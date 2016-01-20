@@ -4,7 +4,7 @@
 
 const { assert, isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../utils");
+const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 
@@ -28,20 +28,6 @@ const DominatorTreeItem = module.exports = createClass({
     onViewSourceInDebugger: PropTypes.func.isRequired,
   },
 
-  formatPercent(percent) {
-    return L10N.getFormatStr("tree-item.percent",
-                             this.formatNumber(percent));
-  },
-
-  formatNumber(number) {
-    const rounded = Math.round(number);
-    if (rounded === 0 || rounded === -0) {
-      return "0";
-    }
-
-    return String(Math.abs(rounded));
-  },
-
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item
       || this.props.depth != nextProps.depth
@@ -58,11 +44,11 @@ const DominatorTreeItem = module.exports = createClass({
       onViewSourceInDebugger,
     } = this.props;
 
-    const retainedSize = this.formatNumber(item.retainedSize);
-    const percentRetainedSize = this.formatPercent(getPercentSize(item.retainedSize));
+    const retainedSize = formatNumber(item.retainedSize);
+    const percentRetainedSize = formatPercent(getPercentSize(item.retainedSize));
 
-    const shallowSize = this.formatNumber(item.shallowSize);
-    const percentShallowSize = this.formatPercent(getPercentSize(item.shallowSize));
+    const shallowSize = formatNumber(item.shallowSize);
+    const percentShallowSize = formatPercent(getPercentSize(item.shallowSize));
 
     // Build up our label UI as an array of each label piece, which is either a
     // string or a frame, and separators in between them.

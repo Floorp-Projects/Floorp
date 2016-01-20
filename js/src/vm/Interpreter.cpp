@@ -282,11 +282,8 @@ SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval, HandleId id, Hand
     if (!obj)
         return false;
 
-    // Note: ES6 specifies that the value lval, not obj, is passed as receiver
-    // to obj's [[Set]] internal method. See bug 603201.
-    RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
-    return SetProperty(cx, obj, id, rval, receiver, result) &&
+    return SetProperty(cx, obj, id, rval, lval, result) &&
            result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP);
 }
 
@@ -1409,9 +1406,9 @@ ModOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue
 }
 
 static MOZ_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
-                          const Value& value, bool strict, JSScript* script = nullptr,
-                          jsbytecode* pc = nullptr)
+SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
+                          HandleValue receiver, bool strict,
+                          JSScript* script = nullptr, jsbytecode* pc = nullptr)
 {
     // receiver != obj happens only at super[expr], where we expect to find the property
     // People probably aren't building hashtables with |super| anyway.
@@ -1430,9 +1427,8 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleValue receiver,
     if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
         return false;
 
-    RootedValue tmp(cx, value);
     ObjectOpResult result;
-    return SetProperty(cx, obj, id, tmp, receiver, result) &&
+    return SetProperty(cx, obj, id, value, receiver, result) &&
            result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
 
@@ -2677,13 +2673,15 @@ CASE(JSOP_STRICTSETELEM)
 {
     static_assert(JSOP_SETELEM_LENGTH == JSOP_STRICTSETELEM_LENGTH,
                   "setelem and strictsetelem must be the same size");
+    HandleValue receiver = REGS.stackHandleAt(-3);
     ReservedRooted<JSObject*> obj(&rootObject0);
-    FETCH_OBJECT(cx, -3, obj);
+    obj = ToObjectFromStack(cx, receiver);
+    if (!obj)
+        goto error;
     ReservedRooted<jsid> id(&rootId0);
     FETCH_ELEMENT_ID(-2, id);
-    Value& value = REGS.sp[-1];
-    ReservedRooted<Value> receiver(&rootValue0, ObjectValue(*obj));
-    if (!SetObjectElementOperation(cx, obj, receiver, id, value, *REGS.pc == JSOP_STRICTSETELEM))
+    HandleValue value = REGS.stackHandleAt(-1);
+    if (!SetObjectElementOperation(cx, obj, id, value, receiver, *REGS.pc == JSOP_STRICTSETELEM))
         goto error;
     REGS.sp[-3] = value;
     REGS.sp -= 2;
@@ -2700,10 +2698,10 @@ CASE(JSOP_STRICTSETELEM_SUPER)
     FETCH_ELEMENT_ID(-4, id);
     ReservedRooted<Value> receiver(&rootValue0, REGS.sp[-3]);
     ReservedRooted<JSObject*> obj(&rootObject1, &REGS.sp[-2].toObject());
-    Value& value = REGS.sp[-1];
+    HandleValue value = REGS.stackHandleAt(-1);
 
     bool strict = JSOp(*REGS.pc) == JSOP_STRICTSETELEM_SUPER;
-    if (!SetObjectElementOperation(cx, obj, receiver, id, value, strict))
+    if (!SetObjectElementOperation(cx, obj, id, value, receiver, strict))
         goto error;
     REGS.sp[-4] = value;
     REGS.sp -= 3;
@@ -4333,7 +4331,7 @@ js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleV
     if (!ToPropertyKey(cx, index, &id))
         return false;
     RootedValue receiver(cx, ObjectValue(*obj));
-    return SetObjectElementOperation(cx, obj, receiver, id, value, strict);
+    return SetObjectElementOperation(cx, obj, id, value, receiver, strict);
 }
 
 bool
@@ -4345,7 +4343,18 @@ js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleV
     if (!ToPropertyKey(cx, index, &id))
         return false;
     RootedValue receiver(cx, ObjectValue(*obj));
-    return SetObjectElementOperation(cx, obj, receiver, id, value, strict, script, pc);
+    return SetObjectElementOperation(cx, obj, id, value, receiver, strict, script, pc);
+}
+
+bool
+js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
+                     HandleValue receiver, bool strict, HandleScript script, jsbytecode* pc)
+{
+    MOZ_ASSERT(pc);
+    RootedId id(cx);
+    if (!ToPropertyKey(cx, index, &id))
+        return false;
+    return SetObjectElementOperation(cx, obj, id, value, receiver, strict, script, pc);
 }
 
 bool

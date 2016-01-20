@@ -18,33 +18,33 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     NS_DECL_NSITIMERCALLBACK
     MediaEngineTabVideoSource();
 
-    virtual void Shutdown() override {};
-    virtual void GetName(nsAString_internal&) override;
-    virtual void GetUUID(nsACString_internal&) override;
-    virtual nsresult Allocate(const dom::MediaTrackConstraints &,
-                              const mozilla::MediaEnginePrefs&,
-                              const nsString& aDeviceId) override;
-    virtual nsresult Deallocate() override;
-    virtual nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID) override;
-    virtual void SetDirectListeners(bool aHasDirectListeners) override {};
-    virtual void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime) override;
-    virtual nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
-    virtual nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
-                             const mozilla::MediaEnginePrefs& aPrefs,
-                             const nsString& aDeviceId) override;
-    virtual nsresult Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t) override;
-    virtual bool IsFake() override;
-    virtual dom::MediaSourceEnum GetMediaSource() const override {
+    void Shutdown() override {};
+    void GetName(nsAString_internal&) override;
+    void GetUUID(nsACString_internal&) override;
+    nsresult Allocate(const dom::MediaTrackConstraints &,
+                      const mozilla::MediaEnginePrefs&,
+                      const nsString& aDeviceId) override;
+    nsresult Deallocate() override;
+    nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID) override;
+    void SetDirectListeners(bool aHasDirectListeners) override {};
+    void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime) override;
+    nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
+    nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+                     const mozilla::MediaEnginePrefs& aPrefs,
+                     const nsString& aDeviceId) override;
+    nsresult Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t) override;
+    bool IsFake() override;
+    dom::MediaSourceEnum GetMediaSource() const override {
       return dom::MediaSourceEnum::Browser;
     }
-    virtual uint32_t GetBestFitnessDistance(
+    uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override
     {
       return 0;
     }
 
-    virtual nsresult TakePhoto(PhotoCallback* aCallback) override
+    nsresult TakePhoto(PhotoCallback* aCallback) override
     {
       return NS_ERROR_NOT_IMPLEMENTED;
     }

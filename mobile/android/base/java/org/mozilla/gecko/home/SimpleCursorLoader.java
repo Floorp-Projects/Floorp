@@ -23,10 +23,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.AsyncTaskLoader;
 
-/**
- * This implmentation may be causing the crash in bug 760956 – use at your own risk.
- * Prefer the framework implementation ({@link android.content.CursorLoader}) or {@link SimpleCancellableCursorLoader}.
- */
 abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
     Cursor mCursor;

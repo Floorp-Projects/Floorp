@@ -32,6 +32,7 @@ flags:
     e10s: /.*e10s.*/
     gaia-js-integration: /.*gaia-js-integration.*/
     gaia-ui-test: /.*gaia-ui-test.*/
+    gtest: /gtest.*/
     jittest: /jittest.*/
     jittests: /jittest.*/
     jsreftest: /jsreftest.*/
@@ -43,16 +44,15 @@ flags:
     mochitest-e10s: /mochitest-e10s.*/
     mochitests-e10s: /mochitest-e10s.*/
     mochitest-debug: /mochitest-debug-.*/
-    mochitest-a11y: /.*mochitest-o.*/
+    mochitest-a11y: /.*mochitest-a11y.*/
     mochitest-bc: /mochitest-browser-chrome.*/
-    mochitest-browser-chrome: /mochitest-browser-chrome.*/
     mochitest-bc-e10s: /mochitest-browser-chrome-e10s.*/
+    mochitest-browser-chrome: /mochitest-browser-chrome.*/
     mochitest-browser-chrome-e10s: /mochitest-browser-chrome-e10s.*/
+    mochitest-chrome: /.*mochitest-chrome.*/
     mochitest-dt: /mochitest-devtools-chrome.*/
     mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
     mochitest-gl: /mochitest-webgl.*/
-    mochitest-o: /.*mochitest-o.*/
-    mochitest-other: /mochitest-other.*/
     mochitest-push: /mochitest-push.*/
     reftest: /(plain-)?reftest.*/
     reftest-no-accel: /(plain-)?reftest-no-accel.*/
@@ -122,6 +122,7 @@ flags:
     - gaia-ui-test-functional
     - gaia-ui-test-functional-dsds
     - gaia-ui-test-unit
+    - gtest
     - jetpack
     - jittests
     - jsreftest
@@ -130,15 +131,16 @@ flags:
     - marionette
     - marionette-webapi
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-browser-chrome-e10s
+    - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-devtools-chrome-e10s
     - mochitest-e10s
     - mochitest-jetpack
     - mochitest-media
     - mochitest-oop
-    - mochitest-other
     - mochitest-push
     - mochitest-webgl
     - mozmill

@@ -285,11 +285,14 @@
   <string name="tab_queue_prompt_tip_text">&tab_queue_prompt_tip_text2;</string>
   <string name="tab_queue_prompt_positive_action_button">&tab_queue_prompt_positive_action_button;</string>
   <string name="tab_queue_prompt_negative_action_button">&tab_queue_prompt_negative_action_button;</string>
+  <string name="tab_queue_prompt_permit_drawing_over_apps">&tab_queue_prompt_permit_drawing_over_apps;</string>
+  <string name="tab_queue_prompt_settings_button">&tab_queue_prompt_settings_button;</string>
   <string name="tab_queue_toast_message">&tab_queue_toast_message3;</string>
   <string name="tab_queue_toast_action">&tab_queue_toast_action;</string>
   <string name="tab_queue_notification_text_singular">&tab_queue_notification_text_singular2;</string>
   <string name="tab_queue_notification_text_plural">&tab_queue_notification_text_plural2;</string>
   <string name="tab_queue_notification_title">&tab_queue_notification_title;</string>
+  <string name="tab_queue_notification_settings">&tab_queue_notification_settings;</string>
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>

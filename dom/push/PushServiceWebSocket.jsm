@@ -299,6 +299,8 @@ this.PushServiceWebSocket = {
     this._requestTimeout = prefs.get("requestTimeout");
     this._adaptiveEnabled = prefs.get('adaptive.enabled');
     this._upperLimit = prefs.get('adaptive.upperLimit');
+
+    return Promise.resolve();
   },
 
   _reconnect: function () {

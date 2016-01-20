@@ -3296,7 +3296,6 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         return;
     }
 
-    bool wasInFullscreen = mSizeState == nsSizeMode_Fullscreen;
     if (aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
         LOG(("\tIconified\n"));
         mSizeState = nsSizeMode_Minimized;
@@ -3325,10 +3324,9 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 
     if (mWidgetListener) {
       mWidgetListener->SizeModeChanged(mSizeState);
-
-      bool isInFullscreen = mSizeState == nsSizeMode_Fullscreen;
-      if (isInFullscreen != wasInFullscreen) {
-        mWidgetListener->FullscreenChanged(isInFullscreen);
+      if (aEvent->changed_mask & GDK_WINDOW_STATE_FULLSCREEN) {
+        mWidgetListener->FullscreenChanged(
+          aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN);
       }
     }
 }

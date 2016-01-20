@@ -31,88 +31,88 @@ public:
   void Init(GMPDecryptor* aSession);
 
   // GMPDecryptorCallback
-  virtual void SetSessionId(uint32_t aCreateSessionToken,
-                            const char* aSessionId,
-                            uint32_t aSessionIdLength) override;
-  virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                         bool aSuccess) override;
-  virtual void ResolvePromise(uint32_t aPromiseId) override;
+  void SetSessionId(uint32_t aCreateSessionToken,
+                    const char* aSessionId,
+                    uint32_t aSessionIdLength) override;
+  void ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                 bool aSuccess) override;
+  void ResolvePromise(uint32_t aPromiseId) override;
 
-  virtual void RejectPromise(uint32_t aPromiseId,
-                             GMPDOMException aException,
-                             const char* aMessage,
-                             uint32_t aMessageLength) override;
+  void RejectPromise(uint32_t aPromiseId,
+                     GMPDOMException aException,
+                     const char* aMessage,
+                     uint32_t aMessageLength) override;
 
-  virtual void SessionMessage(const char* aSessionId,
-                              uint32_t aSessionIdLength,
-                              GMPSessionMessageType aMessageType,
-                              const uint8_t* aMessage,
-                              uint32_t aMessageLength) override;
+  void SessionMessage(const char* aSessionId,
+                      uint32_t aSessionIdLength,
+                      GMPSessionMessageType aMessageType,
+                      const uint8_t* aMessage,
+                      uint32_t aMessageLength) override;
 
-  virtual void ExpirationChange(const char* aSessionId,
-                                 uint32_t aSessionIdLength,
-                                 GMPTimestamp aExpiryTime) override;
+  void ExpirationChange(const char* aSessionId,
+                        uint32_t aSessionIdLength,
+                        GMPTimestamp aExpiryTime) override;
 
-   virtual void SessionClosed(const char* aSessionId,
-                             uint32_t aSessionIdLength) override;
+  void SessionClosed(const char* aSessionId,
+                     uint32_t aSessionIdLength) override;
 
-  virtual void SessionError(const char* aSessionId,
-                            uint32_t aSessionIdLength,
-                            GMPDOMException aException,
-                            uint32_t aSystemCode,
-                            const char* aMessage,
-                            uint32_t aMessageLength) override;
+  void SessionError(const char* aSessionId,
+                    uint32_t aSessionIdLength,
+                    GMPDOMException aException,
+                    uint32_t aSystemCode,
+                    const char* aMessage,
+                    uint32_t aMessageLength) override;
 
-  virtual void KeyStatusChanged(const char* aSessionId,
-                                uint32_t aSessionIdLength,
-                                const uint8_t* aKeyId,
-                                uint32_t aKeyIdLength,
-                                GMPMediaKeyStatus aStatus) override;
+  void KeyStatusChanged(const char* aSessionId,
+                        uint32_t aSessionIdLength,
+                        const uint8_t* aKeyId,
+                        uint32_t aKeyIdLength,
+                        GMPMediaKeyStatus aStatus) override;
 
-  virtual void SetCapabilities(uint64_t aCaps) override;
+  void SetCapabilities(uint64_t aCaps) override;
 
-  virtual void Decrypted(GMPBuffer* aBuffer, GMPErr aResult) override;
+  void Decrypted(GMPBuffer* aBuffer, GMPErr aResult) override;
 
   // GMPDecryptorHost
-  virtual void GetSandboxVoucher(const uint8_t** aVoucher,
-                                 uint32_t* aVoucherLength) override;
+  void GetSandboxVoucher(const uint8_t** aVoucher,
+                         uint32_t* aVoucherLength) override;
 
-  virtual void GetPluginVoucher(const uint8_t** aVoucher,
-                                uint32_t* aVoucherLength) override;
+  void GetPluginVoucher(const uint8_t** aVoucher,
+                        uint32_t* aVoucherLength) override;
 private:
   ~GMPDecryptorChild();
 
   // GMPDecryptorChild
-  virtual bool RecvInit() override;
+  bool RecvInit() override;
 
-  virtual bool RecvCreateSession(const uint32_t& aCreateSessionToken,
-                                 const uint32_t& aPromiseId,
-                                 const nsCString& aInitDataType,
-                                 InfallibleTArray<uint8_t>&& aInitData,
-                                 const GMPSessionType& aSessionType) override;
+  bool RecvCreateSession(const uint32_t& aCreateSessionToken,
+                         const uint32_t& aPromiseId,
+                         const nsCString& aInitDataType,
+                         InfallibleTArray<uint8_t>&& aInitData,
+                         const GMPSessionType& aSessionType) override;
 
-  virtual bool RecvLoadSession(const uint32_t& aPromiseId,
-                               const nsCString& aSessionId) override;
+  bool RecvLoadSession(const uint32_t& aPromiseId,
+                       const nsCString& aSessionId) override;
 
-  virtual bool RecvUpdateSession(const uint32_t& aPromiseId,
-                                 const nsCString& aSessionId,
-                                 InfallibleTArray<uint8_t>&& aResponse) override;
+  bool RecvUpdateSession(const uint32_t& aPromiseId,
+                         const nsCString& aSessionId,
+                         InfallibleTArray<uint8_t>&& aResponse) override;
 
-  virtual bool RecvCloseSession(const uint32_t& aPromiseId,
-                                const nsCString& aSessionId) override;
+  bool RecvCloseSession(const uint32_t& aPromiseId,
+                        const nsCString& aSessionId) override;
 
-  virtual bool RecvRemoveSession(const uint32_t& aPromiseId,
-                                 const nsCString& aSessionId) override;
+  bool RecvRemoveSession(const uint32_t& aPromiseId,
+                         const nsCString& aSessionId) override;
 
-  virtual bool RecvDecrypt(const uint32_t& aId,
-                           InfallibleTArray<uint8_t>&& aBuffer,
-                           const GMPDecryptionData& aMetadata) override;
+  bool RecvDecrypt(const uint32_t& aId,
+                   InfallibleTArray<uint8_t>&& aBuffer,
+                   const GMPDecryptionData& aMetadata) override;
 
   // Resolve/reject promise on completion.
-  virtual bool RecvSetServerCertificate(const uint32_t& aPromiseId,
-                                        InfallibleTArray<uint8_t>&& aServerCert) override;
+  bool RecvSetServerCertificate(const uint32_t& aPromiseId,
+                                InfallibleTArray<uint8_t>&& aServerCert) override;
 
-  virtual bool RecvDecryptingComplete() override;
+  bool RecvDecryptingComplete() override;
 
   template <typename MethodType, typename... ParamType>
   void CallMethod(MethodType, ParamType&&...);

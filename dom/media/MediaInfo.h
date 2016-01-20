@@ -200,22 +200,22 @@ public:
   {
   }
 
-  virtual bool IsValid() const override
+  bool IsValid() const override
   {
     return mDisplay.width > 0 && mDisplay.height > 0;
   }
 
-  virtual VideoInfo* GetAsVideoInfo() override
+  VideoInfo* GetAsVideoInfo() override
   {
     return this;
   }
 
-  virtual const VideoInfo* GetAsVideoInfo() const override
+  const VideoInfo* GetAsVideoInfo() const override
   {
     return this;
   }
 
-  virtual UniquePtr<TrackInfo> Clone() const override
+  UniquePtr<TrackInfo> Clone() const override
   {
     return MakeUnique<VideoInfo>(*this);
   }
@@ -260,22 +260,22 @@ public:
   {
   }
 
-  virtual bool IsValid() const override
+  bool IsValid() const override
   {
     return mChannels > 0 && mRate > 0;
   }
 
-  virtual AudioInfo* GetAsAudioInfo() override
+  AudioInfo* GetAsAudioInfo() override
   {
     return this;
   }
 
-  virtual const AudioInfo* GetAsAudioInfo() const override
+  const AudioInfo* GetAsAudioInfo() const override
   {
     return this;
   }
 
-  virtual UniquePtr<TrackInfo> Clone() const override
+  UniquePtr<TrackInfo> Clone() const override
   {
     return MakeUnique<AudioInfo>(*this);
   }

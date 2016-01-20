@@ -37,25 +37,8 @@ class Addons(object):
 
     def __init__(self, marionette):
         self._mn = marionette
-        self._signature_required = True
 
-        def on_restart():
-            self.signature_required = self._signature_required
-        self._mn.restart_handlers.append(on_restart)
-
-    @property
-    def signature_required(self):
-        """
-        Whether or not addons must be signed.
-        """
-        return self._signature_required
-
-    @signature_required.setter
-    def signature_required(self, val):
-        self._mn.set_pref('xpinstall.signatures.required', val)
-        self._signature_required = val
-
-    def install(self, path):
+    def install(self, path, temp=False):
         """Install an addon.
 
         If the addon is restartless, it can be used right away. Otherwise
@@ -63,6 +46,9 @@ class Addons(object):
         will be needed.
 
         :param path: A file path to the extension to be installed.
+        :param temp: Install a temporary addon. Temporary addons will
+                     automatically be uninstalled on shutdown and do not need
+                     to be signed, though they must be restartless.
         :returns: The addon ID string of the newly installed addon.
         :raises: :exc:`AddonInstallException`
         """
@@ -77,18 +63,29 @@ class Addons(object):
 
                 onInstallFailed: function(install) {
                   marionetteScriptFinished([null, install.error]);
+                },
+
+                onInstalled: function(addon) {
+                  marionetteScriptFinished([addon.id, 0]);
                 }
               }
 
               let file = new FileUtils.File(arguments[0]);
-              AddonManager.getInstallForFile(file, function(aInstall) {
-                if (aInstall.error != 0) {
-                  marionetteScriptFinished([null, aInstall.error]);
-                }
-                aInstall.addListener(listener);
-                aInstall.install();
-              });
-            """, script_args=[path], debug_script=True)
+              let temp = arguments[1];
+
+              if (!temp) {
+                AddonManager.getInstallForFile(file, function(aInstall) {
+                  if (aInstall.error != 0) {
+                    marionetteScriptFinished([null, aInstall.error]);
+                  }
+                  aInstall.addListener(listener);
+                  aInstall.install();
+                });
+              } else {
+                AddonManager.addAddonListener(listener);
+                AddonManager.installTemporaryAddon(file);
+              }
+            """, script_args=[path, temp], debug_script=True)
 
         if status:
             if status in ADDON_INSTALL_ERRORS:

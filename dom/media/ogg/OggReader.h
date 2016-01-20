@@ -50,21 +50,18 @@ protected:
   ~OggReader();
 
 public:
-  virtual nsresult Init() override;
-  virtual nsresult ResetDecode() override;
-  virtual bool DecodeAudioData() override;
+  nsresult Init() override;
+  nsresult ResetDecode() override;
+  bool DecodeAudioData() override;
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold) override;
+  bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) override;
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) override;
-  virtual RefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) override;
-  virtual media::TimeIntervals GetBuffered() override;
+  nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
+  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) override;
+  media::TimeIntervals GetBuffered() override;
 
 private:
   bool HasAudio() {

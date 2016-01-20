@@ -25,7 +25,7 @@ public:
   enum Parameters {
     ENABLE
   };
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
+  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
   {
     switch (aIndex) {
     case ENABLE:
@@ -50,21 +50,21 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void DestroyMediaStream() override;
+  void DestroyMediaStream() override;
 
-  virtual uint16_t NumberOfInputs() const override { return 0; }
+  uint16_t NumberOfInputs() const override { return 0; }
 
-  virtual const char* NodeType() const override
+  const char* NodeType() const override
   {
     return "MediaStreamAudioSourceNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  virtual void PrincipalChanged(DOMMediaStream* aMediaStream) override;
+  void PrincipalChanged(DOMMediaStream* aMediaStream) override;
 
 protected:
   explicit MediaStreamAudioSourceNode(AudioContext* aContext);

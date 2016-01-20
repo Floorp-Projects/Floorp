@@ -17,13 +17,13 @@ public:
   explicit RtspMediaCodecDecoder(MediaDecoderOwner* aOwner)
     : MediaOmxCommonDecoder(aOwner) {}
 
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
 
-  virtual MediaOmxCommonReader* CreateReader() override;
+  MediaOmxCommonReader* CreateReader() override;
 
-  virtual MediaDecoderStateMachine* CreateStateMachineFromReader(MediaOmxCommonReader* aReader) override;
+  MediaDecoderStateMachine* CreateStateMachineFromReader(MediaOmxCommonReader* aReader) override;
 
-  virtual void ChangeState(PlayState aState) override;
+  void ChangeState(PlayState aState) override;
 };
 
 } // namespace mozilla
