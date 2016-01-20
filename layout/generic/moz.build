@@ -112,6 +112,7 @@ EXPORTS.mozilla.layout += [
 
 UNIFIED_SOURCES += [
     'AsyncScrollBase.cpp',
+    'DetailsFrame.cpp',
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',
     'nsAbsoluteContainingBlock.cpp',
