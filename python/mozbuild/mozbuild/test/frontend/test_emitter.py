@@ -101,8 +101,6 @@ class TestEmitterBasic(unittest.TestCase):
         reldirs = [o.relativedir for o in objs]
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])
 
-        self.assertEqual(objs[3].affected_tiers, {'misc'})
-
         dirs = [[d.full_path for d in o.dirs] for o in objs]
         self.assertEqual(dirs, [
             [
