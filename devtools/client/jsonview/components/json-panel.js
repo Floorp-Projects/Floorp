@@ -6,7 +6,7 @@
 
 define(function(require, exports, module) {
 
-const React = require("react");
+const React = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("./reps/rep-utils");
 const { TreeView } = createFactories(require("./reps/tree-view"));
 const { SearchBox } = createFactories(require("./search-box"));

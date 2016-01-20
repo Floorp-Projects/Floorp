@@ -242,7 +242,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         try {
             if (mInputs != null) {
                 for (int i = 0; i < mInputs.length; i++) {
-                    result.put(mInputs[i].getId(), mInputs[i].getValue());
+                    if (mInputs[i] != null) {
+                        result.put(mInputs[i].getId(), mInputs[i].getValue());
+                    }
                 }
             }
         } catch(JSONException ex) { }

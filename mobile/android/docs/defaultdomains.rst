@@ -29,13 +29,14 @@ Sanitizing Methods
 After getting a source list, e.g. Alexa top global sites, we apply some simple guidelines to the
 list of domains:
 
+
+* Remove any sites in the Alexa adult site list.
 * Remove any locale-specific domain duplicates. We assume primary URLs (.com) will redirect to the
   correct locale (.co.jp) at run-time.
-* Remove any explicit adult content domains.
-* Remove any sites that use explicit or adult advertising.
+* Remove any explicit adult content* domains.
+* Remove any sites that use explicit or adult advertising*.
 * Remove any URL shorteners and redirecters.
-* Remove any content/CDN domains. Some sites use separate domains to store images and other
-  static content.
+* Remove any content/CDN domains. Some sites use separate domains to store images and other static content.
 * Remove any sites primarily used for advertising or management of advertising.
 * Remove any sites that fail to load in mobile browsers.
 * Remove any time/date specific sites that may have appeared on the list due to seasonal spikes.
@@ -64,5 +65,25 @@ list of domains:
 * Remove any explicit adult content domains.
 * Remove any sites that use explicit or adult advertising.
 * Remove any URL shorteners and redirecters.
-* Remove any content/CDN domains. Some sites use separate domains to store images and other
-  static content.
+* Remove any content/CDN domains. Some sites use separate domains to store images and other static
+  content.
+
+Guidelines for Adult Content
+============================
+
+Generally the Adult category includes sites whose dominant theme is either:
+* To appeal to the prurient interest in sex without any serious literary, artistic, political, or
+  scientific value
+* The depiction or description of nudity, including sexual or excretory activities or organs in a
+  lascivious way
+* The depiction or description of sexually explicit conduct in a lascivious way (e.g. for
+  entertainment purposes)
+
+For a more complete definition and guidelines of adult content, use the full DMOZ guidelines at
+http://www.dmoz.org/docs/en/guidelines/adult/general.html.
+
+Updating Lists
+==============
+
+After approximately every two releases, Product (with Legal) will review current lists and
+sanitizing methods, and update the lists accordingly.

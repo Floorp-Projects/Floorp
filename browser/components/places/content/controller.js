@@ -188,20 +188,23 @@ PlacesController.prototype = {
              !PlacesUtils.asQuery(this._view.result.root).queryOptions.excludeItems &&
              this._view.result.sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
-    case "placesCmd_show:info":
-      var selectedNode = this._view.selectedNode;
+    case "placesCmd_show:info": {
+      let selectedNode = this._view.selectedNode;
       return selectedNode && PlacesUtils.getConcreteItemId(selectedNode) != -1
-    case "placesCmd_reload":
+    }
+    case "placesCmd_reload": {
       // Livemark containers
-      var selectedNode = this._view.selectedNode;
+      let selectedNode = this._view.selectedNode;
       return selectedNode && this.hasCachedLivemarkInfo(selectedNode);
-    case "placesCmd_sortBy:name":
-      var selectedNode = this._view.selectedNode;
+    }
+    case "placesCmd_sortBy:name": {
+      let selectedNode = this._view.selectedNode;
       return selectedNode &&
              PlacesUtils.nodeIsFolder(selectedNode) &&
              !PlacesUIUtils.isContentsReadOnly(selectedNode) &&
              this._view.result.sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
+    }
     case "placesCmd_createBookmark":
       var node = this._view.selectedNode;
       return node && PlacesUtils.nodeIsURI(node) && node.itemId == -1;
@@ -963,16 +966,13 @@ PlacesController.prototype = {
     }
 
     // Do removal in chunks to give some breath to main-thread.
-    function pagesChunkGenerator(aURIs) {
+    function* pagesChunkGenerator(aURIs) {
       while (aURIs.length) {
         let URIslice = aURIs.splice(0, REMOVE_PAGES_CHUNKLEN);
         PlacesUtils.bhistory.removePages(URIslice, URIslice.length);
-        Services.tm.mainThread.dispatch(function() {
-          try {
-            gen.next();
-          } catch (ex if ex instanceof StopIteration) {}
-        }, Ci.nsIThread.DISPATCH_NORMAL);
-        yield undefined;
+        Services.tm.mainThread.dispatch(() => gen.next(), 
+                                        Ci.nsIThread.DISPATCH_NORMAL);
+        yield unefined;
       }
     }
     let gen = pagesChunkGenerator(URIs);

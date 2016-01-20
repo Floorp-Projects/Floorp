@@ -7,7 +7,7 @@
 const SHORTCUT_URL = "place:folder=2";
 const QUERY_URL = "place:sort=8&maxResults=10";
 
-add_task(function copy_toolbar_shortcut() {
+add_task(function* copy_toolbar_shortcut() {
   let library = yield promiseLibrary();
 
   registerCleanupFunction(function () {
@@ -35,7 +35,7 @@ add_task(function copy_toolbar_shortcut() {
      "original is still a folder shortcut");
 });
 
-add_task(function copy_history_query() {
+add_task(function* copy_history_query() {
   let library = yield promiseLibrary();
 
   library.PlacesOrganizer.selectLeftPaneQuery("History");

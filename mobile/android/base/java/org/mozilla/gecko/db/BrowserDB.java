@@ -20,7 +20,6 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
-import android.support.v4.os.CancellationSignal;
 
 /**
  * Interface for interactions with all databases. If you want an instance
@@ -82,7 +81,7 @@ public interface BrowserDB {
      * Can return <code>null</code>.
      * Returns no more than <code>maxLimit</code> results.
      */
-    public abstract Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit, CancellationSignal cancellationSignal);
+    public abstract Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit);
 
     public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 

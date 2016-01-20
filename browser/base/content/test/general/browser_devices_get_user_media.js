@@ -4,211 +4,11 @@
 
 requestLongerTimeout(2);
 
-const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";
-
-let frameScript = function() {
-
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
-                                   "@mozilla.org/mediaManagerService;1",
-                                   "nsIMediaManagerService");
-
-const kObservedTopics = [
-  "getUserMedia:response:allow",
-  "getUserMedia:revoke",
-  "getUserMedia:response:deny",
-  "getUserMedia:request",
-  "recording-device-events",
-  "recording-window-ended"
-];
-
-var gObservedTopics = {};
-function observer(aSubject, aTopic, aData) {
-  if (!(aTopic in gObservedTopics))
-    gObservedTopics[aTopic] = 1;
-  else
-    ++gObservedTopics[aTopic];
-}
-
-kObservedTopics.forEach(topic => {
-  Services.obs.addObserver(observer, topic, false);
-});
-
-addMessageListener("Test:ExpectObserverCalled", ({data}) => {
-  sendAsyncMessage("Test:ExpectObserverCalled:Reply",
-                   {count: gObservedTopics[data]});
-  if (data in gObservedTopics)
-    --gObservedTopics[data];
-});
-
-addMessageListener("Test:TodoObserverNotCalled", ({data}) => {
-  sendAsyncMessage("Test:TodoObserverNotCalled:Reply",
-                   {count: gObservedTopics[data]});
-  if (gObservedTopics[data] == 1)
-    gObservedTopics[data] = 0;
-});
-
-addMessageListener("Test:ExpectNoObserverCalled", data => {
-  sendAsyncMessage("Test:ExpectNoObserverCalled:Reply", gObservedTopics);
-  gObservedTopics = {};
-});
-
-function _getMediaCaptureState() {
-  let hasVideo = {};
-  let hasAudio = {};
-  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio);
-  if (hasVideo.value && hasAudio.value)
-    return "CameraAndMicrophone";
-  if (hasVideo.value)
-    return "Camera";
-  if (hasAudio.value)
-    return "Microphone";
-  return "none";
-}
-
-addMessageListener("Test:GetMediaCaptureState", data => {
-  sendAsyncMessage("Test:MediaCaptureState", _getMediaCaptureState());
-});
-
-addMessageListener("Test:WaitForObserverCall", ({data}) => {
-  let topic = data;
-  Services.obs.addObserver(function observer() {
-    sendAsyncMessage("Test:ObserverCalled", topic);
-    Services.obs.removeObserver(observer, topic);
-
-    if (kObservedTopics.indexOf(topic) != -1) {
-      if (!(topic in gObservedTopics))
-        gObservedTopics[topic] = -1;
-      else
-        --gObservedTopics[topic];
-    }
-  }, topic, false);
-});
-
-}; // end of framescript
-
-function _mm() {
-  return gBrowser.selectedBrowser.messageManager;
-}
-
-function promiseObserverCalled(aTopic) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:ObserverCalled", function listener({data}) {
-      if (data == aTopic) {
-        ok(true, "got " + aTopic + " notification");
-        mm.removeMessageListener("Test:ObserverCalled", listener);
-        resolve();
-      }
-    });
-    mm.sendAsyncMessage("Test:WaitForObserverCall", aTopic);
-  });
-}
-
-function expectObserverCalled(aTopic) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:ExpectObserverCalled:Reply",
-                          function listener({data}) {
-      is(data.count, 1, "expected notification " + aTopic);
-      mm.removeMessageListener("Test:ExpectObserverCalled:Reply", listener);
-      resolve();
-    });
-    mm.sendAsyncMessage("Test:ExpectObserverCalled", aTopic);
-  });
-}
-
-function expectNoObserverCalled() {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:ExpectNoObserverCalled:Reply",
-                          function listener({data}) {
-      mm.removeMessageListener("Test:ExpectNoObserverCalled:Reply", listener);
-      for (let topic in data) {
-        if (data[topic])
-          is(data[topic], 0, topic + " notification unexpected");
-      }
-      resolve();
-    });
-    mm.sendAsyncMessage("Test:ExpectNoObserverCalled");
-  });
-}
-
-function promiseTodoObserverNotCalled(aTopic) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:TodoObserverNotCalled:Reply",
-                          function listener({data}) {
-      mm.removeMessageListener("Test:TodoObserverNotCalled:Reply", listener);
-      resolve(data.count);
-    });
-    mm.sendAsyncMessage("Test:TodoObserverNotCalled", aTopic);
-  });
-}
-
-function promiseMessage(aMessage, aAction) {
-  let deferred = Promise.defer();
-
-  content.addEventListener("message", function messageListener(event) {
-    content.removeEventListener("message", messageListener);
-    is(event.data, aMessage, "received " + aMessage);
-    if (event.data == aMessage)
-      deferred.resolve();
-    else
-      deferred.reject();
-  });
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function promisePopupNotificationShown(aName, aAction) {
-  let deferred = Promise.defer();
-
-  PopupNotifications.panel.addEventListener("popupshown", function popupNotifShown() {
-    PopupNotifications.panel.removeEventListener("popupshown", popupNotifShown);
-
-    ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
-    ok(PopupNotifications.isPanelOpen, "notification panel open");
-    ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
-
-    deferred.resolve();
-  });
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function promisePopupNotification(aName) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName),
-       aName + " notification appeared");
-
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
-
-  return deferred.promise;
-}
-
-function promiseNoPopupNotification(aName) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => !PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!PopupNotifications.getNotification(aName),
-       aName + " notification removed");
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName + " to disappear");
-
-  return deferred.promise;
-}
+const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
+                 this);
 
 function enableDevice(aType, aEnabled) {
   let menulist = document.getElementById("webRTC-select" + aType + "-menulist");
@@ -216,104 +16,9 @@ function enableDevice(aType, aEnabled) {
   menulist.value = aEnabled ? menupopup.firstChild.getAttribute("value") : "-1";
 }
 
-const kActionAlways = 1;
-const kActionDeny = 2;
-const kActionNever = 3;
-
-function activateSecondaryAction(aAction) {
-  let notification = PopupNotifications.panel.firstChild;
-  notification.button.focus();
-  let popup = notification.menupopup;
-  popup.addEventListener("popupshown", function () {
-    popup.removeEventListener("popupshown", arguments.callee, false);
-
-    // Press 'down' as many time as needed to select the requested action.
-    while (aAction--)
-      EventUtils.synthesizeKey("VK_DOWN", {});
-
-    // Activate
-    EventUtils.synthesizeKey("VK_RETURN", {});
-  }, false);
-
-  // One down event to open the popup
-  EventUtils.synthesizeKey("VK_DOWN",
-                           { altKey: !navigator.platform.includes("Mac") });
-}
-
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
-
-function getMediaCaptureState() {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:MediaCaptureState", ({data}) => {
-      resolve(data);
-    });
-    mm.sendAsyncMessage("Test:GetMediaCaptureState");
-  });
-}
-
-function promiseRequestDevice(aRequestAudio, aRequestVideo) {
-  info("requesting devices");
-  return ContentTask.spawn(gBrowser.selectedBrowser,
-                           {aRequestAudio, aRequestVideo},
-                           function*(args) {
-    content.wrappedJSObject.requestDevice(args.aRequestAudio,
-                                          args.aRequestVideo);
-  });
-}
-
-function* closeStream(aAlreadyClosed) {
-  yield expectNoObserverCalled();
-
-  let promise;
-  if (!aAlreadyClosed)
-    promise = promiseObserverCalled("recording-device-events");
-
-  info("closing the stream");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
-    content.wrappedJSObject.closeStream();
-  });
-
-  if (!aAlreadyClosed)
-    yield promise;
-
-  yield promiseNoPopupNotification("webRTC-sharingDevices");
-  if (!aAlreadyClosed)
-    yield expectObserverCalled("recording-window-ended");
-
-  yield* assertWebRTCIndicatorStatus(null);
-}
-
-function checkDeviceSelectors(aAudio, aVideo) {
-  let micSelector = document.getElementById("webRTC-selectMicrophone");
-  if (aAudio)
-    ok(!micSelector.hidden, "microphone selector visible");
-  else
-    ok(micSelector.hidden, "microphone selector hidden");
-
-  let cameraSelector = document.getElementById("webRTC-selectCamera");
-  if (aVideo)
-    ok(!cameraSelector.hidden, "camera selector visible");
-  else
-    ok(cameraSelector.hidden, "camera selector hidden");
-}
-
-function* checkSharingUI(aExpected) {
-  yield promisePopupNotification("webRTC-sharingDevices");
-
-  yield* assertWebRTCIndicatorStatus(aExpected);
-}
-
-function* checkNotSharing() {
-  is((yield getMediaCaptureState()), "none", "expected nothing to be shared");
-
-  ok(!PopupNotifications.getNotification("webRTC-sharingDevices"),
-     "no webRTC-sharingDevices popup notification");
-
-  yield* assertWebRTCIndicatorStatus(null);
-}
 
 const permissionError = "error: SecurityError: The operation is insecure.";
 
@@ -985,7 +690,7 @@ function test() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
+  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
 
   browser.addEventListener("load", function onload() {
     browser.removeEventListener("load", onload, true);
@@ -1014,11 +719,4 @@ function test() {
   rootDir = rootDir.replace("chrome://mochitests/content/",
                             "https://example.com/");
   content.location = rootDir + "get_user_media.html";
-}
-
-
-function wait(time) {
-  let deferred = Promise.defer();
-  setTimeout(deferred.resolve, time);
-  return deferred.promise;
 }

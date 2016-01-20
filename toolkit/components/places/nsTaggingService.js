@@ -636,7 +636,7 @@ TagAutoCompleteSearch.prototype = {
     
     var self = this;
     // generator: if yields true, not done
-    function doSearch() {
+    function* doSearch() {
       var i = 0;
       while (i < searchResults.length) {
         if (self._stopped)
@@ -682,8 +682,7 @@ TagAutoCompleteSearch.prototype = {
     
     // chunk the search results via the generator
     var gen = doSearch();
-    while (gen.next());
-    gen.close();
+    while (gen.next().value);
   },
 
   /**
