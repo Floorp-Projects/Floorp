@@ -212,6 +212,7 @@ EXPORTS.mozilla.dom += [
     'TreeWalker.h',
     'URL.h',
     'URLSearchParams.h',
+    'WebKitCSSMatrix.h',
     'WebSocket.h',
     'WindowOrientationObserver.h',
 ]
@@ -359,6 +360,7 @@ UNIFIED_SOURCES += [
     'TreeWalker.cpp',
     'URL.cpp',
     'URLSearchParams.cpp',
+    'WebKitCSSMatrix.cpp',
     'WebSocket.cpp',
     'WindowNamedPropertiesHandler.cpp',
     'WindowOrientationObserver.cpp',
