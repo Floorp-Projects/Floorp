@@ -7,7 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = URL_ROOT + "doc_inspector_outerhtml.html";
 
-add_task(function *() {
+add_task(function*() {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   let root = inspector.markup._elt;
 
@@ -33,19 +33,12 @@ function* setSelectionNodeFront(node, inspector) {
 }
 
 function* checkClipboard(expectedText, node) {
-  let deferred = promise.defer();
-  waitForClipboard(
-    expectedText,
-    () => fireCopyEvent(node),
-    deferred.resolve,
-    deferred.reject
-  );
-
   try {
-    yield deferred.promise;
+    yield waitForClipboard(() => fireCopyEvent(node), expectedText);
     ok(true, "Clipboard successfully filled with : " + expectedText);
   } catch (e) {
-    ok(false, "Clipboard could not be filled with the expected text : " + expectedText);
+    ok(false, "Clipboard could not be filled with the expected text : " +
+              expectedText);
   }
 }
 

@@ -7,7 +7,7 @@
 // Test to ensure that CSSOM doesn't make the rule view blow up.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
 
-const TEST_URI = TEST_URL_ROOT + "doc_cssom.html";
+const TEST_URI = URL_ROOT + "doc_cssom.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
