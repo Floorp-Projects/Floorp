@@ -401,69 +401,54 @@ CodeRange::CodeRange(uint32_t nameIndex, uint32_t lineNumber, FuncOffsets offset
     end_ = offsets.end;
 }
 
-static inline size_t StringLength(const char *s) { return s ? strlen(s) : 0; }
-static inline size_t StringLength(const char16_t *s) { return s ? js_strlen(s) : 0; }
-
-template <class CharT>
 size_t
-CacheableUniquePtr<CharT>::serializedSize() const
+CacheableChars::serializedSize() const
 {
-    return sizeof(uint32_t) + StringLength(this->get()) * sizeof(CharT);
+    return sizeof(uint32_t) + strlen(get());
 }
 
-template <class CharT>
 uint8_t*
-CacheableUniquePtr<CharT>::serialize(uint8_t* cursor) const
+CacheableChars::serialize(uint8_t* cursor) const
 {
-    uint32_t length = StringLength(this->get());
+    uint32_t length = strlen(get());
     cursor = WriteBytes(cursor, &length, sizeof(uint32_t));
-    cursor = WriteBytes(cursor, this->get(), length * sizeof(CharT));
+    cursor = WriteBytes(cursor, get(), length);
     return cursor;
 }
 
-template <class CharT>
 const uint8_t*
-CacheableUniquePtr<CharT>::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+CacheableChars::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
     uint32_t length;
     cursor = ReadBytes(cursor, &length, sizeof(uint32_t));
 
-    this->reset(cx->pod_calloc<CharT>(length + 1));
-    if (!this->get())
+    reset(cx->pod_calloc<char>(length + 1));
+    if (!get())
         return nullptr;
 
-    cursor = ReadBytes(cursor, this->get(), length * sizeof(CharT));
+    cursor = ReadBytes(cursor, get(), length);
     return cursor;
 }
 
-template <class CharT>
 bool
-CacheableUniquePtr<CharT>::clone(JSContext* cx, CacheableUniquePtr* out) const
+CacheableChars::clone(JSContext* cx, CacheableChars* out) const
 {
-    uint32_t length = StringLength(this->get());
+    uint32_t length = strlen(get());
 
-    UPtr chars(cx->pod_calloc<CharT>(length + 1));
+    UniqueChars chars(cx->pod_calloc<char>(length + 1));
     if (!chars)
         return false;
 
-    PodCopy(chars.get(), this->get(), length);
+    PodCopy(chars.get(), get(), length);
 
     *out = Move(chars);
     return true;
 }
 
-template <class CharT>
 size_t
-CacheableUniquePtr<CharT>::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(this->get());
-}
-
-namespace js {
-namespace wasm {
-template struct CacheableUniquePtr<char>;
-template struct CacheableUniquePtr<char16_t>;
-}
+    return mallocSizeOf(get());
 }
 
 size_t
@@ -519,8 +504,7 @@ ModuleData::serializedSize() const
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            SerializedVectorSize(funcNames) +
-           filename.serializedSize() +
-           displayURL.serializedSize();
+           filename.serializedSize();
 }
 
 uint8_t*
@@ -535,7 +519,6 @@ ModuleData::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, callSites);
     cursor = SerializeVector(cursor, funcNames);
     cursor = filename.serialize(cursor);
-    cursor = displayURL.serialize(cursor);
     return cursor;
 }
 
@@ -555,8 +538,7 @@ ModuleData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
     (cursor = DeserializeVector(cx, cursor, &funcNames)) &&
-    (cursor = filename.deserialize(cx, cursor)) &&
-    (cursor = displayURL.deserialize(cx, cursor));
+    (cursor = filename.deserialize(cx, cursor));
     return cursor;
 }
 
@@ -576,8 +558,7 @@ ModuleData::clone(JSContext* cx, ModuleData* out) const
            ClonePodVector(cx, codeRanges, &out->codeRanges) &&
            ClonePodVector(cx, callSites, &out->callSites) &&
            CloneVector(cx, funcNames, &out->funcNames) &&
-           filename.clone(cx, &out->filename) &&
-           displayURL.clone(cx, &out->displayURL);
+           filename.clone(cx, &out->filename);
 }
 
 size_t
@@ -590,8 +571,7 @@ ModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf) +
-           displayURL.sizeOfExcludingThis(mallocSizeOf);
+           filename.sizeOfExcludingThis(mallocSizeOf);
 }
 
 uint8_t*
@@ -874,7 +854,7 @@ Module::~Module()
     }
 }
 
-void
+/* virtual */ void
 Module::trace(JSTracer* trc)
 {
     for (const Import& import : imports()) {
@@ -884,6 +864,34 @@ Module::trace(JSTracer* trc)
 
     if (heap_)
         TraceEdge(trc, &heap_, "wasm buffer");
+}
+
+/* virtual */ void
+Module::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
+{
+    *code += codeBytes();
+    *data += mallocSizeOf(this) +
+             globalBytes() +
+             mallocSizeOf(module_.get()) +
+             module_->sizeOfExcludingThis(mallocSizeOf) +
+             funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(funcLabels_, mallocSizeOf);
+}
+
+/* virtual */ bool
+Module::mutedErrors() const
+{
+    // WebAssembly code is always CORS-same-origin and so errors are never
+    // muted. For asm.js, muting depends on the ScriptSource containing the
+    // asm.js so this function is overridden by AsmJSModule.
+    return false;
+}
+
+/* virtual */ const char16_t*
+Module::displayURL() const
+{
+    // WebAssembly code does not have `//# sourceURL`.
+    return nullptr;
 }
 
 bool
@@ -1400,18 +1408,6 @@ Module::profilingLabel(uint32_t funcIndex) const
     MOZ_ASSERT(dynamicallyLinked_);
     MOZ_ASSERT(profilingEnabled_);
     return funcLabels_[funcIndex].get();
-}
-
-void
-Module::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
-{
-    *code += codeBytes();
-    *data += mallocSizeOf(this) +
-             globalBytes() +
-             mallocSizeOf(module_.get()) +
-             module_->sizeOfExcludingThis(mallocSizeOf) +
-             funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
-             SizeOfVectorExcludingThis(funcLabels_, mallocSizeOf);
 }
 
 const Class WasmModuleObject::class_ = {
