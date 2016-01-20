@@ -8,6 +8,7 @@
 #define DetailsFrame_h
 
 #include "nsBlockFrame.h"
+#include "nsIAnonymousContentCreator.h"
 
 class nsContainerFrame;
 class nsStyleContext;
@@ -17,6 +18,7 @@ class nsStyleContext;
 // DetailsFrame.
 //
 class DetailsFrame final : public nsBlockFrame
+                         , public nsIAnonymousContentCreator
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -38,6 +40,17 @@ public:
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList& aChildList) override;
+
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
+
+  // nsIAnonymousContentCreator
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
+
+private:
+  nsCOMPtr<nsIContent> mDefaultSummary;
 };
 
 #endif // DetailsFrame_h

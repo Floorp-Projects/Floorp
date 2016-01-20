@@ -19,6 +19,7 @@ NS_IMPL_FRAMEARENA_HELPERS(DetailsFrame)
 
 NS_QUERYFRAME_HEAD(DetailsFrame)
   NS_QUERYFRAME_ENTRY(DetailsFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 DetailsFrame*
@@ -79,4 +80,48 @@ DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
   }
 
   nsBlockFrame::SetInitialChildList(aListID, aChildList);
+}
+
+void
+DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  nsContentUtils::DestroyAnonymousContent(&mDefaultSummary);
+  nsBlockFrame::DestroyFrom(aDestructRoot);
+}
+
+nsresult
+DetailsFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
+{
+  auto* details = HTMLDetailsElement::FromContent(GetContent());
+  if (details->GetFirstSummary()) {
+    return NS_OK;
+  }
+
+  // The <details> element lacks any direct <summary> child. Create a default
+  // <summary> element as an anonymous content.
+  nsNodeInfoManager* nodeInfoManager =
+    GetContent()->NodeInfo()->NodeInfoManager();
+
+  already_AddRefed<NodeInfo> nodeInfo =
+    nodeInfoManager->GetNodeInfo(nsGkAtoms::summary, nullptr, kNameSpaceID_XHTML,
+                                 nsIDOMNode::ELEMENT_NODE);
+  mDefaultSummary = new HTMLSummaryElement(nodeInfo);
+
+  // TODO: Need to localize this "Details" string in bug 1225752.
+  RefPtr<nsTextNode> description = new nsTextNode(nodeInfoManager);
+  description->SetText(NS_LITERAL_STRING("Details"), false);
+  mDefaultSummary->AppendChildTo(description, false);
+
+  aElements.AppendElement(mDefaultSummary);
+
+  return NS_OK;
+}
+
+void
+DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                       uint32_t aFilter)
+{
+  if (mDefaultSummary) {
+    aElements.AppendElement(mDefaultSummary);
+  }
 }
