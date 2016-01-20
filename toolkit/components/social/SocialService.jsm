@@ -1153,7 +1153,7 @@ AddonWrapper.prototype = {
     return this.manifest.name;
   },
   get version() {
-    return this.manifest.version ? this.manifest.version : "";
+    return this.manifest.version ? this.manifest.version.toString() : "";
   },
 
   get iconURL() {
