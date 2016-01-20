@@ -39,7 +39,7 @@ function* check_normal() {
   BootstrapMonitor.checkAddonNotStarted(ID);
   BootstrapMonitor.checkAddonNotInstalled(ID);
 
-  restartManager();
+  yield promiseRestartManager();
 }
 
 // Installing the add-on normally doesn't require a restart
@@ -112,7 +112,7 @@ add_task(function*() {
   BootstrapMonitor.checkAddonNotStarted(ID);
   BootstrapMonitor.checkAddonNotInstalled(ID);
 
-  restartManager();
+  yield promiseRestartManager();
 });
 
 // The hotfix is unaffected
