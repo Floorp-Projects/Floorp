@@ -7,9 +7,21 @@
 
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
+// Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Summary) to add pref check.
+nsGenericHTMLElement*
+NS_NewHTMLSummaryElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                         mozilla::dom::FromParser aFromParser)
+{
+  if (!mozilla::dom::HTMLDetailsElement::IsDetailsEnabled()) {
+    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
+  }
+
+  return new mozilla::dom::HTMLSummaryElement(aNodeInfo);
+}
 
 namespace mozilla {
 namespace dom {
