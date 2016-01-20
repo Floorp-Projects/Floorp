@@ -5435,6 +5435,29 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       DispatchPendingEvents();
       break;
 
+    // Windows doesn't provide to customize the behavior of 4th nor 5th button
+    // of mouse.  If 5-button mouse works with standard mouse deriver of
+    // Windows, users cannot disable 4th button (browser back) nor 5th button
+    // (browser forward).  We should allow to do it with our prefs since we can
+    // prevent Windows to generate WM_APPCOMMAND message if WM_XBUTTONUP
+    // messages are not sent to DefWindowProc.
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
+    case WM_NCXBUTTONDOWN:
+    case WM_NCXBUTTONUP:
+      *aRetValue = TRUE;
+      switch (GET_XBUTTON_WPARAM(wParam)) {
+        case XBUTTON1:
+          result = !Preferences::GetBool("mousebutton.4th.enabled", true);
+          break;
+        case XBUTTON2:
+          result = !Preferences::GetBool("mousebutton.5th.enabled", true);
+          break;
+        default:
+          break;
+      }
+      break;
+
     case WM_SIZING:
     {
       // When we get WM_ENTERSIZEMOVE we don't know yet if we're in a live
