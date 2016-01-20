@@ -922,6 +922,125 @@ StorageActors.createActor({
   storeObjectType: "storagestoreobject"
 }, getObjectForLocalOrSessionStorage("sessionStorage"));
 
+
+let CacheAttributes = [
+  "url",
+  "status",
+];
+types.addDictType("cacheobject", {
+  "url": "string",
+  "status": "string"
+});
+
+// Array of Cache store objects
+types.addDictType("cachestoreobject", {
+  total: "number",
+  offset: "number",
+  data: "array:nullable:cacheobject"
+});
+
+StorageActors.createActor({
+  typeName: "Cache",
+  storeObjectType: "cachestoreobject"
+}, {
+  getCachesForHost: Task.async(function*(host) {
+    let uri = Services.io.newURI(host, null, null);
+    let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+
+    // The first argument tells if you want to get |content| cache or |chrome| cache.
+    // The |content| cache is the cache explicitely named by the web content
+    // (service worker or web page).
+    // The |chrome| cache is the cache implicitely cached by the platform, hosting the
+    // source file of the service worker.
+    let { CacheStorage } = this.storageActor.window;
+    let cache = new CacheStorage("content", principal);
+    return cache;
+  }),
+
+  preListStores: Task.async(function*() {
+    this.hostVsStores = new Map();
+    for (let host of this.hosts) {
+      yield this.populateStoresForHost(host);
+    }
+  }),
+
+  form: function(form, detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+
+    let hosts = {};
+    for (let host of this.hosts) {
+      hosts[host] = this.getNamesForHost(host);
+    }
+
+    return {
+      actor: this.actorID,
+      hosts: hosts
+    };
+  },
+
+  getNamesForHost: function(host) {
+    // UI code expect each name to be a JSON string of an array :/
+    return [...this.hostVsStores.get(host).keys()].map(a => JSON.stringify([a]));
+  },
+
+  getValuesForHost: Task.async(function*(host, name) {
+    if (!name) return [];
+    // UI is weird and expect a JSON stringified array... and pass it back :/
+    name = JSON.parse(name)[0];
+
+    let cache = this.hostVsStores.get(host).get(name);
+    let requests = yield cache.keys();
+    let results = [];
+    for(let request of requests) {
+      let response = yield cache.match(request);
+      // Unwrap the response to get access to all its properties if the
+      // response happen to be 'opaque', when it is a Cross Origin Request.
+      response = response.cloneUnfiltered();
+      results.push(yield this.processEntry(request, response));
+    }
+    return results;
+  }),
+
+  processEntry: Task.async(function*(request, response) {
+    return {
+      url: String(request.url),
+      status: String(response.statusText),
+    };
+  }),
+
+  getHostName: function(location) {
+    if (!location.host) {
+      return location.href;
+    }
+    return location.protocol + "//" + location.host;
+  },
+
+  populateStoresForHost: Task.async(function*(host, window) {
+    let storeMap = new Map();
+    let caches = yield this.getCachesForHost(host);
+    for (let name of (yield caches.keys())) {
+      storeMap.set(name, (yield caches.open(name)));
+    }
+    this.hostVsStores.set(host, storeMap);
+  }),
+
+  populateStoresForHosts: function() {},
+
+  /**
+   * Given a url, correctly determine its protocol + hostname part.
+   */
+  getSchemaAndHost: function(url) {
+    let uri = Services.io.newURI(url, null, null);
+    return uri.scheme + "://" + uri.hostPort;
+  },
+
+  toStoreObject: function(item) {
+    return item;
+  },
+});
+
 /**
  * Code related to the Indexed DB actor and front
  */
