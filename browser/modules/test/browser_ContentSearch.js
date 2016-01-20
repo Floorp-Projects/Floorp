@@ -396,15 +396,11 @@ var currentStateObj = Task.async(function* () {
 
 var currentEngineObj = Task.async(function* () {
   let engine = Services.search.currentEngine;
-  let uri1x = engine.getIconURLBySize(65, 26);
-  let uri2x = engine.getIconURLBySize(130, 52);
   let uriFavicon = engine.getIconURLBySize(16, 16);
   let bundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   return {
     name: engine.name,
     placeholder: bundle.formatStringFromName("searchWithEngine", [engine.name], 1),
-    logoBuffer: yield arrayBufferFromDataURI(uri1x),
-    logo2xBuffer: yield arrayBufferFromDataURI(uri2x),
     iconBuffer: yield arrayBufferFromDataURI(uriFavicon),
   };
 });
