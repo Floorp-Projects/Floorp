@@ -73,6 +73,9 @@ public class FirstrunPager extends ViewPager {
             panels = FirstrunPagerConfig.getRestricted();
         } else {
             panels = FirstrunPagerConfig.getDefault(appContext);
+            if (panels.size() == 1) {
+                mTabStrip.setVisibility(GONE);
+            }
         }
 
         setAdapter(new ViewPagerAdapter(fm, panels));
