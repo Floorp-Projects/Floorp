@@ -185,9 +185,50 @@ static const JSFunctionSpec SimdTypedObjectMethods[] = {
     JS_FS_END
 };
 
+// Provide JSJitInfo structs for those types that are supported by Ion.
+// The controlling SIMD type is encoded as the InlinableNative primary opcode.
+// The SimdOperation within the type is encoded in the .depth field.
+//
+// The JS_INLINABLE_FN macro refers to js::JitInfo_##native which we provide as
+// Simd##Type##_##Operation
+
+namespace js {
+namespace jit {
+
+// See also JitInfo_* in MCallOptimize.cpp. We provide a JSJitInfo for all the
+// named functions here. The default JitInfo_SimdInt32x4 etc structs represent the
+// SimdOperation::Constructor.
+#define DEFN(TYPE, OP) const JSJitInfo JitInfo_Simd##TYPE##_##OP = {                             \
+     /* .getter, unused for inlinable natives. */                                                \
+    { nullptr },                                                                                 \
+    /* .inlinableNative, but we have to init first union member: .protoID. */                    \
+    { uint16_t(InlinableNative::Simd##TYPE) },                                                   \
+    /* .nativeOp. Actually initializing first union member .depth. */                            \
+    { uint16_t(SimdOperation::Fn_##OP) },                                                        \
+    /* .type_ bitfield says this in an inlinable native function. */                             \
+    JSJitInfo::InlinableNative                                                                   \
+    /* Remaining fields are not used for inlinable natives. They are zero-initialized. */        \
+};
+
+// This list of inlinable types should match the one in jit/InlinableNatives.h.
+#define TDEFN(Name, Func, Operands) DEFN(Float32x4, Name)
+FLOAT32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Int32x4, Name)
+INT32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Bool32x4, Name)
+BOOL32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+} // namespace jit
+} // namespace js
+
 const JSFunctionSpec Float32x4Defn::Methods[] = {
 #define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_INLINABLE_FN(#Name, js::simd_float32x4_##Name, Operands, 0, SimdFloat32x4),
+    JS_INLINABLE_FN(#Name, js::simd_float32x4_##Name, Operands, 0, SimdFloat32x4_##Name),
     FLOAT32X4_FUNCTION_LIST(SIMD_FLOAT32X4_FUNCTION_ITEM)
 #undef SIMD_FLOAT32x4_FUNCTION_ITEM
     JS_FS_END
@@ -219,7 +260,7 @@ const JSFunctionSpec Int16x8Defn::Methods[] = {
 
 const JSFunctionSpec Int32x4Defn::Methods[] = {
 #define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_INLINABLE_FN(#Name, js::simd_int32x4_##Name, Operands, 0, SimdInt32x4),
+    JS_INLINABLE_FN(#Name, js::simd_int32x4_##Name, Operands, 0, SimdInt32x4_##Name),
     INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
 #undef SIMD_INT32X4_FUNCTION_ITEM
     JS_FS_END
