@@ -365,6 +365,14 @@ FileReader::ReadFileContent(Blob& aBlob,
   Abort(error);
   error.SuppressException();
 
+  if (mReadyState == LOADING) {
+    // A nested ReadAsSomething() as been called during one of the events
+    // dispatched by Abort(). We have to terminate this operation in order to
+    // continue the nested one.
+    aRv.Throw(NS_ERROR_ABORT);
+    return;
+  }
+
   mError = nullptr;
   SetDOMStringToNull(mResult);
   mTransferred = 0;
