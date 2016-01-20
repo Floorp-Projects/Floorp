@@ -11,6 +11,7 @@ GARBAGE       += $(MIDL_GENERATED_FILES)
 MIDL_INTERFACES = \
   Accessible2.idl \
   Accessible2_2.idl \
+  Accessible2_3.idl \
   AccessibleAction.idl \
   AccessibleApplication.idl \
   AccessibleComponent.idl \
