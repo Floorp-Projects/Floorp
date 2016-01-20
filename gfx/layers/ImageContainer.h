@@ -867,7 +867,7 @@ public:
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; } ;
   int32_t GetOverlayId() { return mOverlayId; }
-  const GonkNativeHandle& GetSidebandStream() { return mSidebandStream; }
+  GonkNativeHandle& GetSidebandStream() { return mSidebandStream; }
 
   gfx::IntSize GetSize() { return mSize; }
 
