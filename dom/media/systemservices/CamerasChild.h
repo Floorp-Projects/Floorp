@@ -49,6 +49,8 @@ struct CapturerElement {
 
 // Forward declaration so we can work with pointers to it.
 class CamerasChild;
+// Helper class in impl that we friend.
+template <class T> class LockAndDispatch;
 
 // We emulate the sync webrtc.org API with the help of singleton
 // CamerasSingleton, which manages a pointer to an IPC object, a thread
@@ -140,6 +142,7 @@ int GetChildAndCall(MEM_FUN&& f, ARGS&&... args)
 class CamerasChild final : public PCamerasChild
 {
   friend class mozilla::ipc::BackgroundChildImpl;
+  template <class T> friend class mozilla::camera::LockAndDispatch;
 
 public:
   // We are owned by the PBackground thread only. CamerasSingleton
