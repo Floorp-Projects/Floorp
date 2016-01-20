@@ -206,3 +206,4 @@ HTTP(..) load xhr_abortinprogress.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
 load 1230422.html
+load 1230422.html
