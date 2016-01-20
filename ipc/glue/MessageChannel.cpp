@@ -797,15 +797,25 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
-MessageChannel::ProcessPendingRequests()
+MessageChannel::ProcessPendingRequests(int transaction, int prio)
 {
+    IPC_LOG("ProcessPendingRequests");
+
     // Loop until there aren't any more priority messages to process.
     for (;;) {
         mozilla::Vector<Message> toProcess;
 
         for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
             Message &msg = *it;
-            if (!ShouldDeferMessage(msg)) {
+
+            bool defer = ShouldDeferMessage(msg);
+
+            // Only log the interesting messages.
+            if (msg.is_sync() || msg.priority() == IPC::Message::PRIORITY_URGENT) {
+                IPC_LOG("ShouldDeferMessage(seqno=%d) = %d", msg.seqno(), defer);
+            }
+
+            if (!defer) {
                 toProcess.append(Move(msg));
                 it = mPending.erase(it);
                 continue;
@@ -818,8 +828,18 @@ MessageChannel::ProcessPendingRequests()
 
         // Processing these messages could result in more messages, so we
         // loop around to check for more afterwards.
+
         for (auto it = toProcess.begin(); it != toProcess.end(); it++)
             ProcessPendingRequest(*it);
+
+        // If we canceled during ProcessPendingRequest, then we need to leave
+        // immediately because the results of ShouldDeferMessage will be
+        // operating with weird state (as if no Send is in progress). That could
+        // cause even normal priority sync messages to be processed (but not
+        // normal priority async messages), which would break message ordering.
+        if (WasTransactionCanceled(transaction, prio)) {
+            return;
+        }
     }
 }
 
@@ -942,8 +962,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     int32_t transaction = mCurrentTransaction;
     msg->set_transaction_id(transaction);
 
-    ProcessPendingRequests();
+    IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
+
+    ProcessPendingRequests(transaction, prio);
     if (WasTransactionCanceled(transaction, prio)) {
+        IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
         return false;
     }
 
@@ -951,23 +974,27 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     mLink->SendMessage(msg.forget());
 
     while (true) {
-        ProcessPendingRequests();
+        ProcessPendingRequests(transaction, prio);
         if (WasTransactionCanceled(transaction, prio)) {
+            IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
             return false;
         }
 
         // See if we've received a reply.
         if (mRecvdErrors) {
+            IPC_LOG("Error: seqno=%d, xid=%d", seqno, transaction);
             mRecvdErrors--;
             return false;
         }
 
         if (mRecvd) {
+            IPC_LOG("Got reply: seqno=%d, xid=%d", seqno, transaction);
             break;
         }
 
         MOZ_ASSERT(!mTimedOutMessageSeqno);
 
+        MOZ_ASSERT(mCurrentTransaction == transaction);
         bool maybeTimedOut = !WaitForSyncNotify(handleWindowsMessages);
 
         if (!Connected()) {
