@@ -33,7 +33,8 @@ config = {
         "reftest": "runreftestb2g.py",
         "crashtest": "runreftestb2g.py",
         "xpcshell": "runtestsb2g.py",
-        "cppunittest": "remotecppunittests.py"
+        "cppunittest": "remotecppunittests.py",
+        "marionette": "runtests.py"
     },
     "suite_definitions": {
         "cppunittest": {
@@ -175,6 +176,19 @@ config = {
             ],
             "run_filename": "runtestsb2g.py",
             "testsdir": "xpcshell"
+        },
+        "marionette": {
+            "options": [
+                "--type=b2g",
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
+                "--symbols-path=%(symbols_path)s",
+                "--logcat-dir=%(logcat_dir)s",
+                "--emulator=%(emulator)s",
+                "--homedir=%(homedir)s"
+            ],
+            "run_filename": "runtests.py",
+            "testsdir": "marionette/client/marionette"
         }
     },
     "vcs_output_timeout": 1760,
