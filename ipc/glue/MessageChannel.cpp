@@ -2111,11 +2111,21 @@ MessageChannel::CancelCurrentTransactionInternal()
     // tampered with (by us). If so, they don't reset the variable to the old
     // value.
 
+    IPC_LOG("CancelInternal: current xid=%d", mCurrentTransaction);
+
     MOZ_ASSERT(mCurrentTransaction);
     mCurrentTransaction = 0;
 
     mAwaitingSyncReply = false;
     mAwaitingSyncReplyPriority = 0;
+
+    for (size_t i = 0; i < mPending.size(); i++) {
+        // There may be messages in the queue that we expected to process from
+        // ProcessPendingRequests. However, Send will no longer call that
+        // function once it's been canceled. So we may need to process these
+        // messages in the normal event loop instead.
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
 
     // We could also zero out mDispatchingSyncMessage here. However, that would
     // cause a race because mDispatchingSyncMessage is a worker-thread-only
@@ -2128,8 +2138,10 @@ MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
     if (mCurrentTransaction) {
+        CancelMessage *cancel = new CancelMessage();
+        cancel->set_transaction_id(mCurrentTransaction);
+        mLink->SendMessage(cancel);
         CancelCurrentTransactionInternal();
-        mLink->SendMessage(new CancelMessage());
     }
 }
 
