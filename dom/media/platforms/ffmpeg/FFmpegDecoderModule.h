@@ -9,7 +9,7 @@
 
 #include "PlatformDecoderModule.h"
 #include "FFmpegAudioDecoder.h"
-#include "FFmpegVideoDecoder.h"
+#include "FFmpegH264Decoder.h"
 
 namespace mozilla
 {
@@ -37,8 +37,8 @@ public:
                      MediaDataDecoderCallback* aCallback) override
   {
     RefPtr<MediaDataDecoder> decoder =
-      new FFmpegVideoDecoder<V>(aVideoTaskQueue, aCallback, aConfig,
-                                aImageContainer);
+      new FFmpegH264Decoder<V>(aVideoTaskQueue, aCallback, aConfig,
+                               aImageContainer);
     return decoder.forget();
   }
 
@@ -63,7 +63,7 @@ public:
 #else
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
 #endif
-    AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
+    AVCodecID videoCodec = FFmpegH264Decoder<V>::GetCodecId(aMimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       return false;
     }

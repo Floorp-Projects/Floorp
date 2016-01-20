@@ -8,7 +8,7 @@ UNIFIED_SOURCES += [
     '../FFmpegAudioDecoder.cpp',
     '../FFmpegDataDecoder.cpp',
     '../FFmpegDecoderModule.cpp',
-    '../FFmpegVideoDecoder.cpp',
+    '../FFmpegH264Decoder.cpp',
 ]
 LOCAL_INCLUDES += [
     '..',
