@@ -31,9 +31,9 @@ from mozpack import path as mozpath
 class TestContext(unittest.TestCase):
     def test_defaults(self):
         test = Context({
-            'foo': (int, int, '', None),
-            'bar': (bool, bool, '', None),
-            'baz': (dict, dict, '', None),
+            'foo': (int, int, ''),
+            'bar': (bool, bool, ''),
+            'baz': (dict, dict, ''),
         })
 
         self.assertEqual(test.keys(), [])
@@ -57,8 +57,8 @@ class TestContext(unittest.TestCase):
 
     def test_type_check(self):
         test = Context({
-            'foo': (int, int, '', None),
-            'baz': (dict, list, '', None),
+            'foo': (int, int, ''),
+            'baz': (dict, list, ''),
         })
 
         test['foo'] = 5
@@ -79,9 +79,9 @@ class TestContext(unittest.TestCase):
 
     def test_update(self):
         test = Context({
-            'foo': (int, int, '', None),
-            'bar': (bool, bool, '', None),
-            'baz': (dict, list, '', None),
+            'foo': (int, int, ''),
+            'bar': (bool, bool, ''),
+            'baz': (dict, list, ''),
         })
 
         self.assertEqual(test.keys(), [])
@@ -258,7 +258,7 @@ class TestSymbols(unittest.TestCase):
         self.assertEqual(lines[-1].strip(), '')
 
     def test_documentation_formatting(self):
-        for typ, inp, doc, tier in VARIABLES.values():
+        for typ, inp, doc in VARIABLES.values():
             self._verify_doc(doc)
 
         for attr, args, doc in FUNCTIONS.values():
