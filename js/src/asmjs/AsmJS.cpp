@@ -412,6 +412,12 @@ class js::AsmJSModule final : public Module
         *data += mallocSizeOf(link_.get()) + link_->sizeOfExcludingThis(mallocSizeOf);
         *data += mallocSizeOf(module_.get()) + module_->sizeOfExcludingThis(mallocSizeOf);
     }
+    virtual bool mutedErrors() const override {
+        return scriptSource()->mutedErrors();
+    }
+    virtual const char16_t* displayURL() const override {
+        return scriptSource()->hasDisplayURL() ? scriptSource()->displayURL() : nullptr;
+    }
 
     uint32_t minHeapLength() const { return module_->minHeapLength; }
     uint32_t numFFIs() const { return module_->numFFIs; }
@@ -2237,19 +2243,10 @@ class MOZ_STACK_CLASS ModuleValidator
                                 ? HeapUsage::Shared
                                 : HeapUsage::Unshared;
 
-        auto muted = MutedErrorsBool(parser_.ss->mutedErrors());
-
         CacheableChars filename;
         if (parser_.ss->filename()) {
             filename = DuplicateString(parser_.ss->filename());
             if (!filename)
-                return false;
-        }
-
-        CacheableTwoByteChars displayURL;
-        if (parser_.ss->hasDisplayURL()) {
-            displayURL = DuplicateString(parser_.ss->displayURL());
-            if (!displayURL)
                 return false;
         }
 
@@ -2263,7 +2260,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(heap, muted, Move(filename), Move(displayURL), &base, &link, slowFuncs))
+        if (!mg_.finish(heap, Move(filename), &base, &link, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));

@@ -589,9 +589,7 @@ ModuleGenerator::defineOutOfBoundsStub(Offsets offsets)
 
 bool
 ModuleGenerator::finish(HeapUsage heapUsage,
-                        MutedErrorsBool mutedErrors,
                         CacheableChars filename,
-                        CacheableTwoByteChars displayURL,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
                         SlowFunctionVector* slowFuncs)
@@ -600,7 +598,6 @@ ModuleGenerator::finish(HeapUsage heapUsage,
     MOZ_ASSERT(finishedFuncs_);
 
     module_->heapUsage = heapUsage;
-    module_->mutedErrors = mutedErrors;
     module_->filename = Move(filename);
 
     if (!GenerateStubs(*this, UsesHeap(heapUsage)))

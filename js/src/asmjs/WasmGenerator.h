@@ -201,9 +201,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // StaticLinkData required to call Module::staticallyLink, and the list of
     // functions that took a long time to compile.
     bool finish(HeapUsage heapUsage,
-                MutedErrorsBool mutedErrors,
                 CacheableChars filename,
-                CacheableTwoByteChars displayURL,
                 UniqueModuleData* module,
                 UniqueStaticLinkData* staticLinkData,
                 SlowFunctionVector* slowFuncs);
