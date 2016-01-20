@@ -17,12 +17,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 
+function filterStack(error) {
+  return String(error.stack).replace(/(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm, "<Promise Chain>\n")
+}
+
 // Run a function and report exceptions.
 function runSafeSyncWithoutClone(f, ...args) {
   try {
     return f(...args);
   } catch (e) {
-    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n[[Exception stack\n${e.stack}Current stack\n${Error().stack}]]\n`);
+    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n[[Exception stack\n${filterStack(e)}Current stack\n${filterStack(Error())}]]\n`);
     Cu.reportError(e);
   }
 }
@@ -30,13 +34,13 @@ function runSafeSyncWithoutClone(f, ...args) {
 // Run a function and report exceptions.
 function runSafeWithoutClone(f, ...args) {
   if (typeof(f) != "function") {
-    dump(`Extension error: expected function\n${Error().stack}`);
+    dump(`Extension error: expected function\n${filterStack(Error())}`);
     return;
   }
 
-  Services.tm.currentThread.dispatch(function() {
+  Promise.resolve().then(() => {
     runSafeSyncWithoutClone(f, ...args);
-  }, Ci.nsIEventTarget.DISPATCH_NORMAL);
+  });
 }
 
 // Run a function, cloning arguments into context.cloneScope, and
@@ -46,7 +50,7 @@ function runSafeSync(context, f, ...args) {
     args = Cu.cloneInto(args, context.cloneScope);
   } catch (e) {
     Cu.reportError(e);
-    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${Error().stack}`);
+    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${filterStack(Error())}`);
   }
   return runSafeSyncWithoutClone(f, ...args);
 }
@@ -58,7 +62,7 @@ function runSafe(context, f, ...args) {
     args = Cu.cloneInto(args, context.cloneScope);
   } catch (e) {
     Cu.reportError(e);
-    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${Error().stack}`);
+    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${filterStack(Error())}`);
   }
   return runSafeWithoutClone(f, ...args);
 }
