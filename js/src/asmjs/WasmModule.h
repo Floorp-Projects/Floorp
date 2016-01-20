@@ -290,22 +290,18 @@ class CodeRange
 
 typedef Vector<CodeRange, 0, SystemAllocPolicy> CodeRangeVector;
 
-// A CacheableUniquePtr is used to cacheably store strings in Module.
+// CacheableChars is used to cacheably store UniqueChars.
 
-template <class CharT>
-struct CacheableUniquePtr : public UniquePtr<CharT[], JS::FreePolicy>
+struct CacheableChars : UniqueChars
 {
-    typedef UniquePtr<CharT[], JS::FreePolicy> UPtr;
-    explicit CacheableUniquePtr(CharT* ptr) : UPtr(ptr) {}
-    MOZ_IMPLICIT CacheableUniquePtr(UPtr&& rhs) : UPtr(Move(rhs)) {}
-    CacheableUniquePtr() = default;
-    CacheableUniquePtr(CacheableUniquePtr&& rhs) : UPtr(Move(rhs)) {}
-    void operator=(CacheableUniquePtr&& rhs) { UPtr& base = *this; base = Move(rhs); }
-    WASM_DECLARE_SERIALIZABLE(CacheableUniquePtr)
+    CacheableChars() = default;
+    explicit CacheableChars(char* ptr) : UniqueChars(ptr) {}
+    MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs) : UniqueChars(Move(rhs)) {}
+    CacheableChars(CacheableChars&& rhs) : UniqueChars(Move(rhs)) {}
+    void operator=(CacheableChars&& rhs) { UniqueChars::operator=(Move(rhs)); }
+    WASM_DECLARE_SERIALIZABLE(CacheableChars)
 };
 
-typedef CacheableUniquePtr<char> CacheableChars;
-typedef CacheableUniquePtr<char16_t> CacheableTwoByteChars;
 typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
 // The ExportMap describes how Exports are mapped to the fields of the export
@@ -362,14 +358,6 @@ enum ModuleKind
     AsmJS
 };
 
-// See mutedErrors comment in jsapi.h.
-
-enum class MutedErrorsBool
-{
-    DontMuteErrors = false,
-    MuteErrors = true
-};
-
 // ModuleCacheablePod holds the trivially-memcpy()able serializable portion of
 // ModuleData.
 
@@ -380,7 +368,6 @@ struct ModuleCacheablePod
     uint32_t              globalBytes;
     ModuleKind            kind;
     HeapUsage             heapUsage;
-    MutedErrorsBool       mutedErrors;
     CompileArgs           compileArgs;
 
     uint32_t totalBytes() const { return codeBytes + globalBytes; }
@@ -404,7 +391,6 @@ struct ModuleData : ModuleCacheablePod
     CallSiteVector        callSites;
     CacheableCharsVector  funcNames;
     CacheableChars        filename;
-    CacheableTwoByteChars displayURL;
     bool                  loadedFromCache;
 
     WASM_DECLARE_SERIALIZABLE(ModuleData);
@@ -507,13 +493,11 @@ class Module
     HeapUsage heapUsage() const { return module_->heapUsage; }
     bool usesHeap() const { return UsesHeap(module_->heapUsage); }
     bool hasSharedHeap() const { return module_->heapUsage == HeapUsage::Shared; }
-    bool mutedErrors() const { return bool(module_->mutedErrors); }
     CompileArgs compileArgs() const { return module_->compileArgs; }
     const ImportVector& imports() const { return module_->imports; }
     const ExportVector& exports() const { return module_->exports; }
     const char* functionName(uint32_t i) const { return module_->funcNames[i].get(); }
     const char* filename() const { return module_->filename.get(); }
-    const char16_t* displayURL() const { return module_->displayURL.get(); }
     bool loadedFromCache() const { return module_->loadedFromCache; }
     bool staticallyLinked() const { return staticallyLinked_; }
     bool dynamicallyLinked() const { return dynamicallyLinked_; }
@@ -526,6 +510,8 @@ class Module
     bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     AsmJSModule& asAsmJS() { MOZ_ASSERT(isAsmJS()); return *(AsmJSModule*)this; }
     const AsmJSModule& asAsmJS() const { MOZ_ASSERT(isAsmJS()); return *(const AsmJSModule*)this; }
+    virtual bool mutedErrors() const;
+    virtual const char16_t* displayURL() const;
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is
