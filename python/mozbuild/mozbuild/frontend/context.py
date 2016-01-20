@@ -867,7 +867,7 @@ VARIABLES = {
 
     'ANDROID_EXTRA_PACKAGES': (StrictOrderingOnAppendList, list,
         """The name of extra Android packages to generate R.java for, like ['org.mozilla.other'].
-        """, 'export'),
+        """, None),
 
     'ANDROID_EXTRA_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android extra package resource directories.
@@ -876,7 +876,7 @@ VARIABLES = {
         to package into a 'res' directory and merge into an APK file.  These
         directories are packaged into the APK but are assumed to be static
         unchecked dependencies that should not be otherwise re-distributed.
-        """, 'export'),
+        """, None),
 
     'ANDROID_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android resource directories.
@@ -884,7 +884,7 @@ VARIABLES = {
         This variable contains a list of directories containing static
         files to package into a 'res' directory and merge into an APK
         file.
-        """, 'export'),
+        """, None),
 
     'ANDROID_ASSETS_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android assets directories.
@@ -892,14 +892,14 @@ VARIABLES = {
         This variable contains a list of directories containing static
         files to package into an 'assets' directory and merge into an
         APK file.
-        """, 'export'),
+        """, None),
 
     'ANDROID_ECLIPSE_PROJECT_TARGETS': (dict, dict,
         """Defines Android Eclipse project targets.
 
         This variable should not be populated directly. Instead, it should
         populated by calling add_android_eclipse{_library}_project().
-        """, 'export'),
+        """, None),
 
     'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
         """Source code files.
@@ -1121,7 +1121,7 @@ VARIABLES = {
 
         This variable should not be populated directly. Instead, it should
         populated by calling add_java_jar().
-        """, 'libs'),
+        """, None),
 
     'LIBRARY_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for the entire library.
