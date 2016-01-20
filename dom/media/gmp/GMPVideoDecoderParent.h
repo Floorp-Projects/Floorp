@@ -34,22 +34,22 @@ public:
   nsresult Shutdown();
 
   // GMPVideoDecoder
-  virtual void Close() override;
-  virtual nsresult InitDecode(const GMPVideoCodec& aCodecSettings,
-                              const nsTArray<uint8_t>& aCodecSpecific,
-                              GMPVideoDecoderCallbackProxy* aCallback,
-                              int32_t aCoreCount) override;
-  virtual nsresult Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
-                          bool aMissingFrames,
-                          const nsTArray<uint8_t>& aCodecSpecificInfo,
-                          int64_t aRenderTimeMs = -1) override;
-  virtual nsresult Reset() override;
-  virtual nsresult Drain() override;
-  virtual uint32_t GetPluginId() const override { return mPluginId; }
-  virtual const nsCString& GetDisplayName() const override;
+  void Close() override;
+  nsresult InitDecode(const GMPVideoCodec& aCodecSettings,
+                      const nsTArray<uint8_t>& aCodecSpecific,
+                      GMPVideoDecoderCallbackProxy* aCallback,
+                      int32_t aCoreCount) override;
+  nsresult Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
+                  bool aMissingFrames,
+                  const nsTArray<uint8_t>& aCodecSpecificInfo,
+                  int64_t aRenderTimeMs = -1) override;
+  nsresult Reset() override;
+  nsresult Drain() override;
+  uint32_t GetPluginId() const override { return mPluginId; }
+  const nsCString& GetDisplayName() const override;
 
   // GMPSharedMemManager
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
+  bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
   {
 #ifdef GMP_SAFE_SHMEM
     return AllocShmem(aSize, aType, aMem);
@@ -57,7 +57,7 @@ public:
     return AllocUnsafeShmem(aSize, aType, aMem);
 #endif
   }
-  virtual void Dealloc(Shmem& aMem) override
+  void Dealloc(Shmem& aMem) override
   {
     DeallocShmem(aMem);
   }
@@ -66,19 +66,19 @@ private:
   ~GMPVideoDecoderParent();
 
   // PGMPVideoDecoderParent
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual bool RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame) override;
-  virtual bool RecvReceivedDecodedReferenceFrame(const uint64_t& aPictureId) override;
-  virtual bool RecvReceivedDecodedFrame(const uint64_t& aPictureId) override;
-  virtual bool RecvInputDataExhausted() override;
-  virtual bool RecvDrainComplete() override;
-  virtual bool RecvResetComplete() override;
-  virtual bool RecvError(const GMPErr& aError) override;
-  virtual bool RecvShutdown() override;
-  virtual bool RecvParentShmemForPool(Shmem&& aEncodedBuffer) override;
-  virtual bool AnswerNeedShmem(const uint32_t& aFrameBufferSize,
-                               Shmem* aMem) override;
-  virtual bool Recv__delete__() override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame) override;
+  bool RecvReceivedDecodedReferenceFrame(const uint64_t& aPictureId) override;
+  bool RecvReceivedDecodedFrame(const uint64_t& aPictureId) override;
+  bool RecvInputDataExhausted() override;
+  bool RecvDrainComplete() override;
+  bool RecvResetComplete() override;
+  bool RecvError(const GMPErr& aError) override;
+  bool RecvShutdown() override;
+  bool RecvParentShmemForPool(Shmem&& aEncodedBuffer) override;
+  bool AnswerNeedShmem(const uint32_t& aFrameBufferSize,
+                       Shmem* aMem) override;
+  bool Recv__delete__() override;
 
   void UnblockResetAndDrain();
   void CancelResetCompleteTimeout();

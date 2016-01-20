@@ -21,20 +21,20 @@ class AudioBufferSourceNode final : public AudioNode,
 public:
   explicit AudioBufferSourceNode(AudioContext* aContext);
 
-  virtual void DestroyMediaStream() override;
+  void DestroyMediaStream() override;
 
-  virtual uint16_t NumberOfInputs() const final override
+  uint16_t NumberOfInputs() const final override
   {
     return 0;
   }
-  virtual AudioBufferSourceNode* AsAudioBufferSourceNode() override
+  AudioBufferSourceNode* AsAudioBufferSourceNode() override
   {
     return this;
   }
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode, AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Start(double aWhen, double aOffset,
              const Optional<double>& aDuration, ErrorResult& aRv);
@@ -89,15 +89,15 @@ public:
 
   IMPL_EVENT_HANDLER(ended)
 
-  virtual void NotifyMainThreadStreamFinished() override;
+  void NotifyMainThreadStreamFinished() override;
 
-  virtual const char* NodeType() const override
+  const char* NodeType() const override
   {
     return "AudioBufferSourceNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 protected:
   virtual ~AudioBufferSourceNode();

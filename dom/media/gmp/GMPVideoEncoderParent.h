@@ -33,22 +33,22 @@ public:
   void Shutdown();
 
   // GMPVideoEncoderProxy
-  virtual void Close() override;
-  virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
-                            const nsTArray<uint8_t>& aCodecSpecific,
-                            GMPVideoEncoderCallbackProxy* aCallback,
-                            int32_t aNumberOfCores,
-                            uint32_t aMaxPayloadSize) override;
-  virtual GMPErr Encode(GMPUniquePtr<GMPVideoi420Frame> aInputFrame,
-                        const nsTArray<uint8_t>& aCodecSpecificInfo,
-                        const nsTArray<GMPVideoFrameType>& aFrameTypes) override;
-  virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) override;
-  virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override;
-  virtual GMPErr SetPeriodicKeyFrames(bool aEnable) override;
-  virtual uint32_t GetPluginId() const override { return mPluginId; }
+  void Close() override;
+  GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
+                    const nsTArray<uint8_t>& aCodecSpecific,
+                    GMPVideoEncoderCallbackProxy* aCallback,
+                    int32_t aNumberOfCores,
+                    uint32_t aMaxPayloadSize) override;
+  GMPErr Encode(GMPUniquePtr<GMPVideoi420Frame> aInputFrame,
+                const nsTArray<uint8_t>& aCodecSpecificInfo,
+                const nsTArray<GMPVideoFrameType>& aFrameTypes) override;
+  GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) override;
+  GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override;
+  GMPErr SetPeriodicKeyFrames(bool aEnable) override;
+  uint32_t GetPluginId() const override { return mPluginId; }
 
   // GMPSharedMemManager
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
+  bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
   {
 #ifdef GMP_SAFE_SHMEM
     return AllocShmem(aSize, aType, aMem);
@@ -56,7 +56,7 @@ public:
     return AllocUnsafeShmem(aSize, aType, aMem);
 #endif
   }
-  virtual void Dealloc(Shmem& aMem) override
+  void Dealloc(Shmem& aMem) override
   {
     DeallocShmem(aMem);
   }
@@ -65,15 +65,15 @@ private:
   virtual ~GMPVideoEncoderParent();
 
   // PGMPVideoEncoderParent
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                           InfallibleTArray<uint8_t>&& aCodecSpecificInfo) override;
-  virtual bool RecvError(const GMPErr& aError) override;
-  virtual bool RecvShutdown() override;
-  virtual bool RecvParentShmemForPool(Shmem&& aFrameBuffer) override;
-  virtual bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
-                               Shmem* aMem) override;
-  virtual bool Recv__delete__() override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
+                   InfallibleTArray<uint8_t>&& aCodecSpecificInfo) override;
+  bool RecvError(const GMPErr& aError) override;
+  bool RecvShutdown() override;
+  bool RecvParentShmemForPool(Shmem&& aFrameBuffer) override;
+  bool AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
+                       Shmem* aMem) override;
+  bool Recv__delete__() override;
 
   bool mIsOpen;
   bool mShuttingDown;

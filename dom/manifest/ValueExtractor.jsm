@@ -53,7 +53,7 @@ ValueExtractor.prototype = {
     if (DOMUtils.isValidCSSColor(value)) {
       color = value;
     } else if (value) {
-      const msg = `background_color: ${value} is not a valid CSS color.`;
+      const msg = `${spec.property}: ${value} is not a valid CSS color.`;
       this.console.warn(msg);
     }
     return color;

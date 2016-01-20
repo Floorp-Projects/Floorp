@@ -77,7 +77,7 @@ public:
     nsresult Activate(nsAHttpTransaction *, uint32_t caps, int32_t pri);
 
     // Close the underlying socket transport.
-    void Close(nsresult reason);
+    void Close(nsresult reason, bool aIsShutdown = false);
 
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call

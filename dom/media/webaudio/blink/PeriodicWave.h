@@ -106,7 +106,7 @@ private:
 
     // Creates table for specified index based on fundamental frequency.
     void createBandLimitedTables(float fundamentalFrequency, unsigned rangeIndex);
-    float m_lowestRequestedFundamentalFrequency;
+    unsigned m_maxPartialsInBandLimitedTable;
     float m_normalizationScale;
     nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
 };

@@ -293,6 +293,8 @@ ClientMultiTiledLayerBuffer::ClientMultiTiledLayerBuffer(ClientTiledPaintedLayer
                                                          SharedFrameMetricsHelper* aHelper)
   : ClientTiledLayerBuffer(aPaintedLayer, aCompositableClient)
   , mManager(aManager)
+  , mCallback(nullptr)
+  , mCallbackData(nullptr)
   , mSharedFrameMetricsHelper(aHelper)
 {
 }

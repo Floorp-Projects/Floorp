@@ -116,6 +116,7 @@ struct HttpChannelOpenArgs
   OptionalCorsPreflightArgs   preflightArgs;
   uint32_t                    initialRwin;
   bool                        suspendAfterSynthesizeResponse;
+  bool                        allowStaleCacheContent;
 };
 
 struct HttpChannelConnectArgs

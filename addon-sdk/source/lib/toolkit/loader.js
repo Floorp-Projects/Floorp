@@ -1075,7 +1075,8 @@ function traverse (node, cb) {
     cb(node);
     keys(node).map(key => {
       if (key === 'parent' || !node[key]) return;
-      node[key].parent = node;
+      if (typeof node[key] === "object")
+        node[key].parent = node;
       traverse(node[key], cb);
     });
   }

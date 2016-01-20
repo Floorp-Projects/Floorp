@@ -64,13 +64,11 @@ def getModTime(aPath):
 
 
 class JarManifestEntry(object):
-    def __init__(self, output, source, is_locale=False, preprocess=False,
-                 overwrite=False):
+    def __init__(self, output, source, is_locale=False, preprocess=False):
         self.output = output
         self.source = source
         self.is_locale = is_locale
         self.preprocess = preprocess
-        self.overwrite = overwrite
 
 
 class JarInfo(object):
@@ -90,6 +88,9 @@ class JarInfo(object):
         self.relativesrcdir = None
         self.chrome_manifests = []
         self.entries = []
+
+
+class DeprecatedJarManifest(Exception): pass
 
 
 class JarManifestParser(object):
@@ -169,17 +170,17 @@ class JarManifestParser(object):
         # directory. The <source_path> may start with a "%" for files part
         # of a localization directory, in which case the "%" counts as the
         # locale.
-        # Each entry can be prefixed with "*" for preprocessing and "+" to
-        # always overwrite the destination independently of file timestamps
-        # (the usefulness of the latter is dubious in the modern days).
+        # Each entry can be prefixed with "*" for preprocessing.
         m = self.entryline.match(line)
         if m:
+            if m.group('optOverwrite'):
+                raise DeprecatedJarManifest(
+                    'The "+" prefix is not supported anymore')
             self._current_jar.entries.append(JarManifestEntry(
                 m.group('output'),
                 m.group('source') or mozpath.basename(m.group('output')),
                 is_locale=bool(m.group('locale')),
                 preprocess=bool(m.group('optPreprocess')),
-                overwrite=bool(m.group('optOverwrite')),
             ))
             return
 
@@ -431,7 +432,6 @@ class JarMaker(object):
                         path,
                         is_locale=e.is_locale,
                         preprocess=e.preprocess,
-                        overwrite=e.overwrite
                     )
                     self._processEntryLine(e, outHelper, jf)
             return
@@ -465,10 +465,9 @@ class JarMaker(object):
             inf.close()
             return
 
-        # copy or symlink if newer or overwrite
+        # copy or symlink if newer
 
-        if e.overwrite or getModTime(realsrc) \
-            > outHelper.getDestModTime(e.output):
+        if getModTime(realsrc) > outHelper.getDestModTime(e.output):
             if self.outputFormat == 'symlink':
                 outHelper.symlink(realsrc, out)
                 return

@@ -7,11 +7,12 @@ onfetch = function(e) {
 
     e.respondWith(e.request.text().then(function(text) {
       var body = text === '' ? undefined : text;
+      var mode = e.request.mode == 'navigate' ? 'same-origin' : e.request.mode;
       return fetch(url, {
         method: e.request.method,
         headers: e.request.headers,
         body: body,
-        mode: e.request.mode,
+        mode: mode,
         credentials: e.request.credentials,
         redirect: e.request.redirect,
         cache: e.request.cache,

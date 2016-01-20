@@ -47,28 +47,28 @@ public:
   AudioOutput(int aSessionId, int aUid);
   virtual ~AudioOutput();
 
-  virtual ssize_t FrameSize() const;
-  virtual status_t GetPosition(uint32_t* aPosition) const;
-  virtual status_t SetVolume(float aVolume) const;
-  virtual status_t SetParameters(const String8& aKeyValuePairs);
+  ssize_t FrameSize() const override;
+  status_t GetPosition(uint32_t* aPosition) const override;
+  status_t SetVolume(float aVolume) const override;
+  status_t SetParameters(const String8& aKeyValuePairs) override;
 
   // Creates an offloaded audio track with the given parameters
   // TODO: Try to recycle audio tracks instead of creating new audio tracks
   // every time
-  virtual status_t Open(uint32_t aSampleRate,
-                        int aChannelCount,
-                        audio_channel_mask_t aChannelMask,
-                        audio_format_t aFormat,
-                        AudioCallback aCb,
-                        void* aCookie,
-                        audio_output_flags_t aFlags = AUDIO_OUTPUT_FLAG_NONE,
-                        const audio_offload_info_t* aOffloadInfo = nullptr);
+  status_t Open(uint32_t aSampleRate,
+                int aChannelCount,
+                audio_channel_mask_t aChannelMask,
+                audio_format_t aFormat,
+                AudioCallback aCb,
+                void* aCookie,
+                audio_output_flags_t aFlags = AUDIO_OUTPUT_FLAG_NONE,
+                const audio_offload_info_t* aOffloadInfo = nullptr) override;
 
-  virtual status_t Start();
-  virtual void Stop();
-  virtual void Flush();
-  virtual void Pause();
-  virtual void Close();
+  status_t Start() override;
+  void Stop() override;
+  void Flush() override;
+  void Pause() override;
+  void Close() override;
 
 private:
   static void CallbackWrapper(int aEvent, void* aMe, void* aInfo);

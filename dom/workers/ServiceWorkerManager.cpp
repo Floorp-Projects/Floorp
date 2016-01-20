@@ -103,6 +103,8 @@ static_assert(nsIHttpChannelInternal::CORS_MODE_NO_CORS == static_cast<uint32_t>
               "RequestMode enumeration value should match Necko CORS mode value.");
 static_assert(nsIHttpChannelInternal::CORS_MODE_CORS == static_cast<uint32_t>(RequestMode::Cors),
               "RequestMode enumeration value should match Necko CORS mode value.");
+static_assert(nsIHttpChannelInternal::CORS_MODE_NAVIGATE == static_cast<uint32_t>(RequestMode::Navigate),
+              "RequestMode enumeration value should match Necko CORS mode value.");
 
 static_assert(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW == static_cast<uint32_t>(RequestRedirect::Follow),
               "RequestRedirect enumeration value should make Necko Redirect mode value.");
@@ -326,15 +328,9 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  aData.scriptSpec() = newest->ScriptSpec();
-
   if (aRegistration->mActiveWorker) {
     aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
-    aData.activeCacheName() = aRegistration->mActiveWorker->CacheName();
-  }
-
-  if (aRegistration->mWaitingWorker) {
-    aData.waitingCacheName() = aRegistration->mWaitingWorker->CacheName();
+    aData.cacheName() = aRegistration->mActiveWorker->CacheName();
   }
 
   return NS_OK;
@@ -2917,11 +2913,10 @@ ServiceWorkerManager::LoadRegistration(
   if (!registration) {
     registration = CreateNewRegistration(aRegistration.scope(), principal);
   } else {
-    RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-    // If the script spec matches and our active worker state matches our
-    // expectations for a "current worker", then we are done.
-    if (newest && newest->ScriptSpec() == aRegistration.scriptSpec() &&
-        !registration->mActiveWorker == aRegistration.currentWorkerURL().IsEmpty()) {
+    // If active worker script matches our expectations for a "current worker",
+    // then we are done.
+    if (registration->mActiveWorker &&
+        registration->mActiveWorker->ScriptSpec() == aRegistration.currentWorkerURL()) {
       // No needs for updates.
       return;
     }
@@ -2931,7 +2926,7 @@ ServiceWorkerManager::LoadRegistration(
   if (!currentWorkerURL.IsEmpty()) {
     registration->mActiveWorker =
       new ServiceWorkerInfo(registration, currentWorkerURL,
-                            aRegistration.activeCacheName());
+                            aRegistration.cacheName());
     registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }

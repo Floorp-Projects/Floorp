@@ -2705,6 +2705,12 @@ EnterIon(JSContext* cx, EnterJitData& data)
     MOZ_ASSERT(jit::IsIonEnabled(cx));
     MOZ_ASSERT(!data.osrFrame);
 
+#ifdef DEBUG
+    // See comment in EnterBaseline.
+    mozilla::Maybe<JS::AutoAssertOnGC> nogc;
+    nogc.emplace(cx->runtime());
+#endif
+
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
 
     // Caller must construct |this| before invoking the Ion function.
@@ -2717,6 +2723,9 @@ EnterIon(JSContext* cx, EnterJitData& data)
         ActivationEntryMonitor entryMonitor(cx, data.calleeToken);
         JitActivation activation(cx);
 
+#ifdef DEBUG
+        nogc.reset();
+#endif
         CALL_GENERATED_CODE(enter, data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */nullptr, data.calleeToken,
                             /* scopeChain = */ nullptr, 0, data.result.address());
     }
@@ -2826,6 +2835,12 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
 {
     JS_CHECK_RECURSION(cx, return JitExec_Error);
 
+#ifdef DEBUG
+    // See comment in EnterBaseline.
+    mozilla::Maybe<JS::AutoAssertOnGC> nogc;
+    nogc.emplace(cx->runtime());
+#endif
+
     RootedScript script(cx, fun->nonLazyScript());
     IonScript* ion = script->ionScript();
     JitCode* code = ion->method();
@@ -2843,6 +2858,9 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
     RootedValue result(cx, Int32Value(args.length()));
     MOZ_ASSERT(args.length() >= fun->nargs());
 
+#ifdef DEBUG
+    nogc.reset();
+#endif
     CALL_GENERATED_CODE(enter, jitcode, args.length() + 1, args.array() - 1, /* osrFrame = */nullptr,
                         calleeToken, /* scopeChain = */ nullptr, 0, result.address());
 

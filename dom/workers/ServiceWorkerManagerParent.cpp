@@ -181,7 +181,6 @@ ServiceWorkerManagerParent::RecvRegister(
 
   // Basic validation.
   if (aData.scope().IsEmpty() ||
-      aData.scriptSpec().IsEmpty() ||
       aData.principal().type() == PrincipalInfo::TNullPrincipalInfo ||
       aData.principal().type() == PrincipalInfo::TSystemPrincipalInfo) {
     return false;

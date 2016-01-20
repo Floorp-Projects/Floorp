@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <style>
+    path { stroke: red; }
+    text { writing-mode: vertical-rl; font: 24px sans-serif; }
+  </style>
+  <path id="p" d="M 40,40 v 150"/>
+  <text transform="translate(16, 0)"><textPath xlink:href="#p">中国 China</textPath></text>
+</svg>

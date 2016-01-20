@@ -16,6 +16,9 @@ function get_request_init(base, params) {
   var init = {};
   init['method'] = params['method'] || base['method'];
   init['mode'] = params['mode'] || base['mode'];
+  if (init['mode'] == 'navigate') {
+    init['mode'] = 'same-origin';
+  }
   init['credentials'] = params['credentials'] || base['credentials'];
   init['redirect'] = params['redirect-mode'] || base['redirect'];
   return init;
