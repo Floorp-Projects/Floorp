@@ -586,6 +586,25 @@ exports.testRelatedTab = function(assert, done) {
   });
 };
 
+// related to bug #989288
+// https://bugzilla.mozilla.org/show_bug.cgi?id=989288
+exports.testRelatedTabNewWindow = function(assert, done) {
+  let url = "about:logo"
+  let pageMod = new PageMod({
+    include: url,
+    onAttach: function(worker) {
+      assert.equal(worker.tab.url, url, "Worker.tab.url is valid");
+      worker.tab.close(done);
+    }
+  });
+
+  tabs.activeTab.attach({
+    contentScript: "window.open('about:logo', '', " +
+                   "'width=800,height=600,resizable=no,status=no,location=no');"
+  });
+
+};
+
 exports.testRelatedTabNoRequireTab = function(assert, done) {
   let loader = Loader(module);
   let tab;

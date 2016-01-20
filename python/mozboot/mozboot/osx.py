@@ -23,10 +23,12 @@ XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
 XCODE_LEGACY = 'https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg'
 HOMEBREW_AUTOCONF213 = 'https://raw.github.com/Homebrew/homebrew-versions/master/autoconf213.rb'
 
-MACPORTS_URL = {'9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.2.1-10.9-Mavericks.pkg',
-                '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.8-MountainLion.pkg',
-                '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
-                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg', }
+MACPORTS_URL = {'11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.11-ElCapitan.pkg',
+                '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.10-Yosemite.pkg',
+                '9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.9-Mavericks.pkg',
+                '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.8-MountainLion.pkg',
+                '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.7-Lion.pkg',
+                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.6-SnowLeopard.pkg', }
 
 MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 
@@ -409,14 +411,49 @@ class OSXBootstrapper(BaseBootstrapper):
             self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
     def ensure_macports_mobile_android_packages(self):
-        raise NotImplementedError("We don't yet support bootstrapping Firefox for Android with Macports. " +
-                                  "We don't know of a package that installs the Java 7 JDK. " +
-                                  "See https://bugzilla.mozilla.org/show_bug.cgi?id=1114382.")
+        # Multi-part process:
+        # 1. System packages.
+        # 2. Android SDK and NDK.
+        # 3. Android packages.
+
+        import android
+
+        # 1. System packages.
+        packages = [
+            'wget',
+        ]
+        self._ensure_macports_packages(packages)
+
+        # Verify the presence of java and javac.
+        if not self.which('java') or not self.which('javac'):
+            raise Exception('You need to have Java version 1.7 or later installed. Please visit http://www.java.com/en/download/mac_download.jsp to get the latest version.')
+
+        # 2. The user may have an external Android SDK (in which case we save
+        # them a lengthy download), or they may have already completed the
+        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r10e}.
+        mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(os.path.join('~', '.mozbuild')))
+        self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-macosx'))
+        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r10e'))
+        self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-macosx.zip'
+        is_64bits = sys.maxsize > 2**32
+        if is_64bits:
+            self.ndk_url = android.android_ndk_url('darwin')
+        else:
+            raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
+
+        android.ensure_android_sdk_and_ndk(path=mozbuild_path,
+                                           sdk_path=self.sdk_path, sdk_url=self.sdk_url,
+                                           ndk_path=self.ndk_path, ndk_url=self.ndk_url)
+
+        # 3. We expect the |android| tool to at
+        # ~/.mozbuild/android-sdk-macosx/tools/android.
+        android_tool = os.path.join(self.sdk_path, 'tools', 'android')
+        android.ensure_android_packages(android_tool=android_tool)
 
     def suggest_macports_mobile_android_mozconfig(self):
-        raise NotImplementedError("We don't yet support bootstrapping Firefox for Android with Macports. " +
-                                  "We don't know of a package that installs the Java 7 JDK." +
-                                  "See https://bugzilla.mozilla.org/show_bug.cgi?id=1114382.")
+        import android
+        android.suggest_mozconfig(sdk_path=self.sdk_path,
+                                  ndk_path=self.ndk_path)
 
     def ensure_package_manager(self):
         '''

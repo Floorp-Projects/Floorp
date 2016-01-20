@@ -97,7 +97,7 @@ gTests.push({
       checkAddInfoFieldsNotCollapsed(PO);
 
       // open first bookmark
-      var view = ContentTree.view.view;
+      view = ContentTree.view.view;
       ok(view.rowCount > 0, "Bookmark item exists.");
       view.selection.select(0);
       checkInfoBoxSelected(PO);

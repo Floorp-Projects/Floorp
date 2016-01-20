@@ -327,7 +327,7 @@ function* ensureNonExistent(...aGuids) {
 }
 
 add_task(function* test_recycled_transactions() {
-  function ensureTransactThrowsFor(aTransaction) {
+  function* ensureTransactThrowsFor(aTransaction) {
     let [txns, undoPosition] = getTransactionsHistoryState();
     try {
       yield aTransaction.transact();

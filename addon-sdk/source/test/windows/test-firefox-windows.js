@@ -20,6 +20,10 @@ const { after } = require("sdk/test/utils");
 const { merge } = require("sdk/util/object");
 const self = require("sdk/self");
 const { openTab } = require("../tabs/utils");
+const { set: setPref, reset: resetPref } = require("sdk/preferences/service");
+const OPEN_IN_NEW_WINDOW_PREF = 'browser.link.open_newwindow';
+const DISABLE_POPUP_PREF = 'dom.disable_open_during_load';
+const { wait } = require('../event/helpers');
 
 // TEST: open & close window
 exports.testOpenAndCloseWindow = function(assert, done) {
@@ -583,8 +587,35 @@ exports.testWindowTabEventBindings = function(assert, done) {
   windowTabs.open(openArgs);
 }
 
+// related to bug #989288
+// https://bugzilla.mozilla.org/show_bug.cgi?id=989288
+exports["test window events after window.open"] = function*(assert, done) {
+  // ensure popups open in a new windows and disable popup blocker
+  setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
+  setPref(DISABLE_POPUP_PREF, false);
+
+  // open window to trigger observers
+  tabs.activeTab.attach({
+    contentScript: "window.open('about:blank', '', " +
+                   "'width=800,height=600,resizable=no,status=no,location=no');"
+  });
+
+  let window = yield wait(browserWindows, "open");
+  assert.pass("tab open has occured");
+  window.close();
+
+  yield wait(browserWindows,"close");
+  assert.pass("tab close has occured");
+};
+
 after(exports, function*(name, assert) {
+  resetPopupPrefs();
   yield cleanUI();
 });
+
+const resetPopupPrefs = () => {
+  resetPref(OPEN_IN_NEW_WINDOW_PREF);
+  resetPref(DISABLE_POPUP_PREF);
+};
 
 require('sdk/test').run(exports);

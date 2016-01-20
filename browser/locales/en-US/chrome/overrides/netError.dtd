@@ -208,7 +208,6 @@ functionality specific to firefox. -->
 <!ENTITY errorReporting.learnMore "Learn more…">
 <!ENTITY errorReporting.sending "Sending report">
 <!ENTITY errorReporting.sent "Report sent">
-<!ENTITY errorReporting.report "Report">
 <!ENTITY errorReporting.tryAgain "Try again">
 
 <!ENTITY remoteXUL.title "Remote XUL">

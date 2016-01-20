@@ -36,6 +36,7 @@ Cu.import("resource://devtools/shared/gcli/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+loader.lazyRequireGetter(this, "CSS", "CSS");
 loader.lazyGetter(this, "DOMParser", function() {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
@@ -2684,7 +2685,7 @@ ElementEditor.prototype = {
    */
   getAttributeElement: function(attrName) {
     return this.attrList.querySelector(
-      ".attreditor[data-attr=" + attrName + "] .attr-value");
+      ".attreditor[data-attr=" + CSS.escape(attrName) + "] .attr-value");
   },
 
   /**

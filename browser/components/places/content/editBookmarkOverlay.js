@@ -366,7 +366,7 @@ var gEditItemOverlay = {
      * set. Then we sort it descendingly based on the time field.
      */
     this._recentFolders = [];
-    for (var i = 0; i < folderIds.length; i++) {
+    for (let i = 0; i < folderIds.length; i++) {
       var lastUsed = annos.getItemAnnotation(folderIds[i], LAST_USED_ANNO);
       this._recentFolders.push({ folderId: folderIds[i], lastUsed: lastUsed });
     }
@@ -380,7 +380,7 @@ var gEditItemOverlay = {
 
     var numberOfItems = Math.min(MAX_FOLDER_ITEM_IN_MENU_LIST,
                                  this._recentFolders.length);
-    for (var i = 0; i < numberOfItems; i++) {
+    for (let i = 0; i < numberOfItems; i++) {
       this._appendFolderItemToMenupopup(menupopup,
                                         this._recentFolders[i].folderId);
     }

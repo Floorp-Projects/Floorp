@@ -253,6 +253,9 @@ user_pref("identity.fxaccounts.remote.signin.uri", "https://%(server)s/fxa-signi
 user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings");
 user_pref('identity.fxaccounts.remote.webchannel.uri', 'https://%(server)s/');
 
+// We don't want browser tests to perform FxA device registration.
+user_pref('identity.fxaccounts.skipDeviceRegistration', true);
+
 // Increase the APZ content response timeout in tests to 1 minute.
 // This is to accommodate the fact that test environments tends to be slower
 // than production environments (with the b2g emulator being the slowest of them
@@ -262,7 +265,7 @@ user_pref('identity.fxaccounts.remote.webchannel.uri', 'https://%(server)s/');
 user_pref("apz.content_response_timeout", 60000);
 
 // Make sure SSL Error reports don't hit the network
-user_pref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?succeed");
+user_pref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/ssl_error_reports.sjs?succeed");
 
 // Make sure Translation won't hit the network.
 user_pref("browser.translation.bing.authURL", "http://%(server)s/browser/browser/components/translation/test/bing.sjs");

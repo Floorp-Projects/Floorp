@@ -2117,7 +2117,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     copyPostDataElement.hidden = !selectedItem || !selectedItem.attachment.requestPostData;
 
     let copyAsCurlElement = $("#request-menu-context-copy-as-curl");
-    copyAsCurlElement.hidden = !selectedItem || !selectedItem.attachment.responseContent;
+    copyAsCurlElement.hidden = !selectedItem || !selectedItem.attachment;
 
     let copyRequestHeadersElement = $("#request-menu-context-copy-request-headers");
     copyRequestHeadersElement.hidden = !selectedItem || !selectedItem.attachment.requestHeaders;
