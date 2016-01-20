@@ -80,7 +80,7 @@ public class FirstrunPager extends ViewPager {
             @Override
             public void next() {
                 final int currentPage = FirstrunPager.this.getCurrentItem();
-                if (currentPage < FirstrunPager.this.getChildCount() - 1) {
+                if (currentPage < FirstrunPager.this.getAdapter().getCount() - 1) {
                     FirstrunPager.this.setCurrentItem(currentPage + 1);
                 }
             }
