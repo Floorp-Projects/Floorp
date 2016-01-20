@@ -220,6 +220,16 @@ void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
 
 } // namespace test_scheduler
 
+TEST(Moz2D, JobScheduler_Shutdown) {
+  srand(time(nullptr));
+  for (uint32_t threads = 1; threads < 16; ++threads) {
+    for (uint32_t i = 1; i < 1000; ++i) {
+      mozilla::gfx::JobScheduler::Init(threads, threads);
+      mozilla::gfx::JobScheduler::ShutDown();
+    }
+  }
+}
+
 TEST(Moz2D, JobScheduler_Join) {
   srand(time(nullptr));
   for (uint32_t threads = 1; threads < 8; ++threads) {

@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "MediaDecoder.h"
+#include "MediaFormatReader.h"
 
 class nsIStreamListener;
 
@@ -36,10 +37,10 @@ class MediaSourceDecoder : public MediaDecoder
 public:
   explicit MediaSourceDecoder(dom::HTMLMediaElement* aElement);
 
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
-  virtual MediaDecoderStateMachine* CreateStateMachine() override;
-  virtual nsresult Load(nsIStreamListener**) override;
-  virtual media::TimeIntervals GetSeekable() override;
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
+  MediaDecoderStateMachine* CreateStateMachine() override;
+  nsresult Load(nsIStreamListener**) override;
+  media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
 
   // We can't do this in the constructor because we don't know what type of
@@ -50,7 +51,7 @@ public:
     mDormantSupported = aSupported;
   }
 
-  virtual RefPtr<ShutdownPromise> Shutdown() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
 
   static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);
 
@@ -60,7 +61,7 @@ public:
   void Ended(bool aEnded);
 
   // Return the duration of the video in seconds.
-  virtual double GetDuration() override;
+  double GetDuration() override;
 
   void SetInitialDuration(int64_t aDuration);
   void SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction);
@@ -73,7 +74,7 @@ public:
 
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
-  void GetMozDebugReaderData(nsAString& aString);
+  void GetMozDebugReaderData(nsAString& aString) override;
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
 
@@ -88,6 +89,7 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   RefPtr<MediaSourceDemuxer> mDemuxer;
+  RefPtr<MediaFormatReader> mReader;
 
   Atomic<bool> mEnded;
 };

@@ -16,7 +16,7 @@
 #include "nsTArray.h"
 
 #define SERVICEWORKERREGISTRAR_FILE "serviceworker.txt"
-#define SERVICEWORKERREGISTRAR_VERSION "2"
+#define SERVICEWORKERREGISTRAR_VERSION "3"
 #define SERVICEWORKERREGISTRAR_TERMINATOR "#"
 #define SERVICEWORKERREGISTRAR_TRUE "true"
 #define SERVICEWORKERREGISTRAR_FALSE "false"
@@ -76,6 +76,8 @@ private:
   void ScheduleSaveData();
   void ShutdownCompleted();
   void MaybeScheduleShutdownCompleted();
+
+  bool IsSupportedVersion(const nsACString& aVersion) const;
 
   mozilla::Monitor mMonitor;
 

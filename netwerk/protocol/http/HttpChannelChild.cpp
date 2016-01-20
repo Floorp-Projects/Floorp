@@ -1964,6 +1964,8 @@ HttpChannelChild::ContinueAsyncOpen()
   }
   openArgs.cacheKey() = cacheKey;
 
+  openArgs.allowStaleCacheContent() = mAllowStaleCacheContent;
+
   nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2120,6 +2122,20 @@ HttpChannelChild::SetCacheKey(nsISupports *cacheKey)
   ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   mCacheKey = cacheKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::SetAllowStaleCacheContent(bool aAllowStaleCacheContent)
+{
+  mAllowStaleCacheContent = aAllowStaleCacheContent;
+  return NS_OK;
+}
+NS_IMETHODIMP
+HttpChannelChild::GetAllowStaleCacheContent(bool *aAllowStaleCacheContent)
+{
+  NS_ENSURE_ARG(aAllowStaleCacheContent);
+  *aAllowStaleCacheContent = mAllowStaleCacheContent;
   return NS_OK;
 }
 

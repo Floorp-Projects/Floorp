@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid (c5f583f0-ae53-4e39-8af9-2c2d0d7af093)]
+[scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
 {
   /**
@@ -45,4 +45,11 @@ interface nsICacheInfoChannel : nsISupports
    * is likewise valid.
    */
   attribute nsISupports cacheKey;
+
+  /**
+   * Tells the channel to behave as if the LOAD_FROM_CACHE flag has been set,
+   * but without affecting the loads for the entire loadGroup in case of this
+   * channel being the default load group's channel.
+   */
+  attribute boolean allowStaleCacheContent;
 };

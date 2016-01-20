@@ -1053,7 +1053,7 @@ VARIABLES = {
 
     'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
-        """, 'libs'),
+        """, 'misc'),
 
     'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed in the _tests directory.
@@ -1698,7 +1698,7 @@ VARIABLES = {
         Files from topsrcdir and the objdir can also be installed by prefixing
         the path(s) with a '/' character and a '!' character, respectively::
            TEST_HARNESS_FILES.path += ['/build/bar.py', '!quux.py']
-        """, 'libs'),
+        """, 'misc'),
 
     'NO_EXPAND_LIBS': (bool, bool,
         """Forces to build a real static library, and no corresponding fake

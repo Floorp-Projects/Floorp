@@ -530,6 +530,10 @@ private:
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
   virtual MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus();
 
+  // Returns a string describing the state of the media player internal
+  // data. Used for debugging purposes.
+  virtual void GetMozDebugReaderData(nsAString& aString) {}
+
 protected:
   virtual ~MediaDecoder();
 

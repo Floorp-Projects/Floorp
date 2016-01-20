@@ -27,19 +27,10 @@ class MediaStreamSource : public DataSource {
 public:
   MediaStreamSource(MediaResource* aResource);
 
-  virtual status_t initCheck() const;
-  virtual ssize_t readAt(off64_t offset, void *data, size_t size);
-  virtual ssize_t readAt(off_t offset, void *data, size_t size) {
-    return readAt(static_cast<off64_t>(offset), data, size);
-  }
-  virtual status_t getSize(off_t *size) {
-    off64_t size64;
-    status_t status = getSize(&size64);
-    *size = size64;
-    return status;
-  }
-  virtual status_t getSize(off64_t *size);
-  virtual uint32_t flags() {
+  status_t initCheck() const override;
+  ssize_t readAt(off64_t offset, void *data, size_t size) override;
+  status_t getSize(off64_t *size) override;
+  uint32_t flags() override {
     return kWantsPrefetching;
   }
 

@@ -513,7 +513,7 @@ this.PushService = {
     console.debug("startService()");
 
     if (this._state != PUSH_SERVICE_ACTIVATING) {
-      return;
+      return Promise.reject();
     }
 
     this._service = service;
@@ -523,9 +523,11 @@ this.PushService = {
       this._db = this._service.newPushDB();
     }
 
-    this._service.init(options, this, serverURI);
-    this._startObservers();
-    return this._dropExpiredRegistrations();
+    return this._service.init(options, this, serverURI)
+      .then(() => {
+        this._startObservers();
+        return this._dropExpiredRegistrations();
+      });
   },
 
   /**

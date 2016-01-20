@@ -141,7 +141,7 @@ public:
 
   void Shutdown(); // idempotent
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   using DOMEventTargetHelper::DispatchTrustedEvent;
 

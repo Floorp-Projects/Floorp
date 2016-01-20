@@ -2766,7 +2766,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
         if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
             return false;
     } else {
-        if (!SetObjectElement(cx, obj, index, rhs, JSOp(*pc) == JSOP_STRICTSETELEM, script, pc))
+        if (!SetObjectElement(cx, obj, index, rhs, objv, JSOp(*pc) == JSOP_STRICTSETELEM, script, pc))
             return false;
     }
 
@@ -4777,9 +4777,12 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
     } else {
         MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
-        RootedValue v(cx, rhs);
-        if (!PutProperty(cx, obj, id, v, op == JSOP_STRICTSETPROP))
+        ObjectOpResult result;
+        if (!SetProperty(cx, obj, id, rhs, lhs, result) ||
+            !result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP))
+        {
             return false;
+        }
     }
 
     // Leave the RHS on the stack.

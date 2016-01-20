@@ -34,21 +34,21 @@ public:
                   UniquePtr<TrackInfo>&& aInfo,
                   const nsTArray<mp4_demuxer::Index::Indice>& indices);
 
-  virtual UniquePtr<TrackInfo> GetInfo() const override;
+  UniquePtr<TrackInfo> GetInfo() const override;
 
-  virtual RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
 
-  virtual RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+  RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
-  virtual void Reset() override;
+  void Reset() override;
 
-  virtual nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
+  nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
 
-  virtual media::TimeIntervals GetBuffered() override;
+  media::TimeIntervals GetBuffered() override;
 
-  virtual void BreakCycles() override;
+  void BreakCycles() override;
 
 private:
   friend class MP4Demuxer;

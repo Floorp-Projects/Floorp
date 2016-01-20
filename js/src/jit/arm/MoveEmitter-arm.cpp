@@ -170,14 +170,27 @@ MoveEmitterARM::completeCycle(const MoveOperand& from, const MoveOperand& to, Mo
     // saved value of B, to A.
     switch (type) {
       case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+        MOZ_ASSERT(!to.isGeneralRegPair());
         if (to.isMemory()) {
-            ScratchDoubleScope scratch(masm);
+            ScratchFloat32Scope scratch(masm);
             masm.ma_vldr(cycleSlot(slotId, 0), scratch);
             masm.ma_vstr(scratch, toAddress(to));
         } else if (to.isGeneralReg()) {
             MOZ_ASSERT(type == MoveOp::FLOAT32);
             masm.ma_ldr(toAddress(from), to.reg());
+        } else {
+            uint32_t offset = 0;
+            if ((!from.isMemory()) && from.floatReg().numAlignedAliased() == 1)
+                offset = sizeof(float);
+            masm.ma_vldr(cycleSlot(slotId, offset), to.floatReg());
+        }
+        break;
+      case MoveOp::DOUBLE:
+        MOZ_ASSERT(!to.isGeneralReg());
+        if (to.isMemory()) {
+            ScratchDoubleScope scratch(masm);
+            masm.ma_vldr(cycleSlot(slotId, 0), scratch);
+            masm.ma_vstr(scratch, toAddress(to));
         } else if (to.isGeneralRegPair()) {
             MOZ_ASSERT(type == MoveOp::DOUBLE);
             ScratchDoubleScope scratch(masm);

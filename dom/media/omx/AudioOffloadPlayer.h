@@ -78,27 +78,27 @@ public:
   ~AudioOffloadPlayer();
 
   // Caller retains ownership of "aSource".
-  virtual void SetSource(const android::sp<MediaSource> &aSource) override;
+  void SetSource(const android::sp<MediaSource> &aSource) override;
 
   // Start the source if it's not already started and open the GonkAudioSink to
   // create an offloaded audio track
-  virtual status_t Start(bool aSourceAlreadyStarted = false) override;
+  status_t Start(bool aSourceAlreadyStarted = false) override;
 
-  virtual status_t ChangeState(MediaDecoder::PlayState aState) override;
+  status_t ChangeState(MediaDecoder::PlayState aState) override;
 
-  virtual void SetVolume(double aVolume) override;
+  void SetVolume(double aVolume) override;
 
-  virtual int64_t GetMediaTimeUs() override;
+  int64_t GetMediaTimeUs() override;
 
   // To update progress bar when the element is visible
-  virtual void SetElementVisibility(bool aIsVisible) override;;
+  void SetElementVisibility(bool aIsVisible) override;;
 
   // Update ready state based on current play state. Not checking data
   // availability since offloading is currently done only when whole compressed
   // data is available
-  virtual MediaDecoderOwner::NextFrameStatus GetNextFrameStatus() override;
+  MediaDecoderOwner::NextFrameStatus GetNextFrameStatus() override;
 
-  virtual RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) override;
+  RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) override;
 
   void TimeUpdate();
 
