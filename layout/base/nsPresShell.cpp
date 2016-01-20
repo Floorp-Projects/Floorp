@@ -4773,13 +4773,11 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
 static bool gDumpRangePaintList = false;
 #endif
 
-RangePaintInfo*
+UniquePtr<RangePaintInfo>
 PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
                                 nsRect& aSurfaceRect,
                                 bool aForPrimarySelection)
 {
-  RangePaintInfo* info = nullptr;
-
   nsRange* range = static_cast<nsRange*>(aRange);
 
   nsIFrame* ancestorFrame;
@@ -4814,7 +4812,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   if (!ancestorFrame)
     return nullptr;
 
-  info = new RangePaintInfo(range, ancestorFrame);
+  auto info = MakeUnique<RangePaintInfo>(range, ancestorFrame);
 
   // get a display list containing the range
   info->mBuilder.SetIncludeAllOutOfFlows();
@@ -4854,7 +4852,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 }
 
 already_AddRefed<SourceSurface>
-PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
+PresShell::PaintRangePaintInfo(nsTArray<UniquePtr<RangePaintInfo>>* aItems,
                                nsISelection* aSelection,
                                nsIntRegion* aRegion,
                                nsRect aArea,
@@ -4958,7 +4956,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   frameSelection->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
 
   // next, paint each range in the selection
-  for (RangePaintInfo* rangeInfo : *aItems) {
+  for (UniquePtr<RangePaintInfo>& rangeInfo : *aItems) {
     // the display lists paint relative to the offset from the reference
     // frame, so account for that translation too:
     gfxPoint rootOffset =
@@ -4989,7 +4987,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   // area will hold the size of the surface needed to draw the node, measured
   // from the root frame.
   nsRect area;
-  nsTArray<nsAutoPtr<RangePaintInfo> > rangeItems;
+  nsTArray<UniquePtr<RangePaintInfo>> rangeItems;
 
   // nothing to draw if the node isn't in a document
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
@@ -5000,9 +4998,8 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   if (NS_FAILED(range->SelectNode(aNode)))
     return nullptr;
 
-  RangePaintInfo* info = CreateRangePaintInfo(range, area, false);
-  if (info && !rangeItems.AppendElement(info)) {
-    delete info;
+  UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, false);
+  if (info && !rangeItems.AppendElement(Move(info))) {
     return nullptr;
   }
 
@@ -5035,7 +5032,7 @@ PresShell::RenderSelection(nsISelection* aSelection,
   // area will hold the size of the surface needed to draw the selection,
   // measured from the root frame.
   nsRect area;
-  nsTArray<nsAutoPtr<RangePaintInfo> > rangeItems;
+  nsTArray<UniquePtr<RangePaintInfo>> rangeItems;
 
   // iterate over each range and collect them into the rangeItems array.
   // This is done so that the size of selection can be determined so as
@@ -5049,9 +5046,8 @@ PresShell::RenderSelection(nsISelection* aSelection,
     nsCOMPtr<nsIDOMRange> range;
     aSelection->GetRangeAt(r, getter_AddRefs(range));
 
-    RangePaintInfo* info = CreateRangePaintInfo(range, area, true);
-    if (info && !rangeItems.AppendElement(info)) {
-      delete info;
+    UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, true);
+    if (info && !rangeItems.AppendElement(Move(info))) {
       return nullptr;
     }
   }
