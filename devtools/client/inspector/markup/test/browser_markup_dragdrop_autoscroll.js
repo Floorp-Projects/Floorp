@@ -7,10 +7,10 @@
 // Test that dragging a node near the top or bottom edge of the markup-view
 // auto-scrolls the view.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop_autoscroll.html";
+const TEST_URL = URL_ROOT + "doc_markup_dragdrop_autoscroll.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let markup = inspector.markup;
   let viewHeight = markup.doc.documentElement.clientHeight;
 

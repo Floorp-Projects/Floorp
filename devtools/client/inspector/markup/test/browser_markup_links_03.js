@@ -6,14 +6,14 @@
 
 // Tests that links appear correctly in attributes created in content.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node via the content");
   let onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu1");
+  yield setNodeAttribute("body", "contextmenu", "menu1", testActor);
   yield onMutated;
 
   info("Checking for links in the new attribute");
@@ -25,7 +25,7 @@ add_task(function*() {
 
   info("Editing the contextmenu attribute on the body node");
   onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu2");
+  yield setNodeAttribute("body", "contextmenu", "menu2", testActor);
   yield onMutated;
 
   info("Checking for links in the updated attribute");
