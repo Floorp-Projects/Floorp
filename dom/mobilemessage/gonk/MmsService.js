@@ -36,7 +36,6 @@ const kSmsDeletedObserverTopic           = "sms-deleted";
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
 
-const kPrefRilRadioDisabled              = "ril.radio.disabled";
 const kPrefMmsDebuggingEnabled           = "mms.debugging.enabled";
 
 // HTTP status codes:
@@ -194,18 +193,12 @@ function getDefaultServiceId() {
 }
 
 /**
- * Return Radio disabled state.
+ * Return radio disabled state.
  */
-function getRadioDisabledState() {
-  let state;
-  try {
-    state = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-  } catch (e) {
-    if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
-    state = false;
-  }
-
-  return state;
+function isRadioOff(aServiceId) {
+    let connection = gMobileConnectionService.getItemByServiceId(aServiceId);
+    return connection.radioState
+      !== Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED;
 }
 
 /**
@@ -422,7 +415,7 @@ MmsConnection.prototype = {
       this.pendingCallbacks.push(callback);
 
       let errorStatus;
-      if (getRadioDisabledState()) {
+      if (isRadioOff(this.serviceId)) {
         if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
         errorStatus = _HTTP_STATUS_RADIO_DISABLED;
       } else if (this.getCardState() != Ci.nsIIcc.CARD_STATE_READY) {
@@ -993,7 +986,8 @@ function CancellableTransaction(cancellableId, serviceId) {
   this.isCancelled = false;
 }
 CancellableTransaction.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsIMobileConnectionListener]),
 
   // The timer for retrying sending or retrieving process.
   timer: null,
@@ -1010,8 +1004,9 @@ CancellableTransaction.prototype = {
     if (!this.isObserversAdded) {
       Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       Services.obs.addObserver(this, kSmsDeletedObserverTopic, false);
-      Services.prefs.addObserver(kPrefRilRadioDisabled, this, false);
       Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
+      gMobileConnectionService
+        .getItemByServiceId(this.serviceId).registerListener(this);
       this.isObserversAdded = true;
     }
 
@@ -1023,8 +1018,9 @@ CancellableTransaction.prototype = {
     if (this.isObserversAdded) {
       Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kSmsDeletedObserverTopic);
-      Services.prefs.removeObserver(kPrefRilRadioDisabled, this);
       Services.prefs.removeObserver(kPrefDefaultServiceId, this);
+      gMobileConnectionService
+        .getItemByServiceId(this.serviceId).unregisterListener(this);
       this.isObserversAdded = false;
     }
   },
@@ -1080,18 +1076,35 @@ CancellableTransaction.prototype = {
         break;
       }
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-        if (data == kPrefRilRadioDisabled) {
-          if (getRadioDisabledState()) {
-            this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
-          }
-        } else if (data === kPrefDefaultServiceId &&
+        if (data === kPrefDefaultServiceId &&
                    this.serviceId != getDefaultServiceId()) {
           this.cancelRunning(_MMS_ERROR_SIM_CARD_CHANGED);
         }
         break;
       }
     }
-  }
+  },
+
+  // nsIMobileConnectionListener
+
+  notifyVoiceChanged: function() {},
+  notifyDataChanged: function() {},
+  notifyDataError: function(message) {},
+  notifyCFStateChanged: function(action, reason, number, timeSeconds, serviceClass) {},
+  notifyEmergencyCbModeChanged: function(active, timeoutMs) {},
+  notifyOtaStatusChanged: function(status) {},
+
+  notifyRadioStateChanged: function() {
+    if (isRadioOff(this.serviceId)) {
+      this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
+    }
+  },
+
+  notifyClirModeChanged: function(mode) {},
+  notifyLastKnownNetworkChanged: function() {},
+  notifyLastKnownHomeNetworkChanged: function() {},
+  notifyNetworkSelectionModeChanged: function() {},
+  notifyDeviceIdentitiesChanged: function() {}
 };
 
 /**
@@ -2388,7 +2401,7 @@ MmsService.prototype = {
       }
 
       // Check radio state in prior to default service Id.
-      if (getRadioDisabledState()) {
+      if (isRadioOff(aServiceId)) {
         if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
         sendTransactionCb(mmsMessage,
                           Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR,
@@ -2502,7 +2515,13 @@ MmsService.prototype = {
       // Hence, for manual retrieving, instead of checking radio state later
       // in MmsConnection.acquire(), We have to check radio state in prior to
       // iccId to return the error correctly.
-      if (getRadioDisabledState()) {
+      let numRadioInterfaces = gMobileConnectionService.numItems;
+      let isAllRadioOff = true;
+      for (let serviceId = 0; serviceId < numRadioInterfaces; serviceId++) {
+        isAllRadioOff &= isRadioOff(serviceId);
+      }
+
+      if (isAllRadioOff) {
         if (DEBUG) debug("Error! Radio is disabled when retrieving MMS.");
         aRequest.notifyGetMessageFailed(
           Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR);
