@@ -1,69 +1,69 @@
 # Basic <summary> handling
-== multiple-summary.html single-summary.html
-== open-multiple-summary.html open-multiple-summary-ref.html
-== summary-not-first-child.html single-summary.html
-== open-summary-not-first-child.html open-single-summary.html
-== open-summary-block-style.html open-single-summary.html
-== no-summary.html no-summary-ref.html
-== open-no-summary.html open-no-summary-ref.html
-== summary-not-in-details.html summary-not-in-details-ref.html
-== summary-not-direct-child.html summary-not-direct-child-ref.html
-== float-in-summary.html float-in-summary-ref.html
+pref(dom.details_element.enabled,true) == multiple-summary.html single-summary.html
+pref(dom.details_element.enabled,true) == open-multiple-summary.html open-multiple-summary-ref.html
+pref(dom.details_element.enabled,true) == summary-not-first-child.html single-summary.html
+pref(dom.details_element.enabled,true) == open-summary-not-first-child.html open-single-summary.html
+pref(dom.details_element.enabled,true) == open-summary-block-style.html open-single-summary.html
+pref(dom.details_element.enabled,true) == no-summary.html no-summary-ref.html
+pref(dom.details_element.enabled,true) == open-no-summary.html open-no-summary-ref.html
+pref(dom.details_element.enabled,true) == summary-not-in-details.html summary-not-in-details-ref.html
+pref(dom.details_element.enabled,true) == summary-not-direct-child.html summary-not-direct-child-ref.html
+pref(dom.details_element.enabled,true) == float-in-summary.html float-in-summary-ref.html
 
 # Add elements dynamically
-== dynamic-add-single-summary.html open-single-summary.html
-== dynamic-add-summary-not-first-child.html open-single-summary.html
-== dynamic-add-summary-and-paragraph.html open-single-summary.html
-== dynamic-add-paragraph-before-summary.html open-single-summary.html
-== dynamic-add-paragraph-before-summary-close.html single-summary.html
-== dynamic-add-paragraph-after-summary.html open-single-summary.html
-== dynamic-add-paragraph-after-summary-close.html single-summary.html
-== dynamic-add-details.html open-single-summary.html
-== dynamic-add-first-summary.html open-multiple-summary.html
-== dynamic-add-second-summary.html open-multiple-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-single-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-summary-not-first-child.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-summary-and-paragraph.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-paragraph-before-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-paragraph-before-summary-close.html single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-paragraph-after-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-paragraph-after-summary-close.html single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-details.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-first-summary.html open-multiple-summary.html
+pref(dom.details_element.enabled,true) == dynamic-add-second-summary.html open-multiple-summary.html
 
 # Remove elements dynamically
-== dynamic-remove-single-summary.html open-no-summary.html
-== dynamic-remove-summary-not-first-child.html open-no-summary.html
-== dynamic-remove-first-summary.html open-single-summary.html
-== dynamic-remove-second-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-remove-single-summary.html open-no-summary.html
+pref(dom.details_element.enabled,true) == dynamic-remove-summary-not-first-child.html open-no-summary.html
+pref(dom.details_element.enabled,true) == dynamic-remove-first-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == dynamic-remove-second-summary.html open-single-summary.html
 
 # Toggle details by open attribute
-== close-nested-details.html close-nested-details-ref.html
-== open-nested-details.html open-nested-details-ref.html
+pref(dom.details_element.enabled,true) == close-nested-details.html close-nested-details-ref.html
+pref(dom.details_element.enabled,true) == open-nested-details.html open-nested-details-ref.html
 
 # With 'overflow' property
-== overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
-== overflow-auto-open-details.html overflow-auto-open-details-ref.html
+pref(dom.details_element.enabled,true) == overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
+pref(dom.details_element.enabled,true) == overflow-auto-open-details.html overflow-auto-open-details-ref.html
 
 # With pagination property
-== details-page-break-after-1.html details-two-pages.html
-== details-page-break-after-2.html details-two-pages.html
-== details-page-break-before-1.html details-two-pages.html
-== details-page-break-before-2.html details-two-pages.html
+pref(dom.details_element.enabled,true) == details-page-break-after-1.html details-two-pages.html
+pref(dom.details_element.enabled,true) == details-page-break-after-2.html details-two-pages.html
+pref(dom.details_element.enabled,true) == details-page-break-before-1.html details-two-pages.html
+pref(dom.details_element.enabled,true) == details-page-break-before-2.html details-two-pages.html
 
 # Various properties on details or summary
-== details-display-inline.html details-display-inline-ref.html
-== details-percentage-height-children.html details-percentage-height-children-ref.html
-== details-absolute-children.html details-absolute-children-ref.html
-== details-three-columns.html details-three-columns-ref.html
-== details-writing-mode.html details-writing-mode-ref.html
-== details-in-ol.html details-in-ol-ref.html
+pref(dom.details_element.enabled,true) == details-display-inline.html details-display-inline-ref.html
+pref(dom.details_element.enabled,true) == details-percentage-height-children.html details-percentage-height-children-ref.html
+pref(dom.details_element.enabled,true) == details-absolute-children.html details-absolute-children-ref.html
+pref(dom.details_element.enabled,true) == details-three-columns.html details-three-columns-ref.html
+pref(dom.details_element.enabled,true) == details-writing-mode.html details-writing-mode-ref.html
+pref(dom.details_element.enabled,true) == details-in-ol.html details-in-ol-ref.html
 
 # Dispatch mouse click to summary
-== mouse-click-single-summary.html open-single-summary.html
-== mouse-click-twice-single-summary.html single-summary.html
-== mouse-click-open-single-summary.html single-summary.html
-== mouse-click-twice-open-single-summary.html open-single-summary.html
-== mouse-click-open-second-summary.html open-multiple-summary.html
-== mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
-== mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
-== mouse-click-overflow-auto-details.html overflow-auto-open-details.html
-== mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
-== mouse-click-display-none-details.html single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-single-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-single-summary.html single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-open-single-summary.html single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-open-single-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-open-second-summary.html open-multiple-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
+pref(dom.details_element.enabled,true) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
+pref(dom.details_element.enabled,true) == mouse-click-display-none-details.html single-summary.html
 
 # Dispatch mouse click to out-of-flow details or summary
-== mouse-click-fixed-summary.html open-fixed-summary.html
-== mouse-click-twice-fixed-summary.html fixed-summary.html
-== mouse-click-float-details.html open-float-details.html
-== mouse-click-twice-float-details.html float-details.html
+pref(dom.details_element.enabled,true) == mouse-click-fixed-summary.html open-fixed-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-fixed-summary.html fixed-summary.html
+pref(dom.details_element.enabled,true) == mouse-click-float-details.html open-float-details.html
+pref(dom.details_element.enabled,true) == mouse-click-twice-float-details.html float-details.html
