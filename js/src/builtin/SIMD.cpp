@@ -326,7 +326,7 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 
 static const uint32_t SIMD_SLOTS_COUNT = SimdTypeDescr::LAST_TYPE + 1;
 
-const Class SIMDObject::class_ = {
+const Class SimdObject::class_ = {
     "SIMD",
     JSCLASS_HAS_RESERVED_SLOTS(SIMD_SLOTS_COUNT),
     nullptr, /* addProperty */
@@ -353,7 +353,7 @@ GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
     if (!objProto)
         return false;
 
-    globalSimdObject = NewObjectWithGivenProto(cx, &SIMDObject::class_, objProto, SingletonObject);
+    globalSimdObject = NewObjectWithGivenProto(cx, &SimdObject::class_, objProto, SingletonObject);
     if (!globalSimdObject)
         return false;
 
@@ -446,7 +446,7 @@ GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, uint32_t
 }
 
 bool
-SIMDObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolved)
+SimdObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolved)
 {
     *resolved = false;
     if (!JSID_IS_ATOM(id))
@@ -464,7 +464,7 @@ SIMDObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* 
 }
 
 JSObject*
-js::InitSIMDClass(JSContext* cx, HandleObject obj)
+js::InitSimdClass(JSContext* cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     return global->getOrCreateSimdGlobalObject(cx);
