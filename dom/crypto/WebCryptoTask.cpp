@@ -340,7 +340,6 @@ CloneData(JSContext* aCx, CryptoBuffer& aDst, JS::Handle<JSObject*> aSrc)
 void
 WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   mResultPromise = aResultPromise;
 
   // Fail if an error was set during the constructor
@@ -355,13 +354,6 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
     CallCallback(mEarlyRv);
     Skip();
     return;
-  }
-
-  // Ensure that NSS is initialized, since presumably CalculateResult
-  // will use NSS functions
-  if (!EnsureNSSInitializedChromeOrContent()) {
-    mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
-    MAYBE_EARLY_FAIL(mEarlyRv)
   }
 
   // Store calling thread and dispatch to thread pool.
