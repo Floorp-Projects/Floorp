@@ -55,6 +55,8 @@ dictionary MediaTrackConstraintSet {
     ConstrainLong viewportWidth;
     ConstrainLong viewportHeight;
     ConstrainBoolean echoCancellation;
+    ConstrainBoolean mozNoiseSuppression;
+    ConstrainBoolean mozAutoGainControl;
 };
 
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {

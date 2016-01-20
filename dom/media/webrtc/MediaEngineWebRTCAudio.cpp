@@ -251,17 +251,23 @@ MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aCo
                                            const MediaEnginePrefs &aPrefs,
                                            const nsString& aDeviceId)
 {
-  LOG(("Audio config: aec: %d, agc: %d, noise: %d",
-       aPrefs.mAecOn ? aPrefs.mAec : -1,
-       aPrefs.mAgcOn ? aPrefs.mAgc : -1,
-       aPrefs.mNoiseOn ? aPrefs.mNoise : -1));
+  FlattenedConstraints c(aConstraints);
 
-  bool update_echo = (mEchoOn != aPrefs.mAecOn);
-  bool update_agc = (mAgcOn != aPrefs.mAgcOn);
-  bool update_noise = (mNoiseOn != aPrefs.mNoiseOn);
-  mEchoOn = aPrefs.mAecOn;
-  mAgcOn = aPrefs.mAgcOn;
-  mNoiseOn = aPrefs.mNoiseOn;
+  bool aec_on = c.mEchoCancellation.Get(aPrefs.mAecOn);
+  bool agc_on = c.mMozAutoGainControl.Get(aPrefs.mAgcOn);
+  bool noise_on = c.mMozNoiseSuppression.Get(aPrefs.mNoiseOn);
+
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d",
+       aec_on ? aPrefs.mAec : -1,
+       agc_on ? aPrefs.mAgc : -1,
+       noise_on ? aPrefs.mNoise : -1));
+
+  bool update_echo = (mEchoOn != aec_on);
+  bool update_agc = (mAgcOn != agc_on);
+  bool update_noise = (mNoiseOn != noise_on);
+  mEchoOn = aec_on;
+  mAgcOn = agc_on;
+  mNoiseOn = noise_on;
 
   mPlayoutDelay = aPrefs.mPlayoutDelay;
   if ((webrtc::EcModes) aPrefs.mAec != webrtc::kEcUnchanged) {
