@@ -71,23 +71,23 @@ function consoleOpened(HUD) {
     WebConsoleUtils.usageCount = 0;
     updateEditUIVisibility();
 
-    let oldVal = jsterm.inputNode.value;
+    let oldVal = jsterm.getInputValue();
     goDoCommand("cmd_paste");
     let notificationbox = jsterm.hud.document.getElementById("webconsole-notificationbox");
     let notification = notificationbox.getNotificationWithValue("selfxss-notification");
     ok(notification, "Self-xss notification shown");
-    is(oldVal, jsterm.inputNode.value, "Paste blocked by self-xss prevention");
+    is(oldVal, jsterm.getInputValue(), "Paste blocked by self-xss prevention");
 
     // Allow pasting
-    jsterm.inputNode.value = "allow pasting";
+    jsterm.setInputValue("allow pasting");
     let evt = document.createEvent("KeyboardEvent");
     evt.initKeyEvent("keyup", true, true, window,
                      0, 0, 0, 0,
                      0, " ".charCodeAt(0));
     jsterm.inputNode.dispatchEvent(evt);
-    jsterm.inputNode.value = "";
+    jsterm.setInputValue("");
     goDoCommand("cmd_paste");
-    isnot("", jsterm.inputNode.value, "Paste works");
+    isnot("", jsterm.getInputValue(), "Paste works");
   }
   function onClipboardPaste() {
     ok(!jsterm.completeNode.value, "no completion value after paste");
