@@ -79,7 +79,7 @@ public:
 
   void OwnerContentChanged(nsIContent* aContent);
 
-  void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect);
+  void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect, const uint32_t aFlags);
 
   void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
                                  uint64_t aInputBlockId,

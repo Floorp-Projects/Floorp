@@ -1803,6 +1803,19 @@ nsBaseWidget::GetTextEventDispatcher()
   return mTextEventDispatcher;
 }
 
+void
+nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
+                         const FrameMetrics::ViewID& aViewId,
+                         const CSSRect& aRect,
+                         const uint32_t& aFlags)
+{
+  if (!mCompositorParent || !mAPZC) {
+    return;
+  }
+  uint64_t layerId = mCompositorParent->RootLayerTreeId();
+  mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
+}
+
 #ifdef ACCESSIBILITY
 
 a11y::Accessible*
