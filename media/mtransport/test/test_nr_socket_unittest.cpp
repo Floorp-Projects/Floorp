@@ -33,6 +33,8 @@ extern "C" {
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
+#define DATA_BUF_SIZE 1024
+
 namespace mozilla {
 
 class TestNrSocketTest : public ::testing::Test {
@@ -62,12 +64,13 @@ class TestNrSocketTest : public ::testing::Test {
   }
 
   RefPtr<TestNrSocket> CreateTestNrSocket_s(const char *ip_str,
-                                              TestNat *nat) {
+                                            int proto,
+                                            TestNat *nat) {
     // If no nat is supplied, we create a default NAT which is disabled. This
     // is how we simulate a non-natted socket.
     RefPtr<TestNrSocket> sock(new TestNrSocket(nat ? nat : new TestNat));
     nr_transport_addr address;
-    nr_str_port_to_transport_addr(ip_str, 0, IPPROTO_UDP, &address);
+    nr_str_port_to_transport_addr(ip_str, 0, proto, &address);
     int r = sock->create(&address);
     if (r) {
       return nullptr;
@@ -75,40 +78,47 @@ class TestNrSocketTest : public ::testing::Test {
     return sock;
   }
 
-  void CreatePublicAddrs(size_t count, const char *ip_str = "127.0.0.1") {
+  void CreatePublicAddrs(size_t count,
+                         const char *ip_str = "127.0.0.1",
+                         int proto = IPPROTO_UDP) {
     sts_->Dispatch(
         WrapRunnable(this,
                      &TestNrSocketTest::CreatePublicAddrs_s,
                      count,
-                     ip_str),
+                     ip_str,
+                     proto),
         NS_DISPATCH_SYNC);
   }
 
-  void CreatePublicAddrs_s(size_t count, const char* ip_str) {
+  void CreatePublicAddrs_s(size_t count, const char* ip_str, int proto) {
     while (count--) {
-      auto sock = CreateTestNrSocket_s(ip_str, nullptr);
+      auto sock = CreateTestNrSocket_s(ip_str, proto, nullptr);
       ASSERT_TRUE(sock) << "Failed to create socket";
       public_addrs_.push_back(sock);
     }
   }
 
   RefPtr<TestNat> CreatePrivateAddrs(size_t size,
-                                       const char* ip_str = "127.0.0.1") {
+                                     const char* ip_str = "127.0.0.1",
+                                     int proto = IPPROTO_UDP) {
     RefPtr<TestNat> result;
     sts_->Dispatch(
         WrapRunnableRet(&result,
                         this,
                         &TestNrSocketTest::CreatePrivateAddrs_s,
                         size,
-                        ip_str),
+                        ip_str,
+                        proto),
         NS_DISPATCH_SYNC);
     return result;
   }
 
-  RefPtr<TestNat> CreatePrivateAddrs_s(size_t count, const char* ip_str) {
+  RefPtr<TestNat> CreatePrivateAddrs_s(size_t count,
+                                       const char* ip_str,
+                                       int proto) {
     RefPtr<TestNat> nat(new TestNat);
     while (count--) {
-      auto sock = CreateTestNrSocket_s(ip_str, nat);
+      auto sock = CreateTestNrSocket_s(ip_str, proto, nat);
       if (!sock) {
         EXPECT_TRUE(false) << "Failed to create socket";
         break;
@@ -178,6 +188,63 @@ class TestNrSocketTest : public ::testing::Test {
                                 sender_external_address);
   }
 
+  bool CheckTcpConnectivity(TestNrSocket *from, TestNrSocket *to) {
+    NrSocketBase *accepted_sock;
+    if (!Connect(from, to, &accepted_sock)) {
+      std::cerr << "Connect failed" << std::endl;
+      return false;
+    }
+
+    // write on |from|, recv on |accepted_sock|
+    if (!WaitForWriteable(from)) {
+      std::cerr << __LINE__ << "WaitForWriteable failed" << std::endl;
+      return false;
+    }
+
+    int r;
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::SendDataTcp_s,
+                                   from),
+                   NS_DISPATCH_SYNC);
+    if (r) {
+      std::cerr << "SendDataTcp_s (1) failed" << std::endl;
+      return false;
+    }
+
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::RecvDataTcp_s,
+                                   accepted_sock),
+                   NS_DISPATCH_SYNC);
+    if (r) {
+      std::cerr << "RecvDataTcp_s (1) failed" << std::endl;
+      return false;
+    }
+
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::SendDataTcp_s,
+                                   accepted_sock),
+                   NS_DISPATCH_SYNC);
+    if (r) {
+      std::cerr << "SendDataTcp_s (2) failed" << std::endl;
+      return false;
+    }
+
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::RecvDataTcp_s,
+                                   from),
+                   NS_DISPATCH_SYNC);
+    if (r) {
+      std::cerr << "RecvDataTcp_s (2) failed" << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
   int GetAddress(TestNrSocket *sock, nr_transport_addr_ *address) {
     MOZ_ASSERT(sock);
     MOZ_ASSERT(address);
@@ -203,10 +270,16 @@ class TestNrSocketTest : public ::testing::Test {
         const_cast<nr_transport_addr*>(&to));
   }
 
+  int SendDataTcp_s(NrSocketBase *from) {
+    // It is up to caller to ensure that |from| is writeable.
+    const char buf[] = "foobajooba";
+    size_t written;
+    return from->write(buf, sizeof(buf), &written);
+  }
+
   int RecvData_s(TestNrSocket *to, nr_transport_addr *from) {
     // It is up to caller to ensure that |to| is readable
-    const size_t bufSize = 1024;
-    char buf[bufSize];
+    char buf[DATA_BUF_SIZE];
     size_t len;
     // Maybe check that data matches?
     int r = to->recvfrom(buf, sizeof(buf), &len, 0, from);
@@ -215,6 +288,100 @@ class TestNrSocketTest : public ::testing::Test {
     }
     return r;
   }
+
+  int RecvDataTcp_s(NrSocketBase *to) {
+    // It is up to caller to ensure that |to| is readable
+    char buf[DATA_BUF_SIZE];
+    size_t len;
+    // Maybe check that data matches?
+    int r = to->read(buf, sizeof(buf), &len);
+    if (!r && (len == 0)) {
+      r = R_INTERNAL;
+    }
+    return r;
+  }
+
+  int Listen_s(TestNrSocket *to) {
+    // listen on |to|
+    int r = to->listen(1);
+    if (r) {
+      return r;
+    }
+    return 0;
+  }
+
+  int Connect_s(TestNrSocket *from, TestNrSocket *to) {
+    // connect on |from|
+    nr_transport_addr destination_address;
+    int r = to->getaddr(&destination_address);
+    if (r) {
+      return r;
+    }
+
+    r = from->connect(&destination_address);
+    if (r) {
+      return r;
+    }
+
+    return 0;
+  }
+
+  int Accept_s(TestNrSocket *to, NrSocketBase **accepted_sock) {
+    nr_socket *sock;
+    nr_transport_addr source_address;
+    int r = to->accept(&source_address, &sock);
+    if (r) {
+      return r;
+    }
+
+    *accepted_sock = reinterpret_cast<NrSocketBase*>(sock->obj);
+    return 0;
+  }
+
+  bool Connect(TestNrSocket *from,
+               TestNrSocket *to,
+               NrSocketBase **accepted_sock) {
+    int r;
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::Listen_s,
+                                   to),
+                   NS_DISPATCH_SYNC);
+    if (r) {
+      std::cerr << "Listen_s failed: " << r << std::endl;
+      return false;
+    }
+
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::Connect_s,
+                                   from,
+                                   to),
+                   NS_DISPATCH_SYNC);
+    if (r && r != R_WOULDBLOCK) {
+      std::cerr << "Connect_s failed: " << r << std::endl;
+      return false;
+    }
+
+    if (!WaitForReadable(to)) {
+      std::cerr << "WaitForReadable failed" << std::endl;
+      return false;
+    }
+
+    sts_->Dispatch(WrapRunnableRet(&r,
+                                   this,
+                                   &TestNrSocketTest::Accept_s,
+                                   to,
+                                   accepted_sock),
+                   NS_DISPATCH_SYNC);
+
+    if (r) {
+      std::cerr << "Accept_s failed: " << r << std::endl;
+      return false;
+    }
+    return true;
+  }
+
 
   bool WaitForSocketState(TestNrSocket *sock, int state) {
     MOZ_ASSERT(sock);
@@ -641,8 +808,52 @@ TEST_F(TestNrSocketTest, FullConeTimeout) {
                                     sender_external_address));
 }
 
-// TODO(): We need TCP tests, but first we will need ICE TCP to land (this
-// adds listen/accept support to NrSocket)
+TEST_F(TestNrSocketTest, PublicConnectivityTcp)
+{
+  CreatePublicAddrs(2, "127.0.0.1", IPPROTO_TCP);
+
+  ASSERT_TRUE(CheckTcpConnectivity(public_addrs_[0], public_addrs_[1]));
+}
+
+TEST_F(TestNrSocketTest, PrivateConnectivityTcp) {
+  RefPtr<TestNat> nat(CreatePrivateAddrs(2, "127.0.0.1", IPPROTO_TCP));
+  nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
+
+  ASSERT_TRUE(CheckTcpConnectivity(private_addrs_[0], private_addrs_[1]));
+}
+
+TEST_F(TestNrSocketTest, PrivateToPublicConnectivityTcp)
+{
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1, "127.0.0.1", IPPROTO_TCP));
+  nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  CreatePublicAddrs(1, "127.0.0.1", IPPROTO_TCP);
+
+  ASSERT_TRUE(CheckTcpConnectivity(private_addrs_[0], public_addrs_[0]));
+}
+
+TEST_F(TestNrSocketTest, NoConnectivityBetweenSubnetsTcp)
+{
+  RefPtr<TestNat> nat1(CreatePrivateAddrs(1, "127.0.0.1", IPPROTO_TCP));
+  nat1->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  nat1->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  RefPtr<TestNat> nat2(CreatePrivateAddrs(1, "127.0.0.1", IPPROTO_TCP));
+  nat2->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  nat2->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
+
+  ASSERT_FALSE(CheckTcpConnectivity(private_addrs_[0], private_addrs_[1]));
+}
+
+TEST_F(TestNrSocketTest, NoConnectivityPublicToPrivateTcp)
+{
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1, "127.0.0.1", IPPROTO_TCP));
+  nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
+  CreatePublicAddrs(1, "127.0.0.1", IPPROTO_TCP);
+
+  ASSERT_FALSE(CheckTcpConnectivity(public_addrs_[0], private_addrs_[0]));
+}
 
 int main(int argc, char **argv)
 {

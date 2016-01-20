@@ -96,6 +96,10 @@ public:
   }
   virtual ~NrSocketBase() {}
 
+  // Factory method; will create either an NrSocket, NrUdpSocketIpc, or
+  // NrTcpSocketIpc as appropriate.
+  static int CreateSocket(nr_transport_addr *addr, RefPtr<NrSocketBase> *sock);
+
   // the nr_socket APIs
   virtual int create(nr_transport_addr *addr) = 0;
   virtual int sendto(const void *msg, size_t len,
@@ -132,8 +136,9 @@ public:
     return my_addr_;
   }
 
-protected:
   void fire_callback(int how);
+
+protected:
 
   bool connect_invoked_;
   nr_transport_addr my_addr_;
