@@ -18,3 +18,5 @@ DevToolsModules(
     'store.js',
     'types.js',
 )
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
