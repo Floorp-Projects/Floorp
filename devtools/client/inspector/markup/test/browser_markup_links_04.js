@@ -7,7 +7,7 @@
 // Tests that the contextual menu shows the right items when clicking on a link
 // in an attribute.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT + "doc_markup_links.html";
 const STRINGS = Services.strings
   .createBundle("chrome://devtools/locale/inspector.properties");
 const TOOLBOX_STRINGS = Services.strings
@@ -69,7 +69,7 @@ const TEST_DATA = [{
 }];
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   let linkFollow = inspector.panelDoc.getElementById("node-menu-link-follow");
   let linkCopy = inspector.panelDoc.getElementById("node-menu-link-copy");
