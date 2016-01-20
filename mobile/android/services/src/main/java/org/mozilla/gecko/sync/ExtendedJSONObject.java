@@ -173,37 +173,6 @@ public class ExtendedJSONObject {
     this.object = o;
   }
 
-  public ExtendedJSONObject deepCopy() {
-    final ExtendedJSONObject out = new ExtendedJSONObject();
-    @SuppressWarnings("unchecked")
-    final Set<Map.Entry<String, Object>> entries = this.object.entrySet();
-    for (Map.Entry<String, Object> entry : entries) {
-      final String key = entry.getKey();
-      final Object value = entry.getValue();
-      if (value instanceof JSONArray) {
-        // Oh god.
-        try {
-          out.put(key, new JSONParser().parse(((JSONArray) value).toJSONString()));
-        } catch (ParseException e) {
-          // This should never occur, because we're round-tripping.
-        }
-        continue;
-      }
-      if (value instanceof JSONObject) {
-        out.put(key, new ExtendedJSONObject((JSONObject) value).deepCopy().object);
-        continue;
-      }
-      if (value instanceof ExtendedJSONObject) {
-        out.put(key, ((ExtendedJSONObject) value).deepCopy());
-        continue;
-      }
-      // Oh well.
-      out.put(key, value);
-    }
-
-    return out;
-  }
-
   public ExtendedJSONObject(Reader in) throws IOException, ParseException, NonObjectJSONException {
     if (in == null) {
       this.object = new JSONObject();
