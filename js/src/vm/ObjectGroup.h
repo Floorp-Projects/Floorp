@@ -547,10 +547,10 @@ class ObjectGroupCompartment
     NewTable* lazyTable;
 
     struct ArrayObjectKey;
-    using ArrayObjectTable = js::GCHashMap<ArrayObjectKey,
-                                           ReadBarrieredObjectGroup,
-                                           ArrayObjectKey,
-                                           SystemAllocPolicy>;
+    using ArrayObjectTable = js::GCRekeyableHashMap<ArrayObjectKey,
+                                                    ReadBarrieredObjectGroup,
+                                                    ArrayObjectKey,
+                                                    SystemAllocPolicy>;
 
     struct PlainObjectKey;
     struct PlainObjectEntry;
