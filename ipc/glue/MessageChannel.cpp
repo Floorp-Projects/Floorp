@@ -2134,6 +2134,15 @@ MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
     if (mCurrentTransaction) {
+        if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
+            DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT)
+        {
+            MOZ_CRASH("Intentional crash: we're running a nested event loop "
+                      "while processing an urgent message");
+        }
+
+        IPC_LOG("Cancel requested: current xid=%d", mCurrentTransaction);
+        MOZ_ASSERT(DispatchingSyncMessage());
         CancelMessage *cancel = new CancelMessage();
         cancel->set_transaction_id(mCurrentTransaction);
         mLink->SendMessage(cancel);
