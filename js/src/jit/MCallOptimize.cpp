@@ -3695,6 +3695,11 @@ IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::
     return InliningStatus_Inlined;
 }
 
+// Note that SIMD.cpp provides its own JSJitInfo objects for SIMD.foo.* functions.
+// The Simd* objects defined here represent SIMD.foo() constructor calls.
+// They are encoded with .nativeOp = 0. That is the sub-opcode within the SIMD type.
+static_assert(uint16_t(SimdOperation::Constructor) == 0, "Constructor opcode must be 0");
+
 #define ADD_NATIVE(native) const JSJitInfo JitInfo_##native { \
     { nullptr }, { uint16_t(InlinableNative::native) }, { 0 }, JSJitInfo::InlinableNative };
     INLINABLE_NATIVE_LIST(ADD_NATIVE)
