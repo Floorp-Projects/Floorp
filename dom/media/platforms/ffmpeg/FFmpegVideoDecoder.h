@@ -7,6 +7,7 @@
 #ifndef __FFmpegVideoDecoder_h__
 #define __FFmpegVideoDecoder_h__
 
+#include "FFmpegLibWrapper.h"
 #include "FFmpegDataDecoder.h"
 #include "mozilla/Pair.h"
 #include "nsTArray.h"
@@ -32,10 +33,10 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   };
 
 public:
-  FFmpegVideoDecoder(FlushableTaskQueue* aTaskQueue,
-                    MediaDataDecoderCallback* aCallback,
-                    const VideoInfo& aConfig,
-                    ImageContainer* aImageContainer);
+  FFmpegVideoDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
+                     MediaDataDecoderCallback* aCallback,
+                     const VideoInfo& aConfig,
+                     ImageContainer* aImageContainer);
   virtual ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
