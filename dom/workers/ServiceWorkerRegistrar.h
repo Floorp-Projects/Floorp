@@ -77,6 +77,8 @@ private:
   void ShutdownCompleted();
   void MaybeScheduleShutdownCompleted();
 
+  bool IsSupportedVersion(const nsACString& aVersion) const;
+
   mozilla::Monitor mMonitor;
 
 protected:
