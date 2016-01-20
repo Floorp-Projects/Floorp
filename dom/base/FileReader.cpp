@@ -98,9 +98,9 @@ FileReader::RootResultArrayBuffer()
 
 //FileReader constructors/initializers
 
-FileReader::FileReader(nsPIDOMWindow* aWindow,
+FileReader::FileReader(nsIGlobalObject* aGlobal,
                        WorkerPrivate* aWorkerPrivate)
-  : DOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aGlobal)
   , mFileData(nullptr)
   , mDataLen(0)
   , mDataFormat(FILE_AS_BINARY)
@@ -114,8 +114,8 @@ FileReader::FileReader(nsPIDOMWindow* aWindow,
   , mBusyCount(0)
   , mWorkerPrivate(aWorkerPrivate)
 {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerPrivate && !aWindow);
-  MOZ_ASSERT_IF(NS_IsMainThread(), !mWorkerPrivate);
+  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(NS_IsMainThread() == !mWorkerPrivate);
   SetDOMStringToNull(mResult);
 }
 
@@ -128,8 +128,7 @@ FileReader::~FileReader()
 /* static */ already_AddRefed<FileReader>
 FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  // The owner can be null when this object is used by chrome code.
-  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   WorkerPrivate* workerPrivate = nullptr;
 
   if (!NS_IsMainThread()) {
@@ -138,14 +137,7 @@ FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     MOZ_ASSERT(workerPrivate);
   }
 
-  RefPtr<FileReader> fileReader = new FileReader(owner, workerPrivate);
-
-  if (!owner && nsContentUtils::ThreadsafeIsCallerChrome()) {
-    // Instead of grabbing some random global from the context stack,
-    // let's use the default one (junk scope) for now.
-    // We should move away from this Init...
-    fileReader->BindToOwner(xpc::NativeGlobal(xpc::PrivilegedJunkScope()));
-  }
+  RefPtr<FileReader> fileReader = new FileReader(global, workerPrivate);
 
   return fileReader.forget();
 }
@@ -242,17 +234,7 @@ FileReader::DoOnLoadEnd(nsresult aStatus,
   switch (mDataFormat) {
     case FILE_AS_ARRAYBUFFER: {
       AutoJSAPI jsapi;
-      nsCOMPtr<nsIGlobalObject> globalObject;
-
-      if (NS_IsMainThread()) {
-        globalObject = do_QueryInterface(GetParentObject());
-      } else {
-        MOZ_ASSERT(mWorkerPrivate);
-        MOZ_ASSERT(mBusyCount);
-        globalObject = mWorkerPrivate->GlobalScope();
-      }
-
-      if (!globalObject || !jsapi.Init(globalObject)) {
+      if (!jsapi.Init(GetParentObject())) {
         FreeFileData();
         return NS_ERROR_FAILURE;
       }
