@@ -1383,11 +1383,11 @@ private:
 class CreateMessage : public ControlMessage {
 public:
   explicit CreateMessage(MediaStream* aStream) : ControlMessage(aStream) {}
-  virtual void Run() override
+  void Run() override
   {
     mStream->GraphImpl()->AddStreamGraphThread(mStream);
   }
-  virtual void RunDuringShutdown() override
+  void RunDuringShutdown() override
   {
     // Make sure to run this message during shutdown too, to make sure
     // that we balance the number of streams registered with the graph
@@ -1797,14 +1797,14 @@ MediaStream::Destroy()
   class Message : public ControlMessage {
   public:
     explicit Message(MediaStream* aStream) : ControlMessage(aStream) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveAllListenersImpl();
       auto graph = mStream->GraphImpl();
       mStream->DestroyImpl();
       graph->RemoveStreamGraphThread(mStream);
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     { Run(); }
   };
   mWrapper = nullptr;
@@ -1821,7 +1821,7 @@ MediaStream::AddAudioOutput(void* aKey)
   class Message : public ControlMessage {
   public:
     Message(MediaStream* aStream, void* aKey) : ControlMessage(aStream), mKey(aKey) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddAudioOutputImpl(mKey);
     }
@@ -1849,7 +1849,7 @@ MediaStream::SetAudioOutputVolume(void* aKey, float aVolume)
   public:
     Message(MediaStream* aStream, void* aKey, float aVolume) :
       ControlMessage(aStream), mKey(aKey), mVolume(aVolume) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->SetAudioOutputVolumeImpl(mKey, mVolume);
     }
@@ -1888,7 +1888,7 @@ MediaStream::RemoveAudioOutput(void* aKey)
   public:
     Message(MediaStream* aStream, void* aKey) :
       ControlMessage(aStream), mKey(aKey) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveAudioOutputImpl(mKey);
     }
@@ -1924,7 +1924,7 @@ MediaStream::AddVideoOutput(VideoFrameContainer* aContainer)
   public:
     Message(MediaStream* aStream, VideoFrameContainer* aContainer) :
       ControlMessage(aStream), mContainer(aContainer) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddVideoOutputImpl(mContainer.forget());
     }
@@ -1940,7 +1940,7 @@ MediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
   public:
     Message(MediaStream* aStream, VideoFrameContainer* aContainer) :
       ControlMessage(aStream), mContainer(aContainer) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveVideoOutputImpl(mContainer);
     }
@@ -1956,7 +1956,7 @@ MediaStream::Suspend()
   public:
     explicit Message(MediaStream* aStream) :
       ControlMessage(aStream) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->GraphImpl()->IncrementSuspendCount(mStream);
     }
@@ -1977,7 +1977,7 @@ MediaStream::Resume()
   public:
     explicit Message(MediaStream* aStream) :
       ControlMessage(aStream) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->GraphImpl()->DecrementSuspendCount(mStream);
     }
@@ -2012,7 +2012,7 @@ MediaStream::AddListener(MediaStreamListener* aListener)
   public:
     Message(MediaStream* aStream, MediaStreamListener* aListener) :
       ControlMessage(aStream), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddListenerImpl(mListener.forget());
     }
@@ -2037,7 +2037,7 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
   public:
     Message(MediaStream* aStream, MediaStreamListener* aListener) :
       ControlMessage(aStream), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveListenerImpl(mListener);
     }
@@ -2070,12 +2070,12 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
                      already_AddRefed<nsIRunnable> aRunnable)
       : ControlMessage(aStream)
       , mRunnable(aRunnable) {}
-    virtual void Run() override
+    void Run() override
     {
       mStream->Graph()->
         DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
     }
-    virtual void RunDuringShutdown() override
+    void RunDuringShutdown() override
     {
       // Don't run mRunnable now as it may call AppendMessage() which would
       // assume that there are no remaining controlMessagesToRunDuringShutdown.
@@ -2108,7 +2108,7 @@ MediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
   public:
     Message(MediaStream* aStream, TrackID aTrackID, bool aEnabled) :
       ControlMessage(aStream), mTrackID(aTrackID), mEnabled(aEnabled) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->SetTrackEnabledImpl(mTrackID, mEnabled);
     }
@@ -2316,7 +2316,7 @@ SourceMediaStream::NotifyListenersEvent(MediaStreamListener::MediaStreamGraphEve
   public:
     Message(SourceMediaStream* aStream, MediaStreamListener::MediaStreamGraphEvent aEvent) :
       ControlMessage(aStream), mEvent(aEvent) {}
-    virtual void Run()
+    void Run() override
       {
         mStream->AsSourceStream()->NotifyListenersEventImpl(mEvent);
       }
@@ -2481,14 +2481,14 @@ MediaInputPort::Destroy()
   public:
     explicit Message(MediaInputPort* aPort)
       : ControlMessage(nullptr), mPort(aPort) {}
-    virtual void Run()
+    void Run() override
     {
       mPort->Disconnect();
       --mPort->GraphImpl()->mPortCount;
       mPort->SetGraphImpl(nullptr);
       NS_RELEASE(mPort);
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     {
       Run();
     }
@@ -2530,11 +2530,11 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
     explicit Message(MediaInputPort* aPort, TrackID aTrackId)
       : ControlMessage(aPort->GetDestination()),
         mPort(aPort), mTrackId(aTrackId) {}
-    virtual void Run()
+    void Run() override
     {
       mPort->BlockTrackIdImpl(mTrackId);
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     {
       Run();
     }
@@ -2558,14 +2558,14 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
     explicit Message(MediaInputPort* aPort)
       : ControlMessage(aPort->GetDestination()),
         mPort(aPort) {}
-    virtual void Run()
+    void Run() override
     {
       mPort->Init();
       // The graph holds its reference implicitly
       mPort->GraphImpl()->SetStreamOrderDirty();
       Unused << mPort.forget();
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     {
       Run();
     }
@@ -2589,7 +2589,7 @@ ProcessedMediaStream::Finish()
   public:
     explicit Message(ProcessedMediaStream* aStream)
       : ControlMessage(aStream) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->GraphImpl()->FinishStream(mStream);
     }
@@ -2604,7 +2604,7 @@ ProcessedMediaStream::SetAutofinish(bool aAutofinish)
   public:
     Message(ProcessedMediaStream* aStream, bool aAutofinish)
       : ControlMessage(aStream), mAutofinish(aAutofinish) {}
-    virtual void Run()
+    void Run() override
     {
       static_cast<ProcessedMediaStream*>(mStream)->SetAutofinishImpl(mAutofinish);
     }
@@ -2919,7 +2919,7 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
       : ControlMessage(aStream)
     {
     }
-    virtual void Run()
+    void Run() override
     {
       // This runs on the graph thread, so when this runs, and the current
       // driver is an AudioCallbackDriver, we know the audio hardware is
@@ -2936,7 +2936,7 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
         NS_DispatchToMainThread(event.forget());
       }
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     {
     }
   };
@@ -3144,12 +3144,12 @@ MediaStreamGraph::ApplyAudioContextOperation(MediaStream* aDestinationStream,
       , mPromise(aPromise)
     {
     }
-    virtual void Run()
+    void Run() override
     {
       mStream->GraphImpl()->ApplyAudioContextOperationImpl(mStream,
         mStreams, mAudioContextOperation, mPromise);
     }
-    virtual void RunDuringShutdown()
+    void RunDuringShutdown() override
     {
       MOZ_ASSERT(false, "We should be reviving the graph?");
     }

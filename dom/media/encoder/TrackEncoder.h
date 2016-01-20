@@ -146,10 +146,10 @@ public:
     , mAudioBitrate(0)
   {}
 
-  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) override;
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                StreamTime aTrackOffset,
+                                uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia) override;
 
   template<typename T>
   static
@@ -194,7 +194,7 @@ public:
   */
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  virtual void SetBitrate(const uint32_t aBitrate) override
+  void SetBitrate(const uint32_t aBitrate) override
   {
     mAudioBitrate = aBitrate;
   }
@@ -227,7 +227,7 @@ protected:
    * Notifies the audio encoder that we have reached the end of source stream,
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    */
-  virtual void NotifyEndOfStream() override;
+  void NotifyEndOfStream() override;
 
   /**
    * The number of channels are used for processing PCM data in the audio encoder.
@@ -268,16 +268,16 @@ public:
    * Notified by the same callback of MediaEncoder when it has received a track
    * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
-  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) override;
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                StreamTime aTrackOffset,
+                                uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia) override;
   /**
   * Measure size of mRawSegment
   */
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  virtual void SetBitrate(const uint32_t aBitrate) override
+  void SetBitrate(const uint32_t aBitrate) override
   {
     mVideoBitrate = aBitrate;
   }
@@ -303,7 +303,7 @@ protected:
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    * Called on the MediaStreamGraph thread.
    */
-  virtual void NotifyEndOfStream() override;
+  void NotifyEndOfStream() override;
 
   /**
    * The width of source video frame, ceiled if the source width is odd.

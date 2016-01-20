@@ -33,7 +33,8 @@ from mozharness.mozilla.selfserve import SelfServeMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 
 VALID_MIGRATION_BEHAVIORS = (
-    "beta_to_release", "aurora_to_beta", "central_to_aurora", "release_to_esr"
+    "beta_to_release", "aurora_to_beta", "central_to_aurora", "release_to_esr",
+    "bump_second_digit",
 )
 
 
@@ -84,6 +85,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
                 'pull',
                 'lock-update-paths',
                 'migrate',
+                'bump_second_digit',
                 'commit-changes',
                 'push',
                 'trigger-builders',
@@ -126,13 +128,13 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             dirs['abs_work_dir'], 'tools', 'lib', 'python'
         )
         for k in ('from', 'to'):
-            dir_name = self.config.get(
-                "%s_repo_dir",
-                self.get_filename_from_url(self.config["%s_repo_url" % k])
-            )
-            self.abs_dirs['abs_%s_dir' % k] = os.path.join(
-                dirs['abs_work_dir'], dir_name
-            )
+            url = self.config.get("%s_repo_url" % k)
+            if url:
+                dir_name = self.get_filename_from_url(url)
+                self.info("adding %s" % dir_name)
+                self.abs_dirs['abs_%s_dir' % k] = os.path.join(
+                    dirs['abs_work_dir'], dir_name
+                )
         return self.abs_dirs
 
     def query_gecko_repos(self):
@@ -144,13 +146,17 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         dirs = self.query_abs_dirs()
         self.gecko_repos = []
         for k in ('from', 'to'):
-            url = self.config["%s_repo_url" % k]
-            self.gecko_repos.append({
-                "repo": url,
-                "revision": self.config.get("%s_repo_revision", "default"),
-                "dest": dirs['abs_%s_dir' % k],
-                "vcs": "hg",
-            })
+            repo_key = "%s_repo_url" % k
+            url = self.config.get(repo_key)
+            if url:
+                self.gecko_repos.append({
+                    "repo": url,
+                    "revision": self.config.get("%s_repo_revision", "default"),
+                    "dest": dirs['abs_%s_dir' % k],
+                    "vcs": "hg",
+                })
+            else:
+                self.warning("Skipping %s" % repo_key)
         self.info(pprint.pformat(self.gecko_repos))
         return self.gecko_repos
 
@@ -174,10 +180,10 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         dirs = self.query_abs_dirs()
         return self.query_hg_revision(dirs['abs_to_dir'])
 
-    def get_fx_major_version(self, path):
+    def get_fx_version(self, path):
         version_path = os.path.join(path, "browser", "config", "version.txt")
         contents = self.read_from_file(version_path, error_level=FATAL)
-        return contents.split(".")[0]
+        return contents.split(".")
 
     def hg_tag(self, cwd, tags, user=None, message=None, revision=None,
                force=None, halt_on_failure=True):
@@ -327,8 +333,9 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         curr_weave_version = str(int(curr_version) + 2)
         next_weave_version = str(int(curr_weave_version) + 1)
         for f in self.config["version_files"]:
-            self.replace(os.path.join(cwd, f), "%s.0%s" % (curr_version, curr_suffix),
-                         "%s.0%s" % (next_version, next_suffix))
+            from_ = "%s.0%s" % (curr_version, curr_suffix)
+            to = "%s.0%s%s" % (next_version, next_suffix, f["suffix"])
+            self.replace(os.path.join(cwd, f["file"]), from_, to)
 
         # only applicable for m-c
         if bump_major:
@@ -362,11 +369,11 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
                 error_list=HgErrorList,
                 halt_on_failure=True,
             )
-        next_ma_version = self.get_fx_major_version(dirs['abs_to_dir'])
+        next_ma_version = self.get_fx_version(dirs['abs_to_dir'])[0]
         self.bump_version(dirs['abs_to_dir'], next_ma_version, next_ma_version, "a1", "a2")
         self.apply_replacements()
         # bump m-c version
-        curr_mc_version = self.get_fx_major_version(dirs['abs_from_dir'])
+        curr_mc_version = self.get_fx_version(dirs['abs_from_dir'])[0]
         next_mc_version = str(int(curr_mc_version) + 1)
         self.bump_version(
             dirs['abs_from_dir'], curr_mc_version, next_mc_version, "a1", "a1",
@@ -385,7 +392,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             staging beta user repo migrations.
             """
         dirs = self.query_abs_dirs()
-        mb_version = self.get_fx_major_version(dirs['abs_to_dir'])
+        mb_version = self.get_fx_version(dirs['abs_to_dir'])[0]
         self.bump_version(dirs['abs_to_dir'], mb_version, mb_version, "a2", "")
         self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
@@ -466,6 +473,25 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             halt_on_failure=True,
         )
 
+    def bump_second_digit(self, *args, **kwargs):
+        """Bump second digit.
+
+         ESR need only the second digit bumped as a part of merge day."""
+        dirs = self.query_abs_dirs()
+        version = self.get_fx_version(dirs['abs_to_dir'])
+        curr_version = ".".join(version)
+        next_version = list(version)
+        # bump the second digit
+        next_version[1] = str(int(next_version[1]) + 1)
+        # in case we have third digit, reset it to 0
+        if len(next_version) > 2:
+            next_version[2] = '0'
+        next_version = ".".join(next_version)
+        for f in self.config["version_files"]:
+            self.replace(os.path.join(dirs['abs_to_dir'], f["file"]),
+                         curr_version, next_version + f["suffix"])
+        self.touch_clobber_file(dirs['abs_to_dir'])
+
 # Actions {{{1
     def clean_repos(self):
         """ We may end up with contaminated local repos at some point, but
@@ -534,8 +560,8 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         """ Perform the migration.
             """
         dirs = self.query_abs_dirs()
-        from_fx_major_version = self.get_fx_major_version(dirs['abs_from_dir'])
-        to_fx_major_version = self.get_fx_major_version(dirs['abs_to_dir'])
+        from_fx_major_version = self.get_fx_version(dirs['abs_from_dir'])[0]
+        to_fx_major_version = self.get_fx_version(dirs['abs_to_dir'])[0]
         base_from_rev = self.query_from_revision()
         base_to_rev = self.query_to_revision()
         base_tag = self.config['base_tag'] % {'major_version': from_fx_major_version}
@@ -596,7 +622,10 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
 the script (--clean-repos --pull --migrate).  The second run will be faster."""
         dirs = self.query_abs_dirs()
         hg = self.query_exe("hg", return_type="list")
-        for cwd in (dirs['abs_from_dir'], dirs['abs_to_dir']):
+        for cwd in (dirs.get('abs_from_dir'), dirs.get('abs_to_dir')):
+            if not cwd:
+                self.warning("Skipping %s" % cwd)
+                continue
             push_cmd = hg + ['push']
             if cwd == dirs['abs_to_dir'] and self.config['migration_behavior'] == 'beta_to_release':
                 push_cmd.append('--new-branch')

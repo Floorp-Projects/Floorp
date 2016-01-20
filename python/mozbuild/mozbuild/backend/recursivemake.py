@@ -518,13 +518,15 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('GENERATED_FILES += %s\n' % obj.output)
             backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
             if obj.script:
-                backend_file.write("""{output}: {script}{inputs}
+                backend_file.write("""{output}: {script}{inputs}{backend}
 \t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs})
+\t$(call py_action,file_generate,{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
 
 """.format(output=obj.output,
            dep_file=dep_file,
            inputs=' ' + ' '.join(obj.inputs) if obj.inputs else '',
+           flags=' ' + ' '.join(obj.flags) if obj.flags else '',
+           backend=' backend.mk' if obj.flags else '',
            script=obj.script,
            method=obj.method))
 
@@ -948,6 +950,7 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write("""
 %(prefix)s_FILES := %(files)s
 %(prefix)s_DEST := %(dest)s
+%(prefix)s_TARGET := misc
 INSTALL_TARGETS += %(prefix)s
 """ % { 'prefix': prefix,
         'dest': '$(DEPTH)/_tests/%s' % path,
@@ -1314,6 +1317,7 @@ INSTALL_TARGETS += %(prefix)s
                     i, self._pretty_path(f, backend_file)))
             backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
                                % (i, mozpath.join(obj.install_target, path)))
+            backend_file.write('DIST_FILES_%d_TARGET := misc\n' % i)
             backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
 
     def _process_chrome_manifest_entry(self, obj, backend_file):

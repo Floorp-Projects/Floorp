@@ -22,7 +22,7 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
   friend class SpeechSynthesisRequestParent;
 
 public:
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
                               InfallibleTArray<nsString>* aDefaults,
@@ -60,19 +60,19 @@ public:
 
 protected:
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvPause() override;
+  bool RecvPause() override;
 
-  virtual bool RecvResume() override;
+  bool RecvResume() override;
 
-  virtual bool RecvCancel() override;
+  bool RecvCancel() override;
 
-  virtual bool RecvForceEnd() override;
+  bool RecvForceEnd() override;
 
-  virtual bool RecvSetAudioOutputVolume(const float& aVolume) override;
+  bool RecvSetAudioOutputVolume(const float& aVolume) override;
 
-  virtual bool Recv__delete__() override;
+  bool Recv__delete__() override;
 };
 
 class SpeechTaskParent : public nsSpeechTask
@@ -82,21 +82,21 @@ public:
   SpeechTaskParent(float aVolume, const nsAString& aUtterance)
     : nsSpeechTask(aVolume, aUtterance) {}
 
-  virtual nsresult DispatchStartImpl(const nsAString& aUri);
+  nsresult DispatchStartImpl(const nsAString& aUri);
 
-  virtual nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchBoundaryImpl(const nsAString& aName,
-                                        float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchBoundaryImpl(const nsAString& aName,
+                                float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchMarkImpl(const nsAString& aName,
-                                    float aElapsedTime, uint32_t aCharIndex);
+  nsresult DispatchMarkImpl(const nsAString& aName,
+                            float aElapsedTime, uint32_t aCharIndex);
 
 private:
   SpeechSynthesisRequestParent* mActor;

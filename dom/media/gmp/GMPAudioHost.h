@@ -29,24 +29,24 @@ public:
                       uint32_t aRate);
   virtual ~GMPAudioSamplesImpl();
 
-  virtual GMPAudioFormat GetFormat() override;
-  virtual void Destroy() override;
-  virtual GMPErr SetBufferSize(uint32_t aSize) override;
-  virtual uint32_t Size() override;
-  virtual void SetTimeStamp(uint64_t aTimeStamp) override;
-  virtual uint64_t TimeStamp() override;
-  virtual const uint8_t* Buffer() const override;
-  virtual uint8_t* Buffer() override;
-  virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const override;
+  GMPAudioFormat GetFormat() override;
+  void Destroy() override;
+  GMPErr SetBufferSize(uint32_t aSize) override;
+  uint32_t Size() override;
+  void SetTimeStamp(uint64_t aTimeStamp) override;
+  uint64_t TimeStamp() override;
+  const uint8_t* Buffer() const override;
+  uint8_t* Buffer() override;
+  const GMPEncryptedBufferMetadata* GetDecryptionData() const override;
 
   void InitCrypto(const CryptoSample& aCrypto);
 
   void RelinquishData(GMPAudioEncodedSampleData& aData);
 
-  virtual uint32_t Channels() const override;
-  virtual void SetChannels(uint32_t aChannels) override;
-  virtual uint32_t Rate() const override;
-  virtual void SetRate(uint32_t aRate) override;
+  uint32_t Channels() const override;
+  void SetChannels(uint32_t aChannels) override;
+  uint32_t Rate() const override;
+  void SetRate(uint32_t aRate) override;
 
 private:
   GMPAudioFormat mFormat;
@@ -60,8 +60,8 @@ private:
 class GMPAudioHostImpl : public GMPAudioHost
 {
 public:
-  virtual GMPErr CreateSamples(GMPAudioFormat aFormat,
-                               GMPAudioSamples** aSamples) override;
+  GMPErr CreateSamples(GMPAudioFormat aFormat,
+                       GMPAudioSamples** aSamples) override;
 private:
 };
 

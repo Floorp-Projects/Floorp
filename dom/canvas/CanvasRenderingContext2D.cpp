@@ -2488,8 +2488,11 @@ CanvasRenderingContext2D::UpdateFilter()
 //
 
 static bool
-ValidateRect(double& aX, double& aY, double& aWidth, double& aHeight)
+ValidateRect(double& aX, double& aY, double& aWidth, double& aHeight, bool aIsZeroSizeValid)
 {
+  if (!aIsZeroSizeValid && (aWidth == 0.0 || aHeight == 0.0)) {
+    return false;
+  }
 
   // bug 1018527
   // The values of canvas API input are in double precision, but Moz2D APIs are
@@ -2520,7 +2523,8 @@ void
 CanvasRenderingContext2D::ClearRect(double x, double y, double w,
                                     double h)
 {
-  if(!ValidateRect(x, y, w, h)) {
+  // Do not allow zeros - it's a no-op at that point per spec.
+  if (!ValidateRect(x, y, w, h, false)) {
     return;
   }
 
@@ -2537,7 +2541,7 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
 {
   const ContextState &state = CurrentState();
 
-  if(!ValidateRect(x, y, w, h)) {
+  if (!ValidateRect(x, y, w, h, true)) {
     return;
   }
 
@@ -2615,7 +2619,7 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
     return;
   }
 
-  if(!ValidateRect(x, y, w, h)) {
+  if (!ValidateRect(x, y, w, h, true)) {
     return;
   }
 
@@ -2804,7 +2808,7 @@ void CanvasRenderingContext2D::DrawFocusIfNeeded(mozilla::dom::Element& aElement
     return;
   }
 
-  if(DrawCustomFocusRing(aElement)) {
+  if (DrawCustomFocusRing(aElement)) {
     Save();
 
     // set state to conforming focus state
@@ -3051,7 +3055,7 @@ void
 CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
 {
   FillRule fillRule = CurrentState().fillRule;
-  if(winding == CanvasWindingRule::Evenodd)
+  if (winding == CanvasWindingRule::Evenodd)
     fillRule = FillRule::FILL_EVEN_ODD;
 
   EnsureTarget();
@@ -3342,7 +3346,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
     path = mPath;
   }
 
-  if(!path) {
+  if (!path) {
     error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
@@ -4396,8 +4400,8 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
 
   if (optional_argc == 6) {
-    if (!ValidateRect(sx, sy, sw, sh) ||
-        !ValidateRect(dx, dy, dw, dh)) {
+    if  (!ValidateRect(sx, sy, sw, sh, true) ||
+         !ValidateRect(dx, dy, dw, dh, true)) {
       return;
     }
   }

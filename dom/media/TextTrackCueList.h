@@ -28,7 +28,7 @@ public:
   // TextTrackCueList WebIDL
   explicit TextTrackCueList(nsISupports* aParent);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const
   {

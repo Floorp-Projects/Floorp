@@ -572,6 +572,8 @@ this.PushServiceHttp2 = {
     console.debug("init()");
     this._mainPushService = aMainPushService;
     this._serverURI = aServerURL;
+
+    return Promise.resolve();
   },
 
   _retryAfterBackoff: function(aSubscriptionUri, retryAfter) {

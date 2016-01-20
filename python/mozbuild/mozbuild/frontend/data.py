@@ -848,14 +848,16 @@ class GeneratedFile(ContextDerived):
         'method',
         'output',
         'inputs',
+        'flags',
     )
 
-    def __init__(self, context, script, method, output, inputs):
+    def __init__(self, context, script, method, output, inputs, flags=()):
         ContextDerived.__init__(self, context)
         self.script = script
         self.method = method
         self.output = output
         self.inputs = inputs
+        self.flags = flags
 
 
 class ClassPathEntry(object):

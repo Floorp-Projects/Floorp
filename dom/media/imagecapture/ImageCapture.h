@@ -53,7 +53,7 @@ public:
   VideoStreamTrack* GetVideoStreamTrack() const;
 
   // nsWrapperCache member
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return ImageCaptureBinding::Wrap(aCx, this, aGivenProto);
   }

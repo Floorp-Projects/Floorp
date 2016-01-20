@@ -68,7 +68,7 @@ public:
     mHRTFPanner = new HRTFPanner(aNode->Context()->SampleRate(), Move(loader));
   }
 
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
+  void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
     case PannerNode::PANNING_MODEL:
@@ -104,7 +104,7 @@ public:
       NS_ERROR("Bad PannerNodeEngine Int32Parameter");
     }
   }
-  virtual void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) override
+  void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) override
   {
     switch (aIndex) {
     case PannerNode::LISTENER_POSITION: mListenerPosition = aParam; break;
@@ -118,7 +118,7 @@ public:
       NS_ERROR("Bad PannerNodeEngine ThreeDPointParameter");
     }
   }
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override
+  void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     switch (aIndex) {
     case PannerNode::LISTENER_DOPPLER_FACTOR: mListenerDopplerFactor = aParam; break;
@@ -134,11 +134,11 @@ public:
     }
   }
 
-  virtual void ProcessBlock(AudioNodeStream* aStream,
-                            GraphTime aFrom,
-                            const AudioBlock& aInput,
-                            AudioBlock* aOutput,
-                            bool *aFinished) override
+  void ProcessBlock(AudioNodeStream* aStream,
+                    GraphTime aFrom,
+                    const AudioBlock& aInput,
+                    AudioBlock* aOutput,
+                    bool *aFinished) override
   {
     if (aInput.IsNull()) {
       // mLeftOverData != INT_MIN means that the panning model was HRTF and a
@@ -174,7 +174,7 @@ public:
     (this->*mPanningModelFunction)(aInput, aOutput);
   }
 
-  virtual bool IsActive() const override
+  bool IsActive() const override
   {
     return mLeftOverData != INT_MIN;
   }
@@ -191,7 +191,7 @@ public:
   float InverseGainFunction(float aDistance);
   float ExponentialGainFunction(float aDistance);
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     if (mHRTFPanner) {
@@ -201,7 +201,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
