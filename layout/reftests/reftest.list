@@ -157,6 +157,9 @@ include counter-style/reftest.list
 # datalist
 include datalist/reftest.list
 
+# details and summary
+include details-summary/reftest.list
+
 # dom/
 include dom/reftest.list
 
