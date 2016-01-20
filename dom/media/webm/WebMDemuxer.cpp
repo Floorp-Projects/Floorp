@@ -12,11 +12,13 @@
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
 #include "mozilla/Endian.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"
+#include "VideoUtils.h"
 #include "XiphExtradata.h"
 #include "prprf.h"
 
@@ -417,6 +419,13 @@ WebMDemuxer::ReadMetadata()
         mInfo.mAudio.mCodecSpecificConfig->AppendElements(headers[0],
                                                           headerLens[0]);
       }
+
+      if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
+        if (!mVorbisCounter.Init(headers, headerLens)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
       uint64_t duration = 0;
       r = nestegg_duration(mContext, &duration);
       if (!r) {
@@ -542,6 +551,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
   (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
 
   for (uint32_t i = 0; i < count; ++i) {
+    int64_t duration = next_tstamp - tstamp;
     unsigned char* data;
     size_t length;
     r = nestegg_packet_data(holder->Packet(), i, &data, &length);
@@ -552,6 +562,20 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     bool isKeyframe = false;
     if (aType == TrackInfo::kAudioTrack) {
       isKeyframe = true;
+      switch (mAudioCodec) {
+        case NESTEGG_CODEC_VORBIS:
+        {
+          int nsamples = mVorbisCounter.GetNumSamples(data, length);
+          if (nsamples < 0) {
+            return false;
+          }
+          duration =
+            FramesToTimeUnit(nsamples, mInfo.mAudio.mRate).ToMicroseconds();
+          break;
+        }
+        default:
+          break;
+      }
     } else if (aType == TrackInfo::kVideoTrack) {
       vpx_codec_stream_info_t si;
       PodZero(&si);
@@ -572,7 +596,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     RefPtr<MediaRawData> sample = new MediaRawData(data, length);
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;
-    sample->mDuration = next_tstamp - tstamp;
+    sample->mDuration = duration;
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding) {
@@ -582,6 +606,9 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
       sample->mExtraData->AppendElements(&c[0], 8);
     }
     aSamples->Push(sample);
+    if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
+      tstamp += duration;
+    }
   }
   return true;
 }
@@ -721,6 +748,7 @@ WebMDemuxer::SeekInternal(const media::TimeUnit& aTarget)
 
   mLastAudioFrameTime.reset();
   mLastVideoFrameTime.reset();
+  mVorbisCounter.Reset();
 
   return NS_OK;
 }
