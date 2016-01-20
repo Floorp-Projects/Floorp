@@ -53,6 +53,11 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'firefox-ui/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'base': 'js/src',
             'pattern': 'jit-test/**',
             'dest': 'jit-test',
@@ -80,6 +85,11 @@ ARCHIVE_FILES = {
             'base': 'js/src',
             'pattern': 'jsapi.h',
             'dest': 'jit-test',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'puppeteer/**',
         },
         {
             'source': buildconfig.topsrcdir,
