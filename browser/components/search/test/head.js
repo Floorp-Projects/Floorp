@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
-
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
@@ -43,15 +40,15 @@ function getLocalizedPref(aPrefName, aDefault) {
 }
 
 function promiseEvent(aTarget, aEventName, aPreventDefault) {
-  let deferred = Promise.defer();
-  aTarget.addEventListener(aEventName, function onEvent(aEvent) {
-    aTarget.removeEventListener(aEventName, onEvent, true);
+  function cancelEvent(event) {
     if (aPreventDefault) {
-      aEvent.preventDefault();
+      event.preventDefault();
     }
-    deferred.resolve();
-  }, true);
-  return deferred.promise;
+
+    return true;
+  }
+
+  return BrowserTestUtils.waitForEvent(aTarget, aEventName, false, cancelEvent);
 }
 
 function promiseNewEngine(basename, options = {}) {
