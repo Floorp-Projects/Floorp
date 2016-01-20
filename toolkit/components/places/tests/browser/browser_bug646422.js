@@ -7,43 +7,48 @@
  * history.pushState, the history service has a title stored for the new URI.
  **/
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* () {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, 'http://example.com');
 
-  let tab = gBrowser.addTab('http://example.com');
-  let tabBrowser = tab.linkedBrowser;
+  let newTitlePromise = new Promise(resolve => {
+    let observer = {
+      onTitleChanged: function(uri, title) {
+        // If the uri of the page whose title is changing ends with 'new_page',
+        // then it's the result of our pushState.
+        if (/new_page$/.test(uri.spec)) {
+          resolve(title);
+          PlacesUtils.history.removeObserver(observer);
+        }
+      },
 
-  tabBrowser.addEventListener('load', function(aEvent) {
-    tabBrowser.removeEventListener('load', arguments.callee, true);
+      onBeginUpdateBatch: function() { },
+      onEndUpdateBatch: function() { },
+      onVisit: function() { },
+      onDeleteURI: function() { },
+      onClearHistory: function() { },
+      onPageChanged: function() { },
+      onDeleteVisits: function() { },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+    };
 
-    // Control should now flow down to observer.onTitleChanged().
-    let cw = tabBrowser.contentWindow;
-    ok(cw.document.title, 'Content window should initially have a title.');
-    cw.history.pushState('', '', 'new_page');
-  }, true);
+    PlacesUtils.history.addObserver(observer, false);
+  });
 
-  let observer = {
-    onTitleChanged: function(uri, title) {
-      // If the uri of the page whose title is changing ends with 'new_page',
-      // then it's the result of our pushState.
-      if (/new_page$/.test(uri.spec)) {
-        is(title, tabBrowser.contentWindow.document.title,
-           'Title after pushstate.');
-        PlacesUtils.history.removeObserver(this);
-        gBrowser.removeTab(tab);
-        finish();
-      }
-    },
+  let title = yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    let title =  content.document.title;
+    content.history.pushState('', '', 'new_page');
+    return title;
+  });
 
-    onBeginUpdateBatch: function() { },
-    onEndUpdateBatch: function() { },
-    onVisit: function() { },
-    onDeleteURI: function() { },
-    onClearHistory: function() { },
-    onPageChanged: function() { },
-    onDeleteVisits: function() { },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
-  };
+  ok(title, 'Content window should initially have a title.');
 
-  PlacesUtils.history.addObserver(observer, false);
-}
+  let newtitle = yield newTitlePromise;
+
+  title = yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    return content.document.title;
+  });
+  is(newtitle, title, 'Title after pushstate.');
+
+  yield PlacesTestUtils.clearHistory();
+  gBrowser.removeTab(tab);
+});
