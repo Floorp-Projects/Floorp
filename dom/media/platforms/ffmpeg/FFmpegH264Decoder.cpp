@@ -151,7 +151,7 @@ FFmpegH264Decoder<LIBAV_VER>::InitCodecContext()
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
 
-  mCodecParser = AV_CALL(av_parser_init(mCodecID));
+  mCodecParser = av_parser_init(mCodecID);
   if (mCodecParser) {
     mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
   }
@@ -175,10 +175,10 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     while (inputSize) {
       uint8_t* data;
       int size;
-      int len = AV_CALL(av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
-                                         inputData, inputSize,
-                                         aSample->mTime, aSample->mTimecode,
-                                         aSample->mOffset));
+      int len = av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
+                                 inputData, inputSize,
+                                 aSample->mTime, aSample->mTimecode,
+                                 aSample->mOffset);
       if (size_t(len) > inputSize) {
         mCallback->Error();
         return DecodeResult::DECODE_ERROR;
@@ -210,7 +210,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
   AVPacket packet;
-  AV_CALL(av_init_packet(&packet));
+  av_init_packet(&packet);
 
   packet.data = aData;
   packet.size = aSize;
@@ -237,7 +237,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   int decoded;
   int bytesConsumed =
-    AV_CALL(avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet));
+    avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
 
   FFMPEG_LOG("DoDecodeFrame:decode_video: rv=%d decoded=%d "
              "(Input: pts(%lld) dts(%lld) Output: pts(%lld) "
@@ -361,7 +361,7 @@ FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 {
   MOZ_COUNT_DTOR(FFmpegH264Decoder);
   if (mCodecParser) {
-    AV_CALL(av_parser_close(mCodecParser));
+    av_parser_close(mCodecParser);
     mCodecParser = nullptr;
   }
 }
