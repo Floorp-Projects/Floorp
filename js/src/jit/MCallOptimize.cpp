@@ -262,6 +262,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineIsTypedArray(callInfo);
       case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
         return inlineIsPossiblyWrappedTypedArray(callInfo);
+      case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
+        return inlinePossiblyWrappedTypedArrayLength(callInfo);
       case InlinableNative::IntrinsicTypedArrayLength:
         return inlineTypedArrayLength(callInfo);
       case InlinableNative::IntrinsicSetDisjointTypedElements:
@@ -2243,7 +2245,7 @@ IsTypedArrayObject(CompilerConstraintList* constraints, MDefinition* def)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
+IonBuilder::inlinePossiblyWrappedTypedArrayLength(CallInfo& callInfo)
 {
     MOZ_ASSERT(!callInfo.constructing());
     MOZ_ASSERT(callInfo.argc() == 1);
@@ -2252,8 +2254,6 @@ IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
     if (getInlineReturnType() != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    // Note that the argument we see here is not necessarily a typed array.
-    // If it's not, this call should be unreachable though.
     if (!IsTypedArrayObject(constraints(), callInfo.getArg(0)))
         return InliningStatus_NotInlined;
 
@@ -2262,6 +2262,12 @@ IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
+{
+    return inlinePossiblyWrappedTypedArrayLength(callInfo);
 }
 
 IonBuilder::InliningStatus

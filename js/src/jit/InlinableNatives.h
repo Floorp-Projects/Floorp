@@ -111,6 +111,7 @@
     _(IntrinsicIsTypedArray)        \
     _(IntrinsicIsPossiblyWrappedTypedArray) \
     _(IntrinsicTypedArrayLength)    \
+    _(IntrinsicPossiblyWrappedTypedArrayLength)    \
     _(IntrinsicSetDisjointTypedElements) \
                                     \
     _(IntrinsicObjectIsTypedObject) \
