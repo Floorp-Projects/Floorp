@@ -103,7 +103,7 @@ public:
 
   nsresult Init(const dom::Optional<double>& aFPS, const TrackID& aTrackId);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   HTMLCanvasElement* Canvas() const { return mCanvas; }

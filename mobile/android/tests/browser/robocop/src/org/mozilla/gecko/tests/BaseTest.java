@@ -582,7 +582,7 @@ abstract class BaseTest extends BaseRobocopTest {
         addTab();
 
         // Adding a new tab opens about:home, so now we just need to load the url in it.
-        inputAndLoadUrl(url);
+        loadUrlAndWait(url);
     }
 
     public void closeAddedTabs() {

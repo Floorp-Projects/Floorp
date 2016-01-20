@@ -110,7 +110,8 @@ def config_status(topobjdir='.', topsrcdir='.',
                         help='print diffs of changed files.')
     parser.add_argument('-b', '--backend', nargs='+',
                         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
-                                 'VisualStudio', 'FasterMake', 'CompileDB'],
+                                 'VisualStudio', 'FasterMake', 'CompileDB',
+                                 'ChromeMap'],
                         default=default_backends,
                         help='what backend to build (default: %s).' %
                         ' '.join(default_backends))
@@ -150,6 +151,9 @@ def config_status(topobjdir='.', topsrcdir='.',
         elif backend == 'CompileDB':
             from mozbuild.compilation.database import CompileDBBackend
             backends_cls.append(CompileDBBackend)
+        elif backend == 'ChromeMap':
+            from mozbuild.codecoverage.chrome_map import ChromeMapBackend
+            backends_cls.append(ChromeMapBackend)
         else:
             backends_cls.append(RecursiveMakeBackend)
 

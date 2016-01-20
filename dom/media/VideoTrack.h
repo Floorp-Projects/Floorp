@@ -22,9 +22,9 @@ public:
              const nsAString& aLabel,
              const nsAString& aLanguage);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual VideoTrack* AsVideoTrack() override
+  VideoTrack* AsVideoTrack() override
   {
     return this;
   }
@@ -34,7 +34,7 @@ public:
   // default. If multiple video tracks are selected by its media resource at
   // fetching phase, then the first enabled video track is set selected.
   // aFlags contains FIRE_NO_EVENTS because no events are fired in such cases.
-  virtual void SetEnabledInternal(bool aEnabled, int aFlags) override;
+  void SetEnabledInternal(bool aEnabled, int aFlags) override;
 
   // WebIDL
   bool Selected() const

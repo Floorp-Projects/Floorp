@@ -27,22 +27,22 @@ class MP4Demuxer : public MediaDataDemuxer
 public:
   explicit MP4Demuxer(MediaResource* aResource);
 
-  virtual RefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
 
-  virtual bool HasTrackType(TrackInfo::TrackType aType) const override;
+  bool HasTrackType(TrackInfo::TrackType aType) const override;
 
-  virtual uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
+  uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
-  virtual already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(TrackInfo::TrackType aType,
-                                                              uint32_t aTrackNumber) override;
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(TrackInfo::TrackType aType,
+                                                      uint32_t aTrackNumber) override;
 
-  virtual bool IsSeekable() const override;
+  bool IsSeekable() const override;
 
-  virtual UniquePtr<EncryptionInfo> GetCrypto() override;
+  UniquePtr<EncryptionInfo> GetCrypto() override;
 
-  virtual void NotifyDataArrived() override;
+  void NotifyDataArrived() override;
 
-  virtual void NotifyDataRemoved() override;
+  void NotifyDataRemoved() override;
 
 private:
   friend class MP4TrackDemuxer;

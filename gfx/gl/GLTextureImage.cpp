@@ -270,6 +270,7 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
     : mSize(aSize)
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
+    , mTextureFormat(gfx::SurfaceFormat::UNKNOWN)
     , mFilter(Filter::GOOD)
     , mFlags(aFlags)
 {}
@@ -313,6 +314,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
     , mCurrentImage(0)
     , mIterationCallback(nullptr)
+    , mIterationCallbackData(nullptr)
     , mInUpdate(false)
     , mRows(0)
     , mColumns(0)

@@ -553,6 +553,10 @@ public:
   }
 
   already_AddRefed<MediaSource> GetMozMediaSourceObject() const;
+  // Returns a string describing the state of the media player internal
+  // data. Used for debugging purposes.
+  void GetMozDebugReaderData(nsAString& aString);
+
   already_AddRefed<DOMMediaStream> GetSrcObject() const;
   void SetSrcObject(DOMMediaStream& aValue);
   void SetSrcObject(DOMMediaStream* aValue);

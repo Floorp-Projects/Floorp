@@ -38,6 +38,11 @@ namespace dom {
 
 namespace {
 
+static const char* gSupportedRegistrarVersions[] = {
+  SERVICEWORKERREGISTRAR_VERSION,
+  "2"
+};
+
 StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
 
 } // namespace
@@ -297,20 +302,20 @@ ServiceWorkerRegistrar::ReadData()
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(stream);
   MOZ_ASSERT(lineInputStream);
 
-  nsAutoCString line;
+  nsAutoCString version;
   bool hasMoreLines;
-  rv = lineInputStream->ReadLine(line, &hasMoreLines);
+  rv = lineInputStream->ReadLine(version, &hasMoreLines);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // The file is corrupted ?
-  // FIXME: in case we implement a version 2, we should inform the user using
-  // the console about this issue.
-  if (!line.EqualsLiteral(SERVICEWORKERREGISTRAR_VERSION)) {
+  if (!IsSupportedVersion(version)) {
+    nsContentUtils::LogMessageToConsole(
+      "Unsupported service worker registrar version: %s", version.get());
     return NS_ERROR_FAILURE;
   }
 
+  bool overwrite = false;
   while (hasMoreLines) {
     ServiceWorkerRegistrationData* entry = mData.AppendElement();
 
@@ -323,28 +328,58 @@ ServiceWorkerRegistrar::ReadData()
       return NS_ERROR_FAILURE;                        \
     }
 
-    nsAutoCString suffix;
-    GET_LINE(suffix);
+    nsAutoCString line;
+    if (version.EqualsLiteral(SERVICEWORKERREGISTRAR_VERSION)) {
+      nsAutoCString suffix;
+      GET_LINE(suffix);
 
-    PrincipalOriginAttributes attrs;
-    if (!attrs.PopulateFromSuffix(suffix)) {
-      return NS_ERROR_INVALID_ARG;
+      PrincipalOriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(suffix)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      GET_LINE(line);
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, line);
+
+      GET_LINE(entry->scope());
+      GET_LINE(entry->currentWorkerURL());
+
+      nsAutoCString cacheName;
+      GET_LINE(cacheName);
+      CopyUTF8toUTF16(cacheName, entry->cacheName());
+    } else if (version.EqualsLiteral("2")) {
+      overwrite = true;
+
+      nsAutoCString suffix;
+      GET_LINE(suffix);
+
+      PrincipalOriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(suffix)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      GET_LINE(line);
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, line);
+
+      GET_LINE(entry->scope());
+
+      // scriptSpec is no more used in latest version.
+      nsAutoCString unused;
+      GET_LINE(unused);
+
+      GET_LINE(entry->currentWorkerURL());
+
+      nsAutoCString cacheName;
+      GET_LINE(cacheName);
+      CopyUTF8toUTF16(cacheName, entry->cacheName());
+
+      // waitingCacheName is no more used in latest version.
+      GET_LINE(unused);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Should never get here!");
     }
-
-    GET_LINE(line);
-    entry->principal() =
-      mozilla::ipc::ContentPrincipalInfo(attrs, line);
-
-    GET_LINE(entry->scope());
-    GET_LINE(entry->scriptSpec());
-    GET_LINE(entry->currentWorkerURL());
-
-    nsAutoCString cacheName;
-    GET_LINE(cacheName);
-    CopyUTF8toUTF16(cacheName, entry->activeCacheName());
-
-    GET_LINE(cacheName);
-    CopyUTF8toUTF16(cacheName, entry->waitingCacheName());
 
 #undef GET_LINE
 
@@ -356,6 +391,15 @@ ServiceWorkerRegistrar::ReadData()
     if (!line.EqualsLiteral(SERVICEWORKERREGISTRAR_TERMINATOR)) {
       return NS_ERROR_FAILURE;
     }
+  }
+
+  stream->Close();
+
+  // Overwrite previous version.
+  // Cannot call SaveData directly because gtest uses main-thread.
+  if (overwrite && NS_FAILED(WriteData())) {
+    NS_WARNING("Failed to write data for the ServiceWorker Registations.");
+    DeleteData();
   }
 
   return NS_OK;
@@ -494,6 +538,18 @@ ServiceWorkerRegistrar::MaybeScheduleShutdownCompleted()
   }
 }
 
+bool
+ServiceWorkerRegistrar::IsSupportedVersion(const nsACString& aVersion) const
+{
+  uint32_t numVersions = ArrayLength(gSupportedRegistrarVersions);
+  for (uint32_t i = 0; i < numVersions; i++) {
+    if (aVersion.EqualsASCII(gSupportedRegistrarVersions[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsresult
 ServiceWorkerRegistrar::WriteData()
 {
@@ -561,16 +617,10 @@ ServiceWorkerRegistrar::WriteData()
     buffer.Append(data[i].scope());
     buffer.Append('\n');
 
-    buffer.Append(data[i].scriptSpec());
-    buffer.Append('\n');
-
     buffer.Append(data[i].currentWorkerURL());
     buffer.Append('\n');
 
-    buffer.Append(NS_ConvertUTF16toUTF8(data[i].activeCacheName()));
-    buffer.Append('\n');
-
-    buffer.Append(NS_ConvertUTF16toUTF8(data[i].waitingCacheName()));
+    buffer.Append(NS_ConvertUTF16toUTF8(data[i].cacheName()));
     buffer.Append('\n');
 
     buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR);

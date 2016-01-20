@@ -24,9 +24,12 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
   , mLayersId(aLayersId)
+  , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
+  , mScrollDir(Layer::NONE)
+  , mScrollSize(0)
   , mOverride(EventRegionsOverride::NoOverride)
 {
-  if (mIsPrimaryApzcHolder) {
+if (mIsPrimaryApzcHolder) {
     MOZ_ASSERT(mApzc);
   }
   MOZ_ASSERT(!mApzc || mApzc->GetLayersId() == mLayersId);

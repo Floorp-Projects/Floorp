@@ -370,6 +370,10 @@ SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue
                  bool strict, HandleScript script, jsbytecode* pc);
 
 bool
+SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
+                 HandleValue receiver, bool strict, HandleScript script, jsbytecode* pc);
+
+bool
 InitElementArray(JSContext* cx, jsbytecode* pc,
                  HandleObject obj, uint32_t index, HandleValue value);
 

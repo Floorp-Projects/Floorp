@@ -2,223 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const kObservedTopics = [
-  "getUserMedia:response:allow",
-  "getUserMedia:revoke",
-  "getUserMedia:response:deny",
-  "getUserMedia:request",
-  "recording-device-events",
-  "recording-window-ended"
-];
-
-const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
-                                   "@mozilla.org/mediaManagerService;1",
-                                   "nsIMediaManagerService");
-
-var gObservedTopics = {};
-function observer(aSubject, aTopic, aData) {
-  if (!(aTopic in gObservedTopics))
-    gObservedTopics[aTopic] = 1;
-  else
-    ++gObservedTopics[aTopic];
-}
-
-function promiseObserverCalled(aTopic, aAction) {
-  let deferred = Promise.defer();
-
-  Services.obs.addObserver(function observer() {
-    ok(true, "got " + aTopic + " notification");
-    Services.obs.removeObserver(observer, aTopic);
-
-    if (kObservedTopics.indexOf(aTopic) != -1) {
-      if (!(aTopic in gObservedTopics))
-        gObservedTopics[aTopic] = -1;
-      else
-        --gObservedTopics[aTopic];
-    }
-
-    deferred.resolve();
-  }, aTopic, false);
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function expectObserverCalled(aTopic) {
-  is(gObservedTopics[aTopic], 1, "expected notification " + aTopic);
-  if (aTopic in gObservedTopics)
-    --gObservedTopics[aTopic];
-}
-
-function expectNoObserverCalled() {
-  for (let topic in gObservedTopics) {
-    if (gObservedTopics[topic])
-      is(gObservedTopics[topic], 0, topic + " notification unexpected");
-  }
-  gObservedTopics = {};
-}
-
-function promiseMessage(aMessage, aAction) {
-  let deferred = Promise.defer();
-
-  content.addEventListener("message", function messageListener(event) {
-    content.removeEventListener("message", messageListener);
-    is(event.data, aMessage, "received " + aMessage);
-    if (event.data == aMessage)
-      deferred.resolve();
-    else
-      deferred.reject();
-  });
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function promisePopupNotificationShown(aName, aAction) {
-  let deferred = Promise.defer();
-
-  PopupNotifications.panel.addEventListener("popupshown", function popupNotifShown() {
-    PopupNotifications.panel.removeEventListener("popupshown", popupNotifShown);
-
-    ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
-    ok(PopupNotifications.isPanelOpen, "notification panel open");
-    ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
-
-    deferred.resolve();
-  });
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function promisePopupNotification(aName) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName),
-       aName + " notification appeared");
-
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
-
-  return deferred.promise;
-}
-
-function promiseNoPopupNotification(aName) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => !PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!PopupNotifications.getNotification(aName),
-       aName + " notification removed");
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName + " to disappear");
-
-  return deferred.promise;
-}
-
-const kActionAlways = 1;
-const kActionDeny = 2;
-const kActionNever = 3;
-
-function activateSecondaryAction(aAction) {
-  let notification = PopupNotifications.panel.firstChild;
-  notification.button.focus();
-  let popup = notification.menupopup;
-  popup.addEventListener("popupshown", function () {
-    popup.removeEventListener("popupshown", arguments.callee, false);
-
-    // Press 'down' as many time as needed to select the requested action.
-    while (aAction--)
-      EventUtils.synthesizeKey("VK_DOWN", {});
-
-    // Activate
-    EventUtils.synthesizeKey("VK_RETURN", {});
-  }, false);
-
-  // One down event to open the popup
-  EventUtils.synthesizeKey("VK_DOWN",
-                           { altKey: !navigator.platform.includes("Mac") });
-}
+const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
+                 this);
 
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
-  kObservedTopics.forEach(topic => {
-    Services.obs.removeObserver(observer, topic);
-  });
-  Services.prefs.clearUserPref(PREF_PERMISSION_FAKE);
 });
 
-function getMediaCaptureState() {
-  let hasVideo = {};
-  let hasAudio = {};
-  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio);
-  if (hasVideo.value && hasAudio.value)
-    return "CameraAndMicrophone";
-  if (hasVideo.value)
-    return "Camera";
-  if (hasAudio.value)
-    return "Microphone";
-  return "none";
-}
-
-function* closeStream(aGlobal, aAlreadyClosed) {
-  expectNoObserverCalled();
-
-  info("closing the stream");
-  aGlobal.closeStream();
-
-  if (!aAlreadyClosed)
-    yield promiseObserverCalled("recording-device-events");
-
-  yield promiseNoPopupNotification("webRTC-sharingDevices");
-  if (!aAlreadyClosed)
-    expectObserverCalled("recording-window-ended");
-
-  yield* assertWebRTCIndicatorStatus(null);
-}
-
-function checkDeviceSelectors(aAudio, aVideo) {
-  let micSelector = document.getElementById("webRTC-selectMicrophone");
-  if (aAudio)
-    ok(!micSelector.hidden, "microphone selector visible");
-  else
-    ok(micSelector.hidden, "microphone selector hidden");
-
-  let cameraSelector = document.getElementById("webRTC-selectCamera");
-  if (aVideo)
-    ok(!cameraSelector.hidden, "camera selector visible");
-  else
-    ok(cameraSelector.hidden, "camera selector hidden");
-}
-
-function* checkSharingUI(aExpected) {
-  yield promisePopupNotification("webRTC-sharingDevices");
-
-  yield* assertWebRTCIndicatorStatus(aExpected);
-}
-
-function* checkNotSharing() {
-  is(getMediaCaptureState(), "none", "expected nothing to be shared");
-
-  ok(!PopupNotifications.getNotification("webRTC-sharingDevices"),
-     "no webRTC-sharingDevices popup notification");
-
-  yield* assertWebRTCIndicatorStatus(null);
-}
-
-function getFrameGlobal(aFrameId) {
-  return content.wrappedJSObject.document.getElementById(aFrameId).contentWindow;
+function promiseReloadFrame(aFrameId) {
+  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(aFrameId) {
+    content.wrappedJSObject.document.getElementById(aFrameId).contentWindow.location.reload();
+  });
 }
 
 var gTests = [
@@ -226,12 +23,10 @@ var gTests = [
 {
   desc: "getUserMedia audio+video",
   run: function checkAudioVideo() {
-    let global = getFrameGlobal("frame1");
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting devices");
-      global.requestDevice(true, true);
-    });
-    expectObserverCalled("getUserMedia:request");
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
 
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
@@ -243,35 +38,33 @@ var gTests = [
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    expectObserverCalled("getUserMedia:response:allow");
-    expectObserverCalled("recording-device-events");
-    is(getMediaCaptureState(), "CameraAndMicrophone",
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({audio: true, video: true});
-    yield closeStream(global);
+    yield closeStream(false, "frame1");
   }
 },
 
 {
   desc: "getUserMedia audio+video: stop sharing",
   run: function checkStopSharing() {
-    let global = getFrameGlobal("frame1");
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting devices");
-      global.requestDevice(true, true);
-    });
-    expectObserverCalled("getUserMedia:request");
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       activateSecondaryAction(kActionAlways);
     });
-    expectObserverCalled("getUserMedia:response:allow");
-    expectObserverCalled("recording-device-events");
-    is(getMediaCaptureState(), "CameraAndMicrophone",
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
     yield indicator;
@@ -288,17 +81,16 @@ var gTests = [
     activateSecondaryAction(kActionDeny);
 
     yield promiseObserverCalled("recording-device-events");
-    expectObserverCalled("getUserMedia:revoke");
+    yield expectObserverCalled("getUserMedia:revoke");
 
     yield promiseNoPopupNotification("webRTC-sharingDevices");
-    expectObserverCalled("recording-window-ended");
+    yield expectObserverCalled("recording-window-ended");
 
-    if (gObservedTopics["recording-device-events"] == 1) {
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-      gObservedTopics["recording-device-events"] = 0;
     }
 
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
     yield checkNotSharing();
 
     // The persistent permissions for the frame should have been removed.
@@ -308,44 +100,42 @@ var gTests = [
                                  "camera not persistently allowed");
 
     // the stream is already closed, but this will do some cleanup anyway
-    yield closeStream(global, true);
+    yield closeStream(true, "frame1");
   }
 },
 
 {
   desc: "getUserMedia audio+video: reloading the frame removes all sharing UI",
   run: function checkReloading() {
-    let global = getFrameGlobal("frame1");
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting devices");
-      global.requestDevice(true, true);
-    });
-    expectObserverCalled("getUserMedia:request");
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    expectObserverCalled("getUserMedia:response:allow");
-    expectObserverCalled("recording-device-events");
-    is(getMediaCaptureState(), "CameraAndMicrophone",
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
 
     info("reloading the frame");
-    yield promiseObserverCalled("recording-device-events",
-                                () => { global.location.reload(); });
+    promise = promiseObserverCalled("recording-device-events");
+    yield promiseReloadFrame("frame1");
+    yield promise;
 
     yield promiseNoPopupNotification("webRTC-sharingDevices");
-    if (gObservedTopics["recording-device-events"] == 1) {
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-      gObservedTopics["recording-device-events"] = 0;
     }
-    expectObserverCalled("recording-window-ended");
-    expectNoObserverCalled();
+    yield expectObserverCalled("recording-window-ended");
+    yield expectNoObserverCalled();
     yield checkNotSharing();
   }
 },
@@ -353,21 +143,19 @@ var gTests = [
 {
   desc: "getUserMedia audio+video: reloading the frame removes prompts",
   run: function checkReloadingRemovesPrompts() {
-    let global = getFrameGlobal("frame1");
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting devices");
-      global.requestDevice(true, true);
-    });
-    expectObserverCalled("getUserMedia:request");
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     info("reloading the frame");
-    yield promiseObserverCalled("recording-window-ended",
-                                () => { global.location.reload(); });
-
+    promise = promiseObserverCalled("recording-window-ended");
+    yield promiseReloadFrame("frame1");
+    yield promise;
     yield promiseNoPopupNotification("webRTC-shareDevices");
 
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
     yield checkNotSharing();
   }
 },
@@ -378,60 +166,57 @@ var gTests = [
     // We'll share only the mic in the first frame, then share both in the
     // second frame, then reload the second frame. After each step, we'll check
     // the UI is in the correct state.
-    let g1 = getFrameGlobal("frame1"), g2 = getFrameGlobal("frame2");
 
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting microphone in the first frame");
-      g1.requestDevice(true, false);
-    });
-    expectObserverCalled("getUserMedia:request");
+    let promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, false, "frame1");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, false);
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    expectObserverCalled("getUserMedia:response:allow");
-    expectObserverCalled("recording-device-events");
-    is(getMediaCaptureState(), "Microphone", "microphone to be shared");
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "Microphone", "microphone to be shared");
 
     yield indicator;
     yield checkSharingUI({video: false, audio: true});
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
 
-    yield promisePopupNotificationShown("webRTC-shareDevices", () => {
-      info("requesting both devices in the second frame");
-      g2.requestDevice(true, true);
-    });
-    expectObserverCalled("getUserMedia:request");
+    promise = promisePopupNotificationShown("webRTC-shareDevices");
+    yield promiseRequestDevice(true, true, "frame2");
+    yield promise;
+    yield expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
     });
-    expectObserverCalled("getUserMedia:response:allow");
-    expectObserverCalled("recording-device-events");
-    is(getMediaCaptureState(), "CameraAndMicrophone",
+    yield expectObserverCalled("getUserMedia:response:allow");
+    yield expectObserverCalled("recording-device-events");
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
     yield checkSharingUI({video: true, audio: true});
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
 
     info("reloading the second frame");
-    yield promiseObserverCalled("recording-device-events",
-                                () => { g2.location.reload(); });
+    promise = promiseObserverCalled("recording-device-events");
+    yield promiseReloadFrame("frame2");
+    yield promise;
 
     yield checkSharingUI({video: false, audio: true});
-    expectObserverCalled("recording-window-ended");
-    if (gObservedTopics["recording-device-events"] == 1) {
+    yield expectObserverCalled("recording-window-ended");
+    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-      gObservedTopics["recording-device-events"] = 0;
     }
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
 
-    yield closeStream(g1);
+    yield closeStream(false, "frame1");
     yield promiseNoPopupNotification("webRTC-sharingDevices");
-    expectNoObserverCalled();
+    yield expectNoObserverCalled();
     yield checkNotSharing();
   }
 }
@@ -443,24 +228,27 @@ function test() {
 
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function onload() {
-    tab.linkedBrowser.removeEventListener("load", onload, true);
+  let browser = tab.linkedBrowser;
 
-    kObservedTopics.forEach(topic => {
-      Services.obs.addObserver(observer, topic, false);
-    });
-    Services.prefs.setBoolPref(PREF_PERMISSION_FAKE, true);
+  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
+
+  browser.addEventListener("load", function onload() {
+    browser.removeEventListener("load", onload, true);
 
     is(PopupNotifications._currentNotifications.length, 0,
        "should start the test without any prior popup notification");
 
     Task.spawn(function () {
+      yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+        "set": [[PREF_PERMISSION_FAKE, true]],
+      }, resolve));
+
       for (let test of gTests) {
         info(test.desc);
         yield test.run();
 
         // Cleanup before the next test
-        expectNoObserverCalled();
+        yield expectNoObserverCalled();
       }
     }).then(finish, ex => {
      ok(false, "Unexpected Exception: " + ex);

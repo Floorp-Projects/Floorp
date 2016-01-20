@@ -37,7 +37,7 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static
   already_AddRefed<SpeechSynthesisUtterance> Constructor(GlobalObject& aGlobal,

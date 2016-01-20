@@ -72,7 +72,7 @@ add_task(function* test_expire_orphans_optionalarg()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_expire_limited()
+add_task(function* test_expire_limited()
 {
   // Add visits to 2 pages and force a single expiration.
   // Only 1 page should survive.
@@ -96,7 +96,7 @@ add_task(function test_expire_limited()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_expire_unlimited()
+add_task(function* test_expire_unlimited()
 {
   // Add visits to 2 pages and force a single expiration.
   // Only 1 page should survive.

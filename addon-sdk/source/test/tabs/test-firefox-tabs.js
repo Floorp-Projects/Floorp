@@ -22,6 +22,7 @@ const DISABLE_POPUP_PREF = 'dom.disable_open_during_load';
 const fixtures = require("../fixtures");
 const { base64jpeg } = fixtures;
 const { cleanUI, before, after } = require("sdk/test/utils");
+const { wait } = require('../event/helpers');
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
@@ -1214,32 +1215,35 @@ exports['test active tab properties defined on popup closed'] = function (assert
   });
 };
 
-// related to bug 922956
+// related to bugs 922956 and 989288
 // https://bugzilla.mozilla.org/show_bug.cgi?id=922956
-exports["test ready event after window.open"] = function (assert, done) {
+// https://bugzilla.mozilla.org/show_bug.cgi?id=989288
+exports["test tabs ready and close after window.open"] = function*(assert, done) {
+  // ensure popups open in a new window and disable popup blocker
   setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
   setPref(DISABLE_POPUP_PREF, false);
 
-  let firstRun = true;
-  tabs.on('ready', function onReady(tab) {
-    if (firstRun) {
-      assert.pass("tab ready callback after 1st window.open");
-      firstRun = false;
-      tab.close();
-    }
-    else {
-      assert.pass("tab ready callback after 2nd window.open");
-      tabs.removeListener('ready', onReady);
-      tab.close(done);
-    }
-  });
-
+  // open windows to trigger observers
   tabs.activeTab.attach({
     contentScript: "window.open('about:blank');" +
                    "window.open('about:blank', '', " +
                    "'width=800,height=600,resizable=no,status=no,location=no');"
   });
-}
+
+  let tab1 = yield wait(tabs, "ready");
+  assert.pass("first tab ready has occured");
+
+  let tab2 = yield wait(tabs, "ready");
+  assert.pass("second tab ready has occured");
+
+  tab1.close();
+  yield wait(tabs, "close");
+  assert.pass("first tab close has occured");
+
+  tab2.close();
+  yield wait(tabs, "close");
+  assert.pass("second tab close has occured");
+};
 
 // related to bug #939496
 exports["test tab open event for new window"] = function(assert, done) {

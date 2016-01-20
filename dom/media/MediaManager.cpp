@@ -703,7 +703,7 @@ public:
   // single-source trackunion like we have here, the TrackUnion will assign trackids
   // that match the source's trackids, so we can avoid needing a mapping function.
   // XXX This will not handle more complex cases well.
-  virtual void StopTrack(TrackID aTrackID) override
+  void StopTrack(TrackID aTrackID) override
   {
     if (GetSourceStream()) {
       GetSourceStream()->EndTrack(aTrackID);
@@ -719,7 +719,7 @@ public:
     }
   }
 
-  virtual already_AddRefed<Promise>
+  already_AddRefed<Promise>
   ApplyConstraintsToTrack(TrackID aTrackID,
                           const MediaTrackConstraints& aConstraints,
                           ErrorResult &aRv) override
@@ -781,7 +781,7 @@ public:
 #endif
 
   // Allow getUserMedia to pass input data directly to PeerConnection/MediaPipeline
-  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) override
+  bool AddDirectListener(MediaStreamDirectListener *aListener) override
   {
     if (GetSourceStream()) {
       GetSourceStream()->AddDirectListener(aListener);
@@ -790,7 +790,7 @@ public:
     return false;
   }
 
-  virtual void
+  void
   AudioConfig(bool aEchoOn, uint32_t aEcho,
               bool aAgcOn, uint32_t aAgc,
               bool aNoiseOn, uint32_t aNoise,
@@ -805,19 +805,19 @@ public:
     mPlayoutDelay = aPlayoutDelay;
   }
 
-  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) override
+  void RemoveDirectListener(MediaStreamDirectListener *aListener) override
   {
     if (GetSourceStream()) {
       GetSourceStream()->RemoveDirectListener(aListener);
     }
   }
 
-  virtual DOMLocalMediaStream* AsDOMLocalMediaStream() override
+  DOMLocalMediaStream* AsDOMLocalMediaStream() override
   {
     return this;
   }
 
-  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) override
+  MediaEngineSource* GetMediaEngine(TrackID aTrackID) override
   {
     // MediaEngine supports only one video and on video track now and TrackID is
     // fixed in MediaEngine.
@@ -920,7 +920,7 @@ public:
                             DOMMediaStream* aStream)
       : mWindowID(aWindowID), mOnSuccess(aSuccess), mManager(aManager),
         mStream(aStream) {}
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
+    void NotifyTracksAvailable(DOMMediaStream* aStream) override
     {
       // We're in the main thread, so no worries here.
       if (!(mManager->IsWindowStillActive(mWindowID))) {
@@ -2667,8 +2667,8 @@ MediaManager::Shutdown()
       : mManager(aManager)
       , mReply(aReply) {}
   private:
-    virtual void
-    Run()
+    void
+    Run() override
     {
       LOG(("MediaManager Thread Shutdown"));
       MOZ_ASSERT(MediaManager::IsInMediaThread());

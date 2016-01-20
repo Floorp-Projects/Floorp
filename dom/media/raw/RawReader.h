@@ -20,18 +20,17 @@ protected:
   ~RawReader();
 
 public:
-  virtual nsresult ResetDecode() override;
-  virtual bool DecodeAudioData() override;
+  nsresult ResetDecode() override;
+  bool DecodeAudioData() override;
 
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold) override;
+  bool DecodeVideoFrame(bool &aKeyframeSkip,
+                        int64_t aTimeThreshold) override;
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) override;
-  virtual RefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) override;
+  nsresult ReadMetadata(MediaInfo* aInfo,
+                        MetadataTags** aTags) override;
+  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual media::TimeIntervals GetBuffered() override;
+  media::TimeIntervals GetBuffered() override;
 
 private:
   bool ReadFromResource(uint8_t *aBuf, uint32_t aLength);

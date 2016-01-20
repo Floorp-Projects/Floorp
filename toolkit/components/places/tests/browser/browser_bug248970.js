@@ -17,7 +17,7 @@ var visitedURIs = [
   "http://www.test-download.com/"
 ].map(NetUtil.newURI.bind(NetUtil));
 
-add_task(function () {
+add_task(function* () {
   let windowsToClose = [];
   let placeItemsCount = 0;
 

@@ -22,6 +22,7 @@ add_task(function* test_isURIPotentiallyTrustworthy() {
     ["http://localhost/", true],
     ["http://127.0.0.1/", true],
     ["file:///", true],
+    ["resource:///", true],
     ["about:config", false],
     ["urn:generic", false],
   ]) {

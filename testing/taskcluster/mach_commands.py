@@ -10,6 +10,7 @@ from collections import defaultdict
 import os
 import json
 import copy
+import re
 import sys
 import time
 from collections import namedtuple
@@ -132,14 +133,13 @@ def remove_caches_from_task(task):
     :param task: task definition.
     """
     whitelist = [
-        "tc-vcs",
-        "tc-vcs-public-sources",
-        "tooltool-cache",
+        re.compile("^level-[123]-.*-tc-vcs(-public-sources)?$"),
+        re.compile("^tooltool-cache$"),
     ]
     try:
         caches = task["task"]["payload"]["cache"]
         for cache in caches.keys():
-            if cache not in whitelist:
+            if not any(pat.match(cache) for pat in whitelist):
                 caches.pop(cache)
     except KeyError:
         pass

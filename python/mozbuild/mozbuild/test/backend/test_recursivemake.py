@@ -706,6 +706,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'DIST_FILES_0 += $(srcdir)/install.rdf',
             'DIST_FILES_0 += $(srcdir)/main.js',
             'DIST_FILES_0_PATH := $(DEPTH)/dist/bin/',
+            'DIST_FILES_0_TARGET := misc',
             'PP_TARGETS += DIST_FILES_0',
         ]
 

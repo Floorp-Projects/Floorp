@@ -529,15 +529,9 @@ TabParent::ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPk
     return false;
   }
 
-  // If this is a brand new process created to load the signed package
-  // (triggered by previous OnStartSignedPackageRequest), the loading origin
-  // will be "moz-safe-about:blank". In that case, we don't need to switch process
-  // again. We compare with "moz-safe-about:blank" without appId/isBrowserElement/etc
-  // taken into account. That's why we use originNoSuffix.
-  nsCString loadingOriginNoSuffix;
-  loadingPrincipal->GetOriginNoSuffix(loadingOriginNoSuffix);
-  if (loadingOriginNoSuffix.EqualsLiteral("moz-safe-about:blank")) {
-    LOG("The content is already loaded by a brand new process.\n");
+  DocShellOriginAttributes attrs = OriginAttributesRef();
+  if (attrs.mSignedPkg == NS_ConvertUTF8toUTF16(aSignedPkg)) {
+    // This tab is made for the incoming signed content.
     return false;
   }
 

@@ -275,14 +275,13 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aChannel->GetLoadInfo(getter_AddRefs(loadInfo))));
 
-  // RequestMode deviates from our internal security mode for navigations.
-  // While navigations normally allow cross origin we must set a same-origin
-  // RequestMode to get the correct service worker interception restrictions
-  // in place.
-  // TODO: remove the worker override once securityMode is fully implemented (bug 1189945)
   nsContentPolicyType contentPolicy = loadInfo->InternalContentPolicyType();
-  if (IsNavigationContentPolicy(contentPolicy) ||
-      IsWorkerContentPolicy(contentPolicy)) {
+  if (IsNavigationContentPolicy(contentPolicy)) {
+    return RequestMode::Navigate;
+  }
+
+  // TODO: remove the worker override once securityMode is fully implemented (bug 1189945)
+  if (IsWorkerContentPolicy(contentPolicy)) {
     return RequestMode::Same_origin;
   }
 
@@ -319,6 +318,7 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
 
   uint32_t corsMode;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(httpChannel->GetCorsMode(&corsMode)));
+  MOZ_ASSERT(corsMode != nsIHttpChannelInternal::CORS_MODE_NAVIGATE);
 
   // This cast is valid due to static asserts in ServiceWorkerManager.cpp.
   return static_cast<RequestMode>(corsMode);
