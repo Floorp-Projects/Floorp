@@ -1692,15 +1692,6 @@ if test -n "$MOZ_USE_SYSTRACE"; then
     AC_DEFINE(MOZ_USE_SYSTRACE)
 fi
 
-# For profiling builds keep the symbol information
-if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
-    case "$OS_TARGET" in
-    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-        STRIP_FLAGS="--strip-debug"
-        ;;
-    esac
-fi
-
 dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
@@ -1797,6 +1788,15 @@ MOZ_ARG_ENABLE_BOOL(vtune,
 if test -n "$MOZ_VTUNE"; then
     MOZ_PROFILING=1
     AC_DEFINE(MOZ_VTUNE)
+fi
+
+# For profiling builds keep the symbol information
+if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
+    case "$OS_TARGET" in
+    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+        STRIP_FLAGS="--strip-debug"
+        ;;
+    esac
 fi
 
 dnl ========================================================
