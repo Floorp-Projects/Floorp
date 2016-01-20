@@ -274,6 +274,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'FilePicker.java',
     'FilePickerResultHandler.java',
     'FindInPageBar.java',
+    'firstrun/DataPanel.java',
     'firstrun/FirstrunAnimationContainer.java',
     'firstrun/FirstrunPager.java',
     'firstrun/FirstrunPagerConfig.java',

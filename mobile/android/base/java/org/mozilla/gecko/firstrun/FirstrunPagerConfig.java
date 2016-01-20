@@ -41,7 +41,11 @@ public class FirstrunPagerConfig {
             panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_B);
         } else if (isInExperimentLocal(context, ONBOARDING_C)) {
-            // TODO: Add new interactive onboarding flow.
+            panels.add(SimplePanelConfigs.urlbarPanelConfig);
+            panels.add(SimplePanelConfigs.bookmarksPanelConfig);
+            panels.add(SimplePanelConfigs.dataPanelConfig);
+            panels.add(SimplePanelConfigs.syncPanelConfig);
+            panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_C);
         } else {
             Log.d(LOGTAG, "Not in an experiment!");
@@ -117,5 +121,6 @@ public class FirstrunPagerConfig {
         public static final FirstrunPanelConfig urlbarPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_welcome, R.drawable.firstrun_urlbar, R.string.firstrun_urlbar_message, R.string.firstrun_urlbar_subtext);
         public static final FirstrunPanelConfig bookmarksPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_bookmarks_title, R.drawable.firstrun_bookmarks, R.string.firstrun_bookmarks_message, R.string.firstrun_bookmarks_subtext);
         public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
+        public static final FirstrunPanelConfig dataPanelConfig = new FirstrunPanelConfig(DataPanel.class.getName(), R.string.firstrun_data_title, R.drawable.firstrun_data_off, R.string.firstrun_data_message, R.string.firstrun_data_subtext);
     }
 }
