@@ -23,11 +23,12 @@ from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.errors import LogcatErrorList
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
 from mozharness.mozilla.buildbot import TBPL_SUCCESS
 
 
 class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
-    test_suites = ('jsreftest', 'reftest', 'mochitest', 'mochitest-chrome', 'xpcshell', 'crashtest', 'cppunittest')
+    test_suites = ('jsreftest', 'reftest', 'mochitest', 'mochitest-chrome', 'xpcshell', 'crashtest', 'cppunittest', 'marionette')
     config_options = [[
         ["--type"],
         {"action": "store",
@@ -190,6 +191,8 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             dirs['abs_test_install_dir'], 'xpcshell')
         dirs['abs_cppunittest_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'cppunittest')
+        dirs['abs_marionette_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'marionette', 'marionette')
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -250,6 +253,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             'xre_path': os.path.join(dirs['abs_xre_dir'], 'bin'),
             'utility_path': os.path.join(dirs['abs_test_install_dir'], 'bin'),
             'symbols_path': self.symbols_path,
+            'homedir': os.path.join(dirs['abs_emulator_dir'], 'b2g-distro'),
             'busybox': self.busybox_path,
             'total_chunks': self.config.get('total_chunks'),
             'this_chunk': self.config.get('this_chunk'),
@@ -274,6 +278,9 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
                                       str_format_values=str_format_values)
         cmd.extend(opt for opt in tests if not opt.endswith('None'))
 
+        if self.test_manifest:
+            cmd.append(self.test_manifest)
+
         return cmd
 
     def _query_adb(self):
@@ -285,19 +292,15 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
     def preflight_run_tests(self):
         super(B2GEmulatorTest, self).preflight_run_tests()
         suite = self.config['test_suite']
+        dirs = self.query_abs_dirs()
         # set default test manifest by suite if none specified
-        if not self.test_manifest:
-            if suite == 'reftest':
-                self.test_manifest = os.path.join('tests', 'layout',
-                                                  'reftests', 'reftest.list')
-            elif suite == 'xpcshell':
-                self.test_manifest = os.path.join('tests', 'xpcshell_b2g.ini')
-            elif suite == 'crashtest':
-                self.test_manifest = os.path.join('tests', 'testing',
-                                                  'crashtest', 'crashtests.list')
-            elif suite == 'jsreftest':
-                self.test_manifest = os.path.join('jsreftest', 'tests',
-                                                  'jstests.list')
+        if self.test_manifest:
+            if suite == 'marionette':
+                self.test_manifest = os.path.join(dirs['abs_test_install_dir'],
+                                                  'marionette', 'tests',
+                                                  'testing', 'marionette',
+                                                  'client', 'marionette',
+                                                  'tests', self.test_manifest)
 
         if not os.path.isfile(self.adb_path):
             self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
@@ -352,10 +355,15 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
         env = self.query_env(partial_env=env)
 
         success_codes = self._get_success_codes(suite_name)
-        parser = self.get_test_output_parser(suite_name,
-                                             config=self.config,
-                                             log_obj=self.log_obj,
-                                             error_list=error_list)
+        if suite_name == "marionette":
+            parser = TestSummaryOutputParserHelper(config=self.config,
+                                                   log_obj=self.log_obj,
+                                                   error_list=self.error_list)
+        else:
+            parser = self.get_test_output_parser(suite_name,
+                                                 config=self.config,
+                                                 log_obj=self.log_obj,
+                                                 error_list=error_list)
         return_code = self.run_command(cmd, cwd=cwd, env=env,
                                        output_timeout=1000,
                                        output_parser=parser,
