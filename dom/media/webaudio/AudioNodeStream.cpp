@@ -147,9 +147,9 @@ AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
     uint32_t mIndex;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aIndex,
-                                         aContext->DestinationStream(),
-                                         aStreamTime));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex,
+                                                 aContext->DestinationStream(),
+                                                 aStreamTime));
 }
 
 void
@@ -178,7 +178,7 @@ AudioNodeStream::SetDoubleParameter(uint32_t aIndex, double aValue)
     uint32_t mIndex;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
 }
 
 void
@@ -199,7 +199,7 @@ AudioNodeStream::SetInt32Parameter(uint32_t aIndex, int32_t aValue)
     uint32_t mIndex;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
 }
 
 void
@@ -225,7 +225,7 @@ AudioNodeStream::SendTimelineEvent(uint32_t aIndex,
     TrackRate mSampleRate;
     uint32_t mIndex;
   };
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aEvent));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aEvent));
 }
 
 void
@@ -246,7 +246,7 @@ AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aVa
     uint32_t mIndex;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
 }
 
 void
@@ -267,7 +267,7 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& 
     RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aBuffer));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aBuffer));
 }
 
 void
@@ -289,7 +289,7 @@ AudioNodeStream::SetRawArrayData(nsTArray<float>& aData)
     nsTArray<float> mData;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aData));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aData));
 }
 
 void
@@ -320,9 +320,9 @@ AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
     ChannelInterpretation mChannelInterpretation;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aNumberOfChannels,
-                                         aChannelCountMode,
-                                         aChannelInterpretation));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aNumberOfChannels,
+                                                 aChannelCountMode,
+                                                 aChannelInterpretation));
 }
 
 void
@@ -341,7 +341,7 @@ AudioNodeStream::SetPassThrough(bool aPassThrough)
     bool mPassThrough;
   };
 
-  GraphImpl()->AppendMessage(new Message(this, aPassThrough));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aPassThrough));
 }
 
 void
@@ -399,7 +399,7 @@ void
 AudioNodeStream::AdvanceAndResume(StreamTime aAdvance)
 {
   mMainThreadCurrentTime += aAdvance;
-  GraphImpl()->AppendMessage(new AdvanceAndResumeMessage(this, aAdvance));
+  GraphImpl()->AppendMessage(MakeUnique<AdvanceAndResumeMessage>(this, aAdvance));
 }
 
 void
@@ -731,7 +731,7 @@ AudioNodeStream::ScheduleCheckForInactive()
     return;
   }
 
-  nsAutoPtr<CheckForInactiveMessage> message(new CheckForInactiveMessage(this));
+  auto message = MakeUnique<CheckForInactiveMessage>(this);
   GraphImpl()->RunMessageAfterProcessing(Move(message));
 }
 
