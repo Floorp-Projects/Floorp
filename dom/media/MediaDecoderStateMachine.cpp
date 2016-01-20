@@ -116,11 +116,6 @@ static const int AUDIO_DURATION_USECS = 40000;
 // increase it by more.
 static const int THRESHOLD_FACTOR = 2;
 
-// When the continuous silent data is over this threshold, means the a/v does
-// not produce any sound. This time is decided by UX suggestion, see
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1235612#c18
-static const uint32_t SILENT_DATA_THRESHOLD_USECS = 10000000;
-
 namespace detail {
 
 // If we have less than this much undecoded data available, we'll consider
@@ -241,8 +236,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
-  mIsAudioDataAudible(false),
-  mSilentDataDuration(0),
   mBuffered(mTaskQueue, TimeIntervals(),
             "MediaDecoderStateMachine::mBuffered (Mirror)"),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
@@ -717,35 +710,13 @@ MediaDecoderStateMachine::PushFront(MediaData* aSample, MediaData::Type aSampleT
 }
 
 void
-MediaDecoderStateMachine::CheckIsAudible(const MediaData* aSample)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aSample->mType == MediaData::AUDIO_DATA);
-
-  const AudioData* data = aSample->As<AudioData>();
-  bool isAudible = data->IsAudible();
-  if (isAudible && !mIsAudioDataAudible) {
-    mIsAudioDataAudible = true;
-    mSilentDataDuration = 0;
-  } else if (isAudible && mIsAudioDataAudible) {
-    mSilentDataDuration += data->mDuration;
-    if (mSilentDataDuration > SILENT_DATA_THRESHOLD_USECS) {
-      mIsAudioDataAudible = false;
-      mSilentDataDuration = 0;
-    }
-  }
-}
-
-void
 MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchAudioDecodeTaskIfNeeded();
   MaybeStartBuffering();
-  CheckIsAudible(aSample);
 }
 
 void

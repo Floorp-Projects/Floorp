@@ -54,23 +54,6 @@ AudioData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return size;
 }
 
-bool
-AudioData::IsAudible() const
-{
-  if (!mAudioData) {
-    return false;
-  }
-
-  for (uint32_t frame = 0; frame < mFrames; ++frame) {
-    for (uint32_t channel = 0; channel < mChannels; ++channel) {
-      if (mAudioData[frame * mChannels + channel] != 0) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 /* static */
 already_AddRefed<AudioData>
 AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
