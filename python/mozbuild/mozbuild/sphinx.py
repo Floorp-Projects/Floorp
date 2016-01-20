@@ -51,7 +51,7 @@ def function_reference(f, attr, args, doc):
     return lines
 
 
-def variable_reference(v, st_type, in_type, doc, tier):
+def variable_reference(v, st_type, in_type, doc):
     lines = [
         v,
         '-' * len(v),
