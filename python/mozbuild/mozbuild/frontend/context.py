@@ -964,7 +964,7 @@ VARIABLES = {
 
         The chosen script entry point may optionally return a set of strings,
         indicating extra files the output depends on.
-        """, 'export'),
+        """, None),
 
     'DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare.
