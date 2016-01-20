@@ -88,6 +88,32 @@
           toggleVisibility('advancedPanel');
         }
 
+        var checkbox = document.getElementById("automaticallyReportInFuture");
+        checkbox.addEventListener("change", function ({target: {checked}}) {
+          document.dispatchEvent(new CustomEvent("AboutCertErrorSetAutomatic", {
+            detail: checked,
+            bubbles: true
+          }));
+        });
+
+        var retryBtn = document.getElementById("reportCertificateErrorRetry");
+        retryBtn.addEventListener("click", function () {
+          document.dispatchEvent(new CustomEvent("AboutCertErrorSendReport", {
+            bubbles: true
+          }));
+        });
+
+        addEventListener("AboutCertErrorOptions", function (event) {
+          var options = JSON.parse(event.detail);
+          if (options && options.enabled) {
+            // Display error reporting UI
+            document.getElementById("certificateErrorReporting").style.display = "block";
+
+            // set the checkbox
+            checkbox.checked = !!options.automatic;
+          }
+        }, true, true);
+
         // Disallow overrides if this is a Strict-Transport-Security
         // host and the cert is bad (STS Spec section 7.3) or if the
         // certerror is in a frame (bug 633691).
@@ -254,11 +280,26 @@
           <div id="buttonSpacer"></div>
           <button id="advancedButton" autocomplete="off" onclick="toggleVisibility('advancedPanel');" autofocus="true">&certerror.advanced.label;</button>
         </div>
-        <!-- Advanced panel, which is hidden by default -->
-        <div id="advancedPanel" style="visibility: hidden;">
-          <p id="technicalContentText"/>
-          <button id="exceptionDialogButton">&certerror.addException.label;</button>
-        </div>
+      </div>
+
+      <!-- UI for option to report certificate errors to Mozilla. -->
+      <div id="certificateErrorReporting">
+        <p>
+          <input type="checkbox" id="automaticallyReportInFuture" />
+          <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic;</label>
+
+          <span id="reportingState">
+            <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
+            <span id="reportSendingMessage">&errorReporting.sending;</span>
+            <span id="reportSentMessage">&errorReporting.sent;</span>
+          </span>
+        </p>
+      </div>
+
+      <!-- Advanced panel, which is hidden by default -->
+      <div id="advancedPanel" style="visibility: hidden;">
+        <p id="technicalContentText"/>
+        <button id="exceptionDialogButton">&certerror.addException.label;</button>
       </div>
     </div>
 

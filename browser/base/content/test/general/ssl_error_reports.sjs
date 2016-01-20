@@ -65,6 +65,20 @@ function handleRequest(request, response) {
       response.setStatusLine("1.1", 201, "Created");
       response.write("<html>OK</html>");
       break;
+    case "badcert":
+      report = parseReport(request);
+      certChain = report.failedCertChain;
+
+      if (!certChain || certChain.length != 2) {
+        response.setStatusLine("1.1", 500, "Server error");
+        response.write("<html>The report contained an unexpected chain</html>");
+        return;
+      }
+
+      // if all is as expected, send the 201 the client expects
+      response.setStatusLine("1.1", 201, "Created");
+      response.write("<html>OK</html>");
+      break;
     case "error":
       response.setStatusLine("1.1", 500, "Server error");
       response.write("<html>server error</html>");

@@ -150,7 +150,7 @@ add_task(function* test_moz_hosts_typed_update()
 
 add_task(function* test_moz_hosts_www_remove()
 {
-  function test_removal(aURIToRemove, aURIToKeep, aCallback) {
+  function* test_removal(aURIToRemove, aURIToKeep, aCallback) {
     let places = [{ uri: aURIToRemove
                   , title: "test for " + aURIToRemove.spec
                   , transition: TRANSITION_TYPED

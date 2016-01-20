@@ -8,7 +8,7 @@
 
 define(function(require, exports, module) {
 
-const React = require("react");
+const React = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("./reps/rep-utils");
 const { JsonPanel } = createFactories(require("./json-panel"));
 const { TextPanel } = createFactories(require("./text-panel"));

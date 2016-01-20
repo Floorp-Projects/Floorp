@@ -32,6 +32,8 @@ Cc["@mozilla.org/globalmessagemanager;1"]
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
 
+var gSendCharCount = 0;
+
 this.BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
@@ -724,12 +726,21 @@ this.BrowserTestUtils = {
    */
   sendChar(char, browser) {
     return new Promise(resolve => {
+      let seq = ++gSendCharCount;
       let mm = browser.messageManager;
+
       mm.addMessageListener("Test:SendCharDone", function charMsg(message) {
+        if (message.data.seq != seq)
+          return;
+
         mm.removeMessageListener("Test:SendCharDone", charMsg);
         resolve(message.data.sendCharResult);
       });
-      mm.sendAsyncMessage("Test:SendChar", { char: char });
+
+      mm.sendAsyncMessage("Test:SendChar", {
+        char: char,
+        seq: seq
+      });
     });
   }
 };

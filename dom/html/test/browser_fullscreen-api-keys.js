@@ -82,16 +82,21 @@ function* temporaryRemoveUnexpectedKeyEventCapture(callback) {
     "Test:KeyReceived", captureUnexpectedKeyEvent);
 }
 
-function* receiveExpectedKeyEvents(keyCode) {
-  info("Waiting for key events");
-  let events = ["keydown", "keypress", "keyup"];
-  while (events.length > 0) {
-    let evt = yield promiseOneMessage("Test:KeyReceived");
-    let expected = events.shift();
-    is(evt.type, expected, `Should receive a ${expected} event`);
-    is(evt.keyCode, keyCode,
-       `Should receive the event with key code ${keyCode}`);
-  }
+function receiveExpectedKeyEvents(keyCode) {
+  return new Promise(resolve => {
+    let events = ["keydown", "keypress", "keyup"];
+    function listener({ data }) {
+      let expected = events.shift();
+      is(data.type, expected, `Should receive a ${expected} event`);
+      is(data.keyCode, keyCode,
+         `Should receive the event with key code ${keyCode}`);
+      if (!events.length) {
+        gMessageManager.removeMessageListener("Test:KeyReceived", listener);
+        resolve();
+      }
+    }
+    gMessageManager.addMessageListener("Test:KeyReceived", listener);
+  });
 }
 
 const kPage = "http://example.org/browser/" +
@@ -143,17 +148,18 @@ add_task(function* () {
 
     info("Dispatch untrusted key events from content");
     yield* temporaryRemoveUnexpectedKeyEventCapture(function* () {
+      let promiseExpectedKeyEvents = receiveExpectedKeyEvents(keyCode);
       gMessageManager.sendAsyncMessage("Test:DispatchUntrustedKeyEvents", code);
-      yield* receiveExpectedKeyEvents(keyCode);
+      yield promiseExpectedKeyEvents;
     });
 
     info("Send trusted key events");
     yield* temporaryRemoveUnexpectedFullscreenChangeCapture(function* () {
       yield* temporaryRemoveUnexpectedKeyEventCapture(function* () {
+        let promiseExpectedKeyEvents = suppressed ?
+          Promise.resolve() : receiveExpectedKeyEvents(keyCode);
         EventUtils.synthesizeKey(code, {});
-        if (!suppressed) {
-          yield* receiveExpectedKeyEvents(keyCode);
-        }
+        yield promiseExpectedKeyEvents;
         let state = yield promiseOneMessage("Test:FullscreenChanged");
         ok(!state, "The content should have exited fullscreen");
         ok(!document.mozFullScreenElement,

@@ -53,5 +53,8 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
 
 addMessageListener("Test:SendChar", message => {
   let result = EventUtils.sendChar(message.data.char, content);
-  sendAsyncMessage("Test:SendCharDone", { sendCharResult: result });
+  sendAsyncMessage("Test:SendCharDone", {
+    sendCharResult: result,
+    seq: message.data.seq
+  });
 });

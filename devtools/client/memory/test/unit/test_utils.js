@@ -3,7 +3,8 @@
 
 /**
  * Tests the task creator `takeSnapshotAndCensus()` for the whole flow of
- * taking a snapshot, and its sub-actions.
+ * taking a snapshot, and its sub-actions. Tests the formatNumber and
+ * formatPercent methods.
  */
 
 let utils = require("devtools/client/memory/utils");
@@ -48,4 +49,28 @@ add_task(function *() {
 
   ok(utils.breakdownEquals(utils.getCustomBreakdowns()["My Breakdown"], custom),
     "utils.getCustomBreakdowns() returns custom breakdowns");
+
+  ok(true, "test formatNumber util functions");
+  equal(utils.formatNumber(12), "12", "formatNumber returns 12 for 12");
+
+  equal(utils.formatNumber(0), "0", "formatNumber returns 0 for 0");
+  equal(utils.formatNumber(-0), "0", "formatNumber returns 0 for -0");
+  equal(utils.formatNumber(+0), "0", "formatNumber returns 0 for +0");
+
+  equal(utils.formatNumber(1234567), "1 234 567",
+    "formatNumber adds a space every 3rd digit");
+  equal(utils.formatNumber(12345678), "12 345 678",
+    "formatNumber adds a space every 3rd digit");
+  equal(utils.formatNumber(123456789), "123 456 789",
+    "formatNumber adds a space every 3rd digit");
+
+  equal(utils.formatNumber(12, true), "+12",
+    "formatNumber can display number sign");
+  equal(utils.formatNumber(-12, true), "-12",
+    "formatNumber can display number sign (negative)");
+
+  ok(true, "test formatPercent util functions");
+  equal(utils.formatPercent(12), "12%", "formatPercent returns 12% for 12");
+  equal(utils.formatPercent(12345), "12 345%",
+    "formatPercent returns 12 345% for 12345");
 });
