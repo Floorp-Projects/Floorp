@@ -505,12 +505,11 @@ bool js_StartPerf()
 
     pid_t childPid = fork();
     if (childPid == 0) {
-        /* perf record --append --pid $mainPID --output=$outfile $MOZ_PROFILE_PERF_FLAGS */
+        /* perf record --pid $mainPID --output=$outfile $MOZ_PROFILE_PERF_FLAGS */
 
         char mainPidStr[16];
         snprintf(mainPidStr, sizeof(mainPidStr), "%d", mainPid);
-        const char* defaultArgs[] = {"perf", "record", "--append",
-                                     "--pid", mainPidStr, "--output", outfile};
+        const char* defaultArgs[] = {"perf", "record", "--pid", mainPidStr, "--output", outfile};
 
         Vector<const char*, 0, SystemAllocPolicy> args;
         if (!args.append(defaultArgs, ArrayLength(defaultArgs)))
@@ -521,15 +520,14 @@ bool js_StartPerf()
             flags = "--call-graph";
         }
 
-        char* flags2 = (char*)js_malloc(strlen(flags) + 1);
+        UniqueChars flags2((char*)js_malloc(strlen(flags) + 1));
         if (!flags2)
             return false;
-        strcpy(flags2, flags);
+        strcpy(flags2.get(), flags);
 
-        // Split |flags2| on spaces.  (Don't bother to free it -- we're going to
-        // exec anyway.)
+        // Split |flags2| on spaces.
         char* toksave;
-        char* tok = strtok_r(flags2, " ", &toksave);
+        char* tok = strtok_r(flags2.get(), " ", &toksave);
         while (tok) {
             if (!args.append(tok))
                 return false;
@@ -545,17 +543,15 @@ bool js_StartPerf()
         fprintf(stderr, "Unable to start perf.\n");
         exit(1);
     }
-    else if (childPid > 0) {
+    if (childPid > 0) {
         perfPid = childPid;
 
         /* Give perf a chance to warm up. */
         usleep(500 * 1000);
         return true;
     }
-    else {
-        UnsafeError("js_StartPerf: fork() failed\n");
-        return false;
-    }
+    UnsafeError("js_StartPerf: fork() failed\n");
+    return false;
 }
 
 bool js_StopPerf()
