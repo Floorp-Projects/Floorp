@@ -1589,6 +1589,9 @@ pref("browser.defaultbrowser.notificationbar", false);
 // the hang monitor.
 pref("dom.ipc.cpow.timeout", 500);
 
+// Causes access on unsafe CPOWs from browser code to throw by default.
+pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
+
 // Enable e10s hang monitoring (slow script checking and plugin hang
 // detection).
 pref("dom.ipc.processHangMonitor", true);
