@@ -308,7 +308,7 @@ const JSFunctionSpec Bool16x8Defn::Methods[] = {
 
 const JSFunctionSpec Bool32x4Defn::Methods[] = {
 #define SIMD_BOOL32X4_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_bool32x4_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_bool32x4_##Name, Operands, 0, SimdBool32x4_##Name),
     BOOL32X4_FUNCTION_LIST(SIMD_BOOL32X4_FUNCTION_ITEM)
 #undef SIMD_BOOL32X4_FUNCTION_ITEM
     JS_FS_END
