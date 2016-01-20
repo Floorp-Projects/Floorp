@@ -487,6 +487,7 @@ function* selectTreeItem(ids) {
 
   let selector = "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item";
   let target = gPanelWindow.document.querySelector(selector);
+  ok(target, "tree item found with ids " + JSON.stringify(ids));
 
   let updated = gUI.once("store-objects-updated");
 
@@ -503,6 +504,7 @@ function* selectTreeItem(ids) {
 function* selectTableItem(id) {
   let selector = ".table-widget-cell[data-id='" + id + "']";
   let target = gPanelWindow.document.querySelector(selector);
+  ok(target, "table item found with ids " + id);
 
   yield click(target);
   yield gUI.once("sidebar-updated");
