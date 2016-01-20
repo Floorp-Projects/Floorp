@@ -4,17 +4,6 @@
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
-function whenNewWindowLoaded(aOptions, aCallback) {
-  let win = OpenBrowserWindow(aOptions);
-  let focused = SimpleTest.promiseFocus(win);
-  let startupFinished = TestUtils.topicObserved("browser-delayed-startup-finished",
-                                                subject => subject == win).then(() => win);
-  Promise.all([focused, startupFinished])
-    .then(results => executeSoon(() => aCallback(results[1])));
-
-  return win;
-}
-
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
@@ -123,7 +112,7 @@ function promiseNewEngine(basename, options = {}) {
       onInitComplete: function() {
         let url = getRootDirectory(gTestPath) + basename;
         let current = Services.search.currentEngine;
-        Services.search.addEngine(url, null, "", false, {
+        Services.search.addEngine(url, null, options.iconURL || "", false, {
           onSuccess: function (engine) {
             info("Search engine added: " + basename);
             if (setAsCurrent) {
