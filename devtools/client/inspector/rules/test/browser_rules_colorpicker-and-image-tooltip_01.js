@@ -46,8 +46,10 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
 
   let spectrum = yield picker.spectrum;
   let onHidden = picker.tooltip.once("hidden");
+  let onModifications = ruleView.once("ruleview-changed");
   EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
+  yield onModifications;
 
   info("Verify again that the image preview tooltip works");
   // After a color change, the property is re-populated, we need to get the new

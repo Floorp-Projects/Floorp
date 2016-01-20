@@ -11,11 +11,12 @@ function* createTestContent(style) {
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(content));
+  let tab = yield addTab("data:text/html;charset=utf-8," +
+                         encodeURIComponent(content));
 
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  return view;
+  return {view, tab};
 }
 
 add_task(function* () {
@@ -29,9 +30,9 @@ add_task(function* () {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "authored");
 
   for (let color of colors) {
-    let view = yield createTestContent("#testid {" +
-                                       "  color: " + color.text + ";" +
-                                       "} ");
+    let {view, tab} = yield createTestContent("#testid {" +
+                                              "  color: " + color.text + ";" +
+                                              "} ");
 
     let cPicker = view.tooltips.colorPicker;
     let swatch = getRuleViewProperty(view, "#testid", "color").valueSpan
@@ -50,10 +51,17 @@ add_task(function* () {
 
     let spectrum = yield cPicker.spectrum;
     let onHidden = cPicker.tooltip.once("hidden");
+    // Validating the color change ends up updating the rule view twice
+    let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
     EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
     yield onHidden;
+    yield onRuleViewChanged;
 
     is(getRuleViewPropertyValue(view, "#testid", "color"), color.result,
        "changing the color preserved the unit for " + color.name);
+
+    let target = TargetFactory.forTab(tab);
+    yield gDevTools.closeToolbox(target);
+    gBrowser.removeCurrentTab();
   }
 });

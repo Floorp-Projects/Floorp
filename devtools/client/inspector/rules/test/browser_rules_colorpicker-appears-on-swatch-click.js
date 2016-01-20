@@ -49,5 +49,8 @@ function* testColorPickerAppearsOnColorSwatchClick(view, swatch) {
   ok(true, "The color picker was shown on click of the color swatch");
   ok(!inplaceEditor(swatch.parentNode),
     "The inplace editor wasn't shown as a result of the color swatch click");
+
+  let onModifications = view.once("ruleview-changed");
   cPicker.hide();
+  yield onModifications;
 }
