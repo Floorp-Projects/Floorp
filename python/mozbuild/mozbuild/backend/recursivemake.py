@@ -537,6 +537,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_test_harness_files(obj, backend_file)
 
         elif isinstance(obj, JARManifest):
+            self._no_skip['libs'].add(backend_file.relobjdir)
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path.full_path)
 
         elif isinstance(obj, Program):
