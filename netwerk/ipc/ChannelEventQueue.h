@@ -8,8 +8,9 @@
 #ifndef mozilla_net_ChannelEventQueue_h
 #define mozilla_net_ChannelEventQueue_h
 
-#include <nsTArray.h>
-#include <nsAutoPtr.h>
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 class nsISupports;
 class nsIEventTarget;
@@ -51,7 +52,7 @@ class ChannelEventQueue final
   // Puts IPDL-generated channel event into queue, to be run later
   // automatically when EndForcedQueueing and/or Resume is called.
   inline void Enqueue(ChannelEvent* callback);
-  inline nsresult PrependEvents(nsTArray<nsAutoPtr<ChannelEvent> >& aEvents);
+  inline nsresult PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
 
   // After StartForcedQueueing is called, ShouldEnqueue() will return true and
   // no events will be run/flushed until EndForcedQueueing is called.
@@ -82,7 +83,7 @@ class ChannelEventQueue final
   void FlushQueue();
   inline void CompleteResume();
 
-  nsTArray<nsAutoPtr<ChannelEvent> > mEventQueue;
+  nsTArray<UniquePtr<ChannelEvent>> mEventQueue;
 
   uint32_t mSuspendCount;
   bool     mSuspended;
@@ -129,14 +130,16 @@ ChannelEventQueue::EndForcedQueueing()
 }
 
 inline nsresult
-ChannelEventQueue::PrependEvents(nsTArray<nsAutoPtr<ChannelEvent> >& aEvents)
+ChannelEventQueue::PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents)
 {
-  if (!mEventQueue.InsertElementsAt(0, aEvents.Length())) {
+  UniquePtr<ChannelEvent>* newEvents =
+    mEventQueue.InsertElementsAt(0, aEvents.Length());
+  if (!newEvents) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   for (uint32_t i = 0; i < aEvents.Length(); i++) {
-    mEventQueue.ReplaceElementAt(i, aEvents[i].forget());
+    newEvents[i] = Move(aEvents[i]);
   }
   return NS_OK;
 }

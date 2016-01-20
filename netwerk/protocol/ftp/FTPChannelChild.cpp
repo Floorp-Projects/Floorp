@@ -450,7 +450,7 @@ FTPChannelChild::DoOnDataAvailable(const nsresult& channelStatus,
 
   if (mUnknownDecoderInvolved) {
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnDataFTPEvent(this, data, offset, count));
+      MakeUnique<MaybeDivertOnDataFTPEvent>(this, data, offset, count));
   }
 
   // NOTE: the OnDataAvailable contract requires the client to read all the data
@@ -557,7 +557,7 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus)
 
   if (mUnknownDecoderInvolved) {
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnStopFTPEvent(this, aChannelStatus));
+      MakeUnique<MaybeDivertOnStopFTPEvent>(this, aChannelStatus));
   }
 
   { // Ensure that all queued ipdl events are dispatched before
