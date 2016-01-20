@@ -4,8 +4,6 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-const kPrefRilRadioDisabled  = "ril.radio.disabled";
-
 function testSendFailed(aCause, aServiceId) {
   log("testSendFailed, aCause: " + aCause + ", aServiceId: " + aServiceId);
   let sendParameters;
@@ -44,13 +42,9 @@ function testSendFailed(aCause, aServiceId) {
 
 startTestCommon(function testCaseMain() {
   return Promise.resolve()
-    .then(() => {
-      SpecialPowers.setBoolPref(kPrefRilRadioDisabled, true);
-    })
-    .then(() => testSendFailed("RadioDisabledError"))
-    .then(() => {
-      SpecialPowers.setBoolPref(kPrefRilRadioDisabled, false);
-    })
+    .then(() => setAllRadioEnabled(false))
+    .then(() => testSendFailed("RadioDisabledError"), 0)
+    .then(() => setAllRadioEnabled(true))
     .then(() => runIfMultiSIM(
                   () => testSendFailed("NonActiveSimCardError", 1)));
 });
