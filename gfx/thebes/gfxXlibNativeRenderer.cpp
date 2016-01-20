@@ -575,13 +575,8 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
             SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     if (method != eAlphaExtraction) {
         if (drawTarget) {
-            NativeSurface native;
-            native.mFormat = moz2DFormat;
-            native.mType = NativeSurfaceType::CAIRO_CONTEXT;
-            native.mSurface = tempXlibSurface;
-            native.mSize = size;
             RefPtr<SourceSurface> sourceSurface =
-                drawTarget->CreateSourceSurfaceFromNativeSurface(native);
+                Factory::CreateSourceSurfaceForCairoSurface(tempXlibSurface, size, moz2DFormat);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
                     Rect(offset.x, offset.y, size.width, size.height),
@@ -617,13 +612,9 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
 
         gfxASurface* paintSurface = blackImage;
         if (drawTarget) {
-            NativeSurface native;
-            native.mFormat = moz2DFormat;
-            native.mType = NativeSurfaceType::CAIRO_CONTEXT;
-            native.mSurface = paintSurface->CairoSurface();
-            native.mSize = size;
             RefPtr<SourceSurface> sourceSurface =
-                drawTarget->CreateSourceSurfaceFromNativeSurface(native);
+                Factory::CreateSourceSurfaceForCairoSurface(paintSurface->CairoSurface(),
+                                                            size, moz2DFormat);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
                     Rect(offset.x, offset.y, size.width, size.height),
