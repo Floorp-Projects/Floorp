@@ -854,7 +854,7 @@ class IonBuilder
     // SIMD intrinsics and natives.
     InliningStatus inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* target);
 
-    // SIMD helpers
+    // SIMD helpers.
     static MIRType SimdTypeDescrToMIRType(SimdTypeDescr::Type type);
     bool canInlineSimd(CallInfo& callInfo, JSNative native, unsigned numArgs,
                        InlineTypedObject** templateObj);
@@ -862,9 +862,7 @@ class IonBuilder
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
 
-    InliningStatus inlineSimdInt32x4(CallInfo& callInfo, JSNative native);
-    InliningStatus inlineSimdFloat32x4(CallInfo& callInfo, JSNative native);
-    InliningStatus inlineSimdBool32x4(CallInfo& callInfo, JSNative native);
+    InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType);
 
     template <typename T>
     InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,

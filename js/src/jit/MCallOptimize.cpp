@@ -203,11 +203,11 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
       // SIMD natives.
       case InlinableNative::SimdInt32x4:
-        return inlineSimdInt32x4(callInfo, target->native());
+        return inlineSimd(callInfo, target, MIRType_Int32x4);
       case InlinableNative::SimdFloat32x4:
-        return inlineSimdFloat32x4(callInfo, target->native());
+        return inlineSimd(callInfo, target, MIRType_Float32x4);
       case InlinableNative::SimdBool32x4:
-        return inlineSimdBool32x4(callInfo, target->native());
+        return inlineSimd(callInfo, target, MIRType_Bool32x4);
 
       // Testing functions.
       case InlinableNative::TestBailout:
@@ -3056,196 +3056,165 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
     return InliningStatus_Inlined;
 }
 
+// Main entry point for SIMD inlining.
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdBool32x4(CallInfo& callInfo, JSNative native)
+IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
 {
-#define INLINE_SIMD_BITWISE_(OP)                                                                   \
-    if (native == js::simd_bool32x4_##OP)                                                          \
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_,   \
-                                                    MIRType_Bool32x4);
+    JSNative native = target->native();
+    const JSJitInfo* jitInfo = target->jitInfo();
+    MOZ_ASSERT(jitInfo && jitInfo->type() == JSJitInfo::InlinableNative);
+    SimdOperation simdOp = SimdOperation(jitInfo->nativeOp);
+    MOZ_ASSERT(IsSimdType(simdType));
 
-    FOREACH_BITWISE_SIMD_BINOP(INLINE_SIMD_BITWISE_)
-#undef INLINE_SIMD_BITWISE_
+    switch(simdOp) {
+      case SimdOperation::Constructor:
+        // SIMD constructor calls are handled via inlineNonFunctionCall(), so
+        // they won't show up here where target is required to be a JSFunction.
+        // See also inlineConstructSimdObject().
+        MOZ_CRASH("SIMD constructor call not expected.");
+      case SimdOperation::Fn_check:
+        return inlineSimdCheck(callInfo, native, simdType);
+      case SimdOperation::Fn_splat:
+        return inlineSimdSplat(callInfo, native, simdType);
+      case SimdOperation::Fn_extractLane:
+        return inlineSimdExtractLane(callInfo, native, simdType);
+      case SimdOperation::Fn_replaceLane:
+        return inlineSimdReplaceLane(callInfo, native, simdType);
+      case SimdOperation::Fn_select:
+        return inlineSimdSelect(callInfo, native, simdType);
+      case SimdOperation::Fn_swizzle:
+        return inlineSimdShuffle(callInfo, native, simdType, 1, SimdTypeToLength(simdType));
+      case SimdOperation::Fn_shuffle:
+        return inlineSimdShuffle(callInfo, native, simdType, 2, SimdTypeToLength(simdType));
 
-    if (native == js::simd_bool32x4_extractLane)
-        return inlineSimdExtractLane(callInfo, native, MIRType_Bool32x4);
-    if (native == js::simd_bool32x4_replaceLane)
-        return inlineSimdReplaceLane(callInfo, native, MIRType_Bool32x4);
+        // Unary arithmetic.
+      case SimdOperation::Fn_abs:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::abs, simdType);
+      case SimdOperation::Fn_neg:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::neg, simdType);
+      case SimdOperation::Fn_not:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::not_, simdType);
+      case SimdOperation::Fn_reciprocalApproximation:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::reciprocalApproximation,
+                               simdType);
+      case SimdOperation::Fn_reciprocalSqrtApproximation:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::reciprocalSqrtApproximation,
+                               simdType);
+      case SimdOperation::Fn_sqrt:
+        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::sqrt, simdType);
 
-    if (native == js::simd_bool32x4_not)
-        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::not_, MIRType_Bool32x4);
+        // Binary arithmetic.
+      case SimdOperation::Fn_add:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_add,
+                                                  simdType);
+      case SimdOperation::Fn_sub:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_sub,
+                                                  simdType);
+      case SimdOperation::Fn_mul:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_mul,
+                                                  simdType);
+      case SimdOperation::Fn_div:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_div,
+                                                  simdType);
+      case SimdOperation::Fn_max:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_max,
+                                                  simdType);
+      case SimdOperation::Fn_min:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_min,
+                                                  simdType);
+      case SimdOperation::Fn_maxNum:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_maxNum,
+                                                  simdType);
+      case SimdOperation::Fn_minNum:
+        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_minNum,
+                                                  simdType);
 
-    if (native == js::simd_bool32x4_splat)
-        return inlineSimdSplat(callInfo, native, MIRType_Bool32x4);
-    if (native == js::simd_bool32x4_check)
-        return inlineSimdCheck(callInfo, native, MIRType_Bool32x4);
+        // Binary bitwise.
+      case SimdOperation::Fn_and:
+        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::and_,
+                                                    simdType);
+      case SimdOperation::Fn_or:
+        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::or_,
+                                                    simdType);
+      case SimdOperation::Fn_xor:
+        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::xor_,
+                                                    simdType);
 
-    if (native == js::simd_bool32x4_allTrue)
-        return inlineSimdAnyAllTrue(callInfo, true, native);
-    if (native == js::simd_bool32x4_anyTrue)
-        return inlineSimdAnyAllTrue(callInfo, false, native);
+        // Shifts.
+      case SimdOperation::Fn_shiftLeftByScalar:
+        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::lsh, simdType);
+      case SimdOperation::Fn_shiftRightByScalar:
+        // TODO: select opcode from simdType signedness.
+        MOZ_ASSERT(simdType == MIRType_Int32x4);
+        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rsh, simdType);
+      case SimdOperation::Fn_shiftRightArithmeticByScalar:
+        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rsh, simdType);
+      case SimdOperation::Fn_shiftRightLogicalByScalar:
+        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::ursh, simdType);
 
-    return InliningStatus_NotInlined;
-}
+        // Boolean unary.
+      case SimdOperation::Fn_allTrue:
+        return inlineSimdAnyAllTrue(callInfo, /* IsAllTrue= */true, native);
+      case SimdOperation::Fn_anyTrue:
+        return inlineSimdAnyAllTrue(callInfo, /* IsAllTrue= */false, native);
 
-IonBuilder::InliningStatus
-IonBuilder::inlineSimdInt32x4(CallInfo& callInfo, JSNative native)
-{
-#define INLINE_INT32X4_SIMD_ARITH_(OP)                                                           \
-    if (native == js::simd_int32x4_##OP)                                                         \
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
-                                                  MIRType_Int32x4);
+        // Comparisons.
+      case SimdOperation::Fn_lessThan:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThan, simdType);
+      case SimdOperation::Fn_lessThanOrEqual:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThanOrEqual, simdType);
+      case SimdOperation::Fn_equal:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::equal, simdType);
+      case SimdOperation::Fn_notEqual:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::notEqual, simdType);
+      case SimdOperation::Fn_greaterThan:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThan, simdType);
+      case SimdOperation::Fn_greaterThanOrEqual:
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThanOrEqual, simdType);
 
-    FOREACH_NUMERIC_SIMD_BINOP(INLINE_INT32X4_SIMD_ARITH_)
-#undef INLINE_INT32X4_SIMD_ARITH_
+        // Int <-> Float conversions.
+      case SimdOperation::Fn_fromInt32x4:
+        return inlineSimdConvert(callInfo, native, false, MIRType_Int32x4, simdType);
+      case SimdOperation::Fn_fromUint32x4:
+        return InliningStatus_NotInlined;
+      case SimdOperation::Fn_fromFloat32x4:
+        return inlineSimdConvert(callInfo, native, false, MIRType_Float32x4, simdType);
 
-#define INLINE_SIMD_BITWISE_(OP)                                                                 \
-    if (native == js::simd_int32x4_##OP)                                                         \
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_, \
-                                                    MIRType_Int32x4);
+        // Load/store.
+      case SimdOperation::Fn_load:
+        return inlineSimdLoad(callInfo, native, simdType, SimdTypeToLength(simdType));
+      case SimdOperation::Fn_load1:
+        return inlineSimdLoad(callInfo, native, simdType, 1);
+      case SimdOperation::Fn_load2:
+        return inlineSimdLoad(callInfo, native, simdType, 2);
+      case SimdOperation::Fn_load3:
+        return inlineSimdLoad(callInfo, native, simdType, 3);
+      case SimdOperation::Fn_store:
+        return inlineSimdStore(callInfo, native, simdType, SimdTypeToLength(simdType));
+      case SimdOperation::Fn_store1:
+        return inlineSimdStore(callInfo, native, simdType, 1);
+      case SimdOperation::Fn_store2:
+        return inlineSimdStore(callInfo, native, simdType, 2);
+      case SimdOperation::Fn_store3:
+        return inlineSimdStore(callInfo, native, simdType, 3);
 
-    FOREACH_BITWISE_SIMD_BINOP(INLINE_SIMD_BITWISE_)
-#undef INLINE_SIMD_BITWISE_
-
-    if (native == js::simd_int32x4_shiftLeftByScalar)
-        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::lsh, MIRType_Int32x4);
-    if (native == js::simd_int32x4_shiftRightArithmeticByScalar ||
-        native == js::simd_int32x4_shiftRightByScalar) {
-        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rsh, MIRType_Int32x4);
+        // Bitcasts. One for each type with a memory representation.
+      case SimdOperation::Fn_fromInt8x16Bits:
+      case SimdOperation::Fn_fromInt16x8Bits:
+        return InliningStatus_NotInlined;
+      case SimdOperation::Fn_fromInt32x4Bits:
+        return inlineSimdConvert(callInfo, native, true, MIRType_Int32x4, simdType);
+      case SimdOperation::Fn_fromUint8x16Bits:
+      case SimdOperation::Fn_fromUint16x8Bits:
+      case SimdOperation::Fn_fromUint32x4Bits:
+        return InliningStatus_NotInlined;
+      case SimdOperation::Fn_fromFloat32x4Bits:
+        return inlineSimdConvert(callInfo, native, true, MIRType_Float32x4, simdType);
+      case SimdOperation::Fn_fromFloat64x2Bits:
+        return InliningStatus_NotInlined;
     }
-    if (native == js::simd_int32x4_shiftRightLogicalByScalar)
-        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::ursh, MIRType_Int32x4);
 
-#define INLINE_SIMD_COMPARISON_(OP)                                                                \
-    if (native == js::simd_int32x4_##OP)                                                           \
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::OP, MIRType_Int32x4);
-
-    FOREACH_COMP_SIMD_OP(INLINE_SIMD_COMPARISON_)
-#undef INLINE_SIMD_COMPARISON_
-
-    if (native == js::simd_int32x4_extractLane)
-        return inlineSimdExtractLane(callInfo, native, MIRType_Int32x4);
-    if (native == js::simd_int32x4_replaceLane)
-        return inlineSimdReplaceLane(callInfo, native, MIRType_Int32x4);
-
-    if (native == js::simd_int32x4_not)
-        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::not_, MIRType_Int32x4);
-    if (native == js::simd_int32x4_neg)
-        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::neg, MIRType_Int32x4);
-
-    typedef bool IsCast;
-    if (native == js::simd_int32x4_fromFloat32x4)
-        return inlineSimdConvert(callInfo, native, IsCast(false), MIRType_Float32x4, MIRType_Int32x4);
-    if (native == js::simd_int32x4_fromFloat32x4Bits)
-        return inlineSimdConvert(callInfo, native, IsCast(true), MIRType_Float32x4, MIRType_Int32x4);
-
-    if (native == js::simd_int32x4_splat)
-        return inlineSimdSplat(callInfo, native, MIRType_Int32x4);
-
-    if (native == js::simd_int32x4_check)
-        return inlineSimdCheck(callInfo, native, MIRType_Int32x4);
-
-    if (native == js::simd_int32x4_select)
-        return inlineSimdSelect(callInfo, native, MIRType_Int32x4);
-
-    if (native == js::simd_int32x4_swizzle)
-        return inlineSimdShuffle(callInfo, native, MIRType_Int32x4, 1, 4);
-    if (native == js::simd_int32x4_shuffle)
-        return inlineSimdShuffle(callInfo, native, MIRType_Int32x4, 2, 4);
-
-    if (native == js::simd_int32x4_load)
-        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 4);
-    if (native == js::simd_int32x4_load1)
-        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 1);
-    if (native == js::simd_int32x4_load2)
-        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 2);
-    if (native == js::simd_int32x4_load3)
-        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 3);
-
-    if (native == js::simd_int32x4_store)
-        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 4);
-    if (native == js::simd_int32x4_store1)
-        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 1);
-    if (native == js::simd_int32x4_store2)
-        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 2);
-    if (native == js::simd_int32x4_store3)
-        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 3);
-
-    return InliningStatus_NotInlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineSimdFloat32x4(CallInfo& callInfo, JSNative native)
-{
-    // Simd functions
-#define INLINE_FLOAT32X4_SIMD_ARITH_(OP)                                                         \
-    if (native == js::simd_float32x4_##OP)                                                       \
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_##OP,   \
-                                                  MIRType_Float32x4);
-
-    FOREACH_NUMERIC_SIMD_BINOP(INLINE_FLOAT32X4_SIMD_ARITH_)
-    FOREACH_FLOAT_SIMD_BINOP(INLINE_FLOAT32X4_SIMD_ARITH_)
-#undef INLINE_FLOAT32X4_SIMD_ARITH_
-
-#define INLINE_SIMD_COMPARISON_(OP)                                                                \
-    if (native == js::simd_float32x4_##OP)                                                         \
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::OP, MIRType_Float32x4);
-
-    FOREACH_COMP_SIMD_OP(INLINE_SIMD_COMPARISON_)
-#undef INLINE_SIMD_COMPARISON_
-
-    if (native == js::simd_float32x4_extractLane)
-        return inlineSimdExtractLane(callInfo, native, MIRType_Float32x4);
-    if (native == js::simd_float32x4_replaceLane)
-        return inlineSimdReplaceLane(callInfo, native, MIRType_Float32x4);
-
-#define INLINE_SIMD_FLOAT32X4_UNARY_(OP)                                                           \
-    if (native == js::simd_float32x4_##OP)                                                         \
-        return inlineSimdUnary(callInfo, native, MSimdUnaryArith::OP, MIRType_Float32x4);
-
-    FOREACH_FLOAT_SIMD_UNOP(INLINE_SIMD_FLOAT32X4_UNARY_)
-    INLINE_SIMD_FLOAT32X4_UNARY_(neg)
-#undef INLINE_SIMD_FLOAT32X4_UNARY_
-
-    typedef bool IsCast;
-    if (native == js::simd_float32x4_fromInt32x4)
-        return inlineSimdConvert(callInfo, native, IsCast(false), MIRType_Int32x4, MIRType_Float32x4);
-    if (native == js::simd_float32x4_fromInt32x4Bits)
-        return inlineSimdConvert(callInfo, native, IsCast(true), MIRType_Int32x4, MIRType_Float32x4);
-
-    if (native == js::simd_float32x4_splat)
-        return inlineSimdSplat(callInfo, native, MIRType_Float32x4);
-
-    if (native == js::simd_float32x4_check)
-        return inlineSimdCheck(callInfo, native, MIRType_Float32x4);
-
-    if (native == js::simd_float32x4_select)
-        return inlineSimdSelect(callInfo, native, MIRType_Float32x4);
-
-    if (native == js::simd_float32x4_swizzle)
-        return inlineSimdShuffle(callInfo, native, MIRType_Float32x4, 1, 4);
-    if (native == js::simd_float32x4_shuffle)
-        return inlineSimdShuffle(callInfo, native, MIRType_Float32x4, 2, 4);
-
-    if (native == js::simd_float32x4_load)
-        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 4);
-    if (native == js::simd_float32x4_load1)
-        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 1);
-    if (native == js::simd_float32x4_load2)
-        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 2);
-    if (native == js::simd_float32x4_load3)
-        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 3);
-
-    if (native == js::simd_float32x4_store)
-        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 4);
-    if (native == js::simd_float32x4_store1)
-        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 1);
-    if (native == js::simd_float32x4_store2)
-        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 2);
-    if (native == js::simd_float32x4_store3)
-        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 3);
-
-    return InliningStatus_NotInlined;
+    MOZ_CRASH("Unexpected SIMD opcode");
 }
 
 // The representation of boolean SIMD vectors is the same as the corresponding
