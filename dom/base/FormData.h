@@ -35,7 +35,7 @@ private:
   struct FormDataTuple
   {
     nsString name;
-    OwningFileOrUSVString value;
+    OwningBlobOrUSVString value;
   };
 
   // Returns the FormDataTuple to modify. This may be null, in which case
@@ -47,9 +47,9 @@ private:
                         const nsAString& aName,
                         const nsAString& aValue);
 
-  void SetNameFilePair(FormDataTuple* aData,
+  void SetNameBlobPair(FormDataTuple* aData,
                        const nsAString& aName,
-                       File* aFile);
+                       Blob* aBlob);
 
 public:
   explicit FormData(nsISupports* aOwner = nullptr);
@@ -84,9 +84,9 @@ public:
 
   void Delete(const nsAString& aName);
 
-  void Get(const nsAString& aName, Nullable<OwningFileOrUSVString>& aOutValue);
+  void Get(const nsAString& aName, Nullable<OwningBlobOrUSVString>& aOutValue);
 
-  void GetAll(const nsAString& aName, nsTArray<OwningFileOrUSVString>& aValues);
+  void GetAll(const nsAString& aName, nsTArray<OwningBlobOrUSVString>& aValues);
 
   bool Has(const nsAString& aName);
 
@@ -100,7 +100,7 @@ public:
 
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
 
-  const OwningFileOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
+  const OwningBlobOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
 
   // nsFormSubmission
   virtual nsresult
@@ -114,11 +114,11 @@ public:
     return NS_OK;
   }
 
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aFile) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
 
   typedef bool (*FormDataEntryCallback)(const nsString& aName,
-                                        const OwningFileOrUSVString& aValue,
+                                        const OwningBlobOrUSVString& aValue,
                                         void* aClosure);
 
   uint32_t
