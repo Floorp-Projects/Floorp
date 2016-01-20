@@ -7,5 +7,25 @@
 
 <!ENTITY            windowtitle.label      "&brandShortName; - Choose User Profile">
 
+<!ENTITY            profilename.label      "Profile Name:">
+
 <!ENTITY            start.label            "Start &brandShortName;">
 <!ENTITY            exit.label             "Exit">
+
+<!ENTITY            availprofiles.label    "Available Profiles">
+
+<!ENTITY            newButton.label        "Create Profile…">
+<!ENTITY            newButton.accesskey    "C">
+<!ENTITY            renameButton.label     "Rename Profile…">
+<!ENTITY            renameButton.accesskey "R">
+<!ENTITY            deleteButton.label     "Delete Profile…">
+<!ENTITY            deleteButton.accesskey "D">
+
+<!-- manager entities -->
+<!ENTITY            pmDescription.label    "&brandShortName; stores information about your settings, preferences, and other user items in your user profile.">
+
+<!ENTITY            offlineState.label    "Work offline">
+<!ENTITY            offlineState.accesskey "o">
+
+<!ENTITY            useSelected.label       "Use the selected profile without asking at startup">
+<!ENTITY            useSelected.accesskey   "s">
