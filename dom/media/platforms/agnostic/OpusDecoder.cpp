@@ -148,6 +148,12 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     return -1;
   }
 
+  if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
+    // We are starting a new block.
+    mFrames = 0;
+    mLastFrameTime = Some(aSample->mTime);
+  }
+
   // Maximum value is 63*2880, so there's no chance of overflow.
   int32_t frames_number = opus_packet_get_nb_frames(aSample->Data(),
                                                     aSample->Size());
@@ -253,8 +259,9 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     NS_WARNING("OpusDataDecoder: Int overflow converting WebM audio duration");
     return -1;
   }
-  CheckedInt64 time = startTime - FramesToUsecs(mOpusParser->mPreSkip,
-                                                mOpusParser->mRate);
+  CheckedInt64 time =
+    startTime - FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
+    FramesToUsecs(mFrames, mOpusParser->mRate);
   if (!time.isValid()) {
     NS_WARNING("OpusDataDecoder: Int overflow shifting tstamp by codec delay");
     return -1;
@@ -295,7 +302,7 @@ OpusDataDecoder::Flush()
     opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
     mSkip = mOpusParser->mPreSkip;
     mPaddingDiscarded = false;
-    mFrames = 0;
+    mLastFrameTime.reset();
   }
   return NS_OK;
 }
