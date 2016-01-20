@@ -48,13 +48,6 @@
 
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
 
-  <string name="firstrun_import_title">&firstrun_import_title;</string>
-  <string name="firstrun_import_message">&firstrun_import_message;</string>
-  <string name="firstrun_import_subtext">&firstrun_import_subtext;</string>
-  <string name="firstrun_import_action">&firstrun_import_action;</string>
-  <string name="firstrun_import_dialog_button">&firstrun_import_dialog_button;</string>
-  <string name="firstrun_import_progress_title">&firstrun_import_progress_title;</string>
-
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
   <string name="reading_list_title">&reading_list_title;</string>
