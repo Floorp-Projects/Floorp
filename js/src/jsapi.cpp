@@ -1879,7 +1879,7 @@ JS::CompartmentBehaviorsRef(JSContext* cx)
 JS_PUBLIC_API(JSObject*)
 JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions& options /* = JS::CompartmentOptions() */)
+                   const JS::CompartmentOptions& options)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
