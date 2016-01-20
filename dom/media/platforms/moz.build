@@ -39,23 +39,27 @@ if CONFIG['MOZ_EME']:
     DIRS += ['agnostic/eme']
 
 if CONFIG['MOZ_FFMPEG']:
+    LOCAL_INCLUDES += ['/xpcom/build']
     EXPORTS += [
         'ffmpeg/FFmpegRuntimeLinker.h',
     ]
     UNIFIED_SOURCES += [
         'ffmpeg/FFmpegRuntimeLinker.cpp',
     ]
-    if CONFIG['MOZ_FFVPX']:
-        DIRS += [
-            'ffmpeg/ffvpx',
-        ]
     if CONFIG['OS_ARCH'] != 'WINNT':
         DIRS += [
             'ffmpeg/libav53',
             'ffmpeg/libav54',
             'ffmpeg/libav55',
-            'ffmpeg/ffmpeg57',
         ]
+    else:
+        LOCAL_INCLUDES += [
+            'ffmpeg/ffmpeg57/include',
+        ]
+
+    DIRS += [
+        'ffmpeg/ffmpeg57',
+    ]
 
 if CONFIG['MOZ_APPLEMEDIA']:
   EXPORTS += [
