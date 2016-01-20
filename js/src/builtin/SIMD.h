@@ -779,6 +779,37 @@
 
 namespace js {
 
+// Complete set of SIMD operations.
+//
+// No SIMD types implement all of these operations.
+//
+// C++ defines keywords and/or/xor/not, so prepend Fn_ to all named functions to
+// avoid clashes.
+enum class SimdOperation : uint8_t {
+    // The constructor call. No Fn_ prefix here.
+    Constructor,
+
+    // All the operations, except for casts.
+#define DEFOP(x) Fn_##x,
+    FORALL_SIMD_NONCAST_OP(DEFOP)
+#undef DEFOP
+
+    // Int <-> Float conversions.
+    Fn_fromInt32x4,
+    Fn_fromUint32x4,
+    Fn_fromFloat32x4,
+
+    // Bitcasts. One for each type with a memory representation.
+    Fn_fromInt8x16Bits,
+    Fn_fromInt16x8Bits,
+    Fn_fromInt32x4Bits,
+    Fn_fromUint8x16Bits,
+    Fn_fromUint16x8Bits,
+    Fn_fromUint32x4Bits,
+    Fn_fromFloat32x4Bits,
+    Fn_fromFloat64x2Bits,
+};
+
 class SimdObject : public JSObject
 {
   public:
