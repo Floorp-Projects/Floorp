@@ -8,7 +8,7 @@
 
 const {PropertyView} =
       require("devtools/client/inspector/computed/computed");
-const TEST_URI = TEST_URL_ROOT + "doc_matched_selectors.html";
+const TEST_URI = URL_ROOT + "doc_matched_selectors.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
