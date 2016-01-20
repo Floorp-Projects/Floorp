@@ -23,6 +23,14 @@
 // Undo the damage done by mozzconf.h
 #undef compress
 
+// Logging seems to be somewhat broken on b2g.
+#ifdef MOZ_B2G
+#define IPC_LOG(...)
+#else
+static LazyLogModule sLogModule("ipc");
+#define IPC_LOG(...) MOZ_LOG(sLogModule, LogLevel::Debug, (__VA_ARGS__))
+#endif
+
 /*
  * IPC design:
  *
@@ -666,8 +674,11 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     // Regardless of the Interrupt stack, if we're awaiting a sync reply,
     // we know that it needs to be immediately handled to unblock us.
     if (aMsg.is_sync() && aMsg.is_reply()) {
+        IPC_LOG("Received reply seqno=%d xid=%d", aMsg.seqno(), aMsg.transaction_id());
+
         if (aMsg.seqno() == mTimedOutMessageSeqno) {
             // Drop the message, but allow future sync messages to be sent.
+            IPC_LOG("Received reply to timedout message; igoring; xid=%d", mTimedOutMessageSeqno);
             mTimedOutMessageSeqno = 0;
             return;
         }
@@ -675,6 +686,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
         MOZ_ASSERT(aMsg.transaction_id() == mCurrentTransaction);
         MOZ_ASSERT(AwaitingSyncReply());
         MOZ_ASSERT(!mRecvd);
+        MOZ_ASSERT(!mTimedOutMessageSeqno);
 
         // Rather than storing errors in mRecvd, we mark them in
         // mRecvdErrors. We need a counter because multiple replies can arrive
@@ -730,6 +742,9 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     bool shouldWakeUp = AwaitingInterruptReply() ||
                         (AwaitingSyncReply() && !ShouldDeferMessage(aMsg)) ||
                         AwaitingIncomingMessage();
+
+    IPC_LOG("Receive on link thread; seqno=%d, xid=%d, shouldWakeUp=%d",
+            aMsg.seqno(), aMsg.transaction_id(), shouldWakeUp);
 
     // There are three cases we're concerned about, relating to the state of the
     // main thread:
@@ -863,6 +878,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // and we haven't received a reply for it. Once the original timed-out
         // message receives a reply, we'll be able to send more sync messages
         // again.
+        IPC_LOG("Send() failed due to previous timeout");
         return false;
     }
 
@@ -949,6 +965,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         }
 
         if (WasTransactionCanceled(transaction, prio)) {
+            IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
             return false;
         }
 
@@ -956,6 +973,8 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // if neither side has any other message Sends on the stack).
         bool canTimeOut = transaction == seqno;
         if (maybeTimedOut && canTimeOut && !ShouldContinueFromTimeout()) {
+            IPC_LOG("Timing out Send: xid=%d", transaction);
+
             // We might have received a reply during WaitForSyncNotify or inside
             // ShouldContinueFromTimeout (which drops the lock). We need to make
             // sure not to set mTimedOutMessageSeqno if that happens, since then
@@ -1215,6 +1234,8 @@ MessageChannel::ProcessPendingRequest(const Message &aUrgent)
     // to save the reply.
     nsAutoPtr<Message> savedReply(mRecvd.forget());
 
+    IPC_LOG("Process pending: seqno=%d, xid=%d", aUrgent.seqno(), aUrgent.transaction_id());
+
     DispatchMessage(aUrgent);
     if (!Connected()) {
         ReportConnectionError("MessageChannel::ProcessPendingRequest");
@@ -1287,6 +1308,8 @@ MessageChannel::DispatchMessage(const Message &aMsg)
         nojsapi.emplace();
 
     nsAutoPtr<Message> reply;
+
+    IPC_LOG("DispatchMessage: seqno=%d, xid=%d", aMsg.seqno(), aMsg.transaction_id());
 
     {
         AutoEnterTransaction transaction(this, aMsg);
@@ -2020,6 +2043,8 @@ MessageChannel::GetTopmostMessageRoutingId() const
 void
 MessageChannel::CancelCurrentTransactionInternal()
 {
+    mMonitor->AssertCurrentThreadOwns();
+
     // When we cancel a transaction, we need to behave as if there's no longer
     // any IPC on the stack. Anything we were dispatching or sending will get
     // canceled. Consequently, we have to update the state variables below.
