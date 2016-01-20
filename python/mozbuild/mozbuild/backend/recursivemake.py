@@ -944,6 +944,7 @@ class RecursiveMakeBackend(CommonBackend):
                 self._install_manifests['_tests'].add_pattern_symlink(p[0], p[1], path)
 
         for path, files in obj.objdir_files.iteritems():
+            self._no_skip['misc'].add(backend_file.relobjdir)
             prefix = 'TEST_HARNESS_%s' % path.replace('/', '_')
             backend_file.write("""
 %(prefix)s_FILES := %(files)s
@@ -1310,6 +1311,7 @@ INSTALL_TARGETS += %(prefix)s
         # being added via some Makefiles, so for now we just pass them through
         # to the underlying Makefile.in.
         for i, (path, files) in enumerate(files.walk()):
+            self._no_skip['misc'].add(backend_file.relobjdir)
             for f in files:
                 backend_file.write('DIST_FILES_%d += %s\n' % (
                     i, self._pretty_path(f, backend_file)))
