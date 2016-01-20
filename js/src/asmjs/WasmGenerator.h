@@ -120,6 +120,8 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleGeneratorData       shared_;
+    uint32_t                        numSigs_;
+    uint32_t                        numFuncSigs_;
     LifoAlloc                       lifo_;
     jit::TempAllocator              alloc_;
     jit::MacroAssembler             masm_;
@@ -140,12 +142,13 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool finishOutstandingTask();
     bool finishTask(IonCompileTask* task);
+    bool addImport(const Sig& sig, uint32_t globalDataOffset);
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init(UniqueModuleGeneratorData shared);
+    bool init(UniqueModuleGeneratorData shared, ModuleKind = ModuleKind::Wasm);
 
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
@@ -157,7 +160,13 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Signatures:
     void initSig(uint32_t sigIndex, Sig&& sig);
+    uint32_t numSigs() const { return numSigs_; }
     const DeclaredSig& sig(uint32_t sigIndex) const;
+
+    // Function declarations:
+    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
+    uint32_t numFuncSigs() const { return numFuncSigs_; }
+    const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Imports:
     bool initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset);
@@ -172,14 +181,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
 
-    // Functions:
-    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
-    const DeclaredSig& funcSig(uint32_t funcIndex) const;
-    bool startFunc(PropertyName* name, unsigned line, unsigned column, UniqueBytecode* recycled,
-                   FunctionGenerator* fg);
-    bool finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigned generateTime,
-                    FunctionGenerator* fg);
-    bool finishFuncs();
+    // Function definitions:
+    bool startFuncDef(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
+    bool finishFuncDef(uint32_t funcIndex, unsigned generateTime, FunctionGenerator* fg);
+    bool finishFuncDefs();
 
     // Function-pointer tables:
     bool declareFuncPtrTable(uint32_t numElems, uint32_t* index);
@@ -217,8 +222,9 @@ class MOZ_STACK_CLASS FunctionGenerator
     ModuleGenerator*   m_;
     IonCompileTask*    task_;
 
-    // Function metadata created during function generation, then handed over
-    // to the FuncBytecode in ModuleGenerator::finishFunc().
+    // Data created during function generation, then handed over to the
+    // FuncBytecode in ModuleGenerator::finishFunc().
+    UniqueBytecode     bytecode_;
     SourceCoordsVector callSourceCoords_;
     ValTypeVector      localVars_;
 
@@ -237,6 +243,9 @@ class MOZ_STACK_CLASS FunctionGenerator
         column_(0)
     {}
 
+    Bytecode& bytecode() const {
+        return *bytecode_;
+    }
     bool addSourceCoords(size_t byteOffset, uint32_t line, uint32_t column) {
         SourceCoords sc = { byteOffset, line, column };
         return callSourceCoords_.append(sc);

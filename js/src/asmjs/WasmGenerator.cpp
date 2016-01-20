@@ -37,6 +37,8 @@ ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
   : cx_(cx),
     jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
     slowFuncs_(cx),
+    numSigs_(0),
+    numFuncSigs_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     alloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), alloc_),
@@ -102,7 +104,7 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
 {
     module_ = MakeUnique<ModuleData>();
     if (!module_)
@@ -110,12 +112,25 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared)
 
     module_->globalBytes = InitialGlobalDataBytes;
     module_->compileArgs = CompileArgs(cx_);
+    module_->kind = kind;
 
     link_ = MakeUnique<StaticLinkData>();
     if (!link_)
         return false;
 
+    // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
+    // and will be initialized in a linear order via init* functions as the
+    // module is generated. For wasm, the Vectors are correctly-sized and
+    // already initialized.
     shared_ = Move(shared);
+    if (kind == ModuleKind::Wasm) {
+        numSigs_ = shared_->sigs.length();
+        numFuncSigs_ = shared_->funcSigs.length();
+        for (uint32_t i = 0; i < shared_->imports.length(); i++) {
+            if (!addImport(*shared_->imports[i].sig, shared_->imports[i].globalDataOffset))
+                return false;
+        }
+    }
 
     threadView_ = MakeUnique<ModuleGeneratorThreadView>(*shared_);
     if (!threadView_)
@@ -201,6 +216,7 @@ ModuleGenerator::finishTask(IonCompileTask* task)
         if (!funcEntryOffsets_.resize(func.index() + 1))
             return false;
     }
+    MOZ_ASSERT(funcEntryOffsets_[func.index()] == 0);
     funcEntryOffsets_[func.index()] = results.offsets().nonProfilingEntry;
 
     // Merge the compiled results into the whole-module masm.
@@ -228,6 +244,16 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 
     freeTasks_.infallibleAppend(task);
     return true;
+}
+
+bool
+ModuleGenerator::addImport(const Sig& sig, uint32_t globalDataOffset)
+{
+    Sig copy;
+    if (!copy.clone(sig))
+        return false;
+
+    return module_->imports.emplaceBack(Move(copy), globalDataOffset);
 }
 
 bool
@@ -272,6 +298,10 @@ ModuleGenerator::allocateGlobalVar(ValType type, uint32_t* globalDataOffset)
 void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
+    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
+    MOZ_ASSERT(sigIndex == numSigs_);
+    numSigs_++;
+
     MOZ_ASSERT(shared_->sigs[sigIndex] == Sig());
     shared_->sigs[sigIndex] = Move(sig);
 }
@@ -279,18 +309,35 @@ ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 const DeclaredSig&
 ModuleGenerator::sig(uint32_t index) const
 {
+    MOZ_ASSERT(index < numSigs_);
     return shared_->sigs[index];
+}
+
+bool
+ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
+{
+    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
+    MOZ_ASSERT(funcIndex == numFuncSigs_);
+    MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
+
+    numFuncSigs_++;
+    shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
+    return true;
+}
+
+const DeclaredSig&
+ModuleGenerator::funcSig(uint32_t funcIndex) const
+{
+    MOZ_ASSERT(shared_->funcSigs[funcIndex]);
+    return *shared_->funcSigs[funcIndex];
 }
 
 bool
 ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset)
 {
+    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
     MOZ_ASSERT(importIndex == module_->imports.length());
-
-    Sig copy;
-    if (!copy.clone(sig(sigIndex)))
-        return false;
-    if (!module_->imports.emplaceBack(Move(copy), globalDataOffset))
+    if (!addImport(sig(sigIndex), globalDataOffset))
         return false;
 
     ModuleImportGeneratorData& import = shared_->imports[importIndex];
@@ -368,23 +415,8 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 }
 
 bool
-ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
-{
-    MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
-    shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
-    return true;
-}
-
-const DeclaredSig&
-ModuleGenerator::funcSig(uint32_t funcIndex) const
-{
-    MOZ_ASSERT(shared_->funcSigs[funcIndex]);
-    return *shared_->funcSigs[funcIndex];
-}
-
-bool
-ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
-                           UniqueBytecode* recycled, FunctionGenerator* fg)
+ModuleGenerator::startFuncDef(PropertyName* name, unsigned line, unsigned column,
+                              FunctionGenerator* fg)
 {
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(!finishedFuncs_);
@@ -394,7 +426,14 @@ ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
 
     IonCompileTask* task = freeTasks_.popCopy();
 
-    task->reset(recycled);
+    task->reset(&fg->bytecode_);
+    if (fg->bytecode_) {
+        fg->bytecode_->clear();
+    } else {
+        fg->bytecode_ = MakeUnique<Bytecode>();
+        if (!fg->bytecode_)
+            return false;
+    }
 
     fg->name_= name;
     fg->line_ = line;
@@ -406,8 +445,7 @@ ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
 }
 
 bool
-ModuleGenerator::finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigned generateTime,
-                            FunctionGenerator* fg)
+ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFunc_ == fg);
 
@@ -418,7 +456,7 @@ ModuleGenerator::finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigne
                                      Move(fg->callSourceCoords_),
                                      funcIndex,
                                      funcSig(funcIndex),
-                                     Move(bytecode),
+                                     Move(fg->bytecode_),
                                      Move(fg->localVars_),
                                      generateTime);
     if (!func)
@@ -444,7 +482,7 @@ ModuleGenerator::finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigne
 }
 
 bool
-ModuleGenerator::finishFuncs()
+ModuleGenerator::finishFuncDefs()
 {
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(!finishedFuncs_);

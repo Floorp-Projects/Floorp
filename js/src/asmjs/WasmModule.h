@@ -354,6 +354,14 @@ UsesHeap(HeapUsage heapUsage)
     return bool(heapUsage);
 }
 
+// A Module can either be asm.js or wasm.
+
+enum ModuleKind
+{
+    Wasm,
+    AsmJS
+};
+
 // See mutedErrors comment in jsapi.h.
 
 enum class MutedErrorsBool
@@ -370,6 +378,7 @@ struct ModuleCacheablePod
     uint32_t              functionBytes;
     uint32_t              codeBytes;
     uint32_t              globalBytes;
+    ModuleKind            kind;
     HeapUsage             heapUsage;
     MutedErrorsBool       mutedErrors;
     CompileArgs           compileArgs;
@@ -451,7 +460,6 @@ class Module
 
     // Initialized when constructed:
     const UniqueConstModuleData  module_;
-    bool                         isAsmJS_;
 
     // Initialized during staticallyLink:
     bool                         staticallyLinked_;
@@ -479,7 +487,6 @@ class Module
     friend class js::WasmActivation;
 
   protected:
-    enum AsmJSBool { NotAsmJS = false, IsAsmJS = true };
     const ModuleData& base() const { return *module_; }
     bool clone(JSContext* cx, const StaticLinkData& link, Module* clone) const;
 
@@ -488,7 +495,7 @@ class Module
     static const unsigned OffsetOfImportExitFun = offsetof(ImportExit, fun);
     static const unsigned SizeOfEntryArg = sizeof(EntryArg);
 
-    explicit Module(UniqueModuleData module, AsmJSBool = NotAsmJS);
+    explicit Module(UniqueModuleData module);
     virtual ~Module();
     virtual void trace(JSTracer* trc);
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
@@ -516,9 +523,9 @@ class Module
     // semantics. The asAsmJS() member may be used as a checked downcast when
     // isAsmJS() is true.
 
-    bool isAsmJS() const { return isAsmJS_; }
-    AsmJSModule& asAsmJS() { MOZ_ASSERT(isAsmJS_); return *(AsmJSModule*)this; }
-    const AsmJSModule& asAsmJS() const { MOZ_ASSERT(isAsmJS_); return *(const AsmJSModule*)this; }
+    bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
+    AsmJSModule& asAsmJS() { MOZ_ASSERT(isAsmJS()); return *(AsmJSModule*)this; }
+    const AsmJSModule& asAsmJS() const { MOZ_ASSERT(isAsmJS()); return *(const AsmJSModule*)this; }
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is

@@ -304,19 +304,19 @@ enum NeedsBoundsCheck : uint8_t
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytecode;
 typedef UniquePtr<Bytecode> UniqueBytecode;
 
-// The Encoder class recycles (through its constructor) or creates a new Bytecode (through its
-// init() method). Its Bytecode is released when it's done building the wasm IR in finish().
+// The Encoder class appends bytes to the Bytecode object it is given during
+// construction. The client is responsible for the Bytecode's lifetime and must
+// keep the Bytecode alive as long as the Encoder is used.
 class Encoder
 {
-    UniqueBytecode bytecode_;
-    DebugOnly<bool> done_;
+    Bytecode& bytecode_;
 
     template <class T>
     MOZ_WARN_UNUSED_RESULT
     bool write(T v, size_t* offset) {
         if (offset)
-            *offset = bytecode_->length();
-        return bytecode_->append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
+            *offset = bytecode_.length();
+        return bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
     }
 
     template <class T>
@@ -336,33 +336,18 @@ class Encoder
         // See writeEnum comment.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         MOZ_ASSERT(uint64_t(v) < UINT8_MAX);
-        (*bytecode_)[pc] = uint8_t(v);
+        bytecode_[pc] = uint8_t(v);
     }
 
   public:
-    Encoder()
-      : bytecode_(nullptr),
-        done_(false)
-    {}
-
-    bool init(UniqueBytecode bytecode = UniqueBytecode()) {
-        if (bytecode) {
-            bytecode_ = Move(bytecode);
-            bytecode_->clear();
-            return true;
-        }
-        bytecode_ = MakeUnique<Bytecode>();
-        return !!bytecode_;
+    explicit Encoder(Bytecode& bytecode)
+      : bytecode_(bytecode)
+    {
+        MOZ_ASSERT(empty());
     }
 
-    size_t bytecodeOffset() const { return bytecode_->length(); }
+    size_t bytecodeOffset() const { return bytecode_.length(); }
     bool empty() const { return bytecodeOffset() == 0; }
-
-    UniqueBytecode finish() {
-        MOZ_ASSERT(!done_);
-        done_ = true;
-        return Move(bytecode_);
-    }
 
     MOZ_WARN_UNUSED_RESULT bool
     writeVarU32(uint32_t i) {
@@ -418,13 +403,13 @@ class Encoder
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Expr((*bytecode_)[pc]) == Expr::Unreachable;
+            patchable &= Expr(bytecode_[pc]) == Expr::Unreachable;
         return patchable;
     }
 #endif
     void patchU8(size_t pc, uint8_t i) {
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
-        (*bytecode_)[pc] = i;
+        bytecode_[pc] = i;
     }
     void patchExpr(size_t pc, Expr expr) {
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
@@ -435,7 +420,7 @@ class Encoder
         static_assert(sizeof(T) == sizeof(uint32_t),
                       "patch32 must be used with 32-bits wide types");
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
-        memcpy(&(*bytecode_)[pc], &i, sizeof(uint32_t));
+        memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
     }
 };
 
