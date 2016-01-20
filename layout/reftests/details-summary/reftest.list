@@ -1,0 +1,51 @@
+# Basic <summary> handling
+== multiple-summary.html single-summary.html
+== open-multiple-summary.html open-multiple-summary-ref.html
+== summary-not-first-child.html single-summary.html
+== open-summary-not-first-child.html open-single-summary.html
+== open-summary-block-style.html open-single-summary.html
+== no-summary.html no-summary-ref.html
+== open-no-summary.html open-no-summary-ref.html
+== summary-not-in-details.html summary-not-in-details-ref.html
+== summary-not-direct-child.html summary-not-direct-child-ref.html
+== float-in-summary.html float-in-summary-ref.html
+
+# Add elements dynamically
+== dynamic-add-single-summary.html open-single-summary.html
+== dynamic-add-summary-not-first-child.html open-single-summary.html
+== dynamic-add-summary-and-paragraph.html open-single-summary.html
+== dynamic-add-paragraph-before-summary.html open-single-summary.html
+== dynamic-add-paragraph-before-summary-close.html single-summary.html
+== dynamic-add-paragraph-after-summary.html open-single-summary.html
+== dynamic-add-paragraph-after-summary-close.html single-summary.html
+== dynamic-add-details.html open-single-summary.html
+== dynamic-add-first-summary.html open-multiple-summary.html
+== dynamic-add-second-summary.html open-multiple-summary.html
+
+# Remove elements dynamically
+== dynamic-remove-single-summary.html open-no-summary.html
+== dynamic-remove-summary-not-first-child.html open-no-summary.html
+== dynamic-remove-first-summary.html open-single-summary.html
+== dynamic-remove-second-summary.html open-single-summary.html
+
+# Toggle details by open attribute
+== close-nested-details.html close-nested-details-ref.html
+== open-nested-details.html open-nested-details-ref.html
+
+# With 'overflow' property
+== overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
+== overflow-auto-open-details.html overflow-auto-open-details-ref.html
+
+# With pagination property
+== details-page-break-after-1.html details-two-pages.html
+== details-page-break-after-2.html details-two-pages.html
+== details-page-break-before-1.html details-two-pages.html
+== details-page-break-before-2.html details-two-pages.html
+
+# Various properties on details or summary
+== details-display-inline.html details-display-inline-ref.html
+== details-percentage-height-children.html details-percentage-height-children-ref.html
+== details-absolute-children.html details-absolute-children-ref.html
+== details-three-columns.html details-three-columns-ref.html
+== details-writing-mode.html details-writing-mode-ref.html
+== details-in-ol.html details-in-ol-ref.html
