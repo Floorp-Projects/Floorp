@@ -49,3 +49,21 @@
 == details-three-columns.html details-three-columns-ref.html
 == details-writing-mode.html details-writing-mode-ref.html
 == details-in-ol.html details-in-ol-ref.html
+
+# Dispatch mouse click to summary
+== mouse-click-single-summary.html open-single-summary.html
+== mouse-click-twice-single-summary.html single-summary.html
+== mouse-click-open-single-summary.html single-summary.html
+== mouse-click-twice-open-single-summary.html open-single-summary.html
+== mouse-click-open-second-summary.html open-multiple-summary.html
+== mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
+== mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
+== mouse-click-overflow-auto-details.html overflow-auto-open-details.html
+== mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
+== mouse-click-display-none-details.html single-summary.html
+
+# Dispatch mouse click to out-of-flow details or summary
+== mouse-click-fixed-summary.html open-fixed-summary.html
+== mouse-click-twice-fixed-summary.html fixed-summary.html
+== mouse-click-float-details.html open-float-details.html
+== mouse-click-twice-float-details.html float-details.html
