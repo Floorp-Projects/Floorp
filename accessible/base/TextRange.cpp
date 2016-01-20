@@ -4,10 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TextRange.h"
+#include "TextRange-inl.h"
 
 #include "Accessible-inl.h"
-#include "HyperTextAccessible.h"
 #include "nsAccUtils.h"
 
 namespace mozilla {
@@ -59,42 +58,6 @@ TextRange::TextRange(HyperTextAccessible* aRoot,
 {
 }
 
-Accessible*
-TextRange::Container() const
-{
-  if (mStartContainer == mEndContainer)
-    return mStartContainer;
-
-  // Build the chain of parents
-  Accessible* p1 = mStartContainer;
-  Accessible* p2 = mEndContainer;
-  nsAutoTArray<Accessible*, 30> parents1, parents2;
-  do {
-    parents1.AppendElement(p1);
-    p1 = p1->Parent();
-  } while (p1);
-  do {
-    parents2.AppendElement(p2);
-    p2 = p2->Parent();
-  } while (p2);
-
-  // Find where the parent chain differs
-  uint32_t pos1 = parents1.Length();
-  uint32_t pos2 = parents2.Length();
-  Accessible* parent = nullptr;
-  uint32_t len = 0;
-  for (len = std::min(pos1, pos2); len > 0; --len) {
-    Accessible* child1 = parents1.ElementAt(--pos1);
-    Accessible* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2)
-      break;
-
-    parent = child1;
-  }
-
-  return parent;
-}
-
 void
 TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
 {
@@ -111,28 +74,11 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
 
   Accessible* p1 = mStartContainer->GetChildAtOffset(mStartOffset);
   Accessible* p2 = mEndContainer->GetChildAtOffset(mEndOffset);
+
+  uint32_t pos1 = 0, pos2 = 0;
   nsAutoTArray<Accessible*, 30> parents1, parents2;
-  do {
-    parents1.AppendElement(p1);
-    p1 = p1->Parent();
-  } while (p1);
-  do {
-    parents2.AppendElement(p2);
-    p2 = p2->Parent();
-  } while (p2);
-
-  // Find deepest common container.
-  uint32_t pos1 = parents1.Length();
-  uint32_t pos2 = parents2.Length();
-  Accessible* container = nullptr;
-  for (uint32_t len = std::min(pos1, pos2); len > 0; --len) {
-    Accessible* child1 = parents1.ElementAt(--pos1);
-    Accessible* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2)
-      break;
-
-    container = child1;
-  }
+  Accessible* container =
+    CommonParent(p1, p2, &parents1, &pos1, &parents2, &pos2);
 
   // Traverse the tree up to the container and collect embedded objects.
   for (uint32_t idx = 0; idx < pos1 - 1; idx++) {
@@ -194,6 +140,95 @@ void
 TextRange::Normalize(ETextUnit aUnit)
 {
 
+}
+
+bool
+TextRange::Crop(Accessible* aContainer)
+{
+  uint32_t boundaryPos = 0, containerPos = 0;
+  nsAutoTArray<Accessible*, 30> boundaryParents, containerParents;
+
+  // Crop the start boundary.
+  Accessible* container = nullptr;
+  Accessible* boundary = mStartContainer->GetChildAtOffset(mStartOffset);
+  if (boundary != aContainer) {
+    CommonParent(boundary, aContainer, &boundaryParents, &boundaryPos,
+                 &containerParents, &containerPos);
+
+    if (boundaryPos == 0) {
+      if (containerPos != 0) {
+        // The container is contained by the start boundary, reduce the range to
+        // the point starting at the container.
+        aContainer->ToTextPoint(mStartContainer.StartAssignment(), &mStartOffset);
+        static_cast<Accessible*>(mStartContainer)->AddRef();
+      }
+      else {
+        // The start boundary and the container are siblings.
+        container = aContainer;
+      }
+    }
+    else if (containerPos != 0) {
+      // The container does not contain the start boundary.
+      boundary = boundaryParents[boundaryPos];
+      container = containerParents[containerPos];
+    }
+
+    if (container) {
+      // If the range start is after the container, then make the range invalid.
+      if (boundary->IndexInParent() > container->IndexInParent()) {
+        return !!(mRoot = nullptr);
+      }
+
+      // If the range starts before the container, then reduce the range to
+      // the point starting at the container.
+      if (boundary->IndexInParent() < container->IndexInParent()) {
+        container->ToTextPoint(mStartContainer.StartAssignment(), &mStartOffset);
+        mStartContainer.get()->AddRef();
+      }
+    }
+
+    boundaryParents.SetLengthAndRetainStorage(0);
+    containerParents.SetLengthAndRetainStorage(0);
+  }
+
+  boundary = mEndContainer->GetChildAtOffset(mEndOffset);
+  if (boundary == aContainer) {
+    return true;
+  }
+
+  // Crop the end boundary.
+  container = nullptr;
+  CommonParent(boundary, aContainer, &boundaryParents, &boundaryPos,
+               &containerParents, &containerPos);
+
+  if (boundaryPos == 0) {
+    if (containerPos != 0) {
+      aContainer->ToTextPoint(mEndContainer.StartAssignment(), &mEndOffset, false);
+      static_cast<Accessible*>(mEndContainer)->AddRef();
+    }
+    else {
+      container = aContainer;
+    }
+  }
+  else if (containerPos != 0) {
+    boundary = boundaryParents[boundaryPos];
+    container = containerParents[containerPos];
+  }
+
+  if (!container) {
+    return true;
+  }
+
+  if (boundary->IndexInParent() < container->IndexInParent()) {
+    return !!(mRoot = nullptr);
+  }
+
+  if (boundary->IndexInParent() > container->IndexInParent()) {
+    container->ToTextPoint(mEndContainer.StartAssignment(), &mEndOffset, false);
+    static_cast<Accessible*>(mEndContainer)->AddRef();
+  }
+
+  return true;
 }
 
 void
@@ -294,6 +329,47 @@ TextRange::MoveInternal(ETextUnit aUnit, int32_t aCount,
                         HyperTextAccessible* aStopContainer, int32_t aStopOffset)
 {
 
+}
+
+Accessible*
+TextRange::CommonParent(Accessible* aAcc1, Accessible* aAcc2,
+                        nsTArray<Accessible*>* aParents1, uint32_t* aPos1,
+                        nsTArray<Accessible*>* aParents2, uint32_t* aPos2) const
+{
+  if (aAcc1 == aAcc2) {
+    return aAcc1;
+  }
+
+  MOZ_ASSERT(aParents1->Length() == 0 || aParents2->Length() == 0,
+             "Wrong arguments");
+
+  // Build the chain of parents.
+  Accessible* p1 = aAcc1;
+  Accessible* p2 = aAcc2;
+  do {
+    aParents1->AppendElement(p1);
+    p1 = p1->Parent();
+  } while (p1);
+  do {
+    aParents2->AppendElement(p2);
+    p2 = p2->Parent();
+  } while (p2);
+
+  // Find where the parent chain differs
+  *aPos1 = aParents1->Length();
+  *aPos2 = aParents2->Length();
+  Accessible* parent = nullptr;
+  uint32_t len = 0;
+  for (len = std::min(*aPos1, *aPos2); len > 0; --len) {
+    Accessible* child1 = aParents1->ElementAt(--(*aPos1));
+    Accessible* child2 = aParents2->ElementAt(--(*aPos2));
+    if (child1 != child2)
+      break;
+
+    parent = child1;
+  }
+
+  return parent;
 }
 
 } // namespace a11y
