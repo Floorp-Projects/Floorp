@@ -921,11 +921,6 @@ class RecursiveMakeBackend(CommonBackend):
         # registered or not.
         self._traversal.add(backend_file.relobjdir)
 
-        affected_tiers = set(obj.affected_tiers)
-
-        for tier in set(self._no_skip.keys()) & affected_tiers:
-            self._no_skip[tier].add(backend_file.relobjdir)
-
     def _process_defines(self, obj, backend_file, which='DEFINES'):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())

@@ -235,13 +235,6 @@ class Context(KeyedDefaultDict):
                 update[key] = value
         KeyedDefaultDict.update(self, update)
 
-    def get_affected_tiers(self):
-        """Returns the list of tiers affected by the variables set in the
-        context.
-        """
-        tiers = (VARIABLES[key][3] for key in self if key in VARIABLES)
-        return set(tier for tier in tiers if tier)
-
 
 class TemplateContext(Context):
     def __init__(self, template=None, allowed_variables={}, config=None):
