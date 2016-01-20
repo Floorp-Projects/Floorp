@@ -114,9 +114,9 @@ public:
    */
   void AdvanceAndResume(StreamTime aAdvance);
 
-  virtual AudioNodeStream* AsAudioNodeStream() override { return this; }
-  virtual void AddInput(MediaInputPort* aPort) override;
-  virtual void RemoveInput(MediaInputPort* aPort) override;
+  AudioNodeStream* AsAudioNodeStream() override { return this; }
+  void AddInput(MediaInputPort* aPort) override;
+  void RemoveInput(MediaInputPort* aPort) override;
 
   // Graph thread only
   void SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
@@ -124,7 +124,7 @@ public:
   void SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
                                       ChannelCountMode aChannelCountMoe,
                                       ChannelInterpretation aChannelInterpretation);
-  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
+  void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
   /**
    * Produce the next block of output, before input is provided.
    * ProcessInput() will be called later, and it then should not change
@@ -140,7 +140,7 @@ public:
   {
     return mLastChunks;
   }
-  virtual bool MainThreadNeedsUpdates() const override
+  bool MainThreadNeedsUpdates() const override
   {
     return ((mFlags & NEED_MAIN_THREAD_FINISHED) && mFinished) ||
       (mFlags & NEED_MAIN_THREAD_CURRENT_TIME);
@@ -175,7 +175,7 @@ protected:
   class AdvanceAndResumeMessage;
   class CheckForInactiveMessage;
 
-  virtual void DestroyImpl() override;
+  void DestroyImpl() override;
 
   /*
    * CheckForInactive() is called when the engine transitions from active to

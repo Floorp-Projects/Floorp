@@ -15,7 +15,7 @@ function* cleanup() {
   DBConn().executeSimpleSQL("DELETE FROM moz_places");
 }
 
-add_task(function remove_visits_outside_unbookmarked_uri() {
+add_task(function* remove_visits_outside_unbookmarked_uri() {
   do_print("*** TEST: Remove some visits outside valid timeframe from an unbookmarked URI");
  
   do_print("Add 10 visits for the URI from way in the past.");
@@ -56,7 +56,7 @@ add_task(function remove_visits_outside_unbookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_visits_outside_bookmarked_uri() {
+add_task(function* remove_visits_outside_bookmarked_uri() {
   do_print("*** TEST: Remove some visits outside valid timeframe from a bookmarked URI");
 
   do_print("Add 10 visits for the URI from way in the past.");
@@ -103,7 +103,7 @@ add_task(function remove_visits_outside_bookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_visits_unbookmarked_uri() {
+add_task(function* remove_visits_unbookmarked_uri() {
   do_print("*** TEST: Remove some visits from an unbookmarked URI");
 
   do_print("Add 10 visits for the URI from now to 9 usecs in the past.");
@@ -144,7 +144,7 @@ add_task(function remove_visits_unbookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_visits_bookmarked_uri() {
+add_task(function* remove_visits_bookmarked_uri() {
   do_print("*** TEST: Remove some visits from a bookmarked URI");
 
   do_print("Add 10 visits for the URI from now to 9 usecs in the past.");
@@ -191,7 +191,7 @@ add_task(function remove_visits_bookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_all_visits_unbookmarked_uri() {
+add_task(function* remove_all_visits_unbookmarked_uri() {
   do_print("*** TEST: Remove all visits from an unbookmarked URI");
 
   do_print("Add some visits for the URI.");
@@ -224,7 +224,7 @@ add_task(function remove_all_visits_unbookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_all_visits_unbookmarked_place_uri() {
+add_task(function* remove_all_visits_unbookmarked_place_uri() {
   do_print("*** TEST: Remove all visits from an unbookmarked place: URI");
   do_print("Add some visits for the URI.");
   let visits = [];
@@ -260,7 +260,7 @@ add_task(function remove_all_visits_unbookmarked_place_uri() {
   yield cleanup();
 });
 
-add_task(function remove_all_visits_bookmarked_uri() {
+add_task(function* remove_all_visits_bookmarked_uri() {
   do_print("*** TEST: Remove all visits from a bookmarked URI");
 
   do_print("Add some visits for the URI.");
@@ -306,7 +306,7 @@ add_task(function remove_all_visits_bookmarked_uri() {
   yield cleanup();
 });
 
-add_task(function remove_all_visits_bookmarked_uri() {
+add_task(function* remove_all_visits_bookmarked_uri() {
   do_print("*** TEST: Remove some visits from a zero frecency URI retains zero frecency");
 
   do_print("Add some visits for the URI.");
@@ -326,7 +326,3 @@ add_task(function remove_all_visits_bookmarked_uri() {
 
   yield cleanup();
 });
-
-function run_test() {
-  run_next_test();
-}

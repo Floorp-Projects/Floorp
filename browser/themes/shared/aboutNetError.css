@@ -116,7 +116,6 @@ button:disabled {
 }
 
 #certificateErrorReporting,
-#reportCertificateError,
 #reportSentMessage {
   display: none;
 }

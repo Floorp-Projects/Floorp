@@ -40,7 +40,7 @@ public:
     return mNode->Context();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
   // object.
@@ -163,7 +163,7 @@ public:
   // May create the stream if it doesn't exist
   MediaStream* Stream();
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioParamTimeline::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
@@ -179,7 +179,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

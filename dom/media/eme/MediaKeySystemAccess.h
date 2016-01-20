@@ -40,7 +40,7 @@ protected:
 public:
   nsPIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetKeySystem(nsString& aRetVal) const;
 

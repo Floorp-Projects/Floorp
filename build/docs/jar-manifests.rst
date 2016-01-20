@@ -55,15 +55,8 @@ file should be processed by the :ref:`preprocessor` before being packaged::
 
    * path/in/jar/preprocessed.xul  (source/tree/location/file_name.xul)
 
-A plus marker (``+``) at the beginning of the line indicates that the file
-should replace an existing file, even if the source file's timestamp isn't
-newer than the existing file::
-
-   + path/in/jar/file_name.xul     (source/tree/location/my_file_name.xul)
-
 Preprocessed files always replace existing files, to ensure that changes in
-``#expand`` or ``#include`` directives are picked up, so ``+`` and ``*`` are
-equivalent.
+``#expand`` or ``#include`` directives are picked up.
 
 There is a special source-directory format for localized files (note the
 percent sign in the source file location): this format reads ``localized.dtd``

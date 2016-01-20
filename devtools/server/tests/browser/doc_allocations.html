@@ -5,10 +5,12 @@
 </head>
 <body>
 <script>
+window.allocs = [];
 window.onload = function() {
-  var allocs = [];
   function allocator() {
-    allocs.push(new Object);
+    for (var i = 0; i < 1000; i++) {
+      window.allocs.push(new Object);
+    }
   }
 
   window.setInterval(allocator, 1);

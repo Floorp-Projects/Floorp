@@ -10,6 +10,9 @@
     "XPCOMUtils": true,
     "Task": true,
 
+    // Browser window globals.
+    "PanelUI": false,
+
     // Test harness globals
     "ExtensionTestUtils": false,
 

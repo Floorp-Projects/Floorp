@@ -152,6 +152,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
         task: tasks/tests/fx_linux64_crashtest.yml
+  gtest:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_gtest.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
@@ -170,6 +174,14 @@ tests:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest.yml
+  mochitest-a11y:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_mochitest_a11y.yml
+  mochitest-chrome:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_mochitest_chrome.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:

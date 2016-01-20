@@ -131,7 +131,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
                        a.cacheKey(), a.schedulingContextID(), a.preflightArgs(),
-                       a.initialRwin(), a.suspendAfterSynthesizeResponse());
+                       a.initialRwin(), a.suspendAfterSynthesizeResponse(),
+                       a.allowStaleCacheContent());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -264,7 +265,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           aSchedulingContextID,
                                  const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                  const uint32_t&            aInitialRwin,
-                                 const bool&                aSuspendAfterSynthesizeResponse)
+                                 const bool&                aSuspendAfterSynthesizeResponse,
+                                 const bool&                aAllowStaleCacheContent)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -412,6 +414,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   }
 
   mChannel->SetCacheKey(cacheKey);
+
+  mChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
 
   if (priority != nsISupportsPriority::PRIORITY_NORMAL) {
     mChannel->SetPriority(priority);

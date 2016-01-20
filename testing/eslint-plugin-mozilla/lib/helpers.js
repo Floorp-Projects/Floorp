@@ -81,6 +81,8 @@ module.exports = {
         return this.getASTSource(node.expression) + ";";
       case "FunctionExpression":
         return "function() {}";
+      case "ArrowFunctionExpression":
+        return "() => {}";
       default:
         throw new Error("getASTSource unsupported node type: " + node.type);
     }

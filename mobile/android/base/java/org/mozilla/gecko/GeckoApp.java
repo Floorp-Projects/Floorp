@@ -25,6 +25,7 @@ import org.mozilla.gecko.menu.MenuPanel;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.PromptService;
@@ -663,6 +664,26 @@ public abstract class GeckoApp
             UpdateServiceHelper.downloadUpdate(this);
         } else if ("Update:Install".equals(event)) {
             UpdateServiceHelper.applyUpdate(this);
+        } else if ("RuntimePermissions:Prompt".equals(event)) {
+            String[] permissions = message.getStringArray("permissions");
+            if (callback == null || permissions == null) {
+                return;
+            }
+
+            Permissions.from(this)
+                       .withPermissions(permissions)
+                       .andFallback(new Runnable() {
+                           @Override
+                           public void run() {
+                               callback.sendSuccess(false);
+                           }
+                       })
+                       .run(new Runnable() {
+                           @Override
+                           public void run() {
+                               callback.sendSuccess(true);
+                           }
+                       });
         }
     }
 
@@ -1262,6 +1283,7 @@ public abstract class GeckoApp
             "Locale:Set",
             "Permissions:Data",
             "PrivateBrowsing:Data",
+            "RuntimePermissions:Prompt",
             "Session:StatePurged",
             "Share:Text",
             "Snackbar:Show",
@@ -2087,6 +2109,7 @@ public abstract class GeckoApp
             "Locale:Set",
             "Permissions:Data",
             "PrivateBrowsing:Data",
+            "RuntimePermissions:Prompt",
             "Session:StatePurged",
             "Share:Text",
             "Snackbar:Show",
@@ -2450,6 +2473,11 @@ public abstract class GeckoApp
         if (!ActivityHandlerHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Permissions.onRequestPermissionsResult(this, permissions, grantResults);
     }
 
     @Override

@@ -1,0 +1,26 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  workerType: desktop-test-xlarge
+  payload:
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+      - --{{suite}}-suite={{flavor}}
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/unittests/linux_unittest.py
+          mozharness/configs/remove_executables.py
+  metadata:
+    name: '[TC] Linux64 gtest'
+    description: Gtests run {{chunk}}
+  extra:
+    suite:
+      name: gtest
+      flavor: gtest
+    treeherder:
+      symbol: GTest

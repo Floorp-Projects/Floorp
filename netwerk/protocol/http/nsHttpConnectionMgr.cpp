@@ -998,7 +998,7 @@ nsHttpConnectionMgr::ShutdownPassCB(const nsACString &key,
         ent->mActiveConns.RemoveElementAt(0);
         self->DecrementActiveConnCount(conn);
 
-        conn->Close(NS_ERROR_ABORT);
+        conn->Close(NS_ERROR_ABORT, true);
         NS_RELEASE(conn);
     }
 

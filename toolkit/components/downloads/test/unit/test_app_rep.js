@@ -20,7 +20,7 @@ var whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
 var exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
 var blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
 
-const appRepURLPref = "browser.safebrowsing.appRepURL";
+const appRepURLPref = "browser.safebrowsing.downloads.remote.url";
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);

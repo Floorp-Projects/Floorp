@@ -460,6 +460,12 @@ this.Download.prototype = {
           throw new DownloadError({ becauseBlockedByParentalControls: true });
         }
 
+        // Disallow download if needed runtime permissions have not been granted
+        // by user.
+        if (yield DownloadIntegration.shouldBlockForRuntimePermissions()) {
+          throw new DownloadError({ becauseBlockedByRuntimePermissions: true });
+        }
+
         // We should check if we have been canceled in the meantime, after all
         // the previous asynchronous operations have been executed and just
         // before we call the "execute" method of the saver.
@@ -1495,7 +1501,8 @@ this.DownloadError = function (aProperties)
     this.message = aProperties.message;
   } else if (aProperties.becauseBlocked ||
              aProperties.becauseBlockedByParentalControls ||
-             aProperties.becauseBlockedByReputationCheck) {
+             aProperties.becauseBlockedByReputationCheck ||
+             aProperties.becauseBlockedByRuntimePermissions) {
     this.message = "Download blocked.";
   } else {
     let exception = new Components.Exception("", this.result);
@@ -1522,6 +1529,9 @@ this.DownloadError = function (aProperties)
   } else if (aProperties.becauseBlockedByReputationCheck) {
     this.becauseBlocked = true;
     this.becauseBlockedByReputationCheck = true;
+  } else if (aProperties.becauseBlockedByRuntimePermissions) {
+    this.becauseBlocked = true;
+    this.becauseBlockedByRuntimePermissions = true;
   } else if (aProperties.becauseBlocked) {
     this.becauseBlocked = true;
   }
@@ -1570,6 +1580,15 @@ this.DownloadError.prototype = {
   becauseBlockedByReputationCheck: false,
 
   /**
+   * Indicates the download was blocked because a runtime permission required to
+   * download files was not granted.
+   *
+   * This does not apply to all systems. On Android this flag is set to true if
+   * a needed runtime permission (storage) has not been granted by the user.
+   */
+  becauseBlockedByRuntimePermissions: false,
+
+  /**
    * If this DownloadError was caused by an exception this property will
    * contain the original exception. This will not be serialized when saving
    * to the store.
@@ -1591,6 +1610,7 @@ this.DownloadError.prototype = {
       becauseBlocked: this.becauseBlocked,
       becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
       becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
+      becauseBlockedByRuntimePermissions: this.becauseBlockedByRuntimePermissions,
     };
 
     serializeUnknownProperties(this, serializable);
@@ -1615,7 +1635,8 @@ this.DownloadError.fromSerializable = function (aSerializable) {
     property != "becauseTargetFailed" &&
     property != "becauseBlocked" &&
     property != "becauseBlockedByParentalControls" &&
-    property != "becauseBlockedByReputationCheck");
+    property != "becauseBlockedByReputationCheck" &&
+    property != "becauseBlockedByRuntimePermissions");
 
   return e;
 };
@@ -2316,14 +2337,18 @@ this.DownloadLegacySaver.prototype = {
    */
   onProgressBytes: function DLS_onProgressBytes(aCurrentBytes, aTotalBytes)
   {
+    this.progressWasNotified = true;
+
     // Ignore progress notifications until we are ready to process them.
     if (!this.setProgressBytesFn) {
+      // Keep the data from the last progress notification that was received.
+      this.currentBytes = aCurrentBytes;
+      this.totalBytes = aTotalBytes;
       return;
     }
 
     let hasPartFile = !!this.download.target.partFilePath;
 
-    this.progressWasNotified = true;
     this.setProgressBytesFn(aCurrentBytes, aTotalBytes,
                             aCurrentBytes > 0 && hasPartFile);
   },
@@ -2433,6 +2458,9 @@ this.DownloadLegacySaver.prototype = {
     }
 
     this.setProgressBytesFn = aSetProgressBytesFn;
+    if (this.progressWasNotified) {
+      this.onProgressBytes(this.currentBytes, this.totalBytes);
+    }
 
     return Task.spawn(function* task_DLS_execute() {
       try {

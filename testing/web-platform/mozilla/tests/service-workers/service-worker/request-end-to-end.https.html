@@ -43,6 +43,8 @@ t.step(function() {
             location.href.substring(0, location.href.lastIndexOf('/') + 1) +
             scope,
             'request.url should be passed to onfetch event.');
+        assert_equals(event.data.mode, 'navigate',
+                      'request.mode should be passed to onfetch event.');
         assert_equals(event.data.method, 'GET',
                       'request.method should be passed to onfetch event.');
         assert_equals(event.data.referrer, location.href,
