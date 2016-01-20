@@ -1363,7 +1363,7 @@ VARIABLES = {
         This is a list of files that define XPCOM interface definitions.
         Entries must be files that exist. Entries are almost certainly ``.idl``
         files.
-        """, 'export'),
+        """, None),
 
     'XPIDL_MODULE': (unicode, unicode,
         """XPCOM Interface Definition Module Name.
@@ -1386,45 +1386,45 @@ VARIABLES = {
 
         These are ``.ipdl`` files that will be parsed and converted to
         ``.cpp`` files.
-        """, 'export'),
+        """, None),
 
     'WEBIDL_FILES': (StrictOrderingOnAppendList, list,
         """WebIDL source files.
 
         These will be parsed and converted to ``.cpp`` and ``.h`` files.
-        """, 'export'),
+        """, None),
 
     'GENERATED_EVENTS_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
         """WebIDL source files for generated events.
 
         These will be parsed and converted to ``.cpp`` and ``.h`` files.
-        """, 'export'),
+        """, None),
 
     'TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Test WebIDL source files.
 
          These will be parsed and converted to ``.cpp`` and ``.h`` files
          if tests are enabled.
-         """, 'export'),
+         """, None),
 
     'GENERATED_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Generated WebIDL source files.
 
          These will be generated from some other files.
-         """, 'export'),
+         """, None),
 
     'PREPROCESSED_TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Preprocessed test WebIDL source files.
 
          These will be preprocessed, then parsed and converted to .cpp
          and ``.h`` files if tests are enabled.
-         """, 'export'),
+         """, None),
 
     'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Preprocessed WebIDL source files.
 
          These will be preprocessed before being parsed and converted.
-         """, 'export'),
+         """, None),
 
     'WEBIDL_EXAMPLE_INTERFACES': (StrictOrderingOnAppendList, list,
         """Names of example WebIDL interfaces to build as part of the build.
@@ -1432,7 +1432,7 @@ VARIABLES = {
         Names in this list correspond to WebIDL interface names defined in
         WebIDL files included in the build from one of the \*WEBIDL_FILES
         variables.
-        """, 'export'),
+        """, None),
 
     # Test declaration.
     'A11Y_MANIFESTS': (StrictOrderingOnAppendList, list,
