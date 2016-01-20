@@ -17,9 +17,63 @@ extern mozilla::LogModule* GetPDMLog();
 
 namespace mozilla {
 
-ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
-                         bool aBOS, bool aEOS,
-                         int64_t aGranulepos, int64_t aPacketNo)
+VorbisPacketSampleCounter::VorbisPacketSampleCounter()
+  : mError(0)
+  , mVorbisPacketCount(0)
+{
+  vorbis_info_init(&mVorbisInfo);
+  vorbis_comment_init(&mVorbisComment);
+}
+
+bool
+VorbisPacketSampleCounter::Init(const nsTArray<const uint8_t*>& aHeaders,
+                                const nsTArray<size_t>& aHeaderLens)
+{
+  for (size_t i = 0; i < aHeaders.Length(); i++) {
+    ogg_packet pkt =
+      VorbisDataDecoder::InitVorbisPacket(aHeaders[i], aHeaderLens[i],
+                                          i == 0, false, 0, mVorbisPacketCount++);
+    if ((mError = vorbis_synthesis_headerin(&mVorbisInfo, &mVorbisComment, &pkt))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+int
+VorbisPacketSampleCounter::GetNumSamples(const uint8_t* aData, size_t aLength)
+{
+  if (mError) {
+    return -1;
+  }
+  ogg_packet pkt =
+    VorbisDataDecoder::InitVorbisPacket(aData, aLength, false, false, -1, mVorbisPacketCount++);
+  long blockSize = vorbis_packet_blocksize(&mVorbisInfo, &pkt);
+  if (blockSize < 0) {
+    return blockSize;
+  }
+  int nsamples;
+  if (mVorbisLastBlockSize) {
+    nsamples = mVorbisLastBlockSize.ref() / 4 + blockSize / 4;
+  } else {
+    // The first packet will output no audio, so set its count as 0.
+    nsamples = 0;
+  }
+  mVorbisLastBlockSize = Some(blockSize);
+  return nsamples;
+}
+
+VorbisPacketSampleCounter::~VorbisPacketSampleCounter()
+{
+  vorbis_info_clear(&mVorbisInfo);
+  vorbis_comment_clear(&mVorbisComment);
+}
+
+/* static */
+ogg_packet
+VorbisDataDecoder::InitVorbisPacket(const unsigned char* aData, size_t aLength,
+                                    bool aBOS, bool aEOS,
+                                    int64_t aGranulepos, int64_t aPacketNo)
 {
   ogg_packet packet;
   packet.packet = const_cast<unsigned char*>(aData);
