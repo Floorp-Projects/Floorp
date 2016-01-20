@@ -257,6 +257,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
 
         return 8;
 
+    case LOCAL_GL_RENDERBUFFER_SAMPLES:
     case LOCAL_GL_RENDERBUFFER_WIDTH:
     case LOCAL_GL_RENDERBUFFER_HEIGHT:
     case LOCAL_GL_RENDERBUFFER_RED_SIZE:
