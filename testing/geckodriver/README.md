@@ -1,5 +1,4 @@
-# Wires
-
+# Wires [![Build Status](https://travis-ci.org/jgraham/wires.svg?branch=master)](https://travis-ci.org/jgraham/wires)
 
 WebDriver <-> Marionette proxy
 
