@@ -66,6 +66,7 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIIOService2.h"
+#include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIProcess.h"
@@ -4650,6 +4651,7 @@ enum {
   // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
   kE10sDisabledForAccessibility = 4,
   kE10sDisabledForMacGfx = 5,
+  kE10sDisabledForBidi = 6,
 };
 
 #ifdef XP_WIN
@@ -4705,6 +4707,37 @@ mozilla::BrowserTabsRemoteAutostart()
   }
 #endif // XP_WIN
 
+  /**
+   * Avoids enabling e10s for certain locales that require bidi selection,
+   * which currently doesn't work well with e10s.
+   */
+  bool disabledForBidi = false;
+  do { // to allow 'break' to abort this block if a call fails
+    nsresult rv;
+    nsCOMPtr<nsILocaleService> ls =
+      do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      break;
+
+    nsCOMPtr<nsILocale> appLocale;
+    rv = ls->GetApplicationLocale(getter_AddRefs(appLocale));
+    if (NS_FAILED(rv))
+      break;
+
+    nsString localeStr;
+    rv = appLocale->
+      GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), localeStr);
+    if (NS_FAILED(rv))
+      break;
+
+    if (localeStr.EqualsLiteral("ar") ||
+        localeStr.EqualsLiteral("fa") ||
+        localeStr.EqualsLiteral("he") ||
+        localeStr.EqualsLiteral("ur")) {
+      disabledForBidi = true;
+    }
+  } while (0);
+
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
   bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
   bool prefEnabled = optInPref || trialPref;
@@ -4731,6 +4764,9 @@ mozilla::BrowserTabsRemoteAutostart()
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1198459.");
+    } else if (disabledForBidi) {
+      status = kE10sDisabledForBidi;
+      LogE10sBlockedReason("Disabled for RTL locales due to broken bidi detection.");
     } else {
       gBrowserTabsRemoteAutostart = true;
     }
