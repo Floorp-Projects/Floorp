@@ -85,6 +85,9 @@
           'defines': [
             'HAVE_JPEG'
           ],
+          'cflags_mozilla': [
+            '$(MOZ_JPEG_CFLAGS)',
+          ],
         }],
         [ 'OS != "ios" and build_with_mozilla!=1', {
           'defines': [
