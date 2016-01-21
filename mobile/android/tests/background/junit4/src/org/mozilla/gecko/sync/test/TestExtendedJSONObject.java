@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -62,7 +63,6 @@ public class TestExtendedJSONObject {
   public void testSafeInteger() {
     ExtendedJSONObject o = new ExtendedJSONObject();
     o.put("integer", Integer.valueOf(5));
-    o.put("double",  Double.valueOf(1.2));
     o.put("string",  "66");
     o.put("object",  new ExtendedJSONObject());
     o.put("null",    null);
@@ -146,8 +146,7 @@ public class TestExtendedJSONObject {
     ExtendedJSONObject q = new ExtendedJSONObject(exampleJSON);
     q.put("modified", 0);
     assertNotSame(o, q);
-    q.put("modified", o.get("modified"));
-    assertEquals(o, q);
+    assertNotEquals(o, q);
   }
 
   @Test
