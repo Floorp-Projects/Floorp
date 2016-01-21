@@ -846,6 +846,19 @@ class BrandingFiles(FinalTargetFiles):
         return 'dist/branding'
 
 
+class SdkFiles(FinalTargetFiles):
+    """Sandbox container object for SDK_FILES, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing SDK_FILES.
+    """
+    @property
+    def install_target(self):
+        return 'dist/sdk'
+
+
 class GeneratedFile(ContextDerived):
     """Represents a generated file."""
 
