@@ -4,20 +4,18 @@
 
 package org.mozilla.gecko.browserid;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.apache.commons.codec.binary.StringUtils;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.TreeMap;
 
 /**
  * Encode and decode JSON Web Tokens.
@@ -71,8 +69,7 @@ public class JSONWebTokenUtils {
    */
   @SuppressWarnings("unchecked")
   public static String getPayloadString(String payloadString, String audience, String issuer,
-      Long issuedAt, long expiresAt) throws NonObjectJSONException,
-      IOException, ParseException {
+      Long issuedAt, long expiresAt) throws NonObjectJSONException, IOException {
     ExtendedJSONObject payload;
     if (payloadString != null) {
       payload = new ExtendedJSONObject(payloadString);
@@ -91,7 +88,7 @@ public class JSONWebTokenUtils {
     return JSONObject.toJSONString(new TreeMap<Object, Object>(payload.object));
   }
 
-  protected static String getCertificatePayloadString(VerifyingPublicKey publicKeyToSign, String email) throws NonObjectJSONException, IOException, ParseException  {
+  protected static String getCertificatePayloadString(VerifyingPublicKey publicKeyToSign, String email) throws NonObjectJSONException, IOException  {
     ExtendedJSONObject payload = new ExtendedJSONObject();
     ExtendedJSONObject principal = new ExtendedJSONObject();
     principal.put("email", email);
@@ -101,7 +98,7 @@ public class JSONWebTokenUtils {
   }
 
   public static String createCertificate(VerifyingPublicKey publicKeyToSign, String email,
-      String issuer, long issuedAt, long expiresAt, SigningPrivateKey privateKey) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
+      String issuer, long issuedAt, long expiresAt, SigningPrivateKey privateKey) throws NonObjectJSONException, IOException, GeneralSecurityException  {
     String certificatePayloadString = getCertificatePayloadString(publicKeyToSign, email);
     String payloadString = getPayloadString(certificatePayloadString, null, issuer, issuedAt, expiresAt);
     return JSONWebTokenUtils.encode(payloadString, privateKey);
@@ -128,11 +125,10 @@ public class JSONWebTokenUtils {
    * @return assertion.
    * @throws NonObjectJSONException
    * @throws IOException
-   * @throws ParseException
    * @throws GeneralSecurityException
    */
   public static String createAssertion(SigningPrivateKey privateKeyToSignWith, String certificate, String audience,
-      String issuer, Long issuedAt, long expiresAt) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
+      String issuer, Long issuedAt, long expiresAt) throws NonObjectJSONException, IOException, GeneralSecurityException  {
     String emptyAssertionPayloadString = "{}";
     String payloadString = getPayloadString(emptyAssertionPayloadString, audience, issuer, issuedAt, expiresAt);
     String signature = JSONWebTokenUtils.encode(payloadString, privateKeyToSignWith);

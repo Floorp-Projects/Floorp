@@ -5,7 +5,6 @@ package org.mozilla.gecko.sync.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
@@ -34,7 +33,7 @@ public class TestExtendedJSONObject {
   public static String exampleIntegral = "{\"modified\":1233702554,}";
 
   @Test
-  public void testFractional() throws IOException, ParseException, NonObjectJSONException {
+  public void testFractional() throws IOException, NonObjectJSONException {
     ExtendedJSONObject o = new ExtendedJSONObject(exampleJSON);
     assertTrue(o.containsKey("modified"));
     assertTrue(o.containsKey("success"));
@@ -49,7 +48,7 @@ public class TestExtendedJSONObject {
   }
 
   @Test
-  public void testIntegral() throws IOException, ParseException, NonObjectJSONException {
+  public void testIntegral() throws IOException, NonObjectJSONException {
     ExtendedJSONObject o = new ExtendedJSONObject(exampleIntegral);
     assertTrue(o.containsKey("modified"));
     assertFalse(o.containsKey("success"));
