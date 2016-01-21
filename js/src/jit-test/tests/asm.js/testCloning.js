@@ -1,9 +1,15 @@
 // |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
+setCachingEnabled(true);
+
 var code = asmCompile(USE_ASM + "function g() { return 42 } return g");
 assertEq(asmLink(code)(), 42);
 assertEq(asmLink(code)(), 42);
+
+var code = evaluate("(function() { " + USE_ASM + " function g() { return 43 } return g})", {fileName: null});
+assertEq(asmLink(code)(), 43);
+assertEq(asmLink(code)(), 43);
 
 var code = asmCompile('glob', 'ffis', 'buf', USE_ASM + 'var i32=new glob.Int32Array(buf); function g() { return i32[0]|0 } return g');
 var i32_1 = new Int32Array(BUF_MIN/4);
