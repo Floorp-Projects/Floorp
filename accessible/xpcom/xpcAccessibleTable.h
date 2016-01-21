@@ -83,7 +83,8 @@ protected:
   virtual ~xpcAccessibleTable() {}
 
 private:
-  TableAccessible* Intl() { return mIntl.AsAccessible()->AsTable(); }
+  TableAccessible* Intl()
+  { return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsTable() : nullptr; }
 
   xpcAccessibleTable(const xpcAccessibleTable&) = delete;
   xpcAccessibleTable& operator =(const xpcAccessibleTable&) = delete;
