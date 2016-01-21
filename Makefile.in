@@ -128,15 +128,12 @@ ifdef JS_STANDALONE
 NO_REMOVE=1
 endif
 
-.PHONY: $(addprefix install-,$(install_manifests))
-$(addprefix install-,$(filter dist/%,$(install_manifests))): install-dist/%: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$*)
+.PHONY: $(addprefix install-,$(subst /,_,$(install_manifests)))
+$(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
+	$(addprefix $(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
 install-dist_%: install-dist/% ;
-
-install-_tests: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/_tests)
 
 # For compatibility
 .PHONY: install-tests
