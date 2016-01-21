@@ -564,14 +564,20 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   , mCurrentRes(nullptr)
   , mImpl(nullptr)
 {
-  MOZ_ASSERT(aObserver);
-
   MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 BluetoothSocket::~BluetoothSocket()
 {
+  MOZ_ASSERT(!mImpl); // Socket is closed
+
   MOZ_COUNT_DTOR_INHERITED(BluetoothSocket, DataSocket);
+}
+
+void
+BluetoothSocket::SetObserver(BluetoothSocketObserver* aObserver)
+{
+  mObserver = aObserver;
 }
 
 class ConnectSocketResultHandler final : public BluetoothSocketResultHandler
@@ -755,9 +761,9 @@ BluetoothSocket::Accept(int aListenFd, BluetoothSocketResultHandler* aRes)
 void
 BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  MOZ_ASSERT(mObserver);
-
-  mObserver->ReceiveSocketData(this, aBuffer);
+  if (mObserver) {
+    mObserver->ReceiveSocketData(this, aBuffer);
+  }
 }
 
 // |DataSocket|
@@ -783,47 +789,41 @@ BluetoothSocket::Close()
     return;
   }
 
-  MOZ_ASSERT(mSocketInterface);
-  MOZ_ASSERT(mImpl->IsConsumerThread());
-
-  // Stop any watching |SocketMessageWatcher|
-  if (mCurrentRes) {
-    mSocketInterface->Close(mCurrentRes);
-  }
-
-  // From this point on, we consider mImpl as being deleted.
-  // We sever the relationship here so any future calls to listen or connect
-  // will create a new implementation.
-  mImpl->ShutdownOnConsumerThread();
-  mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
-  mImpl = nullptr;
-
   NotifyDisconnect();
 }
 
 void
 BluetoothSocket::OnConnectSuccess()
 {
-  MOZ_ASSERT(mObserver);
-
   SetCurrentResultHandler(nullptr);
-  mObserver->OnSocketConnectSuccess(this);
+
+  if (mObserver) {
+    mObserver->OnSocketConnectSuccess(this);
+  }
 }
 
 void
 BluetoothSocket::OnConnectError()
 {
-  MOZ_ASSERT(mObserver);
+  auto observer = mObserver;
 
-  SetCurrentResultHandler(nullptr);
-  mObserver->OnSocketConnectError(this);
+  Cleanup();
+
+  if (observer) {
+    observer->OnSocketConnectError(this);
+  }
 }
 
 void
 BluetoothSocket::OnDisconnect()
 {
-  MOZ_ASSERT(mObserver);
-  mObserver->OnSocketDisconnect(this);
+  auto observer = mObserver;
+
+  Cleanup();
+
+  if (observer) {
+    observer->OnSocketDisconnect(this);
+  }
 }
 
 nsresult
@@ -842,4 +842,29 @@ BluetoothSocket::LoadSocketInterface()
   mSocketInterface = socketInterface;
 
   return NS_OK;
+}
+
+void
+BluetoothSocket::Cleanup()
+{
+  MOZ_ASSERT(mSocketInterface);
+  MOZ_ASSERT(mImpl);
+  MOZ_ASSERT(mImpl->IsConsumerThread());
+
+  // Stop any watching |SocketMessageWatcher|
+  if (mCurrentRes) {
+    mSocketInterface->Close(mCurrentRes);
+  }
+
+  // From this point on, we consider mImpl as being deleted. We
+  // sever the relationship here so any future calls to listen
+  // or connect will create a new implementation.
+  mImpl->ShutdownOnConsumerThread();
+  mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
+  mImpl = nullptr;
+
+  mSocketInterface = nullptr;
+  mObserver = nullptr;
+  mCurrentRes = nullptr;
+  mDeviceAddress.Clear();
 }
