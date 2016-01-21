@@ -549,6 +549,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   } else {
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
     mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion);
+    if (!mDrawTarget) {
+      return;
+    }
     mInvalidRect = mInvalidRegion.GetBounds();
     if (mInvalidRect.IsEmpty()) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
