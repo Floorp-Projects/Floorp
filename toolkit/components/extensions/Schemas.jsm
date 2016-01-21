@@ -177,6 +177,12 @@ class ChoiceType extends Type {
     this.choices = choices;
   }
 
+  extend(type) {
+    this.choices.push(...type.choices);
+
+    return this;
+  }
+
   normalize(value, context) {
     for (let choice of this.choices) {
       let r = choice.normalize(value, context);
@@ -203,22 +209,21 @@ class RefType extends Type {
     this.reference = reference;
   }
 
-  normalize(value, context) {
+  get targetType() {
     let ns = Schemas.namespaces.get(this.namespaceName);
     let type = ns.get(this.reference);
     if (!type) {
       throw new Error(`Internal error: Type ${this.reference} not found`);
     }
-    return type.normalize(value, context);
+    return type;
+  }
+
+  normalize(value, context) {
+    return this.targetType.normalize(value, context);
   }
 
   checkBaseType(baseType) {
-    let ns = Schemas.namespaces.get(this.namespaceName);
-    let type = ns.get(this.reference);
-    if (!type) {
-      throw new Error(`Internal error: Type ${this.reference} not found`);
-    }
-    return type.checkBaseType(baseType);
+    return this.targetType.checkBaseType(baseType);
   }
 }
 
@@ -289,6 +294,19 @@ class ObjectType extends Type {
     this.additionalProperties = additionalProperties;
     this.patternProperties = patternProperties;
     this.isInstanceOf = isInstanceOf;
+  }
+
+  extend(type) {
+    for (let key of Object.keys(type.properties)) {
+      if (key in this.properties) {
+        throw new Error(`InternalError: Attempt to extend an object with conflicting property "${key}"`);
+      }
+      this.properties[key] = type.properties[key];
+    }
+
+    this.patternProperties.push(...type.patternProperties);
+
+    return this;
   }
 
   checkBaseType(baseType) {
@@ -865,7 +883,12 @@ this.Schemas = {
         additionalProperties = this.parseType(namespaceName, type.additionalProperties);
       }
 
-      checkTypeProperties("properties", "additionalProperties", "patternProperties", "isInstanceOf");
+      if ("$extend" in type) {
+        // Only allow extending "properties" and "patternProperties".
+        checkTypeProperties("properties", "patternProperties");
+      } else {
+        checkTypeProperties("properties", "additionalProperties", "patternProperties", "isInstanceOf");
+      }
       return new ObjectType(properties, additionalProperties, patternProperties, type.isInstanceOf || null);
     } else if (type.type == "array") {
       checkTypeProperties("items", "minItems", "maxItems");
@@ -905,7 +928,32 @@ this.Schemas = {
   },
 
   loadType(namespaceName, type) {
-    this.register(namespaceName, type.id, this.parseType(namespaceName, type, ["id"]));
+    if ("$extend" in type) {
+      this.extendType(namespaceName, type);
+    } else {
+      this.register(namespaceName, type.id, this.parseType(namespaceName, type, ["id"]));
+    }
+  },
+
+  extendType(namespaceName, type) {
+    let ns = Schemas.namespaces.get(namespaceName);
+    let targetType = ns && ns.get(type.$extend);
+
+    // Only allow extending object and choices types for now.
+    if (targetType instanceof ObjectType) {
+      type.type = "object";
+    } else if (!targetType) {
+      throw new Error(`Internal error: Attempt to extend a nonexistant type ${type.$extend}`);
+    } else if (!(targetType instanceof ChoiceType)) {
+      throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
+    }
+
+    let parsed = this.parseType(namespaceName, type, ["$extend"]);
+    if (parsed.constructor !== targetType.constructor) {
+      throw new Error(`Internal error: Bad attempt to extend ${type.$extend}`);
+    }
+
+    targetType.extend(parsed);
   },
 
   loadProperty(namespaceName, name, prop) {
