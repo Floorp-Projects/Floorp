@@ -52,6 +52,8 @@ public:
                   int aChannel,
                   bool aAuth, bool aEncrypt);
 
+  nsresult Accept(int aListenFd, BluetoothSocketResultHandler* aRes);
+
   /**
    * Method to be called whenever data is received. This is only called on the
    * consumer thread.
@@ -70,11 +72,6 @@ public:
     mDeviceAddress = aDeviceAddress;
   }
 
-  inline void SetCurrentResultHandler(BluetoothSocketResultHandler* aRes)
-  {
-    mCurrentRes = aRes;
-  }
-
   // Methods for |DataSocket|
   //
 
@@ -90,6 +87,11 @@ public:
   void OnDisconnect() override;
 
 private:
+  inline void SetCurrentResultHandler(BluetoothSocketResultHandler* aRes)
+  {
+    mCurrentRes = aRes;
+  }
+
   BluetoothSocketObserver* mObserver;
   BluetoothSocketResultHandler* mCurrentRes;
   DroidSocketImpl* mImpl;

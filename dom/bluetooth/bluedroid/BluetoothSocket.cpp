@@ -429,24 +429,20 @@ private:
 class InvokeAcceptTask final : public SocketTask<DroidSocketImpl>
 {
 public:
-  InvokeAcceptTask(DroidSocketImpl* aImpl, int aFd)
+  InvokeAcceptTask(DroidSocketImpl* aImpl, int aListenFd)
     : SocketTask<DroidSocketImpl>(aImpl)
-    , mFd(aFd)
+    , mListenFd(aListenFd)
   { }
 
   void Run() override
   {
     MOZ_ASSERT(GetIO()->IsConsumerThread());
-    MOZ_ASSERT(sBluetoothSocketInterface);
 
-    BluetoothSocketResultHandler* res = new AcceptResultHandler(GetIO());
-    GetIO()->mConsumer->SetCurrentResultHandler(res);
-
-    sBluetoothSocketInterface->Accept(mFd, res);
+    GetIO()->mConsumer->Accept(mListenFd, new AcceptResultHandler(GetIO()));
   }
 
 private:
-  int mFd;
+  int mListenFd;
 };
 
 void
@@ -749,6 +745,15 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 {
   return Listen(aServiceName, aServiceUuid, aType, aChannel, aAuth, aEncrypt,
                 MessageLoop::current(), XRE_GetIOMessageLoop());
+}
+
+nsresult
+BluetoothSocket::Accept(int aListenFd, BluetoothSocketResultHandler* aRes)
+{
+  SetCurrentResultHandler(aRes);
+  sBluetoothSocketInterface->Accept(aListenFd, aRes);
+
+  return NS_OK;
 }
 
 void
