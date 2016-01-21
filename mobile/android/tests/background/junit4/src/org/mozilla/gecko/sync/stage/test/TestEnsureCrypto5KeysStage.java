@@ -87,7 +87,7 @@ public class TestEnsureCrypto5KeysStage {
     session.config.setClusterURL(new URI(TEST_CLUSTER_URL));
 
     // Set info collections to not have crypto.
-    final ExtendedJSONObject noCrypto = ExtendedJSONObject.parseJSONObject(TEST_JSON_NO_CRYPTO);
+    final ExtendedJSONObject noCrypto = new ExtendedJSONObject(TEST_JSON_NO_CRYPTO);
     session.config.infoCollections = new InfoCollections(noCrypto);
     calledResetStages = false;
     stagesReset = null;
@@ -113,7 +113,8 @@ public class TestEnsureCrypto5KeysStage {
 
   @Test
   public void testDownloadUsesPersisted() throws Exception {
-    session.config.infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_JSON_OLD_CRYPTO));
+    session.config.infoCollections = new InfoCollections(new ExtendedJSONObject
+            (TEST_JSON_OLD_CRYPTO));
     session.config.persistedCryptoKeys().persistLastModified(System.currentTimeMillis());
 
     assertNull(session.config.collectionKeys);
@@ -136,7 +137,7 @@ public class TestEnsureCrypto5KeysStage {
 
   @Test
   public void testDownloadFetchesNew() throws Exception {
-    session.config.infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_JSON_NEW_CRYPTO));
+    session.config.infoCollections = new InfoCollections(new ExtendedJSONObject(TEST_JSON_NEW_CRYPTO));
     session.config.persistedCryptoKeys().persistLastModified(System.currentTimeMillis());
 
     assertNull(session.config.collectionKeys);
@@ -172,7 +173,7 @@ public class TestEnsureCrypto5KeysStage {
   public void testDownloadResetsOnDifferentDefaultKey() throws Exception {
     String TEST_COLLECTION = "bookmarks";
 
-    session.config.infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_JSON_NEW_CRYPTO));
+    session.config.infoCollections = new InfoCollections(new ExtendedJSONObject(TEST_JSON_NEW_CRYPTO));
     session.config.persistedCryptoKeys().persistLastModified(System.currentTimeMillis());
 
     KeyBundle keyBundle = KeyBundle.withRandomKeys();
@@ -212,7 +213,7 @@ public class TestEnsureCrypto5KeysStage {
   public void testDownloadResetsEngineOnDifferentKey() throws Exception {
     final String TEST_COLLECTION = "history";
 
-    session.config.infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_JSON_NEW_CRYPTO));
+    session.config.infoCollections = new InfoCollections(new ExtendedJSONObject(TEST_JSON_NEW_CRYPTO));
     session.config.persistedCryptoKeys().persistLastModified(System.currentTimeMillis());
 
     assertNull(session.config.collectionKeys);
