@@ -1183,6 +1183,7 @@ class FunctionCompiler
     SimdConstant   readI32X4()  { return decoder_.uncheckedReadI32X4(); }
     SimdConstant   readF32X4()  { return decoder_.uncheckedReadF32X4(); }
     Expr           readOpcode() { return decoder_.uncheckedReadExpr(); }
+    Expr           peekOpcode() { return decoder_.uncheckedPeekExpr(); }
 
     void readCallLineCol(uint32_t* line, uint32_t* column) {
         const SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
@@ -1291,7 +1292,11 @@ class FunctionCompiler
 };
 
 // A Type or Undefined, implicitly constructed from an ExprType and usabled as
-// an ExprType. Will assert if we're trying to access the type although we
+// an ExprType. Has two functions:
+// - in debug, will ensure that the expected type and the actual type of some
+// expressions match.
+// - provides a way to mean "no type" in the context of expression statements,
+// and will provoke assertions if we're trying to use an expected type when we
 // don't have one.
 class MaybeType
 {
@@ -1300,7 +1305,7 @@ class MaybeType
   public:
     MOZ_IMPLICIT MaybeType(ExprType t) : maybe_() { maybe_.emplace(t); }
     static MaybeType Undefined() { return MaybeType(); }
-    operator bool() { return maybe_.isSome(); }
+    explicit operator bool() { return maybe_.isSome(); }
     MOZ_IMPLICIT operator ExprType() { return maybe_.value(); }
 };
 
@@ -1368,10 +1373,8 @@ EmitLoadGlobal(FunctionCompiler& f, MaybeType type, MDefinition** def)
     return true;
 }
 
-static bool EmitExpr(FunctionCompiler&, MaybeType, Expr, MDefinition**, LabelVector* = nullptr);
 static bool EmitExpr(FunctionCompiler&, MaybeType, MDefinition**, LabelVector* = nullptr);
 static bool EmitExprStmt(FunctionCompiler&, MDefinition**, LabelVector* = nullptr);
-static bool EmitExprStmt(FunctionCompiler&, Expr, MDefinition**, LabelVector* = nullptr);
 static bool EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition** def);
 
 static bool
@@ -2447,18 +2450,15 @@ EmitIfElse(FunctionCompiler& f, bool hasElse)
     if (hasElse) {
         f.switchToElse(elseOrJoinBlock);
 
-        Expr nextStmt(f.readOpcode());
-        if (nextStmt == Expr::If) {
-            hasElse = false;
-            goto recurse;
-        }
-        if (nextStmt == Expr::IfElse) {
-            hasElse = true;
+        Expr nextStmt = f.peekOpcode();
+        if (nextStmt == Expr::If || nextStmt == Expr::IfElse) {
+            hasElse = nextStmt == Expr::IfElse;
+            JS_ALWAYS_TRUE(f.readOpcode() == nextStmt);
             goto recurse;
         }
 
         MDefinition* _;
-        if (!EmitExprStmt(f, nextStmt, &_))
+        if (!EmitExprStmt(f, &_))
             return false;
 
         return f.joinIfElse(thenBlocks);
@@ -2566,12 +2566,12 @@ EmitBreak(FunctionCompiler& f, bool hasLabel)
 }
 
 static bool
-EmitExpr(FunctionCompiler& f, MaybeType type, Expr op, MDefinition** def, LabelVector* maybeLabels)
+EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* maybeLabels)
 {
     if (!f.mirGen().ensureBallast())
         return false;
 
-    switch (op) {
+    switch (Expr op = f.readOpcode()) {
       case Expr::Nop:
         return true;
       case Expr::Block:
@@ -2937,21 +2937,9 @@ EmitExpr(FunctionCompiler& f, MaybeType type, Expr op, MDefinition** def, LabelV
 }
 
 static bool
-EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* maybeLabels)
-{
-    return EmitExpr(f, type, f.readOpcode(), def, maybeLabels);
-}
-
-static bool
-EmitExprStmt(FunctionCompiler& f, Expr op, MDefinition** def, LabelVector* maybeLabels)
-{
-    return EmitExpr(f, MaybeType::Undefined(), op, def, maybeLabels);
-}
-
-static bool
 EmitExprStmt(FunctionCompiler& f, MDefinition** def, LabelVector* maybeLabels)
 {
-    return EmitExprStmt(f, f.readOpcode(), def, maybeLabels);
+    return EmitExpr(f, MaybeType::Undefined(), def, maybeLabels);
 }
 
 bool
