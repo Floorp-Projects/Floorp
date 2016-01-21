@@ -212,6 +212,19 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
 
   ProxyTextChangeEvent(target, aStr, aStart, aLen, aIsInsert, aFromUser);
 
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CHANGED;
+  nsIDOMNode* node = nullptr;
+  RefPtr<xpcAccTextChangeEvent> event =
+    new xpcAccTextChangeEvent(type, xpcAcc, doc, node, aFromUser, aStart, aLen,
+                              aIsInsert, aStr);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
   return true;
 }
 
