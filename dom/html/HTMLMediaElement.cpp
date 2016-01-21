@@ -3056,41 +3056,36 @@ class HTMLMediaElement::StreamSizeListener : public MediaStreamListener {
 public:
   explicit StreamSizeListener(HTMLMediaElement* aElement) :
     mElement(aElement),
-    mMutex("HTMLMediaElement::StreamSizeListener")
+    mInitialSizeFound(false)
   {}
   void Forget() { mElement = nullptr; }
 
-  void ReceivedSize()
+  void ReceivedSize(gfx::IntSize aSize)
   {
     if (!mElement) {
       return;
     }
-    gfx::IntSize size;
-    {
-      MutexAutoLock lock(mMutex);
-      size = mInitialSize;
-    }
     RefPtr<HTMLMediaElement> deathGrip = mElement;
-    mElement->UpdateInitialMediaSize(size);
+    mElement->UpdateInitialMediaSize(aSize);
   }
-  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia,
-                                        MediaStream* aInputStream,
-                                        TrackID aInputTrackID) override
+
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                StreamTime aTrackOffset,
+                                uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia,
+                                MediaStream* aInputStream,
+                                TrackID aInputTrackID) override
   {
-    MutexAutoLock lock(mMutex);
-    if (mInitialSize != gfx::IntSize(0,0) ||
-        aQueuedMedia.GetType() != MediaSegment::VIDEO) {
+    if (mInitialSizeFound || aQueuedMedia.GetType() != MediaSegment::VIDEO) {
       return;
     }
     const VideoSegment& video = static_cast<const VideoSegment&>(aQueuedMedia);
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
-        mInitialSize = c->mFrame.GetIntrinsicSize();
         nsCOMPtr<nsIRunnable> event =
-          NS_NewRunnableMethod(this, &StreamSizeListener::ReceivedSize);
+          NS_NewRunnableMethodWithArgs<gfx::IntSize>(
+              this, &StreamSizeListener::ReceivedSize,
+              c->mFrame.GetIntrinsicSize());
         aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
       }
     }
@@ -3100,9 +3095,8 @@ private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
 
-  // mMutex protects the fields below; they can be accessed on any thread
-  Mutex mMutex;
-  gfx::IntSize mInitialSize;
+  // These fields may only be accessed on the MSG thread
+  bool mInitialSizeFound;
 };
 
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
