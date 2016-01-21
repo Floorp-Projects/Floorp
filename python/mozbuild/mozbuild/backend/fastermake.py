@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from mozbuild.backend.base import PartialBackend
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.context import (
     ObjDirPath,
@@ -21,7 +22,7 @@ from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 
 
-class FasterMakeBackend(CommonBackend):
+class FasterMakeBackend(CommonBackend, PartialBackend):
     def _init(self):
         super(FasterMakeBackend, self)._init()
 
@@ -101,9 +102,12 @@ class FasterMakeBackend(CommonBackend):
 
         elif isinstance(obj, XPIDLFile):
             self._has_xpidl = True
+            # We're not actually handling XPIDL files.
+            return False
 
-        # We currently ignore a lot of object types, so just acknowledge
-        # everything.
+        else:
+            return False
+
         return True
 
     def consume_finished(self):
