@@ -217,28 +217,17 @@ function registerMockPromptService()
   mockPromptFactoryRegisterer.register();
 };
 
-function enableDialogLoopBlocking()
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-    getService(SpecialPowers.Ci.nsIPrefBranch);
-
-  prefs.setIntPref("dom.successive_dialog_time_limit", 3);
-}
-
-function resetDialogLoopBlocking()
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-    getService(SpecialPowers.Ci.nsIPrefBranch);
-
-  prefs.setIntPref("dom.successive_dialog_time_limit", 0);
-}
-
 var expectedState;
 
 function runtests()
 {
+  SpecialPowers.pushPrefEnv({'set': [["dom.successive_dialog_time_limit", 3]]},
+                            runtestsInner);
+}
+
+function runtestsInner()
+{
   registerMockPromptService();
-  enableDialogLoopBlocking();
 
   // Test that alert() works normally and then gets blocked on the
   // second call.
@@ -337,8 +326,6 @@ function runtests()
   promptState = void(0);
 
   w.close();
-
-  resetDialogLoopBlocking();
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
