@@ -79,7 +79,8 @@ protected:
 
 private:
   BluetoothOppManager();
-  bool Init();
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
   void HandleVolumeStateChanged(nsISupports* aSubject);
 
