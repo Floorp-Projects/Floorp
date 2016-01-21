@@ -15,6 +15,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -24,11 +25,15 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TabQueueHelper {
     private static final String LOGTAG = "Gecko" + TabQueueHelper.class.getSimpleName();
@@ -165,13 +170,32 @@ public class TabQueueHelper {
     }
 
     /**
+     * Get up to eight of the last queued URLs for displaying in the notification.
+     */
+    public static List<String> getLastURLs(final Context context, final String filename) {
+        final GeckoProfile profile = GeckoProfile.get(context);
+        final JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
+        final List<String> urls = new ArrayList<>(8);
+
+        for (int i = 0; i < 8; i++) {
+            try {
+                urls.add(jsonArray.getString(i));
+            } catch (JSONException e) {
+                Log.w(LOGTAG, "Unable to parse URL from tab queue array", e);
+            }
+        }
+
+        return urls;
+    }
+
+    /**
      * Displays a notification showing the total number of tabs queue.  If there is already a notification displayed, it
      * will be replaced.
      *
      * @param context
      * @param tabsQueued
      */
-    public static void showNotification(final Context context, final int tabsQueued) {
+    public static void showNotification(final Context context, final int tabsQueued, final List<String> urls) {
         ThreadUtils.assertNotOnUiThread();
 
         Intent resultIntent = new Intent();
@@ -188,10 +212,20 @@ public class TabQueueHelper {
             text = resources.getString(R.string.tab_queue_notification_text_plural, tabsQueued);
         }
 
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        inboxStyle.setBigContentTitle(text);
+        for (String url : urls) {
+            inboxStyle.addLine(url);
+        }
+        inboxStyle.setSummaryText(resources.getString(R.string.tab_queue_notification_title));
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                                                      .setSmallIcon(R.drawable.ic_status_logo)
-                                                     .setContentTitle(resources.getString(R.string.tab_queue_notification_title))
-                                                     .setContentText(text)
+                                                     .setContentTitle(text)
+                                                     .setContentText(resources.getString(R.string.tab_queue_notification_title))
+                                                     .setStyle(inboxStyle)
+                                                     .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
+                                                     .setNumber(tabsQueued)
                                                      .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
