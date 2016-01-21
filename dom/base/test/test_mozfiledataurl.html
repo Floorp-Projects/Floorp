@@ -3,7 +3,7 @@
 <head>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
   <title>Test for File urls</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="gen.next()">
@@ -15,7 +15,7 @@
 <input type=file id=fileList>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
@@ -74,7 +74,7 @@ function runTest() {
   is(res.type, "load", "loaded successfully");
   is(res.width, 120, "correct width");
   is(res.height, 90, "correct height");
-  
+
   // Attempt to load an image in a different cross-origin document
   inner.src = innerCrossSiteURI;
   yield undefined;
@@ -113,7 +113,7 @@ function runTest() {
   inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
   var res = (yield);
   is(res.type, "loadeddata", "loaded successfully");
-  
+
   // Attempt to load an audio in a different cross-origin document
   inner.src = innerCrossSiteURI;
   yield undefined;
