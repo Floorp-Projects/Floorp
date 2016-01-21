@@ -122,8 +122,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             *args, **kwargs)
 
         # As long as we don't run on buildbot the following properties have be set on our own
-        self.installer_url = self.config.get('installer_url')
+        self.binary_path = self.config.get('binary_path')
         self.installer_path = self.config.get('installer_path')
+        self.installer_url = self.config.get('installer_url')
         self.test_packages_url = self.config.get('test_packages_url')
         self.test_url = self.config.get('test_url')
 
@@ -167,8 +168,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         self.vcs_checkout(
             repo=self.firefox_ui_repo,
-            dest=dirs.get('abs_test_install_dir',
-                          os.path.join(dirs['abs_work_dir'], 'tests')),
+            dest=dirs['abs_test_install_dir'],
             branch=self.firefox_ui_branch,
             vcs='gittool',
             env=self.query_env(),
@@ -215,10 +215,15 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         if self.abs_dirs:
             return self.abs_dirs
 
-        abs_dirs = VCSToolsScript.query_abs_dirs(self)
-        abs_dirs.update({
+        abs_dirs = super(FirefoxUITests, self).query_abs_dirs()
+        dirs = {
             'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
-        })
+            'abs_test_install_dir': os.path.join(abs_dirs['abs_work_dir'], 'tests'),
+        }
+
+        for key in dirs.keys():
+            if key not in abs_dirs:
+                abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
 
         return self.abs_dirs
@@ -355,10 +360,12 @@ class FirefoxUIUpdateTests(FirefoxUITests):
     def __init__(self, config_options=None, *args, **kwargs):
         config_options = config_options or firefox_ui_update_config_options
 
-        FirefoxUITests.__init__(self, config_options=config_options,
-                                *args, **kwargs)
+        super(FirefoxUIUpdateTests, self).__init__(
+            config_options=config_options,
+            *args, **kwargs
+        )
 
     def query_harness_args(self):
         """Collects specific update test related command line arguments."""
-        return FirefoxUITests.query_harness_args(self,
-                                                 firefox_ui_update_harness_config_options)
+        return super(FirefoxUIUpdateTests, self).query_harness_args(
+            firefox_ui_update_harness_config_options)
