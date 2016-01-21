@@ -283,7 +283,7 @@ TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
   // Fling up and to the left. The child APZC has room to scroll up, but not
   // to the left, so the horizontal component of the fling should be handed
   // off to the parent APZC.
-  Pan(manager, mcc, ScreenPoint(90, 90), ScreenPoint(55, 55));
+  Pan(manager, mcc, ScreenIntPoint(90, 90), ScreenIntPoint(55, 55));
 
   RefPtr<TestAsyncPanZoomController> parent = ApzcOf(root);
   RefPtr<TestAsyncPanZoomController> child = ApzcOf(layers[1]);
