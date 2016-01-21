@@ -9,6 +9,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "ProxyAccessible.h"
 #include "mozilla/dom/TabParent.h"
+#include "xpcAccessibleDocument.h"
 
 namespace mozilla {
 namespace a11y {
@@ -292,5 +293,13 @@ DocAccessibleParent::CheckDocTree() const
   return true;
 }
 
+xpcAccessibleGeneric*
+DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
+{
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  MOZ_ASSERT(doc);
+
+  return doc->GetXPCAccessible(aProxy);
+}
 } // a11y
 } // mozilla
