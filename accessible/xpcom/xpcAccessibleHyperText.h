@@ -43,7 +43,14 @@ protected:
   virtual ~xpcAccessibleHyperText() {}
 
 private:
-  HyperTextAccessible* Intl() { return mIntl.AsAccessible()->AsHyperText(); }
+  HyperTextAccessible* Intl()
+  {
+    if (Accessible* acc = mIntl.AsAccessible()) {
+      return acc->AsHyperText();
+    }
+
+    return nullptr;
+  }
 
   xpcAccessibleHyperText(const xpcAccessibleHyperText&) = delete;
   xpcAccessibleHyperText& operator =(const xpcAccessibleHyperText&) = delete;
