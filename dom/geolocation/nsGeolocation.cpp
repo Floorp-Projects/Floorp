@@ -31,7 +31,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
 #include "mozilla/dom/WakeLock.h"
@@ -76,12 +75,13 @@ using namespace mozilla::hal;
 
 class nsGeolocationRequest final
  : public nsIContentPermissionRequest
+ , public nsITimerCallback
  , public nsIGeolocationUpdate
- , public SupportsWeakPtr<nsGeolocationRequest>
 {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
+  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIGEOLOCATIONUPDATE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIContentPermissionRequest)
@@ -93,9 +93,6 @@ class nsGeolocationRequest final
                        uint8_t aProtocolType,
                        bool aWatchPositionRequest = false,
                        int32_t aWatchId = 0);
-
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
-
   void Shutdown();
 
   void SendLocation(nsIDOMGeoPosition* aLocation);
@@ -109,23 +106,6 @@ class nsGeolocationRequest final
   int32_t WatchId() { return mWatchId; }
  private:
   virtual ~nsGeolocationRequest();
-
-  class TimerCallbackHolder final : public nsITimerCallback
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSITIMERCALLBACK
-
-    TimerCallbackHolder(nsGeolocationRequest* aRequest)
-      : mRequest(aRequest)
-    {}
-
-  private:
-    ~TimerCallbackHolder() {}
-    WeakPtr<nsGeolocationRequest> mRequest;
-  };
-
-  void Notify();
 
   already_AddRefed<nsIDOMGeoPosition> AdjustedLocation(nsIDOMGeoPosition*);
 
@@ -399,12 +379,12 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
 
 nsGeolocationRequest::~nsGeolocationRequest()
 {
-  StopTimeoutTimer();
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocationRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
 NS_INTERFACE_MAP_END
 
@@ -413,11 +393,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocationRequest)
 
 NS_IMPL_CYCLE_COLLECTION(nsGeolocationRequest, mCallback, mErrorCallback, mLocator)
 
-void
-nsGeolocationRequest::Notify()
+NS_IMETHODIMP
+nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
   StopTimeoutTimer();
   NotifyErrorAndShutdown(nsIDOMGeoPositionError::TIMEOUT);
+  return NS_OK;
 }
 
 void
@@ -580,8 +561,7 @@ nsGeolocationRequest::SetTimeoutTimer()
     }
 
     mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
-    RefPtr<TimerCallbackHolder> holder = new TimerCallbackHolder(this);
-    mTimeoutTimer->InitWithCallback(holder, timeout, nsITimer::TYPE_ONE_SHOT);
+    mTimeoutTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
   }
 }
 
@@ -761,7 +741,10 @@ nsGeolocationRequest::Shutdown()
   MOZ_ASSERT(!mShutdown, "request shutdown twice");
   mShutdown = true;
 
-  StopTimeoutTimer();
+  if (mTimeoutTimer) {
+    mTimeoutTimer->Cancel();
+    mTimeoutTimer = nullptr;
+  }
 
   // If there are no other high accuracy requests, the geolocation service will
   // notify the provider to switch to the default accuracy.
@@ -772,23 +755,6 @@ nsGeolocationRequest::Shutdown()
     }
   }
 }
-
-
-////////////////////////////////////////////////////
-// nsGeolocationRequest::TimerCallbackHolder
-////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS(nsGeolocationRequest::TimerCallbackHolder, nsISupports, nsITimerCallback)
-
-NS_IMETHODIMP
-nsGeolocationRequest::TimerCallbackHolder::Notify(nsITimer*)
-{
-  if (mRequest) {
-    mRequest->Notify();
-  }
-  return NS_OK;
-}
-
 
 ////////////////////////////////////////////////////
 // nsGeolocationService
