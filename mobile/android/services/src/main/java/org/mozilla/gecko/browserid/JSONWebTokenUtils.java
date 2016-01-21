@@ -35,14 +35,7 @@ public class JSONWebTokenUtils {
   public static final String DEFAULT_ASSERTION_ISSUER = "127.0.0.1";
 
   public static String encode(String payload, SigningPrivateKey privateKey) throws UnsupportedEncodingException, GeneralSecurityException  {
-    return encode(payload, privateKey, null);
-  }
-
-  protected static String encode(String payload, SigningPrivateKey privateKey, Map<String, Object> headerFields) throws UnsupportedEncodingException, GeneralSecurityException  {
-    ExtendedJSONObject header = new ExtendedJSONObject();
-    if (headerFields != null) {
-      header.putAll(headerFields);
-    }
+    final ExtendedJSONObject header = new ExtendedJSONObject();
     header.put("alg", privateKey.getAlgorithm());
     String encodedHeader  = Base64.encodeBase64URLSafeString(header.toJSONString().getBytes("UTF-8"));
     String encodedPayload = Base64.encodeBase64URLSafeString(payload.getBytes("UTF-8"));

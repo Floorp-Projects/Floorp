@@ -294,11 +294,6 @@ public class ExtendedJSONObject {
     map.put(key, value);
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public void putAll(Map map) {
-    this.object.putAll(map);
-  }
-
   /**
    * Remove key-value pair from JSONObject.
    *
