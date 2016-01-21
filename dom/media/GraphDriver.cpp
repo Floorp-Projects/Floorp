@@ -5,6 +5,8 @@
 
 #include <MediaStreamGraphImpl.h>
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "CubebUtils.h"
 
 #ifdef XP_MACOSX
@@ -29,6 +31,8 @@ extern mozilla::LazyLogModule gMediaStreamGraphLog;
 #endif
 
 namespace mozilla {
+
+StaticRefPtr<nsIThreadPool> AsyncCubebTask::sThreadPool;
 
 struct AutoProfilerUnregisterThread
 {
@@ -469,20 +473,39 @@ AsyncCubebTask::~AsyncCubebTask()
 {
 }
 
+/* static */
+nsresult
+AsyncCubebTask::EnsureThread()
+{
+  if (!sThreadPool) {
+    nsCOMPtr<nsIThreadPool> threadPool =
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("CubebOperation"), 1);
+    sThreadPool = threadPool;
+    // Need to null this out before xpcom-shutdown-threads Observers run
+    // since we don't know the order that the shutdown-threads observers
+    // will run.  ClearOnShutdown guarantees it runs first.
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+            ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
+      }));
+    } else {
+      ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
+    }
+
+    const uint32_t kIdleThreadTimeoutMs = 2000;
+
+    nsresult rv = sThreadPool->SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 AsyncCubebTask::Run()
 {
-  MOZ_ASSERT(mThread);
-  if (NS_IsMainThread()) {
-    mThread->Shutdown(); // can't shutdown from the thread itself, darn
-    // don't null out mThread!
-    // See bug 999104.  we must hold a ref to the thread across Dispatch()
-    // since the internal mthread ref could be released while processing
-    // the Dispatch(), and Dispatch/PutEvent itself doesn't hold a ref; it
-    // assumes the caller does.
-    return NS_OK;
-  }
-
   MOZ_ASSERT(mDriver);
 
   switch(mOperation) {
@@ -506,9 +529,7 @@ AsyncCubebTask::Run()
       MOZ_CRASH("Operation not implemented.");
   }
 
-  // and now kill this thread
-  NS_DispatchToMainThread(this);
-
+  // The thread will kill itself after a bit
   return NS_OK;
 }
 
