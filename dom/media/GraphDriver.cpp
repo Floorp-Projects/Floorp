@@ -575,7 +575,6 @@ AudioCallbackDriver::Init()
   MOZ_ASSERT(!NS_IsMainThread(),
       "This is blocking and should never run on the main thread.");
 
-  output.devid = mGraphImpl->mOutputDeviceID;
   mSampleRate = output.rate = CubebUtils::PreferredSampleRate();
 
 #if defined(__ANDROID__)
@@ -606,7 +605,6 @@ AudioCallbackDriver::Init()
 
   input = output;
   input.channels = 1; // change to support optional stereo capture
-  input.devid = mGraphImpl->mInputDeviceID;
 
   cubeb_stream* stream;
   // XXX Only pass input input if we have an input listener.  Always
@@ -614,7 +612,9 @@ AudioCallbackDriver::Init()
   // XXX Add support for adding/removing an input listener later.
   if (cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
                         "AudioCallbackDriver",
+                        mGraphImpl->mInputDeviceID,
                         mGraphImpl->mInputWanted ? &input : nullptr,
+                        mGraphImpl->mOutputDeviceID,
                         mGraphImpl->mOutputWanted ? &output : nullptr, latency,
                         DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
     mAudioStream.own(stream);
@@ -744,11 +744,13 @@ AudioCallbackDriver::WakeUp()
 
 /* static */ long
 AudioCallbackDriver::DataCallback_s(cubeb_stream* aStream,
-                                    void* aUser, void* aInputBuffer, void* aOutputBuffer,
+                                    void* aUser,
+                                    const void* aInputBuffer,
+                                    void* aOutputBuffer,
                                     long aFrames)
 {
   AudioCallbackDriver* driver = reinterpret_cast<AudioCallbackDriver*>(aUser);
-  return driver->DataCallback(static_cast<AudioDataValue*>(aInputBuffer),
+  return driver->DataCallback(static_cast<const AudioDataValue*>(aInputBuffer),
                               static_cast<AudioDataValue*>(aOutputBuffer), aFrames);
 }
 
@@ -816,7 +818,7 @@ AudioCallbackDriver::OSXDeviceSwitchingWorkaround()
 #endif // XP_MACOSX
 
 long
-AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
+AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                   AudioDataValue* aOutputBuffer, long aFrames)
 {
   bool stillProcessing;
