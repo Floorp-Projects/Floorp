@@ -211,18 +211,6 @@ class tresize(TsBase):
     unit = 'ms'
 
 
-# Media Test
-@register_test()
-class media_tests(TsBase):
-    """
-    Media Performance Tests
-    """
-    cycles = 5
-    desktop = True
-    url = 'http://localhost:16932/startup_test/media/html/media_tests.html'
-    timeout = 360
-    unit = 'score'
-
 # pageloader tests(tp5, etc)
 
 # The overall test number is determined by first calculating the median

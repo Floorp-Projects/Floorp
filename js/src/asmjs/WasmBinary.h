@@ -304,45 +304,50 @@ enum NeedsBoundsCheck : uint8_t
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytecode;
 typedef UniquePtr<Bytecode> UniqueBytecode;
 
-// The Encoder class recycles (through its constructor) or creates a new Bytecode (through its
-// init() method). Its Bytecode is released when it's done building the wasm IR in finish().
+// The Encoder class appends bytes to the Bytecode object it is given during
+// construction. The client is responsible for the Bytecode's lifetime and must
+// keep the Bytecode alive as long as the Encoder is used.
 class Encoder
 {
-    UniqueBytecode bytecode_;
-    DebugOnly<bool> done_;
+    Bytecode& bytecode_;
 
-    template<class T>
+    template <class T>
     MOZ_WARN_UNUSED_RESULT
     bool write(T v, size_t* offset) {
         if (offset)
-            *offset = bytecode_->length();
-        return bytecode_->append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
+            *offset = bytecode_.length();
+        return bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
+    }
+
+    template <class T>
+    MOZ_WARN_UNUSED_RESULT
+    bool writeEnum(T v, size_t* offset) {
+        // For now, just write a u8 instead of a variable-length integer.
+        // Variable-length is somewhat annoying at the moment due to the
+        // pre-order encoding and back-patching; let's see if we switch to
+        // post-order first.
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        MOZ_ASSERT(uint64_t(v) < UINT8_MAX);
+        return writeU8(uint8_t(v), offset);
+    }
+
+    template <class T>
+    void patchEnum(size_t pc, T v) {
+        // See writeEnum comment.
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        MOZ_ASSERT(uint64_t(v) < UINT8_MAX);
+        bytecode_[pc] = uint8_t(v);
     }
 
   public:
-    Encoder()
-      : bytecode_(nullptr),
-        done_(false)
-    {}
-
-    bool init(UniqueBytecode bytecode = UniqueBytecode()) {
-        if (bytecode) {
-            bytecode_ = Move(bytecode);
-            bytecode_->clear();
-            return true;
-        }
-        bytecode_ = MakeUnique<Bytecode>();
-        return !!bytecode_;
+    explicit Encoder(Bytecode& bytecode)
+      : bytecode_(bytecode)
+    {
+        MOZ_ASSERT(empty());
     }
 
-    size_t bytecodeOffset() const { return bytecode_->length(); }
+    size_t bytecodeOffset() const { return bytecode_.length(); }
     bool empty() const { return bytecodeOffset() == 0; }
-
-    UniqueBytecode finish() {
-        MOZ_ASSERT(!done_);
-        done_ = true;
-        return Move(bytecode_);
-    }
 
     MOZ_WARN_UNUSED_RESULT bool
     writeVarU32(uint32_t i) {
@@ -355,6 +360,11 @@ class Encoder
                 return false;
         } while(i != 0);
         return true;
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool
+    writeExpr(Expr expr, size_t* offset = nullptr) {
+        return writeEnum(expr, offset);
     }
 
     MOZ_WARN_UNUSED_RESULT bool
@@ -393,22 +403,24 @@ class Encoder
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Expr((*bytecode_)[pc]) == Expr::Unreachable;
+            patchable &= Expr(bytecode_[pc]) == Expr::Unreachable;
         return patchable;
     }
 #endif
-
     void patchU8(size_t pc, uint8_t i) {
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
-        (*bytecode_)[pc] = i;
+        bytecode_[pc] = i;
     }
-
+    void patchExpr(size_t pc, Expr expr) {
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
+        patchEnum(pc, expr);
+    }
     template<class T>
     void patch32(size_t pc, T i) {
         static_assert(sizeof(T) == sizeof(uint32_t),
                       "patch32 must be used with 32-bits wide types");
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
-        memcpy(&(*bytecode_)[pc], &i, sizeof(uint32_t));
+        memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
     }
 };
 
@@ -418,7 +430,7 @@ class Decoder
     const uint8_t* const end_;
     const uint8_t* cur_;
 
-    template<class T>
+    template <class T>
     MOZ_WARN_UNUSED_RESULT bool
     read(T* out) {
         if (uintptr_t(end_ - cur_) < sizeof(T))
@@ -428,13 +440,32 @@ class Decoder
         return true;
     }
 
-    template<class T>
+    template <class T>
+    MOZ_WARN_UNUSED_RESULT bool
+    readEnum(T* out) {
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        // See Encoder::writeEnum.
+        uint8_t u8;
+        if (!read(&u8))
+            return false;
+        *out = T(u8);
+        return true;
+    }
+
+    template <class T>
     T uncheckedRead() {
         MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
         cur_ += sizeof(T);
         return ret;
+    }
+
+    template <class T>
+    T uncheckedReadEnum() {
+        // See Encoder::writeEnum.
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        return (T)uncheckedReadU8();
     }
 
   public:
@@ -499,6 +530,9 @@ class Decoder
         *decoded |= uint32_t(byte) << 28;
         return true;
     }
+    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
+        return readEnum(expr);
+    }
 
     // The infallible unpacking API should be used when we are sure that the
     // bytecode is well-formed.
@@ -538,6 +572,9 @@ class Decoder
         MOZ_ASSERT(!(byte & 0xF0));
         decoded |= uint32_t(byte) << 28;
         return decoded;
+    }
+    Expr uncheckedReadExpr() {
+        return uncheckedReadEnum<Expr>();
     }
 };
 

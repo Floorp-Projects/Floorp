@@ -40,6 +40,7 @@ CONFIGS = defaultdict(lambda: {
         'non_global_defines': [],
         'substs': [
             ('ANDROID_TARGET_SDK', '16'),
+            ('MOZ_WIDGET_TOOLKIT', 'android'),
         ],
     },
     'binary-components': {

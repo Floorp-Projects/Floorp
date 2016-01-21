@@ -49,6 +49,12 @@ pref("ui.scrollbarsCanOverlapContent", 1);
 /* turn off the caret blink after 10 cycles */
 pref("ui.caretBlinkCount", 10);
 
+// Unified AccessibleCarets (touch-caret and selection-carets).
+pref("layout.accessiblecaret.enabled", true);
+
+// Android generates long tap (mouse) events.
+pref("layout.accessiblecaret.use_long_tap_injector", false);
+
 /* cache prefs */
 pref("browser.cache.disk.enable", true);
 pref("browser.cache.disk.capacity", 20480); // kilobytes

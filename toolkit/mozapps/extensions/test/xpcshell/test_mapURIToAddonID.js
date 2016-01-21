@@ -246,8 +246,38 @@ function run_test_7() {
     let uri = b1.getResourceURI(".");
     check_mapping(uri, b1.id);
 
+    do_execute_soon(run_test_8);
+  });
+}
+
+// Tests that temporary addon-on URIs are mappable after install and uninstall
+function run_test_8() {
+  prepare_test({
+    "bootstrap2@tests.mozilla.org": [
+      ["onInstalling", false],
+      "onInstalled"
+    ]
+  }, [
+    "onExternalInstall",
+  ], function(b2) {
+    let uri = b2.getResourceURI(".");
+    check_mapping(uri, b2.id);
+
+    prepare_test({
+      "bootstrap2@tests.mozilla.org": [
+        ["onUninstalling", false],
+        "onUninstalled"
+      ]
+    });
+
+    b2.uninstall();
+    ensure_test_completed();
+
+    check_mapping(uri, b2.id);
+
     do_execute_soon(run_test_invalidarg);
   });
+  AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap2_1"));
 }
 
 // Tests that the AddonManager will bail when mapURIToAddonID is called with an

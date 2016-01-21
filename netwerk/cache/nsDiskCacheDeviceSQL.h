@@ -25,7 +25,8 @@
 class nsIURI;
 class nsOfflineCacheDevice;
 class mozIStorageService;
-namespace mozilla { class NeckoOriginAttributes; }
+class nsILoadContextInfo;
+namespace mozilla { class OriginAttributesPattern; }
 
 class nsApplicationCacheNamespace final : public nsIApplicationCacheNamespace
 {
@@ -141,7 +142,7 @@ public:
   nsresult                EvictUnownedEntries(const char *clientID);
 
   static nsresult         BuildApplicationCacheGroupID(nsIURI *aManifestURL,
-                                                       mozilla::NeckoOriginAttributes const *aOriginAttributes,
+                                                       nsACString const &aOriginSuffix,
                                                        nsACString &_result);
 
   nsresult                ActivateCache(const nsCSubstring &group,
@@ -168,7 +169,8 @@ public:
   nsresult                CacheOpportunistically(nsIApplicationCache* cache,
                                                  const nsACString &key);
 
-  nsresult                DiscardByAppId(int32_t appID, bool isInBrowser);
+  nsresult                Evict(nsILoadContextInfo *aInfo);
+  nsresult                Evict(mozilla::OriginAttributesPattern const &aPattern);
 
   nsresult                GetGroups(uint32_t *count,char ***keys);
 

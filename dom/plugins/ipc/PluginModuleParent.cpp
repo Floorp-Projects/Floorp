@@ -110,6 +110,7 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
                               nsresult* rv,
                               uint32_t* runID)
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
     if (NS_WARN_IF(!rv) || NS_WARN_IF(!runID)) {
         return false;
     }

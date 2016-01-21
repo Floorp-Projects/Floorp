@@ -265,6 +265,8 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 inline PluginLibrary*
 GetNewPluginLibrary(nsPluginTag *aPluginTag)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   if (!aPluginTag) {
     return nullptr;
   }
@@ -283,6 +285,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
 nsresult
 nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
   *aResult = nullptr;
 
   if (!aPluginTag) {

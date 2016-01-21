@@ -23228,8 +23228,9 @@ NormalJSRuntime::Init()
 
   JSAutoRequest ar(mContext);
 
+  JS::CompartmentOptions options;
   mGlobal = JS_NewGlobalObject(mContext, &kGlobalClass, nullptr,
-                               JS::FireOnNewGlobalHook);
+                               JS::FireOnNewGlobalHook, options);
   if (NS_WARN_IF(!mGlobal)) {
     return false;
   }

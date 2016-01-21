@@ -554,7 +554,7 @@ add_task(function* test_offline_cache() {
   // Store something to the offline cache
   var appcacheserv = Cc["@mozilla.org/network/application-cache-service;1"]
                      .getService(Ci.nsIApplicationCacheService);
-  var appcachegroupid = appcacheserv.buildGroupID(makeURI(URL + "/manifest"), LoadContextInfo.default);
+  var appcachegroupid = appcacheserv.buildGroupIDForInfo(makeURI(URL + "/manifest"), LoadContextInfo.default);
   var appcache = appcacheserv.createApplicationCache(appcachegroupid);
   var storage = Services.cache2.appCacheStorage(LoadContextInfo.default, appcache);
 

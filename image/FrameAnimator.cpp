@@ -79,6 +79,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
 {
   NS_ASSERTION(aTime <= TimeStamp::Now(),
                "Given time appears to be in the future");
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
 
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;

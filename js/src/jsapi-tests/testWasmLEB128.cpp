@@ -42,17 +42,13 @@ BEGIN_TEST(testWasmLEB128_encoding)
 {
     using namespace wasm;
 
-    Encoder encoder;
-    if (!encoder.init())
-        return false;
+    Bytecode bc;
+    Encoder encoder(bc);
 
     bool passed;
     if (!WriteValidBytes(encoder, &passed))
         return false;
     CHECK(passed);
-
-    UniqueBytecode bytecode = mozilla::Move(encoder.finish());
-    Bytecode& bc = *bytecode;
 
     size_t i = 0;
     CHECK(bc[i++] == 0x0);

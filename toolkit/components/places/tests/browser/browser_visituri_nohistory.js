@@ -6,60 +6,37 @@
 const INITIAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
 const FINAL_URL = "http://example.com/tests/toolkit/components/places/tests/browser/final.html";
 
-var gTab = gBrowser.selectedTab = gBrowser.addTab();
-
 /**
  * One-time observer callback.
  */
-function waitForObserve(name, callback)
+function promiseObserve(name)
 {
-  let observer = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-    observe: function(subject, topic, data)
-    {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(subject) {
       Services.obs.removeObserver(observer, name);
-      callback(subject, topic, data);
-    }
-  };
-
-  Services.obs.addObserver(observer, name, false);
-}
-
-/**
- * One-time DOMContentLoaded callback.
- */
-function waitForLoad(callback)
-{
-  gTab.linkedBrowser.addEventListener("load", function()
-  {
-    gTab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    callback();
-  }, true);
-}
-
-function test()
-{
-  waitForExplicitFinish();
-
-  Services.prefs.setBoolPref("places.history.enabled", false);
-
-  waitForObserve("uri-visit-saved", function(subject, topic, data)
-  {
-    let uri = subject.QueryInterface(Ci.nsIURI);
-    is(uri.spec, FINAL_URL, "received expected visit");
-    if (uri.spec != FINAL_URL)
-      return;
-    gBrowser.removeCurrentTab();
-    PlacesTestUtils.clearHistory().then(finish);
-  });
-
-  Services.prefs.setBoolPref("places.history.enabled", false);
-  content.location.href = INITIAL_URL;
-  waitForLoad(function()
-  {
-    try {
-      Services.prefs.clearUserPref("places.history.enabled");
-    } catch(ex) {}    
-    content.location.href = FINAL_URL;
+      resolve(subject);
+    }, name, false);
   });
 }
+
+add_task(function* ()
+{
+  yield new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]}, resolve));
+
+  let visitUriPromise = promiseObserve("uri-visit-saved");
+
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
+
+  yield new Promise(resolve => SpecialPowers.popPrefEnv(resolve));
+
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.loadURI(FINAL_URL);
+  yield browserLoadedPromise;
+
+  let subject = yield visitUriPromise;
+  let uri = subject.QueryInterface(Ci.nsIURI);
+  is(uri.spec, FINAL_URL, "received expected visit");
+
+  yield PlacesTestUtils.clearHistory();
+  gBrowser.removeCurrentTab();
+});

@@ -167,17 +167,12 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
 {
   class Chunk : public AudioStream::Chunk {
   public:
-    Chunk(AudioData* aBuffer, uint32_t aFrames, uint32_t aOffset)
-      : mBuffer(aBuffer)
-      , mFrames(aFrames)
-      , mData(aBuffer->mAudioData.get() + aBuffer->mChannels * aOffset) {
-      MOZ_ASSERT(aOffset + aFrames <= aBuffer->mFrames);
-    }
+    Chunk(AudioData* aBuffer, uint32_t aFrames, AudioDataValue* aData)
+      : mBuffer(aBuffer), mFrames(aFrames), mData(aData) {}
     Chunk() : mFrames(0), mData(nullptr) {}
     const AudioDataValue* Data() const { return mData; }
     uint32_t Frames() const { return mFrames; }
     AudioDataValue* GetWritable() const { return mData; }
-
   private:
     const RefPtr<AudioData> mBuffer;
     const uint32_t mFrames;
@@ -232,20 +227,22 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
       return MakeUnique<SilentChunk>(framesToPop, mInfo.mChannels);
     }
 
-    mFramesPopped = 0;
     mCurrentData = dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
+    mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
+                                            mCurrentData->mChannels,
+                                            mCurrentData->mFrames);
   }
 
-  auto framesToPop = std::min(aFrames, mCurrentData->mFrames - mFramesPopped);
+  auto framesToPop = std::min(aFrames, mCursor->Available());
 
   SINK_LOG_V("playing audio at time=%lld offset=%u length=%u",
-             mCurrentData->mTime, mFramesPopped, framesToPop);
+             mCurrentData->mTime, mCurrentData->mFrames - mCursor->Available(), framesToPop);
 
   UniquePtr<AudioStream::Chunk> chunk;
 
   if (mCurrentData->mRate == mInfo.mRate &&
       mCurrentData->mChannels == mInfo.mChannels) {
-    chunk = MakeUnique<Chunk>(mCurrentData, framesToPop, mFramesPopped);
+    chunk = MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
   } else {
     SINK_LOG_V("mismatched sample format mInfo=[%uHz/%u channels] audio=[%uHz/%u channels]",
                mInfo.mRate, mInfo.mChannels, mCurrentData->mRate, mCurrentData->mChannels);
@@ -253,11 +250,11 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
   }
 
   mWritten += framesToPop;
-  mFramesPopped += framesToPop;
+  mCursor->Advance(framesToPop);
 
   // All frames are popped. Reset mCurrentData so we can pop new elements from
   // the audio queue in next calls to PopFrames().
-  if (mFramesPopped == mCurrentData->mFrames) {
+  if (mCursor->Available() == 0) {
     mCurrentData = nullptr;
   }
 

@@ -71,6 +71,8 @@ public:
 
   already_AddRefed<NhObj> GetDupNhObj();
 
+  static already_AddRefed<NhObj> CreateDupNhObj(native_handle_t* aHandle);
+
   // Return non owning handle.
   native_handle_t* GetRawNativeHandle() const
   {

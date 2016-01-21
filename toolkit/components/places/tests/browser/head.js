@@ -13,10 +13,6 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 /**
  * Returns a moz_places field value for a url.
@@ -275,18 +271,9 @@ function DBConn(aForceNewConnection) {
   return gDBConn.connectionReady ? gDBConn : null;
 }
 
-function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      executeSoon(function() { aCallback(aWindow); });
-    }
-  }, "browser-delayed-startup-finished", false);
-}
-
 function whenNewWindowLoaded(aOptions, aCallback) {
-  let win = OpenBrowserWindow(aOptions);
-  whenDelayedStartupFinished(win, aCallback);
+  BrowserTestUtils.waitForNewWindow().then(aCallback);
+  OpenBrowserWindow(aOptions);
 }
 
 /**
@@ -299,13 +286,11 @@ function whenNewWindowLoaded(aOptions, aCallback) {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(aURI, aExpectedValue) {
-  let deferred = Promise.defer();
-
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
-    deferred.resolve(aIsVisited);
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+      resolve(aIsVisited);
+    });
   });
-
-  return deferred.promise;
 }
 
 function waitForCondition(condition, nextTest, errorMsg) {

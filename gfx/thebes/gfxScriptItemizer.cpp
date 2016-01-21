@@ -175,7 +175,7 @@ gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
              * We only do this if the script is COMMON; for chars with
              * specific script assignments, we just use them as-is.
              */
-            GetGeneralCategory(ch);
+            gc = GetGeneralCategory(ch);
             if (gc == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION) {
                 uint32_t endPairChar = mozilla::unicode::GetMirroredChar(ch);
                 if (endPairChar != ch) {

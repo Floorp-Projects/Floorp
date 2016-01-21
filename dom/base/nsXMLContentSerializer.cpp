@@ -19,6 +19,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIParserService.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
@@ -1429,7 +1430,7 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
       case ' ':
       case '\t':
         sawBlankOrTab = true;
-        // no break
+        MOZ_FALLTHROUGH;
       case '\n':
         ++aPos;
         // do not increase mColPos,
