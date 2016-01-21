@@ -149,6 +149,10 @@ public:
   // If mAudioBuffer is null, creates it from mAudioData.
   void EnsureAudioBuffer();
 
+  // To check whether mAudioData has audible signal, it's used to distinguish
+  // the audiable data and silent data.
+  bool IsAudible() const;
+
   const uint32_t mChannels;
   const uint32_t mRate;
   // At least one of mAudioBuffer/mAudioData must be non-null.
