@@ -181,6 +181,23 @@ public:
    * are also notified of atomically to MediaStreamListeners.
    */
   virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) {}
+
+  /* These are for cubeb audio input & output streams: */
+  /**
+   * Output data to speakers, for use as the "far-end" data for echo
+   * cancellation.  This is not guaranteed to be in any particular size
+   * chunks.
+   */
+  virtual void NotifySpeakerData(MediaStreamGraph* aGraph,
+                                 AudioDataValue* aBuffer, size_t aFrames,
+                                 uint32_t aChannels) {}
+  /**
+   * Input data from a microphone (or other audio source.  This is not
+   * guaranteed to be in any particular size chunks.
+   */
+  virtual void NotifyInputData(MediaStreamGraph* aGraph,
+                               AudioDataValue* aBuffer, size_t aFrames,
+                               uint32_t aChannels) {}
 };
 
 /**
@@ -1175,6 +1192,11 @@ public:
   // Idempotent
   static void DestroyNonRealtimeInstance(MediaStreamGraph* aGraph);
 
+  virtual nsresult OpenAudioInput(char *aName, MediaStreamListener *aListener) {
+    return NS_ERROR_FAILURE;
+  }
+  virtual void CloseAudioInput(MediaStreamListener *aListener) {}
+
   // Control API.
   /**
    * Create a stream that a media decoder (or some other source of
@@ -1254,6 +1276,13 @@ public:
   already_AddRefed<MediaInputPort> ConnectToCaptureStream(
     uint64_t aWindowId, MediaStream* aMediaStream);
 
+  /**
+   * Data going to the speakers from the GraphDriver's DataCallback
+   * to notify any listeners (for echo cancellation).
+   */
+  void NotifySpeakerData(AudioDataValue* aBuffer, size_t aFrames,
+                         uint32_t aChannels);
+
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)
     : mSampleRate(aSampleRate)
@@ -1274,6 +1303,8 @@ protected:
    * at construction.
    */
   TrackRate mSampleRate;
+
+  nsTArray<RefPtr<MediaStreamListener>> mAudioInputs;
 };
 
 } // namespace mozilla
