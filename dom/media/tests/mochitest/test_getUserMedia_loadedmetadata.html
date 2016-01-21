@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia in media element should have video dimensions on loadedmetadata",
+    bug: "1240478"
+  });
+  /**
+   * Tests that assigning a stream to a media element results in the
+   * "loadedmetadata" event without having to play() the media element.
+   *
+   * Also makes sure that the video size has been set on "loadedmetadata".
+   */
+  runTest(function () {
+    var v = document.createElement("video");
+    v.preload = "metadata";
+
+    var constraints = {video: true, audio: true};
+    return getUserMedia(constraints).then(stream => new Promise(resolve => {
+      v.srcObject = stream;
+      v.onloadedmetadata = resolve;
+    })).then(() => {
+      isnot(v.videoWidth, 0, "videoWidth shall be set on 'loadedmetadata'");
+      isnot(v.videoHeight, 0, "videoHeight shall be set on 'loadedmetadata'");
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>
