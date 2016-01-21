@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedSyncIDException;
 import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedVersionException;
@@ -97,7 +96,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     return record;
   }
 
-  public void setFromRecord(CryptoRecord record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException, NonArrayJSONException {
+  public void setFromRecord(CryptoRecord record) throws IllegalStateException, IOException, NonObjectJSONException, NonArrayJSONException {
     if (record == null) {
       throw new IllegalArgumentException("Cannot set meta/global from null record");
     }

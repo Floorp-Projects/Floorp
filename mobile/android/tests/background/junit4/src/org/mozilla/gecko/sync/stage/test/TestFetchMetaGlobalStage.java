@@ -4,7 +4,6 @@
 package org.mozilla.gecko.sync.stage.test;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -350,7 +349,7 @@ public class TestFetchMetaGlobalStage {
   }
 
   @Test
-  public void testFreshStart() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, ParseException, CryptoException {
+  public void testFreshStart() throws SyncConfigurationException, IllegalArgumentException, NonObjectJSONException, IOException, CryptoException {
     final AtomicBoolean mgUploaded = new AtomicBoolean(false);
     final AtomicBoolean mgDownloaded = new AtomicBoolean(false);
     final MetaGlobal uploadedMg = new MetaGlobal(null, null);

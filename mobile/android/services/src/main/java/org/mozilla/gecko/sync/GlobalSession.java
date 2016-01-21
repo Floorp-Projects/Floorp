@@ -7,13 +7,12 @@ package org.mozilla.gecko.sync;
 import android.content.Context;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.FreshStartDelegate;
+import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.JSONRecordFetchDelegate;
 import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
 import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
@@ -102,7 +101,7 @@ public class GlobalSession implements HttpResponseObserver {
                        GlobalSessionCallback callback,
                        Context context,
                        ClientsDataDelegate clientsDelegate)
-    throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
+    throws SyncConfigurationException, IllegalArgumentException, IOException, NonObjectJSONException {
 
     if (callback == null) {
       throw new IllegalArgumentException("Must provide a callback to GlobalSession constructor.");

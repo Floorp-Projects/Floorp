@@ -5,7 +5,6 @@ package org.mozilla.android.sync.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.Tab;
@@ -33,7 +32,7 @@ public class TestRecord {
 
   @SuppressWarnings("static-method")
   @Test
-  public void testQueryRecord() throws NonObjectJSONException, IOException, ParseException {
+  public void testQueryRecord() throws NonObjectJSONException, IOException {
     final String expectedGUID = "Bl3n3gpKag3s";
     final String testRecord =
         "{\"id\":\"" + expectedGUID + "\"," +
@@ -280,7 +279,7 @@ public class TestRecord {
       super("abcdefghijkl", "bookmarks", 1234, false);
     }
 
-    public void doTest() throws NonObjectJSONException, IOException, ParseException {
+    public void doTest() throws NonObjectJSONException, IOException {
       this.initFromPayload(new ExtendedJSONObject(payload));
       assertEquals("abcdefghijkl",      this.guid);              // Ignores payload.
       assertEquals("livemark",          this.type);
@@ -297,7 +296,7 @@ public class TestRecord {
   }
 
   @Test
-  public void testUnusualBookmarkRecords() throws NonObjectJSONException, IOException, ParseException {
+  public void testUnusualBookmarkRecords() throws NonObjectJSONException, IOException {
     PayloadBookmarkRecord record = new PayloadBookmarkRecord();
     record.doTest();
   }

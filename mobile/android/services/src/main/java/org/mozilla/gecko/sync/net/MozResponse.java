@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Scanner;
 
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -89,11 +88,9 @@ public class MozResponse {
    *
    * @throws IllegalStateException
    * @throws IOException
-   * @throws ParseException
    * @throws NonObjectJSONException
    */
-  public ExtendedJSONObject jsonObjectBody() throws IllegalStateException, IOException,
-                                 ParseException, NonObjectJSONException {
+  public ExtendedJSONObject jsonObjectBody() throws IllegalStateException, IOException, NonObjectJSONException {
     if (body != null) {
       // Do it from the cached String.
       return new ExtendedJSONObject(body);

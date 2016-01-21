@@ -4,7 +4,6 @@
 package org.mozilla.gecko.sync.middleware.test;
 
 import junit.framework.AssertionFailedError;
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -161,7 +160,7 @@ public class TestCrypto5MiddlewareRepositorySession {
   /**
    * Verify that store is actually writing encrypted data to the underlying repository.
    */
-  public void testStoreEncrypts() throws NonObjectJSONException, CryptoException, IOException, ParseException {
+  public void testStoreEncrypts() throws NonObjectJSONException, CryptoException, IOException {
     final BookmarkRecord record = new BookmarkRecord("nncdefghiaaa", "coll", System.currentTimeMillis(), false);
     record.title = "unencrypted title";
 
