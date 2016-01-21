@@ -3,7 +3,6 @@
 
 package org.mozilla.android.sync.net.test;
 
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +13,7 @@ import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.MetaGlobal;
+import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
@@ -33,8 +33,6 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(TestRunner.class)
 public class TestMetaGlobal {
-  public static Object monitor = new Object();
-
   private static final int    TEST_PORT    = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER  = "http://localhost:" + TEST_PORT;
   private static final String TEST_SYNC_ID = "foobar";
@@ -223,7 +221,7 @@ public class TestMetaGlobal {
 
     assertTrue(delegate.errorCalled);
     assertNotNull(delegate.errorException);
-    assertEquals(ParseException.class, delegate.errorException.getClass());
+    assertEquals(NonObjectJSONException.class, delegate.errorException.getClass());
   }
 
   @SuppressWarnings("static-method")
