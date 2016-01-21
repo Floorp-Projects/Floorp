@@ -103,14 +103,8 @@ GetBitmapForSurface(SourceSurface* aSurface)
     return bitmap;
   }
 
-  SkAlphaType alphaType = (surf->GetFormat() == SurfaceFormat::B8G8R8X8) ?
-    kOpaque_SkAlphaType : kPremul_SkAlphaType;
-
-  SkImageInfo info = SkImageInfo::Make(surf->GetSize().width,
-                                       surf->GetSize().height,
-                                       GfxFormatToSkiaColorType(surf->GetFormat()),
-                                       alphaType);
-  if (!bitmap.installPixels(info, surf->GetData(), surf->Stride(), nullptr,
+  if (!bitmap.installPixels(MakeSkiaImageInfo(surf->GetSize(), surf->GetFormat()),
+                            surf->GetData(), surf->Stride(), nullptr,
                             ReleaseTemporarySurface, surf)) {
     gfxDebug() << "Failed installing pixels on Skia bitmap for temporary surface";
   }
@@ -804,18 +798,11 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
     return false;
   }
 
-  SkAlphaType alphaType = (aFormat == SurfaceFormat::B8G8R8X8) ?
-    kOpaque_SkAlphaType : kPremul_SkAlphaType;
-
-  SkImageInfo skiInfo = SkImageInfo::Make(
-        aSize.width, aSize.height,
-        GfxFormatToSkiaColorType(aFormat),
-        alphaType);
   // we need to have surfaces that have a stride aligned to 4 for interop with cairo
   int stride = (BytesPerPixel(aFormat)*aSize.width + (4-1)) & -4;
 
   SkBitmap bitmap;
-  bitmap.setInfo(skiInfo, stride);
+  bitmap.setInfo(MakeSkiaImageInfo(aSize, aFormat), stride);
   if (!bitmap.tryAllocPixels()) {
     return false;
   }
@@ -876,21 +863,15 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
 void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  SkAlphaType alphaType = kPremul_SkAlphaType;
   if (aFormat == SurfaceFormat::B8G8R8X8) {
     // We have to manually set the A channel to be 255 as Skia doesn't understand BGRX
     ConvertBGRXToBGRA(aData, aSize, aStride);
-    alphaType = kOpaque_SkAlphaType;
   }
 
   SkBitmap bitmap;
-
-  SkImageInfo info = SkImageInfo::Make(aSize.width,
-                                       aSize.height,
-                                       GfxFormatToSkiaColorType(aFormat),
-                                       alphaType);
-  bitmap.setInfo(info, aStride);
+  bitmap.setInfo(MakeSkiaImageInfo(aSize, aFormat), aStride);
   bitmap.setPixels(aData);
+
   mCanvas.adopt(new SkCanvas(bitmap));
 
   mSize = aSize;

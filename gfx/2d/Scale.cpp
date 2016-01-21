@@ -18,23 +18,12 @@ bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStr
            SurfaceFormat format)
 {
 #ifdef USE_SKIA
-  SkAlphaType alphaType;
-  if (format == SurfaceFormat::B8G8R8A8) {
-    alphaType = kPremul_SkAlphaType;
-  } else {
-    alphaType = kOpaque_SkAlphaType;
-  }
-
-  SkImageInfo info = SkImageInfo::Make(srcWidth,
-                                       srcHeight,
-                                       GfxFormatToSkiaColorType(format),
-                                       alphaType);
-
   SkBitmap imgSrc;
-  imgSrc.installPixels(info, srcData, srcStride);
+  imgSrc.installPixels(MakeSkiaImageInfo(IntSize(srcWidth, srcHeight), format),
+                       srcData, srcStride);
 
   // Rescaler is compatible with 32 bpp only. Convert to RGB32 if needed.
-  if (format != SurfaceFormat::B8G8R8A8) {
+  if (imgSrc.colorType() != kBGRA_8888_SkColorType) {
     imgSrc.copyTo(&imgSrc, kBGRA_8888_SkColorType);
   }
 
