@@ -284,14 +284,15 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static BluetoothProfileManagerBase* sProfiles[] = {
-    BluetoothHfpManager::Get(),
+  BluetoothProfileManagerBase* sProfiles[] = {
+    // BluetoothGattManager not handled here
     BluetoothAvrcpManager::Get(),
     BluetoothA2dpManager::Get(),
-    BluetoothOppManager::Get(),
+    BluetoothHfpManager::Get(),
+    BluetoothHidManager::Get(),
     BluetoothPbapManager::Get(),
-    BluetoothMapSmsManager::Get(),
-    BluetoothHidManager::Get()
+    BluetoothOppManager::Get(),
+    BluetoothMapSmsManager::Get()
   };
 
   // Disconnect all connected profiles
