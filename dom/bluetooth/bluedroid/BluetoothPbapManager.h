@@ -149,7 +149,9 @@ protected:
 
 private:
   BluetoothPbapManager();
-  bool Init();
+
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
 
   void ReplyToConnect(const nsAString& aPassword = EmptyString());

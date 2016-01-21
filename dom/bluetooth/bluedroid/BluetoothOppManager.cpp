@@ -214,31 +214,24 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
 { }
 
 BluetoothOppManager::~BluetoothOppManager()
-{
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE_VOID(obs);
-  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
-    BT_WARNING("Failed to remove shutdown observer!");
-  }
+{ }
 
-  if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
-    BT_WARNING("Failed to remove volume observer!");
-  }
-}
-
-bool
+nsresult
 BluetoothOppManager::Init()
 {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, false);
-  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+  NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+  auto rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_FAILED(rv)) {
     BT_WARNING("Failed to add shutdown observer!");
-    return false;
+    return rv;
   }
 
-  if (NS_FAILED(obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false))) {
+  rv = obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
+  if (NS_FAILED(rv)) {
     BT_WARNING("Failed to add ns volume observer!");
-    return false;
+    return rv;
   }
 
   /**
@@ -250,7 +243,22 @@ BluetoothOppManager::Init()
    * absence of read events when device boots up.
    */
 
-  return true;
+  return NS_OK;
+}
+
+void
+BluetoothOppManager::Uninit()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    BT_WARNING("Failed to remove shutdown observer!");
+  }
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
+    BT_WARNING("Failed to remove volume observer!");
+  }
 }
 
 // static
@@ -270,7 +278,10 @@ BluetoothOppManager::DeinitOppInterface(BluetoothProfileResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  sBluetoothOppManager = nullptr;
+  if (sBluetoothOppManager) {
+    sBluetoothOppManager->Uninit();
+    sBluetoothOppManager = nullptr;
+  }
 
   if (aRes) {
     aRes->Deinit();
@@ -292,10 +303,11 @@ BluetoothOppManager::Get()
   NS_ENSURE_FALSE(sInShutdown, nullptr);
 
   // Create a new instance, register, and return
-  BluetoothOppManager *manager = new BluetoothOppManager();
-  NS_ENSURE_TRUE(manager->Init(), nullptr);
+  RefPtr<BluetoothOppManager> manager = new BluetoothOppManager();
+  NS_ENSURE_SUCCESS(manager->Init(), nullptr);
 
   sBluetoothOppManager = manager;
+
   return sBluetoothOppManager;
 }
 
@@ -334,6 +346,8 @@ BluetoothOppManager::HandleShutdown()
   MOZ_ASSERT(NS_IsMainThread());
   sInShutdown = true;
   Disconnect(nullptr);
+  Uninit();
+
   sBluetoothOppManager = nullptr;
 }
 
