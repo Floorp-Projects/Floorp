@@ -758,6 +758,11 @@ public:
 
   bool HasCurrentData() { return mHasCurrentData; }
 
+  /**
+   * Find track by track id.
+   */
+  StreamBuffer::Track* FindTrack(TrackID aID);
+
   StreamBuffer::Track* EnsureTrack(TrackID aTrack);
 
   virtual void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
@@ -999,11 +1004,6 @@ public:
    * any pending track adds.
    */
   void FinishAddTracks();
-
-  /**
-   * Find track by track id.
-   */
-  StreamBuffer::Track* FindTrack(TrackID aID);
 
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
