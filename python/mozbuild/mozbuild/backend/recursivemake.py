@@ -36,14 +36,12 @@ from ..frontend.data import (
     AndroidExtraResDirs,
     AndroidExtraPackages,
     AndroidEclipseProjectData,
-    BrandingFiles,
     ChromeManifestEntry,
     ConfigFileSubstitution,
     ContextDerived,
     ContextWrapped,
     Defines,
     DirectoryTraversal,
-    Exports,
     ExternalLibrary,
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
@@ -1244,6 +1242,7 @@ INSTALL_TARGETS += %(prefix)s
             '_tests',
             'dist/include',
             'dist/branding',
+            'dist/sdk',
         ))
         if not path:
             raise Exception("Cannot install to " + target)
