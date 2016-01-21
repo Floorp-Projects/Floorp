@@ -239,6 +239,11 @@ exports.FXA_PWDMGR_SECURE_FIELDS = new Set(
 exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(
   ["cert", "keyPair"]);
 
+// A whitelist of fields that remain in storage when the user needs to
+// reauthenticate. All other fields will be removed.
+exports.FXA_PWDMGR_REAUTH_WHITELIST = new Set(
+  ["email", "uid", "profile", "deviceId", "isDeviceStale", "verified"]);
+
 // The pseudo-host we use in the login manager
 exports.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
 // The realm we use in the login manager.
