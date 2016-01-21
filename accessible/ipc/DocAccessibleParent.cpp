@@ -206,6 +206,20 @@ DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOff
   }
 
   ProxyCaretMoveEvent(proxy, aOffset);
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsIDOMNode* node = nullptr;
+  bool fromUser = true; // XXX fix me
+  uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED;
+  RefPtr<xpcAccCaretMoveEvent> event =
+    new xpcAccCaretMoveEvent(type, xpcAcc, doc, node, fromUser, aOffset);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
   return true;
 }
 
