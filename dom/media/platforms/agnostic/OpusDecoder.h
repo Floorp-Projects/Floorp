@@ -9,7 +9,6 @@
 #include "OpusParser.h"
 #include "PlatformDecoderModule.h"
 
-#include "mozilla/Maybe.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
@@ -54,7 +53,6 @@ private:
   // will raise an error so we can indicate that the file is invalid.
   bool mPaddingDiscarded;
   int64_t mFrames;
-  Maybe<int64_t> mLastFrameTime;
 };
 
 } // namespace mozilla
