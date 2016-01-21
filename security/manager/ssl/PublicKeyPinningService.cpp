@@ -95,21 +95,17 @@ EvalCert(const CERTCertificate* cert, const StaticFingerprints* fingerprints,
 
 /*
  * Sets certListIntersectsPinset to true if a given chain matches any
- * fingerprints from the given pinset or the dynamicFingerprints array, or to
- * false otherwise.
+ * fingerprints from the given static fingerprints or the
+ * dynamicFingerprints array, or to false otherwise.
  */
 static nsresult
-EvalChain(const CERTCertList* certList, const StaticPinset* pinset,
+EvalChain(const CERTCertList* certList, const StaticFingerprints* fingerprints,
           const nsTArray<nsCString>* dynamicFingerprints,
   /*out*/ bool& certListIntersectsPinset)
 {
   certListIntersectsPinset = false;
   CERTCertificate* currentCert;
 
-  const StaticFingerprints* fingerprints = nullptr;
-  if (pinset) {
-    fingerprints = pinset->sha256;
-  }
   if (!fingerprints && !dynamicFingerprints) {
     MOZ_ASSERT(false, "Must pass in at least one type of pinset");
     return NS_ERROR_FAILURE;
