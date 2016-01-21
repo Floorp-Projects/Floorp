@@ -351,7 +351,7 @@ function isNodeVisible(node) {
 var waitForAllAnimationTargets = Task.async(function*(panel) {
   let targets = panel.animationsTimelineComponent.targetNodes;
   yield promise.all(targets.map(t => {
-    if (!t.nodeFront) {
+    if (!t.previewer.nodeFront) {
       return t.once("target-retrieved");
     }
     return false;
