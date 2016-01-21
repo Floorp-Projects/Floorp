@@ -9,7 +9,7 @@
 const TEST_URL = "data:text/html;charset=utf8,<div a b id='order' c class></div>";
 
 add_task(function*() {
-  let {inspector, testActor} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   yield testOriginalAttributesOrder(inspector);
   yield testOrderAfterAttributeChange(inspector, testActor);

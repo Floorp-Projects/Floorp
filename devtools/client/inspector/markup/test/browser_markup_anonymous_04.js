@@ -6,12 +6,12 @@
 
 // Test native anonymous content in the markupview with devtools.inspector.showAllAnonymousContent
 // set to true
-const TEST_URL = TEST_URL_ROOT + "doc_markup_anonymous.html";
+const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
 add_task(function*() {
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
 
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   let native = yield getNodeFront("#native", inspector);
 

@@ -6,12 +6,12 @@
 
 // Check that pseudo-elements and anonymous nodes are not draggable.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop.html";
+const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(function*() {
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
 
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding nodes below #test");
   let parentFront = yield getNodeFront("#test", inspector);

@@ -22,6 +22,7 @@ const { pickFileAndExportSnapshot, pickFileAndImportSnapshotAndCensus } = requir
 const {
   selectSnapshotAndRefresh,
   takeSnapshotAndCensus,
+  clearSnapshots,
   fetchImmediatelyDominated,
   expandCensusNode,
   collapseCensusNode,
@@ -98,6 +99,7 @@ const MemoryApp = createClass({
           snapshots,
           breakdowns: getBreakdownDisplayData(),
           onImportClick: () => dispatch(pickFileAndImportSnapshotAndCensus(heapWorker)),
+          onClearSnapshotsClick: () => dispatch(clearSnapshots(heapWorker)),
           onTakeSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
           onBreakdownChange: breakdown =>
             dispatch(setBreakdownAndRefresh(heapWorker, breakdownNameToSpec(breakdown))),

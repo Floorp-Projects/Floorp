@@ -45,10 +45,13 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
     name: "backgroundColor",
     value: "rgb(0, 0, 0)"
   });
+
   let spectrum = yield picker.spectrum;
+  let onModifications = ruleView.once("ruleview-changed");
   let onHidden = picker.tooltip.once("hidden");
   EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
+  yield onModifications;
 
   info("Open the image preview tooltip");
   let value = getRuleViewProperty(ruleView, "body", "background").valueSpan;

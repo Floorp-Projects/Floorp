@@ -6,8 +6,8 @@
 
 // Tests to make sure that URLs are clickable in the rule view
 
-const TEST_URI = TEST_URL_ROOT + "doc_urls_clickable.html";
-const TEST_IMAGE = TEST_URL_ROOT + "doc_test_image.png";
+const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
+const TEST_IMAGE = URL_ROOT + "doc_test_image.png";
 const BASE_64_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAA" +
   "FCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAA" +
   "BJRU5ErkJggg==";

@@ -2913,6 +2913,12 @@ var BrowserOnClick = {
           this.ignoreWarningButton(reason);
         }
         break;
+
+      case "whyForbiddenButton":
+        // This is the "Why is this site blocked" button for family friendly browsing
+        // for Fennec. There's no desktop focused support page yet.
+        gBrowser.loadURI("https://support.mozilla.org/kb/controlledaccess");
+        break;
     }
   },
 

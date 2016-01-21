@@ -28,7 +28,10 @@ let promise = require("promise");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
-const URL_ROOT = CHROME_URL_ROOT.replace("chrome://mochitests/content/", "http://example.com/");
+const URL_ROOT = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
+                                         "http://example.com/");
+const URL_ROOT_SSL = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
+                                             "https://example.com/");
 
 // All test are asynchronous
 waitForExplicitFinish();

@@ -7,7 +7,7 @@
 // Tests that we correctly display appropriate media query titles in the
 // property view.
 
-const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
+const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
 var {PropertyView} = require("devtools/client/inspector/computed/computed");
 var {CssLogic} = require("devtools/shared/inspector/css-logic");
