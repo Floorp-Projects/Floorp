@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceTextureHostBasic.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "MacIOSurfaceHelpers.h"
 
 namespace mozilla {
 namespace layers {
@@ -33,7 +34,9 @@ MacIOSurfaceTextureSourceBasic::GetSize() const
 gfx::SurfaceFormat
 MacIOSurfaceTextureSourceBasic::GetFormat() const
 {
-  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
+  // Set the format the same way as CreateSourceSurfaceFromMacIOSurface.
+  return mSurface->GetFormat() == gfx::SurfaceFormat::NV12
+    ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::B8G8R8A8;
 }
 
 MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
@@ -51,7 +54,7 @@ gfx::SourceSurface*
 MacIOSurfaceTextureSourceBasic::GetSurface(gfx::DrawTarget* aTarget)
 {
   if (!mSourceSurface) {
-    mSourceSurface = mSurface->GetAsSurface();
+    mSourceSurface = CreateSourceSurfaceFromMacIOSurface(mSurface);
   }
   return mSourceSurface;
 }
