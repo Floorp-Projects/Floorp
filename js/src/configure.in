@@ -1498,7 +1498,6 @@ case "$target" in
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
-    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     LDFLAGS="$LDFLAGS -lobjc"
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
@@ -1580,7 +1579,6 @@ ia64*-hpux*)
     AC_DEFINE(NO_PW_GECOS)
     no_x=yes
     _PLATFORM_DEFAULT_TOOLKIT=cairo-android
-    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-reorder-functions"
@@ -1605,8 +1603,6 @@ ia64*-hpux*)
            MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
         fi
     fi
-
-    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     case "${target_cpu}" in
     alpha*)
@@ -1821,9 +1817,6 @@ ia64*-hpux*)
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
 
-    dnl Hardcode to win95 for now - cls
-    TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
-
     dnl set NO_X11 defines here as the general check is skipped on win32
     no_x=yes
     AC_DEFINE(NO_X11)
@@ -1901,7 +1894,6 @@ ia64*-hpux*)
 
 *-solaris*)
     AC_DEFINE(SOLARIS)
-    TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
     if test -z "$CROSS_COMPILE" && pkginfo -q SUNWpr && pkginfo -q SUNWprd; then
        NO_NSPR_CONFIG_SYSTEM_LDFLAGS="-L/usr/lib/mps -R/usr/lib/mps -lnspr4"
        NO_NSPR_CONFIG_SYSTEM_CFLAGS="-I/usr/include/mps"
@@ -3712,7 +3704,6 @@ AC_SUBST(HOST_OS_ARCH)
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
-AC_SUBST(TARGET_NSPR_MDCPUCFG)
 AC_SUBST(TARGET_MD_ARCH)
 AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(OS_TARGET)
