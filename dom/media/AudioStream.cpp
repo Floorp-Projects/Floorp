@@ -47,7 +47,7 @@ class FrameHistory {
   struct Chunk {
     uint32_t servicedFrames;
     uint32_t totalFrames;
-    int rate;
+    uint32_t rate;
   };
 
   template <typename T>
@@ -58,7 +58,7 @@ public:
   FrameHistory()
     : mBaseOffset(0), mBasePosition(0) {}
 
-  void Append(uint32_t aServiced, uint32_t aUnderrun, int aRate) {
+  void Append(uint32_t aServiced, uint32_t aUnderrun, uint32_t aRate) {
     /* In most case where playback rate stays the same and we don't underrun
      * frames, we are able to merge chunks to avoid lose of precision to add up
      * in compressing chunks into |mBaseOffset| and |mBasePosition|.
@@ -299,13 +299,13 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
 }
 
 nsresult
-AudioStream::Init(int32_t aNumChannels, int32_t aRate,
+AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
   mStartTime = TimeStamp::Now();
   mIsFirst = CubebUtils::GetFirstStream();
 
-  if (!CubebUtils::GetCubebContext() || aNumChannels < 0 || aRate < 0) {
+  if (!CubebUtils::GetCubebContext()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -728,7 +728,7 @@ int64_t AudioClock::GetPositionInFrames() const
 
 void AudioClock::SetPlaybackRateUnlocked(double aPlaybackRate)
 {
-  mOutRate = static_cast<int>(mInRate / aPlaybackRate);
+  mOutRate = static_cast<uint32_t>(mInRate / aPlaybackRate);
 }
 
 double AudioClock::GetPlaybackRate() const
