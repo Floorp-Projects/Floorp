@@ -62,24 +62,17 @@ SourceSurfaceSkia::InitFromCanvas(SkCanvas* aCanvas,
   return true;
 }
 
-bool 
+bool
 SourceSurfaceSkia::InitFromData(unsigned char* aData,
                                 const IntSize &aSize,
                                 int32_t aStride,
                                 SurfaceFormat aFormat)
 {
   SkBitmap temp;
-  SkAlphaType alphaType = (aFormat == SurfaceFormat::B8G8R8X8) ?
-    kOpaque_SkAlphaType : kPremul_SkAlphaType;
-
-  SkImageInfo info = SkImageInfo::Make(aSize.width,
-                                       aSize.height,
-                                       GfxFormatToSkiaColorType(aFormat),
-                                       alphaType);
-  temp.setInfo(info, aStride);
+  temp.setInfo(MakeSkiaImageInfo(aSize, aFormat), aStride);
   temp.setPixels(aData);
 
-  if (!temp.copyTo(&mBitmap, GfxFormatToSkiaColorType(aFormat))) {
+  if (!temp.copyTo(&mBitmap)) {
     return false;
   }
 
