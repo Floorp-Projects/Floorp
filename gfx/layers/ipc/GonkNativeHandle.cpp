@@ -43,18 +43,31 @@ GonkNativeHandle::GetAndResetNhObj()
 already_AddRefed<GonkNativeHandle::NhObj>
 GonkNativeHandle::GetDupNhObj()
 {
-  RefPtr<NhObj> nhObj;
-  if (IsValid()) {
-    native_handle* nativeHandle =
-      native_handle_create(mNhObj->mHandle->numFds, mNhObj->mHandle->numInts);
+  if (!IsValid()) {
+    return GonkNativeHandle::CreateDupNhObj(nullptr);
+  }
+  return GonkNativeHandle::CreateDupNhObj(mNhObj->mHandle);
+}
 
-    for (int i = 0; i < mNhObj->mHandle->numFds; ++i) {
-        nativeHandle->data[i] = dup(mNhObj->mHandle->data[i]);
+/* static */ already_AddRefed<GonkNativeHandle::NhObj>
+GonkNativeHandle::CreateDupNhObj(native_handle_t* aHandle)
+{
+  RefPtr<NhObj> nhObj;
+  if (aHandle) {
+    native_handle* nativeHandle =
+      native_handle_create(aHandle->numFds, aHandle->numInts);
+    if (!nativeHandle) {
+      nhObj = new GonkNativeHandle::NhObj();
+      return nhObj.forget();
+    }
+
+    for (int i = 0; i < aHandle->numFds; ++i) {
+      nativeHandle->data[i] = dup(aHandle->data[i]);
     }
 
     memcpy(nativeHandle->data + nativeHandle->numFds,
-           mNhObj->mHandle->data + mNhObj->mHandle->numFds,
-           sizeof(int) * mNhObj->mHandle->numInts);
+           aHandle->data + aHandle->numFds,
+           sizeof(int) * aHandle->numInts);
 
     nhObj = new GonkNativeHandle::NhObj(nativeHandle);
   } else {
