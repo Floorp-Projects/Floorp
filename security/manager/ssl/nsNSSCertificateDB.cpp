@@ -196,36 +196,6 @@ nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsNSSCertificateDB::FindCertNicknames(uint32_t aType,
-                                      uint32_t* _count,
-                                      char16_t*** _certNames)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsresult rv = NS_ERROR_FAILURE;
-  /*
-   * obtain the cert list from NSS
-   */
-  ScopedCERTCertList certList(PK11_ListCerts(PK11CertListUnique, nullptr));
-  if (!certList)
-    goto cleanup;
-  /*
-   * get list of cert names from list of certs
-   * XXX also cull the list (NSS only distinguishes based on user/non-user
-   */
-  getCertNames(certList.get(), aType, _count, _certNames, locker);
-  rv = NS_OK;
-  /*
-   * finish up
-   */
-cleanup:
-  return rv;
-}
-
 SECStatus
 collect_certs(void *arg, SECItem **certs, int numcerts)
 {
@@ -1114,72 +1084,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
   //blob.LoadCerts(aCertNames, count);
   //return blob.ExportToFile(aFile);
   return blob.ExportToFile(aFile, certs, count);
-}
-
-/*
- * NSS Helper Routines (private to nsNSSCertificateDB)
- */
-
-#define DELIM '\001'
-
-/*
- * GetSortedNameList
- *
- * Converts a CERTCertList to a list of certificate names
- */
-void
-nsNSSCertificateDB::getCertNames(CERTCertList *certList,
-                                 uint32_t      type, 
-                                 uint32_t     *_count,
-                                 char16_t  ***_certNames,
-                                 const nsNSSShutDownPreventionLock &/*proofOfLock*/)
-{
-  CERTCertListNode *node;
-  uint32_t numcerts = 0, i=0;
-  char16_t **tmpArray = nullptr;
-
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("List of certs %d:\n", type));
-  for (node = CERT_LIST_HEAD(certList);
-       !CERT_LIST_END(node, certList);
-       node = CERT_LIST_NEXT(node)) {
-    if (getCertType(node->cert) == type) {
-      numcerts++;
-    }
-  }
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("num certs: %d\n", numcerts));
-  int nc = (numcerts == 0) ? 1 : numcerts;
-  tmpArray = (char16_t **)moz_xmalloc(sizeof(char16_t *) * nc);
-  if (numcerts == 0) goto finish;
-  for (node = CERT_LIST_HEAD(certList);
-       !CERT_LIST_END(node, certList);
-       node = CERT_LIST_NEXT(node)) {
-    if (getCertType(node->cert) == type) {
-      RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(node->cert));
-      nsAutoCString dbkey;
-      pipCert->GetDbKey(dbkey);
-      nsAutoString keystr = NS_ConvertASCIItoUTF16(dbkey);
-      char *namestr = nullptr;
-      if (type == nsIX509Cert::EMAIL_CERT) {
-        namestr = node->cert->emailAddr;
-      } else {
-        namestr = node->cert->nickname;
-        if (namestr) {
-          char *sc = strchr(namestr, ':');
-          if (sc) *sc = DELIM;
-        }
-      }
-      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr ? namestr : "");
-      nsAutoString certstr;
-      certstr.Append(char16_t(DELIM));
-      certstr += certname;
-      certstr.Append(char16_t(DELIM));
-      certstr += keystr;
-      tmpArray[i++] = ToNewUnicode(certstr);
-    }
-  }
-finish:
-  *_count = numcerts;
-  *_certNames = tmpArray;
 }
 
 NS_IMETHODIMP

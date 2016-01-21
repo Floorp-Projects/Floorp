@@ -47,12 +47,6 @@ private:
                                       const char *stringID, nsIX509Cert *certToShow,
                                       const nsNSSShutDownPreventionLock &proofOfLock);
 
-  void getCertNames(CERTCertList *certList,
-                    uint32_t      type, 
-                    uint32_t     *_count,
-                    char16_t  ***_certNameList,
-                    const nsNSSShutDownPreventionLock &proofOfLock);
-
   CERTDERCerts *getCertsFromPackage(PLArenaPool *arena, uint8_t *data, 
                                     uint32_t length,
                                     const nsNSSShutDownPreventionLock &proofOfLock);
