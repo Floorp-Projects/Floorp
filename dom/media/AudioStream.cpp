@@ -535,18 +535,25 @@ AudioStream::IsPaused()
 }
 
 bool
-AudioStream::Downmix(AudioDataValue* aBuffer, uint32_t aFrames)
+AudioStream::Downmix(Chunk* aChunk)
 {
-  if (mChannels > 8) {
+  if (aChunk->Rate() != mInRate) {
+    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mInRate);
     return false;
   }
 
-  if (mChannels > 2 && mChannels <= 8) {
-    DownmixAudioToStereo(aBuffer, mChannels, aFrames);
+  if (aChunk->Channels() > 8) {
+    return false;
   }
 
-  if (mChannels >= 2 && mIsMonoAudioEnabled) {
-    DownmixStereoToMono(aBuffer, aFrames);
+  if (aChunk->Channels() > 2 && aChunk->Channels() <= 8) {
+    DownmixAudioToStereo(aChunk->GetWritable(),
+                         aChunk->Channels(),
+                         aChunk->Frames());
+  }
+
+  if (aChunk->Channels() >= 2 && mIsMonoAudioEnabled) {
+    DownmixStereoToMono(aChunk->GetWritable(), aChunk->Frames());
   }
 
   return true;
@@ -577,7 +584,7 @@ AudioStream::GetUnprocessed(AudioBufferWriter& aWriter)
       break;
     }
     MOZ_ASSERT(c->Frames() <= aWriter.Available());
-    if (Downmix(c->GetWritable(), c->Frames())) {
+    if (Downmix(c.get())) {
       aWriter.Write(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
@@ -605,7 +612,7 @@ AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
       break;
     }
     MOZ_ASSERT(c->Frames() <= toPopFrames);
-    if (Downmix(c->GetWritable(), c->Frames())) {
+    if (Downmix(c.get())) {
       mTimeStretcher->putSamples(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
