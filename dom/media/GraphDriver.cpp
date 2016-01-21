@@ -48,6 +48,7 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     mIterationEnd(0),
     mGraphImpl(aGraphImpl),
     mWaitState(WAITSTATE_RUNNING),
+    mAudioInput(nullptr),
     mCurrentTimeStamp(TimeStamp::Now()),
     mPreviousDriver(nullptr),
     mNextDriver(nullptr)
@@ -539,6 +540,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mSampleRate(0)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
+  , mAudioInput(nullptr)
   , mAudioChannel(aGraphImpl->AudioChannel())
   , mInCallback(false)
   , mMicrophoneActive(false)
@@ -900,8 +902,8 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
   // data off separate cubeb callbacks.  Take care with how stuff is
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
-  mGraphImpl->NotifySpeakerData(aOutputBuffer, static_cast<size_t>(aFrames),
-                                ChannelCount);
+  mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
+                               ChannelCount);
 
   // Process mic data if any/needed -- after inserting far-end data for AEC!
   if (aInputBuffer) {
