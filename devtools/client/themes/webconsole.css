@@ -137,11 +137,9 @@ a {
 }
 
 #output-container {
+  /* This width is set to a hardcoded px in webconsole.js since it's way
+     faster than using 100% with -moz-box-flex (see Bug 1237368) */
   -moz-user-select: text;
-  -moz-box-flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
 }
 
 #output-container.hideTimestamps > .message {
