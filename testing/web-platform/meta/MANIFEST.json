@@ -33304,7 +33304,16 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "html/semantics/embedded-content/the-embed-element/embed-document.html": [
+          {
+            "path": "html/semantics/embedded-content/the-embed-element/embed-document.html",
+            "url": "/html/semantics/embedded-content/the-embed-element/embed-document.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
