@@ -747,6 +747,7 @@ function saveMedia()
     selectSaveFolder(function(aDirectory) {
       if (aDirectory) {
         var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
+          uniqueFile(aChosenData.file);
           internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
                        aChosenData, aBaseURI, null, false, null, gDocInfo.isContentWindowPrivate);
         };
@@ -762,7 +763,10 @@ function saveMedia()
             uri.QueryInterface(Components.interfaces.nsIURL);
             dir.append(decodeURIComponent(uri.fileName));
           } catch(ex) {
-            /* data: uris */
+            // data:/blob: uris
+            // Supply a dummy filename, otherwise Download Manager
+            // will try to delete the base directory on failure.
+            dir.append(gImageView.data[v][COL_IMAGE_TYPE]);
           }
 
           if (i == 0) {
