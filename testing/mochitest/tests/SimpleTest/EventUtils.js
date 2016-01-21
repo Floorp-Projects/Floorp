@@ -11,6 +11,7 @@
  *  synthesizeMouseAtCenter
  *  synthesizePointer
  *  synthesizeWheel
+ *  synthesizeWheelAtPoint
  *  synthesizeKey
  *  synthesizeNativeKey
  *  synthesizeMouseExpectEvent
@@ -406,9 +407,8 @@ function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
 }
 
 /**
- * Synthesize a wheel event on a target. The actual client point is determined
- * by taking the aTarget's client box and offseting it by aOffsetX and
- * aOffsetY.
+ * Synthesize a wheel event without flush layout at a particular point in
+ * aWindow.
  *
  * aEvent is an object which may contain the properties:
  *   shiftKey, ctrlKey, altKey, metaKey, accessKey, deltaX, deltaY, deltaZ,
@@ -423,7 +423,7 @@ function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+function synthesizeWheelAtPoint(aLeft, aTop, aEvent, aWindow)
 {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
@@ -480,12 +480,35 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     aEvent.lineOrPageDeltaY != null ? aEvent.lineOrPageDeltaY :
                   aEvent.deltaY > 0 ? Math.floor(aEvent.deltaY) :
                                       Math.ceil(aEvent.deltaY);
-
-  var rect = aTarget.getBoundingClientRect();
-  utils.sendWheelEvent(rect.left + aOffsetX, rect.top + aOffsetY,
+  utils.sendWheelEvent(aLeft, aTop,
                        aEvent.deltaX, aEvent.deltaY, aEvent.deltaZ,
                        aEvent.deltaMode, modifiers,
                        lineOrPageDeltaX, lineOrPageDeltaY, options);
+}
+
+/**
+ * Synthesize a wheel event on a target. The actual client point is determined
+ * by taking the aTarget's client box and offseting it by aOffsetX and
+ * aOffsetY.
+ *
+ * aEvent is an object which may contain the properties:
+ *   shiftKey, ctrlKey, altKey, metaKey, accessKey, deltaX, deltaY, deltaZ,
+ *   deltaMode, lineOrPageDeltaX, lineOrPageDeltaY, isMomentum,
+ *   isNoLineOrPageDelta, isCustomizedByPrefs, expectedOverflowDeltaX,
+ *   expectedOverflowDeltaY
+ *
+ * deltaMode must be defined, others are ok even if undefined.
+ *
+ * expectedOverflowDeltaX and expectedOverflowDeltaY take integer value.  The
+ * value is just checked as 0 or positive or negative.
+ *
+ * aWindow is optional, and defaults to the current window object.
+ */
+function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+{
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeWheelAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+                         aEvent, aWindow);
 }
 
 /**
