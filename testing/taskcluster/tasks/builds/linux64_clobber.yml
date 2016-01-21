@@ -10,7 +10,6 @@ task:
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
-    image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
       # "clobber" means no workspace cache; non-clobber subclasses should add that
       tooltool-cache: '/home/worker/tooltool-cache'
