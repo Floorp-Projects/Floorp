@@ -106,6 +106,15 @@
     "n_buckets": 50,
     "description": "Peak number of CSS pixels checkerboarded during a checkerboard event (the high value is the size of a 4k display with max APZ zooming)"
   },
+  "CHECKERBOARD_POTENTIAL_DURATION": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1238040],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "1000000",
+    "n_buckets": 50,
+    "description": "Duration of a chunk of time (in ms) that could reasonably have had checkerboarding"
+  },
   "CHECKERBOARD_SEVERITY": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
