@@ -1229,12 +1229,6 @@ libs realchrome:: $(FINAL_TARGET)/chrome
 
 endif
 
-# This is a temporary check to ensure patches relying on the old behavior
-# of silently picking up jar.mn files continue to work.
-else # No JAR_MANIFEST
-ifneq (,$(wildcard $(srcdir)/jar.mn))
-$(error $(srcdir) contains a jar.mn file but this file is not declared in a JAR_MANIFESTS variable in a moz.build file)
-endif
 endif
 
 # When you move this out of the tools tier, please remove the corresponding
