@@ -139,11 +139,16 @@ class FileAvoidWrite(BytesIO):
     Instances can optionally capture diffs of file changes. This feature is not
     enabled by default because it a) doesn't make sense for binary files b)
     could add unwanted overhead to calls.
+
+    Additionally, there is dry run mode where the file is not actually written
+    out, but reports whether the file was existing and would have been updated
+    still occur, as well as diff capture if requested.
     """
-    def __init__(self, filename, capture_diff=False, mode='rU'):
+    def __init__(self, filename, capture_diff=False, dry_run=False, mode='rU'):
         BytesIO.__init__(self)
         self.name = filename
         self._capture_diff = capture_diff
+        self._dry_run = dry_run
         self.diff = None
         self.mode = mode
 
@@ -183,14 +188,15 @@ class FileAvoidWrite(BytesIO):
             finally:
                 existing.close()
 
-        ensureParentDir(self.name)
-        # Maintain 'b' if specified.  'U' only applies to modes starting with
-        # 'r', so it is dropped.
-        writemode = 'w'
-        if 'b' in self.mode:
-            writemode += 'b'
-        with open(self.name, writemode) as file:
-            file.write(buf)
+        if not self._dry_run:
+            ensureParentDir(self.name)
+            # Maintain 'b' if specified.  'U' only applies to modes starting with
+            # 'r', so it is dropped.
+            writemode = 'w'
+            if 'b' in self.mode:
+                writemode += 'b'
+            with open(self.name, writemode) as file:
+                file.write(buf)
 
         if self._capture_diff:
             try:

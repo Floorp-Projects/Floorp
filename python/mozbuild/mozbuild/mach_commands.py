@@ -607,7 +607,9 @@ class Build(MachCommandBase):
         help='Which backend to build.')
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output.')
-    def build_backend(self, backend, diff=False, verbose=False):
+    @CommandArgument('-n', '--dry-run', action='store_true',
+        help='Do everything except writing files out.')
+    def build_backend(self, backend, diff=False, verbose=False, dry_run=False):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
 
@@ -625,6 +627,8 @@ class Build(MachCommandBase):
             args.append('--diff')
         if verbose:
             args.append('--verbose')
+        if dry_run:
+            args.append('--dry-run')
 
         return self._run_command_in_objdir(args=args, pass_thru=True,
             ensure_exit_code=False)
