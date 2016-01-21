@@ -11,15 +11,20 @@ function retrieveUserContextId(browser) {
 
 add_task(function() {
   for (let i = 0; i < 3; ++i) {
-    let tab = gBrowser.addTab("about:blank");
+    let tab = gBrowser.addTab("http://example.com/", {userContextId: i});
     let browser = tab.linkedBrowser;
 
     yield promiseBrowserLoaded(browser);
-    yield promiseTabState(tab, { userContextId: i, entries: [{ url: "http://example.com/" }] });
 
-    let userContextId = yield retrieveUserContextId(browser);
+    let tab2 = gBrowser.duplicateTab(tab);
+    let browser2 = tab2.linkedBrowser;
+    yield promiseTabRestored(tab2)
+
+    let userContextId = yield retrieveUserContextId(browser2);
     is(userContextId, i, "The docShell has the correct userContextId");
 
     yield promiseRemoveTab(tab);
+    yield promiseRemoveTab(tab2);
   }
 });
+

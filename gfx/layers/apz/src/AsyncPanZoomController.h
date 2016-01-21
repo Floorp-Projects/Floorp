@@ -126,7 +126,7 @@ public:
    * in. The actual animation is done on the compositor thread after being set
    * up.
    */
-  void ZoomToRect(CSSRect aRect);
+  void ZoomToRect(CSSRect aRect, const uint32_t aFlags);
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.

@@ -1424,5 +1424,18 @@ PuppetWidget::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
   mTabChild->SendSetCandidateWindowForPlugin(aX, aY);
 }
 
+void
+PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
+                         const FrameMetrics::ViewID& aViewId,
+                         const CSSRect& aRect,
+                         const uint32_t& aFlags)
+{
+  if (!mTabChild) {
+    return;
+  }
+
+  mTabChild->SendZoomToRect(aPresShellId, aViewId, aRect, aFlags);
+}
+
 } // namespace widget
 } // namespace mozilla

@@ -574,8 +574,7 @@ public:
   AllocPOfflineCacheUpdateChild(const URIParams& manifestURI,
                                 const URIParams& documentURI,
                                 const PrincipalInfo& aLoadingPrincipalInfo,
-                                const bool& stickDocument,
-                                const TabId& aTabId) override;
+                                const bool& stickDocument) override;
 
   virtual bool
   DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate) override;

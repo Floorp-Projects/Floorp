@@ -8,7 +8,7 @@
 
 loadHelperScript("helper_attributes_test_runner.js");
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_edit.html";
+const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 var TEST_DATA = [{
   desc: "Change an attribute",
   node: "#node1",
@@ -63,6 +63,6 @@ var TEST_DATA = [{
 }];
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
-  yield runEditAttributesTests(TEST_DATA, inspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  yield runEditAttributesTests(TEST_DATA, inspector, testActor);
 });

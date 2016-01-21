@@ -167,6 +167,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'LoadContextInfo.h',
     'LoadInfo.h',
     'LoadTainting.h',
 ]

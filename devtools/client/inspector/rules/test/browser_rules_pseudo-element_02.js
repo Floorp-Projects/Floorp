@@ -6,7 +6,7 @@
 
 // Test that pseudoelements are displayed correctly in the rule view
 
-const TEST_URI = TEST_URL_ROOT + "doc_pseudoelement.html";
+const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

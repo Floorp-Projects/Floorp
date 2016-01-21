@@ -5,6 +5,7 @@
 from marionette import MarionetteTestCase
 from marionette_driver.errors import MarionetteException
 
+from marionette_driver.decorators import using_context
 
 class TestSetContext(MarionetteTestCase):
     def setUp(self):
@@ -52,3 +53,13 @@ class TestSetContext(MarionetteTestCase):
             with self.marionette.using_context(self.chrome):
                 raise MarionetteException
         self.assertEquals(self.get_context(), self.content)
+
+    def test_with_using_context_decorator(self):
+        @using_context('content')
+        def inner_content(m):
+            self.assertEquals(self.get_context(), 'content')
+        @using_context('chrome')
+        def inner_chrome(m):
+            self.assertEquals(self.get_context(), 'chrome')
+        inner_content(self.marionette)
+        inner_chrome(self.marionette)

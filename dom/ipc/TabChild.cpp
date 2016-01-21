@@ -835,7 +835,10 @@ TabChild::NotifyTabContextUpdated()
         } else {
           docShell->SetIsApp(OwnAppId());
         }
-        docShell->SetIsSignedPackage(OriginAttributesRef().mSignedPkg);
+
+        OriginAttributes attrs = OriginAttributesRef();
+        docShell->SetIsSignedPackage(attrs.mSignedPkg);
+        docShell->SetUserContextId(attrs.mUserContextId);
     }
 }
 
@@ -1688,7 +1691,7 @@ TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifier
     ViewID viewId;
     if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
         document->GetDocumentElement(), &presShellId, &viewId)) {
-      SendZoomToRect(presShellId, viewId, zoomToRect);
+      SendZoomToRect(presShellId, viewId, zoomToRect, DEFAULT_BEHAVIOR);
     }
 
     return true;

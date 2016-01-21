@@ -385,19 +385,22 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'GENERATED_FILES += bar.c',
+            'export:: bar.c',
+            'GARBAGE += bar.c',
             'EXTRA_MDDEPEND_FILES += bar.c.pp',
             'bar.c: %s/generate-bar.py' % env.topsrcdir,
             '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp)' % env.topsrcdir,
             '',
-            'GENERATED_FILES += foo.c',
+            'export:: foo.c',
+            'GARBAGE += foo.c',
             'EXTRA_MDDEPEND_FILES += foo.c.pp',
             'foo.c: %s/generate-foo.py %s/foo-data' % (env.topsrcdir, env.topsrcdir),
             '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp %s/foo-data)' % (env.topsrcdir, env.topsrcdir),
             '',
-            'GENERATED_FILES += quux.c',
+            'export:: quux.c',
+            'GARBAGE += quux.c',
             'EXTRA_MDDEPEND_FILES += quux.c.pp',
         ]
 
@@ -426,13 +429,17 @@ class TestRecursiveMakeBackend(BackendTester):
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
         expected = [
-            'GENERATED_FILES += bar.h',
+            'export:: bar.h',
+            'GARBAGE += bar.h',
             'EXTRA_MDDEPEND_FILES += bar.h.pp',
-            'GENERATED_FILES += mozilla2.h',
+            'export:: mozilla2.h',
+            'GARBAGE += mozilla2.h',
             'EXTRA_MDDEPEND_FILES += mozilla2.h.pp',
-            'GENERATED_FILES += dom2.h',
+            'export:: dom2.h',
+            'GARBAGE += dom2.h',
             'EXTRA_MDDEPEND_FILES += dom2.h.pp',
-            'GENERATED_FILES += dom3.h',
+            'export:: dom3.h',
+            'GARBAGE += dom3.h',
             'EXTRA_MDDEPEND_FILES += dom3.h.pp',
             'dist_include_FILES += bar.h',
             'dist_include_DEST := $(DEPTH)/dist/include/',

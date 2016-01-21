@@ -965,46 +965,6 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
     return gl.forget();
 }
 
-/*static*/ already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
-{
-    gfxASurface *thebesSurface = nullptr;
-    EGLNativePixmapType pixmap = 0;
-
-    if (!pixmap) {
-        return nullptr;
-    }
-
-    EGLSurface surface = 0;
-    EGLConfig config = 0;
-
-    if (!config) {
-        return nullptr;
-    }
-    MOZ_ASSERT(surface);
-
-    SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateGLContext(CreateContextFlags::NONE, dummyCaps,
-                                      nullptr, true,
-                                      config, surface);
-    if (!glContext) {
-        NS_WARNING("Failed to create GLContext from XSurface");
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
-        return nullptr;
-    }
-
-    if (!glContext->Init()) {
-        NS_WARNING("Failed to initialize GLContext!");
-        // GLContextEGL::dtor will destroy |surface| for us.
-        return nullptr;
-    }
-
-    glContext->HoldSurface(thebesSurface);
-
-    return glContext.forget();
-}
-
 /*static*/ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateHeadless(CreateContextFlags flags)
 {

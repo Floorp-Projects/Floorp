@@ -17,6 +17,7 @@ const Toolbar = module.exports = createClass({
     })).isRequired,
     onTakeSnapshotClick: PropTypes.func.isRequired,
     onImportClick: PropTypes.func.isRequired,
+    onClearSnapshotsClick: PropTypes.func.isRequired,
     onBreakdownChange: PropTypes.func.isRequired,
     onToggleRecordAllocationStacks: PropTypes.func.isRequired,
     allocations: models.allocations,
@@ -40,6 +41,7 @@ const Toolbar = module.exports = createClass({
     let {
       onTakeSnapshotClick,
       onImportClick,
+      onClearSnapshotsClick,
       onBreakdownChange,
       breakdowns,
       dominatorTreeBreakdowns,
@@ -190,7 +192,15 @@ const Toolbar = module.exports = createClass({
               "data-text-only": true,
             },
             L10N.getStr("import-snapshot")
-          )
+          ),
+
+          dom.button({
+            id: "clear-snapshots",
+            className: "devtools-toolbarbutton clear-snapshots devtools-button",
+            onClick: onClearSnapshotsClick,
+            title: L10N.getStr("clear-snapshots"),
+            "data-text-only": true,
+          }, L10N.getStr("clear-snapshots"))
         ),
 
         dom.label(

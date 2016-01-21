@@ -34,7 +34,7 @@ var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrin
 function manifestCached()
 {
   // Run first check for an update
-  updateService.checkForUpdate(manifestURI, systemPrincipal, 0, false, {
+  updateService.checkForUpdate(manifestURI, systemPrincipal, {
     observe: function(subject, topic, data) {
       OfflineTest.is(topic, "offline-cache-update-unavailable", "No update avail");
 
@@ -42,13 +42,13 @@ function manifestCached()
       OfflineTest.setSJSState(manifest, "second");
 
       // Check we now get notification on update ready
-      updateService.checkForUpdate(manifestURI, systemPrincipal, 0, false, {
+      updateService.checkForUpdate(manifestURI, systemPrincipal, {
         observe: function(subject, topic, data) {
           OfflineTest.is(topic, "offline-cache-update-available", "Update avail (1)");
 
           // Do the check again.  We must get the same result.  Double check is here
           // to make sure we don't overwrite any data in the cache by the check it self.
-          updateService.checkForUpdate(manifestURI, systemPrincipal, 0, false, {
+          updateService.checkForUpdate(manifestURI, systemPrincipal, {
             observe: function(subject, topic, data) {
               OfflineTest.is(topic, "offline-cache-update-available", "Update avail (2)");
 
@@ -66,7 +66,7 @@ function manifestCached()
 function manifestUpdated()
 {
   // Check for an update after manifest has been updated
-  updateService.checkForUpdate(manifestURI, systemPrincipal, 0, false, {
+  updateService.checkForUpdate(manifestURI, systemPrincipal, {
     observe: function(subject, topic, data) {
       OfflineTest.is(topic, "offline-cache-update-unavailable", "No update avail (2)");
 

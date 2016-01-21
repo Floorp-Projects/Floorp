@@ -143,9 +143,10 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashKey key = { aElement, aPseudoType };
 
-  if (aRestyleType == RestyleType::Throttled &&
-      !elementsToRestyle.Contains(key)) {
-    elementsToRestyle.Put(key, false);
+  if (aRestyleType == RestyleType::Throttled) {
+    if (!elementsToRestyle.Contains(key)) {
+      elementsToRestyle.Put(key, false);
+    }
     mPresContext->Document()->SetNeedStyleFlush();
   } else {
     // Get() returns 0 if the element is not found. It will also return

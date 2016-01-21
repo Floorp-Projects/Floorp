@@ -97,8 +97,8 @@ private:
    */
   // The AudioData at which AudioStream::DataSource is reading.
   RefPtr<AudioData> mCurrentData;
-  // The number of frames that have been popped from mCurrentData.
-  uint32_t mFramesPopped = 0;
+  // Keep track of the read positoin of mCurrentData.
+  UniquePtr<AudioBufferCursor> mCursor;
   // True if there is any error in processing audio data like overflow.
   bool mErrored = false;
 };

@@ -23,7 +23,7 @@ const TEST_URI = `
   <div id="testid2">Styled Node</div>
 `;
 
-var BACKGROUND_IMAGE_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
+var BACKGROUND_IMAGE_URL = 'url("' + URL_ROOT + 'doc_test_image.png")';
 
 var TEST_DATA = [
   { name: "border-color", value: "red", isValid: true },
