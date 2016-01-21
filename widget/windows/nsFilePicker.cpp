@@ -25,6 +25,7 @@
 #include "nsToolkit.h"
 #include "WinUtils.h"
 #include "nsPIDOMWindow.h"
+#include "GeckoProfiler.h"
 
 using mozilla::IsVistaOrLater;
 using mozilla::MakeUnique;
@@ -868,6 +869,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
   RefPtr<IFileDialog> dialog;
   if (mMode != modeSave) {
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC,

@@ -39,6 +39,8 @@ from mozpack.manifests import (
     InstallManifest,
 )
 
+from mozbuild.backend import backends
+
 
 BUILD_WHAT_HELP = '''
 What to build. Can be a top-level make target or a relative directory. If
@@ -601,9 +603,7 @@ class Build(MachCommandBase):
         help='Show a diff of changes.')
     # It would be nice to filter the choices below based on
     # conditions, but that is for another day.
-    @CommandArgument('-b', '--backend', nargs='+',
-        choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
-                 'VisualStudio', 'FasterMake', 'CompileDB', 'ChromeMap'],
+    @CommandArgument('-b', '--backend', nargs='+', choices=sorted(backends),
         help='Which backend to build.')
     def build_backend(self, backend, diff=False):
         python = self.virtualenv_manager.python_path
@@ -1009,8 +1009,11 @@ class Package(MachCommandBase):
 
     @Command('package', category='post-build',
         description='Package the built product for distribution as an APK, DMG, etc.')
-    def package(self):
-        ret = self._run_make(directory=".", target='package', ensure_exit_code=False)
+    @CommandArgument('-v', '--verbose', action='store_true',
+        help='Verbose output for what commands the packaging process is running.')
+    def package(self, verbose=False):
+        ret = self._run_make(directory=".", target='package',
+                             silent=not verbose, ensure_exit_code=False)
         if ret == 0:
             self.notify('Packaging complete')
         return ret
@@ -1447,7 +1450,7 @@ class PackageFrontend(MachCommandBase):
     def _make_artifacts(self, tree=None, job=None):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('pylru==1.0.9')
-        self.virtualenv_manager.install_pip_package('taskcluster==0.0.16')
+        self.virtualenv_manager.install_pip_package('taskcluster==0.0.32')
         self.virtualenv_manager.install_pip_package('mozregression==1.0.2')
 
         state_dir = self._mach_context.state_dir

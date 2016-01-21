@@ -133,8 +133,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x73c0a475, 0x450f, 0x4202, \
-  { 0xab, 0xb4, 0x62, 0xf8, 0x9d, 0xbe, 0xf7, 0x9a } }
+{ 0x6dc8ce1f, 0xbb55, 0x47c1, \
+  { 0xa1, 0x6f, 0x4e, 0x12, 0x37, 0xa1, 0xc2, 0xf4 } }
 
 /*
  * Window shadow styles
@@ -350,6 +350,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
     typedef mozilla::ScreenIntPoint ScreenIntPoint;
     typedef mozilla::DesktopIntRect DesktopIntRect;
+    typedef mozilla::CSSRect CSSRect;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -2068,6 +2069,11 @@ public:
      * widget.  Note that this never returns nullptr.
      */
     NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() = 0;
+
+    virtual void ZoomToRect(const uint32_t& aPresShellId,
+                            const FrameMetrics::ViewID& aViewId,
+                            const CSSRect& aRect,
+                            const uint32_t& aFlags) = 0;
 
 protected:
     /**

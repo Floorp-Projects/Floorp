@@ -231,7 +231,7 @@ define([MOZ_BUILD_BACKEND],
 BUILD_BACKENDS="RecursiveMake"
 
 MOZ_ARG_ENABLE_STRING(build-backend,
-[  --enable-build-backend={AndroidEclipse,CppEclipse,VisualStudio,FasterMake,CompileDB,ChromeMap}
+[  --enable-build-backend={$($(dirname ]$[0)/$1/mach python -c "from mozbuild.backend import backends; print ','.join(sorted(backends))")}
                          Enable additional build backends],
 [ BUILD_BACKENDS="RecursiveMake `echo $enableval | sed 's/,/ /g'`"])
 

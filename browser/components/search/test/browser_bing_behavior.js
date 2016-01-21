@@ -136,6 +136,9 @@ function test() {
       if (!(flags & docStart) || !webProgress.isTopLevel)
         return;
 
+      if (req.originalURI.spec == "about:blank")
+        return;
+
       info("received document start");
 
       ok(req instanceof Ci.nsIChannel, "req is a channel");

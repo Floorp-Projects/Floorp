@@ -1521,7 +1521,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   // rule tree from ElementRestyler::RestyleSelf to avoid taking that
   // path when we're rebuilding the rule tree.
 
-  nsTArray<RuleNodeInfo> rules;
+  // This array can be hot and often grows to ~20 elements, so inline storage
+  // is best.
+  nsAutoTArray<RuleNodeInfo, 30> rules;
   for (nsRuleNode* ruleNode = aOldRuleNode; !ruleNode->IsRoot();
        ruleNode = ruleNode->GetParent()) {
     RuleNodeInfo* curRule = rules.AppendElement();

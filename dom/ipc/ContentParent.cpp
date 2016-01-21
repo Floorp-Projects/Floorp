@@ -1237,6 +1237,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
                                   ContentParent* aOpenerContentParent)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   if (!sCanLaunchSubprocesses) {
     return nullptr;
   }
@@ -2386,6 +2388,8 @@ ContentParent::InitializeMembers()
 bool
 ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   std::vector<std::string> extraArgs;
   if (mIsNuwaProcess) {
     extraArgs.push_back("-nuwa");
@@ -3642,6 +3646,8 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 ContentParent::KillHard(const char* aReason)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   // On Windows, calling KillHard multiple times causes problems - the
   // process handle becomes invalid on the first call, causing a second call
   // to crash our process - more details in bug 890840.
@@ -5240,17 +5246,10 @@ mozilla::docshell::POfflineCacheUpdateParent*
 ContentParent::AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
                                               const URIParams& aDocumentURI,
                                               const PrincipalInfo& aLoadingPrincipalInfo,
-                                              const bool& aStickDocument,
-                                              const TabId& aTabId)
+                                              const bool& aStickDocument)
 {
-  TabContext tabContext;
-  if (!ContentProcessManager::GetSingleton()->
-    GetTabContextByProcessAndTabId(this->ChildID(), aTabId, &tabContext)) {
-    return nullptr;
-  }
   RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-    new mozilla::docshell::OfflineCacheUpdateParent(
-      tabContext.OriginAttributesRef());
+        new mozilla::docshell::OfflineCacheUpdateParent();
   // Use this reference as the IPDL reference.
   return update.forget().take();
 }
@@ -5260,8 +5259,7 @@ ContentParent::RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aAc
                                                   const URIParams& aManifestURI,
                                                   const URIParams& aDocumentURI,
                                                   const PrincipalInfo& aLoadingPrincipal,
-                                                  const bool& aStickDocument,
-                                                  const TabId& aTabId)
+                                                  const bool& aStickDocument)
 {
   MOZ_ASSERT(aActor);
 

@@ -41,7 +41,7 @@ test_data_path = mozpath.join(test_data_path, 'data')
 class TestSandbox(unittest.TestCase):
     def sandbox(self):
         return Sandbox(Context({
-            'DIRS': (list, list, None, None),
+            'DIRS': (list, list, None),
         }))
 
     def test_exec_source_success(self):

@@ -145,6 +145,7 @@ const char CPOWProxyHandler::family = 0;
 const CPOWProxyHandler CPOWProxyHandler::singleton;
 
 #define FORWARD(call, args)                                             \
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::JS);                \
     WrapperOwner* owner = OwnerOf(proxy);                               \
     if (!owner->active()) {                                             \
         JS_ReportError(cx, "cannot use a CPOW whose process is gone");  \

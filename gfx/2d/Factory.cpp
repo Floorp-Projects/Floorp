@@ -8,6 +8,7 @@
 #ifdef USE_CAIRO
 #include "DrawTargetCairo.h"
 #include "ScaledFontCairo.h"
+#include "SourceSurfaceCairo.h"
 #endif
 
 #ifdef USE_SKIA
@@ -848,6 +849,21 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 #endif
   return retVal.forget();
+}
+
+already_AddRefed<SourceSurface>
+Factory::CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat aFormat)
+{
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    gfxWarning() << "Can't create a SourceSurface without a valid size";
+    return nullptr;
+  }
+
+#ifdef USE_CAIRO
+  return MakeAndAddRef<SourceSurfaceCairo>(aSurface, aSize, aFormat);
+#else
+  return nullptr;
+#endif
 }
 
 #ifdef XP_DARWIN

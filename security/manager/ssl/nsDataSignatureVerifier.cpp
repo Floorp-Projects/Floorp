@@ -250,9 +250,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
                                                certificateUsageObjectSigner,
                                                Now(), pinArg,
                                                nullptr, // hostname
-                                               0, // flags
-                                               nullptr, // stapledOCSPResponse
-                                               &context->builtChain));
+                                               context->builtChain));
 }
 
 } // namespace

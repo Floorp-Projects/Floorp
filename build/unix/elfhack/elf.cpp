@@ -258,7 +258,10 @@ Elf::Elf(std::ifstream &file)
                 segment->addSection(sections[j]);
         // Make sure that our view of segments corresponds to the original
         // ELF file.
-        assert(segment->getFileSize() == phdr.p_filesz);
+        // GNU gold likes to start some segments before the first section
+        // they contain. https://sourceware.org/bugzilla/show_bug.cgi?id=19392
+        unsigned int gold_adjustment = segment->getAddr() - phdr.p_vaddr;
+        assert(segment->getFileSize() == phdr.p_filesz - gold_adjustment);
         // gold makes TLS segments end on an aligned virtual address, even
         // when the underlying section ends before that, while bfd ld
         // doesn't. It's fine if we don't keep that alignment.
@@ -267,7 +270,7 @@ Elf::Elf(std::ifstream &file)
             unsigned int align = segment->getAlign();
             memsize = (memsize + align - 1) & ~(align - 1);
         }
-        assert(memsize == phdr.p_memsz);
+        assert(memsize == phdr.p_memsz - gold_adjustment);
         segments.push_back(segment);
     }
 

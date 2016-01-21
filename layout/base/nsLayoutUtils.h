@@ -147,6 +147,7 @@ public:
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
   typedef mozilla::CSSIntSize CSSIntSize;
+  typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
 
@@ -2769,6 +2770,14 @@ public:
    * Returns true if the given frame is a scrollframe and it has snap points.
    */
   static bool IsScrollFrameWithSnapping(nsIFrame* aFrame);
+  /**
+   * Calculate the bounding rect of |aContent|, relative to the origin
+   * of the scrolled content of |aRootScrollFrame|.
+   * Where the element is contained inside a scrollable subframe, the
+   * bounding rect is clipped to the bounds of the subframe.
+   */
+  static CSSRect GetBoundingContentRect(const nsIContent* aContent,
+                                        const nsIScrollableFrame* aRootScrollFrame);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

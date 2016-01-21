@@ -1158,6 +1158,8 @@ CacheFileIOManager::Shutdown()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  gInstance->mShutdownDemanded = true;
+
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_V2> shutdownTimer;
 
   CacheIndex::PreShutdown();
@@ -2293,15 +2295,21 @@ CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
   found = mHandlesByLastUsed.RemoveElement(aHandle);
   MOZ_ASSERT(found);
 
-  if (aIgnoreShutdownLag || !IsPastShutdownIOLag()) {
-    PR_Close(aHandle->mFD);
-  } else {
+  // Leak invalid (w/o metadata) and doomed handles immediately after shutdown.
+  // Leak other handles when past the shutdown time maximum lag.
+  if (
+#ifndef DEBUG
+      ((aHandle->mInvalid || aHandle->mIsDoomed) && MOZ_UNLIKELY(mShutdownDemanded)) ||
+#endif
+      MOZ_UNLIKELY(!aIgnoreShutdownLag && IsPastShutdownIOLag())) {
     // Pretend this file has been validated (the metadata has been written)
     // to prevent removal I/O on this apparently used file.  The entry will
     // never be used, since it doesn't have correct metadata, thus we don't
     // need to worry about removing it.
     aHandle->mInvalid = false;
     LOG(("  past the shutdown I/O lag, leaking file handle"));
+  } else {
+    PR_Close(aHandle->mFD);
   }
 
   aHandle->mFD = nullptr;

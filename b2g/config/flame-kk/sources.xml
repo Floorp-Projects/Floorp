@@ -21,12 +21,12 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="efd70ba6a54849dcef696abf1652cf74daa07899"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="619766a1ce78d50fb8a3b5a9e0821c335a0ed7ee"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="35dccb3127db8f39f20b985ad312d2cd44780669"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="8d83715f08b7849f16a0dfc88f78d5c3a89c0a54">
+  <project name="platform_build" path="build" remote="b2g" revision="d3c9acb642baee501cff89e4efdb16b0c7480760">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>

@@ -3,13 +3,15 @@ $inherits:
   from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
   metadata:
-    name: '[TC] Linux64 jsreftest'
-    description: Jsreftest run
+    name: '[TC] Linux64 jsreftest {{chunk}}'
+    description: Jsreftest run {{chunk}}
   extra:
+    chunks:
+      total: 2
     suite:
       name: reftest
       flavor: jsreftest
     treeherder:
       groupName: Desktop jsreftest
       groupSymbol: tc-R
-      symbol: J
+      symbol: J{{chunk}}
