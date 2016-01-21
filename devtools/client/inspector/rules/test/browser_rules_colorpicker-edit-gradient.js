@@ -72,5 +72,7 @@ function* testPickingNewColor(view) {
       "rgb(0, 0, 0) 100%)",
     "The gradient has been updated correctly");
 
+  let onModified = view.once("ruleview-changed");
   cPicker.hide();
+  yield onModified;
 }

@@ -21,22 +21,22 @@ function* ifTestingSupported() {
     "All the function calls should now be displayed in the UI.");
 
   testItem(CallsListView.getItemAtIndex(0),
-    "1", "ctx", "clearRect", "(0, 0, 128, 128)", "doc_simple-canvas.html:25");
+    "1", "Object", "clearRect", "(0, 0, 128, 128)", "doc_simple-canvas.html:25");
 
   testItem(CallsListView.getItemAtIndex(1),
-    "2", "ctx", "fillStyle", " = rgb(192, 192, 192)", "doc_simple-canvas.html:20");
+    "2", "Object", "fillStyle", " = rgb(192, 192, 192)", "doc_simple-canvas.html:20");
   testItem(CallsListView.getItemAtIndex(2),
-    "3", "ctx", "fillRect", "(0, 0, 128, 128)", "doc_simple-canvas.html:21");
+    "3", "Object", "fillRect", "(0, 0, 128, 128)", "doc_simple-canvas.html:21");
 
   testItem(CallsListView.getItemAtIndex(3),
-    "4", "ctx", "fillStyle", " = rgba(0, 0, 192, 0.5)", "doc_simple-canvas.html:20");
+    "4", "Object", "fillStyle", " = rgba(0, 0, 192, 0.5)", "doc_simple-canvas.html:20");
   testItem(CallsListView.getItemAtIndex(4),
-    "5", "ctx", "fillRect", "(30, 30, 55, 50)", "doc_simple-canvas.html:21");
+    "5", "Object", "fillRect", "(30, 30, 55, 50)", "doc_simple-canvas.html:21");
 
   testItem(CallsListView.getItemAtIndex(5),
-    "6", "ctx", "fillStyle", " = rgba(192, 0, 0, 0.5)", "doc_simple-canvas.html:20");
+    "6", "Object", "fillStyle", " = rgba(192, 0, 0, 0.5)", "doc_simple-canvas.html:20");
   testItem(CallsListView.getItemAtIndex(6),
-    "7", "ctx", "fillRect", "(10, 10, 55, 50)", "doc_simple-canvas.html:21");
+    "7", "Object", "fillRect", "(10, 10, 55, 50)", "doc_simple-canvas.html:21");
 
   testItem(CallsListView.getItemAtIndex(7),
     "8", "", "requestAnimationFrame", "(Function)", "doc_simple-canvas.html:30");
@@ -53,7 +53,7 @@ function* ifTestingSupported() {
       is($(".call-item-context", item.target).getAttribute("value"), context,
         "The item's context label has the correct text.");
     } else {
-      is($(".call-item-context", item.target), null,
+      is($(".call-item-context", item.target) + "", "[object XULElement]",
         "The item's context label should not be available.");
     }
 

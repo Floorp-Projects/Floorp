@@ -8,7 +8,7 @@
 // input that could be parsed as a property line.
 
 const SEARCH = "doc_urls_clickable.css: url";
-const TEST_URI = TEST_URL_ROOT + "doc_urls_clickable.html";
+const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

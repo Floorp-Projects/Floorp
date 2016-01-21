@@ -5,7 +5,7 @@
 const TEST_URL = "data:text/html;charset=utf8,<img src=\"about:logo\" /><div>";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let {markup} = inspector;
 
   info("Get the tooltip target element for the image's src attribute");

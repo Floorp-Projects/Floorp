@@ -4,7 +4,7 @@
 
 "use strict";
 
-const TEST_URI = TEST_URL_ROOT + "doc_custom.html";
+const TEST_URI = URL_ROOT + "doc_custom.html";
 
 // Tests the display of custom declarations in the rule-view.
 

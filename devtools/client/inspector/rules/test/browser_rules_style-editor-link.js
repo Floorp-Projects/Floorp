@@ -19,7 +19,7 @@ const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
    "}"].join("\n"));
 
 const EXTERNAL_STYLESHEET_FILE_NAME = "doc_style_editor_link.css";
-const EXTERNAL_STYLESHEET_URL = TEST_URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
+const EXTERNAL_STYLESHEET_URL = URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
 
 const DOCUMENT_URL = "data:text/html;charset=utf-8,"+encodeURIComponent(
   ['<html>' +
