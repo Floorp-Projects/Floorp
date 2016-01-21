@@ -1951,6 +1951,12 @@ MediaStream::FinishOnGraphThread()
 }
 
 StreamBuffer::Track*
+MediaStream::FindTrack(TrackID aID)
+{
+  return mBuffer.FindTrack(aID);
+}
+
+StreamBuffer::Track*
 MediaStream::EnsureTrack(TrackID aTrackId)
 {
   StreamBuffer::Track* track = mBuffer.FindTrack(aTrackId);
@@ -2580,12 +2586,6 @@ SourceMediaStream::FinishAddTracks()
   if (GraphImpl()) {
     GraphImpl()->EnsureNextIteration();
   }
-}
-
-StreamBuffer::Track*
-SourceMediaStream::FindTrack(TrackID aID)
-{
-  return mBuffer.FindTrack(aID);
 }
 
 void
