@@ -250,7 +250,7 @@ class MessageChannel : HasResultCodes
     bool InterruptEventOccurred();
     bool HasPendingEvents();
 
-    void ProcessPendingRequests(int transaction, int prio);
+    void ProcessPendingRequests();
     bool ProcessPendingRequest(const Message &aUrgent);
 
     void MaybeUndeferIncall();
@@ -525,22 +525,16 @@ class MessageChannel : HasResultCodes
     class AutoSetValue {
       public:
         explicit AutoSetValue(T &var, const T &newValue)
-          : mVar(var), mPrev(var), mNew(newValue)
+          : mVar(var), mPrev(var)
         {
             mVar = newValue;
         }
         ~AutoSetValue() {
-            // The value may have been zeroed if the transaction was
-            // canceled. In that case we shouldn't return it to its previous
-            // value.
-            if (mVar == mNew) {
-                mVar = mPrev;
-            }
+            mVar = mPrev;
         }
       private:
         T& mVar;
         T mPrev;
-        T mNew;
     };
 
     // Worker thread only.
@@ -630,6 +624,7 @@ class MessageChannel : HasResultCodes
     // hitting a lot of corner cases with message nesting that we don't really
     // care about.
     int32_t mTimedOutMessageSeqno;
+    int mTimedOutMessagePriority;
 
     // If waiting for the reply to a sync out-message, it will be saved here
     // on the I/O thread and then read and cleared by the worker thread.
