@@ -26,6 +26,7 @@ protected:
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
     manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
     rootApzc = ApzcOf(root);
+    rootApzc->GetFrameMetrics().SetIsRootContent(true);  // make root APZC zoomable
   }
 
   void CreateScrollHandoffLayerTree2() {
@@ -296,6 +297,51 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
 
   // Lift the finger once again.
   TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Allow any animations to run their course.
+  child->AdvanceAnimationsUntilEnd();
+  rootApzc->AdvanceAnimationsUntilEnd();
+
+  // Make sure nothing is overscrolled.
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateScrollHandoffLayerTree1();
+
+  TestAsyncPanZoomController* child = ApzcOf(layers[1]);
+
+  // Pan, causing the parent APZC to overscroll.
+  Pan(manager, mcc, 60, 90, true /* keep finger down */);
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Lift the finger, triggering an overscroll animation
+  // (but don't allow it to run).
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put the finger down again, interrupting the animation
+  // and entering the TOUCHING state.
+  TouchDown(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put a second finger down. Since we're in the TOUCHING state,
+  // the "are we panned into overscroll" check will fail and we
+  // will not ignore the second finger, instead entering the
+  // PINCHING state.
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as TouchDown(). (A bit hacky.)
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 90), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(10, 80), ScreenSize(0, 0), 0, 0));
+  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+
+  // Release the fingers.
+  MultiTouchInput fingersUp = secondFingerDown;
+  fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
+  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
 
   // Allow any animations to run their course.
   child->AdvanceAnimationsUntilEnd();
