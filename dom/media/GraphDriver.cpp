@@ -421,9 +421,9 @@ OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTi
 
 }
 
-class MediaStreamGraphShutdownThreadRunnable2 : public nsRunnable {
+class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
 public:
-  explicit MediaStreamGraphShutdownThreadRunnable2(nsIThread* aThread)
+  explicit MediaStreamGraphShutdownThreadRunnable(nsIThread* aThread)
     : mThread(aThread)
   {
   }
@@ -445,7 +445,7 @@ OfflineClockDriver::~OfflineClockDriver()
   // transfer the ownership of mThread to the event
   // XXX should use .forget()/etc
   if (mThread) {
-    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable2(mThread);
+    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable(mThread);
     mThread = nullptr;
     NS_DispatchToMainThread(event);
   }
