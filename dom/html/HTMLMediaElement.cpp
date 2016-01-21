@@ -3397,6 +3397,10 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   if (IsVideo() && HasVideo()) {
     DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
   }
+  NS_ASSERTION(!HasVideo() ||
+               (mMediaInfo.mVideo.mDisplay.width > 0 &&
+                mMediaInfo.mVideo.mDisplay.height > 0),
+               "Video resolution must be known on 'loadedmetadata'");
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
