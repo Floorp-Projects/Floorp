@@ -49,9 +49,11 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
     "The text of the timing-function was updated");
 
   info("Sending RETURN key within the tooltip document");
-  let onHidden = bezierTooltip.tooltip.once("hidden");
+  // Pressing RETURN ends up doing 2 rule-view updates, one for the preview and
+  // one for the commit when the tooltip closes.
+  let onRuleViewChanged = waitForNEvents(ruleView, "ruleview-changed", 2);
   EventUtils.sendKey("RETURN", widget.parent.ownerDocument.defaultView);
-  yield onHidden;
+  yield onRuleViewChanged;
 
   is(content.getComputedStyle(content.document.body).transitionTimingFunction,
     expected, "The element's timing-function was kept after RETURN");
