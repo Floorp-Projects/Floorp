@@ -273,6 +273,39 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
 
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateScrollHandoffLayerTree1();
+
+  TestAsyncPanZoomController* child = ApzcOf(layers[1]);
+
+  // Pan, causing the parent APZC to overscroll.
+  Pan(manager, mcc, 60, 90, true /* keep finger down */);
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Lift the finger, triggering an overscroll animation
+  // (but don't allow it to run).
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put the finger down again, interrupting the animation
+  // and entering the TOUCHING state.
+  TouchDown(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Lift the finger once again.
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Allow any animations to run their course.
+  child->AdvanceAnimationsUntilEnd();
+  rootApzc->AdvanceAnimationsUntilEnd();
+
+  // Make sure nothing is overscrolled.
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
 // Test that flinging in a direction where one component of the fling goes into
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the

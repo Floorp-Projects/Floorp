@@ -1339,7 +1339,13 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     if (CurrentTouchBlock()->GetActiveTouchCount() == 0) {
       // It's possible we may be overscrolled if the user tapped during a
       // previous overscroll pan. Make sure to snap back in this situation.
-      if (!SnapBackIfOverscrolled()) {
+      // An ancestor APZC could be overscrolled instead of this APZC, so
+      // walk the handoff chain as well.
+      CurrentTouchBlock()->GetOverscrollHandoffChain()->SnapBackOverscrolledApzc(this);
+      // SnapBackOverscrolledApzc() will put any APZC it causes to snap back
+      // into the OVERSCROLL_ANIMATION state. If that's not us, since we're
+      // done TOUCHING enter the NOTHING state.
+      if (mState != OVERSCROLL_ANIMATION) {
         SetState(NOTHING);
       }
     }
