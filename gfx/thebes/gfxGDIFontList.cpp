@@ -24,6 +24,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIWindowsRegKey.h"
 #include "gfxFontConstants.h"
+#include "GeckoProfiler.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Telemetry.h"
@@ -143,6 +144,8 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
 nsresult
 GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
         return NS_OK;

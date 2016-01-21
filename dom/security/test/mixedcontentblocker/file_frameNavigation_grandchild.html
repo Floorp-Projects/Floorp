@@ -23,7 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
     // When the page is navigating, it goes through about:blank and we will get a permission denied for loc.
     // Catch that specific exception and return
     try {
-      var loc = child.contentDocument.location;
+      var loc;
+      if (child.contentDocument) {
+        loc = child.contentDocument.location;
+      }
     } catch(e) {
       if (e.message && e.message.indexOf("Permission denied to access property") == -1) {
         // We received an exception we didn't expect.

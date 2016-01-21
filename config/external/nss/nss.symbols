@@ -692,6 +692,11 @@ VFY_VerifyDataWithAlgorithmID
 VFY_VerifyDigestDirect
 _SGN_VerifyPKCS1DigestInfo
 __PK11_SetCertificateNickname
+# These symbols are not used by Firefox itself, but are used by Java's security
+# libraries, which in turn are used by Java applets/plugins/etc.  Provide them
+# to make Java code happy.
+NSS_VersionCheck
+NSS_Initialize
 #ifdef NSS_EXTRA_SYMBOLS_FILE
 #include @NSS_EXTRA_SYMBOLS_FILE@
 #endif

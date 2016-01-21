@@ -1,20 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
-
-function whenNewWindowLoaded(aOptions, aCallback) {
-  let win = OpenBrowserWindow(aOptions);
-  let focused = SimpleTest.promiseFocus(win);
-  let startupFinished = TestUtils.topicObserved("browser-delayed-startup-finished",
-                                                subject => subject == win).then(() => win);
-  Promise.all([focused, startupFinished])
-    .then(results => executeSoon(() => aCallback(results[1])));
-
-  return win;
-}
-
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
@@ -53,64 +39,16 @@ function getLocalizedPref(aPrefName, aDefault) {
   return aDefault;
 }
 
-function waitForPopupShown(aPopupId, aCallback) {
-  let popup = document.getElementById(aPopupId);
-  info("waitForPopupShown: got popup: " + popup.id);
-  function onPopupShown() {
-    info("onPopupShown");
-    removePopupShownListener();
-    SimpleTest.executeSoon(aCallback);
-  }
-  function removePopupShownListener() {
-    popup.removeEventListener("popupshown", onPopupShown);
-  }
-  popup.addEventListener("popupshown", onPopupShown);
-  registerCleanupFunction(removePopupShownListener);
-}
-
 function promiseEvent(aTarget, aEventName, aPreventDefault) {
-  let deferred = Promise.defer();
-  aTarget.addEventListener(aEventName, function onEvent(aEvent) {
-    aTarget.removeEventListener(aEventName, onEvent, true);
+  function cancelEvent(event) {
     if (aPreventDefault) {
-      aEvent.preventDefault();
+      event.preventDefault();
     }
-    deferred.resolve();
-  }, true);
-  return deferred.promise;
-}
 
-function waitForBrowserContextMenu(aCallback) {
-  waitForPopupShown(gBrowser.selectedBrowser.contextMenu, aCallback);
-}
-
-function doOnloadOnce(aCallback) {
-  function doOnloadOnceListener(aEvent) {
-    info("doOnloadOnce: " + aEvent.originalTarget.location);
-    removeDoOnloadOnceListener();
-    SimpleTest.executeSoon(function doOnloadOnceCallback() {
-      aCallback(aEvent);
-    });
+    return true;
   }
-  function removeDoOnloadOnceListener() {
-    gBrowser.removeEventListener("load", doOnloadOnceListener, true);
-  }
-  gBrowser.addEventListener("load", doOnloadOnceListener, true);
-  registerCleanupFunction(removeDoOnloadOnceListener);
-}
 
-function* promiseOnLoad() {
-  return new Promise(resolve => {
-    gBrowser.addEventListener("load", function onLoadListener(aEvent) {
-      let cw = aEvent.target.defaultView;
-      let tab = gBrowser._getTabForContentWindow(cw);
-      if (tab) {
-        info("onLoadListener: " + aEvent.originalTarget.location);
-        gBrowser.removeEventListener("load", onLoadListener, true);
-        resolve(aEvent);
-      }
-    }, true);
-  });
+  return BrowserTestUtils.waitForEvent(aTarget, aEventName, false, cancelEvent);
 }
 
 function promiseNewEngine(basename, options = {}) {
@@ -123,7 +61,7 @@ function promiseNewEngine(basename, options = {}) {
       onInitComplete: function() {
         let url = getRootDirectory(gTestPath) + basename;
         let current = Services.search.currentEngine;
-        Services.search.addEngine(url, null, "", false, {
+        Services.search.addEngine(url, null, options.iconURL || "", false, {
           onSuccess: function (engine) {
             info("Search engine added: " + basename);
             if (setAsCurrent) {

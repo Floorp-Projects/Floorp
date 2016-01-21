@@ -1689,6 +1689,7 @@ MarkStack::setBaseCapacity(JSGCMode mode)
 void
 MarkStack::setMaxCapacity(size_t maxCapacity)
 {
+    MOZ_ASSERT(maxCapacity != 0);
     MOZ_ASSERT(isEmpty());
     maxCapacity_ = maxCapacity;
     if (baseCapacity_ > maxCapacity_)
@@ -1706,6 +1707,7 @@ MarkStack::reset()
         return;
     }
 
+    MOZ_ASSERT(baseCapacity_ != 0);
     uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * baseCapacity_);
     if (!newStack) {
         // If the realloc fails, just keep using the existing stack; it's
@@ -1725,6 +1727,7 @@ MarkStack::enlarge(unsigned count)
 
     size_t tosIndex = position();
 
+    MOZ_ASSERT(newCapacity != 0);
     uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * newCapacity);
     if (!newStack)
         return false;

@@ -2339,7 +2339,12 @@ struct JSJitInfo {
         js::jit::InlinableNative inlinableNative;
     };
 
-    uint16_t depth;
+    union {
+        uint16_t depth;
+
+        // Additional opcode for some InlinableNative functions.
+        uint16_t nativeOp;
+    };
 
     // These fields are carefully packed to take up 4 bytes.  If you need more
     // bits for whatever reason, please see if you can steal bits from existing

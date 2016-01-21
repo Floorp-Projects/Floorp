@@ -50,8 +50,9 @@ BEGIN_TEST(testChromeBuffer)
 {
     JS_SetTrustedPrincipals(rt, &system_principals);
 
+    JS::CompartmentOptions options;
     trusted_glob.init(cx, JS_NewGlobalObject(cx, &global_class, &system_principals,
-                                             JS::FireOnNewGlobalHook));
+                                             JS::FireOnNewGlobalHook, options));
     CHECK(trusted_glob);
 
     JS::RootedFunction fun(cx);

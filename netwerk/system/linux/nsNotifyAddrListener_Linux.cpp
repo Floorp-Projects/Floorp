@@ -194,21 +194,21 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             if (attr->rta_type == IFA_ADDRESS) {
                 if (newifam->ifa_family == AF_INET) {
                     struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                    addr = (char*)malloc(INET_ADDRSTRLEN);
+                    addr = new char[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, in, addr.get(), INET_ADDRSTRLEN);
                 } else {
                     struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                    addr = (char*)malloc(INET6_ADDRSTRLEN);
+                    addr = new char[INET6_ADDRSTRLEN];
                     inet_ntop(AF_INET6, in, addr.get(), INET6_ADDRSTRLEN);
                 }
             } else if (attr->rta_type == IFA_LOCAL) {
                 if (newifam->ifa_family == AF_INET) {
                     struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                    localaddr = (char*)malloc(INET_ADDRSTRLEN);
+                    localaddr = new char[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, in, localaddr.get(), INET_ADDRSTRLEN);
                 } else {
                     struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                    localaddr = (char*)malloc(INET6_ADDRSTRLEN);
+                    localaddr = new char[INET6_ADDRSTRLEN];
                     inet_ntop(AF_INET6, in, localaddr.get(), INET6_ADDRSTRLEN);
                 }
             }

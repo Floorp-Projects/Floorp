@@ -42,8 +42,9 @@ BEGIN_TEST(testTracingIncomingCCWs)
 
     JS::RootedObject global1(cx, JS::CurrentGlobalOrNull(cx));
     CHECK(global1);
+    JS::CompartmentOptions options;
     JS::RootedObject global2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
-                                                    JS::FireOnNewGlobalHook));
+                                                    JS::FireOnNewGlobalHook, options));
     CHECK(global2);
     CHECK(global1->zone() != global2->zone());
 

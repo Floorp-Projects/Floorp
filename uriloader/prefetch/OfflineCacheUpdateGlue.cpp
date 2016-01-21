@@ -99,14 +99,18 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
                              nsIURI *aDocumentURI,
                              nsIPrincipal* aLoadingPrincipal,
                              nsIDOMDocument *aDocument,
-                             nsIFile *aCustomProfileDir,
-                             uint32_t aAppID,
-                             bool aInBrowser)
+                             nsIFile *aCustomProfileDir)
 {
+    nsresult rv;
+
+    nsAutoCString originSuffix;
+    rv = aLoadingPrincipal->GetOriginSuffix(originSuffix);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsOfflineCacheUpdateService* service =
         nsOfflineCacheUpdateService::EnsureService();
     if (service) {
-        service->FindUpdate(aManifestURI, aAppID, aInBrowser, aCustomProfileDir,
+        service->FindUpdate(aManifestURI, originSuffix, aCustomProfileDir,
                             getter_AddRefs(mUpdate));
         mCoalesced = !!mUpdate;
     }
@@ -126,7 +130,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
     }
 
     return mUpdate->Init(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr,
-                         aCustomProfileDir, aAppID, aInBrowser);
+                         aCustomProfileDir);
 }
 
 void

@@ -22,14 +22,14 @@ enum class KeySizeStatus {
   AlreadyBad = 3,
 };
 
-// These values correspond to the CERT_CHAIN_SIGNATURE_DIGEST telemetry.
-enum class SignatureDigestStatus {
+// These values correspond to the CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+enum class SHA1ModeResult {
   NeverChecked = 0,
-  GoodAlgorithmsOnly = 1,
-  WeakEECert = 2,
-  WeakCACert = 3,
-  WeakCAAndEE = 4,
-  AlreadyBad = 5,
+  SucceededWithoutSHA1 = 1,
+  SucceededWithSHA1Before2016 = 2,
+  SucceededWithImportedRoot = 3,
+  SucceededWithSHA1 = 4,
+  Failed = 5,
 };
 
 class PinningTelemetryInfo
@@ -73,13 +73,13 @@ public:
                        mozilla::pkix::Time time,
                        void* pinArg,
                        const char* hostname,
+               /*out*/ ScopedCERTCertList& builtChain,
                        Flags flags = 0,
        /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
-      /*optional out*/ ScopedCERTCertList* builtChain = nullptr,
       /*optional out*/ SECOidTag* evOidPolicy = nullptr,
       /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
-      /*optional out*/ SignatureDigestStatus* sigDigestStatus = nullptr,
+      /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr);
 
   SECStatus VerifySSLServerCert(
@@ -88,13 +88,13 @@ public:
                     mozilla::pkix::Time time,
        /*optional*/ void* pinarg,
                     const char* hostname,
-                    bool saveIntermediatesInPermanentDatabase = false,
-                    Flags flags = 0,
-   /*optional out*/ ScopedCERTCertList* builtChain = nullptr,
+            /*out*/ ScopedCERTCertList& builtChain,
+       /*optional*/ bool saveIntermediatesInPermanentDatabase = false,
+       /*optional*/ Flags flags = 0,
    /*optional out*/ SECOidTag* evOidPolicy = nullptr,
    /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
    /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
-   /*optional out*/ SignatureDigestStatus* sigDigestStatus = nullptr,
+   /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
    /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr);
 
   enum PinningMode {
@@ -107,7 +107,8 @@ public:
   enum class SHA1Mode {
     Allowed = 0,
     Forbidden = 1,
-    OnlyBefore2016 = 2
+    Before2016 = 2,
+    ImportedRoot = 3,
   };
 
   enum OcspDownloadConfig {
@@ -134,6 +135,12 @@ public:
 
 private:
   OCSPCache mOCSPCache;
+
+  // Returns true if the configured SHA1 mode is more restrictive than the given
+  // mode. SHA1Mode::Forbidden is more restrictive than any other mode except
+  // Forbidden. Next is Before2016, then ImportedRoot, then Allowed.
+  // (A mode is never more restrictive than itself.)
+  bool SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode);
 };
 
 void InitCertVerifierLog();

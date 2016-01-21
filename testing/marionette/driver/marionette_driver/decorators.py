@@ -65,3 +65,19 @@ def uses_marionette(func):
 
         return ret
     return _
+
+def using_context(context):
+    """Decorator which allows a function to execute in certain scope
+    using marionette.using_context functionality and returns to old
+    scope once the function exits.
+    :param context: Either 'chrome' or 'content'.
+    """
+    def wrap(func):
+         @wraps(func)
+         def inner(*args, **kwargs):
+             m = _find_marionette_in_args(*args, **kwargs)
+             with m.using_context(context):
+                 return func(*args, **kwargs)
+
+         return inner
+    return wrap
