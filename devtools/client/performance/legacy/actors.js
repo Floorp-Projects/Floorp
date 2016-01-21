@@ -5,20 +5,14 @@
 
 const { Task } = require("resource://gre/modules/Task.jsm");
 
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "Poller",
-  "devtools/client/shared/poller", true);
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/event-emitter");
+const { Poller } = require("devtools/client/shared/poller");
 
-loader.lazyRequireGetter(this, "CompatUtils",
-  "devtools/client/performance/legacy/compatibility");
-loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/recording-utils");
-loader.lazyRequireGetter(this, "TimelineFront",
-  "devtools/server/actors/timeline", true);
-loader.lazyRequireGetter(this, "ProfilerFront",
-  "devtools/server/actors/profiler", true);
+const CompatUtils = require("devtools/client/performance/legacy/compatibility");
+const RecordingUtils = require("devtools/shared/performance/recording-utils");
+const { TimelineFront } = require("devtools/server/actors/timeline");
+const { ProfilerFront } = require("devtools/server/actors/profiler");
 
 // how often do we check the status of the profiler's circular buffer
 const PROFILER_CHECK_TIMER = 5000; // ms
