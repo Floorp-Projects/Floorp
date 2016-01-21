@@ -83,6 +83,8 @@ class BuildBackend(LoggingMixin):
         # Mapping of changed file paths to diffs of the changes.
         self.file_diffs = {}
 
+        self.dry_run = False
+
         self._init()
 
     def summary(self):
@@ -149,7 +151,8 @@ class BuildBackend(LoggingMixin):
             except IOError:
                 pass
             try:
-                os.unlink(full_path)
+                if not self.dry_run:
+                    os.unlink(full_path)
                 self._deleted_count += 1
             except OSError:
                 pass
@@ -196,7 +199,7 @@ class BuildBackend(LoggingMixin):
 
         if path is not None:
             assert fh is None
-            fh = FileAvoidWrite(path, capture_diff=True)
+            fh = FileAvoidWrite(path, capture_diff=True, dry_run=self.dry_run)
         else:
             assert fh is not None
 
