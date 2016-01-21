@@ -10695,19 +10695,20 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                                   aReferrerURI);
   }
 
-  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
-  nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+  //
+  // If this is a HTTP channel, then set up the HTTP specific information
+  // (ie. POST data, referrer, ...)
+  //
+  if (httpChannel) {
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
+    /* Get the cache Key from SH */
+    nsCOMPtr<nsISupports> cacheKey;
+    if (mLSHE) {
+      mLSHE->GetCacheKey(getter_AddRefs(cacheKey));
+    } else if (mOSHE) {  // for reload cases
+      mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
+    }
 
-
-  /* Get the cache Key from SH */
-  nsCOMPtr<nsISupports> cacheKey;
-  if (mLSHE) {
-    mLSHE->GetCacheKey(getter_AddRefs(cacheKey));
-  } else if (mOSHE) {  // for reload cases
-    mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
-  }
-
-  if (uploadChannel) {
     // figure out if we need to set the post data stream on the channel...
     // right now, this is only done for http channels.....
     if (aPostData) {
@@ -10720,6 +10721,9 @@ nsDocShell::DoURILoad(nsIURI* aURI,
         rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+
+      nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+      NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
       // we really need to have a content type associated with this stream!!
       uploadChannel->SetUploadStream(aPostData, EmptyCString(), -1);
@@ -10756,9 +10760,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
         }
       }
     }
-  }
-
-  if (httpChannel) {
     if (aHeadersData) {
       rv = AddHeadersToChannel(aHeadersData, httpChannel);
     }
