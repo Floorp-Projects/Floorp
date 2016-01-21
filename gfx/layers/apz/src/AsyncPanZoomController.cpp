@@ -2871,7 +2871,7 @@ AsyncPanZoomController::RequestContentRepaint(const FrameMetrics& aFrameMetrics,
   }
 
   APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
-  if (mCheckerboardEvent) {
+  if (mCheckerboardEvent && mCheckerboardEvent->IsRecordingTrace()) {
     std::stringstream info;
     info << " velocity " << aVelocity;
     std::string str = info.str();
@@ -3102,24 +3102,30 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
     // checkerboard once per composite though.
     return;
   }
-  uint32_t time = (aSampleTime - mLastCheckerboardReport).ToMilliseconds();
-  uint32_t magnitude = GetCheckerboardMagnitude();
-  // TODO: make this a function of velocity
-  mozilla::Telemetry::Accumulate(
-      mozilla::Telemetry::CHECKERBOARDED_CSSPIXELS_MS, magnitude * time);
   mLastCheckerboardReport = aSampleTime;
 
-  if (!mCheckerboardEvent && gfxPrefs::APZRecordCheckerboarding()) {
-    mCheckerboardEvent = MakeUnique<CheckerboardEvent>();
+  bool recordTrace = gfxPrefs::APZRecordCheckerboarding();
+  bool forTelemetry = Telemetry::CanRecordExtended();
+  if (!mCheckerboardEvent && (recordTrace || forTelemetry)) {
+    mCheckerboardEvent = MakeUnique<CheckerboardEvent>(recordTrace);
   }
-  if (mCheckerboardEvent) {
-    if (mCheckerboardEvent->RecordFrameInfo(magnitude)) {
-      // This checkerboard event is done. TODO: save the info somewhere or
-      // dispatch it to telemetry or something. For now we just print it.
+  uint32_t magnitude = GetCheckerboardMagnitude();
+  if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(magnitude)) {
+    // This checkerboard event is done. Report some metrics to telemetry.
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_SEVERITY,
+      mCheckerboardEvent->GetSeverity());
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_PEAK,
+      mCheckerboardEvent->GetPeak());
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CHECKERBOARD_DURATION,
+      (uint32_t)mCheckerboardEvent->GetDuration().ToMilliseconds());
+
+    if (recordTrace) {
+      // TODO: save the info somewhere for
+      // about:checkerboard. For now we just print it.
       std::stringstream log(mCheckerboardEvent->GetLog());
       print_stderr(log);
-      mCheckerboardEvent = nullptr;
     }
+    mCheckerboardEvent = nullptr;
   }
 }
 
@@ -3157,7 +3163,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, aThisLayerTreeUpdated=%d",
     this, aIsFirstPaint, aThisLayerTreeUpdated);
 
-  if (mCheckerboardEvent) {
+  if (mCheckerboardEvent && mCheckerboardEvent->IsRecordingTrace()) {
     std::string str;
     if (aThisLayerTreeUpdated) {
       if (!aLayerMetrics.GetPaintRequestTime().IsNull()) {
