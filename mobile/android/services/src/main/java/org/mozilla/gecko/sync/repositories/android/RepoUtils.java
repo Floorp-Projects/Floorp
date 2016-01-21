@@ -139,9 +139,6 @@ public class RepoUtils {
     } catch (IOException e) {
       Logger.error(LOG_TAG, "JSON parsing error for " + colId, e);
       return null;
-    } catch (ParseException e) {
-      Logger.error(LOG_TAG, "JSON parsing error for " + colId, e);
-      return null;
     }
   }
 

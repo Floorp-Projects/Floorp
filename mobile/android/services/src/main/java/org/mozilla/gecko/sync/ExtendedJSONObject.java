@@ -106,13 +106,17 @@ public class ExtendedJSONObject {
    * You should prefer the stream interface {@link #parseJSONArray(Reader)}.
    *
    * @param jsonString input.
-   * @throws ParseException
    * @throws IOException
-   * @throws NonArrayJSONException if the object is valid JSON, but not an array.
+   * @throws NonArrayJSONException if the object is invalid JSON or not an array.
    */
   public static JSONArray parseJSONArray(String jsonString)
-      throws IOException, ParseException, NonArrayJSONException {
-    Object o = parseRaw(jsonString);
+      throws IOException, NonArrayJSONException {
+    Object o = null;
+    try {
+      o = parseRaw(jsonString);
+    } catch (ParseException e) {
+      throw new NonArrayJSONException(e);
+    }
 
     if (o == null) {
       return null;
@@ -129,12 +133,11 @@ public class ExtendedJSONObject {
    * Helper method to get a JSON object from a UTF-8 byte array.
    *
    * @param in UTF-8 bytes.
-   * @throws ParseException
-   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
+   * @throws NonObjectJSONException if the object is not valid JSON or not an object.
    * @throws IOException
    */
   public static ExtendedJSONObject parseUTF8AsJSONObject(byte[] in)
-      throws ParseException, NonObjectJSONException, IOException {
+      throws NonObjectJSONException, IOException {
     return new ExtendedJSONObject(new String(in, "UTF-8"));
   }
 
@@ -146,13 +149,19 @@ public class ExtendedJSONObject {
     this.object = o;
   }
 
-  public ExtendedJSONObject(Reader in) throws IOException, ParseException, NonObjectJSONException {
+  public ExtendedJSONObject(Reader in) throws IOException, NonObjectJSONException {
     if (in == null) {
       this.object = new JSONObject();
       return;
     }
 
-    Object obj = parseRaw(in);
+    Object obj = null;
+    try {
+      obj = parseRaw(in);
+    } catch (ParseException e) {
+      throw new NonObjectJSONException(e);
+    }
+
     if (obj instanceof JSONObject) {
       this.object = ((JSONObject) obj);
     } else {
@@ -160,7 +169,7 @@ public class ExtendedJSONObject {
     }
   }
 
-  public ExtendedJSONObject(String jsonString) throws IOException, ParseException, NonObjectJSONException {
+  public ExtendedJSONObject(String jsonString) throws IOException, NonObjectJSONException {
     this(jsonString == null ? null : new StringReader(jsonString));
   }
 

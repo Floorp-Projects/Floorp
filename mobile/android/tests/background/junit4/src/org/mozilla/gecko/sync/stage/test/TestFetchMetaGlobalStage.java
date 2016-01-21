@@ -335,7 +335,7 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     assertEquals(true, callback.calledError);
-    assertEquals(ParseException.class, callback.calledErrorException.getClass());
+    assertEquals(NonObjectJSONException.class, callback.calledErrorException.getClass());
   }
 
   protected void doFreshStart(MockServer server) {
