@@ -35,7 +35,7 @@ void
 InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr evalInFramePrev,
                                    const Value& newTargetValue, HandleObject scopeChain)
 {
-    flags_ = HAS_SCOPECHAIN;
+    flags_ = 0;
     script_ = script;
 
     // newTarget = NullValue is an initial sentinel for "please fill me in from the stack".
@@ -329,7 +329,6 @@ InterpreterFrame::pushBlock(JSContext* cx, StaticBlockObject& block)
 bool
 InterpreterFrame::freshenBlock(JSContext* cx)
 {
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
     Rooted<ClonedBlockObject*> block(cx, &scopeChain_->as<ClonedBlockObject>());
     ClonedBlockObject* fresh = ClonedBlockObject::clone(cx, block);
     if (!fresh)
@@ -364,8 +363,7 @@ InterpreterFrame::mark(JSTracer* trc)
      * this path. However, generators use a special write barrier when the stack
      * frame is copied to the floating frame. Therefore, no barrier is needed.
      */
-    if (flags_ & HAS_SCOPECHAIN)
-        TraceManuallyBarrieredEdge(trc, &scopeChain_, "scope chain");
+    TraceManuallyBarrieredEdge(trc, &scopeChain_, "scope chain");
     if (flags_ & HAS_ARGS_OBJ)
         TraceManuallyBarrieredEdge(trc, &argsObj_, "arguments");
     TraceManuallyBarrieredEdge(trc, &script_, "script");

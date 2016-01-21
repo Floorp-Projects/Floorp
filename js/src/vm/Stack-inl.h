@@ -44,11 +44,6 @@ IsCacheableNonGlobalScope(JSObject* obj)
 inline HandleObject
 InterpreterFrame::scopeChain() const
 {
-    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
-    if (!(flags_ & HAS_SCOPECHAIN)) {
-        scopeChain_ = callee().environment();
-        flags_ |= HAS_SCOPECHAIN;
-    }
     return HandleObject::fromMarkedLocation(&scopeChain_);
 }
 
@@ -81,7 +76,7 @@ InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecod
     MOZ_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
-    flags_ = HAS_SCOPECHAIN;
+    flags_ = 0;
     if (constructing)
         flags_ |= CONSTRUCTING;
     argv_ = argv;
@@ -198,20 +193,17 @@ InterpreterFrame::pushOnScopeChain(ScopeObject& scope)
     MOZ_ASSERT(*scopeChain() == scope.enclosingScope() ||
                *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
-    flags_ |= HAS_SCOPECHAIN;
 }
 
 inline void
 InterpreterFrame::popOffScopeChain()
 {
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
     scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
 inline void
 InterpreterFrame::replaceInnermostScope(ScopeObject& scope)
 {
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
     MOZ_ASSERT(scope.enclosingScope() == scopeChain_->as<ScopeObject>().enclosingScope());
     scopeChain_ = &scope;
 }
