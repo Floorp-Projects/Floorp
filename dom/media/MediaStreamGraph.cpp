@@ -30,6 +30,7 @@
 #ifdef MOZ_WEBRTC
 #include "AudioOutputObserver.h"
 #endif
+#include "mtransport/runnable_utils.h"
 
 #include "webaudio/blink/HRTFDatabaseLoader.h"
 
@@ -919,6 +920,85 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   // then no more updates are required.
   if (aStream->mFinished && !haveMultipleImages) {
     aStream->mLastPlayedVideoFrame.SetNull();
+  }
+}
+
+void
+MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, MediaStreamListener *aListener)
+{
+  if (CurrentDriver()->AsAudioCallbackDriver()) {
+    CurrentDriver()->SetInputListener(aListener);
+  } else {
+    // XXX Switch to callback driver
+  }
+  mAudioInputs.AppendElement(aListener); // always monitor speaker data
+}
+
+nsresult
+MediaStreamGraphImpl::OpenAudioInput(char *aName, MediaStreamListener *aListener)
+{
+  // XXX So, so, so annoying.  Can't AppendMessage except on Mainthread
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(WrapRunnable(this,
+                                         &MediaStreamGraphImpl::OpenAudioInput,
+                                         aName, aListener)); // XXX Fix! string need to copied
+    return NS_OK;
+  }
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStreamGraphImpl *aGraph, char *aName, MediaStreamListener *aListener) :
+      ControlMessage(nullptr), mGraph(aGraph), mName(aName), mListener(aListener) {}
+    virtual void Run()
+    {
+      mGraph->OpenAudioInputImpl(mName, mListener);
+    }
+    MediaStreamGraphImpl *mGraph;
+    char *mName; // XXX needs to copy
+    MediaStreamListener *mListener;
+  };
+  this->AppendMessage(new Message(this, aName, aListener));
+  return NS_OK;
+}
+
+void
+MediaStreamGraphImpl::CloseAudioInputImpl(MediaStreamListener *aListener)
+{
+  CurrentDriver()->RemoveInputListener(aListener);
+  mAudioInputs.RemoveElement(aListener);
+}
+
+void
+MediaStreamGraphImpl::CloseAudioInput(MediaStreamListener *aListener)
+{
+  // XXX So, so, so annoying.  Can't AppendMessage except on Mainthread
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(WrapRunnable(this,
+                                         &MediaStreamGraphImpl::CloseAudioInput,
+                                         aListener));
+    return;
+  }
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStreamGraphImpl *aGraph, MediaStreamListener *aListener) :
+      ControlMessage(nullptr), mGraph(aGraph), mListener(aListener) {}
+    virtual void Run()
+    {
+      mGraph->CloseAudioInputImpl(mListener);
+    }
+    MediaStreamGraphImpl *mGraph;
+    MediaStreamListener *mListener;
+  };
+  this->AppendMessage(new Message(this, aListener));
+}
+
+
+// All AudioInput listeners get the same speaker data (at least for now).
+void
+MediaStreamGraph::NotifySpeakerData(AudioDataValue* aBuffer, size_t aFrames,
+                                    uint32_t aChannels)
+{
+  for (auto& listener : mAudioInputs) {
+    listener->NotifySpeakerData(this, aBuffer, aFrames, aChannels);
   }
 }
 
