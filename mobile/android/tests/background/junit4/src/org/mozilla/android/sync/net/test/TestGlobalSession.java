@@ -396,7 +396,7 @@ public class TestGlobalSession {
     ExtendedJSONObject origEnginesJSONObject = new ExtendedJSONObject();
     for (String engineName : origEngines) {
       EngineSettings mockEngineSettings = new EngineSettings(Utils.generateGuid(), Integer.valueOf(0));
-      origEnginesJSONObject.put(engineName, mockEngineSettings);
+      origEnginesJSONObject.put(engineName, mockEngineSettings.toJSONObject());
     }
     session.config.metaGlobal.setEngines(origEnginesJSONObject);
 
