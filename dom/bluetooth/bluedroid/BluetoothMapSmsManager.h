@@ -197,7 +197,9 @@ protected:
 
 private:
   BluetoothMapSmsManager();
-  bool Init();
+
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
 
   void ReplyToConnect();
