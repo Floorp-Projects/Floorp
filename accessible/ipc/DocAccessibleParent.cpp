@@ -148,6 +148,19 @@ DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
   }
 
   ProxyEvent(proxy, aEventType);
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsIDOMNode* node = nullptr;
+  bool fromUser = true; // XXX fix me
+  RefPtr<xpcAccEvent> event = new xpcAccEvent(aEventType, xpcAcc, doc, node,
+                                              fromUser);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
   return true;
 }
 
