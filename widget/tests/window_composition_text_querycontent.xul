@@ -4103,6 +4103,54 @@ function runForceCommitTest()
   is(input.value, "\u306E appended value",
      "runForceCommitTest: the input should have both composed text and appended text #14");
 
+  input.focus();
+  input.value = "abcd";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  input.value = "abcd\u306E";
+
+  is(events.length, 0,
+     "runForceCommitTest: setting same value to input with composition shouldn't cause any events #15");
+  is(input.value, "abcd\u306E",
+     "runForceCommitTest: the input has unexpected value #15");
+
+  input.blur(); // commit composition
+
+  textarea.focus();
+  textarea.value = "abcd";
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  events = [];
+  textarea.value = "abcd\u306E";
+
+  is(events.length, 0,
+     "runForceCommitTest: setting same value to textarea with composition shouldn't cause any events #16");
+  is(textarea.value, "abcd\u306E",
+     "runForceCommitTest: the input has unexpected value #16");
+
+  textarea.blur(); // commit composition
+
   window.removeEventListener("compositionstart", eventHandler, true);
   window.removeEventListener("compositionupdate", eventHandler, true);
   window.removeEventListener("compositionend", eventHandler, true);
