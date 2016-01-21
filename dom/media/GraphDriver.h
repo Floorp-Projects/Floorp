@@ -122,6 +122,8 @@ public:
   virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
+  /* Remove Mixer callbacks when switching */
+  virtual void RemoveCallback() = 0;
   void Shutdown();
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
@@ -270,6 +272,7 @@ public:
   void Stop() override;
   void Resume() override;
   void Revive() override;
+  void RemoveCallback() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
@@ -381,6 +384,7 @@ public:
   void Stop() override;
   void Resume() override;
   void Revive() override;
+  void RemoveCallback() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
 
@@ -511,8 +515,11 @@ private:
   nsCOMPtr<nsIThread> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   nsAutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
-  /* This is set during initialization, and ca be read safely afterwards. */
+  /* This is set during initialization, and can be read safely afterwards. */
   dom::AudioChannel mAudioChannel;
+  /* Used to queue us to add the mixer callback on first run. */
+  bool mAddedMixer;
+
   /* This is atomic and is set by the audio callback thread. It can be read by
    * any thread safely. */
   Atomic<bool> mInCallback;
