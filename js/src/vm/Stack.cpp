@@ -59,9 +59,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
         }
     }
 
-    Value* dstvp = (Value*)this - 2;
+    Value* dstvp = (Value*)this - 1;
     dstvp[0] = newTarget;
-    dstvp[1] = NullValue(); //XXX remove, unused callee.
 
     scopeChain_ = scopeChain.get();
     prev_ = nullptr;
@@ -404,8 +403,8 @@ InterpreterFrame::markValues(JSTracer* trc, Value* sp, jsbytecode* pc)
         unsigned argc = Max(numActualArgs(), numFormalArgs());
         TraceRootRange(trc, argc + isConstructing(), argv_, "fp argv");
     } else {
-        // Mark callee and newTarget
-        TraceRootRange(trc, 2, ((Value*)this) - 2, "stack callee and newTarget");
+        // Mark newTarget.
+        TraceRoot(trc, ((Value*)this) - 1, "stack newTarget");
     }
 
     JSScript* script = this->script();
@@ -487,12 +486,12 @@ InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Val
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
-    unsigned nvars = 2 /* callee, newTarget */ + script->nslots();
+    unsigned nvars = 1 /* newTarget */ + script->nslots();
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvars * sizeof(Value));
     if (!buffer)
         return nullptr;
 
-    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 2 * sizeof(Value));
+    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 1 * sizeof(Value));
     fp->mark_ = mark;
     fp->initExecuteFrame(cx, script, evalInFrame, newTargetValue, scopeChain, type);
     fp->initLocals();
