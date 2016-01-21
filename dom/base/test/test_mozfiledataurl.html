@@ -42,8 +42,8 @@ function runTest() {
   inner.onload = function() { gen.send("inner loaded"); };
 
   // Attempt to load a image in this document
-  var file = getFile("file_mozfiledataurl_img.jpg");
-  var fileurl = URL.createObjectURL(file);
+  var imgFile = getFile("file_mozfiledataurl_img.jpg");
+  var fileurl = URL.createObjectURL(imgFile);
   img.src = fileurl;
   var e = (yield);
   is(e.type, "load", "loaded successfully");
@@ -63,7 +63,7 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(imgFile);
   isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an image in a different same-origin document
@@ -85,8 +85,8 @@ function runTest() {
   isnot(res.height, 90, "correct error height");
 
   // Attempt to load an audio in this document
-  var file = getFile("file_mozfiledataurl_audio.ogg");
-  var fileurl = URL.createObjectURL(file);
+  var audioFile = getFile("file_mozfiledataurl_audio.ogg");
+  fileurl = URL.createObjectURL(audioFile);
   audio.src = fileurl;
   var e = (yield);
   is(e.type, "loadeddata", "loaded successfully");
@@ -104,7 +104,7 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(audioFile);
   isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an audio in a different same-origin document
@@ -134,8 +134,8 @@ function runTest() {
      "image in iframe height");
 
   // Attempt to load a HTML document in an iframe in this document, using file url
-  file = getFile("file_mozfiledataurl_doc.html");
-  fileurl = URL.createObjectURL(file);
+  var docFile = getFile("file_mozfiledataurl_doc.html");
+  fileurl = URL.createObjectURL(docFile);
   iframe.src = fileurl;
   yield undefined;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
@@ -170,8 +170,8 @@ function runTest() {
   is(res.type, "error", "load failed successfully");
 
   // Attempt to load file url using XHR
-  file = getFile("file_mozfiledataurl_text.txt");
-  fileurl = URL.createObjectURL(file);
+  var xhrFile = getFile("file_mozfiledataurl_text.txt");
+  fileurl = URL.createObjectURL(xhrFile);
   xhr = new XMLHttpRequest;
   xhr.onload = function() { gen.send("XHR finished"); };
   xhr.open("GET", fileurl);
