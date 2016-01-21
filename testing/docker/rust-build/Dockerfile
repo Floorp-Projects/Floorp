@@ -1,6 +1,10 @@
 FROM          quay.io/rillian/rust-buildbot
 MAINTAINER    Ralph Giles <giles@mozilla.com>
 
+# Reset user/workdir from parent image so we can install software.
+WORKDIR /
+USER root
+
 # Update base.
 RUN yum upgrade -y
 RUN yum clean all
@@ -11,7 +15,7 @@ ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py 
 RUN chmod +rx /build/tooltool.py
 
 # Add build scripts.
-ADD             checkout-sources.sh build.sh /build/
+ADD             fetch_rust.sh build_rust.sh /build/
 RUN             chmod +x /build/*
 
 # Create user for doing the build.
@@ -25,4 +29,4 @@ WORKDIR ${HOME}
 
 # Invoke our build scripts by default, but allow other commands.
 USER ${USER}
-CMD /build/checkout-sources.sh && /build/build.sh
+ENTRYPOINT /build/fetch_rust.sh && /build/build_rust.sh
