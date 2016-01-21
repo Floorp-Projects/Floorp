@@ -583,6 +583,7 @@ public:
     sBluetoothGattInterface = nullptr;
     sClients = nullptr;
     sServers = nullptr;
+    sBluetoothGattManager = nullptr;
 
     if (mRes) {
       mRes->Deinit();

@@ -296,6 +296,7 @@ public:
 
     sBtA2dpInterface->SetNotificationHandler(nullptr);
     sBtA2dpInterface = nullptr;
+    sBluetoothA2dpManager = nullptr;
 
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
@@ -308,6 +309,7 @@ public:
 
     sBtA2dpInterface->SetNotificationHandler(nullptr);
     sBtA2dpInterface = nullptr;
+    sBluetoothA2dpManager = nullptr;
 
     if (mRes) {
       mRes->Deinit();
