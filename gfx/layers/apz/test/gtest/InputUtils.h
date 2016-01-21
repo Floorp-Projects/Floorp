@@ -32,21 +32,28 @@
 // (which expects an untransformed point). We handle both cases by setting both
 // the transformed and untransformed fields to the same value.
 SingleTouchData
-CreateSingleTouchData(int32_t aIdentifier, int aX, int aY)
+CreateSingleTouchData(int32_t aIdentifier, const ScreenIntPoint& aPoint)
 {
-  SingleTouchData touch(aIdentifier, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0);
-  touch.mLocalScreenPoint = ParentLayerPoint(aX, aY);
+  SingleTouchData touch(aIdentifier, aPoint, ScreenSize(0, 0), 0, 0);
+  touch.mLocalScreenPoint = ParentLayerPoint(aPoint.x, aPoint.y);
   return touch;
+}
+
+// Convenience wrapper for CreateSingleTouchData() that takes loose coordinates.
+SingleTouchData
+CreateSingleTouchData(int32_t aIdentifier, ScreenIntCoord aX, ScreenIntCoord aY)
+{
+  return CreateSingleTouchData(aIdentifier, ScreenIntPoint(aX, aY));
 }
 
 PinchGestureInput
 CreatePinchGestureInput(PinchGestureInput::PinchGestureType aType,
-                        int aFocusX, int aFocusY,
+                        const ScreenIntPoint& aFocus,
                         float aCurrentSpan, float aPreviousSpan)
 {
-  PinchGestureInput result(aType, 0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
+  PinchGestureInput result(aType, 0, TimeStamp(), aFocus,
                            aCurrentSpan, aPreviousSpan, 0);
-  result.mLocalFocusPoint = ParentLayerPoint(aFocusX, aFocusY);
+  result.mLocalFocusPoint = ParentLayerPoint(aFocus.x, aFocus.y);
   return result;
 }
 
@@ -76,34 +83,38 @@ CreateMultiTouchInput(MultiTouchInput::MultiTouchType aType, TimeStamp aTime)
 
 template<class InputReceiver>
 nsEventStatus
-TouchDown(const RefPtr<InputReceiver>& aTarget, int aX, int aY, TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+TouchDown(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+          TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
 {
   MultiTouchInput mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime);
-  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
   return aTarget->ReceiveInputEvent(mti, nullptr, aOutInputBlockId);
 }
 
 template<class InputReceiver>
 nsEventStatus
-TouchMove(const RefPtr<InputReceiver>& aTarget, int aX, int aY, TimeStamp aTime)
+TouchMove(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+          TimeStamp aTime)
 {
   MultiTouchInput mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime);
-  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
   return aTarget->ReceiveInputEvent(mti, nullptr, nullptr);
 }
 
 template<class InputReceiver>
 nsEventStatus
-TouchUp(const RefPtr<InputReceiver>& aTarget, int aX, int aY, TimeStamp aTime)
+TouchUp(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+        TimeStamp aTime)
 {
   MultiTouchInput mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime);
-  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
   return aTarget->ReceiveInputEvent(mti, nullptr, nullptr);
 }
 
 template<class InputReceiver>
 void
-Tap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentControllerDelayed* aMcc,
+Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+    MockContentControllerDelayed* aMcc,
     TimeDuration aTapLength,
     nsEventStatus (*aOutEventStatuses)[2] = nullptr,
     uint64_t* aOutInputBlockId = nullptr)
@@ -115,7 +126,7 @@ Tap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentControllerD
     aOutInputBlockId = &blockId;
   }
 
-  nsEventStatus status = TouchDown(aTarget, aX, aY, aMcc->Time(), aOutInputBlockId);
+  nsEventStatus status = TouchDown(aTarget, aPoint, aMcc->Time(), aOutInputBlockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
   }
@@ -127,7 +138,7 @@ Tap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentControllerD
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
   }
 
-  status = TouchUp(aTarget, aX, aY, aMcc->Time());
+  status = TouchUp(aTarget, aPoint, aMcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
   }
@@ -135,11 +146,12 @@ Tap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentControllerD
 
 template<class InputReceiver>
 void
-TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget, int aX, int aY,
-    MockContentControllerDelayed* aMcc, TimeDuration aTapLength)
+TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+    const ScreenIntPoint& aPoint, MockContentControllerDelayed* aMcc,
+    TimeDuration aTapLength)
 {
   nsEventStatus statuses[2];
-  Tap(aTarget, aX, aY, aMcc, aTapLength, &statuses);
+  Tap(aTarget, aPoint, aMcc, aTapLength, &statuses);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
 }
@@ -148,8 +160,8 @@ template<class InputReceiver>
 void
 Pan(const RefPtr<InputReceiver>& aTarget,
     MockContentControllerDelayed* aMcc,
-    const ScreenPoint& aTouchStart,
-    const ScreenPoint& aTouchEnd,
+    const ScreenIntPoint& aTouchStart,
+    const ScreenIntPoint& aTouchEnd,
     bool aKeepFingerDown = false,
     nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
     nsEventStatus (*aOutEventStatuses)[4] = nullptr,
@@ -173,7 +185,9 @@ Pan(const RefPtr<InputReceiver>& aTarget,
   }
 
   // Make sure the move is large enough to not be handled as a tap
-  nsEventStatus status = TouchDown(aTarget, aTouchStart.x, aTouchStart.y + OVERCOME_TOUCH_TOLERANCE, aMcc->Time(), aOutInputBlockId);
+  nsEventStatus status = TouchDown(aTarget,
+      ScreenIntPoint(aTouchStart.x, aTouchStart.y + OVERCOME_TOUCH_TOLERANCE),
+      aMcc->Time(), aOutInputBlockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
   }
@@ -190,14 +204,14 @@ Pan(const RefPtr<InputReceiver>& aTarget,
     }
   }
 
-  status = TouchMove(aTarget, aTouchStart.x, aTouchStart.y, aMcc->Time());
+  status = TouchMove(aTarget, aTouchStart, aMcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
   }
 
   aMcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
-  status = TouchMove(aTarget, aTouchEnd.x, aTouchEnd.y, aMcc->Time());
+  status = TouchMove(aTarget, aTouchEnd, aMcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = status;
   }
@@ -205,7 +219,7 @@ Pan(const RefPtr<InputReceiver>& aTarget,
   aMcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   if (!aKeepFingerDown) {
-    status = TouchUp(aTarget, aTouchEnd.x, aTouchEnd.y, aMcc->Time());
+    status = TouchUp(aTarget, aTouchEnd, aMcc->Time());
   } else {
     status = nsEventStatus_eIgnore;
   }
@@ -232,7 +246,7 @@ Pan(const RefPtr<InputReceiver>& aTarget,
     nsEventStatus (*aOutEventStatuses)[4] = nullptr,
     uint64_t* aOutInputBlockId = nullptr)
 {
-  ::Pan(aTarget, aMcc, ScreenPoint(10, aTouchStartY), ScreenPoint(10, aTouchEndY),
+  ::Pan(aTarget, aMcc, ScreenIntPoint(10, aTouchStartY), ScreenIntPoint(10, aTouchEndY),
       aKeepFingerDown, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
 }
 
@@ -279,19 +293,20 @@ ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
 template<class InputReceiver>
 void
 PinchWithPinchInput(const RefPtr<InputReceiver>& aTarget,
-                    int aFocusX, int aFocusY, int aSecondFocusX, int aSecondFocusY, float aScale,
+                    const ScreenIntPoint& aFocus,
+                    const ScreenIntPoint& aSecondFocus, float aScale,
                     nsEventStatus (*aOutEventStatuses)[3] = nullptr)
 {
   nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
-                              aFocusX, aFocusY, 10.0, 10.0),
+                              aFocus, 10.0, 10.0),
       nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = actualStatus;
   }
   actualStatus = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocusX, aSecondFocusY, 10.0 * aScale, 10.0),
+                              aSecondFocus, 10.0 * aScale, 10.0),
       nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = actualStatus;
@@ -300,7 +315,7 @@ PinchWithPinchInput(const RefPtr<InputReceiver>& aTarget,
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
                               // note: negative values here tell APZC
                               //       not to turn the pinch into a pan
-                              aFocusX, aFocusY, -1.0, -1.0),
+                              aFocus, -1.0, -1.0),
       nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = actualStatus;
@@ -310,11 +325,11 @@ PinchWithPinchInput(const RefPtr<InputReceiver>& aTarget,
 template<class InputReceiver>
 void
 PinchWithPinchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
-                                  int aFocusX, int aFocusY, float aScale,
+                                  const ScreenIntPoint& aFocus, float aScale,
                                   bool aShouldTriggerPinch)
 {
   nsEventStatus statuses[3];  // scalebegin, scale, scaleend
-  PinchWithPinchInput(aTarget, aFocusX, aFocusY, aFocusX, aFocusY, aScale, &statuses);
+  PinchWithPinchInput(aTarget, aFocus, aFocus, aScale, &statuses);
 
   nsEventStatus expectedStatus = aShouldTriggerPinch
       ? nsEventStatus_eConsumeNoDefault
@@ -326,7 +341,7 @@ PinchWithPinchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
 template<class InputReceiver>
 void
 PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
-                    int aFocusX, int aFocusY, float aScale,
+                    const ScreenIntPoint& aFocus, float aScale,
                     int& inputId,
                     nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
                     nsEventStatus (*aOutEventStatuses)[4] = nullptr,
@@ -345,8 +360,8 @@ PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   }
 
   MultiTouchInput mtiStart = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX, aFocusY));
-  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX, aFocusY));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus));
   nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
@@ -360,24 +375,24 @@ PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
   }
 
   MultiTouchInput mtiMove1 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLength, aFocusY));
-  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLength, aFocusY));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLength, aFocus.y));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLength, aFocus.y));
   status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
   }
 
   MultiTouchInput mtiMove2 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLengthScaled, aFocusY));
-  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLengthScaled, aFocusY));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLengthScaled, aFocus.y));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLengthScaled, aFocus.y));
   status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = status;
   }
 
   MultiTouchInput mtiEnd = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
-  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLengthScaled, aFocusY));
-  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLengthScaled, aFocusY));
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocus.x - pinchLengthScaled, aFocus.y));
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocus.x + pinchLengthScaled, aFocus.y));
   status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[3] = status;
@@ -389,12 +404,12 @@ PinchWithTouchInput(const RefPtr<InputReceiver>& aTarget,
 template<class InputReceiver>
 void
 PinchWithTouchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
-                                  int aFocusX, int aFocusY, float aScale,
+                                  const ScreenIntPoint& aFocus, float aScale,
                                   int& inputId, bool aShouldTriggerPinch,
                                   nsTArray<uint32_t>* aAllowedTouchBehaviors)
 {
   nsEventStatus statuses[4];  // down, move, move, up
-  PinchWithTouchInput(aTarget, aFocusX, aFocusY, aScale, inputId, aAllowedTouchBehaviors, &statuses);
+  PinchWithTouchInput(aTarget, aFocus, aScale, inputId, aAllowedTouchBehaviors, &statuses);
 
   nsEventStatus expectedMoveStatus = aShouldTriggerPinch
       ? nsEventStatus_eConsumeDoDefault
@@ -406,12 +421,13 @@ PinchWithTouchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
 
 template<class InputReceiver>
 void
-DoubleTap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentControllerDelayed* aMcc,
+DoubleTap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+          MockContentControllerDelayed* aMcc,
           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
           uint64_t (*aOutInputBlockIds)[2] = nullptr)
 {
   uint64_t blockId;
-  nsEventStatus status = TouchDown(aTarget, aX, aY, aMcc->Time(), &blockId);
+  nsEventStatus status = TouchDown(aTarget, aPoint, aMcc->Time(), &blockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
   }
@@ -426,12 +442,12 @@ DoubleTap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentContr
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
 
-  status = TouchUp(aTarget, aX, aY, aMcc->Time());
+  status = TouchUp(aTarget, aPoint, aMcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
   }
   aMcc->AdvanceByMillis(10);
-  status = TouchDown(aTarget, aX, aY, aMcc->Time(), &blockId);
+  status = TouchDown(aTarget, aPoint, aMcc->Time(), &blockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = status;
   }
@@ -444,7 +460,7 @@ DoubleTap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentContr
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
 
-  status = TouchUp(aTarget, aX, aY, aMcc->Time());
+  status = TouchUp(aTarget, aPoint, aMcc->Time());
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[3] = status;
   }
@@ -452,11 +468,12 @@ DoubleTap(const RefPtr<InputReceiver>& aTarget, int aX, int aY, MockContentContr
 
 template<class InputReceiver>
 void
-DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget, int aX, int aY,
-    MockContentControllerDelayed* aMcc, uint64_t (*aOutInputBlockIds)[2] = nullptr)
+DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+    const ScreenIntPoint& aPoint, MockContentControllerDelayed* aMcc,
+    uint64_t (*aOutInputBlockIds)[2] = nullptr)
 {
   nsEventStatus statuses[4];
-  DoubleTap(aTarget, aX, aY, aMcc, &statuses, aOutInputBlockIds);
+  DoubleTap(aTarget, aPoint, aMcc, &statuses, aOutInputBlockIds);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[2]);
