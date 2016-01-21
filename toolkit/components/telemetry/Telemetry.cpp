@@ -3645,7 +3645,7 @@ void
 TelemetryImpl::RecordIceCandidates(const uint32_t iceCandidateBitmask,
                                    const bool success, const bool loop)
 {
-  if (!sTelemetry)
+  if (!sTelemetry || !sTelemetry->mCanRecordExtended)
     return;
 
   sTelemetry->mWebrtcTelemetry.RecordIceCandidateMask(iceCandidateBitmask, success, loop);
