@@ -10072,5 +10072,12 @@
     "bug_numbers": [1229961],
     "n_values": 12,
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
+  },
+  "WEB_NOTIFICATION_REQUEST_PERMISSION_CALLBACK": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "bug_numbers": [1241278],
+    "kind": "boolean",
+    "description": "Usage of the deprecated Notification.requestPermission() callback argument"
   }
 }
