@@ -535,7 +535,7 @@ BrowserGlue.prototype = {
     this._isPlacesShutdownObserver = true;
     os.addObserver(this, "handle-xul-text-link", false);
     os.addObserver(this, "profile-before-change", false);
-    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       os.addObserver(this, "keyword-search", false);
     }
     os.addObserver(this, "browser-search-engine-modified", false);
@@ -594,7 +594,7 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "places-shutdown");
     os.removeObserver(this, "handle-xul-text-link");
     os.removeObserver(this, "profile-before-change");
-    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       os.removeObserver(this, "keyword-search");
     }
     os.removeObserver(this, "browser-search-engine-modified");
