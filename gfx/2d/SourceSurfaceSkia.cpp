@@ -13,7 +13,6 @@
 #include "DataSurfaceHelpers.h"
 
 #ifdef USE_SKIA_GPU
-#include "GLDefs.h"
 #include "skia/include/gpu/SkGrPixelRef.h"
 #endif
 
@@ -82,39 +81,27 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
   return true;
 }
 
-bool
-SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
-                                   unsigned int aTexture,
-                                   const IntSize &aSize,
-                                   SurfaceFormat aFormat)
-{
-  MOZ_ASSERT(aOwner, "null GrContext");
 #ifdef USE_SKIA_GPU
-  GrBackendTextureDesc skiaTexGlue;
-  mSize.width = skiaTexGlue.fWidth = aSize.width;
-  mSize.height = skiaTexGlue.fHeight = aSize.height;
-  skiaTexGlue.fFlags = kNone_GrBackendTextureFlag;
-  skiaTexGlue.fOrigin = kTopLeft_GrSurfaceOrigin;
-  skiaTexGlue.fConfig = GfxFormatToGrConfig(aFormat);
-  skiaTexGlue.fSampleCnt = 0;
+bool
+SourceSurfaceSkia::InitFromGrTexture(GrTexture* aTexture,
+                                     const IntSize &aSize,
+                                     SurfaceFormat aFormat)
+{
+  if (!aTexture) {
+    return false;
+  }
 
-  GrGLTextureInfo texInfo;
-  texInfo.fTarget = LOCAL_GL_TEXTURE_2D;
-  texInfo.fID = aTexture;
-  skiaTexGlue.fTextureHandle = reinterpret_cast<GrBackendObject>(&texInfo);
-
-  GrTexture *skiaTexture = aOwner->mGrContext->textureProvider()->wrapBackendTexture(skiaTexGlue);
-  SkImageInfo imgInfo = SkImageInfo::Make(aSize.width, aSize.height, GfxFormatToSkiaColorType(aFormat), kOpaque_SkAlphaType);
-  SkGrPixelRef *texRef = new SkGrPixelRef(imgInfo, skiaTexture);
+  // Create a GPU pixelref wrapping the texture.
+  SkImageInfo imgInfo = MakeSkiaImageInfo(aSize, aFormat);
   mBitmap.setInfo(imgInfo);
-  mBitmap.setPixelRef(texRef);
+  mBitmap.setPixelRef(new SkGrPixelRef(imgInfo, aTexture))->unref();
+
+  mSize = aSize;
   mFormat = aFormat;
   mStride = mBitmap.rowBytes();
-#endif
-
-  mDrawTarget = aOwner;
   return true;
 }
+#endif
 
 unsigned char*
 SourceSurfaceSkia::GetData()

@@ -6,11 +6,6 @@
 #ifndef _MOZILLA_GFX_SOURCESURFACESKIA_H
 #define _MOZILLA_GFX_SOURCESURFACESKIA_H
 
-#ifdef USE_SKIA_GPU
-#include "skia/include/gpu/GrContext.h"
-#include "skia/include/gpu/gl/GrGLInterface.h"
-#endif
-
 #include "skia/include/core/SkCanvas.h"
 
 #include "2D.h"
@@ -168,7 +163,6 @@ private:
 
 #ifdef USE_SKIA_GPU
   RefPtrSkia<GrContext> mGrContext;
-  GrGLuint mTexture;
 #endif
 
   IntSize mSize;
