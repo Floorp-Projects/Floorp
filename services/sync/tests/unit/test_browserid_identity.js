@@ -89,9 +89,18 @@ add_task(function* test_initialializeWithCurrentIdentity() {
 add_task(function* test_initialializeWithAuthErrorAndDeletedAccount() {
     _("Verify sync unpair after initializeWithCurrentIdentity with auth error + account deleted");
 
+    var identityConfig = makeIdentityConfig();
+    var browseridManager = new BrowserIDManager();
+
+    // Use the real `_getAssertion` method that calls
+    // `mockFxAClient.signCertificate`.
+    let fxaInternal = makeFxAccountsInternalMock(identityConfig);
+    delete fxaInternal._getAssertion;
+
+    configureFxAccountIdentity(browseridManager, identityConfig, fxaInternal);
     browseridManager._fxaService.internal.initialize();
 
-    let fetchTokenForUserCalled = false;
+    let signCertificateCalled = false;
     let accountStatusCalled = false;
 
     let MockFxAccountsClient = function() {
@@ -99,6 +108,13 @@ add_task(function* test_initialializeWithAuthErrorAndDeletedAccount() {
     };
     MockFxAccountsClient.prototype = {
       __proto__: FxAccountsClient.prototype,
+      signCertificate() {
+        signCertificateCalled = true;
+        return Promise.reject({
+          code: 401,
+          errno: ERRNO_INVALID_AUTH_TOKEN,
+        });
+      },
       accountStatus() {
         accountStatusCalled = true;
         return Promise.resolve(false);
@@ -108,23 +124,16 @@ add_task(function* test_initialializeWithAuthErrorAndDeletedAccount() {
     let mockFxAClient = new MockFxAccountsClient();
     browseridManager._fxaService.internal._fxAccountsClient = mockFxAClient;
 
-    let oldFetchTokenForUser = browseridManager._fetchTokenForUser;
-    browseridManager._fetchTokenForUser = function() {
-      fetchTokenForUserCalled = true;
-      return Promise.reject(false);
-    }
-
     yield browseridManager.initializeWithCurrentIdentity();
     yield Assert.rejects(browseridManager.whenReadyToAuthenticate.promise,
                      "should reject due to an auth error");
 
-    do_check_true(fetchTokenForUserCalled);
+    do_check_true(signCertificateCalled);
     do_check_true(accountStatusCalled);
     do_check_false(browseridManager.account);
     do_check_false(browseridManager._token);
     do_check_false(browseridManager.hasValidToken());
     do_check_false(browseridManager.account);
-    browseridManager._fetchTokenForUser = oldFetchTokenForUser;
 });
 
 add_task(function* test_initialializeWithNoKeys() {

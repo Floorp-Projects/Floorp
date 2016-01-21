@@ -245,22 +245,11 @@ this.BrowserIDManager.prototype = {
           Services.obs.notifyObservers(null, "weave:service:setup-complete", null);
           Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
         }
-      }).catch(err => {
-        let authErr = err; // note that we must reject with this error and not a
-                           // subsequent one
+      }).catch(authErr => {
         // report what failed...
         this._log.error("Background fetch for key bundle failed", authErr);
-        // check if the account still exists
-        this._fxaService.accountStatus().then(exists => {
-          if (!exists) {
-            return fxAccounts.signOut(true);
-          }
-        }).catch(err => {
-          this._log.error("Error while trying to determine FXA existence", err);
-        }).then(() => {
-          this._shouldHaveSyncKeyBundle = true; // but we probably don't have one...
-          this.whenReadyToAuthenticate.reject(authErr)
-        });
+        this._shouldHaveSyncKeyBundle = true; // but we probably don't have one...
+        this.whenReadyToAuthenticate.reject(authErr);
       });
       // and we are done - the fetch continues on in the background...
     }).catch(err => {
@@ -625,6 +614,9 @@ this.BrowserIDManager.prototype = {
           err = new AuthenticationError(err);
         // A hawkclient error.
         } else if (err.code && err.code === 401) {
+          err = new AuthenticationError(err);
+        // An FxAccounts.jsm error.
+        } else if (err.message == fxAccountsCommon.ERROR_AUTH_ERROR) {
           err = new AuthenticationError(err);
         }
 

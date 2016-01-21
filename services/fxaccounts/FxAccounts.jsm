@@ -417,6 +417,10 @@ FxAccountsInternal.prototype = {
    * Ask the server whether the user's email has been verified
    */
   checkEmailStatus: function checkEmailStatus(sessionToken, options = {}) {
+    if (!sessionToken) {
+      return Promise.reject(new Error(
+        "checkEmailStatus called without a session token"));
+    }
     return this.fxAccountsClient.recoveryEmailStatus(sessionToken, options);
   },
 
@@ -575,17 +579,19 @@ FxAccountsInternal.prototype = {
         return null;
       }
       if (!data.sessionToken) {
-        // can't get a signed certificate without a session token, but that
-        // should be impossible - make log noise about it.
-        log.error("getAssertion called without a session token!");
-        return null;
+        // can't get a signed certificate without a session token. This
+        // can happen if we request an assertion after clearing an invalid
+        // session token from storage.
+        throw this._error(ERROR_AUTH_ERROR, "getAssertion called without a session token");
       }
       return this.getKeypairAndCertificate(currentState).then(
         ({keyPair, certificate}) => {
           return this.getAssertionFromCert(data, keyPair, certificate, audience);
         }
       );
-    }).then(result => currentState.resolve(result));
+    }).catch(err =>
+      this._handleTokenError(err)
+    ).then(result => currentState.resolve(result));
   },
 
   getDeviceId() {
@@ -619,8 +625,13 @@ FxAccountsInternal.prototype = {
       // no signed-in user to begin with, this is probably best regarded as an
       // error.
       if (data) {
+        if (!data.sessionToken) {
+          return Promise.reject(new Error(
+            "resendVerificationEmail called without a session token"));
+        }
         this.pollEmailStatus(currentState, data.sessionToken, "start");
-        return this.fxAccountsClient.resendVerificationEmail(data.sessionToken);
+        return this.fxAccountsClient.resendVerificationEmail(
+          data.sessionToken).catch(err => this._handleTokenError(err));
       }
       throw new Error("Cannot resend verification email; no signed-in user");
     });
@@ -710,7 +721,10 @@ FxAccountsInternal.prototype = {
           // This can happen in the background and shouldn't block
           // the user from signing out. The server must tolerate
           // clients just disappearing, so this call should be best effort.
-          return this._signOutServer(sessionToken, deviceId);
+          if (sessionToken) {
+            return this._signOutServer(sessionToken, deviceId);
+          }
+          log.warn("Missing session token; skipping remote sign out");
         }).catch(err => {
           log.error("Error during remote sign out of Firefox Accounts", err);
         }).then(() => {
@@ -752,8 +766,7 @@ FxAccountsInternal.prototype = {
 
     if (deviceId) {
       log.debug("destroying device and session");
-      return this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId, options)
-        .then(() => this.currentAccountState.updateUserAccountData({ deviceId: null }));
+      return this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId, options);
     }
 
     log.debug("destroying session");
@@ -810,7 +823,9 @@ FxAccountsInternal.prototype = {
         }
       }
       return currentState.whenKeysReadyDeferred.promise;
-    }).then(result => currentState.resolve(result));
+    }).catch(err =>
+      this._handleTokenError(err)
+    ).then(result => currentState.resolve(result));
    },
 
   fetchAndUnwrapKeys: function(keyFetchToken) {
@@ -1115,8 +1130,16 @@ FxAccountsInternal.prototype = {
         // if the session token expired. Let's continue polling otherwise.
         if (!error || !error.code || error.code != 401) {
           this.pollEmailStatusAgain(currentState, sessionToken, timeoutMs);
+        } else {
+          let error = new Error("Verification status check failed");
+          this._rejectWhenVerified(currentState, error);
         }
       });
+  },
+
+  _rejectWhenVerified(currentState, error) {
+    currentState.whenVerifiedDeferred.reject(error);
+    delete currentState.whenVerifiedDeferred;
   },
 
   // Poll email status using truncated exponential back-off.
@@ -1125,8 +1148,7 @@ FxAccountsInternal.prototype = {
     if (ageMs >= this.POLL_SESSION) {
       if (currentState.whenVerifiedDeferred) {
         let error = new Error("User email verification timed out.");
-        currentState.whenVerifiedDeferred.reject(error);
-        delete currentState.whenVerifiedDeferred;
+        this._rejectWhenVerified(currentState, error);
       }
       log.debug("polling session exceeded, giving up");
       return;
@@ -1385,7 +1407,8 @@ FxAccountsInternal.prototype = {
     } else if (aError.message &&
         (aError.message === "INVALID_PARAMETER" ||
         aError.message === "NO_ACCOUNT" ||
-        aError.message === "UNVERIFIED_ACCOUNT")) {
+        aError.message === "UNVERIFIED_ACCOUNT" ||
+        aError.message === "AUTH_ERROR")) {
       return aError;
     }
     return this._error(ERROR_UNKNOWN, aError);
@@ -1458,6 +1481,11 @@ FxAccountsInternal.prototype = {
       }
     } catch(ignore) {}
 
+    if (!signedInUser.sessionToken) {
+      return Promise.reject(new Error(
+        "_registerOrUpdateDevice called without a session token"));
+    }
+
     return this.fxaPushService.registerPushEndpoint().then(subscription => {
       const deviceName = this._getDeviceName();
       let deviceOptions = {};
@@ -1504,8 +1532,11 @@ FxAccountsInternal.prototype = {
         }
       }
 
-      return this._logErrorAndSetStaleDeviceFlag(error);
-    }).catch(() => {});
+      // `_handleTokenError` re-throws the error.
+      return this._handleTokenError(error);
+    }).catch(error =>
+      this._logErrorAndSetStaleDeviceFlag(error)
+    ).catch(() => {});
   },
 
   _recoverFromUnknownDevice() {
@@ -1561,7 +1592,38 @@ FxAccountsInternal.prototype = {
         "failed to set stale device flag, device registration won't be retried",
         secondError);
     }).then(() => {});
-  }
+  },
+
+  _handleTokenError(err) {
+    if (!err || err.code != 401 || err.errno != ERRNO_INVALID_AUTH_TOKEN) {
+      throw err;
+    }
+    log.warn("recovering from invalid token error", err);
+    return this.accountStatus().then(exists => {
+      if (!exists) {
+        // Delete all local account data. Since the account no longer
+        // exists, we can skip the remote calls.
+        log.info("token invalidated because the account no longer exists");
+        return this.signOut(true);
+      }
+
+      // Delete all fields except those required for the user to
+      // reauthenticate.
+      log.info("clearing credentials to handle invalid token error");
+      let updateData = {};
+      let clearField = field => {
+        if (!FXA_PWDMGR_REAUTH_WHITELIST.has(field)) {
+          updateData[field] = null;
+        }
+      }
+      FXA_PWDMGR_PLAINTEXT_FIELDS.forEach(clearField);
+      FXA_PWDMGR_SECURE_FIELDS.forEach(clearField);
+      FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
+
+      let currentState = this.currentAccountState;
+      return currentState.updateUserAccountData(updateData);
+    }).then(() => Promise.reject(err));
+  },
 };
 
 
