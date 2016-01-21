@@ -210,6 +210,12 @@ private:
   // where the content was loaded from
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
+  // the protocols we want to measure
+  enum class ProtocolType: uint8_t { OTHER, HTTP, HTTPS };
+
+  // the protocol used to load the content
+  ProtocolType mProtocolType;
+
   // owning back pointer.
   RefPtr<nsGeolocationService> mService;
 
