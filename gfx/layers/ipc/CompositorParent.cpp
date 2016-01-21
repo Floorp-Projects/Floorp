@@ -403,7 +403,7 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
   if (mCurrentCompositeTask == nullptr) {
     mCurrentCompositeTask = NewRunnableMethod(this,
                                               &CompositorVsyncScheduler::Composite,
-                                              aCompositeTimestamp, nullptr, nullptr);
+                                              aCompositeTimestamp);
     ScheduleTask(mCurrentCompositeTask, 0);
   }
 }
@@ -500,19 +500,12 @@ CompositorVsyncScheduler::CancelCurrentCompositeTask()
 }
 
 void
-CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp, gfx::DrawTarget* aTarget, const IntRect* aRect)
+CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
 {
   MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   {
     MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
     mCurrentCompositeTask = nullptr;
-  }
-
-  if (aVsyncTimestamp < mLastCompose) {
-    // We can sometimes get vsync timestamps that are in the past
-    // compared to the last compose with force composites.
-    // In those cases, normalize to now.
-    aVsyncTimestamp = TimeStamp::Now();
   }
 
   DispatchTouchEvents(aVsyncTimestamp);
@@ -521,7 +514,7 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp, gfx::DrawTarget* 
   if (mNeedsComposite || mAsapScheduling) {
     mNeedsComposite = 0;
     mLastCompose = aVsyncTimestamp;
-    ComposeToTarget(aTarget, aRect);
+    ComposeToTarget(nullptr);
     mVsyncNotificationsSkipped = 0;
 
     TimeDuration compositeFrameTotal = TimeStamp::Now() - aVsyncTimestamp;
@@ -552,10 +545,9 @@ CompositorVsyncScheduler::OnForceComposeToTarget()
 void
 CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
-  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   OnForceComposeToTarget();
-  SetNeedsComposite();
-  Composite(TimeStamp::Now(), aTarget, aRect);
+  mLastCompose = TimeStamp::Now();
+  ComposeToTarget(aTarget, aRect);
 }
 
 bool
@@ -640,9 +632,8 @@ CompositorVsyncScheduler::ScheduleTask(CancelableTask* aTask, int aTime)
 void
 CompositorVsyncScheduler::ResumeComposition()
 {
-  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
-  SetNeedsComposite();
-  Composite(TimeStamp::Now());
+  mLastCompose = TimeStamp::Now();
+  ComposeToTarget(nullptr);
 }
 
 void
