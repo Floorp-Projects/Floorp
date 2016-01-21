@@ -1514,13 +1514,10 @@ ServiceWorkerJobQueue::CancelJobs(QueueData& aQueue)
   }
 
   // We have to treat the first job specially. It is the running job and needs
-  // to be notified correctly.
-  RefPtr<ServiceWorkerJob> runningJob = aQueue.mJobs[0];
-  // We can just let an Unregister job run to completion.
-  if (runningJob->IsRegisterOrInstallJob()) {
-    ServiceWorkerJobBase* job = static_cast<ServiceWorkerJobBase*>(runningJob.get());
-    job->Cancel();
-  }
+  // to be notified correctly.  Even if the job continues some work in the
+  // background, this still needs to be done to let the job know its no longer
+  // in the queue.
+  aQueue.mJobs[0]->Cancel();
 
   // Get rid of everything. Non-main thread objects may still be holding a ref
   // to the running register job. Since we called Cancel() on it, the job's
