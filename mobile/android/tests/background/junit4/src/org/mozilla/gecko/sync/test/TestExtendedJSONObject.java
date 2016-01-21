@@ -87,7 +87,7 @@ public class TestExtendedJSONObject {
     try {
       ExtendedJSONObject.parseJSONArray("[0, ");
       fail();
-    } catch (ParseException e) {
+    } catch (NonArrayJSONException e) {
       // Do nothing.
     }
 
@@ -113,14 +113,14 @@ public class TestExtendedJSONObject {
     try {
       ExtendedJSONObject.parseUTF8AsJSONObject("{}".getBytes("UTF-16"));
       fail();
-    } catch (ParseException e) {
+    } catch (NonObjectJSONException e) {
       // Do nothing.
     }
 
     try {
       ExtendedJSONObject.parseUTF8AsJSONObject("{".getBytes("UTF-8"));
       fail();
-    } catch (ParseException e) {
+    } catch (NonObjectJSONException e) {
       // Do nothing.
     }
   }
