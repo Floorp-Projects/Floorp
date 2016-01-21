@@ -7,6 +7,7 @@
 
 #include "prcvar.h"
 #include "prthread.h"
+#include "prprf.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 
@@ -26,6 +27,8 @@
 #include "AudioSegment.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
+#include "cubeb/cubeb.h"
+#include "CubebUtils.h"
 
 #include "MediaEngineWrapper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
@@ -119,6 +122,159 @@ protected:
   nsCString mUUID;
 };
 
+// Small subset of VoEHardware
+class AudioInput
+{
+public:
+  AudioInput(webrtc::VoiceEngine* aVoiceEngine) : mVoiceEngine(aVoiceEngine) {};
+  virtual ~AudioInput() {}
+
+  NS_INLINE_DECL_REFCOUNTING(AudioInput)
+
+  virtual int GetNumOfRecordingDevices(int& aDevices) = 0;
+  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+                                     char aStrGuidUTF8[128]) = 0;
+  virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
+  virtual void StartRecording(MediaStreamGraph *aGraph) = 0;
+  virtual void StopRecording(MediaStreamGraph *aGraph) = 0;
+  virtual int SetRecordingDevice(int aIndex) = 0;
+
+protected:
+  webrtc::VoiceEngine* mVoiceEngine;
+};
+
+class AudioInputCubeb : public AudioInput,
+                        public MediaStreamListener
+{
+public:
+  AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine) :
+    AudioInput(aVoiceEngine), mDevices(nullptr) {}
+  virtual ~AudioInputCubeb()
+  {
+    if (mDevices) {
+      cubeb_device_collection_destroy(mDevices);
+      mDevices = nullptr;
+    }
+  }
+
+  virtual int GetNumOfRecordingDevices(int& aDevices)
+  {
+    // devices = cubeb_get_num_devices(...)
+    if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
+                                            CUBEB_DEVICE_TYPE_INPUT,
+                                            &mDevices)) {
+      return 0;
+    }
+    aDevices = 0;
+    for (uint32_t i = 0; i < mDevices->count; i++) {
+      if (mDevices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
+          mDevices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED)
+      {
+        aDevices++;
+        // XXX to support device changes, we need to identify by name/UUID not index
+      }
+    }
+    return 0;
+  }
+
+  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+                                     char aStrGuidUTF8[128])
+  {
+    if (!mDevices) {
+      return 1;
+    }
+    int devindex = aIndex == -1 ? 0 : aIndex;
+    PR_snprintf(aStrNameUTF8, 128, "%s%s", aIndex == -1 ? "default: " : "",
+                mDevices->device[devindex]->friendly_name);
+    aStrGuidUTF8[0] = '\0';
+    return 0;
+  }
+
+  virtual int GetRecordingDeviceStatus(bool& aIsAvailable)
+  {
+    // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT
+    aIsAvailable = true;
+    return 0;
+  }
+
+  virtual void StartRecording(MediaStreamGraph *aGraph)
+  {
+    ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
+    ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
+    if (ptrVoERender) {
+      ptrVoERender->SetExternalRecordingStatus(true);
+    }
+    aGraph->OpenAudioInput(nullptr, this);
+  }
+
+  virtual void StopRecording(MediaStreamGraph *aGraph)
+  {
+    aGraph->CloseAudioInput(this);
+  }
+
+  virtual int SetRecordingDevice(int aIndex)
+  {
+    // Not relevant to cubeb
+    return 1;
+  }
+
+private:
+  cubeb_device_collection* mDevices;
+};
+
+class AudioInputWebRTC : public AudioInput
+{
+public:
+  AudioInputWebRTC(webrtc::VoiceEngine* aVoiceEngine) : AudioInput(aVoiceEngine) {}
+  virtual ~AudioInputWebRTC() {}
+
+  virtual int GetNumOfRecordingDevices(int& aDevices)
+  {
+    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
+    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
+    if (!ptrVoEHw)  {
+      return 1;
+    }
+    return ptrVoEHw->GetNumOfRecordingDevices(aDevices);
+  }
+
+  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+                                     char aStrGuidUTF8[128])
+  {
+    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
+    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
+    if (!ptrVoEHw)  {
+      return 1;
+    }
+    return ptrVoEHw->GetRecordingDeviceName(aIndex, aStrNameUTF8,
+                                            aStrGuidUTF8);
+  }
+
+  virtual int GetRecordingDeviceStatus(bool& aIsAvailable)
+  {
+    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
+    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
+    if (!ptrVoEHw)  {
+      return 1;
+    }
+    ptrVoEHw->GetRecordingDeviceStatus(aIsAvailable);
+    return 0;
+  }
+
+  virtual void StartRecording(MediaStreamGraph *aGraph) {}
+  virtual void StopRecording(MediaStreamGraph *aGraph) {}
+
+  virtual int SetRecordingDevice(int aIndex)
+  {
+    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
+    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
+    if (!ptrVoEHw)  {
+      return 1;
+    }
+    return ptrVoEHw->SetRecordingDevice(aIndex);
+  }
+};
+
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
                                           public webrtc::VoEMediaProcess,
                                           private MediaConstraintsHelper
@@ -126,11 +282,13 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
 public:
   MediaEngineWebRTCMicrophoneSource(nsIThread* aThread,
                                     webrtc::VoiceEngine* aVoiceEnginePtr,
+                                    mozilla::AudioInput* aAudioInput,
                                     int aIndex,
                                     const char* name,
                                     const char* uuid)
     : MediaEngineAudioSource(kReleased)
     , mVoiceEngine(aVoiceEnginePtr)
+    , mAudioInput(aAudioInput)
     , mMonitor("WebRTCMic.Monitor")
     , mThread(aThread)
     , mCapIndex(aIndex)
@@ -146,6 +304,7 @@ public:
     , mPlayoutDelay(0)
     , mNullTransport(nullptr) {
     MOZ_ASSERT(aVoiceEnginePtr);
+    MOZ_ASSERT(aAudioInput);
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
     mDeviceUUID.Assign(uuid);
     Init();
@@ -207,6 +366,8 @@ private:
   void Init();
 
   webrtc::VoiceEngine* mVoiceEngine;
+  RefPtr<mozilla::AudioInput> mAudioInput;
+
   ScopedCustomReleasePtr<webrtc::VoEBase> mVoEBase;
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
   ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
@@ -265,6 +426,7 @@ private:
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
   webrtc::VoiceEngine* mVoiceEngine;
+  RefPtr<mozilla::AudioInput> mAudioInput;
   bool mAudioEngineInit;
 
   bool mHasTabVideoSource;
