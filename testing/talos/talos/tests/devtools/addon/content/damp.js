@@ -112,6 +112,55 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
+  _consoleBulkLoggingTest: Task.async(function*() {
+    let TOTAL_MESSAGES = 10;
+    let tab = yield this.testSetup(SIMPLE_URL);
+    let messageManager = tab.linkedBrowser.messageManager;
+    let {toolbox} = yield this.openToolbox("webconsole");
+    let webconsole = toolbox.getPanel("webconsole");
+
+    // Resolve once the last message has been received.
+    let allMessagesReceived = new Promise(resolve => {
+      function receiveMessages(e, messages) {
+        for (let m of messages) {
+          if (m.node.textContent.includes("damp " + TOTAL_MESSAGES)) {
+            webconsole.hud.ui.off("new-messages", receiveMessages);
+            // Wait for the console to redraw
+            requestAnimationFrame(resolve);
+          }
+        }
+      }
+      webconsole.hud.ui.on("new-messages", receiveMessages);
+    });
+
+    // Load a frame script using a data URI so we can do logs
+    // from the page.  So this is running in content.
+    messageManager.loadFrameScript("data:,(" + encodeURIComponent(
+      `function () {
+        addMessageListener("do-logs", function () {
+          for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
+            content.console.log('damp', i+1, content);
+          }
+        });
+      }`
+    ) + ")()", true);
+
+    // Kick off the logging
+    messageManager.sendAsyncMessage("do-logs");
+
+    let start = performance.now();
+    yield allMessagesReceived;
+    let end = performance.now();
+
+    this._results.push({
+      name: "console.bulklog",
+      value: end - start
+    });
+
+    yield this.closeToolbox(null);
+    yield this.testTeardown();
+  }),
+
   takeCensus: function(label) {
     let start = performance.now();
 
@@ -244,10 +293,11 @@ Damp.prototype = {
   },
 
   testSetup: Task.async(function*(url) {
-    yield this.addTab(url);
+    let tab = yield this.addTab(url);
     yield new Promise(resolve => {
       setTimeout(resolve, this._config.rest);
     });
+    return tab;
   }),
 
   testTeardown: Task.async(function*(url) {
@@ -347,6 +397,10 @@ Damp.prototype = {
     let tests = [];
     tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple"));
     tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated"));
+
+    if (config.subtests.indexOf("consoleBulkLogging") > -1) {
+      tests = tests.concat(this._consoleBulkLoggingTest);
+    }
     this._doSequence(tests, this._doneInternal);
   }
 }
