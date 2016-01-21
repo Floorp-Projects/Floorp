@@ -401,16 +401,22 @@ CodeRange::CodeRange(uint32_t nameIndex, uint32_t lineNumber, FuncOffsets offset
     end_ = offsets.end;
 }
 
+static size_t
+NullableStringLength(const char* chars)
+{
+    return chars ? strlen(chars) : 0;
+}
+
 size_t
 CacheableChars::serializedSize() const
 {
-    return sizeof(uint32_t) + strlen(get());
+    return sizeof(uint32_t) + NullableStringLength(get());
 }
 
 uint8_t*
 CacheableChars::serialize(uint8_t* cursor) const
 {
-    uint32_t length = strlen(get());
+    uint32_t length = NullableStringLength(get());
     cursor = WriteBytes(cursor, &length, sizeof(uint32_t));
     cursor = WriteBytes(cursor, get(), length);
     return cursor;
@@ -433,7 +439,7 @@ CacheableChars::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 bool
 CacheableChars::clone(JSContext* cx, CacheableChars* out) const
 {
-    uint32_t length = strlen(get());
+    uint32_t length = NullableStringLength(get());
 
     UniqueChars chars(cx->pod_calloc<char>(length + 1));
     if (!chars)
