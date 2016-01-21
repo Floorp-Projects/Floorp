@@ -10,6 +10,9 @@
 #include "ProxyAccessible.h"
 #include "mozilla/dom/TabParent.h"
 #include "xpcAccessibleDocument.h"
+#include "xpcAccEvents.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 
 namespace mozilla {
 namespace a11y {
@@ -160,6 +163,23 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
   }
 
   ProxyStateChangeEvent(target, aState, aEnabled);
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  uint32_t type = nsIAccessibleEvent::EVENT_STATE_CHANGE;
+  bool extra;
+  uint32_t state = nsAccUtils::To32States(aState, &extra);
+  bool fromUser = true; // XXX fix this
+  nsIDOMNode* node = nullptr; // XXX can we do better?
+  RefPtr<xpcAccStateChangeEvent> event =
+    new xpcAccStateChangeEvent(type, xpcAcc, doc, node, fromUser, state, extra,
+                               aEnabled);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
   return true;
 }
 
