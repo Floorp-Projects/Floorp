@@ -453,36 +453,6 @@ class FileCopier(FileRegistry):
         return result
 
 
-class FilePurger(FileCopier):
-    """A variation of FileCopier that is used to purge untracked files.
-
-    Callers create an instance then call .add() to register files/paths that
-    should exist. Once the canonical set of files that may exist is defined,
-    .purge() is called against a target directory. All files and empty
-    directories in the target directory that aren't in the registry will be
-    deleted.
-    """
-    class FakeFile(BaseFile):
-        def copy(self, dest, skip_if_older=True):
-            return True
-
-    def add(self, path):
-        """Record that a path should exist.
-
-        We currently do not track what kind of entity should be behind that
-        path. We presumably could add type tracking later and have purging
-        delete entities if there is a type mismatch.
-        """
-        return FileCopier.add(self, path, FilePurger.FakeFile())
-
-    def purge(self, dest):
-        """Deletes all files and empty directories not in the registry."""
-        return FileCopier.copy(self, dest)
-
-    def copy(self, *args, **kwargs):
-        raise Exception('copy() disabled on FilePurger. Use purge().')
-
-
 class Jarrer(FileRegistry, BaseFile):
     '''
     FileRegistry with the ability to copy and pack the registered files as a
