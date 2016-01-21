@@ -86,17 +86,6 @@ class MediaTestRunner(BaseMarionetteTestRunner):
 
 
 class FirefoxMediaHarness(MarionetteHarness):
-    def __init__(self,
-             runner_class=MediaTestRunner,
-             parser_class=MediaTestArguments):
-        # workaround until next marionette-client release - Bug 1227918
-        try:
-            MarionetteHarness.__init__(self, runner_class, parser_class)
-        except Exception:
-            logger = mozlog.commandline.setup_logging('Media-test harness', {})
-            logger.error('Failure setting up harness', exc_info=True)
-            raise
-
     def parse_args(self, *args, **kwargs):
         return MarionetteHarness.parse_args(self, {'mach': sys.stdout})
 
