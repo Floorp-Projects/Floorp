@@ -161,6 +161,56 @@ Damp.prototype = {
     yield this.testTeardown();
   }),
 
+  // Log a stream of console messages, 1 per rAF.  Then record the average
+  // time per rAF.  The idea is that the console being slow can slow down
+  // content (i.e. Bug 1237368).
+  _consoleStreamLoggingTest: Task.async(function*() {
+    let TOTAL_MESSAGES = 100;
+    let tab = yield this.testSetup(SIMPLE_URL);
+    let messageManager = tab.linkedBrowser.messageManager;
+    let {toolbox} = yield this.openToolbox("webconsole");
+    let webconsole = toolbox.getPanel("webconsole");
+
+    // Load a frame script using a data URI so we can do logs
+    // from the page.  So this is running in content.
+    messageManager.loadFrameScript("data:,(" + encodeURIComponent(
+      `function () {
+        let count = 0;
+        let startTime = content.performance.now();
+        function log() {
+          if (++count < ${TOTAL_MESSAGES}) {
+            content.document.querySelector("h1").textContent += count + "\\n";
+            content.console.log('damp', count,
+                                content,
+                                content.document,
+                                content.document.body,
+                                content.document.documentElement,
+                                new Array(100).join(" DAMP? DAMP! "));
+            content.requestAnimationFrame(log);
+          } else {
+            let avgTime = (content.performance.now() - startTime) / ${TOTAL_MESSAGES};
+            sendSyncMessage("done", Math.round(avgTime));
+          }
+        }
+        log();
+      }`
+    ) + ")()", true);
+
+    let avgTime = yield new Promise(resolve => {
+      messageManager.addMessageListener("done", (e) => {
+        resolve(e.data);
+      });
+    });
+
+    this._results.push({
+      name: "console.streamlog",
+      value: avgTime
+    });
+
+    yield this.closeToolbox(null);
+    yield this.testTeardown();
+  }),
+
   takeCensus: function(label) {
     let start = performance.now();
 
@@ -400,6 +450,9 @@ Damp.prototype = {
 
     if (config.subtests.indexOf("consoleBulkLogging") > -1) {
       tests = tests.concat(this._consoleBulkLoggingTest);
+    }
+    if (config.subtests.indexOf("consoleStreamLogging") > -1) {
+      tests = tests.concat(this._consoleStreamLoggingTest);
     }
     this._doSequence(tests, this._doneInternal);
   }
