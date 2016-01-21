@@ -93,7 +93,9 @@ var getServerTraits = Task.async(function*(target) {
     { name: "hasSetCurrentTimes", actor: "animations",
       method: "setCurrentTimes" },
     { name: "hasGetFrames", actor: "animationplayer",
-      method: "getFrames" }
+      method: "getFrames" },
+    { name: "hasSetWalkerActor", actor: "animations",
+      method: "setWalkerActor" },
   ];
 
   let traits = {};
@@ -145,6 +147,12 @@ var AnimationsController = {
     if (this.destroyed) {
       console.warn("Could not fully initialize the AnimationsController");
       return;
+    }
+
+    // Let the AnimationsActor know what WalkerActor we're using. This will
+    // come in handy later to return references to DOM Nodes.
+    if (this.traits.hasSetWalkerActor) {
+      yield this.animationsFront.setWalkerActor(gInspector.walker);
     }
 
     this.startListeners();
