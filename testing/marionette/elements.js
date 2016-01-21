@@ -344,8 +344,14 @@ ElementManager.prototype = {
     if (this.elementStrategies.indexOf(values.using) < 0) {
       throw new InvalidSelectorError(`No such strategy: ${values.using}`);
     }
-    let found = all ? this.findElements(values.using, values.value, rootNode, startNode) :
+
+    let found;
+    try {
+      found = all ? this.findElements(values.using, values.value, rootNode, startNode) :
                       this.findElement(values.using, values.value, rootNode, startNode);
+    } catch (e) {
+      throw new InvalidSelectorError(`Given ${values.using} expression "${values.value}" is invalid`);
+    }
     let type = Object.prototype.toString.call(found);
     let isArrayLike = ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]'));
     if (found == null || (isArrayLike && found.length <= 0)) {
