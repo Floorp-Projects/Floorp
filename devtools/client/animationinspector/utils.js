@@ -147,43 +147,6 @@ function findOptimalTimeInterval(timeScale,
 exports.findOptimalTimeInterval = findOptimalTimeInterval;
 
 /**
- * The TargetNodeHighlighter util is a helper for AnimationTargetNode components
- * that is used to lock the highlighter on animated nodes in the page.
- * It instantiates a new highlighter that is then shared amongst all instances
- * of AnimationTargetNode. This is useful because that means showing the
- * highlighter on one animated node will unhighlight the previously highlighted
- * one, but will not interfere with the default inspector highlighter.
- */
-var TargetNodeHighlighter = {
-  highlighter: null,
-  isShown: false,
-
-  highlight: Task.async(function*(animationTargetNode) {
-    if (!this.highlighter) {
-      let hUtils = animationTargetNode.inspector.toolbox.highlighterUtils;
-      this.highlighter = yield hUtils.getHighlighterByType("BoxModelHighlighter");
-    }
-
-    yield this.highlighter.show(animationTargetNode.nodeFront);
-    this.isShown = true;
-    this.emit("highlighted", animationTargetNode);
-  }),
-
-  unhighlight: Task.async(function*() {
-    if (!this.highlighter || !this.isShown) {
-      return;
-    }
-
-    yield this.highlighter.hide();
-    this.isShown = false;
-    this.emit("unhighlighted");
-  })
-};
-
-EventEmitter.decorate(TargetNodeHighlighter);
-exports.TargetNodeHighlighter = TargetNodeHighlighter;
-
-/**
  * Format a timestamp (in ms) as a mm:ss.mmm string.
  * @param {Number} time
  * @return {String}
