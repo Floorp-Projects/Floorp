@@ -885,6 +885,23 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
 
   mBuffer.BufferFilled();
 
+  // Callback any observers for the AEC speaker data.  Note that one
+  // (maybe) of these will be full-duplex, the others will get their input
+  // data off separate cubeb callbacks.  Take care with how stuff is
+  // removed/added to this list and TSAN issues, but input and output will
+  // use separate callback methods.
+  mGraphImpl->NotifySpeakerData(aOutputBuffer, static_cast<size_t>(aFrames),
+                                ChannelCount);
+
+  // Process mic data if any/needed -- after inserting far-end data for AEC!
+  if (aInputBuffer) {
+    if (mAudioInput) { // for this specific input-only or full-duplex stream
+      mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
+                                   static_cast<size_t>(aFrames),
+                                   ChannelCount);
+    }
+  }
+
   bool switching = false;
   {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
