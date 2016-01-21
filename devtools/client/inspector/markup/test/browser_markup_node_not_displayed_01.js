@@ -12,7 +12,7 @@
 // having to visit each and every child of a hidden node. So there's no sense
 // testing children nodes.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_not_displayed.html";
+const TEST_URL = URL_ROOT + "doc_markup_not_displayed.html";
 const TEST_DATA = [
   {selector: "#normal-div", isDisplayed: true},
   {selector: "head", isDisplayed: false},
@@ -22,7 +22,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let {selector, isDisplayed} of TEST_DATA) {
     info("Getting node " + selector);

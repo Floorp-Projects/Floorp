@@ -44,10 +44,12 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
     "2em solid rgba(0, 255, 0, 0.5)",
     "The text of the border css property was updated");
 
+  let onModified = ruleView.once("ruleview-changed");
   let spectrum = yield cPicker.spectrum;
   let onHidden = cPicker.tooltip.once("hidden");
   EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
+  yield onModified;
 
   is(content.getComputedStyle(content.document.body).borderLeftColor,
     "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");

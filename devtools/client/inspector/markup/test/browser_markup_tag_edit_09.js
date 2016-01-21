@@ -6,19 +6,19 @@
 
 // Test that editing a mixed-case attribute preserves the case
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_svg_attributes.html";
+const TEST_URL = URL_ROOT + "doc_markup_svg_attributes.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   yield inspector.markup.expandAll();
   yield selectNode("svg", inspector);
 
-  yield testWellformedMixedCase(inspector);
-  yield testMalformedMixedCase(inspector);
+  yield testWellformedMixedCase(inspector, testActor);
+  yield testMalformedMixedCase(inspector, testActor);
 });
 
-function* testWellformedMixedCase(inspector) {
+function* testWellformedMixedCase(inspector, testActor) {
   info("Modifying a mixed-case attribute, " +
     "expecting the attribute's case to be preserved");
 
@@ -41,10 +41,10 @@ function* testWellformedMixedCase(inspector) {
     "viewBox": "0 0 1 1",
     "width": "200",
     "height": "200"
-  });
+  }, testActor);
 }
 
-function* testMalformedMixedCase(inspector) {
+function* testMalformedMixedCase(inspector, testActor) {
   info("Modifying a malformed, mixed-case attribute, " +
     "expecting the attribute's case to be preserved");
 
@@ -67,5 +67,5 @@ function* testMalformedMixedCase(inspector) {
     "viewBox": "<>",
     "width": "200",
     "height": "200"
-  });
+  }, testActor);
 }

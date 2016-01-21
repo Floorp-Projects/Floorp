@@ -138,6 +138,14 @@ handlers[actions.SELECT_SNAPSHOT] = function (snapshots, { id }) {
   return snapshots.map(s => immutableUpdate(s, { selected: s.id === id }));
 };
 
+handlers[actions.DELETE_SNAPSHOTS_START] = function (snapshots, { ids }) {
+  return snapshots.filter(s => ids.indexOf(s.id) === -1);
+};
+
+handlers[actions.DELETE_SNAPSHOTS_END] = function (snapshots) {
+  return snapshots;
+};
+
 handlers[actions.CHANGE_VIEW] = function (snapshots, { view }) {
   return view === viewState.DIFFING
     ? snapshots.map(s => immutableUpdate(s, { selected: false }))

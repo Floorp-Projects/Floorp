@@ -43,10 +43,8 @@ function* testCreateNew(view) {
   input.value = "background-color";
 
   info("Pressing return to commit and focus the new value field");
-  let onValueFocus = once(elementRuleEditor.element, "focus", true);
-  let onModifications = elementRuleEditor.rule._applyingModifications;
+  let onModifications = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onValueFocus;
   yield onModifications;
 
   // Getting the new value editor after focus
@@ -65,10 +63,9 @@ function* testCreateNew(view) {
 
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "#XYZ";
-  let onBlur = once(editor.input, "blur");
-  onModifications = elementRuleEditor.rule._applyingModifications;
+
+  onModifications = view.once("ruleview-changed");
   editor.input.blur();
-  yield onBlur;
   yield onModifications;
 
   is(textProp.value, "#XYZ", "Text prop should have been changed.");

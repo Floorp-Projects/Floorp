@@ -41,7 +41,7 @@ function* ifTestingSupported() {
     "The first called function's line is correct.");
   is(functionCalls[0].argsPreview, "0, 0, 128, 128",
     "The first called function's args preview is correct.");
-  is(functionCalls[0].callerPreview, "ctx",
+  is(functionCalls[0].callerPreview, "Object",
     "The first called function's caller preview is correct.");
 
   is(functionCalls[6].type, CallWatcherFront.METHOD_FUNCTION,
@@ -54,7 +54,7 @@ function* ifTestingSupported() {
     "The penultimate called function's line is correct.");
   is(functionCalls[6].argsPreview, "10, 10, 55, 50",
     "The penultimate called function's args preview is correct.");
-  is(functionCalls[6].callerPreview, "ctx",
+  is(functionCalls[6].callerPreview, "Object",
     "The penultimate called function's caller preview is correct.");
 
   is(functionCalls[7].type, CallWatcherFront.METHOD_FUNCTION,
@@ -67,7 +67,7 @@ function* ifTestingSupported() {
     "The last called function's line is correct.");
   ok(functionCalls[7].argsPreview.includes("Function"),
     "The last called function's args preview is correct.");
-  is(functionCalls[7].callerPreview, "",
+  is(functionCalls[7].callerPreview, "Object",
     "The last called function's caller preview is correct.");
 
   let firstNonDrawCall = yield functionCalls[1].getDetails();

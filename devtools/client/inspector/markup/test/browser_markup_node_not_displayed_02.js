@@ -7,7 +7,7 @@
 // Tests that nodes are marked as displayed and not-displayed dynamically, when
 // their display changes
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_not_displayed.html";
+const TEST_URL = URL_ROOT + "doc_markup_not_displayed.html";
 const TEST_DATA = [
   {
     desc: "Hiding a node by creating a new stylesheet",
@@ -90,7 +90,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let data of TEST_DATA) {
     info("Running test case: " + data.desc);

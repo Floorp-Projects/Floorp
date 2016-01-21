@@ -7,10 +7,10 @@
 // Tests that the contextual menu items shown when clicking on links in
 // attributes actually do the right things.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
   yield selectNode("video", inspector);
@@ -27,7 +27,7 @@ add_task(function*() {
   yield waitForTabLoad(tab);
 
   ok(true, "A new tab opened");
-  is(tab.linkedBrowser.currentURI.spec, TEST_URL_ROOT + "doc_markup_tooltip.png",
+  is(tab.linkedBrowser.currentURI.spec, URL_ROOT + "doc_markup_tooltip.png",
     "The URL for the new tab is correct");
   gBrowser.removeTab(tab);
 

@@ -6,7 +6,7 @@
 
 // Test that the markup-view nodes can be navigated to with the keyboard
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_navigation.html";
+const TEST_URL = URL_ROOT + "doc_markup_navigation.html";
 const TEST_DATA = [
   ["pageup", "*doctype*"],
   ["down", "html"],
@@ -67,7 +67,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
