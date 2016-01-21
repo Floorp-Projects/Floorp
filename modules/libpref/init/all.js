@@ -438,27 +438,33 @@ pref("media.getusermedia.aec_delay_agnostic", true);
 pref("media.getusermedia.noise", 1);
 pref("media.getusermedia.agc_enabled", false);
 pref("media.getusermedia.agc", 1);
-// Adjustments for OS-specific input delay (lower bound)
-// Adjustments for OS-specific AudioStream+cubeb+output delay (lower bound)
+// capture_delay: Adjustments for OS-specific input delay (lower bound)
+// playout_delay: Adjustments for OS-specific AudioStream+cubeb+output delay (lower bound)
+// full_duplex: enable cubeb full-duplex capture/playback
 #if defined(XP_MACOSX)
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 10);
+pref("media.navigator.audio.full_duplex", false);
 #elif defined(XP_WIN)
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 40);
+pref("media.navigator.audio.full_duplex", false);
 #elif defined(ANDROID)
 pref("media.peerconnection.capture_delay", 100);
 pref("media.getusermedia.playout_delay", 100);
+pref("media.navigator.audio.full_duplex", false);
 // Whether to enable Webrtc Hardware acceleration support
 pref("media.navigator.hardware.vp8_encode.acceleration_enabled", false);
 pref("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
 #elif defined(XP_LINUX)
 pref("media.peerconnection.capture_delay", 70);
 pref("media.getusermedia.playout_delay", 50);
+pref("media.navigator.audio.full_duplex", false);
 #else
 // *BSD, others - merely a guess for now
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 50);
+pref("media.navigator.audio.full_duplex", false);
 #endif
 #endif
 
