@@ -57,9 +57,12 @@ function testJSEnabledIframe(secondPass) {
   }
 }
 
-let toggleJS = Task.async(function*() {
+function toggleJS() {
+  let deferred = promise.defer();
   let panel = toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById("devtools-disable-javascript");
+
+  cbx.scrollIntoView();
 
   if (cbx.checked) {
     info("Clearing checkbox to re-enable JS");
@@ -67,11 +70,16 @@ let toggleJS = Task.async(function*() {
     info("Checking checkbox to disable JS");
   }
 
-  let browserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
+    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+    doc = content.document;
+    deferred.resolve();
+  }, true);
+
   cbx.click();
-  yield browserLoaded;
-  doc = content.document;
-});
+
+  return deferred.promise;
+}
 
 function testJSDisabled() {
   info("Testing that JS is disabled");
