@@ -23,10 +23,6 @@ PLY_FILES = \
   $(topsrcdir)/other-licenses/ply/ply/yacc.py \
   $(NULL)
 
-PLY_DEST = $(SDK_BIN_DIR)/ply
-INSTALL_TARGETS += PLY
-PLY_TARGET = xpidl-parser
-
 include $(topsrcdir)/config/rules.mk
 
 # Generate the PLY lexer and parser.
