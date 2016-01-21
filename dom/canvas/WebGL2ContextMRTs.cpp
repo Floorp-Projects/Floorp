@@ -52,21 +52,42 @@ bool WebGL2Context::ValidateClearBuffer(const char* info, GLenum buffer, GLint d
 void
 WebGL2Context::ClearBufferiv_base(GLenum buffer, GLint drawbuffer, const GLint* value)
 {
+    const char funcName[] = "clearBufferiv";
+
     MakeContextCurrent();
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return;
+    }
+
     gl->fClearBufferiv(buffer, drawbuffer, value);
 }
 
 void
 WebGL2Context::ClearBufferuiv_base(GLenum buffer, GLint drawbuffer, const GLuint* value)
 {
+    const char funcName[] = "clearBufferuiv";
+
     MakeContextCurrent();
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return;
+    }
+
     gl->fClearBufferuiv(buffer, drawbuffer, value);
 }
 
 void
 WebGL2Context::ClearBufferfv_base(GLenum buffer, GLint drawbuffer, const GLfloat* value)
 {
+    const char funcName[] = "clearBufferfv";
+
     MakeContextCurrent();
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return;
+    }
+
     gl->fClearBufferfv(buffer, drawbuffer, value);
 }
 
