@@ -56,7 +56,7 @@ var FunctionCallActor = protocol.ActorClass({
    * @param array stack
    *        The called function's stack, as a list of { name, file, line } objects.
    * @param number timestamp
-   *        The timestamp of draw-related functions
+   *        The performance.now() timestamp when the function was called.
    * @param array args
    *        The called function's arguments.
    * @param any result
@@ -69,6 +69,7 @@ var FunctionCallActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.details = {
+      global: global,
       type: type,
       name: name,
       stack: stack,
@@ -77,49 +78,39 @@ var FunctionCallActor = protocol.ActorClass({
 
     // Store a weak reference to all objects so we don't
     // prevent natural GC if `holdWeak` was passed into
-    // setup as truthy. Used in the Web Audio Editor.
+    // setup as truthy.
     if (holdWeak) {
       let weakRefs = {
         window: Cu.getWeakReference(window),
         caller: Cu.getWeakReference(caller),
+        args: Cu.getWeakReference(args),
         result: Cu.getWeakReference(result),
-        args: Cu.getWeakReference(args)
       };
 
       Object.defineProperties(this.details, {
         window: { get: () => weakRefs.window.get() },
         caller: { get: () => weakRefs.caller.get() },
-        result: { get: () => weakRefs.result.get() },
         args: { get: () => weakRefs.args.get() },
-        timestamp: { get: () => weakRefs.timestamp.get() },
+        result: { get: () => weakRefs.result.get() },
       });
     }
     // Otherwise, hold strong references to the objects.
     else {
       this.details.window = window;
       this.details.caller = caller;
-      this.details.result = result;
       this.details.args = args;
-      this.details.timestamp = timestamp;
+      this.details.result = result;
     }
 
-    this.meta = {
-      global: -1,
-      previews: { caller: "", args: "" }
+    // The caller, args and results are string names for now. It would
+    // certainly be nicer if they were Object actors. Make this smarter, so
+    // that the frontend can inspect each argument, be it object or primitive.
+    // Bug 978960.
+    this.details.previews = {
+      caller: this._generateStringPreview(caller),
+      args: this._generateArgsPreview(args),
+      result: this._generateStringPreview(result)
     };
-
-    if (global == "WebGLRenderingContext") {
-      this.meta.global = CallWatcherFront.CANVAS_WEBGL_CONTEXT;
-    } else if (global == "CanvasRenderingContext2D") {
-      this.meta.global = CallWatcherFront.CANVAS_2D_CONTEXT;
-    } else if (global == "window") {
-      this.meta.global = CallWatcherFront.UNKNOWN_SCOPE;
-    } else {
-      this.meta.global = CallWatcherFront.GLOBAL_SCOPE;
-    }
-
-    this.meta.previews.caller = this._generateCallerPreview();
-    this.meta.previews.args = this._generateArgsPreview();
   },
 
   /**
@@ -134,8 +125,9 @@ var FunctionCallActor = protocol.ActorClass({
       file: this.details.stack[0].file,
       line: this.details.stack[0].line,
       timestamp: this.details.timestamp,
-      callerPreview: this.meta.previews.caller,
-      argsPreview: this.meta.previews.args
+      callerPreview: this.details.previews.caller,
+      argsPreview: this.details.previews.args,
+      resultPreview: this.details.previews.result
     };
   },
 
@@ -170,44 +162,36 @@ var FunctionCallActor = protocol.ActorClass({
   }),
 
   /**
-   * Serializes the caller's name so that it can be easily be transferred
-   * as a string, but still be useful when displayed in a potential UI.
-   *
-   * @return string
-   *         The caller's name as a string.
-   */
-  _generateCallerPreview: function() {
-    let global = this.meta.global;
-    if (global == CallWatcherFront.CANVAS_WEBGL_CONTEXT) {
-      return "gl";
-    }
-    if (global == CallWatcherFront.CANVAS_2D_CONTEXT) {
-      return "ctx";
-    }
-    return "";
-  },
-
-  /**
    * Serializes the arguments so that they can be easily be transferred
    * as a string, but still be useful when displayed in a potential UI.
    *
+   * @param array args
+   *        The source arguments.
    * @return string
    *         The arguments as a string.
    */
-  _generateArgsPreview: function() {
-    let { caller, args, name } = this.details;
-    let { global } = this.meta;
+  _generateArgsPreview: function(args) {
+    let { global, name, caller } = this.details;
 
     // Get method signature to determine if there are any enums
     // used in this method.
-    let enumArgs = (CallWatcherFront.ENUM_METHODS[global] || {})[name];
-    if (typeof enumArgs === "function") {
-      enumArgs = enumArgs(args);
+    let methodSignatureEnums;
+
+    let knownGlobal = CallWatcherFront.KNOWN_METHODS[global];
+    if (knownGlobal) {
+      let knownMethod = knownGlobal[name];
+      if (knownMethod) {
+        let isOverloaded = typeof knownMethod.enums === "function";
+        if (isOverloaded) {
+          methodSignatureEnums = methodSignatureEnums(args);
+        } else {
+          methodSignatureEnums = knownMethod.enums;
+        }
+      }
     }
 
-    // XXX: All of this sucks. Make this smarter, so that the frontend
-    // can inspect each argument, be it object or primitive. Bug 978960.
     let serializeArgs = () => args.map((arg, i) => {
+      // XXX: Bug 978960.
       if (arg === undefined) {
         return "undefined";
       }
@@ -222,13 +206,39 @@ var FunctionCallActor = protocol.ActorClass({
       }
       // If this argument matches the method's signature
       // and is an enum, change it to its constant name.
-      if (enumArgs && enumArgs.indexOf(i) !== -1) {
+      if (methodSignatureEnums && methodSignatureEnums.has(i)) {
         return getBitToEnumValue(global, caller, arg);
       }
-      return arg;
+      return arg + "";
     });
 
     return serializeArgs().join(", ");
+  },
+
+  /**
+   * Serializes the data so that it can be easily be transferred
+   * as a string, but still be useful when displayed in a potential UI.
+   *
+   * @param object data
+   *        The source data.
+   * @return string
+   *         The arguments as a string.
+   */
+  _generateStringPreview: function(data) {
+    // XXX: Bug 978960.
+    if (data === undefined) {
+      return "undefined";
+    }
+    if (data === null) {
+      return "null";
+    }
+    if (typeof data == "function") {
+      return "Function";
+    }
+    if (typeof data == "object") {
+      return "Object";
+    }
+    return data + "";
   }
 });
 
@@ -253,6 +263,7 @@ var FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
     this.timestamp = form.timestamp;
     this.callerPreview = form.callerPreview;
     this.argsPreview = form.argsPreview;
+    this.resultPreview = form.resultPreview;
   }
 });
 
@@ -283,6 +294,7 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
       return;
     }
     this._initialized = true;
+    this._timestampEpoch = 0;
 
     this._functionCalls = [];
     this._tracedGlobals = tracedGlobals || [];
@@ -342,10 +354,10 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
   }),
 
   /**
-   * Initialize frame start timestamp for measuring
+   * Initialize the timestamp epoch used to offset function call timestamps.
    */
-  initFrameStartTimestamp: method(function() {
-    this._frameStartTimestamp = this.tabActor.window.performance.now();
+  initTimestampEpoch: method(function() {
+    this._timestampEpoch = this.tabActor.window.performance.now();
   }),
 
   /**
@@ -378,18 +390,18 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
    * while recording. We're doing this to avoid the event emitter overhead,
    * since this is expected to be a very hot function.
    */
-  onCall: function() {},
+  onCall: null,
 
   /**
    * Invoked whenever the current tab actor's document global is created.
    */
   _onGlobalCreated: function({window, id, isTopLevel}) {
-    let self = this;
-
     // TODO: bug 981748, support more than just the top-level documents.
     if (!isTopLevel) {
       return;
     }
+
+    let self = this;
     this._tracedWindowId = id;
 
     let unwrappedWindow = XPCNativeWrapper.unwrap(window);
@@ -439,9 +451,9 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
         }
 
         if (self._recording) {
-          let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
-          let stack = getStack(name);
           let type = CallWatcherFront.METHOD_FUNCTION;
+          let stack = getStack(name);
+          let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
           callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
         }
         return result;
@@ -469,9 +481,9 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
           let result = Cu.waiveXrays(originalGetter.apply(this, args));
 
           if (self._recording) {
-            let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
-            let stack = getStack(name);
             let type = CallWatcherFront.GETTER_FUNCTION;
+            let stack = getStack(name);
+            let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
             callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
           }
           return result;
@@ -481,9 +493,9 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
           originalSetter.apply(this, args);
 
           if (self._recording) {
-            let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
-            let stack = getStack(name);
             let type = CallWatcherFront.SETTER_FUNCTION;
+            let stack = getStack(name);
+            let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
             callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, undefined);
           }
         },
@@ -554,6 +566,7 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     if (this._tracedWindowId == id) {
       this.pauseRecording();
       this.eraseRecording();
+      this._timestampEpoch = 0;
     }
   },
 
@@ -566,13 +579,18 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     if (this._finalized) {
       return;
     }
+
     let functionCall = new FunctionCallActor(this.conn, details, this._holdWeak);
 
     if (this._storeCalls) {
       this._functionCalls.push(functionCall);
     }
 
-    this.onCall(functionCall);
+    if (this.onCall) {
+      this.onCall(functionCall);
+    } else {
+      emit(this, "call", functionCall);
+    }
   }
 });
 
@@ -593,71 +611,177 @@ CallWatcherFront.METHOD_FUNCTION = 0;
 CallWatcherFront.GETTER_FUNCTION = 1;
 CallWatcherFront.SETTER_FUNCTION = 2;
 
-CallWatcherFront.GLOBAL_SCOPE = 0;
-CallWatcherFront.UNKNOWN_SCOPE = 1;
-CallWatcherFront.CANVAS_WEBGL_CONTEXT = 2;
-CallWatcherFront.CANVAS_2D_CONTEXT = 3;
+CallWatcherFront.KNOWN_METHODS = {};
 
-CallWatcherFront.ENUM_METHODS = {};
-CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_2D_CONTEXT] = {
-  asyncDrawXULElement: [6],
-  drawWindow: [6]
+CallWatcherFront.KNOWN_METHODS["CanvasRenderingContext2D"] = {
+  asyncDrawXULElement: {
+    enums: new Set([6]),
+  },
+  drawWindow: {
+    enums: new Set([6])
+  },
 };
 
-CallWatcherFront.ENUM_METHODS[CallWatcherFront.CANVAS_WEBGL_CONTEXT] = {
-  activeTexture: [0],
-  bindBuffer: [0],
-  bindFramebuffer: [0],
-  bindRenderbuffer: [0],
-  bindTexture: [0],
-  blendEquation: [0],
-  blendEquationSeparate: [0, 1],
-  blendFunc: [0, 1],
-  blendFuncSeparate: [0, 1, 2, 3],
-  bufferData: [0, 1, 2],
-  bufferSubData: [0, 1],
-  checkFramebufferStatus: [0],
-  clear: [0],
-  compressedTexImage2D: [0, 2],
-  compressedTexSubImage2D: [0, 6],
-  copyTexImage2D: [0, 2],
-  copyTexSubImage2D: [0],
-  createShader: [0],
-  cullFace: [0],
-  depthFunc: [0],
-  disable: [0],
-  drawArrays: [0],
-  drawElements: [0, 2],
-  enable: [0],
-  framebufferRenderbuffer: [0, 1, 2],
-  framebufferTexture2D: [0, 1, 2],
-  frontFace: [0],
-  generateMipmap: [0],
-  getBufferParameter: [0, 1],
-  getParameter: [0],
-  getFramebufferAttachmentParameter: [0, 1, 2],
-  getProgramParameter: [1],
-  getRenderbufferParameter: [0, 1],
-  getShaderParameter: [1],
-  getShaderPrecisionFormat: [0, 1],
-  getTexParameter: [0, 1],
-  getVertexAttrib: [1],
-  getVertexAttribOffset: [1],
-  hint: [0, 1],
-  isEnabled: [0],
-  pixelStorei: [0],
-  readPixels: [4, 5],
-  renderbufferStorage: [0, 1],
-  stencilFunc: [0],
-  stencilFuncSeparate: [0, 1],
-  stencilMaskSeparate: [0],
-  stencilOp: [0, 1, 2],
-  stencilOpSeparate: [0, 1, 2, 3],
-  texImage2D: (args) => args.length > 6 ? [0, 2, 6, 7] : [0, 2, 3, 4],
-  texParameterf: [0, 1],
-  texParameteri: [0, 1, 2],
-  texSubImage2D: (args) => args.length === 9 ? [0, 6, 7] : [0, 4, 5],
-  vertexAttribPointer: [2]
+CallWatcherFront.KNOWN_METHODS["WebGLRenderingContext"] = {
+  activeTexture: {
+    enums: new Set([0]),
+  },
+  bindBuffer: {
+    enums: new Set([0]),
+  },
+  bindFramebuffer: {
+    enums: new Set([0]),
+  },
+  bindRenderbuffer: {
+    enums: new Set([0]),
+  },
+  bindTexture: {
+    enums: new Set([0]),
+  },
+  blendEquation: {
+    enums: new Set([0]),
+  },
+  blendEquationSeparate: {
+    enums: new Set([0, 1]),
+  },
+  blendFunc: {
+    enums: new Set([0, 1]),
+  },
+  blendFuncSeparate: {
+    enums: new Set([0, 1, 2, 3]),
+  },
+  bufferData: {
+    enums: new Set([0, 1, 2]),
+  },
+  bufferSubData: {
+    enums: new Set([0, 1]),
+  },
+  checkFramebufferStatus: {
+    enums: new Set([0]),
+  },
+  clear: {
+    enums: new Set([0]),
+  },
+  compressedTexImage2D: {
+    enums: new Set([0, 2]),
+  },
+  compressedTexSubImage2D: {
+    enums: new Set([0, 6]),
+  },
+  copyTexImage2D: {
+    enums: new Set([0, 2]),
+  },
+  copyTexSubImage2D: {
+    enums: new Set([0]),
+  },
+  createShader: {
+    enums: new Set([0]),
+  },
+  cullFace: {
+    enums: new Set([0]),
+  },
+  depthFunc: {
+    enums: new Set([0]),
+  },
+  disable: {
+    enums: new Set([0]),
+  },
+  drawArrays: {
+    enums: new Set([0]),
+  },
+  drawElements: {
+    enums: new Set([0, 2]),
+  },
+  enable: {
+    enums: new Set([0]),
+  },
+  framebufferRenderbuffer: {
+    enums: new Set([0, 1, 2]),
+  },
+  framebufferTexture2D: {
+    enums: new Set([0, 1, 2]),
+  },
+  frontFace: {
+    enums: new Set([0]),
+  },
+  generateMipmap: {
+    enums: new Set([0]),
+  },
+  getBufferParameter: {
+    enums: new Set([0, 1]),
+  },
+  getParameter: {
+    enums: new Set([0]),
+  },
+  getFramebufferAttachmentParameter: {
+    enums: new Set([0, 1, 2]),
+  },
+  getProgramParameter: {
+    enums: new Set([1]),
+  },
+  getRenderbufferParameter: {
+    enums: new Set([0, 1]),
+  },
+  getShaderParameter: {
+    enums: new Set([1]),
+  },
+  getShaderPrecisionFormat: {
+    enums: new Set([0, 1]),
+  },
+  getTexParameter: {
+    enums: new Set([0, 1]),
+  },
+  getVertexAttrib: {
+    enums: new Set([1]),
+  },
+  getVertexAttribOffset: {
+    enums: new Set([1]),
+  },
+  hint: {
+    enums: new Set([0, 1]),
+  },
+  isEnabled: {
+    enums: new Set([0]),
+  },
+  pixelStorei: {
+    enums: new Set([0]),
+  },
+  readPixels: {
+    enums: new Set([4, 5]),
+  },
+  renderbufferStorage: {
+    enums: new Set([0, 1]),
+  },
+  stencilFunc: {
+    enums: new Set([0]),
+  },
+  stencilFuncSeparate: {
+    enums: new Set([0, 1]),
+  },
+  stencilMaskSeparate: {
+    enums: new Set([0]),
+  },
+  stencilOp: {
+    enums: new Set([0, 1, 2]),
+  },
+  stencilOpSeparate: {
+    enums: new Set([0, 1, 2, 3]),
+  },
+  texImage2D: {
+    enums: args => args.length > 6 ? new Set([0, 2, 6, 7]) :  new Set([0, 2, 3, 4]),
+  },
+  texParameterf: {
+    enums: new Set([0, 1]),
+  },
+  texParameteri: {
+    enums: new Set([0, 1, 2]),
+  },
+  texSubImage2D: {
+    enums: args => args.length === 9 ? new Set([0, 6, 7]) : new Set([0, 4, 5]),
+  },
+  vertexAttribPointer: {
+    enums: new Set([2])
+  },
 };
 
 /**

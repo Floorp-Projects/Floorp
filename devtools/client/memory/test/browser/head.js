@@ -104,6 +104,14 @@ function takeSnapshot (window) {
   return waitUntilState(gStore, () => gStore.getState().snapshots.length === snapshotCount + 1);
 }
 
+function clearSnapshots (window) {
+  let { gStore, document } = window;
+  document.querySelector(".devtools-toolbar .clear-snapshots").click();
+  return waitUntilState(gStore, () => gStore.getState().snapshots.every(
+    (snapshot) => snapshot.state !== states.SAVED_CENSUS)
+  );
+}
+
 /**
  * Sets breakdown and waits for currently selected breakdown to use it
  * and be completed the census.

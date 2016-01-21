@@ -47,9 +47,10 @@ function* testPressingEscapeRevertsChanges(view) {
 
   info("Pressing ESCAPE to close the tooltip");
   let onHidden = cPicker.tooltip.once("hidden");
+  let onModifications = view.once("ruleview-changed");
   EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
-  yield ruleEditor.rule._applyingModifications;
+  yield onModifications;
 
   yield waitForComputedStyleProperty("body", null, "background-color",
     "rgb(237, 237, 237)");

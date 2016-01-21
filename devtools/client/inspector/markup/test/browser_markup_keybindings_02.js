@@ -10,7 +10,7 @@
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
 add_task(function*() {
-  let {inspector, toolbox} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
 
   info("Focusing the tag editor of the test element");
   let {editor} = yield getContainerForSelector("div", inspector);

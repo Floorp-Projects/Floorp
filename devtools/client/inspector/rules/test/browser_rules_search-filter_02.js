@@ -8,7 +8,7 @@
 // selectors.
 
 const SEARCH = "20%";
-const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
+const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

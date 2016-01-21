@@ -910,17 +910,33 @@ AbstractCanvasGraph.prototype = {
       };
     }
 
-    let quad = this._canvas.getBoxQuads({
-      relativeTo: this._topWindow.document
-    })[0];
+    // This method is concerned with converting mouse event coordinates from
+    // "screen space" to "local space" (in other words, relative to this
+    // canvas's position, thus (0,0) would correspond to the upper left corner).
+    // We can't simply use `clientX` and `clientY` because the given MouseEvent
+    // object may be generated from events coming from other DOM nodes.
+    // Therefore, we need to get a bounding box relative to the top document and
+    // do some simple math to convert screen coords into local coords.
+    // However, `getBoxQuads` may be a very costly operation depending on the
+    // complexity of the "outside world" DOM, so cache the results until we
+    // suspect they might change (e.g. on a resize).
+    // It'd sure be nice if we could use `getBoundsWithoutFlushing`, but it's
+    // not taking the document zoom factor into consideration consistently.
+    if (!this._boundingBox || this._maybeDirtyBoundingBox) {
+      let topDocument = this._topWindow.document;
+      let boxQuad = this._canvas.getBoxQuads({ relativeTo: topDocument })[0];
+      this._boundingBox = boxQuad;
+      this._maybeDirtyBoundingBox = false;
+    }
 
-    let x = (e.screenX - this._topWindow.screenX) - quad.p1.x;
-    let y = (e.screenY - this._topWindow.screenY) - quad.p1.y;
+    let bb = this._boundingBox;
+    let x = (e.screenX - this._topWindow.screenX) - bb.p1.x;
+    let y = (e.screenY - this._topWindow.screenY) - bb.p1.y;
 
     // Don't allow the event coordinates to be bigger than the canvas
     // or less than 0.
-    let maxX = quad.p2.x - quad.p1.x;
-    let maxY = quad.p3.y - quad.p1.y;
+    let maxX = bb.p2.x - bb.p1.x;
+    let maxY = bb.p3.y - bb.p1.y;
     let mouseX = Math.max(0, Math.min(x, maxX)) * this._pixelRatio;
     let mouseY = Math.max(0, Math.min(x, maxY)) * this._pixelRatio;
 
@@ -1185,6 +1201,11 @@ AbstractCanvasGraph.prototype = {
    */
   _onResize: function() {
     if (this.hasData()) {
+      // The assumption is that resize events may change the outside world
+      // layout in a way that affects this graph's bounding box location
+      // relative to the top window's document. Graphs aren't currently
+      // (or ever) expected to move around on their own.
+      this._maybeDirtyBoundingBox = true;
       setNamedTimeout(this._uid, GRAPH_RESIZE_EVENTS_DRAIN, this.refresh);
     }
   }

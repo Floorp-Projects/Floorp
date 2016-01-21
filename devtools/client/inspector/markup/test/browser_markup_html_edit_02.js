@@ -74,7 +74,7 @@ const TEST_DATA = [
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
       let p = getNode("#badMarkup5");
-      let nodiv = getNode("#badMarkup5 div");
+      let nodiv = getNode("#badMarkup5 div", {expectNoMatch: true});
       let div = getNode("#badMarkup5 ~ div");
 
       ok(!nodiv, "The invalid markup got created as a sibling");
@@ -95,7 +95,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
-  yield runEditOuterHTMLTests(TEST_DATA, inspector);
+  yield runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

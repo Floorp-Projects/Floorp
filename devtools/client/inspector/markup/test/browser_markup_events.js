@@ -7,7 +7,7 @@
 // Test that markup view event bubbles show the correct event info for DOM
 // events.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_events.html";
+const TEST_URL = URL_ROOT + "doc_markup_events.html";
 
 loadHelperScript("helper_events_test_runner.js");
 

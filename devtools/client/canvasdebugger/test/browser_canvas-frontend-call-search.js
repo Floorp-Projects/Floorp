@@ -40,7 +40,7 @@ function* ifTestingSupported() {
     "The visible item's line has the expected value.");
   is(CallsListView.visibleItems[0].attachment.actor.argsPreview, "0, 0, 128, 128",
     "The visible item's args have the expected value.");
-  is(CallsListView.visibleItems[0].attachment.actor.callerPreview, "ctx",
+  is(CallsListView.visibleItems[0].attachment.actor.callerPreview, "Object",
     "The visible item's caller has the expected value.");
 
   let secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);

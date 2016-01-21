@@ -7,9 +7,6 @@
 // Tests that we can guess indentation from a style sheet, not just a
 // rule.
 
-// Needed for openStyleEditor.
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/styleeditor/test/head.js", this);
-
 // Use a weird indentation depth to avoid accidental success.
 const TEST_URI = `
   <style type='text/css'>
@@ -35,12 +32,12 @@ div {
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+  let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testIndentation(inspector, view);
+  yield testIndentation(toolbox, inspector, view);
 });
 
-function* testIndentation(inspector, view) {
+function* testIndentation(toolbox, inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
 
   info("Focusing a new property name in the rule-view");
@@ -68,9 +65,9 @@ function* testIndentation(inspector, view) {
   yield onBlur;
   yield onModifications;
 
-  let { ui } = yield openStyleEditor();
+  let { UI } = yield toolbox.selectTool("styleeditor");
 
-  let styleEditor = yield ui.editors[0].getSourceEditor();
+  let styleEditor = yield UI.editors[0].getSourceEditor();
   let text = styleEditor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");
 }
