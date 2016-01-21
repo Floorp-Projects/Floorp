@@ -4918,6 +4918,9 @@ pref("layout.accessiblecaret.height", "36.0");
 pref("layout.accessiblecaret.margin-left", "-18.5");
 pref("layout.accessiblecaret.bar.width", "2.0");
 
+// Show the selection bars at the two ends of the selection highlight.
+pref("layout.accessiblecaret.bar.enabled", true);
+
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
 // no one touches it. Set the value to 0 to disable this feature.
 pref("layout.accessiblecaret.timeout_ms", 3000);
