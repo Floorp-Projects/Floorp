@@ -308,24 +308,26 @@ function runtestsInner()
 
   // Test that showModalDialog() works normally and then gets blocked
   // on the second call.
-  w = window.open();
-  w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-  is (promptState, void(0), "Wrong prompt state");
-
-  // Test that showModalDialog() works normally and then gets blocked
-  // on the second call.
-  try {
+  if (window.showModalDialog) {
+    w = window.open();
     w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-  } catch(e) {
-    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
-  }
-  is (promptState.method, "confirm", "Wrong prompt method called");
-  is (promptState.parent, w, "Wrong confirm parent");
-  is (promptState.msg, "Prevent this page from creating additional dialogs",
-      "Wrong confirm message");
-  promptState = void(0);
+    is (promptState, void(0), "Wrong prompt state");
 
-  w.close();
+    // Test that showModalDialog() works normally and then gets blocked
+    // on the second call.
+    try {
+      w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
+    } catch(e) {
+      is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+    }
+    is (promptState.method, "confirm", "Wrong prompt method called");
+    is (promptState.parent, w, "Wrong confirm parent");
+    is (promptState.msg, "Prevent this page from creating additional dialogs",
+        "Wrong confirm message");
+    promptState = void(0);
+
+    w.close();
+  }
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
