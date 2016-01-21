@@ -319,7 +319,7 @@ public class TestMetaGlobal {
       public void handle(Request request, Response response) {
         if (request.getMethod().equals("PUT")) {
           try {
-            ExtendedJSONObject body = ExtendedJSONObject.parseJSONObject(request.getContent());
+            ExtendedJSONObject body = new ExtendedJSONObject(request.getContent());
             System.out.println(body.toJSONString());
             assertTrue(body.containsKey("payload"));
             assertFalse(body.containsKey("default"));

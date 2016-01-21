@@ -36,7 +36,13 @@ public class TestCryptoRecord {
 
   @Test
   public void testBaseCryptoRecordEncrypt() throws IOException, ParseException, NonObjectJSONException, CryptoException {
-    ExtendedJSONObject clearPayload = ExtendedJSONObject.parseJSONObject("{\"id\":\"5qRsgXWRJZXr\",\"title\":\"Index of file:///Users/jason/Library/Application Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\",\"histUri\":\"file:///Users/jason/Library/Application%20Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\",\"visits\":[{\"type\":1,\"date\":1319149012372425}]}");
+
+    ExtendedJSONObject clearPayload = new ExtendedJSONObject("{\"id\":\"5qRsgXWRJZXr\"," +
+            "\"title\":\"Index of file:///Users/jason/Library/Application " +
+            "Support/Firefox/Profiles/ksgd7wpk.LocalSyncServer/weave/logs/\"," +
+            "\"histUri\":\"file:///Users/jason/Library/Application%20Support/Firefox/Profiles" +
+            "/ksgd7wpk.LocalSyncServer/weave/logs/\",\"visits\":[{\"type\":1," +
+            "\"date\":1319149012372425}]}");
 
     CryptoRecord record = new CryptoRecord();
     record.payload = clearPayload;
@@ -256,7 +262,7 @@ public class TestCryptoRecord {
     assertEquals(expectedJson.get("collections"), decrypted.payload.get("collections"));
 
     // Check that the extracted keys were as expected.
-    JSONArray keys = ExtendedJSONObject.parseJSONObject(decrypted.payload.toJSONString()).getArray("default");
+    JSONArray keys = new ExtendedJSONObject(decrypted.payload.toJSONString()).getArray("default");
     KeyBundle keyBundle = KeyBundle.fromBase64EncodedKeys((String)keys.get(0), (String)keys.get(1));
 
     assertArrayEquals(Base64.decodeBase64(expectedBase64EncryptionKey.getBytes("UTF-8")), keyBundle.getEncryptionKey());

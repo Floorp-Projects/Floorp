@@ -19,7 +19,8 @@ public class RepositorySessionBundle {
   protected final ExtendedJSONObject object;
 
   public RepositorySessionBundle(String jsonString) throws IOException, ParseException, NonObjectJSONException {
-    object = ExtendedJSONObject.parseJSONObject(jsonString);
+
+    object = new ExtendedJSONObject(jsonString);
   }
 
   public RepositorySessionBundle(long lastSyncTimestamp) {

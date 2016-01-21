@@ -126,34 +126,6 @@ public class ExtendedJSONObject {
   }
 
   /**
-   * Helper method to get a JSON object from a stream.
-   *
-   * @param in input {@link Reader}.
-   * @throws ParseException
-   * @throws IOException
-   * @throws NonArrayJSONException if the object is valid JSON, but not an object.
-   */
-  public static ExtendedJSONObject parseJSONObject(Reader in)
-      throws IOException, ParseException, NonObjectJSONException {
-    return new ExtendedJSONObject(in);
-  }
-
-  /**
-   * Helper method to get a JSON object from a string.
-   * <p>
-   * You should prefer the stream interface {@link #parseJSONObject(Reader)}.
-   *
-   * @param jsonString input.
-   * @throws ParseException
-   * @throws IOException
-   * @throws NonObjectJSONException if the object is valid JSON, but not an object.
-   */
-  public static ExtendedJSONObject parseJSONObject(String jsonString)
-      throws IOException, ParseException, NonObjectJSONException {
-    return new ExtendedJSONObject(jsonString);
-  }
-
-  /**
    * Helper method to get a JSON object from a UTF-8 byte array.
    *
    * @param in UTF-8 bytes.
@@ -163,7 +135,7 @@ public class ExtendedJSONObject {
    */
   public static ExtendedJSONObject parseUTF8AsJSONObject(byte[] in)
       throws ParseException, NonObjectJSONException, IOException {
-    return parseJSONObject(new String(in, "UTF-8"));
+    return new ExtendedJSONObject(new String(in, "UTF-8"));
   }
 
   public ExtendedJSONObject() {
