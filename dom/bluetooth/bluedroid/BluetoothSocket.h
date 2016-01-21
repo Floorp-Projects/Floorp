@@ -14,6 +14,7 @@ class MessageLoop;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothSocketInterface;
 class BluetoothSocketObserver;
 class BluetoothSocketResultHandler;
 class DroidSocketImpl;
@@ -87,11 +88,14 @@ public:
   void OnDisconnect() override;
 
 private:
+  nsresult LoadSocketInterface();
+
   inline void SetCurrentResultHandler(BluetoothSocketResultHandler* aRes)
   {
     mCurrentRes = aRes;
   }
 
+  BluetoothSocketInterface* mSocketInterface;
   BluetoothSocketObserver* mObserver;
   BluetoothSocketResultHandler* mCurrentRes;
   DroidSocketImpl* mImpl;

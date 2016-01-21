@@ -20,24 +20,6 @@ using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 static const size_t MAX_READ_SIZE = 1 << 16;
-static BluetoothSocketInterface* sBluetoothSocketInterface;
-
-// helper functions
-static bool
-EnsureBluetoothSocketHalLoad()
-{
-  if (sBluetoothSocketInterface) {
-    return true;
-  }
-
-  BluetoothInterface* btInf = BluetoothInterface::GetInstance();
-  NS_ENSURE_TRUE(btInf, false);
-
-  sBluetoothSocketInterface = btInf->GetBluetoothSocketInterface();
-  NS_ENSURE_TRUE(sBluetoothSocketInterface, false);
-
-  return true;
-}
 
 class mozilla::dom::bluetooth::DroidSocketImpl
   : public mozilla::ipc::UnixFdWatcher
@@ -577,15 +559,14 @@ DroidSocketImpl::DiscardBuffer()
 //
 
 BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
-  : mObserver(aObserver)
+  : mSocketInterface(nullptr)
+  , mObserver(aObserver)
   , mCurrentRes(nullptr)
   , mImpl(nullptr)
 {
   MOZ_ASSERT(aObserver);
 
   MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
-
-  EnsureBluetoothSocketHalLoad();
 }
 
 BluetoothSocket::~BluetoothSocket()
@@ -651,6 +632,11 @@ BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
 {
   MOZ_ASSERT(!mImpl);
 
+  auto rv = LoadSocketInterface();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   SetConnectionStatus(SOCKET_CONNECTING);
 
   mImpl = new DroidSocketImpl(aConsumerLoop, aIOLoop, this);
@@ -658,7 +644,7 @@ BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
   BluetoothSocketResultHandler* res = new ConnectSocketResultHandler(mImpl);
   SetCurrentResultHandler(res);
 
-  sBluetoothSocketInterface->Connect(
+  mSocketInterface->Connect(
     aDeviceAddress, aType,
     aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
@@ -715,8 +701,13 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 {
   MOZ_ASSERT(!mImpl);
 
+  auto rv = LoadSocketInterface();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   BluetoothServiceName serviceName;
-  nsresult rv = StringToServiceName(aServiceName, serviceName);
+  rv = StringToServiceName(aServiceName, serviceName);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -728,7 +719,7 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
   BluetoothSocketResultHandler* res = new ListenResultHandler(mImpl);
   SetCurrentResultHandler(res);
 
-  sBluetoothSocketInterface->Listen(
+  mSocketInterface->Listen(
     aType,
     serviceName, aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
@@ -750,8 +741,13 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 nsresult
 BluetoothSocket::Accept(int aListenFd, BluetoothSocketResultHandler* aRes)
 {
+  auto rv = LoadSocketInterface();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   SetCurrentResultHandler(aRes);
-  sBluetoothSocketInterface->Accept(aListenFd, aRes);
+  mSocketInterface->Accept(aListenFd, aRes);
 
   return NS_OK;
 }
@@ -783,17 +779,16 @@ BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 void
 BluetoothSocket::Close()
 {
-  MOZ_ASSERT(sBluetoothSocketInterface);
-
   if (!mImpl) {
     return;
   }
 
+  MOZ_ASSERT(mSocketInterface);
   MOZ_ASSERT(mImpl->IsConsumerThread());
 
   // Stop any watching |SocketMessageWatcher|
   if (mCurrentRes) {
-    sBluetoothSocketInterface->Close(mCurrentRes);
+    mSocketInterface->Close(mCurrentRes);
   }
 
   // From this point on, we consider mImpl as being deleted.
@@ -829,4 +824,22 @@ BluetoothSocket::OnDisconnect()
 {
   MOZ_ASSERT(mObserver);
   mObserver->OnSocketDisconnect(this);
+}
+
+nsresult
+BluetoothSocket::LoadSocketInterface()
+{
+  if (mSocketInterface) {
+    return NS_OK;
+  }
+
+  auto interface = BluetoothInterface::GetInstance();
+  NS_ENSURE_TRUE(!!interface, NS_ERROR_FAILURE);
+
+  auto socketInterface = interface->GetBluetoothSocketInterface();
+  NS_ENSURE_TRUE(!!socketInterface, NS_ERROR_FAILURE);
+
+  mSocketInterface = socketInterface;
+
+  return NS_OK;
 }
