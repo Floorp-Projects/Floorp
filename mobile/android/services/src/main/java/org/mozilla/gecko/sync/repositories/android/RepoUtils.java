@@ -4,10 +4,14 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.io.IOException;
+import android.content.ContentProviderClient;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.RemoteException;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -16,12 +20,7 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 
-import android.content.ContentProviderClient;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
-import android.os.RemoteException;
+import java.io.IOException;
 
 public class RepoUtils {
 

@@ -5,7 +5,6 @@ package org.mozilla.android.sync.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -35,7 +34,7 @@ public class TestCryptoRecord {
   String base64HmacKey = "MMntEfutgLTc8FlTLQFms8/xMPmCldqPlq/QQXEjx70=";
 
   @Test
-  public void testBaseCryptoRecordEncrypt() throws IOException, ParseException, NonObjectJSONException, CryptoException {
+  public void testBaseCryptoRecordEncrypt() throws IOException, NonObjectJSONException, CryptoException {
 
     ExtendedJSONObject clearPayload = new ExtendedJSONObject("{\"id\":\"5qRsgXWRJZXr\"," +
             "\"title\":\"Index of file:///Users/jason/Library/Application " +
