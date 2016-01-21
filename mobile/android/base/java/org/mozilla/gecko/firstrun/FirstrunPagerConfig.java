@@ -47,11 +47,8 @@ public class FirstrunPagerConfig {
      */
     private static boolean isInExperimentLocal(Context context, String name) {
         if (AppConstants.MOZ_SWITCHBOARD) {
-            if (SwitchBoard.isInBucket(context, 0, 50)) {
-                return ONBOARDING_A.equals(name);
-            } else if (SwitchBoard.isInBucket(context, 50, 100)) {
-                return ONBOARDING_B.equals(name);
-            }
+          // Only show Onboarding A.
+          return ONBOARDING_A.equals(name);
         }
         return false;
     }
