@@ -385,9 +385,11 @@ nsHttpHandler::Init()
 void
 nsHttpHandler::MakeNewRequestTokenBucket()
 {
-    if (!mConnMgr)
+    LOG(("nsHttpHandler::MakeNewRequestTokenBucket this=%p child=%d\n",
+         this, IsNeckoChild()));
+    if (!mConnMgr || IsNeckoChild()) {
         return;
-
+    }
     RefPtr<EventTokenBucket> tokenBucket =
         new EventTokenBucket(RequestTokenBucketHz(), RequestTokenBucketBurst());
     mConnMgr->UpdateRequestTokenBucket(tokenBucket);
