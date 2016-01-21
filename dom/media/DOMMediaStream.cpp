@@ -337,7 +337,6 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
                                MediaStreamTrackSourceGetter* aTrackSourceGetter)
   : mLogicalStreamStartTime(0), mWindow(aWindow),
     mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
-    mOwnedPort(nullptr), mPlaybackPort(nullptr),
     mTrackSourceGetter(aTrackSourceGetter), mTracksCreated(false),
     mNotifiedOfMediaStreamGraphShutdown(false), mCORSMode(CORS_NONE)
 {
@@ -556,7 +555,6 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
     LOG(LogLevel::Debug, ("DOMMediaStream %p already contains track %p", this, &aTrack));
     return;
   }
-
 
   // Hook up the underlying track with our underlying playback stream.
   RefPtr<MediaInputPort> inputPort =
@@ -1013,6 +1011,18 @@ DOMMediaStream::CreateClonedDOMTrack(MediaStreamTrack& aTrack,
   return newTrack.forget();
 }
 
+static DOMMediaStream::TrackPort*
+FindTrackPortAmongTracks(const MediaStreamTrack& aTrack,
+                         const nsTArray<RefPtr<DOMMediaStream::TrackPort>>& aTracks)
+{
+  for (const RefPtr<DOMMediaStream::TrackPort>& info : aTracks) {
+    if (info->GetTrack() == &aTrack) {
+      return info;
+    }
+  }
+  return nullptr;
+}
+
 MediaStreamTrack*
 DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
                                   TrackID aInputTrackID) const
@@ -1033,12 +1043,7 @@ DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
 DOMMediaStream::TrackPort*
 DOMMediaStream::FindOwnedTrackPort(const MediaStreamTrack& aTrack) const
 {
-  for (const RefPtr<TrackPort>& info : mOwnedTracks) {
-    if (info->GetTrack() == &aTrack) {
-      return info;
-    }
-  }
-  return nullptr;
+  return FindTrackPortAmongTracks(aTrack, mOwnedTracks);
 }
 
 
@@ -1072,12 +1077,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
 DOMMediaStream::TrackPort*
 DOMMediaStream::FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const
 {
-  for (const RefPtr<TrackPort>& info : mTracks) {
-    if (info->GetTrack() == &aTrack) {
-      return info;
-    }
-  }
-  return nullptr;
+  return FindTrackPortAmongTracks(aTrack, mTracks);
 }
 
 void
@@ -1151,8 +1151,7 @@ DOMMediaStream::UnregisterTrackListener(TrackListener* aListener)
 }
 
 void
-DOMMediaStream::NotifyTrackAdded(
-    const RefPtr<MediaStreamTrack>& aTrack)
+DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1167,8 +1166,7 @@ DOMMediaStream::NotifyTrackAdded(
 }
 
 void
-DOMMediaStream::NotifyTrackRemoved(
-    const RefPtr<MediaStreamTrack>& aTrack)
+DOMMediaStream::NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
