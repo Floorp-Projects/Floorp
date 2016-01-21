@@ -178,7 +178,7 @@ nsHttpChannelAuthProvider::ProcessAuthentication(uint32_t httpStatus,
 }
 
 NS_IMETHODIMP
-nsHttpChannelAuthProvider::AddAuthorizationHeaders()
+nsHttpChannelAuthProvider::AddAuthorizationHeaders(bool aDontUseCachedWWWCreds)
 {
     LOG(("nsHttpChannelAuthProvider::AddAuthorizationHeaders? "
          "[this=%p channel=%p]\n", this, mAuthChannel));
@@ -202,14 +202,21 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders()
 
     // check if proxy credentials should be sent
     const char *proxyHost = ProxyHost();
-    if (proxyHost && UsingHttpProxy())
+    if (proxyHost && UsingHttpProxy()) {
         SetAuthorizationHeader(authCache, nsHttp::Proxy_Authorization,
                                "http", proxyHost, ProxyPort(),
                                nullptr, // proxy has no path
                                mProxyIdent);
+    }
 
     if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
         LOG(("Skipping Authorization header for anonymous load\n"));
+        return NS_OK;
+    }
+
+    if (aDontUseCachedWWWCreds) {
+        LOG(("Authorization header already present:"
+             " skipping adding auth header from cache\n"));
         return NS_OK;
     }
 
