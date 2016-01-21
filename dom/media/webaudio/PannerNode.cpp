@@ -62,10 +62,18 @@ public:
     , mListenerSpeedOfSound(0.)
     , mLeftOverData(INT_MIN)
   {
+  }
+
+  void CreateHRTFPanner()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mHRTFPanner) {
+      return;
+    }
     // HRTFDatabaseLoader needs to be fetched on the main thread.
     already_AddRefed<HRTFDatabaseLoader> loader =
-      HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(aNode->Context()->SampleRate());
-    mHRTFPanner = new HRTFPanner(aNode->Context()->SampleRate(), Move(loader));
+      HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(NodeMainThread()->Context()->SampleRate());
+    mHRTFPanner = new HRTFPanner(NodeMainThread()->Context()->SampleRate(), Move(loader));
   }
 
   void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
@@ -206,6 +214,9 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  // This member is set on the main thread, but is not accessed on the rendering
+  // thread untile mPanningModelFunction has changed, and this happens strictly
+  // later, via a MediaStreamGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput);
   PanningModelFunction mPanningModelFunction;
@@ -259,6 +270,18 @@ PannerNode::~PannerNode()
   if (Context()) {
     Context()->UnregisterPannerNode(this);
   }
+}
+
+void PannerNode::SetPanningModel(PanningModelType aPanningModel)
+{
+  mPanningModel = aPanningModel;
+  if (mPanningModel == PanningModelType::HRTF) {
+    // We can set the engine's `mHRTFPanner` member here from the main thread,
+    // because the engine will not touch it from the MediaStreamGraph
+    // thread until the PANNING_MODEL message sent below is received.
+    static_cast<PannerNodeEngine*>(mStream->Engine())->CreateHRTFPanner();
+  }
+  SendInt32ParameterToStream(PANNING_MODEL, int32_t(mPanningModel));
 }
 
 size_t
