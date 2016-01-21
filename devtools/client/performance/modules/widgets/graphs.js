@@ -15,22 +15,14 @@ const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 const MountainGraphWidget = require("devtools/client/shared/widgets/MountainGraphWidget");
 const { CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "colorUtils",
-  "devtools/shared/css-color", true);
-loader.lazyRequireGetter(this, "getColor",
-  "devtools/client/shared/theme", true);
-loader.lazyRequireGetter(this, "ProfilerGlobal",
-  "devtools/client/performance/modules/global");
-loader.lazyRequireGetter(this, "L10N",
-  "devtools/client/performance/modules/global", true);
-loader.lazyRequireGetter(this, "MarkersOverview",
-  "devtools/client/performance/modules/widgets/markers-overview", true);
-loader.lazyRequireGetter(this, "createTierGraphDataFromFrameNode",
-  "devtools/client/performance/modules/logic/jit", true);
+const { colorUtils } = require("devtools/shared/css-color");
+const { getColor } = require("devtools/client/shared/theme");
+const ProfilerGlobal = require("devtools/client/performance/modules/global");
+const { MarkersOverview } = require("devtools/client/performance/modules/widgets/markers-overview");
+const { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
 
 /**
  * For line graphs
@@ -132,7 +124,7 @@ FramerateGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
  *        The parent node holding the overview.
  */
 function MemoryGraph(parent) {
-  PerformanceGraph.call(this, parent, L10N.getStr("graphs.memory"));
+  PerformanceGraph.call(this, parent, ProfilerGlobal.L10N.getStr("graphs.memory"));
 }
 
 MemoryGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
