@@ -18,7 +18,6 @@ from itertools import chain
 
 from reftest import ReftestManifest
 
-from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
 )
@@ -1342,17 +1341,9 @@ INSTALL_TARGETS += %(prefix)s
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
             dest)
 
-        # We have a purger for the manifests themselves to ensure legacy
-        # manifests are deleted.
-        purger = FilePurger()
-
         for k, manifest in manifests.items():
-            purger.add(k)
-
             with self._write_file(mozpath.join(man_dir, k)) as fh:
                 manifest.write(fileobj=fh)
-
-        purger.purge(man_dir)
 
     def _write_master_test_manifest(self, path, manifests):
         with self._write_file(path) as master:
