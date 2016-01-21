@@ -22,6 +22,7 @@ public class PermissionBlock {
     private boolean onUIThread;
     private Runnable onPermissionsGranted;
     private Runnable onPermissionsDenied;
+    private boolean doNotPrompt;
 
     /* package-private */ PermissionBlock(Activity activity, PermissionsHelper helper) {
         this.activity = activity;
@@ -45,6 +46,26 @@ public class PermissionBlock {
     }
 
     /**
+     * Do not prompt the user to accept the permission if it has not been granted yet.
+     */
+    public PermissionBlock doNotPrompt() {
+        doNotPrompt = true;
+        return this;
+    }
+
+    /**
+     * If the condition is true then do not prompt the user to accept the permission if it has not
+     * been granted yet.
+     */
+    public PermissionBlock doNotPromptIf(boolean condition) {
+        if (condition) {
+            doNotPrompt();
+        }
+
+        return this;
+    }
+
+    /**
      * Execute the specified runnable if the app has been granted all permissions. Calling this method will prompt the
      * user if needed.
      */
@@ -53,6 +74,8 @@ public class PermissionBlock {
 
         if (hasPermissions(activity)) {
             onPermissionsGranted();
+        } else if (doNotPrompt) {
+            onPermissionsDenied();
         } else {
             Permissions.prompt(activity, this);
         }
