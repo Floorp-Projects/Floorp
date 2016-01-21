@@ -92,19 +92,25 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']
             'GonkNativeWindowICS.cpp',
         ]
 
-if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
-    if CONFIG['ANDROID_VERSION'] >= '18':
-        SOURCES += [
-            'FakeSurfaceComposer.cpp',
-        ]
+if CONFIG['ANDROID_VERSION'] >= '18':
+    SOURCES += [
+        'FakeSurfaceComposer.cpp',
+    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['ANDROID_VERSION'] >= '18':
+    LOCAL_INCLUDES += [
+        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+            'frameworks/native/opengl/include',
+        ]
+    ]
 
 # Suppress some GCC warnings being treated as errors:
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
 if CONFIG['GNU_CC']:
-  CXXFLAGS += ['-Wno-error=attributes']
+  CXXFLAGS += ['-Wno-error=attributes', '-Wno-overloaded-virtual']
 
 FINAL_LIBRARY = 'xul'
 
