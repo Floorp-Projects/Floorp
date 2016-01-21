@@ -96,7 +96,7 @@ public class MozResponse {
                                  ParseException, NonObjectJSONException {
     if (body != null) {
       // Do it from the cached String.
-      return ExtendedJSONObject.parseJSONObject(body);
+      return new ExtendedJSONObject(body);
     }
 
     HttpEntity entity = this.response.getEntity();
@@ -107,7 +107,7 @@ public class MozResponse {
     InputStream content = entity.getContent();
     try {
       Reader in = new BufferedReader(new InputStreamReader(content, "UTF-8"));
-      return ExtendedJSONObject.parseJSONObject(in);
+      return new ExtendedJSONObject(in);
     } finally {
       content.close();
     }
