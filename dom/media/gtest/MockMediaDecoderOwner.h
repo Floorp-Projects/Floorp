@@ -47,6 +47,7 @@ public:
     return nullptr;
   }
   void ResetConnectionState() override {}
+  void NotifyAudibleStateChanged(bool aAudible) override {}
 };
 }
 
