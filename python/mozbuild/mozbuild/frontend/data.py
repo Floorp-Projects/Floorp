@@ -497,10 +497,12 @@ class SharedLibrary(Library):
         else:
             self.soname = self.lib_name
 
-        if symbols_file:
-            self.symbols_file = '%s.symbols' % self.lib_name
-        else:
+        if not symbols_file:
             self.symbols_file = None
+        elif context.config.substs['OS_TARGET'] == 'WINNT':
+            self.symbols_file = '%s.def' % self.lib_name
+        else:
+            self.symbols_file = '%s.symbols' % self.lib_name
 
 
 class ExternalLibrary(object):
