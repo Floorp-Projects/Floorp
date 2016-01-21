@@ -1379,9 +1379,8 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
   fclose(file);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Cleanup
   if (mURLShortcut) {
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS, 0);
+    SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS, 0);
   }
   return rv;
 }
