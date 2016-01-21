@@ -39,7 +39,7 @@ Damp.prototype = {
     return this._win.gBrowser.selectedTab;
   },
 
-  reloadPage: function(name) {
+  reloadPage: function() {
     let startReloadTimestamp = performance.now();
     return new Promise((resolve, reject) => {
       let browser = gBrowser.selectedBrowser;
@@ -47,14 +47,15 @@ Damp.prototype = {
       browser.addEventListener("load", function onload() {
         browser.removeEventListener("load", onload, true);
         let stopReloadTimestamp = performance.now();
-        self._results.push({name: name + ".reload.DAMP", value: stopReloadTimestamp - startReloadTimestamp});
-        resolve();
+        resolve({
+          time: stopReloadTimestamp - startReloadTimestamp
+        });
       }, true);
       browser.reload();
     });
   },
 
-  openToolbox: function (name, tool = "webconsole") {
+  openToolbox: function (tool = "webconsole") {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
     let startRecordTimestamp = performance.now();
@@ -62,20 +63,23 @@ Damp.prototype = {
 
     return showPromise.then(toolbox => {
       let stopRecordTimestamp = performance.now();
-      this._results.push({name: name + ".open.DAMP", value: stopRecordTimestamp - startRecordTimestamp});
-
-      return toolbox;
+      return {
+        toolbox,
+        time: stopRecordTimestamp - startRecordTimestamp
+      };
     });
   },
 
-  closeToolbox: function(name) {
+  closeToolbox: function() {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
     let startRecordTimestamp = performance.now();
     let closePromise = gDevTools.closeToolbox(target);
     return closePromise.then(() => {
       let stopRecordTimestamp = performance.now();
-      this._results.push({name: name + ".close.DAMP", value: stopRecordTimestamp - startRecordTimestamp});
+      return {
+        time: stopRecordTimestamp - startRecordTimestamp
+      };
     });
   },
 
@@ -145,63 +149,80 @@ Damp.prototype = {
   },
 
   _getToolLoadingTests: function(url, label) {
+
+    let openToolboxAndLog = Task.async(function*(name, tool) {
+      let {time, toolbox} = yield this.openToolbox(tool);
+      this._results.push({name: name + ".open.DAMP", value: time });
+      return toolbox;
+    }.bind(this));
+
+    let closeToolboxAndLog = Task.async(function*(name) {
+      let {time} = yield this.closeToolbox();
+      this._results.push({name: name + ".close.DAMP", value: time });
+    }.bind(this));
+
+    let reloadPageAndLog = Task.async(function*(name) {
+      let {time} = yield this.reloadPage();
+      this._results.push({name: name + ".reload.DAMP", value: time });
+    }.bind(this));
+
     let subtests = {
       webconsoleOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".webconsole", "webconsole");
-        yield this.reloadPage(label + ".webconsole");
-        yield this.closeToolbox(label + ".webconsole");
+        yield openToolboxAndLog(label + ".webconsole", "webconsole");
+        yield reloadPageAndLog(label + ".webconsole");
+        yield closeToolboxAndLog(label + ".webconsole");
         yield this.testTeardown();
       }),
 
       inspectorOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".inspector", "inspector");
-        yield this.reloadPage(label + ".inspector");
-        yield this.closeToolbox(label + ".inspector");
+        yield openToolboxAndLog(label + ".inspector", "inspector");
+        yield reloadPageAndLog(label + ".inspector");
+        yield closeToolboxAndLog(label + ".inspector");
         yield this.testTeardown();
       }),
 
       debuggerOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".jsdebugger", "jsdebugger");
-        yield this.reloadPage(label + ".jsdebugger");
-        yield this.closeToolbox(label + ".jsdebugger");
+        yield openToolboxAndLog(label + ".jsdebugger", "jsdebugger");
+        yield reloadPageAndLog(label + ".jsdebugger");
+        yield closeToolboxAndLog(label + ".jsdebugger");
         yield this.testTeardown();
       }),
 
       styleEditorOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".styleeditor", "styleeditor");
-        yield this.reloadPage(label + ".styleeditor");
-        yield this.closeToolbox(label + ".styleeditor");
+        yield openToolboxAndLog(label + ".styleeditor", "styleeditor");
+        yield reloadPageAndLog(label + ".styleeditor");
+        yield closeToolboxAndLog(label + ".styleeditor");
         yield this.testTeardown();
       }),
 
       performanceOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".performance", "performance");
-        yield this.reloadPage(label + ".performance");
-        yield this.closeToolbox(label + ".performance");
+        yield openToolboxAndLog(label + ".performance", "performance");
+        yield reloadPageAndLog(label + ".performance");
+        yield closeToolboxAndLog(label + ".performance");
         yield this.testTeardown();
       }),
 
       netmonitorOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".netmonitor", "netmonitor");
-        yield this.reloadPage(label + ".netmonitor");
-        yield this.closeToolbox(label + ".netmonitor");
+        yield openToolboxAndLog(label + ".netmonitor", "netmonitor");
+        yield reloadPageAndLog(label + ".netmonitor");
+        yield closeToolboxAndLog(label + ".netmonitor");
         yield this.testTeardown();
       }),
 
       saveAndReadHeapSnapshot: Task.async(function*() {
         yield this.testSetup(url);
-        yield this.openToolbox(label + ".memory", "memory");
-        yield this.reloadPage(label + ".memory");
+        yield openToolboxAndLog(label + ".memory", "memory");
+        yield reloadPageAndLog(label + ".memory");
         yield this.saveHeapSnapshot(label);
         yield this.readHeapSnapshot(label);
         yield this.takeCensus(label);
-        yield this.closeToolbox(label + ".memory");
+        yield closeToolboxAndLog(label + ".memory");
         yield this.testTeardown();
       }),
     };
