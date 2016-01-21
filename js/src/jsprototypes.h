@@ -103,7 +103,7 @@ IF_SAB(real,imaginary)(SharedArrayBuffer,       37,     InitSharedArrayBufferCla
 IF_INTL(real,imaginary) (Intl,                  38,     InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           39,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     real(Reflect,               40,     InitReflect,            nullptr) \
-IF_SIMD(real,imaginary)(SIMD,                   41,     InitSIMDClass, OCLASP(SIMD)) \
+IF_SIMD(real,imaginary)(SIMD,                   41,     InitSimdClass, OCLASP(Simd)) \
     real(WeakSet,               42,     InitWeakSetClass,       OCLASP(WeakSet)) \
     real(TypedArray,            43,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics,                 44,     InitAtomicsClass, OCLASP(Atomics)) \

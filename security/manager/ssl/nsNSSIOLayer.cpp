@@ -380,11 +380,11 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   }
   nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
+  ScopedCERTCertList unusedBuiltChain;
   SECStatus rv = certVerifier->VerifySSLServerCert(nssCert, nullptr,
                                                    mozilla::pkix::Now(),
                                                    nullptr, hostnameFlat.get(),
-                                                   false, flags, nullptr,
-                                                   nullptr);
+                                                   unusedBuiltChain, false, flags);
   if (rv != SECSuccess) {
     return NS_OK;
   }

@@ -154,6 +154,7 @@ DOMStorageDBThread::Shutdown()
 void
 DOMStorageDBThread::SyncPreload(DOMStorageCacheBridge* aCache, bool aForceSync)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::STORAGE);
   if (!aForceSync && aCache->LoadedCount()) {
     // Preload already started for this cache, just wait for it to finish.
     // LoadWait will exit after LoadDone on the cache has been called.
@@ -257,7 +258,7 @@ DOMStorageDBThread::InsertDBOp(DOMStorageDBThread::DBOperation* aOperation)
       aOperation->Finalize(NS_OK);
       return NS_OK;
     }
-    // NO BREAK
+    MOZ_FALLTHROUGH;
 
   case DBOperation::opGetUsage:
     if (aOperation->Type() == DBOperation::opPreloadUrgent) {

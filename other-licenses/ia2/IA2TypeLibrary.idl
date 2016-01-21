@@ -71,6 +71,7 @@ library IAccessible2Lib
     importlib ("oleacc.dll");
     interface IAccessible2;
     interface IAccessible2_2;
+    interface IAccessible2_3;
     interface IAccessibleAction;
     interface IAccessibleApplication;
     interface IAccessibleComponent;

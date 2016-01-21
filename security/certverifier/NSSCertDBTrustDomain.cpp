@@ -50,11 +50,10 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            CertVerifier::PinningMode pinningMode,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
-                                           SignatureDigestOption signatureDigestOption,
                                            CertVerifier::SHA1Mode sha1Mode,
+                                           ScopedCERTCertList& builtChain,
                               /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
-                              /*optional*/ const char* hostname,
-                              /*optional*/ ScopedCERTCertList* builtChain)
+                              /*optional*/ const char* hostname)
   : mCertDBTrustType(certDBTrustType)
   , mOCSPFetching(ocspFetching)
   , mOCSPCache(ocspCache)
@@ -64,11 +63,10 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mPinningMode(pinningMode)
   , mMinRSABits(minRSABits)
   , mValidityCheckingMode(validityCheckingMode)
-  , mSignatureDigestOption(signatureDigestOption)
   , mSHA1Mode(sha1Mode)
+  , mBuiltChain(builtChain)
   , mPinningTelemetryInfo(pinningTelemetryInfo)
   , mHostname(hostname)
-  , mBuiltChain(builtChain)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
   , mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED)
 {
@@ -806,9 +804,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
     }
   }
 
-  if (mBuiltChain) {
-    *mBuiltChain = certList.forget();
-  }
+  mBuiltChain = certList.forget();
 
   return Success;
 }
@@ -824,40 +820,25 @@ NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm aAlg,
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: CheckSignatureDigestAlgorithm"));
   if (aAlg == DigestAlgorithm::sha1) {
-    // First check based on SHA1Mode
     switch (mSHA1Mode) {
       case CertVerifier::SHA1Mode::Forbidden:
         MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("SHA-1 certificate rejected"));
         return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
-      case CertVerifier::SHA1Mode::OnlyBefore2016:
+      case CertVerifier::SHA1Mode::Before2016:
         if (JANUARY_FIRST_2016 <= notBefore) {
           MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Post-2015 SHA-1 certificate rejected"));
           return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
         }
         break;
       case CertVerifier::SHA1Mode::Allowed:
+      // Enforcing that the resulting chain uses an imported root is only
+      // possible at a higher level. This is done in CertVerifier::VerifyCert.
+      case CertVerifier::SHA1Mode::ImportedRoot:
       default:
         break;
     }
-
-    // Then check the signatureDigestOption values
-    if (mSignatureDigestOption == DisableSHA1Everywhere) {
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("SHA-1 certificate rejected"));
-      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
-    }
-
-    if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("CA cert is SHA-1"));
-      return mSignatureDigestOption == DisableSHA1ForCA
-             ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-             : Success;
-    } else {
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("EE cert is SHA-1"));
-      return mSignatureDigestOption == DisableSHA1ForEE
-             ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-             : Success;
-    }
   }
+
   return Success;
 }
 

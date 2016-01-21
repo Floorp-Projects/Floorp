@@ -56,6 +56,7 @@ using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
+using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -397,7 +398,7 @@ class js::AsmJSModule final : public Module
     AsmJSModule(UniqueModuleData base,
                 UniqueStaticLinkData link,
                 UniqueAsmJSModuleData module)
-      : Module(Move(base), AsmJSBool::IsAsmJS),
+      : Module(Move(base)),
         link_(Move(link)),
         module_(Move(module))
     {}
@@ -410,6 +411,12 @@ class js::AsmJSModule final : public Module
         Module::addSizeOfMisc(mallocSizeOf, code, data);
         *data += mallocSizeOf(link_.get()) + link_->sizeOfExcludingThis(mallocSizeOf);
         *data += mallocSizeOf(module_.get()) + module_->sizeOfExcludingThis(mallocSizeOf);
+    }
+    virtual bool mutedErrors() const override {
+        return scriptSource()->mutedErrors();
+    }
+    virtual const char16_t* displayURL() const override {
+        return scriptSource()->hasDisplayURL() ? scriptSource()->displayURL() : nullptr;
     }
 
     uint32_t minHeapLength() const { return module_->minHeapLength; }
@@ -1790,7 +1797,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         }
 
-        return mg_.init(Move(genData));
+        return mg_.init(Move(genData), ModuleKind::AsmJS);
     }
 
     ExclusiveContext* cx() const             { return cx_; }
@@ -2227,7 +2234,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return true;
     }
     bool finishFunctionBodies() {
-        return mg_.finishFuncs();
+        return mg_.finishFuncDefs();
     }
     bool finish(MutableHandle<WasmModuleObject*> moduleObj, SlowFunctionVector* slowFuncs) {
         HeapUsage heap = arrayViews_.empty()
@@ -2236,19 +2243,10 @@ class MOZ_STACK_CLASS ModuleValidator
                                 ? HeapUsage::Shared
                                 : HeapUsage::Unshared;
 
-        auto muted = MutedErrorsBool(parser_.ss->mutedErrors());
-
         CacheableChars filename;
         if (parser_.ss->filename()) {
             filename = DuplicateString(parser_.ss->filename());
             if (!filename)
-                return false;
-        }
-
-        CacheableTwoByteChars displayURL;
-        if (parser_.ss->hasDisplayURL()) {
-            displayURL = DuplicateString(parser_.ss->displayURL());
-            if (!displayURL)
                 return false;
         }
 
@@ -2262,7 +2260,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(heap, muted, Move(filename), Move(displayURL), &base, &link, slowFuncs))
+        if (!mg_.finish(heap, Move(filename), &base, &link, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));
@@ -2590,7 +2588,7 @@ class MOZ_STACK_CLASS FunctionValidator
     ParseNode*        fn_;
 
     FunctionGenerator fg_;
-    Encoder           encoder_;
+    Maybe<Encoder>    encoder_;
 
     LocalMap          locals_;
     LabelMap          labels_;
@@ -2612,15 +2610,18 @@ class MOZ_STACK_CLASS FunctionValidator
     ParseNode* fn() const             { return fn_; }
 
     bool init(PropertyName* name, unsigned line, unsigned column) {
-        UniqueBytecode recycled;
-        return m_.mg().startFunc(name, line, column, &recycled, &fg_) &&
-               encoder_.init(Move(recycled)) &&
-               locals_.init() &&
-               labels_.init();
+        if (!locals_.init() || !labels_.init())
+            return false;
+
+        if (!m_.mg().startFuncDef(name, line, column, &fg_))
+            return false;
+
+        encoder_.emplace(fg_.bytecode());
+        return true;
     }
 
     bool finish(uint32_t funcIndex, unsigned generateTime) {
-        return m_.mg().finishFunc(funcIndex, encoder().finish(), generateTime, &fg_);
+        return m_.mg().finishFuncDef(funcIndex, generateTime, &fg_);
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -2704,7 +2705,8 @@ class MOZ_STACK_CLASS FunctionValidator
     size_t numLocals() const { return locals_.count(); }
 
     /************************************************* Packing interface */
-    Encoder& encoder() { return encoder_; }
+
+    Encoder& encoder() { return *encoder_; }
 
     bool noteLineCol(ParseNode* pn) {
         uint32_t line, column;
@@ -2714,8 +2716,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     MOZ_WARN_UNUSED_RESULT
     bool writeOp(Expr op) {
-        static_assert(sizeof(Expr) == sizeof(uint8_t), "opcodes must be uint8");
-        return encoder().writeU8(uint8_t(op));
+        return encoder().writeExpr(op);
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -2772,8 +2773,7 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     void patchOp(size_t pos, Expr stmt) {
-        static_assert(sizeof(Expr) == sizeof(uint8_t), "opcodes must be uint8");
-        encoder().patchU8(pos, uint8_t(stmt));
+        encoder().patchExpr(pos, stmt);
     }
     void patchU8(size_t pos, uint8_t u8) {
         encoder().patchU8(pos, u8);
@@ -2790,7 +2790,7 @@ class MOZ_STACK_CLASS FunctionValidator
     }
     MOZ_WARN_UNUSED_RESULT
     bool tempOp(size_t* offset) {
-        return tempU8(offset);
+        return encoder().writeExpr(Expr::Unreachable, offset);
     }
     MOZ_WARN_UNUSED_RESULT
     bool temp32(size_t* offset) {

@@ -1100,6 +1100,9 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   static const size_t bufferSize = 2048;
   if (!mCachedBuffer) {
     mCachedBuffer = nsStringBuffer::Alloc(bufferSize).take();
+    if (NS_WARN_IF(!mCachedBuffer)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   NS_ASSERTION(!mCachedBuffer->IsReadonly(),
                "DocumentEncoder shouldn't keep reference to non-readonly buffer!");

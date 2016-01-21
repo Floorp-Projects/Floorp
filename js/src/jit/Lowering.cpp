@@ -582,15 +582,15 @@ LIRGenerator::visitApplyArray(MApplyArray* apply)
     MOZ_ASSERT(CallTempReg2 != JSReturnReg_Data);
 
     LApplyArrayGeneric* lir = new(alloc()) LApplyArrayGeneric(
-        useFixed(apply->getFunction(), CallTempReg3),
-        useFixed(apply->getElements(), CallTempReg0),
+        useFixedAtStart(apply->getFunction(), CallTempReg3),
+        useFixedAtStart(apply->getElements(), CallTempReg0),
         tempFixed(CallTempReg1),  // object register
         tempFixed(CallTempReg2)); // stack counter register
 
     MDefinition* self = apply->getThis();
     useBoxFixed(lir, LApplyArrayGeneric::ThisIndex, self, CallTempReg4, CallTempReg5);
 
-    // Bailout is needed in the case of possible non-JSFunction callee
+    // Bailout is needed in the case of possible non-JSFunction callee,
     // too many values in the array, or empty space at the end of the
     // array.  I'm going to use NonJSFunctionCallee for the code even
     // if that is not an adequate description.

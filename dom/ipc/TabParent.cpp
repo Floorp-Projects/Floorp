@@ -2798,10 +2798,11 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 bool
 TabParent::RecvZoomToRect(const uint32_t& aPresShellId,
                           const ViewID& aViewId,
-                          const CSSRect& aRect)
+                          const CSSRect& aRect,
+                          const uint32_t& aFlags)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ZoomToRect(aPresShellId, aViewId, aRect);
+    rfp->ZoomToRect(aPresShellId, aViewId, aRect, aFlags);
   }
   return true;
 }
