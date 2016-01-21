@@ -88,14 +88,32 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "CHECKERBOARDED_CSSPIXELS_MS": {
+  "CHECKERBOARD_DURATION": {
     "alert_emails": ["kgupta@mozilla.com"],
-    "bug_numbers": [1221694],
+    "bug_numbers": [1238040],
     "expires_in_version": "55",
     "kind": "exponential",
-    "high": "3840 * 2160 * 16",
+    "high": "100000",
     "n_buckets": 50,
-    "description": "Magnitude of checkerboarding in CSSPixel-milliseconds per scrollable frame per composite"
+    "description": "Duration of a checkerboard event in milliseconds"
+  },
+  "CHECKERBOARD_PEAK": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1238040],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "3840 * 2160 * 8",
+    "n_buckets": 50,
+    "description": "Peak number of CSS pixels checkerboarded during a checkerboard event (the high value is the size of a 4k display with max APZ zooming)"
+  },
+  "CHECKERBOARD_SEVERITY": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1238040],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "1073741824",
+    "n_buckets": 50,
+    "description": "Opaque measure of the severity of a checkerboard event"
   },
   "COMPOSITE_TIME" : {
     "expires_in_version": "never",
