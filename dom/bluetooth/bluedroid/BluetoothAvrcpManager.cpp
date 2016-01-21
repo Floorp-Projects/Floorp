@@ -317,6 +317,7 @@ public:
 
     sBtAvrcpInterface->SetNotificationHandler(nullptr);
     sBtAvrcpInterface = nullptr;
+    sBluetoothAvrcpManager = nullptr;
 
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
@@ -329,6 +330,7 @@ public:
 
     sBtAvrcpInterface->SetNotificationHandler(nullptr);
     sBtAvrcpInterface = nullptr;
+    sBluetoothAvrcpManager = nullptr;
 
     if (mRes) {
       mRes->Deinit();

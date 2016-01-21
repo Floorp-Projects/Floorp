@@ -446,6 +446,7 @@ public:
 
     sBluetoothHfpInterface->SetNotificationHandler(nullptr);
     sBluetoothHfpInterface = nullptr;
+    sBluetoothHfpManager = nullptr;
 
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
@@ -458,6 +459,7 @@ public:
 
     sBluetoothHfpInterface->SetNotificationHandler(nullptr);
     sBluetoothHfpInterface = nullptr;
+    sBluetoothHfpManager = nullptr;
 
     if (mRes) {
       mRes->Deinit();
