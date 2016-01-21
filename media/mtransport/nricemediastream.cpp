@@ -306,6 +306,11 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // If we haven't at least started checking then there is nothing to report
+  if (ctx_->connection_state() == NrIceCtx::ICE_CTX_INIT) {
+    return NS_OK;
+  }
+
   // Get the check_list on the peer stream (this is where the check_list
   // actually lives, not in stream_)
   nr_ice_media_stream* peer_stream;
@@ -481,6 +486,11 @@ nsresult NrIceMediaStream::GetRemoteCandidates(
     std::vector<NrIceCandidate>* candidates) const {
   if (!stream_) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // If we haven't at least started checking then there is nothing to report
+  if (ctx_->connection_state() == NrIceCtx::ICE_CTX_INIT) {
+    return NS_OK;
   }
 
   nr_ice_media_stream* peer_stream;
