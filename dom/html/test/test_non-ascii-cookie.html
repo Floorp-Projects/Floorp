@@ -20,40 +20,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=784367
 
 /** Test for non-ASCII cookie values **/
 
-SimpleTest.waitForExplicitFinish();
+var [Cc, Ci] = [SpecialPowers.Cc, SpecialPowers.Ci];
 
-var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("file_cookiemanager.js"));
-
+var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 function getCookieFromManager() {
-  return new Promise(resolve => {
-    gScript.addMessageListener("getCookieFromManager:return", function gcfm({ cookie }) {
-      gScript.removeMessageListener("getCookieFromManager:return", gcfm);
-      resolve(cookie);
-    });
-    gScript.sendAsyncMessage("getCookieFromManager", { host: location.hostname, path: location.pathname });
-  });
+  var values = [];
+  var host = location.hostname;
+  var path = location.pathname;
+  path = path.substring(0, path.lastIndexOf("/") + 1);
+  var e = cm.enumerator;
+  while (e.hasMoreElements()) {
+    var cookie = e.getNext().QueryInterface(Ci.nsICookie);
+    if (!cookie) {
+      break;
+    }
+    if (host != cookie.host || path != cookie.path) {
+      continue;
+    }
+    values.push(cookie.name + "=" + cookie.value);
+  }
+  return values.join("; ");
 }
 
 var c = document.cookie;
 is(document.cookie, 'abc=012©ABC\ufffdDEF', "document.cookie should be decoded as UTF-8");
-
-var newCookie;
-
-getCookieFromManager().then((cookie) => {
-  is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
-  newCookie = 'def=∼≩≭≧∯≳≲≣∽≸≸∺≸∠≯≮≥≲≲≯≲∽≡≬≥≲≴∨∱∩∾';
-  document.cookie = newCookie;
-  is(document.cookie, c + '; ' + newCookie, "document.cookie should be encoded as UTF-8");
-
-  return getCookieFromManager();
-}).then((cookie) => {
-  is(cookie, document.cookie, "nsICookieManager should be consistent with document.cookie");
-  var date1 = new Date();
-  date1.setTime(0);
-  document.cookie = newCookie + 'def=;expires=' + date1.toGMTString();
-  gScript.destroy();
-  SimpleTest.finish();
-});
+is(getCookieFromManager(), document.cookie, "nsICookieManager should be consistent with document.cookie");
+var newCookie = 'def=∼≩≭≧∯≳≲≣∽≸≸∺≸∠≯≮≥≲≲≯≲∽≡≬≥≲≴∨∱∩∾';
+document.cookie = newCookie;
+is(document.cookie, c + '; ' + newCookie, "document.cookie should be encoded as UTF-8");
+is(getCookieFromManager(), document.cookie, "nsICookieManager should be consistent with document.cookie");
+var date1 = new Date();
+date1.setTime(0);
+document.cookie = newCookie + 'def=;expires=' + date1.toGMTString();
 </script>
 </pre>
 </body>

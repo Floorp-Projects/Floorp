@@ -19,17 +19,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=513439
 
 /** Test for Bug 513439 **/
 
-SimpleTest.waitForExplicitFinish();
+var prefService = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
+                               .getService(SpecialPowers.Ci.nsIPrefService);
+var layoutCSSBranch = prefService.getBranch("layout.css.");
+var oldVal = layoutCSSBranch.getCharPref("devPixelsPerPx");
 
-var domWindowUtils = SpecialPowers.DOMWindowUtils;
-SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "2"]]}, () => {
+try {
+  var domWindowUtils = SpecialPowers.DOMWindowUtils;
+  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
+
+  layoutCSSBranch.setCharPref("devPixelsPerPx", "2");
   is(domWindowUtils.screenPixelsPerCSSPixel, 2, "devPixelsPerPx wasn't set correctly");
 
-  SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "1.5"]]}, () => {
-    is(domWindowUtils.screenPixelsPerCSSPixel, 1.5, "devPixelsPerPx wasn't set correctly");
-    SimpleTest.finish();
-  });
-});
+  layoutCSSBranch.setCharPref("devPixelsPerPx", "1.5");
+  is(domWindowUtils.screenPixelsPerCSSPixel, 1.5, "devPixelsPerPx wasn't set correctly");
+
+} finally {
+  layoutCSSBranch.setCharPref("devPixelsPerPx", oldVal);
+}
 
 </script>
 </pre>
