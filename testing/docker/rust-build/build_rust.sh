@@ -10,28 +10,20 @@ set -v
 
 # Configure and build rust.
 OPTIONS="--enable-rpath --enable-llvm-static-stdcpp --disable-docs"
-M32="i686-unknown-linux-gnu"
-M64="x86_64-unknown-linux-gnu"
+x32="i686-unknown-linux-gnu"
+x64="x86_64-unknown-linux-gnu"
+arm="arm-linux-androideabi"
 
 mkdir -p ${WORKSPACE}/rust-build
 pushd ${WORKSPACE}/rust-build
-mkdir -p ${M32}
-pushd ${M32}
-${WORKSPACE}/rust/configure --prefix=${PWD}/../rustc --build=${M32} ${OPTIONS}
-make -j ${CORES}
-popd
-mkdir -p ${M64}
-pushd ${M64}
-${WORKSPACE}/rust/configure --prefix=${PWD}/../rustc --build=${M64} ${OPTIONS}
+${WORKSPACE}/rust/configure --prefix=${WORKSPACE}/rustc \
+  --target=${x64},${x32} ${OPTIONS}
 make -j ${CORES}
 make install
 popd
-# Copy 32 bit stdlib into the install directory for cross support.
-cp -r ${M32}/${M32}/stage2/lib/rustlib/${M32} rustc/lib/rustlib/
-popd
 
 # Package the toolchain for upload.
-pushd ${WORKSPACE}/rust-build
+pushd ${WORKSPACE}
 tar cvJf rustc.tar.xz rustc/*
 /build/tooltool.py add --visibility=public rustc.tar.xz
 popd
