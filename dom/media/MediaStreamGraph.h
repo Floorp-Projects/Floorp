@@ -203,7 +203,7 @@ public:
    * guaranteed to be in any particular size chunks.
    */
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
-                               AudioDataValue* aBuffer, size_t aFrames,
+                               const AudioDataValue* aBuffer, size_t aFrames,
                                uint32_t aChannels) = 0;
 };
 

@@ -104,7 +104,7 @@ public:
                         uint32_t aChannels) override
   {}
   void NotifyInputData(MediaStreamGraph* aGraph,
-                       AudioDataValue* aBuffer, size_t aFrames,
+                       const AudioDataValue* aBuffer, size_t aFrames,
                        uint32_t aChannels) override
   {}
   void NotifyPull(MediaStreamGraph* aGraph, SourceMediaStream* aSource,
@@ -351,7 +351,7 @@ public:
     mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aChannels);
   }
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
-                               AudioDataValue* aBuffer, size_t aFrames,
+                               const AudioDataValue* aBuffer, size_t aFrames,
                                uint32_t aChannels) override
   {
     mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aChannels);
@@ -425,7 +425,7 @@ public:
                         AudioDataValue* aBuffer, size_t aFrames,
                         uint32_t aChannels) override;
   void NotifyInputData(MediaStreamGraph* aGraph,
-                       AudioDataValue* aBuffer, size_t aFrames,
+                       const AudioDataValue* aBuffer, size_t aFrames,
                        uint32_t aChannels) override;
 
   bool IsFake() override {
