@@ -25,7 +25,7 @@
 
 static LazyLogModule sLogModule("ipc");
 
-#define IPC_LOG(args...) MOZ_LOG(sLogModule, LogLevel::Debug, (args))
+#define IPC_LOG(...) MOZ_LOG(sLogModule, LogLevel::Debug, __VA_ARGS__)
 
 /*
  * IPC design:
