@@ -20,7 +20,10 @@ from mach.mixin.logging import LoggingMixin
 import mozpack.path as mozpath
 from ..preprocessor import Preprocessor
 from ..pythonutil import iter_modules_in_path
-from ..util import FileAvoidWrite
+from ..util import (
+    FileAvoidWrite,
+    simple_diff,
+)
 from ..frontend.data import ContextDerived
 from .configenvironment import ConfigEnvironment
 from mozbuild.base import ExecutionSummary
@@ -136,8 +139,17 @@ class BuildBackend(LoggingMixin):
         # Purge backend files created in previous run, but not created anymore
         delete_files = self._backend_output_list - self._backend_output_files
         for path in delete_files:
+            full_path = mozpath.join(self.environment.topobjdir, path)
             try:
-                os.unlink(mozpath.join(self.environment.topobjdir, path))
+                with open(full_path, 'r') as existing:
+                    old_content = existing.read()
+                    if old_content:
+                        self.file_diffs[full_path] = simple_diff(
+                            full_path, old_content.splitlines(), None)
+            except IOError:
+                pass
+            try:
+                os.unlink(full_path)
                 self._deleted_count += 1
             except OSError:
                 pass
@@ -199,12 +211,12 @@ class BuildBackend(LoggingMixin):
 
         self._backend_output_files.add(mozpath.relpath(fh.name, self.environment.topobjdir))
         existed, updated = fh.close()
+        if fh.diff:
+            self.file_diffs[fh.name] = fh.diff
         if not existed:
             self._created_count += 1
         elif updated:
             self._updated_count += 1
-            if fh.diff:
-                self.file_diffs[fh.name] = fh.diff
         else:
             self._unchanged_count += 1
 

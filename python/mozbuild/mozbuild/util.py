@@ -111,6 +111,23 @@ def ensureParentDir(path):
                 raise
 
 
+def simple_diff(filename, old_lines, new_lines):
+    """Returns the diff between old_lines and new_lines, in unified diff form,
+    as a list of lines.
+
+    old_lines and new_lines are lists of non-newline terminated lines to
+    compare.
+    old_lines can be None, indicating a file creation.
+    new_lines can be None, indicating a file deletion.
+    """
+
+    old_name = '/dev/null' if old_lines is None else filename
+    new_name = '/dev/null' if new_lines is None else filename
+
+    return difflib.unified_diff(old_lines or [], new_lines or [],
+                                old_name, new_name, n=4, lineterm='')
+
+
 class FileAvoidWrite(BytesIO):
     """File-like object that buffers output and only writes if content changed.
 
@@ -177,11 +194,10 @@ class FileAvoidWrite(BytesIO):
 
         if self._capture_diff:
             try:
-                old_lines = old_content.splitlines() if old_content else []
+                old_lines = old_content.splitlines() if existed else None
                 new_lines = buf.splitlines()
 
-                self.diff = difflib.unified_diff(old_lines, new_lines,
-                    self.name, self.name, n=4, lineterm='')
+                self.diff = simple_diff(self.name, old_lines, new_lines)
             # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
             # content or opened and written in different modes may involve
             # implicit conversion and this will make Python unhappy. Since
@@ -189,7 +205,8 @@ class FileAvoidWrite(BytesIO):
             # This can go away once FileAvoidWrite uses io.BytesIO and
             # io.StringIO. But that will require a lot of work.
             except (UnicodeDecodeError, UnicodeEncodeError):
-                self.diff = 'Binary or non-ascii file changed: %s' % self.name
+                self.diff = ['Binary or non-ascii file changed: %s' %
+                             self.name]
 
         return existed, True
 
