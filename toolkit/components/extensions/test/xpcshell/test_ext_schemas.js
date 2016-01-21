@@ -26,6 +26,35 @@ let json = [
          prop2: {type: "array", items: {"$ref": "type1"}},
        },
      },
+
+     {
+       id: "basetype1",
+       type: "object",
+       properties: {
+         prop1: {type: "string"},
+       },
+     },
+
+     {
+       id: "basetype2",
+       choices: [
+         {type: "integer"},
+       ],
+     },
+
+     {
+       $extend: "basetype1",
+       properties: {
+         prop2: {type: "string"},
+       },
+     },
+
+     {
+       $extend: "basetype2",
+       choices: [
+         {type: "string"},
+       ],
+     },
    ],
 
    functions: [
@@ -164,6 +193,22 @@ let json = [
              strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
            },
          },
+       ],
+     },
+
+     {
+       name: "extended1",
+       type: "function",
+       parameters: [
+         {name: "val", $ref: "basetype1"},
+       ],
+     },
+
+     {
+       name: "extended2",
+       type: "function",
+       parameters: [
+         {name: "val", $ref: "basetype2"},
        ],
      },
    ],
@@ -447,4 +492,34 @@ add_task(function* () {
                   /Expected a plain JavaScript object, got a Proxy/,
                   "should throw when passing a Proxy");
   }
+
+
+  root.testing.extended1({prop1: "foo", prop2: "bar"});
+  verify("call", "testing", "extended1", [{prop1: "foo", prop2: "bar"}]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.extended1({prop1: "foo", prop2: 12}),
+                /Expected string instead of 12/,
+                "should throw for wrong property type");
+
+  Assert.throws(() => root.testing.extended1({prop1: "foo"}),
+                /Property "prop2" is required/,
+                "should throw for missing property");
+
+  Assert.throws(() => root.testing.extended1({prop1: "foo", prop2: "bar", prop3: "xxx"}),
+                /Unexpected property "prop3"/,
+                "should throw for extra property");
+
+
+  root.testing.extended2("foo");
+  verify("call", "testing", "extended2", ["foo"]);
+  tallied = null;
+
+  root.testing.extended2(12);
+  verify("call", "testing", "extended2", [12]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.extended2(true),
+                /Incorrect argument types/,
+                "should throw for wrong argument type");
 });
