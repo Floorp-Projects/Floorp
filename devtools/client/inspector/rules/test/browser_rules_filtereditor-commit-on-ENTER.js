@@ -5,7 +5,7 @@
 
 // Tests the Filter Editor Tooltip committing changes on ENTER
 
-const TEST_URL = TEST_URL_ROOT + "doc_filter.html";
+const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(function*() {
   yield addTab(TEST_URL);

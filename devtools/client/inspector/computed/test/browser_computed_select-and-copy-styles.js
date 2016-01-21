@@ -44,7 +44,7 @@ add_task(function*() {
   yield checkSelectAll(view);
 });
 
-function checkCopySelection(view) {
+function* checkCopySelection(view) {
   info("Testing selection copy");
 
   let contentDocument = view.styleDocument;
@@ -63,16 +63,15 @@ function checkCopySelection(view) {
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
-  return waitForClipboard(() => {
-    fireCopyEvent(props[0]);
-  }, () => {
-    return checkClipboardData(expectedPattern);
-  }).then(() => {}, () => {
+  try {
+    yield waitForClipboard(() => fireCopyEvent(props[0]),
+                           () => checkClipboardData(expectedPattern));
+  } catch (e) {
     failedClipboard(expectedPattern);
-  });
+  }
 }
 
-function checkSelectAll(view) {
+function* checkSelectAll(view) {
   info("Testing select-all copy");
 
   let contentDoc = view.styleDocument;
@@ -86,13 +85,12 @@ function checkSelectAll(view) {
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
-  return waitForClipboard(() => {
-    fireCopyEvent(prop);
-  }, () => {
-    return checkClipboardData(expectedPattern);
-  }).then(() => {}, () => {
+  try {
+    yield waitForClipboard(() => fireCopyEvent(prop),
+                           () => checkClipboardData(expectedPattern));
+  } catch (e) {
     failedClipboard(expectedPattern);
-  });
+  }
 }
 
 function checkClipboardData(expectedPattern) {

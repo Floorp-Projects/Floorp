@@ -10,7 +10,7 @@ const URL_1 = SCHEMA + "<div id='one' style='color:red;'>ONE</div>";
 const URL_2 = SCHEMA + "<div id='two' style='color:green;'>TWO</div>";
 
 add_task(function* () {
-  let { inspector, toolbox } = yield addTab(URL_1).then(openInspector);
+  let { inspector, toolbox } = yield openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   yield selectNode("#one", inspector);

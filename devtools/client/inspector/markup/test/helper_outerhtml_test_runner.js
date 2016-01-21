@@ -13,13 +13,14 @@
  * @param {Array} tests See runEditOuterHTMLTest for the structure
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
+ * @param {TestActorFront} testActor The current TestActorFront instance
  * @return a promise that resolves when the tests have run
  */
-function runEditOuterHTMLTests(tests, inspector) {
+function runEditOuterHTMLTests(tests, inspector, testActor) {
   info("Running " + tests.length + " edit-outer-html tests");
   return Task.spawn(function* () {
     for (let step of TEST_DATA) {
-      yield runEditOuterHTMLTest(step, inspector);
+      yield runEditOuterHTMLTest(step, inspector, testActor);
     }
   });
 }
@@ -35,9 +36,10 @@ function runEditOuterHTMLTests(tests, inspector) {
  *        after the new outer-html has been inserted. Should be used to verify
  *        the actual DOM, see if it corresponds to the newHTML string provided
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * @param {TestActorFront} testActor The current TestActorFront instance
  * opened
  */
-function* runEditOuterHTMLTest(test, inspector) {
+function* runEditOuterHTMLTest(test, inspector, testActor) {
   info("Running an edit outerHTML test on '" + test.selector + "'");
   yield selectNode(test.selector, inspector);
   let oldNodeFront = inspector.selection.nodeFront;
@@ -60,7 +62,7 @@ function* runEditOuterHTMLTest(test, inspector) {
     yield test.validate(pageNode, pageNodeFront, selectedNodeFront, inspector);
   } else {
     is(pageNodeFront, selectedNodeFront, "Original node (grabbed by selector) is selected");
-    let {outerHTML} = yield getNodeInfo(test.selector);
+    let {outerHTML} = yield getNodeInfo(test.selector, testActor);
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 

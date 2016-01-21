@@ -1189,7 +1189,7 @@
 
 .table-widget-column-header,
 .table-widget-cell {
-  -moz-border-end: 1px solid var(--table-splitter-color) !important;
+  border-inline-end: 1px solid var(--table-splitter-color) !important;
 }
 
 /* Table widget column header colors are taken from netmonitor.inc.css to match
@@ -1217,7 +1217,7 @@
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
   border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
-  box-shadow: -0.5px 0px 0px 0.5px var(--theme-splitter-color);
+  box-shadow: -0.5px 0 0 0.5px var(--theme-splitter-color);
   background-position: right 6px center;
 }
 
@@ -1238,11 +1238,8 @@
 .table-widget-cell {
   width: 100%;
   padding: 3px 4px;
-  background-clip: padding-box;
   min-width: 100px;
   -moz-user-focus: normal;
-  margin-bottom: -1px !important;
-  border-bottom: 1px solid transparent;
   color: var(--theme-body-color);
 }
 
@@ -1259,7 +1256,7 @@
   background: var(--table-zebra-background);
 }
 
-.table-widget-cell.flash-out {
+:root:not(.no-animate) .table-widget-cell.flash-out {
   animation: flash-out 0.5s ease-in;
 }
 

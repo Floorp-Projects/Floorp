@@ -7,33 +7,33 @@
 // Test editing various markup-containers' attribute fields, in particular
 // attributes with long values and quotes
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_edit.html";
+const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   yield inspector.markup.expandAll();
-  yield testCollapsedLongAttribute(inspector);
-  yield testModifyInlineStyleWithQuotes(inspector);
-  yield testEditingAttributeWithMixedQuotes(inspector);
+  yield testCollapsedLongAttribute(inspector, testActor);
+  yield testModifyInlineStyleWithQuotes(inspector, testActor);
+  yield testEditingAttributeWithMixedQuotes(inspector, testActor);
 });
 
-function* testCollapsedLongAttribute(inspector) {
+function* testCollapsedLongAttribute(inspector, testActor) {
   info("Try to modify the collapsed long attribute, making sure it expands.");
 
   info("Adding test attributes to the node");
   let onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("#node24", "class", "");
-  yield setNodeAttribute("#node24", "data-long", LONG_ATTRIBUTE);
+  yield setNodeAttribute("#node24", "class", "", testActor);
+  yield setNodeAttribute("#node24", "data-long", LONG_ATTRIBUTE, testActor);
   yield onMutated;
 
   yield assertAttributes("#node24", {
     id: "node24",
     "class": "",
     "data-long": LONG_ATTRIBUTE
-  });
+  }, testActor);
 
   let {editor} = yield getContainerForSelector("#node24", inspector);
   let attr = editor.attrElements.get("data-long").querySelector(".editable");
@@ -56,16 +56,16 @@ function* testCollapsedLongAttribute(inspector) {
     class: "",
     'data-long': LONG_ATTRIBUTE,
     "data-short": "ABC"
-  });
+  }, testActor);
 }
 
-function* testModifyInlineStyleWithQuotes(inspector) {
+function* testModifyInlineStyleWithQuotes(inspector, testActor) {
   info("Modify inline style containing \"");
 
   yield assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
-  });
+  }, testActor);
 
   let onMutated = inspector.once("markupmutation");
   let {editor} = yield getContainerForSelector("#node26", inspector);
@@ -92,16 +92,16 @@ function* testModifyInlineStyleWithQuotes(inspector) {
   yield assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
-  });
+  }, testActor);
 }
 
-function* testEditingAttributeWithMixedQuotes(inspector) {
+function* testEditingAttributeWithMixedQuotes(inspector, testActor) {
   info("Modify class containing \" and \'");
 
   yield assertAttributes("#node27", {
     "id": "node27",
     "class": 'Double " and single \''
-  });
+  }, testActor);
 
   let onMutated = inspector.once("markupmutation");
   let {editor} = yield getContainerForSelector("#node27", inspector);
@@ -125,5 +125,5 @@ function* testEditingAttributeWithMixedQuotes(inspector) {
   yield assertAttributes("#node27", {
     id: "node27",
     class: '" " and \' \''
-  });
+  }, testActor);
 }

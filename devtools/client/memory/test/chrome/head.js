@@ -35,6 +35,7 @@ var React = require("devtools/client/shared/vendor/react");
 var ReactDOM = require("devtools/client/shared/vendor/react-dom");
 var Heap = React.createFactory(require("devtools/client/memory/components/heap"));
 var DominatorTreeComponent = React.createFactory(require("devtools/client/memory/components/dominator-tree"));
+var DominatorTreeItem = React.createFactory(require("devtools/client/memory/components/dominator-tree-item"));
 var Toolbar = React.createFactory(require("devtools/client/memory/components/toolbar"));
 
 // All tests are asynchronous.

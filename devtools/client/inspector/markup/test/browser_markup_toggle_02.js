@@ -6,10 +6,10 @@
 
 // Test toggling (expand/collapse) elements by dbl-clicking on tag lines
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_toggle.html";
+const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   let container = yield getContainerForSelector("ul", inspector);

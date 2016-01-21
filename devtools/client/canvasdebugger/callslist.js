@@ -81,8 +81,6 @@ var CallsListView = Heritage.extend(WidgetMethods, {
       gutter.appendChild(index);
       contents.appendChild(gutter);
 
-      // Not all function calls have a caller that was stringified (e.g.
-      // context calls have a "gl" or "ctx" caller preview).
       if (call.callerPreview) {
         let context = document.createElement("label");
         context.className = "plain call-item-context";

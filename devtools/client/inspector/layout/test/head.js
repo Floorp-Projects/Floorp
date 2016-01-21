@@ -46,51 +46,28 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
 }
 
 /**
- * Checks whether the inspector's sidebar corresponding to the given id already
- * exists
- * @param {InspectorPanel}
- * @param {String}
- * @return {Boolean}
- */
-function hasSideBarTab(inspector, id) {
-  return !!inspector.sidebar.getWindowForTab(id);
-}
-
-/**
  * Open the toolbox, with the inspector tool visible, and the layout-view
  * sidebar tab selected.
  * @return a promise that resolves when the inspector is ready and the layout
  * view is visible and ready
  */
-var openLayoutView = Task.async(function*() {
-  let {toolbox, inspector} = yield openInspector();
+function openLayoutView() {
+  return openInspectorSidebarTab("layoutview").then(objects => {
+    // The actual highligher show/hide methods are mocked in layoutview tests.
+    // The highlighter is tested in devtools/inspector/test.
+    function mockHighlighter({highlighter}) {
+      highlighter.showBoxModel = function(nodeFront, options) {
+        return promise.resolve();
+      };
+      highlighter.hideBoxModel = function() {
+        return promise.resolve();
+      };
+    }
+    mockHighlighter(objects.toolbox);
 
-  // The actual highligher show/hide methods are mocked in layoutview tests.
-  // The highlighter is tested in devtools/inspector/test.
-  function mockHighlighter({highlighter}) {
-    highlighter.showBoxModel = function(nodeFront, options) {
-      return promise.resolve();
-    };
-    highlighter.hideBoxModel = function() {
-      return promise.resolve();
-    };
-  }
-  mockHighlighter(toolbox);
-
-  if (!hasSideBarTab(inspector, "layoutview")) {
-    info("Waiting for the layoutview sidebar to be ready");
-    yield inspector.sidebar.once("layoutview-ready");
-  }
-
-  info("Selecting the layoutview sidebar");
-  inspector.sidebar.select("layoutview");
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector,
-    view: inspector.sidebar.getWindowForTab("layoutview")["layoutview"]
-  };
-});
+    return objects;
+  });
+}
 
 /**
  * Wait for the layoutview-updated event.

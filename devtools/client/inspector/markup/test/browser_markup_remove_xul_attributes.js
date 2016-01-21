@@ -7,10 +7,10 @@
 // Test confirms that XUL attributes don't show up as empty
 // attributes after being deleted
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_xul.xul";
+const TEST_URL = URL_ROOT + "doc_markup_xul.xul";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   let panel = yield getNode("#test", inspector);
   let panelFront = yield getNodeFront("#test", inspector);

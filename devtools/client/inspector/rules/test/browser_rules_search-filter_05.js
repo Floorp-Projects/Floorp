@@ -7,7 +7,7 @@
 // Tests that the rule view search filter works properly for stylesheet source.
 
 const SEARCH = "doc_urls_clickable.css";
-const TEST_URI = TEST_URL_ROOT + "doc_urls_clickable.html";
+const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);
