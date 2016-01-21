@@ -17,18 +17,6 @@ function test() {
   let uri = null;
 
   function doTest(aIsPrivateMode, aWindow, aTestURI, aCallback) {
-    aWindow.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-      if (aWindow.gBrowser.selectedBrowser.contentWindow.location != aTestURI) {
-        aWindow.gBrowser.selectedBrowser.contentWindow.location = aTestURI;
-        return;
-      }
-      aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-
-      if (aCallback) {
-        aCallback();
-      }
-    }, true);
-
     observer = {
       observe: function(aSubject, aTopic, aData) {
         // The uri-visit-saved topic should only work when on normal mode.
@@ -50,6 +38,8 @@ function test() {
     };
 
     aWindow.Services.obs.addObserver(observer, "uri-visit-saved", false);
+
+    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(aCallback);
     aWindow.gBrowser.selectedBrowser.loadURI(aTestURI);
   }
 

@@ -8298,27 +8298,32 @@ IonBuilder::testGlobalLexicalBinding(PropertyName* name)
     jsid id = NameToId(name);
     if (analysisContext)
         lexicalKey->ensureTrackedProperty(analysisContext, id);
-    if (!lexicalKey->unknownProperties()) {
-        // If the property is not found on the global lexical scope but it is
-        // found on the global and is configurable, freeze the typeset for its
-        // non-existence.
-        //
-        // In the case that it is found on the global but is non-configurable,
-        // the binding cannot be shadowed by a global lexical binding.
-        HeapTypeSetKey lexicalProperty = lexicalKey->property(id);
-        Shape* shape = obj->lookupPure(name);
-        if (shape) {
-            if ((JSOp(*pc) != JSOP_GETGNAME && !shape->writable()) ||
-                obj->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
-            {
-                return nullptr;
-            }
-        } else {
-            shape = script()->global().lookupPure(name);
-            if (!shape || shape->configurable())
-                MOZ_ALWAYS_FALSE(lexicalProperty.isOwnProperty(constraints()));
-            obj = &script()->global();
+
+    // If the property is not found on the global lexical scope but it is found
+    // on the global and is configurable, try to freeze the typeset for its
+    // non-existence.  If we don't have type information then fail.
+    //
+    // In the case that it is found on the global but is non-configurable,
+    // the binding cannot be shadowed by a global lexical binding.
+    Maybe<HeapTypeSetKey> lexicalProperty;
+    if (!lexicalKey->unknownProperties())
+        lexicalProperty.emplace(lexicalKey->property(id));
+    Shape* shape = obj->lookupPure(name);
+    if (shape) {
+        if ((JSOp(*pc) != JSOP_GETGNAME && !shape->writable()) ||
+            obj->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+        {
+            return nullptr;
         }
+    } else {
+        shape = script()->global().lookupPure(name);
+        if (!shape || shape->configurable()) {
+            if (lexicalProperty.isSome())
+                MOZ_ALWAYS_FALSE(lexicalProperty->isOwnProperty(constraints()));
+            else
+                return nullptr;
+        }
+        obj = &script()->global();
     }
 
     return obj;

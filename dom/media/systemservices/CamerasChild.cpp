@@ -143,6 +143,62 @@ CamerasChild::RecvReplyNumberOfCapabilities(const int& numdev)
   return true;
 }
 
+// Helper function to dispatch calls to the IPC Thread and
+// CamerasChild object. Takes the needed locks and dispatches.
+// Takes a "failed" value and a reference to the output variable
+// as parameters, will return the right one depending on whether
+// dispatching succeeded.
+template <class T = int>
+class LockAndDispatch
+{
+public:
+  LockAndDispatch(CamerasChild* aCamerasChild,
+                  const char* aRequestingFunc,
+                  nsIRunnable *aRunnable,
+                  const T& aFailureValue = T(-1), const T& aSuccessValue = T(0))
+    : mCamerasChild(aCamerasChild), mRequestingFunc(aRequestingFunc),
+      mRunnable(aRunnable),
+      mReplyLock(aCamerasChild->mReplyMonitor),
+      mRequestLock(aCamerasChild->mRequestMutex),
+      mSuccess(true),
+      mFailureValue(aFailureValue), mSuccessValue(aSuccessValue)
+  {
+    Dispatch();
+  }
+
+  const T& ReturnValue() const {
+    if (mSuccess) {
+      return mSuccessValue;
+    } else {
+      return mFailureValue;
+    }
+  }
+
+  const bool& Success() const {
+    return mSuccess;
+  }
+
+private:
+  void Dispatch() {
+    if (!mCamerasChild->DispatchToParent(mRunnable, mReplyLock)) {
+      LOG(("Cameras dispatch for IPC failed in %s", mRequestingFunc));
+      mSuccess = false;
+    }
+  }
+
+  CamerasChild* mCamerasChild;
+  const char* mRequestingFunc;
+  nsIRunnable* mRunnable;
+  // Prevent concurrent use of the reply variables by holding
+  // the mReplyMonitor. Note that this is unlocked while waiting for
+  // the reply to be filled in, necessitating the additional mRequestLock/Mutex;
+  MonitorAutoLock mReplyLock;
+  MutexAutoLock mRequestLock;
+  bool mSuccess;
+  const T& mFailureValue;
+  const T& mSuccessValue;
+};
+
 bool
 CamerasChild::DispatchToParent(nsIRunnable* aRunnable,
                                MonitorAutoLock& aMonitor)
@@ -170,8 +226,6 @@ int
 CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
                                    const char* deviceUniqueIdUTF8)
 {
-  // Prevents multiple outstanding requests from happening.
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   LOG(("NumberOfCapabilities for %s", deviceUniqueIdUTF8));
   nsCString unique_id(deviceUniqueIdUTF8);
@@ -182,22 +236,14 @@ CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  // Prevent concurrent use of the reply variables. Note
-  // that this is unlocked while waiting for the reply to be
-  // filled in, necessitating the first Mutex above.
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    LOG(("Get capture capability count failed"));
-    return 0;
-  }
-  LOG(("Capture capability count: %d", mReplyInteger));
-  return mReplyInteger;
+  LockAndDispatch<> dispatcher(this, __func__, runnable, 0, mReplyInteger);
+  LOG(("Capture capability count: %d", dispatcher.ReturnValue()));
+  return dispatcher.ReturnValue();
 }
 
 int
 CamerasChild::NumberOfCaptureDevices(CaptureEngine aCapEngine)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
     media::NewRunnableFrom([this, aCapEngine]() -> nsresult {
@@ -206,13 +252,9 @@ CamerasChild::NumberOfCaptureDevices(CaptureEngine aCapEngine)
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    LOG(("Get NumberOfCaptureDevices failed"));
-    return 0;
-  }
-  LOG(("Capture Devices: %d", mReplyInteger));
-  return mReplyInteger;
+  LockAndDispatch<> dispatcher(this, __func__, runnable, 0, mReplyInteger);
+  LOG(("Capture Devices: %d", dispatcher.ReturnValue()));
+  return dispatcher.ReturnValue();
 }
 
 bool
@@ -233,7 +275,6 @@ CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
                                    const unsigned int capability_number,
                                    webrtc::CaptureCapability& capability)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG(("GetCaptureCapability: %s %d", unique_idUTF8, capability_number));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
@@ -243,12 +284,11 @@ CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    return -1;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  if (dispatcher.Success()) {
+    capability = mReplyCapability;
   }
-  capability = mReplyCapability;
-  return 0;
+  return dispatcher.ReturnValue();
 }
 
 bool
@@ -276,7 +316,6 @@ CamerasChild::GetCaptureDevice(CaptureEngine aCapEngine,
                                char* unique_idUTF8,
                                const unsigned int unique_idUTF8Length)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
     media::NewRunnableFrom([this, aCapEngine, list_number]() -> nsresult {
@@ -285,15 +324,13 @@ CamerasChild::GetCaptureDevice(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    LOG(("GetCaptureDevice failed"));
-    return -1;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  if (dispatcher.Success()) {
+    base::strlcpy(device_nameUTF8, mReplyDeviceName.get(), device_nameUTF8Length);
+    base::strlcpy(unique_idUTF8, mReplyDeviceID.get(), unique_idUTF8Length);
+    LOG(("Got %s name %s id", device_nameUTF8, unique_idUTF8));
   }
-  base::strlcpy(device_nameUTF8, mReplyDeviceName.get(), device_nameUTF8Length);
-  base::strlcpy(unique_idUTF8, mReplyDeviceID.get(), unique_idUTF8Length);
-  LOG(("Got %s name %s id", device_nameUTF8, unique_idUTF8));
-  return 0;
+  return dispatcher.ReturnValue();
 }
 
 bool
@@ -316,7 +353,6 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
                                     const unsigned int unique_idUTF8Length,
                                     int& capture_id)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
@@ -326,14 +362,12 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    LOG(("AllocateCaptureDevice failed"));
-    return -1;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  if (dispatcher.Success()) {
+    LOG(("Capture Device allocated: %d", mReplyInteger));
+    capture_id = mReplyInteger;
   }
-  LOG(("Capture Device allocated: %d", mReplyInteger));
-  capture_id = mReplyInteger;
-  return 0;
+  return dispatcher.ReturnValue();
 }
 
 
@@ -353,7 +387,6 @@ int
 CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
                                    const int capture_id)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
     media::NewRunnableFrom([this, aCapEngine, capture_id]() -> nsresult {
@@ -362,11 +395,8 @@ CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    return -1;
-  }
-  return 0;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  return dispatcher.ReturnValue();
 }
 
 void
@@ -400,7 +430,6 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
                            webrtc::CaptureCapability& webrtcCaps,
                            webrtc::ExternalRenderer* cb)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   AddCallback(aCapEngine, capture_id, cb);
   CaptureCapability capCap(webrtcCaps.width,
@@ -417,17 +446,13 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    return -1;
-  }
-  return 0;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  return dispatcher.ReturnValue();
 }
 
 int
 CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
 {
-  MutexAutoLock requestLock(mRequestMutex);
   LOG((__PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
     media::NewRunnableFrom([this, aCapEngine, capture_id]() -> nsresult {
@@ -436,12 +461,11 @@ CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
       }
       return NS_ERROR_FAILURE;
     });
-  MonitorAutoLock monitor(mReplyMonitor);
-  if (!DispatchToParent(runnable, monitor)) {
-    return -1;
+  LockAndDispatch<> dispatcher(this, __func__, runnable);
+  if (dispatcher.Success()) {
+    RemoveCallback(aCapEngine, capture_id);
   }
-  RemoveCallback(aCapEngine, capture_id);
-  return 0;
+  return dispatcher.ReturnValue();
 }
 
 void

@@ -82,6 +82,7 @@ public:
   explicit AsyncFrameInit(nsIFrame* aFrame) : mFrame(aFrame) {}
   NS_IMETHOD Run()
   {
+    PROFILER_LABEL("mozilla", "AsyncFrameInit::Run", js::ProfileEntry::Category::OTHER);
     if (mFrame.IsAlive()) {
       static_cast<nsSubDocumentFrame*>(mFrame.GetFrame())->ShowViewer();
     }

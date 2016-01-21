@@ -235,6 +235,11 @@ static inline void* js_calloc(size_t nmemb, size_t size)
 
 static inline void* js_realloc(void* p, size_t bytes)
 {
+    // realloc() with zero size is not portable, as some implementations may
+    // return nullptr on success and free |p| for this.  We assume nullptr
+    // indicates failure and that |p| is still valid.
+    MOZ_ASSERT(bytes != 0);
+
     JS_OOM_POSSIBLY_FAIL();
     return realloc(p, bytes);
 }

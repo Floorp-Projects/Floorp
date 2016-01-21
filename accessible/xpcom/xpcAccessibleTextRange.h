@@ -49,6 +49,7 @@ public:
   NS_IMETHOD MoveStart(uint32_t aUnit, int32_t aCount) final override;
   NS_IMETHOD MoveEnd(uint32_t aUnit, int32_t aCount) final override;
   NS_IMETHOD Normalize(uint32_t aUnit) final override;
+  NS_IMETHOD Crop(nsIAccessible* aContainer, bool* aSuccess) final override;
   NS_IMETHOD FindText(const nsAString& aText, bool aIsBackward, bool aIsIgnoreCase,
                       nsIAccessibleTextRange** aRange) final override;
   NS_IMETHOD FindAttr(uint32_t aAttr, nsIVariant* aVal, bool aIsBackward,

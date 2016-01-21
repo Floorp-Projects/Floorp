@@ -2250,6 +2250,30 @@ Accessible::AnchorURIAt(uint32_t aAnchorIndex)
   return nullptr;
 }
 
+void
+Accessible::ToTextPoint(HyperTextAccessible** aContainer, int32_t* aOffset,
+                        bool aIsBefore) const
+{
+  if (IsHyperText()) {
+    *aContainer = const_cast<Accessible*>(this)->AsHyperText();
+    *aOffset = aIsBefore ? 0 : (*aContainer)->CharacterCount();
+    return;
+  }
+
+  const Accessible* child = nullptr;
+  const Accessible* parent = this;
+  do {
+    child = parent;
+    parent = parent->Parent();
+  } while (parent && !parent->IsHyperText());
+
+  if (parent) {
+    *aContainer = const_cast<Accessible*>(parent)->AsHyperText();
+    *aOffset = (*aContainer)->GetChildOffset(
+      child->IndexInParent() + static_cast<int32_t>(!aIsBefore));
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible

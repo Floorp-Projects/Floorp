@@ -483,6 +483,7 @@ AutoParentOpResult::~AutoParentOpResult()
         break;
       }
       Unused << PCacheParent::Send__delete__(result.actorParent());
+      break;
     }
     default:
       // other types do not need clean up

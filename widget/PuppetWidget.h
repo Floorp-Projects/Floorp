@@ -40,6 +40,7 @@ class PuppetWidget : public nsBaseWidget
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef nsBaseWidget Base;
+  typedef mozilla::CSSRect CSSRect;
 
   // The width and height of the "widget" are clamped to this.
   static const size_t kMaxDimension;
@@ -254,6 +255,10 @@ public:
 
   virtual void SetCandidateWindowForPlugin(int32_t aX, int32_t aY) override;
 
+  virtual void ZoomToRect(const uint32_t& aPresShellId,
+                          const FrameMetrics::ViewID& aViewId,
+                          const CSSRect& aRect,
+                          const uint32_t& aFlags) override;
 protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;

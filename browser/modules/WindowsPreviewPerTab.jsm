@@ -371,8 +371,6 @@ function TabWindow(win) {
   this.win = win;
   this.tabbrowser = win.gBrowser;
 
-  this.cacheDims();
-
   this.previews = new Map();
 
   for (let i = 0; i < this.tabEvents.length; i++)
@@ -394,6 +392,8 @@ function TabWindow(win) {
 
 TabWindow.prototype = {
   _enabled: false,
+  _cachedWidth: 0,
+  _cachedHeight: 0,
   tabEvents: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
   winEvents: ["resize"],
 
@@ -404,8 +404,8 @@ TabWindow.prototype = {
 
     this.tabbrowser.removeTabsProgressListener(this);
 
-  for (let i = 0; i < this.winEvents.length; i++)
-    this.win.removeEventListener(this.winEvents[i], this, false);
+    for (let i = 0; i < this.winEvents.length; i++)
+      this.win.removeEventListener(this.winEvents[i], this, false);
 
     for (let i = 0; i < this.tabEvents.length; i++)
       this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this, false);

@@ -1394,8 +1394,9 @@ pref("dom.identity.enabled", false);
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
-// Show degraded UI for http pages with password fields
-#ifdef NIGHTLY_BUILD
+// Show degraded UI for http pages with password fields.
+// Only for Nightly and Dev Edition for not, not for beta or release.
+#ifndef RELEASE_BUILD
 pref("security.insecure_password.ui.enabled", true);
 #else
 pref("security.insecure_password.ui.enabled", false);
@@ -1404,6 +1405,8 @@ pref("security.insecure_password.ui.enabled", false);
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 
+// NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+// See the comment in CertVerifier.cpp.
 // 0 = allow SHA-1
 pref("security.pki.sha1_enforcement_level", 0);
 

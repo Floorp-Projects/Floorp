@@ -445,9 +445,9 @@ nsContentPermissionUtils::NotifyRemoveContentPermissionRequestChild(
 NS_IMPL_ISUPPORTS(nsContentPermissionRequester, nsIContentPermissionRequester)
 
 nsContentPermissionRequester::nsContentPermissionRequester(nsPIDOMWindow* aWindow)
-  : mWindow(aWindow)
+  : mWindow(do_GetWeakReference(aWindow))
+  , mListener(new VisibilityChangeListener(aWindow))
 {
-  mListener = new VisibilityChangeListener(mWindow);
 }
 
 nsContentPermissionRequester::~nsContentPermissionRequester()
@@ -461,12 +461,12 @@ nsContentPermissionRequester::GetVisibility(nsIContentPermissionRequestCallback*
 {
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  if (!mWindow) {
-    MOZ_ASSERT(false);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  if (!window) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocShell> docshell = mWindow->GetDocShell();
+  nsCOMPtr<nsIDocShell> docshell = window->GetDocShell();
   if (!docshell) {
     return NS_ERROR_FAILURE;
   }

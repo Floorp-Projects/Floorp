@@ -19,12 +19,6 @@
 #define FUN_APPLY(FUN, RECEIVER, ARGS) \
   callFunction(std_Function_apply, FUN, RECEIVER, ARGS)
 
-// Unforgeable versions of ARRAY.push(ELEMENT) and ARRAY.slice.
-#define ARRAY_PUSH(ARRAY, ELEMENT) \
-  callFunction(std_Array_push, ARRAY, ELEMENT);
-#define ARRAY_SLICE(ARRAY, ELEMENT) \
-  callFunction(std_Array_slice, ARRAY, ELEMENT);
-
 // Property descriptor attributes.
 #define ATTR_ENUMERABLE         0x01
 #define ATTR_CONFIGURABLE       0x02

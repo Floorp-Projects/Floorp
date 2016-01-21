@@ -13,7 +13,7 @@ interface nsIVariant;
 /**
  * A range representing a piece of text in the document.
  */
-[scriptable, uuid(525b3401-8a67-4822-b35d-661065767cd8)]
+[scriptable, uuid(c4515623-55f9-4543-a3d5-c1e9afa588f4)]
 interface nsIAccessibleTextRange : nsISupports
 {
   readonly attribute nsIAccessibleText startContainer;
@@ -80,6 +80,11 @@ interface nsIAccessibleTextRange : nsISupports
    * Normalize the range to the closest unit of the given type.
    */
   void normalize(in unsigned long aUnit);
+
+  /**
+   * Crops the range by the given accessible element.
+   */
+  boolean crop(in nsIAccessible aContainer);
 
   /**
    * Return range enclosing the found text.

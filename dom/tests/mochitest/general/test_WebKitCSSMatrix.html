@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for WebKitCSSMatrix</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+function RoughCompareMatrix(dm1, dm2)
+{
+  var m1 = dm1.toFloat32Array();
+  var m2 = dm2.toFloat32Array();
+
+  if (m1.length != m2.length) {
+    return false;
+  }
+
+  const tolerance = 1 / 65535;
+  for (var x = 0; x < m1.length; x++) {
+    if (Math.abs(m1[x] - m2[x]) > tolerance) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function CompareMatrix(dm1, dm2)
+{
+  var m1 = dm1.toFloat32Array();
+  var m2 = dm2.toFloat32Array();
+
+  if (m1.length != m2.length) {
+    return false;
+  }
+
+  for (var x = 0; x < m1.length; x++) {
+    if (m1[x] != m2[x]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+test(function() {
+  var m = new WebKitCSSMatrix();
+
+  assert_equals(m.m11, 1, "m11 should be 1");
+  assert_equals(m.m22, 1, "m22 should be 1");
+  assert_equals(m.m33, 1, "m33 should be 1");
+  assert_equals(m.m44, 1, "m44 should be 1");
+  assert_equals(m.m12, 0, "m12 should be 0");
+  assert_equals(m.m13, 0, "m13 should be 0");
+  assert_equals(m.m14, 0, "m14 should be 0");
+  assert_equals(m.m21, 0, "m21 should be 0");
+  assert_equals(m.m23, 0, "m23 should be 0");
+  assert_equals(m.m24, 0, "m24 should be 0");
+  assert_equals(m.m31, 0, "m31 should be 0");
+  assert_equals(m.m32, 0, "m32 should be 0");
+  assert_equals(m.m34, 0, "m34 should be 0");
+  assert_equals(m.m41, 0, "m41 should be 0");
+  assert_equals(m.m42, 0, "m42 should be 0");
+  assert_equals(m.m43, 0, "m43 should be 0");
+}, "Test constructor with no arguments.");
+
+test(function() {
+  var m = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  assert_equals(m.m11, 1, "m11 should be 1");
+  assert_equals(m.m12, 2, "m12 should be 2");
+  assert_equals(m.m21, 3, "m21 should be 3");
+  assert_equals(m.m22, 4, "m22 should be 4");
+  assert_equals(m.m41, 5, "m41 should be 5");
+  assert_equals(m.m42, 6, "m42 should be 6");
+}, "Test constructor with transform list.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new WebKitCSSMatrix(m1);
+
+  assert_true(RoughCompareMatrix(m1, m2), "Matrix should be equal.");
+}, "Test constructor with other matrix.");
+
+test(function() {
+  var m = new WebKitCSSMatrix();
+  var mr = m.setMatrixValue("matrix(1,2,3,4,5,6)");
+
+  assert_equals(m.m11, 1, "m11 should be 1");
+  assert_equals(m.m12, 2, "m12 should be 2");
+  assert_equals(m.m21, 3, "m21 should be 3");
+  assert_equals(m.m22, 4, "m22 should be 4");
+  assert_equals(m.m41, 5, "m41 should be 5");
+  assert_equals(m.m42, 6, "m42 should be 6");
+
+  assert_equals(m, mr, "Return value of setMatrixValue should be the same matrix.");
+}, "Test setMatrixValue.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(6,5,4,3,2,1)");
+  var m4 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.multiply(m3);
+  var m2r = m2.multiply(m3);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "multiply should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m4), "Multiply should not mutate original matrix.");
+}, "Test multiply.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.inverse();
+  var m2r = m2.inverse();
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "inverse should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "inverse should not mutate original matrix.");
+}, "Test inverse.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.translate(2, 3, 4);
+  var m2r = m2.translate(2, 3, 4);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "translate should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "translate should not mutate original matrix.");
+}, "Test inverse.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(2);
+  var m2r = m2.scaleNonUniform(2, 2, 1);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with 1 argument.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(2, 3);
+  var m2r = m2.scaleNonUniform(2, 3, 1);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with 2 arguments.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(2, 3, 4);
+  var m2r = m2.scaleNonUniform(2, 3, 4);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with 3 arguments.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(undefined, 3, 4);
+  var m2r = m2.scaleNonUniform(1, 3, 4);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with undefined scaleX argument.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(2, undefined, 4);
+  var m2r = m2.scaleNonUniform(2, 2, 4);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with undefined scaleY argument.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.scale(2, 3, undefined);
+  var m2r = m2.scaleNonUniform(2, 3, 1);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "scale should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "scale should not mutate original matrix.");
+}, "Test scale with undefined scaleZ argument.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotate(2);
+  var m2r = m2.rotateAxisAngle(0, 0, 1, 2); // Rotate around unit vector on z-axis.
+
+  assert_true(RoughCompareMatrix(m1r, m2r));
+  assert_true(CompareMatrix(m1, m3), "rotate should not mutate original matrix.");
+}, "Test rotate with 1 argument.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotate(2, 3);
+  var m2r = m2.rotateAxisAngle(0, 1, 0, 3); // Rotate around unit vector on x-axis.
+  m2r = m2r.rotateAxisAngle(1, 0, 0, 2); // Rotate around unit vector on y-axis.
+
+  assert_true(RoughCompareMatrix(m1r, m2r));
+  assert_true(CompareMatrix(m1, m3), "rotate should not mutate original matrix.");
+}, "Test rotate with 2 arguments.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotate(2, 3, 4);
+  var m2r = m2.rotateAxisAngle(0, 0, 1, 4); // Rotate around unit vector on z-axis.
+  m2r = m2r.rotateAxisAngle(0, 1, 0, 3); // Rotate around unit vector on y-axis.
+  m2r = m2r.rotateAxisAngle(1, 0, 0, 2); // Rotate around unit vector on x-axis.
+
+  assert_true(RoughCompareMatrix(m1r, m2r));
+  assert_true(CompareMatrix(m1, m3), "rotate should not mutate original matrix.");
+}, "Test rotate with 3 arguments.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotate(2, undefined, undefined);
+  var m2r = m2.rotateAxisAngle(0, 0, 1, 2); // Rotate around unit vector on z-axis.
+
+  assert_true(RoughCompareMatrix(m1r, m2r));
+  assert_true(CompareMatrix(m1, m3), "rotate should not mutate original matrix.");
+}, "Test rotate with rotY and rotZ as undefined.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotate(undefined, 3, 4);
+  var m2r = m2.rotateAxisAngle(0, 0, 1, 4); // Rotate around unit vector on z-axis.
+  m2r = m2r.rotateAxisAngle(0, 1, 0, 3); // Rotate around unit vector on y-axis.
+
+  assert_true(RoughCompareMatrix(m1r, m2r));
+  assert_true(CompareMatrix(m1, m3), "rotate should not mutate original matrix.");
+}, "Test rotate with rotX as undefined.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.rotateAxisAngle(2, 3, 4, 5);
+  var m2r = m2.rotateAxisAngle(2, 3, 4, 5);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "rotateAxisAngle should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "rotateAxisAngle should not mutate original matrix.");
+}, "Test rotateAxisAngle.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.skewX(2);
+  var m2r = m2.skewX(2);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "skewX should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "skewX should not mutate original matrix.");
+}, "Test skewX.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+  var m2 = new DOMMatrix("matrix(1,2,3,4,5,6)");
+  var m3 = new WebKitCSSMatrix("matrix(1,2,3,4,5,6)");
+
+  var m1r = m1.skewY(2);
+  var m2r = m2.skewY(2);
+
+  assert_true(RoughCompareMatrix(m1r, m2r), "skewY should return the same result as DOMMatrixReadOnly.");
+  assert_true(CompareMatrix(m1, m3), "skewY should not mutate original matrix.");
+}, "Test skewY.");
+</script>

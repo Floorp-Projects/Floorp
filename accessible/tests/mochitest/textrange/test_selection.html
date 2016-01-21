@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text Range selection tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      var sel = window.getSelection();
+      var p = getNode("p1");
+      var a = getNode("p2_a");
+
+      var range = document.createRange();
+      sel.addRange(range);
+
+      // the accessible is contained by the range
+      range.selectNode(p);
+
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #1", document, 3, document, 4);
+
+      ok(a11yrange.crop(getAccessible(a)), "Range failed to crop #1.");
+      testTextRange(a11yrange, "cropped range #1", a, 0, a, 5);
+
+      // the range is contained by the accessible
+      range.selectNode(a);
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #2", p, 5, p, 6);
+
+      ok(a11yrange.crop(getAccessible(p)), "Range failed to crop #2.");
+      testTextRange(a11yrange, "cropped range #2", p, 5, p, 6);
+
+      // the range starts before the accessible and ends inside it
+      range.setStart(p, 0);
+      range.setEndAfter(a.firstChild, 4);
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #3", p, 0, a, 4);
+
+      ok(a11yrange.crop(getAccessible(a)), "Range failed to crop #3.");
+      testTextRange(a11yrange, "cropped range #3", a, 0, a, 4);
+
+      // the range starts inside the accessible and ends after it
+      range.setStart(a.firstChild, 1);
+      range.setEndAfter(p);
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #4", a, 1, document, 4);
+
+      ok(a11yrange.crop(getAccessible(a)), "Range failed to crop #4.");
+      testTextRange(a11yrange, "cropped range #4", a, 1, a, 5);
+
+      // the range ends before the accessible
+      range.setStart(p.firstChild, 0);
+      range.setEnd(p.firstChild, 4);
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #5", p, 0, p, 4);
+      ok(!a11yrange.crop(getAccessible(a)), "Crop #5 succeeded while it shouldn't");
+
+      // the range starts after the accessible
+      range.setStart(p.lastChild, 0);
+      range.setEnd(p.lastChild, 4);
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #6", p, 6, p, 10);
+
+      ok(!a11yrange.crop(getAccessible(a)), "Crop #6 succeeded while it shouldn't");
+
+      // crop a range by a table
+      range.selectNode(getNode("c2"));
+      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+
+      testTextRange(a11yrange, "selection range #7", document, 4, document, 5);
+
+      ok(a11yrange.crop(getAccessible("table")), "Range failed to crop #7.");
+      testTextRange(a11yrange, "cropped range #7", "c2", 5, "c2", 6);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Implement IAccessible2_3::selectionRanges"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1233118">Bug 1233118</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="p1">text <a id="p2_a" href="www">link<img id="p2_img", src="../moz.png"></a> text</p>
+
+  <div id="c2">start<table id="table"><tr><td>cell</td></tr></table>end</div>
+</body>
+</html>

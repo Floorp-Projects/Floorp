@@ -758,6 +758,12 @@ public:
    */
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
 
+  /**
+   * Returns a text point for the accessible element.
+   */
+  void ToTextPoint(HyperTextAccessible** aContainer, int32_t* aOffset,
+                   bool aIsBefore = true) const;
+
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 
