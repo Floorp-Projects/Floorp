@@ -725,7 +725,7 @@ CSSFilterEditorWidget.prototype = {
         }
       }
 
-      this.add(name, value, quote);
+      this.add(name, value, quote, true);
     }
 
     this.emit("updated", this.getCssValue());
@@ -745,8 +745,12 @@ CSSFilterEditorWidget.prototype = {
     *        single quote, a double quote, or empty.
     * @return {Number}
     *        The index of the new filter in the current list of filters
+    * @param {Boolean}
+    *        By default, adding a new filter emits an "updated" event, but if
+    *        you're calling add in a loop and wait to emit a single event after
+    *        the loop yourself, set this parameter to true.
     */
-  add: function(name, value, quote) {
+  add: function(name, value, quote, noEvent) {
     const def = this._definition(name);
     if (!def) {
       return false;
@@ -794,7 +798,9 @@ CSSFilterEditorWidget.prototype = {
     }
 
     const index = this.filters.push({value, unit, name, quote}) - 1;
-    this.emit("updated", this.getCssValue());
+    if (!noEvent) {
+      this.emit("updated", this.getCssValue());
+    }
 
     return index;
   },
