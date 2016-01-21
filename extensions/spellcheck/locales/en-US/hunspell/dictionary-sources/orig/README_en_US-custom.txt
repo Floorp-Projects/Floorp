@@ -1,6 +1,6 @@
 en_US-custom Hunspell Dictionary
-Generated from SCOWL Version 2015.08.24
-Sun Jan 10 15:07:16 EST 2016
+Generated from SCOWL Version 2016.01.19
+Thu Jan 21 14:36:27 EST 2016
 
 http://wordlist.sourceforge.net
 
@@ -24,9 +24,12 @@ The normal (non-large) dictionaries correspond to SCOWL size 60 and,
 to encourage consistent spelling, generally only include one spelling
 variant for a word.  The large dictionaries correspond to SCOWL size
 70 and may include multiple spelling for a word when both variants are
-considered almost equal.  Also, the general quality of the larger
-dictionaries may also be less as they are not as carefully checked for
-errors as the normal dictionaries.
+considered almost equal.  The larger dictionaries however (1) have not
+been as carefully checked for errors as the normal dictionaries and
+thus may contain misspelled or invalid words; and (2) contain
+uncommon, yet valid, words that might cause problems as they are
+likely to be misspellings of more common words (for example, "ort" and
+"calender").
 
 To get an idea of the difference in size, here are 25 random words
 only found in the large dictionary for American English:
@@ -42,7 +45,7 @@ basis.  If you find them useful please send me a quick email at
 kevina@gnu.org.
 
 If none of these dictionaries suite you (for example, maybe you want
-the larger dictionary but only use spelling of a word) additional
+the normal dictionary that also includes common variants) additional
 dictionaries can be generated at http://app.aspell.net/create or by
 modifying speller/make-hunspell-dict in SCOWL.  Please do let me know
 if you end up publishing a customized dictionary.
@@ -57,10 +60,15 @@ kevina@gnu.org or to the wordlist-devel mailing lists
 have specific issues with any of these dictionaries please file a bug
 report at https://github.com/kevina/wordlist/issues.
 
-IMPORTANT CHANGES FROM 2015.02.15:
+IMPORTANT CHANGES INTRODUCED IN 2015.04.24:
 
 The dictionaries are now in UTF-8 format instead of ISO-8859-1.  This
 was required to handle smart quotes correctly.
+
+IMPORTANT CHANGES INTRODUCED IN 2016.01.19:
+
+"SET UTF8" was changes to "SET UTF-8" in the affix file as some
+versions of Hunspell do not recognize "UTF8".
 
 ADDITIONAL NOTES:
 
@@ -311,5 +319,5 @@ from the Ispell distribution they are under the Ispell copyright:
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-Build Date: Sun Jan 10 15:07:16 EST 2016
+Build Date: Thu Jan 21 14:36:27 EST 2016
 With Input Command: ../mk-list -v1 --accents=both en_US 60
