@@ -298,6 +298,9 @@ private:
     QueueData& queue = GetQueue(aJob->mJobType);
     MOZ_ASSERT(!queue.mJobs.IsEmpty());
     MOZ_ASSERT(queue.mJobs[0] == aJob);
+    if (NS_WARN_IF(queue.mJobs[0] != aJob)) {
+      return;
+    }
     Pop(queue);
   }
 };
