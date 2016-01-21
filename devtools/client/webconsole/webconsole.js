@@ -212,6 +212,7 @@ function WebConsoleFrame(webConsoleOwner)
   this.output = new ConsoleOutput(this);
 
   this._toggleFilter = this._toggleFilter.bind(this);
+  this.resize = this.resize.bind(this);
   this._onPanelSelected = this._onPanelSelected.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
   this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
@@ -503,6 +504,8 @@ WebConsoleFrame.prototype = {
 
     this.filterBox = doc.querySelector(".hud-filter-box");
     this.outputNode = doc.getElementById("output-container");
+    this.outputWrapper = doc.getElementById("output-wrapper");
+
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
 
@@ -540,6 +543,11 @@ WebConsoleFrame.prototype = {
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
 
+    this.resize();
+    this.window.addEventListener("resize", this.resize, true);
+    this.jsterm.on("sidebar-opened", this.resize);
+    this.jsterm.on("sidebar-closed", this.resize);
+
     let toolbox = gDevTools.getToolbox(this.owner.target);
     if (toolbox) {
       toolbox.on("webconsole-selected", this._onPanelSelected);
@@ -566,6 +574,15 @@ WebConsoleFrame.prototype = {
 
     // focus input node
     this.jsterm.inputNode.focus();
+  },
+
+  /**
+   * Resizes the output node to fit the output wrapped.
+   * We need this because it makes the layout a lot faster than
+   * using -moz-box-flex and 100% width.  See Bug 1237368.
+   */
+  resize: function(e) {
+    this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
   },
 
   /**
@@ -2030,14 +2047,14 @@ WebConsoleFrame.prototype = {
     let batch = this._outputQueue.splice(0, toDisplay);
     let outputNode = this.outputNode;
     let lastVisibleNode = null;
-    let scrollNode = outputNode.parentNode;
+    let scrollNode = this.outputWrapper;
     let hudIdSupportsString = WebConsoleUtils.supportsString(this.hudId);
 
     // We won't bother to try to restore scroll position if this is showing
     // a lot of messages at once (and there are still items in the queue).
     // It is going to purge whatever you were looking at anyway.
     let scrolledToBottom = shouldPrune ||
-                           Utils.isOutputScrolledToBottom(outputNode);
+                           Utils.isOutputScrolledToBottom(outputNode, scrollNode);
 
     // Output the current batch of messages.
     let messages = new Set();
@@ -2833,6 +2850,7 @@ WebConsoleFrame.prototype = {
     }
 
     gDevTools.off("pref-changed", this._onToolboxPrefChanged);
+    this.window.removeEventListener("resize", this.resize, true);
 
     this._repeatNodes = {};
     this._outputQueue.forEach(this._destroyItem, this);
@@ -2848,6 +2866,8 @@ WebConsoleFrame.prototype = {
     }
     this._outputTimer = null;
     if (this.jsterm) {
+      this.jsterm.off("sidebar-opened", this.resize);
+      this.jsterm.off("sidebar-closed", this.resize);
       this.jsterm.destroy();
       this.jsterm = null;
     }
@@ -3478,6 +3498,7 @@ JSTerm.prototype = {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
     this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
+    this.emit("sidebar-opened");
   },
 
   /**
@@ -4040,10 +4061,10 @@ JSTerm.prototype = {
           }
         }
         else {
-          this.hud.outputNode.parentNode.scrollTop =
+          this.hud.outputWrapper.scrollTop =
             Math.max(0,
-              this.hud.outputNode.parentNode.scrollTop -
-              this.hud.outputNode.parentNode.clientHeight
+              this.hud.outputWrapper.scrollTop -
+              this.hud.outputWrapper.clientHeight
             );
         }
         event.preventDefault();
@@ -4057,10 +4078,10 @@ JSTerm.prototype = {
           }
         }
         else {
-          this.hud.outputNode.parentNode.scrollTop =
-            Math.min(this.hud.outputNode.parentNode.scrollHeight,
-              this.hud.outputNode.parentNode.scrollTop +
-              this.hud.outputNode.parentNode.clientHeight
+          this.hud.outputWrapper.scrollTop =
+            Math.min(this.hud.outputWrapper.scrollHeight,
+              this.hud.outputWrapper.scrollTop +
+              this.hud.outputWrapper.clientHeight
             );
         }
         event.preventDefault();
@@ -4071,7 +4092,7 @@ JSTerm.prototype = {
           this.autocompletePopup.selectedIndex = 0;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
-          this.hud.outputNode.parentNode.scrollTop = 0;
+          this.hud.outputWrapper.scrollTop = 0;
           event.preventDefault();
         }
         break;
@@ -4081,7 +4102,7 @@ JSTerm.prototype = {
           this.autocompletePopup.selectedIndex = this.autocompletePopup.itemCount - 1;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
-          this.hud.outputNode.parentNode.scrollTop = this.hud.outputNode.parentNode.scrollHeight;
+          this.hud.outputWrapper.scrollTop = this.hud.outputWrapper.scrollHeight;
           event.preventDefault();
         }
         break;
@@ -4633,15 +4654,15 @@ var Utils = {
    * Check if the given output node is scrolled to the bottom.
    *
    * @param nsIDOMNode outputNode
+   * @param nsIDOMNode scrollNode
    * @return boolean
    *         True if the output node is scrolled to the bottom, or false
    *         otherwise.
    */
-  isOutputScrolledToBottom: function Utils_isOutputScrolledToBottom(outputNode)
+  isOutputScrolledToBottom: function (outputNode, scrollNode)
   {
     let lastNodeHeight = outputNode.lastChild ?
                          outputNode.lastChild.clientHeight : 0;
-    let scrollNode = outputNode.parentNode;
     return scrollNode.scrollTop + scrollNode.clientHeight >=
            scrollNode.scrollHeight - lastNodeHeight / 2;
   },

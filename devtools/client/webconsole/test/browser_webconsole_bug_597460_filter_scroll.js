@@ -65,7 +65,7 @@ function consoleOpened(hud) {
 }
 
 function testScroll([result], hud) {
-  let scrollNode = hud.outputNode.parentNode;
+  let scrollNode = hud.ui.outputWrapper;
   let msgNode = [...result.matched][0];
   ok(msgNode.classList.contains("filtered-by-type"),
     "network message is filtered by type");

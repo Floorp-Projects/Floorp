@@ -30,24 +30,24 @@ add_task(function*() {
     }],
   });
 
-  let currentPosition = hud.outputNode.parentNode.scrollTop;
+  let currentPosition = hud.ui.outputWrapper.scrollTop;
   let bottom = currentPosition;
 
   EventUtils.synthesizeKey("VK_PAGE_UP", {});
-  isnot(hud.outputNode.parentNode.scrollTop, currentPosition,
+  isnot(hud.ui.outputWrapper.scrollTop, currentPosition,
         "scroll position changed after page up");
 
-  currentPosition = hud.outputNode.parentNode.scrollTop;
+  currentPosition = hud.ui.outputWrapper.scrollTop;
   EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
-  ok(hud.outputNode.parentNode.scrollTop > currentPosition,
+  ok(hud.ui.outputWrapper.scrollTop > currentPosition,
      "scroll position now at bottom");
 
   EventUtils.synthesizeKey("VK_HOME", {});
-  is(hud.outputNode.parentNode.scrollTop, 0, "scroll position now at top");
+  is(hud.ui.outputWrapper.scrollTop, 0, "scroll position now at top");
 
   EventUtils.synthesizeKey("VK_END", {});
 
-  let scrollTop = hud.outputNode.parentNode.scrollTop;
+  let scrollTop = hud.ui.outputWrapper.scrollTop;
   ok(scrollTop > 0 && Math.abs(scrollTop - bottom) <= 5,
      "scroll position now at bottom");
 
