@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=61098
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=61098">Mozilla Bug 61098</a>
 <p id="display">
 </p>
-<div id="content" style="display: none"> 
+<div id="content" style="display: none">
 </div>
 <pre id="test">
 </pre>
@@ -313,10 +313,9 @@ function runtestsInner()
     w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
     is (promptState, void(0), "Wrong prompt state");
 
-    // Test that showModalDialog() works normally and then gets blocked
-    // on the second call.
     try {
       w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
+      ok(false, "showModalDialog call should throw an exception");
     } catch(e) {
       is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
     }
