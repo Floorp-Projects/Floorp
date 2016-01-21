@@ -51,7 +51,8 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC"),
     mVoiceEngine(nullptr),
     mAudioInput(nullptr),
-    mAudioEngineInit(false)
+    mAudioEngineInit(false),
+    mFullDuplex(aPrefs.mFullDuplex)
 {
 #ifndef MOZ_B2G_CAMERA
   nsCOMPtr<nsIComponentRegistrar> compMgr;
@@ -287,7 +288,8 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
   }
 
   if (!mAudioInput) {
-    if (true /*platform_supports_full_duplex*/) {
+    if (mFullDuplex) {
+      // The platform_supports_full_duplex.
       mAudioInput = new mozilla::AudioInputCubeb(mVoiceEngine);
     } else {
       mAudioInput = new mozilla::AudioInputWebRTC(mVoiceEngine);
@@ -330,8 +332,10 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
       aASources->AppendElement(aSource.get());
     } else {
       AudioInput* audioinput = mAudioInput;
-      if (true /*platform_supports_full_duplex*/) {
-        // For cubeb, it has state (the selected ID
+      if (mFullDuplex) {
+        // The platform_supports_full_duplex.
+
+        // For cubeb, it has state (the selected ID)
         // XXX just use the uniqueID for cubeb and support it everywhere, and get rid of this
         // XXX Small window where the device list/index could change!
         audioinput = new mozilla::AudioInputCubeb(mVoiceEngine);
