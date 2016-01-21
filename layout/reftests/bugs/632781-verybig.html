@@ -11,17 +11,17 @@
       correctly skip the padding.
     -->
     <div id="container" style="width: 100px; height: 100px; padding: 10px; overflow: hidden">
-      <canvas width="10000" height="10000" id="c"></canvas>
+      <canvas width="10000" height="120" id="c"></canvas>
     </div>
     <script>
       var ctx = document.getElementById("c").getContext("2d");
       ctx.fillStyle = "red";
       ctx.fillRect(0, 0, 10000, 5000);
       ctx.fillStyle = "green";
-      ctx.fillRect(0, 5000, 10000, 5000);
+      ctx.fillRect(5000, 0, 10000, 5000);
       var container = document.getElementById("container");
-      container.scrollLeft = 10;
-      container.scrollTop = 5010;
+      container.scrollLeft = 5010;
+      container.scrollTop = 10;
     </script>
   </body>
 </html>
