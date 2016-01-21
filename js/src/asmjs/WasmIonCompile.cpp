@@ -25,6 +25,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::DebugOnly;
+using mozilla::Maybe;
 
 typedef Vector<size_t, 1, SystemAllocPolicy> LabelVector;
 typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
@@ -95,7 +96,6 @@ class FunctionCompiler
         // Prepare the entry block for MIR generation:
 
         const ValTypeVector& args = func_.sig().args();
-        unsigned firstVarSlot = args.length();
 
         if (!mirGen_.ensureBallast())
             return false;
@@ -110,9 +110,9 @@ class FunctionCompiler
                 return false;
         }
 
-        for (size_t i = 0; i < func_.numLocalVars(); i++) {
+        for (size_t i = args.length(); i < func_.numLocals(); i++) {
             MInstruction* ins = nullptr;
-            switch (func_.localVarType(i)) {
+            switch (func_.localType(i)) {
               case ValType::I32:
                 ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType_Int32);
                 break;
@@ -137,7 +137,7 @@ class FunctionCompiler
             }
 
             curBlock_->add(ins);
-            curBlock_->initSlot(info().localSlot(firstVarSlot + i), ins);
+            curBlock_->initSlot(info().localSlot(i), ins);
             if (!mirGen_.ensureBallast())
                 return false;
         }
@@ -168,6 +168,8 @@ class FunctionCompiler
             return nullptr;
         return curBlock_->getSlot(info().localSlot(slot));
     }
+
+    ExprType localType(unsigned slot) const { return ToExprType(func_.localType(slot)); }
 
     /***************************** Code generation (after local scope setup) */
 
@@ -1288,6 +1290,20 @@ class FunctionCompiler
     }
 };
 
+// A Type or Undefined, implicitly constructed from an ExprType and usabled as
+// an ExprType. Will assert if we're trying to access the type although we
+// don't have one.
+class MaybeType
+{
+    Maybe<ExprType> maybe_;
+    MaybeType() {}
+  public:
+    MOZ_IMPLICIT MaybeType(ExprType t) : maybe_() { maybe_.emplace(t); }
+    static MaybeType Undefined() { return MaybeType(); }
+    operator bool() { return maybe_.isSome(); }
+    MOZ_IMPLICIT operator ExprType() { return maybe_.value(); }
+};
+
 static bool
 EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition**def)
 {
@@ -1334,25 +1350,28 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition**def)
 }
 
 static bool
-EmitGetLocal(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitGetLocal(FunctionCompiler& f, MaybeType type, MDefinition** def)
 {
     uint32_t slot = f.readVarU32();
     *def = f.getLocalDef(slot);
-    MOZ_ASSERT_IF(*def, (*def)->type() == ToMIRType(type));
+    MOZ_ASSERT_IF(type, f.localType(slot) == type);
     return true;
 }
 
 static bool
-EmitLoadGlobal(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitLoadGlobal(FunctionCompiler& f, MaybeType type, MDefinition** def)
 {
-    uint32_t globalDataOffset = f.readVarU32();
-    bool isConst = bool(f.readU8());
-    *def = f.loadGlobalVar(globalDataOffset, isConst, ToMIRType(type));
+    uint32_t index = f.readVarU32();
+    const AsmJSGlobalVariable& global = f.mg().globalVar(index);
+    *def = f.loadGlobalVar(global.globalDataOffset, global.isConst, ToMIRType(global.type));
+    MOZ_ASSERT_IF(type, global.type == type);
     return true;
 }
 
-static bool EmitExpr(FunctionCompiler&, ExprType, Expr, MDefinition**, LabelVector* = nullptr);
-static bool EmitExpr(FunctionCompiler&, ExprType, MDefinition**, LabelVector* = nullptr);
+static bool EmitExpr(FunctionCompiler&, MaybeType, Expr, MDefinition**, LabelVector* = nullptr);
+static bool EmitExpr(FunctionCompiler&, MaybeType, MDefinition**, LabelVector* = nullptr);
+static bool EmitExprStmt(FunctionCompiler&, MDefinition**, LabelVector* = nullptr);
+static bool EmitExprStmt(FunctionCompiler&, Expr, MDefinition**, LabelVector* = nullptr);
 static bool EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition** def);
 
 static bool
@@ -1428,11 +1447,13 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 }
 
 static bool
-EmitSetLocal(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitSetLocal(FunctionCompiler& f, MaybeType expected, MDefinition** def)
 {
     uint32_t slot = f.readVarU32();
     MDefinition* expr;
-    if (!EmitExpr(f, type, &expr))
+    ExprType actual = f.localType(slot);
+    MOZ_ASSERT_IF(expected, actual == expected);
+    if (!EmitExpr(f, actual, &expr))
         return false;
     f.assign(slot, expr);
     *def = expr;
@@ -1440,13 +1461,15 @@ EmitSetLocal(FunctionCompiler& f, ExprType type, MDefinition** def)
 }
 
 static bool
-EmitStoreGlobal(FunctionCompiler& f, ExprType type, MDefinition**def)
+EmitStoreGlobal(FunctionCompiler& f, MaybeType type, MDefinition**def)
 {
-    uint32_t globalDataOffset = f.readVarU32();
+    uint32_t index = f.readVarU32();
+    const AsmJSGlobalVariable& global = f.mg().globalVar(index);
+    MOZ_ASSERT_IF(type, global.type == type);
     MDefinition* expr;
-    if (!EmitExpr(f, type, &expr))
+    if (!EmitExpr(f, global.type, &expr))
         return false;
-    f.storeGlobalVar(globalDataOffset, expr);
+    f.storeGlobalVar(global.globalDataOffset, expr);
     *def = expr;
     return true;
 }
@@ -1572,12 +1595,12 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 }
 
 static bool
-EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitInternalCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 {
     uint32_t funcIndex = f.readU32();
 
     const Sig& sig = f.mg().funcSig(funcIndex);
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
 
     uint32_t lineno, column;
     f.readCallLineCol(&lineno, &column);
@@ -1590,14 +1613,14 @@ EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 }
 
 static bool
-EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitFuncPtrCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 {
     uint32_t mask = f.readU32();
     uint32_t globalDataOffset = f.readU32();
     uint32_t sigIndex = f.readU32();
 
     const Sig& sig = f.mg().sig(sigIndex);
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
 
     uint32_t lineno, column;
     f.readCallLineCol(&lineno, &column);
@@ -1614,7 +1637,7 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 }
 
 static bool
-EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitFFICall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 {
     uint32_t importIndex = f.readU32();
 
@@ -1623,13 +1646,13 @@ EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 
     const ModuleImportGeneratorData& import = f.mg().import(importIndex);
     const Sig& sig = *import.sig;
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
-    return f.ffiCall(import.globalDataOffset, call, ret, def);
+    return f.ffiCall(import.globalDataOffset, call, sig.ret(), def);
 }
 
 static bool
@@ -2034,7 +2057,7 @@ EmitUnaryMir(FunctionCompiler& f, ExprType type, MDefinition** def)
 }
 
 static bool
-EmitTernary(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitTernary(FunctionCompiler& f, MaybeType type, MDefinition** def)
 {
     MDefinition* cond;
     if (!EmitExpr(f, ExprType::I32, &cond))
@@ -2065,6 +2088,8 @@ EmitTernary(FunctionCompiler& f, ExprType type, MDefinition** def)
 
     if (!f.joinIfElse(thenBlocks))
         return false;
+
+    MOZ_ASSERT(ifTrue->type() == ifFalse->type(), "both sides of a ternary have the same type");
 
     *def = f.popPhiOutput();
     return true;
@@ -2272,7 +2297,7 @@ EmitInterruptCheckLoop(FunctionCompiler& f)
     if (!EmitInterruptCheck(f))
         return false;
     MDefinition* _;
-    return EmitExpr(f, ExprType::Void, &_);
+    return EmitExprStmt(f, &_);
 }
 
 static bool
@@ -2293,7 +2318,7 @@ EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
         return false;
 
     MDefinition* _;
-    if (!EmitExpr(f, ExprType::Void, &_))
+    if (!EmitExprStmt(f, &_))
         return false;
 
     if (!f.bindContinues(headId, maybeLabels))
@@ -2311,7 +2336,7 @@ EmitFor(FunctionCompiler& f, Expr expr, const LabelVector* maybeLabels)
 
     if (expr == Expr::ForInitInc || expr == Expr::ForInitNoInc) {
         MDefinition* _;
-        if (!EmitExpr(f, ExprType::Void, &_))
+        if (!EmitExprStmt(f, &_))
             return false;
     }
 
@@ -2328,7 +2353,7 @@ EmitFor(FunctionCompiler& f, Expr expr, const LabelVector* maybeLabels)
         return false;
 
     MDefinition* _;
-    if (!EmitExpr(f, ExprType::Void, &_))
+    if (!EmitExprStmt(f, &_))
         return false;
 
     if (!f.bindContinues(headId, maybeLabels))
@@ -2336,7 +2361,7 @@ EmitFor(FunctionCompiler& f, Expr expr, const LabelVector* maybeLabels)
 
     if (expr == Expr::ForInitInc || expr == Expr::ForNoInitInc) {
         MDefinition* _;
-        if (!EmitExpr(f, ExprType::Void, &_))
+        if (!EmitExprStmt(f, &_))
             return false;
     }
 
@@ -2355,7 +2380,7 @@ EmitDoWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
         return false;
 
     MDefinition* _;
-    if (!EmitExpr(f, ExprType::Void, &_))
+    if (!EmitExprStmt(f, &_))
         return false;
 
     if (!f.bindContinues(headId, maybeLabels))
@@ -2377,7 +2402,7 @@ EmitLabel(FunctionCompiler& f, LabelVector* maybeLabels)
         if (!maybeLabels->append(labelId))
             return false;
         MDefinition* _;
-        return EmitExpr(f, ExprType::Void, &_, maybeLabels);
+        return EmitExprStmt(f, &_, maybeLabels);
     }
 
     LabelVector labels;
@@ -2385,7 +2410,7 @@ EmitLabel(FunctionCompiler& f, LabelVector* maybeLabels)
         return false;
 
     MDefinition* _;
-    if (!EmitExpr(f, ExprType::Void, &_, &labels))
+    if (!EmitExprStmt(f, &_, &labels))
         return false;
 
     return f.bindLabeledBreaks(&labels);
@@ -2413,7 +2438,7 @@ EmitIfElse(FunctionCompiler& f, bool hasElse)
         return false;
 
     MDefinition* _;
-    if (!EmitExpr(f, ExprType::Void, &_))
+    if (!EmitExprStmt(f, &_))
         return false;
 
     if (!f.appendThenBlock(&thenBlocks))
@@ -2433,7 +2458,7 @@ EmitIfElse(FunctionCompiler& f, bool hasElse)
         }
 
         MDefinition* _;
-        if (!EmitExpr(f, ExprType::Void, nextStmt, &_))
+        if (!EmitExprStmt(f, nextStmt, &_))
             return false;
 
         return f.joinIfElse(thenBlocks);
@@ -2473,7 +2498,7 @@ EmitTableSwitch(FunctionCompiler& f)
         if (!f.startSwitchCase(switchBlock, &cases[caseIndex]))
             return false;
         MDefinition* _;
-        if (!EmitExpr(f, ExprType::Void, &_))
+        if (!EmitExprStmt(f, &_))
             return false;
     }
 
@@ -2482,7 +2507,7 @@ EmitTableSwitch(FunctionCompiler& f)
         return false;
 
     MDefinition* _;
-    if (hasDefault && !EmitExpr(f, ExprType::Void, &_))
+    if (hasDefault && !EmitExprStmt(f, &_))
         return false;
 
     return f.joinSwitch(switchBlock, cases, defaultBlock);
@@ -2506,14 +2531,16 @@ EmitRet(FunctionCompiler& f)
 }
 
 static bool
-EmitBlock(FunctionCompiler& f, ExprType type, MDefinition** def)
+EmitBlock(FunctionCompiler& f, MaybeType type, MDefinition** def)
 {
     size_t numStmt = f.readU32();
-    for (size_t i = 0; i < numStmt; i++) {
+    for (size_t i = 1; i < numStmt; i++) {
         // Fine to clobber def, we only want the last use.
-        if (!EmitExpr(f, type, def))
+        if (!EmitExprStmt(f, def))
             return false;
     }
+    if (numStmt && !EmitExpr(f, type, def))
+        return false;
     f.assertDebugCheckPoint();
     return true;
 }
@@ -2539,7 +2566,7 @@ EmitBreak(FunctionCompiler& f, bool hasLabel)
 }
 
 static bool
-EmitExpr(FunctionCompiler& f, ExprType type, Expr op, MDefinition** def, LabelVector* maybeLabels)
+EmitExpr(FunctionCompiler& f, MaybeType type, Expr op, MDefinition** def, LabelVector* maybeLabels)
 {
     if (!f.mirGen().ensureBallast())
         return false;
@@ -2577,18 +2604,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, Expr op, MDefinition** def, LabelVe
         return EmitBreak(f, HasLabel(true));
       case Expr::Return:
         return EmitRet(f);
-      case Expr::I32Expr:
-        return EmitExpr(f, ExprType::I32, def);
-      case Expr::F32Expr:
-        return EmitExpr(f, ExprType::F32, def);
-      case Expr::F64Expr:
-        return EmitExpr(f, ExprType::F64, def);
-      case Expr::I32X4Expr:
-        return EmitExpr(f, ExprType::I32x4, def);
-      case Expr::F32X4Expr:
-        return EmitExpr(f, ExprType::F32x4, def);
-      case Expr::B32X4Expr:
-        return EmitExpr(f, ExprType::B32x4, def);
       case Expr::CallInternal:
         return EmitInternalCall(f, type, def);
       case Expr::CallIndirect:
@@ -2922,9 +2937,21 @@ EmitExpr(FunctionCompiler& f, ExprType type, Expr op, MDefinition** def, LabelVe
 }
 
 static bool
-EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* maybeLabels)
+EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* maybeLabels)
 {
     return EmitExpr(f, type, f.readOpcode(), def, maybeLabels);
+}
+
+static bool
+EmitExprStmt(FunctionCompiler& f, Expr op, MDefinition** def, LabelVector* maybeLabels)
+{
+    return EmitExpr(f, MaybeType::Undefined(), op, def, maybeLabels);
+}
+
+static bool
+EmitExprStmt(FunctionCompiler& f, MDefinition** def, LabelVector* maybeLabels)
+{
+    return EmitExprStmt(f, f.readOpcode(), def, maybeLabels);
 }
 
 bool
@@ -2952,7 +2979,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
 
         while (!f.done()) {
             MDefinition* _;
-            if (!EmitExpr(f, ExprType::Void, &_))
+            if (!EmitExprStmt(f, &_))
                 return false;
         }
 
