@@ -559,23 +559,23 @@ AudioCallbackDriver::~AudioCallbackDriver()
 void
 AudioCallbackDriver::Init()
 {
-  cubeb_stream_params out_params;
-  cubeb_stream_params in_params;
+  cubeb_stream_params output;
+  cubeb_stream_params input;
   uint32_t latency;
 
   MOZ_ASSERT(!NS_IsMainThread(),
       "This is blocking and should never run on the main thread.");
 
-  out_params.devid = nullptr; // XXX take from config for the graph
-  mSampleRate = out_params.rate = CubebUtils::PreferredSampleRate();
+  output.devid = mGraphImpl->mOutputDeviceID;
+  mSampleRate = output.rate = CubebUtils::PreferredSampleRate();
 
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
-  out_params.stream_type = CubebUtils::ConvertChannelToCubebType(mAudioChannel);
+  output.stream_type = CubebUtils::ConvertChannelToCubebType(mAudioChannel);
 #else
-  out_params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
+  output.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif
-  if (out_params.stream_type == CUBEB_STREAM_TYPE_MAX) {
+  if (output.stream_type == CUBEB_STREAM_TYPE_MAX) {
     NS_WARNING("Bad stream type");
     return;
   }
@@ -583,27 +583,30 @@ AudioCallbackDriver::Init()
   (void)mAudioChannel;
 #endif
 
-  out_params.channels = mGraphImpl->AudioChannelCount();
+  output.channels = mGraphImpl->AudioChannelCount();
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
-    out_params.format = CUBEB_SAMPLE_S16NE;
+    output.format = CUBEB_SAMPLE_S16NE;
   } else {
-    out_params.format = CUBEB_SAMPLE_FLOAT32NE;
+    output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), out_params, &latency) != CUBEB_OK) {
+  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), output, &latency) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return;
   }
 
-  in_params = out_params;
-  in_params.channels = 1; // change to support optional stereo capture
+  input = output;
+  input.channels = 1; // change to support optional stereo capture
+  input.devid = mGraphImpl->mInputDeviceID;
 
   cubeb_stream* stream;
-  // XXX Only pass input in_params if we have an input listener.  Always
+  // XXX Only pass input input if we have an input listener.  Always
   // set up output because it's easier, and it will just get silence.
   // XXX Add support for adding/removing an input listener later.
   if (cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
-                        "AudioCallbackDriver", &out_params, &in_params, latency,
+                        "AudioCallbackDriver",
+                        mGraphImpl->mInputWanted ? &input : nullptr,
+                        mGraphImpl->mOutputWanted ? &output : nullptr, latency,
                         DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
     mAudioStream.own(stream);
   } else {
