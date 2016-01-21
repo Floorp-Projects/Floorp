@@ -275,56 +275,50 @@ enum MaybeConstruct { NO_CONSTRUCT = false, CONSTRUCT = true };
 class InterpreterFrame
 {
     enum Flags : uint32_t {
-        /* (0x1, 0x2, 0x4, 0x8, 0x10 are unused) */
+        CONSTRUCTING           =        0x1,  /* frame is for a constructor invocation */
 
-        CONSTRUCTING           =       0x20,  /* frame is for a constructor invocation */
-
-        RESUMED_GENERATOR      =       0x40,  /* frame is for a resumed generator invocation */
-
-        /* (0x80 is unused) */
+        RESUMED_GENERATOR      =        0x2,  /* frame is for a resumed generator invocation */
 
         /* Function prologue state */
-        HAS_CALL_OBJ           =      0x100,  /* CallObject created for needsCallObject function */
-        HAS_ARGS_OBJ           =      0x200,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ           =        0x4,  /* CallObject created for needsCallObject function */
+        HAS_ARGS_OBJ           =        0x8,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_RVAL               =      0x800,  /* frame has rval_ set */
-        HAS_SCOPECHAIN         =     0x1000,  /* frame has scopeChain_ set */
+        HAS_RVAL               =       0x10,  /* frame has rval_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE        =     0x4000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE        =       0x20,  /* see DebugScopes::updateLiveScopes */
 
         /*
          * See comment above 'isDebuggee' in jscompartment.h for explanation of
          * invariants of debuggee compartments, scripts, and frames.
          */
-        DEBUGGEE               =     0x8000,  /* Execution is being observed by Debugger */
+        DEBUGGEE               =       0x40,  /* Execution is being observed by Debugger */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME   =    0x10000, /* SPS was notified of enty */
-
+        HAS_PUSHED_SPS_FRAME   =       0x80,  /* SPS was notified of enty */
 
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
          * this frame.
          */
-        RUNNING_IN_JIT         =    0x20000,
+        RUNNING_IN_JIT         =      0x100,
 
         /* Miscellaneous state. */
-        CREATE_SINGLETON       =    0x40000,   /* Constructed |this| object should be singleton. */
+        CREATE_SINGLETON       =      0x200,  /* Constructed |this| object should be singleton. */
 
         /*
          * If set, this frame has been on the stack when
          * |js::SavedStacks::saveCurrentStack| was called, and so there is a
          * |js::SavedFrame| object cached for this frame.
          */
-        HAS_CACHED_SAVED_FRAME =    0x80000,
+        HAS_CACHED_SAVED_FRAME =      0x400,
     };
 
     mutable uint32_t    flags_;         /* bits described by Flags */
+    uint32_t            nactual_;       /* number of actual arguments, for function frames */
     JSScript*           script_;        /* the script we're executing */
-    unsigned            nactual_;       /* number of actual arguments, for function frames */
-    mutable JSObject*   scopeChain_;    /* if HAS_SCOPECHAIN, current scope chain */
+    JSObject*           scopeChain_;    /* current scope chain */
     Value               rval_;          /* if HAS_RVAL, return value of the frame */
     ArgumentsObject*    argsObj_;       /* if HAS_ARGS_OBJ, the call's arguments object */
 
@@ -696,7 +690,7 @@ class InterpreterFrame
     void resumeGeneratorFrame(JSObject* scopeChain) {
         MOZ_ASSERT(script()->isGenerator());
         MOZ_ASSERT(isFunctionFrame());
-        flags_ |= HAS_CALL_OBJ | HAS_SCOPECHAIN;
+        flags_ |= HAS_CALL_OBJ;
         scopeChain_ = scopeChain;
     }
 
