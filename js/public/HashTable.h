@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
@@ -652,6 +653,18 @@ struct DefaultHasher<float>
     }
     static bool match(float lhs, float rhs) {
         return mozilla::BitwiseCast<uint32_t>(lhs) == mozilla::BitwiseCast<uint32_t>(rhs);
+    }
+};
+
+// A hash policy that compares C strings.
+struct CStringHasher
+{
+    typedef const char* Lookup;
+    static js::HashNumber hash(Lookup l) {
+        return mozilla::HashString(l);
+    }
+    static bool match(const char* key, Lookup lookup) {
+        return strcmp(key, lookup) == 0;
     }
 };
 

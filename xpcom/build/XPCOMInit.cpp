@@ -857,10 +857,12 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
     mozilla::scache::StartupCache::DeleteSingleton();
     if (observerService)
+    {
       mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownThreads);
       observerService->NotifyObservers(nullptr,
                                        NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                        nullptr);
+    }
 
     gXPCOMThreadsShutDown = true;
     NS_ProcessPendingEvents(thread);

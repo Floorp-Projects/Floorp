@@ -14,6 +14,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsGlobalWindow.h"
 
+#include "GeckoProfiler.h"
+
 #include "nsID.h"
 
 using namespace js;
@@ -172,6 +174,8 @@ bool
 AddonWrapper<Base>::get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<Value> receiver,
                         JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
     Rooted<JSPropertyDescriptor> desc(cx);
     if (!InterposeProperty(cx, wrapper, nullptr, id, &desc))
         return false;

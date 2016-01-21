@@ -170,10 +170,6 @@ def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir,
 
     command_args.extend(url.split(' '))
 
-    # Handle media performance tests
-    if url.find('media_manager.py') != -1:
-        command_args = url.split(' ')
-
     return command_args
 
 

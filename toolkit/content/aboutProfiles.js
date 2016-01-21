@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(
   'nsIToolkitProfileService'
 );
 
-const gManage = window.location.href.indexOf('?manage') != -1;
-
 const bundle = Services.strings.createBundle(
   'chrome://global/locale/aboutProfiles.properties');
 
@@ -54,24 +52,8 @@ function findCurrentProfile() {
 }
 
 function initializeUI() {
-  if (gManage) {
-    document.getElementById('about-profile-action-box').style.display = 'none';
-    document.getElementById('profile-manager-action-box').style.display = 'block';
-
-    let autoSelect = document.getElementById("auto-select");
-    autoSelect.checked = ProfileService.startWithLastProfile;
-    autoSelect.addEventListener('change', function() {
-      ProfileService.startWithLastProfile = autoSelect.checked;
-    });
-
-    let offline = document.getElementById("work-offline");
-    offline.addEventListener('change', function() {
-      ProfileService.startOffline = offline.checked;
-    });
-  } else {
-    document.getElementById('about-profile-action-box').style.display = 'block';
-    document.getElementById('profile-manager-action-box').style.display = 'none';
-  }
+  document.getElementById('about-profile-action-box').style.display = 'block';
+  document.getElementById('profile-manager-action-box').style.display = 'none';
 
   refreshUI();
 }
@@ -122,33 +104,11 @@ function display(profileData) {
   let nameStr = bundle.formatStringFromName('name', [profileData.profile.name], 1);
 
   let name = document.createElement('h2');
-
-  if (gManage) {
-    let checkBox = document.createElement('input');
-    checkBox.setAttribute('type', 'radio');
-    checkBox.setAttribute('name', 'profile');
-    checkBox.setAttribute('id', profileData.profile.name);
-    if (profileData.isCurrentProfile) {
-      checkBox.setAttribute('checked', 'checked');
-    }
-    name.appendChild(checkBox);
-
-    checkBox.addEventListener('change', function() {
-      ProfileService.selectedProfile = profileData.profile;
-      ProfileService.flush();
-    });
-
-    let label = document.createElement('label');
-    label.appendChild(document.createTextNode(nameStr));
-    label.setAttribute('for', profileData.profile.name);
-    name.appendChild(label);
-  } else {
-    name.appendChild(document.createTextNode(nameStr));
-  }
+  name.appendChild(document.createTextNode(nameStr));
 
   div.appendChild(name);
 
-  if (!gManage && profileData.isCurrentProfile) {
+  if (profileData.isCurrentProfile) {
     let currentProfile = document.createElement('h3');
     let currentProfileStr = bundle.GetStringFromName('currentProfile');
     currentProfile.appendChild(document.createTextNode(currentProfileStr));
@@ -209,7 +169,7 @@ function display(profileData) {
   };
   div.appendChild(renameButton);
 
-  if (gManage || !profileData.isCurrentProfile) {
+  if (!profileData.isCurrentProfile) {
     let removeButton = document.createElement('button');
     removeButton.appendChild(document.createTextNode(bundle.GetStringFromName('remove')));
     removeButton.onclick = function() {

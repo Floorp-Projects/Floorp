@@ -26,6 +26,12 @@ class CppEclipseBackend(CommonBackend):
     """Backend that generates Cpp Eclipse project files.
     """
 
+    def __init__(self, environment):
+        if os.name == 'nt':
+            raise Exception('Eclipse is not supported on Windows. '
+                            'Consider using Visual Studio instead.')
+        super(CppEclipseBackend, self).__init__(environment)
+
     def _init(self):
         CommonBackend._init(self)
 

@@ -48,16 +48,16 @@ class Piyo(ContextDerivedValue):
 
 
 VARIABLES = {
-    'HOGE': (unicode, unicode, None, None),
-    'FUGA': (Fuga, unicode, None, None),
-    'PIYO': (Piyo, unicode, None, None),
+    'HOGE': (unicode, unicode, None),
+    'FUGA': (Fuga, unicode, None),
+    'PIYO': (Piyo, unicode, None),
     'HOGERA': (ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList),
-        list, None, None),
+        list, None),
     'HOGEHOGE': (ContextDerivedTypedListWithItems(
         Piyo,
         StrictOrderingOnAppendListWithFlagsFactory({
             'foo': bool,
-        })), list, None, None),
+        })), list, None),
 }
 
 class TestContext(unittest.TestCase):

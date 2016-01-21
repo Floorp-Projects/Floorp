@@ -70,6 +70,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIDOMBlob)
 
+  // This creates a Blob or a File based on the type of BlobImpl.
   static Blob*
   Create(nsISupports* aParent, BlobImpl* aImpl);
 
@@ -833,13 +834,13 @@ private:
   bool mIsTemporary;
 };
 
-class BlobImplEmptyFile final : public BlobImplBase
+class EmptyBlobImpl final : public BlobImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  explicit BlobImplEmptyFile(const nsAString& aContentType)
-    : BlobImplBase(EmptyString(), aContentType, 0 /* aLength */)
+  explicit EmptyBlobImpl(const nsAString& aContentType)
+    : BlobImplBase(aContentType, 0 /* aLength */)
   {}
 
   virtual void GetInternalStream(nsIInputStream** aStream,
@@ -855,7 +856,7 @@ public:
   }
 
 private:
-  ~BlobImplEmptyFile() {}
+  ~EmptyBlobImpl() {}
 };
 
 } // namespace dom

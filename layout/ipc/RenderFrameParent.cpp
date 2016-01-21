@@ -506,11 +506,12 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void
 RenderFrameParent::ZoomToRect(uint32_t aPresShellId, ViewID aViewId,
-                              const CSSRect& aRect)
+                              const CSSRect& aRect,
+                              const uint32_t aFlags)
 {
   if (GetApzcTreeManager()) {
     GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
-                                     aRect);
+                                     aRect, aFlags);
   }
 }
 
