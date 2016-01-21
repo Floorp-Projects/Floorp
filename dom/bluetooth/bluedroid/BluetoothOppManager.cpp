@@ -249,6 +249,24 @@ BluetoothOppManager::Init()
 void
 BluetoothOppManager::Uninit()
 {
+  if (mServerSocket) {
+    mServerSocket->SetObserver(nullptr);
+
+    if (mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mServerSocket->Close();
+    }
+    mServerSocket = nullptr;
+  }
+
+  if (mSocket) {
+    mSocket->SetObserver(nullptr);
+
+    if (mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mSocket->Close();
+    }
+    mSocket = nullptr;
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE_VOID(obs);
 
@@ -317,10 +335,11 @@ BluetoothOppManager::ConnectInternal(const BluetoothAddress& aDeviceAddress)
   MOZ_ASSERT(NS_IsMainThread());
 
   // Stop listening because currently we only support one connection at a time.
-  if (mServerSocket) {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mServerSocket->Close();
-    mServerSocket = nullptr;
   }
+  mServerSocket = nullptr;
 
   mIsServer = false;
 
@@ -394,10 +413,11 @@ BluetoothOppManager::Listen()
    * BT stops; otherwise no more read events would be received even if
    * BT restarts.
    */
-  if (mServerSocket) {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mServerSocket->Close();
-    mServerSocket = nullptr;
   }
+  mServerSocket = nullptr;
 
   mServerSocket = new BluetoothSocket(this);
 
@@ -1564,7 +1584,16 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 {
   BT_LOGR("[%s]", (mIsServer)? "server" : "client");
 
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mServerSocket->Close();
+  }
   mServerSocket = nullptr;
+
+  if (mSocket &&
+      mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mSocket->Close();
+  }
   mSocket = nullptr;
 
   if (!mIsServer) {
@@ -1614,7 +1643,8 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   mDeviceAddress.Clear();
   mSuccessFlag = false;
 
-  mSocket = nullptr;
+  mSocket = nullptr; // should already be closed
+
   // Listen as a server if there's no more batch to process
   if (!ProcessNextBatch()) {
     Listen();

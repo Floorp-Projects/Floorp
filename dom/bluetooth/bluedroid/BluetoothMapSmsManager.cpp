@@ -130,6 +130,24 @@ BluetoothMapSmsManager::Init()
 void
 BluetoothMapSmsManager::Uninit()
 {
+  if (mMasServerSocket) {
+    mMasServerSocket->SetObserver(nullptr);
+
+    if (mMasServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mMasServerSocket->Close();
+    }
+    mMasServerSocket = nullptr;
+  }
+
+  if (mMasSocket) {
+    mMasSocket->SetObserver(nullptr);
+
+    if (mMasSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mMasSocket->Close();
+    }
+    mMasSocket = nullptr;
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
     return;
@@ -208,10 +226,11 @@ BluetoothMapSmsManager::Listen()
    * BT stops; otherwise no more read events would be received even if
    * BT restarts.
    */
-  if (mMasServerSocket) {
+  if (mMasServerSocket &&
+      mMasServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mMasServerSocket->Close();
-    mMasServerSocket = nullptr;
   }
+  mMasServerSocket = nullptr;
 
   mMasServerSocket = new BluetoothSocket(this);
 
@@ -1543,7 +1562,17 @@ BluetoothMapSmsManager::OnSocketConnectError(BluetoothSocket* aSocket)
   }
 
   // MAS socket connection error
+
+  if (mMasServerSocket &&
+      mMasServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mMasServerSocket->Close();
+  }
   mMasServerSocket = nullptr;
+
+  if (mMasSocket &&
+      mMasSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mMasSocket->Close();
+  }
   mMasSocket = nullptr;
 }
 
@@ -1574,6 +1603,7 @@ BluetoothMapSmsManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   // MAS socket is disconnected
   AfterMapSmsDisconnected();
   mDeviceAddress.Clear();
+
   mMasSocket = nullptr;
 
   Listen();
