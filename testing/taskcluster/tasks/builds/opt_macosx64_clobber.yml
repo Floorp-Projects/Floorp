@@ -16,7 +16,6 @@ task:
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
-    image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
       tooltool-cache: '/home/worker/tooltool-cache'
 
