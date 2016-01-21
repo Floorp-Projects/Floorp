@@ -17,25 +17,6 @@
 
 namespace mozilla {
 
-class VorbisPacketSampleCounter
-{
-public:
-  VorbisPacketSampleCounter();
-  ~VorbisPacketSampleCounter();
-
-  bool Init(const nsTArray<const uint8_t*>& aHeaders,
-            const nsTArray<size_t>& aHeaderLens);
-  int GetNumSamples(const uint8_t* aData, size_t aLength);
-  void Reset() { mVorbisLastBlockSize.reset(); }
-
-private:
-  int mError;
-  vorbis_info mVorbisInfo;
-  vorbis_comment mVorbisComment;
-  int64_t mVorbisPacketCount;
-  Maybe<long> mVorbisLastBlockSize;
-};
-
 class VorbisDataDecoder : public MediaDataDecoder
 {
 public:
@@ -52,10 +33,6 @@ public:
 
   // Return true if mimetype is Vorbis
   static bool IsVorbis(const nsACString& aMimeType);
-
-  static ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
-                                     bool aBOS, bool aEOS,
-                                     int64_t aGranulepos, int64_t aPacketNo);
 
 private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
