@@ -445,10 +445,23 @@ class Decoder
     }
 
     template <class T>
-    T uncheckedRead() {
+    T uncheckedPeek() const {
         MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
+        return ret;
+    }
+
+    template <class T>
+    T uncheckedPeekEnum() const {
+        // See Encoder::writeEnum.
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        return (T)uncheckedPeek<uint8_t>();
+    }
+
+    template <class T>
+    T uncheckedRead() {
+        T ret = uncheckedPeek<T>();
         cur_ += sizeof(T);
         return ret;
     }
@@ -567,6 +580,9 @@ class Decoder
     }
     Expr uncheckedReadExpr() {
         return uncheckedReadEnum<Expr>();
+    }
+    Expr uncheckedPeekExpr() const {
+        return uncheckedPeekEnum<Expr>();
     }
 };
 
