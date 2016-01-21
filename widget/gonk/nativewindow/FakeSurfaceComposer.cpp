@@ -21,12 +21,14 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <cutils/atomic.h>
 #include <cutils/log.h>
 #include <cutils/properties.h>
 #include <private/android_filesystem_config.h>
 
 #include <gui/IDisplayEventConnection.h>
 #include <gui/GraphicBufferAlloc.h>
+#include <gui/Surface.h>
 #include <ui/DisplayInfo.h>
 
 #if ANDROID_VERSION >= 21
@@ -39,6 +41,8 @@
 #include "gfxPrefs.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/layers/CompositorParent.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;
@@ -272,6 +276,127 @@ sp<IDisplayEventConnection> FakeSurfaceComposer::createDisplayEventConnection() 
     return nullptr;
 }
 
+// ---------------------------------------------------------------------------
+// Capture screen into an IGraphiBufferProducer
+// ---------------------------------------------------------------------------
+
+class Barrier {
+public:
+    inline Barrier() : state(CLOSED) { }
+    inline ~Barrier() { }
+
+    // Release any threads waiting at the Barrier.
+    // Provides release semantics: preceding loads and stores will be visible
+    // to other threads before they wake up.
+    void open() {
+        Mutex::Autolock _l(lock);
+        state = OPENED;
+        cv.broadcast();
+    }
+
+    // Reset the Barrier, so wait() will block until open() has been called.
+    void close() {
+        Mutex::Autolock _l(lock);
+        state = CLOSED;
+    }
+
+    // Wait until the Barrier is OPEN.
+    // Provides acquire semantics: no subsequent loads or stores will occur
+    // until wait() returns.
+    void wait() const {
+        Mutex::Autolock _l(lock);
+        while (state == CLOSED) {
+            cv.wait(lock);
+        }
+    }
+private:
+    enum { OPENED, CLOSED };
+    mutable     Mutex       lock;
+    mutable     Condition   cv;
+    volatile    int         state;
+};
+
+/* The code below is here to handle b/8734824
+ *
+ * We create a IGraphicBufferProducer wrapper that forwards all calls
+ * to the calling binder thread, where they are executed. This allows
+ * the calling thread to be reused (on the other side) and not
+ * depend on having "enough" binder threads to handle the requests.
+ *
+ */
+
+class GraphicProducerWrapper : public BBinder, public MessageHandler {
+    sp<IGraphicBufferProducer> impl;
+    sp<Looper> looper;
+    status_t result;
+    bool exitPending;
+    bool exitRequested;
+    mutable Barrier barrier;
+    volatile int32_t memoryBarrier;
+    uint32_t code;
+    Parcel const* data;
+    Parcel* reply;
+
+    enum {
+        MSG_API_CALL,
+        MSG_EXIT
+    };
+
+    /*
+     * this is called by our "fake" BpGraphicBufferProducer. We package the
+     * data and reply Parcel and forward them to the calling thread.
+     */
+    virtual status_t transact(uint32_t code,
+            const Parcel& data, Parcel* reply, uint32_t flags) {
+        this->code = code;
+        this->data = &data;
+        this->reply = reply;
+        android_atomic_acquire_store(0, &memoryBarrier);
+        if (exitPending) {
+            // if we've exited, we run the message synchronously right here
+            handleMessage(Message(MSG_API_CALL));
+        } else {
+            barrier.close();
+            looper->sendMessage(this, Message(MSG_API_CALL));
+            barrier.wait();
+        }
+        return NO_ERROR;
+    }
+
+    /*
+     * here we run on the binder calling thread. All we've got to do is
+     * call the real BpGraphicBufferProducer.
+     */
+    virtual void handleMessage(const Message& message) {
+        android_atomic_release_load(&memoryBarrier);
+        if (message.what == MSG_API_CALL) {
+            impl->asBinder()->transact(code, data[0], reply);
+            barrier.open();
+        } else if (message.what == MSG_EXIT) {
+            exitRequested = true;
+        }
+    }
+
+public:
+    GraphicProducerWrapper(const sp<IGraphicBufferProducer>& impl) :
+        impl(impl), looper(new Looper(true)), result(NO_ERROR),
+        exitPending(false), exitRequested(false) {
+    }
+
+    status_t waitForResponse() {
+        do {
+            looper->pollOnce(-1);
+        } while (!exitRequested);
+        return result;
+    }
+
+    void exit(status_t result) {
+        this->result = result;
+        exitPending = true;
+        looper->sendMessage(this, Message(MSG_EXIT));
+    }
+};
+
 status_t
 FakeSurfaceComposer::captureScreen(const sp<IBinder>& display
                                  , const sp<IGraphicBufferProducer>& producer
@@ -290,7 +415,116 @@ FakeSurfaceComposer::captureScreen(const sp<IBinder>& display
 #endif
                                   )
 {
-    return INVALID_OPERATION;
+    if (display == 0 || producer == 0) {
+        return BAD_VALUE;
+    }
+
+    // Limit only to primary display
+    if (display != mPrimaryDisplay) {
+        return BAD_VALUE;
+    }
+
+    // this creates a "fake" BBinder which will serve as a "fake" remote
+    // binder to receive the marshaled calls and forward them to the
+    // real remote (a BpGraphicBufferProducer)
+    sp<GraphicProducerWrapper> wrapper = new GraphicProducerWrapper(producer);
+    // the asInterface() call below creates our "fake" BpGraphicBufferProducer
+    // which does the marshaling work forwards to our "fake remote" above.
+    sp<IGraphicBufferProducer> fakeProducer = IGraphicBufferProducer::asInterface(wrapper);
+
+    nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction([&]() {
+            captureScreenImp(fakeProducer, reqWidth, reqHeight, wrapper.get());
+        });
+    NS_DispatchToMainThread(runnable);
+
+    status_t result = wrapper->waitForResponse();
+
+    return result;
+}
+
+class RunnableCallTask : public Task {
+public:
+    explicit RunnableCallTask(nsIRunnable* aRunnable)
+        : mRunnable(aRunnable) {}
+
+    void Run() override
+    {
+        mRunnable->Run();
+    }
+protected:
+    nsCOMPtr<nsIRunnable> mRunnable;
+};
+
+void
+FakeSurfaceComposer::captureScreenImp(const sp<IGraphicBufferProducer>& producer,
+                                      uint32_t reqWidth,
+                                      uint32_t reqHeight,
+                                      const sp<GraphicProducerWrapper>& wrapper)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(wrapper.get());
+
+    RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+
+    // get screen geometry
+    nsIntRect screenBounds = screen->GetNaturalBounds().ToUnknownRect();
+    const uint32_t hw_w = screenBounds.width;
+    const uint32_t hw_h = screenBounds.height;
+
+    if (reqWidth > hw_w || reqHeight > hw_h) {
+        ALOGE("size mismatch (%d, %d) > (%d, %d)",
+                reqWidth, reqHeight, hw_w, hw_h);
+        static_cast<GraphicProducerWrapper*>(producer->asBinder().get())->exit(BAD_VALUE);
+        return;
+    }
+
+    reqWidth  = (!reqWidth)  ? hw_w : reqWidth;
+    reqHeight = (!reqHeight) ? hw_h : reqHeight;
+
+    nsScreenGonk* screenPtr = screen.forget().take();
+    nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableFunction([screenPtr, reqWidth, reqHeight, producer, wrapper]() {
+            // create a surface (because we're a producer, and we need to
+            // dequeue/queue a buffer)
+            sp<Surface> sur = new Surface(producer);
+            ANativeWindow* window = sur.get();
+
+            if (native_window_api_connect(window, NATIVE_WINDOW_API_EGL) != NO_ERROR) {
+                static_cast<GraphicProducerWrapper*>(producer->asBinder().get())->exit(BAD_VALUE);
+                NS_ReleaseOnMainThread(screenPtr);
+                return;
+            }
+            uint32_t usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN |
+                             GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_TEXTURE;
+
+            int err = 0;
+            err = native_window_set_buffers_dimensions(window, reqWidth, reqHeight);
+            err |= native_window_set_scaling_mode(window, NATIVE_WINDOW_SCALING_MODE_SCALE_TO_WINDOW);
+            err |= native_window_set_buffers_format(window, HAL_PIXEL_FORMAT_RGBA_8888);
+            err |= native_window_set_usage(window, usage);
+
+            status_t result = NO_ERROR;
+            if (err == NO_ERROR) {
+                ANativeWindowBuffer* buffer;
+                result = native_window_dequeue_buffer_and_wait(window,  &buffer);
+                if (result == NO_ERROR) {
+                    nsresult rv = screenPtr->MakeSnapshot(buffer);
+                    if (rv != NS_OK) {
+                        result = INVALID_OPERATION;
+                    }
+                    window->queueBuffer(window, buffer, -1);
+                }
+            } else {
+                result = BAD_VALUE;
+            }
+            native_window_api_disconnect(window, NATIVE_WINDOW_API_EGL);
+            static_cast<GraphicProducerWrapper*>(producer->asBinder().get())->exit(result);
+            NS_ReleaseOnMainThread(screenPtr);
+        });
+
+    mozilla::layers::CompositorParent::CompositorLoop()->PostTask(
+        FROM_HERE, new RunnableCallTask(runnable));
 }
 
 #if ANDROID_VERSION >= 21
