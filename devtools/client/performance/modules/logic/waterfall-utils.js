@@ -7,10 +7,8 @@
  * Utility functions for collapsing markers into a waterfall.
  */
 
-loader.lazyRequireGetter(this, "extend",
-  "sdk/util/object", true);
-loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/client/performance/modules/logic/marker-utils");
+const { extend } = require("sdk/util/object");
+const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
 
 /**
  * Creates a parent marker, which functions like a regular marker,
