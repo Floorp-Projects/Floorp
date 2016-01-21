@@ -79,6 +79,24 @@
           result : "blocked",
           policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
         },
+        'script-src-worker': {
+          id: "script-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+        },
+        'script-src-service_worker': {
+          id: "script-src-service_worker",
+          file: SERVICE_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+        },
+        'script-src-self-shared_worker': {
+          id: "script-src-self-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+        },
       };
 
       finished = {};
