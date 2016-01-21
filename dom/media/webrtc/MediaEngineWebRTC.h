@@ -159,7 +159,7 @@ class AudioInputCubeb final : public AudioInput
 {
 public:
   explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine) :
-    AudioInput(aVoiceEngine), mSelectedDevice(0)
+    AudioInput(aVoiceEngine), mSelectedDevice(0), mInUse(false)
   {
     // Force calculation of the indexes.  We could keep them global
     // too... cleanup would be annoying
@@ -242,11 +242,15 @@ public:
       ptrVoERender->SetExternalRecordingStatus(true);
     }
     aGraph->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
+    mInUse = true;
+    mAnyInUse = true;
   }
 
   void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
   {
     aGraph->CloseAudioInput(aListener);
+    mInUse = false;
+    mAnyInUse = false;
   }
 
   int SetRecordingDevice(int aIndex)
@@ -260,12 +264,16 @@ public:
   }
 
 protected:
-  ~AudioInputCubeb() {}
+  ~AudioInputCubeb() {
+    MOZ_RELEASE_ASSERT(!mInUse);
+  }
 
 private:
   nsTArray<int> mDeviceIndexes;
   int mSelectedDevice;
   static cubeb_device_collection *mDevices;
+  bool mInUse; // for assertions about listener lifetime
+  static bool mAnyInUse;
 };
 
 class AudioInputWebRTC final : public AudioInput
