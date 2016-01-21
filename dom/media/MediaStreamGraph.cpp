@@ -924,8 +924,13 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, AudioDataListener *aListener)
+MediaStreamGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
+                                         AudioDataListener *aListener)
 {
+  MOZ_ASSERT(!mInputWanted);
+  mInputWanted = true;
+  mInputDeviceID = aID;
+  // XXX Switch Drivers
   if (CurrentDriver()->AsAudioCallbackDriver()) {
     CurrentDriver()->SetInputListener(aListener);
   } else {
@@ -935,35 +940,40 @@ MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, AudioDataListener *aListen
 }
 
 nsresult
-MediaStreamGraphImpl::OpenAudioInput(char *aName, AudioDataListener *aListener)
+MediaStreamGraphImpl::OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                                     AudioDataListener *aListener)
 {
   // XXX So, so, so annoying.  Can't AppendMessage except on Mainthread
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(WrapRunnable(this,
                                          &MediaStreamGraphImpl::OpenAudioInput,
-                                         aName, aListener)); // XXX Fix! string need to copied
+                                         aID, aListener)); // XXX Fix! string need to copied
     return NS_OK;
   }
   class Message : public ControlMessage {
   public:
-    Message(MediaStreamGraphImpl *aGraph, char *aName, AudioDataListener *aListener) :
-      ControlMessage(nullptr), mGraph(aGraph), mName(aName), mListener(aListener) {}
+    Message(MediaStreamGraphImpl *aGraph, CubebUtils::AudioDeviceID aID,
+            AudioDataListener *aListener) :
+      ControlMessage(nullptr), mGraph(aGraph), mID(aID), mListener(aListener) {}
     virtual void Run()
     {
-      mGraph->OpenAudioInputImpl(mName, mListener);
+      mGraph->OpenAudioInputImpl(mID, mListener);
     }
     MediaStreamGraphImpl *mGraph;
-    char *mName; // XXX needs to copy
+    CubebUtils::AudioDeviceID mID;
     RefPtr<AudioDataListener> mListener;
   };
-  this->AppendMessage(new Message(this, aName, aListener));
+  this->AppendMessage(new Message(this, aID, aListener));
   return NS_OK;
 }
 
 void
 MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
 {
+  mInputDeviceID = nullptr;
+  mInputWanted = false;
   CurrentDriver()->RemoveInputListener(aListener);
+  // XXX Switch Drivers
   mAudioInputs.RemoveElement(aListener);
 }
 
@@ -2711,6 +2721,10 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
                                            dom::AudioChannel aChannel)
   : MediaStreamGraph(aSampleRate)
   , mPortCount(0)
+  , mInputWanted(false)
+  , mInputDeviceID(nullptr)
+  , mOutputWanted(true)
+  , mOutputDeviceID(nullptr)
   , mNeedAnotherIteration(false)
   , mGraphDriverAsleep(false)
   , mMonitor("MediaStreamGraphImpl")

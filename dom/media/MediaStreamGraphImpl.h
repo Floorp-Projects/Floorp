@@ -350,8 +350,10 @@ public:
    * at the current buffer end point. The StreamBuffer's tracks must be
    * explicitly set to finished by the caller.
    */
-  void OpenAudioInputImpl(char *aName, AudioDataListener *aListener);
-  virtual nsresult OpenAudioInput(char *aName, AudioDataListener *aListener) override;
+  void OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
+                          AudioDataListener *aListener);
+  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                                  AudioDataListener *aListener) override;
   void CloseAudioInputImpl(AudioDataListener *aListener);
   virtual void CloseAudioInput(AudioDataListener *aListener) override;
 
@@ -581,6 +583,15 @@ public:
    * Number of active MediaInputPorts
    */
   int32_t mPortCount;
+
+  /**
+   * Devices to use for cubeb input & output, or NULL for no input (void*),
+   * and boolean to control if we want input/output
+   */
+  bool mInputWanted;
+  CubebUtils::AudioDeviceID mInputDeviceID;
+  bool mOutputWanted;
+  CubebUtils::AudioDeviceID mOutputDeviceID;
 
   // True if the graph needs another iteration after the current iteration.
   Atomic<bool> mNeedAnotherIteration;
