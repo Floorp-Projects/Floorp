@@ -7,25 +7,25 @@
 // exact preview images because they are drawn on a canvas causing them to vary
 // between systems, platforms and software versions.
 
-const TEST_URI = BASE_URI + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
 add_task(function*() {
-  let { inspector, fontInspector } = yield openFontInspectorForURL(TEST_URI);
-  let viewDoc = fontInspector.chromeDoc;
+  let {view} = yield openFontInspectorForURL(TEST_URI);
+  let viewDoc = view.chromeDoc;
 
   let previews = viewDoc.querySelectorAll("#all-fonts .font-preview");
   let initialPreviews = [...previews].map(p => p.src);
 
   info("Typing 'Abc' to check that the reference previews are correct.");
-  yield updatePreviewText(fontInspector, "Abc");
+  yield updatePreviewText(view, "Abc");
   checkPreviewImages(viewDoc, initialPreviews, true);
 
   info("Typing something else to the preview box.");
-  yield updatePreviewText(fontInspector, "The quick brown");
+  yield updatePreviewText(view, "The quick brown");
   checkPreviewImages(viewDoc, initialPreviews, false);
 
   info("Blanking the input to restore default previews.");
-  yield updatePreviewText(fontInspector, "");
+  yield updatePreviewText(view, "");
   checkPreviewImages(viewDoc, initialPreviews, true);
 });
 

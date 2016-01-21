@@ -310,7 +310,11 @@ public class HistoryPanel extends HomeFragment {
             emptyIcon.setImageResource(R.drawable.icon_most_recent_empty);
 
             final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-            emptyText.setText(R.string.home_most_recent_empty);
+            if (selected == null || mRangeAdapter == null || mRangeList == null) {
+                emptyText.setText(R.string.home_most_recent_empty);
+            } else {
+                emptyText.setText(R.string.home_selected_empty);
+            }
 
             final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
             final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);

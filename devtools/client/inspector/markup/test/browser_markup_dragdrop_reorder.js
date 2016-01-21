@@ -8,10 +8,10 @@ requestLongerTimeout(2);
 
 // Test different kinds of drag and drop node re-ordering.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop.html";
+const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let ids;
 
   info("Expand #test node");

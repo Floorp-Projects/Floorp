@@ -14,7 +14,7 @@ requestLongerTimeout(2);
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
 add_task(function*() {
-  let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");
   yield selectWithBrowserMenu(inspector);
@@ -26,7 +26,7 @@ add_task(function*() {
   assertNodeSelected(inspector, "body");
 
   info("Select the test node with the element picker");
-  yield selectWithElementPicker(inspector);
+  yield selectWithElementPicker(inspector, testActor);
   assertNodeSelected(inspector, "div");
 
   info("Press arrowUp to focus <body> " +
@@ -71,16 +71,13 @@ function* selectWithBrowserMenu(inspector) {
   yield inspector.once("inspector-updated");
 }
 
-function* selectWithElementPicker(inspector) {
+function* selectWithElementPicker(inspector, testActor) {
   yield inspector.toolbox.highlighterUtils.startPicker();
 
   yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
     type: "mousemove",
   }, gBrowser.selectedBrowser);
 
-  executeInContent("Test:SynthesizeKey", {
-    key: "VK_RETURN",
-    options: {}
-  }, {}, false);
+  yield testActor.synthesizeKey({key: "VK_RETURN", options: {}});
   yield inspector.once("inspector-updated");
 }

@@ -14,11 +14,6 @@ Services.scriptloader.loadSubScript(
 //   Services.prefs.clearUserPref("devtools.debugger.log");
 // });
 
-// Uncomment this pref to dump all devtools emitted events to the console.
-// Services.prefs.setBoolPref("devtools.dump.emit", true);
-
-var ROOT_TEST_DIR = getRootDirectory(gTestPath);
-
 // Import the GCLI test helper
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
@@ -35,7 +30,6 @@ registerCleanupFunction(() => {
 });
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });
 
@@ -163,6 +157,43 @@ var openInspector = Task.async(function*(hostType) {
 function getActiveInspector() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
+}
+
+/**
+ * Open the toolbox, with the inspector tool visible, and the one of the sidebar
+ * tabs selected.
+ * @param {String} id The ID of the sidebar tab to be opened
+ * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
+ * @return a promise that resolves when the inspector is ready and the tab is
+ * visible and ready
+ */
+var openInspectorSidebarTab = Task.async(function*(id, hostType) {
+  let {toolbox, inspector} = yield openInspector();
+
+  if (!hasSideBarTab(inspector, id)) {
+    info("Waiting for the " + id + " sidebar to be ready");
+    yield inspector.sidebar.once(id + "-ready");
+  }
+
+  info("Selecting the " + id + " sidebar");
+  inspector.sidebar.select(id);
+
+  return {
+    toolbox: toolbox,
+    inspector: inspector,
+    view: inspector.sidebar.getWindowForTab(id)[id]
+  };
+});
+
+/**
+ * Checks whether the inspector's sidebar corresponding to the given id already
+ * exists
+ * @param {InspectorPanel}
+ * @param {String}
+ * @return {Boolean}
+ */
+function hasSideBarTab(inspector, id) {
+  return !!inspector.sidebar.getWindowForTab(id);
 }
 
 /**
@@ -476,4 +507,72 @@ function waitForChildrenUpdated({markup}) {
         executeSoon(def.resolve);
     });
     return def.promise;
+}
+
+/**
+ * Wait for the toolbox to emit the styleeditor-selected event and when done
+ * wait for the stylesheet identified by href to be loaded in the stylesheet
+ * editor
+ *
+ * @param {Toolbox} toolbox
+ * @param {String} href
+ *        Optional, if not provided, wait for the first editor to be ready
+ * @return a promise that resolves to the editor when the stylesheet editor is
+ * ready
+ */
+function waitForStyleEditor(toolbox, href) {
+  let def = promise.defer();
+
+  info("Waiting for the toolbox to switch to the styleeditor");
+  toolbox.once("styleeditor-selected").then(() => {
+    let panel = toolbox.getCurrentPanel();
+    ok(panel && panel.UI, "Styleeditor panel switched to front");
+
+    // A helper that resolves the promise once it receives an editor that
+    // matches the expected href. Returns false if the editor was not correct.
+    let gotEditor = (event, editor) => {
+      let currentHref = editor.styleSheet.href;
+      if (!href || (href && currentHref.endsWith(href))) {
+        info("Stylesheet editor selected");
+        panel.UI.off("editor-selected", gotEditor);
+
+        editor.getSourceEditor().then(sourceEditor => {
+          info("Stylesheet editor fully loaded");
+          def.resolve(sourceEditor);
+        });
+
+        return true;
+      }
+
+      info("The editor was incorrect. Waiting for editor-selected event.");
+      return false;
+    };
+
+    // The expected editor may already be selected. Check the if the currently
+    // selected editor is the expected one and if not wait for an
+    // editor-selected event.
+    if (!gotEditor("styleeditor-selected", panel.UI.selectedEditor)) {
+      // The expected editor is not selected (yet). Wait for it.
+      panel.UI.on("editor-selected", gotEditor);
+    }
+  });
+
+  return def.promise;
+}
+
+/**
+ * @see SimpleTest.waitForClipboard
+ *
+ * @param {Function} setup
+ *        Function to execute before checking for the
+ *        clipboard content
+ * @param {String|Function} expected
+ *        An expected string or validator function
+ * @return a promise that resolves when the expected string has been found or
+ * the validator function has returned true, rejects otherwise.
+ */
+function waitForClipboard(setup, expected) {
+  let def = promise.defer();
+  SimpleTest.waitForClipboard(expected, setup, def.resolve, def.reject);
+  return def.promise;
 }
