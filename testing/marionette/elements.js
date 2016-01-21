@@ -116,7 +116,7 @@ ElementManager.prototype = {
   getKnownElement: function EM_getKnownElement(id, container) {
     let el = this.seenItems[id];
     if (!el) {
-      throw new JavaScriptError("Element has not been seen before. Id given was " + id);
+      throw new JavaScriptError(`Element has not been seen before. Id given was ${id}`);
     }
     try {
       el = el.get();
@@ -342,7 +342,7 @@ ElementManager.prototype = {
     let startNode = (values.element != undefined) ?
                     this.getKnownElement(values.element, container) : rootNode;
     if (this.elementStrategies.indexOf(values.using) < 0) {
-      throw new InvalidSelectorError("No such strategy: " + values.using);
+      throw new InvalidSelectorError(`No such strategy: ${values.using}`);
     }
     if (values.value == null) {
       throw new InvalidSelectorError("Invalid selector value of null was used.");
@@ -362,11 +362,11 @@ ElementManager.prototype = {
           on_success([], command_id); // findElements should return empty list
         } else {
           // Format message depending on strategy if necessary
-          let message = "Unable to locate element: " + values.value;
+          let message = `Unable to locate element: ${values.value}`
           if (values.using == ANON) {
             message = "Unable to locate anonymous children";
           } else if (values.using == ANON_ATTRIBUTE) {
-            message = "Unable to locate anonymous element: " + JSON.stringify(values.value);
+            message = `Unable to locate anonymous element: ${JSON.stringify(values.value)}`;
           }
           on_error(new NoSuchElementError(message), command_id);
         }
@@ -466,13 +466,13 @@ ElementManager.prototype = {
       case ID:
         element = startNode.getElementById ?
                   startNode.getElementById(value) :
-                  this.findByXPath(rootNode, './/*[@id="' + value + '"]', startNode);
+                  this.findByXPath(rootNode, `.//*[@id="${value}"]`, startNode);
         break;
 
       case NAME:
         element = startNode.getElementsByName ?
                   startNode.getElementsByName(value)[0] :
-                  this.findByXPath(rootNode, './/*[@name="' + value + '"]', startNode);
+                  this.findByXPath(rootNode, `.//*[@name="${value}"]`, startNode);
         break;
 
       case CLASS_NAME:
@@ -522,7 +522,7 @@ ElementManager.prototype = {
         break;
 
       default:
-        throw new InvalidSelectorError("No such strategy: " + using);
+        throw new InvalidSelectorError(`No such strategy: ${using}`);
     }
 
     return element;
@@ -547,14 +547,14 @@ ElementManager.prototype = {
     let elements = [];
     switch (using) {
       case ID:
-        value = './/*[@id="' + value + '"]';
+        value = `.//*[@id="${value}"]`;
       case XPATH:
         elements = this.findByXPathAll(rootNode, value, startNode);
         break;
       case NAME:
         elements = startNode.getElementsByName ?
                    startNode.getElementsByName(value) :
-                   this.findByXPathAll(rootNode, './/*[@name="' + value + '"]', startNode);
+                   this.findByXPathAll(rootNode, `.//*[@name="${value}"]`, startNode);
         break;
       case CLASS_NAME:
         elements = startNode.getElementsByClassName(value);
@@ -590,7 +590,7 @@ ElementManager.prototype = {
         }
         break;
       default:
-        throw new InvalidSelectorError("No such strategy: " + using);
+        throw new InvalidSelectorError(`No such strategy: ${using}`);
     }
     return elements;
   },
