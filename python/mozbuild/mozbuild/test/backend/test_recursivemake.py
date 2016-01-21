@@ -566,6 +566,9 @@ class TestRecursiveMakeBackend(BackendTester):
         os.makedirs(purge_dir)
         m = InstallManifest()
         m.write(path=manifest_path)
+        with open(mozpath.join(
+                env.topobjdir, 'backend.RecursiveMakeBackend'), 'w') as f:
+            f.write('%s\n' % manifest_path)
 
         self.assertTrue(os.path.exists(manifest_path))
         self._consume('stub0', RecursiveMakeBackend, env)
