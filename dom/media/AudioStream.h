@@ -225,6 +225,10 @@ public:
     virtual const AudioDataValue* Data() const = 0;
     // Return the number of frames in this chunk.
     virtual uint32_t Frames() const = 0;
+    // Return the number of audio channels.
+    virtual uint32_t Channels() const = 0;
+    // Return the sample rate of this chunk.
+    virtual uint32_t Rate() const = 0;
     // Return a writable pointer for downmixing.
     virtual AudioDataValue* GetWritable() const = 0;
     virtual ~Chunk() {}
@@ -323,7 +327,7 @@ private:
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
   // Return true if downmixing succeeds otherwise false.
-  bool Downmix(AudioDataValue* aBuffer, uint32_t aFrames);
+  bool Downmix(Chunk* aChunk);
 
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
