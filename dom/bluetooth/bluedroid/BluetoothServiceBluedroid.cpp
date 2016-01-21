@@ -138,6 +138,10 @@ public:
   void Init() override
   {
     static void (* const sInitManager[])(BluetoothProfileResultHandler*) = {
+      BluetoothMapSmsManager::InitMapSmsInterface,
+      BluetoothOppManager::InitOppInterface,
+      BluetoothPbapManager::InitPbapInterface,
+      BluetoothHidManager::InitHidInterface,
       BluetoothHfpManager::InitHfpInterface,
       BluetoothA2dpManager::InitA2dpInterface,
       BluetoothAvrcpManager::InitAvrcpInterface,
@@ -2037,7 +2041,11 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
       BluetoothGattManager::DeinitGattInterface,
       BluetoothAvrcpManager::DeinitAvrcpInterface,
       BluetoothA2dpManager::DeinitA2dpInterface,
-      BluetoothHfpManager::DeinitHfpInterface
+      BluetoothHfpManager::DeinitHfpInterface,
+      BluetoothHidManager::DeinitHidInterface,
+      BluetoothPbapManager::DeinitPbapInterface,
+      BluetoothOppManager::DeinitOppInterface,
+      BluetoothMapSmsManager::DeinitMapSmsInterface
     };
 
     // Return error if BluetoothService is unavailable
