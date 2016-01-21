@@ -72,9 +72,6 @@ private:
 
     nsCOMPtr<nsIObserverService> mObserverService;
 
-    uint32_t mAppID;
-    bool mInBrowser;
-
     /* Clients watching this update for changes */
     nsCOMArray<nsIWeakReference> mWeakObservers;
     nsCOMArray<nsIOfflineCacheUpdateObserver> mObservers;

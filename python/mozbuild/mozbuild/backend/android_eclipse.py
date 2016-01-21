@@ -24,7 +24,10 @@ from ..frontend.data import (
 )
 from ..makeutil import Makefile
 from ..util import ensureParentDir
-from mozbuild.base import ExecutionSummary
+from mozbuild.base import (
+    ExecutionSummary,
+    MachCommandConditions,
+)
 
 
 def pretty_print(element):
@@ -38,6 +41,13 @@ def pretty_print(element):
 class AndroidEclipseBackend(CommonBackend):
     """Backend that generates Android Eclipse project files.
     """
+    def __init__(self, environment):
+        if not MachCommandConditions.is_android(environment):
+            raise Exception(
+                'The Android Eclipse backend is not available with this '
+                'configuration.')
+
+        super(AndroidEclipseBackend, self).__init__(environment)
 
     def summary(self):
         return ExecutionSummary(

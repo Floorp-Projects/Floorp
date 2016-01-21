@@ -595,6 +595,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'LD_VERSION_SCRIPT',
             'USE_EXTENSION_MANIFEST',
             'NO_JS_MANIFEST',
+            'HAS_MISC_RULE',
         ]
         for v in varlist:
             if v in context and context[v]:
@@ -1308,7 +1309,6 @@ class TreeMetadataEmitter(LoggingMixin):
     def _emit_directory_traversal_from_context(self, context):
         o = DirectoryTraversal(context)
         o.dirs = context.get('DIRS', [])
-        o.affected_tiers = context.get_affected_tiers()
 
         # Some paths have a subconfigure, yet also have a moz.build. Those
         # shouldn't end up in self._external_paths.

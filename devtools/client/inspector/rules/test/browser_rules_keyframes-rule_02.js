@@ -7,7 +7,7 @@
 // Test that verifies the content of the keyframes rule and property changes
 // to keyframe rules.
 
-const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
+const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

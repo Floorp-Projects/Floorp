@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
 
 # WebGL Sources
 UNIFIED_SOURCES += [
-    'MurmurHash3.cpp',
     'TexUnpackBlob.cpp',
     'WebGL1Context.cpp',
     'WebGL1ContextBuffers.cpp',
@@ -148,6 +147,14 @@ UNIFIED_SOURCES += [
     'WebGLVertexArrayGL.cpp',
     'WebGLVertexArrayObject.cpp',
 ]
+
+SOURCES += [
+    'MurmurHash3.cpp',
+]
+
+# Suppress warnings from third-party code.
+if CONFIG['CLANG_CXX']:
+    SOURCES['MurmurHash3.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 LOCAL_INCLUDES += [
     '/js/xpconnect/wrappers',

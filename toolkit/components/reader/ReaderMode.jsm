@@ -307,10 +307,12 @@ this.ReaderMode = {
   },
 
   _blockedHosts: [
-    "twitter.com",
     "mail.google.com",
     "github.com",
+    "pinterest.com",
     "reddit.com",
+    "twitter.com",
+    "youtube.com",
   ],
 
   _shouldCheckUri: function (uri) {

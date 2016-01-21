@@ -16,9 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789315
 <script type="text/javascript">
   var obj = new FormData(document.getElementById('a')).get('b');
 
-  ok(obj instanceof File, "This should return an empty File");
+  ok(obj instanceof Blob, "This should return an empty Blob");
   is(obj.size, 0, "Size should be 0");
-  is(obj.name, "", "Name should be an empty string");
   is(obj.type, "application/octet-stream", "Type should be application/octet-stream");
 
   var o = obj.slice(10, 100, "foo/bar");

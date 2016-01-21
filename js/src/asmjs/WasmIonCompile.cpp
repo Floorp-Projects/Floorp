@@ -1180,8 +1180,7 @@ class FunctionCompiler
     double         readF64()    { return decoder_.uncheckedReadF64(); }
     SimdConstant   readI32X4()  { return decoder_.uncheckedReadI32X4(); }
     SimdConstant   readF32X4()  { return decoder_.uncheckedReadF32X4(); }
-
-    Expr           readOpcode() { return Expr(readU8()); }
+    Expr           readOpcode() { return decoder_.uncheckedReadExpr(); }
 
     void readCallLineCol(uint32_t* line, uint32_t* column) {
         const SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);

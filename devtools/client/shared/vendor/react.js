@@ -10085,7 +10085,7 @@ if ("production" !== 'production') {
    * real browser event.
    */
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof document !== 'undefined' && typeof document.createEvent === 'function') {
-    var fakeNode = document.createElement('react');
+    var fakeNode = document.createElementNS('http://www.w3.org/1999/xhtml', 'react');
     ReactErrorUtils.invokeGuardedCallback = function (name, func, a, b) {
       var boundFunc = func.bind(null, a, b);
       var evtType = 'react-' + name;
@@ -14159,7 +14159,7 @@ function findAllInRenderedTreeInternal(inst, test) {
  */
 var ReactTestUtils = {
   renderIntoDocument: function (instance) {
-    var div = document.createElement('div');
+    var div = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
     // None of our tests actually require attaching the container to the
     // DOM, and doing so creates a mess that we rely on test isolation to
     // clean up, so we're going to stop honoring the name of this method
@@ -19831,7 +19831,7 @@ var invariant = _dereq_(161);
 /**
  * Dummy container used to render all markup.
  */
-var dummyNode = ExecutionEnvironment.canUseDOM ? document.createElement('div') : null;
+var dummyNode = ExecutionEnvironment.canUseDOM ? document.createElementNS('http://www.w3.org/1999/xhtml', 'div') : null;
 
 /**
  * Pattern used by `getNodeName`.
@@ -19890,6 +19890,7 @@ function createNodesFromMarkup(markup, handleScript) {
 }
 
 module.exports = createNodesFromMarkup;
+
 },{"147":147,"151":151,"157":157,"161":161}],153:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2015, Facebook, Inc.
@@ -20036,7 +20037,7 @@ var invariant = _dereq_(161);
 /**
  * Dummy container used to detect which wraps are necessary.
  */
-var dummyNode = ExecutionEnvironment.canUseDOM ? document.createElement('div') : null;
+var dummyNode = ExecutionEnvironment.canUseDOM ? document.createElementNS('http://www.w3.org/1999/xhtml', 'div') : null;
 
 /**
  * Some browsers cannot use `innerHTML` to render certain elements standalone,

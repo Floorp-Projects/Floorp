@@ -7,7 +7,7 @@
 // Test that editing a rule will update the line numbers of subsequent
 // rules in the rule view.
 
-const TESTCASE_URI = TEST_URL_ROOT + "doc_ruleLineNumbers.html";
+const TESTCASE_URI = URL_ROOT + "doc_ruleLineNumbers.html";
 
 add_task(function*() {
   yield addTab(TESTCASE_URI);

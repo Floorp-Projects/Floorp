@@ -135,11 +135,17 @@
           el.parentNode.removeChild(el);
           el = document.getElementById("errorShortDescText_forbidden");
           el.parentNode.removeChild(el);
+          el = document.getElementById("whyForbiddenButton");
+          el.parentNode.removeChild(el);
         } else {
           el = document.getElementById("ignoreWarningButton");
           el.parentNode.removeChild(el);
           el = document.getElementById("reportButton");
           el.parentNode.removeChild(el);
+
+          // Remove red style: A "forbidden site" does not warrant the same level
+          // of anxiety as a security concern.
+          document.documentElement.className = "";
         }
 
         // Set sitename
@@ -197,7 +203,7 @@
         <h1 id="errorTitleText_phishing">&safeb.blocked.phishingPage.title;</h1>
         <h1 id="errorTitleText_malware">&safeb.blocked.malwarePage.title;</h1>
         <h1 id="errorTitleText_unwanted">&safeb.blocked.unwantedPage.title;</h1>
-        <h1 id="errorTitleText_forbidden">&safeb.blocked.forbiddenPage.title;</h1>
+        <h1 id="errorTitleText_forbidden">&safeb.blocked.forbiddenPage.title2;</h1>
       </div>
       
       <div id="errorLongContent">
@@ -207,7 +213,7 @@
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
           <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
-          <p id="errorShortDescText_forbidden">&safeb.blocked.forbiddenPage.shortDesc;</p>
+          <p id="errorShortDescText_forbidden">&safeb.blocked.forbiddenPage.shortDesc2;</p>
         </div>
 
         <!-- Long Description -->
@@ -222,6 +228,7 @@
           <!-- Commands handled in browser.js -->
           <button id="getMeOutButton">&safeb.palm.accept.label;</button>
           <button id="reportButton">&safeb.palm.reportPage.label;</button>
+          <button id="whyForbiddenButton">&safeb.palm.whyForbidden.label;</button>
         </div>
       </div>
       <div id="ignoreWarning">

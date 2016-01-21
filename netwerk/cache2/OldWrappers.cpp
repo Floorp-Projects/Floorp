@@ -995,71 +995,48 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallbac
   nsresult rv;
 
   if (!mAppCache && mOfflineStorage) {
-    // TODO - bug 1165256, have an API on nsIApplicationCacheService that takes
-    // optional OAs and decides internally what to do.
+    nsCOMPtr<nsIApplicationCacheService> appCacheService =
+      do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // Special casing for pure offline storage
-    if (mLoadInfo->OriginAttributesPtr()->mAppId == nsILoadContextInfo::NO_APP_ID &&
-        !mLoadInfo->OriginAttributesPtr()->mInBrowser) {
+    rv = appCacheService->Evict(mLoadInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (mAppCache) {
+    nsCOMPtr<nsICacheSession> session;
+    rv = GetCacheSession(EmptyCString(),
+                          mWriteToDisk, mLoadInfo, mAppCache,
+                          getter_AddRefs(session));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      // Clear everything.
-      nsCOMPtr<nsICacheService> serv =
-          do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = session->EvictEntries();
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Oh, I'll be so happy when session names are gone...
+    nsCOMPtr<nsICacheSession> session;
+    rv = GetCacheSession(NS_LITERAL_CSTRING("http"),
+                          mWriteToDisk, mLoadInfo, mAppCache,
+                          getter_AddRefs(session));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // Clear app or inbrowser staff.
-      nsCOMPtr<nsIApplicationCacheService> appCacheService =
-        do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = session->EvictEntries();
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = appCacheService->DiscardByAppId(mLoadInfo->OriginAttributesPtr()->mAppId,
-                                           mLoadInfo->OriginAttributesPtr()->mInBrowser);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-  else {
-    if (mAppCache) {
-      nsCOMPtr<nsICacheSession> session;
-      rv = GetCacheSession(EmptyCString(),
-                           mWriteToDisk, mLoadInfo, mAppCache,
-                           getter_AddRefs(session));
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = GetCacheSession(NS_LITERAL_CSTRING("wyciwyg"),
+                          mWriteToDisk, mLoadInfo, mAppCache,
+                          getter_AddRefs(session));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = session->EvictEntries();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // Oh, I'll be so happy when session names are gone...
-      nsCOMPtr<nsICacheSession> session;
-      rv = GetCacheSession(NS_LITERAL_CSTRING("http"),
-                           mWriteToDisk, mLoadInfo, mAppCache,
-                           getter_AddRefs(session));
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = session->EvictEntries();
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = session->EvictEntries();
-      NS_ENSURE_SUCCESS(rv, rv);
+    // This clears any data from scheme other then http, wyciwyg or ftp
+    rv = GetCacheSession(EmptyCString(),
+                          mWriteToDisk, mLoadInfo, mAppCache,
+                          getter_AddRefs(session));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = GetCacheSession(NS_LITERAL_CSTRING("wyciwyg"),
-                           mWriteToDisk, mLoadInfo, mAppCache,
-                           getter_AddRefs(session));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = session->EvictEntries();
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // This clears any data from scheme other then http, wyciwyg or ftp
-      rv = GetCacheSession(EmptyCString(),
-                           mWriteToDisk, mLoadInfo, mAppCache,
-                           getter_AddRefs(session));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = session->EvictEntries();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = session->EvictEntries();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (aCallback) {

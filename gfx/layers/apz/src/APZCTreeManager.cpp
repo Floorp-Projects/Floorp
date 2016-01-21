@@ -1138,11 +1138,12 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
 
 void
 APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
-                            const CSSRect& aRect)
+                            const CSSRect& aRect,
+                            const uint32_t aFlags)
 {
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (apzc) {
-    apzc->ZoomToRect(aRect);
+    apzc->ZoomToRect(aRect, aFlags);
   }
 }
 

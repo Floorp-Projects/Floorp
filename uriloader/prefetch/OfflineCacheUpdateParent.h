@@ -10,8 +10,11 @@
 #include "mozilla/BasePrincipal.h"
 #include "nsIOfflineCacheUpdate.h"
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsILoadContext.h"
+
+class nsIPrincipal;
 
 namespace mozilla {
 
@@ -45,7 +48,7 @@ public:
       mIPCClosed = true;
     }
 
-    explicit OfflineCacheUpdateParent(const mozilla::DocShellOriginAttributes& aAttrs);
+    explicit OfflineCacheUpdateParent();
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 private:
@@ -53,7 +56,7 @@ private:
 
     bool mIPCClosed;
 
-    mozilla::DocShellOriginAttributes mOriginAttributes;
+    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 };
 
 } // namespace docshell

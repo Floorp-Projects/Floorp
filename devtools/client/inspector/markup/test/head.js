@@ -1,30 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-var Cu = Components.utils;
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {TargetFactory} = require("devtools/client/framework/target");
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
-var promise = require("promise");
+// Import the inspector's head.js first (which itself imports shared-head.js).
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
+  this);
+
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("sdk/clipboard");
 var {setTimeout, clearTimeout} = require("sdk/timers");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-// All test are asynchronous
-waitForExplicitFinish();
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.
 SimpleTest.requestCompleteLog();
-
-// Uncomment this pref to dump all devtools emitted events to the console.
-// Services.prefs.setBoolPref("devtools.dump.emit", true);
-
-// Import helpers registering the test-actor in remote targets
-var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "../../../../shared/test/test-actor-registry.js", this);
 
 // Set the testing flag on DevToolsUtils and reset it when the test ends
 DevToolsUtils.testing = true;
@@ -34,58 +24,10 @@ registerCleanupFunction(() => DevToolsUtils.testing = false);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
   Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
-  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
-  Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.markup.pagesize");
   Services.prefs.clearUserPref("dom.webcomponents.enabled");
   Services.prefs.clearUserPref("devtools.inspector.showAllAnonymousContent");
 });
-
-// Auto close the toolbox and close the test tabs when the test ends
-registerCleanupFunction(function*() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-});
-
-const TEST_URL_ROOT =
-  "http://example.com/browser/devtools/client/inspector/markup/test/";
-const CHROME_BASE =
-  "chrome://mochitests/content/browser/devtools/client/inspector/markup/test/";
-const COMMON_FRAME_SCRIPT_URL =
-  "chrome://devtools/content/shared/frame-script-utils.js";
-
-/**
- * Add a new test tab in the browser and load the given url.
- * @param {String} url The url to be loaded in the new tab
- * @return a promise that resolves to the tab object when the url is loaded
- */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
-
-  // Bug 921935 should bring waitForFocus() support to e10s, which would
-  // probably cover the case of the test losing focus when the page is loading.
-  // For now, we just make sure the window is focused.
-  window.focus();
-
-  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-  let linkedBrowser = tab.linkedBrowser;
-
-  info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
-  linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
-
-  linkedBrowser.addEventListener("load", function onload() {
-    linkedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    def.resolve(tab);
-  }, true);
-
-  return def.promise;
-}
 
 /**
  * Some tests may need to import one or more of the test helper scripts.
@@ -116,91 +58,12 @@ function reloadPage(inspector) {
 }
 
 /**
- * Open the toolbox, with given tool visible.
- * @param {string} toolId ID of the tool that should be visible by default.
- * @return a promise that resolves when the tool is ready.
- */
-function openToolbox(toolId) {
-  info("Opening the inspector panel");
-  let deferred = promise.defer();
-
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, toolId).then(function(toolbox) {
-    info("The toolbox is open");
-    deferred.resolve({toolbox: toolbox});
-  }).then(null, console.error);
-
-  return deferred.promise;
-}
-
-/**
- * Open the toolbox, with the inspector tool visible.
- * @return a promise that resolves when the inspector is ready
- */
-function openInspector() {
-  return openToolbox("inspector").then(({toolbox}) => {
-    let inspector = toolbox.getCurrentPanel();
-    let eventId = "inspector-updated";
-    return inspector.once("inspector-updated").then(() => {
-      info("The inspector panel is active and ready");
-      return registerTestActor(toolbox.target.client);
-    }).then(() => {
-      return getTestActor(toolbox);
-    }).then((testActor) => {
-      return {toolbox, inspector, testActor};
-    });
-  });
-}
-
-/**
- * Wait for a content -> chrome message on the message manager (the window
- * messagemanager is used).
- * @param {String} name The message name
- * @return {Promise} A promise that resolves to the response data when the
- * message has been received
- */
-function waitForContentMessage(name) {
-  info("Expecting message " + name + " from content");
-
-  let mm = gBrowser.selectedBrowser.messageManager;
-
-  let def = promise.defer();
-  mm.addMessageListener(name, function onMessage(msg) {
-    mm.removeMessageListener(name, onMessage);
-    def.resolve(msg.data);
-  });
-  return def.promise;
-}
-
-/**
- * Send an async message to the frame script (chrome -> content) and wait for a
- * response message with the same name (content -> chrome).
- * @param {String} name The message name. Should be one of the messages defined
- * in doc_frame_script.js
- * @param {Object} data Optional data to send along
- * @param {Object} objects Optional CPOW objects to send along
- * @param {Boolean} expectResponse If set to false, don't wait for a response
- * with the same name from the content script. Defaults to true.
- * @return {Promise} Resolves to the response data if a response is expected,
- * immediately resolves otherwise
- */
-function executeInContent(name, data={}, objects={}, expectResponse=true) {
-  info("Sending message " + name + " to content");
-  let mm = gBrowser.selectedBrowser.messageManager;
-
-  mm.sendAsyncMessage(name, data, objects);
-  if (expectResponse) {
-    return waitForContentMessage(name);
-  } else {
-    return promise.resolve();
-  }
-}
-
-/**
  * Reload the current tab location.
+ * @param {TestActorFront} testActor An instance of the current TestActorFront
+ * instantiated when the test started.
  */
-function reloadTab() {
-  return executeInContent("devtools:test:reload", {}, {}, false);
+function reloadTab(testActor) {
+  return testActor.eval("location.reload()");
 }
 
 /**
@@ -218,26 +81,12 @@ function getNode(nodeOrSelector) {
 }
 
 /**
- * Get the NodeFront for a given css selector, via the protocol
- * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @return {Promise} Resolves to the NodeFront instance
- */
-function getNodeFront(selector, {walker}) {
-  if (selector._form) {
-    return selector;
-  }
-  return walker.querySelector(walker.rootNode, selector);
-}
-
-/**
  * Get information about a DOM element, identified by its selector.
  * @param {String} selector.
  * @return {Promise} a promise that resolves to the element's information.
  */
-function getNodeInfo(selector) {
-  return executeInContent("devtools:test:getDomElementInfo", {selector});
+function getNodeInfo(selector, testActor) {
+  return testActor.getNodeInfo(selector);
 }
 
 /**
@@ -245,11 +94,11 @@ function getNodeInfo(selector) {
  * @param {String} selector.
  * @param {String} attributeName.
  * @param {String} attributeValue.
- * @param {Promise} resolves when done.
+ * @param {TestActorFront} testActor The current TestActorFront instance.
+ * @return {Promise} resolves when done.
  */
-function setNodeAttribute(selector, attributeName, attributeValue) {
-  return executeInContent("devtools:test:setAttribute",
-                          {selector, attributeName, attributeValue});
+function setNodeAttribute(selector, attributeName, attributeValue, testActor) {
+  return testActor.setAttribute(selector, attributeName, attributeValue);
 }
 
 /**
@@ -269,24 +118,6 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
   inspector.selection.setNode(node, "test-highlight");
   return updated;
 }
-
-/**
- * Set the inspector's current selection to the first match of the given css
- * selector
- * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
- * @return {Promise} Resolves when the inspector is updated with the new node
- */
-var selectNode = Task.async(function*(selector, inspector, reason="test") {
-  info("Selecting the node for '" + selector + "'");
-  let nodeFront = yield getNodeFront(selector, inspector);
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, reason);
-  yield updated;
-});
 
 /**
  * Get the MarkupContainer object instance that corresponds to the given
@@ -410,12 +241,13 @@ var addNewAttributes = Task.async(function*(selector, text, inspector) {
  * @param {String} selector The selector for the node to check.
  * @param {Object} expected An object containing the attributes to check.
  *        e.g. {id: "id1", class: "someclass"}
+ * @param {TestActorFront} testActor The current TestActorFront instance.
  *
  * Note that node.getAttribute() returns attribute values provided by the HTML
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
-var assertAttributes = Task.async(function*(selector, expected) {
-  let {attributes: actual} = yield getNodeInfo(selector);
+var assertAttributes = Task.async(function*(selector, expected, testActor) {
+  let {attributes: actual} = yield getNodeInfo(selector, testActor);
 
   is(actual.length, Object.keys(expected).length,
     "The node " + selector + " has the expected number of attributes.");
@@ -501,37 +333,6 @@ function wait(ms) {
   let def = promise.defer();
   content.setTimeout(def.resolve, ms);
   return def.promise;
-}
-
-/**
- * Wait for eventName on target.
- * @param {Object} target An observable object that either supports on/off or
- * addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function once(target, eventName, useCapture=false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        info("Got event: '" + eventName + "' on " + target + ".");
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
 }
 
 /**

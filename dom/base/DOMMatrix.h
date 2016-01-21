@@ -142,7 +142,7 @@ private:
   DOMMatrixReadOnly& operator=(const DOMMatrixReadOnly&) = delete;
 };
 
-class DOMMatrix final : public DOMMatrixReadOnly
+class DOMMatrix : public DOMMatrixReadOnly
 {
 public:
   explicit DOMMatrix(nsISupports* aParent)
@@ -244,8 +244,10 @@ public:
   DOMMatrix* SkewYSelf(double aSy);
   DOMMatrix* InvertSelf();
   DOMMatrix* SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv);
-private:
+protected:
   void Ensure3DMatrix();
+
+  virtual ~DOMMatrix() {}
 };
 
 } // namespace dom

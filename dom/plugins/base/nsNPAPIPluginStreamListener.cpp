@@ -286,6 +286,7 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
 nsresult
 nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPeer)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
   if (!mInst || !mInst->CanFireNotifications() || mStreamCleanedUp)
     return NS_ERROR_FAILURE;
 
