@@ -744,6 +744,12 @@ nsScreenManagerGonk::Initialize()
 void
 nsScreenManagerGonk::DisplayEnabled(bool aEnabled)
 {
+#if ANDROID_VERSION >= 19
+    if (mCompositorVsyncScheduler) {
+        mCompositorVsyncScheduler->SetDisplay(aEnabled);
+    }
+#endif
+
     VsyncControl(aEnabled);
     NS_DispatchToMainThread(aEnabled ? mScreenOnEvent : mScreenOffEvent);
 }
@@ -976,3 +982,15 @@ nsScreenManagerGonk::RemoveScreen(GonkDisplay::DisplayType aDisplayType)
     }
     return NS_OK;
 }
+
+#if ANDROID_VERSION >= 19
+void
+nsScreenManagerGonk::SetCompositorVsyncScheduler(mozilla::layers::CompositorVsyncScheduler *aObserver)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // We assume on b2g that there is only 1 CompositorParent
+    MOZ_ASSERT(mCompositorVsyncScheduler == nullptr);
+    mCompositorVsyncScheduler = aObserver;
+}
+#endif

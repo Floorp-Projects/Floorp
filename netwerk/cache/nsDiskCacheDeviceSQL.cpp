@@ -48,6 +48,8 @@
 
 #include "sqlite3.h"
 #include "mozilla/storage.h"
+#include "nsVariant.h"
+#include "mozilla/BasePrincipal.h"
 
 using namespace mozilla;
 using namespace mozilla::storage;
@@ -1305,21 +1307,12 @@ GetGroupForCache(const nsCSubstring &clientID, nsCString &group)
   return NS_OK;
 }
 
-void
-AppendJARIdentifier(nsACString &_result, NeckoOriginAttributes const *aOriginAttributes)
-{
-  nsAutoCString suffix;
-  aOriginAttributes->CreateSuffix(suffix);
-  _result.Append('#');
-  _result.Append(suffix);
-}
-
 } // namespace
 
 // static
 nsresult
 nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
-                                                   NeckoOriginAttributes const *aOriginAttributes,
+                                                   nsACString const &aOriginSuffix,
                                                    nsACString &_result)
 {
   nsCOMPtr<nsIURI> newURI;
@@ -1331,10 +1324,8 @@ nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   _result.Assign(manifestSpec);
-
-  if (aOriginAttributes) {
-    AppendJARIdentifier(_result, aOriginAttributes);
-  }
+  _result.Append('#');
+  _result.Append(aOriginSuffix);
 
   return NS_OK;
 }
@@ -2405,55 +2396,156 @@ nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 }
 
 nsresult
-nsOfflineCacheDevice::DiscardByAppId(int32_t appID, bool browserEntriesOnly)
+nsOfflineCacheDevice::Evict(nsILoadContextInfo *aInfo)
+{
+  NS_ENSURE_ARG(aInfo);
+
+  nsresult rv;
+
+  mozilla::OriginAttributes const *oa = aInfo->OriginAttributesPtr();
+
+  if (oa->mAppId == NECKO_NO_APP_ID && oa->mInBrowser == false) {
+    nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
+  }
+
+  nsAutoCString jaridsuffix;
+  jaridsuffix.Append('%');
+
+  nsAutoCString suffix;
+  oa->CreateSuffix(suffix);
+  jaridsuffix.Append('#');
+  jaridsuffix.Append(suffix);
+
+  AutoResetStatement statement(mStatement_EnumerateApps);
+  rv = statement->BindUTF8StringByIndex(0, jaridsuffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (hasRows) {
+    nsAutoCString group;
+    rv = statement->GetUTF8String(0, group);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString clientID;
+    rv = statement->GetUTF8String(1, clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRunnable> ev =
+      new nsOfflineCacheDiscardCache(this, group, clientID);
+
+    rv = nsCacheService::DispatchToCacheIOThread(ev);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+namespace { // anon
+
+class OriginMatch final : public mozIStorageFunction
+{
+  ~OriginMatch() {}
+  mozilla::OriginAttributesPattern const mPattern;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+  explicit OriginMatch(mozilla::OriginAttributesPattern const &aPattern)
+    : mPattern(aPattern) {}
+};
+
+NS_IMPL_ISUPPORTS(OriginMatch, mozIStorageFunction)
+
+NS_IMETHODIMP
+OriginMatch::OnFunctionCall(mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
 {
   nsresult rv;
 
-  nsAutoCString jaridsuffix;
+  nsAutoCString groupId;
+  rv = aFunctionArguments->GetUTF8String(0, groupId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  jaridsuffix.Append('%');
-
-  // TODO - this method should accept NeckoOriginAttributes* from outside instead.
-  // If passed null, we should then delegate to
-  // nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
-
-  NeckoOriginAttributes oa;
-  oa.mAppId = appID;
-  oa.mInBrowser = browserEntriesOnly;
-  AppendJARIdentifier(jaridsuffix, &oa);
-
-  {
-    AutoResetStatement statement(mStatement_EnumerateApps);
-    rv = statement->BindUTF8StringByIndex(0, jaridsuffix);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasRows;
-    rv = statement->ExecuteStep(&hasRows);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    while (hasRows) {
-      nsAutoCString group;
-      rv = statement->GetUTF8String(0, group);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCString clientID;
-      rv = statement->GetUTF8String(1, clientID);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIRunnable> ev =
-        new nsOfflineCacheDiscardCache(this, group, clientID);
-
-      rv = nsCacheService::DispatchToCacheIOThread(ev);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = statement->ExecuteStep(&hasRows);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  int32_t hash = groupId.Find(NS_LITERAL_CSTRING("#"));
+  if (hash == kNotFound) {
+    // Just ignore...
+    return NS_OK;
   }
 
-  if (!browserEntriesOnly) {
-    // If deleting app, delete any 'inBrowserElement' entries too
-    rv = DiscardByAppId(appID, true);
+  ++hash;
+
+  nsDependentCSubstring suffix(groupId.BeginReading() + hash, groupId.Length() - hash);
+
+  mozilla::NeckoOriginAttributes oa;
+  bool ok = oa.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+
+  bool match = mPattern.Matches(oa);
+
+  RefPtr<nsVariant> outVar(new nsVariant());
+  rv = outVar->SetAsUint32(match ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  outVar.forget(aResult);
+  return NS_OK;
+}
+
+} // anon
+
+nsresult
+nsOfflineCacheDevice::Evict(mozilla::OriginAttributesPattern const &aPattern)
+{
+  nsresult rv;
+
+  nsCOMPtr<mozIStorageFunction> function1(new OriginMatch(aPattern));
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"), 1, function1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  class AutoRemoveFunc {
+  public:
+    mozIStorageConnection* mDB;
+    explicit AutoRemoveFunc(mozIStorageConnection* aDB) : mDB(aDB) {}
+    ~AutoRemoveFunc() {
+      mDB->RemoveFunction(NS_LITERAL_CSTRING("ORIGIN_MATCH"));
+    }
+  };
+  AutoRemoveFunc autoRemove(mDB);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDB->CreateStatement(
+    NS_LITERAL_CSTRING("SELECT GroupID, ActiveClientID FROM moz_cache_groups WHERE ORIGIN_MATCH(GroupID);"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoResetStatement statementScope(statement);
+
+  bool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (hasRows) {
+    nsAutoCString group;
+    rv = statement->GetUTF8String(0, group);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString clientID;
+    rv = statement->GetUTF8String(1, clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRunnable> ev =
+      new nsOfflineCacheDiscardCache(this, group, clientID);
+
+    rv = nsCacheService::DispatchToCacheIOThread(ev);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->ExecuteStep(&hasRows);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2495,12 +2587,12 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI,
   // Check the groupID we found is equal to groupID based
   // on the load context demanding load from app cache.
   // This is check of extended origin.
-  nsAutoCString demandedGroupID;
 
-  const NeckoOriginAttributes *oa = loadContextInfo
-    ? loadContextInfo->OriginAttributesPtr()
-    : nullptr;
-  rv = BuildApplicationCacheGroupID(groupURI, oa, demandedGroupID);
+  nsAutoCString originSuffix;
+  loadContextInfo->OriginAttributesPtr()->CreateSuffix(originSuffix);
+
+  nsAutoCString demandedGroupID;
+  rv = BuildApplicationCacheGroupID(groupURI, originSuffix, demandedGroupID);
   NS_ENSURE_SUCCESS(rv, false);
 
   if (groupID != demandedGroupID) {
@@ -2516,10 +2608,14 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
                                              nsILoadContextInfo *loadContextInfo,
                                              nsIApplicationCache **out)
 {
+  NS_ENSURE_ARG(loadContextInfo);
+
+  nsresult rv;
+
   *out = nullptr;
 
   nsCOMPtr<nsIURI> keyURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(keyURI), key);
+  rv = NS_NewURI(getter_AddRefs(keyURI), key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // First try to find a matching cache entry.
@@ -2700,6 +2796,7 @@ nsOfflineCacheDevice::AutoShutdown(nsIApplicationCache * aAppCache)
 
   Shutdown();
 
+  nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID);
   RefPtr<nsCacheService> cacheService = nsCacheService::GlobalInstance();
   cacheService->RemoveCustomOfflineDevice(this);
 

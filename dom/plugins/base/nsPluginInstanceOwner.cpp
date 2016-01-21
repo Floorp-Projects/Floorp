@@ -3600,6 +3600,8 @@ nsPluginInstanceOwner::UpdateWindowVisibility(bool aVisible)
 void
 nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   mPluginDocumentActiveState = aIsActive;
 #ifndef XP_MACOSX
   UpdateWindowPositionAndClipRect(true);

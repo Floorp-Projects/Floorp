@@ -294,6 +294,12 @@ interface nsIProtocolHandler : nsISupports
      * headers.
      */
     const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 19);
+
+    /**
+     * If this flag is set, then the origin for this protocol is the full URI
+     * spec, not just the scheme + host + port.
+     */
+    const unsigned long ORIGIN_IS_FULL_SPEC = (1 << 20);
 };
 
 %{C++
@@ -304,4 +310,6 @@ interface nsIProtocolHandler : nsISupports
 /**
  * For example, "@mozilla.org/network/protocol;1?name=http"
  */
+
+#define IS_ORIGIN_IS_FULL_SPEC_DEFINED 1
 %}

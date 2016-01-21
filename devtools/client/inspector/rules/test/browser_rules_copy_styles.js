@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
-const TEST_URI = TEST_URL_ROOT + "doc_copystyles.html";
+const TEST_URI = URL_ROOT + "doc_copystyles.html";
 
 add_task(function*() {
   yield addTab(TEST_URI);

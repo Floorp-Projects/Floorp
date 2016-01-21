@@ -33,17 +33,16 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(function*() {
-  let tab = yield addTab(TEST_URL);
-  let {inspector} = yield openInspector();
+  let {inspector, testActor, tab} = yield openInspectorForURL(TEST_URL);
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
 
   ok (inspector.markup, "There is a markup view");
 
   // Select an element while the tab is in the middle of a slow reload.
-  reloadTab();
+  reloadTab(testActor);
   yield domContentLoaded;
-  yield chooseWithInspectElementContextMenu("img");
+  yield chooseWithInspectElementContextMenu("img", testActor);
   yield pageLoaded;
 
   yield inspector.once("markuploaded");
@@ -51,13 +50,13 @@ add_task(function*() {
   is (inspector.markup._elt.children.length, 1, "The markup view is rendering");
 });
 
-function* chooseWithInspectElementContextMenu(selector) {
+function* chooseWithInspectElementContextMenu(selector, testActor) {
   yield BrowserTestUtils.synthesizeMouseAtCenter(selector, {
     type: "contextmenu",
     button: 2
   }, gBrowser.selectedBrowser);
 
-  executeInContent("Test:SynthesizeKey", {key: "Q", options: {}});
+  yield testActor.synthesizeKey({key: "Q", options: {}});
 }
 
 function waitForLinkedBrowserEvent(tab, event) {

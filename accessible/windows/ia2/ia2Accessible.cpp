@@ -8,6 +8,7 @@
 
 #include "Accessible2_i.c"
 #include "Accessible2_2_i.c"
+#include "Accessible2_3_i.c"
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
 
@@ -18,6 +19,7 @@
 #include "nsIAccessibleTypes.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "Relation.h"
+#include "TextRange-inl.h"
 #include "nsAccessibilityService.h"
 
 #include "nsIPersistentProperties2.h"
@@ -40,7 +42,9 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv)
 
   *ppv = nullptr;
 
-  if (IID_IAccessible2_2 == iid)
+  if (IID_IAccessible2_3 == iid)
+    *ppv = static_cast<IAccessible2_3*>(this);
+  else if (IID_IAccessible2_2 == iid)
     *ppv = static_cast<IAccessible2_2*>(this);
   else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
     *ppv = static_cast<IAccessible2*>(this);
@@ -748,6 +752,58 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
 
   A11Y_TRYBLOCK_END
 }
+
+STDMETHODIMP
+ia2Accessible::get_selectionRanges(IA2Range** aRanges,
+                                   long *aNRanges)
+{
+  A11Y_TRYBLOCK_BEGIN
+
+  if (!aRanges || !aNRanges || aNRanges <= 0)
+    return E_INVALIDARG;
+
+  *aNRanges = 0;
+
+  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
+  if (acc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  nsAutoTArray<TextRange, 1> ranges;
+  acc->Document()->SelectionRanges(&ranges);
+  uint32_t len = ranges.Length();
+  for (uint32_t idx = 0; idx < len; idx++) {
+    if (!ranges[idx].Crop(acc)) {
+      ranges.RemoveElementAt(idx);
+    }
+  }
+
+  *aNRanges = ranges.Length();
+  *aRanges = static_cast<IA2Range*>(
+    ::CoTaskMemAlloc(sizeof(IA2Range) * *aNRanges));
+  if (!*aRanges)
+    return E_OUTOFMEMORY;
+
+  for (uint32_t idx = 0; idx < static_cast<uint32_t>(*aNRanges); idx++) {
+    AccessibleWrap* anchor =
+      static_cast<AccessibleWrap*>(ranges[idx].StartContainer());
+    (*aRanges)[idx].anchor = static_cast<IAccessible2*>(anchor);
+    anchor->AddRef();
+
+    (*aRanges)[idx].anchorOffset = ranges[idx].StartOffset();
+
+    AccessibleWrap* active =
+      static_cast<AccessibleWrap*>(ranges[idx].EndContainer());
+    (*aRanges)[idx].active = static_cast<IAccessible2*>(active);
+    active->AddRef();
+
+    (*aRanges)[idx].activeOffset = ranges[idx].EndOffset();
+  }
+
+  return S_OK;
+
+  A11Y_TRYBLOCK_END
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers

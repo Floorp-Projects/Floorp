@@ -187,8 +187,8 @@ class Context(KeyedDefaultDict):
         """Validates whether the key is allowed and if the value's type
         matches.
         """
-        stored_type, input_type, docs, tier = \
-            self._allowed_variables.get(key, (None, None, None, None))
+        stored_type, input_type, docs = \
+            self._allowed_variables.get(key, (None, None, None))
 
         if stored_type is None or not is_template and key in TEMPLATE_VARIABLES:
             raise KeyError('global_ns', 'set_unknown', key, value)
@@ -234,13 +234,6 @@ class Context(KeyedDefaultDict):
             else:
                 update[key] = value
         KeyedDefaultDict.update(self, update)
-
-    def get_affected_tiers(self):
-        """Returns the list of tiers affected by the variables set in the
-        context.
-        """
-        tiers = (VARIABLES[key][3] for key in self if key in VARIABLES)
-        return set(tier for tier in tiers if tier)
 
 
 class TemplateContext(Context):
@@ -642,7 +635,7 @@ class Files(SubContext):
 
             Values are a 2-tuple of unicode describing the Bugzilla product and
             component. e.g. ``('Core', 'Build Config')``.
-            """, None),
+            """),
 
         'FINAL': (bool, bool,
             """Mark variable assignments as finalized.
@@ -657,7 +650,7 @@ class Files(SubContext):
             are ignored during metadata reading.
 
             See :ref:`mozbuild_files_metadata_finalizing` for more info.
-            """, None),
+            """),
         'IMPACTED_TESTS': (DependentTestsEntry, list,
             """File patterns, tags, and flavors for tests relevant to these files.
 
@@ -705,7 +698,7 @@ class Files(SubContext):
 
             Would suggest that nsGlobalWindow.cpp is potentially relevant to
             any plain mochitest.
-            """, None),
+            """),
     }
 
     def __init__(self, parent, pattern=None):
@@ -826,16 +819,7 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 #
 # Each variable is a tuple of:
 #
-#   (storage_type, input_types, docs, tier)
-#
-# Tier says for which specific tier the variable has an effect.
-# Valid tiers are:
-# - 'export'
-# - 'libs': everything that is not built from C/C++/ObjC source and that has
-#      traditionally been in the libs tier.
-# - 'misc': like libs, but with parallel build. Eventually, everything that
-#      currently is in libs should move here.
-# A value of None means the variable has no direct effect on any tier.
+#   (storage_type, input_types, docs)
 
 VARIABLES = {
     'ALLOW_COMPILER_WARNINGS': (bool, bool,
@@ -845,7 +829,7 @@ VARIABLES = {
         This is commonplace (almost mandatory, in fact) in directories
         containing third-party code that we regularly update from upstream and
         thus do not control, but is otherwise discouraged.
-        """, None),
+        """),
 
     # Variables controlling reading of other frontend files.
     'ANDROID_GENERATED_RESFILES': (StrictOrderingOnAppendList, list,
@@ -855,19 +839,19 @@ VARIABLES = {
         generated (often by preprocessing) into a 'res' directory as
         part of the build process, and subsequently merged into an APK
         file.
-        """, 'export'),
+        """),
 
     'ANDROID_APK_NAME': (unicode, unicode,
         """The name of an Android APK file to generate.
-        """, 'export'),
+        """),
 
     'ANDROID_APK_PACKAGE': (unicode, unicode,
         """The name of the Android package to generate R.java for, like org.mozilla.gecko.
-        """, 'export'),
+        """),
 
     'ANDROID_EXTRA_PACKAGES': (StrictOrderingOnAppendList, list,
         """The name of extra Android packages to generate R.java for, like ['org.mozilla.other'].
-        """, 'export'),
+        """),
 
     'ANDROID_EXTRA_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android extra package resource directories.
@@ -876,7 +860,7 @@ VARIABLES = {
         to package into a 'res' directory and merge into an APK file.  These
         directories are packaged into the APK but are assumed to be static
         unchecked dependencies that should not be otherwise re-distributed.
-        """, 'export'),
+        """),
 
     'ANDROID_RES_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android resource directories.
@@ -884,7 +868,7 @@ VARIABLES = {
         This variable contains a list of directories containing static
         files to package into a 'res' directory and merge into an APK
         file.
-        """, 'export'),
+        """),
 
     'ANDROID_ASSETS_DIRS': (ContextDerivedTypedListWithItems(Path, List), list,
         """Android assets directories.
@@ -892,26 +876,26 @@ VARIABLES = {
         This variable contains a list of directories containing static
         files to package into an 'assets' directory and merge into an
         APK file.
-        """, 'export'),
+        """),
 
     'ANDROID_ECLIPSE_PROJECT_TARGETS': (dict, dict,
         """Defines Android Eclipse project targets.
 
         This variable should not be populated directly. Instead, it should
         populated by calling add_android_eclipse{_library}_project().
-        """, 'export'),
+        """),
 
     'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
         Accepts assembler, C, C++, Objective C/C++.
-        """, None),
+        """),
 
     'FILES_PER_UNIFIED_FILE': (int, int,
         """The number of source files to compile into each unified source file.
 
-        """, 'None'),
+        """),
 
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
@@ -920,7 +904,7 @@ VARIABLES = {
         that can be concatenated all together and built as a single source
         file. This can help make the build faster and reduce the debug info
         size.
-        """, None),
+        """),
 
     'GENERATED_FILES': (StrictOrderingOnAppendListWithFlagsFactory({
                 'script': unicode,
@@ -964,7 +948,7 @@ VARIABLES = {
 
         The chosen script entry point may optionally return a set of strings,
         indicating extra files the output depends on.
-        """, 'export'),
+        """),
 
     'DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare.
@@ -992,14 +976,14 @@ VARIABLES = {
                'MOZ_EXTENSIONS_DB_SCHEMA': 15,
                'DLL_SUFFIX': '".so"',
            })
-        """, None),
+        """),
 
     'DELAYLOAD_DLLS': (List, list,
         """Delay-loaded DLLs.
 
         This variable contains a list of DLL files which the module being linked
         should load lazily.  This only has an effect when building with MSVC.
-        """, None),
+        """),
 
     'DIRS': (ContextDerivedTypedList(SourcePath), list,
         """Child directories to descend into looking for build frontend files.
@@ -1013,7 +997,7 @@ VARIABLES = {
         Values are relative paths. They can be multiple directory levels
         above or below. Use ``..`` for parent directories and ``/`` for path
         delimiters.
-        """, None),
+        """),
 
     'HAS_MISC_RULE': (bool, bool,
         """Whether this directory should be traversed in the ``misc`` tier.
@@ -1029,7 +1013,7 @@ VARIABLES = {
         Please note that converting ``libs`` rules to the ``misc`` tier must
         be done with care, as there are many implicit dependencies that can
         break the build in subtle ways.
-        """, 'misc'),
+        """),
 
     'FINAL_TARGET_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the application directory.
@@ -1044,22 +1028,22 @@ VARIABLES = {
 
            FINAL_TARGET_FILES += ['foo.png']
            FINAL_TARGET_FILES.images['do-not-use'] += ['bar.svg']
-        """, None),
+        """),
 
     'DISABLE_STL_WRAPPING': (bool, bool,
         """Disable the wrappers for STL which allow it to work with C++ exceptions
         disabled.
-        """, None),
+        """),
 
     'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
-        """, 'misc'),
+        """),
 
     'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed in the _tests directory.
 
         This works similarly to FINAL_TARGET_FILES.
-        """, None),
+        """),
 
     'FINAL_LIBRARY': (unicode, unicode,
         """Library in which the objects of the current directory will be linked.
@@ -1067,7 +1051,7 @@ VARIABLES = {
         This variable contains the name of a library, defined elsewhere with
         ``LIBRARY_NAME``, in which the objects of the current directory will be
         linked.
-        """, None),
+        """),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list,
         """Compile a list of C++ unit test names.
@@ -1078,57 +1062,57 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to each name. If a name already ends with
         ``BIN_SUFFIX``, the name will remain unchanged.
-        """, None),
+        """),
 
     'FORCE_SHARED_LIB': (bool, bool,
         """Whether the library in this directory is a shared library.
-        """, None),
+        """),
 
     'FORCE_STATIC_LIB': (bool, bool,
         """Whether the library in this directory is a static library.
-        """, None),
+        """),
 
     'USE_STATIC_LIBS': (bool, bool,
         """Whether the code in this directory is a built against the static
         runtime library.
 
         This variable only has an effect when building with MSVC.
-        """, None),
+        """),
 
     'HOST_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files to compile with the host compiler.
 
         This variable contains a list of source code files to compile.
         with the host compiler.
-        """, None),
+        """),
 
     'IS_COMPONENT': (bool, bool,
         """Whether the library contains a binary XPCOM component manifest.
 
         Implies FORCE_SHARED_LIB.
-        """, None),
+        """),
 
     'PYTHON_UNIT_TESTS': (StrictOrderingOnAppendList, list,
         """A list of python unit tests.
-        """, None),
+        """),
 
     'HOST_LIBRARY_NAME': (unicode, unicode,
         """Name of target library generated when cross compiling.
-        """, None),
+        """),
 
     'JAVA_JAR_TARGETS': (dict, dict,
         """Defines Java JAR targets to be built.
 
         This variable should not be populated directly. Instead, it should
         populated by calling add_java_jar().
-        """, 'libs'),
+        """),
 
     'LIBRARY_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for the entire library.
 
         This variable works like DEFINES, except that declarations apply to all
         libraries that link into this library via FINAL_LIBRARY.
-        """, None),
+        """),
 
     'LIBRARY_NAME': (unicode, unicode,
         """The code name of the library generated for a directory.
@@ -1140,87 +1124,87 @@ VARIABLES = {
 
         would generate ``example/components/libxpcomsample.so`` on Linux, or
         ``example/components/xpcomsample.lib`` on Windows.
-        """, None),
+        """),
 
     'SHARED_LIBRARY_NAME': (unicode, unicode,
         """The name of the static library generated for a directory, if it needs to
         differ from the library code name.
 
         Implies FORCE_SHARED_LIB.
-        """, None),
+        """),
 
     'IS_FRAMEWORK': (bool, bool,
         """Whether the library to build should be built as a framework on OSX.
 
         This implies the name of the library won't be prefixed nor suffixed.
         Implies FORCE_SHARED_LIB.
-        """, None),
+        """),
 
     'STATIC_LIBRARY_NAME': (unicode, unicode,
         """The name of the static library generated for a directory, if it needs to
         differ from the library code name.
 
         Implies FORCE_STATIC_LIB.
-        """, None),
+        """),
 
     'USE_LIBS': (StrictOrderingOnAppendList, list,
         """List of libraries to link to programs and libraries.
-        """, None),
+        """),
 
     'HOST_USE_LIBS': (StrictOrderingOnAppendList, list,
         """List of libraries to link to host programs and libraries.
-        """, None),
+        """),
 
     'HOST_OS_LIBS': (List, list,
         """List of system libraries for host programs and libraries.
-        """, None),
+        """),
 
     'LOCAL_INCLUDES': (ContextDerivedTypedList(Path, StrictOrderingOnAppendList), list,
         """Additional directories to be searched for include files by the compiler.
-        """, None),
+        """),
 
     'NO_PGO': (bool, bool,
         """Whether profile-guided optimization is disable in this directory.
-        """, None),
+        """),
 
     'NO_VISIBILITY_FLAGS': (bool, bool,
         """Build sources listed in this file without VISIBILITY_FLAGS.
-        """, None),
+        """),
 
     'OS_LIBS': (List, list,
         """System link libraries.
 
         This variable contains a list of system libaries to link against.
-        """, None),
+        """),
     'RCFILE': (unicode, unicode,
         """The program .rc file.
 
         This variable can only be used on Windows.
-        """, None),
+        """),
 
     'RESFILE': (unicode, unicode,
         """The program .res file.
 
         This variable can only be used on Windows.
-        """, None),
+        """),
 
     'RCINCLUDE': (unicode, unicode,
         """The resource script file to be included in the default .res file.
 
         This variable can only be used on Windows.
-        """, None),
+        """),
 
     'DEFFILE': (unicode, unicode,
         """The program .def (module definition) file.
 
         This variable can only be used on Windows.
-        """, None),
+        """),
 
     'LD_VERSION_SCRIPT': (unicode, unicode,
         """The linker version script for shared libraries.
 
         This variable can only be used on Linux.
-        """, None),
+        """),
 
     'SYMBOLS_FILE': (SourcePath, unicode,
         """A file containing a list of symbols to export from a shared library.
@@ -1230,7 +1214,7 @@ VARIABLES = {
         A special marker "@DATA@" must be added after a symbol name if it
         points to data instead of code, so that the Windows linker can treat
         them correctly.
-        """, None),
+        """),
 
     'BRANDING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the branding directory.
@@ -1244,13 +1228,13 @@ VARIABLES = {
 
            BRANDING_FILES += ['foo.png']
            BRANDING_FILES.images.subdir += ['bar.png']
-        """, None),
+        """),
 
     'SDK_LIBRARY': (bool, bool,
         """Whether the library built in the directory is part of the SDK.
 
         The library will be copied into ``SDK_LIB_DIR`` (``$DIST/sdk/lib``).
-        """, None),
+        """),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list,
         """Compile a list of executable names.
@@ -1261,7 +1245,7 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to each name. If a name already ends with
         ``BIN_SUFFIX``, the name will remain unchanged.
-        """, None),
+        """),
 
     'SONAME': (unicode, unicode,
         """The soname of the shared object currently being linked
@@ -1269,7 +1253,7 @@ VARIABLES = {
         soname is the "logical name" of a shared object, often used to provide
         version backwards compatibility. This variable makes sense only for
         shared objects, and is supported only on some unix platforms.
-        """, None),
+        """),
 
     'HOST_SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list,
         """Compile a list of host executable names.
@@ -1280,7 +1264,7 @@ VARIABLES = {
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will
         be automatically appended to each name. If a name already ends with
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
-        """, None),
+        """),
 
     'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files that will be generated using configure-like substitution.
@@ -1290,7 +1274,7 @@ VARIABLES = {
         ``{path}.in``. The contents of this file will be read and variable
         patterns like ``@foo@`` will be substituted with the values of the
         ``AC_SUBST`` variables declared during configure.
-        """, None),
+        """),
 
     'CONFIGURE_DEFINE_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files generated from configure/config.status.
@@ -1298,7 +1282,7 @@ VARIABLES = {
         This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very
         similar to ``CONFIGURE_SUBST_FILES`` except the generation logic takes
         into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
-        """, None),
+        """),
 
     'EXPORTS': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be exported, and in which subdirectories.
@@ -1317,7 +1301,7 @@ VARIABLES = {
         Entries in ``EXPORTS`` are paths, so objdir paths may be used, but
         any files listed from the objdir must also be listed in
         ``GENERATED_FILES``.
-        """, None),
+        """),
 
     'PROGRAM' : (unicode, unicode,
         """Compiled executable name.
@@ -1325,7 +1309,7 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to ``PROGRAM``. If ``PROGRAM`` already ends with
         ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
-        """, None),
+        """),
 
     'HOST_PROGRAM' : (unicode, unicode,
         """Compiled host executable name.
@@ -1333,7 +1317,7 @@ VARIABLES = {
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will be
         automatically appended to ``HOST_PROGRAM``. If ``HOST_PROGRAM`` already
         ends with ``HOST_BIN_SUFFIX``, ``HOST_PROGRAM`` will remain unchanged.
-        """, None),
+        """),
 
     'DIST_INSTALL': (Enum(None, False, True), bool,
         """Whether to install certain files into the dist directory.
@@ -1346,7 +1330,7 @@ VARIABLES = {
 
         This is confusing for historical reasons, but eventually, the behavior
         will be made explicit.
-        """, None),
+        """),
 
     'JAR_MANIFESTS': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """JAR manifest files that should be processed as part of the build.
@@ -1354,7 +1338,7 @@ VARIABLES = {
         JAR manifests are files in the tree that define how to package files
         into JARs and how chrome registration is performed. For more info,
         see :ref:`jar_manifests`.
-        """, 'libs'),
+        """),
 
     # IDL Generation.
     'XPIDL_SOURCES': (StrictOrderingOnAppendList, list,
@@ -1363,7 +1347,7 @@ VARIABLES = {
         This is a list of files that define XPCOM interface definitions.
         Entries must be files that exist. Entries are almost certainly ``.idl``
         files.
-        """, 'export'),
+        """),
 
     'XPIDL_MODULE': (unicode, unicode,
         """XPCOM Interface Definition Module Name.
@@ -1371,7 +1355,7 @@ VARIABLES = {
         This is the name of the ``.xpt`` file that is created by linking
         ``XPIDL_SOURCES`` together. If unspecified, it defaults to be the same
         as ``MODULE``.
-        """, None),
+        """),
 
     'XPIDL_NO_MANIFEST': (bool, bool,
         """Indicate that the XPIDL module should not be added to a manifest.
@@ -1379,52 +1363,52 @@ VARIABLES = {
         This flag exists primarily to prevent test-only XPIDL modules from being
         added to the application's chrome manifest. Most XPIDL modules should
         not use this flag.
-        """, None),
+        """),
 
     'IPDL_SOURCES': (StrictOrderingOnAppendList, list,
         """IPDL source files.
 
         These are ``.ipdl`` files that will be parsed and converted to
         ``.cpp`` files.
-        """, 'export'),
+        """),
 
     'WEBIDL_FILES': (StrictOrderingOnAppendList, list,
         """WebIDL source files.
 
         These will be parsed and converted to ``.cpp`` and ``.h`` files.
-        """, 'export'),
+        """),
 
     'GENERATED_EVENTS_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
         """WebIDL source files for generated events.
 
         These will be parsed and converted to ``.cpp`` and ``.h`` files.
-        """, 'export'),
+        """),
 
     'TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Test WebIDL source files.
 
          These will be parsed and converted to ``.cpp`` and ``.h`` files
          if tests are enabled.
-         """, 'export'),
+         """),
 
     'GENERATED_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Generated WebIDL source files.
 
          These will be generated from some other files.
-         """, 'export'),
+         """),
 
     'PREPROCESSED_TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Preprocessed test WebIDL source files.
 
          These will be preprocessed, then parsed and converted to .cpp
          and ``.h`` files if tests are enabled.
-         """, 'export'),
+         """),
 
     'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list,
          """Preprocessed WebIDL source files.
 
          These will be preprocessed before being parsed and converted.
-         """, 'export'),
+         """),
 
     'WEBIDL_EXAMPLE_INTERFACES': (StrictOrderingOnAppendList, list,
         """Names of example WebIDL interfaces to build as part of the build.
@@ -1432,72 +1416,72 @@ VARIABLES = {
         Names in this list correspond to WebIDL interface names defined in
         WebIDL files included in the build from one of the \*WEBIDL_FILES
         variables.
-        """, 'export'),
+        """),
 
     # Test declaration.
     'A11Y_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining a11y tests.
-        """, None),
+        """),
 
     'BROWSER_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining browser chrome tests.
-        """, None),
+        """),
 
     'JETPACK_PACKAGE_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining jetpack package tests.
-        """, None),
+        """),
 
     'JETPACK_ADDON_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining jetpack addon tests.
-        """, None),
+        """),
 
     'CRASHTEST_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining crashtests.
 
         These are commonly named crashtests.list.
-        """, None),
+        """),
 
     'ANDROID_INSTRUMENTATION_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining Android instrumentation tests.
-        """, None),
+        """),
 
     'METRO_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining metro browser chrome tests.
-        """, None),
+        """),
 
     'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining mochitest chrome tests.
-        """, None),
+        """),
 
     'MOCHITEST_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining mochitest tests.
-        """, None),
+        """),
 
     'MOCHITEST_WEBAPPRT_CONTENT_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining webapprt mochitest content tests.
-        """, None),
+        """),
 
     'MOCHITEST_WEBAPPRT_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining webapprt mochitest chrome tests.
-        """, None),
+        """),
 
     'REFTEST_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining reftests.
 
         These are commonly named reftest.list.
-        """, None),
+        """),
 
     'WEB_PLATFORM_TESTS_MANIFESTS': (TypedList(WebPlatformTestManifest), list,
         """List of (manifest_path, test_path) defining web-platform-tests.
-        """, None),
+        """),
 
     'WEBRTC_SIGNALLING_TEST_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining WebRTC signalling tests.
-        """, None),
+        """),
 
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining xpcshell tests.
-        """, None),
+        """),
 
     # The following variables are used to control the target of installed files.
     'XPI_NAME': (unicode, unicode,
@@ -1505,7 +1489,7 @@ VARIABLES = {
 
         When this variable is present, the results of this directory will end up
         being packaged into an extension instead of the main dist/bin results.
-        """, 'libs'),
+        """),
 
     'DIST_SUBDIR': (unicode, unicode,
         """The name of an alternate directory to install files to.
@@ -1513,7 +1497,7 @@ VARIABLES = {
         When this variable is present, the results of this directory will end up
         being placed in the $(DIST_SUBDIR) subdirectory of where it would
         otherwise be placed.
-        """, None),
+        """),
 
     'FINAL_TARGET': (FinalTargetValue, unicode,
         """The name of the directory to install targets to.
@@ -1523,7 +1507,7 @@ VARIABLES = {
         neither are present, the result is dist/bin. If XPI_NAME is present, the
         result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
         the $(DIST_SUBDIR) directory of the otherwise default value is used.
-        """, None),
+        """),
 
     'USE_EXTENSION_MANIFEST': (bool, bool,
         """Controls the name of the manifest for JAR files.
@@ -1531,7 +1515,7 @@ VARIABLES = {
         By default, the name of the manifest is ${JAR_MANIFEST}.manifest.
         Setting this variable to ``True`` changes the name of the manifest to
         chrome.manifest.
-        """, None),
+        """),
 
     'NO_JS_MANIFEST': (bool, bool,
         """Explicitly disclaims responsibility for manifest listing in EXTRA_COMPONENTS.
@@ -1542,7 +1526,7 @@ VARIABLES = {
         indicates that the relevant .manifest file and entries for those .js
         files are elsehwere (jar.mn, for instance) and this state of affairs
         is OK.
-        """, None),
+        """),
 
     'GYP_DIRS': (StrictOrderingOnAppendListWithFlagsFactory({
             'variables': dict,
@@ -1575,7 +1559,7 @@ VARIABLES = {
                 (...)
             }
             (...)
-        """, None),
+        """),
 
     'SPHINX_TREES': (dict, dict,
         """Describes what the Sphinx documentation tree will look like.
@@ -1583,11 +1567,11 @@ VARIABLES = {
         Keys are relative directories inside the final Sphinx documentation
         tree to install files into. Values are directories (relative to this
         file) whose content to copy into the Sphinx documentation tree.
-        """, None),
+        """),
 
     'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
         """Directories containing Python packages that Sphinx documents.
-        """, None),
+        """),
 
     'CFLAGS': (List, list,
         """Flags passed to the C compiler for all of the C source files
@@ -1596,7 +1580,7 @@ VARIABLES = {
            Note that the ordering of flags matters here, these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'CXXFLAGS': (List, list,
         """Flags passed to the C++ compiler for all of the C++ source files
@@ -1605,12 +1589,12 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'HOST_DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare for host compilation.
         See ``DEFINES`` for specifics.
-        """, None),
+        """),
 
     'CMFLAGS': (List, list,
         """Flags passed to the Objective-C compiler for all of the Objective-C
@@ -1619,7 +1603,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'CMMFLAGS': (List, list,
         """Flags passed to the Objective-C++ compiler for all of the
@@ -1628,7 +1612,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'ASFLAGS': (List, list,
         """Flags passed to the assembler for all of the assembly source files
@@ -1637,7 +1621,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the assembler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'HOST_CFLAGS': (List, list,
         """Flags passed to the host C compiler for all of the C source files
@@ -1646,7 +1630,7 @@ VARIABLES = {
            Note that the ordering of flags matters here, these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'HOST_CXXFLAGS': (List, list,
         """Flags passed to the host C++ compiler for all of the C++ source files
@@ -1655,7 +1639,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'LDFLAGS': (List, list,
         """Flags passed to the linker when linking all of the libraries and
@@ -1664,7 +1648,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the linker's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'EXTRA_DSO_LDOPTS': (List, list,
         """Flags passed to the linker when linking a shared library.
@@ -1672,7 +1656,7 @@ VARIABLES = {
            Note that the ordering of flags matter here, these flags will be
            added to the linker's command line in the same order as they
            appear in the moz.build file.
-        """, None),
+        """),
 
     'WIN32_EXE_LDFLAGS': (List, list,
         """Flags passed to the linker when linking a Windows .exe executable
@@ -1683,7 +1667,7 @@ VARIABLES = {
            appear in the moz.build file.
 
            This variable only has an effect on Windows.
-        """, None),
+        """),
 
     'TEST_HARNESS_FILES': (HierarchicalStringList, list,
         """List of files to be installed for test harnesses.
@@ -1698,21 +1682,21 @@ VARIABLES = {
         Files from topsrcdir and the objdir can also be installed by prefixing
         the path(s) with a '/' character and a '!' character, respectively::
            TEST_HARNESS_FILES.path += ['/build/bar.py', '!quux.py']
-        """, 'misc'),
+        """),
 
     'NO_EXPAND_LIBS': (bool, bool,
         """Forces to build a real static library, and no corresponding fake
            library.
-        """, None),
+        """),
 
     'NO_COMPONENTS_MANIFEST': (bool, bool,
         """Do not create a binary-component manifest entry for the
         corresponding XPCOMBinaryComponent.
-        """, None),
+        """),
 }
 
 # Sanity check: we don't want any variable above to have a list as storage type.
-for name, (storage_type, input_types, docs, tier) in VARIABLES.items():
+for name, (storage_type, input_types, docs) in VARIABLES.items():
     if storage_type == list:
         raise RuntimeError('%s has a "list" storage type. Use "List" instead.'
             % name)
@@ -1736,9 +1720,9 @@ for name in TEMPLATE_VARIABLES:
     if name not in VARIABLES:
         raise RuntimeError('%s is in TEMPLATE_VARIABLES but not in VARIABLES.'
             % name)
-    storage_type, input_types, docs, tier = VARIABLES[name]
+    storage_type, input_types, docs = VARIABLES[name]
     docs += 'This variable is only available in templates.\n'
-    VARIABLES[name] = (storage_type, input_types, docs, tier)
+    VARIABLES[name] = (storage_type, input_types, docs)
 
 
 # The set of functions exposed to the sandbox.

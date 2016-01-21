@@ -46,7 +46,7 @@ class FileReader final : public DOMEventTargetHelper,
   friend class FileReaderDecreaseBusyCounter;
 
 public:
-  FileReader(nsPIDOMWindow* aWindow,
+  FileReader(nsIGlobalObject* aGlobal,
              workers::WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_ISUPPORTS_INHERITED

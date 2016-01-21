@@ -155,6 +155,7 @@
 #endif
   skin/classic/mozapps/plugins/pluginBlocked-64.png          (../../windows/mozapps/plugins/pluginBlocked-64.png)
   skin/classic/mozapps/plugins/pluginHelp-16.png             (../../windows/mozapps/plugins/pluginHelp-16.png)
+  skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
   skin/classic/mozapps/update/downloadButtons.png            (../../windows/mozapps/update/downloadButtons.png)
 * skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (../../windows/mozapps/extensions/xpinstallConfirm.css)
 

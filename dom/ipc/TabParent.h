@@ -299,7 +299,8 @@ public:
 
   virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                               const ViewID& aViewId,
-                              const CSSRect& aRect) override;
+                              const CSSRect& aRect,
+                              const uint32_t& aFlags) override;
 
   virtual bool
   RecvUpdateZoomConstraints(const uint32_t& aPresShellId,

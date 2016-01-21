@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>mozscreenshots@mozilla.org</em:id>
+#expand <em:version>__MOZILLA_VERSION_U__</em:version>
+    <em:bootstrap>true</em:bootstrap>
+
+    <!-- for running custom screenshot binaries -->
+    <em:unpack>true</em:unpack>
+
+    <!-- Front End MetaData -->
+    <em:name>mozscreenshots</em:name>
+    <em:description>Take screenshots of Mozilla applications in various UI configurations.</em:description>
+    <em:creator>Mozilla</em:creator>
+
+    <em:targetApplication>
+      <Description>
+        <!-- Firefox -->
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+#expand <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+  </Description>
+</RDF>

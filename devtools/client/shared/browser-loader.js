@@ -70,6 +70,9 @@ function BrowserLoader(baseURI, window) {
       return require(uri);
     },
     globals: {
+      // Allow modules to use the window's console to ensure logs appear in a
+      // tab toolbox, if one exists, instead of just the browser console.
+      console: window.console,
       // Make sure 'define' function exists. This allows reusing AMD modules.
       define: function(callback) {
         callback(this.require, this.exports, this.module);

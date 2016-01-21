@@ -277,17 +277,8 @@ static int compareEntries(const void* lhsVoid, const void* rhsVoid) {
     return 0;
 }
 
-// A hash policy that compares C strings.
-struct CStringHashPolicy {
-    using Lookup = const char*;
-    static js::HashNumber hash(Lookup l) { return mozilla::HashString(l); }
-    static bool match(const char* key, Lookup lookup) {
-        return strcmp(key, lookup) == 0;
-    }
-};
-
 // A hash map mapping from C strings to counts.
-using CStringCountMap = HashMap<const char*, CountBasePtr, CStringHashPolicy, SystemAllocPolicy>;
+using CStringCountMap = HashMap<const char*, CountBasePtr, CStringHasher, SystemAllocPolicy>;
 
 // Convert a CStringCountMap into an object with each key one of the c strings
 // from the map and each value the associated count's report. For use with

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<script>
+
+var a = new FileReader();
+
+function f() {
+  a.removeEventListener("loadend", f);
+  g();
+}
+
+function g() {
+  a.readAsBinaryString(new Blob());
+}
+
+a.addEventListener("loadend", f);
+
+try {
+  g();
+  g();
+} catch(e) {}
+
+</script>
+</body>
+</html>

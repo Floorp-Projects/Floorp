@@ -2,103 +2,67 @@
 // search in a private window, and then checks in the public window
 // whether there is an autocomplete entry for the private search.
 
-function test() {
+add_task(function* () {
   // Don't use about:home as the homepage for new windows
   Services.prefs.setIntPref("browser.startup.page", 0);
   registerCleanupFunction(() => Services.prefs.clearUserPref("browser.startup.page"));
 
-  waitForExplicitFinish();
-
   let engineURL =
     "http://mochi.test:8888/browser/browser/components/search/test/";
   let windowsToClose = [];
-  registerCleanupFunction(function() {
-    let engine = Services.search.getEngineByName("Bug 426329");
-    Services.search.removeEngine(engine);
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-  });
 
-  function onPageLoad(aWin, aCallback) {
-    aWin.gBrowser.addEventListener("DOMContentLoaded", function load(aEvent) {
-      let doc = aEvent.originalTarget;
-      info(doc.location.href);
-      if (doc.location.href.indexOf(engineURL) != -1) {
-        aWin.gBrowser.removeEventListener("DOMContentLoaded", load, false);
-        aCallback();
-      }
-    }, false);
-  }
-
-  function performSearch(aWin, aIsPrivate, aCallback) {
+  function performSearch(aWin, aIsPrivate) {
     let searchBar = aWin.BrowserSearch.searchBar;
     ok(searchBar, "got search bar");
-    onPageLoad(aWin, aCallback);
+
+    let loadPromise = BrowserTestUtils.browserLoaded(aWin.gBrowser.selectedBrowser);
 
     searchBar.value = aIsPrivate ? "private test" : "public test";
     searchBar.focus();
     EventUtils.synthesizeKey("VK_RETURN", {}, aWin);
+
+    return loadPromise;
   }
 
-  function addEngine(aCallback) {
-    let installCallback = {
-      onSuccess: function (engine) {
-        Services.search.currentEngine = engine;
-        aCallback();
-      },
-      onError: function (errorCode) {
-        ok(false, "failed to install engine: " + errorCode);
-      }
-    };
-    Services.search.addEngine(engineURL + "426329.xml", null,
-                              "data:image/x-icon,%00", false, installCallback);
-  }
-
-  function testOnWindow(aIsPrivate, aCallback) {
-    let win = whenNewWindowLoaded({ private: aIsPrivate }, function() {
-      waitForFocus(aCallback, win);
-    });
+  function* testOnWindow(aIsPrivate) {
+    let win = yield BrowserTestUtils.openNewBrowserWindow({ private: aIsPrivate });
+    yield SimpleTest.promiseFocus(win);
     windowsToClose.push(win);
+    return win;
   }
 
-  addEngine(function() {
-    testOnWindow(false, function(win) {
-      performSearch(win, false, function() {
-        testOnWindow(true, function(win) {
-          performSearch(win, true, function() {
-            testOnWindow(false, function(win) {
-              checkSearchPopup(win, finish);
-            });
-          });
-        });
-      });
-    });
-  });
-}
+  yield promiseNewEngine("426329.xml", { iconURL: "data:image/x-icon,%00" });
 
-function checkSearchPopup(aWin, aCallback) {
-  let searchBar = aWin.BrowserSearch.searchBar;
+  let newWindow = yield* testOnWindow(false);
+  yield performSearch(newWindow, false);
+
+  newWindow = yield* testOnWindow(true);
+  yield performSearch(newWindow, true);
+
+  newWindow = yield* testOnWindow(false);
+
+  let searchBar = newWindow.BrowserSearch.searchBar;
   searchBar.value = "p";
   searchBar.focus();
 
   let popup = searchBar.textbox.popup;
-  popup.addEventListener("popupshowing", function showing() {
-    popup.removeEventListener("popupshowing", showing, false);
-
-    let entries = getMenuEntries(searchBar);
-    for (let i = 0; i < entries.length; i++) {
-      isnot(entries[i], "private test",
-            "shouldn't see private autocomplete entries");
-    }
-
-    searchBar.textbox.toggleHistoryPopup();
-    searchBar.value = "";
-    aCallback();
-  }, false);
-
+  let popupPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
   searchBar.textbox.showHistoryPopup();
-}
+  yield popupPromise;
+
+  let entries = getMenuEntries(searchBar);
+  for (let i = 0; i < entries.length; i++) {
+    isnot(entries[i], "private test",
+          "shouldn't see private autocomplete entries");
+  }
+
+  searchBar.textbox.toggleHistoryPopup();
+  searchBar.value = "";
+
+  windowsToClose.forEach(function(win) {
+    win.close();
+  });
+});
 
 function getMenuEntries(searchBar) {
   let entries = [];

@@ -58,7 +58,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(e9029838-3553-4192-a00b-f0f11073a6eb)]
+[scriptable, uuid(6e3e26ea-45b2-4db7-9e4a-93b965679298)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -108,9 +108,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
             in nsIURI aDocumentURI,
             in nsIPrincipal aLoadingPrincipal,
             in nsIDOMDocument aDocument,
-            [optional] in nsIFile aCustomProfileDir,
-            [optional] in unsigned long aAppId,
-            [optional] in boolean aInBrowser);
+            [optional] in nsIFile aCustomProfileDir);
 
   /**
    * Initialize the update for partial processing. 
@@ -134,10 +132,6 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *
    * @param aManifestURI
    *        The manifest URI of the related cache.
-   * @param aAppID
-   *        Local ID of an app (optional) to check the cache update for.
-   * @param aInBrowser
-   *        Whether to check for a cache populated from browser element.
    * @param aObserver
    *        nsIObserver implementation that receives the result.
    *        When aTopic == "offline-cache-update-available" there is an update to
@@ -148,8 +142,6 @@ interface nsIOfflineCacheUpdate : nsISupports {
    */
   void initForUpdateCheck(in nsIURI aManifestURI,
                           in nsIPrincipal aLoadingPrincipal,
-                          in unsigned long aAppID,
-                          in boolean aInBrowser,
                           in nsIObserver aObserver);
 
   /**
@@ -199,7 +191,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(a297a334-bcae-4779-a564-555593edc96b)]
+[scriptable, uuid(39aee0e8-9478-475d-8b62-7535293cae08)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -239,8 +231,6 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     nsIOfflineCacheUpdate scheduleAppUpdate(in nsIURI aManifestURI,
                                             in nsIURI aDocumentURI,
                                             in nsIPrincipal aLoadingPrincipal,
-                                            in unsigned long aAppID,
-                                            in boolean aInBrowser,
                                             in nsIFile aProfileDir);
 
     /**
@@ -265,8 +255,6 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     void checkForUpdate(in nsIURI aManifestURI,
                         in nsIPrincipal aLoadingPrincipal,
-                        in unsigned long aAppID,
-                        in boolean aInBrowser,
                         in nsIObserver aObserver);
 
     /**
