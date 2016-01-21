@@ -137,6 +137,24 @@ BluetoothPbapManager::Init()
 void
 BluetoothPbapManager::Uninit()
 {
+  if (mServerSocket) {
+    mServerSocket->SetObserver(nullptr);
+
+    if (mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mServerSocket->Close();
+    }
+    mServerSocket = nullptr;
+  }
+
+  if (mSocket) {
+    mSocket->SetObserver(nullptr);
+
+    if (mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mSocket->Close();
+    }
+    mSocket = nullptr;
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
     return;
@@ -214,10 +232,11 @@ BluetoothPbapManager::Listen()
    * BT stops; otherwise no more read events would be received even if
    * BT restarts.
    */
-  if (mServerSocket) {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mServerSocket->Close();
-    mServerSocket = nullptr;
   }
+  mServerSocket = nullptr;
 
   mServerSocket = new BluetoothSocket(this);
 
@@ -1164,7 +1183,16 @@ BluetoothPbapManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
 void
 BluetoothPbapManager::OnSocketConnectError(BluetoothSocket* aSocket)
 {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mServerSocket->Close();
+  }
   mServerSocket = nullptr;
+
+  if (mSocket &&
+      mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mSocket->Close();
+  }
   mSocket = nullptr;
 }
 
@@ -1180,7 +1208,8 @@ BluetoothPbapManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 
   AfterPbapDisconnected();
   mDeviceAddress.Clear();
-  mSocket = nullptr;
+
+  mSocket = nullptr; // should already be closed
 
   Listen();
 }
