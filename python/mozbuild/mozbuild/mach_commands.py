@@ -605,7 +605,9 @@ class Build(MachCommandBase):
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend', nargs='+', choices=sorted(backends),
         help='Which backend to build.')
-    def build_backend(self, backend, diff=False):
+    @CommandArgument('-v', '--verbose', action='store_true',
+        help='Verbose output.')
+    def build_backend(self, backend, diff=False, verbose=False):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
 
@@ -621,6 +623,8 @@ class Build(MachCommandBase):
             args.extend(backend)
         if diff:
             args.append('--diff')
+        if verbose:
+            args.append('--verbose')
 
         return self._run_command_in_objdir(args=args, pass_thru=True,
             ensure_exit_code=False)
