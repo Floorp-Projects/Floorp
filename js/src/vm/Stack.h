@@ -670,7 +670,7 @@ class InterpreterFrame
      */
     Value newTarget() const {
         if (isEvalFrame())
-            return ((Value*)this)[-2];
+            return ((Value*)this)[-1];
 
         MOZ_ASSERT(isFunctionFrame());
 
