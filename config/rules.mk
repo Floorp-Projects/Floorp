@@ -463,14 +463,19 @@ endif
 endif
 
 ifdef SYMBOLS_FILE
+ifeq ($(OS_TARGET),WINNT)
+ifndef GNU_CC
+EXTRA_DSO_LDOPTS += -DEF:$(call normalizepath,$(SYMBOLS_FILE))
+else
+EXTRA_DSO_LDOPTS += $(call normalizepath,$(SYMBOLS_FILE))
+endif
+else
 ifdef GCC_USE_GNU_LD
 EXTRA_DSO_LDOPTS += -Wl,--version-script,$(SYMBOLS_FILE)
 else
 ifeq ($(OS_TARGET),Darwin)
 EXTRA_DSO_LDOPTS += -Wl,-exported_symbols_list,$(SYMBOLS_FILE)
 endif
-ifeq ($(OS_TARGET),WINNT)
-EXTRA_DSO_LDOPTS += -DEF:$(call normalizepath,$(SYMBOLS_FILE))
 endif
 endif
 EXTRA_DEPS += $(SYMBOLS_FILE)
