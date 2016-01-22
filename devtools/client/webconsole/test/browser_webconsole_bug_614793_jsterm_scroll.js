@@ -27,7 +27,7 @@ function consoleOpened(hud) {
 
   hud.jsterm.clearOutput();
 
-  let scrollNode = hud.outputNode.parentNode;
+  let scrollNode = hud.ui.outputWrapper;
 
   for (let i = 0; i < 150; i++) {
     content.console.log("test message " + i);

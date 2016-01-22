@@ -8,6 +8,18 @@ var fileURL = 'http://example.org/tests/dom/browser-element/mochitest/file_brows
 var generator = runTests();
 var testFrame;
 
+function alertListener(e) {
+  var message = e.detail.message;
+  if (/^OK/.exec(message)) {
+    ok(true, "Message from file : " + message);
+    continueTest();
+  } else if (/^KO/.exec(message)) {
+    error(message);
+  } else {
+    error("Undefined event.");
+  }
+}
+
 function error(aMessage) {
   ok(false, "Error : " + aMessage);
   finish();
@@ -22,30 +34,24 @@ function continueTest() {
 }
 
 function finish() {
+  testFrame.removeEventListener('mozbrowsershowmodalprompt', alertListener);
+  ok(true, "Remove event-listener.");
   document.body.removeChild(testFrame);
+  ok(true, "Remove test-frame from document.");
   SimpleTest.finish();
 }
 
 function setCommand(aArg) {
   info("# Command = " + aArg);
   testFrame.src = fileURL + '#' + aArg;
-
-  // Yield to the event loop a few times to make sure that onactivestatechanged
-  // is not dispatched.
-  SimpleTest.executeSoon(function() {
-    SimpleTest.executeSoon(function() {
-      SimpleTest.executeSoon(function() {
-        continueTest();
-      });
-    });
-  });
 }
 
 function runTests() {
   setCommand('play');
   yield undefined;
 
-  setCommand('pause');
+  // wait a second to make sure that onactivestatechanged isn't dispatched.
+  setCommand('idle');
   yield undefined;
 
   finish();
@@ -77,7 +83,11 @@ function setupTestFrame() {
   }
 
   testFrame.addEventListener('mozbrowserloadend', loadend);
+  testFrame.addEventListener('mozbrowsershowmodalprompt', alertListener);
+  ok(true, "Add event-listeners.");
+
   document.body.appendChild(testFrame);
+  ok(true, "Append test-frame to document.");
 }
 
 addEventListener('testready', function() {

@@ -486,7 +486,8 @@ SavedFrame::create(JSContext* cx)
         return nullptr;
     assertSameCompartment(cx, proto);
 
-    RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto));
+    RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto,
+                                                      TenuredObject));
     if (!frameObj)
         return nullptr;
 

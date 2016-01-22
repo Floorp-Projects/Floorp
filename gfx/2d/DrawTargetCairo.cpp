@@ -613,7 +613,7 @@ DrawTargetCairo::~DrawTargetCairo()
 bool
 DrawTargetCairo::IsValid() const
 {
-  return mSurface && !cairo_surface_status(mSurface);
+  return mSurface && !cairo_surface_status(mSurface) && !cairo_surface_status(cairo_get_group_target(mContext));
 }
 
 DrawTargetType
@@ -812,7 +812,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   }
 
   if (!IsValid() || !aSurface) {
-    gfxCriticalNote << "DrawSurface with bad surface " << cairo_surface_status(mSurface);
+    gfxCriticalNote << "DrawSurface with bad surface " << cairo_surface_status(cairo_get_group_target(mContext));
     return;
   }
 
@@ -1266,7 +1266,7 @@ DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 {
   DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
 #ifdef MOZ_TREE_CAIRO
-  cairo_surface_set_subpixel_antialiasing(mSurface,
+  cairo_surface_set_subpixel_antialiasing(cairo_get_group_target(mContext),
     aPermitSubpixelAA ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
 #endif
 }
@@ -1283,7 +1283,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   }
 
   if (!IsValid()) {
-    gfxDebug() << "FillGlyphs bad surface " << cairo_surface_status(mSurface);
+    gfxDebug() << "FillGlyphs bad surface " << cairo_surface_status(cairo_get_group_target(mContext));
     return;
   }
 
@@ -1321,8 +1321,8 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
 
   cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
 
-  if (mSurface && cairo_surface_status(mSurface)) {
-    gfxDebug() << "Ending FillGlyphs with a bad surface " << cairo_surface_status(mSurface);
+  if (mContext && cairo_surface_status(cairo_get_group_target(mContext))) {
+    gfxDebug() << "Ending FillGlyphs with a bad surface " << cairo_surface_status(cairo_get_group_target(mContext));
   }
 }
 
@@ -1736,7 +1736,7 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
 already_AddRefed<DrawTarget>
 DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  if (cairo_surface_status(mSurface)) {
+  if (cairo_surface_status(cairo_get_group_target(mContext))) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
     if (target->Init(aSize, aFormat)) {
       return target.forget();
@@ -1754,7 +1754,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
     }
   }
 
-  gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "Failed to create similar cairo surface! Size: " << aSize << " Status: " << cairo_surface_status(similar) << cairo_surface_status(mSurface) << " format " << (int)aFormat;
+  gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "Failed to create similar cairo surface! Size: " << aSize << " Status: " << cairo_surface_status(similar) << cairo_surface_status(cairo_get_group_target(mContext)) << " format " << (int)aFormat;
 
   return nullptr;
 }

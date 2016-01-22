@@ -6863,6 +6863,10 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
         script->compartment_ = target;
         script->setTypesGeneration(target->zone()->types.generation);
 
+        // If the script failed to compile, no need to fix up.
+        if (!script->code())
+            continue;
+
         // See warning in handleParseWorkload. If we start optimizing global
         // lexicals, we would need to merge the contents of the static global
         // lexical scope.

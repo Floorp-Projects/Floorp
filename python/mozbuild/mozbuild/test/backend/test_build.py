@@ -12,6 +12,7 @@ import unittest
 import mozpack.path as mozpath
 from contextlib import contextmanager
 from mozunit import main
+from mozbuild.backend import get_backend_class
 from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.backend.fastermake import FasterMakeBackend
@@ -79,6 +80,30 @@ class TestBuild(unittest.TestCase):
         substs = list(BASE_SUBSTS)
         with self.do_test_backend(RecursiveMakeBackend,
                                   substs=substs) as config:
+            build = MozbuildObject(config.topsrcdir, None, None,
+                                   config.topobjdir)
+            overrides = [
+                'install_manifest_depends=',
+                'MOZ_CHROME_FILE_FORMAT=flat',
+                'TEST_MOZBUILD=1',
+            ]
+            with self.line_handler() as handle_make_line:
+                build._run_make(directory=config.topobjdir, target=overrides,
+                                silent=False, line_handler=handle_make_line)
+
+            self.validate(config)
+
+    def test_faster_recursive_make(self):
+        substs = list(BASE_SUBSTS) + [
+            ('BUILD_BACKENDS', 'FasterMake+RecursiveMake'),
+        ]
+        with self.do_test_backend(get_backend_class(
+                'FasterMake+RecursiveMake'), substs=substs) as config:
+            buildid = mozpath.join(config.topobjdir, 'config', 'buildid')
+            ensureParentDir(buildid)
+            with open(buildid, 'w') as fh:
+                fh.write('20100101012345\n')
+
             build = MozbuildObject(config.topsrcdir, None, None,
                                    config.topobjdir)
             overrides = [

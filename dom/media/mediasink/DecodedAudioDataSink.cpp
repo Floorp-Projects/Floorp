@@ -172,6 +172,8 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     Chunk() : mFrames(0), mData(nullptr) {}
     const AudioDataValue* Data() const { return mData; }
     uint32_t Frames() const { return mFrames; }
+    uint32_t Channels() const { return mBuffer ? mBuffer->mChannels: 0; }
+    uint32_t Rate() const { return mBuffer ? mBuffer->mRate : 0; }
     AudioDataValue* GetWritable() const { return mData; }
   private:
     const RefPtr<AudioData> mBuffer;
@@ -181,16 +183,22 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
 
   class SilentChunk : public AudioStream::Chunk {
   public:
-    SilentChunk(uint32_t aFrames, uint32_t aChannels)
+    SilentChunk(uint32_t aFrames, uint32_t aChannels, uint32_t aRate)
       : mFrames(aFrames)
+      , mChannels(aChannels)
+      , mRate(aRate)
       , mData(MakeUnique<AudioDataValue[]>(aChannels * aFrames)) {
       memset(mData.get(), 0, aChannels * aFrames * sizeof(AudioDataValue));
     }
     const AudioDataValue* Data() const { return mData.get(); }
     uint32_t Frames() const { return mFrames; }
+    uint32_t Channels() const { return mChannels; }
+    uint32_t Rate() const { return mRate; }
     AudioDataValue* GetWritable() const { return mData.get(); }
   private:
     const uint32_t mFrames;
+    const uint32_t mChannels;
+    const uint32_t mRate;
     UniquePtr<AudioDataValue[]> mData;
   };
 
@@ -224,7 +232,7 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
       missingFrames = std::min<int64_t>(UINT32_MAX, missingFrames.value());
       auto framesToPop = std::min<uint32_t>(missingFrames.value(), aFrames);
       mWritten += framesToPop;
-      return MakeUnique<SilentChunk>(framesToPop, mInfo.mChannels);
+      return MakeUnique<SilentChunk>(framesToPop, mInfo.mChannels, mInfo.mRate);
     }
 
     mCurrentData = dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
@@ -238,16 +246,8 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
   SINK_LOG_V("playing audio at time=%lld offset=%u length=%u",
              mCurrentData->mTime, mCurrentData->mFrames - mCursor->Available(), framesToPop);
 
-  UniquePtr<AudioStream::Chunk> chunk;
-
-  if (mCurrentData->mRate == mInfo.mRate &&
-      mCurrentData->mChannels == mInfo.mChannels) {
-    chunk = MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
-  } else {
-    SINK_LOG_V("mismatched sample format mInfo=[%uHz/%u channels] audio=[%uHz/%u channels]",
-               mInfo.mRate, mInfo.mChannels, mCurrentData->mRate, mCurrentData->mChannels);
-    chunk = MakeUnique<SilentChunk>(framesToPop, mInfo.mChannels);
-  }
+  UniquePtr<AudioStream::Chunk> chunk =
+    MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
 
   mWritten += framesToPop;
   mCursor->Advance(framesToPop);

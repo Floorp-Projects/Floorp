@@ -325,7 +325,6 @@
         <image class="fxaSyncIllustration"/>
       </vbox>
     </hbox>
-    <spacer class="separator"/>
     <groupbox>
       <caption>
         <label accesskey="&syncDeviceName.accesskey;"
@@ -358,7 +357,6 @@
         -->&mobilePromo2.iOSLink;</label><!--
         -->&mobilePromo2.end;
     </label>
-    <spacer class="separator" flex="1"/>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;

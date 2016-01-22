@@ -50,6 +50,10 @@
 #include "ssl.h"
 #include "plbase64.h"
 
+#ifdef XP_WIN
+#include <winsock.h> // for htonl
+#endif
+
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -486,32 +490,37 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString& nickname,
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetDbKey(char** aDbKey)
+nsNSSCertificate::GetDbKey(nsACString& aDbKey)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  SECItem key;
+  static_assert(sizeof(uint64_t) == 8, "type size sanity check");
+  static_assert(sizeof(uint32_t) == 4, "type size sanity check");
+  // The format of the key is the base64 encoding of the following:
+  // 4 bytes: {0, 0, 0, 0} (this was intended to be the module ID, but it was
+  //                        never implemented)
+  // 4 bytes: {0, 0, 0, 0} (this was intended to be the slot ID, but it was
+  //                        never implemented)
+  // 4 bytes: <serial number length in big-endian order>
+  // 4 bytes: <DER-encoded issuer distinguished name length in big-endian order>
+  // n bytes: <bytes of serial number>
+  // m bytes: <DER-encoded issuer distinguished name>
+  nsAutoCString buf;
+  const char leadingZeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
+  buf.Append(leadingZeroes, sizeof(leadingZeroes));
+  uint32_t serialNumberLen = htonl(mCert->serialNumber.len);
+  buf.Append(reinterpret_cast<const char*>(&serialNumberLen), sizeof(uint32_t));
+  uint32_t issuerLen = htonl(mCert->derIssuer.len);
+  buf.Append(reinterpret_cast<const char*>(&issuerLen), sizeof(uint32_t));
+  buf.Append(reinterpret_cast<const char*>(mCert->serialNumber.data),
+             mCert->serialNumber.len);
+  buf.Append(reinterpret_cast<const char*>(mCert->derIssuer.data),
+             mCert->derIssuer.len);
 
-  NS_ENSURE_ARG(aDbKey);
-  *aDbKey = nullptr;
-  key.len = NS_NSS_LONG*4+mCert->serialNumber.len+mCert->derIssuer.len;
-  key.data = (unsigned char*) moz_xmalloc(key.len);
-  if (!key.data)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_NSS_PUT_LONG(0,key.data); // later put moduleID
-  NS_NSS_PUT_LONG(0,&key.data[NS_NSS_LONG]); // later put slotID
-  NS_NSS_PUT_LONG(mCert->serialNumber.len,&key.data[NS_NSS_LONG*2]);
-  NS_NSS_PUT_LONG(mCert->derIssuer.len,&key.data[NS_NSS_LONG*3]);
-  memcpy(&key.data[NS_NSS_LONG*4], mCert->serialNumber.data,
-         mCert->serialNumber.len);
-  memcpy(&key.data[NS_NSS_LONG*4+mCert->serialNumber.len],
-         mCert->derIssuer.data, mCert->derIssuer.len);
-
-  *aDbKey = NSSBase64_EncodeItem(nullptr, nullptr, 0, &key);
-  free(key.data); // SECItem is a 'c' type without a destructor
-  return (*aDbKey) ? NS_OK : NS_ERROR_FAILURE;
+  return Base64Encode(buf, aDbKey);
 }
 
 NS_IMETHODIMP

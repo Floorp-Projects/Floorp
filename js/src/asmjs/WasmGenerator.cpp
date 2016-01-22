@@ -38,7 +38,6 @@ ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
     jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
     slowFuncs_(cx),
     numSigs_(0),
-    numFuncSigs_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     alloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), alloc_),
@@ -125,7 +124,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
     shared_ = Move(shared);
     if (kind == ModuleKind::Wasm) {
         numSigs_ = shared_->sigs.length();
-        numFuncSigs_ = shared_->funcSigs.length();
+        module_->numFuncs = shared_->funcSigs.length();
         for (uint32_t i = 0; i < shared_->imports.length(); i++) {
             if (!addImport(*shared_->imports[i].sig, shared_->imports[i].globalDataOffset))
                 return false;
@@ -189,19 +188,13 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
 
     // Add the CodeRange for this function.
-    CacheableChars funcName = StringToNewUTF8CharsZ(cx_, *func.name());
-    if (!funcName)
-        return false;
-    uint32_t nameIndex = module_->funcNames.length();
-    if (!module_->funcNames.emplaceBack(Move(funcName)))
-        return false;
-    if (!module_->codeRanges.emplaceBack(nameIndex, func.line(), results.offsets()))
+    if (!module_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), results.offsets()))
         return false;
 
     // Keep a record of slow functions for printing in the final console message.
     unsigned totalTime = func.generateTime() + results.compileTime();
     if (totalTime >= SlowFunction::msThreshold) {
-        if (!slowFuncs_.emplaceBack(func.name(), totalTime, func.line(), func.column()))
+        if (!slowFuncs_.emplaceBack(func.index(), totalTime, func.lineOrBytecode()))
             return false;
     }
 
@@ -287,10 +280,10 @@ bool
 ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 {
     MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
-    MOZ_ASSERT(funcIndex == numFuncSigs_);
+    MOZ_ASSERT(funcIndex == module_->numFuncs);
     MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
 
-    numFuncSigs_++;
+    module_->numFuncs++;
     shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
     return true;
 }
@@ -430,8 +423,7 @@ ModuleGenerator::startFuncDefs()
 }
 
 bool
-ModuleGenerator::startFuncDef(PropertyName* name, unsigned line, unsigned column,
-                              FunctionGenerator* fg)
+ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 {
     MOZ_ASSERT(startedFuncDefs());
     MOZ_ASSERT(!activeFunc_);
@@ -451,9 +443,7 @@ ModuleGenerator::startFuncDef(PropertyName* name, unsigned line, unsigned column
             return false;
     }
 
-    fg->name_= name;
-    fg->line_ = line;
-    fg->column_ = column;
+    fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
     fg->task_ = task;
     activeFunc_ = fg;
@@ -466,14 +456,12 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
     MOZ_ASSERT(activeFunc_ == fg);
 
     UniqueFuncBytecode func =
-        js::MakeUnique<FuncBytecode>(fg->name_,
-                                     fg->line_,
-                                     fg->column_,
-                                     Move(fg->callSourceCoords_),
-                                     funcIndex,
+        js::MakeUnique<FuncBytecode>(funcIndex,
                                      funcSig(funcIndex),
                                      Move(fg->bytecode_),
                                      Move(fg->localVars_),
+                                     fg->lineOrBytecode_,
+                                     Move(fg->callSourceCoords_),
                                      generateTime);
     if (!func)
         return false;
@@ -607,6 +595,7 @@ ModuleGenerator::defineOutOfBoundsStub(Offsets offsets)
 bool
 ModuleGenerator::finish(HeapUsage heapUsage,
                         CacheableChars filename,
+                        CacheableCharsVector&& prettyFuncNames,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
                         SlowFunctionVector* slowFuncs)
@@ -616,6 +605,7 @@ ModuleGenerator::finish(HeapUsage heapUsage,
 
     module_->heapUsage = heapUsage;
     module_->filename = Move(filename);
+    module_->prettyFuncNames = Move(prettyFuncNames);
 
     if (!GenerateStubs(*this, UsesHeap(heapUsage)))
         return false;

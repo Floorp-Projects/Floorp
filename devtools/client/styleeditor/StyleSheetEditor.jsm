@@ -576,12 +576,8 @@ StyleSheetEditor.prototype = {
    * @param {Number} y
    */
   _highlightSelectorAt: Task.async(function*(x, y) {
-    // Need to catch parsing exceptions as long as bug 1051900 isn't fixed
-    let info;
-    try {
-      let pos = this.sourceEditor.getPositionFromCoords({left: x, top: y});
-      info = this.sourceEditor.getInfoAt(pos);
-    } catch (e) {}
+    let pos = this.sourceEditor.getPositionFromCoords({left: x, top: y});
+    let info = this.sourceEditor.getInfoAt(pos);
     if (!info || info.state !== "selector") {
       return;
     }

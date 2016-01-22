@@ -6,10 +6,17 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(72e64e64-2004-4601-a36a-9d3387d0c525)]
+[scriptable, uuid(0462247e-fe8c-4aa5-b675-3752547e485f)]
 interface nsIDeviceSensorData : nsISupports
 {
   // Keep in sync with hal/HalSensor.h
+
+  // 1. TYPE_ORIENTATION: absolute device orientation, not spec-conform and
+  // deprecated on Android.
+  // 2. TYPE_ROTATION_VECTOR: absolute device orientation affected by drift.
+  // 3. TYPE_GAME_ROTATION_VECTOR: relative device orientation less affected by drift.
+  // Preferred fallback priorities on Android are [3, 2, 1] for the general case
+  // and [2, 1] if absolute orientation (compass heading) is required.
   const unsigned long TYPE_ORIENTATION = 0;
   const unsigned long TYPE_ACCELERATION = 1;
   const unsigned long TYPE_PROXIMITY = 2;
