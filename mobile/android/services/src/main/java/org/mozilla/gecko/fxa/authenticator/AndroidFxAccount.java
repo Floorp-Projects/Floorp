@@ -4,20 +4,19 @@
 
 package org.mozilla.gecko.fxa.authenticator;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.background.ReadingListConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -33,18 +32,16 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.ResultReceiver;
-import android.util.Log;
-import android.support.v4.content.LocalBroadcastManager;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 /**
  * A Firefox Account that stores its details and state as user data attached to
@@ -525,30 +522,24 @@ public class AndroidFxAccount {
   }
 
   /**
-   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
+   * Request an immediate sync.  Use this to sync as soon as possible in response to user action.
+   *
+   * @param stagesToSync stage names to sync; can be null to sync <b>all</b> known stages.
+   * @param stagesToSkip stage names to skip; can be null to skip <b>no</b> known stages.
    */
-  public void requestSync() {
-    requestSync(FirefoxAccounts.SOON, null, null);
+  public void requestImmediateSync(String[] stagesToSync, String[] stagesToSkip) {
+    FirefoxAccounts.requestImmediateSync(getAndroidAccount(), stagesToSync, stagesToSkip);
   }
 
   /**
-   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
+   * Request an eventual sync.  Use this to request the system queue a sync for some time in the
+   * future.
    *
-   * @param syncHints to pass to sync.
+   * @param stagesToSync stage names to sync; can be null to sync <b>all</b> known stages.
+   * @param stagesToSkip stage names to skip; can be null to skip <b>no</b> known stages.
    */
-  public void requestSync(EnumSet<FirefoxAccounts.SyncHint> syncHints) {
-    requestSync(syncHints, null, null);
-  }
-
-  /**
-   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
-   *
-   * @param syncHints to pass to sync.
-   * @param stagesToSync stage names to sync.
-   * @param stagesToSkip stage names to skip.
-   */
-  public void requestSync(EnumSet<FirefoxAccounts.SyncHint> syncHints, String[] stagesToSync, String[] stagesToSkip) {
-    FirefoxAccounts.requestSync(getAndroidAccount(), syncHints, stagesToSync, stagesToSkip);
+  public void requestEventualSync(String[] stagesToSync, String[] stagesToSkip) {
+    FirefoxAccounts.requestEventualSync(getAndroidAccount(), stagesToSync, stagesToSkip);
   }
 
   public synchronized void setState(State state) {

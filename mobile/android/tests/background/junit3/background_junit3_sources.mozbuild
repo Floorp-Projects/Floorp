@@ -24,7 +24,6 @@ background_junit3_sources = [
     'src/org/mozilla/gecko/background/fxa/authenticator/TestAccountPickler.java',
     'src/org/mozilla/gecko/background/fxa/TestAccountLoader.java',
     'src/org/mozilla/gecko/background/fxa/TestBrowserIDKeyPairGeneration.java',
-    'src/org/mozilla/gecko/background/fxa/TestFirefoxAccounts.java',
     'src/org/mozilla/gecko/background/helpers/AndroidSyncTestCase.java',
     'src/org/mozilla/gecko/background/helpers/BackgroundServiceTestCase.java',
     'src/org/mozilla/gecko/background/helpers/DBHelpers.java',
