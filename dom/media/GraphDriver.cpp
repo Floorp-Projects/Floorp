@@ -125,7 +125,7 @@ void GraphDriver::Shutdown()
     LIFECYCLE_LOG("Releasing audio driver off main thread (GraphDriver::Shutdown).\n");
     RefPtr<AsyncCubebTask> releaseEvent =
       new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
-    releaseEvent->Dispatch();
+    releaseEvent->Dispatch(NS_DISPATCH_SYNC);
   } else {
     Stop();
   }

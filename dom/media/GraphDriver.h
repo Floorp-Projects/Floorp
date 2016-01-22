@@ -126,6 +126,7 @@ public:
   virtual void Revive() = 0;
   /* Remove Mixer callbacks when switching */
   virtual void RemoveCallback() = 0;
+  /* Shutdown GraphDriver (synchronously) */
   void Shutdown();
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
@@ -551,11 +552,11 @@ public:
 
   AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation);
 
-  nsresult Dispatch()
+  nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL)
   {
     nsresult rv = EnsureThread();
     if (!NS_FAILED(rv)) {
-      rv = sThreadPool->Dispatch(this, NS_DISPATCH_NORMAL);
+      rv = sThreadPool->Dispatch(this, aFlags);
     }
     return rv;
   }
