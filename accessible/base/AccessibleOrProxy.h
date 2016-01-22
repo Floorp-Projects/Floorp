@@ -73,6 +73,18 @@ public:
     return AsAccessible()->GetChildAt(aIdx);
   }
 
+  /**
+   * Return the first child object.
+   */
+  AccessibleOrProxy FirstChild()
+  {
+    if (IsProxy()) {
+      return AsProxy()->FirstChild();
+    }
+
+    return AsAccessible()->FirstChild();
+  }
+
   role Role() const
   {
     if (IsProxy()) {
