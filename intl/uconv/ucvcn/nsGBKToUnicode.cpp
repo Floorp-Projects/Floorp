@@ -104,8 +104,13 @@ NS_IMETHODIMP nsGB18030ToUnicode::ConvertNoBuff(const char* aSrc,
            if ( ! FIRST_BYTE_IS_SURROGATE(aSrc[0])) 
            {
              // let's call the delegated 4 byte gb18030 converter to convert it
-             if(! Try4BytesDecoder(aSrc, aDest))
+             if (!Try4BytesDecoder(aSrc, aDest)) {
                *aDest = UCS2_NO_MAPPING;
+             }
+             // Swapped character in GB18030-2005
+             if (*aDest == 0x1E3F) {
+               *aDest = 0xE7C7;
+             }
            } else {
               // let's try supplement mapping
              if ( (iDestlen+1) < (*aDestLength) )
