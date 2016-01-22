@@ -2483,76 +2483,6 @@ jit::OffThreadCompilationAvailable(JSContext* cx)
         && CanUseExtraThreads();
 }
 
-// Decide if a transition from interpreter execution to Ion code should occur.
-// May compile or recompile the target JSScript.
-MethodStatus
-jit::CanEnterAtBranch(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode* pc)
-{
-    MOZ_ASSERT(jit::IsIonEnabled(cx));
-    MOZ_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
-    MOZ_ASSERT(LoopEntryCanIonOsr(pc));
-
-    // Skip if the script has been disabled.
-    if (!script->canIonCompile())
-        return Method_Skipped;
-
-    // Skip if the script is being compiled off thread.
-    if (script->isIonCompilingOffThread())
-        return Method_Skipped;
-
-    // Skip if the code is expected to result in a bailout.
-    if (script->hasIonScript() && script->ionScript()->bailoutExpected())
-        return Method_Skipped;
-
-    // Optionally ignore on user request.
-    if (!JitOptions.osr)
-        return Method_Skipped;
-
-    // Mark as forbidden if frame can't be handled.
-    if (!CheckFrame(cx, osrFrame)) {
-        ForbidCompilation(cx, script);
-        return Method_CantCompile;
-    }
-
-    // Check if the jitcode still needs to get linked and do this
-    // to have a valid IonScript.
-    if (script->baselineScript()->hasPendingIonBuilder())
-        LazyLink(cx, script);
-
-    // By default a recompilation doesn't happen on osr mismatch.
-    // Decide if we want to force a recompilation if this happens too much.
-    bool force = false;
-    if (script->hasIonScript() && pc != script->ionScript()->osrPc()) {
-        uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
-        if (count <= JitOptions.osrPcMismatchesBeforeRecompile)
-            return Method_Skipped;
-        force = true;
-    }
-
-    // Attempt compilation.
-    // - Returns Method_Compiled if the right ionscript is present
-    //   (Meaning it was present or a sequantial compile finished)
-    // - Returns Method_Skipped if pc doesn't match
-    //   (This means a background thread compilation with that pc could have started or not.)
-    RootedScript rscript(cx, script);
-    MethodStatus status = Compile(cx, rscript, osrFrame, pc, osrFrame->isConstructing(),
-                                  force);
-    if (status != Method_Compiled) {
-        if (status == Method_CantCompile)
-            ForbidCompilation(cx, script);
-        return status;
-    }
-
-    // Return the compilation was skipped when the osr pc wasn't adjusted.
-    // This can happen when there was still an IonScript available and a
-    // background compilation started, but hasn't finished yet.
-    // Or when we didn't force a recompile.
-    if (script->hasIonScript() && pc != script->ionScript()->osrPc())
-        return Method_Skipped;
-
-    return Method_Compiled;
-}
-
 MethodStatus
 jit::CanEnter(JSContext* cx, RunState& state)
 {
@@ -2627,8 +2557,8 @@ jit::CanEnter(JSContext* cx, RunState& state)
     return Method_Compiled;
 }
 
-MethodStatus
-jit::CompileFunctionForBaseline(JSContext* cx, HandleScript script, BaselineFrame* frame)
+static MethodStatus
+BaselineCanEnterAtEntry(JSContext* cx, HandleScript script, BaselineFrame* frame)
 {
     MOZ_ASSERT(jit::IsIonEnabled(cx));
     MOZ_ASSERT(frame->callee()->nonLazyScript()->canIonCompile());
@@ -2652,6 +2582,157 @@ jit::CompileFunctionForBaseline(JSContext* cx, HandleScript script, BaselineFram
 
     return Method_Compiled;
 }
+
+// Decide if a transition from baseline execution to Ion code should occur.
+// May compile or recompile the target JSScript.
+static MethodStatus
+BaselineCanEnterAtBranch(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode* pc)
+{
+    MOZ_ASSERT(jit::IsIonEnabled(cx));
+    MOZ_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
+    MOZ_ASSERT(LoopEntryCanIonOsr(pc));
+
+    // Skip if the script has been disabled.
+    if (!script->canIonCompile())
+        return Method_Skipped;
+
+    // Skip if the script is being compiled off thread.
+    if (script->isIonCompilingOffThread())
+        return Method_Skipped;
+
+    // Skip if the code is expected to result in a bailout.
+    if (script->hasIonScript() && script->ionScript()->bailoutExpected())
+        return Method_Skipped;
+
+    // Optionally ignore on user request.
+    if (!JitOptions.osr)
+        return Method_Skipped;
+
+    // Mark as forbidden if frame can't be handled.
+    if (!CheckFrame(cx, osrFrame)) {
+        ForbidCompilation(cx, script);
+        return Method_CantCompile;
+    }
+
+    // Check if the jitcode still needs to get linked and do this
+    // to have a valid IonScript.
+    if (script->baselineScript()->hasPendingIonBuilder())
+        LazyLink(cx, script);
+
+    // By default a recompilation doesn't happen on osr mismatch.
+    // Decide if we want to force a recompilation if this happens too much.
+    bool force = false;
+    if (script->hasIonScript() && pc != script->ionScript()->osrPc()) {
+        uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
+        if (count <= JitOptions.osrPcMismatchesBeforeRecompile)
+            return Method_Skipped;
+        force = true;
+    }
+
+    // Attempt compilation.
+    // - Returns Method_Compiled if the right ionscript is present
+    //   (Meaning it was present or a sequantial compile finished)
+    // - Returns Method_Skipped if pc doesn't match
+    //   (This means a background thread compilation with that pc could have started or not.)
+    RootedScript rscript(cx, script);
+    MethodStatus status = Compile(cx, rscript, osrFrame, pc, osrFrame->isConstructing(),
+                                  force);
+    if (status != Method_Compiled) {
+        if (status == Method_CantCompile)
+            ForbidCompilation(cx, script);
+        return status;
+    }
+
+    // Return the compilation was skipped when the osr pc wasn't adjusted.
+    // This can happen when there was still an IonScript available and a
+    // background compilation started, but hasn't finished yet.
+    // Or when we didn't force a recompile.
+    if (script->hasIonScript() && pc != script->ionScript()->osrPc())
+        return Method_Skipped;
+
+    return Method_Compiled;
+}
+
+bool
+jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
+{
+    // A TI OOM will disable TI and Ion.
+    if (!jit::IsIonEnabled(cx))
+        return true;
+
+    RootedScript script(cx, frame->script());
+    bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
+
+    MOZ_ASSERT(!isLoopEntry || LoopEntryCanIonOsr(pc));
+
+    if (!script->canIonCompile()) {
+        // TODO: ASSERT that ion-compilation-disabled checker stub doesn't exist.
+        // TODO: Clear all optimized stubs.
+        // TODO: Add a ion-compilation-disabled checker IC stub
+        script->resetWarmUpCounter();
+        return true;
+    }
+
+    MOZ_ASSERT(!script->isIonCompilingOffThread());
+
+    // If Ion script exists, but PC is not at a loop entry, then Ion will be entered for
+    // this script at an appropriate LOOPENTRY or the next time this function is called.
+    if (script->hasIonScript() && !isLoopEntry) {
+        JitSpew(JitSpew_BaselineOSR, "IonScript exists, but not at loop entry!");
+        // TODO: ASSERT that a ion-script-already-exists checker stub doesn't exist.
+        // TODO: Clear all optimized stubs.
+        // TODO: Add a ion-script-already-exists checker stub.
+        return true;
+    }
+
+    // Ensure that Ion-compiled code is available.
+    JitSpew(JitSpew_BaselineOSR,
+            "WarmUpCounter for %s:%" PRIuSIZE " reached %d at pc %p, trying to switch to Ion!",
+            script->filename(), script->lineno(), (int) script->getWarmUpCount(), (void*) pc);
+
+    MethodStatus stat;
+    if (isLoopEntry) {
+        MOZ_ASSERT(LoopEntryCanIonOsr(pc));
+        JitSpew(JitSpew_BaselineOSR, "  Compile at loop entry!");
+        stat = BaselineCanEnterAtBranch(cx, script, frame, pc);
+    } else if (frame->isFunctionFrame()) {
+        JitSpew(JitSpew_BaselineOSR, "  Compile function from top for later entry!");
+        stat = BaselineCanEnterAtEntry(cx, script, frame);
+    } else {
+        return true;
+    }
+
+    if (stat == Method_Error) {
+        JitSpew(JitSpew_BaselineOSR, "  Compile with Ion errored!");
+        return false;
+    }
+
+    if (stat == Method_CantCompile)
+        JitSpew(JitSpew_BaselineOSR, "  Can't compile with Ion!");
+    else if (stat == Method_Skipped)
+        JitSpew(JitSpew_BaselineOSR, "  Skipped compile with Ion!");
+    else if (stat == Method_Compiled)
+        JitSpew(JitSpew_BaselineOSR, "  Compiled with Ion!");
+    else
+        MOZ_CRASH("Invalid MethodStatus!");
+
+    // Failed to compile.  Reset warm-up counter and return.
+    if (stat != Method_Compiled) {
+        // TODO: If stat == Method_CantCompile, insert stub that just skips the
+        // warm-up counter entirely, instead of resetting it.
+        bool bailoutExpected = script->hasIonScript() && script->ionScript()->bailoutExpected();
+        if (stat == Method_CantCompile || bailoutExpected) {
+            JitSpew(JitSpew_BaselineOSR, "  Reset WarmUpCounter cantCompile=%s bailoutExpected=%s!",
+                    stat == Method_CantCompile ? "yes" : "no",
+                    bailoutExpected ? "yes" : "no");
+            script->resetWarmUpCounter();
+        }
+        return true;
+    }
+
+    return true;
+}
+
 
 MethodStatus
 jit::Recompile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode* osrPc,

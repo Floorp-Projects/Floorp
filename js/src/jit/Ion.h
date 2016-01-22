@@ -83,10 +83,9 @@ void SetJitContext(JitContext* ctx);
 
 bool CanIonCompileScript(JSContext* cx, JSScript* script, bool osr);
 
-MethodStatus CanEnterAtBranch(JSContext* cx, HandleScript script,
-                              BaselineFrame* frame, jsbytecode* pc);
+bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode* pc);
+
 MethodStatus CanEnter(JSContext* cx, RunState& state);
-MethodStatus CompileFunctionForBaseline(JSContext* cx, HandleScript script, BaselineFrame* frame);
 MethodStatus CanEnterUsingFastInvoke(JSContext* cx, HandleScript script, uint32_t numActualArgs);
 
 MethodStatus

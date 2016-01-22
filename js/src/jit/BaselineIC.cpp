@@ -50,66 +50,6 @@ namespace jit {
 // WarmUpCounter_Fallback
 //
 
-static bool
-EnsureCanEnterIon(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame* frame,
-                  HandleScript script, jsbytecode* pc, void** jitcodePtr)
-{
-    MOZ_ASSERT(jitcodePtr);
-    MOZ_ASSERT(!*jitcodePtr);
-
-    bool isLoopEntry = (JSOp(*pc) == JSOP_LOOPENTRY);
-
-    MethodStatus stat;
-    if (isLoopEntry) {
-        MOZ_ASSERT(LoopEntryCanIonOsr(pc));
-        JitSpew(JitSpew_BaselineOSR, "  Compile at loop entry!");
-        stat = CanEnterAtBranch(cx, script, frame, pc);
-    } else if (frame->isFunctionFrame()) {
-        JitSpew(JitSpew_BaselineOSR, "  Compile function from top for later entry!");
-        stat = CompileFunctionForBaseline(cx, script, frame);
-    } else {
-        return true;
-    }
-
-    if (stat == Method_Error) {
-        JitSpew(JitSpew_BaselineOSR, "  Compile with Ion errored!");
-        return false;
-    }
-
-    if (stat == Method_CantCompile)
-        JitSpew(JitSpew_BaselineOSR, "  Can't compile with Ion!");
-    else if (stat == Method_Skipped)
-        JitSpew(JitSpew_BaselineOSR, "  Skipped compile with Ion!");
-    else if (stat == Method_Compiled)
-        JitSpew(JitSpew_BaselineOSR, "  Compiled with Ion!");
-    else
-        MOZ_CRASH("Invalid MethodStatus!");
-
-    // Failed to compile.  Reset warm-up counter and return.
-    if (stat != Method_Compiled) {
-        // TODO: If stat == Method_CantCompile, insert stub that just skips the
-        // warm-up counter entirely, instead of resetting it.
-        bool bailoutExpected = script->hasIonScript() && script->ionScript()->bailoutExpected();
-        if (stat == Method_CantCompile || bailoutExpected) {
-            JitSpew(JitSpew_BaselineOSR, "  Reset WarmUpCounter cantCompile=%s bailoutExpected=%s!",
-                    stat == Method_CantCompile ? "yes" : "no",
-                    bailoutExpected ? "yes" : "no");
-            script->resetWarmUpCounter();
-        }
-        return true;
-    }
-
-    if (isLoopEntry) {
-        IonScript* ion = script->ionScript();
-        MOZ_ASSERT(cx->runtime()->spsProfiler.enabled() == ion->hasProfilingInstrumentation());
-        MOZ_ASSERT(ion->osrPc() == pc);
-
-        JitSpew(JitSpew_BaselineOSR, "  OSR possible!");
-        *jitcodePtr = ion->method()->raw() + ion->osrEntryOffset();
-    }
-
-    return true;
-}
 
 //
 // The following data is kept in a temporary heap-allocated buffer, stored in
@@ -184,56 +124,33 @@ PrepareOsrTempData(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame*
 }
 
 static bool
-DoWarmUpCounterFallback(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_Fallback* stub,
-                        IonOsrTempData** infoPtr)
+DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_Fallback* stub,
+                           IonOsrTempData** infoPtr)
 {
     MOZ_ASSERT(infoPtr);
     *infoPtr = nullptr;
 
-    // A TI OOM will disable TI and Ion.
-    if (!jit::IsIonEnabled(cx))
-        return true;
-
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
-    bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
+    MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
 
-    MOZ_ASSERT(!isLoopEntry || LoopEntryCanIonOsr(pc));
+    FallbackICSpew(cx, stub, "WarmUpCounter(%d)", int(script->pcToOffset(pc)));
 
-    FallbackICSpew(cx, stub, "WarmUpCounter(%d)", isLoopEntry ? int(script->pcToOffset(pc)) : int(-1));
-
-    if (!script->canIonCompile()) {
-        // TODO: ASSERT that ion-compilation-disabled checker stub doesn't exist.
-        // TODO: Clear all optimized stubs.
-        // TODO: Add a ion-compilation-disabled checker IC stub
-        script->resetWarmUpCounter();
-        return true;
-    }
-
-    MOZ_ASSERT(!script->isIonCompilingOffThread());
-
-    // If Ion script exists, but PC is not at a loop entry, then Ion will be entered for
-    // this script at an appropriate LOOPENTRY or the next time this function is called.
-    if (script->hasIonScript() && !isLoopEntry) {
-        JitSpew(JitSpew_BaselineOSR, "IonScript exists, but not at loop entry!");
-        // TODO: ASSERT that a ion-script-already-exists checker stub doesn't exist.
-        // TODO: Clear all optimized stubs.
-        // TODO: Add a ion-script-already-exists checker stub.
-        return true;
-    }
-
-    // Ensure that Ion-compiled code is available.
-    JitSpew(JitSpew_BaselineOSR,
-            "WarmUpCounter for %s:%" PRIuSIZE " reached %d at pc %p, trying to switch to Ion!",
-            script->filename(), script->lineno(), (int) script->getWarmUpCount(), (void*) pc);
-    void* jitcode = nullptr;
-    if (!EnsureCanEnterIon(cx, stub, frame, script, pc, &jitcode))
+    if (!IonCompileScriptForBaseline(cx, frame, pc))
         return false;
 
-    // Jitcode should only be set here if not at loop entry.
-    MOZ_ASSERT_IF(!isLoopEntry, !jitcode);
-    if (!jitcode)
+    if (!script->hasIonScript() || script->ionScript()->osrPc() != pc ||
+        script->ionScript()->bailoutExpected())
+    {
         return true;
+    }
+
+    IonScript* ion = script->ionScript();
+    MOZ_ASSERT(cx->runtime()->spsProfiler.enabled() == ion->hasProfilingInstrumentation());
+    MOZ_ASSERT(ion->osrPc() == pc);
+
+    JitSpew(JitSpew_BaselineOSR, "  OSR possible!");
+    void* jitcode = ion->method()->raw() + ion->osrEntryOffset();
 
     // Prepare the temporary heap copy of the fake InterpreterFrame and actual args list.
     JitSpew(JitSpew_BaselineOSR, "Got jitcode.  Preparing for OSR into ion.");
@@ -245,10 +162,10 @@ DoWarmUpCounterFallback(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_Fal
     return true;
 }
 
-typedef bool (*DoWarmUpCounterFallbackFn)(JSContext*, BaselineFrame*,
-                                          ICWarmUpCounter_Fallback*, IonOsrTempData** infoPtr);
-static const VMFunction DoWarmUpCounterFallbackInfo =
-    FunctionInfo<DoWarmUpCounterFallbackFn>(DoWarmUpCounterFallback);
+typedef bool (*DoWarmUpCounterFallbackOSRFn)(JSContext*, BaselineFrame*,
+                                             ICWarmUpCounter_Fallback*, IonOsrTempData** infoPtr);
+static const VMFunction DoWarmUpCounterFallbackOSRInfo =
+    FunctionInfo<DoWarmUpCounterFallbackOSRFn>(DoWarmUpCounterFallbackOSR);
 
 bool
 ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
@@ -259,7 +176,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     enterStubFrame(masm, R1.scratchReg());
 
     Label noCompiledCode;
-    // Call DoWarmUpCounterFallback to compile/check-for Ion-compiled function
+    // Call DoWarmUpCounterFallbackOSR to compile/check-for Ion-compiled function
     {
         // Push IonOsrTempData pointer storage
         masm.subFromStackPtr(Imm32(sizeof(void*)));
@@ -270,7 +187,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
         pushStubPayload(masm, R0.scratchReg());
 
-        if (!callVM(DoWarmUpCounterFallbackInfo, masm))
+        if (!callVM(DoWarmUpCounterFallbackOSRInfo, masm))
             return false;
 
         // Pop IonOsrTempData pointer.
