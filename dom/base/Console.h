@@ -14,6 +14,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsPIDOMWindow.h"
@@ -29,12 +30,13 @@ struct ConsoleStackEntry;
 
 class Console final : public nsIObserver
                     , public nsWrapperCache
+                    , public nsSupportsWeakReference
 {
   ~Console();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Console)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Console, nsIObserver)
   NS_DECL_NSIOBSERVER
 
   explicit Console(nsPIDOMWindow* aWindow);

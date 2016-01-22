@@ -989,7 +989,13 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
     }
 
     // Clear!
-    mContext->ForceClearFramebufferWithDefaultValues(clearBits, false);
+    {
+        // This FB maybe bind to GL_READ_FRAMEBUFFER and glClear only
+        // clear GL_DRAW_FRAMEBUFFER. So bind FB to GL_DRAW_FRAMEBUFFER
+        // here.
+        gl::ScopedBindFramebuffer autoFB(mContext->gl, mGLName);
+        mContext->ForceClearFramebufferWithDefaultValues(clearBits, false);
+    }
 
     if (hasDrawBuffers) {
         fnDrawBuffers(mDrawBuffers);

@@ -33,7 +33,11 @@ task:
   extra:
     chunks:
       total: 20
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupName: XPCShell
       symbol: X{{chunk}}
       productName: b2g
+      tier: 2
