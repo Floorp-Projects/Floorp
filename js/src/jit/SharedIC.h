@@ -240,6 +240,10 @@ class ICEntry
         // the prologue).
         Kind_NonOpCallVM,
 
+        // A fake IC entry for returning from a callVM to after the
+        // warmup counter.
+        Kind_WarmupCounter,
+
         // A fake IC entry for returning from a callVM to the interrupt
         // handler via the over-recursion check on function entry.
         Kind_StackCheck,
