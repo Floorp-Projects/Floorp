@@ -216,7 +216,10 @@ var ExtensionManager;
 // Scope in which extension content script code can run. It uses
 // Cu.Sandbox to run the code. There is a separate scope for each
 // frame.
-function ExtensionContext(extensionId, contentWindow) {
+function ExtensionContext(extensionId, contentWindow, contextOptions = {}) {
+  let { isExtensionPage } = contextOptions;
+
+  this.isExtensionPage = isExtensionPage;
   this.extension = ExtensionManager.get(extensionId);
   this.extensionId = extensionId;
   this.contentWindow = contentWindow;
@@ -243,12 +246,27 @@ function ExtensionContext(extensionId, contentWindow) {
     prin = [contentPrincipal, extensionPrincipal];
   }
 
-  this.sandbox = Cu.Sandbox(prin, {
-    sandboxPrototype: contentWindow,
-    wantXrays: true,
-    isWebExtensionContentScript: true,
-    wantGlobalProperties: ["XMLHttpRequest"],
-  });
+  if (isExtensionPage) {
+    if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
+      throw new Error("Invalid target window for this extension context");
+    }
+    // This is an iframe with content script API enabled and its principal should be the
+    // contentWindow itself. (we create a sandbox with the contentWindow as principal and with X-rays disabled
+    // because it enables us to create the APIs object in this sandbox object and then copying it
+    // into the iframe's window, see Bug 1214658 for rationale)
+    this.sandbox = Cu.Sandbox(contentWindow, {
+      sandboxPrototype: contentWindow,
+      wantXrays: false,
+      isWebExtensionContentScript: true,
+    });
+  } else {
+    this.sandbox = Cu.Sandbox(prin, {
+      sandboxPrototype: contentWindow,
+      wantXrays: true,
+      isWebExtensionContentScript: true,
+      wantGlobalProperties: ["XMLHttpRequest"],
+    });
+  }
 
   let delegate = {
     getSender(context, target, sender) {
@@ -265,12 +283,19 @@ function ExtensionContext(extensionId, contentWindow) {
   let filter = {extensionId, frameId};
   this.messenger = new Messenger(this, broker, sender, filter, delegate);
 
-  let chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
+  this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
 
   // Sandboxes don't get Xrays for some weird compatibility
   // reason. However, we waive here anyway in case that changes.
-  Cu.waiveXrays(this.sandbox).chrome = Cu.waiveXrays(this.sandbox).browser;
-  injectAPI(api(this), chromeObj);
+  Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
+
+  injectAPI(api(this), this.chromeObj);
+
+  // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
+  if (isExtensionPage) {
+    Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
+    Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
+  }
 }
 
 ExtensionContext.prototype = {
@@ -294,7 +319,17 @@ ExtensionContext.prototype = {
     for (let obj of this.onClose) {
       obj.close();
     }
+
+    // Overwrite the content script APIs with an empty object if the APIs objects are still
+    // defined in the content window (See Bug 1214658 for rationale).
+    if (this.isExtensionPage && !Cu.isDeadWrapper(this.contentWindow) &&
+        Cu.waiveXrays(this.contentWindow).browser === this.chromeObj) {
+      Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
+      Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
+    }
+
     Cu.nukeSandbox(this.sandbox);
+    this.sandbox = null;
   },
 };
 
@@ -310,7 +345,10 @@ var DocumentManager = {
   extensionCount: 0,
 
   // Map[windowId -> Map[extensionId -> ExtensionContext]]
-  windows: new Map(),
+  contentScriptWindows: new Map(),
+
+  // Map[windowId -> ExtensionContext]
+  extensionPageWindows: new Map(),
 
   init() {
     Services.obs.addObserver(this, "document-element-inserted", false);
@@ -348,23 +386,40 @@ var DocumentManager = {
         return;
       }
 
+      // Enable the content script APIs should be available in subframes' window
+      // if it is recognized as a valid addon id (see Bug 1214658 for rationale).
+      const { CONTENTSCRIPT_PRIVILEGES } = ExtensionManagement.API_LEVELS;
+      let extensionId = ExtensionManagement.getAddonIdForWindow(window);
+
+      if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES &&
+          ExtensionManager.get(extensionId)) {
+        DocumentManager.getExtensionPageContext(extensionId, window);
+      }
+
       this.trigger("document_start", window);
       /* eslint-disable mozilla/balanced-listeners */
       window.addEventListener("DOMContentLoaded", this, true);
       window.addEventListener("load", this, true);
       /* eslint-enable mozilla/balanced-listeners */
     } else if (topic == "inner-window-destroyed") {
-      let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (!this.windows.has(id)) {
-        return;
+      let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+
+      // Close any existent content-script context for the destroyed window.
+      if (this.contentScriptWindows.has(windowId)) {
+        let extensions = this.contentScriptWindows.get(windowId);
+        for (let [, context] of extensions) {
+          context.close();
+        }
+
+        this.contentScriptWindows.delete(windowId);
       }
 
-      let extensions = this.windows.get(id);
-      for (let [, context] of extensions) {
+      // Close any existent iframe extension page context for the destroyed window.
+      if (this.extensionPageWindows.has(windowId)) {
+        let context = this.extensionWindows.get(windowId);
         context.close();
+        this.extensionPageWindows.delete(windowId);
       }
-
-      this.windows.delete(id);
     }
   },
 
@@ -389,7 +444,7 @@ var DocumentManager = {
 
   executeScript(global, extensionId, script) {
     let window = global.content;
-    let context = this.getContext(extensionId, window);
+    let context = this.getContentScriptContext(extensionId, window);
     if (!context) {
       return;
     }
@@ -413,17 +468,31 @@ var DocumentManager = {
     }
   },
 
-  getContext(extensionId, window) {
+  getContentScriptContext(extensionId, window) {
     let winId = windowId(window);
-    if (!this.windows.has(winId)) {
-      this.windows.set(winId, new Map());
+    if (!this.contentScriptWindows.has(winId)) {
+      this.contentScriptWindows.set(winId, new Map());
     }
-    let extensions = this.windows.get(winId);
+
+    let extensions = this.contentScriptWindows.get(winId);
     if (!extensions.has(extensionId)) {
       let context = new ExtensionContext(extensionId, window);
       extensions.set(extensionId, context);
     }
+
     return extensions.get(extensionId);
+  },
+
+  getExtensionPageContext(extensionId, window) {
+    let winId = windowId(window);
+
+    let context = this.extensionPageWindows.get(winId);
+    if (!context) {
+      let context = new ExtensionContext(extensionId, window, { isExtensionPage: true });
+      this.extensionPageWindows.set(winId, context);
+    }
+
+    return context;
   },
 
   startupExtension(extensionId) {
@@ -440,7 +509,7 @@ var DocumentManager = {
       for (let [window, state] of this.enumerateWindows(global.docShell)) {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
-            let context = this.getContext(extensionId, window);
+            let context = this.getContentScriptContext(extensionId, window);
             context.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state));
           }
         }
@@ -449,11 +518,20 @@ var DocumentManager = {
   },
 
   shutdownExtension(extensionId) {
-    for (let [, extensions] of this.windows) {
+    // Clean up content-script contexts on extension shutdown.
+    for (let [, extensions] of this.contentScriptWindows) {
       let context = extensions.get(extensionId);
       if (context) {
         context.close();
         extensions.delete(extensionId);
+      }
+    }
+
+    // Clean up iframe extension page contexts on extension shutdown.
+    for (let [winId, context] of this.extensionPageWindows) {
+      if (context.extensionId == extensionId) {
+        context.close();
+        this.extensionPageWindows.delete(winId);
       }
     }
 
@@ -468,7 +546,7 @@ var DocumentManager = {
     for (let [extensionId, extension] of ExtensionManager.extensions) {
       for (let script of extension.scripts) {
         if (script.matches(window)) {
-          let context = this.getContext(extensionId, window);
+          let context = this.getContentScriptContext(extensionId, window);
           context.execute(script, scheduled => scheduled == state);
         }
       }
