@@ -1088,11 +1088,16 @@ GetAccessibleWrap(AtkObject* aAtkObj)
 ProxyAccessible*
 GetProxy(AtkObject* aObj)
 {
-  if (!aObj || !IS_MAI_OBJECT(aObj) ||
-      !MAI_ATK_OBJECT(aObj)->accWrap.IsProxy())
+  return GetInternalObj(aObj).AsProxy();
+}
+
+AccessibleOrProxy
+GetInternalObj(AtkObject* aObj)
+{
+  if (!aObj || !IS_MAI_OBJECT(aObj))
     return nullptr;
 
-  return MAI_ATK_OBJECT(aObj)->accWrap.AsProxy();
+  return MAI_ATK_OBJECT(aObj)->accWrap;
 }
 
 AtkObject*
