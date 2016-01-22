@@ -812,6 +812,7 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
     MakeContextCurrent();
 
     switch (pname) {
+        case LOCAL_GL_RENDERBUFFER_SAMPLES:
         case LOCAL_GL_RENDERBUFFER_WIDTH:
         case LOCAL_GL_RENDERBUFFER_HEIGHT:
         case LOCAL_GL_RENDERBUFFER_RED_SIZE:

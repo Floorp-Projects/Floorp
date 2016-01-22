@@ -62,6 +62,15 @@ test path(s):
 Please check spelling and make sure there are mochitests living there.
 '''.lstrip()
 
+ROBOCOP_TESTS_NOT_FOUND = '''
+The robocop command could not find any tests under the following
+test path(s):
+
+{}
+
+Please check spelling and make sure the named tests exist.
+'''.lstrip()
+
 NOW_RUNNING = '''
 ######
 ### Now running mochitest-{}.
@@ -593,6 +602,11 @@ class RobocopCommands(MachCommandBase):
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=self._mach_context.cwd,
                                             flavor='instrumentation', subsuite='robocop'))
+
+        if len(tests) < 1:
+            print(ROBOCOP_TESTS_NOT_FOUND.format('\n'.join(
+                sorted(list(test_paths)))))
+            return 1
 
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)

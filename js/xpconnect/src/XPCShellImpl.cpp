@@ -98,6 +98,20 @@ private:
     nsCOMPtr<nsIFile> mAppFile;
 };
 
+#ifdef XP_WIN
+class MOZ_STACK_CLASS AutoAudioSession
+{
+public:
+    AutoAudioSession() {
+        widget::StartAudioSession();
+    }
+
+    ~AutoAudioSession() {
+        widget::StopAudioSession();
+    }
+};
+#endif
+
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 
 #define EXITCODE_RUNTIME_ERROR 3
@@ -1501,7 +1515,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 #ifdef XP_WIN
         // Plugin may require audio session if installed plugin can initialize
         // asynchronized.
-        widget::StartAudioSession();
+        AutoAudioSession audioSession;
 #endif
 
         {
@@ -1571,9 +1585,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
             JS_GC(rt);
         }
         JS_GC(rt);
-#ifdef XP_WIN
-        widget::StopAudioSession();
-#endif
     } // this scopes the nsCOMPtrs
 
     if (!XRE_ShutdownTestShell())
