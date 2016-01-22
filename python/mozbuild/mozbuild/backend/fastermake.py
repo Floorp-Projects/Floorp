@@ -116,7 +116,6 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
         mk.create_rule(['default'])
         mk.add_statement('TOPSRCDIR = %s' % self.environment.topsrcdir)
         mk.add_statement('TOPOBJDIR = %s' % self.environment.topobjdir)
-        mk.add_statement('BACKEND = %s' % self._backend_output_list_file)
         if not self._has_xpidl:
             mk.add_statement('NO_XPIDL = 1')
 
@@ -149,10 +148,6 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
         for target, deps in self._dependencies.iteritems():
             mk.create_rule([target]).add_dependencies(
                 '$(TOPOBJDIR)/%s' % d for d in deps)
-
-        # Add backend dependencies:
-        mk.create_rule([self._backend_output_list_file]).add_dependencies(
-            self.backend_input_files)
 
         mk.add_statement('include $(TOPSRCDIR)/config/faster/rules.mk')
 
