@@ -1807,7 +1807,8 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
           continue;
         }
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-        RefPtr<RemoteTrackSource> source = new RemoteTrackSource(principal);
+        RefPtr<RemoteTrackSource> source =
+          new RemoteTrackSource(principal, nsString());
 #else
         RefPtr<MediaStreamTrackSource> source = new MediaStreamTrackSource();
 #endif
@@ -1817,13 +1818,11 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
           domTrack =
             info->GetMediaStream()->CreateDOMTrack(trackID,
                                                    MediaSegment::AUDIO,
-                                                   nsString(),
                                                    source);
         } else {
           domTrack =
             info->GetMediaStream()->CreateDOMTrack(trackID,
                                                    MediaSegment::VIDEO,
-                                                   nsString(),
                                                    source);
         }
         info->AddTrack(track->GetTrackId(), domTrack);

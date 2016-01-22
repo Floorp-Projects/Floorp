@@ -522,7 +522,6 @@ public:
    * Creates a MediaStreamTrack, adds it to mTracks and returns it.
    */
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
-                                   const nsString& aLabel,
                                    MediaStreamTrackSource* aSource);
 
   /**

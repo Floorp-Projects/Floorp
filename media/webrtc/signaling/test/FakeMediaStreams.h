@@ -537,7 +537,7 @@ public:
 
   Fake_MediaStreamTrack*
   CreateDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType,
-                 const nsString& aLabel, Fake_MediaStreamTrackSource* aSource)
+                 Fake_MediaStreamTrackSource* aSource)
   {
     switch(aType) {
       case mozilla::MediaSegment::AUDIO: {
