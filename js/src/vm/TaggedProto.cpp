@@ -29,3 +29,25 @@ InternalGCMethods<TaggedProto>::postBarrier(TaggedProto* vp, TaggedProto prev, T
 }
 
 } // namespace js
+
+HashNumber
+js::TaggedProto::hashCode() const
+{
+    if (isLazy())
+        return HashNumber(1);
+    JSObject* obj = toObjectOrNull();
+    if (!obj)
+        return HashNumber(0);
+    return obj->zone()->getHashCodeInfallible(obj);
+}
+
+uint64_t
+js::TaggedProto::uniqueId() const
+{
+    if (isLazy())
+        return uint64_t(1);
+    JSObject* obj = toObjectOrNull();
+    if (!obj)
+        return uint64_t(0);
+    return obj->zone()->getUniqueIdInfallible(obj);
+}
