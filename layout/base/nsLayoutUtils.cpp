@@ -1176,8 +1176,45 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   }
 
   // Display port margins changing means that the set of visible images may
-  // have drastically changed. Schedule an update.
-  aPresShell->ScheduleImageVisibilityUpdate();
+  // have drastically changed. Check if we should schedule an update.
+  nsIFrame* frame = GetScrollFrameFromContent(aContent);
+  nsIScrollableFrame* scrollableFrame = frame ? frame->GetScrollTargetFrame() : nullptr;
+  if (!scrollableFrame) {
+    return true;
+  }
+
+  nsRect oldDisplayPort;
+  bool hadDisplayPort =
+    scrollableFrame->GetDisplayPortAtLastImageVisibilityUpdate(&oldDisplayPort);
+
+  nsRect newDisplayPort;
+  Unused << GetDisplayPort(aContent, &newDisplayPort);
+
+  bool needImageVisibilityUpdate = !hadDisplayPort;
+  // Check if the total size has changed by a large factor.
+  if (!needImageVisibilityUpdate) {
+    if ((newDisplayPort.width > 2 * oldDisplayPort.width) ||
+        (oldDisplayPort.width > 2 * newDisplayPort.width) ||
+        (newDisplayPort.height > 2 * oldDisplayPort.height) ||
+        (oldDisplayPort.height > 2 * newDisplayPort.height)) {
+      needImageVisibilityUpdate = true;
+    }
+  }
+  // Check if it's moved by a significant amount.
+  if (!needImageVisibilityUpdate) {
+    if (nsRect* baseData = static_cast<nsRect*>(aContent->GetProperty(nsGkAtoms::DisplayPortBase))) {
+      nsRect base = *baseData;
+      if ((std::abs(newDisplayPort.X() - oldDisplayPort.X()) > base.width) ||
+          (std::abs(newDisplayPort.XMost() - oldDisplayPort.XMost()) > base.width) ||
+          (std::abs(newDisplayPort.Y() - oldDisplayPort.Y()) > base.height) ||
+          (std::abs(newDisplayPort.YMost() - oldDisplayPort.YMost()) > base.height)) {
+        needImageVisibilityUpdate = true;
+      }
+    }
+  }
+  if (needImageVisibilityUpdate) {
+    aPresShell->ScheduleImageVisibilityUpdate();
+  }
 
   return true;
 }
