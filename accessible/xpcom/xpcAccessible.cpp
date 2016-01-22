@@ -139,7 +139,7 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
     children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)), false);
   }
 
-  NS_ADDREF(*aChildren = children);
+  children.forget(aChildren);
   return NS_OK;
 }
 
