@@ -2274,6 +2274,13 @@ class MOZ_STACK_CLASS ModuleValidator
                 return false;
         }
 
+        CacheableCharsVector funcNames;
+        for (const Func* func : functions_) {
+            CacheableChars funcName = StringToNewUTF8CharsZ(cx_, *func->name());
+            if (!funcName || !funcNames.emplaceBack(Move(funcName)))
+                return false;
+        }
+
         uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
         module_->srcLength = endBeforeCurly - module_->srcStart;
 
@@ -2284,7 +2291,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(heap, Move(filename), &base, &link, slowFuncs))
+        if (!mg_.finish(heap, Move(filename), Move(funcNames), &base, &link, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));
@@ -2633,11 +2640,11 @@ class MOZ_STACK_CLASS FunctionValidator
     ExclusiveContext* cx() const      { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
 
-    bool init(PropertyName* name, unsigned line, unsigned column) {
+    bool init(PropertyName* name, unsigned line) {
         if (!locals_.init() || !labels_.init())
             return false;
 
-        if (!m_.mg().startFuncDef(name, line, column, &fg_))
+        if (!m_.mg().startFuncDef(line, &fg_))
             return false;
 
         encoder_.emplace(fg_.bytecode());
@@ -6706,12 +6713,12 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt)
 }
 
 static bool
-ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line, unsigned* column)
+ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
 {
     TokenStream& tokenStream = m.tokenStream();
 
     tokenStream.consumeKnownToken(TOK_FUNCTION, TokenStream::Operand);
-    tokenStream.srcCoords.lineNumAndColumnIndex(tokenStream.currentToken().pos.end, line, column);
+    *line = tokenStream.srcCoords.lineNum(tokenStream.currentToken().pos.end);
 
     RootedPropertyName name(m.cx());
 
@@ -6778,15 +6785,15 @@ CheckFunction(ModuleValidator& m)
     int64_t before = PRMJ_Now();
 
     ParseNode* fn = nullptr;
-    unsigned line = 0, column = 0;
-    if (!ParseFunction(m, &fn, &line, &column))
+    unsigned line = 0;
+    if (!ParseFunction(m, &fn, &line))
         return false;
 
     if (!CheckFunctionHead(m, fn))
         return false;
 
     FunctionValidator f(m, fn);
-    if (!f.init(FunctionName(fn), line, column))
+    if (!f.init(FunctionName(fn), line))
         return m.fail(fn, "internal compiler failure (probably out of memory)");
 
     ParseNode* stmtIter = ListHead(FunctionStatementList(fn));
@@ -8279,12 +8286,11 @@ BuildConsoleMessage(ExclusiveContext* cx, AsmJSModule& module, unsigned time,
 
         for (unsigned i = 0; i < slowFuncs.length(); i++) {
             const SlowFunction& func = slowFuncs[i];
-            JSAutoByteString name;
-            if (!AtomToPrintableString(cx, func.name, &name))
-                return nullptr;
-
-            slowText.reset(JS_smprintf("%s%s:%u:%u (%ums)%s", slowText.get(),
-                                       name.ptr(), func.line, func.column, func.ms,
+            slowText.reset(JS_smprintf("%s%s:%u (%ums)%s",
+                                       slowText.get(),
+                                       module.prettyFuncName(func.index),
+                                       func.lineOrBytecode,
+                                       func.ms,
                                        i+1 < slowFuncs.length() ? ", " : ""));
             if (!slowText)
                 return nullptr;
