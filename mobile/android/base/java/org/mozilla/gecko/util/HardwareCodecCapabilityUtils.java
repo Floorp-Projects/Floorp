@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 
 import android.media.MediaCodecInfo;
@@ -35,6 +36,21 @@ public final class HardwareCodecCapabilityUtils {
     COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m
   };
 
+  @WrapForJNI(allowMultithread = true, stubName = "FindDecoderCodecInfoForMimeType")
+  public static boolean findDecoderCodecInfoForMimeType(String aMimeType) {
+    for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
+      MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+      if (info.isEncoder()) {
+        continue;
+      }
+      for (String mimeType : info.getSupportedTypes()) {
+        if (mimeType.equals(aMimeType)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   public static boolean getHWEncoderCapability() {
     if (Versions.feature20Plus) {
