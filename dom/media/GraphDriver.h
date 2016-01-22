@@ -196,16 +196,6 @@ public:
 
   virtual bool OnThread() = 0;
 
-  // XXX Thread-safety! Do these via commands to avoid TSAN issues
-  // and crashes!!!
-  virtual void SetInputListener(MediaStreamListener *aListener) {
-    mAudioInput = aListener;
-  }
-  // XXX do we need the param?  probably no
-  virtual void RemoveInputListener(MediaStreamListener *aListener) {
-    mAudioInput = nullptr;
-  }
-
 protected:
   GraphTime StateComputedTime() const;
 
@@ -235,9 +225,6 @@ protected:
   };
   // This must be access with the monitor.
   WaitState mWaitState;
-
-  // Callback for mic data, if any
-  RefPtr<MediaStreamListener> mAudioInput;
 
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
@@ -501,8 +488,6 @@ private:
    * This is synchronized by the Graph's monitor.
    * */
   bool mStarted;
-  /* Listener for mic input, if any. */
-  RefPtr<MediaStreamListener> mAudioInput;
 
   struct AutoInCallback
   {
