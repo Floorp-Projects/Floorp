@@ -4,7 +4,7 @@
 "use strict";
 
 const { L10N } = require("devtools/client/performance/modules/global");
-const { Formatters } = require("devtools/client/performance/modules/logic/marker-utils");
+const { Formatters } = require("devtools/client/performance/modules/logic/marker-formatters");
 
 /**
  * A simple schema for mapping markers to the timeline UI. The keys correspond

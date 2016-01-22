@@ -603,15 +603,10 @@ typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
 class FuncBytecode
 {
     // Function metadata
-    SourceCoordsVector callSourceCoords_;
     const DeclaredSig& sig_;
     ValTypeVector locals_;
-
-    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
-    // asm.js compilation.
-    PropertyName* name_;
-    unsigned line_;
-    unsigned column_;
+    uint32_t lineOrBytecode_;
+    SourceCoordsVector callSourceCoords_;
 
     // Compilation bookkeeping
     uint32_t index_;
@@ -620,21 +615,17 @@ class FuncBytecode
     UniqueBytecode bytecode_;
 
   public:
-    FuncBytecode(PropertyName* name,
-                 unsigned line,
-                 unsigned column,
-                 SourceCoordsVector&& sourceCoords,
-                 uint32_t index,
+    FuncBytecode(uint32_t index,
                  const DeclaredSig& sig,
                  UniqueBytecode bytecode,
                  ValTypeVector&& locals,
+                 uint32_t lineOrBytecode,
+                 SourceCoordsVector&& sourceCoords,
                  unsigned generateTime)
-      : callSourceCoords_(Move(sourceCoords)),
-        sig_(sig),
+      : sig_(sig),
         locals_(Move(locals)),
-        name_(name),
-        line_(line),
-        column_(column),
+        lineOrBytecode_(lineOrBytecode),
+        callSourceCoords_(Move(sourceCoords)),
         index_(index),
         generateTime_(generateTime),
         bytecode_(Move(bytecode))
@@ -642,9 +633,7 @@ class FuncBytecode
 
     UniqueBytecode recycleBytecode() { return Move(bytecode_); }
 
-    PropertyName* name() const { return name_; }
-    unsigned line() const { return line_; }
-    unsigned column() const { return column_; }
+    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
     const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
 
     uint32_t index() const { return index_; }

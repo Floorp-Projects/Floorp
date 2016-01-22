@@ -1314,7 +1314,7 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition**def)
 {
     switch (type) {
       case ExprType::I32: {
-        int32_t val = f.readI32();
+        int32_t val = f.readVarU32();
         *def = f.constant(Int32Value(val), MIRType_Int32);
         return true;
       }
@@ -2965,11 +2965,16 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!f.init())
             return false;
 
+        MDefinition* last = nullptr;
         while (!f.done()) {
-            MDefinition* _;
-            if (!EmitExprStmt(f, &_))
+            if (!EmitExprStmt(f, &last))
                 return false;
         }
+
+        if (IsVoid(f.sig().ret()))
+            f.returnVoid();
+        else
+            f.returnExpr(last);
 
         f.checkPostconditions();
     }

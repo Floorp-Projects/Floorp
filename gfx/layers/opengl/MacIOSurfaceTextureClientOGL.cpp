@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceTextureClientOGL.h"
 #include "mozilla/gfx/MacIOSurface.h" 
+#include "MacIOSurfaceHelpers.h"
 
 namespace mozilla {
 namespace layers {
@@ -53,7 +54,7 @@ MacIOSurfaceTextureData::GetFormat() const
 already_AddRefed<gfx::DataSourceSurface>
 MacIOSurfaceTextureData::GetAsSurface()
 {
-  RefPtr<gfx::SourceSurface> surf = mSurface->GetAsSurface();
+  RefPtr<gfx::SourceSurface> surf = CreateSourceSurfaceFromMacIOSurface(mSurface);
   return surf->GetDataSurface();
 }
 

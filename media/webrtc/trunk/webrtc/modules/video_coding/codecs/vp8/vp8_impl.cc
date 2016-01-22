@@ -738,8 +738,8 @@ int VP8EncoderImpl::Encode(
   const I420VideoFrame& input_image =
       use_quality_scaler ? quality_scaler_.GetScaledFrame(frame) : frame;
 
-  if (use_quality_scaler && (input_image.width() != codec_.width ||
-      input_image.height() != codec_.height)) {
+  if (input_image.width() != codec_.width ||
+      input_image.height() != codec_.height) {
     int ret = UpdateCodecFrameSize(input_image);
     if (ret < 0)
       return ret;

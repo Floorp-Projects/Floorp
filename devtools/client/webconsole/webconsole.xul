@@ -202,8 +202,12 @@ function goUpdateConsoleCommands() {
       </toolbar>
 
       <hbox id="output-wrapper" flex="1" context="output-contextmenu" tooltip="aHTMLTooltip">
-        <div xmlns="http://www.w3.org/1999/xhtml" id="output-container"
-             tabindex="0" role="document" aria-live="polite" />
+        <!-- Wrapper element to make scrolling in output-container much faster.
+             See Bug 1237368 -->
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          <div xmlns="http://www.w3.org/1999/xhtml" id="output-container"
+               tabindex="0" role="document" aria-live="polite" />
+        </div>
       </hbox>
       <notificationbox id="webconsole-notificationbox">
         <hbox class="jsterm-input-container" style="direction:ltr">

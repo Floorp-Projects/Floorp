@@ -31,7 +31,7 @@ nsNSSCertificateFakeTransport::~nsNSSCertificateFakeTransport()
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetDbKey(char**)
+nsNSSCertificateFakeTransport::GetDbKey(nsACString&)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;

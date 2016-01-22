@@ -3,12 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
-
-loader.lazyRequireGetter(this, "JITOptimizations",
-  "devtools/client/performance/modules/logic/jit", true);
-loader.lazyRequireGetter(this, "FrameUtils",
-  "devtools/client/performance/modules/logic/frame-utils");
+const { JITOptimizations } = require("devtools/client/performance/modules/logic/jit");
+const FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
 
 /**
  * A call tree for a thread. This is essentially a linkage between all frames

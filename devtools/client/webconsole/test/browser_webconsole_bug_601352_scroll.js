@@ -48,7 +48,7 @@ function test() {
 
     let node = yield hud.jsterm.execute("1+1");
 
-    let scrollNode = hud.outputNode.parentNode;
+    let scrollNode = hud.ui.outputWrapper;
     let rectNode = node.getBoundingClientRect();
     let rectOutput = scrollNode.getBoundingClientRect();
     console.debug("rectNode", rectNode, "rectOutput", rectOutput);

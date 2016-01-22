@@ -699,10 +699,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             }
             config = dict(config.items() + self.config.items())
 
-            self.info("Creating ADBDevicHandler for %s with config %s" % (emulator["name"], config))
-            dh = ADBDeviceHandler(config=config, log_obj=self.log_obj, script_obj=self)
-            dh.device_id = emulator['device_id']
-
             # Wait for Android to finish booting
             completed = None
             retries = 0
@@ -717,15 +713,29 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             if completed != '1':
                 self.warning('Retries exhausted waiting for Android boot.')
 
+            cmd = [self.adb_path, '-s', emulator['device_id'], 'shell', 'getprop', 'ro.build.version.sdk']
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            out, err = p.communicate()
+            sdk_level = out
+
             # Install Fennec
             self.info("Installing Fennec for %s" % emulator["name"])
-            dh.install_app(self.installer_path)
+            if int(sdk_level) >= 23:
+                cmd = [self.adb_path, '-s', emulator['device_id'], 'install', '-r', '-g', self.installer_path]
+            else:
+                cmd = [self.adb_path, '-s', emulator['device_id'], 'install', '-r', self.installer_path]
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            out, err = p.communicate()
 
             # Install the robocop apk if required
             if suite_name.startswith('robocop'):
                 self.info("Installing Robocop for %s" % emulator["name"])
-                config['device_package_name'] = self.config["robocop_package_name"]
-                dh.install_app(self.robocop_path)
+                if int(sdk_level) >= 23:
+                    cmd = [self.adb_path, '-s', emulator['device_id'], 'install', '-r', '-g', self.robocop_path]
+                else:
+                    cmd = [self.adb_path, '-s', emulator['device_id'], 'install', '-r', self.robocop_path]
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+                out, err = p.communicate()
 
             self.info("Finished installing apps for %s" % emulator["name"])
 

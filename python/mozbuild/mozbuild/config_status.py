@@ -116,6 +116,8 @@ def config_status(topobjdir='.', topsrcdir='.',
                         default=default_backends,
                         help='what backend to build (default: %s).' %
                         ' '.join(default_backends))
+    parser.add_argument('--dry-run', action='store_true',
+                        help='do everything except writing files out.')
     options = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
@@ -136,6 +138,10 @@ def config_status(topobjdir='.', topsrcdir='.',
     # Make appropriate backend instances, defaulting to RecursiveMakeBackend,
     # or what is in BUILD_BACKENDS.
     selected_backends = [get_backend_class(b)(env) for b in options.backend]
+
+    if options.dry_run:
+        for b in selected_backends:
+            b.dry_run = True
 
     reader = BuildReader(env)
     emitter = TreeMetadataEmitter(env)
