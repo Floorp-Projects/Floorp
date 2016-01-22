@@ -6,7 +6,6 @@ const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory } = require("devtools/client/shared/vendor/react");
 const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
-const unknownSourceString = L10N.getStr("unknownSource");
 const { TREE_ROW_HEIGHT } = require("../constants");
 
 const CensusTreeItem = module.exports = createClass({
@@ -68,13 +67,11 @@ const CensusTreeItem = module.exports = createClass({
 
   toLabel(name, linkToDebugger) {
     if (isSavedFrame(name)) {
-      let onClickTooltipString =
-        L10N.getFormatStr("viewsourceindebugger",`${name.source}:${name.line}:${name.column}`);
       return Frame({
         frame: name,
         onClick: () => linkToDebugger(name),
-        onClickTooltipString,
-        unknownSourceString
+        showFunctionName: true,
+        showHost: true,
       });
     }
 
