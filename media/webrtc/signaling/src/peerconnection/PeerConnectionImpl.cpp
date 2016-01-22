@@ -1736,6 +1736,152 @@ static void DeferredSetRemote(const std::string& aPcHandle,
   }
 }
 
+nsresult
+PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
+{
+  JSErrorResult jrv;
+
+  std::vector<RefPtr<JsepTrack>> newTracks =
+    mJsepSession->GetRemoteTracksAdded();
+
+  // Group new tracks by stream id
+  std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
+  for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
+    RefPtr<JsepTrack> track = *i;
+
+    if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
+      // Ignore datachannel
+      continue;
+    }
+
+    tracksByStreamId[track->GetStreamId()].push_back(track);
+  }
+
+  for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
+    std::string streamId = i->first;
+    std::vector<RefPtr<JsepTrack>>& tracks = i->second;
+
+    RefPtr<RemoteSourceStreamInfo> info =
+      mMedia->GetRemoteStreamById(streamId);
+    if (!info) {
+      nsresult nrv = CreateRemoteSourceStreamInfo(&info, streamId);
+      if (NS_FAILED(nrv)) {
+        aPco->OnSetRemoteDescriptionError(
+            kInternalError,
+            ObString("CreateRemoteSourceStreamInfo failed"),
+            jrv);
+        return nrv;
+      }
+
+      nrv = mMedia->AddRemoteStream(info);
+      if (NS_FAILED(nrv)) {
+        aPco->OnSetRemoteDescriptionError(
+            kInternalError,
+            ObString("AddRemoteStream failed"),
+            jrv);
+        return nrv;
+      }
+
+      CSFLogDebug(logTag, "Added remote stream %s", info->GetId().c_str());
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+      info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
+#else
+      info->GetMediaStream()->AssignId((streamId));
+#endif
+    }
+
+    size_t numNewAudioTracks = 0;
+    size_t numNewVideoTracks = 0;
+    size_t numPreexistingTrackIds = 0;
+
+    for (auto j = tracks.begin(); j != tracks.end(); ++j) {
+      RefPtr<JsepTrack> track = *j;
+      if (!info->HasTrack(track->GetTrackId())) {
+        if (track->GetMediaType() == SdpMediaSection::kAudio) {
+          ++numNewAudioTracks;
+        } else if (track->GetMediaType() == SdpMediaSection::kVideo) {
+          ++numNewVideoTracks;
+        } else {
+          MOZ_ASSERT(false);
+          continue;
+        }
+        info->AddTrack(track->GetTrackId());
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+        RefPtr<MediaStreamTrackSource> source =
+          new BasicUnstoppableTrackSource(MediaSourceEnum::Other);
+        if (track->GetMediaType() == SdpMediaSection::kAudio) {
+          info->GetMediaStream()->CreateOwnDOMTrack(
+            info->GetNumericTrackId(track->GetTrackId()),
+            MediaSegment::AUDIO, nsString(), source);
+        } else {
+          info->GetMediaStream()->CreateOwnDOMTrack(
+            info->GetNumericTrackId(track->GetTrackId()),
+            MediaSegment::VIDEO, nsString(), source);
+        }
+#endif
+        CSFLogDebug(logTag, "Added remote track %s/%s",
+                    info->GetId().c_str(), track->GetTrackId().c_str());
+      } else {
+        ++numPreexistingTrackIds;
+      }
+    }
+
+    // Now that the streams are all set up, notify about track availability.
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+    TracksAvailableCallback* tracksAvailableCallback =
+      new TracksAvailableCallback(numNewAudioTracks,
+                                  numNewVideoTracks,
+                                  mHandle,
+                                  aPco);
+    info->GetMediaStream()->OnTracksAvailable(tracksAvailableCallback);
+#else
+    if (!numPreexistingTrackIds) {
+      aPco->OnAddStream(*info->GetMediaStream(), jrv);
+    }
+#endif
+  }
+  return NS_OK;
+}
+
+void
+PeerConnectionImpl::RemoveOldRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
+{
+  JSErrorResult jrv;
+
+  std::vector<RefPtr<JsepTrack>> removedTracks =
+    mJsepSession->GetRemoteTracksRemoved();
+
+  for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
+    const std::string& streamId = (*i)->GetStreamId();
+    const std::string& trackId = (*i)->GetTrackId();
+
+    RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
+    if (!info) {
+      MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
+                        "This is a bug.");
+      continue;
+    }
+
+    mMedia->RemoveRemoteTrack(streamId, trackId);
+
+    DOMMediaStream* stream = info->GetMediaStream();
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
+    stream->GetTracks(tracks);
+    for (auto& track : tracks) {
+      if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
+        aPco->OnRemoveTrack(*track, jrv);
+        break;
+      }
+    }
+
+    // We might be holding the last ref, but that's ok.
+    if (!info->GetTrackCount()) {
+      aPco->OnRemoveStream(*stream, jrv);
+    }
+  }
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 {
@@ -1814,137 +1960,13 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
     pco->OnSetRemoteDescriptionError(error, ObString(errorString.c_str()), jrv);
   } else {
-    std::vector<RefPtr<JsepTrack>> newTracks =
-      mJsepSession->GetRemoteTracksAdded();
-
-    // Group new tracks by stream id
-    std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
-    for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
-      RefPtr<JsepTrack> track = *i;
-
-      if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
-        // Ignore datachannel
-        continue;
-      }
-
-      tracksByStreamId[track->GetStreamId()].push_back(track);
+    nrv = CreateNewRemoteTracks(pco);
+    if (NS_FAILED(nrv)) {
+      // aPco was already notified, just return early.
+      return NS_OK;
     }
 
-    for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
-      std::string streamId = i->first;
-      std::vector<RefPtr<JsepTrack>>& tracks = i->second;
-
-      RefPtr<RemoteSourceStreamInfo> info =
-        mMedia->GetRemoteStreamById(streamId);
-      if (!info) {
-        nsresult nrv = CreateRemoteSourceStreamInfo(&info, streamId);
-        if (NS_FAILED(nrv)) {
-          pco->OnSetRemoteDescriptionError(
-              kInternalError,
-              ObString("CreateRemoteSourceStreamInfo failed"),
-              jrv);
-          return NS_OK;
-        }
-
-        nrv = mMedia->AddRemoteStream(info);
-        if (NS_FAILED(nrv)) {
-          pco->OnSetRemoteDescriptionError(
-              kInternalError,
-              ObString("AddRemoteStream failed"),
-              jrv);
-          return NS_OK;
-        }
-        CSFLogDebug(logTag, "Added remote stream %s", info->GetId().c_str());
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-        info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
-#else
-        info->GetMediaStream()->AssignId((streamId));
-#endif
-      }
-
-      size_t numNewAudioTracks = 0;
-      size_t numNewVideoTracks = 0;
-      size_t numPreexistingTrackIds = 0;
-
-      for (auto j = tracks.begin(); j != tracks.end(); ++j) {
-        RefPtr<JsepTrack> track = *j;
-        if (!info->HasTrack(track->GetTrackId())) {
-          if (track->GetMediaType() == SdpMediaSection::kAudio) {
-            ++numNewAudioTracks;
-          } else if (track->GetMediaType() == SdpMediaSection::kVideo) {
-            ++numNewVideoTracks;
-          } else {
-            MOZ_ASSERT(false);
-            continue;
-          }
-          info->AddTrack(track->GetTrackId());
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-          RefPtr<MediaStreamTrackSource> source =
-            new BasicUnstoppableTrackSource(MediaSourceEnum::Other);
-          if (track->GetMediaType() == SdpMediaSection::kAudio) {
-            info->GetMediaStream()->CreateOwnDOMTrack(
-              info->GetNumericTrackId(track->GetTrackId()),
-              MediaSegment::AUDIO, nsString(), source);
-          } else {
-            info->GetMediaStream()->CreateOwnDOMTrack(
-              info->GetNumericTrackId(track->GetTrackId()),
-              MediaSegment::VIDEO, nsString(), source);
-          }
-#endif
-          CSFLogDebug(logTag, "Added remote track %s/%s",
-                      info->GetId().c_str(), track->GetTrackId().c_str());
-        } else {
-          ++numPreexistingTrackIds;
-        }
-      }
-
-      // Now that the streams are all set up, notify about track availability.
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-      TracksAvailableCallback* tracksAvailableCallback =
-        new TracksAvailableCallback(numNewAudioTracks,
-                                    numNewVideoTracks,
-                                    mHandle,
-                                    pco);
-      info->GetMediaStream()->OnTracksAvailable(tracksAvailableCallback);
-#else
-      if (!numPreexistingTrackIds) {
-        pco->OnAddStream(*info->GetMediaStream(), jrv);
-      }
-#endif
-    }
-
-    std::vector<RefPtr<JsepTrack>> removedTracks =
-      mJsepSession->GetRemoteTracksRemoved();
-
-    for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
-      const std::string& streamId = (*i)->GetStreamId();
-      const std::string& trackId = (*i)->GetTrackId();
-
-      RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
-      if (!info) {
-        MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
-                          "This is a bug.");
-        continue;
-      }
-
-      mMedia->RemoveRemoteTrack(streamId, trackId);
-
-      DOMMediaStream* stream = info->GetMediaStream();
-      nsTArray<RefPtr<MediaStreamTrack>> tracks;
-      stream->GetTracks(tracks);
-      for (auto& track : tracks) {
-        if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
-          pco->OnRemoveTrack(*track, jrv);
-          break;
-        }
-      }
-
-      // We might be holding the last ref, but that's ok.
-      if (!info->GetTrackCount()) {
-        pco->OnRemoveStream(*stream, jrv);
-      }
-    }
+    RemoveOldRemoteTracks(pco);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
