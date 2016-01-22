@@ -141,7 +141,7 @@ private:
 
 public:
     InterruptFrame(Direction direction, const Message* msg)
-      : mMessageName(strdup(msg->name())),
+      : mMessageName(msg->name()),
         mMessageRoutingId(msg->routing_id()),
         mMesageSemantics(msg->is_interrupt() ? INTR_SEMS :
                           msg->is_sync() ? SYNC_SEMS :
@@ -167,9 +167,6 @@ public:
     ~InterruptFrame()
     {
         MOZ_ASSERT_IF(!mMessageName, mMoved);
-
-        if (mMessageName)
-            free(const_cast<char*>(mMessageName));
     }
 
     InterruptFrame& operator=(InterruptFrame&& aOther)

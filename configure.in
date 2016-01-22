@@ -139,8 +139,6 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_PYTHON
 
-MOZ_BUILD_BACKEND(.)
-
 MOZ_DEFAULT_COMPILER
 
 COMPILE_ENVIRONMENT=1
@@ -161,6 +159,8 @@ if test -n "$MOZ_ARTIFACT_BUILDS"; then
     dnl Artifact builds imply --disable-compile-environment.
     COMPILE_ENVIRONMENT=
 fi
+
+MOZ_BUILD_BACKEND(.)
 
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR    path to l10n repositories],
@@ -4061,8 +4061,6 @@ xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 esac
-
-BUILD_BACKENDS="$BUILD_BACKENDS FasterMake"
 
 if test -n "$MOZ_B2G"; then
     AC_DEFINE(MOZ_B2G)

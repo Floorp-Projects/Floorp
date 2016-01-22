@@ -386,8 +386,7 @@ class Build(MachCommandBase):
                 # backend. But that involves make reinvoking itself and there
                 # are undesired side-effects of this. See bug 877308 for a
                 # comprehensive history lesson.
-                self._run_make(directory=self.topobjdir,
-                    target='backend.RecursiveMakeBackend',
+                self._run_make(directory=self.topobjdir, target='backend',
                     line_handler=output.on_line, log=False,
                     print_directory=False)
 
@@ -605,7 +604,11 @@ class Build(MachCommandBase):
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend', nargs='+', choices=sorted(backends),
         help='Which backend to build.')
-    def build_backend(self, backend, diff=False):
+    @CommandArgument('-v', '--verbose', action='store_true',
+        help='Verbose output.')
+    @CommandArgument('-n', '--dry-run', action='store_true',
+        help='Do everything except writing files out.')
+    def build_backend(self, backend, diff=False, verbose=False, dry_run=False):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
 
@@ -621,6 +624,10 @@ class Build(MachCommandBase):
             args.extend(backend)
         if diff:
             args.append('--diff')
+        if verbose:
+            args.append('--verbose')
+        if dry_run:
+            args.append('--dry-run')
 
         return self._run_command_in_objdir(args=args, pass_thru=True,
             ensure_exit_code=False)

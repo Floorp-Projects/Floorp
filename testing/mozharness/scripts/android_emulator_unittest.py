@@ -117,6 +117,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self.emulator = c.get('emulator')
         self.test_suite_definitions = c['test_suite_definitions']
         self.test_suite = c.get('test_suite')
+        self.sdk_level = None
         assert self.test_suite in self.test_suite_definitions
 
     def _query_tests_dir(self):
@@ -356,7 +357,10 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _install_fennec_apk(self):
         install_ok = False
-        cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.installer_path]
+        if int(self.sdk_level) >= 23:
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.installer_path]
+        else:
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.installer_path]
         out = self._run_with_timeout(300, cmd)
         if 'Success' in out:
             install_ok = True
@@ -364,7 +368,10 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _install_robocop_apk(self):
         install_ok = False
-        cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.robocop_path]
+        if int(self.sdk_level) >= 23:
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.robocop_path]
+        else:
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.robocop_path]
         out = self._run_with_timeout(300, cmd)
         if 'Success' in out:
             install_ok = True
@@ -642,6 +649,9 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'device_package_name': self._query_package_name()
         }
         config = dict(config.items() + self.config.items())
+
+        self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s', self.emulator['device_id'],
+            'shell', 'getprop', 'ro.build.version.sdk'])
 
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_fennec_apk, "Install Fennec APK")

@@ -106,7 +106,13 @@ FrameIterator::functionDisplayAtom() const
 {
     MOZ_ASSERT(!done());
 
-    const char* chars = module_->functionName(codeRange_->funcNameIndex());
+    UniqueChars owner;
+    const char* chars = module_->getFuncName(cx_, codeRange_->funcIndex(), &owner);
+    if (!chars) {
+        cx_->clearPendingException();
+        return cx_->names().empty;
+    }
+
     JSAtom* atom = AtomizeUTF8Chars(cx_, chars, strlen(chars));
     if (!atom) {
         cx_->clearPendingException();
@@ -693,7 +699,7 @@ ProfilingFrameIterator::label() const
     }
 
     switch (codeRange_->kind()) {
-      case CodeRange::Function:         return module_->profilingLabel(codeRange_->funcNameIndex());
+      case CodeRange::Function:         return module_->profilingLabel(codeRange_->funcIndex());
       case CodeRange::Entry:            return "entry trampoline (in asm.js)";
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;

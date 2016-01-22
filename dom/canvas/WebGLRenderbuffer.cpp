@@ -25,19 +25,17 @@ DepthStencilDepthFormat(gl::GLContext* gl)
 }
 
 static bool
-SupportsDepthStencil(gl::GLContext* gl)
-{
-    return gl->IsSupported(gl::GLFeature::packed_depth_stencil);
-}
-
-static bool
 NeedsDepthStencilEmu(gl::GLContext* gl, GLenum internalFormat)
 {
     MOZ_ASSERT(internalFormat != LOCAL_GL_DEPTH_STENCIL);
+
     if (internalFormat != LOCAL_GL_DEPTH24_STENCIL8)
         return false;
 
-    return !SupportsDepthStencil(gl);
+    if (gl->IsSupported(gl::GLFeature::packed_depth_stencil))
+        return false;
+
+    return true;
 }
 
 JSObject*
@@ -61,8 +59,10 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
     mContext->MakeContextCurrent();
 
     mContext->gl->fGenRenderbuffers(1, &mPrimaryRB);
-    if (!SupportsDepthStencil(mContext->gl))
+
+    if (!mContext->gl->IsSupported(gl::GLFeature::packed_depth_stencil)) {
         mContext->gl->fGenRenderbuffers(1, &mSecondaryRB);
+    }
 
     mContext->mRenderbuffers.insertBack(this);
 }
@@ -150,7 +150,7 @@ RenderbufferStorageMaybeMultisample(gl::GLContext* gl, GLsizei samples,
     case LOCAL_GL_DEPTH_COMPONENT16:
         if (!gl->IsGLES() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
             internalFormatForGL = LOCAL_GL_DEPTH_COMPONENT24;
-        else if (gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil))
+        else if (gl->IsSupported(gl::GLFeature::packed_depth_stencil))
             internalFormatForGL = LOCAL_GL_DEPTH24_STENCIL8;
         break;
 
@@ -257,6 +257,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
 
         return 8;
 
+    case LOCAL_GL_RENDERBUFFER_SAMPLES:
     case LOCAL_GL_RENDERBUFFER_WIDTH:
     case LOCAL_GL_RENDERBUFFER_HEIGHT:
     case LOCAL_GL_RENDERBUFFER_RED_SIZE:
