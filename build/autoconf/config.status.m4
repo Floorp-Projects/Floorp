@@ -228,12 +228,18 @@ define([AC_CONFIG_HEADER],
 
 define([MOZ_BUILD_BACKEND],
 [
-BUILD_BACKENDS="RecursiveMake"
+dnl For now, only enable the unified hybrid build system on artifact builds,
+dnl otherwise default to RecursiveMake /and/ FasterMake.
+if [ -n "$MOZ_ARTIFACT_BUILDS" ]; then
+    BUILD_BACKENDS="FasterMake+RecursiveMake"
+else
+    BUILD_BACKENDS="RecursiveMake FasterMake"
+fi
 
 MOZ_ARG_ENABLE_STRING(build-backend,
 [  --enable-build-backend={$($(dirname ]$[0)/$1/mach python -c "from mozbuild.backend import backends; print ','.join(sorted(backends))")}
                          Enable additional build backends],
-[ BUILD_BACKENDS="RecursiveMake `echo $enableval | sed 's/,/ /g'`"])
+[ BUILD_BACKENDS="$BUILD_BACKENDS `echo $enableval | sed 's/,/ /g'`"])
 
 AC_SUBST_SET([BUILD_BACKENDS])
 ])
