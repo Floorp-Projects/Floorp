@@ -65,10 +65,10 @@ xpcAccessible::GetFirstChild(nsIAccessible** aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aFirstChild = ToXPC(Intl()->FirstChild()));
+  NS_IF_ADDREF(*aFirstChild = ToXPC(IntlGeneric().FirstChild()));
   return NS_OK;
 }
 
