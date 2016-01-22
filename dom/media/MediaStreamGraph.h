@@ -1208,8 +1208,7 @@ public:
   // Idempotent
   static void DestroyNonRealtimeInstance(MediaStreamGraph* aGraph);
 
-  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
-                                  AudioDataListener *aListener) {
+  virtual nsresult OpenAudioInput(char *aName, AudioDataListener *aListener) {
     return NS_ERROR_FAILURE;
   }
   virtual void CloseAudioInput(AudioDataListener *aListener) {}

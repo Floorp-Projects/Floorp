@@ -44,8 +44,6 @@ GetUserMediaLog()
 
 namespace mozilla {
 
-cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
-
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC"),
     mVoiceEngine(nullptr),
@@ -328,14 +326,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
       // We've already seen this device, just append.
       aASources->AppendElement(aSource.get());
     } else {
-      AudioInput* audioinput = mAudioInput;
-      if (true /*platform_supports_full_duplex*/) {
-        // For cubeb, it has state (the selected ID
-        // XXX just use the uniqueID for cubeb and support it everywhere, and get rid of this
-        // XXX Small window where the device list/index could change!
-        audioinput = new mozilla::AudioInputCubeb(mVoiceEngine);
-      }
-      aSource = new MediaEngineWebRTCMicrophoneSource(mThread, mVoiceEngine, audioinput,
+      aSource = new MediaEngineWebRTCMicrophoneSource(mThread, mVoiceEngine, mAudioInput,
                                                       i, deviceName, uniqueId);
       mAudioSources.Put(uuid, aSource); // Hashtable takes ownership.
       aASources->AppendElement(aSource);
@@ -375,7 +366,6 @@ MediaEngineWebRTC::Shutdown()
   mVoiceEngine = nullptr;
 
   mozilla::camera::Shutdown();
-  AudioInputCubeb::CleanupGlobalData();
 
   if (mThread) {
     mThread->Shutdown();
