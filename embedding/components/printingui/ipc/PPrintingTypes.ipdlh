@@ -75,6 +75,8 @@ struct PrintData {
   /* Windows-specific things */
   nsString driverName;
   nsString deviceName;
+  double printableWidthInInches;
+  double printableHeightInInches;
   bool isFramesetDocument;
   bool isFramesetFrameSelected;
   bool isIFrameSelected;
