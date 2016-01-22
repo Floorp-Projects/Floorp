@@ -99,6 +99,15 @@ nsKeyObjectFactory::nsKeyObjectFactory()
 {
 }
 
+nsKeyObjectFactory::~nsKeyObjectFactory()
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  shutdown(calledFromObject);
+}
+
 NS_IMETHODIMP
 nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
                                   nsIKeyObject** _retval)
