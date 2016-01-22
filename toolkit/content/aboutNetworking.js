@@ -133,6 +133,7 @@ function init() {
   if (gPrefs.getBoolPref("warnOnAboutNetworking")) {
     let div = document.getElementById("warning_message");
     div.classList.add("active");
+    div.hidden = false;
     document.getElementById("confpref").addEventListener("click", confirm);
   }
 
@@ -158,8 +159,8 @@ function init() {
   if (document.getElementById("autorefcheck").checked)
     refr.disabled = "disabled";
 
-  // Event delegation on #menu element
-  let menu = document.getElementById("menu");
+  // Event delegation on #categories element
+  let menu = document.getElementById("categories");
   menu.addEventListener("click", function click(e) {
     if (e.target && e.target.parentNode == menu)
       show(e.target);
@@ -169,27 +170,33 @@ function init() {
 function confirm () {
   let div = document.getElementById("warning_message");
   div.classList.remove("active");
+  div.hidden = true;
   let warnBox = document.getElementById("warncheck");
   gPrefs.setBoolPref("warnOnAboutNetworking", warnBox.checked);
 }
 
 function show(button) {
   let current_tab = document.querySelector(".active");
-  let content = document.getElementById(button.value);
+  let content = document.getElementById(button.getAttribute("value"));
   if (current_tab == content)
     return;
   current_tab.classList.remove("active");
+  current_tab.hidden = true;
   content.classList.add("active");
+  content.hidden = false;
 
-  let current_button = document.querySelector(".selected");
-  current_button.classList.remove("selected");
-  button.classList.add("selected");
+  let current_button = document.querySelector("[selected=true]");
+  current_button.removeAttribute("selected");
+  button.setAttribute("selected", "true");
 
   let autoRefresh = document.getElementById("autorefcheck");
   if (autoRefresh.checked) {
     clearInterval(autoRefresh.interval);
     setAutoRefreshInterval(autoRefresh);
   }
+
+  let title = document.getElementById("sectionTitle");
+  title.textContent = button.children[0].textContent;
 }
 
 function setAutoRefreshInterval(checkBox) {

@@ -1434,13 +1434,7 @@ SyncEngine.prototype = {
 
       // collection we'll upload
       let up = new Collection(this.engineURL, null, this.service);
-      let count = 0;
-
-      // Upload what we've got so far in the collection
-      let doUpload = Utils.bind2(this, function(desc) {
-        this._log.info("Uploading " + desc + " of " + modifiedIDs.length +
-                       " records");
-        let resp = up.post();
+      let handleResponse = resp => {
         if (!resp.success) {
           this._log.debug("Uploading records failed: " + resp);
           resp.failureCode = ENGINE_UPLOAD_FAIL;
@@ -1463,32 +1457,29 @@ SyncEngine.prototype = {
           let id = resp.obj.success[key];
           delete this._modified[id];
         }
+      }
 
-        up.clearRecords();
-      });
+      let postQueue = up.newPostQueue(this._log, handleResponse);
 
       for (let id of modifiedIDs) {
+        let out;
+        let ok = false;
         try {
-          let out = this._createRecord(id);
+          out = this._createRecord(id);
           if (this._log.level <= Log.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
           out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
-          up.pushData(out);
+          ok = true;
         } catch (ex if !Async.isShutdownException(ex)) {
           this._log.warn("Error creating record", ex);
         }
-
-        // Partial upload
-        if ((++count % MAX_UPLOAD_RECORDS) == 0)
-          doUpload((count - MAX_UPLOAD_RECORDS) + " - " + count + " out");
-
+        if (ok) {
+          postQueue.enqueue(out);
+        }
         this._store._sleep(0);
       }
-
-      // Final upload
-      if (count % MAX_UPLOAD_RECORDS > 0)
-        doUpload(count >= MAX_UPLOAD_RECORDS ? "last batch" : "all");
+      postQueue.flush();
     }
   },
 

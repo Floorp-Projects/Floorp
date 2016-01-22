@@ -216,8 +216,9 @@ private:
   class ServerSendIndicationResultHandler;
 
   BluetoothGattManager();
-  bool Init();
 
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
 
   void RegisterClientNotification(BluetoothGattStatus aStatus,

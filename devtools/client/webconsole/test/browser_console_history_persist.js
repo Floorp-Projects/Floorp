@@ -113,6 +113,6 @@ function* testNaviatingHistoryInUI(hud) {
   // restores this.
   for (let i = INPUT_HISTORY_COUNT - 1; i >= 0; i--) {
     EventUtils.synthesizeKey("VK_UP", {});
-    is(inputNode.value, i, "Pressing up restores last input");
+    is(jsterm.getInputValue(), i, "Pressing up restores last input");
   }
 }

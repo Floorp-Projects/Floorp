@@ -4,18 +4,17 @@
 
 package org.mozilla.gecko.background.fxa;
 
+import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.Utils;
+
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
-
-import org.json.simple.JSONObject;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.CreateDelegate;
-import org.mozilla.gecko.sync.Utils;
 
 /**
  * An abstraction around providing an email and authorization token to the auth
  * server.
  */
-public class FxAccount20LoginDelegate implements CreateDelegate {
+public class FxAccount20LoginDelegate {
   protected final byte[] emailUTF8;
   protected final byte[] authPW;
 
@@ -24,10 +23,8 @@ public class FxAccount20LoginDelegate implements CreateDelegate {
     this.authPW = FxAccountUtils.generateAuthPW(quickStretchedPW);
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public JSONObject getCreateBody() throws FxAccountClientException {
-    final JSONObject body = new JSONObject();
+  public ExtendedJSONObject getCreateBody() throws FxAccountClientException {
+    final ExtendedJSONObject body = new ExtendedJSONObject();
     try {
       body.put("email", new String(emailUTF8, "UTF-8"));
       body.put("authPW", Utils.byte2Hex(authPW));

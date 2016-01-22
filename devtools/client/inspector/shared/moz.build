@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'dom-node-preview.js',
     'style-inspector-menu.js',
     'style-inspector-overlays.js',
     'utils.js'

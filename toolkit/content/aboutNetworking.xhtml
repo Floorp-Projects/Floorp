@@ -14,89 +14,110 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>&aboutNetworking.title;</title>
-        <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css" />
         <link rel="stylesheet" href="chrome://mozapps/skin/aboutNetworking.css" type="text/css" />
         <script type="application/javascript;version=1.7" src="chrome://global/content/aboutNetworking.js" />
     </head>
     <body id="body">
-        <div id="warning_message" class="warningBackground">
-            <div class="warningMessage">
-                &aboutNetworking.warning; <br/> <br/>
-                <label><input id="warncheck" type="checkbox" checked="yes" />&aboutNetworking.showNextTime;</label> <br/> <br/>
-                <button id="confpref">&aboutNetworking.ok;</button>
+        <div id="warning_message" class="warningBackground" hidden="true">
+            <div class="container">
+                <h1 class="title">&aboutNetworking.warning;</h1>
+                <div>
+                    <input id="warncheck" type="checkbox" checked="yes" />
+                    <label for="warncheck">&aboutNetworking.showNextTime;</label>
+                </div>
+                <div>
+                    <button id="confpref" class="primary">&aboutNetworking.ok;</button>
+                </div>
             </div>
         </div>
-        <div id="menu">
-            <button class="selected" value="http">&aboutNetworking.http;</button>
-            <button value="sockets">&aboutNetworking.sockets;</button>
-            <button value="dns">&aboutNetworking.dns;</button>
-            <button value="websockets">&aboutNetworking.websockets;</button>
+        <div id="categories">
+            <div class="category" selected="true" value="http">
+                <span class="category-name">&aboutNetworking.HTTP;</span>
+            </div>
+            <div class="category" value="sockets">
+                <span class="category-name">&aboutNetworking.sockets;</span>
+            </div>
+            <div class="category" value="dns">
+                <span class="category-name">&aboutNetworking.dns;</span>
+            </div>
+            <div class="category" value="websockets">
+                <span class="category-name">&aboutNetworking.websockets;</span>
+            </div>
+            <hr></hr>
         </div>
-        <div id="refreshdiv">
-            <button id="refreshButton">&aboutNetworking.refresh;</button>
-            <label><input id="autorefcheck" type="checkbox" name="Autorefresh" />&aboutNetworking.autoRefresh;</label>
-        </div>
+        <div class="main-content">
+            <div class="header">
+                <div id="sectionTitle" class="header-name">
+                    &aboutNetworking.HTTP;
+                </div>
+                <div id="refreshDiv">
+                    <button id="refreshButton">&aboutNetworking.refresh;</button>
+                    <input id="autorefcheck" type="checkbox" name="Autorefresh" />
+                    <label for="autorefcheck">&aboutNetworking.autoRefresh;</label>
+                </div>
+            </div>
 
-        <div id="http" class="tab active">
-            <table border="1" width="100%">
-                <thead>
-                    <tr>
-                        <th>&aboutNetworking.hostname;</th>
-                        <th>&aboutNetworking.port;</th>
-                        <th>&aboutNetworking.spdy;</th>
-                        <th>&aboutNetworking.ssl;</th>
-                        <th>&aboutNetworking.active;</th>
-                        <th>&aboutNetworking.idle;</th>
-                    </tr>
-                </thead>
-                <tbody id="http_content" />
-            </table>
-        </div>
+          <div id="http" class="tab active">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>&aboutNetworking.hostname;</th>
+                          <th>&aboutNetworking.port;</th>
+                          <th>&aboutNetworking.spdy;</th>
+                          <th>&aboutNetworking.ssl;</th>
+                          <th>&aboutNetworking.active;</th>
+                          <th>&aboutNetworking.idle;</th>
+                      </tr>
+                  </thead>
+                  <tbody id="http_content" />
+              </table>
+          </div>
 
-        <div id="sockets" class="tab">
-            <table border="1" width="100%">
-                <thead>
-                    <tr>
-                        <th>&aboutNetworking.host;</th>
-                        <th>&aboutNetworking.port;</th>
-                        <th>&aboutNetworking.tcp;</th>
-                        <th>&aboutNetworking.active;</th>
-                        <th>&aboutNetworking.sent;</th>
-                        <th>&aboutNetworking.received;</th>
-                    </tr>
-                </thead>
-                <tbody id="sockets_content" />
-            </table>
-        </div>
+          <div id="sockets" class="tab" hidden="true">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>&aboutNetworking.host;</th>
+                          <th>&aboutNetworking.port;</th>
+                          <th>&aboutNetworking.tcp;</th>
+                          <th>&aboutNetworking.active;</th>
+                          <th>&aboutNetworking.sent;</th>
+                          <th>&aboutNetworking.received;</th>
+                      </tr>
+                  </thead>
+                  <tbody id="sockets_content" />
+              </table>
+          </div>
 
-        <div id="dns" class="tab">
-            <table border="1" width="100%">
-                <thead>
-                    <tr>
-                        <th>&aboutNetworking.hostname;</th>
-                        <th>&aboutNetworking.family;</th>
-                        <th>&aboutNetworking.addresses;</th>
-                        <th>&aboutNetworking.expires;</th>
-                    </tr>
-                </thead>
-                <tbody id="dns_content" />
-            </table>
-        </div>
+          <div id="dns" class="tab" hidden="true">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>&aboutNetworking.hostname;</th>
+                          <th>&aboutNetworking.family;</th>
+                          <th>&aboutNetworking.addresses;</th>
+                          <th>&aboutNetworking.expires;</th>
+                      </tr>
+                  </thead>
+                  <tbody id="dns_content" />
+              </table>
+          </div>
 
-        <div id="websockets" class="tab">
-            <table border="1" width="100%">
-                <thead>
-                    <tr>
-                        <th>&aboutNetworking.hostname;</th>
-                        <th>&aboutNetworking.ssl;</th>
-                        <th>&aboutNetworking.messagesSent;</th>
-                        <th>&aboutNetworking.messagesReceived;</th>
-                        <th>&aboutNetworking.bytesSent;</th>
-                        <th>&aboutNetworking.bytesReceived;</th>
-                    </tr>
-                </thead>
-                <tbody id="websockets_content" />
-            </table>
+          <div id="websockets" class="tab" hidden="true">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>&aboutNetworking.hostname;</th>
+                          <th>&aboutNetworking.ssl;</th>
+                          <th>&aboutNetworking.messagesSent;</th>
+                          <th>&aboutNetworking.messagesReceived;</th>
+                          <th>&aboutNetworking.bytesSent;</th>
+                          <th>&aboutNetworking.bytesReceived;</th>
+                      </tr>
+                  </thead>
+                  <tbody id="websockets_content" />
+              </table>
+          </div>
         </div>
     </body>
 </html>
