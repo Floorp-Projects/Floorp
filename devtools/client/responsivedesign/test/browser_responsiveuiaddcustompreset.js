@@ -6,7 +6,7 @@
 add_task(function*() {
   let tab = yield addTab("data:text/html;charset=utf8,Test RDM custom presets");
 
-  let {rdm} = yield openRDM(tab);
+  let { rdm, manager } = yield openRDM(tab);
 
   let oldPrompt = Services.prompt;
   Services.prompt = {
@@ -29,8 +29,6 @@ add_task(function*() {
 
   ok(rdm, "RDM instance should be attached to the tab.");
 
-  yield rdm._test_notifyOnResize();
-
   // Tries to add a custom preset and cancel the prompt
   let idx = rdm.menulist.selectedIndex;
   let presetCount = rdm.presets.length;
@@ -48,35 +46,27 @@ add_task(function*() {
   Services.prompt.value = "Testing preset";
   Services.prompt.returnBool = true;
 
+  let resized = once(manager, "contentResize");
   let customHeight = 123, customWidth = 456;
   rdm.startResizing({});
   rdm.setSize(customWidth, customHeight);
   rdm.stopResizing({});
 
   rdm.addbutton.doCommand();
-
-  // Force document reflow to avoid intermittent failures.
-  info("document height " + document.height);
+  yield resized;
 
   yield closeRDM(rdm);
-
-  // We're still in the loop of initializing the responsive mode.
-  // Let's wait next loop to stop it.
-  yield waitForTick();
 
   ({rdm} = yield openRDM(tab));
   is(container.getAttribute("responsivemode"), "true",
      "Should be in responsive mode.");
 
   let presetLabel = "456" + "\u00D7" + "123 (Testing preset)";
-  let customPresetIndex = getPresetIndex(rdm, presetLabel);
-  info(customPresetIndex);
+  let customPresetIndex = yield getPresetIndex(rdm, manager, presetLabel);
   ok(customPresetIndex >= 0, "(idx = " + customPresetIndex + ") should be the" +
                              " previously added preset in the list of items");
 
-  let resizePromise = rdm._test_notifyOnResize();
-  rdm.menulist.selectedIndex = customPresetIndex;
-  yield resizePromise;
+  yield setPresetIndex(rdm, manager, customPresetIndex);
 
   let browser = gBrowser.selectedBrowser;
   let props = yield ContentTask.spawn(browser, {}, function*() {
@@ -87,43 +77,44 @@ add_task(function*() {
   is(props.innerWidth, 456, "Selecting preset should change the width");
   is(props.innerHeight, 123, "Selecting preset should change the height");
 
+  info(`menulist count: ${rdm.menulist.itemCount}`)
+
   rdm.removebutton.doCommand();
 
-  rdm.menulist.selectedIndex = 2;
+  yield setPresetIndex(rdm, manager, 2);
   let deletedPresetA = rdm.menulist.selectedItem.getAttribute("label");
   rdm.removebutton.doCommand();
 
-  rdm.menulist.selectedIndex = 2;
+  yield setPresetIndex(rdm, manager, 2);
   let deletedPresetB = rdm.menulist.selectedItem.getAttribute("label");
   rdm.removebutton.doCommand();
 
   yield closeRDM(rdm);
-  yield waitForTick();
   ({rdm} = yield openRDM(tab));
 
-  customPresetIndex = getPresetIndex(rdm, deletedPresetA);
+  customPresetIndex = yield getPresetIndex(rdm, manager, deletedPresetA);
   is(customPresetIndex, -1,
      "Deleted preset " + deletedPresetA + " should not be in the list anymore");
 
-  customPresetIndex = getPresetIndex(rdm, deletedPresetB);
+  customPresetIndex = yield getPresetIndex(rdm, manager, deletedPresetB);
   is(customPresetIndex, -1,
      "Deleted preset " + deletedPresetB + " should not be in the list anymore");
 
   yield closeRDM(rdm);
 });
 
-function getPresetIndex(rdm, presetLabel) {
-  function testOnePreset(c) {
+var getPresetIndex = Task.async(function*(rdm, manager, presetLabel) {
+  var testOnePreset = Task.async(function*(c) {
     if (c == 0) {
       return -1;
     }
-    rdm.menulist.selectedIndex = c;
+    yield setPresetIndex(rdm, manager, c);
 
     let item = rdm.menulist.firstChild.childNodes[c];
     if (item.getAttribute("label") === presetLabel) {
       return c;
     }
     return testOnePreset(c - 1);
-  }
+  });
   return testOnePreset(rdm.menulist.firstChild.childNodes.length - 4);
-}
+});
