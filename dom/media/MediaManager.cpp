@@ -845,7 +845,6 @@ public:
   bool mEchoOn;
   bool mAgcOn;
   bool mNoiseOn;
-  bool mFullDuplex;
   uint32_t mEcho;
   uint32_t mAgc;
   uint32_t mNoise;
@@ -1520,7 +1519,6 @@ MediaManager::MediaManager()
   mPrefs.mHeight = 0; // adaptive default
   mPrefs.mFPS    = MediaEngine::DEFAULT_VIDEO_FPS;
   mPrefs.mMinFPS = MediaEngine::DEFAULT_VIDEO_MIN_FPS;
-  mPrefs.mFullDuplex = false;
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -1529,9 +1527,8 @@ MediaManager::MediaManager()
       GetPrefs(branch, nullptr);
     }
   }
-  LOG(("%s: default prefs: %dx%d @%dfps (min %d), %dHz test tones, %sfull-duplex", __FUNCTION__,
-       mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS, mPrefs.mFreq,
-       mPrefs.mFullDuplex ? "" : "not "));
+  LOG(("%s: default prefs: %dx%d @%dfps (min %d), %dHz test tones", __FUNCTION__,
+       mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS, mPrefs.mFreq));
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
@@ -1593,8 +1590,6 @@ MediaManager::Get() {
       prefs->AddObserver("media.navigator.video.default_height", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_fps", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_minfps", sSingleton, false);
-      prefs->AddObserver("media.navigator.audio.fake_frequency", sSingleton, false);
-      prefs->AddObserver("media.navigator.audio.full_duplex", sSingleton, false);
     }
 
     // Prepare async shutdown
@@ -2628,7 +2623,6 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.navigator.video.default_fps", aData, &mPrefs.mFPS);
   GetPref(aBranch, "media.navigator.video.default_minfps", aData, &mPrefs.mMinFPS);
   GetPref(aBranch, "media.navigator.audio.fake_frequency", aData, &mPrefs.mFreq);
-  GetPrefBool(aBranch, "media.navigator.audio.full_duplex", aData, &mPrefs.mFullDuplex);
 }
 
 void
@@ -2655,7 +2649,6 @@ MediaManager::Shutdown()
     prefs->RemoveObserver("media.navigator.video.default_fps", this);
     prefs->RemoveObserver("media.navigator.video.default_minfps", this);
     prefs->RemoveObserver("media.navigator.audio.fake_frequency", this);
-    prefs->RemoveObserver("media.navigator.audio.full_duplex", this);
   }
 
   // Close off any remaining active windows.
@@ -3129,10 +3122,10 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
 
 void
 GetUserMediaCallbackMediaStreamListener::AudioConfig(bool aEchoOn,
-                                                     uint32_t aEcho,
-                                                     bool aAgcOn, uint32_t aAGC,
-                                                     bool aNoiseOn, uint32_t aNoise,
-                                                     int32_t aPlayoutDelay)
+              uint32_t aEcho,
+              bool aAgcOn, uint32_t aAGC,
+              bool aNoiseOn, uint32_t aNoise,
+              int32_t aPlayoutDelay)
 {
   if (mAudioDevice) {
 #ifdef MOZ_WEBRTC

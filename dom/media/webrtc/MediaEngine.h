@@ -216,7 +216,6 @@ public:
     , mFPS(0)
     , mMinFPS(0)
     , mFreq(0)
-    , mFullDuplex(false)
   {}
 
   int32_t mWidth;
@@ -224,7 +223,6 @@ public:
   int32_t mFPS;
   int32_t mMinFPS;
   int32_t mFreq; // for test tones (fake:true)
-  bool mFullDuplex;
 
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 
