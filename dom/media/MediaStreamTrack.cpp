@@ -24,7 +24,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamTrackSource)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamTrackSource)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION_0(MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTION(MediaStreamTrackSource, mPrincipal)
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
                                    TrackID aInputTrackID, const nsString& aLabel,
@@ -38,8 +38,7 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     gMediaStreamTrackLog = PR_NewLogModule("MediaStreamTrack");
   }
 
-  MOZ_RELEASE_ASSERT(mSource);
-  mSource->RegisterSink();
+  GetSource().RegisterSink(this);
 
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -65,7 +64,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaStreamTrack,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwningStream)
-  tmp->mSource->UnregisterSink();
+  if (tmp->mSource) {
+    tmp->mSource->UnregisterSink(tmp);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginalTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -119,7 +120,7 @@ MediaStreamTrack::Stop()
     return;
   }
 
-  mSource->UnregisterSink();
+  mSource->UnregisterSink(this);
   mStopped = true;
 }
 
@@ -142,6 +143,15 @@ MediaStreamGraph*
 MediaStreamTrack::Graph()
 {
   return GetOwnedStream()->Graph();
+}
+
+void
+MediaStreamTrack::PrincipalChanged()
+{
+  for (PrincipalChangeObserver<MediaStreamTrack>* observer
+      : mPrincipalChangeObservers) {
+    observer->PrincipalChanged(this);
+  }
 }
 
 bool

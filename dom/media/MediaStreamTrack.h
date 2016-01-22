@@ -39,8 +39,16 @@ class MediaStreamTrackSource : public nsISupports
   NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSource)
 
 public:
-  explicit MediaStreamTrackSource(const bool aIsRemote)
-    : mNrSinks(0), mIsRemote(aIsRemote), mStopped(false)
+  class Sink
+  {
+  public:
+    virtual void PrincipalChanged() = 0;
+  };
+
+  MediaStreamTrackSource(nsIPrincipal* aPrincipal, const bool aIsRemote)
+    : mPrincipal(aPrincipal),
+      mIsRemote(aIsRemote),
+      mStopped(false)
   {
     MOZ_COUNT_CTOR(MediaStreamTrackSource);
   }
@@ -49,6 +57,11 @@ public:
    * Gets the source's MediaSourceEnum for usage by PeerConnections.
    */
   virtual MediaSourceEnum GetMediaSource() const = 0;
+
+  /**
+   * Get this TrackSource's principal.
+   */
+  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
 
   /**
    * Indicates whether the track is remote or not per the MediaCapture and
@@ -71,24 +84,23 @@ public:
   /**
    * Called by each MediaStreamTrack clone on initialization.
    */
-  void RegisterSink()
+  void RegisterSink(Sink* aSink)
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (mStopped) {
       return;
     }
-    ++mNrSinks;
+    mSinks.AppendElement(aSink);
   }
 
   /**
-   * Called by each MediaStreamTrack clone on track.Stop().
+   * Called by each MediaStreamTrack clone on Stop() if supported by the
+   * source (us) or destruction.
    */
-  void UnregisterSink()
+  void UnregisterSink(Sink* aSink)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    NS_ASSERTION(mNrSinks > 0, "Unmatched UnregisterSink()");
-    --mNrSinks;
-    if (mNrSinks == 0 && !IsRemote()) {
+    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty() && !IsRemote()) {
       Stop();
       mStopped = true;
     }
@@ -98,11 +110,24 @@ protected:
   virtual ~MediaStreamTrackSource()
   {
     MOZ_COUNT_DTOR(MediaStreamTrackSource);
-    NS_ASSERTION(mNrSinks == 0, "Some sinks did not unregister");
   }
 
-  // Number of currently registered sinks.
-  size_t mNrSinks;
+  /**
+   * Called by a sub class when the principal has changed.
+   * Notifies all sinks.
+   */
+  void PrincipalChanged()
+  {
+    for (Sink* sink : mSinks) {
+      sink->PrincipalChanged();
+    }
+  }
+
+  // Principal identifying who may access the contents of this source.
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // Currently registered sinks.
+  nsTArray<Sink*> mSinks;
 
   // True if this is a remote track source, i.e., a PeerConnection.
   const bool mIsRemote;
@@ -120,7 +145,7 @@ class BasicUnstoppableTrackSource : public MediaStreamTrackSource
 public:
   explicit BasicUnstoppableTrackSource(const MediaSourceEnum aMediaSource =
                                          MediaSourceEnum::Other)
-    : MediaStreamTrackSource(true), mMediaSource(aMediaSource) {}
+    : MediaStreamTrackSource(nullptr, true), mMediaSource(aMediaSource) {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
@@ -135,7 +160,9 @@ protected:
 /**
  * Class representing a track in a DOMMediaStream.
  */
-class MediaStreamTrack : public DOMEventTargetHelper {
+class MediaStreamTrack : public DOMEventTargetHelper,
+                         public MediaStreamTrackSource::Sink
+{
 public:
   /**
    * aTrackID is the MediaStreamGraph track ID for the track in the
@@ -188,7 +215,7 @@ public:
   /**
    * Get this track's principal.
    */
-  nsIPrincipal* GetPrincipal() const { return nullptr; }
+  nsIPrincipal* GetPrincipal() const { return GetSource().GetPrincipal(); }
 
   MediaStreamGraph* Graph();
 
@@ -201,6 +228,9 @@ public:
   // Webrtc allows the remote side to name tracks whatever it wants, and we
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
+
+  // Implementation of MediaStreamTrackSource::Sink
+  void PrincipalChanged() override;
 
   /**
    * Add a PrincipalChangeObserver to this track.
