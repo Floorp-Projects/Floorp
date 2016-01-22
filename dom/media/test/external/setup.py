@@ -4,7 +4,7 @@
 
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '0.4'
+PACKAGE_VERSION = '1.0'
 
 deps = [
     'marionette-client == 2.0.0',
@@ -14,7 +14,7 @@ deps = [
     'firefox-puppeteer >= 3.1.0, <4.0.0',
 ]
 
-setup(name='firefox-media-tests',
+setup(name='external-media-tests',
       version=PACKAGE_VERSION,
       description=('A collection of Mozilla Firefox media playback tests run '
                    'with Marionette'),
@@ -30,7 +30,7 @@ setup(name='firefox-media-tests',
       keywords='mozilla',
       author='Mozilla Automation and Tools Team',
       author_email='tools@lists.mozilla.org',
-      url='https://github.com/mjzffr/firefox-media-tests',
+      url='https://hg.mozilla.org/mozilla-central/dom/media/test/external/',
       license='MPL 2.0',
       packages=find_packages(),
       zip_safe=False,
@@ -38,5 +38,5 @@ setup(name='firefox-media-tests',
       include_package_data=True,
       entry_points="""
         [console_scripts]
-        firefox-media-tests = harness:cli
+        external-media-tests = external_media_harness:cli
     """)

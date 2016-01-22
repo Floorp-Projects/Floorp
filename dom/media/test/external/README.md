@@ -1,4 +1,4 @@
-firefox-media-tests
+external-media-tests
 ===================
 
 [Marionette Python tests][marionette-python-tests] for media playback in Mozilla Firefox. MediaTestCase uses [Firefox Puppeteer][ff-puppeteer-docs] library.
@@ -6,7 +6,7 @@ firefox-media-tests
 Setup
 -----
 
-The instructions below assume you have a copy of the project in `some/path/firefox-media-tests` and they refer to this path as `$PROJECT_HOME`.
+Normally, you get this source by cloning a firefox repo such as mozilla-central. The path to these tests would be in <mozilla-central>/dom/media/test/external, and these instuctions refer to this path as '$PROJECT_HOME'.
 
 * Create a virtualenv called `foo`.
 
@@ -15,13 +15,13 @@ The instructions below assume you have a copy of the project in `some/path/firef
    $ source foo/bin/activate #or `foo\Scripts\activate` on Windows
    ```
 
-* Install `firefox-media-tests` in development mode. (To get an environment that is closer to what is actually used in Mozilla's automation jobs, run `pip install -r requirements.txt` first.)
+* Install `external-media-tests` in development mode. (To get an environment that is closer to what is actually used in Mozilla's automation jobs, run `pip install -r requirements.txt` first.)
 
    ```sh
    $ python setup.py develop
    ```
 
-Now `firefox-media-tests` should be a recognized command. Try `firefox-media-tests --help` to see if it works.
+Now `external-media-tests` should be a recognized command. Try `external-media-tests --help` to see if it works.
 
 
 Running the Tests
@@ -29,28 +29,28 @@ Running the Tests
 
 In the examples below, `$FF_PATH` is a path to a recent Firefox binary.
 
-This runs all the tests listed in `$PROJECT_HOME/firefox_media_tests/manifest.ini`:
+This runs all the tests listed in `$PROJECT_HOME/external_media_tests/manifest.ini`:
 
    ```sh
-   $ firefox-media-tests --binary $FF_PATH
+   $ external-media-tests --binary $FF_PATH
    ```
 
 You can also run all the tests at a particular path:
 
    ```sh
-   $ firefox-media-tests --binary $FF_PATH some/path/foo
+   $ external-media-tests --binary $FF_PATH some/path/foo
    ```
 
 Or you can run the tests that are listed in a manifest file of your choice.
 
    ```sh
-   $ firefox-media-tests --binary $FF_PATH some/other/path/manifest.ini
+   $ external-media-tests --binary $FF_PATH some/other/path/manifest.ini
    ```
 
-By default, the urls listed in `firefox_media_tests/urls/default.ini` are used for the tests, but you can also supply your own ini file of urls:
+By default, the urls listed in `external_media_tests/urls/default.ini` are used for the tests, but you can also supply your own ini file of urls:
 
    ```sh
-   $ firefox-media-tests --binary $FF_PATH --urls some/other/path/my_urls.ini
+   $ external-media-tests --binary $FF_PATH --urls some/other/path/my_urls.ini
    ```
 
 ### Running EME tests
@@ -58,7 +58,7 @@ By default, the urls listed in `firefox_media_tests/urls/default.ini` are used f
 In order to run EME tests, you must use a Firefox profile that has a signed plugin-container.exe and voucher.bin. With Netflix, this will be created when you log in and save the credentials. You must also use a custom .ini file for urls to the provider's content and indicate which test to run, like above. Ex:
 
    ```sh
-   $ firefox-media-tests --binary $FF_PATH some/path/tests.ini --profile custom_profile --urls some/path/provider-urls.ini
+   $ external-media-tests --binary $FF_PATH some/path/tests.ini --profile custom_profile --urls some/path/provider-urls.ini
    ```
 
 
@@ -84,7 +84,7 @@ What if Firefox crashes during a test run? You want to know why! To report usefu
 5. Run the tests with a `--symbols-path` flag
 
   ```sh
-   $ firefox-media-tests --binary $FF_PATH --symbols-path path/to/example/firefox-38.0a2.en-US.win32.crashreporter-symbols
+   $ external-media-tests --binary $FF_PATH --symbols-path path/to/example/firefox-38.0a2.en-US.win32.crashreporter-symbols
   ```
 
 To check whether the above setup is working for you, trigger a (silly) Firefox crash while the tests are running. One way to do this is with the [crashme add-on](https://github.com/luser/crashme) -- you can add it to Firefox even while the tests are running. Another way on Linux and Mac OS systems:
@@ -101,7 +101,7 @@ To check whether the above setup is working for you, trigger a (silly) Firefox c
    $ kill -6 1234
   ```
 
-Somewhere in the output produced by `firefox-media-tests`, you should see something like:
+Somewhere in the output produced by `external-media-tests`, you should see something like:
 
 ```
 0:12.68 CRASH: MainThread pid:1234. Test:test_basic_playback.py TestVideoPlayback.test_playback_starts.
@@ -137,11 +137,11 @@ On Windows, use browsermob-proxy.bat.
 You can then call browsermob to shape the network. You can find an example in firefox_media_tests/playback/test_playback_limiting_bandwidth.py. Another example can be found at https://dxr.mozilla.org/mozilla-central/source/testing/marionette/client/marionette/tests/unit/test_browsermobproxy.py.
 
 ### A warning about video URLs
-The ini files in `firefox_media_tests/urls` may contain URLs pulled from Firefox crash or bug data. Automated tests don't care about video content, but you might: visit these at your own risk and be aware that they may be NSFW. We do not intend to ever moderate or filter these URLs.
+The ini files in `external_media_tests/urls` may contain URLs pulled from Firefox crash or bug data. Automated tests don't care about video content, but you might: visit these at your own risk and be aware that they may be NSFW. We do not intend to ever moderate or filter these URLs.
 
 Writing a test
 --------------
-Write your test in a new or existing `test_*.py` file under `$PROJECT_HOME/firefox_media_tests`. Add it to the appropriate `manifest.ini` file(s) as well. Look in `media_utils` for useful video-playback functions.
+Write your test in a new or existing `test_*.py` file under `$PROJECT_HOME/external_media_tests`. Add it to the appropriate `manifest.ini` file(s) as well. Look in `media_utils` for useful video-playback functions.
 
 * [Marionette docs][marionette-docs]
   - [Marionette Command Line Options](https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options)

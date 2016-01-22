@@ -6,7 +6,7 @@ from time import clock, sleep
 
 from marionette_driver import By, expected, Wait
 
-from media_tests.utils import verbose_until
+from external_media_tests.utils import verbose_until
 
 
 # Adapted from

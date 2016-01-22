@@ -59,8 +59,9 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
-            'base': 'dom/media/test',
-            'pattern': 'external-media-tests/**',
+            'base': 'dom/media/test/external',
+            'pattern': '**',
+            'dest': 'external-media-tests',
         },
         {
             'source': buildconfig.topsrcdir,
