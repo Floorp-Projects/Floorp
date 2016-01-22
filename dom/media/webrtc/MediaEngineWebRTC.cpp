@@ -45,7 +45,6 @@ GetUserMediaLog()
 namespace mozilla {
 
 cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
-bool AudioInputCubeb::mAnyInUse = false;
 
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC"),
