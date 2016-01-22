@@ -175,7 +175,6 @@
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
-#include "mozilla/dom/PushNotifier.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -3215,57 +3214,6 @@ ContentChild::RecvTestGraphicsDeviceReset(const uint32_t& aResetReason)
 #if defined(XP_WIN)
   gfxPlatform::GetPlatform()->TestDeviceReset(DeviceResetReason(aResetReason));
 #endif
-  return true;
-}
-
-bool
-ContentChild::RecvPush(const nsCString& aScope,
-                       const IPC::Principal& aPrincipal)
-{
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
-      return true;
-  }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
-  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal, Nothing());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-  return true;
-}
-
-bool
-ContentChild::RecvPushWithData(const nsCString& aScope,
-                               const IPC::Principal& aPrincipal,
-                               InfallibleTArray<uint8_t>&& aData)
-{
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
-      return true;
-  }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
-  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
-                                                Some(aData));
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-  return true;
-}
-
-bool
-ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
-                                         const IPC::Principal& aPrincipal)
-{
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
-      return true;
-  }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
-  nsresult rv = pushNotifier->NotifySubscriptionChangeWorkers(aScope,
-                                                              aPrincipal);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
   return true;
 }
 

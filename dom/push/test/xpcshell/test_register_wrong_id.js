@@ -16,6 +16,9 @@ function run_test() {
     requestTimeout: 1000,
     retryBaseInterval: 150
   });
+  disableServiceWorkerEvents(
+    'https://example.com/mismatched'
+  );
   run_next_test();
 }
 

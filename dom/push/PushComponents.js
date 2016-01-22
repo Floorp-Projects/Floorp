@@ -106,8 +106,10 @@ Object.assign(PushServiceParent.prototype, {
     "Push:Registration",
     "Push:Unregister",
     "Push:Clear",
+    "Push:RegisterEventNotificationListener",
     "Push:NotificationForOriginShown",
     "Push:NotificationForOriginClosed",
+    "child-process-shutdown",
   ],
 
   // nsIPushService methods
@@ -167,6 +169,14 @@ Object.assign(PushServiceParent.prototype, {
       return;
     }
     let {name, principal, target, data} = message;
+    if (name === "Push:RegisterEventNotificationListener") {
+      this._service.registerListener(target);
+      return;
+    }
+    if (name === "child-process-shutdown") {
+      this._service.unregisterListener(target);
+      return;
+    }
     if (name === "Push:NotificationForOriginShown") {
       this.notificationForOriginShown(data);
       return;
@@ -458,7 +468,21 @@ PushSubscription.prototype = {
   },
 };
 
+/**
+ * `PushObserverNotification` instances are passed to all
+ * `push-notification` observers.
+ */
+function PushObserverNotification() {}
+
+PushObserverNotification.prototype = {
+  classID: Components.ID("{e68997fd-8b92-49ee-af12-800830b023e8}"),
+  contractID: "@mozilla.org/push/ObserverNotification;1",
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushObserverNotification]),
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
+  PushObserverNotification,
+
   // Export the correct implementation depending on whether we're running in
   // the parent or content process.
   isParent ? PushServiceParent : PushServiceContent,
