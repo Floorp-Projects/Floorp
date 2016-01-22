@@ -52,7 +52,7 @@ add_task(function* test_trackingPages() {
     is(Services.prefs.getIntPref(PREF_INTRO_COUNT), TrackingProtection.MAX_INTROS, "Check intro count increased");
 
     let step2URL = Services.urlFormatter.formatURLPref("privacy.trackingprotection.introURL") +
-                    "#step2";
+                   "?step=2&newtab=true";
     let buttons = document.getElementById("UITourTooltipButtons");
 
     info("Click the step text and nothing should happen");
