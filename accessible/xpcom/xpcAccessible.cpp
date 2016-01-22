@@ -125,7 +125,7 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
   NS_ENSURE_ARG_POINTER(aChildren);
   *aChildren = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -133,9 +133,9 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t childCount = Intl()->ChildCount();
+  uint32_t childCount = IntlGeneric().ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = Intl()->GetChildAt(childIdx);
+    AccessibleOrProxy child = IntlGeneric().ChildAt(childIdx);
     children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)), false);
   }
 
