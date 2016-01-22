@@ -418,7 +418,7 @@ tv = {
     ),
   },
 
-  // RSA-PSS test vectors, pss-vect.txt, Example 1: A 1024-bit RSA Key Pair
+  // [pss-vect.txt] Example 1.1 from
   // <ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip>
   rsapss: {
     pkcs8: util.hex2abv(
@@ -466,9 +466,7 @@ tv = {
       "df6ebb9c2f9579aa77598a38f914b5b9c1bd83c4e2f9f382a0d0aa3542ffee65" +
       "984a601bc69eb28deb27dca12c82c2d4c3f66cd500f1ff2b994d8a4e30cbb33c"
     ),
-    salt: util.hex2abv(
-      "dee959c7e06411361420ff80185ed57f3e6776af"
-    ),
+    saltLength: 20,
     jwk_priv: {
       kty: "RSA",
       n: "pW5KDnAQF1iaUYfcfqhB0Vby7A42rVKkTf6x5h962ZHYxRBW_-2xYrTA8oOhK" +
@@ -496,6 +494,104 @@ tv = {
          "_4nRnxBazC0_DLNfKSgOE4a29kxO8i4eHyDQzoz_siSb2aITc",
       e: "AQAB",
     },
+  },
+
+  // [pss-vect.txt] Example 1.4 from
+  // <ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip>
+  rsapss2: {
+    spki: util.hex2abv(
+      "30819f300d06092a864886f70d010101050003818d0030818902818100a56e4a" +
+      "0e701017589a5187dc7ea841d156f2ec0e36ad52a44dfeb1e61f7ad991d8c510" +
+      "56ffedb162b4c0f283a12a88a394dff526ab7291cbb307ceabfce0b1dfd5cd95" +
+      "08096d5b2b8b6df5d671ef6377c0921cb23c270a70e2598e6ff89d19f105acc2" +
+      "d3f0cb35f29280e1386b6f64c4ef22e1e1f20d0ce8cffb2249bd9a2137020301" +
+      "0001"
+    ),
+    data: util.hex2abv(
+      "bc656747fa9eafb3f0"
+    ),
+    sig: util.hex2abv(
+      "4609793b23e9d09362dc21bb47da0b4f3a7622649a47d464019b9aeafe53359c" +
+      "178c91cd58ba6bcb78be0346a7bc637f4b873d4bab38ee661f199634c547a1ad" +
+      "8442e03da015b136e543f7ab07c0c13e4225b8de8cce25d4f6eb8400f81f7e18" +
+      "33b7ee6e334d370964ca79fdb872b4d75223b5eeb08101591fb532d155a6de87"
+    ),
+    saltLength: 20
+  },
+
+  // [SigVerPSS_186-3.rsp] from
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/dss/186-2rsatestvectors.zip>
+  rsapss3: {
+    spki: util.hex2abv(
+      "30819d300d06092a864886f70d010101050003818b0030818702818100be499b" +
+      "5e7f06c83fa0293e31465c8eb6b58af920bae52a7b5b9bfeb7aa72db1264112e" +
+      "b3fd431d31a2a7e50941566929494a0e891ed5613918b4b51b0d1fb97783b26a" +
+      "cf7d0f384cfb35f4d2824f5dd380623a26bf180b63961c619dcdb20cae406f22" +
+      "f6e276c80a37259490cfeb72c1a71a84f1846d330877ba3e3101ec9c7b020111"
+    ),
+    data: util.hex2abv(
+      "c7f5270fca725f9bd19f519a8d7cca3cc5c079024029f3bae510f9b02140fe23" +
+      "8908e4f6c18f07a89c687c8684669b1f1db2baf9251a3c829faccb493084e16e" +
+      "c9e28d58868074a5d6221667dd6e528d16fe2c9f3db4cfaf6c4dce8c8439af38" +
+      "ceaaaa9ce2ecae7bc8f4a5a55e3bf96df9cd575c4f9cb327951b8cdfe4087168"
+    ),
+    sig: util.hex2abv(
+      "11e169f2fd40b07641b9768a2ab19965fb6c27f10fcf0323fcc6d12eb4f1c06b" +
+      "330ddaa1ea504407afa29de9ebe0374fe9d1e7d0ffbd5fc1cf3a3446e4145415" +
+      "d2ab24f789b3464c5c43a256bbc1d692cf7f04801dac5bb401a4a03ab7d5728a" +
+      "860c19e1a4dc797ca542c8203cec2e601eb0c51f567f2eda022b0b9ebddeeefa"
+    ),
+    saltLength: 10
+  },
+
+  // [SigVerPSS_186-3.rsp] from
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/dss/186-2rsatestvectors.zip>
+  rsapss4: {
+    spki: util.hex2abv(
+      "30819d300d06092a864886f70d010101050003818b0030818702818100be499b" +
+      "5e7f06c83fa0293e31465c8eb6b58af920bae52a7b5b9bfeb7aa72db1264112e" +
+      "b3fd431d31a2a7e50941566929494a0e891ed5613918b4b51b0d1fb97783b26a" +
+      "cf7d0f384cfb35f4d2824f5dd380623a26bf180b63961c619dcdb20cae406f22" +
+      "f6e276c80a37259490cfeb72c1a71a84f1846d330877ba3e3101ec9c7b020111"
+    ),
+    data: util.hex2abv(
+      "c7f5270fca725f9bd19f519a8d7cca3cc5c079024029f3bae510f9b02140fe23" +
+      "8908e4f6c18f07a89c687c8684669b1f1db2baf9251a3c829faccb493084e16e" +
+      "c9e28d58868074a5d6221667dd6e528d16fe2c9f3db4cfaf6c4dce8c8439af38" +
+      "ceaaaa9ce2ecae7bc8f4a5a55e3bf96df9cd575c4f9cb327951b8cdfe4087168"
+    ),
+    sig: util.hex2abv(
+      "b281ad934b2775c0cba5fb10aa574d2ed85c7f99b942b78e49702480069362ed" +
+      "394baded55e56cfcbe7b0b8d2217a05a60e1acd725cb09060dfac585bc2132b9" +
+      "9b41cdbd530c69d17cdbc84bc6b9830fc7dc8e1b2412cfe06dcf8c1a0cc3453f" +
+      "93f25ebf10cb0c90334fac573f449138616e1a194c67f44efac34cc07a526267"
+    ),
+    saltLength: 10
+  },
+
+  // [SigVerPSS_186-3.rsp] from
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/dss/186-2rsatestvectors.zip>
+  rsapss5: {
+    spki: util.hex2abv(
+      "30819d300d06092a864886f70d010101050003818b0030818702818100be499b" +
+      "5e7f06c83fa0293e31465c8eb6b58af920bae52a7b5b9bfeb7aa72db1264112e" +
+      "b3fd431d31a2a7e50941566929494a0e891ed5613918b4b51b0d1fb97783b26a" +
+      "cf7d0f384cfb35f4d2824f5dd380623a26bf180b63961c619dcdb20cae406f22" +
+      "f6e276c80a37259490cfeb72c1a71a84f1846d330877ba3e3101ec9c7b020111"
+    ),
+    data: util.hex2abv(
+      "c7f5270fca725f9bd19f519a8d7cca3cc5c079024029f3bae510f9b02140fe23" +
+      "8908e4f6c18f07a89c687c8684669b1f1db2baf9251a3c829faccb493084e16e" +
+      "c9e28d58868074a5d6221667dd6e528d16fe2c9f3db4cfaf6c4dce8c8439af38" +
+      "ceaaaa9ce2ecae7bc8f4a5a55e3bf96df9cd575c4f9cb327951b8cdfe4087168"
+    ),
+    sig: util.hex2abv(
+      "8ffc38f9b820ef6b080fd2ec7de5626c658d79056f3edf610a295b7b0546f73e" +
+      "01ffdf4d0070ebf79c33fd86c2d608be9438b3d420d09535b97cd3d846ecaf8f" +
+      "6551cdf93197e9f8fb048044473ab41a801e9f7fc983c62b324361dade9f71a6" +
+      "5952bd35c59faaa4d6ff462f68a6c4ec0b428aa47336f2178aeb276136563b7d"
+    ),
+    saltLength: 10
   },
 
   key_wrap_known_answer: {
