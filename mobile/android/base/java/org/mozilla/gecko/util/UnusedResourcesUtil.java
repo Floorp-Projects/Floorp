@@ -47,8 +47,6 @@ final class UnusedResourcesUtil {
             R.xml.fxaccount_syncadapter,
             R.xml.search_widget_info,
             R.xml.searchable,
-            R.xml.sync_authenticator,
-            R.xml.sync_syncadapter,
     };
 
     public static final int[] USED_IN_SUGGESTEDSITES = {

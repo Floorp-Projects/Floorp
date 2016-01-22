@@ -39,6 +39,8 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
  *          inherited: An element this rule was inherited from.  If omitted,
  *            the rule applies directly to the current element.
  *          isSystem: Is this a user agent style?
+ *          isUnmatched: True if the rule does not match the current selected
+ *            element, otherwise, false.
  */
 function Rule(elementStyle, options) {
   this.elementStyle = elementStyle;
@@ -48,6 +50,7 @@ function Rule(elementStyle, options) {
   this.pseudoElement = options.pseudoElement || "";
 
   this.isSystem = options.isSystem;
+  this.isUnmatched = options.isUnmatched || false;
   this.inherited = options.inherited || null;
   this.keyframes = options.keyframes || null;
   this._modificationDepth = 0;

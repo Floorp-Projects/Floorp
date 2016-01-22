@@ -5,14 +5,11 @@
 
 package org.mozilla.gecko.preferences;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.Intent;
 import android.preference.Preference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.View;
-import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -22,19 +19,14 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 import org.mozilla.gecko.fxa.activities.PicassoPreferenceIconTarget;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.util.ThreadUtils;
 
 class SyncPreference extends Preference {
-    private static final boolean DEFAULT_TO_FXA = true;
-
     private final Context mContext;
     private final Target profileAvatarTarget;
 
@@ -43,18 +35,6 @@ class SyncPreference extends Preference {
         mContext = context;
         final float cornerRadius = mContext.getResources().getDimension(R.dimen.fxaccount_profile_image_width) / 2;
         profileAvatarTarget = new PicassoPreferenceIconTarget(mContext.getResources(), this, cornerRadius);
-    }
-
-    private void openSync11Settings() {
-        // Show Sync setup if no accounts exist; otherwise, show account settings.
-        if (SyncAccounts.syncAccountsExist(mContext)) {
-            // We don't check for failure here. If you already have Sync set up,
-            // then there's nothing we can do.
-            SyncAccounts.openSyncSettings(mContext);
-            return;
-        }
-        Intent intent = new Intent(mContext, SetupSyncActivity.class);
-        mContext.startActivity(intent);
     }
 
     private void launchFxASetup() {
@@ -120,23 +100,8 @@ class SyncPreference extends Preference {
 
     @Override
     protected void onClick() {
-        // If we're not defaulting to FxA, just do what we've always done.
-        if (!DEFAULT_TO_FXA) {
-            openSync11Settings();
-            return;
-        }
-
-        // If there's a legacy Sync account (or a pickled one on disk),
-        // open the settings page.
-        if (SyncAccounts.syncAccountsExist(mContext)) {
-            if (SyncAccounts.openSyncSettings(mContext) != null) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, "sync_settings");
-                return;
-            }
-        }
-
-        // Otherwise, launch the FxA "Get started" activity, which will
-        // dispatch to the right location.
+        // Launch the FxA "Get started" activity, which will dispatch to the
+        // right location.
         launchFxASetup();
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, "sync_setup");
     }

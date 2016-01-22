@@ -3,19 +3,23 @@
 
 package org.mozilla.gecko.background.sync;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
+import android.content.Context;
+import android.test.InstrumentationTestCase;
+
+import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.content.Context;
+import java.util.concurrent.TimeUnit;
 
 public class AndroidSyncTestCaseWithAccounts extends AndroidSyncTestCase {
   public final String testAccountType;
@@ -61,9 +65,38 @@ public class AndroidSyncTestCaseWithAccounts extends AndroidSyncTestCase {
     return testAccounts;
   }
 
+  public static void deleteAccount(final InstrumentationTestCase test, final AccountManager accountManager, final Account account) {
+    performWait(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          test.runTestOnUiThread(new Runnable() {
+            final AccountManagerCallback<Boolean> callback = new AccountManagerCallback<Boolean>() {
+              @Override
+              public void run(AccountManagerFuture<Boolean> future) {
+                try {
+                  future.getResult(5L, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                }
+                performNotify();
+              }
+            };
+
+            @Override
+            public void run() {
+              accountManager.removeAccount(account, callback, null);
+            }
+          });
+        } catch (Throwable e) {
+          performNotify(e);
+        }
+      }
+    });
+  }
+
   public void deleteTestAccounts() {
     for (Account account : getTestAccounts()) {
-      TestSyncAccounts.deleteAccount(this, accountManager, account);
+      deleteAccount(this, accountManager, account);
     }
   }
 

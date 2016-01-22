@@ -181,6 +181,8 @@ DominatorTreeNode.getLabelAndShallowSize = function (nodeId,
  * `maxSiblings` within any single node's children.
  *
  * @param {DominatorTree} dominatorTree
+ * @param {HeapSnapshot} snapshot
+ * @param {Object} breakdown
  * @param {Number} maxDepth
  * @param {Number} maxSiblings
  *
@@ -204,7 +206,7 @@ DominatorTreeNode.partialTraversal = function (dominatorTree,
       for (let i = 0; i < endIdx; i++) {
         DominatorTreeNode.addChild(node, dfs(childNodeIds[i], newDepth));
       }
-      node.moreChildrenAvailable = childNodeIds.length < endIdx;
+      node.moreChildrenAvailable = endIdx < childNodeIds.length;
     } else {
       node.moreChildrenAvailable = childNodeIds.length > 0;
     }
