@@ -28,7 +28,7 @@ class ImageCapture;
  * released during the period of the capturing process described above.
  */
 class CaptureTask : public MediaStreamListener,
-                    public DOMMediaStream::PrincipalChangeObserver
+                    public dom::PrincipalChangeObserver<DOMMediaStream>
 {
 public:
   // MediaStreamListener methods.
@@ -42,7 +42,7 @@ public:
   void NotifyEvent(MediaStreamGraph* aGraph,
                    MediaStreamGraphEvent aEvent) override;
 
-  // DOMMediaStream::PrincipalChangeObserver method.
+  // PrincipalChangeObserver<DOMMediaStream> method.
   void PrincipalChanged(DOMMediaStream* aMediaStream) override;
 
   // CaptureTask methods.

@@ -800,13 +800,15 @@ DOMMediaStream::NotifyPrincipalChanged()
 
 
 bool
-DOMMediaStream::AddPrincipalChangeObserver(PrincipalChangeObserver* aObserver)
+DOMMediaStream::AddPrincipalChangeObserver(
+  PrincipalChangeObserver<DOMMediaStream>* aObserver)
 {
   return mPrincipalChangeObservers.AppendElement(aObserver) != nullptr;
 }
 
 bool
-DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver)
+DOMMediaStream::RemovePrincipalChangeObserver(
+  PrincipalChangeObserver<DOMMediaStream>* aObserver)
 {
   return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
