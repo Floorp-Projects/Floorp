@@ -144,6 +144,20 @@ MediaStreamTrack::Graph()
   return GetOwnedStream()->Graph();
 }
 
+bool
+MediaStreamTrack::AddPrincipalChangeObserver(
+  PrincipalChangeObserver<MediaStreamTrack>* aObserver)
+{
+  return mPrincipalChangeObservers.AppendElement(aObserver) != nullptr;
+}
+
+bool
+MediaStreamTrack::RemovePrincipalChangeObserver(
+  PrincipalChangeObserver<MediaStreamTrack>* aObserver)
+{
+  return mPrincipalChangeObservers.RemoveElement(aObserver);
+}
+
 DOMMediaStream*
 MediaStreamTrack::GetInputDOMStream()
 {
