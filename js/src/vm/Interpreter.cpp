@@ -369,14 +369,14 @@ Interpret(JSContext* cx, RunState& state);
 InterpreterFrame*
 InvokeState::pushInterpreterFrame(JSContext* cx)
 {
-    return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, initial_);
+    return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, construct_);
 }
 
 InterpreterFrame*
 ExecuteState::pushInterpreterFrame(JSContext* cx)
 {
     return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
-                                                              scopeChain_, type_, evalInFrame_);
+                                                              scopeChain_, evalInFrame_);
 }
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
@@ -450,9 +450,6 @@ js::Invoke(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
     /* Perform GC if necessary on exit from the function. */
     AutoGCIfRequested gcIfRequested(cx->runtime());
 
-    /* MaybeConstruct is a subset of InitialFrameFlags */
-    InitialFrameFlags initial = (InitialFrameFlags) construct;
-
     unsigned skipForCallee = args.length() + 1 + (construct == CONSTRUCT);
     if (args.calleev().isPrimitive())
         return ReportIsNotFunction(cx, args.calleev(), skipForCallee, construct);
@@ -482,7 +479,7 @@ js::Invoke(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
         return false;
 
     /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
-    InvokeState state(cx, args, initial);
+    InvokeState state(cx, args, construct);
 
     // Check to see if createSingleton flag should be set for this frame.
     if (construct) {
@@ -650,11 +647,10 @@ js::InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v)
 
 bool
 js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
-                  const Value& newTargetValue, ExecuteType type, AbstractFramePtr evalInFrame,
+                  const Value& newTargetValue, AbstractFramePtr evalInFrame,
                   Value* result)
 {
-    MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL_OR_MODULE && !script->module(),
+    MOZ_ASSERT_IF(script->isGlobalCode(),
                   IsGlobalLexicalScope(&scopeChainArg) || !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
     RootedObject terminatingScope(cx, &scopeChainArg);
@@ -680,7 +676,7 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
     }
 
     probes::StartExecution(script);
-    ExecuteState state(cx, script, newTargetValue, scopeChainArg, type, evalInFrame, result);
+    ExecuteState state(cx, script, newTargetValue, scopeChainArg, evalInFrame, result);
     bool ok = RunScript(cx, state);
     probes::StopExecution(script);
 
@@ -713,7 +709,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     } while ((s = s->enclosingScope()));
 #endif
 
-    return ExecuteKernel(cx, script, *scopeChain, NullValue(), EXECUTE_GLOBAL_OR_MODULE,
+    return ExecuteKernel(cx, script, *scopeChain, NullValue(),
                          NullFramePtr() /* evalInFrame */, rval);
 }
 
@@ -2777,7 +2773,7 @@ CASE(JSOP_FUNCALL)
     if (REGS.fp()->hasPushedSPSFrame())
         cx->runtime()->spsProfiler.updatePC(script, REGS.pc);
 
-    bool construct = (*REGS.pc == JSOP_NEW || *REGS.pc == JSOP_SUPERCALL);
+    MaybeConstruct construct = MaybeConstruct(*REGS.pc == JSOP_NEW || *REGS.pc == JSOP_SUPERCALL);
     unsigned argStackSlots = GET_ARGC(REGS.pc) + construct;
 
     MOZ_ASSERT(REGS.stackDepth() >= 2u + GET_ARGC(REGS.pc));
@@ -2815,13 +2811,12 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
 
-        InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
         bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, REGS.pc);
 
         TypeMonitorCall(cx, args, construct);
 
         mozilla::Maybe<InvokeState> state;
-        state.emplace(cx, args, initial);
+        state.emplace(cx, args, construct);
 
         if (createSingleton)
             state->setCreateSingleton();
@@ -2855,7 +2850,7 @@ CASE(JSOP_FUNCALL)
         state.reset();
         funScript = fun->nonLazyScript();
 
-        if (!activation.pushInlineFrame(args, funScript, initial))
+        if (!activation.pushInlineFrame(args, funScript, construct))
             goto error;
 
         if (createSingleton)

@@ -197,8 +197,8 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 class CodeRange
 {
     // All fields are treated as cacheable POD:
-    uint32_t nameIndex_;
-    uint32_t lineNumber_;
+    uint32_t funcIndex_;
+    uint32_t funcLineOrBytecode_;
     uint32_t begin_;
     uint32_t profilingReturn_;
     uint32_t end_;
@@ -220,7 +220,7 @@ class CodeRange
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
     CodeRange(Kind kind, ProfilingOffsets offsets);
-    CodeRange(uint32_t nameIndex, uint32_t lineNumber, FuncOffsets offsets);
+    CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
 
     // All CodeRanges have a begin and end.
 
@@ -265,13 +265,13 @@ class CodeRange
         MOZ_ASSERT(isFunction());
         return profilingReturn_ - u.func.profilingEpilogueToProfilingReturn_;
     }
-    uint32_t funcNameIndex() const {
+    uint32_t funcIndex() const {
         MOZ_ASSERT(isFunction());
-        return nameIndex_;
+        return funcIndex_;
     }
-    uint32_t funcLineNumber() const {
+    uint32_t funcLineOrBytecode() const {
         MOZ_ASSERT(isFunction());
-        return lineNumber_;
+        return funcLineOrBytecode_;
     }
 
     // A sorted array of CodeRanges can be looked up via BinarySearch and PC.
@@ -366,6 +366,7 @@ struct ModuleCacheablePod
     uint32_t              functionBytes;
     uint32_t              codeBytes;
     uint32_t              globalBytes;
+    uint32_t              numFuncs;
     ModuleKind            kind;
     HeapUsage             heapUsage;
     CompileArgs           compileArgs;
@@ -389,7 +390,7 @@ struct ModuleData : ModuleCacheablePod
     HeapAccessVector      heapAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
-    CacheableCharsVector  funcNames;
+    CacheableCharsVector  prettyFuncNames;
     CacheableChars        filename;
     bool                  loadedFromCache;
 
@@ -466,7 +467,7 @@ class Module
     WasmActivation*& activation();
     void specializeToHeap(ArrayBufferObjectMaybeShared* heap);
     void despecializeFromHeap(ArrayBufferObjectMaybeShared* heap);
-    void sendCodeRangesToProfiler(JSContext* cx);
+    bool sendCodeRangesToProfiler(JSContext* cx);
     MOZ_WARN_UNUSED_RESULT bool setProfilingEnabled(JSContext* cx, bool enabled);
     ImportExit& importToExit(const Import& import);
 
@@ -496,7 +497,6 @@ class Module
     CompileArgs compileArgs() const { return module_->compileArgs; }
     const ImportVector& imports() const { return module_->imports; }
     const ExportVector& exports() const { return module_->exports; }
-    const char* functionName(uint32_t i) const { return module_->funcNames[i].get(); }
     const char* filename() const { return module_->filename.get(); }
     bool loadedFromCache() const { return module_->loadedFromCache; }
     bool staticallyLinked() const { return staticallyLinked_; }
@@ -572,6 +572,13 @@ class Module
 
     uint8_t* interrupt() const { MOZ_ASSERT(staticallyLinked_); return interrupt_; }
     uint8_t* outOfBounds() const { MOZ_ASSERT(staticallyLinked_); return outOfBounds_; }
+
+    // Every function has an associated display atom which is either the pretty
+    // name given by the asm.js function name or wasm symbols or something
+    // generated from the function index.
+
+    const char* prettyFuncName(uint32_t funcIndex) const;
+    const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
 
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no

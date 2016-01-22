@@ -47,7 +47,7 @@ class FrameHistory {
   struct Chunk {
     uint32_t servicedFrames;
     uint32_t totalFrames;
-    int rate;
+    uint32_t rate;
   };
 
   template <typename T>
@@ -58,7 +58,7 @@ public:
   FrameHistory()
     : mBaseOffset(0), mBasePosition(0) {}
 
-  void Append(uint32_t aServiced, uint32_t aUnderrun, int aRate) {
+  void Append(uint32_t aServiced, uint32_t aUnderrun, uint32_t aRate) {
     /* In most case where playback rate stays the same and we don't underrun
      * frames, we are able to merge chunks to avoid lose of precision to add up
      * in compressing chunks into |mBaseOffset| and |mBasePosition|.
@@ -299,13 +299,13 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
 }
 
 nsresult
-AudioStream::Init(int32_t aNumChannels, int32_t aRate,
+AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
   mStartTime = TimeStamp::Now();
   mIsFirst = CubebUtils::GetFirstStream();
 
-  if (!CubebUtils::GetCubebContext() || aNumChannels < 0 || aRate < 0) {
+  if (!CubebUtils::GetCubebContext()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -364,7 +364,8 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams)
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(cubebContext, &stream, "AudioStream", aParams,
+    if (cubeb_stream_init(cubebContext, &stream, "AudioStream",
+                          nullptr, nullptr, nullptr, &aParams,
                           latency, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       MonitorAutoLock mon(mMonitor);
       MOZ_ASSERT(mState != SHUTDOWN);
@@ -534,18 +535,25 @@ AudioStream::IsPaused()
 }
 
 bool
-AudioStream::Downmix(AudioDataValue* aBuffer, uint32_t aFrames)
+AudioStream::Downmix(Chunk* aChunk)
 {
-  if (mChannels > 8) {
+  if (aChunk->Rate() != mInRate) {
+    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mInRate);
     return false;
   }
 
-  if (mChannels > 2 && mChannels <= 8) {
-    DownmixAudioToStereo(aBuffer, mChannels, aFrames);
+  if (aChunk->Channels() > 8) {
+    return false;
   }
 
-  if (mChannels >= 2 && mIsMonoAudioEnabled) {
-    DownmixStereoToMono(aBuffer, aFrames);
+  if (aChunk->Channels() > 2 && aChunk->Channels() <= 8) {
+    DownmixAudioToStereo(aChunk->GetWritable(),
+                         aChunk->Channels(),
+                         aChunk->Frames());
+  }
+
+  if (aChunk->Channels() >= 2 && mIsMonoAudioEnabled) {
+    DownmixStereoToMono(aChunk->GetWritable(), aChunk->Frames());
   }
 
   return true;
@@ -576,7 +584,7 @@ AudioStream::GetUnprocessed(AudioBufferWriter& aWriter)
       break;
     }
     MOZ_ASSERT(c->Frames() <= aWriter.Available());
-    if (Downmix(c->GetWritable(), c->Frames())) {
+    if (Downmix(c.get())) {
       aWriter.Write(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
@@ -604,7 +612,7 @@ AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
       break;
     }
     MOZ_ASSERT(c->Frames() <= toPopFrames);
-    if (Downmix(c->GetWritable(), c->Frames())) {
+    if (Downmix(c.get())) {
       mTimeStretcher->putSamples(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
@@ -720,7 +728,7 @@ int64_t AudioClock::GetPositionInFrames() const
 
 void AudioClock::SetPlaybackRateUnlocked(double aPlaybackRate)
 {
-  mOutRate = static_cast<int>(mInRate / aPlaybackRate);
+  mOutRate = static_cast<uint32_t>(mInRate / aPlaybackRate);
 }
 
 double AudioClock::GetPlaybackRate() const

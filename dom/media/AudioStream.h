@@ -67,9 +67,9 @@ private:
   // pointer is garanteed to always be valid.
   AudioStream* const mAudioStream;
   // Output rate in Hz (characteristic of the playback rate)
-  int mOutRate;
+  uint32_t mOutRate;
   // Input rate in Hz (characteristic of the media being played)
-  int mInRate;
+  uint32_t mInRate;
   // True if the we are timestretching, false if we are resampling.
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
@@ -225,6 +225,10 @@ public:
     virtual const AudioDataValue* Data() const = 0;
     // Return the number of frames in this chunk.
     virtual uint32_t Frames() const = 0;
+    // Return the number of audio channels.
+    virtual uint32_t Channels() const = 0;
+    // Return the sample rate of this chunk.
+    virtual uint32_t Rate() const = 0;
     // Return a writable pointer for downmixing.
     virtual AudioDataValue* GetWritable() const = 0;
     virtual ~Chunk() {}
@@ -248,7 +252,7 @@ public:
   // Initialize the audio stream. aNumChannels is the number of audio
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
-  nsresult Init(int32_t aNumChannels, int32_t aRate,
+  nsresult Init(uint32_t aNumChannels, uint32_t aRate,
                 const dom::AudioChannel aAudioStreamChannel);
 
   // Closes the stream. All future use of the stream is an error.
@@ -280,9 +284,9 @@ public:
   // Returns true when the audio stream is paused.
   bool IsPaused();
 
-  int GetRate() { return mOutRate; }
-  int GetChannels() { return mChannels; }
-  int GetOutChannels() { return mOutChannels; }
+  uint32_t GetRate() { return mOutRate; }
+  uint32_t GetChannels() { return mChannels; }
+  uint32_t GetOutChannels() { return mOutChannels; }
 
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
   // be called only with aPlaybackRate > 0.0.
@@ -304,9 +308,11 @@ protected:
 private:
   nsresult OpenCubeb(cubeb_stream_params &aParams);
 
-  static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
+  static long DataCallback_S(cubeb_stream*, void* aThis,
+                             const void* /* aInputBuffer */, void* aOutputBuffer,
+                             long aFrames)
   {
-    return static_cast<AudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
+    return static_cast<AudioStream*>(aThis)->DataCallback(aOutputBuffer, aFrames);
   }
 
   static void StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
@@ -321,7 +327,7 @@ private:
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
   // Return true if downmixing succeeds otherwise false.
-  bool Downmix(AudioDataValue* aBuffer, uint32_t aFrames);
+  bool Downmix(Chunk* aChunk);
 
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
@@ -332,11 +338,11 @@ private:
   Monitor mMonitor;
 
   // Input rate in Hz (characteristic of the media being played)
-  int mInRate;
+  uint32_t mInRate;
   // Output rate in Hz (characteristic of the playback rate)
-  int mOutRate;
-  int mChannels;
-  int mOutChannels;
+  uint32_t mOutRate;
+  uint32_t mChannels;
+  uint32_t mOutChannels;
 #if defined(__ANDROID__)
   dom::AudioChannel mAudioChannel;
 #endif

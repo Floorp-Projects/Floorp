@@ -44,11 +44,6 @@ IsCacheableNonGlobalScope(JSObject* obj)
 inline HandleObject
 InterpreterFrame::scopeChain() const
 {
-    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
-    if (!(flags_ & HAS_SCOPECHAIN)) {
-        scopeChain_ = callee().environment();
-        flags_ |= HAS_SCOPECHAIN;
-    }
     return HandleObject::fromMarkedLocation(&scopeChain_);
 }
 
@@ -76,13 +71,14 @@ InterpreterFrame::extensibleLexicalScope() const
 inline void
 InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecode* prevpc,
                                 Value* prevsp, JSFunction& callee, JSScript* script, Value* argv,
-                                uint32_t nactual, InterpreterFrame::Flags flagsArg)
+                                uint32_t nactual, MaybeConstruct constructing)
 {
-    MOZ_ASSERT((flagsArg & ~CONSTRUCTING) == 0);
     MOZ_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
-    flags_ = HAS_SCOPECHAIN | flagsArg;
+    flags_ = 0;
+    if (constructing)
+        flags_ |= CONSTRUCTING;
     argv_ = argv;
     script_ = script;
     nactual_ = nactual;
@@ -197,20 +193,17 @@ InterpreterFrame::pushOnScopeChain(ScopeObject& scope)
     MOZ_ASSERT(*scopeChain() == scope.enclosingScope() ||
                *scopeChain() == scope.as<CallObject>().enclosingScope().as<DeclEnvObject>().enclosingScope());
     scopeChain_ = &scope;
-    flags_ |= HAS_SCOPECHAIN;
 }
 
 inline void
 InterpreterFrame::popOffScopeChain()
 {
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
     scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
 inline void
 InterpreterFrame::replaceInnermostScope(ScopeObject& scope)
 {
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
     MOZ_ASSERT(scope.enclosingScope() == scopeChain_->as<ScopeObject>().enclosingScope());
     scopeChain_ = &scope;
 }
@@ -274,7 +267,7 @@ InterpreterStack::allocateFrame(JSContext* cx, size_t size)
 
 MOZ_ALWAYS_INLINE InterpreterFrame*
 InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript script,
-                               InterpreterFrame::Flags* flags, Value** pargv)
+                               MaybeConstruct constructing, Value** pargv)
 {
     JSFunction* fun = &args.callee().as<JSFunction>();
 
@@ -291,8 +284,7 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
     // Pad any missing arguments with |undefined|.
     MOZ_ASSERT(args.length() < nformal);
 
-    bool isConstructing = *flags & InterpreterFrame::CONSTRUCTING;
-    unsigned nfunctionState = 2 + isConstructing; // callee, |this|, |new.target|
+    unsigned nfunctionState = 2 + constructing; // callee, |this|, |new.target|
 
     nvals += nformal + nfunctionState;
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvals * sizeof(Value));
@@ -305,7 +297,7 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
     mozilla::PodCopy(argv, args.base(), 2 + args.length());
     SetValueRangeToUndefined(argv + 2 + args.length(), nmissing);
 
-    if (isConstructing)
+    if (constructing)
         argv[2 + nformal] = args.newTarget();
 
     *pargv = argv + 2;
@@ -314,7 +306,7 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
 
 MOZ_ALWAYS_INLINE bool
 InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const CallArgs& args,
-                                  HandleScript script, InitialFrameFlags initial)
+                                  HandleScript script, MaybeConstruct constructing)
 {
     RootedFunction callee(cx, &args.callee().as<JSFunction>());
     MOZ_ASSERT(regs.sp == args.end());
@@ -329,16 +321,16 @@ InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const Ca
 
     LifoAlloc::Mark mark = allocator_.mark();
 
-    InterpreterFrame::Flags flags = ToFrameFlags(initial);
     Value* argv;
-    InterpreterFrame* fp = getCallFrame(cx, args, script, &flags, &argv);
+    InterpreterFrame* fp = getCallFrame(cx, args, script, constructing, &argv);
     if (!fp)
         return false;
 
     fp->mark_ = mark;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, args.length(), flags);
+    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, args.length(),
+                      constructing);
 
     regs.prepareToRun(*fp, script);
     return true;
@@ -360,7 +352,7 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
 
     LifoAlloc::Mark mark = allocator_.mark();
 
-    bool constructing = newTarget.isObject();
+    MaybeConstruct constructing = MaybeConstruct(newTarget.isObject());
 
     // Include callee, |this|, and maybe |new.target|
     unsigned nformal = callee->nargs();
@@ -378,10 +370,8 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
         argv[nformal] = newTarget;
 
     InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(argv + nformal + constructing);
-    InterpreterFrame::Flags flags = constructing ? ToFrameFlags(INITIAL_CONSTRUCT)
-                                                 : ToFrameFlags(INITIAL_NONE);
     fp->mark_ = mark;
-    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, 0, flags);
+    fp->initCallFrame(cx, prev, prevpc, prevsp, *callee, script, argv, 0, constructing);
     fp->resumeGeneratorFrame(scopeChain);
 
     regs.prepareToRun(*fp, script);
@@ -945,20 +935,18 @@ InterpreterActivation::~InterpreterActivation()
     while (regs_.fp() != entryFrame_)
         popInlineFrame(regs_.fp());
 
-    JSContext* cx = cx_->asJSContext();
-    MOZ_ASSERT(oldFrameCount_ == cx->runtime()->interpreterStack().frameCount_);
-    MOZ_ASSERT_IF(oldFrameCount_ == 0, cx->runtime()->interpreterStack().allocator_.used() == 0);
+    MOZ_ASSERT(oldFrameCount_ == cx_->runtime()->interpreterStack().frameCount_);
+    MOZ_ASSERT_IF(oldFrameCount_ == 0, cx_->runtime()->interpreterStack().allocator_.used() == 0);
 
     if (entryFrame_)
-        cx->runtime()->interpreterStack().releaseFrame(entryFrame_);
+        cx_->runtime()->interpreterStack().releaseFrame(entryFrame_);
 }
 
 inline bool
 InterpreterActivation::pushInlineFrame(const CallArgs& args, HandleScript script,
-                                       InitialFrameFlags initial)
+                                       MaybeConstruct constructing)
 {
-    JSContext* cx = cx_->asJSContext();
-    if (!cx->runtime()->interpreterStack().pushInlineFrame(cx, regs_, args, script, initial))
+    if (!cx_->runtime()->interpreterStack().pushInlineFrame(cx_, regs_, args, script, constructing))
         return false;
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment());
     return true;
@@ -971,15 +959,15 @@ InterpreterActivation::popInlineFrame(InterpreterFrame* frame)
     MOZ_ASSERT(regs_.fp() == frame);
     MOZ_ASSERT(regs_.fp() != entryFrame_);
 
-    cx_->asJSContext()->runtime()->interpreterStack().popInlineFrame(regs_);
+    cx_->runtime()->interpreterStack().popInlineFrame(regs_);
 }
 
 inline bool
 InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
                                             HandleObject scopeChain)
 {
-    InterpreterStack& stack = cx_->asJSContext()->runtime()->interpreterStack();
-    if (!stack.resumeGeneratorCallFrame(cx_->asJSContext(), regs_, callee, newTarget, scopeChain))
+    InterpreterStack& stack = cx_->runtime()->interpreterStack();
+    if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, newTarget, scopeChain))
         return false;
 
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment_);
