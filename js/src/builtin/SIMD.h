@@ -779,6 +779,26 @@
 
 namespace js {
 
+// Complete set of SIMD types.
+// It must be kept in sync with the enumeration of values in
+// TypedObjectConstants.h; in particular we need to ensure that Count is
+// appropriately set with respect to the number of actual types.
+enum class SimdType : uint8_t {
+    Int8x16   = JS_SIMDTYPEREPR_INT8X16,
+    Int16x8   = JS_SIMDTYPEREPR_INT16X8,
+    Int32x4   = JS_SIMDTYPEREPR_INT32X4,
+    Uint8x16  = JS_SIMDTYPEREPR_UINT8X16,
+    Uint16x8  = JS_SIMDTYPEREPR_UINT16X8,
+    Uint32x4  = JS_SIMDTYPEREPR_UINT32X4,
+    Float32x4 = JS_SIMDTYPEREPR_FLOAT32X4,
+    Float64x2 = JS_SIMDTYPEREPR_FLOAT64X2,
+    Bool8x16  = JS_SIMDTYPEREPR_BOOL8X16,
+    Bool16x8  = JS_SIMDTYPEREPR_BOOL16X8,
+    Bool32x4  = JS_SIMDTYPEREPR_BOOL32X4,
+    Bool64x2  = JS_SIMDTYPEREPR_BOOL64X2,
+    Count
+};
+
 // Complete set of SIMD operations.
 //
 // No SIMD types implement all of these operations.
@@ -823,8 +843,8 @@ class SimdObject : public JSObject
 // of the SIMD vector.
 // - requires static const unsigned lanes: this is the number of lanes (length)
 // of the SIMD vector.
-// - requires static const SimdTypeDescr::Type type: this is the SimdTypeDescr
-// enum value corresponding to the SIMD type.
+// - requires static const SimdType type: this is the SimdType enum value
+// corresponding to the SIMD type.
 // - requires static bool Cast(JSContext*, JS::HandleValue, Elem*): casts a
 // given Value to the current scalar lane type and saves it in the Elem
 // out-param.
@@ -838,7 +858,7 @@ class SimdObject : public JSObject
 struct Float32x4 {
     typedef float Elem;
     static const unsigned lanes = 4;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
+    static const SimdType type = SimdType::Float32x4;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         double d;
         if (!ToNumber(cx, v, &d))
@@ -854,7 +874,7 @@ struct Float32x4 {
 struct Float64x2 {
     typedef double Elem;
     static const unsigned lanes = 2;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
+    static const SimdType type = SimdType::Float64x2;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToNumber(cx, v, out);
     }
@@ -866,7 +886,7 @@ struct Float64x2 {
 struct Int8x16 {
     typedef int8_t Elem;
     static const unsigned lanes = 16;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Int8x16;
+    static const SimdType type = SimdType::Int8x16;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt8(cx, v, out);
     }
@@ -878,7 +898,7 @@ struct Int8x16 {
 struct Int16x8 {
     typedef int16_t Elem;
     static const unsigned lanes = 8;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Int16x8;
+    static const SimdType type = SimdType::Int16x8;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt16(cx, v, out);
     }
@@ -890,7 +910,7 @@ struct Int16x8 {
 struct Int32x4 {
     typedef int32_t Elem;
     static const unsigned lanes = 4;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
+    static const SimdType type = SimdType::Int32x4;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt32(cx, v, out);
     }
@@ -902,7 +922,7 @@ struct Int32x4 {
 struct Uint8x16 {
     typedef uint8_t Elem;
     static const unsigned lanes = 16;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint8x16;
+    static const SimdType type = SimdType::Uint8x16;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToUint8(cx, v, out);
     }
@@ -914,7 +934,7 @@ struct Uint8x16 {
 struct Uint16x8 {
     typedef uint16_t Elem;
     static const unsigned lanes = 8;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint16x8;
+    static const SimdType type = SimdType::Uint16x8;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToUint16(cx, v, out);
     }
@@ -926,7 +946,7 @@ struct Uint16x8 {
 struct Uint32x4 {
     typedef uint32_t Elem;
     static const unsigned lanes = 4;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint32x4;
+    static const SimdType type = SimdType::Uint32x4;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToUint32(cx, v, out);
     }
@@ -938,7 +958,7 @@ struct Uint32x4 {
 struct Bool8x16 {
     typedef int8_t Elem;
     static const unsigned lanes = 16;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool8x16;
+    static const SimdType type = SimdType::Bool8x16;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         *out = ToBoolean(v) ? -1 : 0;
         return true;
@@ -951,7 +971,7 @@ struct Bool8x16 {
 struct Bool16x8 {
     typedef int16_t Elem;
     static const unsigned lanes = 8;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool16x8;
+    static const SimdType type = SimdType::Bool16x8;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         *out = ToBoolean(v) ? -1 : 0;
         return true;
@@ -964,7 +984,7 @@ struct Bool16x8 {
 struct Bool32x4 {
     typedef int32_t Elem;
     static const unsigned lanes = 4;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool32x4;
+    static const SimdType type = SimdType::Bool32x4;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         *out = ToBoolean(v) ? -1 : 0;
         return true;
@@ -977,7 +997,7 @@ struct Bool32x4 {
 struct Bool64x2 {
     typedef int64_t Elem;
     static const unsigned lanes = 2;
-    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool64x2;
+    static const SimdType type = SimdType::Bool64x2;
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         *out = ToBoolean(v) ? -1 : 0;
         return true;
@@ -986,6 +1006,10 @@ struct Bool64x2 {
         return BooleanValue(value);
     }
 };
+
+bool IsSignedIntSimdType(SimdType type);
+
+PropertyName* SimdTypeToName(JSContext* cx, SimdType type);
 
 template<typename V>
 JSObject* CreateSimd(JSContext* cx, const typename V::Elem* data);
