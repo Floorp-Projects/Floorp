@@ -924,7 +924,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, AudioDataListener *aListener)
+MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, MediaStreamListener *aListener)
 {
   if (CurrentDriver()->AsAudioCallbackDriver()) {
     CurrentDriver()->SetInputListener(aListener);
@@ -935,7 +935,7 @@ MediaStreamGraphImpl::OpenAudioInputImpl(char *aName, AudioDataListener *aListen
 }
 
 nsresult
-MediaStreamGraphImpl::OpenAudioInput(char *aName, AudioDataListener *aListener)
+MediaStreamGraphImpl::OpenAudioInput(char *aName, MediaStreamListener *aListener)
 {
   // XXX So, so, so annoying.  Can't AppendMessage except on Mainthread
   if (!NS_IsMainThread()) {
@@ -946,7 +946,7 @@ MediaStreamGraphImpl::OpenAudioInput(char *aName, AudioDataListener *aListener)
   }
   class Message : public ControlMessage {
   public:
-    Message(MediaStreamGraphImpl *aGraph, char *aName, AudioDataListener *aListener) :
+    Message(MediaStreamGraphImpl *aGraph, char *aName, MediaStreamListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mName(aName), mListener(aListener) {}
     virtual void Run()
     {
@@ -954,21 +954,21 @@ MediaStreamGraphImpl::OpenAudioInput(char *aName, AudioDataListener *aListener)
     }
     MediaStreamGraphImpl *mGraph;
     char *mName; // XXX needs to copy
-    RefPtr<AudioDataListener> mListener;
+    MediaStreamListener *mListener;
   };
   this->AppendMessage(new Message(this, aName, aListener));
   return NS_OK;
 }
 
 void
-MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
+MediaStreamGraphImpl::CloseAudioInputImpl(MediaStreamListener *aListener)
 {
   CurrentDriver()->RemoveInputListener(aListener);
   mAudioInputs.RemoveElement(aListener);
 }
 
 void
-MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
+MediaStreamGraphImpl::CloseAudioInput(MediaStreamListener *aListener)
 {
   // XXX So, so, so annoying.  Can't AppendMessage except on Mainthread
   if (!NS_IsMainThread()) {
@@ -979,14 +979,14 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
   }
   class Message : public ControlMessage {
   public:
-    Message(MediaStreamGraphImpl *aGraph, AudioDataListener *aListener) :
+    Message(MediaStreamGraphImpl *aGraph, MediaStreamListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mListener(aListener) {}
     virtual void Run()
     {
       mGraph->CloseAudioInputImpl(mListener);
     }
     MediaStreamGraphImpl *mGraph;
-    RefPtr<AudioDataListener> mListener;
+    MediaStreamListener *mListener;
   };
   this->AppendMessage(new Message(this, aListener));
 }
@@ -994,11 +994,11 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
 
 // All AudioInput listeners get the same speaker data (at least for now).
 void
-MediaStreamGraph::NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
-                                   uint32_t aChannels)
+MediaStreamGraph::NotifySpeakerData(AudioDataValue* aBuffer, size_t aFrames,
+                                    uint32_t aChannels)
 {
   for (auto& listener : mAudioInputs) {
-    listener->NotifyOutputData(this, aBuffer, aFrames, aChannels);
+    listener->NotifySpeakerData(this, aBuffer, aFrames, aChannels);
   }
 }
 
