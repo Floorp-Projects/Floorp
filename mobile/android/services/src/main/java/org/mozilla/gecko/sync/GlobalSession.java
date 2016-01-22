@@ -4,6 +4,44 @@
 
 package org.mozilla.gecko.sync;
 
+import android.content.Context;
+
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.crypto.CryptoException;
+import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
+import org.mozilla.gecko.sync.delegates.FreshStartDelegate;
+import org.mozilla.gecko.sync.delegates.JSONRecordFetchDelegate;
+import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
+import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
+import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.net.BaseResource;
+import org.mozilla.gecko.sync.net.HttpResponseObserver;
+import org.mozilla.gecko.sync.net.SyncResponse;
+import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
+import org.mozilla.gecko.sync.net.SyncStorageRequest;
+import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
+import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
+import org.mozilla.gecko.sync.stage.AndroidBrowserHistoryServerSyncStage;
+import org.mozilla.gecko.sync.stage.CheckPreconditionsStage;
+import org.mozilla.gecko.sync.stage.CompletedStage;
+import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
+import org.mozilla.gecko.sync.stage.FennecTabsServerSyncStage;
+import org.mozilla.gecko.sync.stage.FetchInfoCollectionsStage;
+import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
+import org.mozilla.gecko.sync.stage.FormHistoryServerSyncStage;
+import org.mozilla.gecko.sync.stage.GlobalSyncStage;
+import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.mozilla.gecko.sync.stage.NoSuchStageException;
+import org.mozilla.gecko.sync.stage.PasswordsServerSyncStage;
+import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
+import org.mozilla.gecko.sync.stage.UploadMetaGlobalStage;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,45 +57,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.crypto.CryptoException;
-import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.mozilla.gecko.sync.delegates.BaseGlobalSessionCallback;
-import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
-import org.mozilla.gecko.sync.delegates.FreshStartDelegate;
-import org.mozilla.gecko.sync.delegates.JSONRecordFetchDelegate;
-import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
-import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
-import org.mozilla.gecko.sync.delegates.NodeAssignmentCallback;
-import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
-import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.HttpResponseObserver;
-import org.mozilla.gecko.sync.net.SyncResponse;
-import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
-import org.mozilla.gecko.sync.net.SyncStorageRequest;
-import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
-import org.mozilla.gecko.sync.net.SyncStorageResponse;
-import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
-import org.mozilla.gecko.sync.stage.AndroidBrowserHistoryServerSyncStage;
-import org.mozilla.gecko.sync.stage.CheckPreconditionsStage;
-import org.mozilla.gecko.sync.stage.CompletedStage;
-import org.mozilla.gecko.sync.stage.EnsureClusterURLStage;
-import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
-import org.mozilla.gecko.sync.stage.FennecTabsServerSyncStage;
-import org.mozilla.gecko.sync.stage.FetchInfoCollectionsStage;
-import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
-import org.mozilla.gecko.sync.stage.FormHistoryServerSyncStage;
-import org.mozilla.gecko.sync.stage.GlobalSyncStage;
-import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
-import org.mozilla.gecko.sync.stage.NoSuchStageException;
-import org.mozilla.gecko.sync.stage.PasswordsServerSyncStage;
-import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
-import org.mozilla.gecko.sync.stage.UploadMetaGlobalStage;
-
-import android.content.Context;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
 
@@ -71,10 +70,9 @@ public class GlobalSession implements HttpResponseObserver {
   protected Map<Stage, GlobalSyncStage> stages;
   public Stage currentState = Stage.idle;
 
-  public final BaseGlobalSessionCallback callback;
+  public final GlobalSessionCallback callback;
   protected final Context context;
   protected final ClientsDataDelegate clientsDelegate;
-  protected final NodeAssignmentCallback nodeAssignmentCallback;
 
   /**
    * Map from engine name to new settings for an updated meta/global record.
@@ -101,9 +99,9 @@ public class GlobalSession implements HttpResponseObserver {
   }
 
   public GlobalSession(SyncConfiguration config,
-                       BaseGlobalSessionCallback callback,
+                       GlobalSessionCallback callback,
                        Context context,
-                       ClientsDataDelegate clientsDelegate, NodeAssignmentCallback nodeAssignmentCallback)
+                       ClientsDataDelegate clientsDelegate)
     throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
 
     if (callback == null) {
@@ -113,7 +111,6 @@ public class GlobalSession implements HttpResponseObserver {
     this.callback        = callback;
     this.context         = context;
     this.clientsDelegate = clientsDelegate;
-    this.nodeAssignmentCallback = nodeAssignmentCallback;
 
     this.config = config;
     registerCommands();
@@ -179,11 +176,9 @@ public class GlobalSession implements HttpResponseObserver {
     Map<Stage, GlobalSyncStage> stages = new EnumMap<Stage, GlobalSyncStage>(Stage.class);
 
     stages.put(Stage.checkPreconditions,      new CheckPreconditionsStage());
-    stages.put(Stage.ensureClusterURL,        new EnsureClusterURLStage(nodeAssignmentCallback));
     stages.put(Stage.fetchInfoCollections,    new FetchInfoCollectionsStage());
     stages.put(Stage.fetchMetaGlobal,         new FetchMetaGlobalStage());
     stages.put(Stage.ensureKeysStage,         new EnsureCrypto5KeysStage());
-    stages.put(Stage.attemptMigrationStage,   new MigrationSentinelSyncStage());
 
     stages.put(Stage.syncClientsEngine,       new SyncClientsEngineStage());
 

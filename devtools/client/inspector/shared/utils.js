@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Ci, Cu} = require("chrome");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
 const {parseDeclarations} =
@@ -28,7 +28,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  * @param {object} attributes
  *        A set of attributes to set on the node.
  */
-function createChild(parent, tagName, attributes={}) {
+function createChild(parent, tagName, attributes = {}) {
   let elt = parent.ownerDocument.createElementNS(HTML_NS, tagName);
   for (let attr in attributes) {
     if (attributes.hasOwnProperty(attr)) {

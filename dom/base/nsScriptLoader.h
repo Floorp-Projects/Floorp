@@ -82,7 +82,7 @@ public:
   {
   }
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   void FireScriptAvailable(nsresult aResult)
   {

@@ -299,7 +299,8 @@ TextPropertyEditor.prototype = {
     this.warning.hidden = this.editing || this.isValid();
     this.filterProperty.hidden = this.editing ||
                                  !this.isValid() ||
-                                 !this.prop.overridden;
+                                 !this.prop.overridden ||
+                                 this.ruleEditor.rule.isUnmatched;
 
     if (!this.editing &&
         (this.prop.overridden || !this.prop.enabled ||

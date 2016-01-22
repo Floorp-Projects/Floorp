@@ -94,10 +94,10 @@ SCORE_UPDATE_DELAY:                    100,
 // observed spurious idle/back events and short enough to pre-empt user activity.
 IDLE_OBSERVER_BACK_DELAY:              100,
 
-// Number of records to upload in a single POST (multiple POSTS if exceeded)
-// FIXME: Record size limit is 256k (new cluster), so this can be quite large!
-// (Bug 569295)
+// Max number of records or bytes to upload in a single POST - we'll do multiple POSTS if either
+// MAX_UPLOAD_RECORDS or MAX_UPLOAD_BYTES is hit)
 MAX_UPLOAD_RECORDS:                    100,
+MAX_UPLOAD_BYTES:                      1024 * 1023, // just under 1MB
 MAX_HISTORY_UPLOAD:                    5000,
 MAX_HISTORY_DOWNLOAD:                  5000,
 

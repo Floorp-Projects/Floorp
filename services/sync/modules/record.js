@@ -600,14 +600,6 @@ Collection.prototype = {
     this._rebuildURL();
   },
 
-  pushData: function Coll_pushData(data) {
-    this._data.push(data);
-  },
-
-  clearRecords: function Coll_clearRecords() {
-    this._data = [];
-  },
-
   set recordHandler(onRecord) {
     // Save this because onProgress is called with this as the ChannelListener
     let coll = this;
@@ -629,4 +621,82 @@ Collection.prototype = {
       }
     };
   },
+
+  // This object only supports posting via the postQueue object.
+  post() {
+    throw new Error("Don't directly post to a collection - use newPostQueue instead");
+  },
+
+  newPostQueue(log, postCallback) {
+    let poster = data => {
+      return Resource.prototype.post.call(this, data);
+    }
+    return new PostQueue(poster, log, postCallback);
+  },
 };
+
+/* A helper to manage the posting of records while respecting the various
+   size limits.
+*/
+function PostQueue(poster, log, postCallback) {
+  // The "post" function we should use when it comes time to do the post.
+  this.poster = poster;
+  this.log = log;
+
+  // The callback we make with the response when we do get around to making the
+  // post (which could be during any of the enqueue() calls or the final flush())
+  // This callback may be called multiple times and must not add new items to
+  // the queue.
+  this.postCallback = postCallback;
+
+  // The string where we are capturing the stringified version of the records
+  // queued so far. It will always be invalid JSON as it is always missing the
+  // close bracket.
+  this.queued = "";
+
+  // The number of records we've queued so far.
+  this.numQueued = 0;
+}
+
+PostQueue.prototype = {
+  enqueue(record) {
+    // We want to ensure the record has a .toJSON() method defined - even
+    // though JSON.stringify() would implicitly call it, the stringify might
+    // still work even if it isn't defined, which isn't what we want.
+    let jsonRepr = record.toJSON();
+    if (!jsonRepr) {
+      throw new Error("You must only call this with objects that explicitly support JSON");
+    }
+    let bytes = JSON.stringify(jsonRepr);
+    // Note that we purposely don't check if a single record would exceed our
+    // limit - we still attempt the post and if it sees a 413 like we think it
+    // will, we just let that do whatever it does (which is probably cause
+    // ongoing sync failures for that engine - bug 1241356 exists to fix this)
+    // (Note that counter-intuitively, the post of the oversized record will
+    // not happen here but on the next .enqueue/.flush.)
+
+    // Do a flush if we can't add this record without exceeding our limits.
+    let newLength = this.queued.length + bytes.length + 1; // extra 1 for trailing "]"
+    if (this.numQueued >= MAX_UPLOAD_RECORDS || newLength >= MAX_UPLOAD_BYTES) {
+      this.log.trace("PostQueue flushing"); // flush logs more info...
+      // We need to write the queue out before handling this one.
+      this.flush();
+    }
+    // Either a ',' or a '[' depending on whether this is the first record.
+    this.queued += this.numQueued ? "," : "[";
+    this.queued += bytes;
+    this.numQueued++;
+  },
+
+  flush() {
+    if (!this.queued) {
+      // nothing queued.
+      return;
+    }
+    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length+1} bytes`);
+    let queued = this.queued + "]";
+    this.queued = "";
+    this.numQueued = 0;
+    this.postCallback(this.poster(queued));
+  },
+}

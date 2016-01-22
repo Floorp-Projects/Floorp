@@ -14,6 +14,7 @@ import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -25,7 +26,6 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -252,8 +252,7 @@ public class AccountsHelper implements NativeEventListener {
 
             try {
                 if ("any".equals(kind)) {
-                    response.put("exists", SyncAccounts.syncAccountsExist(mContext) ||
-                            FirefoxAccounts.firefoxAccountsExist(mContext));
+                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(mContext));
                     callback.sendSuccess(response);
                 } else if ("fxa".equals(kind)) {
                     final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
@@ -276,9 +275,6 @@ public class AccountsHelper implements NativeEventListener {
                         }
                     }
 
-                    callback.sendSuccess(response);
-                } else if ("sync11".equals(kind)) {
-                    response.put("exists", SyncAccounts.syncAccountsExist(mContext));
                     callback.sendSuccess(response);
                 } else {
                     callback.sendError("Could not query account existence: unknown kind.");

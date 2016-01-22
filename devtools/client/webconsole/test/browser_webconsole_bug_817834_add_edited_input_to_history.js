@@ -28,36 +28,36 @@ add_task(function* () {
 function testEditedInputHistory(HUD) {
   let jsterm = HUD.jsterm;
   let inputNode = jsterm.inputNode;
-  ok(!inputNode.value, "inputNode.value is empty");
+  ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
   is(inputNode.selectionStart, 0);
   is(inputNode.selectionEnd, 0);
 
   jsterm.setInputValue('"first item"');
   EventUtils.synthesizeKey("VK_UP", {});
-  is(inputNode.value, '"first item"', "null test history up");
+  is(jsterm.getInputValue(), '"first item"', "null test history up");
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(inputNode.value, '"first item"', "null test history down");
+  is(jsterm.getInputValue(), '"first item"', "null test history down");
 
   jsterm.execute();
-  is(inputNode.value, "", "cleared input line after submit");
+  is(jsterm.getInputValue(), "", "cleared input line after submit");
 
   jsterm.setInputValue('"editing input 1"');
   EventUtils.synthesizeKey("VK_UP", {});
-  is(inputNode.value, '"first item"', "test history up");
+  is(jsterm.getInputValue(), '"first item"', "test history up");
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(inputNode.value, '"editing input 1"',
+  is(jsterm.getInputValue(), '"editing input 1"',
     "test history down restores in-progress input");
 
   jsterm.setInputValue('"second item"');
   jsterm.execute();
   jsterm.setInputValue('"editing input 2"');
   EventUtils.synthesizeKey("VK_UP", {});
-  is(inputNode.value, '"second item"', "test history up");
+  is(jsterm.getInputValue(), '"second item"', "test history up");
   EventUtils.synthesizeKey("VK_UP", {});
-  is(inputNode.value, '"first item"', "test history up");
+  is(jsterm.getInputValue(), '"first item"', "test history up");
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(inputNode.value, '"second item"', "test history down");
+  is(jsterm.getInputValue(), '"second item"', "test history down");
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(inputNode.value, '"editing input 2"',
+  is(jsterm.getInputValue(), '"editing input 2"',
      "test history down restores new in-progress input again");
 }

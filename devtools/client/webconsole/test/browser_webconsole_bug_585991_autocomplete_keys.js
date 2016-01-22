@@ -88,7 +88,7 @@ var consoleOpened = Task.async(function*(aHud) {
        "Index of the first item from bottom is selected.");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
-    let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
+    let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
     is(popup.selectedItem.label, "watch", "watch is selected");
@@ -149,7 +149,7 @@ function popupHideAfterTab() {
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
 
-  is(inputNode.value, "window.foobarBug585991.watch",
+  is(jsterm.getInputValue(), "window.foobarBug585991.watch",
      "completion was successful after VK_TAB");
 
   ok(!completeNode.value, "completeNode is empty");
@@ -164,7 +164,7 @@ function popupHideAfterTab() {
     is(popup.selectedIndex, 18, "First index from bottom is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
-    let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
+    let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
     is(popup.selectedItem.label, "watch", "watch is selected");
@@ -176,7 +176,7 @@ function popupHideAfterTab() {
 
       ok(!popup.isOpen, "popup is not open after VK_ESCAPE");
 
-      is(inputNode.value, "window.foobarBug585991.",
+      is(jsterm.getInputValue(), "window.foobarBug585991.",
          "completion was cancelled");
 
       ok(!completeNode.value, "completeNode is empty");
@@ -212,7 +212,7 @@ function testReturnKey() {
     is(popup.selectedIndex, 18, "First index from bottom is selected");
     EventUtils.synthesizeKey("VK_DOWN", {});
 
-    let prefix = jsterm.inputNode.value.replace(/[\S]/g, " ");
+    let prefix = jsterm.getInputValue().replace(/[\S]/g, " ");
 
     is(popup.selectedIndex, 0, "index 0 is selected");
     is(popup.selectedItem.label, "watch", "watch is selected");
@@ -231,7 +231,7 @@ function testReturnKey() {
 
       ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
-      is(inputNode.value, "window.foobarBug585991.valueOf",
+      is(jsterm.getInputValue(), "window.foobarBug585991.valueOf",
          "completion was successful after VK_RETURN");
 
       ok(!completeNode.value, "completeNode is empty");
@@ -324,7 +324,7 @@ function testReturnWithNoSelection() {
 function popupHideAfterReturnWithNoSelection() {
   ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
-  is(inputNode.value, "", "inputNode is empty after VK_RETURN");
+  is(jsterm.getInputValue(), "", "inputNode is empty after VK_RETURN");
   is(completeNode.value, "", "completeNode is empty");
   is(jsterm.history[jsterm.history.length - 1], "window.testBug",
      "jsterm history is correct");
@@ -369,7 +369,7 @@ function testCompletionInText() {
 function popupHideAfterCompletionInText() {
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
-  is(inputNode.value, "dump(window.testBug873250b)",
+  is(jsterm.getInputValue(), "dump(window.testBug873250b)",
      "completion was successful after VK_TAB");
   is(inputNode.selectionStart, 26, "cursor location is correct");
   is(inputNode.selectionStart, inputNode.selectionEnd,

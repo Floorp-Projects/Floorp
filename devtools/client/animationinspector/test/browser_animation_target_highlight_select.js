@@ -24,7 +24,7 @@ add_task(function*() {
   let targetNodeComponent = targets[0];
 
   info("Retrieve the part of the widget that highlights the node on hover");
-  let highlightingEl = targetNodeComponent.previewEl;
+  let highlightingEl = targetNodeComponent.previewer.previewEl;
 
   info("Listen to node-highlight event and mouse over the widget");
   let onHighlight = toolbox.once("node-highlight");
@@ -39,7 +39,7 @@ add_task(function*() {
                              highlightingEl.ownerDocument.defaultView);
 
   ok(true, "The node-highlight event was fired");
-  is(targetNodeComponent.nodeFront, nodeFront,
+  is(targetNodeComponent.previewer.nodeFront, nodeFront,
     "The highlighted node is the one stored on the animation widget");
   is(nodeFront.tagName, "DIV",
     "The highlighted node has the correct tagName");
@@ -60,12 +60,12 @@ add_task(function*() {
        "selection to change");
   let onSelection = inspector.selection.once("new-node-front");
   onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  let nodeEl = targetNodeComponent.previewEl;
+  let nodeEl = targetNodeComponent.previewer.previewEl;
   EventUtils.sendMouseEvent({type: "click"}, nodeEl,
                             nodeEl.ownerDocument.defaultView);
   yield onSelection;
 
-  is(inspector.selection.nodeFront, targetNodeComponent.nodeFront,
+  is(inspector.selection.nodeFront, targetNodeComponent.previewer.nodeFront,
     "The selected node is the one stored on the animation widget");
 
   yield onPanelUpdated;

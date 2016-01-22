@@ -3,28 +3,27 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import ch.boye.httpclientandroidlib.HttpStatus;
-import ch.boye.httpclientandroidlib.ProtocolVersion;
-import ch.boye.httpclientandroidlib.entity.StringEntity;
-import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.StatusResponse;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.StatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.browserid.MockMyIDTokenFactory;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import ch.boye.httpclientandroidlib.HttpStatus;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.entity.StringEntity;
+import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 
 public class MockFxAccountClient implements FxAccountClient {
   protected static MockMyIDTokenFactory mockMyIdTokenFactory = new MockMyIDTokenFactory();
@@ -106,33 +105,6 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
-  public void loginAndGetKeys(byte[] emailUTF8, final PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> requestDelegate) {
-    User user;
-    try {
-      user = users.get(new String(emailUTF8, "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      user = null;
-    }
-    if (user == null) {
-      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS, "invalid emailUTF8");
-      return;
-    }
-    byte[] quickStretchedPW;
-    try {
-      quickStretchedPW = passwordStretcher.getQuickStretchedPW(emailUTF8);
-    } catch (Exception e) {
-      handleFailure(requestDelegate, HttpStatus.SC_INTERNAL_SERVER_ERROR, 999, "error stretching password");
-      return;
-    }
-    if (user.quickStretchedPW == null || !Arrays.equals(user.quickStretchedPW, quickStretchedPW)) {
-      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.INCORRECT_PASSWORD, "invalid quickStretchedPW");
-      return;
-    }
-    LoginResponse loginResponse = addLogin(user, Utils.generateRandomBytes(8), Utils.generateRandomBytes(8));
-    requestDelegate.handleSuccess(loginResponse);
-  }
-
-  @Override
   public void keys(byte[] keyFetchToken, RequestDelegate<TwoKeys> requestDelegate) {
     String email = keyFetchTokens.get(Utils.byte2Hex(keyFetchToken));
     User user = users.get(email);
@@ -168,36 +140,5 @@ public class MockFxAccountClient implements FxAccountClient {
     } catch (Exception e) {
       requestDelegate.handleError(e);
     }
-  }
-
-  @Override
-  public void resendCode(byte[] sessionToken, RequestDelegate<Void> requestDelegate) {
-    String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
-    User user = users.get(email);
-    if (email == null || user == null) {
-      handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
-      return;
-    }
-    requestDelegate.handleSuccess(null);
-  }
-
-  @Override
-  public void resendUnlockCode(byte[] emailUTF8, RequestDelegate<Void> requestDelegate) {
-    User user;
-    try {
-      user = users.get(new String(emailUTF8, "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      user = null;
-    }
-    if (user == null) {
-      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_ACCESS_AN_ACCOUNT_THAT_DOES_NOT_EXIST, "invalid emailUTF8");
-      return;
-    }
-    requestDelegate.handleSuccess(null);
-  }
-
-  @Override
-  public void createAccountAndGetKeys(byte[] emailUTF8, PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> delegate) {
-    delegate.handleError(new RuntimeException("Not yet implemented"));
   }
 }

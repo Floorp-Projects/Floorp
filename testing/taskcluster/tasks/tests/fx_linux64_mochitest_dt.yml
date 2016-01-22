@@ -15,7 +15,7 @@ task:
         loopbackAudio: true
   extra:
     chunks:
-      total: 8
+      total: 10
     suite:
       name: mochitest
       flavor: mochitest-devtools-chrome
