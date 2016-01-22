@@ -40,6 +40,25 @@ using namespace mozilla;
 
 #define kVisibilityChange "visibilitychange"
 
+class VisibilityChangeListener final : public nsIDOMEventListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  explicit VisibilityChangeListener(nsPIDOMWindow* aWindow);
+
+  void RemoveListener();
+  void SetCallback(nsIContentPermissionRequestCallback* aCallback);
+  already_AddRefed<nsIContentPermissionRequestCallback> GetCallback();
+
+private:
+  virtual ~VisibilityChangeListener() {}
+
+  nsWeakPtr mWindow;
+  nsCOMPtr<nsIContentPermissionRequestCallback> mCallback;
+};
+
 NS_IMPL_ISUPPORTS(VisibilityChangeListener, nsIDOMEventListener)
 
 VisibilityChangeListener::VisibilityChangeListener(nsPIDOMWindow* aWindow)
@@ -754,6 +773,11 @@ RemotePermissionRequest::RemotePermissionRequest(
 {
   mListener = new VisibilityChangeListener(mWindow);
   mListener->SetCallback(this);
+}
+
+RemotePermissionRequest::~RemotePermissionRequest()
+{
+  MOZ_ASSERT(!mIPCOpen, "Protocol must not be open when RemotePermissionRequest is destroyed.");
 }
 
 void
