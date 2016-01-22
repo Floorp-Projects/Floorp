@@ -156,7 +156,7 @@ public:
         nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
         source = new BasicUnstoppableTrackSource(principal);
       }
-      track = mStream->CreateDOMTrack(aTrackID, aType, nsString(), source);
+      track = mStream->CreateDOMTrack(aTrackID, aType, source);
     }
   }
 
@@ -796,7 +796,7 @@ DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGrap
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
-  CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString(), audioCaptureSource);
+  CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, audioCaptureSource);
   audioCaptureStream->Start();
 }
 
@@ -968,7 +968,6 @@ DOMMediaStream::RemovePrincipalChangeObserver(
 
 MediaStreamTrack*
 DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
-                               const nsString& aLabel,
                                MediaStreamTrackSource* aSource)
 {
   MOZ_RELEASE_ASSERT(mInputStream);
@@ -979,10 +978,10 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    track = new AudioStreamTrack(this, aTrackID, aTrackID, aLabel, aSource);
+    track = new AudioStreamTrack(this, aTrackID, aTrackID, aSource);
     break;
   case MediaSegment::VIDEO:
-    track = new VideoStreamTrack(this, aTrackID, aTrackID, aLabel, aSource);
+    track = new VideoStreamTrack(this, aTrackID, aTrackID, aSource);
     break;
   default:
     MOZ_CRASH("Unhandled track type");

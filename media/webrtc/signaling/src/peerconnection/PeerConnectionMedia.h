@@ -162,8 +162,8 @@ private:
 class RemoteTrackSource : public dom::MediaStreamTrackSource
 {
 public:
-  explicit RemoteTrackSource(nsIPrincipal* aPrincipal)
-    : dom::MediaStreamTrackSource(aPrincipal, true) {}
+  explicit RemoteTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel)
+    : dom::MediaStreamTrackSource(aPrincipal, true, aLabel) {}
 
   dom::MediaSourceEnum GetMediaSource() const override
   {
