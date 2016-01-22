@@ -111,13 +111,15 @@ add_test(function disabling_test() {
 
     var list = gWin.document.getElementById("disable-list");
     ok(!list.hidden, "Disable list should be visible");
-    is(list.childNodes.length, 2, "Should be one add-on getting disabled (plus the header)");
-    is(list.childNodes[1].id, "test2@tests.mozilla.org", "Should be the right add-on ID");
-    is(list.childNodes[1].getAttribute("name"), "Test Add-on 2", "Should be the right add-on name");
+    // As of bug 1231784, mochikit and special-powers are temporary addons
+    // and therefore also getting disabled.
+    is(list.childNodes.length, 4, "Should be three add-ons getting disabled (plus the header)");
+    is(list.childNodes[3].id, "test2@tests.mozilla.org", "Should be the right add-on ID");
+    is(list.childNodes[3].getAttribute("name"), "Test Add-on 2", "Should be the right add-on name");
 
     var list = gWin.document.getElementById("enable-list");
     ok(!list.hidden, "Enable list should be visible");
-    is(list.childNodes.length, 2, "Should be one add-on getting disabled (plus the header)");
+    is(list.childNodes.length, 2, "Should be one add-on getting enabled (plus the header)");
     is(list.childNodes[1].id, "test3@tests.mozilla.org", "Should be the right add-on ID");
     is(list.childNodes[1].getAttribute("name"), "Test Add-on 3", "Should be the right add-on name");
 
@@ -133,7 +135,7 @@ add_test(function disabling_test() {
 add_test(function incompatible_test() {
   setupUI(true, false, function() {
     ok(gWin.document.getElementById("update-list").hidden, "Update list should be hidden");
-    ok(gWin.document.getElementById("disable-list").hidden, "Disable list should be hidden");
+    ok(!gWin.document.getElementById("disable-list").hidden, "Disable list should be visible");
     ok(gWin.document.getElementById("enable-list").hidden, "Enable list should be hidden");
 
     var list = gWin.document.getElementById("incompatible-list");
@@ -168,9 +170,11 @@ add_test(function update_test() {
 
     list = gWin.document.getElementById("disable-list");
     ok(!list.hidden, "Disable list should be visible");
-    is(list.childNodes.length, 2, "Should be one add-on getting disabled (plus the header)");
-    is(list.childNodes[1].id, "test2@tests.mozilla.org", "Should be the right add-on ID");
-    is(list.childNodes[1].getAttribute("name"), "Test Add-on 2", "Should be the right add-on name");
+    // As of bug 1231784, mochikit and special-powers are temporary addons
+    // and therefore also getting disabled.
+    is(list.childNodes.length, 4, "Should be three add-ons getting disabled (plus the header)");
+    is(list.childNodes[3].id, "test2@tests.mozilla.org", "Should be the right add-on ID");
+    is(list.childNodes[3].getAttribute("name"), "Test Add-on 2", "Should be the right add-on name");
 
     ok(!gWin.document.getElementById("next").hidden, "Next button should be visible");
     ok(gWin.document.getElementById("done").hidden, "Done button should be hidden");
