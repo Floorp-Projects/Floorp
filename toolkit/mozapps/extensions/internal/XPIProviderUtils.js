@@ -48,6 +48,7 @@ const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
+const PREF_E10S_BLOCKED_BY_ADDONS     = "extensions.e10sBlockedByAddons";
 
 const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
@@ -460,6 +461,7 @@ this.XPIDatabase = {
                                             ASYNC_SAVE_DELAY_MS);
     }
 
+    this.updateAddonsBlockingE10s();
     let promise = this._deferredSave.saveChanges();
     if (!this._schemaVersionSet) {
       this._schemaVersionSet = true;
@@ -1387,6 +1389,17 @@ this.XPIDatabase = {
 
     aAddon.active = aActive;
     this.saveChanges();
+  },
+
+  updateAddonsBlockingE10s: function() {
+    let blockE10s = false;
+    for (let [, addon] of this.addonDB) {
+      let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
+
+      if (active && XPIProvider.isBlockingE10s(addon))
+        blockE10s = true;
+    }
+    Preferences.set(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
   },
 
   /**
