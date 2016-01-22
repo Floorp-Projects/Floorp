@@ -6,11 +6,76 @@
 
 "use strict";
 
-window.addViewport = contentURI => {
+const { utils: Cu } = Components;
+const { BrowserLoader } =
+  Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+const { require } =
+  BrowserLoader("resource://devtools/client/responsive.html/", this);
+const Telemetry = require("devtools/client/shared/telemetry");
+
+const { createFactory, createElement } =
+  require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
+
+const App = createFactory(require("./app"));
+const Store = require("./store");
+const { changeLocation } = require("./actions/location");
+const { addViewport } = require("./actions/viewports");
+
+let bootstrap = {
+
+  telemetry: new Telemetry(),
+
+  store: null,
+
+  init() {
+    // TODO: Should we track this as a separate tool from the old version?
+    // See bug 1242057.
+    this.telemetry.toolOpened("responsive");
+    let store = this.store = Store();
+    let app = createElement(App);
+    let provider = createElement(Provider, { store }, app);
+    ReactDOM.render(provider, document.querySelector("#app"));
+  },
+
+  destroy() {
+    this.store = null;
+    this.telemetry.toolClosed("responsive");
+    this.telemetry = null;
+  },
+
+  /**
+   * While most actions will be dispatched by React components, some external
+   * APIs that coordinate with the larger browser UI may also have actions to
+   * to dispatch.  They can do so here.
+   */
+  dispatch(action) {
+    this.store.dispatch(action);
+  },
+
+};
+
+window.addEventListener("load", function onLoad() {
+  window.removeEventListener("load", onLoad);
+  bootstrap.init();
+});
+
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  bootstrap.destroy();
+});
+
+// Allows quick testing of actions from the console
+window.dispatch = action => bootstrap.dispatch(action);
+
+/**
+ * Called by manager.js to add the initial viewport based on the original page.
+ */
+window.addInitialViewport = contentURI => {
   try {
-    let frame = document.createElement("iframe");
-    frame.setAttribute("src", contentURI);
-    document.body.appendChild(frame);
+    bootstrap.dispatch(changeLocation(contentURI));
+    bootstrap.dispatch(addViewport());
   } catch (e) {
     console.error(e);
   }
