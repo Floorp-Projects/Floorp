@@ -824,9 +824,7 @@ nsHttpChannelAuthProvider::BlockPrompt()
     nsCOMPtr<nsIHttpChannelInternal> chanInternal = do_QueryInterface(mAuthChannel);
     MOZ_ASSERT(chanInternal);
 
-    bool skipAuthentication = false;
-    nsresult rv = chanInternal->GetBlockAuthPrompt(&skipAuthentication);
-    if (NS_SUCCEEDED(rv) && skipAuthentication) {
+    if (chanInternal->GetBlockAuthPrompt()) {
         return true;
     }
 

@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(01b8296a-e206-4e5f-acab-82bd8b6a900c)]
+[builtinclass, scriptable, uuid(4e28263d-1e03-46f4-aa5c-9512f91957f9)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -271,5 +271,6 @@ interface nsIHttpChannelInternal : nsISupports
      * authentication failure, that failure will be propagated to the channel
      * listener.  Must be called before opening the channel, otherwise throws.
      */
+    [infallible]
     attribute boolean blockAuthPrompt;
 };
