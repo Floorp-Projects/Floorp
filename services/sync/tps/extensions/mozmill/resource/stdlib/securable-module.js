@@ -40,6 +40,8 @@
    const Cu = Components.utils;
    const Cr = Components.results;
 
+   Cu.import("resource://gre/modules/NetUtil.jsm");
+
    var exports = {};
 
    var ios = Cc['@mozilla.org/network/io-service;1']
@@ -313,17 +315,23 @@
        else
          baseURI = ios.newURI(base, null, null);
        var newURI = ios.newURI(path, null, baseURI);
-       var channel = ios.newChannelFromURI(newURI);
+       var channel = NetUtil.newChannel({
+          uri: newURI,
+          loadUsingSystemPrincipal: true
+       });
        try {
-         channel.open().close();
+         channel.open2().close();
        } catch (e if e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
          return null;
        }
        return newURI.spec;
      },
      getFile: function getFile(path) {
-       var channel = ios.newChannel(path, null, null);
-       var iStream = channel.open();
+       var channel = NetUtil.newChannel({
+         uri: path,
+         loadUsingSystemPrincipal: true
+       });
+       var iStream = channel.open2();
        var ciStream = Cc["@mozilla.org/intl/converter-input-stream;1"].
                       createInstance(Ci.nsIConverterInputStream);
        var bufLen = 0x8000;
