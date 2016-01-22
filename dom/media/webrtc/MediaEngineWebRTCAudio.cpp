@@ -202,11 +202,10 @@ MediaEngineWebRTCMicrophoneSource::Config(bool aEchoOn, uint32_t aEcho,
                                           bool aNoiseOn, uint32_t aNoise,
                                           int32_t aPlayoutDelay)
 {
-  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d",
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d",
        aEchoOn ? aEcho : -1,
        aAgcOn ? aAGC : -1,
-       aNoiseOn ? aNoise : -1,
-       aPlayoutDelay));
+       aNoiseOn ? aNoise : -1));
 
   bool update_echo = (mEchoOn != aEchoOn);
   bool update_agc = (mAgcOn != aAgcOn);
