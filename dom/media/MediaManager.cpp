@@ -844,11 +844,12 @@ public:
       {
       public:
         LocalTrackSource(nsIPrincipal* aPrincipal,
+                         const nsString& aLabel,
                          GetUserMediaCallbackMediaStreamListener* aListener,
                          const MediaSourceEnum aSource,
                          const TrackID aTrackID,
                          const PeerIdentity* aPeerIdentity)
-          : MediaStreamTrackSource(aPrincipal, false), mListener(aListener),
+          : MediaStreamTrackSource(aPrincipal, false, aLabel), mListener(aListener),
             mSource(aSource), mTrackID(aTrackID), mPeerIdentity(aPeerIdentity) {}
 
         MediaSourceEnum GetMediaSource() const override
@@ -927,10 +928,9 @@ public:
         const MediaSourceEnum source =
           mAudioDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> audioSource =
-          new LocalTrackSource(principal, mListener, source, kAudioTrack,
-                               mPeerIdentity);
-        domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO,
-                                  audioDeviceName, audioSource);
+          new LocalTrackSource(principal, audioDeviceName, mListener, source,
+                               kAudioTrack, mPeerIdentity);
+        domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioSource);
       }
       if (mVideoDevice) {
         nsString videoDeviceName;
@@ -938,10 +938,9 @@ public:
         const MediaSourceEnum source =
           mVideoDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> videoSource =
-          new LocalTrackSource(principal, mListener, source, kVideoTrack,
-                               mPeerIdentity);
-        domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO,
-                                  videoDeviceName, videoSource);
+          new LocalTrackSource(principal, videoDeviceName, mListener, source,
+                               kVideoTrack, mPeerIdentity);
+        domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoSource);
       }
       stream = domStream->GetInputStream()->AsSourceStream();
     }

@@ -100,11 +100,11 @@ protected:
 };
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                                   TrackID aInputTrackID, const nsString& aLabel,
+                                   TrackID aInputTrackID,
                                    MediaStreamTrackSource* aSource)
   : mOwningStream(aStream), mTrackID(aTrackID),
     mInputTrackID(aInputTrackID), mSource(aSource),
-    mPrincipal(aSource->GetPrincipal()), mLabel(aLabel),
+    mPrincipal(aSource->GetPrincipal()),
     mEnded(false), mEnabled(true), mRemote(aSource->IsRemote()), mStopped(false)
 {
 

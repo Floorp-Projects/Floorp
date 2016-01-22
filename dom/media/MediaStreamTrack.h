@@ -55,9 +55,12 @@ public:
     virtual void PrincipalChanged() = 0;
   };
 
-  MediaStreamTrackSource(nsIPrincipal* aPrincipal, const bool aIsRemote)
+  MediaStreamTrackSource(nsIPrincipal* aPrincipal,
+                         const bool aIsRemote,
+                         const nsString& aLabel)
     : mPrincipal(aPrincipal),
       mIsRemote(aIsRemote),
+      mLabel(aLabel),
       mStopped(false)
   {
     MOZ_COUNT_CTOR(MediaStreamTrackSource);
@@ -96,6 +99,11 @@ public:
    * Streams spec.
    */
   virtual bool IsRemote() const { return mIsRemote; }
+
+  /**
+   * MediaStreamTrack::GetLabel (see spec) calls through to here.
+   */
+  void GetLabel(nsAString& aLabel) { aLabel.Assign(mLabel); }
 
   /**
    * Forwards a photo request to backends that support it. Other backends return
@@ -169,6 +177,9 @@ protected:
   // True if this is a remote track source, i.e., a PeerConnection.
   const bool mIsRemote;
 
+  // The label of the track we are the source of per the MediaStreamTrack spec.
+  const nsString mLabel;
+
   // True if this source is not remote, all MediaStreamTrack users have
   // unregistered from this source and Stop() has been called.
   bool mStopped;
@@ -183,7 +194,9 @@ public:
   explicit BasicUnstoppableTrackSource(nsIPrincipal* aPrincipal,
                                        const MediaSourceEnum aMediaSource =
                                          MediaSourceEnum::Other)
-    : MediaStreamTrackSource(aPrincipal, true), mMediaSource(aMediaSource) {}
+    : MediaStreamTrackSource(aPrincipal, true, nsString())
+    , mMediaSource(aMediaSource)
+  {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
@@ -218,7 +231,7 @@ public:
    * MediaStream owned by aStream.
    */
   MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                   TrackID aInputTrackID, const nsString& aLabel,
+                   TrackID aInputTrackID,
                    MediaStreamTrackSource* aSource);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -237,7 +250,7 @@ public:
   // WebIDL
   virtual void GetKind(nsAString& aKind) = 0;
   void GetId(nsAString& aID) const;
-  void GetLabel(nsAString& aLabel) { aLabel.Assign(mLabel); }
+  void GetLabel(nsAString& aLabel) { GetSource().GetLabel(aLabel); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
@@ -376,7 +389,6 @@ protected:
   nsCOMPtr<nsIPrincipal> mPendingPrincipal;
   RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
   nsString mID;
-  nsString mLabel;
   bool mEnded;
   bool mEnabled;
   const bool mRemote;
