@@ -35,16 +35,15 @@ typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 struct SlowFunction
 {
-    SlowFunction(PropertyName* name, unsigned ms, unsigned line, unsigned column)
-     : name(name), ms(ms), line(line), column(column)
+    SlowFunction(uint32_t index, unsigned ms, unsigned lineOrBytecode)
+     : index(index), ms(ms), lineOrBytecode(lineOrBytecode)
     {}
 
     static const unsigned msThreshold = 250;
 
-    PropertyName* name;
+    uint32_t index;
     unsigned ms;
-    unsigned line;
-    unsigned column;
+    unsigned lineOrBytecode;
 };
 typedef Vector<SlowFunction> SlowFunctionVector;
 
@@ -138,7 +137,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleGeneratorData       shared_;
     uint32_t                        numSigs_;
-    uint32_t                        numFuncSigs_;
     LifoAlloc                       lifo_;
     jit::TempAllocator              alloc_;
     jit::MacroAssembler             masm_;
@@ -160,6 +158,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishOutstandingTask();
     bool finishTask(IonCompileTask* task);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
+    bool startedFuncDefs() const { return !!threadView_; }
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
@@ -183,7 +182,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Function declarations:
     bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
-    uint32_t numFuncSigs() const { return numFuncSigs_; }
+    uint32_t numFuncSigs() const { return module_->numFuncs; }
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Imports:
@@ -201,8 +200,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Function definitions:
     bool startFuncDefs();
-    bool startedFuncDefs() const { return !!threadView_; }
-    bool startFuncDef(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
+    bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
     bool finishFuncDef(uint32_t funcIndex, unsigned generateTime, FunctionGenerator* fg);
     bool finishFuncDefs();
 
@@ -222,6 +220,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // functions that took a long time to compile.
     bool finish(HeapUsage heapUsage,
                 CacheableChars filename,
+                CacheableCharsVector&& prettyFuncNames,
                 UniqueModuleData* module,
                 UniqueStaticLinkData* staticLinkData,
                 SlowFunctionVector* slowFuncs);
@@ -246,19 +245,11 @@ class MOZ_STACK_CLASS FunctionGenerator
     SourceCoordsVector callSourceCoords_;
     ValTypeVector      localVars_;
 
-    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
-    // asm.js compilation.
-    PropertyName* name_;
-    unsigned line_;
-    unsigned column_;
+    uint32_t lineOrBytecode_;
 
   public:
     FunctionGenerator()
-      : m_(nullptr),
-        task_(nullptr),
-        name_(nullptr),
-        line_(0),
-        column_(0)
+      : m_(nullptr), task_(nullptr), lineOrBytecode_(0)
     {}
 
     Bytecode& bytecode() const {
