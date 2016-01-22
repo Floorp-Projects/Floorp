@@ -34,11 +34,13 @@ else
 configure_dir = $(topsrcdir)
 endif
 
+BUILD_BACKEND_FILES := $(addprefix backend.,$(addsuffix Backend,$(BUILD_BACKENDS)))
+
 ifndef TEST_MOZBUILD
 ifndef MOZ_PROFILE_USE
-# We need to explicitly put backend.RecursiveMakeBackend here
-# otherwise the rule in rules.mk doesn't run early enough.
-$(TIERS) binaries:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
+# We need to explicitly put BUILD_BACKEND_FILES here otherwise the rule in
+# rules.mk doesn't run early enough.
+$(TIERS) binaries:: CLOBBER $(configure_dir)/configure config.status $(BUILD_BACKEND_FILES)
 ifndef JS_STANDALONE
 ifdef COMPILE_ENVIRONMENT
 $(TIERS) binaries:: $(topsrcdir)/js/src/configure js/src/config.status
@@ -84,16 +86,40 @@ config.status js/src/config.status:
 # builds. This cleanly avoids most of the pain.
 
 ifndef TEST_MOZBUILD
-backend.RecursiveMakeBackend:
+
+.PHONY: backend
+backend: $(BUILD_BACKEND_FILES)
+
+# A traditional rule would look like this:
+#    backend.%:
+#        @echo do stuff
+#
+# But with -j<n>, and multiple items in BUILD_BACKEND_FILES, the command would
+# run multiple times in parallel.
+#
+# "Fortunately", make has some weird semantics for pattern rules: if there are
+# multiple targets in a pattern rule and each of them is matched at most once,
+# the command will only run once. So:
+#     backend%RecursiveMakeBackend backend%FasterMakeBackend:
+#         @echo do stuff
+#     backend: backend.RecursiveMakeBackend backend.FasterMakeBackend
+# would only execute the command once.
+#
+# Credit where due: http://stackoverflow.com/questions/2973445/gnu-makefile-rule-generating-a-few-targets-from-a-single-source-file/3077254#3077254
+$(subst .,%,$(BUILD_BACKEND_FILES)):
 	@echo 'Build configuration changed. Regenerating backend.'
 	$(PYTHON) config.status
 
-Makefile: backend.RecursiveMakeBackend
+Makefile: $(BUILD_BACKEND_FILES)
 	@$(TOUCH) $@
 
-include backend.RecursiveMakeBackend.pp
+define build_backend_rule
+$(1): $$(shell cat $(1).in)
 
-default:: backend.RecursiveMakeBackend
+endef
+$(foreach file,$(BUILD_BACKEND_FILES),$(eval $(call build_backend_rule,$(file))))
+
+default:: $(BUILD_BACKEND_FILES)
 endif
 
 install_manifests := \
@@ -104,7 +130,7 @@ install_manifest_depends = \
   CLOBBER \
   $(configure_dir)/configure \
   config.status \
-  backend.RecursiveMakeBackend \
+  $(BUILD_BACKEND_FILES) \
   $(NULL)
 
 ifndef JS_STANDALONE
