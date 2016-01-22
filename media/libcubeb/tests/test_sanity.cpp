@@ -40,14 +40,13 @@ static uint64_t total_frames_written;
 static int delay_callback;
 
 static long
-test_data_callback(cubeb_stream * stm, void * user_ptr, const void * inputbuffer, void * outputbuffer, long nframes)
+test_data_callback(cubeb_stream * stm, void * user_ptr, void * p, long nframes)
 {
-  assert(stm && user_ptr == &dummy && outputbuffer && nframes > 0);
-  memset(outputbuffer, 0, nframes * sizeof(short));
+  assert(stm && user_ptr == &dummy && p && nframes > 0);
 #if (defined(_WIN32) || defined(__WIN32__))
-  memset(outputbuffer, 0, nframes * sizeof(float));
+  memset(p, 0, nframes * sizeof(float));
 #else
-  memset(outputbuffer, 0, nframes * sizeof(short));
+  memset(p, 0, nframes * sizeof(short));
 #endif
 
   total_frames_written += nframes;
@@ -159,7 +158,7 @@ test_init_destroy_stream(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  r = cubeb_stream_init(ctx, &stream, "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
                         test_data_callback, test_state_callback, &dummy);
   assert(r == 0 && stream);
 
@@ -188,7 +187,7 @@ test_init_destroy_multiple_streams(void)
   params.channels = STREAM_CHANNELS;
 
   for (i = 0; i < ARRAY_LENGTH(stream); ++i) {
-    r = cubeb_stream_init(ctx, &stream[i], "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+    r = cubeb_stream_init(ctx, &stream[i], "test", params, STREAM_LATENCY,
                           test_data_callback, test_state_callback, &dummy);
     assert(r == 0);
     assert(stream[i]);
@@ -220,7 +219,7 @@ test_configure_stream(void)
   params.rate = STREAM_RATE;
   params.channels = 2; // panning
 
-  r = cubeb_stream_init(ctx, &stream, "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
                         test_data_callback, test_state_callback, &dummy);
   assert(r == 0 && stream);
 
@@ -254,7 +253,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   params.channels = STREAM_CHANNELS;
 
   for (i = 0; i < ARRAY_LENGTH(stream); ++i) {
-    r = cubeb_stream_init(ctx, &stream[i], "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+    r = cubeb_stream_init(ctx, &stream[i], "test", params, STREAM_LATENCY,
                           test_data_callback, test_state_callback, &dummy);
     assert(r == 0);
     assert(stream[i]);
@@ -318,7 +317,7 @@ test_init_destroy_multiple_contexts_and_streams(void)
     assert(r == 0 && ctx[i]);
 
     for (j = 0; j < streams_per_ctx; ++j) {
-      r = cubeb_stream_init(ctx[i], &stream[i * streams_per_ctx + j], "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+      r = cubeb_stream_init(ctx[i], &stream[i * streams_per_ctx + j], "test", params, STREAM_LATENCY,
                             test_data_callback, test_state_callback, &dummy);
       assert(r == 0);
       assert(stream[i * streams_per_ctx + j]);
@@ -353,7 +352,7 @@ test_basic_stream_operations(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  r = cubeb_stream_init(ctx, &stream, "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
                         test_data_callback, test_state_callback, &dummy);
   assert(r == 0 && stream);
 
@@ -402,7 +401,7 @@ test_stream_position(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  r = cubeb_stream_init(ctx, &stream, "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
                         test_data_callback, test_state_callback, &dummy);
   assert(r == 0 && stream);
 
@@ -475,16 +474,16 @@ static int do_drain;
 static int got_drain;
 
 static long
-test_drain_data_callback(cubeb_stream * stm, void * user_ptr, const void * inputbuffer, void * outputbuffer, long nframes)
+test_drain_data_callback(cubeb_stream * stm, void * user_ptr, void * p, long nframes)
 {
-  assert(stm && user_ptr == &dummy && outputbuffer && nframes > 0);
+  assert(stm && user_ptr == &dummy && p && nframes > 0);
   if (do_drain == 1) {
     do_drain = 2;
     return 0;
   }
   /* once drain has started, callback must never be called again */
   assert(do_drain != 2);
-  memset(outputbuffer, 0, nframes * sizeof(short));
+  memset(p, 0, nframes * sizeof(short));
   total_frames_written += nframes;
   return nframes;
 }
@@ -518,7 +517,7 @@ test_drain(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  r = cubeb_stream_init(ctx, &stream, "test", NULL, NULL, NULL, &params, STREAM_LATENCY,
+  r = cubeb_stream_init(ctx, &stream, "test", params, STREAM_LATENCY,
                         test_drain_data_callback, test_drain_state_callback, &dummy);
   assert(r == 0 && stream);
 

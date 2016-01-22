@@ -179,7 +179,7 @@ winmm_refill_stream(cubeb_stream * stm)
   /* It is assumed that the caller is holding this lock.  It must be dropped
      during the callback to avoid deadlocks. */
   LeaveCriticalSection(&stm->lock);
-  got = stm->data_callback(stm, stm->user_ptr, NULL, hdr->lpData, wanted);
+  got = stm->data_callback(stm, stm->user_ptr, hdr->lpData, wanted);
   EnterCriticalSection(&stm->lock);
   if (got < 0) {
     LeaveCriticalSection(&stm->lock);
@@ -380,11 +380,7 @@ static void winmm_stream_destroy(cubeb_stream * stm);
 
 static int
 winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
-                  cubeb_devid input_device,
-                  cubeb_stream_params * input_stream_params,
-                  cubeb_devid output_device,
-                  cubeb_stream_params * output_stream_params,
-                  unsigned int latency,
+                  cubeb_stream_params stream_params, unsigned int latency,
                   cubeb_data_callback data_callback,
                   cubeb_state_callback state_callback,
                   void * user_ptr)
@@ -398,32 +394,26 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   XASSERT(context);
   XASSERT(stream);
 
-  XASSERT(input_stream_params && "not supported.");
-  if (input_device || output_device) {
-    /* Device selection not yet implemented. */
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
   *stream = NULL;
 
   memset(&wfx, 0, sizeof(wfx));
-  if (output_stream_params->channels > 2) {
+  if (stream_params.channels > 2) {
     wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
     wfx.Format.cbSize = sizeof(wfx) - sizeof(wfx.Format);
   } else {
     wfx.Format.wFormatTag = WAVE_FORMAT_PCM;
-    if (output_stream_params->format == CUBEB_SAMPLE_FLOAT32LE) {
+    if (stream_params.format == CUBEB_SAMPLE_FLOAT32LE) {
       wfx.Format.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
     }
     wfx.Format.cbSize = 0;
   }
-  wfx.Format.nChannels = output_stream_params->channels;
-  wfx.Format.nSamplesPerSec = output_stream_params->rate;
+  wfx.Format.nChannels = stream_params.channels;
+  wfx.Format.nSamplesPerSec = stream_params.rate;
 
   /* XXX fix channel mappings */
   wfx.dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
 
-  switch (output_stream_params->format) {
+  switch (stream_params.format) {
   case CUBEB_SAMPLE_S16LE:
     wfx.Format.wBitsPerSample = 16;
     wfx.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
@@ -456,7 +446,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   stm->context = context;
 
-  stm->params = *output_stream_params;
+  stm->params = stream_params;
 
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;

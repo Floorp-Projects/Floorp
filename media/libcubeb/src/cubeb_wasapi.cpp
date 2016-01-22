@@ -1,5 +1,5 @@
 /*
- * Copyright Â© 2013 Mozilla Foundation
+ * Copyright © 2013 Mozilla Foundation
  *
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
@@ -472,7 +472,7 @@ refill(cubeb_stream * stm, float * data, long frames_needed)
     dest = data;
   }
 
-  long out_frames = cubeb_resampler_fill(stm->resampler, NULL, dest, frames_needed);
+  long out_frames = cubeb_resampler_fill(stm->resampler, dest, frames_needed);
   /* TODO: Report out_frames < 0 as an error via the API. */
   XASSERT(out_frames >= 0);
 
@@ -1201,11 +1201,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
 
 int
 wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
-                   char const * stream_name,
-                   cubeb_devid input_device,
-                   cubeb_stream_params * input_stream_params,
-                   cubeb_devid output_device,
-                   cubeb_stream_params * output_stream_params,
+                   char const * stream_name, cubeb_stream_params stream_params,
                    unsigned int latency, cubeb_data_callback data_callback,
                    cubeb_state_callback state_callback, void * user_ptr)
 {
@@ -1216,15 +1212,9 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  XASSERT(!input_stream_params && "not supported.");
-  if (input_device || output_device) {
-    /* Device selection not yet implemented. */
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
   XASSERT(context && stream);
 
-  if (output_stream_params->format != CUBEB_SAMPLE_FLOAT32NE) {
+  if (stream_params.format != CUBEB_SAMPLE_FLOAT32NE) {
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
@@ -1236,7 +1226,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
-  stm->stream_params = *output_stream_params;
+  stm->stream_params = stream_params;
   stm->draining = false;
   stm->latency = latency;
   stm->volume = 1.0;
