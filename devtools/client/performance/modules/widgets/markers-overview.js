@@ -13,18 +13,12 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
-loader.lazyRequireGetter(this, "colorUtils",
-  "devtools/shared/css-color", true);
-loader.lazyRequireGetter(this, "getColor",
-  "devtools/client/shared/theme", true);
-loader.lazyRequireGetter(this, "L10N",
-  "devtools/client/performance/modules/global", true);
-loader.lazyRequireGetter(this, "TickUtils",
-  "devtools/client/performance/modules/widgets/waterfall-ticks", true);
-loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/client/performance/modules/logic/marker-utils");
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/client/performance/modules/markers", true);
+const { colorUtils } = require("devtools/shared/css-color");
+const { getColor } = require("devtools/client/shared/theme");
+const ProfilerGlobal = require("devtools/client/performance/modules/global");
+const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+const { TickUtils } = require("devtools/client/performance/modules/widgets/waterfall-ticks");
+const { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px
@@ -181,7 +175,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       let lineLeft = x;
       let textLeft = lineLeft + textPaddingLeft;
       let time = Math.round(x / dataScale);
-      let label = L10N.getFormatStr("timeline.tick", time);
+      let label = ProfilerGlobal.L10N.getFormatStr("timeline.tick", time);
       ctx.fillText(label, textLeft, headerHeight / 2 + textPaddingTop);
       ctx.moveTo(lineLeft, 0);
       ctx.lineTo(lineLeft, canvasHeight);

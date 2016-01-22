@@ -22,6 +22,11 @@
   <preference id="accessibility.blockautorefresh"
               name="accessibility.blockautorefresh"
               type="bool"/>
+#ifdef XP_WIN
+  <preference id="ui.osk.enabled"
+              name="ui.osk.enabled"
+              type="bool"/>
+#endif
 
   <preference id="general.autoScroll"
               name="general.autoScroll"
@@ -147,6 +152,13 @@
       <groupbox id="accessibilityGroup" align="start">
         <caption><label>&accessibility.label;</label></caption>
 
+#ifdef XP_WIN
+        <checkbox id="useOnScreenKeyboard"
+                  hidden="true"
+                  label="&useOnScreenKeyboard.label;"
+                  accesskey="&useOnScreenKeyboard.accesskey;"
+                  preference="ui.osk.enabled"/>
+#endif
         <checkbox id="useCursorNavigation"
                   label="&useCursorNavigation.label;"
                   accesskey="&useCursorNavigation.accesskey;"
