@@ -329,6 +329,9 @@ pref("media.wmf.skip-blacklist", false);
 #if defined(MOZ_FFMPEG)
 pref("media.ffmpeg.enabled", true);
 #endif
+#if defined(MOZ_FFVPX)
+pref("media.ffvpx.enabled", true);
+#endif
 pref("media.gmp.decoder.enabled", false);
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
@@ -4917,6 +4920,9 @@ pref("layout.accessiblecaret.width", "34.0");
 pref("layout.accessiblecaret.height", "36.0");
 pref("layout.accessiblecaret.margin-left", "-18.5");
 pref("layout.accessiblecaret.bar.width", "2.0");
+
+// Show the selection bars at the two ends of the selection highlight.
+pref("layout.accessiblecaret.bar.enabled", true);
 
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
 // no one touches it. Set the value to 0 to disable this feature.

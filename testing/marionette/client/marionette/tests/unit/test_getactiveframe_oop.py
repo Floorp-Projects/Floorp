@@ -6,28 +6,30 @@ from marionette import MarionetteTestCase
 from marionette_driver.by import By
 
 
+OOP_BY_DEFAULT = "dom.ipc.browser_frames.oop_by_default"
+BROWSER_FRAMES_ENABLED = "dom.mozBrowserFramesEnabeld"
+
+
 class TestGetActiveFrameOOP(MarionetteTestCase):
     def setUp(self):
         super(TestGetActiveFrameOOP, self).setUp()
-        with self.marionette.using_context('chrome'):
-            self.oop_by_default = self.marionette.execute_script("""
-                try {
-                  return Services.prefs.getBoolPref('dom.ipc.browser_frames.oop_by_default');
-                }
-                catch(e) {}
-                """)
-            self.mozBrowserFramesEnabled = self.marionette.execute_script("""
-                try {
-                  return Services.prefs.getBoolPref('dom.mozBrowserFramesEnabled');
-                }
-                catch(e) {}
-                """)
-            self.marionette.execute_script("""
-                Services.prefs.setBoolPref('dom.ipc.browser_frames.oop_by_default', true);
-                """)
-            self.marionette.execute_script("""
-                Services.prefs.setBoolPref('dom.mozBrowserFramesEnabled', true);
-                """)
+        with self.marionette.using_context("chrome"):
+            self.oop_by_default = self.marionette.get_pref(OOP_BY_DEFAULT)
+            self.mozBrowserFramesEnabled = self.marionette.get_pref(BROWSER_FRAMES_ENABLED)
+            self.marionette.set_pref(OOP_BY_DEFAULT, True)
+            self.marionette.set_pref(BROWSER_FRAMES_ENABLED, True)
+
+    def tearDown(self):
+        with self.marionette.using_context("chrome"):
+            if self.oop_by_default is None:
+                self.marionette.clear_pref(OOP_BY_DEFAULT)
+            else:
+                self.marionette.set_pref(OOP_BY_DEFAULT, self.oop_by_default)
+
+            if self.mozBrowserFramesEnabled is None:
+                self.marionette.clear_pref(BROWSER_FRAMES_ENABLED)
+            else:
+                self.marionette.set_pref(BROWSER_FRAMES_ENABLED, self.mozBrowserFramesEnabled)
 
     def test_active_frame_oop(self):
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
@@ -94,22 +96,3 @@ class TestGetActiveFrameOOP(MarionetteTestCase):
         # on a b2g device, the contents do appear
         # print self.marionette.get_url()
         # print self.marionette.page_source
-
-    def tearDown(self):
-        with self.marionette.using_context('chrome'):
-            if self.oop_by_default is None:
-                self.marionette.execute_script("""
-                    Services.prefs.clearUserPref('dom.ipc.browser_frames.oop_by_default');
-                    """)
-            else:
-                self.marionette.execute_script("""
-                    Services.prefs.setBoolPref('dom.ipc.browser_frames.oop_by_default', %s);
-                    """ % 'true' if self.oop_by_default else 'false')
-            if self.mozBrowserFramesEnabled is None:
-                self.marionette.execute_script("""
-                    Services.prefs.clearUserPref('dom.mozBrowserFramesEnabled');
-                    """)
-            else:
-                self.marionette.execute_script("""
-                    Services.prefs.setBoolPref('dom.mozBrowserFramesEnabled', %s);
-                    """ % 'true' if self.mozBrowserFramesEnabled else 'false')

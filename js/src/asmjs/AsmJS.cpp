@@ -1014,6 +1014,29 @@ class NumLit
         return which_ != OutOfRangeInt;
     }
 
+    bool isZeroBits() const {
+        MOZ_ASSERT(valid());
+        switch (which()) {
+          case NumLit::Fixnum:
+          case NumLit::NegativeInt:
+          case NumLit::BigUnsigned:
+            return toInt32() == 0;
+          case NumLit::Double:
+            return toDouble() == 0.0 && !IsNegativeZero(toDouble());
+          case NumLit::Float:
+            return toFloat() == 0.f && !IsNegativeZero(toFloat());
+          case NumLit::Int32x4:
+            return simdValue() == SimdConstant::SplatX4(0);
+          case NumLit::Float32x4:
+            return simdValue() == SimdConstant::SplatX4(0.f);
+          case NumLit::Bool32x4:
+            return simdValue() == SimdConstant::SplatX4(0);
+          case NumLit::OutOfRangeInt:
+            MOZ_CRASH("can't be here because of valid() check above");
+        }
+        return false;
+    }
+
     ValType type() const {
         switch (which_) {
           case NumLit::Fixnum:
@@ -1441,7 +1464,7 @@ class MOZ_STACK_CLASS ModuleValidator
         union {
             struct {
                 Type::Which type_;
-                uint32_t globalDataOffset_;
+                unsigned index_;
                 NumLit literalValue_;
             } varOrConst;
             uint32_t funcIndex_;
@@ -1472,9 +1495,10 @@ class MOZ_STACK_CLASS ModuleValidator
             MOZ_ASSERT(which_ == Variable || which_ == ConstantLiteral || which_ == ConstantImport);
             return u.varOrConst.type_;
         }
-        uint32_t varOrConstGlobalDataOffset() const {
+        unsigned varOrConstIndex() const {
             MOZ_ASSERT(which_ == Variable || which_ == ConstantImport);
-            return u.varOrConst.globalDataOffset_;
+            MOZ_ASSERT(u.varOrConst.index_ != -1u);
+            return u.varOrConst.index_;
         }
         bool isConst() const {
             return which_ == ConstantLiteral || which_ == ConstantImport;
@@ -1829,15 +1853,15 @@ class MOZ_STACK_CLASS ModuleValidator
         module_->bufferArgumentName = n;
     }
     bool addGlobalVarInit(PropertyName* var, const NumLit& lit, bool isConst) {
-        uint32_t globalDataOffset;
-        if (!mg_.allocateGlobalVar(lit.type(), &globalDataOffset))
+        uint32_t index;
+        if (!mg_.allocateGlobalVar(lit.type(), isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.globalDataOffset_ = globalDataOffset;
+        global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = (isConst ? Type::lit(lit) : Type::var(lit.type())).which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
@@ -1847,19 +1871,19 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Variable, nullptr);
         g.pod.u.var.initKind_ = AsmJSGlobal::InitConstant;
         g.pod.u.var.u.val_ = lit.value();
-        g.pod.u.var.globalDataOffset_ = globalDataOffset;
+        g.pod.u.var.globalDataOffset_ = mg_.globalVar(index).globalDataOffset;
         return module_->globals.append(g);
     }
     bool addGlobalVarImport(PropertyName* var, PropertyName* field, ValType type, bool isConst) {
-        uint32_t globalDataOffset;
-        if (!mg_.allocateGlobalVar(type, &globalDataOffset))
+        uint32_t index;
+        if (!mg_.allocateGlobalVar(type, isConst, &index))
             return false;
 
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.globalDataOffset_ = globalDataOffset;
+        global->u.varOrConst.index_ = index;
         global->u.varOrConst.type_ = Type::var(type).which();
         if (!globalMap_.putNew(var, global))
             return false;
@@ -1867,7 +1891,7 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSGlobal g(AsmJSGlobal::Variable, field);
         g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
         g.pod.u.var.u.importType_ = type;
-        g.pod.u.var.globalDataOffset_ = globalDataOffset;
+        g.pod.u.var.globalDataOffset_ = mg_.globalVar(index).globalDataOffset;
         return module_->globals.append(g);
     }
     bool addArrayView(PropertyName* var, Scalar::Type vt, PropertyName* maybeField) {
@@ -2231,7 +2255,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     bool startFunctionBodies() {
-        return true;
+        return mg_.startFuncDefs();
     }
     bool finishFunctionBodies() {
         return mg_.finishFuncDefs();
@@ -2642,16 +2666,12 @@ class MOZ_STACK_CLASS FunctionValidator
 
     /***************************************************** Local scope setup */
 
-    bool addFormal(ParseNode* pn, PropertyName* name, ValType type) {
+    bool addLocal(ParseNode* pn, PropertyName* name, ValType type) {
         LocalMap::AddPtr p = locals_.lookupForAdd(name);
         if (p)
             return failName(pn, "duplicate local name '%s' not allowed", name);
-        return locals_.add(p, name, Local(type, locals_.count()));
-    }
-
-    bool addVariable(ParseNode* pn, PropertyName* name, ValType type) {
-        return addFormal(pn, name, type) &&
-               fg_.addVariable(type);
+        return locals_.add(p, name, Local(type, locals_.count())) &&
+               fg_.addLocal(type);
     }
 
     /****************************** For consistency of returns in a function */
@@ -3375,7 +3395,7 @@ CheckArguments(FunctionValidator& f, ParseNode** stmtIter, ValTypeVector* argTyp
         if (!argTypes->append(type))
             return false;
 
-        if (!f.addFormal(argpn, name, type))
+        if (!f.addLocal(argpn, name, type))
             return false;
     }
 
@@ -3421,10 +3441,9 @@ CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 }
 
 static bool
-SetLocal(FunctionValidator& f, Expr exprStmt, NumLit lit)
+SetLocal(FunctionValidator& f, NumLit lit)
 {
-    return f.writeOp(exprStmt) &&
-           f.writeOp(Expr::SetLocal) &&
+    return f.writeOp(Expr::SetLocal) &&
            f.writeVarU32(f.numLocals()) &&
            f.writeLit(lit);
 }
@@ -3451,43 +3470,10 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
     if (!lit.valid())
         return f.failName(var, "var '%s' initializer out of range", name);
 
-    switch (lit.which()) {
-      case NumLit::Fixnum:
-      case NumLit::NegativeInt:
-      case NumLit::BigUnsigned:
-        if (lit.toInt32() != 0 && !SetLocal(f, Expr::I32Expr, lit))
-            return false;
-        break;
-      case NumLit::Double:
-        if ((lit.toDouble() != 0.0 || IsNegativeZero(lit.toDouble())) &&
-            !SetLocal(f, Expr::F64Expr, lit))
-            return false;
-        break;
-      case NumLit::Float:
-        if ((lit.toFloat() != 0.f || !IsNegativeZero(lit.toFloat())) &&
-            !SetLocal(f, Expr::F32Expr, lit))
-            return false;
-        break;
-      case NumLit::Int32x4:
-        if (lit.simdValue() != SimdConstant::SplatX4(0) &&
-            !SetLocal(f, Expr::I32X4Expr, lit))
-            return false;
-        break;
-      case NumLit::Float32x4:
-        if (lit.simdValue() != SimdConstant::SplatX4(0.f) &&
-            !SetLocal(f, Expr::F32X4Expr, lit))
-            return false;
-        break;
-      case NumLit::Bool32x4:
-        if (lit.simdValue() != SimdConstant::SplatX4(0) &&
-            !SetLocal(f, Expr::B32X4Expr, lit))
-            return false;
-        break;
-      case NumLit::OutOfRangeInt:
-        MOZ_CRASH("can't be here because of valid() check above");
-    }
+    if (!lit.isZeroBits() && !SetLocal(f, lit))
+        return false;
 
-    return f.addVariable(var, name, lit.type());
+    return f.addLocal(var, name, lit.type());
 }
 
 static bool
@@ -3542,9 +3528,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
-            return f.writeOp(Expr::LoadGlobal) &&
-                   f.writeVarU32(global->varOrConstGlobalDataOffset()) &&
-                   f.writeU8(uint8_t(global->isConst()));
+            return f.writeOp(Expr::LoadGlobal) && f.writeVarU32(global->varOrConstIndex());
           }
           case ModuleValidator::Global::Function:
           case ModuleValidator::Global::FFI:
@@ -3855,7 +3839,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         if (global->which() != ModuleValidator::Global::Variable)
             return f.failName(lhs, "'%s' is not a mutable variable", name);
 
-        if (!f.writeOp(Expr::StoreGlobal) || !f.writeVarU32(global->varOrConstGlobalDataOffset()))
+        if (!f.writeOp(Expr::StoreGlobal) || !f.writeVarU32(global->varOrConstIndex()))
             return false;
 
         Type rhsType;
@@ -5531,22 +5515,7 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
     //      | patchAt | the thing we wanted to coerce | current position |>
     switch (expected) {
       case ExprType::Void:
-        if (actual.isIntish())
-            f.patchOp(patchAt, Expr::I32Expr);
-        else if (actual.isFloatish())
-            f.patchOp(patchAt, Expr::F32Expr);
-        else if (actual.isMaybeDouble())
-            f.patchOp(patchAt, Expr::F64Expr);
-        else if (actual.isInt32x4())
-            f.patchOp(patchAt, Expr::I32X4Expr);
-        else if (actual.isFloat32x4())
-            f.patchOp(patchAt, Expr::F32X4Expr);
-        else if (actual.isBool32x4())
-            f.patchOp(patchAt, Expr::B32X4Expr);
-        else if (actual.isVoid())
-            f.patchOp(patchAt, Expr::Id);
-        else
-            MOZ_CRASH("unhandled return type");
+        f.patchOp(patchAt, Expr::Id);
         break;
       case ExprType::I32:
         if (!actual.isIntish())
@@ -6263,35 +6232,10 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt);
 static bool
 CheckAsExprStatement(FunctionValidator& f, ParseNode* expr)
 {
-    if (expr->isKind(PNK_CALL)) {
-        Type _;
-        return CheckCoercedCall(f, expr, ExprType::Void, &_);
-    }
-
-    size_t opcodeAt;
-    if (!f.tempOp(&opcodeAt))
-        return false;
-
-    Type type;
-    if (!CheckExpr(f, expr, &type))
-        return false;
-
-    if (type.isIntish())
-        f.patchOp(opcodeAt, Expr::I32Expr);
-    else if (type.isFloatish())
-        f.patchOp(opcodeAt, Expr::F32Expr);
-    else if (type.isMaybeDouble())
-        f.patchOp(opcodeAt, Expr::F64Expr);
-    else if (type.isInt32x4())
-        f.patchOp(opcodeAt, Expr::I32X4Expr);
-    else if (type.isFloat32x4())
-        f.patchOp(opcodeAt, Expr::F32X4Expr);
-    else if (type.isBool32x4())
-        f.patchOp(opcodeAt, Expr::B32X4Expr);
-    else
-        MOZ_CRASH("unexpected or unimplemented expression statement");
-
-    return true;
+    Type ignored;
+    if (expr->isKind(PNK_CALL))
+        return CheckCoercedCall(f, expr, ExprType::Void, &ignored);
+    return CheckExpr(f, expr, &ignored);
 }
 
 static bool

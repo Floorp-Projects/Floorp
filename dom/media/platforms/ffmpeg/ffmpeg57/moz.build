@@ -8,7 +8,7 @@ UNIFIED_SOURCES += [
     '../FFmpegAudioDecoder.cpp',
     '../FFmpegDataDecoder.cpp',
     '../FFmpegDecoderModule.cpp',
-    '../FFmpegH264Decoder.cpp',
+    '../FFmpegVideoDecoder.cpp',
 ]
 LOCAL_INCLUDES += [
     '..',
@@ -20,10 +20,6 @@ if CONFIG['GNU_CXX']:
 if CONFIG['CLANG_CXX']:
   CXXFLAGS += [
     '-Wno-unknown-attributes',
-  ]
-if CONFIG['_MSC_VER']:
-  CXXFLAGS += [
-    '-wd4996', # deprecated declaration
   ]
 
 FINAL_LIBRARY = 'xul'

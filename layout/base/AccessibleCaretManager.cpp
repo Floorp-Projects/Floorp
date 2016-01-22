@@ -65,6 +65,8 @@ std::ostream& operator<<(std::ostream& aStream,
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 /*static*/ bool
+AccessibleCaretManager::sSelectionBarEnabled = false;
+/*static*/ bool
 AccessibleCaretManager::sCaretsExtendedVisibility = false;
 /*static*/ bool
 AccessibleCaretManager::sHapticFeedback = false;
@@ -83,6 +85,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
 
   static bool addedPrefs = false;
   if (!addedPrefs) {
+    Preferences::AddBoolVarCache(&sSelectionBarEnabled,
+                                 "layout.accessiblecaret.bar.enabled");
     Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
                                  "layout.accessiblecaret.extendedvisibility");
     Preferences::AddBoolVarCache(&sHapticFeedback,
@@ -319,7 +323,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode()
                               int32_t aOffset) -> PositionChangedResult
   {
     PositionChangedResult result = aCaret->SetPosition(aFrame, aOffset);
-    aCaret->SetSelectionBarEnabled(true);
+    aCaret->SetSelectionBarEnabled(sSelectionBarEnabled);
 
     switch (result) {
       case PositionChangedResult::NotChanged:
