@@ -45,6 +45,7 @@ public:
   nsresult CreatePBackgroundSpinUntilDone();
 
   virtual bool RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) override;
+  virtual bool RecvCallbackConnected(const UDPAddressInfo& aAddressInfo) override;
   virtual bool RecvCallbackClosed() override;
   virtual bool RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
                                         InfallibleTArray<uint8_t>&& aData) override;
