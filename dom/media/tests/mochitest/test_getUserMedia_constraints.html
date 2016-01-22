@@ -70,7 +70,7 @@ var mustSupport = [
   'width', 'height', 'frameRate', 'facingMode', 'deviceId',
   // Yet to add:
   //  'aspectRatio', 'frameRate', 'volume', 'sampleRate', 'sampleSize',
-  //  'echoCancellation', 'latency', 'groupId'
+  //  'latency', 'groupId'
 
   // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
   // OBE by http://w3c.github.io/mediacapture-screen-share
@@ -78,7 +78,9 @@ var mustSupport = [
 
   // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
   'browserWindow', 'scrollWithPage',
-  'viewportOffsetX', 'viewportOffsetY', 'viewportWidth', 'viewportHeight'
+  'viewportOffsetX', 'viewportOffsetY', 'viewportWidth', 'viewportHeight',
+
+  'echoCancellation', 'mozNoiseSuppression', 'mozAutoGainControl'
 ];
 
 var mustFailWith = (msg, reason, constraint, f) =>
