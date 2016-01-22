@@ -265,6 +265,20 @@ class StaticBlockScope : public NestedStaticScope
         setSlotValue(i, PrivateValue(def));
     }
 
+    // XXXshu Used only for phasing in block-scope function early
+    // XXXshu errors.
+    // XXXshu
+    // XXXshu Back out when major version >= 50. See [1].
+    // XXXshu
+    // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
+    void updateDefinitionParseNode(unsigned i,
+                                   frontend::Definition* oldDef,
+                                   frontend::Definition* newDef)
+    {
+        MOZ_ASSERT(definitionParseNode(i) == oldDef);
+        setSlotValue(i, PrivateValue(newDef));
+    }
+
     frontend::Definition* definitionParseNode(unsigned i) {
         Value v = slotValue(i);
         return reinterpret_cast<frontend::Definition*>(v.toPrivate());
