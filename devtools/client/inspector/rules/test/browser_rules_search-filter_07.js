@@ -23,16 +23,15 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testModifyPropertyNameFilter(inspector, view);
-});
 
-function* testModifyPropertyNameFilter(inspector, view) {
+  info("Enter the test value in the search filter");
   yield setSearchFilter(view, SEARCH);
 
+  info("Focus the width property name");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
   let propEditor = rule.textProps[0].editor;
-  let editor = yield focusEditableField(view, propEditor.nameSpan);
+  yield focusEditableField(view, propEditor.nameSpan);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -43,13 +42,21 @@ function* testModifyPropertyNameFilter(inspector, view) {
     .contains("ruleview-highlight"),
     "height text property is correctly highlighted.");
 
-  let onBlur = once(editor.input, "blur");
-  let onModification = rule._applyingModifications;
+  info("Change the width property to margin-left");
   EventUtils.sendString("margin-left", view.styleWindow);
+
+  info("Submit the change");
+  let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield onBlur;
-  yield onModification;
+  yield onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "margin-left text property is correctly highlighted.");
-}
+
+  // After pressing return on the property name, the value has been focused
+  // automatically. Blur it now and wait for the rule-view to refresh to avoid
+  // pending requests.
+  onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield onRuleViewChanged;
+});

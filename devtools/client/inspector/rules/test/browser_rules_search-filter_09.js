@@ -23,12 +23,11 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testNewPropertyFilter(inspector, view);
-});
 
-function* testNewPropertyFilter(inspector, view) {
+  info("Enter the test value in the search filter");
   yield setSearchFilter(view, SEARCH);
 
+  info("Start entering a new property in the rule");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
   let editor = yield focusEditableField(view, ruleEditor.closeBrace);
@@ -46,27 +45,28 @@ function* testNewPropertyFilter(inspector, view) {
   info("Test creating a new property");
 
   info("Entering margin-left in the property name editor");
+  // Changing the value doesn't cause a rule-view refresh, no need to wait for
+  // ruleview-changed here.
   editor.input.value = "margin-left";
 
   info("Pressing return to commit and focus the new value field");
-  let onValueFocus = once(ruleEditor.element, "focus", true);
-  let onModifications = ruleEditor.rule._applyingModifications;
+  let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onValueFocus;
-  yield onModifications;
+  yield onRuleViewChanged;
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.styleDocument.activeElement);
   let propEditor = ruleEditor.rule.textProps[2].editor;
 
   info("Entering a value and bluring the field to expect a rule change");
+  onRuleViewChanged = view.once("ruleview-changed");
   editor.input.value = "100%";
-  let onBlur = once(editor.input, "blur");
-  onModifications = ruleEditor.rule._applyingModifications;
+  yield onRuleViewChanged;
+
+  onRuleViewChanged = view.once("ruleview-changed");
   editor.input.blur();
-  yield onBlur;
-  yield onModifications;
+  yield onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "margin-left text property is correctly highlighted.");
-}
+});
