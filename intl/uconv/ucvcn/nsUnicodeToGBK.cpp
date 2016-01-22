@@ -217,6 +217,10 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuffNoErr(const char16_t * aSrc,
         aDest += 2;	// increment 2 bytes
         iDestLength +=2;
       } else {
+        // Swapped character in GB18030-2005
+        if (unicode == 0xE7C7) {
+          unicode = 0x1E3F;
+        }
         int32_t aOutLen = 2;
         // we cannot map in the common mapping. Let's try to
         // call the delegated 2 byte converter for the gbk or gb18030
