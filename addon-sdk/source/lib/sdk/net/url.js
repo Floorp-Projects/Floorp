@@ -81,7 +81,7 @@ function readURISync(uri, charset) {
   let channel = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, charset),
     loadUsingSystemPrincipal: true});
-  let stream = channel.open();
+  let stream = channel.open2();
 
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, { charset : charset });
