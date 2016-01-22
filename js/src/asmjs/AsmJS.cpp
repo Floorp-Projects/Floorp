@@ -2772,7 +2772,7 @@ class MOZ_STACK_CLASS FunctionValidator
     }
     MOZ_WARN_UNUSED_RESULT
     bool writeInt32Lit(int32_t i32) {
-        return writeOp(Expr::I32Const) && encoder().writeI32(i32);
+        return writeOp(Expr::I32Const) && encoder().writeVarU32(i32);
     }
 
     MOZ_WARN_UNUSED_RESULT
