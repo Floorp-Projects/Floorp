@@ -41,6 +41,13 @@ public:
 
   void ConfigurationChanged(const TrackInfo& aConfig) override;
 
+  const char* GetDescriptionName() const override
+  {
+    nsCString failureReason;
+    return IsHardwareAccelerated(failureReason)
+      ? "wmf hardware video decoder" : "wmf software video decoder";
+  }
+
 private:
 
   bool InitializeDXVA(bool aForceD3D9);
