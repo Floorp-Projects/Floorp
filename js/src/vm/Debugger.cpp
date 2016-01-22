@@ -5410,6 +5410,19 @@ Debugger::observesScript(JSScript* script) const
 Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePtr to,
                            ScriptFrameIter& iter)
 {
+    auto removeFromDebuggerFramesOnExit = MakeScopeExit([&] {
+        // Remove any remaining old entries on exit, as the 'from' frame will
+        // be gone. On success, the range will be empty.
+        for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
+            r.frontFrame()->setPrivate(nullptr);
+            r.removeFrontFrame();
+        }
+
+        // Rekey missingScopes to maintain Debugger.Environment identity and
+        // forward liveScopes to point to the new frame.
+        DebugScopes::forwardLiveFrame(cx, from, to);
+    });
+
     // Forward live Debugger.Frame objects.
     for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
         RootedNativeObject frameobj(cx, r.frontFrame());
@@ -5423,7 +5436,7 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
             return false;
         frameobj->setPrivate(data);
 
-        // Remove the old entry before mutating the HashMap.
+        // Remove the old frame.
         r.removeFrontFrame();
 
         // Add the frame object with |to| as key.
@@ -5432,11 +5445,6 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
             return false;
         }
     }
-
-    // Rekey missingScopes to maintain Debugger.Environment identity and
-    // forward liveScopes to point to the new frame, as the old frame will be
-    // gone.
-    DebugScopes::forwardLiveFrame(cx, from, to);
 
     return true;
 }
