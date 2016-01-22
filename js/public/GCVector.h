@@ -21,9 +21,9 @@ namespace js {
 // the contents.
 //
 // Most types of GC pointers as keys and values can be traced with no extra
-// infrastructure.  For structs and non-gc-pointer members, ensure that there
-// is a specialization of DefaultGCPolicy<T> with an appropriate trace method
-// available to handle the custom type. Generic helpers can be found in
+// infrastructure. For structs and non-gc-pointer members, ensure that there is
+// a specialization of GCPolicy<T> with an appropriate trace method available
+// to handle the custom type. Generic helpers can be found in
 // js/public/TracingAPI.h.
 //
 // Note that although this Vector's trace will deal correctly with moved items,
@@ -31,8 +31,7 @@ namespace js {
 // it must either be used with Rooted, or barriered and traced manually.
 template <typename T,
           size_t MinInlineCapacity = 0,
-          typename AllocPolicy = TempAllocPolicy,
-          typename GCPolicy = DefaultGCPolicy<T>>
+          typename AllocPolicy = TempAllocPolicy>
 class GCVector : public JS::Traceable
 {
     mozilla::Vector<T, MinInlineCapacity, AllocPolicy> vector;
@@ -122,14 +121,14 @@ class GCVector : public JS::Traceable
 
     void trace(JSTracer* trc) {
         for (auto& elem : vector)
-            GCPolicy::trace(trc, &elem, "vector element");
+            DefaultGCPolicy<T>::trace(trc, &elem, "vector element");
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class GCVectorOperations
 {
-    using Vec = GCVector<T, Capacity, AllocPolicy, GCPolicy>;
+    using Vec = GCVector<T, Capacity, AllocPolicy>;
     const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
@@ -146,11 +145,11 @@ class GCVectorOperations
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class MutableGCVectorOperations
-  : public GCVectorOperations<Outer, T, Capacity, AllocPolicy, GCPolicy>
+  : public GCVectorOperations<Outer, T, Capacity, AllocPolicy>
 {
-    using Vec = GCVector<T, Capacity, AllocPolicy, GCPolicy>;
+    using Vec = GCVector<T, Capacity, AllocPolicy>;
     const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
     Vec& vec() { return static_cast<Outer*>(this)->get(); }
 
@@ -213,26 +212,24 @@ class MutableGCVectorOperations
     void erase(T* aBegin, T* aEnd) { vec().erase(aBegin, aEnd); }
 };
 
-template <typename T, size_t N, typename AP, typename GP>
-class RootedBase<GCVector<T,N,AP,GP>>
-  : public MutableGCVectorOperations<JS::Rooted<GCVector<T,N,AP,GP>>, T,N,AP,GP>
+template <typename T, size_t N, typename AP>
+class RootedBase<GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::Rooted<GCVector<T,N,AP>>, T,N,AP>
 {};
 
-template <typename T, size_t N, typename AP, typename GP>
-class MutableHandleBase<GCVector<T,N,AP,GP>>
-  : public MutableGCVectorOperations<JS::MutableHandle<GCVector<T,N,AP,GP>>,
-                                            T,N,AP,GP>
+template <typename T, size_t N, typename AP>
+class MutableHandleBase<GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::MutableHandle<GCVector<T,N,AP>>, T,N,AP>
 {};
 
-template <typename T, size_t N, typename AP, typename GP>
-class HandleBase<GCVector<T,N,AP,GP>>
-  : public GCVectorOperations<JS::Handle<GCVector<T,N,AP,GP>>, T,N,AP,GP>
+template <typename T, size_t N, typename AP>
+class HandleBase<GCVector<T,N,AP>>
+  : public GCVectorOperations<JS::Handle<GCVector<T,N,AP>>, T,N,AP>
 {};
 
-template <typename T, size_t N, typename AP, typename GP>
-class PersistentRootedBase<GCVector<T,N,AP,GP>>
-  : public MutableGCVectorOperations<JS::PersistentRooted<GCVector<T,N,AP,GP>>,
-                                            T,N,AP,GP>
+template <typename T, size_t N, typename AP>
+class PersistentRootedBase<GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::PersistentRooted<GCVector<T,N,AP>>, T,N,AP>
 {};
 
 } // namespace js
