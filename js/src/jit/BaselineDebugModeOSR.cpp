@@ -756,7 +756,8 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     } else {
         firstMonitorStub = nullptr;
     }
-    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForKind(oldStub->kind(), entry.script);
+    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForKind(oldStub->kind(), entry.script,
+                                                              ICStubCompiler::Engine::Baseline);
 
     // Clone the existing stub into the recompiled IC.
     //
