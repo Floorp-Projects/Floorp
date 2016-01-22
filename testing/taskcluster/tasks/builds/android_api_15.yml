@@ -1,28 +1,28 @@
 $inherits:
   from: 'tasks/builds/mobile_base.yml'
   variables:
-    build_name: 'android-api-11-partner-sample1'
+    build_name: 'android'
     build_type: 'opt'
 task:
   metadata:
-      name: '[TC] Android armv7 API 11+ partner sample 1'
-      description: 'Android armv7 API 11+ partner sample 1'
+      name: '[TC] Android armv7 API 15+'
+      description: 'Android armv7 API 15+'
 
-  workerType: android-api-11
+  workerType: android-api-15
 
   routes:
-    - 'index.buildbot.branches.{{project}}.android-api-11-partner-sample1'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-11-partner-sample1'
+    - 'index.buildbot.branches.{{project}}.android-api-15'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15'
 
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-11-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-android-api-11-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-android-api-15-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
@@ -36,20 +36,9 @@ task:
           builds/releng_base_android_64_builds.py
           disable_signing.py
           platform_supports_post_upload_to_latest.py
-      MH_CUSTOM_BUILD_VARIANT_CFG: api-11-partner-sample1
+      MH_CUSTOM_BUILD_VARIANT_CFG: api-15
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
-
-      # space separated list of repositories required for this build
-      # for each ITEM in list you want checked out, you must also supply tc-vcs args:
-      # e.g. ${ITEM}_BASE_REPOSITORY
-      EXTRA_CHECKOUT_REPOSITORIES: >
-          PARTNER
-
-      PARTNER_BASE_REPOSITORY: 'https://github.com/mozilla/fennec-distribution-sample'
-      PARTNER_HEAD_REPOSITORY: 'https://github.com/mozilla/fennec-distribution-sample'
-      PARTNER_HEAD_REV: 756f0378d4cac87e5e6c405249ede5effe082da2
-      PARTNER_DEST_DIR: '/home/worker/workspace/build/partner'
 
     maxRunTime: 36000
 
@@ -62,7 +51,7 @@ task:
     treeherder:
       machine:
         # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
-        platform: android-4-0-armv7-api11-partner1
+        platform: android-4-0-armv7-api15
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.

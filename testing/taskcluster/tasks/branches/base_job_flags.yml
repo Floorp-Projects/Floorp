@@ -97,7 +97,7 @@ flags:
     - aries-eng
     - aries-dogfood
     - aries-noril
-    - android-api-11
+    - android-api-15
     - android-partner-sample1
     - android-b2gdroid
     - linux

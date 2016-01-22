@@ -3,7 +3,7 @@ MOZ_UPDATE_CHANNEL = "release"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
 STAGE_SERVER = "dev-stage01.srv.releng.scl3.mozilla.com"
-EN_US_BINARY_URL = "http://" + STAGE_SERVER + "/pub/mozilla.org/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-11/en-US"
+EN_US_BINARY_URL = "http://" + STAGE_SERVER + "/pub/mozilla.org/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-15/en-US"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -62,13 +62,13 @@ config = {
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
     "base_en_us_binary_url": EN_US_BINARY_URL,
-    "upload_branch": "%s-android-api-11" % BRANCH,
+    "upload_branch": "%s-android-api-15" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-11/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates",
+    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-15/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates",
     "merge_locales": True,
     "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-11/l10n-release" % MOZILLA_DIR,
+    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-15/l10n-release" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
 
     # Mock

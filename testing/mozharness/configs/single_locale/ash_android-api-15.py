@@ -2,7 +2,7 @@ BRANCH = "ash"
 MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-11/en-US" % BRANCH
+EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-15/en-US" % BRANCH
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -56,16 +56,16 @@ config = {
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "upload_branch": "%s-android-api-11" % BRANCH,
+    "upload_branch": "%s-android-api-15" % BRANCH,
     "ssh_key_dir": "~/.ssh",
     "merge_locales": True,
     "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-11/l10n-nightly" % MOZILLA_DIR,
+    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-15/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "stage_product": "mobile",
     "platform": "android",
-    "build_type": "api-11-opt",
+    "build_type": "api-15-opt",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",

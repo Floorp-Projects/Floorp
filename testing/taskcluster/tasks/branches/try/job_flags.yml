@@ -41,18 +41,18 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_dolphin_512_eng.yml
-  android-api-11:
+  android-api-15:
     platforms:
       - Android
     types:
       opt:
-        task: tasks/builds/android_api_11.yml
+        task: tasks/builds/android_api_15.yml
   android-partner-sample1:
     platforms:
       - Android
     types:
       opt:
-        task: tasks/builds/android_api_11_partner_sample1.yml
+        task: tasks/builds/android_api_15_partner_sample1.yml
   linux:
     platforms:
       - Linux
@@ -140,7 +140,7 @@ post-build:
       - tasks/builds/opt_linux64.yml
       - tasks/builds/opt_linux64_st-an.yml
       - tasks/builds/dbg_linux64.yml
-      - tasks/builds/android_api_11.yml
+      - tasks/builds/android_api_15.yml
     task: tasks/post-builds/upload_symbols.yml
 
 tests:
