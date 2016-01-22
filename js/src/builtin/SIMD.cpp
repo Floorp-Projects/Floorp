@@ -37,8 +37,38 @@ using mozilla::NumberIsInt32;
 ///////////////////////////////////////////////////////////////////////////
 // SIMD
 
+static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
+
+bool
+js::IsSignedIntSimdType(SimdType type)
+{
+    switch (type) {
+      case SimdType::Int32x4:
+        return true;
+      case SimdType::Float32x4:
+      case SimdType::Bool32x4:
+        return false;
+      default:
+        break;
+   }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown SIMD type");
+}
+
+PropertyName*
+js::SimdTypeToName(JSContext* cx, SimdType type)
+{
+    switch (type) {
+      case SimdType::Int32x4:   return cx->names().Int32x4;
+      case SimdType::Float32x4: return cx->names().Float32x4;
+      case SimdType::Bool32x4:  return cx->names().Bool32x4;
+      default:                  break;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected SIMD type");
+}
+
+
 static bool
-CheckVectorObject(HandleValue v, SimdTypeDescr::Type expectedType)
+CheckVectorObject(HandleValue v, SimdType expectedType)
 {
     if (!v.isObject())
         return false;
@@ -162,7 +192,7 @@ namespace {
 #define DEFINE_DEFN_(TypeName)                                       \
 class TypeName##Defn {                                               \
   public:                                                            \
-    static const SimdTypeDescr::Type type = SimdTypeDescr::TypeName; \
+    static const SimdType type = SimdType::TypeName;                 \
     static const JSFunctionSpec Methods[];                           \
 };
 
@@ -351,10 +381,11 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
 #define CASE_CALL_(Type) \
-      case SimdTypeDescr::Type:   return FillLanes< ::Type>(cx, result, args);
+      case SimdType::Type:   return FillLanes< ::Type>(cx, result, args);
 
     switch (descr->type()) {
       FOR_EACH_SIMD(CASE_CALL_)
+      case SimdType::Count: break;
     }
 
 #undef CASE_CALL_
@@ -365,11 +396,9 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 ///////////////////////////////////////////////////////////////////////////
 // SIMD class
 
-static const uint32_t SIMD_SLOTS_COUNT = SimdTypeDescr::LAST_TYPE + 1;
-
 const Class SimdObject::class_ = {
     "SIMD",
-    JSCLASS_HAS_RESERVED_SLOTS(SIMD_SLOTS_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(uint32_t(SimdType::Count)),
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -423,13 +452,13 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
     if (!typeDescr)
         return false;
 
-    const SimdTypeDescr::Type type = T::type;
+    const SimdType simdType = T::type;
     typeDescr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::Simd));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
-    typeDescr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(SimdTypeDescr::alignment(type)));
-    typeDescr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(SimdTypeDescr::size(type)));
+    typeDescr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(SimdTypeDescr::alignment(simdType)));
+    typeDescr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(SimdTypeDescr::size(simdType)));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(false));
-    typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
+    typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(uint8_t(simdType)));
 
     if (!CreateUserSizeAndAlignmentProperties(cx, typeDescr))
         return false;
@@ -476,10 +505,11 @@ bool
 GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, uint32_t simdTypeDescrType)
 {
 #define CREATE_(Type) \
-    case SimdTypeDescr::Type: return CreateSimdType<Type##Defn>(cx, global, cx->names().Type);
+    case SimdType::Type: return CreateSimdType<Type##Defn>(cx, global, cx->names().Type);
 
-    switch (SimdTypeDescr::Type(simdTypeDescrType)) {
+    switch (SimdType(simdTypeDescrType)) {
       FOR_EACH_SIMD(CREATE_)
+      case SimdType::Count: break;
     }
     MOZ_CRASH("unexpected simd type");
 
