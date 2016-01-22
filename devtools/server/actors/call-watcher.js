@@ -284,6 +284,23 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     this.finalize();
   },
 
+  events: {
+    /**
+     * Events emitted when the `onCall` function isn't provided.
+     */
+    "call": {
+      type: "call",
+      function: Arg(0, "function-call")
+    }
+  },
+
+  /**
+   * Lightweight listener invoked whenever an instrumented function is called
+   * while recording. We're doing this to avoid the event emitter overhead,
+   * since this is expected to be a very hot function.
+   */
+  onCall: null,
+
   /**
    * Starts waiting for the current tab actor's document global to be
    * created, in order to instrument the specified objects and become
@@ -384,13 +401,6 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
   eraseRecording: method(function() {
     this._functionCalls = [];
   }),
-
-  /**
-   * Lightweight listener invoked whenever an instrumented function is called
-   * while recording. We're doing this to avoid the event emitter overhead,
-   * since this is expected to be a very hot function.
-   */
-  onCall: null,
 
   /**
    * Invoked whenever the current tab actor's document global is created.
