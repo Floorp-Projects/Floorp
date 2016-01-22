@@ -232,12 +232,11 @@ this.AddonWatcher = {
    *
    * @type {Map<String, Object>} A map associating addonId to
    *  objects with fields
-   *  - {Object} peaks The highest values encountered for each filter.
-   *    - {number} longestDuration
-   *    - {number} totalCPOWTime
-   *  - {Object} alerts The number of alerts for each filter.
-   *    - {number} longestDuration
-   *    - {number} totalCPOWTime
+   *  {number} occurrences The total number of performance alerts recorded for this addon.
+   *  {number} occurrencesSinceLastNotification The number of performances alerts recorded
+   *     since we last notified the user.
+   *  {number} latestNotificationTimeStamp The timestamp of the latest user notification
+   *     that this add-on is slow.
    */
   get alerts() {
     let result = new Map();

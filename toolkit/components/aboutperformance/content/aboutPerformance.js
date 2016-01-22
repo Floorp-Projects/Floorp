@@ -564,12 +564,12 @@ var View = {
       let processes = delta.diff.processes.map(proc => `${proc.processId} (${proc.isChildProcess?"child":"parent"})`);
       cachedElements.eltProcess.textContent = `Processes: ${processes.join(", ")}`;
       let jankSuffix = "";
-      let cpowSuffix = "";
       if (watcherAlerts) {
         let deltaAlerts = watcherAlerts.get(delta.diff.addonId);
         if (deltaAlerts) {
-          jankSuffix = ` (${deltaAlerts.get("longestDuration") || 0} alerts)`;
-          cpowSuffix = ` (${deltaAlerts.get("totalCPOWTime") || 0} alerts)`;
+          if (deltaAlerts.occurrences) {
+            jankSuffix = ` (${deltaAlerts.occurrences} alerts)`;
+          }
         }
       }
 
@@ -587,7 +587,7 @@ var View = {
         cachedElements.eltFPS.textContent = `Impact on framerate: ${delta.diff.jank.longestDuration + 1}/${delta.diff.jank.durations.length}${jankSuffix}.`;
         cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime/delta.diff.deltaT)}%.`;
         cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime/delta.diff.deltaT)}%.`;
-        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime/delta.diff.deltaT)}%${cpowSuffix}.`;
+        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime/delta.diff.deltaT)}%.`;
       } else {
         if (delta.alerts.length == 0) {
           eltImpact.textContent = " has performed well so far.";
@@ -630,7 +630,7 @@ var View = {
         let result = delta.diff.jank.totalCPUTime/delta.diff.deltaT;
         cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime/delta.diff.deltaT)}% (total ${delta.diff.jank.totalUserTime}ms).`;
         cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime/delta.diff.deltaT)}% (total ${delta.diff.jank.totalSystemTime}ms).`;
-        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime/delta.diff.deltaT)}% (total ${delta.diff.cpow.totalCPOWTime}ms)${cpowSuffix}.`;
+        cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime/delta.diff.deltaT)}% (total ${delta.diff.cpow.totalCPOWTime}ms).`;
       }
     }
     this._insertElements(toAdd, id);
