@@ -12,6 +12,7 @@ const {
 } = Components;
 
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/NetUtil.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 /** This little class ensures that redirects maintain an https:// origin */
@@ -44,17 +45,16 @@ function ResourceLoader(res, rej) {
 ResourceLoader.load = function(uri, doc) {
   return new Promise((resolve, reject) => {
     let listener = new ResourceLoader(resolve, reject);
-    let ioService = Cc['@mozilla.org/network/io-service;1']
-      .getService(Ci.nsIIOService);
-    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    // the '2' identifies this as a script load
-    let ioChannel = ioService.newChannelFromURI2(uri, doc, doc.nodePrincipal,
-                                                 systemPrincipal, 0,
-                                                 Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT);
+    let ioChannel = NetUtil.newChannel({
+      uri: uri,
+      loadingNode: doc,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT
+    });
 
     ioChannel.loadGroup = doc.documentLoadGroup.QueryInterface(Ci.nsILoadGroup);
     ioChannel.notificationCallbacks = new RedirectHttpsOnly();
-    ioChannel.asyncOpen(listener, null);
+    ioChannel.asyncOpen2(listener);
   });
 };
 
