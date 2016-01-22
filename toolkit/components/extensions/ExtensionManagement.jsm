@@ -202,17 +202,57 @@ var Service = {
   // This is used to set the addonId on the originAttributes for the
   // nsIPrincipal attached to the URI.
   extensionURIToAddonID(uri) {
-    if (this.extensionURILoadableByAnyone(uri)) {
-      // We don't want webAccessibleResources to be associated with
-      // the add-on. That way they don't get any special privileges.
-      return null;
-    }
-
     let uuid = uri.host;
     let extension = this.uuidMap.get(uuid);
     return extension ? extension.id : undefined;
   },
 };
+
+// API Levels Helpers
+
+// Find the add-on associated with this document via the
+// principal's originAttributes. This value is computed by
+// extensionURIToAddonID, which ensures that we don't inject our
+// API into webAccessibleResources or remote web pages.
+function getAddonIdForWindow(window) {
+  let principal = window.document.nodePrincipal;
+  return principal.originAttributes.addonId;
+}
+
+const API_LEVELS = Object.freeze({
+  NO_PRIVILEGES: 0,
+  CONTENTSCRIPT_PRIVILEGES: 1,
+  FULL_PRIVILEGES: 2,
+});
+
+// Finds the API Level ("FULL_PRIVILEGES", "CONTENTSCRIPT_PRIVILEGES", "NO_PRIVILEGES")
+// with a given a window object.
+function getAPILevelForWindow(window, addonId) {
+  const { NO_PRIVILEGES, CONTENTSCRIPT_PRIVILEGES, FULL_PRIVILEGES } = API_LEVELS;
+
+  // Non WebExtension URLs and WebExtension URLs from a different extension
+  // has no access to APIs.
+  if (!addonId && getAddonIdForWindow(window) != addonId) {
+    return NO_PRIVILEGES;
+  }
+
+  let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDocShell);
+
+  // WebExtension URLs loaded into sub-frame UI have "content script API level privileges".
+  // (see Bug 1214658 for rationale)
+  if (docShell.sameTypeParent) {
+    return CONTENTSCRIPT_PRIVILEGES;
+  }
+
+  // Extension pages running in the content process defaults to "content script API level privileges".
+  if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+    return CONTENTSCRIPT_PRIVILEGES;
+  }
+
+  // WebExtension URLs loaded into top frames UI could have full API level privileges.
+  return FULL_PRIVILEGES;
+}
 
 this.ExtensionManagement = {
   startupExtension: Service.startupExtension.bind(Service),
@@ -226,4 +266,9 @@ this.ExtensionManagement = {
 
   getFrameId: Frames.getId.bind(Frames),
   getParentFrameId: Frames.getParentId.bind(Frames),
+
+  // exported API Level Helpers
+  getAddonIdForWindow,
+  getAPILevelForWindow,
+  API_LEVELS,
 };

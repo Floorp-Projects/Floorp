@@ -363,12 +363,16 @@ GlobalManager = {
       Schemas.inject(chromeObj, schemaWrapper);
     };
 
-    // Find the add-on associated with this document via the
-    // principal's originAttributes. This value is computed by
-    // extensionURIToAddonID, which ensures that we don't inject our
-    // API into webAccessibleResources or remote web pages.
-    let principal = contentWindow.document.nodePrincipal;
-    let id = principal.originAttributes.addonId;
+    let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
+
+    // We don't inject privileged APIs into sub-frames of a UI page.
+    const { FULL_PRIVILEGES } = ExtensionManagement.API_LEVELS;
+    if (ExtensionManagement.getAPILevelForWindow(contentWindow, id) !== FULL_PRIVILEGES) {
+      return;
+    }
+
+    // We don't inject privileged APIs if the addonId is null
+    // or doesn't exist.
     if (!this.extensionMap.has(id)) {
       return;
     }
@@ -387,10 +391,6 @@ GlobalManager = {
       return;
     }
 
-    // We don't inject into sub-frames of a UI page.
-    if (contentWindow != contentWindow.top) {
-      return;
-    }
     let extension = this.extensionMap.get(id);
     let uri = contentWindow.document.documentURIObject;
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
