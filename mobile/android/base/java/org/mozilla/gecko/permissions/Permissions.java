@@ -6,6 +6,7 @@
 package org.mozilla.gecko.permissions;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 
@@ -46,9 +47,12 @@ public class Permissions {
 
     /**
      * Entry point for checking (and optionally prompting for) runtime permissions.
+     *
+     * Note: The provided context needs to be an Activity context in order to prompt. Use doNotPrompt()
+     * for all other contexts.
      */
-    public static PermissionBlock from(@NonNull Activity activity) {
-        return new PermissionBlock(activity, permissionHelper);
+    public static PermissionBlock from(@NonNull Context context) {
+        return new PermissionBlock(context, permissionHelper);
     }
 
     /**
