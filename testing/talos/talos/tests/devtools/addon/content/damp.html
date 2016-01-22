@@ -17,6 +17,8 @@ var defaultConfig = {
     performanceOpen: true,
     netmonitorOpen: true,
     saveAndReadHeapSnapshot: true,
+    consoleBulkLogging: true,
+    consoleStreamLogging: true,
   }
 };
 
@@ -28,6 +30,8 @@ var testsInfo = {
   performanceOpen: "Measure open/close toolbox on performance panel",
   netmonitorOpen: "Measure open/close toolbox on network monitor panel",
   saveAndReadHeapSnapshot: "Measure open/close toolbox on memory panel and save/read heap snapshot",
+  consoleBulkLogging: "Measure time for a bunch of sync console.log statements to appear",
+  consoleStreamLogging: "Measure rAF on page during a stream of console.log statements",
 };
 
 function updateConfig() {

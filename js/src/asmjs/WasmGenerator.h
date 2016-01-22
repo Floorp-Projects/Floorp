@@ -64,11 +64,25 @@ struct ModuleImportGeneratorData
 
 typedef Vector<ModuleImportGeneratorData, 0, SystemAllocPolicy> ModuleImportGeneratorDataVector;
 
+// Global variable descriptor, in asm.js only.
+
+struct AsmJSGlobalVariable {
+    ExprType type;
+    unsigned globalDataOffset;
+    bool isConst;
+    AsmJSGlobalVariable(ExprType type, unsigned offset, bool isConst)
+      : type(type), globalDataOffset(offset), isConst(isConst)
+    {}
+};
+
+typedef Vector<AsmJSGlobalVariable, 0, SystemAllocPolicy> AsmJSGlobalVariableVector;
+
 struct ModuleGeneratorData
 {
     DeclaredSigVector               sigs;
     DeclaredSigPtrVector            funcSigs;
     ModuleImportGeneratorDataVector imports;
+    AsmJSGlobalVariableVector       globals;
 };
 
 typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
@@ -96,6 +110,9 @@ class ModuleGeneratorThreadView
     const ModuleImportGeneratorData& import(uint32_t importIndex) const {
         MOZ_ASSERT(shared_.imports[importIndex].sig);
         return shared_.imports[importIndex];
+    }
+    const AsmJSGlobalVariable& globalVar(uint32_t globalIndex) const {
+        return shared_.globals[globalIndex];
     }
 };
 
@@ -156,7 +173,8 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Global data:
     bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
-    bool allocateGlobalVar(ValType type, uint32_t* globalDataOffset);
+    bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
+    const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
 
     // Signatures:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -182,6 +200,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineExport(uint32_t index, Offsets offsets);
 
     // Function definitions:
+    bool startFuncDefs();
+    bool startedFuncDefs() const { return !!threadView_; }
     bool startFuncDef(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
     bool finishFuncDef(uint32_t funcIndex, unsigned generateTime, FunctionGenerator* fg);
     bool finishFuncDefs();
@@ -248,7 +268,7 @@ class MOZ_STACK_CLASS FunctionGenerator
         SourceCoords sc = { byteOffset, line, column };
         return callSourceCoords_.append(sc);
     }
-    bool addVariable(ValType v) {
+    bool addLocal(ValType v) {
         return localVars_.append(v);
     }
 };

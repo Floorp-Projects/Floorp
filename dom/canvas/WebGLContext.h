@@ -332,6 +332,8 @@ public:
         return ActiveBoundTextureForTarget(texTarget);
     }
 
+    void InvalidateResolveCacheForTextureWithTexUnit(const GLuint);
+
     already_AddRefed<Layer>
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager) override;

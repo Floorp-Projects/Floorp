@@ -14,6 +14,15 @@ namespace mozilla {
 WebGLSampler::WebGLSampler(WebGLContext* webgl, GLuint sampler)
     : WebGLContextBoundObject(webgl)
     , mGLName(sampler)
+    , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
+    , mMagFilter(LOCAL_GL_LINEAR)
+    , mWrapS(LOCAL_GL_REPEAT)
+    , mWrapT(LOCAL_GL_REPEAT)
+    , mWrapR(LOCAL_GL_REPEAT)
+    , mMinLod(-1000)
+    , mMaxLod(1000)
+    , mCompareMode(LOCAL_GL_NONE)
+    , mCompareFunc(LOCAL_GL_LEQUAL)
 {
     mContext->mSamplers.insertBack(this);
 }
@@ -42,6 +51,72 @@ JSObject*
 WebGLSampler::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
     return dom::WebGLSamplerBinding::Wrap(cx, this, givenProto);
+}
+
+void
+WebGLSampler::SamplerParameter1i(GLenum pname, GLint param)
+{
+    switch (pname) {
+    case LOCAL_GL_TEXTURE_MIN_FILTER:
+        mMinFilter = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_MAG_FILTER:
+        mMagFilter = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_S:
+        mWrapS = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_T:
+        mWrapT = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_R:
+        mWrapR = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+        mCompareMode = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+        mCompareFunc = param;
+        break;
+
+    default:
+        MOZ_CRASH("Unhandled pname");
+        break;
+    }
+
+    for (uint32_t i = 0; i < mContext->mBoundSamplers.Length(); ++i) {
+        if (this == mContext->mBoundSamplers[i])
+            mContext->InvalidateResolveCacheForTextureWithTexUnit(i);
+    }
+}
+
+void
+WebGLSampler::SamplerParameter1f(GLenum pname, GLfloat param)
+{
+    switch (pname) {
+    case LOCAL_GL_TEXTURE_MIN_LOD:
+        mMinLod = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_MAX_LOD:
+        mMaxLod = param;
+        break;
+
+    default:
+        MOZ_CRASH("Unhandled pname");
+        break;
+    }
+
+    for (uint32_t i = 0; i < mContext->mBoundSamplers.Length(); ++i) {
+        if (this == mContext->mBoundSamplers[i])
+            mContext->InvalidateResolveCacheForTextureWithTexUnit(i);
+    }
 }
 
 

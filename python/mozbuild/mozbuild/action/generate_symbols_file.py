@@ -42,24 +42,7 @@ def generate_symbols_file(output, *args):
 
     symbols = [s.strip() for s in pp.out.getvalue().splitlines() if s.strip()]
 
-    if buildconfig.substs['GCC_USE_GNU_LD']:
-        # A linker version script is generated for GNU LD that looks like the
-        # following:
-        # {
-        # global:
-        #   symbol1;
-        #   symbol2;
-        #   ...
-        # local:
-        #   *;
-        # };
-        output.write('{\nglobal:\n  %s;\nlocal:\n  *;\n};'
-                     % ';\n  '.join(symbols))
-    elif buildconfig.substs['OS_TARGET'] == 'Darwin':
-        # A list of symbols is generated for Apple ld that simply lists all
-        # symbols, with an underscore prefix.
-        output.write(''.join('_%s\n' % s for s in symbols))
-    elif buildconfig.substs['OS_TARGET'] == 'WINNT':
+    if buildconfig.substs['OS_TARGET'] == 'WINNT':
         # A def file is generated for MSVC link.exe that looks like the
         # following:
         # LIBRARY library.dll
@@ -84,8 +67,25 @@ def generate_symbols_file(output, *args):
         # is, in fact, part of the symbol name as far as the symbols variable
         # is concerned.
         libname, ext = os.path.splitext(os.path.basename(output.name))
-        assert ext == '.symbols'
+        assert ext == '.def'
         output.write('LIBRARY %s\nEXPORTS\n  %s\n'
                      % (libname, '\n  '.join(symbols)))
+    elif buildconfig.substs['GCC_USE_GNU_LD']:
+        # A linker version script is generated for GNU LD that looks like the
+        # following:
+        # {
+        # global:
+        #   symbol1;
+        #   symbol2;
+        #   ...
+        # local:
+        #   *;
+        # };
+        output.write('{\nglobal:\n  %s;\nlocal:\n  *;\n};'
+                     % ';\n  '.join(symbols))
+    elif buildconfig.substs['OS_TARGET'] == 'Darwin':
+        # A list of symbols is generated for Apple ld that simply lists all
+        # symbols, with an underscore prefix.
+        output.write(''.join('_%s\n' % s for s in symbols))
 
     return set(pp.includes)

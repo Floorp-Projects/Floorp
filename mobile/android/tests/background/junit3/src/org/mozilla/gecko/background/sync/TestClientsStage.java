@@ -50,7 +50,7 @@ public class TestClientsStage extends AndroidSyncTestCase {
     final SharedPreferences prefs = new MockSharedPreferences();
     final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
     config.syncKeyBundle = keyBundle;
-    GlobalSession session = new GlobalSession(config, callback, context, delegate, callback);
+    GlobalSession session = new GlobalSession(config, callback, context, delegate);
 
     SyncClientsEngineStage stage = new SyncClientsEngineStage() {
 

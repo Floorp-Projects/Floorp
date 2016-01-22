@@ -21,6 +21,7 @@
 #include "hardware/hwcomposer.h"
 
 #include "libdisplay/GonkDisplay.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Mutex.h"
 #include "nsBaseScreen.h"
@@ -44,6 +45,7 @@ namespace gl {
 }
 namespace layers {
 class CompositorVsyncScheduler;
+class CompositorParent;
 }
 }
 
@@ -57,6 +59,8 @@ class nsScreenGonk : public nsBaseScreen
     typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
     typedef mozilla::GonkDisplay GonkDisplay;
     typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+    typedef mozilla::layers::CompositorParent CompositorParent;
+    typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
     nsScreenGonk(uint32_t aId,
@@ -85,8 +89,11 @@ public:
     ScreenConfiguration GetConfiguration();
     bool IsPrimaryScreen();
 
-    already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing();
+    already_AddRefed<DrawTarget> StartRemoteDrawing();
     void EndRemoteDrawing();
+
+    nsresult MakeSnapshot(ANativeWindowBuffer* aBuffer);
+    void SetCompositorParent(CompositorParent* aCompositorParent);
 
 #if ANDROID_VERSION >= 17
     android::DisplaySurface* GetDisplaySurface();
@@ -144,6 +151,7 @@ protected:
 #endif
     bool mIsMirroring; // Non-primary screen only
     RefPtr<nsScreenGonk> mMirroringScreen; // Primary screen only
+    mozilla::Atomic<CompositorParent*> mCompositorParent;
 
     // Accessed and updated only on compositor thread
     GonkDisplay::DisplayType mDisplayType;
@@ -155,7 +163,7 @@ protected:
     // If we're using a BasicCompositor, these fields are temporarily
     // set during frame composition.  They wrap the hardware
     // framebuffer.
-    RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
+    RefPtr<DrawTarget> mFramebufferTarget;
     ANativeWindowBuffer* mFramebuffer;
     /**
      * Points to a mapped gralloc buffer between calls to lock and unlock.
@@ -170,7 +178,7 @@ protected:
     //
     // Only accessed on the compositor thread, except during
     // destruction.
-    RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
+    RefPtr<DrawTarget> mBackBuffer;
 };
 
 class nsScreenManagerGonk final : public nsIScreenManager

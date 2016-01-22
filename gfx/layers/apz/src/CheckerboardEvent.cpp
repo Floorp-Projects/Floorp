@@ -32,8 +32,9 @@ const char* CheckerboardEvent::sColors[] = {
   "red",
 };
 
-CheckerboardEvent::CheckerboardEvent()
-  : mOriginTime(TimeStamp::Now())
+CheckerboardEvent::CheckerboardEvent(bool aRecordTrace)
+  : mRecordTrace(aRecordTrace)
+  , mOriginTime(TimeStamp::Now())
   , mCheckerboardingActive(false)
   , mLastSampleTime(mOriginTime)
   , mFrameCount(0)
@@ -43,10 +44,23 @@ CheckerboardEvent::CheckerboardEvent()
 {
 }
 
-uint64_t
+uint32_t
 CheckerboardEvent::GetSeverity()
 {
-  return mTotalPixelMs;
+  // Scale the total into a 32-bit value
+  return (uint32_t)sqrt((double)mTotalPixelMs);
+}
+
+uint32_t
+CheckerboardEvent::GetPeak()
+{
+  return mPeakPixels;
+}
+
+TimeDuration
+CheckerboardEvent::GetDuration()
+{
+  return mEndTime - mStartTime;
 }
 
 std::string
@@ -56,11 +70,20 @@ CheckerboardEvent::GetLog()
   return mRendertraceInfo.str();
 }
 
+bool
+CheckerboardEvent::IsRecordingTrace()
+{
+  return mRecordTrace;
+}
+
 void
 CheckerboardEvent::UpdateRendertraceProperty(RendertraceProperty aProperty,
                                              const CSSRect& aRect,
                                              const std::string& aExtraInfo)
 {
+  if (!mRecordTrace) {
+    return;
+  }
   MonitorAutoLock lock(mRendertraceLock);
   if (!mCheckerboardingActive) {
     mBufferedProperties[aProperty].Update(aProperty, aRect, aExtraInfo, lock);
@@ -76,6 +99,7 @@ CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
                            const std::string& aExtraInfo,
                            const MonitorAutoLock& aProofOfLock)
 {
+  MOZ_ASSERT(mRecordTrace);
   if (mRendertraceInfo.tellp() >= LOG_LENGTH_LIMIT) {
     // The log is already long enough, don't put more things into it. We'll
     // append a truncation message when this event ends.
@@ -130,6 +154,9 @@ CheckerboardEvent::StartEvent()
   mCheckerboardingActive = true;
   mStartTime = TimeStamp::Now();
 
+  if (!mRecordTrace) {
+    return;
+  }
   MonitorAutoLock lock(mRendertraceLock);
   std::vector<PropertyValue> history;
   for (int i = 0; i < MAX_RendertraceProperty; i++) {
@@ -148,6 +175,9 @@ CheckerboardEvent::StopEvent()
   mCheckerboardingActive = false;
   mEndTime = TimeStamp::Now();
 
+  if (!mRecordTrace) {
+    return;
+  }
   MonitorAutoLock lock(mRendertraceLock);
   if (mRendertraceInfo.tellp() >= LOG_LENGTH_LIMIT) {
     mRendertraceInfo << "[logging aborted due to length limitations]\n";

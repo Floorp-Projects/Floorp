@@ -4,14 +4,14 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import org.mozilla.gecko.background.fxa.FxAccountClient10;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.AccountNeedsVerification;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LocalError;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.RemoteError;
 
-public abstract class BaseRequestDelegate<T> implements FxAccountClient10.RequestDelegate<T> {
+public abstract class BaseRequestDelegate<T> implements FxAccountClient20.RequestDelegate<T> {
   protected final ExecuteDelegate delegate;
   protected final State state;
 

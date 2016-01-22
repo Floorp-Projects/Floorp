@@ -12,6 +12,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -365,9 +366,9 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       }
     }
 
-    if (!Services.prefs.getBoolPref("marionette.contentListener") || !isNewSession) {
+    if (!Preferences.get(CONTENT_LISTENER_PREF) || !isNewSession) {
       mm.loadFrameScript(FRAME_SCRIPT, true, true);
-      Services.prefs.setBoolPref("marionette.contentListener", true);
+      Preferences.set(CONTENT_LISTENER_PREF, true);
     }
   } catch (e) {
     // there may not always be a content process
@@ -543,10 +544,7 @@ GeckoDriver.prototype.newSession = function(cmd, resp) {
       };
       win.addEventListener("load", listener, true);
     } else {
-      let clickToStart;
-      try {
-        clickToStart = Services.prefs.getBoolPref(CLICK_TO_START_PREF);
-      } catch (e) {}
+      let clickToStart = Preferences.get(CLICK_TO_START_PREF);
       if (clickToStart && (this.appName != "B2G")) {
         let pService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
             .getService(Ci.nsIPromptService);
@@ -557,7 +555,7 @@ GeckoDriver.prototype.newSession = function(cmd, resp) {
   };
 
   let runSessionStart = function() {
-    if (!Services.prefs.getBoolPref(CONTENT_LISTENER_PREF)) {
+    if (!Preferences.get(CONTENT_LISTENER_PREF)) {
       waitForWindow.call(this);
     } else if (this.appName != "Firefox" && this.curBrowser === null) {
       // if there is a content listener, then we just wake it up
@@ -672,45 +670,49 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
 };
 
 GeckoDriver.prototype.setUpProxy = function(proxy) {
-  logger.debug("User-provided proxy settings: " + JSON.stringify(proxy));
+  logger.config("User-provided proxy settings: " + JSON.stringify(proxy));
 
   if (typeof proxy == "object" && proxy.hasOwnProperty("proxyType")) {
     switch (proxy.proxyType.toUpperCase()) {
       case "MANUAL":
-        Services.prefs.setIntPref("network.proxy.type", 1);
+        Preferences.set("network.proxy.type", 1);
         if (proxy.httpProxy && proxy.httpProxyPort){
-          Services.prefs.setCharPref("network.proxy.http", proxy.httpProxy);
-          Services.prefs.setIntPref("network.proxy.http_port", proxy.httpProxyPort);
+          Preferences.set("network.proxy.http", proxy.httpProxy);
+          Preferences.set("network.proxy.http_port", proxy.httpProxyPort);
         }
         if (proxy.sslProxy && proxy.sslProxyPort){
-          Services.prefs.setCharPref("network.proxy.ssl", proxy.sslProxy);
-          Services.prefs.setIntPref("network.proxy.ssl_port", proxy.sslProxyPort);
+          Preferences.set("network.proxy.ssl", proxy.sslProxy);
+          Preferences.set("network.proxy.ssl_port", proxy.sslProxyPort);
         }
         if (proxy.ftpProxy && proxy.ftpProxyPort) {
-          Services.prefs.setCharPref("network.proxy.ftp", proxy.ftpProxy);
-          Services.prefs.setIntPref("network.proxy.ftp_port", proxy.ftpProxyPort);
+          Preferences.set("network.proxy.ftp", proxy.ftpProxy);
+          Preferences.set("network.proxy.ftp_port", proxy.ftpProxyPort);
         }
         if (proxy.socksProxy) {
-          Services.prefs.setCharPref("network.proxy.socks", proxy.socksProxy);
-          Services.prefs.setIntPref("network.proxy.socks_port", proxy.socksProxyPort);
+          Preferences.set("network.proxy.socks", proxy.socksProxy);
+          Preferences.set("network.proxy.socks_port", proxy.socksProxyPort);
           if (proxy.socksVersion) {
-            Services.prefs.setIntPref("network.proxy.socks_version", proxy.socksVersion);
+            Preferences.set("network.proxy.socks_version", proxy.socksVersion);
           }
         }
         break;
+
       case "PAC":
-        Services.prefs.setIntPref("network.proxy.type", 2);
-        Services.prefs.setCharPref("network.proxy.autoconfig_url", proxy.pacUrl);
+        Preferences.set("network.proxy.type", 2);
+        Preferences.set("network.proxy.autoconfig_url", proxy.pacUrl);
         break;
+
       case "AUTODETECT":
-        Services.prefs.setIntPref("network.proxy.type", 4);
+        Preferences.set("network.proxy.type", 4);
         break;
+
       case "SYSTEM":
-        Services.prefs.setIntPref("network.proxy.type", 5);
+        Preferences.set("network.proxy.type", 5);
         break;
+
       case "NOPROXY":
       default:
-        Services.prefs.setIntPref("network.proxy.type", 0);
+        Preferences.set("network.proxy.type", 0);
     }
   } else {
     throw new InvalidArgumentError("Value of 'proxy' should be an object");
@@ -2450,7 +2452,7 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
           this.curBrowser.knownFrames.indexOf(this.curBrowser.mainContentId), 1);
     } else {
       // don't set this pref for B2G since the framescript can be safely reused
-      Services.prefs.setBoolPref("marionette.contentListener", false);
+      Preferences.set(CONTENT_LISTENER_PREF, false);
     }
 
     // delete session in each frame in each browser

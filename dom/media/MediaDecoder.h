@@ -777,6 +777,9 @@ protected:
   // start playing back again.
   Mirror<int64_t> mPlaybackPosition;
 
+  // Used to distiguish whether the audio is producing sound.
+  Mirror<bool> mIsAudioDataAudible;
+
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
   Canonical<double> mVolume;
 
@@ -872,6 +875,9 @@ public:
   }
 
 private:
+  // Notify owner when the audible state changed
+  void NotifyAudibleStateChanged();
+
   /* Functions called by ResourceCallback */
 
   // A media stream is assumed to be infinite if the metadata doesn't

@@ -39,22 +39,34 @@ add_task(function *() {
   names = names.map(element => element.textContent);
   ok(names.includes(SERVICE_WORKER), "The service worker url appears in the list: " + names);
 
+  // Finally, unregister the service worker itself
+  let aboutDebuggingUpdate = waitForWorkersUpdate(document);
+
   // Use message manager to work with e10s
   let frameScript = function () {
     // Retrieve the `sw` promise created in the html page
     let { sw } = content.wrappedJSObject;
     sw.then(function (registration) {
       registration.unregister().then(function (success) {
-        dump("SW unregistered: " + success + "\n");
+        sendAsyncMessage("sw-unregistered");
       },
       function (e) {
         dump("SW not unregistered; " + e + "\n");
       });
     });
   };
-  swTab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+  let mm = swTab.linkedBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
 
-  yield waitForWorkersUpdate(document);
+  yield new Promise(done => {
+    mm.addMessageListener("sw-unregistered", function listener() {
+      mm.removeMessageListener("sw-unregistered", listener);
+      done();
+    });
+  });
+  ok(true, "Service worker registration unregistered");
+
+  yield aboutDebuggingUpdate;
 
   // Check that the service worker disappeared from the UI
   names = [...document.querySelectorAll("#service-workers .target-name")];

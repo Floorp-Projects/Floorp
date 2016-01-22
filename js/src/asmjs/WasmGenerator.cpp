@@ -132,43 +132,6 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
         }
     }
 
-    threadView_ = MakeUnique<ModuleGeneratorThreadView>(*shared_);
-    if (!threadView_)
-        return false;
-
-    if (!funcIndexToExport_.init())
-        return false;
-
-    uint32_t numTasks;
-    if (ParallelCompilationEnabled(cx_) &&
-        HelperThreadState().wasmCompilationInProgress.compareExchange(false, true))
-    {
-#ifdef DEBUG
-        {
-            AutoLockHelperThreadState lock;
-            MOZ_ASSERT(!HelperThreadState().wasmFailed());
-            MOZ_ASSERT(HelperThreadState().wasmWorklist().empty());
-            MOZ_ASSERT(HelperThreadState().wasmFinishedList().empty());
-        }
-#endif
-
-        parallel_ = true;
-        numTasks = HelperThreadState().maxWasmCompilationThreads();
-    } else {
-        numTasks = 1;
-    }
-
-    if (!tasks_.initCapacity(numTasks))
-        return false;
-    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
-    for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(rt, args(), *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
-
-    if (!freeTasks_.reserve(numTasks))
-        return false;
-    for (size_t i = 0; i < numTasks; i++)
-        freeTasks_.infallibleAppend(&tasks_[i]);
-
     return true;
 }
 
@@ -274,8 +237,9 @@ ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* g
 }
 
 bool
-ModuleGenerator::allocateGlobalVar(ValType type, uint32_t* globalDataOffset)
+ModuleGenerator::allocateGlobalVar(ValType type, bool isConst, uint32_t* index)
 {
+    MOZ_ASSERT(!startedFuncDefs());
     unsigned width = 0;
     switch (type) {
       case wasm::ValType::I32:
@@ -292,7 +256,13 @@ ModuleGenerator::allocateGlobalVar(ValType type, uint32_t* globalDataOffset)
         width = 16;
         break;
     }
-    return allocateGlobalBytes(width, width, globalDataOffset);
+
+    uint32_t offset;
+    if (!allocateGlobalBytes(width, width, &offset))
+        return false;
+
+    *index = shared_->globals.length();
+    return shared_->globals.append(AsmJSGlobalVariable(ToExprType(type), offset, isConst));
 }
 
 void
@@ -415,9 +385,55 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 }
 
 bool
+ModuleGenerator::startFuncDefs()
+{
+    MOZ_ASSERT(!startedFuncDefs());
+    threadView_ = MakeUnique<ModuleGeneratorThreadView>(*shared_);
+    if (!threadView_)
+        return false;
+
+    if (!funcIndexToExport_.init())
+        return false;
+
+    uint32_t numTasks;
+    if (ParallelCompilationEnabled(cx_) &&
+        HelperThreadState().wasmCompilationInProgress.compareExchange(false, true))
+    {
+#ifdef DEBUG
+        {
+            AutoLockHelperThreadState lock;
+            MOZ_ASSERT(!HelperThreadState().wasmFailed());
+            MOZ_ASSERT(HelperThreadState().wasmWorklist().empty());
+            MOZ_ASSERT(HelperThreadState().wasmFinishedList().empty());
+        }
+#endif
+
+        parallel_ = true;
+        numTasks = HelperThreadState().maxWasmCompilationThreads();
+    } else {
+        numTasks = 1;
+    }
+
+    if (!tasks_.initCapacity(numTasks))
+        return false;
+    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
+    for (size_t i = 0; i < numTasks; i++)
+        tasks_.infallibleEmplaceBack(rt, args(), *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+
+    if (!freeTasks_.reserve(numTasks))
+        return false;
+    for (size_t i = 0; i < numTasks; i++)
+        freeTasks_.infallibleAppend(&tasks_[i]);
+
+    MOZ_ASSERT(startedFuncDefs());
+    return true;
+}
+
+bool
 ModuleGenerator::startFuncDef(PropertyName* name, unsigned line, unsigned column,
                               FunctionGenerator* fg)
 {
+    MOZ_ASSERT(startedFuncDefs());
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(!finishedFuncs_);
 
@@ -484,6 +500,7 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
 bool
 ModuleGenerator::finishFuncDefs()
 {
+    MOZ_ASSERT(startedFuncDefs());
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(!finishedFuncs_);
 

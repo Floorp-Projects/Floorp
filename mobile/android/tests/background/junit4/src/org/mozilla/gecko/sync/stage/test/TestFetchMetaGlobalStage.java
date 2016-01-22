@@ -53,7 +53,6 @@ public class TestFetchMetaGlobalStage {
   private static final int     TEST_PORT        = HTTPServerTestHelper.getTestPort();
   private static final String  TEST_SERVER      = "http://localhost:" + TEST_PORT + "/";
   private static final String  TEST_CLUSTER_URL = TEST_SERVER + "cluster/";
-  static String                TEST_NW_URL      = TEST_SERVER + "/1.0/c6o7dvmr2c4ud2fyv6woz2u4zi22bcyd/node/weave"; // GET https://server/pathname/version/username/node/weave
   private HTTPServerTestHelper data             = new HTTPServerTestHelper();
 
   private final String TEST_USERNAME            = "johndoe";
@@ -97,7 +96,7 @@ public class TestFetchMetaGlobalStage {
     infoCollections = new InfoCollections(ExtendedJSONObject.parseJSONObject(TEST_INFO_COLLECTIONS_JSON));
 
     syncKeyBundle = new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY);
-    callback = new MockGlobalSessionCallback(TEST_CLUSTER_URL);
+    callback = new MockGlobalSessionCallback();
     session = new MockGlobalSession(TEST_USERNAME, TEST_PASSWORD,
       syncKeyBundle, callback) {
       @Override

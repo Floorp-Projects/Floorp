@@ -38,6 +38,15 @@ this.TestRunner = {
   _libDir: null,
 
   init(extensionPath) {
+    this._extensionPath = extensionPath;
+  },
+
+  /**
+   * Load specified sets, execute all combinations of them, and capture screenshots.
+   */
+  start(setNames = null) {
+    setNames = setNames || defaultSetNames;
+
     let subDirs = ["mozscreenshots",
                    (new Date()).toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS];
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
@@ -48,27 +57,14 @@ this.TestRunner = {
     }
 
     log.info("Saving screenshots to:", screenshotPath);
-    log.debug("TestRunner.init");
 
     let screenshotPrefix = Services.appinfo.appBuildID + "_";
-    Screenshot.init(screenshotPath, extensionPath, screenshotPrefix);
-    this._libDir = extensionPath.QueryInterface(Ci.nsIFileURL).file.clone();
+    Screenshot.init(screenshotPath, this._extensionPath, screenshotPrefix);
+    this._libDir = this._extensionPath.QueryInterface(Ci.nsIFileURL).file.clone();
     this._libDir.append("chrome");
     this._libDir.append("mozscreenshots");
     this._libDir.append("lib");
 
-    // Setup some prefs
-    Services.prefs.setCharPref("browser.aboutHomeSnippets.updateUrl", "data:");
-    Services.prefs.setCharPref("extensions.ui.lastCategory", "addons://list/extension");
-    // Don't let the caret blink since it causes false positives for image diffs
-    Services.prefs.setIntPref("ui.caretBlinkTime", -1);
-  },
-
-  /**
-   * Load specified sets, execute all combinations of them, and capture screenshots.
-   */
-  start(setNames = null) {
-    setNames = setNames || defaultSetNames;
     let sets = this.loadSets(setNames);
 
     log.info(sets.length + " sets:", setNames);
@@ -77,6 +73,12 @@ this.TestRunner = {
 
     this.currentComboIndex = this.completedCombos = 0;
     this._lastCombo = null;
+
+    // Setup some prefs
+    Services.prefs.setCharPref("browser.aboutHomeSnippets.updateUrl", "data:");
+    Services.prefs.setCharPref("extensions.ui.lastCategory", "addons://list/extension");
+    // Don't let the caret blink since it causes false positives for image diffs
+    Services.prefs.setIntPref("ui.caretBlinkTime", -1);
 
     return Task.spawn(function* doStart() {
       for (let i = 0; i < this.combos.length;
