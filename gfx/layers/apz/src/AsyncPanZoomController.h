@@ -1102,6 +1102,8 @@ private:
    * recording.
    */
 private:
+  // Mutex protecting mCheckerboardEvent
+  Mutex mCheckerboardEventLock;
   // This is created when this APZC instance is first included as part of a
   // composite. If a checkerboard event takes place, this is destroyed at the
   // end of the event, and a new one is created on the next composite.
