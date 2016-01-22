@@ -22,36 +22,36 @@ add_task(function*() {
   yield addTab(TEST_URI);
 
   info("Open the responsive design mode and set its size to 500x500 to start");
-  let {rdm} = yield openRDM();
-  rdm.setSize(500, 500);
+  let { rdm, manager } = yield openRDM();
+  yield setSize(rdm, manager, 500, 500);
 
   info("Open the inspector, computed-view and select the test node");
   let {inspector, view} = yield openComputedView();
   yield selectNode("div", inspector);
 
   info("Try shrinking the viewport and checking the applied styles");
-  yield testShrink(view, inspector, rdm);
+  yield testShrink(view, inspector, rdm, manager);
 
   info("Try growing the viewport and checking the applied styles");
-  yield testGrow(view, inspector, rdm);
+  yield testGrow(view, inspector, rdm, manager);
 
   yield closeRDM(rdm);
   yield closeToolbox();
 });
 
-function* testShrink(computedView, inspector, rdm) {
+function* testShrink(computedView, inspector, rdm, manager) {
   is(computedWidth(computedView), "500px", "Should show 500px initially.");
 
   let onRefresh = inspector.once("computed-view-refreshed");
-  rdm.setSize(100, 100);
+  yield setSize(rdm, manager, 100, 100);
   yield onRefresh;
 
   is(computedWidth(computedView), "100px", "Should be 100px after shrinking.");
 }
 
-function* testGrow(computedView, inspector, rdm) {
+function* testGrow(computedView, inspector, rdm, manager) {
   let onRefresh = inspector.once("computed-view-refreshed");
-  rdm.setSize(500, 500);
+  yield setSize(rdm, manager, 500, 500);
   yield onRefresh;
 
   is(computedWidth(computedView), "500px", "Should be 500px after growing.");
