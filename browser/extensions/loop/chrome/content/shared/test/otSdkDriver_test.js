@@ -12,8 +12,8 @@ describe("loop.OTSdkDriver", function() {
   var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
   var sandbox, constants;
-  var dispatcher, driver, requestStubs, publisher, sdk, session, sessionData, subscriber;
-  var publisherConfig, fakeEvent;
+  var dispatcher, driver, requestStubs, publisher, screenshare, sdk, session;
+  var sessionData, subscriber, publisherConfig, fakeEvent;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
@@ -58,6 +58,8 @@ describe("loop.OTSdkDriver", function() {
         switchAcquiredWindow: sinon.stub()
       }
     }, Backbone.Events);
+
+    screenshare = publisher;
 
     subscriber = _.extend({
       _: {
@@ -141,11 +143,14 @@ describe("loop.OTSdkDriver", function() {
   });
 
   describe("#setupStreamElements", function() {
-    it("should call initPublisher", function() {
+    beforeEach(function() {
+      sandbox.stub(publisher, "off");
       driver.setupStreamElements(new sharedActions.SetupStreamElements({
         publisherConfig: publisherConfig
       }));
+    });
 
+    it("should call initPublisher", function() {
       var expectedConfig = _.extend({
         channels: {
           text: {}
@@ -156,6 +161,45 @@ describe("loop.OTSdkDriver", function() {
       sinon.assert.calledWith(sdk.initPublisher,
         sinon.match.instanceOf(HTMLDivElement),
         expectedConfig);
+    });
+
+    it("should not do anything if publisher completed successfully", function() {
+      sdk.initPublisher.callArg(2);
+
+      sinon.assert.notCalled(publisher.off);
+      sinon.assert.notCalled(dispatcher.dispatch);
+    });
+
+    it("should clean up publisher if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { message: "FAKE" });
+
+      sinon.assert.calledOnce(publisher.off);
+      sinon.assert.calledOnce(publisher.destroy);
+      expect(driver.publisher).to.equal(undefined);
+      expect(driver._mockPublisherEl).to.equal(undefined);
+    });
+
+    it("should dispatch ConnectionFailure if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { message: "FAKE" });
+
+      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ConnectionFailure({
+          reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+        }));
+    });
+
+    it("should notify metrics if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
+
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ConnectionStatus({
+          event: "sdk.exception.123.FAKE",
+          state: "starting",
+          connections: 0,
+          sendStreams: 0,
+          recvStreams: 0
+        }));
     });
   });
 
@@ -190,28 +234,76 @@ describe("loop.OTSdkDriver", function() {
   });
 
   describe("#startScreenShare", function() {
+    var options = {};
+
     beforeEach(function() {
+      sandbox.stub(screenshare, "off");
       sandbox.stub(driver, "_noteSharingState");
+      options = {
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42,
+          scrollWithPage: true
+        }
+      };
+
+      driver.startScreenShare(options);
     });
 
     it("should initialize a publisher", function() {
-      // We're testing with `videoSource` set to 'browser', not 'window', as it
-      // has multiple options.
-      var options = {
-        videoSource: "browser",
-        constraints: {
-          browserWindow: 42,
-          scrollWithPage: true
-        }
-      };
-      driver.startScreenShare(options);
-
       sinon.assert.calledOnce(sdk.initPublisher);
       sinon.assert.calledWithMatch(sdk.initPublisher,
-        sinon.match.instanceOf(HTMLDivElement), options);
+      sinon.match.instanceOf(HTMLDivElement), options);
     });
 
     it("should log a telemetry action", function() {
+      sinon.assert.calledWithExactly(driver._noteSharingState, "browser", true);
+    });
+
+    it("should not do anything if publisher completed successfully", function() {
+      sdk.initPublisher.callArg(2);
+
+      sinon.assert.notCalled(screenshare.off);
+      sinon.assert.notCalled(dispatcher.dispatch);
+    });
+
+    it("should clean up publisher if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
+
+      sinon.assert.calledOnce(screenshare.off);
+      sinon.assert.calledOnce(screenshare.destroy);
+      expect(driver.screenshare).to.equal(undefined);
+      expect(driver._mockScreenSharePreviewEl).to.equal(undefined);
+    });
+
+    it("should dispatch ConnectionFailure if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
+
+      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+    });
+
+    it("should notify metrics if an error occurred", function() {
+      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
+
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ConnectionStatus({
+          event: "sdk.exception.screen.123.FAKE",
+          state: "starting",
+          connections: 0,
+          sendStreams: 0,
+          recvStreams: 0
+        }));
+    });
+  });
+
+  describe("Screenshare Access Denied", function() {
+    beforeEach(function() {
+      sandbox.stub(screenshare, "off");
+      sandbox.stub(driver, "_noteSharingState");
       var options = {
         videoSource: "browser",
         constraints: {
@@ -220,8 +312,23 @@ describe("loop.OTSdkDriver", function() {
         }
       };
       driver.startScreenShare(options);
+      sdk.initPublisher.callArg(2);
+      driver.screenshare.trigger("accessDenied");
+    });
 
-      sinon.assert.calledWithExactly(driver._noteSharingState, "browser", true);
+    it("should clean up publisher", function() {
+      sinon.assert.calledOnce(screenshare.off);
+      sinon.assert.calledOnce(screenshare.destroy);
+      expect(driver.screenshare).to.equal(undefined);
+      expect(driver._mockScreenSharePreviewEl).to.equal(undefined);
+    });
+
+    it("should dispatch ConnectionFailure", function() {
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ScreenSharingState({
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
     });
   });
 
@@ -1676,69 +1783,6 @@ describe("loop.OTSdkDriver", function() {
             sendStreams: 0,
             recvStreams: 0
           }));
-      });
-
-      describe("Unable to publish (not GetUserMedia)", function() {
-        it("should notify metrics", function() {
-          sdk.trigger("exception", {
-            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
-            message: "Fake",
-            title: "Connect Failed"
-          });
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.ConnectionStatus({
-              event: "sdk.exception." + OT.ExceptionCodes.UNABLE_TO_PUBLISH + ".Fake",
-              state: "starting",
-              connections: 0,
-              sendStreams: 0,
-              recvStreams: 0
-            }));
-        });
-      });
-
-      describe("Unable to publish (GetUserMedia)", function() {
-        it("should destroy the publisher", function() {
-          sdk.trigger("exception", {
-            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
-            message: "GetUserMedia"
-          });
-
-          sinon.assert.calledOnce(publisher.destroy);
-        });
-
-        // XXX We should remove this when we stop being unable to publish as a
-        // workaround for knowing if the user has video as well as audio devices
-        // installed (bug 1138851).
-        it("should not notify metrics", function() {
-          sdk.trigger("exception", {
-            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
-            message: "GetUserMedia"
-          });
-
-          sinon.assert.neverCalledWith(dispatcher.dispatch,
-            new sharedActions.ConnectionStatus({
-              event: "sdk.exception." + OT.ExceptionCodes.UNABLE_TO_PUBLISH,
-              state: "starting",
-              connections: 0,
-              sendStreams: 0,
-              recvStreams: 0
-            }));
-        });
-
-        it("should dispatch a ConnectionFailure action", function() {
-          sdk.trigger("exception", {
-            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
-            message: "GetUserMedia"
-          });
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.ConnectionFailure({
-              reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-            }));
-        });
       });
 
       describe("ToS Failure", function() {

@@ -8,13 +8,11 @@ describe("loop.panel", function() {
   var expect = chai.expect;
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
-  var sharedUtils = loop.shared.utils;
 
   var sandbox, notifications, requestStubs;
   var fakeXHR, fakeWindow, fakeEvent;
   var requests = [];
   var roomData, roomData2, roomList, roomName;
-  var mozL10nGetSpy;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
@@ -56,16 +54,16 @@ describe("loop.panel", function() {
       GetPluralRule: sinon.stub(),
       SetLoopPref: sinon.stub(),
       GetLoopPref: function(prefName) {
-        if (prefName === "gettingStarted.seen") {
-          return "unseen";
+        if (prefName === "debug.dispatcher") {
+          return false;
         }
-
-        return false;
+        return 1;
       },
+      SetPanelHeight: function() { return null; },
       GetPluralForm: function() {
         return "fakeText";
       },
-      "Rooms:GetAll": function(version) {
+      "Rooms:GetAll": function() {
         return [];
       },
       "Rooms:PushSubscription": sinon.stub(),
@@ -86,7 +84,7 @@ describe("loop.panel", function() {
       GetHasEncryptionKey: true,
       GetUserProfile: null,
       GetDoNotDisturb: false,
-      "GetLoopPref|gettingStarted.seen": "unseen",
+      "GetLoopPref|gettingStarted.latestFTUVersion": 1,
       "GetLoopPref|legal.ToS_url": "",
       "GetLoopPref|legal.privacy_url": "",
       IsMultiProcessEnabled: false
@@ -187,14 +185,9 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.PanelView", function() {
-    var dispatcher, roomStore, callUrlData;
+    var dispatcher, roomStore;
 
     beforeEach(function() {
-      callUrlData = {
-        callUrl: "http://call.invalid/",
-        expiresAt: 1000
-      };
-
       dispatcher = new loop.Dispatcher();
       roomStore = new loop.store.RoomStore(dispatcher, {
         constants: {}
@@ -219,7 +212,7 @@ describe("loop.panel", function() {
       var view = TestUtils.renderIntoDocument(
         React.createElement(loop.panel.SettingsDropdown));
 
-      expect(view.getDOMNode().querySelectorAll(".icon-account"))
+      expect(view.getDOMNode().querySelectorAll(".entry-settings-account"))
         .to.have.length.of(0);
     });
 
@@ -269,19 +262,11 @@ describe("loop.panel", function() {
         expect(view.getDOMNode()).to.be.null;
       });
 
-      it("should add ellipsis to text over 24chars", function() {
-        loop.storedRequests.GetUserProfile = { email: "reallyreallylongtext@example.com" };
-        var view = createTestPanelView();
-        var node = view.getDOMNode().querySelector(".user-identity");
-
-        expect(node.textContent).to.eql("reallyreallylongtext@exa…");
-      });
-
       it("should warn when user profile is different from {} or null",
          function() {
           var warnstub = sandbox.stub(console, "warn");
 
-          var view = TestUtils.renderIntoDocument(React.createElement(
+          TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
               fxAEnabled: false,
               userProfile: []
@@ -297,7 +282,7 @@ describe("loop.panel", function() {
          function() {
           var warnstub = sandbox.stub(console, "warn");
 
-          var view = TestUtils.renderIntoDocument(React.createElement(
+          TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
               fxAEnabled: false,
               userProfile: {}
@@ -314,7 +299,7 @@ describe("loop.panel", function() {
           React.createElement(loop.panel.SettingsDropdown));
       }
 
-      var loginToFxAStub, logoutFromFxAStub, openFxASettingsStub;
+      var openFxASettingsStub;
 
       beforeEach(function() {
         openFxASettingsStub = sandbox.stub();
@@ -345,7 +330,7 @@ describe("loop.panel", function() {
            function() {
              var view = mountTestComponent();
 
-             expect(view.getDOMNode().querySelectorAll(".icon-account"))
+             expect(view.getDOMNode().querySelectorAll(".entry-settings-account"))
                .to.have.length.of(0);
            });
 
@@ -357,50 +342,80 @@ describe("loop.panel", function() {
 
           sinon.assert.calledOnce(requestStubs.LoginToFxA);
         });
-      });
 
-      it("should show a signout entry when user is authenticated", function() {
-        loop.storedRequests.GetUserProfile = { email: "test@example.com" };
+        it("should close the menu on clicking sign in", function() {
+          var view = mountTestComponent();
 
-        var view = mountTestComponent();
+          TestUtils.Simulate.click(view.getDOMNode()
+                                     .querySelector(".entry-settings-signin"));
 
-        sinon.assert.calledWithExactly(document.mozL10n.get,
-                                       "settings_menu_item_signout");
-        sinon.assert.neverCalledWith(document.mozL10n.get,
-                                     "settings_menu_item_signin");
-      });
-
-      it("should show an account entry when user is authenticated", function() {
-        LoopMochaUtils.stubLoopRequest({
-          GetUserProfile: function() { return { email: "test@example.com" }; }
+          expect(view.state.showMenu).eql(false);
         });
 
-        var view = mountTestComponent();
+        it("should close the panel on clicking sign in", function() {
+          var view = mountTestComponent();
 
-        sinon.assert.calledWithExactly(document.mozL10n.get,
-                                       "settings_menu_item_settings");
+          TestUtils.Simulate.click(view.getDOMNode()
+                                     .querySelector(".entry-settings-signin"));
+
+          sinon.assert.calledOnce(fakeWindow.close);
+        });
       });
 
-      it("should open the FxA settings when the account entry is clicked",
-         function() {
-           loop.storedRequests.GetUserProfile = { email: "test@example.com" };
+      describe("UserLoggedIn", function() {
+        var view;
 
-           var view = mountTestComponent();
+        beforeEach(function() {
+          loop.storedRequests.GetUserProfile = { email: "test@example.com" };
+          view = mountTestComponent();
+        });
 
-           TestUtils.Simulate.click(view.getDOMNode()
-                                      .querySelector(".entry-settings-account"));
+        it("should show a signout entry when user is authenticated", function() {
+          expect(view.getDOMNode().querySelectorAll(".entry-settings-signout"))
+              .to.have.length.of(1);
+          expect(view.getDOMNode().querySelectorAll(".entry-settings-signin"))
+              .to.have.length.of(0);
+        });
 
-           sinon.assert.calledOnce(openFxASettingsStub);
-         });
+        it("should show an account entry when user is authenticated", function() {
+          expect(view.getDOMNode().querySelectorAll(".entry-settings-account"))
+              .to.have.length.of(1);
+        });
 
-      it("should sign out the user on click when authenticated", function() {
-        loop.storedRequests.GetUserProfile = { email: "test@example.com" };
-        var view = mountTestComponent();
+        it("should open the FxA settings when the account entry is clicked",
+            function() {
+              TestUtils.Simulate.click(view.getDOMNode()
+                                         .querySelector(".entry-settings-account"));
 
-        TestUtils.Simulate.click(view.getDOMNode()
-                                   .querySelector(".entry-settings-signout"));
+              sinon.assert.calledOnce(openFxASettingsStub);
+            });
 
-        sinon.assert.calledOnce(requestStubs.LogoutFromFxA);
+        it("should sign out the user on click when authenticated", function() {
+          TestUtils.Simulate.click(view.getDOMNode()
+                                     .querySelector(".entry-settings-signout"));
+
+          sinon.assert.calledOnce(requestStubs.LogoutFromFxA);
+        });
+
+        it("should close the dropdown menu on clicking sign out", function() {
+          LoopMochaUtils.stubLoopRequest({
+            GetUserProfile: function() { return { email: "test@example.com" }; }
+          });
+
+          view.setState({ showMenu: true });
+
+          TestUtils.Simulate.click(view.getDOMNode()
+                                     .querySelector(".entry-settings-signout"));
+
+          expect(view.state.showMenu).eql(false);
+        });
+
+        it("should not close the panel on clicking sign out", function() {
+          TestUtils.Simulate.click(view.getDOMNode()
+                                     .querySelector(".entry-settings-signout"));
+
+          sinon.assert.notCalled(fakeWindow.close);
+        });
       });
 
       describe("Toggle Notifications", function() {
@@ -468,7 +483,7 @@ describe("loop.panel", function() {
               return supportUrl;
             }
 
-            return "unseen";
+            return 1;
           }
         });
       });
@@ -509,7 +524,7 @@ describe("loop.panel", function() {
               return feedbackUrl;
             }
 
-            return "unseen";
+            return 1;
           }
         });
       });
@@ -535,10 +550,8 @@ describe("loop.panel", function() {
     });
 
     describe("#render", function() {
-      it("should not render a ToSView when gettingStarted.seen is true", function() {
-        LoopMochaUtils.stubLoopRequest({
-          GetLoopPref: function() { return true; }
-        });
+      it("should not render a ToSView when gettingStarted.latestFTUVersion is equal to or greater than FTU_VERSION", function() {
+        loop.storedRequests["GetLoopPref|gettingStarted.latestFTUVersion"] = 2;
         var view = createTestPanelView();
 
         expect(function() {
@@ -546,8 +559,8 @@ describe("loop.panel", function() {
         }).to.Throw(/not find/);
       });
 
-      it("should not render a ToSView when gettingStarted.seen is false", function() {
-        loop.storedRequests["GetLoopPref|gettingStarted.seen"] = false;
+      it("should render a ToSView when gettingStarted.latestFTUVersion is less than FTU_VERSION", function() {
+        loop.storedRequests["GetLoopPref|gettingStarted.latestFTUVersion"] = 0;
         var view = createTestPanelView();
 
         expect(function() {
@@ -555,15 +568,16 @@ describe("loop.panel", function() {
         }).to.not.Throw();
       });
 
-      it("should render a GettingStarted view", function() {
-        loop.storedRequests["GetLoopPref|gettingStarted.seen"] = false;
-        var view = createTestPanelView();
 
-        TestUtils.findRenderedComponentWithType(view, loop.panel.GettingStartedView);
+      it("should render a GettingStarted view when gettingStarted.latestFTUVersion is less than FTU_VERSION", function() {
+        loop.storedRequests["GetLoopPref|gettingStarted.latestFTUVersion"] = 0;
+        var view = createTestPanelView();
+        expect(function() {
+          TestUtils.findRenderedComponentWithType(view, loop.panel.GettingStartedView);
+        }).to.not.Throw();
       });
 
       it("should not render a GettingStartedView when the view has been seen", function() {
-        loop.storedRequests["GetLoopPref|gettingStarted.seen"] = true;
         var view = createTestPanelView();
 
         try {
@@ -579,10 +593,12 @@ describe("loop.panel", function() {
 
         var view = createTestPanelView();
 
-        TestUtils.findRenderedComponentWithType(view, loop.panel.SignInRequestView);
+        expect(function() {
+          TestUtils.findRenderedComponentWithType(view, loop.panel.SignInRequestView);
+        }).to.not.Throw();
       });
 
-      it("should render a SignInRequestView when mozLoop.hasEncryptionKey is true", function() {
+      it("should not render a SignInRequestView when mozLoop.hasEncryptionKey is true", function() {
         var view = createTestPanelView();
 
         try {
@@ -598,7 +614,9 @@ describe("loop.panel", function() {
 
         var view = createTestPanelView();
 
-        TestUtils.findRenderedComponentWithType(view, loop.panel.E10sNotSupported);
+        expect(function() {
+          TestUtils.findRenderedComponentWithType(view, loop.panel.E10sNotSupported);
+        }).to.not.Throw();
       });
 
     });
@@ -813,22 +831,6 @@ describe("loop.panel", function() {
       });
     });
 
-    describe("Room Entry click", function() {
-      var roomEntry, roomEntryNode;
-
-      beforeEach(function() {
-        sandbox.stub(dispatcher, "dispatch");
-
-        roomEntry = mountRoomEntry({
-          dispatcher: dispatcher,
-          isOpenedRoom: false,
-          room: new loop.store.Room(roomData)
-        });
-        roomEntryNode = roomEntry.getDOMNode();
-      });
-
-    });
-
     describe("Room name updated", function() {
       it("should update room name", function() {
         var roomEntry = mountRoomEntry({
@@ -953,7 +955,7 @@ describe("loop.panel", function() {
     });
 
     it("should close the panel once a room is created and there is no error", function() {
-      var view = createTestComponent();
+      createTestComponent();
 
       roomStore.setStoreState({ pendingCreation: true });
 
@@ -964,20 +966,10 @@ describe("loop.panel", function() {
       sinon.assert.calledOnce(fakeWindow.close);
     });
 
-    it("should render the no rooms view when no rooms available", function() {
+    it("should not render the room list view when no rooms available", function() {
       var view = createTestComponent();
       var node = view.getDOMNode();
-
-      expect(node.querySelectorAll(".room-list-empty").length).to.eql(1);
-    });
-
-    it("should call mozL10n.get for room empty strings", function() {
-      var view = createTestComponent();
-
-      sinon.assert.calledWithExactly(document.mozL10n.get,
-                                     "no_conversations_message_heading2");
-      sinon.assert.calledWithExactly(document.mozL10n.get,
-                                     "no_conversations_start_message2");
+      expect(node.querySelectorAll(".room-list").length).to.eql(0);
     });
 
     it("should display a loading animation when rooms are pending", function() {

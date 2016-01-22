@@ -1,3 +1,5 @@
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,7 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.chat = (function(mozL10n) {
+loop.shared.views.chat = function (mozL10n) {
   "use strict";
 
   var sharedActions = loop.shared.actions;
@@ -17,15 +19,20 @@ loop.shared.views.chat = (function(mozL10n) {
   /**
    * Renders an individual entry for the text chat entries view.
    */
-  var TextChatEntry = React.createClass({displayName: "TextChatEntry",
+  var TextChatEntry = React.createClass({
+    displayName: "TextChatEntry",
+
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
       contentType: React.PropTypes.string.isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
+      extraData: React.PropTypes.object,
       message: React.PropTypes.string.isRequired,
       showTimestamp: React.PropTypes.bool.isRequired,
       timestamp: React.PropTypes.string.isRequired,
-      type: React.PropTypes.string.isRequired
+      type: React.PropTypes.string.isRequired,
+      useDesktopPaths: React.PropTypes.bool
     },
 
     /**
@@ -33,21 +40,18 @@ loop.shared.views.chat = (function(mozL10n) {
      * (or L10N equivalent).
      *
      */
-    _renderTimestamp: function() {
+    _renderTimestamp: function () {
       var date = new Date(this.props.timestamp);
-      var language = mozL10n.language ? mozL10n.language.code
-                                      : mozL10n.getLanguage();
 
-      return (
-        React.createElement("span", {className: "text-chat-entry-timestamp"}, 
-          date.toLocaleTimeString(language,
-                                   { hour: "numeric", minute: "numeric",
-                                   hour12: false })
-        )
+      return React.createElement(
+        "span",
+        { className: "text-chat-entry-timestamp" },
+        date.toLocaleTimeString(mozL10n.language.code, { hour: "numeric", minute: "numeric",
+          hour12: false })
       );
     },
 
-    render: function() {
+    render: function () {
       var classes = classNames({
         "text-chat-entry": true,
         "received": this.props.type === CHAT_MESSAGE_TYPES.RECEIVED,
@@ -58,33 +62,54 @@ loop.shared.views.chat = (function(mozL10n) {
 
       var optionalProps = {};
       if (loop.shared.utils.isDesktop()) {
-        optionalProps.linkClickHandler = function(url) {
+        optionalProps.linkClickHandler = function (url) {
           loop.request("OpenURL", url);
         };
       }
 
-      return (
-        React.createElement("div", {className: classes}, 
-          React.createElement(sharedViews.LinkifiedTextView, React.__spread({},  optionalProps, 
-            {rawText: this.props.message})), 
-          React.createElement("span", {className: "text-chat-arrow"}), 
+      if (this.props.contentType === CHAT_CONTENT_TYPES.CONTEXT_TILE) {
+        return React.createElement(
+          "div",
+          { className: classes },
+          React.createElement(sharedViews.ContextUrlView, {
+            allowClick: true,
+            description: this.props.message,
+            dispatcher: this.props.dispatcher,
+            thumbnail: this.props.extraData.newRoomThumbnail,
+            url: this.props.extraData.newRoomURL,
+            useDesktopPaths: this.props.useDesktopPaths }),
           this.props.showTimestamp ? this._renderTimestamp() : null
-        )
+        );
+      }
+
+      return React.createElement(
+        "div",
+        { className: classes },
+        React.createElement(sharedViews.LinkifiedTextView, _extends({}, optionalProps, {
+          rawText: this.props.message })),
+        React.createElement("span", { className: "text-chat-arrow" }),
+        this.props.showTimestamp ? this._renderTimestamp() : null
       );
     }
   });
 
-  var TextChatRoomName = React.createClass({displayName: "TextChatRoomName",
+  var TextChatRoomName = React.createClass({
+    displayName: "TextChatRoomName",
+
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
       message: React.PropTypes.string.isRequired
     },
 
-    render: function() {
-      return (
-        React.createElement("div", {className: "text-chat-header special room-name"}, 
-          React.createElement("p", null, mozL10n.get("rooms_welcome_title", { conversationName: this.props.message }))
+    render: function () {
+      return React.createElement(
+        "div",
+        { className: "text-chat-header special room-name" },
+        React.createElement(
+          "p",
+          null,
+          mozL10n.get("rooms_welcome_title", { conversationName: this.props.message })
         )
       );
     }
@@ -95,11 +120,10 @@ loop.shared.views.chat = (function(mozL10n) {
    * TextChatView so that scrolling can be managed more efficiently - this
    * component only updates when the message list is changed.
    */
-  var TextChatEntriesView = React.createClass({displayName: "TextChatEntriesView",
-    mixins: [
-      React.addons.PureRenderMixin,
-      sharedMixins.AudioMixin
-    ],
+  var TextChatEntriesView = React.createClass({
+    displayName: "TextChatEntriesView",
+
+    mixins: [React.addons.PureRenderMixin, sharedMixins.AudioMixin],
 
     statics: {
       ONE_MINUTE: 60
@@ -112,31 +136,30 @@ loop.shared.views.chat = (function(mozL10n) {
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         receivedMessageCount: 0
       };
     },
 
-    _hasChatMessages: function() {
-      return this.props.messageList.some(function(message) {
+    _hasChatMessages: function () {
+      return this.props.messageList.some(function (message) {
         return message.contentType === CHAT_CONTENT_TYPES.TEXT;
       });
     },
 
-    componentWillUpdate: function() {
+    componentWillUpdate: function () {
       var node = this.getDOMNode();
       if (!node) {
         return;
       }
       // Scroll only if we're right at the bottom of the display, or if we've
       // not had any chat messages so far.
-      this.shouldScroll = !this._hasChatMessages() ||
-        node.scrollHeight === node.scrollTop + node.clientHeight;
+      this.shouldScroll = !this._hasChatMessages() || node.scrollHeight === node.scrollTop + node.clientHeight;
     },
 
-    componentWillReceiveProps: function(nextProps) {
-      var receivedMessageCount = nextProps.messageList.filter(function(message) {
+    componentWillReceiveProps: function (nextProps) {
+      var receivedMessageCount = nextProps.messageList.filter(function (message) {
         return message.type === CHAT_MESSAGE_TYPES.RECEIVED;
       }).length;
 
@@ -147,12 +170,12 @@ loop.shared.views.chat = (function(mozL10n) {
       }
     },
 
-    componentDidUpdate: function() {
+    componentDidUpdate: function () {
       // Don't scroll if we haven't got any chat messages yet - e.g. for context
       // display, we want to display starting at the top.
       if (this.shouldScroll && this._hasChatMessages()) {
         // This ensures the paint is complete.
-        window.requestAnimationFrame(function() {
+        window.requestAnimationFrame(function () {
           try {
             var node = this.getDOMNode();
             node.scrollTop = node.scrollHeight - node.clientHeight;
@@ -163,7 +186,7 @@ loop.shared.views.chat = (function(mozL10n) {
       }
     },
 
-    render: function() {
+    render: function () {
       /* Keep track of the last printed timestamp. */
       var lastTimestamp = 0;
 
@@ -171,61 +194,60 @@ loop.shared.views.chat = (function(mozL10n) {
         "text-chat-entries": true
       });
 
-      return (
-        React.createElement("div", {className: entriesClasses}, 
-          React.createElement("div", {className: "text-chat-scroller"}, 
-            
-              this.props.messageList.map(function(entry, i) {
-                if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
-                  if (!this.props.showInitialContext) { return null; }
-                  switch (entry.contentType) {
-                    case CHAT_CONTENT_TYPES.ROOM_NAME:
-                      return (
-                        React.createElement(TextChatRoomName, {
-                          key: i, 
-                          message: entry.message})
-                      );
-                    case CHAT_CONTENT_TYPES.CONTEXT:
-                      return (
-                        React.createElement("div", {className: "context-url-view-wrapper", key: i}, 
-                          React.createElement(sharedViews.ContextUrlView, {
-                            allowClick: true, 
-                            description: entry.message, 
-                            dispatcher: this.props.dispatcher, 
-                            thumbnail: entry.extraData.thumbnail, 
-                            url: entry.extraData.location, 
-                            useDesktopPaths: this.props.useDesktopPaths})
-                        )
-                      );
-                    default:
-                      console.error("Unsupported contentType",
-                                    entry.contentType);
-                      return null;
-                  }
-                }
-
-                /* For SENT messages there is no received timestamp. */
-                var timestamp = entry.receivedTimestamp || entry.sentTimestamp;
-
-                var timeDiff = this._isOneMinDelta(timestamp, lastTimestamp);
-                var shouldShowTimestamp = this._shouldShowTimestamp(i,
-                                                                    timeDiff);
-
-                if (shouldShowTimestamp) {
-                  lastTimestamp = timestamp;
-                }
-
-                return (
-                  React.createElement(TextChatEntry, {contentType: entry.contentType, 
-                                 key: i, 
-                                 message: entry.message, 
-                                 showTimestamp: shouldShowTimestamp, 
-                                 timestamp: timestamp, 
-                                 type: entry.type})
+      return React.createElement(
+        "div",
+        { className: entriesClasses },
+        React.createElement(
+          "div",
+          { className: "text-chat-scroller" },
+          this.props.messageList.map(function (entry, i) {
+            if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
+              if (!this.props.showInitialContext) {
+                return null;
+              }
+              switch (entry.contentType) {
+                case CHAT_CONTENT_TYPES.ROOM_NAME:
+                  return React.createElement(TextChatRoomName, {
+                    key: i,
+                    message: entry.message });
+                case CHAT_CONTENT_TYPES.CONTEXT:
+                  return React.createElement(
+                    "div",
+                    { className: "context-url-view-wrapper", key: i },
+                    React.createElement(sharedViews.ContextUrlView, {
+                      allowClick: true,
+                      description: entry.message,
+                      dispatcher: this.props.dispatcher,
+                      thumbnail: entry.extraData.thumbnail,
+                      url: entry.extraData.location,
+                      useDesktopPaths: this.props.useDesktopPaths })
                   );
-              }, this)
-            
-          )
+                default:
+                  console.error("Unsupported contentType", entry.contentType);
+                  return null;
+              }
+            }
+
+            /* For SENT messages there is no received timestamp. */
+            var timestamp = entry.receivedTimestamp || entry.sentTimestamp;
+
+            var timeDiff = this._isOneMinDelta(timestamp, lastTimestamp);
+            var shouldShowTimestamp = this._shouldShowTimestamp(i, timeDiff);
+
+            if (shouldShowTimestamp) {
+              lastTimestamp = timestamp;
+            }
+
+            return React.createElement(TextChatEntry, { contentType: entry.contentType,
+              dispatcher: this.props.dispatcher,
+              extraData: entry.extraData,
+              key: i,
+              message: entry.message,
+              showTimestamp: shouldShowTimestamp,
+              timestamp: timestamp,
+              type: entry.type,
+              useDesktopPaths: this.props.useDesktopPaths });
+          }, this)
         )
       );
     },
@@ -239,14 +261,13 @@ loop.shared.views.chat = (function(mozL10n) {
      * @param {boolean} timeDiff If difference between consecutive messages is
      *                           bigger than one minute.
      */
-    _shouldShowTimestamp: function(idx, timeDiff) {
+    _shouldShowTimestamp: function (idx, timeDiff) {
       if (!idx) {
         return true;
       }
 
       /* If consecutive messages are from different senders */
-      if (this.props.messageList[idx].type !==
-          this.props.messageList[idx - 1].type) {
+      if (this.props.messageList[idx].type !== this.props.messageList[idx - 1].type) {
         return true;
       }
 
@@ -262,7 +283,7 @@ loop.shared.views.chat = (function(mozL10n) {
      * @param {string} currTime Timestamp of message yet to be rendered.
      * @param {string} prevTime Last timestamp printed in the chat view.
      */
-    _isOneMinDelta: function(currTime, prevTime) {
+    _isOneMinDelta: function (currTime, prevTime) {
       var date1 = new Date(currTime);
       var date2 = new Date(prevTime);
       var delta = date1 - date2;
@@ -283,11 +304,10 @@ loop.shared.views.chat = (function(mozL10n) {
    * @property {Boolean} textChatEnabled    Set to true to enable the box. If false, the
    *                                        text chat box won't be displayed.
    */
-  var TextChatInputView = React.createClass({displayName: "TextChatInputView",
-    mixins: [
-      React.addons.LinkedStateMixin,
-      React.addons.PureRenderMixin
-    ],
+  var TextChatInputView = React.createClass({
+    displayName: "TextChatInputView",
+
+    mixins: [React.addons.LinkedStateMixin, React.addons.PureRenderMixin],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -295,7 +315,7 @@ loop.shared.views.chat = (function(mozL10n) {
       textChatEnabled: React.PropTypes.bool.isRequired
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         messageDetail: ""
       };
@@ -307,7 +327,7 @@ loop.shared.views.chat = (function(mozL10n) {
      *
      * @param {Object} event The DOM event.
      */
-    handleKeyDown: function(event) {
+    handleKeyDown: function (event) {
       if (event.which === 13) {
         this.handleFormSubmit(event);
       }
@@ -318,7 +338,7 @@ loop.shared.views.chat = (function(mozL10n) {
      *
      * @param {Object} event The DOM event.
      */
-    handleFormSubmit: function(event) {
+    handleFormSubmit: function (event) {
       event.preventDefault();
 
       // Don't send empty messages.
@@ -329,27 +349,29 @@ loop.shared.views.chat = (function(mozL10n) {
       this.props.dispatcher.dispatch(new sharedActions.SendTextChatMessage({
         contentType: CHAT_CONTENT_TYPES.TEXT,
         message: this.state.messageDetail,
-        sentTimestamp: (new Date()).toISOString()
+        sentTimestamp: new Date().toISOString()
       }));
 
       // Reset the form to empty, ready for the next message.
       this.setState({ messageDetail: "" });
     },
 
-    render: function() {
+    render: function () {
       if (!this.props.textChatEnabled) {
         return null;
       }
 
-      return (
-        React.createElement("div", {className: "text-chat-box"}, 
-          React.createElement("form", {onSubmit: this.handleFormSubmit}, 
-            React.createElement("input", {
-              onKeyDown: this.handleKeyDown, 
-              placeholder: this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : "", 
-              type: "text", 
-              valueLink: this.linkState("messageDetail")})
-          )
+      return React.createElement(
+        "div",
+        { className: "text-chat-box" },
+        React.createElement(
+          "form",
+          { onSubmit: this.handleFormSubmit },
+          React.createElement("input", {
+            onKeyDown: this.handleKeyDown,
+            placeholder: this.props.showPlaceholder ? mozL10n.get("chat_textbox_placeholder") : "",
+            type: "text",
+            valueLink: this.linkState("messageDetail") })
         )
       );
     }
@@ -363,11 +385,10 @@ loop.shared.views.chat = (function(mozL10n) {
    * @property {Boolean}         showInitialContext Set to true to show the room name
    *                                          and initial context tile for linker clicker's special list items
    */
-  var TextChatView = React.createClass({displayName: "TextChatView",
-    mixins: [
-      React.addons.LinkedStateMixin,
-      loop.store.StoreMixin("textChatStore")
-    ],
+  var TextChatView = React.createClass({
+    displayName: "TextChatView",
+
+    mixins: [React.addons.LinkedStateMixin, loop.store.StoreMixin("textChatStore")],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -375,25 +396,23 @@ loop.shared.views.chat = (function(mozL10n) {
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       return this.getStoreState();
     },
 
-    render: function() {
+    render: function () {
       var messageList = this.state.messageList;
 
       // Filter out items not displayed when showing initial context.
       // We do this here so that we can set the classes correctly on the view.
       if (!this.props.showInitialContext) {
-        messageList = messageList.filter(function(item) {
-          return item.type !== CHAT_MESSAGE_TYPES.SPECIAL ||
-            (item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME &&
-             item.contentType !== CHAT_CONTENT_TYPES.CONTEXT);
+        messageList = messageList.filter(function (item) {
+          return item.type !== CHAT_MESSAGE_TYPES.SPECIAL || item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME && item.contentType !== CHAT_CONTENT_TYPES.CONTEXT;
         });
       }
 
       // Only show the placeholder if we've sent messages.
-      var hasSentMessages = messageList.some(function(item) {
+      var hasSentMessages = messageList.some(function (item) {
         return item.type === CHAT_MESSAGE_TYPES.SENT;
       });
 
@@ -403,18 +422,18 @@ loop.shared.views.chat = (function(mozL10n) {
         "text-chat-disabled": !this.state.textChatEnabled
       });
 
-      return (
-        React.createElement("div", {className: textChatViewClasses}, 
-          React.createElement(TextChatEntriesView, {
-            dispatcher: this.props.dispatcher, 
-            messageList: messageList, 
-            showInitialContext: this.props.showInitialContext, 
-            useDesktopPaths: this.props.useDesktopPaths}), 
-          React.createElement(TextChatInputView, {
-            dispatcher: this.props.dispatcher, 
-            showPlaceholder: !hasSentMessages, 
-            textChatEnabled: this.state.textChatEnabled})
-        )
+      return React.createElement(
+        "div",
+        { className: textChatViewClasses },
+        React.createElement(TextChatEntriesView, {
+          dispatcher: this.props.dispatcher,
+          messageList: messageList,
+          showInitialContext: this.props.showInitialContext,
+          useDesktopPaths: this.props.useDesktopPaths }),
+        React.createElement(TextChatInputView, {
+          dispatcher: this.props.dispatcher,
+          showPlaceholder: !hasSentMessages,
+          textChatEnabled: this.state.textChatEnabled })
       );
     }
   });
@@ -424,4 +443,4 @@ loop.shared.views.chat = (function(mozL10n) {
     TextChatEntry: TextChatEntry,
     TextChatView: TextChatView
   };
-})(navigator.mozL10n || document.mozL10n);
+}(navigator.mozL10n || document.mozL10n);

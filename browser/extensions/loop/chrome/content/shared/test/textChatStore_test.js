@@ -86,6 +86,34 @@ describe("loop.store.TextChatStore", function() {
       }]);
     });
 
+    it("should add the context tile to the list", function() {
+      store.receivedTextChatMessage({
+        type: CHAT_MESSAGE_TYPES.SENT,
+        contentType: CHAT_CONTENT_TYPES.CONTEXT_TILE,
+        message: "fake",
+        extraData: {
+          roomToken: "fakeRoomToken",
+          newRoomThumbnail: "favicon",
+          newRoomURL: "https://www.fakeurl.com"
+        },
+        sentTimestamp: "2015-06-24T23:58:53.848Z",
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      });
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.CONTEXT_TILE,
+        message: "fake",
+        extraData: {
+          roomToken: "fakeRoomToken",
+          newRoomThumbnail: "favicon",
+          newRoomURL: "https://www.fakeurl.com"
+        },
+        sentTimestamp: "2015-06-24T23:58:53.848Z",
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }]);
+    });
+
     it("should not add messages for unknown content types", function() {
       store.receivedTextChatMessage({
         contentType: "invalid type",
@@ -255,6 +283,55 @@ describe("loop.store.TextChatStore", function() {
       }));
 
       sinon.assert.notCalled(window.dispatchEvent);
+    });
+  });
+
+  describe("#updateRoomContext", function() {
+    beforeEach(function() {
+      store.setStoreState({ messageList: [] });
+      store.updateRoomContext(new sharedActions.UpdateRoomContext({
+        newRoomDescription: "fake",
+        newRoomThumbnail: "favicon",
+        newRoomURL: "https://www.fakeurl.com",
+        roomToken: "fakeRoomToken"
+      }));
+    });
+
+    it("should add the room context to the list", function() {
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.SENT,
+        contentType: CHAT_CONTENT_TYPES.CONTEXT_TILE,
+        message: "fake",
+        extraData: {
+          roomToken: "fakeRoomToken",
+          newRoomThumbnail: "favicon",
+          newRoomURL: "https://www.fakeurl.com"
+        },
+        sentTimestamp: "1970-01-01T00:00:00.000Z",
+        receivedTimestamp: undefined
+      }]);
+    });
+
+    it("should not add the room context if the last tile has the same domain", function() {
+      store.updateRoomContext(new sharedActions.UpdateRoomContext({
+        newRoomDescription: "fake",
+        newRoomThumbnail: "favicon",
+        newRoomURL: "https://www.fakeurl.com/test/same_domain",
+        roomToken: "fakeRoomToken"
+      }));
+
+      expect(store.getStoreState("messageList").length).eql(1);
+    });
+
+    it("should add the room context if the last tile has not the same domain", function() {
+      store.updateRoomContext(new sharedActions.UpdateRoomContext({
+        newRoomDescription: "fake",
+        newRoomThumbnail: "favicon",
+        newRoomURL: "https://www.myfakeurl.com",
+        roomToken: "fakeRoomToken"
+      }));
+
+      expect(store.getStoreState("messageList").length).eql(2);
     });
   });
 });

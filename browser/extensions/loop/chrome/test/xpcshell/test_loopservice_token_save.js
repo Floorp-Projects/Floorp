@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 /**
  * Test that things behave reasonably when a reasonable Hawk-Session-Token
  * header is returned with the registration response.

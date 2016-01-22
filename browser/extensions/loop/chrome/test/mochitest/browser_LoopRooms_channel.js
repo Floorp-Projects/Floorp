@@ -12,7 +12,7 @@ var { WebChannel } = Cu.import("resource://gre/modules/WebChannel.jsm", {});
 var { Chat } = Cu.import("resource:///modules/Chat.jsm", {});
 
 const TEST_URI =
-  "example.com/browser/browser/extensions/loop/test/mochitest/test_loopLinkClicker_channel.html";
+  "example.com/browser/browser/extensions/loop/chrome/test/mochitest/test_loopLinkClicker_channel.html";
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URI, null, null);
 const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URI, null, null);
 
@@ -54,7 +54,7 @@ var gBadBackChannel;
 // Loads the specified URI in a new tab and waits for it to send us data on our
 // test web-channel and resolves with that data.
 function promiseNewChannelResponse(uri, channel, hash) {
-  let waitForChannelPromise = new Promise((resolve, reject) => {
+  let waitForChannelPromise = new Promise((resolve) => {
     if (channel.receivedData) {
       let data = channel.receivedData;
       channel.receivedData = null;

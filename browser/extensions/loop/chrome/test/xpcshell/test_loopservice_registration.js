@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 Cu.import("resource://services-common/utils.js");
 
 /**

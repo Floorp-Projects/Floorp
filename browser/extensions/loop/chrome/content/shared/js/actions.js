@@ -326,6 +326,7 @@ loop.shared.actions = (function() {
       // newRoomDescription: String, Optional.
       // newRoomThumbnail: String, Optional.
       // newRoomURL: String Optional.
+      // sentTimestamp: String, Optional.
     }),
 
     /**
@@ -344,6 +345,9 @@ loop.shared.actions = (function() {
     /**
      * Copy a room url into the user's clipboard.
      * XXX: should move to some roomActions module - refs bug 1079284
+     * @from: where the invitation is shared from.
+     *        Possible values ['panel', 'conversation']
+     * @roomUrl: the URL that is shared
      */
     CopyRoomUrl: Action.define("copyRoomUrl", {
       from: String,
@@ -353,6 +357,9 @@ loop.shared.actions = (function() {
     /**
      * Email a room url.
      * XXX: should move to some roomActions module - refs bug 1079284
+     * @from: where the invitation is shared from.
+     *        Possible values ['panel', 'conversation']
+     * @roomUrl: the URL that is shared
      */
     EmailRoomUrl: Action.define("emailRoomUrl", {
       from: String,
@@ -361,8 +368,22 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Share a room url with Facebook.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     * @from: where the invitation is shared from.
+     *        Possible values ['panel', 'conversation']
+     * @roomUrl: the URL that is shared
+     */
+    FacebookShareRoomUrl: Action.define("facebookShareRoomUrl", {
+      from: String,
+      roomUrl: String
+    }),
+
+    /**
      * Share a room url via the Social API.
      * XXX: should move to some roomActions module - refs bug 1079284
+     * @provider: one of the share-capable Social Providers included
+     * @roomUrl: the URL that is shared
      */
     ShareRoomUrl: Action.define("shareRoomUrl", {
       provider: Object,

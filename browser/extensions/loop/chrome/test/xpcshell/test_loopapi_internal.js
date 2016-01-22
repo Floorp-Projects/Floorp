@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 const [LoopAPIInternal] = LoopAPI.inspect();
 
@@ -56,6 +58,40 @@ add_test(function test_handleMessage() {
     callCount++;
   });
   Assert.strictEqual(callCount, 2, "The reply handler should've been called");
+
+  run_next_test();
+});
+
+add_test(function test_sendMessageToHandler() {
+  // Testing error branches.
+  LoopAPI.sendMessageToHandler({
+    name: "WellThisDoesNotExist"
+  }, err => {
+    Assert.ok(err.isError, "An error should be returned");
+    Assert.strictEqual(err.message,
+      "Ouch, no message handler available for 'WellThisDoesNotExist'",
+      "Error messages should match");
+  });
+
+  // Testing correct flow branches.
+  let hangupNowCalls = [];
+  LoopAPI.stubMessageHandlers({
+    HangupNow: function(message, reply) {
+      hangupNowCalls.push(message);
+      reply();
+    }
+  });
+
+  let message = {
+    name: "HangupNow",
+    data: ["fakeToken", 42]
+  };
+  LoopAPI.sendMessageToHandler(message);
+
+  Assert.strictEqual(hangupNowCalls.length, 1, "HangupNow handler should be called once");
+  Assert.deepEqual(hangupNowCalls.pop(), message, "Messages should be the same");
+
+  LoopAPI.restore();
 
   run_next_test();
 });

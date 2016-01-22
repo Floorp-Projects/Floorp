@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Timer.jsm");
 const { MozLoopService } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
 const consoleLog = MozLoopService.log;
 
+/* exported MozLoopPushHandler */
+
 this.EXPORTED_SYMBOLS = ["MozLoopPushHandler"];
 
 const CONNECTION_STATE_CLOSED = 0;
@@ -556,7 +558,7 @@ var MozLoopPushHandler = {
    * This method will continually try to re-establish a connection
    * to the PushServer unless shutdown has been called.
    */
-  _onClose: function(aCode, aReason) {
+  _onClose: function(aCode) {
     this._pingMonitor.stop();
 
     switch (this.connectionState) {

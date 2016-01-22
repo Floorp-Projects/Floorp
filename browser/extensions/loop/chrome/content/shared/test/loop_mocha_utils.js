@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* exported LoopMochaUtils */
+
 var LoopMochaUtils = (function(global, _) {
   "use strict";
 
@@ -30,7 +32,7 @@ var LoopMochaUtils = (function(global, _) {
    * @param  {Function} asyncFn Function to invoke directly that contains async
    *                            continuation(s).
    */
-  function syncThenable(asyncFn) {
+  function SyncThenable(asyncFn) {
     var continuations = [];
     var resolved = false;
     var resolvedWith = null;
@@ -45,6 +47,12 @@ var LoopMochaUtils = (function(global, _) {
       return this;
     };
 
+    /**
+     * Used to resolve an object of type SyncThenable.
+     *
+     * @param  {*} result     The result to return.
+     * @return {SyncThenable} A resolved SyncThenable object.
+     */
     this.resolve = function(result) {
       resolved = true;
       resolvedWith = result;
@@ -69,8 +77,8 @@ var LoopMochaUtils = (function(global, _) {
     asyncFn(this.resolve.bind(this), this.reject.bind(this));
   }
 
-  syncThenable.all = function(promises) {
-    return new syncThenable(function(resolve) {
+  SyncThenable.all = function(promises) {
+    return new SyncThenable(function(resolve) {
       var results = [];
 
       promises.forEach(function(promise) {
@@ -84,14 +92,27 @@ var LoopMochaUtils = (function(global, _) {
   };
 
   /**
+   * This simulates the equivalent of Promise.resolve() - calling the
+   * resolve function on the raw object.
+   *
+   * @param  {*} result     The result to return.
+   * @return {SyncThenable} A resolved SyncThenable object.
+   */
+  SyncThenable.resolve = function(result) {
+    return new SyncThenable(function(resolve) {
+      resolve(result);
+    });
+  };
+
+  /**
    * Simple wrapper around `sinon.sandbox.create()` to also stub the native Promise
-   * object out with `syncThenable`.
+   * object out with `SyncThenable`.
    *
    * @return {Sandbox} A Sinon.JS sandbox object.
    */
   function createSandbox() {
     var sandbox = sinon.sandbox.create();
-    sandbox.stub(global, "Promise", syncThenable);
+    sandbox.stub(global, "Promise", SyncThenable);
     return sandbox;
   }
 
@@ -201,7 +222,8 @@ var LoopMochaUtils = (function(global, _) {
    *                             to the listeners.
    */
   function publish() {
-    var args = Array.slice(arguments);
+    // Convert to a proper array.
+    var args = Array.prototype.slice.call(arguments);
     var name = args.shift();
     gPushListenerCallbacks.forEach(function(cb) {
       cb({ data: [name, args] });

@@ -10,6 +10,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 const { INVALID_AUTH_TOKEN } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
 
 /**
@@ -61,7 +63,7 @@ add_task(function* guest_401() {
   Services.prefs.setCharPref("loop.hawk-session-token.fxa", "fxa");
   yield MozLoopServiceInternal.hawkRequestInternal(LOOP_SESSION_TYPE.GUEST, "/401", "POST").then(
     () => Assert.ok(false, "Should have rejected"),
-    (error) => {
+    () => {
       Assert.strictEqual(Services.prefs.getPrefType("loop.hawk-session-token"),
                          Services.prefs.PREF_INVALID,
                          "Guest session token should have been cleared");
@@ -85,7 +87,7 @@ add_task(function* fxa_401() {
   Services.prefs.setCharPref("loop.hawk-session-token.fxa", "fxa");
   yield MozLoopServiceInternal.hawkRequestInternal(LOOP_SESSION_TYPE.FXA, "/401", "POST").then(
     () => Assert.ok(false, "Should have rejected"),
-    (error) => {
+    () => {
       Assert.strictEqual(Services.prefs.getCharPref("loop.hawk-session-token"),
                          "guest",
                          "Guest session token should NOT have been cleared");
