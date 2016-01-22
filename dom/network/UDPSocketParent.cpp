@@ -293,12 +293,19 @@ UDPSocketParent::RecvConnect(const UDPAddressInfo& aAddressInfo)
 }
 
 void
+UDPSocketParent::DoSendConnectResponse(const UDPAddressInfo& aAddressInfo)
+{
+  // can't use directly with WrapRunnable due to warnings
+  mozilla::Unused << SendCallbackConnected(aAddressInfo);
+}
+
+void
 UDPSocketParent::SendConnectResponse(nsIEventTarget *aThread,
                                      const UDPAddressInfo& aAddressInfo)
 {
   NS_WARN_IF(NS_FAILED(aThread->Dispatch(WrapRunnable(
                                            this,
-                                           &UDPSocketParent::SendCallbackConnected,
+                                           &UDPSocketParent::DoSendConnectResponse,
                                            aAddressInfo),
                                          NS_DISPATCH_NORMAL)));
 }
