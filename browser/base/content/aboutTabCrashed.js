@@ -166,6 +166,8 @@ var AboutTabCrashed = {
       if (data.emailMe) {
         document.getElementById("email").value = data.email;
       }
+
+      this.showCrashReportUI(data.sendReport);
     }
 
     let event = new CustomEvent("AboutTabCrashedReady", {bubbles:true});

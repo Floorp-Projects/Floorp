@@ -80,7 +80,7 @@ function consoleOpened(aHud) {
 function testContextMenuCopy() {
   let deferred = promise.defer();
 
-  let contextMenuId = outputNode.parentNode.getAttribute("context");
+  let contextMenuId = HUD.ui.outputWrapper.getAttribute("context");
   let contextMenu = HUD.ui.document.getElementById(contextMenuId);
   ok(contextMenu, "the output node has a context menu");
 
