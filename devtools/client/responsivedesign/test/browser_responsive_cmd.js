@@ -11,6 +11,9 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("destroy");
 
 function test() {
+  let manager = ResponsiveUI.ResponsiveUIManager;
+  let done;
+
   function isOpen() {
     return gBrowser.getBrowserContainer(gBrowser.selectedBrowser)
                    .hasAttribute("responsivemode");
@@ -19,7 +22,10 @@ function test() {
   helpers.addTabWithToolbar("data:text/html;charset=utf-8,hi", (options) => {
     return helpers.audit(options, [
       {
-        setup: "resize toggle",
+        setup() {
+          done = once(manager, "on");
+          return helpers.setInput(options, "resize toggle");
+        },
         check: {
           input:  "resize toggle",
           hints:               "",
@@ -29,12 +35,16 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(isOpen(), "responsive mode is open");
-        },
+        }),
       },
       {
-        setup: "resize toggle",
+        setup() {
+          done = once(manager, "off");
+          return helpers.setInput(options, "resize toggle");
+        },
         check: {
           input:  "resize toggle",
           hints:               "",
@@ -44,12 +54,16 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(!isOpen(), "responsive mode is closed");
-        },
+        }),
       },
       {
-        setup: "resize on",
+        setup() {
+          done = once(manager, "on");
+          return helpers.setInput(options, "resize on");
+        },
         check: {
           input:  "resize on",
           hints:           "",
@@ -59,12 +73,16 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(isOpen(), "responsive mode is open");
-        },
+        }),
       },
       {
-        setup: "resize off",
+        setup() {
+          done = once(manager, "off");
+          return helpers.setInput(options, "resize off");
+        },
         check: {
           input:  "resize off",
           hints:            "",
@@ -74,12 +92,16 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(!isOpen(), "responsive mode is closed");
-        },
+        }),
       },
       {
-        setup: "resize to 400 400",
+        setup() {
+          done = once(manager, "on");
+          return helpers.setInput(options, "resize to 400 400");
+        },
         check: {
           input:  "resize to 400 400",
           hints:                   "",
@@ -93,12 +115,16 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(isOpen(), "responsive mode is open");
-        },
+        }),
       },
       {
-        setup: "resize off",
+        setup() {
+          done = once(manager, "off");
+          return helpers.setInput(options, "resize off");
+        },
         check: {
           input:  "resize off",
           hints:            "",
@@ -108,9 +134,10 @@ function test() {
         exec: {
           output: ""
         },
-        post: function() {
+        post: Task.async(function*() {
+          yield done;
           ok(!isOpen(), "responsive mode is closed");
-        },
+        }),
       },
     ]);
   }).then(finish);

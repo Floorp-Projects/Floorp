@@ -92,11 +92,11 @@ exports.items = [
   }
 ];
 
-function gcli_cmd_resize(args, context) {
+function* gcli_cmd_resize(args, context) {
   let browserWindow = context.environment.chromeWindow;
   let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-  mgr.handleGcliCommand(browserWindow,
-                        browserWindow.gBrowser.selectedTab,
-                        this.name,
-                        args);
+  yield mgr.handleGcliCommand(browserWindow,
+                              browserWindow.gBrowser.selectedTab,
+                              this.name,
+                              args);
 }
