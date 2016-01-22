@@ -13,6 +13,7 @@ DevToolsModules(
     'actor-registry.js',
     'addon.js',
     'animation.js',
+    'breakpoint.js',
     'call-watcher.js',
     'canvas.js',
     'child-process.js',
