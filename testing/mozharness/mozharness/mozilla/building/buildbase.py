@@ -357,11 +357,15 @@ class BuildOptionParser(object):
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
         'api-9': 'builds/releng_sub_%s_configs/%s_api_9.py',
         'api-11': 'builds/releng_sub_%s_configs/%s_api_11.py',
+        'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
         'api-9-debug': 'builds/releng_sub_%s_configs/%s_api_9_debug.py',
         'api-11-debug': 'builds/releng_sub_%s_configs/%s_api_11_debug.py',
+        'api-15-debug': 'builds/releng_sub_%s_configs/%s_api_15_debug.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
         'api-11-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_11_partner_sample1.py',
+        'api-15-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_15_partner_sample1.py',
         'api-11-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_11_b2gdroid.py',
+        'api-15-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_15_b2gdroid.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
