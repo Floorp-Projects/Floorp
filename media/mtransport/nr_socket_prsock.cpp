@@ -1133,7 +1133,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString &host,
   return NS_OK;
 }
 
-NS_IMETHODIMP NrUdpSocketIpc::SetAddress() {
+nsresult NrUdpSocketIpc::SetAddress() {
   uint16_t port;
   if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
     err_ = true;
