@@ -110,7 +110,7 @@ class CompileDBBackend(CommonBackend):
             if name not in build_vars:
                 continue
 
-            build_vars[name] = shell_split(build_vars[name])
+            build_vars[name] = util.sanitize_cflags(shell_split(build_vars[name]))
 
         self._flags[directory] = build_vars
         return self._flags[directory]
