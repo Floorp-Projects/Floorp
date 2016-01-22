@@ -215,6 +215,7 @@ public:
   void Stop();
   already_AddRefed<Promise>
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
+  already_AddRefed<MediaStreamTrack> Clone();
 
   bool Ended() const { return mEnded; }
   // Notifications from the MediaStreamGraph
@@ -281,6 +282,14 @@ protected:
   // Returns the original DOMMediaStream. If this track is a clone,
   // the original track's owning DOMMediaStream is returned.
   DOMMediaStream* GetInputDOMStream();
+
+  /**
+   * Creates a new MediaStreamTrack with the same type, input track ID and
+   * source as this MediaStreamTrack.
+   * aTrackID is the TrackID the new track will have in its owned stream.
+   */
+  virtual already_AddRefed<MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream,
+                                                           TrackID aTrackID) = 0;
 
   nsTArray<PrincipalChangeObserver<MediaStreamTrack>*> mPrincipalChangeObservers;
 
