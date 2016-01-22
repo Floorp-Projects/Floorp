@@ -35,27 +35,29 @@ function* testButton(toolbox, Telemetry) {
   checkResults("_RESPONSIVE_", Telemetry);
 }
 
-function delayedClicks(node, clicks) {
+function waitForToggle() {
   return new Promise(resolve => {
-    let clicked = 0;
-
-    // See TOOL_DELAY for why we need setTimeout here
-    setTimeout(function delayedClick() {
-      info("Clicking button " + node.id);
-      if (clicked >= clicks) {
-        node.addEventListener("click", function listener() {
-          node.removeEventListener("click", listener);
-          resolve();
-        });
-      } else {
-        setTimeout(delayedClick, TOOL_DELAY);
-      }
-
-      node.click();
-      clicked++;
-    }, TOOL_DELAY);
+    let handler = () => {
+      manager.off("on", handler);
+      manager.off("off", handler);
+      resolve();
+    };
+    let manager = ResponsiveUI.ResponsiveUIManager;
+    manager.on("on", handler);
+    manager.on("off", handler);
   });
 }
+
+var delayedClicks = Task.async(function*(node, clicks) {
+  for (let i = 0; i < clicks; i++) {
+    info("Clicking button " + node.id);
+    let toggled = waitForToggle();
+    node.click();
+    yield toggled;
+    // See TOOL_DELAY for why we need setTimeout here
+    yield DevToolsUtils.waitForTime(TOOL_DELAY);
+  }
+});
 
 function checkResults(histIdFocus, Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;
