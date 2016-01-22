@@ -95,12 +95,6 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
   LIFECYCLE_LOG("Switching to new driver: %p (%s)",
       aNextDriver, aNextDriver->AsAudioCallbackDriver() ?
       "AudioCallbackDriver" : "SystemClockDriver");
-  if (mNextDriver &&
-      mNextDriver != GraphImpl()->CurrentDriver()) {
-    LIFECYCLE_LOG("Discarding previous next driver: %p (%s)",
-                  mNextDriver.get(), mNextDriver->AsAudioCallbackDriver() ?
-                  "AudioCallbackDriver" : "SystemClockDriver");
-  }
   SetNextDriver(aNextDriver);
 }
 
@@ -487,13 +481,13 @@ AsyncCubebTask::Run()
 
   switch(mOperation) {
     case AsyncCubebOperation::INIT: {
-      LIFECYCLE_LOG("AsyncCubebOperation::INIT driver=%p\n", mDriver.get());
+      LIFECYCLE_LOG("AsyncCubebOperation::INIT\n");
       mDriver->Init();
       mDriver->CompleteAudioContextOperations(mOperation);
       break;
     }
     case AsyncCubebOperation::SHUTDOWN: {
-      LIFECYCLE_LOG("AsyncCubebOperation::SHUTDOWN driver=%p\n", mDriver.get());
+      LIFECYCLE_LOG("AsyncCubebOperation::SHUTDOWN\n");
       mDriver->Stop();
 
       mDriver->CompleteAudioContextOperations(mOperation);
@@ -872,11 +866,11 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
     // reclock the current time against the state time, here.
     mIterationEnd = mIterationStart + 0.8 * inGraph;
 
-    STREAM_LOG(LogLevel::Verbose, ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) (duration ticks: %ld)\n",
-                                   (long)mIterationStart, (long)mIterationEnd,
-                                   (long)stateComputedTime, (long)nextStateComputedTime,
-                                   (long)aFrames, (uint32_t)durationMS,
-                                   (long)(nextStateComputedTime - stateComputedTime)));
+    STREAM_LOG(LogLevel::Debug, ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) (duration ticks: %ld)\n",
+                              (long)mIterationStart, (long)mIterationEnd,
+                              (long)stateComputedTime, (long)nextStateComputedTime,
+                              (long)aFrames, (uint32_t)durationMS,
+                              (long)(nextStateComputedTime - stateComputedTime)));
 
     mCurrentTimeStamp = TimeStamp::Now();
 
