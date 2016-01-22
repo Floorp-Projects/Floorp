@@ -108,7 +108,7 @@ public class TestGlobalSession {
   @Test
   public void testBackoffCalledByHandleHTTPError() {
     try {
-      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback(TEST_CLUSTER_URL);
+      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback();
       SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), new MockSharedPreferences(), new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY));
       final GlobalSession session = new MockGlobalSession(config, callback);
 
@@ -140,7 +140,7 @@ public class TestGlobalSession {
   @Test
   public void testSuccessCalledAfterStages() {
     try {
-      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback(TEST_CLUSTER_URL);
+      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback();
       SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), new MockSharedPreferences(), new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY));
       final GlobalSession session = new MockGlobalSession(config, callback);
 
@@ -173,7 +173,7 @@ public class TestGlobalSession {
   @Test
   public void testBackoffCalledInStages() {
     try {
-      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback(TEST_CLUSTER_URL);
+      final MockGlobalSessionCallback callback = new MockGlobalSessionCallback();
 
       // Stage fakes a 503 and sets X-Weave-Backoff header to the given seconds.
       final GlobalSyncStage stage = new MockAbstractNonRepositorySyncStage() {
@@ -266,7 +266,7 @@ public class TestGlobalSession {
       }
     };
 
-    final MockGlobalSessionCallback callback = new MockGlobalSessionCallback(TEST_CLUSTER_URL);
+    final MockGlobalSessionCallback callback = new MockGlobalSessionCallback();
     SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD), new MockSharedPreferences(), new KeyBundle(TEST_USERNAME, TEST_SYNC_KEY));
     final GlobalSession session = new MockGlobalSession(config, callback)
                                       .withStage(Stage.syncBookmarks, stage);

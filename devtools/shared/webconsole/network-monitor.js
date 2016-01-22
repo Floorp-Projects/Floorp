@@ -223,8 +223,10 @@ NetworkResponseListener.prototype = {
     // In the multi-process mode, the conversion happens on the child side while we can
     // only monitor the channel on the parent side. If the content is gzipped, we have
     // to unzip it ourself. For that we use the stream converter services.
+    // Do not do that for Service workers as they are run in the child process.
     let channel = this.request;
-    if (channel instanceof Ci.nsIEncodedChannel &&
+    if (!this.httpActivity.fromServiceWorker &&
+        channel instanceof Ci.nsIEncodedChannel &&
         channel.contentEncodings &&
         !channel.applyConversion) {
       let encodingHeader = channel.getResponseHeader("Content-Encoding");
@@ -860,6 +862,7 @@ NetworkMonitor.prototype = {
     event.startedDateTime = (timestamp ? new Date(Math.round(timestamp / 1000)) : new Date()).toISOString();
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
+    httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {
       event.headersSize = extraStringData.length;

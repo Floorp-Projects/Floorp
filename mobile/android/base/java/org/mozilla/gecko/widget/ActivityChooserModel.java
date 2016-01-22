@@ -31,7 +31,6 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.R;
 import java.io.File;
 
@@ -1310,8 +1309,7 @@ public class ActivityChooserModel extends DataSetObservable {
     private boolean hasOtherSyncClients() {
         // ClientsDatabaseAccessor returns stale data (bug 1145896) so we work around this by
         // checking if we have accounts set up - if not, we can't have any clients.
-        if (!FirefoxAccounts.firefoxAccountsExist(mContext) &&
-                !SyncAccounts.syncAccountsExist(mContext))  {
+        if (!FirefoxAccounts.firefoxAccountsExist(mContext)) {
             return false;
         }
 

@@ -190,12 +190,12 @@ WebGLTexture::SetImageInfosAtLevel(uint32_t level, const ImageInfo& newInfo)
 }
 
 bool
-WebGLTexture::IsMipmapComplete() const
+WebGLTexture::IsMipmapComplete(uint32_t texUnit) const
 {
     MOZ_ASSERT(DoesMinFilterRequireMipmap());
     // GLES 3.0.4, p161
 
-    const uint32_t maxLevel = MaxEffectiveMipmapLevel();
+    const uint32_t maxLevel = MaxEffectiveMipmapLevel(texUnit);
 
     // "* `level_base <= level_max`"
     if (mBaseMipmapLevel > maxLevel)
@@ -290,7 +290,7 @@ WebGLTexture::IsCubeComplete() const
 }
 
 bool
-WebGLTexture::IsComplete(const char** const out_reason) const
+WebGLTexture::IsComplete(uint32_t texUnit, const char** const out_reason) const
 {
     // Texture completeness is established at GLES 3.0.4, p160-161.
     // "[A] texture is complete unless any of the following conditions hold true:"
@@ -315,19 +315,23 @@ WebGLTexture::IsComplete(const char** const out_reason) const
         return false;
     }
 
+    WebGLSampler* sampler = mContext->mBoundSamplers[texUnit];
+    TexMinFilter minFilter = sampler ? sampler->mMinFilter : mMinFilter;
+    TexMagFilter magFilter = sampler ? sampler->mMagFilter : mMagFilter;
+
     // "* The minification filter requires a mipmap (is neither NEAREST nor LINEAR) and
     //    the texture is not mipmap complete."
-    const bool requiresMipmap = (mMinFilter != LOCAL_GL_NEAREST &&
-                                 mMinFilter != LOCAL_GL_LINEAR);
-    if (requiresMipmap && !IsMipmapComplete()) {
+    const bool requiresMipmap = (minFilter != LOCAL_GL_NEAREST &&
+                                 minFilter != LOCAL_GL_LINEAR);
+    if (requiresMipmap && !IsMipmapComplete(texUnit)) {
         *out_reason = "Because the minification filter requires mipmapping, the texture"
                       " must be \"mipmap complete\".";
         return false;
     }
 
-    const bool isMinFilteringNearest = (mMinFilter == LOCAL_GL_NEAREST ||
-                                        mMinFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-    const bool isMagFilteringNearest = (mMagFilter == LOCAL_GL_NEAREST);
+    const bool isMinFilteringNearest = (minFilter == LOCAL_GL_NEAREST ||
+                                        minFilter == LOCAL_GL_NEAREST_MIPMAP_NEAREST);
+    const bool isMagFilteringNearest = (magFilter == LOCAL_GL_NEAREST);
     const bool isFilteringNearestOnly = (isMinFilteringNearest && isMagFilteringNearest);
     if (!isFilteringNearestOnly) {
         auto formatUsage = baseImageInfo.mFormat;
@@ -394,9 +398,11 @@ WebGLTexture::IsComplete(const char** const out_reason) const
         //    non-power-of-two images, and either the texture wrap mode is not
         //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
         if (!baseImageInfo.IsPowerOfTwo()) {
+            TexWrap wrapS = sampler ? sampler->mWrapS : mWrapS;
+            TexWrap wrapT = sampler ? sampler->mWrapT : mWrapT;
             // "either the texture wrap mode is not CLAMP_TO_EDGE"
-            if (mWrapS != LOCAL_GL_CLAMP_TO_EDGE ||
-                mWrapT != LOCAL_GL_CLAMP_TO_EDGE)
+            if (wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
+                wrapT != LOCAL_GL_CLAMP_TO_EDGE)
             {
                 *out_reason = "Non-power-of-two textures must have a wrap mode of"
                               " CLAMP_TO_EDGE.";
@@ -421,10 +427,12 @@ WebGLTexture::IsComplete(const char** const out_reason) const
 
 
 uint32_t
-WebGLTexture::MaxEffectiveMipmapLevel() const
+WebGLTexture::MaxEffectiveMipmapLevel(uint32_t texUnit) const
 {
-    if (mMinFilter == LOCAL_GL_NEAREST ||
-        mMinFilter == LOCAL_GL_LINEAR)
+    WebGLSampler* sampler = mContext->mBoundSamplers[texUnit];
+    TexMinFilter minFilter = sampler ? sampler->mMinFilter : mMinFilter;
+    if (minFilter == LOCAL_GL_NEAREST ||
+        minFilter == LOCAL_GL_LINEAR)
     {
         // No mips used.
         return mBaseMipmapLevel;
@@ -442,7 +450,7 @@ WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
                                FakeBlackType* const out_fakeBlack)
 {
     const char* incompleteReason;
-    if (!IsComplete(&incompleteReason)) {
+    if (!IsComplete(texUnit, &incompleteReason)) {
         if (incompleteReason) {
             mContext->GenerateWarning("%s: Active texture %u for target 0x%04x is"
                                       " 'incomplete', and will be rendered as"
@@ -458,7 +466,7 @@ WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
     bool hasUninitializedData = false;
     bool hasInitializedData = false;
 
-    const auto maxLevel = MaxEffectiveMipmapLevel();
+    const auto maxLevel = MaxEffectiveMipmapLevel(texUnit);
     MOZ_ASSERT(mBaseMipmapLevel <= maxLevel);
     for (uint32_t level = mBaseMipmapLevel; level <= maxLevel; level++) {
         for (uint8_t face = 0; face < mFaceCount; face++) {
@@ -731,6 +739,12 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     if (format->hasDepth) {
         mContext->ErrorInvalidOperation("generateMipmap: Depth textures are not"
                                         " supported.");
+        return;
+    }
+
+    if (!baseImageInfo.mFormat->isRenderable || !baseImageInfo.mFormat->isFilterable) {
+        mContext->ErrorInvalidOperation("generateMipmap: Texture at base level is not"
+                                        " color-renderable or texture-filterable.");
         return;
     }
 

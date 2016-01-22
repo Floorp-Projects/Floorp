@@ -11,42 +11,44 @@ requestLongerTimeout(2);
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {toolbox, inspector, panel} = yield openAnimationInspector();
+  let {panel} = yield openAnimationInspector();
 
   let targets = panel.animationsTimelineComponent.targetNodes;
 
   info("Click on the highlighter icon for the first animated node");
-  yield lockHighlighterOn(targets[0]);
-  ok(targets[0].highlightNodeEl.classList.contains("selected"),
+  let domNodePreview1 = targets[0].previewer;
+  yield lockHighlighterOn(domNodePreview1);
+  ok(domNodePreview1.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon is selected");
 
   info("Click on the highlighter icon for the second animated node");
-  yield lockHighlighterOn(targets[1]);
-  ok(targets[1].highlightNodeEl.classList.contains("selected"),
+  let domNodePreview2 = targets[1].previewer;
+  yield lockHighlighterOn(domNodePreview2);
+  ok(domNodePreview2.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon is selected");
-  ok(!targets[0].highlightNodeEl.classList.contains("selected"),
+  ok(!domNodePreview1.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon for the first node is unselected");
 
   info("Click again to unhighlight");
-  yield unlockHighlighterOn(targets[1]);
-  ok(!targets[1].highlightNodeEl.classList.contains("selected"),
+  yield unlockHighlighterOn(domNodePreview2);
+  ok(!domNodePreview2.highlightNodeEl.classList.contains("selected"),
      "The highlighter icon for the second node is unselected");
 });
 
-function* lockHighlighterOn(targetComponent) {
-  let onLocked = targetComponent.once("target-highlighter-locked");
-  clickOnHighlighterIcon(targetComponent);
+function* lockHighlighterOn(domNodePreview) {
+  let onLocked = domNodePreview.once("target-highlighter-locked");
+  clickOnHighlighterIcon(domNodePreview);
   yield onLocked;
 }
 
-function* unlockHighlighterOn(targetComponent) {
-  let onUnlocked = targetComponent.once("target-highlighter-unlocked");
-  clickOnHighlighterIcon(targetComponent);
+function* unlockHighlighterOn(domNodePreview) {
+  let onUnlocked = domNodePreview.once("target-highlighter-unlocked");
+  clickOnHighlighterIcon(domNodePreview);
   yield onUnlocked;
 }
 
-function clickOnHighlighterIcon(targetComponent) {
-  let lockEl = targetComponent.highlightNodeEl;
+function clickOnHighlighterIcon(domNodePreview) {
+  let lockEl = domNodePreview.highlightNodeEl;
   EventUtils.sendMouseEvent({type: "click"}, lockEl,
                             lockEl.ownerDocument.defaultView);
 }

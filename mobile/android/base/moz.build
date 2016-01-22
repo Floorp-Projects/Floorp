@@ -667,10 +667,6 @@ if max_sdk_version >= 11:
         'tabs/TabStripView.java'
     ]]
 
-# Selectively include reading list service code.
-if CONFIG['MOZ_ANDROID_READING_LIST_SERVICE']:
-    gbjar.sources += reading_list_service_java_files
-
 gbjar.extra_jars += [
     OBJDIR + '/../javaaddons/javaaddons-1.0.jar',
     'gecko-R.jar',

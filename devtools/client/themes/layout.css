@@ -126,14 +126,12 @@ body.theme-sidebar {
 #main > p {
   position: absolute;
   pointer-events: none;
-}
-
-#main > p {
   margin: 0;
   text-align: center;
 }
 
-#main > p > span {
+#main > p > span,
+#main > p > input {
   vertical-align: middle;
   pointer-events: auto;
 }
