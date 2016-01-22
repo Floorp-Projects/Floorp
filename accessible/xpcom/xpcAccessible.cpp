@@ -78,10 +78,10 @@ xpcAccessible::GetLastChild(nsIAccessible** aLastChild)
   NS_ENSURE_ARG_POINTER(aLastChild);
   *aLastChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aLastChild = ToXPC(Intl()->LastChild()));
+  NS_IF_ADDREF(*aLastChild = ToXPC(IntlGeneric().LastChild()));
   return NS_OK;
 }
 
