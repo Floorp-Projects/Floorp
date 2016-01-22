@@ -11,6 +11,7 @@
 #include "nsID.h"
 #include "StreamBuffer.h"
 #include "MediaTrackConstraints.h"
+#include "PrincipalChangeObserver.h"
 
 namespace mozilla {
 
@@ -184,6 +185,11 @@ public:
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }
 
+  /**
+   * Get this track's principal.
+   */
+  nsIPrincipal* GetPrincipal() const { return nullptr; }
+
   MediaStreamGraph* Graph();
 
   MediaStreamTrackSource& GetSource() const
@@ -195,6 +201,23 @@ public:
   // Webrtc allows the remote side to name tracks whatever it wants, and we
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
+
+  /**
+   * Add a PrincipalChangeObserver to this track.
+   *
+   * Returns true if it was successfully added.
+   *
+   * Ownership of the PrincipalChangeObserver remains with the caller, and it's
+   * the caller's responsibility to remove the observer before it dies.
+   */
+  bool AddPrincipalChangeObserver(PrincipalChangeObserver<MediaStreamTrack>* aObserver);
+
+  /**
+   * Remove an added PrincipalChangeObserver from this track.
+   *
+   * Returns true if it was successfully removed.
+   */
+  bool RemovePrincipalChangeObserver(PrincipalChangeObserver<MediaStreamTrack>* aObserver);
 
 protected:
   virtual ~MediaStreamTrack();
@@ -208,6 +231,8 @@ protected:
   // Returns the original DOMMediaStream. If this track is a clone,
   // the original track's owning DOMMediaStream is returned.
   DOMMediaStream* GetInputDOMStream();
+
+  nsTArray<PrincipalChangeObserver<MediaStreamTrack>*> mPrincipalChangeObservers;
 
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
