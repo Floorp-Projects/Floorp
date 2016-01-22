@@ -863,16 +863,49 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
 
   LOG(LogLevel::Debug, ("DOMMediaStream %p Created new track %p with ID %u", this, track, aTrackID));
 
-  RefPtr<TrackPort> ownedTrackPort =
-    new TrackPort(mOwnedPort, track, TrackPort::InputPortOwnership::EXTERNAL);
-  mOwnedTracks.AppendElement(ownedTrackPort.forget());
+  mOwnedTracks.AppendElement(
+    new TrackPort(mOwnedPort, track, TrackPort::InputPortOwnership::EXTERNAL));
 
-  RefPtr<TrackPort> playbackTrackPort =
-    new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL);
-  mTracks.AppendElement(playbackTrackPort.forget());
+  mTracks.AppendElement(
+    new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL));
 
   NotifyTrackAdded(track);
   return track;
+}
+
+already_AddRefed<MediaStreamTrack>
+DOMMediaStream::CreateClonedDOMTrack(MediaStreamTrack& aTrack,
+                                     TrackID aCloneTrackID)
+{
+  MOZ_RELEASE_ASSERT(mOwnedStream);
+  MOZ_RELEASE_ASSERT(mPlaybackStream);
+  MOZ_RELEASE_ASSERT(IsTrackIDExplicit(aCloneTrackID));
+
+  TrackID inputTrackID = aTrack.mInputTrackID;
+  MediaStream* inputStream = aTrack.GetInputStream();
+
+  RefPtr<MediaStreamTrack> newTrack = aTrack.CloneInternal(this, aCloneTrackID);
+
+  newTrack->mOriginalTrack =
+    aTrack.mOriginalTrack ? aTrack.mOriginalTrack.get() : &aTrack;
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Created new track %p cloned from stream %p track %d",
+                        this, newTrack.get(), inputStream, inputTrackID));
+
+  RefPtr<MediaInputPort> inputPort =
+    mOwnedStream->AllocateInputPort(inputStream, inputTrackID, aCloneTrackID);
+
+  mOwnedTracks.AppendElement(
+    new TrackPort(inputPort, newTrack, TrackPort::InputPortOwnership::OWNED));
+
+  mTracks.AppendElement(
+    new TrackPort(mPlaybackPort, newTrack, TrackPort::InputPortOwnership::EXTERNAL));
+
+  NotifyTrackAdded(newTrack);
+
+  newTrack->SetEnabled(aTrack.Enabled());
+
+  return newTrack.forget();
 }
 
 MediaStreamTrack*
@@ -907,7 +940,11 @@ DOMMediaStream::FindOwnedTrackPort(const MediaStreamTrack& aTrack) const
 MediaStreamTrack*
 DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTrackID) const
 {
-  MOZ_RELEASE_ASSERT(mPlaybackStream);
+  if (!mPlaybackStream) {
+    // One would think we can assert mPlaybackStream here, but track clones have
+    // a dummy DOMMediaStream that doesn't have a playback stream, so we can't.
+    return nullptr;
+  }
 
   for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetInputPort() == mPlaybackPort &&

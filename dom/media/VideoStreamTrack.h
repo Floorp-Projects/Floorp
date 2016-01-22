@@ -27,6 +27,17 @@ public:
 
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
+
+protected:
+  already_AddRefed<MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream,
+                                                   TrackID aTrackID) override
+  {
+    return do_AddRef(new VideoStreamTrack(aOwningStream,
+                                          aTrackID,
+                                          mInputTrackID,
+                                          mLabel,
+                                          mSource));
+  }
 };
 
 } // namespace dom

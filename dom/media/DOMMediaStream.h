@@ -518,6 +518,14 @@ public:
                                       const nsString& aLabel,
                                       MediaStreamTrackSource* aSource);
 
+  /**
+   * Creates a MediaStreamTrack cloned from aTrack, adds it to mTracks and
+   * returns it.
+   * aCloneTrackID is the TrackID the new track will get in mOwnedStream.
+   */
+  already_AddRefed<MediaStreamTrack> CreateClonedDOMTrack(MediaStreamTrack& aTrack,
+                                                          TrackID aCloneTrackID);
+
   // When the initial set of tracks has been added, run
   // aCallback->NotifyTracksAvailable.
   // It is allowed to do anything, including run script.
