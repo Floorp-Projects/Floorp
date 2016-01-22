@@ -17612,6 +17612,18 @@
         "url": "/html/semantics/embedded-content/media-elements/volume_nonfinite.html"
       },
       {
+        "path": "html/semantics/embedded-content/the-area-element/area-coords.html",
+        "url": "/html/semantics/embedded-content/the-area-element/area-coords.html"
+      },
+      {
+        "path": "html/semantics/embedded-content/the-area-element/area-processing.html",
+        "url": "/html/semantics/embedded-content/the-area-element/area-processing.html"
+      },
+      {
+        "path": "html/semantics/embedded-content/the-area-element/area-shape.html",
+        "url": "/html/semantics/embedded-content/the-area-element/area-shape.html"
+      },
+      {
         "path": "html/semantics/embedded-content/the-area-element/area-stringifier.html",
         "url": "/html/semantics/embedded-content/the-area-element/area-stringifier.html"
       },
@@ -21360,12 +21372,20 @@
         "url": "/old-tests/submission/Opera/script_scheduling/105.html"
       },
       {
-        "path": "old-tests/submission/Opera/script_scheduling/106.html",
-        "url": "/old-tests/submission/Opera/script_scheduling/106.html"
+        "path": "old-tests/submission/Opera/script_scheduling/106-import.html",
+        "url": "/old-tests/submission/Opera/script_scheduling/106-import.html"
       },
       {
-        "path": "old-tests/submission/Opera/script_scheduling/107.html",
-        "url": "/old-tests/submission/Opera/script_scheduling/107.html"
+        "path": "old-tests/submission/Opera/script_scheduling/106-noimport.html",
+        "url": "/old-tests/submission/Opera/script_scheduling/106-noimport.html"
+      },
+      {
+        "path": "old-tests/submission/Opera/script_scheduling/107-import.html",
+        "url": "/old-tests/submission/Opera/script_scheduling/107-import.html"
+      },
+      {
+        "path": "old-tests/submission/Opera/script_scheduling/107-noimport.html",
+        "url": "/old-tests/submission/Opera/script_scheduling/107-noimport.html"
       },
       {
         "path": "old-tests/submission/Opera/script_scheduling/108.html",
@@ -26338,6 +26358,10 @@
       {
         "path": "shadow-dom/ShadowRoot-interface.html",
         "url": "/shadow-dom/ShadowRoot-interface.html"
+      },
+      {
+        "path": "shadow-dom/styles/shadow-cascade-order.html",
+        "url": "/shadow-dom/styles/shadow-cascade-order.html"
       },
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/attributes/test-001.html",
@@ -39426,7 +39450,7 @@
       }
     ]
   },
-  "rev": "967dfa72eaa149af854c6c38cb64e28b4961a480",
+  "rev": "c41adf030ec80a62ef9e1988d3c4be460f2a0012",
   "url_base": "/",
   "version": 2
 }
