@@ -94,9 +94,6 @@ HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-# bug 493976 - for some reason the Arabic tests below cause Tinderbox timeouts
-# HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
-
 == local-1.html local-1-ref.html
 == local-styled-1.html local-styled-1-ref.html
 
