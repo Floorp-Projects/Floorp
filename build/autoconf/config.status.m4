@@ -230,7 +230,7 @@ define([MOZ_BUILD_BACKEND],
 [
 dnl For now, only enable the unified hybrid build system on artifact builds,
 dnl otherwise default to RecursiveMake /and/ FasterMake.
-if [ -n "$MOZ_ARTIFACT_BUILDS" ]; then
+if test -n "$MOZ_ARTIFACT_BUILDS"; then
     BUILD_BACKENDS="FasterMake+RecursiveMake"
 else
     BUILD_BACKENDS="RecursiveMake FasterMake"
