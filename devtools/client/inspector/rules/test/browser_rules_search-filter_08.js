@@ -23,12 +23,11 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testModifyPropertyValueFilter(inspector, view);
-});
 
-function* testModifyPropertyValueFilter(inspector, view) {
+  info("Enter the test value in the search filter");
   yield setSearchFilter(view, SEARCH);
 
+  info("Focus the height property value");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
   let propEditor = rule.textProps[1].editor;
@@ -43,13 +42,12 @@ function* testModifyPropertyValueFilter(inspector, view) {
   ok(!propEditor.container.classList.contains("ruleview-highlight"),
     "height text property is not highlighted.");
 
-  let onBlur = once(editor.input, "blur");
-  let onModification = rule._applyingModifications;
+  info("Change the height property value to 100%");
+  let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString("100%", view.styleWindow);
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield onBlur;
-  yield onModification;
+  yield onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "height text property is correctly highlighted.");
-}
+});
