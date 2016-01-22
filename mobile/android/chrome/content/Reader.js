@@ -32,8 +32,7 @@ var Reader = {
     HIDDEN: 0,
     SHOWN: 1,
     TAP_ENTER: 2,
-    TAP_EXIT: 3,
-    LONG_TAP: 4
+    TAP_EXIT: 3
   },
 
   /**
@@ -224,12 +223,6 @@ var Reader = {
         Reader._buttonHistogram.add(Reader._buttonHistogramValues.TAP_ENTER);
       }
     },
-
-    readerModeActiveCallback: function(tabID) {
-      Reader._addTabToReadingList(tabID).catch(e => Cu.reportError("Error adding tab to reading list: " + e));
-      UITelemetry.addEvent("save.1", "pageaction", null, "reading_list");
-      Reader._buttonHistogram.add(Reader._buttonHistogramValues.LONG_TAP);
-    },
   },
 
   updatePageAction: function(tab) {
@@ -247,7 +240,6 @@ var Reader = {
         icon: icon,
         title: title,
         clickCallback: () => this.pageAction.readerModeCallback(browser),
-        longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),
         important: true
       });
     };
@@ -310,34 +302,6 @@ var Reader = {
       yield ReaderMode.storeArticleInCache(article);
     }
     return article;
-  }),
-
-  _addTabToReadingList: Task.async(function* (tabID) {
-    let tab = BrowserApp.getTabForId(tabID);
-    if (!tab) {
-      throw new Error("Can't add tab to reading list because no tab found for ID: " + tabID);
-    }
-
-    let url = tab.browser.currentURI.spec;
-    let article = yield this._getArticle(url).catch(e => {
-      Cu.reportError("Error getting article for tab: " + e);
-      return null;
-    });
-    if (!article) {
-      // If there was a problem getting the article, just store the
-      // URL and title from the tab.
-      article = {
-        url: url,
-        title: tab.browser.contentDocument.title,
-        length: 0,
-        excerpt: "",
-        status: this.STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT,
-      };
-    } else {
-      article.status = this.STATUS_FETCHED_ARTICLE;
-    }
-
-    this._addArticleToReadingList(article);
   }),
 
   _addArticleToReadingList: function(article) {
