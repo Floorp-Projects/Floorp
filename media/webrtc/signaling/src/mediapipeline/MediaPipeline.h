@@ -402,12 +402,12 @@ public:
   {}
 
   // Initialize (stuff here may fail)
-  virtual nsresult Init() override;
+  nsresult Init() override;
 
   virtual void AttachToTrack(const std::string& track_id);
 
   // written and used from MainThread
-  virtual bool IsVideo() const override;
+  bool IsVideo() const override;
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // When the principal of the domtrack changes, it calls through to here
@@ -419,10 +419,10 @@ public:
 #endif
 
   // Called on the main thread.
-  virtual void DetachMedia() override;
+  void DetachMedia() override;
 
   // Override MediaPipeline::TransportReady.
-  virtual nsresult TransportReady_s(TransportInfo &info) override;
+  nsresult TransportReady_s(TransportInfo &info) override;
 
   // Replace a track with a different one
   // In non-compliance with the likely final spec, allow the new
@@ -602,7 +602,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                                      queue_track)) {
   }
 
-  virtual void DetachMedia() override {
+  void DetachMedia() override {
     ASSERT_ON_THREAD(main_thread_);
     if (stream_) {
       stream_->RemoveListener(listener_);
@@ -610,8 +610,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     }
   }
 
-  virtual nsresult Init() override;
-  virtual bool IsVideo() const override { return false; }
+  nsresult Init() override;
+  bool IsVideo() const override { return false; }
 
 #ifndef USE_FAKE_MEDIA_STREAMS
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
@@ -644,13 +644,13 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     }
 
     // Implement MediaStreamListener
-    virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                          StreamTime offset,
-                                          uint32_t events,
-                                          const MediaSegment& queued_media,
-                                          MediaStream* input_stream,
-                                          TrackID input_tid) override {}
-    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
+    void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
+                                  StreamTime offset,
+                                  uint32_t events,
+                                  const MediaSegment& queued_media,
+                                  MediaStream* input_stream,
+                                  TrackID input_tid) override {}
+    void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
 
    private:
     RefPtr<MediaSessionConduit> conduit_;
@@ -689,7 +689,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   }
 
   // Called on the main thread.
-  virtual void DetachMedia() override {
+  void DetachMedia() override {
     ASSERT_ON_THREAD(main_thread_);
 
     listener_->EndTrack();
@@ -704,8 +704,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     }
   }
 
-  virtual nsresult Init() override;
-  virtual bool IsVideo() const override { return true; }
+  nsresult Init() override;
+  bool IsVideo() const override { return true; }
 
 #ifndef USE_FAKE_MEDIA_STREAMS
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
@@ -723,29 +723,29 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     void Detach() { pipeline_ = nullptr; }
 
     // Implement VideoRenderer
-    virtual void FrameSizeChange(unsigned int width,
-                                 unsigned int height,
-                                 unsigned int number_of_streams) override {
+    void FrameSizeChange(unsigned int width,
+                         unsigned int height,
+                         unsigned int number_of_streams) override {
       pipeline_->listener_->FrameSizeChange(width, height, number_of_streams);
     }
 
-    virtual void RenderVideoFrame(const unsigned char* buffer,
-                                  size_t buffer_size,
-                                  uint32_t time_stamp,
-                                  int64_t render_time,
-                                  const ImageHandle& handle) override {
+    void RenderVideoFrame(const unsigned char* buffer,
+                          size_t buffer_size,
+                          uint32_t time_stamp,
+                          int64_t render_time,
+                          const ImageHandle& handle) override {
       pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
                                              time_stamp, render_time,
                                              handle.GetImage());
     }
 
-    virtual void RenderVideoFrame(const unsigned char* buffer,
-                                  size_t buffer_size,
-                                  uint32_t y_stride,
-                                  uint32_t cbcr_stride,
-                                  uint32_t time_stamp,
-                                  int64_t render_time,
-                                  const ImageHandle& handle) override {
+    void RenderVideoFrame(const unsigned char* buffer,
+                          size_t buffer_size,
+                          uint32_t y_stride,
+                          uint32_t cbcr_stride,
+                          uint32_t time_stamp,
+                          int64_t render_time,
+                          const ImageHandle& handle) override {
       pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
                                              y_stride, cbcr_stride,
                                              time_stamp, render_time,
@@ -763,13 +763,13 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                      bool queue_track);
 
     // Implement MediaStreamListener
-    virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                          StreamTime offset,
-                                          uint32_t events,
-                                          const MediaSegment& queued_media,
-                                          MediaStream* input_stream,
-                                          TrackID input_tid) override {}
-    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
+    void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
+                                  StreamTime offset,
+                                  uint32_t events,
+                                  const MediaSegment& queued_media,
+                                  MediaStream* input_stream,
+                                  TrackID input_tid) override {}
+    void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
 
     // Accessors for external writes from the renderer
     void FrameSizeChange(unsigned int width,
