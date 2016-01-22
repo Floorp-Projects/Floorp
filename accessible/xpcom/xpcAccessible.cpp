@@ -204,10 +204,10 @@ xpcAccessible::GetRole(uint32_t* aRole)
   NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  *aRole = Intl()->Role();
+  *aRole = IntlGeneric().Role();
   return NS_OK;
 }
 
