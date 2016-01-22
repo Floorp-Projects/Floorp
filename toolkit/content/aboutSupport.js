@@ -46,23 +46,8 @@ var snapshotFormatters = {
     if (data.updateChannel)
       $("updatechannel-box").textContent = data.updateChannel;
 
-    let statusStrName = ".unknown";
-
-    // Whitelist of known values with string descriptions:
-    switch (data.autoStartStatus) {
-      case 0:
-      case 1:
-      case 2:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-        statusStrName = "." + data.autoStartStatus;
-    }
-
-    let statusText = stringBundle().GetStringFromName("multiProcessStatus" + statusStrName);
-    $("multiprocess-box").textContent = stringBundle().formatStringFromName("multiProcessWindows",
-      [data.numRemoteWindows, data.numTotalWindows, statusText], 3);
+    $("multiprocess-box").textContent = stringBundle().formatStringFromName("multiProcessStatus",
+      [data.numRemoteWindows, data.numTotalWindows, data.remoteAutoStart], 3);
 
     $("safemode-box").textContent = data.safeMode;
   },
