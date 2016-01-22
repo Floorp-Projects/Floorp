@@ -11,11 +11,9 @@
 #include "nsISupportsPrimitives.h"
 
 nsBaseClipboard::nsBaseClipboard()
+  : mEmptyingForSetData(false)
+  , mIgnoreEmptyNotification(false)
 {
-  mClipboardOwner          = nullptr;
-  mTransferable            = nullptr;
-  mIgnoreEmptyNotification = false;
-  mEmptyingForSetData      = false;
 }
 
 nsBaseClipboard::~nsBaseClipboard()
@@ -50,18 +48,13 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   mEmptyingForSetData = false;
 
   mClipboardOwner = anOwner;
-  if ( anOwner )
-    NS_ADDREF(mClipboardOwner);
-
   mTransferable = aTransferable;
-  
-  nsresult rv = NS_ERROR_FAILURE;
 
-  if ( mTransferable ) {
-    NS_ADDREF(mTransferable);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mTransferable) {
     rv = SetNativeClipboardData(aWhichClipboard);
   }
-  
+
   return rv;
 }
 
@@ -92,19 +85,18 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard)
   SupportsSelectionClipboard(&selectClipPresent);
   bool findClipPresent;
   SupportsFindClipboard(&findClipPresent);
-  if ( !selectClipPresent && !findClipPresent && aWhichClipboard != kGlobalClipboard )
+  if (!selectClipPresent && !findClipPresent && aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_FAILURE;
 
   if (mIgnoreEmptyNotification)
     return NS_OK;
 
-  if ( mClipboardOwner ) {
+  if (mClipboardOwner) {
     mClipboardOwner->LosingOwnership(mTransferable);
-    NS_RELEASE(mClipboardOwner);
+    mClipboardOwner = nullptr;
   }
 
-  NS_IF_RELEASE(mTransferable);
-
+  mTransferable = nullptr;
   return NS_OK;
 }
 

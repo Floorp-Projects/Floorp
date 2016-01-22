@@ -186,10 +186,6 @@ enum class Expr : uint8_t
     Break,
     BreakLabel,
 
-    I32Expr,        // to be removed
-    F32Expr,
-    F64Expr,
-
     Id,
 
     InterruptCheckHead,
@@ -212,10 +208,6 @@ enum class Expr : uint8_t
     I32X4Const,
     B32X4Const,
     F32X4Const,
-
-    I32X4Expr,
-    F32X4Expr,
-    B32X4Expr,
 
     I32I32X4ExtractLane,
     I32B32X4ExtractLane,
@@ -453,10 +445,23 @@ class Decoder
     }
 
     template <class T>
-    T uncheckedRead() {
+    T uncheckedPeek() const {
         MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
+        return ret;
+    }
+
+    template <class T>
+    T uncheckedPeekEnum() const {
+        // See Encoder::writeEnum.
+        static_assert(mozilla::IsEnum<T>::value, "is an enum");
+        return (T)uncheckedPeek<uint8_t>();
+    }
+
+    template <class T>
+    T uncheckedRead() {
+        T ret = uncheckedPeek<T>();
         cur_ += sizeof(T);
         return ret;
     }
@@ -576,6 +581,9 @@ class Decoder
     Expr uncheckedReadExpr() {
         return uncheckedReadEnum<Expr>();
     }
+    Expr uncheckedPeekExpr() const {
+        return uncheckedPeekEnum<Expr>();
+    }
 };
 
 // Source coordinates for a call site. As they're read sequentially, we
@@ -594,19 +602,22 @@ typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
 // lives only until it is fully compiled.
 class FuncBytecode
 {
+    // Function metadata
+    SourceCoordsVector callSourceCoords_;
+    const DeclaredSig& sig_;
+    ValTypeVector locals_;
+
     // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
     // asm.js compilation.
     PropertyName* name_;
     unsigned line_;
     unsigned column_;
 
-    SourceCoordsVector callSourceCoords_;
-
+    // Compilation bookkeeping
     uint32_t index_;
-    const DeclaredSig& sig_;
-    UniqueBytecode bytecode_;
-    ValTypeVector localVars_;
     unsigned generateTime_;
+
+    UniqueBytecode bytecode_;
 
   public:
     FuncBytecode(PropertyName* name,
@@ -616,17 +627,17 @@ class FuncBytecode
                  uint32_t index,
                  const DeclaredSig& sig,
                  UniqueBytecode bytecode,
-                 ValTypeVector&& localVars,
+                 ValTypeVector&& locals,
                  unsigned generateTime)
-      : name_(name),
+      : callSourceCoords_(Move(sourceCoords)),
+        sig_(sig),
+        locals_(Move(locals)),
+        name_(name),
         line_(line),
         column_(column),
-        callSourceCoords_(Move(sourceCoords)),
         index_(index),
-        sig_(sig),
-        bytecode_(Move(bytecode)),
-        localVars_(Move(localVars)),
-        generateTime_(generateTime)
+        generateTime_(generateTime),
+        bytecode_(Move(bytecode))
     {}
 
     UniqueBytecode recycleBytecode() { return Move(bytecode_); }
@@ -640,9 +651,8 @@ class FuncBytecode
     const DeclaredSig& sig() const { return sig_; }
     const Bytecode& bytecode() const { return *bytecode_; }
 
-    size_t numLocalVars() const { return localVars_.length(); }
-    ValType localVarType(size_t i) const { return localVars_[i]; }
-    size_t numLocals() const { return sig_.args().length() + numLocalVars(); }
+    size_t numLocals() const { return locals_.length(); }
+    ValType localType(size_t i) const { return locals_[i]; }
 
     unsigned generateTime() const { return generateTime_; }
 };

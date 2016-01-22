@@ -687,8 +687,11 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     }
 
     CreateCompositor();
-    if (mCompositorParent && mScreen->IsPrimaryScreen()) {
-        mComposer2D->SetCompositorParent(mCompositorParent);
+    if (mCompositorParent) {
+        mScreen->SetCompositorParent(mCompositorParent);
+        if (mScreen->IsPrimaryScreen()) {
+            mComposer2D->SetCompositorParent(mCompositorParent);
+        }
     }
     MOZ_ASSERT(mLayerManager);
     return mLayerManager;
@@ -697,9 +700,12 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 void
 nsWindow::DestroyCompositor()
 {
-    if (mCompositorParent && mScreen->IsPrimaryScreen()) {
-        // Unset CompositorParent
-        mComposer2D->SetCompositorParent(nullptr);
+    if (mCompositorParent) {
+        mScreen->SetCompositorParent(nullptr);
+        if (mScreen->IsPrimaryScreen()) {
+            // Unset CompositorParent
+            mComposer2D->SetCompositorParent(nullptr);
+        }
     }
     nsBaseWidget::DestroyCompositor();
 }

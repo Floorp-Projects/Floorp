@@ -67,7 +67,10 @@ public:
   static const int MAX_PACKET_LENGTH = 0xFFFE;
   static const int DIGEST_LENGTH = 16;
 
+  static void InitPbapInterface(BluetoothProfileResultHandler* aRes);
+  static void DeinitPbapInterface(BluetoothProfileResultHandler* aRes);
   static BluetoothPbapManager* Get();
+
   bool Listen();
 
   /**
@@ -146,7 +149,9 @@ protected:
 
 private:
   BluetoothPbapManager();
-  bool Init();
+
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
 
   void ReplyToConnect(const nsAString& aPassword = EmptyString());

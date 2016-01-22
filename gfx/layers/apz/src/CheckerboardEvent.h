@@ -39,14 +39,25 @@ public:
   static const char* sColors[MAX_RendertraceProperty];
 
 public:
-  CheckerboardEvent();
+  explicit CheckerboardEvent(bool aRecordTrace);
 
   /**
    * Gets the "severity" of the checkerboard event. This doesn't have units,
    * it's just useful for comparing two checkerboard events to see which one
    * is worse, for some implementation-specific definition of "worse".
    */
-  uint64_t GetSeverity();
+  uint32_t GetSeverity();
+
+  /**
+   * Gets the number of CSS pixels that were checkerboarded at the peak of the
+   * checkerboard event.
+   */
+  uint32_t GetPeak();
+
+  /**
+   * Gets the length of the checkerboard event.
+   */
+  TimeDuration GetDuration();
 
   /**
    * Gets the raw log of the checkerboard event. This can be called any time,
@@ -54,6 +65,12 @@ public:
    * RecordFrameInfo returns true.
    */
   std::string GetLog();
+
+  /**
+   * Returns true iff this event is recording a detailed trace of the event.
+   * This is the argument passed in to the constructor.
+   */
+  bool IsRecordingTrace();
 
   /**
    * Provide a new value for one of the rects that is tracked for
@@ -137,6 +154,12 @@ private:
   };
 
 private:
+  /**
+   * If true, we should log the various properties during the checkerboard
+   * event. If false, we only need to record things we need for telemetry
+   * measures.
+   */
+  const bool mRecordTrace;
   /**
    * A base time so that the other timestamps can be turned into durations.
    */

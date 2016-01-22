@@ -7,6 +7,7 @@
 const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("chrome://marionette/content/driver.js");
