@@ -22,7 +22,7 @@ mkdir mozilla-bk
 mv ../en-US.dic ../en-US.aff ../README_en_US.txt mozilla-bk
 
 # Convert the affix file to ISO8859-1
-sed -i=bak -e '/^ICONV/d' -e 's/^SET UTF8$/SET ISO8859-1/' en_US-mozilla.aff
+sed -i=bak -e '/^ICONV/d' -e 's/^SET UTF-8$/SET ISO8859-1/' en_US-mozilla.aff
 
 # Convert the dictionary to ISO8859-1
 mv en_US-mozilla.dic en_US-mozilla-utf8.dic

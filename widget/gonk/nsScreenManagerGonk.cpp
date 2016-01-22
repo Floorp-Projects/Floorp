@@ -524,6 +524,63 @@ nsScreenGonk::QueueBuffer(ANativeWindowBuffer* buf)
 #endif
 }
 
+nsresult
+nsScreenGonk::MakeSnapshot(ANativeWindowBuffer* aBuffer)
+{
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+    MOZ_ASSERT(aBuffer);
+
+    layers::CompositorParent* compositorParent = mCompositorParent;
+    if (!compositorParent) {
+        return NS_ERROR_FAILURE;
+    }
+
+    int width = aBuffer->width, height = aBuffer->height;
+    uint8_t* mappedBuffer = nullptr;
+    if (gralloc_module()->lock(gralloc_module(), aBuffer->handle,
+                               GRALLOC_USAGE_SW_READ_OFTEN |
+                               GRALLOC_USAGE_SW_WRITE_OFTEN,
+                               0, 0, width, height,
+                               reinterpret_cast<void**>(&mappedBuffer))) {
+        return NS_ERROR_FAILURE;
+    }
+
+    SurfaceFormat format = HalFormatToSurfaceFormat(GetSurfaceFormat());
+    RefPtr<DrawTarget> mTarget =
+        Factory::CreateDrawTargetForData(
+            BackendType::CAIRO,
+            mappedBuffer,
+            IntSize(width, height),
+            aBuffer->stride * gfx::BytesPerPixel(format),
+            format);
+    if (!mTarget) {
+        return NS_ERROR_FAILURE;
+    }
+
+    gfx::IntRect rect = GetRect().ToUnknownRect();
+    compositorParent->ForceComposeToTarget(mTarget, &rect);
+
+    // Convert from BGR to RGB
+    // XXX this is a temporary solution. It consumes extra cpu cycles,
+    if (NeedsRBSwap(GetSurfaceFormat())) {
+        LOGE("Slow path of making Snapshot!!!");
+        SurfaceFormat format = HalFormatToSurfaceFormat(GetSurfaceFormat());
+        gfxUtils::ConvertBGRAtoRGBA(
+            mappedBuffer,
+            aBuffer->stride * aBuffer->height * gfx::BytesPerPixel(format));
+        mappedBuffer = nullptr;
+    }
+    gralloc_module()->unlock(gralloc_module(), aBuffer->handle);
+    return NS_OK;
+}
+
+void
+nsScreenGonk::SetCompositorParent(layers::CompositorParent* aCompositorParent)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    mCompositorParent = aCompositorParent;
+}
+
 #if ANDROID_VERSION >= 17
 android::DisplaySurface*
 nsScreenGonk::GetDisplaySurface()

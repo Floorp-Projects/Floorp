@@ -722,6 +722,10 @@ protected:
 #ifdef ANDROID
   virtual nsIDocument* GetTouchEventTargetDocument();
 #endif
+
+  virtual void PausePainting() override;
+  virtual void ResumePainting() override;
+
   void UpdateImageVisibility();
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
