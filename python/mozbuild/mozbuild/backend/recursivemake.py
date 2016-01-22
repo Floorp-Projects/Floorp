@@ -18,7 +18,6 @@ from itertools import chain
 
 from reftest import ReftestManifest
 
-from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
 )
@@ -392,19 +391,14 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(mozpath.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
-        self._install_manifests = {
-            k: InstallManifest() for k in [
-                'dist_bin',
-                'dist_branding',
-                'dist_idl',
-                'dist_include',
-                'dist_public',
-                'dist_private',
-                'dist_sdk',
-                'dist_xpi-stage',
-                '_tests',
-                'xpidl',
-            ]}
+        self._install_manifests = defaultdict(InstallManifest)
+        # The build system relies on some install manifests always existing
+        # even if they are empty, because the directories are still filled
+        # by the build system itself, and the install manifests are only
+        # used for a "magic" rm -rf.
+        self._install_manifests['dist_public']
+        self._install_manifests['dist_private']
+        self._install_manifests['dist_sdk']
 
         self._traversal = RecursiveMakeTraversal()
         self._compile_graph = defaultdict(set)
@@ -829,19 +823,6 @@ class RecursiveMakeBackend(CommonBackend):
                     self._check_blacklisted_variables(makefile_in, content)
 
         self._fill_root_mk()
-
-        # Write out a dependency file used to determine whether a config.status
-        # re-run is needed.
-        inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
-
-        # We need to use $(DEPTH) so the target here matches what's in
-        # rules.mk. If they are different, the dependencies don't get pulled in
-        # properly.
-        with self._write_file('%s.pp' % self._backend_output_list_file) as backend_deps:
-            backend_deps.write('$(DEPTH)/backend.%s: %s\n' %
-                (self.__class__.__name__, ' '.join(inputs)))
-            for path in inputs:
-                backend_deps.write('%s:\n' % path)
 
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
@@ -1342,17 +1323,9 @@ INSTALL_TARGETS += %(prefix)s
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
             dest)
 
-        # We have a purger for the manifests themselves to ensure legacy
-        # manifests are deleted.
-        purger = FilePurger()
-
         for k, manifest in manifests.items():
-            purger.add(k)
-
             with self._write_file(mozpath.join(man_dir, k)) as fh:
                 manifest.write(fileobj=fh)
-
-        purger.purge(man_dir)
 
     def _write_master_test_manifest(self, path, manifests):
         with self._write_file(path) as master:

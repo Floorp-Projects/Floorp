@@ -18,13 +18,11 @@ class PublicKeyPinningService
 {
 public:
   /**
-   * Returns true if the given (host, certList) passes pinning checks,
-   * false otherwise. If the host is pinned, return true if one of the keys in
-   * the given certificate chain matches the pin set specified by the
-   * hostname. If the hostname is null or empty evaluate against all the
-   * possible names for the EE cert (Common Name (CN) plus all DNS Name:
-   * subject Alt Name entries). The certList's head is the EE cert and the
-   * tail is the trust anchor.
+   * Sets chainHasValidPins to true if the given (host, certList) passes pinning
+   * checks, or to false otherwise. If the host is pinned, returns true via
+   * chainHasValidPins if one of the keys in the given certificate chain matches
+   * the pin set specified by the hostname. The certList's head is the EE cert
+   * and the tail is the trust anchor.
    * Note: if an alt name is a wildcard, it won't necessarily find a pinset
    * that would otherwise be valid for it
    */
@@ -35,9 +33,9 @@ public:
                             /*out*/ bool& chainHasValidPins,
                    /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo);
   /**
-   * Returns true if there is any intersection between the certificate list
-   * and the pins specified in the aSHA256key array. Values passed in are
-   * assumed to be in base64 encoded form
+   * Sets chainMatchesPinset to true if there is any intersection between the
+   * certificate list and the pins specified in the aSHA256keys array.
+   * Values passed in are assumed to be in base64 encoded form.
    */
   static nsresult ChainMatchesPinset(const CERTCertList* certList,
                                      const nsTArray<nsCString>& aSHA256keys,

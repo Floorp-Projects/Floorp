@@ -214,8 +214,7 @@ TryEvalJSON(JSContext* cx, JSLinearString* str, MutableHandleValue rval)
            : ParseEvalStringAsJSON(cx, linearChars.twoByteRange(), rval);
 }
 
-// Define subset of ExecuteType so that casting performs the injection.
-enum EvalType { DIRECT_EVAL = EXECUTE_DIRECT_EVAL, INDIRECT_EVAL = EXECUTE_INDIRECT_EVAL };
+enum EvalType { DIRECT_EVAL, INDIRECT_EVAL };
 
 // Common code implementing direct and indirect eval.
 //
@@ -330,7 +329,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
 
     // Look up the newTarget from the frame iterator.
     Value newTargetVal = NullValue();
-    return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetVal, ExecuteType(evalType),
+    return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetVal,
                          NullFramePtr() /* evalInFrame */, args.rval().address());
 }
 
@@ -411,7 +410,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
     }
 
     return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetValue,
-                         ExecuteType(DIRECT_EVAL), NullFramePtr() /* evalInFrame */, vp.address());
+                         NullFramePtr() /* evalInFrame */, vp.address());
 }
 
 bool
@@ -483,7 +482,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
         return false;
 
     RootedValue rval(cx);
-    if (!ExecuteKernel(cx, script, *scope, UndefinedValue(), EXECUTE_GLOBAL_OR_MODULE,
+    if (!ExecuteKernel(cx, script, *scope, UndefinedValue(),
                        NullFramePtr() /* evalInFrame */, rval.address()))
     {
         return false;

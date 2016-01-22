@@ -53,17 +53,13 @@ const DOMAINHEADER = "/* Domainlist */\n" +
   "  const bool mTestMode;\n" +
   "  const bool mIsMoz;\n" +
   "  const int32_t mId;\n" +
-  "  const StaticPinset* pinset;\n" +
+  "  const StaticFingerprints* pinset;\n" +
   "};\n\n";
 
 const PINSETDEF = "/* Pinsets are each an ordered list by the actual value of the fingerprint */\n" +
   "struct StaticFingerprints {\n" +
   "  const size_t size;\n" +
   "  const char* const* data;\n" +
-  "};\n\n" +
-  "struct StaticPinset {\n" +
-  "  const StaticFingerprints* sha1;\n" +
-  "  const StaticFingerprints* sha256;\n" +
   "};\n\n";
 
 // Command-line arguments
@@ -458,12 +454,10 @@ function writeFullPinset(certNameToSKD, certSKDToName, pinset) {
   }
   writeFingerprints(certNameToSKD, certSKDToName, pinset.name,
                     pinset.sha256_hashes);
-  writeString("static const StaticPinset " + prefix + " = {\n" +
-              "  nullptr,\n  &" + prefix + "_sha256\n};\n\n");
 }
 
 function writeFingerprints(certNameToSKD, certSKDToName, name, hashes) {
-  let varPrefix = "kPinset_" + name + "_sha256";
+  let varPrefix = "kPinset_" + name;
   writeString("static const char* " + varPrefix + "_Data[] = {\n");
   let SKDList = [];
   for (let certName of hashes) {

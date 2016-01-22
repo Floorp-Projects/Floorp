@@ -13,6 +13,8 @@
 #include "AudioSegment.h"
 #include "SelfRef.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/StaticPtr.h"
 
 struct cubeb_stream;
 
@@ -122,6 +124,8 @@ public:
   virtual void Resume() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
+  /* Remove Mixer callbacks when switching */
+  virtual void RemoveCallback() = 0;
   void Shutdown();
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
@@ -151,10 +155,6 @@ public:
 
   GraphTime IterationEnd() {
     return mIterationEnd;
-  }
-
-  virtual void GetAudioBuffer(float** aBuffer, long& aFrames) {
-    MOZ_CRASH("This is not an Audio GraphDriver!");
   }
 
   virtual AudioCallbackDriver* AsAudioCallbackDriver() {
@@ -196,6 +196,15 @@ public:
 
   virtual bool OnThread() = 0;
 
+  // These are invoked on the MSG thread (or MainThread in shutdown)
+  virtual void SetInputListener(AudioDataListener *aListener) {
+    mAudioInput = aListener;
+  }
+  // XXX do we need the param?  probably no
+  virtual void RemoveInputListener(AudioDataListener *aListener) {
+    mAudioInput = nullptr;
+  }
+
 protected:
   GraphTime StateComputedTime() const;
 
@@ -225,6 +234,9 @@ protected:
   };
   // This must be access with the monitor.
   WaitState mWaitState;
+
+  // Callback for mic data, if any
+  AudioDataListener *mAudioInput;
 
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
@@ -262,6 +274,7 @@ public:
   void Stop() override;
   void Resume() override;
   void Revive() override;
+  void RemoveCallback() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
@@ -373,12 +386,15 @@ public:
   void Stop() override;
   void Resume() override;
   void Revive() override;
+  void RemoveCallback() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
 
   /* Static wrapper function cubeb calls back. */
   static long DataCallback_s(cubeb_stream * aStream,
-                             void * aUser, void * aBuffer,
+                             void * aUser,
+                             const void * aInputBuffer,
+                             void * aOutputBuffer,
                              long aFrames);
   static void StateCallback_s(cubeb_stream* aStream, void * aUser,
                               cubeb_state aState);
@@ -388,7 +404,7 @@ public:
    * audio. If the return value is exactly aFrames, this function will get
    * called again. If it is less than aFrames, the stream will go in draining
    * mode, and this function will not be called again. */
-  long DataCallback(AudioDataValue* aBuffer, long aFrames);
+  long DataCallback(const AudioDataValue* aInputBuffer, AudioDataValue* aOutputBuffer, long aFrames);
   /* This function is called by the underlying audio backend, but is only used
    * for informational purposes at the moment. */
   void StateCallback(cubeb_state aState);
@@ -488,6 +504,8 @@ private:
    * This is synchronized by the Graph's monitor.
    * */
   bool mStarted;
+  /* Listener for mic input, if any. */
+  RefPtr<AudioDataListener> mAudioInput;
 
   struct AutoInCallback
   {
@@ -501,8 +519,11 @@ private:
   nsCOMPtr<nsIThread> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   nsAutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
-  /* This is set during initialization, and ca be read safely afterwards. */
+  /* This is set during initialization, and can be read safely afterwards. */
   dom::AudioChannel mAudioChannel;
+  /* Used to queue us to add the mixer callback on first run. */
+  bool mAddedMixer;
+
   /* This is atomic and is set by the audio callback thread. It can be read by
    * any thread safely. */
   Atomic<bool> mInCallback;
@@ -532,11 +553,9 @@ public:
 
   nsresult Dispatch()
   {
-    // Can't add 'this' as the event to run, since mThread may not be set yet
-    nsresult rv = NS_NewNamedThread("CubebOperation", getter_AddRefs(mThread));
-    if (NS_SUCCEEDED(rv)) {
-      // Note: event must not null out mThread!
-      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    nsresult rv = EnsureThread();
+    if (!NS_FAILED(rv)) {
+      rv = sThreadPool->Dispatch(this, NS_DISPATCH_NORMAL);
     }
     return rv;
   }
@@ -545,8 +564,10 @@ protected:
   virtual ~AsyncCubebTask();
 
 private:
+  static nsresult EnsureThread();
+
   NS_IMETHOD Run() override final;
-  nsCOMPtr<nsIThread> mThread;
+  static StaticRefPtr<nsIThreadPool> sThreadPool;
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
   RefPtr<MediaStreamGraphImpl> mShutdownGrip;

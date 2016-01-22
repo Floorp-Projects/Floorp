@@ -268,94 +268,57 @@ class NullFramePtr : public AbstractFramePtr
     { }
 };
 
-/*****************************************************************************/
-
-/* Flags specified for a frame as it is constructed. */
-enum InitialFrameFlags {
-    INITIAL_NONE           =          0,
-    INITIAL_CONSTRUCT      =       0x20, /* == InterpreterFrame::CONSTRUCTING, asserted below */
-};
-
-enum ExecuteType {
-    EXECUTE_GLOBAL_OR_MODULE =      0x1, /* == InterpreterFrame::GLOBAL_OR_MODULE */
-    EXECUTE_DIRECT_EVAL    =        0x8, /* == InterpreterFrame::EVAL */
-    EXECUTE_INDIRECT_EVAL  =        0x9, /* == InterpreterFrame::GLOBAL | EVAL */
-    EXECUTE_DEBUG          =       0x18, /* == InterpreterFrame::EVAL | DEBUGGER_EVAL */
-};
+enum MaybeConstruct { NO_CONSTRUCT = false, CONSTRUCT = true };
 
 /*****************************************************************************/
 
 class InterpreterFrame
 {
-  public:
     enum Flags : uint32_t {
-        /* Primary frame type */
-        GLOBAL_OR_MODULE       =        0x1,  /* frame pushed for a global script */
-        /* (0x2, 0x4, 0x8 are unused) */
+        CONSTRUCTING           =        0x1,  /* frame is for a constructor invocation */
 
-        /*
-         * Frame pushed for debugger eval.
-         * - Don't bother to JIT it, because it's probably short-lived.
-         * - It is required to have a scope chain object outside the
-         *   js::ScopeObject hierarchy: either a global object, or a
-         *   DebugScopeObject (not a ScopeObject, despite the name)
-         * - If evalInFramePrev_ is set, then this frame was created for an
-         *   "eval in frame" call, which can push a successor to any live
-         *   frame; so its logical "prev" frame is not necessarily the
-         *   previous frame in memory. Iteration should treat
-         *   evalInFramePrev_ as this frame's previous frame.
-         */
-        DEBUGGER_EVAL          =       0x10,
-
-        CONSTRUCTING           =       0x20,  /* frame is for a constructor invocation */
-
-        RESUMED_GENERATOR      =       0x40,  /* frame is for a resumed generator invocation */
-
-        /* (0x80 is unused) */
+        RESUMED_GENERATOR      =        0x2,  /* frame is for a resumed generator invocation */
 
         /* Function prologue state */
-        HAS_CALL_OBJ           =      0x100,  /* CallObject created for needsCallObject function */
-        HAS_ARGS_OBJ           =      0x200,  /* ArgumentsObject created for needsArgsObj script */
+        HAS_CALL_OBJ           =        0x4,  /* CallObject created for needsCallObject function */
+        HAS_ARGS_OBJ           =        0x8,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
-        HAS_RVAL               =      0x800,  /* frame has rval_ set */
-        HAS_SCOPECHAIN         =     0x1000,  /* frame has scopeChain_ set */
+        HAS_RVAL               =       0x10,  /* frame has rval_ set */
 
         /* Debugger state */
-        PREV_UP_TO_DATE        =     0x4000,  /* see DebugScopes::updateLiveScopes */
+        PREV_UP_TO_DATE        =       0x20,  /* see DebugScopes::updateLiveScopes */
 
         /*
          * See comment above 'isDebuggee' in jscompartment.h for explanation of
          * invariants of debuggee compartments, scripts, and frames.
          */
-        DEBUGGEE               =     0x8000,  /* Execution is being observed by Debugger */
+        DEBUGGEE               =       0x40,  /* Execution is being observed by Debugger */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME   =    0x10000, /* SPS was notified of enty */
-
+        HAS_PUSHED_SPS_FRAME   =       0x80,  /* SPS was notified of enty */
 
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
          * this frame.
          */
-        RUNNING_IN_JIT         =    0x20000,
+        RUNNING_IN_JIT         =      0x100,
 
         /* Miscellaneous state. */
-        CREATE_SINGLETON       =    0x40000,   /* Constructed |this| object should be singleton. */
+        CREATE_SINGLETON       =      0x200,  /* Constructed |this| object should be singleton. */
 
         /*
          * If set, this frame has been on the stack when
          * |js::SavedStacks::saveCurrentStack| was called, and so there is a
          * |js::SavedFrame| object cached for this frame.
          */
-        HAS_CACHED_SAVED_FRAME =    0x80000,
+        HAS_CACHED_SAVED_FRAME =      0x400,
     };
 
-  private:
     mutable uint32_t    flags_;         /* bits described by Flags */
+    uint32_t            nactual_;       /* number of actual arguments, for function frames */
     JSScript*           script_;        /* the script we're executing */
-    unsigned            nactual_;       /* number of actual arguments, for function frames */
-    mutable JSObject*   scopeChain_;    /* if HAS_SCOPECHAIN, current scope chain */
+    JSObject*           scopeChain_;    /* current scope chain */
     Value               rval_;          /* if HAS_RVAL, return value of the frame */
     ArgumentsObject*    argsObj_;       /* if HAS_ARGS_OBJ, the call's arguments object */
 
@@ -406,11 +369,11 @@ class InterpreterFrame
     /* Used for Invoke and Interpret. */
     void initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecode* prevpc, Value* prevsp,
                        JSFunction& callee, JSScript* script, Value* argv, uint32_t nactual,
-                       InterpreterFrame::Flags flags);
+                       MaybeConstruct constructing);
 
     /* Used for global and eval frames. */
     void initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr prev,
-                          const Value& newTargetValue, HandleObject scopeChain, ExecuteType type);
+                          const Value& newTargetValue, HandleObject scopeChain);
 
   public:
     /*
@@ -670,7 +633,7 @@ class InterpreterFrame
      */
     Value newTarget() const {
         if (isEvalFrame())
-            return ((Value*)this)[-2];
+            return ((Value*)this)[-1];
 
         MOZ_ASSERT(isFunctionFrame());
 
@@ -727,25 +690,13 @@ class InterpreterFrame
     void resumeGeneratorFrame(JSObject* scopeChain) {
         MOZ_ASSERT(script()->isGenerator());
         MOZ_ASSERT(isFunctionFrame());
-        flags_ |= HAS_CALL_OBJ | HAS_SCOPECHAIN;
+        flags_ |= HAS_CALL_OBJ;
         scopeChain_ = scopeChain;
     }
 
     /*
      * Other flags
      */
-
-    InitialFrameFlags initialFlags() const {
-        JS_STATIC_ASSERT((int)INITIAL_NONE == 0);
-        JS_STATIC_ASSERT((int)INITIAL_CONSTRUCT == (int)CONSTRUCTING);
-        uint32_t mask = CONSTRUCTING;
-        MOZ_ASSERT((flags_ & mask) != mask);
-        return InitialFrameFlags(flags_ & mask);
-    }
-
-    void setConstructing() {
-        flags_ |= CONSTRUCTING;
-    }
 
     bool isConstructing() const {
         return !!(flags_ & CONSTRUCTING);
@@ -786,8 +737,22 @@ class InterpreterFrame
         return flags_ & CREATE_SINGLETON;
     }
 
+    /*
+     * Debugger eval frames.
+     *
+     * - If evalInFramePrev_ is non-null, frame was created for an "eval in
+     *   frame" call, which can push a successor to any live frame; so its
+     *   logical "prev" frame is not necessarily the previous frame in memory.
+     *   Iteration should treat evalInFramePrev_ as this frame's previous frame.
+     *
+     * - Don't bother to JIT it, because it's probably short-lived.
+     *
+     * - It is required to have a scope chain object outside the
+     *   js::ScopeObject hierarchy: either a global object, or a
+     *   DebugScopeObject (not a ScopeObject, despite the name)
+     */
     bool isDebuggerEvalFrame() const {
-        return !!(flags_ & DEBUGGER_EVAL);
+        return isEvalFrame() && !!evalInFramePrev_;
     }
 
     bool prevUpToDate() const {
@@ -835,26 +800,6 @@ class InterpreterFrame
         flags_ &= ~RUNNING_IN_JIT;
     }
 };
-
-static const size_t VALUES_PER_STACK_FRAME = sizeof(InterpreterFrame) / sizeof(Value);
-
-static inline InterpreterFrame::Flags
-ToFrameFlags(InitialFrameFlags initial)
-{
-    return InterpreterFrame::Flags(initial);
-}
-
-static inline InitialFrameFlags
-InitialFrameFlagsFromConstructing(bool b)
-{
-    return b ? INITIAL_CONSTRUCT : INITIAL_NONE;
-}
-
-static inline bool
-InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
-{
-    return !!(initial & INITIAL_CONSTRUCT);
-}
 
 /*****************************************************************************/
 
@@ -931,7 +876,7 @@ class InterpreterStack
 
     inline InterpreterFrame*
     getCallFrame(JSContext* cx, const CallArgs& args, HandleScript script,
-                 InterpreterFrame::Flags* pflags, Value** pargv);
+                 MaybeConstruct constructing, Value** pargv);
 
     void releaseFrame(InterpreterFrame* fp) {
         frameCount_--;
@@ -951,16 +896,16 @@ class InterpreterStack
     // For execution of eval or global code.
     InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script,
                                        const Value& newTargetValue, HandleObject scopeChain,
-                                       ExecuteType type, AbstractFramePtr evalInFrame);
+                                       AbstractFramePtr evalInFrame);
 
     // Called to invoke a function.
     InterpreterFrame* pushInvokeFrame(JSContext* cx, const CallArgs& args,
-                                      InitialFrameFlags initial);
+                                      MaybeConstruct constructing);
 
     // The interpreter can push light-weight, "inline" frames without entering a
     // new InterpreterActivation or recursively calling Interpret.
     bool pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const CallArgs& args,
-                         HandleScript script, InitialFrameFlags initial);
+                         HandleScript script, MaybeConstruct constructing);
 
     void popInlineFrame(InterpreterRegs& regs);
 
@@ -1364,7 +1309,7 @@ class InterpreterActivation : public Activation
     inline ~InterpreterActivation();
 
     inline bool pushInlineFrame(const CallArgs& args, HandleScript script,
-                                InitialFrameFlags initial);
+                                MaybeConstruct constructing);
     inline void popInlineFrame(InterpreterFrame* frame);
 
     inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,

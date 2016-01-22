@@ -5,6 +5,7 @@
 DIRS += ["components", "atoms"]
 
 JAR_MANIFESTS += ["jar.mn"]
+XPCSHELL_TESTS_MANIFESTS += ["unit.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")

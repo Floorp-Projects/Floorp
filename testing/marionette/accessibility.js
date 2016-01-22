@@ -228,7 +228,7 @@ Accessibility.prototype = {
     if (this.strict) {
       throw new ElementNotAccessibleError(message);
     }
-    logger.error(message);
+    logger.debug(message);
   },
 
   /**

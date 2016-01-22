@@ -2293,11 +2293,16 @@ Debugger::updateObservesAllExecutionOnDebuggees(JSContext* cx, IsObserving obser
         // so add the compartment to the set only if we are observing.
         if (observing && !obs.add(comp))
             return false;
-
-        comp->updateDebuggerObservesAllExecution();
     }
 
-    return updateExecutionObservability(cx, obs, observing);
+    if (!updateExecutionObservability(cx, obs, observing))
+        return false;
+
+    typedef ExecutionObservableCompartments::CompartmentRange CompartmentRange;
+    for (CompartmentRange r = obs.compartments()->all(); !r.empty(); r.popFront())
+        r.front()->updateDebuggerObservesAllExecution();
+
+    return true;
 }
 
 bool
@@ -2857,10 +2862,14 @@ Debugger::setHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CALLABLE_OR_UNDEFINED);
         return false;
     }
-    dbg.object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, args[0]);
+    uint32_t slot = JSSLOT_DEBUG_HOOK_START + which;
+    RootedValue oldHook(cx, dbg.object->getReservedSlot(slot));
+    dbg.object->setReservedSlot(slot, args[0]);
     if (hookObservesAllExecution(which)) {
-        if (!dbg.updateObservesAllExecutionOnDebuggees(cx, dbg.observesAllExecution()))
+        if (!dbg.updateObservesAllExecutionOnDebuggees(cx, dbg.observesAllExecution())) {
+            dbg.object->setReservedSlot(slot, oldHook);
             return false;
+        }
     }
     args.rval().setUndefined();
     return true;
@@ -5401,6 +5410,19 @@ Debugger::observesScript(JSScript* script) const
 Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePtr to,
                            ScriptFrameIter& iter)
 {
+    auto removeFromDebuggerFramesOnExit = MakeScopeExit([&] {
+        // Remove any remaining old entries on exit, as the 'from' frame will
+        // be gone. On success, the range will be empty.
+        for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
+            r.frontFrame()->setPrivate(nullptr);
+            r.removeFrontFrame();
+        }
+
+        // Rekey missingScopes to maintain Debugger.Environment identity and
+        // forward liveScopes to point to the new frame.
+        DebugScopes::forwardLiveFrame(cx, from, to);
+    });
+
     // Forward live Debugger.Frame objects.
     for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
         RootedNativeObject frameobj(cx, r.frontFrame());
@@ -5414,7 +5436,7 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
             return false;
         frameobj->setPrivate(data);
 
-        // Remove the old entry before mutating the HashMap.
+        // Remove the old frame.
         r.removeFrontFrame();
 
         // Add the frame object with |to| as key.
@@ -5423,11 +5445,6 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
             return false;
         }
     }
-
-    // Rekey missingScopes to maintain Debugger.Environment identity and
-    // forward liveScopes to point to the new frame, as the old frame will be
-    // gone.
-    DebugScopes::forwardLiveFrame(cx, from, to);
 
     return true;
 }
@@ -6732,8 +6749,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
         script->setActiveEval();
     }
 
-    ExecuteType type = !frame ? EXECUTE_GLOBAL_OR_MODULE : EXECUTE_DEBUG;
-    return ExecuteKernel(cx, script, *env, NullValue(), type, frame, rval.address());
+    return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
 }
 
 enum EvalBindings { EvalHasExtraBindings = true, EvalWithDefaultBindings = false };

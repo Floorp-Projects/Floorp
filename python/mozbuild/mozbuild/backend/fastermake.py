@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from mozbuild.backend.base import PartialBackend
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.context import (
     ObjDirPath,
@@ -21,7 +22,7 @@ from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 
 
-class FasterMakeBackend(CommonBackend):
+class FasterMakeBackend(CommonBackend, PartialBackend):
     def _init(self):
         super(FasterMakeBackend, self)._init()
 
@@ -101,9 +102,12 @@ class FasterMakeBackend(CommonBackend):
 
         elif isinstance(obj, XPIDLFile):
             self._has_xpidl = True
+            # We're not actually handling XPIDL files.
+            return False
 
-        # We currently ignore a lot of object types, so just acknowledge
-        # everything.
+        else:
+            return False
+
         return True
 
     def consume_finished(self):
@@ -112,7 +116,6 @@ class FasterMakeBackend(CommonBackend):
         mk.create_rule(['default'])
         mk.add_statement('TOPSRCDIR = %s' % self.environment.topsrcdir)
         mk.add_statement('TOPOBJDIR = %s' % self.environment.topobjdir)
-        mk.add_statement('BACKEND = %s' % self._backend_output_list_file)
         if not self._has_xpidl:
             mk.add_statement('NO_XPIDL = 1')
 
@@ -123,7 +126,9 @@ class FasterMakeBackend(CommonBackend):
             'MOZ_BUILD_APP',
             'MOZ_WIDGET_TOOLKIT',
         ):
-            mk.add_statement('%s = %s' % (var, self.environment.substs[var]))
+            value = self.environment.substs.get(var)
+            if value is not None:
+                mk.add_statement('%s = %s' % (var, value))
 
         install_manifests_bases = self._install_manifests.keys()
 
@@ -145,10 +150,6 @@ class FasterMakeBackend(CommonBackend):
         for target, deps in self._dependencies.iteritems():
             mk.create_rule([target]).add_dependencies(
                 '$(TOPOBJDIR)/%s' % d for d in deps)
-
-        # Add backend dependencies:
-        mk.create_rule([self._backend_output_list_file]).add_dependencies(
-            self.backend_input_files)
 
         mk.add_statement('include $(TOPSRCDIR)/config/faster/rules.mk')
 

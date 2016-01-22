@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=61098
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=61098">Mozilla Bug 61098</a>
 <p id="display">
 </p>
-<div id="content" style="display: none"> 
+<div id="content" style="display: none">
 </div>
 <pre id="test">
 </pre>
@@ -217,28 +217,17 @@ function registerMockPromptService()
   mockPromptFactoryRegisterer.register();
 };
 
-function enableDialogLoopBlocking()
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-    getService(SpecialPowers.Ci.nsIPrefBranch);
-
-  prefs.setIntPref("dom.successive_dialog_time_limit", 3);
-}
-
-function resetDialogLoopBlocking()
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-    getService(SpecialPowers.Ci.nsIPrefBranch);
-
-  prefs.setIntPref("dom.successive_dialog_time_limit", 0);
-}
-
 var expectedState;
 
 function runtests()
 {
+  SpecialPowers.pushPrefEnv({'set': [["dom.successive_dialog_time_limit", 3]]},
+                            runtestsInner);
+}
+
+function runtestsInner()
+{
   registerMockPromptService();
-  enableDialogLoopBlocking();
 
   // Test that alert() works normally and then gets blocked on the
   // second call.
@@ -319,26 +308,25 @@ function runtests()
 
   // Test that showModalDialog() works normally and then gets blocked
   // on the second call.
-  w = window.open();
-  w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-  is (promptState, void(0), "Wrong prompt state");
-
-  // Test that showModalDialog() works normally and then gets blocked
-  // on the second call.
-  try {
+  if (window.showModalDialog) {
+    w = window.open();
     w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
-  } catch(e) {
-    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+    is (promptState, void(0), "Wrong prompt state");
+
+    try {
+      w.showModalDialog("data:text/html,%3Cscript>window.close();%3C/script>")
+      ok(false, "showModalDialog call should throw an exception");
+    } catch(e) {
+      is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+    }
+    is (promptState.method, "confirm", "Wrong prompt method called");
+    is (promptState.parent, w, "Wrong confirm parent");
+    is (promptState.msg, "Prevent this page from creating additional dialogs",
+        "Wrong confirm message");
+    promptState = void(0);
+
+    w.close();
   }
-  is (promptState.method, "confirm", "Wrong prompt method called");
-  is (promptState.parent, w, "Wrong confirm parent");
-  is (promptState.msg, "Prevent this page from creating additional dialogs",
-      "Wrong confirm message");
-  promptState = void(0);
-
-  w.close();
-
-  resetDialogLoopBlocking();
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();
