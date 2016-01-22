@@ -60,6 +60,19 @@ public:
     return AsAccessible()->ChildCount();
   }
 
+  /**
+   * Return the child object either an accessible or a proxied accessible at
+   * the given index.
+   */
+  AccessibleOrProxy ChildAt(uint32_t aIdx)
+  {
+    if (IsProxy()) {
+      return AsProxy()->ChildAt(aIdx);
+    }
+
+    return AsAccessible()->GetChildAt(aIdx);
+  }
+
   role Role() const
   {
     if (IsProxy()) {
