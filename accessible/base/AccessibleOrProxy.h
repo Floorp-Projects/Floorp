@@ -9,6 +9,7 @@
 
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/Role.h"
 
 #include <stdint.h>
 
@@ -57,6 +58,15 @@ public:
     }
 
     return AsAccessible()->ChildCount();
+  }
+
+  role Role() const
+  {
+    if (IsProxy()) {
+      return AsProxy()->Role();
+    }
+
+    return AsAccessible()->Role();
   }
 
   // XXX these are implementation details that ideally would not be exposed.
