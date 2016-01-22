@@ -35,8 +35,11 @@ function run_test() {
 
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
-  servicePrefs.set('testing.notifyWorkers', false);
-  servicePrefs.set('testing.notifyAllObservers', true);
+  disableServiceWorkerEvents(
+    'https://example.com/page/1',
+    'https://example.com/page/2',
+    'https://example.com/page/3'
+  );
 
   run_next_test();
 }
@@ -121,24 +124,24 @@ add_task(function* test_pushNotifications() {
   }
 
   let notifyPromise = Promise.all([
-    promiseObserverNotification('push-message', function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
-      if (message && (data == "https://example.com/page/1")){
-        equal(message.text(), "Some message", "decoded message is incorrect");
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/1")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
         return true;
       }
     }),
-    promiseObserverNotification('push-message', function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
-      if (message && (data == "https://example.com/page/2")){
-        equal(message.text(), "Some message", "decoded message is incorrect");
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/2")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
         return true;
       }
     }),
-    promiseObserverNotification('push-message', function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
-      if (message && (data == "https://example.com/page/3")){
-        equal(message.text(), "Some message", "decoded message is incorrect");
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/3")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
         return true;
       }
     })
