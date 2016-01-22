@@ -168,6 +168,13 @@ public:
 
   virtual void Start() = 0;
 
+  void
+  Cancel()
+  {
+    mQueue = nullptr;
+    mCanceled = true;
+  }
+
   bool
   IsRegisterOrInstallJob() const
   {
@@ -181,10 +188,12 @@ protected:
   ServiceWorkerJobQueue* mQueue;
 
   Type mJobType;
+  bool mCanceled;
 
   explicit ServiceWorkerJob(ServiceWorkerJobQueue* aQueue, Type aJobType)
     : mQueue(aQueue)
     , mJobType(aJobType)
+    , mCanceled(false)
   {}
 
   virtual ~ServiceWorkerJob()
@@ -298,6 +307,9 @@ private:
     QueueData& queue = GetQueue(aJob->mJobType);
     MOZ_ASSERT(!queue.mJobs.IsEmpty());
     MOZ_ASSERT(queue.mJobs[0] == aJob);
+    if (NS_WARN_IF(queue.mJobs[0] != aJob)) {
+      return;
+    }
     Pop(queue);
   }
 };
@@ -949,17 +961,9 @@ public:
     , mScriptSpec(aScriptSpec)
     , mCallback(aCallback)
     , mUpdateAndInstallInfo(aServiceWorkerInfo)
-    , mCanceled(false)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aPrincipal);
-  }
-
-  void
-  Cancel()
-  {
-    mQueue = nullptr;
-    mCanceled = true;
   }
 
 protected:
@@ -969,7 +973,6 @@ protected:
   RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
-  bool mCanceled;
 
   ~ServiceWorkerJobBase()
   { }
@@ -1611,13 +1614,10 @@ ServiceWorkerJobQueue::CancelJobs(QueueData& aQueue)
   }
 
   // We have to treat the first job specially. It is the running job and needs
-  // to be notified correctly.
-  RefPtr<ServiceWorkerJob> runningJob = aQueue.mJobs[0];
-  // We can just let an Unregister job run to completion.
-  if (runningJob->IsRegisterOrInstallJob()) {
-    ServiceWorkerJobBase* job = static_cast<ServiceWorkerJobBase*>(runningJob.get());
-    job->Cancel();
-  }
+  // to be notified correctly.  Even if the job continues some work in the
+  // background, this still needs to be done to let the job know its no longer
+  // in the queue.
+  aQueue.mJobs[0]->Cancel();
 
   // Get rid of everything. Non-main thread objects may still be holding a ref
   // to the running register job. Since we called Cancel() on it, the job's
@@ -2460,6 +2460,10 @@ private:
   Unregister()
   {
     AssertIsOnMainThread();
+
+    if (mCanceled) {
+      return mCallback ? mCallback->UnregisterSucceeded(false) : NS_OK;
+    }
 
     PrincipalInfo principalInfo;
     if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(mPrincipal,
