@@ -200,6 +200,22 @@ MediaStreamTrack::RemovePrincipalChangeObserver(
   return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
+already_AddRefed<MediaStreamTrack>
+MediaStreamTrack::Clone()
+{
+  // MediaStreamTracks are currently governed by streams, so we need a dummy
+  // DOMMediaStream to own our track clone. The dummy will never see any
+  // dynamically created tracks (no input stream) so no need for a SourceGetter.
+  RefPtr<DOMMediaStream> newStream =
+    new DOMMediaStream(mOwningStream->GetParentObject(), nullptr);
+
+  MediaStreamGraph* graph = Graph();
+  newStream->InitOwnedStreamCommon(graph);
+  newStream->InitPlaybackStreamCommon(graph);
+
+  return newStream->CreateClonedDOMTrack(*this, mTrackID);
+}
+
 DOMMediaStream*
 MediaStreamTrack::GetInputDOMStream()
 {
