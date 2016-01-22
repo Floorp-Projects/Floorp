@@ -914,7 +914,7 @@ public:
         LocalTrackSource(GetUserMediaCallbackMediaStreamListener* aListener,
                          const MediaSourceEnum aSource,
                          const TrackID aTrackID)
-          : MediaStreamTrackSource(false), mListener(aListener),
+          : MediaStreamTrackSource(nullptr, false), mListener(aListener),
             mSource(aSource), mTrackID(aTrackID) {}
 
         MediaSourceEnum GetMediaSource() const override
