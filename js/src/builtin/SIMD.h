@@ -1020,6 +1020,16 @@ bool IsVectorObject(HandleValue v);
 template<typename V>
 bool ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out);
 
+JSObject*
+InitSimdClass(JSContext* cx, HandleObject obj);
+
+namespace jit {
+
+extern const JSJitInfo JitInfo_SimdInt32x4_extractLane;
+extern const JSJitInfo JitInfo_SimdFloat32x4_extractLane;
+
+} // namespace jit
+
 #define DECLARE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands)   \
 extern bool                                                     \
 simd_float32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
@@ -1091,9 +1101,6 @@ extern bool                                                     \
 simd_bool64x2_##Name(JSContext* cx, unsigned argc, Value* vp);
 BOOL64X2_FUNCTION_LIST(DECLARE_SIMD_BOOL64x2_FUNCTION)
 #undef DECLARE_SIMD_BOOL64x2_FUNCTION
-
-JSObject*
-InitSimdClass(JSContext* cx, HandleObject obj);
 
 }  /* namespace js */
 

@@ -221,6 +221,9 @@ static const JSFunctionSpec SimdTypedObjectMethods[] = {
 //
 // The JS_INLINABLE_FN macro refers to js::JitInfo_##native which we provide as
 // Simd##Type##_##Operation
+//
+// /!\ Don't forget to keep this list in sync with the SIMD instrinics used in
+// SelfHosting.cpp.
 
 namespace js {
 namespace jit {
