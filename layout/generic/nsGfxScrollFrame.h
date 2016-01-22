@@ -367,6 +367,7 @@ public:
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aDirtyRect,
                              bool aAllowCreateDisplayPort);
+  void NotifyImageVisibilityUpdate();
 
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
@@ -849,6 +850,9 @@ public:
                                      bool aAllowCreateDisplayPort) override {
     return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
   }
+  virtual void NotifyImageVisibilityUpdate() override {
+    mHelper.NotifyImageVisibilityUpdate();
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) override {
@@ -1316,7 +1320,9 @@ public:
                                      bool aAllowCreateDisplayPort) override {
     return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
   }
-
+  virtual void NotifyImageVisibilityUpdate() override {
+    mHelper.NotifyImageVisibilityUpdate();
+  }
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
