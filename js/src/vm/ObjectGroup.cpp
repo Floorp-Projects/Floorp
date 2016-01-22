@@ -14,6 +14,7 @@
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
 #include "vm/ArrayObject.h"
+#include "vm/TaggedProto.h"
 #include "vm/UnboxedObject.h"
 
 #include "jsobjinlines.h"
@@ -377,33 +378,30 @@ struct ObjectGroupCompartment::NewEntry
 
     struct Lookup {
         const Class* clasp;
-        TaggedProto hashProto;
-        TaggedProto matchProto;
-        JSObject* associated;
+        uint64_t protoUID;
+        uint64_t assocUID;
 
         Lookup(const Class* clasp, TaggedProto proto, JSObject* associated)
-          : clasp(clasp), hashProto(proto), matchProto(proto), associated(associated)
-        {}
-
-        /*
-         * For use by generational post barriers only.  Look up an entry whose
-         * proto has been moved, but was hashed with the original value.
-         */
-        Lookup(const Class* clasp, TaggedProto hashProto, TaggedProto matchProto, JSObject* associated)
-            : clasp(clasp), hashProto(hashProto), matchProto(matchProto), associated(associated)
+          : clasp(clasp),
+            protoUID(proto.uniqueId()),
+            assocUID(associated ? associated->zone()->getUniqueIdInfallible(associated) : 0)
         {}
     };
 
     static inline HashNumber hash(const Lookup& lookup) {
-        return PointerHasher<JSObject*, 3>::hash(lookup.hashProto.raw()) ^
-               PointerHasher<const Class*, 3>::hash(lookup.clasp) ^
-               PointerHasher<JSObject*, 3>::hash(lookup.associated);
+        HashNumber hash = uintptr_t(lookup.clasp);
+        hash = mozilla::RotateLeft(hash, 4) ^ Zone::UniqueIdToHash(lookup.protoUID);
+        hash = mozilla::RotateLeft(hash, 4) ^ Zone::UniqueIdToHash(lookup.assocUID);
+        return hash;
     }
 
     static inline bool match(const NewEntry& key, const Lookup& lookup) {
-        return key.group.unbarrieredGet()->proto() == lookup.matchProto &&
-               (!lookup.clasp || key.group.unbarrieredGet()->clasp() == lookup.clasp) &&
-               key.associated == lookup.associated;
+        if (lookup.clasp && key.group.unbarrieredGet()->clasp() != lookup.clasp)
+            return false;
+        if (key.group.unbarrieredGet()->proto().unbarrieredGet().uniqueId() != lookup.protoUID)
+            return false;
+        return !key.associated ||
+               key.associated->zone()->getUniqueIdInfallible(key.associated) == lookup.assocUID;
     }
 
     static void rekey(NewEntry& k, const NewEntry& newKey) { k = newKey; }
@@ -413,58 +411,6 @@ struct ObjectGroupCompartment::NewEntry
                 (associated && IsAboutToBeFinalizedUnbarriered(&associated)));
     }
 };
-
-// This class is used to add a post barrier on a NewTable entry, as the key is
-// calculated from a prototype object which may be moved by generational GC.
-class ObjectGroupCompartment::NewTableRef : public gc::BufferableRef
-{
-    NewTable* table;
-    const Class* clasp;
-    JSObject* proto;
-    JSObject* associated;
-
-  public:
-    NewTableRef(NewTable* table, const Class* clasp, JSObject* proto, JSObject* associated)
-        : table(table), clasp(clasp), proto(proto), associated(associated)
-    {}
-
-    void trace(JSTracer* trc) override {
-        JSObject* prior = proto;
-        TraceManuallyBarrieredEdge(trc, &proto, "newObjectGroups set prototype");
-        if (prior == proto)
-            return;
-
-        NewTable::Ptr p = table->lookup(NewTable::Lookup(clasp, TaggedProto(prior),
-                                                         TaggedProto(proto),
-                                                         associated));
-        if (!p)
-            return;
-
-        table->rekeyAs(NewTable::Lookup(clasp, TaggedProto(prior), TaggedProto(proto), associated),
-                       NewTable::Lookup(clasp, TaggedProto(proto), associated), *p);
-    }
-};
-
-/* static */ void
-ObjectGroupCompartment::newTablePostBarrier(ExclusiveContext* cx, NewTable* table,
-                                            const Class* clasp, TaggedProto proto,
-                                            JSObject* associated)
-{
-    MOZ_ASSERT_IF(associated, !IsInsideNursery(associated));
-
-    if (!proto.isObject())
-        return;
-
-    if (!cx->isJSContext()) {
-        MOZ_ASSERT(!IsInsideNursery(proto.toObject()));
-        return;
-    }
-
-    if (IsInsideNursery(proto.toObject())) {
-        gc::StoreBuffer& sb = cx->asJSContext()->runtime()->gc.storeBuffer;
-        sb.putGeneric(NewTableRef(table, clasp, proto.toObject(), associated));
-    }
-}
 
 /* static */ ObjectGroup*
 ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
@@ -559,8 +505,6 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         return nullptr;
     }
 
-    ObjectGroupCompartment::newTablePostBarrier(cx, table, clasp, proto, associated);
-
     if (proto.isObject()) {
         RootedObject obj(cx, proto.toObject());
 
@@ -638,8 +582,6 @@ ObjectGroup::lazySingletonGroup(ExclusiveContext* cx, const Class* clasp, Tagged
         ReportOutOfMemory(cx);
         return nullptr;
     }
-
-    ObjectGroupCompartment::newTablePostBarrier(cx, table, clasp, proto, nullptr);
 
     return group;
 }
@@ -1807,14 +1749,12 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
      */
     if (table && table->initialized()) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
-            NewEntry entry = e.front();
-            ObjectGroup* group = entry.group.unbarrieredGet();
+            NewEntry& entry = e.mutableFront();
 
-            bool needRekey = false;
-            if (IsForwarded(entry.group.unbarrieredGet())) {
-                group = Forwarded(entry.group.unbarrieredGet());
+            ObjectGroup* group = entry.group.unbarrieredGet();
+            if (IsForwarded(group)) {
+                group = Forwarded(group);
                 entry.group.set(group);
-                needRekey = true;
             }
             TaggedProto proto = group->proto();
             if (proto.isObject() && IsForwarded(proto.toObject())) {
@@ -1822,19 +1762,9 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
                 // Update the group's proto here so that we are able to lookup
                 // entries in this table before all object pointers are updated.
                 group->proto() = proto;
-                needRekey = true;
             }
-            if (entry.associated && IsForwarded(entry.associated)) {
+            if (entry.associated && IsForwarded(entry.associated))
                 entry.associated = Forwarded(entry.associated);
-                needRekey = true;
-            }
-            if (needRekey) {
-                const Class* clasp = group->clasp();
-                if (entry.associated && entry.associated->is<JSFunction>())
-                    clasp = nullptr;
-                NewEntry::Lookup lookup(clasp, proto, entry.associated);
-                e.rekeyFront(lookup, entry);
-            }
         }
     }
 }
