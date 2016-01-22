@@ -2427,11 +2427,10 @@ CrossProcessCompositorParent::SetConfirmedTargetAPZC(const LayerTransactionParen
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
   const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(id);
-  if (!state) {
+  if (!state || !state->mParent) {
     return;
   }
 
-  MOZ_ASSERT(state->mParent);
   state->mParent->SetConfirmedTargetAPZC(aLayerTree, aInputBlockId, aTargets);
 }
 
