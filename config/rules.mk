@@ -532,12 +532,17 @@ endif
 ifndef MOZBUILD_BACKEND_CHECKED
 ifndef MACH
 ifndef TOPLEVEL_BUILD
-$(DEPTH)/backend.RecursiveMakeBackend:
+BUILD_BACKEND_FILES := $(addprefix $(DEPTH)/backend.,$(addsuffix Backend,$(BUILD_BACKENDS)))
+$(DEPTH)/backend.%Backend:
 	$(error Build configuration changed. Build with |mach build| or run |mach build-backend| to regenerate build config)
 
-include $(DEPTH)/backend.RecursiveMakeBackend.pp
+define build_backend_rule
+$(1): $$(shell cat $(1).in)
 
-default:: $(DEPTH)/backend.RecursiveMakeBackend
+endef
+$(foreach file,$(BUILD_BACKEND_FILES),$(eval $(call build_backend_rule,$(file))))
+
+default:: $(BUILD_BACKEND_FILES)
 
 export MOZBUILD_BACKEND_CHECKED=1
 endif
