@@ -617,10 +617,11 @@ if CONFIG['MOZ_ETW']:
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_BINARYDATA'] = True
 
-# Also in shell/moz.build
 if CONFIG['NIGHTLY_BUILD']:
-    DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
     DEFINES['ENABLE_SIMD'] = True
+
+# Also set in shell/moz.build
+DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
 
 DEFINES['EXPORT_JS_API'] = True
 
