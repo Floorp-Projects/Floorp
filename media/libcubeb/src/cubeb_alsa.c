@@ -306,7 +306,7 @@ alsa_refill_stream(cubeb_stream * stm)
   assert(p);
 
   pthread_mutex_unlock(&stm->mutex);
-  got = stm->data_callback(stm, stm->user_ptr, p, avail);
+  got = stm->data_callback(stm, stm->user_ptr, NULL, p, avail);
   pthread_mutex_lock(&stm->mutex);
   if (got < 0) {
     pthread_mutex_unlock(&stm->mutex);
@@ -781,7 +781,11 @@ static void alsa_stream_destroy(cubeb_stream * stm);
 
 static int
 alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
-                 cubeb_stream_params stream_params, unsigned int latency,
+                 cubeb_devid input_device,
+                 cubeb_stream_params * input_stream_params,
+                 cubeb_devid output_device,
+                 cubeb_stream_params * output_stream_params,
+                 unsigned int latency,
                  cubeb_data_callback data_callback, cubeb_state_callback state_callback,
                  void * user_ptr)
 {
@@ -792,9 +796,15 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
 
   assert(ctx && stream);
 
+  assert(!input_stream_params && "not supported.");
+  if (input_device || output_device) {
+    /* Device selection not yet implemented. */
+    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
+  }
+
   *stream = NULL;
 
-  switch (stream_params.format) {
+  switch (output_stream_params->format) {
   case CUBEB_SAMPLE_S16LE:
     format = SND_PCM_FORMAT_S16_LE;
     break;
@@ -826,7 +836,7 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
-  stm->params = stream_params;
+  stm->params = *output_stream_params;
   stm->state = INACTIVE;
   stm->volume = 1.0;
 
@@ -933,7 +943,7 @@ alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
   assert(ctx);
 
-  r = alsa_stream_init(ctx, &stm, "", params, 100, NULL, NULL, NULL);
+  r = alsa_stream_init(ctx, &stm, "", NULL, NULL, NULL, &params, 100, NULL, NULL, NULL);
   if (r != CUBEB_OK) {
     return CUBEB_ERROR;
   }

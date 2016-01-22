@@ -1839,6 +1839,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mLastPos(-1, -1)
   , mScrollPosForLayerPixelAlignment(-1, -1)
   , mLastUpdateImagesPos(-1, -1)
+  , mHadDisplayPortAtLastImageUpdate(false)
+  , mDisplayPortAtLastImageUpdate()
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -2475,6 +2477,23 @@ ScrollFrameHelper::ScheduleSyntheticMouseMove()
 }
 
 void
+ScrollFrameHelper::NotifyImageVisibilityUpdate()
+{
+  mLastUpdateImagesPos = GetScrollPosition();
+  mHadDisplayPortAtLastImageUpdate =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &mDisplayPortAtLastImageUpdate);
+}
+
+bool
+ScrollFrameHelper::GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort)
+{
+  if (mHadDisplayPortAtLastImageUpdate) {
+    *aDisplayPort = mDisplayPortAtLastImageUpdate;
+  }
+  return mHadDisplayPortAtLastImageUpdate;
+}
+
+void
 ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOrigin)
 {
   if (aOrigin == nullptr) {
@@ -2896,7 +2915,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForImageVisibility()) {
-    mLastUpdateImagesPos = GetScrollPosition();
+    NotifyImageVisibilityUpdate();
   }
 
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);

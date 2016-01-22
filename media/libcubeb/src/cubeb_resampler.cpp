@@ -9,6 +9,9 @@
 #include <cstring>
 #include <cstddef>
 #include <cstdio>
+#if defined(HAVE_CONFIG_H)
+#include "config.h"
+#endif
 #include "cubeb_resampler.h"
 #include "cubeb-speex-resampler.h"
 
@@ -69,7 +72,7 @@ to_speex_quality(cubeb_resampler_quality q)
 } // end of anonymous namespace
 
 struct cubeb_resampler {
-  virtual long fill(void * buffer, long frames_needed) = 0;
+  virtual long fill(void * input_buffer, void * output_buffer, long frames_needed) = 0;
   virtual ~cubeb_resampler() {}
 };
 
@@ -84,9 +87,9 @@ public:
   {
   }
 
-  virtual long fill(void * buffer, long frames_needed)
+  virtual long fill(void * input_buffer, void * output_buffer, long frames_needed)
   {
-    long got = data_callback(stream, user_ptr, buffer, frames_needed);
+    long got = data_callback(stream, user_ptr, input_buffer, output_buffer, frames_needed);
     assert(got <= frames_needed);
     return got;
   }
@@ -106,7 +109,7 @@ public:
 
   virtual ~cubeb_resampler_speex();
 
-  virtual long fill(void * buffer, long frames_needed);
+  virtual long fill(void * input_buffer, void * output_buffer, long frames_needed);
 
 private:
   SpeexResamplerState * const speex_resampler;
@@ -161,7 +164,7 @@ cubeb_resampler_speex::~cubeb_resampler_speex()
 }
 
 long
-cubeb_resampler_speex::fill(void * buffer, long frames_needed)
+cubeb_resampler_speex::fill(void * input_buffer, void * output_buffer, long frames_needed)
 {
   // Use more input frames than strictly necessary, so in the worst case,
   // we have leftover unresampled frames at the end, that we can use
@@ -175,7 +178,7 @@ cubeb_resampler_speex::fill(void * buffer, long frames_needed)
   memcpy(resampling_src_buffer.get(), leftover_frames_buffer.get(), leftover_bytes);
   uint8_t * buffer_start = resampling_src_buffer.get() + leftover_bytes;
 
-  long got = data_callback(stream, user_ptr, buffer_start, frames_requested);
+  long got = data_callback(stream, user_ptr, NULL, buffer_start, frames_requested);
   assert(got <= frames_requested);
 
   if (got < 0) {
@@ -188,12 +191,12 @@ cubeb_resampler_speex::fill(void * buffer, long frames_needed)
 
   if (stream_params.format == CUBEB_SAMPLE_FLOAT32NE) {
     float * in_buffer = reinterpret_cast<float *>(resampling_src_buffer.get());
-    float * out_buffer = reinterpret_cast<float *>(buffer);
+    float * out_buffer = reinterpret_cast<float *>(output_buffer);
     speex_resampler_process_interleaved_float(speex_resampler, in_buffer, &in_frames,
                                               out_buffer, &out_frames);
   } else {
     short * in_buffer = reinterpret_cast<short *>(resampling_src_buffer.get());
-    short * out_buffer = reinterpret_cast<short *>(buffer);
+    short * out_buffer = reinterpret_cast<short *>(output_buffer);
     speex_resampler_process_interleaved_int(speex_resampler, in_buffer, &in_frames,
                                             out_buffer, &out_frames);
   }
@@ -239,9 +242,11 @@ cubeb_resampler_create(cubeb_stream * stream,
 
 long
 cubeb_resampler_fill(cubeb_resampler * resampler,
-                     void * buffer, long frames_needed)
+                     void * input_buffer,
+                     void * output_buffer,
+                     long frames_needed)
 {
-  return resampler->fill(buffer, frames_needed);
+  return resampler->fill(input_buffer, output_buffer, frames_needed);
 }
 
 void

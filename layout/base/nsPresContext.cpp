@@ -151,7 +151,7 @@ nsPresContext::IsDOMPaintEventPending()
   if (mFireAfterPaintEvents) {
     return true;
   }
-  nsRootPresContext* drpc = GetDisplayRootPresContext();
+  nsRootPresContext* drpc = GetRootPresContext();
   if (drpc && drpc->mRefreshDriver->ViewManagerFlushIsPending()) {
     // Since we're promising that there will be a MozAfterPaint event
     // fired, we record an empty invalidation in case display list
@@ -1327,33 +1327,6 @@ nsPresContext::GetRootPresContext()
   for (;;) {
     nsPresContext* parent = pc->GetParentPresContext();
     if (!parent)
-      break;
-    pc = parent;
-  }
-  return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nullptr;
-}
-
-nsRootPresContext*
-nsPresContext::GetDisplayRootPresContext()
-{
-  nsPresContext* pc = this;
-  for (;;) {
-    nsPresContext* parent = pc->GetParentPresContext();
-    if (!parent) {
-      // Not sure if this is always strictly the parent, but it works for GetRootPresContext
-      // where the current pres context has no frames.
-      nsIDocument *doc = pc->Document();
-      if (doc) {
-        doc = doc->GetParentDocument();
-        if (doc) {
-          nsIPresShell* shell = doc->GetShell();
-          if (shell) {
-            parent = shell->GetPresContext();
-          }
-        }
-      }
-    }
-    if (!parent || parent == pc)
       break;
     pc = parent;
   }

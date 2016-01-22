@@ -183,6 +183,39 @@ public:
   virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) {}
 };
 
+class AudioDataListenerInterface {
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~AudioDataListenerInterface() {}
+
+public:
+  /* These are for cubeb audio input & output streams: */
+  /**
+   * Output data to speakers, for use as the "far-end" data for echo
+   * cancellation.  This is not guaranteed to be in any particular size
+   * chunks.
+   */
+  virtual void NotifyOutputData(MediaStreamGraph* aGraph,
+                                AudioDataValue* aBuffer, size_t aFrames,
+                                uint32_t aChannels) = 0;
+  /**
+   * Input data from a microphone (or other audio source.  This is not
+   * guaranteed to be in any particular size chunks.
+   */
+  virtual void NotifyInputData(MediaStreamGraph* aGraph,
+                               const AudioDataValue* aBuffer, size_t aFrames,
+                               uint32_t aChannels) = 0;
+};
+
+class AudioDataListener : public AudioDataListenerInterface {
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~AudioDataListener() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioDataListener)
+};
+
 /**
  * This is a base class for media graph thread listener direct callbacks
  * from within AppendToTrack().  Note that your regular listener will
@@ -1175,6 +1208,12 @@ public:
   // Idempotent
   static void DestroyNonRealtimeInstance(MediaStreamGraph* aGraph);
 
+  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+                                  AudioDataListener *aListener) {
+    return NS_ERROR_FAILURE;
+  }
+  virtual void CloseAudioInput(AudioDataListener *aListener) {}
+
   // Control API.
   /**
    * Create a stream that a media decoder (or some other source of
@@ -1254,6 +1293,13 @@ public:
   already_AddRefed<MediaInputPort> ConnectToCaptureStream(
     uint64_t aWindowId, MediaStream* aMediaStream);
 
+  /**
+   * Data going to the speakers from the GraphDriver's DataCallback
+   * to notify any listeners (for echo cancellation).
+   */
+  void NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
+                        uint32_t aChannels);
+
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)
     : mSampleRate(aSampleRate)
@@ -1274,6 +1320,12 @@ protected:
    * at construction.
    */
   TrackRate mSampleRate;
+
+  /**
+   * Lifetime is controlled by OpenAudioInput/CloseAudioInput.  Destroying the listener
+   * without removing it is an error; callers should assert on that.
+   */
+  nsTArray<AudioDataListener *> mAudioInputs;
 };
 
 } // namespace mozilla

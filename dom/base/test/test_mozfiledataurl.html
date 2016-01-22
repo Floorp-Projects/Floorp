@@ -3,19 +3,18 @@
 <head>
   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
   <title>Test for File urls</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next()">
+<body onload="start()">
 <p id="display">
 <iframe id=inner></iframe>
 <iframe id=iframe></iframe>
 <img id=img onload="gen.send(event);">
 <audio id=audio onloadeddata="gen.send(event);">
-<input type=file id=fileList>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
@@ -31,10 +30,36 @@ window.addEventListener("message", function(e) {
 const innerSameSiteURI = "file_mozfiledataurl_inner.html";
 const innerCrossSiteURI = "http://example.com/tests/dom/base/test/file_mozfiledataurl_inner.html"
 
-gen = runTest();
+var fileNames = ["file_mozfiledataurl_img.jpg",
+                 "file_mozfiledataurl_audio.ogg",
+                 "file_mozfiledataurl_doc.html",
+                 "file_mozfiledataurl_text.txt"];
+
+function start() {
+  let xhr = new XMLHttpRequest;
+  xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
+  xhr.send();
+  let basePath = xhr.responseText;
+
+  let fullFileNames = [];
+  for (let name of fileNames) {
+    fullFileNames.push(basePath + name);
+  }
+
+  var script = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("create_file_objects.js"));
+
+  script.addMessageListener("created-file-objects", function handler(files) {
+    script.removeMessageListener("created-file-objects", handler);
+    gen = runTest(files);
+    gen.next();
+  });
+
+  script.sendAsyncMessage("create-file-objects", {fileNames: fullFileNames});
+};
+
 SimpleTest.waitForExplicitFinish();
 
-function runTest() {
+function runTest([imgFile, audioFile, docFile, xhrFile]) {
   inner = document.getElementById('inner');
   img = document.getElementById('img');
   audio = document.getElementById('audio');
@@ -42,8 +67,7 @@ function runTest() {
   inner.onload = function() { gen.send("inner loaded"); };
 
   // Attempt to load a image in this document
-  var file = getFile("file_mozfiledataurl_img.jpg");
-  var fileurl = URL.createObjectURL(file);
+  var fileurl = URL.createObjectURL(imgFile);
   img.src = fileurl;
   var e = (yield);
   is(e.type, "load", "loaded successfully");
@@ -63,7 +87,7 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(imgFile);
   isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an image in a different same-origin document
@@ -74,7 +98,7 @@ function runTest() {
   is(res.type, "load", "loaded successfully");
   is(res.width, 120, "correct width");
   is(res.height, 90, "correct height");
-  
+
   // Attempt to load an image in a different cross-origin document
   inner.src = innerCrossSiteURI;
   yield undefined;
@@ -85,8 +109,7 @@ function runTest() {
   isnot(res.height, 90, "correct error height");
 
   // Attempt to load an audio in this document
-  var file = getFile("file_mozfiledataurl_audio.ogg");
-  var fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(audioFile);
   audio.src = fileurl;
   var e = (yield);
   is(e.type, "loadeddata", "loaded successfully");
@@ -104,7 +127,7 @@ function runTest() {
 */
   // Generate new fileurl and make sure it's different from the old
   var oldFileurl = fileurl;
-  var fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(audioFile);
   isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
 
   // Attempt to load an audio in a different same-origin document
@@ -113,7 +136,7 @@ function runTest() {
   inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
   var res = (yield);
   is(res.type, "loadeddata", "loaded successfully");
-  
+
   // Attempt to load an audio in a different cross-origin document
   inner.src = innerCrossSiteURI;
   yield undefined;
@@ -134,8 +157,7 @@ function runTest() {
      "image in iframe height");
 
   // Attempt to load a HTML document in an iframe in this document, using file url
-  file = getFile("file_mozfiledataurl_doc.html");
-  fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(docFile);
   iframe.src = fileurl;
   yield undefined;
   is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
@@ -170,8 +192,7 @@ function runTest() {
   is(res.type, "error", "load failed successfully");
 
   // Attempt to load file url using XHR
-  file = getFile("file_mozfiledataurl_text.txt");
-  fileurl = URL.createObjectURL(file);
+  fileurl = URL.createObjectURL(xhrFile);
   xhr = new XMLHttpRequest;
   xhr.onload = function() { gen.send("XHR finished"); };
   xhr.open("GET", fileurl);
@@ -198,23 +219,6 @@ function runTest() {
 
   yield undefined;
 }
-
-
-var basePath = "";
-function getFile(name) {
-  if (!basePath) {
-    let xhr = new XMLHttpRequest;
-    xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
-    xhr.send();
-    basePath = xhr.responseText;
-  }
-
-  var fileList = document.getElementById('fileList');
-  SpecialPowers.wrap(fileList).value = basePath + name;
-
-  return fileList.files[0];
-}
-
 </script>
 </pre>
 </body>
