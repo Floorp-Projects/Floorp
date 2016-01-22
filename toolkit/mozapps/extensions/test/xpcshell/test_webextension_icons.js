@@ -11,6 +11,19 @@ profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
+const { Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+function promiseAddonStartup() {
+  return new Promise(resolve => {
+    let listener = (extension) => {
+      Management.off("startup", listener);
+      resolve(extension);
+    };
+
+    Management.on("startup", listener);
+  });
+}
+
 // Test simple icon set parsing
 add_task(function*() {
   writeWebManifestForExtension({
@@ -31,6 +44,7 @@ add_task(function*() {
   }, profileDir);
 
   yield promiseRestartManager();
+  yield promiseAddonStartup();
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -62,6 +76,7 @@ add_task(function*() {
 
   // check if icons are persisted through a restart
   yield promiseRestartManager();
+  yield promiseAddonStartup();
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -94,6 +109,7 @@ add_task(function*() {
   }, profileDir);
 
   yield promiseRestartManager();
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -132,6 +148,7 @@ add_task(function*() {
   }, profileDir);
 
   yield promiseRestartManager();
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
