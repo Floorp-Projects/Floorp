@@ -123,9 +123,16 @@ default:: $(BUILD_BACKEND_FILES)
 endif
 
 install_manifests := \
-  $(addprefix dist/,bin branding idl include public private sdk xpi-stage) \
+  $(addprefix dist/,branding idl include public private sdk xpi-stage) \
   _tests \
   $(NULL)
+# Skip the dist/bin install manifest when using the hybrid
+# FasterMake/RecursiveMake backend. This is a hack until bug 1241744 moves
+# xpidl handling to FasterMake in that case, mechanically making the dist/bin
+# install manifest non-existent (non-existent manifests being skipped)
+ifeq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+install_manifests += dist/bin
+endif
 install_manifest_depends = \
   CLOBBER \
   $(configure_dir)/configure \
@@ -145,6 +152,15 @@ endif
 .PHONY: install-manifests
 install-manifests: $(addprefix install-,$(install_manifests))
 
+# If we're using the hybrid FasterMake/RecursiveMake backend, we want
+# to recurse in the faster/ directory in parallel of install manifests.
+ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+install-manifests: faster
+.PHONY: faster
+faster:
+	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
+endif
+
 # process_install_manifest needs to be invoked with --no-remove when building
 # js as standalone because automated builds are building nspr separately and
 # that would remove the resulting files.
@@ -156,6 +172,12 @@ endif
 
 .PHONY: $(addprefix install-,$(subst /,_,$(install_manifests)))
 $(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
+ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
+	@# If we're using the hybrid FasterMake/RecursiveMake backend, we want
+	@# to ensure the FasterMake end doesn't have install manifests for the
+	@# same directory, because that would blow up
+	$(if $(wildcard _build_manifests/install/$(subst /,_,$*)),$(if $(wildcard faster/install_$(subst /,_,$*)*),$(error FasterMake and RecursiveMake ends of the hybrid build system want to handle $*)))
+endif
 	$(addprefix $(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back

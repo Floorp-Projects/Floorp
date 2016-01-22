@@ -126,7 +126,9 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
             'MOZ_BUILD_APP',
             'MOZ_WIDGET_TOOLKIT',
         ):
-            mk.add_statement('%s = %s' % (var, self.environment.substs[var]))
+            value = self.environment.substs.get(var)
+            if value is not None:
+                mk.add_statement('%s = %s' % (var, value))
 
         install_manifests_bases = self._install_manifests.keys()
 
