@@ -3467,6 +3467,8 @@ IsCacheableDOMProxy(JSObject* obj)
     return handler->family() == GetDOMProxyHandlerFamily();
 }
 
+struct IonOsrTempData;
+
 } // namespace jit
 } // namespace js
 
