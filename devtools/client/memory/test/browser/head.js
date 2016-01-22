@@ -96,6 +96,30 @@ function waitUntilSnapshotState (store, expected) {
   return waitUntilState(store, predicate);
 }
 
+/**
+ * Returns a promise that will resolve when the provided store matches
+ * the expected array. expectedStates is an array of dominatorTree states.
+ * Expectations :
+ * - store.getState().snapshots.length == expected.length
+ * - snapshots[i].dominatorTree.state == expected[i]
+ *
+ * @param  {Store} store
+ * @param  {Array<string>} expectedStates [description]
+ * @return {Promise}
+ */
+function waitUntilDominatorTreeState(store, expected) {
+  let predicate = () => {
+    let snapshots = store.getState().snapshots;
+    return snapshots.length === expected.length &&
+            expected.every((state, i) => {
+              return snapshots[i].dominatorTree &&
+              snapshots[i].dominatorTree.state === state;
+            });
+  };
+  info(`Waiting for dominator trees to be of state: ${expected}`);
+  return waitUntilState(store, predicate);
+}
+
 function takeSnapshot (window) {
   let { gStore, document } = window;
   let snapshotCount = gStore.getState().snapshots.length;
