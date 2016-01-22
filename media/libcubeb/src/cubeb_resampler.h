@@ -53,8 +53,7 @@ cubeb_resampler * cubeb_resampler_create(cubeb_stream * stream,
  * @retval CUBEB_ERROR on error.
  */
 long cubeb_resampler_fill(cubeb_resampler * resampler,
-                          void * input_buffer, void * buffer,
-			  long frames_needed);
+                          void * buffer, long frames_needed);
 
 /**
  * Destroy a cubeb_resampler.
