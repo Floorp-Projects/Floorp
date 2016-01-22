@@ -368,6 +368,7 @@ public:
                              nsRect* aDirtyRect,
                              bool aAllowCreateDisplayPort);
   void NotifyImageVisibilityUpdate();
+  bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort);
 
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
@@ -460,6 +461,8 @@ public:
 
   // The scroll position where we last updated image visibility.
   nsPoint mLastUpdateImagesPos;
+  bool mHadDisplayPortAtLastImageUpdate;
+  nsRect mDisplayPortAtLastImageUpdate;
 
   nsRect mPrevScrolledRect;
 
@@ -852,6 +855,9 @@ public:
   }
   virtual void NotifyImageVisibilityUpdate() override {
     mHelper.NotifyImageVisibilityUpdate();
+  }
+  virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) override {
+    return mHelper.GetDisplayPortAtLastImageVisibilityUpdate(aDisplayPort);
   }
 
   // nsIStatefulFrame
@@ -1322,6 +1328,9 @@ public:
   }
   virtual void NotifyImageVisibilityUpdate() override {
     mHelper.NotifyImageVisibilityUpdate();
+  }
+  virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) override {
+    return mHelper.GetDisplayPortAtLastImageVisibilityUpdate(aDisplayPort);
   }
 
 #ifdef DEBUG_FRAME_DUMP
