@@ -362,7 +362,24 @@ public:
   void AddTrack(MediaStreamTrack& aTrack);
   void RemoveTrack(MediaStreamTrack& aTrack);
 
+  /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
+  already_AddRefed<DOMMediaStream> Clone();
+
   // NON-WebIDL
+
+  /**
+   * Option to provide to CloneInternal() of which tracks should be forwarded
+   * from the source stream (`this`) to the returned stream clone.
+   *
+   * CURRENT forwards the tracks currently in the source stream's track set.
+   * ALL     forwards like EXPLICIT plus any and all future tracks originating
+   *         from the same input stream as the source DOMMediaStream (`this`).
+   */
+  enum class TrackForwardingOption {
+    CURRENT,
+    ALL
+  };
+  already_AddRefed<DOMMediaStream> CloneInternal(TrackForwardingOption aForwarding);
 
   MediaStreamTrack* GetTrackById(const nsString& aId);
 
