@@ -288,7 +288,8 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   AssertIsOnOwningThread();
   if (mState == kReleased) {
     if (mInitDone) {
-      if (mAudioInput->SetRecordingDevice(mCapIndex)) {
+      ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw(webrtc::VoEHardware::GetInterface(mVoiceEngine));
+      if (!ptrVoEHw || ptrVoEHw->SetRecordingDevice(mCapIndex)) {
         return NS_ERROR_FAILURE;
       }
       mState = kAllocated;
@@ -381,8 +382,6 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // Attach external media processor, so this::Process will be called.
   mVoERender->RegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel, *this);
 
-  mAudioInput->StartRecording(aStream->Graph());
-
   return NS_OK;
 }
 
@@ -412,8 +411,6 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
 
     mState = kStopped;
   }
-
-  mAudioInput->StopRecording(aSource->Graph());
 
   mVoERender->DeRegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel);
 
@@ -478,7 +475,8 @@ MediaEngineWebRTCMicrophoneSource::Init()
   LOG(("%s: sampling rate %u", __FUNCTION__, mSampleFrequency));
 
   // Check for availability.
-  if (mAudioInput->SetRecordingDevice(mCapIndex)) {
+  ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw(webrtc::VoEHardware::GetInterface(mVoiceEngine));
+  if (!ptrVoEHw || ptrVoEHw->SetRecordingDevice(mCapIndex)) {
     return;
   }
 
@@ -486,7 +484,7 @@ MediaEngineWebRTCMicrophoneSource::Init()
   // Because of the permission mechanism of B2G, we need to skip the status
   // check here.
   bool avail = false;
-  mAudioInput->GetRecordingDeviceStatus(avail);
+  ptrVoEHw->GetRecordingDeviceStatus(avail);
   if (!avail) {
     return;
   }
@@ -641,7 +639,6 @@ MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName)
 {
   aName.AssignLiteral("AudioCapture");
 }
-
 void
 MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID)
 {
@@ -699,5 +696,4 @@ MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
   // There is only one way of capturing audio for now, and it's always adequate.
   return 0;
 }
-
 }

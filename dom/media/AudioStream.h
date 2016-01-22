@@ -308,9 +308,9 @@ protected:
 private:
   nsresult OpenCubeb(cubeb_stream_params &aParams);
 
-  static long DataCallback_S(cubeb_stream*, void* aThis, void* /* aInputBuffer */, void* aOutputBuffer, long aFrames)
+  static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
   {
-    return static_cast<AudioStream*>(aThis)->DataCallback(aOutputBuffer, aFrames);
+    return static_cast<AudioStream*>(aThis)->DataCallback(aBuffer, aFrames);
   }
 
   static void StateCallback_S(cubeb_stream*, void* aThis, cubeb_state aState)
