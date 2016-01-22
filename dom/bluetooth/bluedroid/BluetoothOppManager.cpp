@@ -214,31 +214,24 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
 { }
 
 BluetoothOppManager::~BluetoothOppManager()
-{
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE_VOID(obs);
-  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
-    BT_WARNING("Failed to remove shutdown observer!");
-  }
+{ }
 
-  if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
-    BT_WARNING("Failed to remove volume observer!");
-  }
-}
-
-bool
+nsresult
 BluetoothOppManager::Init()
 {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, false);
-  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+  NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+  auto rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_FAILED(rv)) {
     BT_WARNING("Failed to add shutdown observer!");
-    return false;
+    return rv;
   }
 
-  if (NS_FAILED(obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false))) {
+  rv = obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
+  if (NS_FAILED(rv)) {
     BT_WARNING("Failed to add ns volume observer!");
-    return false;
+    return rv;
   }
 
   /**
@@ -250,7 +243,67 @@ BluetoothOppManager::Init()
    * absence of read events when device boots up.
    */
 
-  return true;
+  return NS_OK;
+}
+
+void
+BluetoothOppManager::Uninit()
+{
+  if (mServerSocket) {
+    mServerSocket->SetObserver(nullptr);
+
+    if (mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mServerSocket->Close();
+    }
+    mServerSocket = nullptr;
+  }
+
+  if (mSocket) {
+    mSocket->SetObserver(nullptr);
+
+    if (mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+      mSocket->Close();
+    }
+    mSocket = nullptr;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    BT_WARNING("Failed to remove shutdown observer!");
+  }
+
+  if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
+    BT_WARNING("Failed to remove volume observer!");
+  }
+}
+
+// static
+void
+BluetoothOppManager::InitOppInterface(BluetoothProfileResultHandler* aRes)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aRes) {
+    aRes->Init();
+  }
+}
+
+// static
+void
+BluetoothOppManager::DeinitOppInterface(BluetoothProfileResultHandler* aRes)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sBluetoothOppManager) {
+    sBluetoothOppManager->Uninit();
+    sBluetoothOppManager = nullptr;
+  }
+
+  if (aRes) {
+    aRes->Deinit();
+  }
 }
 
 //static
@@ -268,10 +321,11 @@ BluetoothOppManager::Get()
   NS_ENSURE_FALSE(sInShutdown, nullptr);
 
   // Create a new instance, register, and return
-  BluetoothOppManager *manager = new BluetoothOppManager();
-  NS_ENSURE_TRUE(manager->Init(), nullptr);
+  RefPtr<BluetoothOppManager> manager = new BluetoothOppManager();
+  NS_ENSURE_SUCCESS(manager->Init(), nullptr);
 
   sBluetoothOppManager = manager;
+
   return sBluetoothOppManager;
 }
 
@@ -281,10 +335,11 @@ BluetoothOppManager::ConnectInternal(const BluetoothAddress& aDeviceAddress)
   MOZ_ASSERT(NS_IsMainThread());
 
   // Stop listening because currently we only support one connection at a time.
-  if (mServerSocket) {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mServerSocket->Close();
-    mServerSocket = nullptr;
   }
+  mServerSocket = nullptr;
 
   mIsServer = false;
 
@@ -310,6 +365,8 @@ BluetoothOppManager::HandleShutdown()
   MOZ_ASSERT(NS_IsMainThread());
   sInShutdown = true;
   Disconnect(nullptr);
+  Uninit();
+
   sBluetoothOppManager = nullptr;
 }
 
@@ -356,10 +413,11 @@ BluetoothOppManager::Listen()
    * BT stops; otherwise no more read events would be received even if
    * BT restarts.
    */
-  if (mServerSocket) {
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
     mServerSocket->Close();
-    mServerSocket = nullptr;
   }
+  mServerSocket = nullptr;
 
   mServerSocket = new BluetoothSocket(this);
 
@@ -1526,7 +1584,16 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 {
   BT_LOGR("[%s]", (mIsServer)? "server" : "client");
 
+  if (mServerSocket &&
+      mServerSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mServerSocket->Close();
+  }
   mServerSocket = nullptr;
+
+  if (mSocket &&
+      mSocket->GetConnectionStatus() != SOCKET_DISCONNECTED) {
+    mSocket->Close();
+  }
   mSocket = nullptr;
 
   if (!mIsServer) {
@@ -1576,7 +1643,8 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   mDeviceAddress.Clear();
   mSuccessFlag = false;
 
-  mSocket = nullptr;
+  mSocket = nullptr; // should already be closed
+
   // Listen as a server if there's no more batch to process
   if (!ProcessNextBatch()) {
     Listen();

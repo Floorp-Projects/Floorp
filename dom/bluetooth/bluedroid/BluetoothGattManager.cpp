@@ -389,26 +389,39 @@ BluetoothGattManager::Get()
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
   // Create a new instance, register, and return
-  BluetoothGattManager* manager = new BluetoothGattManager();
-  NS_ENSURE_TRUE(manager->Init(), nullptr);
+  RefPtr<BluetoothGattManager> manager = new BluetoothGattManager();
+  NS_ENSURE_SUCCESS(manager->Init(), nullptr);
+
   sBluetoothGattManager = manager;
+
   return sBluetoothGattManager;
 }
 
-bool
+nsresult
 BluetoothGattManager::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, false);
+  NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
 
-  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+  auto rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_FAILED(rv)) {
     BT_WARNING("Failed to add observers!");
-    return false;
+    return rv;
   }
 
-  return true;
+  return NS_OK;
+}
+
+void
+BluetoothGattManager::Uninit()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+    BT_WARNING("Failed to remove shutdown observer!");
+  }
 }
 
 class BluetoothGattManager::RegisterModuleResultHandler final
@@ -569,6 +582,11 @@ public:
 
     sBluetoothGattInterface->SetNotificationHandler(nullptr);
     sBluetoothGattInterface = nullptr;
+    sClients = nullptr;
+    sServers = nullptr;
+
+    sBluetoothGattManager->Uninit();
+    sBluetoothGattManager = nullptr;
 
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
@@ -583,6 +601,9 @@ public:
     sBluetoothGattInterface = nullptr;
     sClients = nullptr;
     sServers = nullptr;
+
+    sBluetoothGattManager->Uninit();
+    sBluetoothGattManager = nullptr;
 
     if (mRes) {
       mRes->Deinit();
@@ -4090,13 +4111,7 @@ BluetoothGattManager::BluetoothGattManager()
 { }
 
 BluetoothGattManager::~BluetoothGattManager()
-{
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE_VOID(obs);
-  if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
-    BT_WARNING("Failed to remove shutdown observer!");
-  }
-}
+{ }
 
 NS_IMETHODIMP
 BluetoothGattManager::Observe(nsISupports* aSubject,
