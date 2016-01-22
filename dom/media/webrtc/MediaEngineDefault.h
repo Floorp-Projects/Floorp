@@ -149,7 +149,7 @@ public:
                         uint32_t aChannels) override
   {}
   void NotifyInputData(MediaStreamGraph* aGraph,
-                       const AudioDataValue* aBuffer, size_t aFrames,
+                       AudioDataValue* aBuffer, size_t aFrames,
                        uint32_t aChannels) override
   {}
   bool IsFake() override {
