@@ -19,7 +19,7 @@ add_task(function* () {
 
   hud.jsterm.clearOutput();
   let outputNode = hud.outputNode;
-  let scrollBox = outputNode.parentNode;
+  let scrollBox = hud.ui.outputWrapper;
 
   for (let i = 0; i < 150; i++) {
     content.console.log("test message " + i);

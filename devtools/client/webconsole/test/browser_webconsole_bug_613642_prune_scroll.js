@@ -24,7 +24,7 @@ add_task(function* () {
   let outputNode = hud.outputNode;
 
   Services.prefs.setIntPref("devtools.hud.loglimit.console", 140);
-  let scrollBoxElement = outputNode.parentNode;
+  let scrollBoxElement = hud.ui.outputWrapper;
 
   for (let i = 0; i < 150; i++) {
     content.console.log("test message " + i);

@@ -441,8 +441,6 @@
   <string name="home_selected_empty">&home_selected_empty;</string>
   <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint2;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
-  <string name="home_reading_list_hint">&home_reading_list_hint3;</string>
-  <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible2;</string>
   <string name="home_default_empty">&home_default_empty;</string>
   <string name="home_move_up_to_filter">&home_move_up_to_filter;</string>
   <string name="home_remote_tabs_title">&home_remote_tabs_title;</string>

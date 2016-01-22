@@ -6,6 +6,7 @@
 DevToolsModules(
     'frame-utils.js',
     'jit.js',
+    'marker-formatters.js',
     'marker-utils.js',
     'telemetry.js',
     'tree-model.js',

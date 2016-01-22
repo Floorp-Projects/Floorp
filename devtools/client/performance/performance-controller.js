@@ -4,84 +4,55 @@
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-
-const { Task } = require("resource://gre/modules/Task.jsm");
-const { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+var BrowserLoaderModule = {};
+Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
+var { loader, require } = BrowserLoaderModule.BrowserLoader("resource://devtools/client/performance/", this);
+var { Task } = require("resource://gre/modules/Task.jsm");
+var { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 // Events emitted by various objects in the panel.
-const EVENTS = require("devtools/client/performance/events");
+var EVENTS = require("devtools/client/performance/events");
 Object.defineProperty(this, "EVENTS", {
   value: EVENTS,
   enumerable: true,
   writable: false
 });
 
-loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "system",
-  "devtools/shared/system");
+var Services = require("Services");
+var promise = require("promise");
+var EventEmitter = require("devtools/shared/event-emitter");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var system = require("devtools/shared/system");
 
 // Logic modules
 
-loader.lazyRequireGetter(this, "L10N",
-  "devtools/client/performance/modules/global", true);
-loader.lazyRequireGetter(this, "PerformanceTelemetry",
-  "devtools/client/performance/modules/logic/telemetry", true);
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/client/performance/modules/markers", true);
-loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/recording-utils");
-loader.lazyRequireGetter(this, "GraphsController",
-  "devtools/client/performance/modules/widgets/graphs", true);
-loader.lazyRequireGetter(this, "OptimizationsGraph",
-  "devtools/client/performance/modules/widgets/graphs", true);
-loader.lazyRequireGetter(this, "WaterfallHeader",
-  "devtools/client/performance/modules/widgets/waterfall-ticks", true);
-loader.lazyRequireGetter(this, "MarkerView",
-  "devtools/client/performance/modules/widgets/marker-view", true);
-loader.lazyRequireGetter(this, "MarkerDetails",
-  "devtools/client/performance/modules/widgets/marker-details", true);
-loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/client/performance/modules/logic/marker-utils");
-loader.lazyRequireGetter(this, "WaterfallUtils",
-  "devtools/client/performance/modules/logic/waterfall-utils");
-loader.lazyRequireGetter(this, "FrameUtils",
-  "devtools/client/performance/modules/logic/frame-utils");
-loader.lazyRequireGetter(this, "CallView",
-  "devtools/client/performance/modules/widgets/tree-view", true);
-loader.lazyRequireGetter(this, "ThreadNode",
-  "devtools/client/performance/modules/logic/tree-model", true);
-loader.lazyRequireGetter(this, "FrameNode",
-  "devtools/client/performance/modules/logic/tree-model", true);
-loader.lazyRequireGetter(this, "JITOptimizations",
-  "devtools/client/performance/modules/logic/jit", true);
+var { L10N } = require("devtools/client/performance/modules/global");
+var { PerformanceTelemetry } = require("devtools/client/performance/modules/logic/telemetry");
+var { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+var RecordingUtils = require("devtools/shared/performance/recording-utils");
+var { OptimizationsGraph, GraphsController } = require("devtools/client/performance/modules/widgets/graphs");
+var { WaterfallHeader } = require("devtools/client/performance/modules/widgets/waterfall-ticks");
+var { MarkerView } = require("devtools/client/performance/modules/widgets/marker-view");
+var { MarkerDetails } = require("devtools/client/performance/modules/widgets/marker-details");
+var MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
+var WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
+var FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
+var { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
+var { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+var { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");
+var { JITOptimizations } = require("devtools/client/performance/modules/logic/jit");
 
 // Widgets modules
 
-loader.lazyRequireGetter(this, "OptionsView",
-  "devtools/client/shared/options-view", true);
-loader.lazyRequireGetter(this, "FlameGraphUtils",
-  "devtools/client/shared/widgets/FlameGraph", true);
-loader.lazyRequireGetter(this, "FlameGraph",
-  "devtools/client/shared/widgets/FlameGraph", true);
-loader.lazyRequireGetter(this, "TreeWidget",
-  "devtools/client/shared/widgets/TreeWidget", true);
+var { OptionsView } = require("devtools/client/shared/options-view");
+var { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/FlameGraph");
+var { TreeWidget } = require("devtools/client/shared/widgets/TreeWidget");
 
-loader.lazyImporter(this, "SideMenuWidget",
-  "resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-loader.lazyImporter(this, "setNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-loader.lazyImporter(this, "clearNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-loader.lazyImporter(this, "PluralForm",
-  "resource://gre/modules/PluralForm.jsm");
+var { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
+var { setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+var { PluralForm } = require("resource://gre/modules/PluralForm.jsm");
 
-const BRANCH_NAME = "devtools.performance.ui.";
+var BRANCH_NAME = "devtools.performance.ui.";
 
 /**
  * The current target, toolbox and PerformanceFront, set by this tool's host.
@@ -136,6 +107,7 @@ var PerformanceController = {
     this._setMultiprocessAttributes();
 
     this._prefs = require("devtools/client/performance/modules/global").PREFS;
+    this._prefs.registerObserver();
     this._prefs.on("pref-changed", this._onPrefChanged);
 
     ToolbarView.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
@@ -156,6 +128,7 @@ var PerformanceController = {
   destroy: function() {
     this._telemetry.destroy();
     this._prefs.off("pref-changed", this._onPrefChanged);
+    this._prefs.unregisterObserver();
 
     ToolbarView.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
