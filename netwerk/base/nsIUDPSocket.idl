@@ -30,7 +30,7 @@ native NetAddr(mozilla::net::NetAddr);
  *
  * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(e0377f7b-34a9-4d0f-8191-7e0cba77a52f)]
+[scriptable, uuid(d423bf4e-4499-40cf-bc03-153e2bf206d1)]
 interface nsIUDPSocket : nsISupports
 {
     /**
@@ -101,6 +101,16 @@ interface nsIUDPSocket : nsISupports
      *        The listener to be notified when client connections are accepted.
      */
     void asyncListen(in nsIUDPSocketListener aListener);
+
+    /**
+     * connect
+     *
+     * This method connects the UDP socket to a remote UDP address.
+     *
+     * @param aRemoteAddr
+     *        The remote address to connect to
+     */
+     void connect([const] in NetAddrPtr aAddr);
 
     /**
      * Returns the local address of this UDP socket

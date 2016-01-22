@@ -21,6 +21,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/ipc/PBackgroundParent.h"
+#include "mtransport/runnable_utils.h"
 
 //
 // set NSPR_LOG_MODULES=UDPSocket:5
@@ -100,7 +101,7 @@ UDPSocketParent::Init(const IPC::Principal& aPrincipal,
   // will be used once we move all UDPSocket to PBackground, or
   // if we add in Principal checking for mtransport
   Unused << mBackgroundManager;
-  
+
   mPrincipal = aPrincipal;
   if (net::UsingNeckoIPCSecurity() &&
       mPrincipal &&
@@ -196,7 +197,7 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
 {
   nsresult rv;
 
-  UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, nsCString(aHost).get(), aPort));
+  UDPSOCKET_LOG(("%s: [this=%p] %s:%u addressReuse: %d loopback: %d", __FUNCTION__, this, nsCString(aHost).get(), aPort, aAddressReuse, aLoopback));
 
   nsCOMPtr<nsIUDPSocket> sock =
       do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
@@ -226,9 +227,21 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
     return rv;
   }
 
-  rv = sock->SetMulticastLoopback(aLoopback);
+  nsCOMPtr<nsINetAddr> laddr;
+  rv = sock->GetLocalAddr(getter_AddRefs(laddr));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+  uint16_t family;
+  rv = laddr->GetFamily(&family);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (family == nsINetAddr::FAMILY_INET) {
+    rv = sock->SetMulticastLoopback(aLoopback);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // register listener
@@ -238,6 +251,110 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
   }
 
   mSocket = sock;
+
+  return NS_OK;
+}
+
+
+static nsCOMPtr<nsIEventTarget> GetSTSThread()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIEventTarget> sts_thread;
+
+  sts_thread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  return sts_thread;
+}
+
+static void CheckSTSThread()
+{
+  nsCOMPtr<nsIEventTarget> sts_thread = GetSTSThread();
+
+  ASSERT_ON_THREAD(sts_thread);
+}
+
+
+// Proxy the Connect() request to the STS thread, since it may block and
+// should be done there.
+bool
+UDPSocketParent::RecvConnect(const UDPAddressInfo& aAddressInfo)
+{
+  nsCOMPtr<nsIEventTarget> thread(NS_GetCurrentThread());
+  NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(WrapRunnable(
+                                                  this,
+                                                  &UDPSocketParent::DoConnect,
+                                                  mSocket,
+                                                  thread,
+                                                  aAddressInfo),
+                                                NS_DISPATCH_NORMAL)));
+  return true;
+}
+
+void
+UDPSocketParent::SendConnectResponse(nsIEventTarget *aThread,
+                                     const UDPAddressInfo& aAddressInfo)
+{
+  NS_WARN_IF(NS_FAILED(aThread->Dispatch(WrapRunnable(
+                                           this,
+                                           &UDPSocketParent::SendCallbackConnected,
+                                           aAddressInfo),
+                                         NS_DISPATCH_NORMAL)));
+}
+
+// Runs on STS thread
+void
+UDPSocketParent::DoConnect(nsCOMPtr<nsIUDPSocket>& aSocket,
+                           nsCOMPtr<nsIEventTarget>& aReturnThread,
+                           const UDPAddressInfo& aAddressInfo)
+{
+  UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, aAddressInfo.addr().get(), aAddressInfo.port()));
+  if (NS_FAILED(ConnectInternal(aAddressInfo.addr(), aAddressInfo.port()))) {
+    SendInternalError(aReturnThread, __LINE__);
+    return;
+  }
+  CheckSTSThread();
+
+  nsCOMPtr<nsINetAddr> localAddr;
+  aSocket->GetLocalAddr(getter_AddRefs(localAddr));
+
+  nsCString addr;
+  if (NS_FAILED(localAddr->GetAddress(addr))) {
+    SendInternalError(aReturnThread, __LINE__);
+    return;
+  }
+
+  uint16_t port;
+  if (NS_FAILED(localAddr->GetPort(&port))) {
+    SendInternalError(aReturnThread, __LINE__);
+    return;
+  }
+
+  UDPSOCKET_LOG(("%s: SendConnectResponse: %s:%u", __FUNCTION__, addr.get(), port));
+  SendConnectResponse(aReturnThread, UDPAddressInfo(addr, port));
+}
+
+nsresult
+UDPSocketParent::ConnectInternal(const nsCString& aHost, const uint16_t& aPort)
+{
+  nsresult rv;
+
+  UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, nsCString(aHost).get(), aPort));
+  PRNetAddr prAddr;
+  PR_InitializeNetAddr(PR_IpAddrAny, aPort, &prAddr);
+  PRStatus status = PR_StringToNetAddr(aHost.BeginReading(), &prAddr);
+  if (status != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
+
+  rv = mSocket->Connect(&addr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -483,6 +600,18 @@ UDPSocketParent::FireInternalError(uint32_t aLineNo)
 
   mozilla::Unused << SendCallbackError(NS_LITERAL_CSTRING("Internal error"),
                                        NS_LITERAL_CSTRING(__FILE__), aLineNo);
+}
+
+void
+UDPSocketParent::SendInternalError(nsIEventTarget *aThread,
+                                   uint32_t aLineNo)
+{
+  UDPSOCKET_LOG(("SendInternalError: %u", aLineNo));
+  NS_WARN_IF(NS_FAILED(aThread->Dispatch(WrapRunnable(
+                                           this,
+                                           &UDPSocketParent::FireInternalError,
+                                           aLineNo),
+                                         NS_DISPATCH_NORMAL)));
 }
 
 } // namespace dom

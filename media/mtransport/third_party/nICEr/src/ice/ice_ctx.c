@@ -601,6 +601,8 @@ static int nr_ice_get_default_address(nr_ice_ctx *ctx, int ip_version, nr_transp
     if ((r=nr_socket_getaddr(sock, addrp)))
       ABORT(r);
 
+    r_log(LOG_GENERIC, LOG_DEBUG, "Default address: %s", addrp->as_string);
+
     _status=0;
   abort:
     nr_socket_destroy(&sock);

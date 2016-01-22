@@ -36,6 +36,12 @@ public:
 
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
                         const bool& aAddressReuse, const bool& aLoopback) override;
+  virtual bool RecvConnect(const UDPAddressInfo& aAddressInfo) override;
+  void SendConnectResponse(nsIEventTarget *aThread,
+                           const UDPAddressInfo& aAddressInfo);
+  void DoConnect(nsCOMPtr<nsIUDPSocket>& aSocket,
+                 nsCOMPtr<nsIEventTarget>& aReturnThread,
+                 const UDPAddressInfo& aAddressInfo);
 
   virtual bool RecvOutgoingData(const UDPData& aData, const UDPSocketAddr& aAddr) override;
 
@@ -56,8 +62,10 @@ private:
   void Send(const InputStreamParams& aStream, const UDPSocketAddr& aAddr);
   nsresult BindInternal(const nsCString& aHost, const uint16_t& aPort,
                         const bool& aAddressReuse, const bool& aLoopback);
-
+  nsresult ConnectInternal(const nsCString& aHost, const uint16_t& aPort);
   void FireInternalError(uint32_t aLineNo);
+  void SendInternalError(nsIEventTarget *aThread,
+                         uint32_t aLineNo);
 
   // One of these will be null and the other non-null.
   PBackgroundParent* mBackgroundManager;

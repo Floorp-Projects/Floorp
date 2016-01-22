@@ -19,7 +19,7 @@ union NetAddr;
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
 
-[scriptable, uuid(481f15ce-224a-40b6-9927-7effbc326776)]
+[scriptable, uuid(1e6ad73b-6c05-4d78-9a88-2d357b88f58b)]
 interface nsIUDPSocketChild : nsISupports
 {
   readonly attribute unsigned short localPort;
@@ -33,6 +33,9 @@ interface nsIUDPSocketChild : nsISupports
   void bind(in nsIUDPSocketInternal socket, in nsIPrincipal principal,
             in AUTF8String host, in unsigned short port,
             in bool addressReuse, in bool loopback);
+
+  // Tell the chrome process to connect the UDP socket to a given remote host and port
+  void connect(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
 
   // Tell the chrome process to perform equivalent operations to all following methods
   void send(in AUTF8String host, in unsigned short port,
@@ -56,11 +59,13 @@ interface nsIUDPSocketChild : nsISupports
 /*
  * Internal interface for callback from chrome process
  */
-[scriptable, uuid(44cd9ad5-d574-4169-baf9-e1af0648a143)]
+[scriptable, uuid(613dd3ad-598b-4da9-ad63-bbda50c20098)]
 interface nsIUDPSocketInternal : nsISupports
 {
   // callback while socket is opened. localPort and localAddress is ready until this time.
   void callListenerOpened();
+  // callback while socket is connected.
+  void callListenerConnected();
   // callback while socket is closed.
   void callListenerClosed();
   // callback while incoming packet is received.
