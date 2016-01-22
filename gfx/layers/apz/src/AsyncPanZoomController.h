@@ -26,6 +26,7 @@
 #include "LayersTypes.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsRegion.h"
+#include "PotentialCheckerboardDurationTracker.h"
 
 #include "base/message_loop.h"
 
@@ -1105,6 +1106,10 @@ private:
   // composite. If a checkerboard event takes place, this is destroyed at the
   // end of the event, and a new one is created on the next composite.
   UniquePtr<CheckerboardEvent> mCheckerboardEvent;
+  // This is used to track the total amount of time that we could reasonably
+  // be checkerboarding. Combined with other info, this allows us to meaningfully
+  // say how frequently users actually encounter checkerboarding.
+  PotentialCheckerboardDurationTracker mPotentialCheckerboardTracker;
 };
 
 } // namespace layers

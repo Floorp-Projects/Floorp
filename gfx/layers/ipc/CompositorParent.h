@@ -445,6 +445,8 @@ public:
 
   nsIWidget* GetWidget() { return mWidget; }
 
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~CompositorParent();
@@ -459,7 +461,6 @@ protected:
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
   virtual void ScheduleTask(CancelableTask*, int);
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
-  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
   void SetEGLSurfaceSize(int width, int height);
 

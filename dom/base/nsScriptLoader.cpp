@@ -67,9 +67,6 @@ GetSriLog()
   return gSriPRLog;
 }
 
-// The nsScriptLoadRequest is passed as the context to necko, and thus
-// it needs to be threadsafe. Necko won't do anything with this
-// context, but it will AddRef and Release it on other threads.
 NS_IMPL_ISUPPORTS0(nsScriptLoadRequest)
 
 nsScriptLoadRequestList::~nsScriptLoadRequestList()

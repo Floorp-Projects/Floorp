@@ -7,7 +7,7 @@ task:
     description: XPCShell run {{chunk}}
   extra:
     chunks:
-      total: 4 # NOTE: We're doubling the chunking to make them run under an hour
+      total: 5
     suite:
       name: xpcshell
       flavor: xpcshell

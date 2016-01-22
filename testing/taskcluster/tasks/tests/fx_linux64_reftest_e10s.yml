@@ -10,7 +10,7 @@ task:
     description: Reftest e10s run {{chunk}}
   extra:
     chunks:
-      total: 2
+      total: 5
     suite:
       name: reftest
       flavor: reftest

@@ -284,7 +284,7 @@ protected:
 
     void PopulateMipChain(uint32_t baseLevel, uint32_t maxLevel);
 
-    uint32_t MaxEffectiveMipmapLevel() const;
+    uint32_t MaxEffectiveMipmapLevel(uint32_t texUnit) const;
 
     static uint8_t FaceForTarget(TexImageTarget texImageTarget) {
         GLenum rawTexImageTarget = texImageTarget.get();
@@ -369,11 +369,11 @@ public:
 
     bool AreAllLevel0ImageInfosEqual() const;
 
-    bool IsMipmapComplete() const;
+    bool IsMipmapComplete(uint32_t texUnit) const;
 
     bool IsCubeComplete() const;
 
-    bool IsComplete(const char** const out_reason) const;
+    bool IsComplete(uint32_t texUnit, const char** const out_reason) const;
 
     bool IsMipmapCubeComplete() const;
 

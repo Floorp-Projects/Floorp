@@ -22,6 +22,7 @@
 #include <sys/types.h>
 
 #include <utils/Errors.h>
+#include <utils/Looper.h>
 
 #include <binder/BinderService.h>
 
@@ -38,6 +39,7 @@ namespace android {
 
 // ---------------------------------------------------------------------------
 
+class GraphicProducerWrapper;
 class IGraphicBufferAlloc;
 
 enum {
@@ -127,6 +129,11 @@ private:
      * Transactions
      */
     uint32_t setDisplayStateLocked(const DisplayState& s);
+
+    void captureScreenImp(const sp<IGraphicBufferProducer>& producer,
+                          uint32_t reqWidth,
+                          uint32_t reqHeight,
+                          const sp<GraphicProducerWrapper>& wrapper);
 
     sp<IBinder> mPrimaryDisplay;
 
