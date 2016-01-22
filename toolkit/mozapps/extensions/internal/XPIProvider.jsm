@@ -4240,6 +4240,33 @@ this.XPIProvider = {
   },
 
   /**
+   * Determine if an add-on should be blocking e10s if enabled.
+   *
+   * @param  aAddon
+   *         The add-on to test
+   * @return true if enabling the add-on should block e10s
+   */
+  isBlockingE10s: function(aAddon) {
+    // Only extensions change behaviour
+    if (aAddon.type != "extension")
+      return false;
+
+    // The hotfix is exempt
+    let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+    if (hotfixID && hotfixID == aAddon.id)
+      return false;
+
+    // System add-ons are exempt
+    let locName = aAddon._installLocation ? aAddon._installLocation.name
+                                          : undefined;
+    if (locName == KEY_APP_SYSTEM_DEFAULTS ||
+        locName == KEY_APP_SYSTEM_ADDONS)
+      return false;
+
+    return true;
+  },
+
+  /**
    * In some cases having add-ons active blocks e10s but turning off e10s
    * requires a restart so some add-ons that are normally restartless will
    * require a restart to install or enable.
@@ -4257,21 +4284,7 @@ this.XPIProvider = {
     if (!Services.appinfo.browserTabsRemoteAutostart)
       return false;
 
-    // Only extensions change behaviour
-    if (aAddon.type != "extension")
-      return false;
-
-    // The hotfix is exempt
-    let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
-    if (hotfixID && hotfixID == aAddon.id)
-      return false;
-
-    // System add-ons are exempt
-    if (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
-        aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS)
-      return false;
-
-    return true;
+    return this.isBlockingE10s(aAddon);
   },
 
   /**
