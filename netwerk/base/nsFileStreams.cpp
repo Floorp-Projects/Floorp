@@ -701,21 +701,17 @@ nsPartialFileInputStream::Init(nsIFile* aFile, uint64_t aStart,
                                           aBehaviorFlags);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return rv;
+    return nsFileInputStream::Seek(NS_SEEK_SET, mStart);
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Tell(int64_t *aResult)
 {
     int64_t tell = 0;
-
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsFileInputStream::Tell(&tell);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aResult = tell - mStart;
+    nsresult rv = nsFileInputStream::Tell(&tell);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = tell - mStart;
+    }
     return rv;
 }
 
@@ -723,23 +719,16 @@ NS_IMETHODIMP
 nsPartialFileInputStream::Available(uint64_t* aResult)
 {
     uint64_t available = 0;
-
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsFileInputStream::Available(&available);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aResult = TruncateSize(available);
+    nsresult rv = nsFileInputStream::Available(&available);
+    if (NS_SUCCEEDED(rv)) {
+        *aResult = TruncateSize(available);
+    }
     return rv;
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
 {
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     uint32_t readsize = (uint32_t) TruncateSize(aCount);
     if (readsize == 0 && mBehaviorFlags & CLOSE_ON_EOF) {
         Close();
@@ -747,19 +736,16 @@ nsPartialFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
         return NS_OK;
     }
 
-    rv = nsFileInputStream::Read(aBuf, readsize, aResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPosition += readsize;
+    nsresult rv = nsFileInputStream::Read(aBuf, readsize, aResult);
+    if (NS_SUCCEEDED(rv)) {
+        mPosition += readsize;
+    }
     return rv;
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     int64_t offset;
     switch (aWhence) {
         case NS_SEEK_SET:
@@ -779,10 +765,10 @@ nsPartialFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
         return NS_ERROR_INVALID_ARG;
     }
 
-    rv = nsFileInputStream::Seek(NS_SEEK_SET, offset);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPosition = offset - mStart;
+    nsresult rv = nsFileInputStream::Seek(NS_SEEK_SET, offset);
+    if (NS_SUCCEEDED(rv)) {
+        mPosition = offset - mStart;
+    }
     return rv;
 }
 
@@ -842,14 +828,6 @@ nsPartialFileInputStream::Deserialize(
     return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, mStart));
 }
 
-nsresult
-nsPartialFileInputStream::DoPendingOpen()
-{
-    if (!mDeferredOpen) {
-       return NS_OK;
-    }
-    return nsFileInputStream::Seek(NS_SEEK_SET, mStart);
-}
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 

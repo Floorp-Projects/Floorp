@@ -199,8 +199,6 @@ protected:
     ~nsPartialFileInputStream()
     { }
 
-    inline nsresult DoPendingOpen();
-
 private:
     uint64_t TruncateSize(uint64_t aSize) {
           return std::min<uint64_t>(mLength - mPosition, aSize);
