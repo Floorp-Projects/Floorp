@@ -78,7 +78,7 @@ ImageCapture::TakePhotoByMediaEngine()
   // Callback for TakPhoto(), it also monitor the principal. If principal
   // changes, it returns PHOTO_ERROR with security error.
   class TakePhotoCallback : public MediaEnginePhotoCallback,
-                            public DOMMediaStream::PrincipalChangeObserver
+                            public PrincipalChangeObserver<DOMMediaStream>
   {
   public:
     TakePhotoCallback(VideoStreamTrack* aVideoTrack, ImageCapture* aImageCapture)

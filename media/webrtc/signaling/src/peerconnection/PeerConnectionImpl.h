@@ -247,7 +247,7 @@ class RTCStatsQuery {
 class PeerConnectionImpl final : public nsISupports,
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
                                  public mozilla::DataChannelConnection::DataConnectionListener,
-                                 public DOMMediaStream::PrincipalChangeObserver,
+                                 public dom::PrincipalChangeObserver<DOMMediaStream>,
 #endif
                                  public sigslot::has_slots<>
 {

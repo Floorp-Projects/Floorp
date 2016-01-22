@@ -16,6 +16,7 @@
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/CORSMode.h"
+#include "PrincipalChangeObserver.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
@@ -456,17 +457,8 @@ public:
    */
   void SetPrincipal(nsIPrincipal* aPrincipal);
 
-  /**
-   * Used to learn about dynamic changes in principal occur.
-   * Operations relating to these observers must be confined to the main thread.
-   */
-  class PrincipalChangeObserver
-  {
-  public:
-    virtual void PrincipalChanged(DOMMediaStream* aMediaStream) = 0;
-  };
-  bool AddPrincipalChangeObserver(PrincipalChangeObserver* aObserver);
-  bool RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver);
+  bool AddPrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
+  bool RemovePrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
   /**
    * Called when this stream's MediaStreamGraph has been shut down. Normally
@@ -652,7 +644,7 @@ private:
   // Principal identifying who may access the contents of this stream.
   // If null, this stream can be used by anyone because it has no content yet.
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsTArray<PrincipalChangeObserver*> mPrincipalChangeObservers;
+  nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
   // this is used in gUM and WebRTC to identify peers that this stream
   // is allowed to be sent to
   nsAutoPtr<PeerIdentity> mPeerIdentity;

@@ -41,7 +41,7 @@ private:
 };
 
 class MediaStreamAudioSourceNode : public AudioNode,
-                                   public DOMMediaStream::PrincipalChangeObserver
+                                   public PrincipalChangeObserver<DOMMediaStream>
 {
 public:
   static already_AddRefed<MediaStreamAudioSourceNode>
