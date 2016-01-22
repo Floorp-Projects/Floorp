@@ -51,7 +51,7 @@ public:
   NS_DECL_NSIKEYOBJECTFACTORY
 
 private:
-  ~nsKeyObjectFactory() {}
+  ~nsKeyObjectFactory();
 
   // Disallow copy constructor
   nsKeyObjectFactory(nsKeyObjectFactory&);
