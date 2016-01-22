@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 var fakeCharPrefName = "color";
 var fakeBoolPrefName = "boolean";
 var fakePrefValue = "green";

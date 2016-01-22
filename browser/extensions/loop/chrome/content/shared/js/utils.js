@@ -105,7 +105,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   var CHAT_CONTENT_TYPES = {
     CONTEXT: "chat-context",
     TEXT: "chat-text",
-    ROOM_NAME: "room-name"
+    ROOM_NAME: "room-name",
+    CONTEXT_TILE: "context-tile"
   };
 
   /**
@@ -721,34 +722,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   /**
-   * Truncate a string if it exceeds the length as defined in `maxLen`, which
-   * is defined as '72' characters by default. If the string needs trimming,
-   * it'll be suffixed with the unicode ellipsis char, \u2026.
-   *
-   * @param  {String} str    The string to truncate, if needed.
-   * @param  {Number} maxLen Maximum number of characters that the string is
-   *                         allowed to contain. Optional, defaults to 72.
-   * @return {String} Truncated version of `str`.
-   */
-  function truncate(str, maxLen) {
-    maxLen = maxLen || 72;
-
-    if (str.length > maxLen) {
-      var substring = str.substr(0, maxLen);
-      // XXX Due to the fact that we have two different l10n libraries.
-      var direction = mozL10n.getDirection ? mozL10n.getDirection() :
-                      mozL10n.language.direction;
-      if (direction === "rtl") {
-        return "…" + substring;
-      }
-
-      return substring + "…";
-    }
-
-    return str;
-  }
-
-  /**
    * Look up the DOM hierarchy for a node matching `selector`.
    * If it is not found return the parent node, this is a sane default so
    * that subsequent queries on the result do no fail.
@@ -802,7 +775,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     strToUint8Array: strToUint8Array,
     Uint8ArrayToStr: Uint8ArrayToStr,
     objectDiff: objectDiff,
-    stripFalsyValues: stripFalsyValues,
-    truncate: truncate
+    stripFalsyValues: stripFalsyValues
   };
 }).call(inChrome ? this : loop.shared);

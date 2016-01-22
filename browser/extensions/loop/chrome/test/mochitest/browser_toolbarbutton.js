@@ -8,8 +8,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
-const { LoopRoomsInternal } = Components.utils.import("chrome://loop/content/modules/LoopRooms.jsm", {});
-Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
+Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 1);
 
 const fxASampleToken = {
   token_type: "bearer",
@@ -26,7 +25,7 @@ registerCleanupFunction(function*() {
   MozLoopService.doNotDisturb = false;
   MozLoopServiceInternal.fxAOAuthProfile = null;
   yield MozLoopServiceInternal.clearError("testing");
-  Services.prefs.clearUserPref("loop.gettingStarted.seen");
+  Services.prefs.clearUserPref("loop.gettingStarted.latestFTUVersion");
 });
 
 add_task(function* test_LoopUI_getters() {

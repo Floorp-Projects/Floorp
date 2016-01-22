@@ -6,7 +6,7 @@
 <head>
   <meta charset="utf-8">
   <title>Loop desktop-local mocha tests</title>
-  <link rel="stylesheet" media="all" href="../shared/vendor/mocha-2.2.5.css">
+  <link rel="stylesheet" media="all" href="/test/vendor/mocha.css">
 </head>
 <body>
   <div id="mocha">
@@ -14,22 +14,26 @@
   </div>
   <div id="messages"></div>
   <div id="fixtures"></div>
-  <script src="../../content/shared/vendor/lodash-3.9.3.js"></script>
-  <script src="../shared/loop_mocha_utils.js"></script>
+  <script src="/shared/vendor/lodash.js"></script>
+  <script src="/shared/test/loop_mocha_utils.js"></script>
   <script>
     LoopMochaUtils.trapErrors();
   </script>
 
   <!-- libs -->
-  <script src="../../content/panels/vendor/l10n.js"></script>
-  <script src="../../content/shared/vendor/react-0.13.3.js"></script>
-  <script src="../../content/shared/vendor/classnames-2.2.0.js"></script>
-  <script src="../../content/shared/vendor/backbone-1.2.1.js"></script>
 
   <!-- test dependencies -->
-  <script src="../shared/vendor/mocha-2.2.5.js"></script>
-  <script src="../shared/vendor/chai-3.0.0.js"></script>
-  <script src="../shared/vendor/sinon-1.16.1.js"></script>
+  <script src="/add-on/panels/vendor/l10n.js"></script>
+  <script src="/shared/vendor/react.js"></script>
+  <script src="/shared/vendor/classnames.js"></script>
+  <script src="/shared/vendor/backbone.js"></script>
+
+  <!-- test dependencies -->
+  <script src="/test/vendor/mocha.js"></script>
+  <script src="/test/vendor/chai.js"></script>
+  <script src="/test/vendor/chai-as-promised.js"></script>
+  <script src="/test/vendor/sinon.js"></script>
+
   <script>
     /*global chai,mocha */
     chai.config.includeStack = true;
@@ -37,25 +41,25 @@
   </script>
 
   <!-- App scripts -->
-  <script src="../../content/shared/js/loopapi-client.js"></script>
-  <script src="../../content/shared/js/utils.js"></script>
-  <script src="../../content/shared/js/models.js"></script>
-  <script src="../../content/shared/js/mixins.js"></script>
-  <script src="../../content/shared/js/actions.js"></script>
-  <script src="../../content/shared/js/validate.js"></script>
-  <script src="../../content/shared/js/dispatcher.js"></script>
-  <script src="../../content/shared/js/otSdkDriver.js"></script>
-  <script src="../../content/shared/js/store.js"></script>
-  <script src="../../content/shared/js/activeRoomStore.js"></script>
-  <script src="../../content/shared/js/views.js"></script>
-  <script src="../../content/shared/js/textChatStore.js"></script>
-  <script src="../../content/shared/js/textChatView.js"></script>
-  <script src="../../content/panels/js/conversationAppStore.js"></script>
-  <script src="../../content/panels/js/roomStore.js"></script>
-  <script src="../../content/panels/js/roomViews.js"></script>
-  <script src="../../content/panels/js/feedbackViews.js"></script>
-  <script src="../../content/panels/js/conversation.js"></script>
-  <script src="../../content/panels/js/panel.js"></script>
+  <script src="/add-on/shared/js/loopapi-client.js"></script>
+  <script src="/add-on/shared/js/utils.js"></script>
+  <script src="/add-on/shared/js/models.js"></script>
+  <script src="/add-on/shared/js/mixins.js"></script>
+  <script src="/add-on/shared/js/actions.js"></script>
+  <script src="/add-on/shared/js/validate.js"></script>
+  <script src="/add-on/shared/js/dispatcher.js"></script>
+  <script src="/add-on/shared/js/otSdkDriver.js"></script>
+  <script src="/add-on/shared/js/store.js"></script>
+  <script src="/add-on/shared/js/activeRoomStore.js"></script>
+  <script src="/add-on/shared/js/views.js"></script>
+  <script src="/add-on/shared/js/textChatStore.js"></script>
+  <script src="/add-on/shared/js/textChatView.js"></script>
+  <script src="/add-on/panels/js/conversationAppStore.js"></script>
+  <script src="/add-on/panels/js/roomStore.js"></script>
+  <script src="/add-on/panels/js/roomViews.js"></script>
+  <script src="/add-on/panels/js/feedbackViews.js"></script>
+  <script src="/add-on/panels/js/conversation.js"></script>
+  <script src="/add-on/panels/js/panel.js"></script>
 
   <!-- Test scripts -->
   <script src="conversationAppStore_test.js"></script>

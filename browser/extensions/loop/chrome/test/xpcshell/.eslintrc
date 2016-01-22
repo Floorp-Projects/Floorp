@@ -1,5 +1,4 @@
 {
-  "extends": "../../.eslintrc-gecko",
   "globals": {
     // General xpcshell-test functions
     "HttpServer": false,

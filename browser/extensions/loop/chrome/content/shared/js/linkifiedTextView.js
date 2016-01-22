@@ -1,3 +1,5 @@
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,7 +7,7 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.LinkifiedTextView = (function() {
+loop.shared.views.LinkifiedTextView = function () {
   "use strict";
 
   /**
@@ -13,7 +15,10 @@ loop.shared.views.LinkifiedTextView = (function() {
    * links starting with http://, https://, or ftp:// as actual clickable
    * links inside a <p> container.
    */
-  var LinkifiedTextView = React.createClass({displayName: "LinkifiedTextView",
+
+  var LinkifiedTextView = React.createClass({
+    displayName: "LinkifiedTextView",
+
     propTypes: {
       // Call this instead of allowing the default <a> click semantics, if
       // given.  Also causes sendReferrer and suppressTarget attributes to be
@@ -28,18 +33,16 @@ loop.shared.views.LinkifiedTextView = (function() {
       suppressTarget: React.PropTypes.bool
     },
 
-    mixins: [
-      React.addons.PureRenderMixin
-    ],
+    mixins: [React.addons.PureRenderMixin],
 
-    _handleClickEvent: function(e) {
+    _handleClickEvent: function (e) {
       e.preventDefault();
       e.stopPropagation();
 
       this.props.linkClickHandler(e.currentTarget.href);
     },
 
-    _generateLinkAttributes: function(href) {
+    _generateLinkAttributes: function (href) {
       var linkAttributes = {
         href: href
       };
@@ -71,7 +74,7 @@ loop.shared.views.LinkifiedTextView = (function() {
      *
      * @returns {Array} of strings and React <a> elements in order.
      */
-    parseStringToElements: function(s) {
+    parseStringToElements: function (s) {
       var elements = [];
       var result = loop.shared.urlRegExps.fullUrlMatch.exec(s);
       var reactElementsCounter = 0; // For giving keys to each ReactElement.
@@ -85,12 +88,12 @@ loop.shared.views.LinkifiedTextView = (function() {
         }
 
         // Push the first link itself, and advance the string pointer again.
-        elements.push(
-          React.createElement("a", React.__spread({},   this._generateLinkAttributes(result[0]) , 
-            {key: reactElementsCounter++}), 
-            result[0]
-          )
-        );
+        elements.push(React.createElement(
+          "a",
+          _extends({}, this._generateLinkAttributes(result[0]), {
+            key: reactElementsCounter++ }),
+          result[0]
+        ));
         s = s.substr(result[0].length);
 
         // Check for another link, and perhaps continue...
@@ -104,13 +107,14 @@ loop.shared.views.LinkifiedTextView = (function() {
       return elements;
     },
 
-    render: function() {
-      return (
-        React.createElement("p", null, this.parseStringToElements(this.props.rawText))
+    render: function () {
+      return React.createElement(
+        "p",
+        null,
+        this.parseStringToElements(this.props.rawText)
       );
     }
   });
 
   return LinkifiedTextView;
-
-})();
+}();

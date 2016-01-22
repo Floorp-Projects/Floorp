@@ -10,7 +10,9 @@ class TestSharedUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestSharedUnits, self).setUp()
-        self.set_server_prefix(".")
+        # Set the server prefix to the top of the src directory for the mozilla-central
+        # repository.
+        self.set_server_prefix("../../../../")
 
     def test_units(self):
-        self.check_page("index.html")
+        self.check_page("chrome/content/shared/test/index.html")

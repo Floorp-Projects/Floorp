@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 var startTimerCalled = false;
 
 /**

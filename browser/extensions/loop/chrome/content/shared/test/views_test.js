@@ -11,12 +11,11 @@ describe("loop.shared.views", function() {
   var sharedActions = loop.shared.actions;
   var sharedModels = loop.shared.models;
   var sharedViews = loop.shared.views;
-  var getReactElementByClass = TestUtils.findRenderedDOMComponentWithClass;
-  var sandbox, fakeAudioXHR, dispatcher, OS, OSVersion;
+  var sandbox, clock, dispatcher, OS, OSVersion;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
-    sandbox.useFakeTimers(); // exposes sandbox.clock as a fake timer
+    clock = sandbox.useFakeTimers(); // exposes sandbox.clock as a fake timer
     sandbox.stub(l10n, "get", function(x) {
       return "translated:" + x;
     });
@@ -27,20 +26,6 @@ describe("loop.shared.views", function() {
 
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
-
-    fakeAudioXHR = {
-      open: sinon.spy(),
-      send: function() {},
-      abort: function() {},
-      getResponseHeader: function(header) {
-        if (header === "Content-Type") {
-          return "audio/ogg";
-        }
-      },
-      responseType: null,
-      response: new ArrayBuffer(10),
-      onload: null
-    };
 
     OS = "mac";
     OSVersion = { major: 10, minor: 10 };
@@ -108,177 +93,12 @@ describe("loop.shared.views", function() {
     });
   });
 
-  describe("SettingsControlButton", function() {
-    var requestStubs;
-    var support_url = "https://support.com";
-
-    beforeEach(function() {
-      LoopMochaUtils.stubLoopRequest(requestStubs = {
-        OpenURL: sandbox.stub(),
-        SetLoopPref: sandbox.stub(),
-        GetLoopPref: function(prefName) {
-          switch (prefName) {
-            case "support_url":
-              return support_url;
-            default:
-              return prefName;
-          }
-        }
-      });
-
-      sandbox.stub(console, "error");
-    });
-
-    function mountTestComponent(props) {
-      return TestUtils.renderIntoDocument(
-        React.createElement(sharedViews.SettingsControlButton, props));
-    }
-
-    it("should render a visible button", function() {
-      var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      var node = comp.getDOMNode().querySelector(".btn-settings");
-      expect(node.classList.contains("hide")).eql(false);
-    });
-
-    it("should not render anything", function() {
-      var comp = mountTestComponent();
-      expect(comp.getDOMNode()).to.eql(null);
-    });
-
-    it("should not show an undefined menu option", function() {
-      var settingsMenuItems = [
-        { id: "not Defined" },
-        { id: "help" }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-      var menuItems = comp.getDOMNode().querySelectorAll(".settings-menu > li");
-      expect(menuItems).to.have.length.of(1);
-    });
-
-    it("should log an error for an undefined menu option", function() {
-      var settingsMenuItems = [
-        { id: "not Defined" },
-        { id: "help" }
-      ];
-
-      mountTestComponent({ menuItems: settingsMenuItems });
-
-      sinon.assert.calledOnce(console.error);
-      sinon.assert.calledWithMatch(console.error, "Invalid");
-    });
-
-    it("should not render anything if not exists any valid item to show", function() {
-      var settingsMenuItems = [
-        { id: "not Defined" },
-        { id: "another wrong menu item" }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-      expect(comp.getDOMNode()).to.eql(null);
-    });
-
-    it("should show the settings dropdown on click", function() {
-      var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      expect(comp.state.showMenu).eql(false);
-      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-settings"));
-
-      expect(comp.state.showMenu).eql(true);
-    });
-
-    it("should have a `menu-below` class on the dropdown when the prop is set.", function() {
-      var settingsMenuItems = [
-        { id: "help" }
-      ];
-      var comp = mountTestComponent({
-        menuBelow: true,
-        menuItems: settingsMenuItems
-      });
-      var menuItems = comp.getDOMNode().querySelector(".settings-menu");
-
-      expect(menuItems.classList.contains("menu-below")).eql(true);
-    });
-
-    it("should not have a `menu-below` class on the dropdown when the prop is not set.", function() {
-      var settingsMenuItems = [
-        { id: "help" }
-      ];
-      var comp = mountTestComponent({
-        menuItems: settingsMenuItems
-      });
-      var menuItems = comp.getDOMNode().querySelector(".settings-menu");
-
-      expect(menuItems.classList.contains("menu-below")).eql(false);
-    });
-
-    it("should show edit Context on menu when the option is enabled", function() {
-      var settingsMenuItems = [
-        {
-          id: "edit",
-          enabled: true,
-          visible: true,
-          onClick: function() {}
-        }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
-      expect(node.classList.contains("hide")).eql(false);
-    });
-
-    it("should hide edit Context on menu when the option is not visible", function() {
-      var settingsMenuItems = [
-        {
-          id: "edit",
-          enabled: false,
-          visible: false,
-          onClick: function() {}
-        }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
-      expect(node.classList.contains("hide")).eql(true);
-    });
-
-    it("should call onClick method when the edit context menu item is clicked", function() {
-      var onClickCalled = false;
-      var settingsMenuItems = [
-        {
-          id: "edit",
-          enabled: true,
-          visible: true,
-          onClick: sandbox.stub()
-        }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit"));
-      sinon.assert.calledOnce(settingsMenuItems[0].onClick);
-    });
-
-    it("should open a tab to the support url when the support menu item is clicked", function() {
-      var settingsMenuItems = [
-        { id: "help" }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems });
-
-      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:last-child"));
-
-      sinon.assert.calledOnce(requestStubs.OpenURL);
-      sinon.assert.calledWithExactly(requestStubs.OpenURL, support_url);
-    });
-  });
-
   describe("ConversationToolbar", function() {
-    var clock, hangup, publishStream;
+    var hangup, publishStream;
 
     function mountTestComponent(props) {
       props = _.extend({
-        dispatcher: dispatcher,
-        show: true
+        dispatcher: dispatcher
       }, props || {});
       return TestUtils.renderIntoDocument(
         React.createElement(sharedViews.ConversationToolbar, props));
@@ -287,21 +107,6 @@ describe("loop.shared.views", function() {
     beforeEach(function() {
       hangup = sandbox.stub();
       publishStream = sandbox.stub();
-      clock = sinon.useFakeTimers();
-    });
-
-    afterEach(function() {
-      clock.restore();
-    });
-
-    it("should not render the component when 'show' is false", function() {
-      var comp = mountTestComponent({
-        hangup: hangup,
-        publishStream: publishStream,
-        show: false
-      });
-
-      expect(comp.getDOMNode()).to.eql(null);
     });
 
     it("should start no idle", function() {
@@ -743,7 +548,7 @@ describe("loop.shared.views", function() {
       expect(element.className).eql("no-video");
     });
 
-    it("should display a video element if a source object is supplied", function() {
+    it("should display a video element if a source object is supplied", function(done) {
       view = mountTestComponent({
         displayAvatar: false,
         mediaType: "local",
@@ -758,7 +563,18 @@ describe("loop.shared.views", function() {
 
       expect(element).not.eql(null);
       expect(element.className).eql("local-video");
-      expect(element.muted).eql(true);
+
+      // Google Chrome doesn't seem to set "muted" on the element at creation
+      // time, so we need to do the test as async.
+      clock.restore();
+      setTimeout(function() {
+        try {
+          expect(element.muted).eql(true);
+          done();
+        } catch (ex) {
+          done(ex);
+        }
+      }, 10);
     });
 
     // We test this function by itself, as otherwise we'd be into creating fake
