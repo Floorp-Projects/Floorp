@@ -11,7 +11,7 @@ task:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   payload:
-    image: '{{#docker_image}}desktop-test{{/docker_image}}'
+    image: '{{#docker_image}}tester{{/docker_image}}'
     cache:
       # So pip installs are cached...
       level-{{level}}-{{project}}-dotcache: /home/worker/.cache
@@ -21,6 +21,8 @@ task:
         loopbackVideo: true
         loopbackAudio: true
     env:
+      GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
+      GECKO_HEAD_REV: '{{{head_rev}}}'
       NEED_XVFB: true
       NEED_PULSEAUDIO: true
       MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'

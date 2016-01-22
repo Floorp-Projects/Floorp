@@ -286,7 +286,7 @@ class SystemResourceMonitor(object):
 
         done = False
 
-        while self._pipe.poll(1):
+        while self._pipe.poll(0.1):
             start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
                 swap_mem = self._pipe.recv()
 

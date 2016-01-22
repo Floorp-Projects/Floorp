@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __FFmpegH264Decoder_h__
-#define __FFmpegH264Decoder_h__
+#ifndef __FFmpegVideoDecoder_h__
+#define __FFmpegVideoDecoder_h__
 
 #include "FFmpegDataDecoder.h"
 #include "mozilla/Pair.h"
@@ -15,12 +15,12 @@ namespace mozilla
 {
 
 template <int V>
-class FFmpegH264Decoder : public FFmpegDataDecoder<V>
+class FFmpegVideoDecoder : public FFmpegDataDecoder<V>
 {
 };
 
 template <>
-class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
+class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
@@ -32,11 +32,11 @@ class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   };
 
 public:
-  FFmpegH264Decoder(FlushableTaskQueue* aTaskQueue,
+  FFmpegVideoDecoder(FlushableTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
                     const VideoInfo& aConfig,
                     ImageContainer* aImageContainer);
-  virtual ~FFmpegH264Decoder();
+  virtual ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
@@ -122,4 +122,4 @@ private:
 
 } // namespace mozilla
 
-#endif // __FFmpegH264Decoder_h__
+#endif // __FFmpegVideoDecoder_h__

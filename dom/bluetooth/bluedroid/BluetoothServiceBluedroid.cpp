@@ -138,6 +138,10 @@ public:
   void Init() override
   {
     static void (* const sInitManager[])(BluetoothProfileResultHandler*) = {
+      BluetoothMapSmsManager::InitMapSmsInterface,
+      BluetoothOppManager::InitOppInterface,
+      BluetoothPbapManager::InitPbapInterface,
+      BluetoothHidManager::InitHidInterface,
       BluetoothHfpManager::InitHfpInterface,
       BluetoothA2dpManager::InitA2dpInterface,
       BluetoothAvrcpManager::InitAvrcpInterface,
@@ -280,14 +284,15 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static BluetoothProfileManagerBase* sProfiles[] = {
-    BluetoothHfpManager::Get(),
+  BluetoothProfileManagerBase* sProfiles[] = {
+    // BluetoothGattManager not handled here
     BluetoothAvrcpManager::Get(),
     BluetoothA2dpManager::Get(),
-    BluetoothOppManager::Get(),
+    BluetoothHfpManager::Get(),
+    BluetoothHidManager::Get(),
     BluetoothPbapManager::Get(),
-    BluetoothMapSmsManager::Get(),
-    BluetoothHidManager::Get()
+    BluetoothOppManager::Get(),
+    BluetoothMapSmsManager::Get()
   };
 
   // Disconnect all connected profiles
@@ -2037,7 +2042,11 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
       BluetoothGattManager::DeinitGattInterface,
       BluetoothAvrcpManager::DeinitAvrcpInterface,
       BluetoothA2dpManager::DeinitA2dpInterface,
-      BluetoothHfpManager::DeinitHfpInterface
+      BluetoothHfpManager::DeinitHfpInterface,
+      BluetoothHidManager::DeinitHidInterface,
+      BluetoothPbapManager::DeinitPbapInterface,
+      BluetoothOppManager::DeinitOppInterface,
+      BluetoothMapSmsManager::DeinitMapSmsInterface
     };
 
     // Return error if BluetoothService is unavailable

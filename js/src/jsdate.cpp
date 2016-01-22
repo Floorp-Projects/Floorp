@@ -1339,14 +1339,7 @@ DateObject::fillLocalTimeSlots()
     int weekday = WeekDay(localTime);
     setReservedSlot(LOCAL_DAY_SLOT, Int32Value(weekday));
 
-    int seconds = yearSeconds % 60;
-    setReservedSlot(LOCAL_SECONDS_SLOT, Int32Value(seconds));
-
-    int minutes = (yearSeconds / 60) % 60;
-    setReservedSlot(LOCAL_MINUTES_SLOT, Int32Value(minutes));
-
-    int hours = (yearSeconds / (60 * 60)) % 24;
-    setReservedSlot(LOCAL_HOURS_SLOT, Int32Value(hours));
+    setReservedSlot(LOCAL_SECONDS_INTO_YEAR_SLOT, Int32Value(yearSeconds));
 }
 
 inline double
@@ -1547,7 +1540,15 @@ DateObject::getHours_impl(JSContext* cx, const CallArgs& args)
     DateObject* dateObj = &args.thisv().toObject().as<DateObject>();
     dateObj->fillLocalTimeSlots();
 
-    args.rval().set(dateObj->getReservedSlot(LOCAL_HOURS_SLOT));
+    // Note: LOCAL_SECONDS_INTO_YEAR_SLOT is guaranteed to contain an
+    // int32 or NaN after the call to fillLocalTimeSlots.
+    Value yearSeconds = dateObj->getReservedSlot(LOCAL_SECONDS_INTO_YEAR_SLOT);
+    if (yearSeconds.isDouble()) {
+        MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+        args.rval().set(yearSeconds);
+    } else {
+        args.rval().setInt32((yearSeconds.toInt32() / int(SecondsPerHour)) % int(HoursPerDay));
+    }
     return true;
 }
 
@@ -1582,7 +1583,15 @@ DateObject::getMinutes_impl(JSContext* cx, const CallArgs& args)
     DateObject* dateObj = &args.thisv().toObject().as<DateObject>();
     dateObj->fillLocalTimeSlots();
 
-    args.rval().set(dateObj->getReservedSlot(LOCAL_MINUTES_SLOT));
+    // Note: LOCAL_SECONDS_INTO_YEAR_SLOT is guaranteed to contain an
+    // int32 or NaN after the call to fillLocalTimeSlots.
+    Value yearSeconds = dateObj->getReservedSlot(LOCAL_SECONDS_INTO_YEAR_SLOT);
+    if (yearSeconds.isDouble()) {
+        MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+        args.rval().set(yearSeconds);
+    } else {
+        args.rval().setInt32((yearSeconds.toInt32() / int(SecondsPerMinute)) % int(MinutesPerHour));
+    }
     return true;
 }
 
@@ -1611,7 +1620,17 @@ date_getUTCMinutes(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsDate, DateObject::getUTCMinutes_impl>(cx, args);
 }
 
-/* Date.getSeconds is mapped to getUTCSeconds */
+/*
+ * Date.getSeconds is mapped to getUTCSeconds. As long as no supported time
+ * zone has a fractional-minute component, the differences in their
+ * specifications aren't observable.
+ *
+ * We'll have to split the implementations if a new time zone with a
+ * fractional-minute component is introduced or once we implement ES6's
+ * 20.3.1.7 Local Time Zone Adjustment: time zones with adjustments like that
+ * did historically exist, e.g.
+ * https://en.wikipedia.org/wiki/UTC%E2%88%9200:25:21
+ */
 
 /* static */ MOZ_ALWAYS_INLINE bool
 DateObject::getUTCSeconds_impl(JSContext* cx, const CallArgs& args)
@@ -1619,7 +1638,15 @@ DateObject::getUTCSeconds_impl(JSContext* cx, const CallArgs& args)
     DateObject* dateObj = &args.thisv().toObject().as<DateObject>();
     dateObj->fillLocalTimeSlots();
 
-    args.rval().set(dateObj->getReservedSlot(LOCAL_SECONDS_SLOT));
+    // Note: LOCAL_SECONDS_INTO_YEAR_SLOT is guaranteed to contain an
+    // int32 or NaN after the call to fillLocalTimeSlots.
+    Value yearSeconds = dateObj->getReservedSlot(LOCAL_SECONDS_INTO_YEAR_SLOT);
+    if (yearSeconds.isDouble()) {
+        MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+        args.rval().set(yearSeconds);
+    } else {
+        args.rval().setInt32(yearSeconds.toInt32() % int(SecondsPerMinute));
+    }
     return true;
 }
 
@@ -1629,8 +1656,13 @@ date_getUTCSeconds(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, DateObject::getUTCSeconds_impl>(cx, args);
 }
-
-/* Date.getMilliseconds is mapped to getUTCMilliseconds */
+/*
+ * Date.getMilliseconds is mapped to getUTCMilliseconds for the same reasons
+ * that getSeconds is mapped to getUTCSeconds (see above).  No known LocalTZA
+ * has *ever* included a fractional-second component, however, so we can keep
+ * this simplification even if we stop implementing ES5 local-time computation
+ * semantics.
+ */
 
 /* static */ MOZ_ALWAYS_INLINE bool
 DateObject::getUTCMilliseconds_impl(JSContext* cx, const CallArgs& args)
