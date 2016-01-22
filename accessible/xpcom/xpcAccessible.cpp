@@ -90,10 +90,10 @@ xpcAccessible::GetChildCount(int32_t* aChildCount)
 {
   NS_ENSURE_ARG_POINTER(aChildCount);
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  *aChildCount = Intl()->ChildCount();
+  *aChildCount = IntlGeneric().ChildCount();
   return NS_OK;
 }
 
