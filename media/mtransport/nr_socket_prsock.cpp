@@ -498,7 +498,7 @@ int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
         MOZ_ASSERT(false);
         ABORT(R_BAD_ARGS);
     }
-    _status=0;
+    _status = 0;
   abort:
     return(_status);
   }
@@ -536,7 +536,7 @@ int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
         ABORT(R_BAD_ARGS);
     }
 
-    _status=0;
+    _status = 0;
  abort:
     return(_status);
   }
@@ -563,7 +563,7 @@ int nr_transport_addr_get_addrstring_and_port(nr_transport_addr *addr,
 
   *host = addr_string;
 
-  _status=0;
+  _status = 0;
 abort:
   return(_status);
 }
@@ -765,7 +765,7 @@ int NrSocket::sendto(const void *msg, size_t len,
     ABORT(R_IO_ERROR);
   }
 
-  _status=0;
+  _status = 0;
 abort:
   return(_status);
 }
@@ -785,14 +785,14 @@ int NrSocket::recvfrom(void * buf, size_t maxlen,
     r_log(LOG_GENERIC, LOG_INFO, "Error in recvfrom: %d", (int)PR_GetError());
     ABORT(R_IO_ERROR);
   }
-  *len=status;
+  *len = status;
 
   if((r=nr_praddr_to_transport_addr(&nfrom,from,my_addr_.protocol,0)))
     ABORT(r);
 
   //r_log(LOG_GENERIC,LOG_DEBUG,"Read %d bytes from %s",*len,addr->as_string);
 
-  _status=0;
+  _status = 0;
 abort:
   return(_status);
 }
@@ -848,7 +848,7 @@ int NrSocket::connect(nr_transport_addr *addr) {
     ABORT(R_WOULDBLOCK);
   }
 
-  _status=0;
+  _status = 0;
 abort:
   return(_status);
 }
@@ -872,7 +872,7 @@ int NrSocket::write(const void *msg, size_t len, size_t *written) {
 
   *written = status;
 
-  _status=0;
+  _status = 0;
 abort:
   return _status;
 }
@@ -912,7 +912,7 @@ int NrSocket::listen(int backlog) {
     ABORT(R_IO_ERROR);
   }
 
-  _status=0;
+  _status = 0;
 abort:
   return(_status);
 }
@@ -990,7 +990,7 @@ int NrSocket::accept(nr_transport_addr *addrp, nr_socket **sockp) {
 
   // Add a reference so that we can delete it in destroy()
   sock->AddRef();
-  _status=0;
+  _status = 0;
 abort:
   if (_status) {
     delete sock;
@@ -1044,6 +1044,12 @@ NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerOpened() {
   return socket_->CallListenerOpened();
 }
 
+// callback while UDP socket is connected
+NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerConnected() {
+  return socket_->CallListenerConnected();
+  return NS_OK;
+}
+
 // callback while UDP socket is closed
 NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerClosed() {
   return socket_->CallListenerClosed();
@@ -1079,8 +1085,8 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerError(const nsACString &message,
                                                 uint32_t line_number) {
   ASSERT_ON_THREAD(io_thread_);
 
-  r_log(LOG_GENERIC, LOG_ERR, "UDP socket error:%s at %s:%d",
-        message.BeginReading(), filename.BeginReading(), line_number );
+  r_log(LOG_GENERIC, LOG_ERR, "UDP socket error:%s at %s:%d this=%p",
+        message.BeginReading(), filename.BeginReading(), line_number, (void*) this );
 
   ReentrantMonitorAutoEnter mon(monitor_);
   err_ = true;
@@ -1127,11 +1133,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString &host,
   return NS_OK;
 }
 
-// callback while UDP socket is opened
-NS_IMETHODIMP NrUdpSocketIpc::CallListenerOpened() {
-  ASSERT_ON_THREAD(io_thread_);
-  ReentrantMonitorAutoEnter mon(monitor_);
-
+NS_IMETHODIMP NrUdpSocketIpc::SetAddress() {
   uint16_t port;
   if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
     err_ = true;
@@ -1170,12 +1172,48 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerOpened() {
     MOZ_ASSERT(false, "Failed to copy local host to my_addr_");
   }
 
-  if (nr_transport_addr_cmp(&expected_addr, &my_addr_,
+  if (!nr_transport_addr_is_wildcard(&expected_addr) &&
+      nr_transport_addr_cmp(&expected_addr, &my_addr_,
                             NR_TRANSPORT_ADDR_CMP_MODE_ADDR)) {
     err_ = true;
     MOZ_ASSERT(false, "Address of opened socket is not expected");
   }
 
+  return NS_OK;
+}
+
+// callback while UDP socket is opened
+NS_IMETHODIMP NrUdpSocketIpc::CallListenerOpened() {
+  ASSERT_ON_THREAD(io_thread_);
+  ReentrantMonitorAutoEnter mon(monitor_);
+
+  r_log(LOG_GENERIC, LOG_DEBUG, "UDP socket opened this=%p", (void*) this);
+  nsresult rv = SetAddress();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mon.NotifyAll();
+
+  return NS_OK;
+}
+
+// callback while UDP socket is connected
+NS_IMETHODIMP NrUdpSocketIpc::CallListenerConnected() {
+  ASSERT_ON_THREAD(io_thread_);
+
+  ReentrantMonitorAutoEnter mon(monitor_);
+
+  r_log(LOG_GENERIC, LOG_DEBUG, "UDP socket connected this=%p", (void*) this);
+  MOZ_ASSERT(state_ == NR_CONNECTED);
+
+  nsresult rv = SetAddress();
+  if (NS_FAILED(rv)) {
+    mon.NotifyAll();
+    return rv;
+  }
+
+  r_log(LOG_GENERIC, LOG_INFO, "Exit UDP socket connected");
   mon.NotifyAll();
 
   return NS_OK;
@@ -1187,6 +1225,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerClosed() {
 
   ReentrantMonitorAutoEnter mon(monitor_);
 
+  r_log(LOG_GENERIC, LOG_DEBUG, "UDP socket closed this=%p", (void*) this);
   MOZ_ASSERT(state_ == NR_CONNECTED || state_ == NR_CLOSING);
   state_ = NR_CLOSED;
 
@@ -1279,6 +1318,8 @@ int NrUdpSocketIpc::sendto(const void *msg, size_t len, int flags,
 }
 
 void NrUdpSocketIpc::close() {
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrUdpSocketIpc::close()");
+
   ASSERT_ON_THREAD(sts_thread_);
 
   ReentrantMonitorAutoEnter mon(monitor_);
@@ -1351,8 +1392,37 @@ int NrUdpSocketIpc::getaddr(nr_transport_addr *addrp) {
 }
 
 int NrUdpSocketIpc::connect(nr_transport_addr *addr) {
-  MOZ_ASSERT(false);
-  return R_INTERNAL;
+  int r,_status;
+  int32_t port;
+  nsCString host;
+
+  ReentrantMonitorAutoEnter mon(monitor_);
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrUdpSocketIpc::connect(%s) this=%p", addr->as_string,
+        (void*) this);
+
+  if ((r=nr_transport_addr_get_addrstring_and_port(addr, &host, &port))) {
+    ABORT(r);
+  }
+
+  RUN_ON_THREAD(io_thread_,
+                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
+                                      &NrUdpSocketIpc::connect_i,
+                                      host, static_cast<uint16_t>(port)),
+                NS_DISPATCH_NORMAL);
+
+  // Wait until connect() completes.
+  mon.Wait();
+
+  r_log(LOG_GENERIC, LOG_DEBUG, "NrUdpSocketIpc::connect this=%p completed err_ = %s",
+        (void*) this, err_ ? "true" : "false");
+
+  if (err_) {
+    ABORT(R_INTERNAL);
+  }
+
+  _status = 0;
+abort:
+  return _status;
 }
 
 int NrUdpSocketIpc::write(const void *msg, size_t len, size_t *written) {
@@ -1417,6 +1487,28 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
     return;
   }
 }
+
+void NrUdpSocketIpc::connect_i(const nsACString &host, const uint16_t port) {
+  ASSERT_ON_THREAD(io_thread_);
+  nsresult rv;
+  ReentrantMonitorAutoEnter mon(monitor_);
+
+  RefPtr<NrUdpSocketIpcProxy> proxy(new NrUdpSocketIpcProxy);
+  rv = proxy->Init(this);
+  if (NS_FAILED(rv)) {
+    err_ = true;
+    mon.NotifyAll();
+    return;
+  }
+
+  if (NS_FAILED(socket_child_->Connect(proxy, host, port))) {
+    err_ = true;
+    MOZ_ASSERT(false, "Failed to connect UDP socket");
+    mon.NotifyAll();
+    return;
+  }
+}
+
 
 void NrUdpSocketIpc::sendto_i(const net::NetAddr &addr, nsAutoPtr<DataBuffer> buf) {
   ASSERT_ON_THREAD(io_thread_);
@@ -2017,7 +2109,7 @@ static int nr_socket_local_destroy(void **objp) {
     return 0;
 
   NrSocketBase *sock = static_cast<NrSocketBase *>(*objp);
-  *objp=0;
+  *objp = 0;
 
   sock->close();  // Signal STS that we want not to listen
   sock->Release();  // Decrement the ref count
