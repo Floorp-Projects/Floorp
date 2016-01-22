@@ -557,23 +557,21 @@ AudioCallbackDriver::~AudioCallbackDriver()
 void
 AudioCallbackDriver::Init()
 {
-  cubeb_stream_params out_params;
-  cubeb_stream_params in_params;
+  cubeb_stream_params params;
   uint32_t latency;
 
   MOZ_ASSERT(!NS_IsMainThread(),
       "This is blocking and should never run on the main thread.");
 
-  out_params.devid = nullptr; // XXX take from config for the graph
-  mSampleRate = out_params.rate = CubebUtils::PreferredSampleRate();
+  mSampleRate = params.rate = CubebUtils::PreferredSampleRate();
 
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
-  out_params.stream_type = CubebUtils::ConvertChannelToCubebType(mAudioChannel);
+  params.stream_type = CubebUtils::ConvertChannelToCubebType(mAudioChannel);
 #else
-  out_params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
+  params.stream_type = CUBEB_STREAM_TYPE_MUSIC;
 #endif
-  if (out_params.stream_type == CUBEB_STREAM_TYPE_MAX) {
+  if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
     NS_WARNING("Bad stream type");
     return;
   }
@@ -581,27 +579,21 @@ AudioCallbackDriver::Init()
   (void)mAudioChannel;
 #endif
 
-  out_params.channels = mGraphImpl->AudioChannelCount();
+  params.channels = mGraphImpl->AudioChannelCount();
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
-    out_params.format = CUBEB_SAMPLE_S16NE;
+    params.format = CUBEB_SAMPLE_S16NE;
   } else {
-    out_params.format = CUBEB_SAMPLE_FLOAT32NE;
+    params.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), out_params, &latency) != CUBEB_OK) {
+  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), params, &latency) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return;
   }
 
-  in_params = out_params;
-  in_params.channels = 1; // change to support optional stereo capture
-
   cubeb_stream* stream;
-  // XXX Only pass input in_params if we have an input listener.  Always
-  // set up output because it's easier, and it will just get silence.
-  // XXX Add support for adding/removing an input listener later.
   if (cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
-                        "AudioCallbackDriver", &out_params, &in_params, latency,
+                        "AudioCallbackDriver", params, latency,
                         DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
     mAudioStream.own(stream);
   } else {
@@ -731,12 +723,11 @@ AudioCallbackDriver::WakeUp()
 
 /* static */ long
 AudioCallbackDriver::DataCallback_s(cubeb_stream* aStream,
-                                    void* aUser, void* aInputBuffer, void* aOutputBuffer,
+                                    void* aUser, void* aBuffer,
                                     long aFrames)
 {
   AudioCallbackDriver* driver = reinterpret_cast<AudioCallbackDriver*>(aUser);
-  return driver->DataCallback(static_cast<AudioDataValue*>(aInputBuffer),
-                              static_cast<AudioDataValue*>(aOutputBuffer), aFrames);
+  return driver->DataCallback(static_cast<AudioDataValue*>(aBuffer), aFrames);
 }
 
 /* static */ void
@@ -803,14 +794,13 @@ AudioCallbackDriver::OSXDeviceSwitchingWorkaround()
 #endif // XP_MACOSX
 
 long
-AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
-                                  AudioDataValue* aOutputBuffer, long aFrames)
+AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
 {
   bool stillProcessing;
 
 #ifdef XP_MACOSX
   if (OSXDeviceSwitchingWorkaround()) {
-    PodZero(aOutputBuffer, aFrames * mGraphImpl->AudioChannelCount());
+    PodZero(aBuffer, aFrames * mGraphImpl->AudioChannelCount());
     return aFrames;
   }
 #endif
@@ -830,7 +820,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
     // driver is the first one for this graph), and the graph would exit. Simply
     // return here until we have messages.
     if (!mGraphImpl->MessagesQueued()) {
-      PodZero(aOutputBuffer, aFrames * mGraphImpl->AudioChannelCount());
+      PodZero(aBuffer, aFrames * mGraphImpl->AudioChannelCount());
       return aFrames;
     }
     mGraphImpl->SwapMessageQueues();
@@ -847,7 +837,7 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aInputBuffer,
     mIterationDurationMS /= 4;
   }
 
-  mBuffer.SetBuffer(aOutputBuffer, aFrames);
+  mBuffer.SetBuffer(aBuffer, aFrames);
   // fill part or all with leftover data from last iteration (since we
   // align to Audio blocks)
   mScratchBuffer.Empty(mBuffer);

@@ -153,6 +153,10 @@ public:
     return mIterationEnd;
   }
 
+  virtual void GetAudioBuffer(float** aBuffer, long& aFrames) {
+    MOZ_CRASH("This is not an Audio GraphDriver!");
+  }
+
   virtual AudioCallbackDriver* AsAudioCallbackDriver() {
     return nullptr;
   }
@@ -387,7 +391,7 @@ public:
 
   /* Static wrapper function cubeb calls back. */
   static long DataCallback_s(cubeb_stream * aStream,
-                             void * aUser, void * aInputBuffer, void * aOutputBuffer,
+                             void * aUser, void * aBuffer,
                              long aFrames);
   static void StateCallback_s(cubeb_stream* aStream, void * aUser,
                               cubeb_state aState);
@@ -397,7 +401,7 @@ public:
    * audio. If the return value is exactly aFrames, this function will get
    * called again. If it is less than aFrames, the stream will go in draining
    * mode, and this function will not be called again. */
-  long DataCallback(AudioDataValue* aInputBuffer, AudioDataValue* aOutputBuffer, long aFrames);
+  long DataCallback(AudioDataValue* aBuffer, long aFrames);
   /* This function is called by the underlying audio backend, but is only used
    * for informational purposes at the moment. */
   void StateCallback(cubeb_state aState);
