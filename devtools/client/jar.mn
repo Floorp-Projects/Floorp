@@ -145,6 +145,8 @@ devtools.jar:
     content/aboutdebugging/aboutdebugging.xhtml (aboutdebugging/aboutdebugging.xhtml)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
     content/aboutdebugging/aboutdebugging.js (aboutdebugging/aboutdebugging.js)
+    content/responsive.html/index.xhtml (responsive.html/index.xhtml)
+    content/responsive.html/index.js (responsive.html/index.js)
 %   skin devtools classic/1.0 %skin/
     skin/devtools-browser.css (themes/devtools-browser.css)
     skin/common.css (themes/common.css)
