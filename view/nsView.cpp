@@ -1087,7 +1087,7 @@ nsView::DidCompositeWindow(const TimeStamp& aCompositeStart,
     nsAutoScriptBlocker scriptBlocker;
 
     nsPresContext* context = presShell->GetPresContext();
-    context->GetDisplayRootPresContext()->GetRootPresContext()->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE);
+    context->GetRootPresContext()->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE);
 
     // If the two timestamps are identical, this was likely a fake composite
     // event which wouldn't be terribly useful to display.
