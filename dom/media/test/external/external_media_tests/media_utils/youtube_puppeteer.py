@@ -9,7 +9,7 @@ from json import loads
 from marionette_driver import By, expected, Wait
 from marionette_driver.errors import TimeoutException, NoSuchElementException
 from video_puppeteer import VideoPuppeteer, VideoException
-from media_tests.utils import verbose_until
+from external_media_tests.utils import verbose_until
 
 
 class YouTubePuppeteer(VideoPuppeteer):

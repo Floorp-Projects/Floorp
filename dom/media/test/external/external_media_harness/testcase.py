@@ -10,8 +10,8 @@ from marionette_driver.errors import TimeoutException
 from marionette.marionette_test import SkipTest
 
 from firefox_puppeteer.testcases import FirefoxTestCase
-from media_tests.utils import (timestamp_now, verbose_until)
-from media_utils.video_puppeteer import (playback_done, playback_started,
+from external_media_tests.utils import (timestamp_now, verbose_until)
+from external_media_tests.media_utils.video_puppeteer import (playback_done, playback_started,
                                          VideoException, VideoPuppeteer as VP)
 
 

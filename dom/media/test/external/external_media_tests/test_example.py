@@ -1,4 +1,4 @@
-from harness.testcase import MediaTestCase
+from external_media_harness.testcase import MediaTestCase
 
 
 class TestSomethingElse(MediaTestCase):

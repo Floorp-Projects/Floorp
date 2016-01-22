@@ -4,7 +4,7 @@
 
 from marionette import BrowserMobProxyTestCaseMixin
 
-from harness.testcase import NetworkBandwidthTestCase
+from external_media_harness.testcase import NetworkBandwidthTestCase
 
 
 class TestUltraLowBandwidth(NetworkBandwidthTestCase,

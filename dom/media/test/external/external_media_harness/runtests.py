@@ -11,9 +11,9 @@ from marionette.runner import BrowserMobProxyArguments
 from marionette.runtests import MarionetteHarness, cli as mn_cli
 import mozlog
 
-import media_tests
+import external_media_tests
 from testcase import MediaTestCase
-from media_utils.video_puppeteer import debug_script
+from external_media_tests.media_utils.video_puppeteer import debug_script
 
 
 class MediaTestArgumentsBase(object):
@@ -21,7 +21,7 @@ class MediaTestArgumentsBase(object):
     args = [
         [['--urls'], {
             'help': 'ini file of urls to make available to all tests',
-            'default': os.path.join(media_tests.urls, 'default.ini'),
+            'default': os.path.join(external_media_tests.urls, 'default.ini'),
         }],
     ]
 
@@ -35,7 +35,7 @@ class MediaTestArgumentsBase(object):
 
     def parse_args_handler(self, args):
         if not args.tests:
-           args.tests = [media_tests.manifest]
+           args.tests = [external_media_tests.manifest]
 
 
     @staticmethod
@@ -55,7 +55,7 @@ class MediaTestRunner(BaseMarionetteTestRunner):
     def __init__(self, **kwargs):
         BaseMarionetteTestRunner.__init__(self, **kwargs)
         if not self.server_root:
-            self.server_root = media_tests.resources
+            self.server_root = external_media_tests.resources
         # pick up prefs from marionette_driver.geckoinstance.DesktopInstance
         self.app = 'fxdesktop'
         self.test_handlers = [MediaTestCase]
@@ -87,8 +87,8 @@ class MediaTestRunner(BaseMarionetteTestRunner):
 
 class FirefoxMediaHarness(MarionetteHarness):
     def __init__(self,
-                 runner_class=MediaTestRunner,
-                 parser_class=MediaTestArguments):
+             runner_class=MediaTestRunner,
+             parser_class=MediaTestArguments):
         # workaround until next marionette-client release - Bug 1227918
         try:
             MarionetteHarness.__init__(self, runner_class, parser_class)

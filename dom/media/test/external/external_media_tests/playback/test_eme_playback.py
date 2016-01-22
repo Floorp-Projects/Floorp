@@ -4,7 +4,7 @@
 
 import re
 
-from harness.testcase import MediaTestCase, VideoPlaybackTestsMixin
+from external_media_harness.testcase import MediaTestCase, VideoPlaybackTestsMixin
 
 
 class TestEMEPlayback(MediaTestCase, VideoPlaybackTestsMixin):

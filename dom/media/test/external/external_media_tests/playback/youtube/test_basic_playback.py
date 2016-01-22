@@ -5,10 +5,10 @@
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
 
-from media_tests.utils import verbose_until
-from harness.testcase import MediaTestCase
-from media_utils.video_puppeteer import VideoException
-from media_utils.youtube_puppeteer import (YouTubePuppeteer, playback_done,
+from external_media_tests.utils import verbose_until
+from external_media_harness.testcase import MediaTestCase
+from external_media_tests.media_utils.video_puppeteer import VideoException
+from external_media_tests.media_utils.youtube_puppeteer import (YouTubePuppeteer, playback_done,
                                            wait_for_almost_done)
 
 

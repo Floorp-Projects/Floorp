@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from harness.testcase import MediaTestCase
-from media_utils.video_puppeteer import VideoPuppeteer
+from external_media_harness.testcase import MediaTestCase
+from external_media_tests.media_utils.video_puppeteer import VideoPuppeteer
 
 
 class TestFullPlayback(MediaTestCase):
