@@ -99,11 +99,12 @@ audiotrack_refill(int event, void* user, void* info)
       return;
     }
 
-    got = stream->data_callback(stream, stream->user_ptr, NULL, b->raw, b->frameCount);
+    got = stream->data_callback(stream, stream->user_ptr, b->raw, b->frameCount);
 
     stream->written += got;
 
     if (got != (long)b->frameCount) {
+      uint32_t p;
       stream->draining = 1;
       /* set a marker so we are notified when the are done draining, that is,
        * when every frame has been played by android. */
@@ -278,11 +279,7 @@ audiotrack_destroy(cubeb * context)
 
 int
 audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
-                       cubeb_devid input_device,
-                       cubeb_stream_params * input_stream_params,
-                       cubeb_devid output_device,
-                       cubeb_stream_params * output_stream_params,
-                       unsigned int latency,
+                       cubeb_stream_params stream_params, unsigned int latency,
                        cubeb_data_callback data_callback,
                        cubeb_state_callback state_callback,
                        void * user_ptr)
@@ -293,18 +290,12 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
 
   assert(ctx && stream);
 
-  assert(!input_stream_params && "not supported");
-  if (input_device || output_device) {
-    /* Device selection not yet implemented. */
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
-  if (output_stream_params->format == CUBEB_SAMPLE_FLOAT32LE ||
-      output_stream_params->format == CUBEB_SAMPLE_FLOAT32BE) {
+  if (stream_params.format == CUBEB_SAMPLE_FLOAT32LE ||
+      stream_params.format == CUBEB_SAMPLE_FLOAT32BE) {
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
-  if (audiotrack_get_min_frame_count(ctx, output_stream_params, (int *)&min_frame_count)) {
+  if (audiotrack_get_min_frame_count(ctx, &stream_params, (int *)&min_frame_count)) {
     return CUBEB_ERROR;
   }
 
@@ -315,7 +306,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
-  stm->params = *output_stream_params;
+  stm->params = stream_params;
 
   stm->instance = calloc(SIZE_AUDIOTRACK_INSTANCE, 1);
   (*(uint32_t*)((intptr_t)stm->instance + SIZE_AUDIOTRACK_INSTANCE - 4)) = 0xbaadbaad;
