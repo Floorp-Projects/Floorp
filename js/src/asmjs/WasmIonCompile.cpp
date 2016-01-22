@@ -1314,7 +1314,7 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition**def)
 {
     switch (type) {
       case ExprType::I32: {
-        int32_t val = f.readI32();
+        int32_t val = f.readVarU32();
         *def = f.constant(Int32Value(val), MIRType_Int32);
         return true;
       }
