@@ -103,16 +103,16 @@ xpcAccessible::GetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
   NS_ENSURE_ARG_POINTER(aChild);
   *aChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   // If child index is negative, then return last child.
   // XXX: do we really need this?
   if (aChildIndex < 0)
-    aChildIndex = Intl()->ChildCount() - 1;
+    aChildIndex = IntlGeneric().ChildCount() - 1;
 
-  Accessible* child = Intl()->GetChildAt(aChildIndex);
-  if (!child)
+  AccessibleOrProxy child = IntlGeneric().ChildAt(aChildIndex);
+  if (child.IsNull())
     return NS_ERROR_INVALID_ARG;
 
   NS_ADDREF(*aChild = ToXPC(child));
