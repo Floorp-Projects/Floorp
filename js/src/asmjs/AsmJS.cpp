@@ -3434,15 +3434,11 @@ CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 {
     if (!f.hasAlreadyReturned()) {
         f.setReturnedType(ExprType::Void);
-        return f.writeOp(Expr::Return);
+        return true;
     }
 
-    if (!lastNonEmptyStmt->isKind(PNK_RETURN)) {
-        if (!IsVoid(f.returnedType()))
-            return f.fail(lastNonEmptyStmt, "void incompatible with previous return type");
-
-        return f.writeOp(Expr::Return);
-    }
+    if (!lastNonEmptyStmt->isKind(PNK_RETURN) && !IsVoid(f.returnedType()))
+        return f.fail(lastNonEmptyStmt, "void incompatible with previous return type");
 
     return true;
 }
