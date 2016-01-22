@@ -17,6 +17,7 @@ var { immutableUpdate } = DevToolsUtils;
 
 var constants = require("devtools/client/memory/constants");
 var {
+  breakdowns,
   diffingState,
   dominatorTreeBreakdowns,
   dominatorTreeState,
