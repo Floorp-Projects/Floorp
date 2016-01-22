@@ -13,6 +13,7 @@
 #include "DocAccessible-inl.h"
 #include "nsIDOMDocument.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,4 +227,19 @@ xpcAccessibleDocument::Shutdown()
     iter.Remove();
   }
   xpcAccessibleGeneric::Shutdown();
+}
+
+xpcAccessibleGeneric*
+a11y::ToXPC(AccessibleOrProxy aAcc)
+{
+  if (aAcc.IsNull()) {
+    return nullptr;
+  }
+
+  if (aAcc.IsAccessible()) {
+    return ToXPC(aAcc.AsAccessible());
+  }
+
+ xpcAccessibleDocument* doc = ToXPCDocument(aAcc.AsProxy()->Document());
+ return doc->GetXPCAccessible(aAcc.AsProxy());
 }
