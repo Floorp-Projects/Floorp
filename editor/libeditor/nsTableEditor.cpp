@@ -259,7 +259,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
     NS_ENSURE_SUCCESS(res, res);
 
     tableChild = nextChild;
-  };
+  }
   // If here, row was not found
   return NS_EDITOR_ELEMENT_NOT_FOUND;
 }
@@ -360,7 +360,7 @@ nsHTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)
     NS_ENSURE_SUCCESS(res, res);
 
     rowChild = previousChild;
-  };
+  }
   if (rowChild)
   {
     *aCellNode = rowChild.get();

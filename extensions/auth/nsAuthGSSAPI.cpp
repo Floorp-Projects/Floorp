@@ -144,7 +144,7 @@ gssInit()
             libSpec.type = PR_LibSpec_Pathname;
             libSpec.value.pathname = verLibNames[i];
             lib = PR_LoadLibraryWithFlags(libSpec, PR_LD_GLOBAL);
-        };
+        }
 
 #else
         

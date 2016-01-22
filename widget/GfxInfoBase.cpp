@@ -155,7 +155,7 @@ GetPrefNameForFeature(int32_t aFeature)
       break;
     default:
       break;
-  };
+  }
 
   return name;
 }

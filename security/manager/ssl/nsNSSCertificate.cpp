@@ -1147,7 +1147,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
       break;
     default:
       return NS_ERROR_INVALID_ARG;
-  };
+  }
 
   ScopedNSSCMSMessage cmsg(NSS_CMSMessage_Create(nullptr));
   if (!cmsg) {

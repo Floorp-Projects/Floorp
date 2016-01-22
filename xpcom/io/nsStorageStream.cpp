@@ -199,7 +199,7 @@ nsStorageStream::Write(const char* aBuffer, uint32_t aCount,
     mWriteCursor += count;
     LOG(("nsStorageStream [%p] Writing mWriteCursor=%x mSegmentEnd=%x count=%d\n",
          this, mWriteCursor, mSegmentEnd, count));
-  };
+  }
 
 out:
   *aNumWritten = aCount - remaining;
@@ -476,7 +476,7 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     remainingCapacity -= bytesConsumed;
     mReadCursor += bytesConsumed;
     mLogicalCursor += bytesConsumed;
-  };
+  }
 
 out:
   *aNumRead = aCount - remainingCapacity;
