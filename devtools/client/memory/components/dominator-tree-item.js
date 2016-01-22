@@ -70,7 +70,8 @@ const DominatorTreeItem = module.exports = createClass({
         label[i * 2] = Frame({
           key,
           onClick: () => onViewSourceInDebugger(piece),
-          frame: piece
+          frame: piece,
+          showFunctionName: true
         });
       } else if (piece === "noStack") {
         label[i * 2] = dom.span({ key, className: "not-available" },
