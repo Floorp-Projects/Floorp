@@ -152,7 +152,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
 
     // It adds itself into MediaStreamGraph, so ImageCapture doesn't need to hold
     // the reference.
-    task->AttachStream();
+    task->AttachTrack();
   }
 }
 

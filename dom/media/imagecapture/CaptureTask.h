@@ -20,7 +20,7 @@ class MediaStreamTrack;
 
 /**
  * CaptureTask retrieves image from MediaStream and encodes the image to jpeg in
- * ImageEncoder. The whole procedures start at AttachStream(), it will add this
+ * ImageEncoder. The whole procedures start at AttachTrack(), it will add this
  * class into MediaStream and retrieves an image in MediaStreamGraph thread.
  * Once the image is retrieved, it will be sent to ImageEncoder and the encoded
  * blob will be sent out via encoder callback in main thread.
@@ -28,20 +28,16 @@ class MediaStreamTrack;
  * CaptureTask holds a reference of ImageCapture to ensure ImageCapture won't be
  * released during the period of the capturing process described above.
  */
-class CaptureTask : public MediaStreamListener,
+class CaptureTask : public MediaStreamTrackListener,
                     public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
 public:
-  // MediaStreamListener methods.
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia,
-                                MediaStream* aInputStream,
-                                TrackID aInputTrackID) override;
+  // MediaStreamTrackListener methods.
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph,
+                           StreamTime aTrackOffset,
+                           const MediaSegment& aQueuedMedia) override;
 
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent aEvent) override;
+  void NotifyEnded() override;
 
   // PrincipalChangeObserver<MediaStreamTrack> method.
   void PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack) override;
@@ -55,13 +51,13 @@ public:
   //   this function should be called on main thread.
   nsresult TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv);
 
-  // Add listeners into MediaStream and PrincipalChangeObserver.
+  // Add listeners into MediaStreamTrack and PrincipalChangeObserver.
   // It should be on main thread only.
-  void AttachStream();
+  void AttachTrack();
 
-  // Remove listeners from MediaStream and PrincipalChangeObserver.
+  // Remove listeners from MediaStreamTrack and PrincipalChangeObserver.
   // It should be on main thread only.
-  void DetachStream();
+  void DetachTrack();
 
   // CaptureTask should be created on main thread.
   CaptureTask(dom::ImageCapture* aImageCapture, TrackID aTrackID)
