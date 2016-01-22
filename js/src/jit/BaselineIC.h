@@ -513,7 +513,7 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
 class ICGetElemNativeStub : public ICMonitoredStub
 {
   public:
-    enum AccessType { FixedSlot = 0, DynamicSlot, UnboxedProperty, NativeGetter, ScriptedGetter };
+    enum AccessType { FixedSlot = 0, DynamicSlot, UnboxedProperty, NativeGetter, ScriptedGetter, NumAccessTypes };
 
   protected:
     HeapReceiverGuard receiverGuard_;
@@ -522,10 +522,12 @@ class ICGetElemNativeStub : public ICMonitoredStub
     static const uint16_t NEEDS_ATOMIZE_MASK = 0x1;
 
     static const unsigned ACCESSTYPE_SHIFT = 1;
-    static const uint16_t ACCESSTYPE_MASK = 0x3;
+    static const uint16_t ACCESSTYPE_MASK = 0x7;
 
-    static const unsigned ISSYMBOL_SHIFT = 3;
+    static const unsigned ISSYMBOL_SHIFT = 4;
     static const uint16_t ISSYMBOL_MASK = 0x1;
+
+    static_assert(ACCESSTYPE_MASK >= NumAccessTypes, "ACCESSTYPE_MASK must cover all possible AccessType values");
 
     ICGetElemNativeStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
                         ReceiverGuard guard, AccessType acctype, bool needsAtomize, bool isSymbol);
