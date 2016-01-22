@@ -11,6 +11,9 @@ const channelID = 'cafed00d';
 function run_test() {
   do_get_profile();
   setPrefs();
+  disableServiceWorkerEvents(
+    'https://example.com/invalid-channel'
+  );
   run_next_test();
 }
 
