@@ -91,7 +91,7 @@ public:
   int64_t GetMediaTimeUs() override;
 
   // To update progress bar when the element is visible
-  void SetElementVisibility(bool aIsVisible) override;;
+  void SetElementVisibility(bool aIsVisible) override;
 
   // Update ready state based on current play state. Not checking data
   // availability since offloading is currently done only when whole compressed

@@ -1177,7 +1177,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(
       break;
     }
     node = child;
-  };
+  }
 
   selection->Collapse(node, 0);
 }
@@ -2703,7 +2703,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
           if (NS_FAILED(res)) break;
 
           GetNextSelectedCell(nullptr, getter_AddRefs(cell));
-        };
+        }
         return res;
       }
     }

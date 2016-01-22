@@ -3327,7 +3327,7 @@ IonBuilder::canInlineSimd(CallInfo& callInfo, JSNative native, unsigned numArgs,
 
     JSObject* templateObject = inspector->getTemplateObjectForNative(pc, native);
     if (!templateObject)
-        return false;;
+        return false;
 
     *templateObj = &templateObject->as<InlineTypedObject>();
     return true;

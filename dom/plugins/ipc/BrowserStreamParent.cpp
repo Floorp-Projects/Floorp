@@ -135,7 +135,7 @@ BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
   default:
     NS_ERROR("Unexpected state");
     return false;
-  };
+  }
 
   mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
   return true;

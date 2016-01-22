@@ -4068,7 +4068,7 @@ LIRGenerator::visitSimdUnbox(MSimdUnbox* ins)
         break;
       default:
         MOZ_CRASH("Unexpected SIMD Type.");
-    };
+    }
 
     LSimdUnbox* lir = new(alloc()) LSimdUnbox(in, temp());
     assignSnapshot(lir, kind);

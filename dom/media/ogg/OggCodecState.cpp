@@ -1448,7 +1448,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket)
     }
     msgLength--;
     msgProbe++;
-  };
+  }
 
   if (!mMsgFieldStore.Contains(serialno)) {
     mMsgFieldStore.Put(serialno, field.forget());

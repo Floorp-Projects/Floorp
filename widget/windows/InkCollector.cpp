@@ -216,7 +216,7 @@ HRESULT InkCollectorEvent::Invoke(DISPID aDispIdMember, REFIID /*aRiid*/,
       }
       break;
     }
-  };
+  }
   return S_OK;
 }
 

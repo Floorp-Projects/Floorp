@@ -363,7 +363,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
 #else
     case eColorID_threeddarkshadow:
         // Hardcode to black
-        aColor = NS_RGB(0x00,0x00,0x00);;
+        aColor = NS_RGB(0x00,0x00,0x00);
         break;
 
     case eColorID__moz_eventreerow:
