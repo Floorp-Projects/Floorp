@@ -80,14 +80,45 @@ TestArray.addTest(
   function () {
     var that = this;
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var vec = tv.rsapss;
 
     function doVerify(x) {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
-      return crypto.subtle.verify(alg, x, tv.rsapss.sig, tv.rsapss.data);
+      var alg = {name: "RSA-PSS", saltLength: vec.saltLength};
+      return crypto.subtle.verify(alg, x, vec.sig, vec.data);
     }
 
-    crypto.subtle.importKey("spki", tv.rsapss.spki, alg, false, ["verify"])
+    crypto.subtle.importKey("spki", vec.spki, alg, false, ["verify"])
       .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test invalid RSA-PSS signatures",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var vec = tv.rsapss;
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: vec.saltLength};
+      var clone1 = new Uint8Array(vec.data);
+      var clone2 = new Uint8Array(vec.data);
+      clone1[clone1.byteLength - 1] ^= 1;
+      clone2[0] ^= 1;
+
+      return Promise.all([
+        crypto.subtle.verify(alg, x, vec.sig, clone1),
+        crypto.subtle.verify(alg, x, vec.sig, clone2),
+        crypto.subtle.verify(alg, x, vec.sig, vec.data.slice(1)),
+        crypto.subtle.verify(alg, x, vec.sig, vec.data.slice(0, vec.data.byteLength - 1)),
+      ]);
+    }
+
+    crypto.subtle.importKey("spki", vec.spki, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(results => results.every(x => !x))
       .then(complete(that, x => x), error(that));
   }
 );
@@ -100,13 +131,34 @@ TestArray.addTest(
     var alg = {name: "RSA-PSS", hash: "SHA-1"};
 
     function doVerify(x) {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
       return crypto.subtle.verify(alg, x, tv.rsapss.sig, tv.rsapss.data);
     }
 
     crypto.subtle.importKey("jwk", tv.rsapss.jwk_pub, alg, false, ["verify"])
       .then(doVerify, error(that))
       .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signatures (SHA-1 to SHA-512, 1024-bit)",
+  function () {
+    var that = this;
+
+    function verifyCase(hash, tv) {
+      var alg = {name: "RSA-PSS", hash, saltLength: tv.saltLength};
+      return crypto.subtle.importKey("spki", tv.spki, alg, false, ["verify"])
+        .then(x => crypto.subtle.verify(alg, x, tv.sig, tv.data));
+    }
+
+    Promise.all([
+      verifyCase("SHA-1", tv.rsapss2),
+      verifyCase("SHA-256", tv.rsapss3),
+      verifyCase("SHA-384", tv.rsapss4),
+      verifyCase("SHA-512", tv.rsapss5),
+    ]).then(complete(that, x => x.every(y => y)), error(that));
   }
 );
 
@@ -120,11 +172,11 @@ TestArray.addTest(
     var privKey, pubKey;
     function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
     function doSign() {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
       return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
     }
     function doVerify(x) {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
       return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
     }
 
@@ -151,11 +203,11 @@ TestArray.addTest(
     var privKey, pubKey;
     function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
     function doSign() {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
       return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
     }
     function doVerify(x) {
-      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
       return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
     }
 
@@ -269,6 +321,50 @@ TestArray.addTest(
           }),
         error(that)
       );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deterministic RSA-PSS signatures with saltLength=0 (SHA-256, 2048-bit)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-PSS",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+
+    function doSignTwice() {
+      var alg = {name: "RSA-PSS", saltLength: 0};
+      return Promise.all([
+        crypto.subtle.sign(alg, privKey, data),
+        crypto.subtle.sign(alg, privKey, data)
+      ]);
+    }
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: 0};
+      return crypto.subtle.verify(alg, pubKey, x, data);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["sign", "verify"])
+      .then(setKey, error(that))
+      .then(doSignTwice, error(that))
+      .then(([sig1, sig2]) => {
+        if (!util.memcmp(sig1, sig2)) {
+          throw new Error("sig1 must be equal to sig2");
+        }
+
+        return sig1;
+      }, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that))
   }
 );
 /*]]>*/</script>
