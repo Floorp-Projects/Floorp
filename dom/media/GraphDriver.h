@@ -192,12 +192,13 @@ public:
 
   virtual bool OnThread() = 0;
 
-  // These are invoked on the MSG thread (or MainThread in shutdown)
-  virtual void SetInputListener(AudioDataListener *aListener) {
+  // XXX Thread-safety! Do these via commands to avoid TSAN issues
+  // and crashes!!!
+  virtual void SetInputListener(MediaStreamListener *aListener) {
     mAudioInput = aListener;
   }
   // XXX do we need the param?  probably no
-  virtual void RemoveInputListener(AudioDataListener *aListener) {
+  virtual void RemoveInputListener(MediaStreamListener *aListener) {
     mAudioInput = nullptr;
   }
 
@@ -232,7 +233,7 @@ protected:
   WaitState mWaitState;
 
   // Callback for mic data, if any
-  AudioDataListener *mAudioInput;
+  RefPtr<MediaStreamListener> mAudioInput;
 
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
@@ -497,7 +498,7 @@ private:
    * */
   bool mStarted;
   /* Listener for mic input, if any. */
-  RefPtr<AudioDataListener> mAudioInput;
+  RefPtr<MediaStreamListener> mAudioInput;
 
   struct AutoInCallback
   {

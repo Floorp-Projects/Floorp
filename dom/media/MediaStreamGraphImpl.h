@@ -350,10 +350,10 @@ public:
    * at the current buffer end point. The StreamBuffer's tracks must be
    * explicitly set to finished by the caller.
    */
-  void OpenAudioInputImpl(char *aName, AudioDataListener *aListener);
-  virtual nsresult OpenAudioInput(char *aName, AudioDataListener *aListener) override;
-  void CloseAudioInputImpl(AudioDataListener *aListener);
-  virtual void CloseAudioInput(AudioDataListener *aListener) override;
+  void OpenAudioInputImpl(char *aName, MediaStreamListener *aListener);
+  virtual nsresult OpenAudioInput(char *aName, MediaStreamListener *aListener) override;
+  void CloseAudioInputImpl(MediaStreamListener *aListener);
+  virtual void CloseAudioInput(MediaStreamListener *aListener) override;
 
   void FinishStream(MediaStream* aStream);
   /**
