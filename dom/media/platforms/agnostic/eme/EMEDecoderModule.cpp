@@ -137,6 +137,10 @@ public:
     return rv;
   }
 
+  const char* GetDescriptionName() const override {
+    return mDecoder->GetDescriptionName();
+  }
+
 private:
 
   RefPtr<MediaDataDecoder> mDecoder;

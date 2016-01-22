@@ -31,6 +31,10 @@ public:
   void ProcessDrain() override;
   void InitCodecContext() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
+  const char* GetDescriptionName() const override
+  {
+    return "ffmpeg audio decoder";
+  }
 
 private:
   void DecodePacket(MediaRawData* aSample);
