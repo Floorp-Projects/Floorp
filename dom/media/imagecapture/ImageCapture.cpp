@@ -78,7 +78,7 @@ ImageCapture::TakePhotoByMediaEngine()
   // Callback for TakPhoto(), it also monitor the principal. If principal
   // changes, it returns PHOTO_ERROR with security error.
   class TakePhotoCallback : public MediaEnginePhotoCallback,
-                            public PrincipalChangeObserver<DOMMediaStream>
+                            public PrincipalChangeObserver<MediaStreamTrack>
   {
   public:
     TakePhotoCallback(VideoStreamTrack* aVideoTrack, ImageCapture* aImageCapture)
@@ -87,11 +87,10 @@ ImageCapture::TakePhotoByMediaEngine()
       , mPrincipalChanged(false)
     {
       MOZ_ASSERT(NS_IsMainThread());
-      MOZ_RELEASE_ASSERT(mVideoTrack->GetStream());
-      mVideoTrack->GetStream()->AddPrincipalChangeObserver(this);
+      mVideoTrack->AddPrincipalChangeObserver(this);
     }
 
-    void PrincipalChanged(DOMMediaStream* aMediaStream) override
+    void PrincipalChanged(MediaStreamTrack* aMediaStream) override
     {
       mPrincipalChanged = true;
     }
@@ -115,8 +114,7 @@ ImageCapture::TakePhotoByMediaEngine()
     ~TakePhotoCallback()
     {
       MOZ_ASSERT(NS_IsMainThread());
-      MOZ_RELEASE_ASSERT(mVideoTrack->GetStream());
-      mVideoTrack->GetStream()->RemovePrincipalChangeObserver(this);
+      mVideoTrack->RemovePrincipalChangeObserver(this);
     }
 
     RefPtr<VideoStreamTrack> mVideoTrack;
@@ -213,11 +211,7 @@ ImageCapture::CheckPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<DOMMediaStream> ms = mVideoStreamTrack->GetStream();
-  if (!ms) {
-    return false;
-  }
-  nsCOMPtr<nsIPrincipal> principal = ms->GetPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = mVideoStreamTrack->GetPrincipal();
 
   if (!GetOwner()) {
     return false;
