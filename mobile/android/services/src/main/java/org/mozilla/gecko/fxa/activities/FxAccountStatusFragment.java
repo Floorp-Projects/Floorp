@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
@@ -24,14 +23,15 @@ import android.preference.PreferenceScreen;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.preferences.PreferenceFragment;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -289,7 +289,7 @@ public class FxAccountStatusFragment
 
     if (preference == syncNowPreference) {
       if (fxAccount != null) {
-        FirefoxAccounts.requestSync(fxAccount.getAndroidAccount(), FirefoxAccounts.FORCE, null, null);
+        fxAccount.requestImmediateSync(null, null);
       }
       return true;
     }
@@ -794,7 +794,7 @@ public class FxAccountStatusFragment
         return;
       }
       Logger.info(LOG_TAG, "Requesting a sync sometime soon.");
-      fxAccount.requestSync();
+      fxAccount.requestEventualSync(null, null);
     }
   }
 
@@ -843,7 +843,7 @@ public class FxAccountStatusFragment
         fxAccount.dump();
       } else if ("debug_force_sync".equals(key)) {
         Logger.info(LOG_TAG, "Force syncing.");
-        fxAccount.requestSync(FirefoxAccounts.FORCE);
+        fxAccount.requestImmediateSync(null, null);
         // No sense refreshing, since the sync will complete in the future.
       } else if ("debug_forget_certificate".equals(key)) {
         State state = fxAccount.getState();
