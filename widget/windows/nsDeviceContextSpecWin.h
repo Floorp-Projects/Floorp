@@ -69,7 +69,6 @@ protected:
   LPDEVMODEW mDevMode;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  RefPtr<gfxASurface> mPrintingSurface;
 };
 
 
