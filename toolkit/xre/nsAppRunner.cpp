@@ -4611,6 +4611,7 @@ enum {
   kE10sDisabledForAccessibility = 4,
   kE10sDisabledForMacGfx = 5,
   kE10sDisabledForBidi = 6,
+  kE10sDisabledForAddons = 7,
 };
 
 #ifdef XP_WIN
@@ -4722,6 +4723,15 @@ mozilla::BrowserTabsRemoteAutostart()
   // Disable for VR
   bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
 
+  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
+  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
+                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
+                                                      : NS_LITERAL_CSTRING("0"));
+#endif
+
   if (e10sAllowed && prefEnabled) {
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
@@ -4731,6 +4741,9 @@ mozilla::BrowserTabsRemoteAutostart()
       LogE10sBlockedReason("Disabled for RTL locales due to broken bidi detection.");
     } else if (disabledForVR) {
       LogE10sBlockedReason("Experimental VR interfaces are enabled");
+    } else if (addonsCanDisable && disabledByAddons) {
+      status = kE10sDisabledForAddons;
+      LogE10sBlockedReason("3rd party add-ons are installed and enabled.");
     } else {
       gBrowserTabsRemoteAutostart = true;
     }
