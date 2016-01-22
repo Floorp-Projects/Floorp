@@ -61,6 +61,28 @@ NormalizedConstraintSet::DoubleRange::DoubleRange(
   }
 }
 
+NormalizedConstraintSet::BooleanRange::BooleanRange(
+    const dom::OwningBooleanOrConstrainBooleanParameters& aOther, bool advanced)
+: Range<bool>(false, true)
+{
+  if (aOther.IsBoolean()) {
+    if (advanced) {
+      mMin = mMax = aOther.GetAsBoolean();
+    } else {
+      mIdeal.Construct(aOther.GetAsBoolean());
+    }
+  } else {
+    const ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
+    if (r.mIdeal.WasPassed()) {
+      mIdeal.Construct(r.mIdeal.Value());
+    }
+    if (r.mExact.WasPassed()) {
+      mMin = r.mExact.Value();
+      mMax = r.mExact.Value();
+    }
+  }
+}
+
 FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOther)
 : NormalizedConstraintSet(aOther, false)
 {
@@ -76,6 +98,15 @@ FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOt
         mWidth.Intersect(set.mWidth);
         mHeight.Intersect(set.mHeight);
         mFrameRate.Intersect(set.mFrameRate);
+      }
+      if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
+          mEchoCancellation.Intersect(set.mEchoCancellation);
+      }
+      if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
+          mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
+      }
+      if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
+          mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
       }
     }
   }
