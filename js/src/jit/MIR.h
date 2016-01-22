@@ -67,6 +67,18 @@ MIRType MIRTypeFromValue(const js::Value& vp)
     return MIRTypeFromValueType(vp.extractNonDoubleType());
 }
 
+static inline
+SimdType MIRTypeToSimdType(MIRType type)
+{
+    switch (type) {
+      case MIRType_Float32x4: return SimdType::Float32x4;
+      case MIRType_Int32x4:   return SimdType::Int32x4;
+      case MIRType_Bool32x4:  return SimdType::Bool32x4;
+      default:                break;
+    }
+    MOZ_CRASH("unhandled MIRType");
+}
+
 #define MIR_FLAG_LIST(_)                                                        \
     _(InWorklist)                                                               \
     _(EmittedAtUses)                                                            \
