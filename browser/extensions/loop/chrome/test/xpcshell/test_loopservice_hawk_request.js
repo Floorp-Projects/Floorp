@@ -7,6 +7,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 Cu.import("resource://services-common/utils.js");
 
 add_task(function* request_with_unicode() {

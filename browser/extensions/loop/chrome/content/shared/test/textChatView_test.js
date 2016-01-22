@@ -6,18 +6,17 @@ describe("loop.shared.views.TextChatView", function() {
 
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
-  var sharedUtils = loop.shared.utils;
-  var sharedViews = loop.shared.views;
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
   var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
   var fixtures = document.querySelector("#fixtures");
+  var mozL10n = navigator.mozL10n || document.mozL10n;
 
-  var dispatcher, fakeSdkDriver, sandbox, store, fakeClock;
+  var dispatcher, fakeSdkDriver, originalLanguage, sandbox, store;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
-    fakeClock = sandbox.useFakeTimers();
+    sandbox.useFakeTimers();
 
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
@@ -33,11 +32,23 @@ describe("loop.shared.views.TextChatView", function() {
     loop.store.StoreMixin.register({
       textChatStore: store
     });
+
+    originalLanguage = mozL10n.language;
+
+    mozL10n.language = {
+      code: "en-US",
+      direction: "rtl"
+    };
+
+    sandbox.stub(mozL10n, "get", function(string) {
+      return string;
+    });
   });
 
   afterEach(function() {
     sandbox.restore();
     React.unmountComponentAtNode(fixtures);
+    mozL10n.language = originalLanguage;
   });
 
   describe("TextChatEntriesView", function() {
@@ -411,10 +422,6 @@ describe("loop.shared.views.TextChatView", function() {
       // Fake server to catch all XHR requests.
       fakeServer = sinon.fakeServer.create();
       store.setStoreState({ textChatEnabled: true });
-
-      sandbox.stub(navigator.mozL10n, "get", function(string) {
-        return string;
-      });
     });
 
     afterEach(function() {

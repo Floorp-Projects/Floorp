@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 const FAKE_FXA_TOKEN_DATA = JSON.stringify({
   "token_type": "bearer",
   "access_token": "1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",

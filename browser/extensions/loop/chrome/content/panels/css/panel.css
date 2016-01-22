@@ -147,35 +147,6 @@ body {
 
 /* Rooms CSS */
 
-.no-conversations-message {
-  /* example of vertical aligning a container in an element see:
-     http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
-  text-align: center;
-  color: #4a4a4a;
-  font-weight: lighter;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-  padding-top: 11rem;
-  padding-bottom: 1rem;
-  background-image: url("../../shared/img/empty_conversations.svg");
-  background-repeat: no-repeat;
-  background-position: top center;
-}
-
-.panel-text-medium,
-.panel-text-large {
-  margin: 3px 0;
-}
-
-.panel-text-medium {
-  font-size: 1.6rem;
-}
-
-.panel-text-large {
-  font-size: 2.2rem;
-}
-
 .room-list-loading {
   position: relative;
   text-align: center;
@@ -203,16 +174,18 @@ body {
 .rooms > h1 {
   color: #666;
   font-size: 1rem;
-  padding: .5rem 0;
+  padding: .5rem 15px;
   height: 3rem;
   line-height: 3rem;
-  margin: 0 15px;
 }
 
 .new-room-view {
-  border-bottom: 1px solid #d8d8d8;
   display: flex;
   flex-direction: column;
+}
+
+.new-room-view + h1 {
+  border-top: 1px solid #d8d8d8;
 }
 
 .new-room-view > .btn {
@@ -243,15 +216,6 @@ body {
   display: flex;
   flex-flow: column nowrap;
   width: 100%;
-}
-
-.room-list-empty {
-  border-bottom-width: 0;
-  flex: 1;
-  /* the child no-conversations-message is vertical aligned inside this container
-    see: http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/
-    stops blurring from decimal pixels being rendered - pixel rounding */
-  transform-style: preserve-3d;
 }
 
 .room-list > .room-entry {
@@ -487,7 +451,7 @@ html[dir="rtl"] .generate-url-spinner {
 #powered-by,
 .terms-service {
   color: #4a4a4a;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 #powered-by {
@@ -502,10 +466,10 @@ html[dir="rtl"] .generate-url-spinner {
   margin-left: 10px;
   margin-right: 10px;
   vertical-align: middle;
-  background-image: url("../../shared/img/telefonica.png");
-  background-size: 72px 20px;
-  width: 72px;
-  height: 20px;
+  background-image: url("../../shared/img/telefonica-logo.svg");
+  width: 84px;
+  height: 23px;
+  background-repeat: no-repeat;
 }
 
 #powered-by-logo.en-GB,
@@ -531,10 +495,6 @@ html[dir="rtl"] .generate-url-spinner {
 }
 
 @media (min-resolution: 2dppx) {
-  #powered-by-logo {
-    background-image: url("../../shared/img/telefonica@2x.png");
-  }
-
   #powered-by-logo.en-GB,
   #powered-by-logo.de {
     background-image: url("../../shared/img/02@2x.png");
@@ -573,9 +533,8 @@ html[dir="rtl"] .generate-url-spinner {
 /* Sign in/up link */
 
 .signin-link {
-  flex: 2 1 auto;
+  flex: 1;
   margin: 0;
-  text-align: right;
 }
 
 .signin-link > a {
@@ -599,15 +558,6 @@ html[dir="rtl"] .generate-url-spinner {
   background-repeat: no-repeat;
   background-size: cover;
   -moz-margin-start: .5em;
-}
-
-.user-details .dropdown-menu {
-  bottom: 1.3rem; /* Just above the text. */
-  left: -5px; /* Compensate for button padding. */
-}
-
-html[dir="rtl"] .user-details .dropdown-menu {
-  right: -5px;
 }
 
 .settings-menu .dropdown-menu {
@@ -650,15 +600,18 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   height: 42px;
 }
 
-.footer .signin-details {
+.footer > .signin-details {
   align-items: center;
-  display: flex;
 }
 
-.footer .user-identity {
+.footer > .user-identity {
+  flex: 1;
   color: #000;
   font-weight: bold;
   margin: 0;
+  margin-inline-end: 1rem;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 
 /* First time use */
@@ -666,28 +619,59 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 .fte-get-started-content {
   /* Manual vertical centering */
   flex: 1;
-  padding: 7.5rem 0 0;
+  padding: 2rem 0 0;
   display: flex;
   flex-direction: column;
 }
 
 .fte-title {
-  margin: 0 44px;
+  margin: 0 20px;
 }
 
 .fte-title > img {
   width: 100%;
 }
 
-.fte-subheader {
+img.fte-logo {
+  height: 32px;
+}
+
+.fte-subheader, .fte-content {
+  font-size: 1.6rem;
   text-align: center;
-  font-size: 1.8rem;
-  margin-bottom: 2rem;
+  margin: 2rem auto;
   color: #4a4a4a;
+  line-height: 2.4rem;
+}
+
+.fte-content {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #9a9a9a;
+}
+
+.fte-separator {
+  /* Constrain separator width with magic number. */
+  width: 164px;
+  border: solid #c5c5c5 1px;
+  height: 1px;
+  margin: 0 auto;
+}
+
+img.fte-hello-web-share {
+  /* Set custom SVG size and position to align with powered-by-wrapper element. */
+  width: 290px;
+  height: 148px;
+  margin-bottom: -4px;
 }
 
 .fte-get-started-content + .powered-by-wrapper {
   width: 100%;
+  background: #ebebeb;
+}
+
+.fte-get-started-content + .powered-by-wrapper > #powered-by {
+  border: none;
 }
 
 .fte-get-started-container {
@@ -698,12 +682,20 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   background: #fbfbfb;
 }
 
+.fte-button-container {
+  border-top: 1px solid #ccc;
+  padding: 8px 8px 0;
+  background: #ebebeb;
+  display: flex;
+  flex-direction: column;
+}
+
 .fte-get-started-button {
   border: none;
   color: #fff;
   background-color: #00a9dc;
   line-height: 43px;
-  margin: 0 15px;
+  margin: 10px;
   padding: 0;
   border-radius: 4px;
   font-size: 1.4rem;

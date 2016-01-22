@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* exported startup, shutdown, install, uninstall */
+
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -35,6 +37,7 @@ var WindowListener = {
     let gBrowser = window.gBrowser;
     let xhrClass = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
     let FileReader = window.FileReader;
+    let menuItem = null;
 
     // the "exported" symbols
     var LoopUI = {
@@ -67,20 +70,6 @@ var WindowListener = {
           this.browser = browser;
         }
         return browser;
-      },
-
-      /**
-       * @var {String|null} selectedTab Getter for the name of the currently selected
-       *                                tab inside the Loop panel. Will be NULL if
-       *                                the panel hasn't loaded yet.
-       */
-      get selectedTab() {
-        if (!this.browser) {
-          return null;
-        }
-
-        let selectedTab = this.browser.contentDocument.querySelector(".tab-view > .selected");
-        return selectedTab && selectedTab.getAttribute("data-tab-name");
       },
 
       /**
@@ -278,6 +267,8 @@ var WindowListener = {
           }
         });
 
+        //this.addMenuItem();
+
         // Don't do the rest if this is for the hidden window - we don't
         // have a toolbar there.
         if (window == Services.appShell.hiddenDOMWindow) {
@@ -292,6 +283,35 @@ var WindowListener = {
         Services.obs.addObserver(this, "loop-status-changed", false);
 
         this.updateToolbarState();
+      },
+
+      /**
+       * Adds a menu item to the browsers' Tools menu that open the Loop panel
+       * when selected.
+       */
+      addMenuItem: function() {
+        let menu = document.getElementById("menu_ToolsPopup");
+        if (!menu || menuItem) {
+          return;
+        }
+
+        menuItem = document.createElementNS(kNSXUL, "menuitem");
+        menuItem.setAttribute("id", "menu_openLoop");
+        menuItem.setAttribute("label", this._getString("loopMenuItem_label"));
+        menuItem.setAttribute("accesskey", this._getString("loopMenuItem_accesskey"));
+
+        menuItem.addEventListener("command", () => this.togglePanel());
+
+        menu.insertBefore(menuItem, document.getElementById("sync-setup"));
+      },
+
+      /**
+       * Removes the menu item from the browsers' Tools menu.
+       */
+      removeMenuItem: function() {
+        if (menuItem) {
+          menuItem.parentNode.removeChild(menuItem);
+        }
       },
 
       // Implements nsIObserver
@@ -408,7 +428,7 @@ var WindowListener = {
         }
 
         let notification = new window.Notification(options.title, notificationOptions);
-        notification.addEventListener("click", e => {
+        notification.addEventListener("click", () => {
           if (window.closed) {
             return;
           }
@@ -465,6 +485,7 @@ var WindowListener = {
           // Watch for title changes as opposed to location changes as more
           // metadata about the page is available when this event fires.
           gBrowser.addEventListener("DOMTitleChanged", this);
+          this._browserSharePaused = false;
         }
 
         this._maybeShowBrowserSharingInfoBar();
@@ -486,6 +507,7 @@ var WindowListener = {
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
         gBrowser.removeEventListener("DOMTitleChanged", this);
         this._listeningToTabSelect = false;
+        this._browserSharePaused = false;
       },
 
       /**
@@ -517,26 +539,37 @@ var WindowListener = {
         }
 
         let box = gBrowser.getNotificationBox();
-        let paused = false;
+        let pauseButtonLabel = this._getString(this._browserSharePaused ?
+                                               "infobar_button_resume_label" :
+                                               "infobar_button_pause_label");
+        let pauseButtonAccessKey = this._getString(this._browserSharePaused ?
+                                                   "infobar_button_resume_accesskey" :
+                                                   "infobar_button_pause_accesskey");
+        let barLabel = this._getString(this._browserSharePaused ?
+                                       "infobar_screenshare_paused_browser_message" :
+                                       "infobar_screenshare_browser_message2");
         let bar = box.appendNotification(
-          this._getString("infobar_screenshare_browser_message2"),
+          barLabel,
           kBrowserSharingNotificationId,
           // Icon is defined in browser theme CSS.
           null,
           box.PRIORITY_WARNING_LOW,
           [{
-            label: this._getString("infobar_button_pause_label"),
-            accessKey: this._getString("infobar_button_pause_accesskey"),
+            label: pauseButtonLabel,
+            accessKey: pauseButtonAccessKey,
             isDefault: false,
             callback: (event, buttonInfo, buttonNode) => {
-              paused = !paused;
-              bar.label = paused ? this._getString("infobar_screenshare_paused_browser_message") :
-                this._getString("infobar_screenshare_browser_message2");
-              bar.classList.toggle("paused", paused);
-              buttonNode.label = paused ? this._getString("infobar_button_resume_label") :
-                this._getString("infobar_button_pause_label");
-              buttonNode.accessKey = paused ? this._getString("infobar_button_resume_accesskey") :
-                this._getString("infobar_button_pause_accesskey");
+              this._browserSharePaused = !this._browserSharePaused;
+              bar.label = this._getString(this._browserSharePaused ?
+                                          "infobar_screenshare_paused_browser_message" :
+                                          "infobar_screenshare_browser_message2");
+              bar.classList.toggle("paused", this._browserSharePaused);
+              buttonNode.label = this._getString(this._browserSharePaused ?
+                                                 "infobar_button_resume_label" :
+                                                 "infobar_button_pause_label");
+              buttonNode.accessKey = this._getString(this._browserSharePaused ?
+                                                     "infobar_button_resume_accesskey" :
+                                                     "infobar_button_pause_accesskey");
               return true;
             },
             type: "pause"
@@ -552,6 +585,9 @@ var WindowListener = {
             type: "stop"
           }]
         );
+
+        // Sets 'paused' class if needed.
+        bar.classList.toggle("paused", !!this._browserSharePaused);
 
         // Keep showing the notification bar until the user explicitly closes it.
         bar.persistence = -1;
@@ -594,7 +630,7 @@ var WindowListener = {
        * Handles events from gBrowser.
        */
       handleEvent: function(event) {
-        switch(event.type) {
+        switch (event.type) {
           case "DOMTitleChanged":
             // Get the new title of the shared tab
             this._notifyBrowserSwitch();
@@ -671,9 +707,7 @@ var WindowListener = {
     window.LoopUI = LoopUI;
   },
 
-  tearDownBrowserUI: function(window) {
-    let document = window.document;
-
+  tearDownBrowserUI: function() {
     // Take any steps to remove UI or anything from the browser window
     // document.getElementById() etc. will work here
     // XXX Add in tear-down of the panel.
@@ -696,10 +730,10 @@ var WindowListener = {
     }, false);
   },
 
-  onCloseWindow: function(xulWindow) {
+  onCloseWindow: function() {
   },
 
-  onWindowTitleChange: function(xulWindow, newTitle) {
+  onWindowTitleChange: function() {
   }
 };
 

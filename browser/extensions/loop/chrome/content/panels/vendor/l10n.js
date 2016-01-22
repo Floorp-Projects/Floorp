@@ -7,7 +7,7 @@
 // It uses an explicitly passed object for the strings/locale functionality,
 // and does not automatically translate on DOMContentLoaded, but requires
 // initialize to be called. This improves testability and helps to avoid race
-// conditions.
+// conditions. It has also been updated to be closer to the gaia l10n.js api.
 (function(window) {
   var gL10nDetails;
   var gLanguage = '';
@@ -221,14 +221,19 @@
     get: translateString,
 
     // get the document language
-    getLanguage: function() { return gLanguage; },
-
-    // get the direction (ltr|rtl) of the current language
-    getDirection: function() {
-      // http://www.w3.org/International/questions/qa-scripts
-      // Arabic, Hebrew, Farsi, Pashto, Urdu
-      var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
-      return (rtlList.indexOf(gLanguage) >= 0) ? 'rtl' : 'ltr';
+    language: {
+      set code(lang) {
+        throw new Error("unsupported");
+      },
+      get code() {
+        return gLanguage;
+      },
+      get direction() {
+        // http://www.w3.org/International/questions/qa-scripts
+        // Arabic, Hebrew, Farsi, Pashto, Urdu
+        var rtlList = ['ar', 'he', 'fa', 'ps', 'ur'];
+        return (rtlList.indexOf(gLanguage) >= 0) ? 'rtl' : 'ltr';
+      }
     },
 
     // translate an element or document fragment

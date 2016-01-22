@@ -25,7 +25,8 @@ loop.store.TextChatStore = (function() {
       "dataChannelsAvailable",
       "receivedTextChatMessage",
       "sendTextChatMessage",
-      "updateRoomInfo"
+      "updateRoomInfo",
+      "updateRoomContext"
     ],
 
     /**
@@ -134,7 +135,8 @@ loop.store.TextChatStore = (function() {
     receivedTextChatMessage: function(actionData) {
       // If we don't know how to deal with this content, then skip it
       // as this version doesn't support it.
-      if (actionData.contentType !== CHAT_CONTENT_TYPES.TEXT) {
+      if (actionData.contentType !== CHAT_CONTENT_TYPES.TEXT &&
+        actionData.contentType !== CHAT_CONTENT_TYPES.CONTEXT_TILE) {
         return;
       }
 
@@ -187,6 +189,57 @@ loop.store.TextChatStore = (function() {
           }
         });
       }
+    },
+
+    /**
+     * Handles receiving information about the room context due to a change of the tabs
+     *
+     * @param  {sharedActions.updateRoomContext} actionData
+     */
+    updateRoomContext: function(actionData) {
+      // Firstly, check if there is a previous context tile, if not, create it
+      var contextTile = null;
+
+      for (var i = this._storeState.messageList.length - 1; i >= 0; i--) {
+        if (this._storeState.messageList[i].contentType === CHAT_CONTENT_TYPES.CONTEXT_TILE) {
+          contextTile = this._storeState.messageList[i];
+          break;
+        }
+      }
+
+      if (!contextTile) {
+        this._appendContextTileMessage(actionData);
+        return;
+      }
+
+      var oldDomain = new URL(contextTile.extraData.newRoomURL).hostname;
+      var currentDomain = new URL(actionData.newRoomURL).hostname;
+
+      if (oldDomain === currentDomain) {
+        return;
+      }
+
+      this._appendContextTileMessage(actionData);
+    },
+
+    /**
+     * Appends a context tile message to the UI and sends it.
+     *
+     * @param  {sharedActions.updateRoomContext} data
+     */
+    _appendContextTileMessage: function(data) {
+      var msgData = {
+        contentType: CHAT_CONTENT_TYPES.CONTEXT_TILE,
+        message: data.newRoomDescription,
+        extraData: {
+          roomToken: data.roomToken,
+          newRoomThumbnail: data.newRoomThumbnail,
+          newRoomURL: data.newRoomURL
+        },
+        sentTimestamp: (new Date()).toISOString()
+      };
+
+      this.sendTextChatMessage(msgData);
     }
   });
 

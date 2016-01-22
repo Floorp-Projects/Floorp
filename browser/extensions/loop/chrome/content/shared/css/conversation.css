@@ -15,10 +15,10 @@ button::-moz-focus-inner {
   z-index: 1020; /* required to have it superimposed to the video element */
   border: 0;
   left: 1.2rem;
-  right: 1.2rem;
   height: 2.4rem;
   position: absolute;
   bottom: 1.2rem;
+  text-align: center;
 }
 
 html[dir="rtl"] .conversation-toolbar {
@@ -95,14 +95,6 @@ html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:h
   background-size: cover;
 }
 
-.conversation-toolbar-btn-box.btn-edit-entry {
-  float: right;
-}
-
-html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
-  float: left;
-}
-
 /* conversationViews.jsx */
 
 .conversation-toolbar .btn-hangup {
@@ -168,8 +160,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   width: 100%;
 }
 
-.call-action-group > .btn,
-.room-context > .btn {
+.call-action-group > .btn {
   min-height: 30px;
   border-radius: 4px;
   margin: 0 4px;
@@ -219,6 +210,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   margin: .5rem 0 0;
   position: absolute;
   right: -10rem;
+  font-size: 0.8rem;
 }
 
 .call-action-group > .invite-button.triggered > p,
@@ -508,92 +500,15 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   margin: 0 1rem 1.5rem 1rem;
 }
 
-.room-context {
-  background: #fff;
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  font-size: .9em;
-  display: flex;
-  flex-flow: column nowrap;
-  align-content: flex-start;
-  align-items: flex-start;
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* Make the context view float atop the video elements. */
-  z-index: 3;
-}
-
-.room-invitation-overlay .room-context {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  flex: 0 1 auto;
-  height: 100%;
-}
-
-.room-context > .error-display-area.error {
-  display: block;
-  background-color: rgba(215,67,69,.8);
-  border-radius: 3px;
-  padding: .5em;
-}
-
-.room-context > .error-display-area {
-  display: none;
-}
-
-.room-context > .error-display-area.error {
-  margin: 1em 0 .5em 0;
-  text-align: center;
-  text-shadow: 1px 1px 0 rgba(0,0,0,.3);
-}
-
-.room-invitation-content,
-.room-context-header {
+.room-invitation-content {
   color: #333;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1rem;
   margin: 1rem auto;
 }
 
-.room-context > form {
-  margin-bottom: 1rem;
-  padding: .5rem;
-  width: 100%;
-}
-
-.room-context > form > textarea,
-.room-context > form > input[type="text"] {
-  border: 1px solid #c3c3c3;
-  border-radius: 4px;
-  box-shadow: none;
-  color: #4a4a4a;
-  display: block;
-  font-size: 1.1rem;
-  height: 2.6rem;
-  margin: 10px 0;
-  outline: none;
-  padding: 6px;
-  width: 100%;
-}
-
-.room-context > form > textarea {
-  font-family: inherit;
-  height: 5.2rem;
-  resize: none;
-}
-
-.room-context > form > textarea::-moz-placeholder,
-.room-context > form > input::-moz-placeholder {
-  color: #999;
-}
-
-.room-context > form > textarea:focus,
-.room-context > form > input:focus {
-  border: 0.1rem solid #5cccee;
+.room-invitation-content > p {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .media-layout {
@@ -801,8 +716,16 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   }
 }
 
-/* e.g. very narrow widths similar to conversation window */
-@media screen and (max-width:350px) {
+/* e.g. very narrow widths similar to conversation window.
+   Note: on some displays (e.g. windows / medium size) the width
+   may be very slightly over the expected width, so we add on 2px
+   just in case. */
+@media screen and (max-width:352px) {
+  .conversation-toolbar {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .media-layout > .media-wrapper {
     flex-flow: column nowrap;
   }
@@ -904,23 +827,23 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   /* aligns paragraph to right side */
   justify-content: flex-end;
   margin-left: 0;
-  margin-right: 4px;
+  margin-right: 10px;
 }
 
 .text-chat-entry.received {
-  margin-left: 2px;
+  margin-left: 10px;
   margin-right: 0;
 }
 
 html[dir="rtl"] .text-chat-entry.sent {
-  margin-left: 5px;
+  margin-left: 10px;
   margin-right: 0;
 }
 
 
 html[dir="rtl"] .text-chat-entry.received {
   margin-left: 0;
-  margin-right: 5px;
+  margin-right: 10px;
 }
 
 .text-chat-entry > p {
@@ -935,6 +858,11 @@ html[dir="rtl"] .text-chat-entry.received {
   border: 1px solid #5cccee;
   background: #fff;
   word-wrap: break-word;
+  flex: 0 1 auto;
+  order: 1;
+}
+
+.text-chat-entry > .context-wrapper {
   flex: 0 1 auto;
   order: 1;
 }
@@ -1055,6 +983,21 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   margin-left: -10px;
 }
 
+/* Context updated */
+.text-chat-entry > .context-content > .context-wrapper {
+  max-width: 300px;
+  min-height: 50px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 4px;
+  padding: 10px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.15);
+}
+
+.text-chat-entry.received > .context-content > .context-wrapper {
+  max-width: 180px;
+}
+
 .text-chat-header.special.room-name {
   color: #666;
   font-weight: bold;
@@ -1119,8 +1062,11 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   border-top: 1px solid #66c9f2;
 }
 
-/* e.g. very narrow widths similar to conversation window */
-@media screen and (max-width:350px) {
+/* e.g. very narrow widths similar to conversation window.
+   Note: on some displays (e.g. windows / medium size) the width
+   may be very slightly over the expected width, so we add on 2px
+   just in case. */
+@media screen and (max-width:352px) {
   .text-chat-view {
     display: flex;
     flex-flow: column nowrap;

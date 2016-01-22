@@ -6,7 +6,7 @@ describe("loop.shared.models", function() {
   "use strict";
 
   var expect = chai.expect;
-  var l10n = navigator.mozL10n;
+  var l10n = navigator.mozL10n || document.mozL10n;
   var sharedModels = loop.shared.models;
   var sandbox;
 

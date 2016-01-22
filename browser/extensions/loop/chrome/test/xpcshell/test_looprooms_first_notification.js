@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 Cu.import("resource://services-common/utils.js");
 Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.import("resource:///modules/Chat.jsm");

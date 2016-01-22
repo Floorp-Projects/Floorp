@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
 XPCOMUtils.defineLazyModuleGetter(this, "ObjectUtils",
   "resource://gre/modules/ObjectUtils.jsm");
 
+/* exported LoopRooms, roomsPushNotification */
 
 this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
 
@@ -718,7 +719,7 @@ var LoopRoomsInternal = {
 
     eventEmitter.emit("open", roomToken);
 
-    MozLoopService.openChatWindow(windowData, () => {
+    return MozLoopService.openChatWindow(windowData, () => {
       eventEmitter.emit("close");
     });
   },
@@ -737,7 +738,7 @@ var LoopRoomsInternal = {
     let room = this.rooms.get(roomToken);
     let url = "/rooms/" + encodeURIComponent(roomToken);
     MozLoopService.hawkRequest(this.sessionType, url, "DELETE")
-      .then(response => {
+      .then(() => {
         this.rooms.delete(roomToken);
         eventEmitter.emit("delete", room);
         eventEmitter.emit("delete:" + room.roomToken, room);

@@ -10,7 +10,6 @@
 
 importScripts("resource://gre/modules/osfile.jsm");
 
-var File = OS.File;
 var Encoder = new TextEncoder();
 var Counter = 0;
 
@@ -49,13 +48,20 @@ onmessage = function(e) {
   // Save to disk
   let array = Encoder.encode(pingStr);
   try {
-    File.makeDir(directory,
-                 { unixMode: OS.Constants.S_IRWXU, ignoreExisting: true });
-    File.writeAtomic(OS.Path.join(directory, filename), array);
+    OS.File.makeDir(directory, {
+      unixMode: OS.Constants.S_IRWXU,
+      ignoreExisting: true
+    });
+    OS.File.writeAtomic(OS.Path.join(directory, filename), array);
     postMessage({ ok: true });
-  } catch (ex if ex instanceof File.Error) {
+  } catch (ex) {
     // Instances of OS.File.Error know how to serialize themselves
-    postMessage({fail: File.Error.toMsg(ex)});
+    if (ex instanceof OS.File.Error) {
+      postMessage({ fail: OS.File.Error.toMsg(ex) });
+    }
+    else {
+      throw ex;
+    }
   }
 };
 
