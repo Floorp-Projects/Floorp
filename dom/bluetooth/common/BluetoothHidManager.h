@@ -22,6 +22,8 @@ public:
     aName.AssignLiteral("HID");
   }
 
+  static void InitHidInterface(BluetoothProfileResultHandler* aRes);
+  static void DeinitHidInterface(BluetoothProfileResultHandler* aRes);
   static BluetoothHidManager* Get();
 
   // HID-specific functions

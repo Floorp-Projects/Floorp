@@ -40,6 +40,7 @@ class BluetoothOppManager : public BluetoothSocketObserver
   class SendSocketDataTask;
 
 public:
+
   BT_DECL_PROFILE_MGR_BASE
   BT_DECL_SOCKET_OBSERVER
   virtual void GetName(nsACString& aName)
@@ -49,7 +50,10 @@ public:
 
   static const int MAX_PACKET_LENGTH = 0xFFFE;
 
+  static void InitOppInterface(BluetoothProfileResultHandler* aRes);
+  static void DeinitOppInterface(BluetoothProfileResultHandler* aRes);
   static BluetoothOppManager* Get();
+
   void ClientDataHandler(mozilla::ipc::UnixSocketBuffer* aMessage);
   void ServerDataHandler(mozilla::ipc::UnixSocketBuffer* aMessage);
 
@@ -75,7 +79,8 @@ protected:
 
 private:
   BluetoothOppManager();
-  bool Init();
+  nsresult Init();
+  void Uninit();
   void HandleShutdown();
   void HandleVolumeStateChanged(nsISupports* aSubject);
 

@@ -1,4 +1,4 @@
-FROM          taskcluster/base-test:0.1.2
+FROM          taskcluster/base-test:0.1.3
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
