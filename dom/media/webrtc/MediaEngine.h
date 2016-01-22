@@ -274,8 +274,7 @@ protected:
 /**
  * Audio source and friends.
  */
-class MediaEngineAudioSource : public MediaEngineSource,
-                               public AudioDataListenerInterface
+class MediaEngineAudioSource : public MediaEngineSource
 {
 public:
   virtual ~MediaEngineAudioSource() {}

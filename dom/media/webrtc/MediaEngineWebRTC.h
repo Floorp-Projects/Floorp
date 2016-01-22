@@ -29,7 +29,6 @@
 #include "MediaStreamGraph.h"
 #include "cubeb/cubeb.h"
 #include "CubebUtils.h"
-#include "AudioPacketizer.h"
 
 #include "MediaEngineWrapper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
@@ -99,14 +98,6 @@ public:
   {
     return NS_OK;
   }
-  void NotifyOutputData(MediaStreamGraph* aGraph,
-                        AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override
-  {}
-  void NotifyInputData(MediaStreamGraph* aGraph,
-                       AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override
-  {}
   void NotifyPull(MediaStreamGraph* aGraph, SourceMediaStream* aSource,
                   TrackID aID, StreamTime aDesiredTime) override
   {}
@@ -136,32 +127,37 @@ class AudioInput
 {
 public:
   AudioInput(webrtc::VoiceEngine* aVoiceEngine) : mVoiceEngine(aVoiceEngine) {};
-  // Threadsafe because it's referenced from an MicrophoneSource, which can
-  // had references to it on other threads.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioInput)
+  virtual ~AudioInput() {}
+
+  NS_INLINE_DECL_REFCOUNTING(AudioInput)
 
   virtual int GetNumOfRecordingDevices(int& aDevices) = 0;
   virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
                                      char aStrGuidUTF8[128]) = 0;
   virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
-  virtual void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
-  virtual void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
+  virtual void StartRecording(MediaStreamGraph *aGraph) = 0;
+  virtual void StopRecording(MediaStreamGraph *aGraph) = 0;
   virtual int SetRecordingDevice(int aIndex) = 0;
 
 protected:
-  // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AudioInput() {}
-
   webrtc::VoiceEngine* mVoiceEngine;
 };
 
-class AudioInputCubeb final : public AudioInput
+class AudioInputCubeb : public AudioInput,
+                        public MediaStreamListener
 {
 public:
-  explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine) :
+  AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine) :
     AudioInput(aVoiceEngine), mDevices(nullptr) {}
+  virtual ~AudioInputCubeb()
+  {
+    if (mDevices) {
+      cubeb_device_collection_destroy(mDevices);
+      mDevices = nullptr;
+    }
+  }
 
-  int GetNumOfRecordingDevices(int& aDevices)
+  virtual int GetNumOfRecordingDevices(int& aDevices)
   {
     // devices = cubeb_get_num_devices(...)
     if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
@@ -181,8 +177,8 @@ public:
     return 0;
   }
 
-  int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
-                             char aStrGuidUTF8[128])
+  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+                                     char aStrGuidUTF8[128])
   {
     if (!mDevices) {
       return 1;
@@ -194,53 +190,45 @@ public:
     return 0;
   }
 
-  int GetRecordingDeviceStatus(bool& aIsAvailable)
+  virtual int GetRecordingDeviceStatus(bool& aIsAvailable)
   {
     // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT
     aIsAvailable = true;
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  virtual void StartRecording(MediaStreamGraph *aGraph)
   {
     ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
     ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
     if (ptrVoERender) {
       ptrVoERender->SetExternalRecordingStatus(true);
     }
-    aGraph->OpenAudioInput(nullptr, aListener);
+    aGraph->OpenAudioInput(nullptr, this);
   }
 
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  virtual void StopRecording(MediaStreamGraph *aGraph)
   {
-    aGraph->CloseAudioInput(aListener);
+    aGraph->CloseAudioInput(this);
   }
 
-  int SetRecordingDevice(int aIndex)
+  virtual int SetRecordingDevice(int aIndex)
   {
-    // Relevant with devid support
+    // Not relevant to cubeb
     return 1;
-  }
-
-protected:
-  ~AudioInputCubeb() {
-  {
-    if (mDevices) {
-      cubeb_device_collection_destroy(mDevices);
-      mDevices = nullptr;
-    }
   }
 
 private:
   cubeb_device_collection* mDevices;
 };
 
-class AudioInputWebRTC final : public AudioInput
+class AudioInputWebRTC : public AudioInput
 {
 public:
-  explicit AudioInputWebRTC(webrtc::VoiceEngine* aVoiceEngine) : AudioInput(aVoiceEngine) {}
+  AudioInputWebRTC(webrtc::VoiceEngine* aVoiceEngine) : AudioInput(aVoiceEngine) {}
+  virtual ~AudioInputWebRTC() {}
 
-  int GetNumOfRecordingDevices(int& aDevices)
+  virtual int GetNumOfRecordingDevices(int& aDevices)
   {
     ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
     ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
@@ -250,8 +238,8 @@ public:
     return ptrVoEHw->GetNumOfRecordingDevices(aDevices);
   }
 
-  int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
-                             char aStrGuidUTF8[128])
+  virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
+                                     char aStrGuidUTF8[128])
   {
     ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
     ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
@@ -262,7 +250,7 @@ public:
                                             aStrGuidUTF8);
   }
 
-  int GetRecordingDeviceStatus(bool& aIsAvailable)
+  virtual int GetRecordingDeviceStatus(bool& aIsAvailable)
   {
     ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
     ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
@@ -273,10 +261,10 @@ public:
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
+  virtual void StartRecording(MediaStreamGraph *aGraph) {}
+  virtual void StopRecording(MediaStreamGraph *aGraph) {}
 
-  int SetRecordingDevice(int aIndex)
+  virtual int SetRecordingDevice(int aIndex)
   {
     ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
     ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
@@ -285,39 +273,6 @@ public:
     }
     return ptrVoEHw->SetRecordingDevice(aIndex);
   }
-
-protected:
-  // Protected destructor, to discourage deletion outside of Release():
-  ~AudioInputWebRTC() {}
-};
-
-class WebRTCAudioDataListener : public AudioDataListener
-{
-protected:
-  // Protected destructor, to discourage deletion outside of Release():
-  virtual ~WebRTCAudioDataListener() {}
-
-public:
-  explicit WebRTCAudioDataListener(MediaEngineAudioSource* aAudioSource) :
-    mAudioSource(aAudioSource)
-  {}
-
-  // AudioDataListenerInterface methods
-  virtual void NotifyOutputData(MediaStreamGraph* aGraph,
-                                AudioDataValue* aBuffer, size_t aFrames,
-                                uint32_t aChannels) override
-  {
-    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aChannels);
-  }
-  virtual void NotifyInputData(MediaStreamGraph* aGraph,
-                               AudioDataValue* aBuffer, size_t aFrames,
-                               uint32_t aChannels) override
-  {
-    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aChannels);
-  }
-
-private:
-  RefPtr<MediaEngineAudioSource> mAudioSource;
 };
 
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
@@ -352,7 +307,6 @@ public:
     MOZ_ASSERT(aAudioInput);
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
     mDeviceUUID.Assign(uuid);
-    mListener = new mozilla::WebRTCAudioDataListener(this);
     Init();
   }
 
@@ -378,14 +332,6 @@ public:
                   SourceMediaStream* aSource,
                   TrackID aId,
                   StreamTime aDesiredTime) override;
-
-  // AudioDataListenerInterface methods
-  void NotifyOutputData(MediaStreamGraph* aGraph,
-                        AudioDataValue* aBuffer, size_t aFrames,
-                        uint32_t aChannels) override;
-  void NotifyInputData(MediaStreamGraph* aGraph,
-                       AudioDataValue* aBuffer, size_t aFrames,
-                       uint32_t aChannels) override;
 
   bool IsFake() override {
     return false;
@@ -421,14 +367,11 @@ private:
 
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
-  RefPtr<WebRTCAudioDataListener> mListener;
 
   ScopedCustomReleasePtr<webrtc::VoEBase> mVoEBase;
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
   ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
   ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
-
-  nsAutoPtr<AudioPacketizer<AudioDataValue, int16_t>> mPacketizer;
 
   // mMonitor protects mSources[] access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack()).

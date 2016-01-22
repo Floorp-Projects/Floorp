@@ -381,7 +381,7 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // Attach external media processor, so this::Process will be called.
   mVoERender->RegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel, *this);
 
-  mAudioInput->StartRecording(aStream->Graph(), mListener);
+  mAudioInput->StartRecording(aStream->Graph());
 
   return NS_OK;
 }
@@ -413,7 +413,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
     mState = kStopped;
   }
 
-  mAudioInput->StopRecording(aSource->Graph(), mListener);
+  mAudioInput->StopRecording(aSource->Graph());
 
   mVoERender->DeRegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel);
 
@@ -442,39 +442,6 @@ MediaEngineWebRTCMicrophoneSource::NotifyPull(MediaStreamGraph *aGraph,
 {
   // Ignore - we push audio data
   LOG_FRAMES(("NotifyPull, desired = %ld", (int64_t) aDesiredTime));
-}
-
-void
-MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
-                                                    AudioDataValue* aBuffer,
-                                                    size_t aFrames,
-                                                    uint32_t aChannels)
-{
-}
-
-// Called back on GraphDriver thread
-void
-MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
-                                                   AudioDataValue* aBuffer,
-                                                   size_t aFrames,
-                                                   uint32_t aChannels)
-{
-  // This will call Process() with data coming out of the AEC/NS/AGC/etc chain
-  if (!mPacketizer ||
-      mPacketizer->PacketSize() != mSampleFrequency/100 ||
-      mPacketizer->Channels() != aChannels) {
-    // It's ok to drop the audio still in the packetizer here.
-    mPacketizer = new AudioPacketizer<AudioDataValue, int16_t>(mSampleFrequency/100, aChannels);
-   }
-
-  mPacketizer->Input(aBuffer, static_cast<uint32_t>(aFrames));
-
-  while (mPacketizer->PacketsAvailable()) {
-    uint32_t samplesPerPacket = mPacketizer->PacketSize() *
-                                mPacketizer->Channels();
-    int16_t* packet = mPacketizer->Output();
-    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, mSampleFrequency, 0);
-  }
 }
 
 void
@@ -593,9 +560,6 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
   mVoENetwork = nullptr;
   mVoERender = nullptr;
   mVoEBase = nullptr;
-
-  mAudioInput = nullptr;
-  mListener = nullptr; // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
 
   mState = kReleased;
   mInitDone = false;
