@@ -364,8 +364,7 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams)
 
   {
     cubeb_stream* stream;
-    if (cubeb_stream_init(cubebContext, &stream, "AudioStream",
-                          nullptr, nullptr, nullptr, &aParams,
+    if (cubeb_stream_init(cubebContext, &stream, "AudioStream", nullptr, &aParams,
                           latency, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       MonitorAutoLock mon(mMonitor);
       MOZ_ASSERT(mState != SHUTDOWN);
