@@ -47,13 +47,18 @@ ifndef NO_XPIDL
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
 endif
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 # Mac builds require to copy things in dist/bin/*.app
 # TODO: remove the MOZ_WIDGET_TOOLKIT and MOZ_BUILD_APP variables from
 # faster/Makefile and python/mozbuild/mozbuild/test/backend/test_build.py
 # when this is not required anymore.
+# We however don't need to do this when using the hybrid
+# FasterMake/RecursiveMake backend (FASTER_RECURSIVE_MAKE is set when
+# recursing from the RecursiveMake backend)
+ifndef FASTER_RECURSIVE_MAKE
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 default:
 	$(MAKE) -C $(TOPOBJDIR)/$(MOZ_BUILD_APP)/app repackage
+endif
 endif
 
 .PHONY: FORCE
