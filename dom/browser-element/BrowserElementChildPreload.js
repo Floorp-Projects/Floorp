@@ -27,6 +27,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "ManifestObtainer",
 
 var kLongestReturnedString = 128;
 
+const Timer = Components.Constructor("@mozilla.org/timer;1",
+                                     "nsITimer",
+                                     "initWithCallback");
+
 function debug(msg) {
   //dump("BrowserElementChildPreload - " + msg + "\n");
 }
@@ -65,7 +69,8 @@ const OBSERVED_EVENTS = [
   'xpcom-shutdown',
   'audio-playback',
   'activity-done',
-  'invalid-widget'
+  'invalid-widget',
+  'will-launch-app'
 ];
 
 /**
@@ -316,11 +321,14 @@ BrowserElementChild.prototype = {
     this.forwarder.init();
   },
 
+  _paintFrozenTimer: null,
   observe: function(subject, topic, data) {
     // Ignore notifications not about our document.  (Note that |content| /can/
     // be null; see bug 874900.)
 
-    if (topic !== 'activity-done' && topic !== 'audio-playback' &&
+    if (topic !== 'activity-done' &&
+        topic !== 'audio-playback' &&
+        topic !== 'will-launch-app' &&
         (!content || subject !== content.document)) {
       return;
     }
@@ -341,7 +349,29 @@ BrowserElementChild.prototype = {
       case 'invalid-widget':
         sendAsyncMsg('error', { type: 'invalid-widget' });
         break;
+      case 'will-launch-app':
+        // If the launcher is not visible, let's ignore the message.
+        if (!docShell.isActive) {
+          return;
+        }
+
+        // If this is not a content process, let's not freeze painting.
+        if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
+          return;
+        }
+
+        docShell.contentViewer.pausePainting();
+
+        this._paintFrozenTimer && this._paintFrozenTimer.cancel();
+        this._paintFrozenTimer = new Timer(this, 3000, Ci.nsITimer.TYPE_ONE_SHOT);
+        break;
     }
+  },
+
+  notify: function(timer) {
+    docShell.contentViewer.resumePainting();
+    this._paintFrozenTimer.cancel();
+    this._paintFrozenTimer = null;
   },
 
   /**
@@ -1265,6 +1295,11 @@ BrowserElementChild.prototype = {
     if (docShell && docShell.isActive !== visible) {
       docShell.isActive = visible;
       sendAsyncMsg('visibilitychange', {visible: visible});
+
+      // Ensure painting is not frozen if the app goes visible.
+      if (visible && this._paintFrozenTimer) {
+        this.notify();
+      }
     }
   },
 

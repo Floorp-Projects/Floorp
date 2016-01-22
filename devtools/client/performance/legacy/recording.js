@@ -6,13 +6,10 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 
-loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/client/performance/modules/io");
-loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/recording-utils");
-loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
-  "devtools/shared/performance/recording-common", true);
-loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
+const PerformanceIO = require("devtools/client/performance/modules/io");
+const RecordingUtils = require("devtools/shared/performance/recording-utils");
+const { PerformanceRecordingCommon } = require("devtools/shared/performance/recording-common");
+const { merge } = require("sdk/util/object");
 
 /**
  * Model for a wholistic profile, containing the duration, profiling data,

@@ -102,7 +102,7 @@ var gSyncPane = {
         cachedComputerName = "";
       }
       document.getElementById("fxaEmailAddress1").textContent = username;
-      document.getElementById("fxaSyncComputerName").value = cachedComputerName;
+      this._populateComputerName(cachedComputerName);
       this.page = FXA_PAGE_LOGGED_IN;
     } else { // Old Sync
       this.page = PAGE_HAS_ACCOUNT;
@@ -177,13 +177,11 @@ var gSyncPane = {
   },
 
   _updateComputerNameValue: function(save) {
-    let textbox = document.getElementById("fxaSyncComputerName");
     if (save) {
+      let textbox = document.getElementById("fxaSyncComputerName");
       Weave.Service.clientsEngine.localName = textbox.value;
     }
-    else {
-      textbox.value = Weave.Service.clientsEngine.localName;
-    }
+    this._populateComputerName(Weave.Service.clientsEngine.localName);
   },
 
   _closeSyncStatusMessageBox: function() {
@@ -360,7 +358,7 @@ var gSyncPane = {
         fxaEmailAddress1Label.textContent = data.email;
         document.getElementById("fxaEmailAddress2").textContent = data.email;
         document.getElementById("fxaEmailAddress3").textContent = data.email;
-        document.getElementById("fxaSyncComputerName").value = Weave.Service.clientsEngine.localName;
+        this._populateComputerName(Weave.Service.clientsEngine.localName);
         let engines = document.getElementById("fxaSyncEngines")
         for (let checkbox of engines.querySelectorAll("checkbox")) {
           checkbox.disabled = !syncReady;
@@ -673,6 +671,15 @@ var gSyncPane = {
 
   resetSync: function () {
     this.openSetup("reset");
+  },
+
+  _populateComputerName(value) {
+    let textbox = document.getElementById("fxaSyncComputerName");
+    if (!textbox.hasAttribute("placeholder")) {
+      textbox.setAttribute("placeholder",
+                           Weave.Utils.getDefaultDeviceName());
+    }
+    textbox.value = value;
   },
 };
 

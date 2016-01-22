@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * A dummy front decorated with the provided methods.
