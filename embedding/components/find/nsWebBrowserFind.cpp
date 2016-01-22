@@ -186,7 +186,7 @@ nsWebBrowserFind::FindNext(bool* aResult)
     if (curItem.get() == startingItem.get()) {
       doFind = true; // start looking in frames after this one
     }
-  };
+  }
 
   if (!mWrapFind) {
     // remember where we left off

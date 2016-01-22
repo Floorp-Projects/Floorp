@@ -7530,7 +7530,7 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
              aOrigVisualOverflow.Size() != visualOverflow.Size()){
     aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);
     aFrame->InvalidateFrame();
-    parent->InvalidateFrameWithRect(aOrigRect);;
+    parent->InvalidateFrameWithRect(aOrigRect);
     parent->InvalidateFrame();
   }
 }

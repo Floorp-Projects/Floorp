@@ -1256,7 +1256,7 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
     ErrorResult errorResult;
 
     cachedHeaders->Append(name, value, errorResult);
-    if (errorResult.Failed()) { return errorResult.StealNSResult(); };
+    if (errorResult.Failed()) { return errorResult.StealNSResult(); }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
