@@ -32,11 +32,16 @@ const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
 
 // Types of nodes in the rule/computed-view
-const VIEW_NODE_SELECTOR_TYPE = exports.VIEW_NODE_SELECTOR_TYPE = 1;
-const VIEW_NODE_PROPERTY_TYPE = exports.VIEW_NODE_PROPERTY_TYPE = 2;
-const VIEW_NODE_VALUE_TYPE = exports.VIEW_NODE_VALUE_TYPE = 3;
-const VIEW_NODE_IMAGE_URL_TYPE = exports.VIEW_NODE_IMAGE_URL_TYPE = 4;
-const VIEW_NODE_LOCATION_TYPE = exports.VIEW_NODE_LOCATION_TYPE = 5;
+const VIEW_NODE_SELECTOR_TYPE = 1;
+exports.VIEW_NODE_SELECTOR_TYPE = VIEW_NODE_SELECTOR_TYPE;
+const VIEW_NODE_PROPERTY_TYPE = 2;
+exports.VIEW_NODE_PROPERTY_TYPE = VIEW_NODE_PROPERTY_TYPE;
+const VIEW_NODE_VALUE_TYPE = 3;
+exports.VIEW_NODE_VALUE_TYPE = VIEW_NODE_VALUE_TYPE;
+const VIEW_NODE_IMAGE_URL_TYPE = 4;
+exports.VIEW_NODE_IMAGE_URL_TYPE = VIEW_NODE_IMAGE_URL_TYPE;
+const VIEW_NODE_LOCATION_TYPE = 5;
+exports.VIEW_NODE_LOCATION_TYPE = VIEW_NODE_LOCATION_TYPE;
 
 /**
  * Manages all highlighters in the style-inspector.
@@ -183,9 +188,9 @@ HighlightersOverlay.prototype = {
     // promise. This causes some tests to fail when trying to install a
     // rejection handler on the result of the call. To avoid this, check
     // whether the result is truthy before installing the handler.
-    let promise = this.highlighters[this.highlighterShown].hide();
-    if (promise) {
-      promise.then(null, e => console.error(e));
+    let onHidden = this.highlighters[this.highlighterShown].hide();
+    if (onHidden) {
+      onHidden.then(null, e => console.error(e));
     }
 
     this.highlighterShown = null;

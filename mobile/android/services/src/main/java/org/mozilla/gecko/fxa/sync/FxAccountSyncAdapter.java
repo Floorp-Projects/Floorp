@@ -4,17 +4,16 @@
 
 package org.mozilla.gecko.fxa.sync;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import android.accounts.Account;
+import android.content.AbstractThreadedSyncAdapter;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SyncResult;
+import android.os.Bundle;
+import android.os.SystemClock;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -39,7 +38,7 @@ import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.mozilla.gecko.sync.delegates.BaseGlobalSessionCallback;
+import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
@@ -50,15 +49,15 @@ import org.mozilla.gecko.tokenserver.TokenServerClientDelegate;
 import org.mozilla.gecko.tokenserver.TokenServerException;
 import org.mozilla.gecko.tokenserver.TokenServerToken;
 
-import android.accounts.Account;
-import android.content.AbstractThreadedSyncAdapter;
-import android.content.ContentProviderClient;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SyncResult;
-import android.os.Bundle;
-import android.os.SystemClock;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
@@ -131,7 +130,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
   }
 
-  protected static class SessionCallback implements BaseGlobalSessionCallback {
+  protected static class SessionCallback implements GlobalSessionCallback {
     protected final SyncDelegate syncDelegate;
     protected final SchedulePolicy schedulePolicy;
     protected volatile BackoffHandler storageBackoffHandler;
@@ -294,7 +293,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         // or we never had one at all, or we're OK to sync.
         storageBackoffHandler.setEarliestNextRequest(0L);
 
-        FxAccountGlobalSession globalSession = null;
+        GlobalSession globalSession = null;
         try {
           final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs, getContext());
           if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
@@ -322,7 +321,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           syncConfig.stagesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
           syncConfig.setClusterURL(storageServerURI);
 
-          globalSession = new FxAccountGlobalSession(syncConfig, callback, context, clientsDataDelegate);
+          globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate);
           globalSession.start();
         } catch (Exception e) {
           callback.handleError(globalSession, e);

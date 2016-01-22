@@ -2280,12 +2280,6 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   mInner->mFirstChild = nullptr;
   mInner->mNameSpaceMap = nullptr;
 
-  // allow agent features if the style sheet's principal is the system principal
-  css::SheetParsingMode parsingMode =
-    nsContentUtils::IsSystemPrincipal(mInner->mPrincipal)
-      ? css::eAgentSheetFeatures
-      : css::eAuthorSheetFeatures;
-
   uint32_t lineNumber = 1;
   if (mOwningNode) {
     nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(mOwningNode);
@@ -2297,7 +2291,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   nsCSSParser parser(loader, this);
   nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
                                   mInner->mPrincipal, lineNumber,
-                                  parsingMode, &reusableSheets);
+                                  mParsingMode, &reusableSheets);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 

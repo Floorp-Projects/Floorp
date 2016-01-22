@@ -149,10 +149,6 @@ public class RemoteTabsPanel extends HomeFragment {
             return null;
         }
 
-        if (SyncConstants.ACCOUNTTYPE_SYNC.equals(account.type)) {
-            return Action.None;
-        }
-
         if (!FxAccountConstants.ACCOUNT_TYPE.equals(account.type)) {
             Log.wtf(LOGTAG, "Non Sync, non Firefox Android Account returned by AccountLoader; returning null.");
             return null;

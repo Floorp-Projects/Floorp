@@ -4,9 +4,6 @@
 # Exclude expected objdirs.
 obj*/**
 
-# Temporarily ignore HTML files that still need to be fixed.
-devtools/**/*.html
-
 # We ignore all these directories by default, until we get them enabled.
 # If you are enabling a directory, please add directory specific exclusions
 # below.
@@ -17,7 +14,6 @@ caps/**
 chrome/**
 config/**
 db/**
-devtools/**
 docshell/**
 dom/**
 editor/**
@@ -91,24 +87,52 @@ browser/locales/**
 browser/extensions/loop/**
 
 # devtools/ exclusions
-# Ignore d3
-devtools/client/shared/d3.js
-devtools/client/webaudioeditor/lib/dagre-d3.js
+devtools/*.js
+devtools/client/*.js
+devtools/client/aboutdebugging/**
+devtools/client/animationinspector/**
+devtools/client/canvasdebugger/**
+devtools/client/commandline/**
+devtools/client/debugger/**
+devtools/client/eyedropper/**
+devtools/client/framework/**
+# devtools/client/inspector/shared/*.js files are eslint-clean, so they aren't
+# included in the ignore list.
+devtools/client/inspector/computed/**
+devtools/client/inspector/fonts/**
+devtools/client/inspector/layout/**
+devtools/client/inspector/markup/**
+devtools/client/inspector/rules/**
+devtools/client/inspector/shared/test/**
+devtools/client/inspector/test/**
+devtools/client/inspector/*.js
+devtools/client/jsonview/**
+devtools/client/memory/**
+devtools/client/netmonitor/**
+devtools/client/performance/**
+devtools/client/projecteditor/**
+devtools/client/promisedebugger/**
+devtools/client/responsivedesign/**
+devtools/client/scratchpad/**
+devtools/client/shadereditor/**
+devtools/client/shared/**
+devtools/client/sourceeditor/**
+devtools/client/storage/**
+devtools/client/styleeditor/**
+devtools/client/tilt/**
+devtools/client/webaudioeditor/**
+devtools/client/webconsole/**
+devtools/client/webide/**
+devtools/server/**
+devtools/shared/**
 
-# Ignore codemirror
-devtools/client/sourceeditor/codemirror/*.js
-devtools/client/sourceeditor/codemirror/**/*.js
-devtools/client/sourceeditor/test/codemirror/*
-
-# Ignore jquery test libs
-devtools/client/markupview/test/lib_*
-
-# Ignore pre-processed files
+# Ignore devtools pre-processed files
 devtools/client/framework/toolbox-process-window.js
 devtools/client/performance/system.js
 devtools/client/webide/webide-prefs.js
+devtools/client/preferences/**
 
-# Ignore various libs
+# Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
 devtools/shared/acorn/*
 devtools/client/sourceeditor/tern/*
@@ -117,6 +141,12 @@ devtools/shared/sourcemap/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
 devtools/client/shared/vendor/*
+devtools/client/shared/d3.js
+devtools/client/webaudioeditor/lib/dagre-d3.js
+devtools/client/sourceeditor/codemirror/*.js
+devtools/client/sourceeditor/codemirror/**/*.js
+devtools/client/sourceeditor/test/codemirror/*
+devtools/client/markupview/test/lib_*
 
 # mobile/android/ exclusions
 mobile/android/chrome/content

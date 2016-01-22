@@ -14,6 +14,7 @@ class MessageLoop;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothSocketInterface;
 class BluetoothSocketObserver;
 class BluetoothSocketResultHandler;
 class DroidSocketImpl;
@@ -23,6 +24,8 @@ class BluetoothSocket final : public mozilla::ipc::DataSocket
 public:
   BluetoothSocket(BluetoothSocketObserver* aObserver);
   ~BluetoothSocket();
+
+  void SetObserver(BluetoothSocketObserver* aObserver);
 
   nsresult Connect(const BluetoothAddress& aDeviceAddress,
                    const BluetoothUuid& aServiceUuid,
@@ -52,6 +55,8 @@ public:
                   int aChannel,
                   bool aAuth, bool aEncrypt);
 
+  nsresult Accept(int aListenFd, BluetoothSocketResultHandler* aRes);
+
   /**
    * Method to be called whenever data is received. This is only called on the
    * consumer thread.
@@ -70,11 +75,6 @@ public:
     mDeviceAddress = aDeviceAddress;
   }
 
-  inline void SetCurrentResultHandler(BluetoothSocketResultHandler* aRes)
-  {
-    mCurrentRes = aRes;
-  }
-
   // Methods for |DataSocket|
   //
 
@@ -90,6 +90,15 @@ public:
   void OnDisconnect() override;
 
 private:
+  nsresult LoadSocketInterface();
+  void Cleanup();
+
+  inline void SetCurrentResultHandler(BluetoothSocketResultHandler* aRes)
+  {
+    mCurrentRes = aRes;
+  }
+
+  BluetoothSocketInterface* mSocketInterface;
   BluetoothSocketObserver* mObserver;
   BluetoothSocketResultHandler* mCurrentRes;
   DroidSocketImpl* mImpl;

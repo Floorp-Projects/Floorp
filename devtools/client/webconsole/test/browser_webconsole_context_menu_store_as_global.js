@@ -57,7 +57,7 @@ add_task(function*() {
   info("Waiting for input to be set");
   yield onceInputSet;
 
-  is(hud.jsterm.inputNode.value, "temp0", "Input was set");
+  is(hud.jsterm.getInputValue(), "temp0", "Input was set");
   let executedResult = yield hud.jsterm.execute();
 
   ok(executedResult.textContent.includes("{ baz: 1 }"),
