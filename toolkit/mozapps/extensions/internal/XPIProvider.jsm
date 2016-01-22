@@ -248,8 +248,6 @@ function mustSign(aType) {
   return REQUIRE_SIGNING || Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false);
 }
 
-const INTEGER = /^[1-9]\d*$/;
-
 // Keep track of where we are in startup for telemetry
 // event happened during XPIDatabase.startup()
 const XPI_STARTING = "XPIStarting";
@@ -862,48 +860,17 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
 
   let manifest = yield extension.readManifest();
 
-  function findProp(obj, current, properties) {
-    if (properties.length == 0)
-      return obj;
+  // Read the list of available locales, and pre-load messages for
+  // all locales.
+  let locales = yield extension.initAllLocales();
 
-    let field = properties[0];
-    current += "." + field;
-    if (!obj || !(field in obj)) {
-      throw new Error("Manifest file was missing required property " + current.substring(1));
-    }
-
-    return findProp(obj[field], current, properties.slice(1));
-  }
-
-  function getProp(path, type = "String") {
-    let val = findProp(manifest, "", path.split("."));
-
-    if ({}.toString.call(val) != `[object ${type}]`)
-      throw new SyntaxError(`Expected property ${path} to be of type ${type}`);
-    return val;
-  }
-
-  function getOptionalProp(path, defValue = null, type = "String") {
-    try {
-      return getProp(path, type);
-    }
-    catch (e) {
-      if (e instanceof SyntaxError)
-        throw e;
-      return defValue;
-    }
-  }
-
-  let mVersion = getProp("manifest_version", "Number");
-  if (mVersion != 2) {
-    throw new Error("Expected manifest_version to be 2 but was " + mVersion);
-  }
+  // If there were any errors loading the extension, bail out now.
+  if (extension.errors.length)
+    throw new Error("Extension is invalid");
 
   let addon = new AddonInternal();
-  addon.id = getProp("applications.gecko.id");
-  if (!gIDTest.test(addon.id))
-    throw new Error("Illegal add-on ID " + addon.id);
-  addon.version = getProp("version");
+  addon.id = manifest.applications.gecko.id;
+  addon.version = manifest.version;
   addon.type = "webextension";
   addon.unpack = false;
   addon.strictCompatibility = true;
@@ -911,41 +878,23 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.hasBinaryComponents = false;
   addon.multiprocessCompatible = true;
   addon.internalName = null;
-  addon.updateURL = getOptionalProp("applications.gecko.update_url");
+  addon.updateURL = manifest.applications.gecko.update_url;
   addon.updateKey = null;
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
 
-  if (addon.updateURL != null) {
-    // Make sure that the URL is a valid absolute URL, and that anyone is
-    // allowed to load it.
-    let ssm = Services.scriptSecurityManager;
-    ssm.checkLoadURIStrWithPrincipal(ssm.createNullPrincipal({}),
-                                     addon.updateURL,
-                                     ssm.DISALLOW_INHERIT_PRINCIPAL);
-  }
-
   // WebExtensions don't use iconURLs
   addon.iconURL = null;
   addon.icon64URL = null;
-  addon.icons = {};
-
-  let icons = getOptionalProp("icons", null, "Object");
-  if (icons) {
-    // filter out invalid (non-integer) size keys
-    Object.keys(icons)
-          .filter((size) => INTEGER.test(size))
-          .map((size) => parseInt(size, 10))
-          .forEach((size) => addon.icons[size] = icons[size]);
-  }
+  addon.icons = manifest.icons || {};
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   function getLocale(aLocale) {
     let result = {
-      name: extension.localize(getProp("name"), aLocale),
-      description: extension.localize(getOptionalProp("description"), aLocale),
+      name: extension.localize(manifest.name, aLocale),
+      description: extension.localize(manifest.description, aLocale),
       creator: null,
       homepageURL: null,
 
@@ -957,14 +906,6 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
     return result;
   }
 
-  // Read the list of available locales, and pre-load messages for
-  // all locales.
-  let locales = yield extension.initAllLocales();
-
-  // If there were any errors loading the extension, bail out now.
-  if (extension.errors.length)
-    throw new Error("Extension is invalid");
-
   addon.defaultLocale = getLocale(extension.defaultLocale);
   addon.locales = Array.from(locales.keys(), getLocale);
 
@@ -972,9 +913,9 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
 
   addon.targetApplications = [{
     id: TOOLKIT_ID,
-    minVersion: getOptionalProp("application.gecko.strict_min_version",
-                                AddonManagerPrivate.webExtensionsMinPlatformVersion),
-    maxVersion: getOptionalProp("application.gecko.strict_max_version", "*"),
+    minVersion: (manifest.applications.gecko.strict_min_version ||
+                 AddonManagerPrivate.webExtensionsMinPlatformVersion),
+    maxVersion: manifest.applications.gecko.strict_max_version || "*",
   }];
 
   addon.targetPlatforms = [];

@@ -1070,7 +1070,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
       return this.runManifest(this.manifest);
     }).catch(e => {
-      dump(`Extension error: ${e} ${e.filename || e.fileName}:${e.lineNumber}\n`);
+      dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
       ExtensionManagement.shutdownExtension(this.uuid);
