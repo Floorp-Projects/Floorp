@@ -338,7 +338,7 @@ class ICEntry
 
 class IonICEntry : public ICEntry
 {
-  JSScript* script_;
+    JSScript* script_;
 
   public:
     IonICEntry(uint32_t pcOffset, Kind kind, JSScript* script)
@@ -349,9 +349,7 @@ class IonICEntry : public ICEntry
     JSScript* script() {
         return script_;
     }
-
 };
-
 
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
@@ -977,9 +975,9 @@ class ICStubCompiler
 #endif
     {}
 
-    // Pushes the frame ptr.
-    void PushFramePtr(MacroAssembler& masm, Register scratch);
-    void pushFramePtr(MacroAssembler& masm, Register scratch);
+    // Push a payload specialized per compiler needed to execute stubs.
+    void PushStubPayload(MacroAssembler& masm, Register scratch);
+    void pushStubPayload(MacroAssembler& masm, Register scratch);
 
     // Emits a tail call to a VMFunction wrapper.
     bool tailCallVM(const VMFunction& fun, MacroAssembler& masm);
@@ -1054,14 +1052,65 @@ class ICStubCompiler
   public:
     virtual ICStub* getStub(ICStubSpace* space) = 0;
 
-    static ICStubSpace* StubSpaceForKind(ICStub::Kind kind, JSScript* script) {
-        if (ICStub::CanMakeCalls(kind))
-            return script->baselineScript()->fallbackStubSpace();
-        return script->zone()->jitZone()->optimizedStubSpace();
+    static ICStubSpace* StubSpaceForKind(ICStub::Kind kind, JSScript* outerScript, Engine engine) {
+        if (ICStub::CanMakeCalls(kind)) {
+            if (engine == ICStubCompiler::Engine::Baseline)
+                return outerScript->baselineScript()->fallbackStubSpace();
+            return outerScript->ionScript()->fallbackStubSpace();
+        }
+        return outerScript->zone()->jitZone()->optimizedStubSpace();
     }
 
-    ICStubSpace* getStubSpace(JSScript* script) {
-        return StubSpaceForKind(kind, script);
+    ICStubSpace* getStubSpace(JSScript* outerScript) {
+        return StubSpaceForKind(kind, outerScript, engine_);
+    }
+};
+
+class SharedStubInfo
+{
+    BaselineFrame* maybeFrame_;
+    RootedScript outerScript_;
+    RootedScript innerScript_;
+    ICEntry* icEntry_;
+
+  public:
+    SharedStubInfo(JSContext* cx, void* payload, ICEntry* entry);
+
+    ICStubCompiler::Engine engine() const {
+        return maybeFrame_ ? ICStubCompiler::Engine::Baseline : ICStubCompiler::Engine::IonMonkey;
+    }
+
+    HandleScript script() const {
+        MOZ_ASSERT(innerScript_);
+        return innerScript_;
+    }
+
+    HandleScript innerScript() const {
+        MOZ_ASSERT(innerScript_);
+        return innerScript_;
+    }
+
+    HandleScript outerScript(JSContext* cx);
+
+    jsbytecode* pc() const {
+        return icEntry()->pc(innerScript());
+    }
+
+    uint32_t pcOffset() const {
+        return script()->pcToOffset(pc());
+    }
+
+    BaselineFrame* frame() const {
+        MOZ_ASSERT(maybeFrame_);
+        return maybeFrame_;
+    }
+
+    BaselineFrame* maybeFrame() const {
+        return maybeFrame_;
+    }
+
+    ICEntry* icEntry() const {
+        return icEntry_;
     }
 };
 
@@ -1078,8 +1127,7 @@ class ICMonitoredFallbackStub : public ICFallbackStub
 
   public:
     bool initMonitoringChain(JSContext* cx, ICStubSpace* space, ICStubCompiler::Engine engine);
-    bool addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val,
-                                ICStubCompiler::Engine engine);
+    bool addMonitorStubForValue(JSContext* cx, SharedStubInfo* info, HandleValue val);
 
     inline ICTypeMonitor_Fallback* fallbackMonitorStub() const {
         return fallbackMonitorStub_;
@@ -1327,8 +1375,7 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Create a new monitor stub for the type of the given value, and
     // add it to this chain.
-    bool addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val,
-                                ICStubCompiler::Engine engine);
+    bool addMonitorStubForValue(JSContext* cx, SharedStubInfo* info, HandleValue val);
 
     void resetMonitorStubChain(Zone* zone);
 
