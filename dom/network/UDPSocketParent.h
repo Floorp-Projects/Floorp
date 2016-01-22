@@ -37,6 +37,7 @@ public:
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
                         const bool& aAddressReuse, const bool& aLoopback) override;
   virtual bool RecvConnect(const UDPAddressInfo& aAddressInfo) override;
+  void DoSendConnectResponse(const UDPAddressInfo& aAddressInfo);
   void SendConnectResponse(nsIEventTarget *aThread,
                            const UDPAddressInfo& aAddressInfo);
   void DoConnect(nsCOMPtr<nsIUDPSocket>& aSocket,
