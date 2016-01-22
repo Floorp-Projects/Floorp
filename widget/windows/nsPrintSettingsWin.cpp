@@ -111,6 +111,82 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODEW * aDevMode)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrintSettingsWin::GetPrintableWidthInInches(double* aPrintableWidthInInches)
+{
+  MOZ_ASSERT(aPrintableWidthInInches);
+  *aPrintableWidthInInches = mPrintableWidthInInches;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsWin::SetPrintableWidthInInches(double aPrintableWidthInInches)
+{
+  mPrintableWidthInInches = aPrintableWidthInInches;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsWin::GetPrintableHeightInInches(double* aPrintableHeightInInches)
+{
+  MOZ_ASSERT(aPrintableHeightInInches);
+  *aPrintableHeightInInches = mPrintableHeightInInches;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsWin::SetPrintableHeightInInches(double aPrintableHeightInInches)
+{
+  mPrintableHeightInInches = aPrintableHeightInInches;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsWin::GetEffectivePageSize(double *aWidth, double *aHeight)
+{
+  // If printable page size not set, fall back to nsPrintSettings.
+  if (mPrintableWidthInInches == 0l || mPrintableHeightInInches == 0l) {
+    return nsPrintSettings::GetEffectivePageSize(aWidth, aHeight);
+  }
+
+  if (mOrientation == kPortraitOrientation) {
+    *aWidth = NS_INCHES_TO_TWIPS(mPrintableWidthInInches);
+    *aHeight = NS_INCHES_TO_TWIPS(mPrintableHeightInInches);
+  } else {
+    *aHeight = NS_INCHES_TO_TWIPS(mPrintableWidthInInches);
+    *aWidth = NS_INCHES_TO_TWIPS(mPrintableHeightInInches);
+  }
+  return NS_OK;
+}
+
+void
+nsPrintSettingsWin::CopyFromNative(HDC aHdc)
+{
+  MOZ_ASSERT(aHdc);
+
+  // On Windows we currently create a surface using the printable area of the
+  // page and don't set the unwriteable [sic] margins. Using the unwriteable
+  // margins doesn't appear to work on Windows, but I am not sure if this is a
+  // bug elsewhere in our code or a Windows quirk.
+  int32_t printableWidthInDots = GetDeviceCaps(aHdc, HORZRES);
+  int32_t printableHeightInDots = GetDeviceCaps(aHdc, VERTRES);
+  int32_t widthDPI = GetDeviceCaps(aHdc, LOGPIXELSX);
+  int32_t heightDPI = GetDeviceCaps(aHdc, LOGPIXELSY);
+
+  // Keep these values in portrait format, so we can reflect our own changes
+  // to mOrientation.
+  if (mOrientation == kPortraitOrientation) {
+    mPrintableWidthInInches = double(printableWidthInDots) / widthDPI;
+    mPrintableHeightInInches = double(printableHeightInDots) / heightDPI;
+  } else {
+    mPrintableHeightInInches = double(printableWidthInDots) / widthDPI;
+    mPrintableWidthInInches = double(printableHeightInDots) / heightDPI;
+  }
+
+  // Using Y to match existing code, X DPI should be the same for printing.
+  mResolution = heightDPI;
+}
+
 //-------------------------------------------
 nsresult 
 nsPrintSettingsWin::_Clone(nsIPrintSettings **_retval)

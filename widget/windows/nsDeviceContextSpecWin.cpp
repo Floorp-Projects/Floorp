@@ -49,6 +49,8 @@ PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 
 using namespace mozilla;
 
+static const wchar_t kDriverName[] =  L"WINSPOOL";
+
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecWin
 // The PrinterEnumerator creates the printer info
@@ -80,6 +82,13 @@ protected:
 // static members
 GlobalPrinters    GlobalPrinters::mGlobalPrinters;
 nsTArray<LPWSTR>* GlobalPrinters::mPrinters = nullptr;
+
+struct AutoFreeGlobalPrinters
+{
+  ~AutoFreeGlobalPrinters() {
+    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  }
+};
 
 
 //******************************************************
@@ -321,7 +330,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     }
   }
 
-  mPrintingSurface = newSurface;
   newSurface.forget(surface);
   return NS_OK;
 }
@@ -329,11 +337,11 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 float
 nsDeviceContextSpecWin::GetPrintingScale()
 {
-  MOZ_ASSERT(mPrintingSurface);
+  MOZ_ASSERT(mPrintSettings);
 
-  HDC dc = reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
-  int32_t OSVal = GetDeviceCaps(dc, LOGPIXELSY);
-  return float(OSVal) / GetDPI();
+  int32_t resolution;
+  mPrintSettings->GetResolution(&resolution);
+  return float(resolution) / GetDPI();
 }
 
 //----------------------------------------------------------------------------------
@@ -512,7 +520,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* 
 
     SetDeviceName(aName);
 
-    SetDriverName(L"WINSPOOL");
+    SetDriverName(kDriverName);
 
     ::ClosePrinter(hPrinter);
     rv = NS_OK;
@@ -657,18 +665,30 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterNam
     return NS_ERROR_FAILURE;
   }
 
+  AutoFreeGlobalPrinters autoFreeGlobalPrinters;
+
   devSpecWin->GetDataFromPrinter(aPrinterName);
 
   LPDEVMODEW devmode;
   devSpecWin->GetDevMode(devmode);
-  NS_ASSERTION(devmode, "DevMode can't be NULL here");
-  if (devmode) {
-    aPrintSettings->SetPrinterName(aPrinterName);
-    nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, devmode);
+  if (NS_WARN_IF(!devmode)) {
+    return NS_ERROR_FAILURE;
   }
 
-  // Free them, we won't need them for a while
-  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  aPrintSettings->SetPrinterName(aPrinterName);
+  nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(aPrintSettings, devmode);
+
+  // We need to get information from the device as well.
+  HDC dc = ::CreateICW(kDriverName, aPrinterName, nullptr, devmode);
+  if (NS_WARN_IF(!dc)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrintSettingsWin> psWin = do_QueryInterface(aPrintSettings);
+  MOZ_ASSERT(psWin);
+  psWin->CopyFromNative(dc);
+  ::DeleteDC(dc);
+
   return NS_OK;
 }
 

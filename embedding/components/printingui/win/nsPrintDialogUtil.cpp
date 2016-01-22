@@ -987,13 +987,15 @@ ShowNativePrintDialog(HWND              aHWnd,
 
     // Transfer the settings from the native data to the PrintSettings
     LPDEVMODEW devMode = (LPDEVMODEW)::GlobalLock(prntdlg.hDevMode);
-    if (devMode == nullptr) {
+    if (!devMode || !prntdlg.hDC) {
       ::GlobalFree(hGlobalDevMode);
       return NS_ERROR_FAILURE;
     }
     psWin->SetDevMode(devMode); // copies DevMode
     SetPrintSettingsFromDevMode(aPrintSettings, devMode);
     ::GlobalUnlock(prntdlg.hDevMode);
+    psWin->CopyFromNative(prntdlg.hDC);
+    ::DeleteDC(prntdlg.hDC);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     bool    printSelection = prntdlg.Flags & PD_SELECTION;
