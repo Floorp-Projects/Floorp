@@ -2293,11 +2293,16 @@ Debugger::updateObservesAllExecutionOnDebuggees(JSContext* cx, IsObserving obser
         // so add the compartment to the set only if we are observing.
         if (observing && !obs.add(comp))
             return false;
-
-        comp->updateDebuggerObservesAllExecution();
     }
 
-    return updateExecutionObservability(cx, obs, observing);
+    if (!updateExecutionObservability(cx, obs, observing))
+        return false;
+
+    typedef ExecutionObservableCompartments::CompartmentRange CompartmentRange;
+    for (CompartmentRange r = obs.compartments()->all(); !r.empty(); r.popFront())
+        r.front()->updateDebuggerObservesAllExecution();
+
+    return true;
 }
 
 bool
@@ -2857,10 +2862,14 @@ Debugger::setHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg, Hook which)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CALLABLE_OR_UNDEFINED);
         return false;
     }
-    dbg.object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, args[0]);
+    uint32_t slot = JSSLOT_DEBUG_HOOK_START + which;
+    RootedValue oldHook(cx, dbg.object->getReservedSlot(slot));
+    dbg.object->setReservedSlot(slot, args[0]);
     if (hookObservesAllExecution(which)) {
-        if (!dbg.updateObservesAllExecutionOnDebuggees(cx, dbg.observesAllExecution()))
+        if (!dbg.updateObservesAllExecutionOnDebuggees(cx, dbg.observesAllExecution())) {
+            dbg.object->setReservedSlot(slot, oldHook);
             return false;
+        }
     }
     args.rval().setUndefined();
     return true;
