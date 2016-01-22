@@ -824,19 +824,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._fill_root_mk()
 
-        # Write out a dependency file used to determine whether a config.status
-        # re-run is needed.
-        inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
-
-        # We need to use $(DEPTH) so the target here matches what's in
-        # rules.mk. If they are different, the dependencies don't get pulled in
-        # properly.
-        with self._write_file('%s.pp' % self._backend_output_list_file) as backend_deps:
-            backend_deps.write('$(DEPTH)/backend.%s: %s\n' %
-                (self.__class__.__name__, ' '.join(inputs)))
-            for path in inputs:
-                backend_deps.write('%s:\n' % path)
-
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
             install_prefix, manifests = t

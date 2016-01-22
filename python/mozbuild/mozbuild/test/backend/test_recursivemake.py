@@ -164,7 +164,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
             'backend.RecursiveMakeBackend')))
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
-            'backend.RecursiveMakeBackend.pp')))
+            'backend.RecursiveMakeBackend.in')))
 
     def test_output_files(self):
         """Ensure proper files are generated."""
