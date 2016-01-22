@@ -14,6 +14,8 @@
 <!ENTITY searchStartTyping.accesskey     "x">
 <!ENTITY blockAutoRefresh.label          "Warn me when websites try to redirect or reload the page">
 <!ENTITY blockAutoRefresh.accesskey      "b">
+<!ENTITY useOnScreenKeyboard.label       "Show a touch keyboard when necessary">
+<!ENTITY useOnScreenKeyboard.accesskey   "k">
 
 <!ENTITY browsing.label                  "Browsing">
 

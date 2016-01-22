@@ -68,7 +68,7 @@ function performTestsAfterOutput(hud) {
 
   // Test the context menu "Select All" (which has a different code path) works
   // properly as well.
-  let contextMenuId = outputNode.parentNode.getAttribute("context");
+  let contextMenuId = hud.ui.outputWrapper.getAttribute("context");
   let contextMenu = hud.ui.document.getElementById(contextMenuId);
   ok(contextMenu != null, "the output node has a context menu");
 
