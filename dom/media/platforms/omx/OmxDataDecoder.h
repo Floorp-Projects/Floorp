@@ -71,6 +71,11 @@ public:
 
   nsresult Shutdown() override;
 
+  const char* GetDescriptionName() const override
+  {
+    return "omx decoder";
+  }
+
   // Return true if event is handled.
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
