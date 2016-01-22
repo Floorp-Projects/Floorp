@@ -40,11 +40,6 @@ GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res);
 extern bool
 GetNonSyntacticGlobalThis(JSContext* cx, HandleObject scopeChain, MutableHandleValue res);
 
-enum MaybeConstruct {
-    NO_CONSTRUCT = INITIAL_NONE,
-    CONSTRUCT = INITIAL_CONSTRUCT
-};
-
 /*
  * numToSkip is the number of stack values the expression decompiler should skip
  * before it reaches |v|. If it's -1, the decompiler will search the stack.
@@ -113,8 +108,7 @@ InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue t
  */
 extern bool
 ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChain,
-              const Value& newTargetVal, ExecuteType type, AbstractFramePtr evalInFrame,
-              Value* result);
+              const Value& newTargetVal, AbstractFramePtr evalInFrame, Value* result);
 
 /* Execute a script with the given scopeChain as global code. */
 extern bool
@@ -169,8 +163,6 @@ class RunState
 // Eval or global script.
 class ExecuteState : public RunState
 {
-    ExecuteType type_;
-
     RootedValue newTargetValue_;
     RootedObject scopeChain_;
 
@@ -179,10 +171,8 @@ class ExecuteState : public RunState
 
   public:
     ExecuteState(JSContext* cx, JSScript* script, const Value& newTargetValue,
-                 JSObject& scopeChain, ExecuteType type, AbstractFramePtr evalInFrame,
-                 Value* result)
+                 JSObject& scopeChain, AbstractFramePtr evalInFrame, Value* result)
       : RunState(cx, Execute, script),
-        type_(type),
         newTargetValue_(cx, newTargetValue),
         scopeChain_(cx, &scopeChain),
         evalInFrame_(evalInFrame),
@@ -191,7 +181,7 @@ class ExecuteState : public RunState
 
     Value newTarget() { return newTargetValue_; }
     JSObject* scopeChain() const { return scopeChain_; }
-    ExecuteType type() const { return type_; }
+    bool isDebuggerEval() const { return !!evalInFrame_; }
 
     virtual InterpreterFrame* pushInterpreterFrame(JSContext* cx);
 
@@ -205,21 +195,21 @@ class ExecuteState : public RunState
 class InvokeState : public RunState
 {
     const CallArgs& args_;
-    InitialFrameFlags initial_;
+    MaybeConstruct construct_;
     bool createSingleton_;
 
   public:
-    InvokeState(JSContext* cx, const CallArgs& args, InitialFrameFlags initial)
+    InvokeState(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
       : RunState(cx, Invoke, args.callee().as<JSFunction>().nonLazyScript()),
         args_(args),
-        initial_(initial),
+        construct_(construct),
         createSingleton_(false)
     { }
 
     bool createSingleton() const { return createSingleton_; }
     void setCreateSingleton() { createSingleton_ = true; }
 
-    bool constructing() const { return InitialFrameFlagsAreConstructing(initial_); }
+    bool constructing() const { return construct_; }
     const CallArgs& args() const { return args_; }
 
     virtual InterpreterFrame* pushInterpreterFrame(JSContext* cx);

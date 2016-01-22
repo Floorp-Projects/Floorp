@@ -398,19 +398,10 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   if (NS_FAILED(rv))
     return rv;
 
-  char *dbkey = nullptr;
-  rv = aCert->GetDbKey(&dbkey);
-  if (NS_FAILED(rv) || !dbkey)
+  nsAutoCString dbkey;
+  rv = aCert->GetDbKey(dbkey);
+  if (NS_FAILED(rv)) {
     return rv;
-
-  // change \n and \r to spaces in the possibly multi-line-base64-encoded key
-  for (char *dbkey_walk = dbkey;
-       *dbkey_walk;
-      ++dbkey_walk) {
-    char c = *dbkey_walk;
-    if (c == '\r' || c == '\n') {
-      *dbkey_walk = ' ';
-    }
   }
 
   {
@@ -421,11 +412,10 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
                    aTemporary, 
                    mDottedOidForStoringNewHashes, fpStr, 
                    (nsCertOverride::OverrideBits)aOverrideBits, 
-                   nsDependentCString(dbkey));
+                   dbkey);
     Write();
   }
 
-  PR_Free(dbkey);
   return NS_OK;
 }
 
@@ -553,6 +543,8 @@ nsCertOverrideService::AddEntryToList(const nsACString &aHostName, int32_t aPort
     settings.mFingerprint = fingerprint;
     settings.mOverrideBits = ob;
     settings.mDBKey = dbKey;
+    // remove whitespace from stored dbKey for backwards compatibility
+    settings.mDBKey.StripWhitespace();
     settings.mCert = aCert;
   }
 
@@ -599,51 +591,14 @@ nsCertOverrideService::CountPermanentOverrideTelemetry()
 }
 
 static bool
-matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
+matchesDBKey(nsIX509Cert* cert, const nsCString& matchDbKey)
 {
-  char *dbkey = nullptr;
-  nsresult rv = cert->GetDbKey(&dbkey);
-  if (NS_FAILED(rv) || !dbkey)
+  nsAutoCString dbKey;
+  nsresult rv = cert->GetDbKey(dbKey);
+  if (NS_FAILED(rv)) {
     return false;
-
-  bool found_mismatch = false;
-  const char *key1 = dbkey;
-  const char *key2 = match_dbkey;
-
-  // skip over any whitespace when comparing
-  while (*key1 && *key2) {
-    char c1 = *key1;
-    char c2 = *key2;
-    
-    switch (c1) {
-      case ' ':
-      case '\t':
-      case '\n':
-      case '\r':
-        ++key1;
-        continue;
-    }
-
-    switch (c2) {
-      case ' ':
-      case '\t':
-      case '\n':
-      case '\r':
-        ++key2;
-        continue;
-    }
-
-    if (c1 != c2) {
-      found_mismatch = true;
-      break;
-    }
-
-    ++key1;
-    ++key2;
   }
-
-  PR_Free(dbkey);
-  return !found_mismatch;
+  return dbKey.Equals(matchDbKey);
 }
 
 NS_IMETHODIMP
@@ -667,7 +622,7 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert,
         still_ok = false;
       }
 
-      if (still_ok && matchesDBKey(aCert, settings.mDBKey.get())) {
+      if (still_ok && matchesDBKey(aCert, settings.mDBKey)) {
         nsAutoCString cert_fingerprint;
         nsresult rv = NS_ERROR_UNEXPECTED;
         if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {
@@ -697,7 +652,7 @@ nsCertOverrideService::EnumerateCertOverrides(nsIX509Cert *aCert,
     if (!aCert) {
       aEnumerator(settings, aUserData);
     } else {
-      if (matchesDBKey(aCert, settings.mDBKey.get())) {
+      if (matchesDBKey(aCert, settings.mDBKey)) {
         nsAutoCString cert_fingerprint;
         nsresult rv = NS_ERROR_UNEXPECTED;
         if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {

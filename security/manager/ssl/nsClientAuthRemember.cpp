@@ -102,29 +102,26 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
 {
   // aClientCert == nullptr means: remember that user does not want to use a cert
   NS_ENSURE_ARG_POINTER(aServerCert);
-  if (aHostName.IsEmpty())
+  if (aHostName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   nsAutoCString fpStr;
   nsresult rv = GetCertFingerprintByOidTag(aServerCert, SEC_OID_SHA256, fpStr);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   {
     ReentrantMonitorAutoEnter lock(monitor);
     if (aClientCert) {
       RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
-      char *dbkey = nullptr;
-      rv = pipCert->GetDbKey(&dbkey);
-      if (NS_SUCCEEDED(rv) && dbkey) {
-        AddEntryToList(aHostName, fpStr, 
-                       nsDependentCString(dbkey));
+      nsAutoCString dbkey;
+      rv = pipCert->GetDbKey(dbkey);
+      if (NS_SUCCEEDED(rv)) {
+        AddEntryToList(aHostName, fpStr, dbkey);
       }
-      if (dbkey) {
-        PORT_Free(dbkey);
-      }
-    }
-    else {
+    } else {
       nsCString empty;
       AddEntryToList(aHostName, fpStr, empty);
     }

@@ -818,7 +818,9 @@ add_task(function* test_client_metrics() {
 
   let client = new FxAccountsClient(server.baseURI);
 
-  yield rejects(client.signOut(FAKE_SESSION_TOKEN), function(err) {
+  yield rejects(client.signOut(FAKE_SESSION_TOKEN, {
+    service: "sync",
+  }), function(err) {
     return err.errno == 111;
   });
 

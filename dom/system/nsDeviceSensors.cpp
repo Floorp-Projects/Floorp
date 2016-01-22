@@ -198,6 +198,12 @@ WindowCannotReceiveSensorEvent (nsPIDOMWindow* aWindow)
 // Holds the device orientation in Euler angle degrees (azimuth, pitch, roll).
 struct Orientation
 {
+  enum OrientationReference
+  {
+    kRelative = 0,
+    kAbsolute
+  };
+
   static Orientation RadToDeg(const Orientation& aOrient)
   {
     const static double kRadToDeg = 180.0 / M_PI;
@@ -282,10 +288,15 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
         type == nsIDeviceSensorData::TYPE_GYROSCOPE) {
         FireDOMMotionEvent(domDoc, target, type, x, y, z);
       } else if (type == nsIDeviceSensorData::TYPE_ORIENTATION) {
-        FireDOMOrientationEvent(target, x, y, z);
+        FireDOMOrientationEvent(target, x, y, z, Orientation::kAbsolute);
       } else if (type == nsIDeviceSensorData::TYPE_ROTATION_VECTOR) {
         const Orientation orient = RotationVectorToOrientation(x, y, z, w);
-        FireDOMOrientationEvent(target, orient.alpha, orient.beta, orient.gamma);
+        FireDOMOrientationEvent(target, orient.alpha, orient.beta, orient.gamma,
+                                Orientation::kAbsolute);
+      } else if (type == nsIDeviceSensorData::TYPE_GAME_ROTATION_VECTOR) {
+        const Orientation orient = RotationVectorToOrientation(x, y, z, w);
+        FireDOMOrientationEvent(target, orient.alpha, orient.beta, orient.gamma,
+                                Orientation::kRelative);
       } else if (type == nsIDeviceSensorData::TYPE_PROXIMITY) {
         FireDOMProximityEvent(target, x, y, z);
       } else if (type == nsIDeviceSensorData::TYPE_LIGHT) {
@@ -368,7 +379,8 @@ void
 nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
                                          double aAlpha,
                                          double aBeta,
-                                         double aGamma)
+                                         double aGamma,
+                                         bool aIsAbsolute)
 {
   DeviceOrientationEventInit init;
   init.mBubbles = true;
@@ -376,18 +388,36 @@ nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
   init.mAlpha.SetValue(aAlpha);
   init.mBeta.SetValue(aBeta);
   init.mGamma.SetValue(aGamma);
-  init.mAbsolute = true;
+  init.mAbsolute = aIsAbsolute;
 
-  RefPtr<DeviceOrientationEvent> event =
-    DeviceOrientationEvent::Constructor(aTarget,
-                                        NS_LITERAL_STRING("deviceorientation"),
-                                        init);
-  event->SetTrusted(true);
+  auto Dispatch = [&](EventTarget* aEventTarget, const nsAString& aType)
+  {
+    RefPtr<DeviceOrientationEvent> event =
+      DeviceOrientationEvent::Constructor(aEventTarget, aType, init);
+    event->SetTrusted(true);
+    bool dummy;
+    aEventTarget->DispatchEvent(event, &dummy);
+  };
 
-  bool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  Dispatch(aTarget, aIsAbsolute ? NS_LITERAL_STRING("absolutedeviceorientation") :
+                                  NS_LITERAL_STRING("deviceorientation"));
+
+  // This is used to determine whether relative events have been dispatched
+  // during the current session, in which case we don't dispatch the additional
+  // compatibility events.
+  static bool sIsDispatchingRelativeEvents = false;
+  sIsDispatchingRelativeEvents = sIsDispatchingRelativeEvents || !aIsAbsolute;
+
+  // Android devices with SENSOR_GAME_ROTATION_VECTOR support dispatch
+  // relative events for "deviceorientation" by default, while other platforms
+  // and devices without such support dispatch absolute events by default.
+  if (aIsAbsolute && !sIsDispatchingRelativeEvents) {
+    // For absolute events on devices without support for relative events,
+    // we need to additionally dispatch type "deviceorientation" to keep
+    // backwards-compatibility.
+    Dispatch(aTarget, NS_LITERAL_STRING("deviceorientation"));
+  }
 }
-
 
 void
 nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,

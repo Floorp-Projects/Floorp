@@ -9,10 +9,8 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/client/performance/modules/logic/marker-utils");
+const EventEmitter = require("devtools/shared/event-emitter");
+const MarkerUtils = require("devtools/client/performance/modules/logic/marker-utils");
 
 /**
  * A detailed view for one single marker.
