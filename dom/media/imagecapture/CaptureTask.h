@@ -7,14 +7,15 @@
 #ifndef CAPTURETASK_H
 #define CAPTURETASK_H
 
-#include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
+#include "PrincipalChangeObserver.h"
 
 namespace mozilla {
 
 namespace dom {
 class Blob;
 class ImageCapture;
+class MediaStreamTrack;
 } // namespace dom
 
 /**
@@ -28,7 +29,7 @@ class ImageCapture;
  * released during the period of the capturing process described above.
  */
 class CaptureTask : public MediaStreamListener,
-                    public dom::PrincipalChangeObserver<DOMMediaStream>
+                    public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
 public:
   // MediaStreamListener methods.
@@ -42,8 +43,8 @@ public:
   void NotifyEvent(MediaStreamGraph* aGraph,
                    MediaStreamGraphEvent aEvent) override;
 
-  // PrincipalChangeObserver<DOMMediaStream> method.
-  void PrincipalChanged(DOMMediaStream* aMediaStream) override;
+  // PrincipalChangeObserver<MediaStreamTrack> method.
+  void PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack) override;
 
   // CaptureTask methods.
 
@@ -54,12 +55,12 @@ public:
   //   this function should be called on main thread.
   nsresult TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv);
 
-  // Add listeners into MediaStream and PrincipalChangeObserver. It should be on
-  // main thread only.
+  // Add listeners into MediaStream and PrincipalChangeObserver.
+  // It should be on main thread only.
   void AttachStream();
 
-  // Remove listeners from MediaStream and PrincipalChangeObserver. It should be
-  // on main thread only.
+  // Remove listeners from MediaStream and PrincipalChangeObserver.
+  // It should be on main thread only.
   void DetachStream();
 
   // CaptureTask should be created on main thread.
@@ -87,8 +88,8 @@ protected:
   // sends a track finish, end, or removed event.
   bool mImageGrabbedOrTrackEnd;
 
-  // True when MediaStream principal is changed in the period of taking photo
-  // and it causes a NS_ERROR_DOM_SECURITY_ERR error to script.
+  // True after MediaStreamTrack principal changes while waiting for a photo
+  // to finish and we should raise a security error.
   bool mPrincipalChanged;
 };
 

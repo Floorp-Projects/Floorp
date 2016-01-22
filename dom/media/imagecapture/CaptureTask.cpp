@@ -8,6 +8,7 @@
 #include "mozilla/dom/ImageCapture.h"
 #include "mozilla/dom/ImageCaptureError.h"
 #include "mozilla/dom/ImageEncoder.h"
+#include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "gfxUtils.h"
 #include "nsThreadUtils.h"
@@ -52,11 +53,12 @@ CaptureTask::AttachStream()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<dom::VideoStreamTrack> track = mImageCapture->GetVideoStreamTrack();
+  dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
+
+  track->AddPrincipalChangeObserver(this);
 
   RefPtr<DOMMediaStream> domStream = track->GetStream();
-  domStream->AddPrincipalChangeObserver(this);
-
+  MOZ_RELEASE_ASSERT(domStream);
   RefPtr<MediaStream> stream = domStream->GetPlaybackStream();
   stream->AddListener(this);
 }
@@ -66,17 +68,18 @@ CaptureTask::DetachStream()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<dom::VideoStreamTrack> track = mImageCapture->GetVideoStreamTrack();
+  dom::VideoStreamTrack* track = mImageCapture->GetVideoStreamTrack();
 
-  RefPtr<DOMMediaStream> domStream = track->GetStream();
-  domStream->RemovePrincipalChangeObserver(this);
+  track->RemovePrincipalChangeObserver(this);
 
+  DOMMediaStream* domStream = track->GetStream();
+  MOZ_RELEASE_ASSERT(domStream);
   RefPtr<MediaStream> stream = domStream->GetPlaybackStream();
   stream->RemoveListener(this);
 }
 
 void
-CaptureTask::PrincipalChanged(DOMMediaStream* aMediaStream)
+CaptureTask::PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPrincipalChanged = true;
