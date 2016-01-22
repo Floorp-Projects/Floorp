@@ -1212,6 +1212,10 @@ DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
 
 DigestOutputStream::~DigestOutputStream()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
   shutdown(calledFromObject);
 }
 
