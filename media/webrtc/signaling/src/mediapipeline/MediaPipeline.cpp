@@ -675,6 +675,12 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
 #endif
 }
 
+bool
+MediaPipelineTransmit::IsVideo() const
+{
+  return !!domtrack_->AsVideoStreamTrack();
+}
+
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 void MediaPipelineTransmit::UpdateSinkIdentity_m(MediaStreamTrack* track,
                                                  nsIPrincipal* principal,
@@ -703,6 +709,18 @@ void MediaPipelineTransmit::UpdateSinkIdentity_m(MediaStreamTrack* track,
   listener_->SetEnabled(enableTrack);
 }
 #endif
+
+void
+MediaPipelineTransmit::DetachMedia()
+{
+  ASSERT_ON_THREAD(main_thread_);
+  if (domtrack_) {
+    domtrack_->RemoveDirectListener(listener_);
+    domtrack_->RemoveListener(listener_);
+    domtrack_ = nullptr;
+  }
+  // Let the listener be destroyed with the pipeline (or later).
+}
 
 nsresult MediaPipelineTransmit::TransportReady_s(TransportInfo &info) {
   ASSERT_ON_THREAD(sts_thread_);

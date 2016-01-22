@@ -14,7 +14,6 @@
 #include "FakeMediaStreams.h"
 #else
 #include "DOMMediaStream.h"
-#include "MediaStreamTrack.h"
 #include "MediaStreamGraph.h"
 #include "VideoUtils.h"
 #endif
@@ -408,7 +407,7 @@ public:
   virtual void AttachToTrack(const std::string& track_id);
 
   // written and used from MainThread
-  virtual bool IsVideo() const override { return !!domtrack_->AsVideoStreamTrack(); }
+  virtual bool IsVideo() const override;
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // When the principal of the domtrack changes, it calls through to here
@@ -420,15 +419,7 @@ public:
 #endif
 
   // Called on the main thread.
-  virtual void DetachMedia() override {
-    ASSERT_ON_THREAD(main_thread_);
-    if (domtrack_) {
-      domtrack_->RemoveDirectListener(listener_);
-      domtrack_->RemoveListener(listener_);
-      domtrack_ = nullptr;
-    }
-    // Let the listener be destroyed with the pipeline (or later).
-  }
+  virtual void DetachMedia() override;
 
   // Override MediaPipeline::TransportReady.
   virtual nsresult TransportReady_s(TransportInfo &info) override;
