@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.Manifest;
 import android.os.AsyncTask;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -46,6 +47,7 @@ import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -65,6 +67,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
@@ -754,6 +757,39 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
+
+        // The update service is enabled for RELEASE_BUILD, which includes the release and beta channels.
+        // However, no updates are served.  Therefore, we don't trust the update service directly, and
+        // try to avoid prompting unnecessarily. See Bug 1232798.
+        if (!AppConstants.RELEASE_BUILD && UpdateServiceHelper.isUpdaterEnabled()) {
+            Permissions.from(this)
+                       .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                       .doNotPrompt()
+                       .andFallback(new Runnable() {
+                           @Override
+                           public void run() {
+                               showUpdaterPermissionSnackbar();
+                           }
+                       })
+                      .run();
+        }
+    }
+
+    private void showUpdaterPermissionSnackbar() {
+        SnackbarHelper.SnackbarCallback allowCallback = new SnackbarHelper.SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                Permissions.from(BrowserApp.this)
+                        .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        .run();
+            }
+        };
+
+        SnackbarHelper.showSnackbarWithAction(this,
+                getString(R.string.updater_permission_text),
+                Snackbar.LENGTH_INDEFINITE,
+                getString(R.string.updater_permission_allow),
+                allowCallback);
     }
 
     private void conditionallyNotifyHCEOL() {
