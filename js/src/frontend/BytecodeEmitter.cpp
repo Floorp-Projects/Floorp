@@ -2344,18 +2344,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case PNK_ANNEXB_FUNCTION:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
-
-        // XXXshu NOP check used only for phasing in block-scope function
-        // XXXshu early errors.
-        // XXXshu
-        // XXXshu Back out when major version >= 50. See [1].
-        // XXXshu
-        // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-        if (pn->pn_left->isKind(PNK_NOP)) {
-            *answer = false;
-            return true;
-        }
-
         return checkSideEffects(pn->pn_left, answer);
 
       case PNK_ARGSBODY:
@@ -8555,19 +8543,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
     switch (pn->getKind()) {
       case PNK_FUNCTION:
-        if (!emitFunction(pn))
-            return false;
-        break;
-
       case PNK_ANNEXB_FUNCTION:
-        // XXXshu NOP check used only for phasing in block-scope function
-        // XXXshu early errors.
-        // XXXshu
-        // XXXshu Back out when major version >= 50. See [1].
-        // XXXshu
-        // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-        if (pn->pn_left->isKind(PNK_NOP))
-            break;
         if (!emitFunction(pn))
             return false;
         break;
