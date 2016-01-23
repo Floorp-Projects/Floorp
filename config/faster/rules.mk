@@ -68,10 +68,6 @@ endif
 # toolkit/content/buildconfig.html and browser/locales/jar.mn.
 ACDEFINES += -DBUILD_FASTER
 
-# Generic rule to fall back to the recursive make backend
-$(TOPOBJDIR)/%: FORCE
-	$(MAKE) -C $(dir $@) $(notdir $@)
-
 # Files under the faster/ sub-directory, however, are not meant to use the
 # fallback
 $(TOPOBJDIR)/faster/%: ;
@@ -82,6 +78,13 @@ $(TOPOBJDIR)/dist/%:
 	rm -f $@
 	mkdir -p $(@D)
 	cp $< $@
+
+# Generic rule to fall back to the recursive make backend.
+# This needs to stay after other $(TOPOBJDIR)/* rules because GNU Make
+# <3.82 apply pattern rules in definition order, not stem length like
+# modern GNU Make.
+$(TOPOBJDIR)/%: FORCE
+	$(MAKE) -C $(dir $@) $(notdir $@)
 
 # Install files using install manifests
 #
