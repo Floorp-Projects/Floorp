@@ -76,6 +76,11 @@ class MessageListener
         return false;
     }
 
+    // WARNING: This function is called with the MessageChannel monitor held.
+    virtual void IntentionalCrash() {
+        MOZ_CRASH("Intentional IPDL crash");
+    }
+
     virtual void OnEnteredCxxStack() {
         NS_RUNTIMEABORT("default impl shouldn't be invoked");
     }
