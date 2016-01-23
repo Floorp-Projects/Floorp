@@ -69,6 +69,7 @@
 #include "mozilla/dom/MediaSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaSourceDecoder.h"
+#include "DOMMediaStream.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "MediaTrackList.h"
