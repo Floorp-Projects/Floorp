@@ -8470,8 +8470,7 @@ AssertIsPromise(JSContext* cx, HandleObject promise)
 {
     MOZ_ASSERT(promise);
     assertSameCompartment(cx, promise);
-    MOZ_ASSERT(strcmp(promise->getClass()->name, "Promise") == 0 ||
-               strcmp(promise->getClass()->name, "MozAbortablePromise") == 0);
+    MOZ_ASSERT(strcmp(promise->getClass()->name, "Promise") == 0);
 }
 
 JS_PUBLIC_API(void)
