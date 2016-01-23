@@ -29,8 +29,6 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
-#include <opus/opus.h>
-
 #define WEBM_DEBUG(arg, ...) MOZ_LOG(gWebMDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
@@ -580,17 +578,6 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
               FramesToTimeUnit(nsamples, mInfo.mAudio.mRate).ToMicroseconds();
             break;
           }
-          case NESTEGG_CODEC_OPUS:
-          {
-            int nsamples =
-              opus_packet_get_nb_samples(data, length, mInfo.mAudio.mRate);
-            if (nsamples < 0) {
-              return false;
-            }
-            duration =
-              FramesToTimeUnit(nsamples, mInfo.mAudio.mRate).ToMicroseconds();
-            break;
-          }
           default:
             break;
         }
@@ -625,8 +612,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
       sample->mExtraData->AppendElements(&c[0], 8);
     }
     aSamples->Push(sample);
-    if (mAudioCodec == NESTEGG_CODEC_VORBIS ||
-        mAudioCodec == NESTEGG_CODEC_OPUS) {
+    if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
       tstamp += duration;
     }
   }
