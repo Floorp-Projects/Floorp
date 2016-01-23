@@ -324,6 +324,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDispatchingAsyncMessage(false),
     mDispatchingAsyncMessagePriority(0),
     mCurrentTransaction(0),
+    mPendingSendPriorities(0),
     mTimedOutMessageSeqno(0),
     mTimedOutMessagePriority(0),
     mRecvdErrors(0),
@@ -838,37 +839,6 @@ MessageChannel::WasTransactionCanceled(int transaction, int prio)
     if (transaction == mCurrentTransaction) {
         return false;
     }
-
-    // This isn't an assert so much as an intentional crash because we're in a
-    // situation that we don't know how to recover from: The child is awaiting
-    // a reply to a normal-priority sync message. The transaction that this
-    // message initiated has now been canceled. That could only happen if a CPOW
-    // raced with the sync message and was dispatched by the child while the
-    // child was awaiting the sync reply; at some point while dispatching the
-    // CPOW, the transaction was canceled.
-    //
-    // Notes:
-    //
-    // 1. We don't want to cancel the normal-priority sync message along with
-    // the CPOWs because the browser relies on these messages working
-    // reliably.
-    //
-    // 2. Ideally we would like to avoid dispatching CPOWs while awaiting a sync
-    // response. This isn't possible though. To avoid deadlock, the parent would
-    // have to dispatch the sync message while waiting for the CPOW
-    // response. However, it wouldn't have dispatched async messages at that
-    // time, so we would have a message ordering bug. Dispatching the async
-    // messages first causes other hard-to-handle situations (what if they send
-    // CPOWs?).
-    //
-    // 3. We would like to be able to cancel the CPOWs but not the sync
-    // message. However, that would leave both the parent and the child running
-    // code at the same time, all while the sync message is still
-    // outstanding. That can cause a problem where message replies are received
-    // out of order.
-    IPC_ASSERT(prio != IPC::Message::PRIORITY_NORMAL,
-               "Intentional crash: We canceled a CPOW that was racing with a sync message.");
-
     return true;
 }
 
@@ -967,6 +937,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     AutoSetValue<bool> replies(mAwaitingSyncReply, true);
     AutoSetValue<int> prioSet(mAwaitingSyncReplyPriority, prio);
     AutoEnterTransaction transact(this, seqno);
+
+    int prios = mPendingSendPriorities | (1 << prio);
+    AutoSetValue<int> priosSet(mPendingSendPriorities, prios);
 
     int32_t transaction = mCurrentTransaction;
     msg->set_transaction_id(transaction);
@@ -2115,6 +2088,37 @@ MessageChannel::CancelTransaction(int transaction)
 
     IPC_LOG("CancelTransaction: xid=%d prios=%d", transaction, mPendingSendPriorities);
 
+    if (mPendingSendPriorities & (1 << IPC::Message::PRIORITY_NORMAL)) {
+        // This isn't an assert so much as an intentional crash because we're in
+        // a situation that we don't know how to recover from: The child is
+        // awaiting a reply to a normal-priority sync message. The transaction
+        // that this message initiated has now been canceled. That could only
+        // happen if a CPOW raced with the sync message and was dispatched by
+        // the child while the child was awaiting the sync reply; at some point
+        // while dispatching the CPOW, the transaction was canceled.
+        //
+        // Notes:
+        //
+        // 1. We don't want to cancel the normal-priority sync message along
+        // with the CPOWs because the browser relies on these messages working
+        // reliably.
+        //
+        // 2. Ideally we would like to avoid dispatching CPOWs while awaiting a
+        // sync response. This isn't possible though. To avoid deadlock, the
+        // parent would have to dispatch the sync message while waiting for the
+        // CPOW response. However, it wouldn't have dispatched async messages at
+        // that time, so we would have a message ordering bug. Dispatching the
+        // async messages first causes other hard-to-handle situations (what if
+        // they send CPOWs?).
+        //
+        // 3. We would like to be able to cancel the CPOWs but not the sync
+        // message. However, that would leave both the parent and the child
+        // running code at the same time, all while the sync message is still
+        // outstanding. That can cause a problem where message replies are
+        // received out of order.
+        mListener->IntentionalCrash();
+    }
+
     // An unusual case: We timed out a transaction which the other side then
     // cancelled. In this case we just leave the timedout state and try to
     // forget this ever happened.
@@ -2183,8 +2187,7 @@ MessageChannel::CancelCurrentTransaction()
         if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
             DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT)
         {
-            MOZ_CRASH("Intentional crash: we're running a nested event loop "
-                      "while processing an urgent message");
+            mListener->IntentionalCrash();
         }
 
         IPC_LOG("Cancel requested: current xid=%d", mCurrentTransaction);
