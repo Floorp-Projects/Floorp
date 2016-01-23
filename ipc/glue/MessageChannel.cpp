@@ -602,20 +602,9 @@ MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
             return true;
         } else if (CANCEL_MESSAGE_TYPE == aMsg.type()) {
             IPC_LOG("Cancel from message");
-
-            if (aMsg.transaction_id() == mTimedOutMessageSeqno) {
-                // An unusual case: We timed out a transaction which the other
-                // side then cancelled. In this case we just leave the timedout
-                // state and try to forget this ever happened.
-                mTimedOutMessageSeqno = 0;
-                return true;
-            } else {
-                MOZ_RELEASE_ASSERT(mCurrentTransaction == aMsg.transaction_id());
-                CancelCurrentTransactionInternal();
-                NotifyWorkerThread();
-                IPC_LOG("Notified");
-                return true;
-            }
+            CancelTransaction(aMsg.transaction_id());
+            NotifyWorkerThread();
+            return true;
         }
     }
     return false;
@@ -945,7 +934,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         MOZ_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
         IPC_LOG("Cancel from Send");
         CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
-        CancelCurrentTransactionInternal();
+        CancelTransaction(mCurrentTransaction);
         mLink->SendMessage(cancel);
     }
 
@@ -2110,7 +2099,7 @@ MessageChannel::GetTopmostMessageRoutingId() const
 }
 
 void
-MessageChannel::CancelCurrentTransactionInternal()
+MessageChannel::CancelTransaction(int transaction)
 {
     mMonitor->AssertCurrentThreadOwns();
 
@@ -2124,20 +2113,60 @@ MessageChannel::CancelCurrentTransactionInternal()
     // tampered with (by us). If so, they don't reset the variable to the old
     // value.
 
-    IPC_LOG("CancelInternal: current xid=%d", mCurrentTransaction);
+    IPC_LOG("CancelTransaction: xid=%d prios=%d", transaction, mPendingSendPriorities);
 
-    MOZ_ASSERT(mCurrentTransaction);
-    mCurrentTransaction = 0;
+    // An unusual case: We timed out a transaction which the other side then
+    // cancelled. In this case we just leave the timedout state and try to
+    // forget this ever happened.
+    if (transaction == mTimedOutMessageSeqno) {
+        IPC_LOG("Cancelled timed out message %d", mTimedOutMessageSeqno);
+        mTimedOutMessageSeqno = 0;
 
-    mAwaitingSyncReply = false;
-    mAwaitingSyncReplyPriority = 0;
+        // Normally mCurrentTransaction == 0 here. But it can be non-zero if:
+        // 1. Parent sends hi prio message H.
+        // 2. Parent times out H.
+        // 3. Child dispatches H and sends nested message H' (same transaction).
+        // 4. Parent dispatches H' and cancels.
+        MOZ_ASSERT_IF(mCurrentTransaction, mCurrentTransaction == transaction);
+        mCurrentTransaction = 0;
 
-    for (size_t i = 0; i < mPending.size(); i++) {
+        // During a timeout Send should always fail.
+        MOZ_ASSERT(!mAwaitingSyncReply);
+    } else {
+        MOZ_ASSERT(mCurrentTransaction == transaction);
+        mCurrentTransaction = 0;
+
+        mAwaitingSyncReply = false;
+        mAwaitingSyncReplyPriority = 0;
+    }
+
+    DebugOnly<bool> foundSync = false;
+    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
+        Message &msg = *it;
+
+        // If there was a race between the parent and the child, then we may
+        // have a queued sync message. We want to drop this message from the
+        // queue since it will get cancelled along with the transaction being
+        // cancelled. We don't bother doing this for normal priority messages
+        // because the child is just going to crash in that case, and we want to
+        // avoid processing messages out of order in the short time before it
+        // crashes.
+        if (msg.is_sync() && msg.priority() != IPC::Message::PRIORITY_NORMAL) {
+            MOZ_ASSERT(!foundSync);
+            MOZ_ASSERT(msg.transaction_id() != transaction);
+            IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg.seqno(), msg.transaction_id());
+            foundSync = true;
+            it = mPending.erase(it);
+            continue;
+        }
+
         // There may be messages in the queue that we expected to process from
         // ProcessPendingRequests. However, Send will no longer call that
         // function once it's been canceled. So we may need to process these
         // messages in the normal event loop instead.
         mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+
+        it++;
     }
 
     // We could also zero out mDispatchingSyncMessage here. However, that would
@@ -2161,7 +2190,7 @@ MessageChannel::CancelCurrentTransaction()
         IPC_LOG("Cancel requested: current xid=%d", mCurrentTransaction);
         MOZ_ASSERT(DispatchingSyncMessage());
         CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
-        CancelCurrentTransactionInternal();
+        CancelTransaction(mCurrentTransaction);
         mLink->SendMessage(cancel);
     }
 }
