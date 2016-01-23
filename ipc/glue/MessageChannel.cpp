@@ -793,7 +793,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
-MessageChannel::ProcessPendingRequests(int transaction, int prio)
+MessageChannel::ProcessPendingRequests(int seqno, int transaction)
 {
     IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d", seqno, transaction);
 
@@ -834,19 +834,31 @@ MessageChannel::ProcessPendingRequests(int transaction, int prio)
         // operating with weird state (as if no Send is in progress). That could
         // cause even normal priority sync messages to be processed (but not
         // normal priority async messages), which would break message ordering.
-        if (WasTransactionCanceled(transaction, prio)) {
+        if (WasTransactionCanceled(transaction)) {
             return;
         }
     }
 }
 
 bool
-MessageChannel::WasTransactionCanceled(int transaction, int prio)
+MessageChannel::WasTransactionCanceled(int transaction)
 {
-    if (transaction == mCurrentTransaction) {
-        return false;
+    if (transaction != mCurrentTransaction) {
+        // Imagine this scenario:
+        // 1. Child sends high prio sync message H1.
+        // 2. Parent sends reply to H1.
+        // 3. Parent sends high prio sync message H2.
+        // 4. Child's link thread receives H1 reply and H2 before worker wakes up.
+        // 5. Child dispatches H2 while still waiting for H1 reply.
+        // 6. Child cancels H2.
+        //
+        // In this case H1 will also be considered cancelled. However, its
+        // reply is still sitting in mRecvd, which can trip up later Sends. So
+        // we null it out here.
+        mRecvd = nullptr;
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool
@@ -951,22 +963,21 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     int32_t transaction = mCurrentTransaction;
     msg->set_transaction_id(transaction);
 
-    IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
-
-    ProcessPendingRequests(transaction, prio);
-    if (WasTransactionCanceled(transaction, prio)) {
-        IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
-        return false;
-    }
+    IPC_LOG("Send seqno=%d, xid=%d, pending=%d", seqno, transaction, prios);
 
     bool handleWindowsMessages = mListener->HandleWindowsMessages(*aMsg);
     mLink->SendMessage(msg.forget());
 
     while (true) {
-        ProcessPendingRequests(transaction, prio);
-        if (WasTransactionCanceled(transaction, prio)) {
+        ProcessPendingRequests(seqno, transaction);
+        if (WasTransactionCanceled(transaction)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
             mLastSendError = SyncSendError::CancelledAfterSend;
+            return false;
+        }
+        if (!Connected()) {
+            ReportConnectionError("MessageChannel::Send");
+            mLastSendError = SyncSendError::DisconnectedDuringSend;
             return false;
         }
 
@@ -994,7 +1005,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             return false;
         }
 
-        if (WasTransactionCanceled(transaction, prio)) {
+        if (WasTransactionCanceled(transaction)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
             mLastSendError = SyncSendError::CancelledAfterSend;
             return false;
