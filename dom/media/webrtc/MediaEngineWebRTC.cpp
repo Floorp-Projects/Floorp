@@ -45,8 +45,8 @@ GetUserMediaLog()
 namespace mozilla {
 
 // statics from AudioInputCubeb
-nsTArray<int> AudioInputCubeb::mDeviceIndexes;
-nsTArray<nsCString> AudioInputCubeb::mDeviceNames;
+nsTArray<int>* AudioInputCubeb::mDeviceIndexes;
+nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
 cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
 bool AudioInputCubeb::mAnyInUse = false;
 
