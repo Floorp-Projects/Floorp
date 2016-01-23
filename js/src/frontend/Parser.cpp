@@ -423,17 +423,7 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
     MOZ_ASSERT(!oldDecl->pn_scopecoord.isFree());
     newDecl->pn_scopecoord = oldDecl->pn_scopecoord;
     newDecl->pn_dflags |= PND_BOUND;
-    if (oldDecl->isOp(JSOP_INITLEXICAL)) {
-        // XXXshu Branch used only for phasing in block-scope function early
-        // XXXshu errors.
-        // XXXshu
-        // XXXshu Back out when major version >= 50. See [1].
-        // XXXshu
-        // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-        MOZ_ASSERT(oldDecl->getKind() == PNK_FUNCTION);
-        MOZ_ASSERT(newDecl->getKind() == PNK_FUNCTION);
-        newDecl->setOp(JSOP_INITLEXICAL);
-    } else if (IsArgOp(oldDecl->getOp())) {
+    if (IsArgOp(oldDecl->getOp())) {
         newDecl->setOp(JSOP_GETARG);
         MOZ_ASSERT(args_[oldDecl->pn_scopecoord.slot()] == oldDecl);
         args_[oldDecl->pn_scopecoord.slot()] = newDecl;
@@ -2419,31 +2409,9 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
                     if (annexDef->kind() == Definition::CONSTANT ||
                         annexDef->kind() == Definition::LET)
                     {
-                        if (annexDef->isKind(PNK_FUNCTION)) {
-                            // XXXshu Code used only for phasing in block-scope
-                            // XXXshu function early errors. Ignore redeclarations
-                            // XXXshu here and generate Annex B assignments for
-                            // XXXshu block-scoped functions that redeclare other
-                            // XXXshu block-scoped functions.
-                            // XXXshu
-                            // XXXshu Get the possibly-synthesized var that was
-                            // XXXshu already made for the first of the block-scoped
-                            // XXXshu functions.
-                            // XXXshu
-                            // XXXshu Back out when major version >= 50. See [1].
-                            // XXXshu
-                            // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-                            annexDef = pc->decls().lookupLast(funName);
-                            if (annexDef->kind() == Definition::CONSTANT ||
-                                annexDef->kind() == Definition::LET)
-                            {
-                                annexDef = nullptr;
-                            }
-                        } else {
-                            // Do not emit Annex B assignment if we would've
-                            // thrown a redeclaration error.
-                            annexDef = nullptr;
-                        }
+                        // Do not emit Annex B assignment if we would've
+                        // thrown a redeclaration error.
+                        annexDef = nullptr;
                     }
                 } else {
                     // Synthesize a new 'var' binding if one does not exist.
@@ -3685,41 +3653,8 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
         // The reason we compare using >= instead of == on the block id is to
         // detect redeclarations where a 'var' binding first appeared in a
         // nested block: |{ var x; } let x;|
-        if (dn && dn->pn_blockid >= pc->blockid()) {
-            // XXXshu Used only for phasing in block-scope function early
-            // XXXshu errors.
-            // XXXshu
-            // XXXshu Back out when major version >= 50. See [1].
-            // XXXshu
-            // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-            if (pn->isKind(PNK_FUNCTION) && dn->isKind(PNK_FUNCTION)) {
-                if (!parser->makeDefIntoUse(dn, pn, name))
-                    return false;
-
-                MOZ_ASSERT(blockScope);
-                Shape* shape = blockScope->lastProperty()->search(cx, NameToId(name));
-                MOZ_ASSERT(shape);
-                uint32_t oldDefIndex = blockScope->shapeToIndex(*shape);
-                blockScope->updateDefinitionParseNode(oldDefIndex, dn,
-                                                      reinterpret_cast<Definition*>(pn));
-
-                parser->addTelemetry(JSCompartment::DeprecatedBlockScopeFunRedecl);
-                JSAutoByteString bytes;
-                if (!AtomToPrintableString(cx, name, &bytes))
-                    return false;
-                if (!parser->report(ParseWarning, false, null(),
-                                    JSMSG_DEPRECATED_BLOCK_SCOPE_FUN_REDECL,
-                                    bytes.ptr()))
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
+        if (dn && dn->pn_blockid >= pc->blockid())
             return parser->reportRedeclaration(pn, dn->kind(), name);
-        }
-
         if (!pc->define(parser->tokenStream, name, pn, bindingKind))
             return false;
     }
