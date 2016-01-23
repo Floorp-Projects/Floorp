@@ -740,9 +740,17 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
         }
     }
 
+    bool wakeUpSyncSend = AwaitingSyncReply() && !ShouldDeferMessage(aMsg);
+
     bool shouldWakeUp = AwaitingInterruptReply() ||
-                        (AwaitingSyncReply() && !ShouldDeferMessage(aMsg)) ||
+                        wakeUpSyncSend ||
                         AwaitingIncomingMessage();
+
+    // Although we usually don't need to post an OnMaybeDequeueOne task if
+    // shouldWakeUp is true, it's easier to post anyway than to have to
+    // guarantee that every Send call processes everything it's supposed to
+    // before returning.
+    bool shouldPostTask = !shouldWakeUp || wakeUpSyncSend;
 
     IPC_LOG("Receive on link thread; seqno=%d, xid=%d, shouldWakeUp=%d",
             aMsg.seqno(), aMsg.transaction_id(), shouldWakeUp);
@@ -773,10 +781,9 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 
     if (shouldWakeUp) {
         NotifyWorkerThread();
-    } else {
-        // Worker thread is either not blocked on a reply, or this is an
-        // incoming Interrupt that raced with outgoing sync, and needs to be
-        // deferred to a later event-loop iteration.
+    }
+
+    if (shouldPostTask) {
         if (!compress) {
             // If we compressed away the previous message, we'll re-use
             // its pending task.
@@ -788,7 +795,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 void
 MessageChannel::ProcessPendingRequests(int transaction, int prio)
 {
-    IPC_LOG("ProcessPendingRequests");
+    IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d", seqno, transaction);
 
     // Loop until there aren't any more priority messages to process.
     for (;;) {
