@@ -130,69 +130,6 @@ add_task(function* () {
   yield openPrefsFromMenuPanel("PanelUI-remotetabs-reauthsync", "syncbutton")
 });
 
-// Test the mobile promo links
-add_task(function* () {
-  // change the preferences for the mobile links.
-  Services.prefs.setCharPref("identity.mobilepromo.android", "http://example.com/?os=android&tail=");
-  Services.prefs.setCharPref("identity.mobilepromo.ios", "http://example.com/?os=ios&tail=");
-
-  mockedInternal.getTabClients = () => [];
-  mockedInternal.syncTabs = () => Promise.resolve();
-
-  document.getElementById("sync-reauth-state").hidden = true;
-  document.getElementById("sync-setup-state").hidden = true;
-  document.getElementById("sync-syncnow-state").hidden = false;
-
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
-
-  let syncPanel = document.getElementById("PanelUI-remotetabs");
-  let links = syncPanel.querySelectorAll(".remotetabs-promo-link");
-
-  is(links.length, 2, "found 2 links as expected");
-
-  // test each link and left and middle mouse buttons
-  for (let link of links) {
-    for (let button = 0; button < 2; button++) {
-      yield PanelUI.show();
-      EventUtils.sendMouseEvent({ type: "click", button }, link, window);
-      // the panel should have been closed.
-      ok(!isPanelUIOpen(), "click closed the panel");
-      // should be a new tab - wait for the load.
-      is(gBrowser.tabs.length, 2, "there's a new tab");
-      yield new Promise(resolve => {
-        if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
-          gBrowser.selectedBrowser.addEventListener("load", function listener(e) {
-            gBrowser.selectedBrowser.removeEventListener("load", listener, true);
-            resolve();
-          }, true);
-          return;
-        }
-        // the new tab has already transitioned away from about:blank so we
-        // are good to go.
-        resolve();
-      });
-
-      let os = link.getAttribute("mobile-promo-os");
-      let expectedUrl = `http://example.com/?os=${os}&tail=synced-tabs`;
-      is(gBrowser.selectedBrowser.currentURI.spec, expectedUrl, "correct URL");
-      gBrowser.removeTab(gBrowser.selectedTab);
-    }
-  }
-
-  // test each link and right mouse button - should be a noop.
-  yield PanelUI.show();
-  for (let link of links) {
-    EventUtils.sendMouseEvent({ type: "click", button: 2 }, link, window);
-    // the panel should still be open
-    ok(isPanelUIOpen(), "panel remains open after right-click");
-    is(gBrowser.tabs.length, 1, "no new tab was opened");
-  }
-  PanelUI.hide();
-
-  Services.prefs.clearUserPref("identity.mobilepromo.android");
-  Services.prefs.clearUserPref("identity.mobilepromo.ios");
-});
-
 // Test the "Sync Now" button
 add_task(function* () {
   let nSyncs = 0;
