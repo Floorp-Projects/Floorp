@@ -680,7 +680,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
         if (aMsg.seqno() == mTimedOutMessageSeqno) {
             // Drop the message, but allow future sync messages to be sent.
             IPC_LOG("Received reply to timedout message; igoring; xid=%d", mTimedOutMessageSeqno);
-            mTimedOutMessageSeqno = 0;
+            EndTimeout();
             return;
         }
 
@@ -1294,6 +1294,37 @@ MessageChannel::DequeueOne(Message *recvd)
 
     if (!mDeferred.empty())
         MaybeUndeferIncall();
+
+    // If we've timed out a message and we're awaiting the reply to the timed
+    // out message, we have to be careful what messages we process. Here's what
+    // can go wrong:
+    // 1. child sends a normal priority sync message S
+    // 2. parent sends a high priority sync message H at the same time
+    // 3. parent times out H
+    // 4. child starts processing H and sends a high priority message H' nested
+    //    within the same transaction
+    // 5. parent dispatches S and sends reply
+    // 6. child asserts because it instead expected a reply to H'.
+    //
+    // To solve this, we refuse to process S in the parent until we get a reply
+    // to H. More generally, let the timed out message be M. We don't process a
+    // message unless the child would need the response to that message in order
+    // to process M. Those messages are the ones that have a higher priority
+    // than M or that are part of the same transaction as M.
+    if (mTimedOutMessageSeqno) {
+        for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
+            Message &msg = *it;
+            if (msg.priority() > mTimedOutMessagePriority ||
+                (msg.priority() == mTimedOutMessagePriority
+                 && msg.transaction_id() == mTimedOutMessageSeqno))
+            {
+                *recvd = Move(msg);
+                mPending.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
 
     if (mPending.empty())
         return false;
@@ -2072,6 +2103,24 @@ MessageChannel::GetTopmostMessageRoutingId() const
 }
 
 void
+MessageChannel::EndTimeout()
+{
+    mMonitor->AssertCurrentThreadOwns();
+
+    IPC_LOG("Ending timeout of seqno=%d", mTimedOutMessageSeqno);
+    mTimedOutMessageSeqno = 0;
+    mTimedOutMessagePriority = 0;
+
+    for (size_t i = 0; i < mPending.size(); i++) {
+        // There may be messages in the queue that we expected to process from
+        // OnMaybeDequeueOne. But during the timeout, that function will skip
+        // some messages. Now they're ready to be processed, so we enqueue more
+        // tasks.
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
+}
+
+void
 MessageChannel::CancelTransaction(int transaction)
 {
     mMonitor->AssertCurrentThreadOwns();
@@ -2124,7 +2173,7 @@ MessageChannel::CancelTransaction(int transaction)
     // forget this ever happened.
     if (transaction == mTimedOutMessageSeqno) {
         IPC_LOG("Cancelled timed out message %d", mTimedOutMessageSeqno);
-        mTimedOutMessageSeqno = 0;
+        EndTimeout();
 
         // Normally mCurrentTransaction == 0 here. But it can be non-zero if:
         // 1. Parent sends hi prio message H.
