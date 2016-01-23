@@ -1,17 +1,22 @@
 @import url("chrome://pocket-shared/skin/pocket.css");
 
+#pocket-button[cui-areatype="toolbar"] > .toolbarbutton-icon {
+  max-width: 18px;
+  margin: 0;
+}
+
 #pocket-button[cui-areatype="toolbar"][open] {
-  -moz-image-region: rect(36px, 774px, 54px, 756px);
+  -moz-image-region: rect(36px, 18px, 54px, 0);
 }
 
 @media (min-resolution: 1.1dppx) {
 
   #pocket-button[cui-areatype="toolbar"] {
-    -moz-image-region: rect(0, 1548px, 36px, 1512px);
+    -moz-image-region: rect(0, 36px, 36px, 0);
   }
 
   #pocket-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 1548px, 108px, 1512px);
+    -moz-image-region: rect(72px, 36px, 108px, 0);
   }
 }
 
@@ -29,12 +34,12 @@
 
 @media not all and (min-resolution: 1.1dppx) {
   #pocket-button:hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"]) {
-    -moz-image-region: rect(18px, 774px, 36px, 756px);
+    -moz-image-region: rect(18px, 18px, 36px, 0);
   }
 }
 
 @media (min-resolution: 1.1dppx) {
   #pocket-button:hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"]) {
-    -moz-image-region: rect(36px, 1548px, 72px, 1512px);
+    -moz-image-region: rect(36px, 36px, 72px, 0);
   }
 }
