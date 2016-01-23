@@ -599,6 +599,13 @@ class MessageChannel : HasResultCodes
     // The current transaction ID.
     int32_t mCurrentTransaction;
 
+    // This field describes the priorities of the sync Send calls that are
+    // currently on stack. If a Send call for a message with priority P is on
+    // the C stack, then mPendingSendPriorities & (1 << P) will be
+    // non-zero. Note that cancelled Send calls are not removed from this
+    // bitfield (until they return).
+    int mPendingSendPriorities;
+
     class AutoEnterTransaction
     {
      public:
