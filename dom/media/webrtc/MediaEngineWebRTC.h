@@ -129,7 +129,7 @@ protected:
 class AudioInput
 {
 public:
-  AudioInput(webrtc::VoiceEngine* aVoiceEngine) : mVoiceEngine(aVoiceEngine) {};
+  explicit AudioInput(webrtc::VoiceEngine* aVoiceEngine) : mVoiceEngine(aVoiceEngine) {};
   // Threadsafe because it's referenced from an MicrophoneSource, which can
   // had references to it on other threads.
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioInput)
@@ -152,14 +152,9 @@ protected:
 class AudioInputCubeb final : public AudioInput
 {
 public:
-  explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine) :
-    AudioInput(aVoiceEngine), mSelectedDevice(0), mInUse(false)
-  {
-    // Force calculation of the indexes.  We could keep them global
-    // too... cleanup would be annoying
-    int devices;
-    GetNumOfRecordingDevices(devices);
-  }
+  AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine, int aIndex = 0) :
+    AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUse(false)
+  {}
 
   static void CleanupGlobalData()
   {
@@ -168,29 +163,13 @@ public:
       cubeb_device_collection_destroy(mDevices);
       mDevices = nullptr;
     }
+    mDeviceIndexes.Clear();
+    mDeviceNames.Clear();
   }
 
   int GetNumOfRecordingDevices(int& aDevices)
   {
-    if (!mDevices) {
-      if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
-                                              CUBEB_DEVICE_TYPE_INPUT,
-                                              &mDevices)) {
-        return 0;
-      }
-    }
-    // Calculate translation once (per AudioInput)
-    if (mDeviceIndexes.Length() == 0) {
-      for (uint32_t i = 0; i < mDevices->count; i++) {
-        if (mDevices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
-            (mDevices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
-             mDevices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED))
-        {
-          mDeviceIndexes.AppendElement(i);
-          // XXX to support device changes, we need to identify by name/devid not index
-        }
-      }
-    }
+    UpdateDeviceList();
     aDevices = mDeviceIndexes.Length();
     return 0;
   }
@@ -203,6 +182,7 @@ public:
     if (aIndex >= (int) mDeviceIndexes.Length()) {
       return -1;
     }
+    // Note: if the device is gone, this will be -1
     return mDeviceIndexes[aIndex]; // translate to mDevices index
   }
 
@@ -221,7 +201,8 @@ public:
 
   int GetRecordingDeviceStatus(bool& aIsAvailable)
   {
-    // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT
+    // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT,
+    // so unless it was removed, say it's available
     aIsAvailable = true;
     return 0;
   }
@@ -263,10 +244,60 @@ protected:
   }
 
 private:
-  nsTArray<int> mDeviceIndexes;
+  // It would be better to watch for device-change notifications
+  void UpdateDeviceList()
+  {
+    cubeb_device_collection *devices = nullptr;
+
+    if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
+                                            CUBEB_DEVICE_TYPE_INPUT,
+                                            &devices)) {
+      return;
+    }
+
+    for (auto& device_index : mDeviceIndexes) {
+      device_index = -1; // unmapped
+    }
+    // We keep all the device names, but wipe the mappings and rebuild them
+
+    // Calculate translation from existing mDevices to new devices. Note we
+    // never end up with less devices than before, since people have
+    // stashed indexes.
+    for (uint32_t i = 0; i < devices->count; i++) {
+      if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
+          (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
+           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED))
+      {
+        auto j = mDeviceNames.IndexOf(devices->device[i]->device_id);
+        if (j != nsTArray<nsCString>::NoIndex) {
+          // match! update the mapping
+          mDeviceIndexes[j] = i;
+        } else {
+          // new device, add to the array
+          mDeviceIndexes.AppendElement(i);
+          mDeviceNames.AppendElement(strdup(devices->device[i]->device_id));
+        }
+      }
+    }
+    // swap state
+    if (mDevices) {
+      cubeb_device_collection_destroy(mDevices);
+    }
+    mDevices = devices;
+  }
+
+  // We have an array, which consists of indexes to the current mDevices
+  // list.  This is updated on mDevices updates.  Many devices in mDevices
+  // won't be included in the array (wrong type, etc), or if a device is
+  // removed it will map to -1 (and opens of this device will need to check
+  // for this - and be careful of threading access.  The mappings need to
+  // updated on each re-enumeration.
   int mSelectedDevice;
-  static cubeb_device_collection *mDevices;
   bool mInUse; // for assertions about listener lifetime
+
+  static nsTArray<int> mDeviceIndexes;
+  static nsTArray<nsCString> mDeviceNames;
+  static cubeb_device_collection *mDevices;
   static bool mAnyInUse;
 };
 
