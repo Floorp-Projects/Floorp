@@ -36,6 +36,8 @@
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/Telemetry.h"          // for Telemetry
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
+#include "mozilla/dom/CheckerboardReportService.h" // for CheckerboardEventStorage
+             // note: CheckerboardReportService.h actually lives in gfx/layers/apz/util/
 #include "mozilla/dom/KeyframeEffect.h" // for ComputedTimingFunction
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
@@ -3134,10 +3136,15 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
     mPotentialCheckerboardTracker.CheckerboardDone();
 
     if (recordTrace) {
-      // TODO: save the info somewhere for
-      // about:checkerboard. For now we just print it.
-      std::stringstream log(mCheckerboardEvent->GetLog());
-      print_stderr(log);
+      // if the pref is enabled, also send it to the storage class. it may be
+      // chosen for public display on about:checkerboard, the hall of fame for
+      // checkerboard events.
+      uint32_t severity = mCheckerboardEvent->GetSeverity();
+      std::string log = mCheckerboardEvent->GetLog();
+      NS_DispatchToMainThread(NS_NewRunnableFunction([severity, log]() {
+          RefPtr<CheckerboardEventStorage> storage = CheckerboardEventStorage::GetInstance();
+          storage->ReportCheckerboard(severity, log);
+      }));
     }
     mCheckerboardEvent = nullptr;
   }
