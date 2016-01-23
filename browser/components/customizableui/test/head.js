@@ -200,7 +200,7 @@ function endCustomizing(aWindow=window) {
 
     // If we stop early enough, this might actually be about:blank.
     if (newTabBrowser.contentDocument.location.href == "about:blank") {
-      return;
+      return null;
     }
 
     // Otherwise, make it be about:blank, and wait for that to be done.
@@ -216,7 +216,7 @@ function endCustomizing(aWindow=window) {
 
 function startCustomizing(aWindow=window) {
   if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
-    return;
+    return null;
   }
   Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   let deferred = Promise.defer();

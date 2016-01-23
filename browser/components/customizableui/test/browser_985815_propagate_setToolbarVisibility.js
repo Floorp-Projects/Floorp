@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function() {
+add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   this.otherWin = yield openAndLoadWindow({private: true}, true);
   yield startCustomizing(this.otherWin);
@@ -35,7 +35,7 @@ add_task(function() {
 });
 
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   if (this.otherWin && !this.otherWin.closed) {
     yield promiseWindowClosed(this.otherWin);
   }

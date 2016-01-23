@@ -18,7 +18,7 @@ const kStarBtn = "bookmarks-menu-button";
 var originalWindowWidth;
 
 // Adding a widget should add it next to the widget it's being inserted next to.
-add_task(function() {
+add_task(function*() {
   originalWindowWidth = window.outerWidth;
   createDummyXULButton(kTestBtn1, "Test");
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
@@ -59,7 +59,7 @@ add_task(function() {
 });
 
 // Removing a widget should remove it from the overflow list if that is where it is, and update it accordingly.
-add_task(function() {
+add_task(function*() {
   createDummyXULButton(kTestBtn2, "Test");
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
@@ -90,7 +90,7 @@ add_task(function() {
 });
 
 // Constructing a widget while overflown should set the right class on it.
-add_task(function() {
+add_task(function*() {
   originalWindowWidth = window.outerWidth;
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
@@ -125,7 +125,7 @@ add_task(function() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   window.resizeTo(originalWindowWidth, window.outerHeight);
   yield resetCustomization();
 });

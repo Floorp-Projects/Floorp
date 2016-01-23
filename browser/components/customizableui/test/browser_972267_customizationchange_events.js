@@ -6,7 +6,7 @@
 
 // Create a new window, then move the home button to the menu and check both windows have
 // customizationchange events fire on the toolbox:
-add_task(function() {
+add_task(function*() {
   let newWindow = yield openAndLoadWindow();
   let otherToolbox = newWindow.gNavToolbox;
 
@@ -41,7 +41,6 @@ add_task(function() {
   yield promiseWindowClosed(newWindow);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });
-

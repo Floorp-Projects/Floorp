@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Entering then exiting customization mode should reenable the Help and Exit buttons.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   let helpButton = document.getElementById("PanelUI-help");
   let quitButton = document.getElementById("PanelUI-quit");

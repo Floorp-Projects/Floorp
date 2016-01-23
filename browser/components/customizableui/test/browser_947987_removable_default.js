@@ -23,7 +23,7 @@ add_task(function() {
 });
 
 // Test non-removable widget with defaultArea
-add_task(function() {
+add_task(function*() {
   // Non-removable widget with defaultArea should work:
   let spec = {id: kWidgetId + (widgetCounter++), removable: false,
               defaultArea: kNavBar};
@@ -63,6 +63,6 @@ add_task(function() {
   yield promiseWindowClosed(otherWin);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });

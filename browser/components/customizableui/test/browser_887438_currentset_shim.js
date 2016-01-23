@@ -70,6 +70,6 @@ add_task(function() {
   is(currentSet, navbar.currentSet, "Should be able to return to original state.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });

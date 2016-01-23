@@ -7,7 +7,7 @@
 var initialLocation = gBrowser.currentURI.spec;
 var newTab = null;
 
-add_task(function() {
+add_task(function*() {
   info("Check addons button existence and functionality");
 
   yield PanelUI.show();
@@ -26,7 +26,7 @@ add_task(function() {
   ok(addonsPage, "Add-ons page was opened");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   gBrowser.addTab(initialLocation);
   gBrowser.removeTab(gBrowser.selectedTab);
   info("Tabs were restored");

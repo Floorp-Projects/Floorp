@@ -5,7 +5,7 @@
 "use strict";
 
 // There should be an advert to get more addons when the palette is empty.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   let visiblePalette = document.getElementById("customization-palette");
   let emptyPaletteNotice = document.getElementById("customization-empty");
@@ -29,7 +29,7 @@ add_task(function() {
      "The empty palette notice should not be shown when there is at least one item in the palette.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
   yield resetCustomization();
 });

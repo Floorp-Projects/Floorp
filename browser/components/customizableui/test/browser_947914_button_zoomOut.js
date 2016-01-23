@@ -6,7 +6,7 @@
 
 var initialPageZoom = ZoomManager.zoom;
 
-add_task(function() {
+add_task(function*() {
   info("Check zoom out button existence and functionality");
 
   is(initialPageZoom, 1, "Initial zoom factor should be 1");
@@ -31,7 +31,7 @@ add_task(function() {
   info("Menu panel was closed");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   // reset zoom level
   ZoomManager.zoom = initialPageZoom;
   info("Zoom level was restored");

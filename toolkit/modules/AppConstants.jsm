@@ -254,6 +254,20 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MENUBAR_CAN_AUTOHIDE:
+#ifdef MENUBAR_CAN_AUTOHIDE
+  true,
+#else
+  false,
+#endif
+
+  CAN_DRAW_IN_TITLEBAR:
+#ifdef CAN_DRAW_IN_TITLEBAR
+  true,
+#else
+  false,
+#endif
+
   MOZ_ANDROID_HISTORY:
 #ifdef MOZ_ANDROID_HISTORY
   true,

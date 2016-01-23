@@ -7,7 +7,7 @@
 var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
-add_task(function() {
+add_task(function*() {
   info("Check cut button existence and functionality");
 
   let testText = "cut text test";
@@ -50,7 +50,7 @@ add_task(function() {
   is(clipboardValue, testText, "Data was copied to the clipboard.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   // clear the clipboard
   Services.clipboard.emptyClipboard(globalClipboard);
   info("Clipboard was cleared");

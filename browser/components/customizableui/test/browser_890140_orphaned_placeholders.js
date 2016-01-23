@@ -7,7 +7,7 @@
 requestLongerTimeout(2);
 
 // One orphaned item should have two placeholders next to it.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
 
   if (isInDevEdition()) {
@@ -42,7 +42,7 @@ add_task(function() {
 });
 
 // Two orphaned items should have one placeholder next to them (case 1).
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
 
   if (isInDevEdition()) {
@@ -86,7 +86,7 @@ add_task(function() {
 });
 
 // Two orphaned items should have one placeholder next to them (case 2).
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
 
   if (isInDevEdition()) {
@@ -128,7 +128,7 @@ add_task(function() {
 });
 
 // A wide widget at the bottom of the panel should have three placeholders after it.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
 
   if (isInDevEdition()) {
@@ -172,7 +172,7 @@ add_task(function() {
 });
 
 // The default placements should have two placeholders at the bottom (or 1 in win8).
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   let numPlaceholders = -1;
 
@@ -199,7 +199,7 @@ add_task(function() {
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
   yield resetCustomization();
 });
