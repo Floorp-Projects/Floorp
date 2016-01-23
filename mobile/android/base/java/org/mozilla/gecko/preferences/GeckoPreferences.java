@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.preferences;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AdjustConstants;
 import org.mozilla.gecko.AppConstants;
@@ -43,8 +45,8 @@ import org.mozilla.gecko.util.InputOptionsUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.FloatingHintEditText;
 
-import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -58,7 +60,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
-import android.Manifest;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -72,7 +73,6 @@ import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -87,7 +87,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1290,18 +1289,14 @@ OnSharedPreferenceChangeListener
                 });
     }
 
-    private TextInputLayout getTextBox(int aHintText) {
-        final EditText input = new EditText(this);
+    private EditText getTextBox(int aHintText) {
+        EditText input = new FloatingHintEditText(this);
         int inputtype = InputType.TYPE_CLASS_TEXT;
         inputtype |= InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         input.setInputType(inputtype);
 
         input.setHint(aHintText);
-
-        final TextInputLayout layout = new TextInputLayout(this);
-        layout.addView(input);
-
-        return layout;
+        return input;
     }
 
     private class PasswordTextWatcher implements TextWatcher {
@@ -1365,13 +1360,10 @@ OnSharedPreferenceChangeListener
         AlertDialog dialog;
         switch(id) {
             case DIALOG_CREATE_MASTER_PASSWORD:
-                final TextInputLayout inputLayout1 = getTextBox(R.string.masterpassword_password);
-                final TextInputLayout inputLayout2 = getTextBox(R.string.masterpassword_confirm);
-                linearLayout.addView(inputLayout1);
-                linearLayout.addView(inputLayout2);
-
-                final EditText input1 = inputLayout1.getEditText();
-                final EditText input2 = inputLayout2.getEditText();
+                final EditText input1 = getTextBox(R.string.masterpassword_password);
+                final EditText input2 = getTextBox(R.string.masterpassword_confirm);
+                linearLayout.addView(input1);
+                linearLayout.addView(input2);
 
                 builder.setTitle(R.string.masterpassword_create_title)
                        .setView((View) linearLayout)
@@ -1415,9 +1407,8 @@ OnSharedPreferenceChangeListener
 
                 break;
             case DIALOG_REMOVE_MASTER_PASSWORD:
-                final TextInputLayout inputLayout = getTextBox(R.string.masterpassword_password);
-                linearLayout.addView(inputLayout);
-                final EditText input = inputLayout.getEditText();
+                final EditText input = getTextBox(R.string.masterpassword_password);
+                linearLayout.addView(input);
 
                 builder.setTitle(R.string.masterpassword_remove_title)
                        .setView((View) linearLayout)
