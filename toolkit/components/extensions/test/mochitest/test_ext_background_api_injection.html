@@ -25,7 +25,7 @@ add_task(function* testBackgroundWindow() {
 
   let awaitConsole = new Promise(resolve => {
     let chromeScript = SpecialPowers.loadChromeScript(
-      SimpleTest.getTestFileURL("file_ext_test_api_injection.js"));
+      SimpleTest.getTestFileURL("file_ext_background_api_injection.js"));
 
     chromeScript.addMessageListener("console-message", resolve);
   });
