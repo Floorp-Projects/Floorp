@@ -1441,7 +1441,8 @@ public:
     }
 #endif
 
-    mGraph->mDriver->Shutdown();
+    mGraph->mDriver->Shutdown(); // This will wait until it's shutdown since
+                                 // we'll start tearing down the graph after this
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
