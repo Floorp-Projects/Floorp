@@ -308,7 +308,7 @@ class MessageChannel : HasResultCodes
 
     bool ShouldContinueFromTimeout();
 
-    void CancelCurrentTransactionInternal();
+    void CancelTransaction(int transaction);
 
     // The "remote view of stack depth" can be different than the
     // actual stack depth when there are out-of-turn replies.  When we
