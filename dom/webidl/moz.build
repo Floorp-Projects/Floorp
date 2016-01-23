@@ -75,6 +75,7 @@ WEBIDL_FILES = [
     'ChannelMergerNode.webidl',
     'ChannelSplitterNode.webidl',
     'CharacterData.webidl',
+    'CheckerboardReportService.webidl',
     'ChildNode.webidl',
     'ChromeNodeList.webidl',
     'ChromeNotifications.webidl',
