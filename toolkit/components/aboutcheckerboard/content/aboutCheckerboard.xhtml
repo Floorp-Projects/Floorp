@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta name="viewport" content="width=device-width"/>
+  <link rel="stylesheet" href="chrome://global/content/aboutCheckerboard.css" type="text/css"/>
+  <script type="text/javascript;version=1.8" src="chrome://global/content/aboutCheckerboard.js"></script>
+ </head>
+
+ <body onload="onLoad()">
+  <p>Checkerboard recording is <span id="enabled" style="color: red">undetermined</span>.
+     <button onclick="toggleEnabled()">Toggle it!</button>.</p>
+  <table class="listing" cellspacing="0">
+   <tr>
+    <th>Most severe checkerboarding reports</th>
+    <th>Most recent checkerboarding reports</th>
+   </tr>
+   <tr>
+    <td><ul id="severe"></ul></td>
+    <td><ul id="recent"></ul></td>
+   </tr>
+  </table>
+
+  <hr/>
+
+  <div id="player">
+   <div id="controls">
+    <button onclick="reset(true)">&#171;</button><!-- rewind button -->
+    <button onclick="step(true)">&lt;</button><!-- step back button -->
+    <button onclick="togglePlay()">|| &#9654;</button><!-- pause button -->
+    <button onclick="stopPlay()">&#9744;</button><!-- stop button -->
+    <button onclick="step(false)">&gt;</button><!-- step forward button -->
+    <button onclick="reset(false)">&#187;</button><!-- forward button -->
+   </div>
+   <canvas id="canvas" width="800" height="600">Canvas not supported!</canvas>
+   <pre id="active">(Details for currently visible replay frame)</pre>
+  </div>
+
+  <hr/>
+
+  <div id="raw">
+   Raw log:<br/>
+   <textarea id="trace" rows="10"></textarea>
+   <div>
+    <input type="checkbox" id="excludePageFromZoom" onclick="loadData()"/><label for="excludePageFromZoom">Exclude page coordinates from zoom calculations</label><br/>
+   </div>
+  </div>
+ </body>
+</html>
