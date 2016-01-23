@@ -282,7 +282,7 @@ private:
         } else {
           // new device, add to the array
           mDeviceIndexes->AppendElement(i);
-          mDeviceNames->AppendElement(strdup(devices->device[i]->device_id));
+          mDeviceNames->AppendElement(devices->device[i]->device_id);
         }
       }
     }
