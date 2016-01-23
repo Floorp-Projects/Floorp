@@ -773,22 +773,23 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 
     if (shouldWakeUp) {
         NotifyWorkerThread();
-    } else {
-        // Worker thread is either not blocked on a reply, or this is an
-        // incoming Interrupt that raced with outgoing sync, and needs to be
-        // deferred to a later event-loop iteration.
-        if (!compress) {
-            // If we compressed away the previous message, we'll re-use
-            // its pending task.
-            mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
-        }
+    }
+
+    // It's possible that a Send or Call call on the stack will process the
+    // message. However, it's difficult to ensure that Send always processes all
+    // messages in mPending before exiting, so it's safer to enqueue a task for
+    // each one. If the queue is empty, the task does nothing.
+    if (!compress) {
+        // If we compressed away the previous message, we'll re-use
+        // its pending task.
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
     }
 }
 
 void
 MessageChannel::ProcessPendingRequests(int transaction, int prio)
 {
-    IPC_LOG("ProcessPendingRequests");
+    IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d", seqno, transaction);
 
     // Loop until there aren't any more priority messages to process.
     for (;;) {
