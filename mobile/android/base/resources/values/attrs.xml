@@ -182,6 +182,10 @@
         <attr name="ellipsizeAtLine" format="integer"/>
     </declare-styleable>
 
+    <declare-styleable name="FloatingHintEditText">
+        <attr name="floatingHintEditTextStyle" format="reference" />
+    </declare-styleable>
+
     <declare-styleable name="FaviconView">
         <attr name="dominantBorderEnabled" format="boolean" />
         <attr name="overrideScaleType" format="boolean" />
