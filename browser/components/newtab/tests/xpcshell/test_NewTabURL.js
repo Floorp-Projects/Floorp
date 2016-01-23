@@ -5,6 +5,7 @@
 
 Components.utils.import("resource:///modules/NewTabURL.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 add_task(function* () {
   Assert.equal(NewTabURL.get(), "about:newtab", "Default newtab URL should be about:newtab");
@@ -23,7 +24,8 @@ add_task(function* () {
 
   // change newtab page to remote
   Services.prefs.setBoolPref("browser.newtabpage.remote", true);
-  Assert.equal(NewTabURL.get(), "about:remote-newtab", "Newtab URL should be the about:remote-newtab");
+  let expected = AppConstants.RELEASE_BUILD ? "about:newtab" : "about:remote-newtab";
+  Assert.equal(NewTabURL.get(), expected, "Newtab URL should be the " + expected);
   Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
 });
 
