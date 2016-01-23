@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
 #include "mozilla/CORSMode.h"
-#include "DOMMediaStream.h"
 #include "DecoderTraits.h"
 #include "nsIAudioChannelAgent.h"
 #include "mozilla/Attributes.h"
@@ -40,6 +39,7 @@ typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
+class DOMMediaStream;
 class ErrorResult;
 class MediaResource;
 class MediaDecoder;
