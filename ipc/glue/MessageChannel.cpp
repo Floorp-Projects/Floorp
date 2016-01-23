@@ -319,6 +319,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mTimeoutMs(kNoTimeout),
     mInTimeoutSecondHalf(false),
     mNextSeqno(0),
+    mLastSendError(SyncSendError::SendSuccess),
     mAwaitingSyncReply(false),
     mAwaitingSyncReplyPriority(0),
     mDispatchingSyncMessage(false),
@@ -573,9 +574,10 @@ MessageChannel::Send(Message* aMsg)
 class CancelMessage : public IPC::Message
 {
 public:
-    CancelMessage() :
+    explicit CancelMessage(int transaction) :
         IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
     {
+        set_transaction_id(transaction);
     }
     static bool Read(const Message* msg) {
         return true;
@@ -910,6 +912,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // message receives a reply, we'll be able to send more sync messages
         // again.
         IPC_LOG("Send() failed due to previous timeout");
+        mLastSendError = SyncSendError::PreviousTimeout;
         return false;
     }
 
@@ -920,6 +923,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // Don't allow sending CPOWs while we're dispatching a sync message.
         // If you want to do that, use sendRpcMessage instead.
         IPC_LOG("Prio forbids send");
+        mLastSendError = SyncSendError::SendingCPOWWhileDispatchingSync;
         return false;
     }
 
@@ -931,6 +935,8 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // sync messages it can send are high-priority. Mainly we want to ensure
         // here that we don't return false for non-CPOW messages.
         MOZ_ASSERT(msg->priority() == IPC::Message::PRIORITY_HIGH);
+        IPC_LOG("Sending while dispatching urgent message");
+        mLastSendError = SyncSendError::SendingCPOWWhileDispatchingUrgent;
         return false;
     }
 
@@ -940,10 +946,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     {
         MOZ_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
         IPC_LOG("Cancel from Send");
-        CancelMessage *cancel = new CancelMessage();
-        cancel->set_transaction_id(mCurrentTransaction);
-        mLink->SendMessage(cancel);
+        CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
         CancelCurrentTransactionInternal();
+        mLink->SendMessage(cancel);
     }
 
     IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
@@ -962,6 +967,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     if (!Connected()) {
         ReportConnectionError("MessageChannel::SendAndWait", msg);
+        mLastSendError = SyncSendError::NotConnectedBeforeSend;
         return false;
     }
 
@@ -993,6 +999,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         ProcessPendingRequests(transaction, prio);
         if (WasTransactionCanceled(transaction, prio)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+            mLastSendError = SyncSendError::CancelledAfterSend;
             return false;
         }
 
@@ -1000,6 +1007,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         if (mRecvdErrors) {
             IPC_LOG("Error: seqno=%d, xid=%d", seqno, transaction);
             mRecvdErrors--;
+            mLastSendError = SyncSendError::ReplyError;
             return false;
         }
 
@@ -1015,11 +1023,13 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
         if (!Connected()) {
             ReportConnectionError("MessageChannel::SendAndWait");
+            mLastSendError = SyncSendError::DisconnectedDuringSend;
             return false;
         }
 
         if (WasTransactionCanceled(transaction, prio)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+            mLastSendError = SyncSendError::CancelledAfterSend;
             return false;
         }
 
@@ -1035,14 +1045,18 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             // there would be no way to unset it.
             if (mRecvdErrors) {
                 mRecvdErrors--;
+                mLastSendError = SyncSendError::ReplyError;
                 return false;
             }
             if (mRecvd) {
                 break;
             }
 
+            IPC_LOG("Timing out Send: xid=%d", transaction);
+
             mTimedOutMessageSeqno = seqno;
             mTimedOutMessagePriority = prio;
+            mLastSendError = SyncSendError::TimedOut;
             return false;
         }
     }
@@ -1056,6 +1070,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     *aReply = Move(*mRecvd);
     mRecvd = nullptr;
+    mLastSendError = SyncSendError::SendSuccess;
     return true;
 }
 
@@ -1832,6 +1847,8 @@ MessageChannel::OnChannelErrorFromLink()
     AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
 
+    IPC_LOG("OnChannelErrorFromLink");
+
     if (InterruptStackDepth() > 0)
         NotifyWorkerThread();
 
@@ -2147,10 +2164,9 @@ MessageChannel::CancelCurrentTransaction()
 
         IPC_LOG("Cancel requested: current xid=%d", mCurrentTransaction);
         MOZ_ASSERT(DispatchingSyncMessage());
-        CancelMessage *cancel = new CancelMessage();
-        cancel->set_transaction_id(mCurrentTransaction);
-        mLink->SendMessage(cancel);
+        CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
         CancelCurrentTransactionInternal();
+        mLink->SendMessage(cancel);
     }
 }
 
