@@ -9,7 +9,7 @@
  */
 
 // Show and hide the menu panel programmatically without an event (like UITour.jsm would)
-add_task(function() {
+add_task(function*() {
   let shownPromise = promisePanelShown(window);
   PanelUI.show();
   yield shownPromise;
@@ -26,7 +26,7 @@ add_task(function() {
 });
 
 // Toggle the menu panel open and closed
-add_task(function() {
+add_task(function*() {
   let shownPromise = promisePanelShown(window);
   PanelUI.toggle({type: "command"});
   yield shownPromise;

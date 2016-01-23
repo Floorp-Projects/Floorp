@@ -7,7 +7,7 @@
 
 // Adding the character encoding menu to the panel, exiting customize mode,
 // and moving it to the nav-bar should have it enabled, not disabled.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   CustomizableUI.addWidgetToArea("characterencoding-button", "PanelUI-contents");
   yield endCustomizing();

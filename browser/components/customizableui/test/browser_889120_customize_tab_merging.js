@@ -8,13 +8,13 @@ const kTestToolbarId = "test-empty-drag";
 
 // Attempting to switch quickly from one tab to another to see whether the state changes
 // correctly.
-add_task(function CheckBasicCustomizeMode() {
+add_task(function* CheckBasicCustomizeMode() {
   yield startCustomizing();
   ok(CustomizationHandler.isCustomizing(), "We should be in customize mode");
   yield endCustomizing();
   ok(!CustomizationHandler.isCustomizing(), "We should not be in customize mode");
 });
-add_task(function CheckQuickCustomizeModeSwitch() {
+add_task(function* CheckQuickCustomizeModeSwitch() {
   let tab1 = gBrowser.addTab("about:newtab");
   gBrowser.selectedTab = tab1;
   let tab2 = gBrowser.addTab("about:customizing");
@@ -38,7 +38,7 @@ add_task(function CheckQuickCustomizeModeSwitch() {
   gBrowser.removeTab(tab3);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
 });
 

@@ -7,7 +7,7 @@
 const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
 const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
-add_task(function () {
+add_task(function* () {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
   LightweightThemeManager.clearBuiltInThemes();
@@ -54,9 +54,9 @@ add_task(function () {
   is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"), "", "No lwtheme should be selected");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
 
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
-})
+});

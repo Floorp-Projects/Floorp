@@ -228,7 +228,7 @@ const PanelUI = {
     if (this._readyPromise) {
       return this._readyPromise;
     }
-    this._readyPromise = Task.spawn(function() {
+    this._readyPromise = Task.spawn(function*() {
       if (!this._initialized) {
         let delayedStartupDeferred = Promise.defer();
         let delayedStartupObserver = (aSubject, aTopic, aData) => {

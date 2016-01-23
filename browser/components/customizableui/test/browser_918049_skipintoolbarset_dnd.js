@@ -8,7 +8,7 @@ var navbar;
 var skippedItem;
 
 // Attempting to drag a skipintoolbarset item should work.
-add_task(function() {
+add_task(function*() {
   navbar = document.getElementById("nav-bar");
   skippedItem = document.createElement("toolbarbutton");
   skippedItem.id = "test-skipintoolbarset-item";
@@ -31,7 +31,7 @@ add_task(function() {
   ok(CustomizableUI.inDefaultState, "Should still be in default state");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
   skippedItem.remove();
   yield resetCustomization();

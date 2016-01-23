@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function() {
+add_task(function*() {
   const kNormalLabel = "Character Encoding";
   CustomizableUI.addWidgetToArea("characterencoding-button", CustomizableUI.AREA_NAVBAR);
   let characterEncoding = document.getElementById("characterencoding-button");
@@ -61,7 +61,7 @@ add_task(function() {
   characterEncoding.setAttribute("label", kOriginalLabel);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
   yield resetCustomization();
 });

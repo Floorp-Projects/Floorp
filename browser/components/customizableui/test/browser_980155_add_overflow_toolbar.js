@@ -7,7 +7,7 @@
 const kToolbarName = "test-new-overflowable-toolbar";
 const kTestWidgetPrefix = "test-widget-for-overflowable-toolbar-";
 
-add_task(function addOverflowingToolbar() {
+add_task(function* addOverflowingToolbar() {
   let originalWindowWidth = window.outerWidth;
 
   let widgetIds = [];
@@ -45,7 +45,7 @@ add_task(function addOverflowingToolbar() {
 });
 
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   removeCustomToolbars();
   yield resetCustomization();
 });
