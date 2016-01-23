@@ -1009,12 +1009,15 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // if neither side has any other message Sends on the stack).
         bool canTimeOut = transaction == seqno;
         if (maybeTimedOut && canTimeOut && !ShouldContinueFromTimeout()) {
-            IPC_LOG("Timing out Send: xid=%d", transaction);
-
-            // We might have received a reply during WaitForSyncNotify or inside
-            // ShouldContinueFromTimeout (which drops the lock). We need to make
-            // sure not to set mTimedOutMessageSeqno if that happens, since then
-            // there would be no way to unset it.
+            // Since ShouldContinueFromTimeout drops the lock, we need to
+            // re-check all our conditions here. We shouldn't time out if any of
+            // these things happen because there won't be a reply to the timed
+            // out message in these cases.
+            if (WasTransactionCanceled(transaction)) {
+                IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+                mLastSendError = SyncSendError::CancelledAfterSend;
+                return false;
+            }
             if (mRecvdErrors) {
                 mRecvdErrors--;
                 mLastSendError = SyncSendError::ReplyError;
