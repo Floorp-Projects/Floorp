@@ -753,6 +753,7 @@ struct JSCompartment
         DeprecatedFlagsArgument = 7,        // JS 1.3 or older
         // NO LONGER USING 8
         // NO LONGER USING 9
+        DeprecatedBlockScopeFunRedecl = 10,
         DeprecatedLanguageExtensionCount
     };
 
