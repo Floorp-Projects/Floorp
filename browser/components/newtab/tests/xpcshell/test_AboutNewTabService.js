@@ -4,6 +4,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
                                    .getService(Components.interfaces.nsIAboutNewTabService);
 
@@ -24,7 +25,8 @@ add_task(function* () {
 
   // change newtab page to remote
   Services.prefs.setBoolPref("browser.newtabpage.remote", true);
-  Assert.equal(aboutNewTabService.newTabURL, "about:remote-newtab", "Newtab URL should be the about:remote-newtab");
+  let expected = AppConstants.RELEASE_BUILD ? "about:newtab" : "about:remote-newtab";
+  Assert.equal(aboutNewTabService.newTabURL, expected, "Newtab URL should be the " + expected);
   Assert.ok(!aboutNewTabService.overridden, "Newtab URL should not be overridden");
 });
 
