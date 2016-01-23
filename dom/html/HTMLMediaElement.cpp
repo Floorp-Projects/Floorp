@@ -3056,36 +3056,41 @@ class HTMLMediaElement::StreamSizeListener : public MediaStreamListener {
 public:
   explicit StreamSizeListener(HTMLMediaElement* aElement) :
     mElement(aElement),
-    mInitialSizeFound(false)
+    mMutex("HTMLMediaElement::StreamSizeListener")
   {}
   void Forget() { mElement = nullptr; }
 
-  void ReceivedSize(gfx::IntSize aSize)
+  void ReceivedSize()
   {
     if (!mElement) {
       return;
     }
+    gfx::IntSize size;
+    {
+      MutexAutoLock lock(mMutex);
+      size = mInitialSize;
+    }
     RefPtr<HTMLMediaElement> deathGrip = mElement;
-    mElement->UpdateInitialMediaSize(aSize);
+    mElement->UpdateInitialMediaSize(size);
   }
-
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia,
-                                MediaStream* aInputStream,
-                                TrackID aInputTrackID) override
+  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                        StreamTime aTrackOffset,
+                                        uint32_t aTrackEvents,
+                                        const MediaSegment& aQueuedMedia,
+                                        MediaStream* aInputStream,
+                                        TrackID aInputTrackID) override
   {
-    if (mInitialSizeFound || aQueuedMedia.GetType() != MediaSegment::VIDEO) {
+    MutexAutoLock lock(mMutex);
+    if (mInitialSize != gfx::IntSize(0,0) ||
+        aQueuedMedia.GetType() != MediaSegment::VIDEO) {
       return;
     }
     const VideoSegment& video = static_cast<const VideoSegment&>(aQueuedMedia);
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
+        mInitialSize = c->mFrame.GetIntrinsicSize();
         nsCOMPtr<nsIRunnable> event =
-          NS_NewRunnableMethodWithArgs<gfx::IntSize>(
-              this, &StreamSizeListener::ReceivedSize,
-              c->mFrame.GetIntrinsicSize());
+          NS_NewRunnableMethod(this, &StreamSizeListener::ReceivedSize);
         aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
       }
     }
@@ -3095,8 +3100,9 @@ private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
 
-  // These fields may only be accessed on the MSG thread
-  bool mInitialSizeFound;
+  // mMutex protects the fields below; they can be accessed on any thread
+  Mutex mMutex;
+  gfx::IntSize mInitialSize;
 };
 
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
@@ -3166,7 +3172,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
 
     mMediaStreamListener = new StreamListener(this,
         "HTMLMediaElement::mMediaStreamListener");
+    mMediaStreamSizeListener = new StreamSizeListener(this);
     stream->AddListener(mMediaStreamListener);
+    stream->AddListener(mMediaStreamSizeListener);
 
     mWatchManager.Watch(*mMediaStreamListener,
         &HTMLMediaElement::UpdateReadyStateInternal);
@@ -3183,6 +3191,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
       mSrcStreamPausedCurrentTime = CurrentTime();
 
       stream->RemoveListener(mMediaStreamListener);
+      stream->RemoveListener(mMediaStreamSizeListener);
 
       stream->RemoveAudioOutput(this);
       VideoFrameContainer* container = GetVideoFrameContainer();
@@ -3198,6 +3207,8 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
 
     mMediaStreamListener->Forget();
     mMediaStreamListener = nullptr;
+    mMediaStreamSizeListener->Forget();
+    mMediaStreamSizeListener = nullptr;
   }
 }
 
@@ -3216,9 +3227,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   RefPtr<MediaStream> stream = GetSrcMediaStream();
   if (stream) {
     stream->SetAudioChannelType(mAudioChannel);
-
-    mMediaStreamSizeListener = new StreamSizeListener(this);
-    stream->AddListener(mMediaStreamSizeListener);
   }
 
   UpdateSrcMediaStreamPlaying();
@@ -3244,13 +3252,6 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
   MOZ_ASSERT(mSrcStream);
 
   UpdateSrcMediaStreamPlaying(REMOVING_SRC_STREAM);
-
-  RefPtr<MediaStream> stream = GetSrcMediaStream();
-  if (stream) {
-    stream->RemoveListener(mMediaStreamSizeListener);
-  }
-  mMediaStreamSizeListener->Forget();
-  mMediaStreamSizeListener = nullptr;
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
   mMediaStreamTrackListener = nullptr;
@@ -3400,10 +3401,6 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   if (IsVideo() && HasVideo()) {
     DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
   }
-  NS_ASSERTION(!HasVideo() ||
-               (mMediaInfo.mVideo.mDisplay.width > 0 &&
-                mMediaInfo.mVideo.mDisplay.height > 0),
-               "Video resolution must be known on 'loadedmetadata'");
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
