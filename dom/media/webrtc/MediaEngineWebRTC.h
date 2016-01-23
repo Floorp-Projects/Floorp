@@ -152,7 +152,7 @@ protected:
 class AudioInputCubeb final : public AudioInput
 {
 public:
-  AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine, int aIndex = 0) :
+  explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine, int aIndex = 0) :
     AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUse(false)
   {}
 
