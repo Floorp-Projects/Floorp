@@ -799,11 +799,22 @@ MessageChannel::ProcessPendingRequests(int seqno, int transaction)
 
     // Loop until there aren't any more priority messages to process.
     for (;;) {
+        // If we canceled during ProcessPendingRequest, then we need to leave
+        // immediately because the results of ShouldDeferMessage will be
+        // operating with weird state (as if no Send is in progress). That could
+        // cause even normal priority sync messages to be processed (but not
+        // normal priority async messages), which would break message ordering.
+        if (WasTransactionCanceled(transaction)) {
+            return;
+        }
+
         mozilla::Vector<Message> toProcess;
 
         for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
             Message &msg = *it;
 
+            MOZ_ASSERT(mCurrentTransaction == transaction,
+                       "Calling ShouldDeferMessage when cancelled");
             bool defer = ShouldDeferMessage(msg);
 
             // Only log the interesting messages.
@@ -828,15 +839,6 @@ MessageChannel::ProcessPendingRequests(int seqno, int transaction)
 
         for (auto it = toProcess.begin(); it != toProcess.end(); it++)
             ProcessPendingRequest(*it);
-
-        // If we canceled during ProcessPendingRequest, then we need to leave
-        // immediately because the results of ShouldDeferMessage will be
-        // operating with weird state (as if no Send is in progress). That could
-        // cause even normal priority sync messages to be processed (but not
-        // normal priority async messages), which would break message ordering.
-        if (WasTransactionCanceled(transaction)) {
-            return;
-        }
     }
 }
 
@@ -1015,12 +1017,15 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // if neither side has any other message Sends on the stack).
         bool canTimeOut = transaction == seqno;
         if (maybeTimedOut && canTimeOut && !ShouldContinueFromTimeout()) {
-            IPC_LOG("Timing out Send: xid=%d", transaction);
-
-            // We might have received a reply during WaitForSyncNotify or inside
-            // ShouldContinueFromTimeout (which drops the lock). We need to make
-            // sure not to set mTimedOutMessageSeqno if that happens, since then
-            // there would be no way to unset it.
+            // Since ShouldContinueFromTimeout drops the lock, we need to
+            // re-check all our conditions here. We shouldn't time out if any of
+            // these things happen because there won't be a reply to the timed
+            // out message in these cases.
+            if (WasTransactionCanceled(transaction)) {
+                IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+                mLastSendError = SyncSendError::CancelledAfterSend;
+                return false;
+            }
             if (mRecvdErrors) {
                 mRecvdErrors--;
                 mLastSendError = SyncSendError::ReplyError;
