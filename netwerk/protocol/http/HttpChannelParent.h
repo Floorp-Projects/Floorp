@@ -137,6 +137,7 @@ protected:
                    const nsCString&           aSchedulingContextID,
                    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                    const uint32_t&            aInitialRwin,
+                   const bool&                aBlockAuthPrompt,
                    const bool&                aSuspendAfterSynthesizeResponse,
                    const bool&                aAllowStaleCacheContent);
 

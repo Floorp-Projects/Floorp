@@ -42,6 +42,7 @@ protocol PUDPSocket
 
 parent:
   Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
+  Connect(UDPAddressInfo addressInfo);
 
   OutgoingData(UDPData data, UDPSocketAddr addr);
 
@@ -54,6 +55,7 @@ parent:
 
 child:
   CallbackOpened(UDPAddressInfo addressInfo);
+  CallbackConnected(UDPAddressInfo addressInfo);
   CallbackClosed();
   CallbackReceivedData(UDPAddressInfo addressInfo, uint8_t[] data);
   CallbackError(nsCString message, nsCString filename, uint32_t lineNumber);

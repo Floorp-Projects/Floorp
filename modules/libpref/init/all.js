@@ -327,7 +327,11 @@ pref("media.wmf.low-latency.enabled", false);
 pref("media.wmf.skip-blacklist", false);
 #endif
 #if defined(MOZ_FFMPEG)
+#if defined(XP_MACOSX)
+pref("media.ffmpeg.enabled", false);
+#else
 pref("media.ffmpeg.enabled", true);
+#endif
 #endif
 #if defined(MOZ_FFVPX)
 pref("media.ffvpx.enabled", true);
