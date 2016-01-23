@@ -181,7 +181,7 @@ endif
 	$(addprefix $(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
-install-dist_%: install-dist/% ;
+$(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
 
 # For compatibility
 .PHONY: install-tests
