@@ -82,6 +82,45 @@ function closeTab(tab) {
   return deferred.promise;
 }
 
+/**
+ * Load the page and return the associated HUD.
+ *
+ * @param string uri
+ *   The URI of the page to load.
+ * @param string consoleType [optional]
+ *   The console type, either "browserConsole" or "webConsole". Defaults to
+ *   "webConsole".
+ * @return object
+ *   The HUD associated with the console
+ */
+function* loadPageAndGetHud(uri, consoleType) {
+  let { browser } = yield loadTab("data:text/html;charset=utf-8,Loading tab for tests");
+
+  let hud;
+  if (consoleType === "browserConsole") {
+    hud = yield HUDService.openBrowserConsoleOrFocus();
+  } else {
+    hud = yield openConsole();
+  }
+
+  ok(hud, "Console was opened");
+
+  let loaded = loadBrowser(browser);
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri);
+  yield loaded;
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: uri,
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_LOG,
+    }],
+  });
+
+  return hud;
+}
+
 function afterAllTabsLoaded(callback, win) {
   win = win || window;
 
@@ -1588,6 +1627,23 @@ function checkOutputForInputs(hud, inputTests) {
   return Task.spawn(runner);
 }
 
+
+/**
+ * Finish the request and resolve with the request object.
+ *
+ * @return promise
+ * @resolves The request object.
+ */
+function waitForFinishedRequest() {
+  registerCleanupFunction(function() {
+    HUDService.lastFinishedRequest.callback = null;
+  });
+
+  return new Promise(resolve => {
+    HUDService.lastFinishedRequest.callback = request => { resolve(request) };
+  });
+}
+
 /**
  * Wait for eventName on target.
  * @param {Object} target An observable object that either supports on/off or
@@ -1651,6 +1707,21 @@ function checkLinkToInspector(hasLinkToInspector, msg) {
 function getSourceActor(sources, URL) {
   let item = sources.getItemForAttachment(a => a.source.url === URL);
   return item && item.value;
+}
+
+/**
+ * Make a request against an actor and resolve with the packet.
+ * @param object client
+ *   The client to use when making the request.
+ * @param function requestType
+ *   The client request function to run.
+ * @param array args
+ *   The arguments to pass into the function.
+ */
+function getPacket(client, requestType, args) {
+  return new Promise(resolve => {
+    client[requestType](...args, packet => resolve(packet));
+  });
 }
 
 /**
