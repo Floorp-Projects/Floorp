@@ -8,6 +8,7 @@
 #define mozilla_logging_h
 
 #include <string.h>
+#include <stdarg.h>
 
 #include "prlog.h"
 
