@@ -24,10 +24,9 @@ sys.path.insert(0, os.path.abspath(os.pardir))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 
 # Add any paths that contain templates here, relative to this directory.
-## FIXME: disabled for now because I haven't figured out how to use this:
 #templates_path = ['_templates']
 
 # The suffix of source filenames.
@@ -73,6 +72,11 @@ unused_docs = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+
+extlinks = {
+    'issue': ('https://github.com/pypa/virtualenv/issues/%s', '#'),
+    'pull': ('https://github.com/pypa/virtualenv/pull/%s', 'PR #'),
+}
 
 
 # Options for HTML output
