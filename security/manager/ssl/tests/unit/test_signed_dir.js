@@ -77,7 +77,7 @@ function verifyDirAsync(name, expectedRv, tamper) {
 //
 
 add_test(function() {
-  verifyDirAsync("'valid'", Cr.NS_OK, {} /* no tampering */ );
+  verifyDirAsync("'valid'", Cr.NS_OK, {} /* no tampering */);
 });
 
 add_test(function() {
