@@ -53,6 +53,19 @@ removeAllRtpMaps: function(sdp) {
   return sdp.replace(/a=rtpmap:.*\r\n/g, "");
 },
 
+transferSimulcastProperties: function(offer_sdp, answer_sdp) {
+  if (!offer_sdp.includes("a=simulcast:")) {
+    return answer_sdp;
+  }
+  var o_simul = offer_sdp.match(/simulcast: send rid=(.*)([\n$])*/i);
+  var o_rids = offer_sdp.match(/a=rid:(.*)/ig);
+  var new_answer_sdp = answer_sdp + "a=simulcast: recv rid=" + o_simul[1] + "\r\n";
+  o_rids.forEach((o_rid) => {
+    new_answer_sdp = new_answer_sdp + o_rid.replace(/send/, "recv") + "\r\n";
+  });
+  return new_answer_sdp;
+},
+
 verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
                     testOptions) {
   info("Examining this SessionDescription: " + JSON.stringify(desc));

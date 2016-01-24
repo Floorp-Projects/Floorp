@@ -93,6 +93,7 @@ public:
 
 private:
   virtual ~EventTokenBucket();
+  void CleanupTimers();
 
   friend class RunNotifyEvent;
   friend class SetTimerEvent;

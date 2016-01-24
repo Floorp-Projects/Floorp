@@ -10,11 +10,6 @@ var userAgentID = '5ab1d1df-7a3d-4024-a469-b9e1bb399fad';
 function run_test() {
   do_get_profile();
   setPrefs({userAgentID});
-  disableServiceWorkerEvents(
-    'https://example.org/1',
-    'https://example.org/2',
-    'https://example.org/3'
-  );
   run_next_test();
 }
 
@@ -28,6 +23,7 @@ add_task(function* test_notification_ack() {
     originAttributes: '',
     version: 1,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: '9a5ff87f-47c9-4215-b2b8-0bdd38b4b305',
     pushEndpoint: 'https://example.com/update/2',
@@ -35,6 +31,7 @@ add_task(function* test_notification_ack() {
     originAttributes: '',
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: '5477bfda-22db-45d4-9614-fee369630260',
     pushEndpoint: 'https://example.com/update/3',
@@ -42,16 +39,15 @@ add_task(function* test_notification_ack() {
     originAttributes: '',
     version: 3,
     quota: Infinity,
+    systemRecord: true,
   }];
   for (let record of records) {
     yield db.put(record);
   }
 
-  let notifyPromise = Promise.all([
-    promiseObserverNotification('push-notification'),
-    promiseObserverNotification('push-notification'),
-    promiseObserverNotification('push-notification')
-  ]);
+  let notifyCount = 0;
+  let notifyPromise = promiseObserverNotification('push-message', () =>
+    ++notifyCount == 3);
 
   let acks = 0;
   let ackDone;

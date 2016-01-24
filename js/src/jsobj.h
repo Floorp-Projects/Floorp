@@ -527,8 +527,8 @@ class JSObject : public js::gc::Cell
      *
      * These XObject classes form a hierarchy. For example, for a cloned block
      * object, the following predicates are true: is<ClonedBlockObject>,
-     * is<BlockObject>, is<NestedScopeObject> and is<ScopeObject>. Each of
-     * these has a respective class that derives and adds operations.
+     * is<NestedScopeObject> and is<ScopeObject>. Each of these has a
+     * respective class that derives and adds operations.
      *
      * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
      * triplet (along with any class YObject that derives XObject).

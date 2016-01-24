@@ -293,7 +293,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
             enclosing = callerScript->innermostStaticScope(pc);
         else
             enclosing = &cx->global()->lexicalScope().staticBlock();
-        Rooted<StaticEvalObject*> staticScope(cx, StaticEvalObject::create(cx, enclosing));
+        Rooted<StaticEvalScope*> staticScope(cx, StaticEvalScope::create(cx, enclosing));
         if (!staticScope)
             return false;
 
@@ -335,13 +335,13 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
 
 bool
 js::DirectEvalStringFromIon(JSContext* cx,
-                            HandleObject scopeobj, HandleScript callerScript,
+                            HandleObject scopeObj, HandleScript callerScript,
                             HandleValue newTargetValue, HandleString str,
                             jsbytecode* pc, MutableHandleValue vp)
 {
-    AssertInnerizedScopeChain(cx, *scopeobj);
+    AssertInnerizedScopeChain(cx, *scopeObj);
 
-    Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeobj->global());
+    Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeObj->global());
     if (!GlobalObject::isRuntimeCodeGenEnabled(cx, scopeObjGlobal)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
@@ -375,7 +375,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
             introducerFilename = maybeScript->scriptSource()->introducerFilename();
 
         RootedObject enclosing(cx, callerScript->innermostStaticScope(pc));
-        Rooted<StaticEvalObject*> staticScope(cx, StaticEvalObject::create(cx, enclosing));
+        Rooted<StaticEvalScope*> staticScope(cx, StaticEvalScope::create(cx, enclosing));
         if (!staticScope)
             return false;
 
@@ -398,7 +398,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, staticScope, callerScript,
+                                                     scopeObj, staticScope, callerScript,
                                                      options, srcBuf, linearStr);
         if (!compiled)
             return false;
@@ -409,7 +409,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         esg.setNewScript(compiled);
     }
 
-    return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetValue,
+    return ExecuteKernel(cx, esg.script(), *scopeObj, newTargetValue,
                          NullFramePtr() /* evalInFrame */, vp.address());
 }
 
@@ -458,8 +458,8 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     RootedScript script(cx, scriptArg);
     Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
     if (script->compartment() != cx->compartment()) {
-        Rooted<ScopeObject*> staticScope(cx, &globalRoot->lexicalScope().staticBlock());
-        staticScope = StaticNonSyntacticScopeObjects::create(cx, staticScope);
+        Rooted<StaticScope*> staticScope(cx, &globalRoot->lexicalScope().staticBlock());
+        staticScope = StaticNonSyntacticScope::create(cx, staticScope);
         if (!staticScope)
             return false;
         script = CloneGlobalScript(cx, staticScope, script);

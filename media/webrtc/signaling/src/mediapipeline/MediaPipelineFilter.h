@@ -56,7 +56,6 @@ class MediaPipelineFilter {
   // payload types too.
   bool FilterSenderReport(const unsigned char* data, size_t len) const;
 
-  void AddLocalSSRC(uint32_t ssrc);
   void AddRemoteSSRC(uint32_t ssrc);
 
   // When a payload type id is unique to our media section, add it here.
@@ -78,7 +77,6 @@ class MediaPipelineFilter {
   // The number of filters we manage here is quite small, so I am optimizing
   // for readability.
   std::set<uint32_t> remote_ssrc_set_;
-  std::set<uint32_t> local_ssrc_set_;
   std::set<uint8_t> payload_type_set_;
 };
 

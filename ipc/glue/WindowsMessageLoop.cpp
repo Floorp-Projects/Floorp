@@ -501,24 +501,26 @@ CreateWindowAHook(LPCSTR aClassName, LPCSTR aWindowName, DWORD aStyle, int aX,
 void
 InitCreateWindowHook()
 {
+  // Forcing these interceptions to be detours due to conflicts with
+  // NVIDIA Optimus DLLs that are injected into our process.
   sUser32Interceptor.Init("user32.dll");
   if (!sCreateWindowExWStub) {
-    sUser32Interceptor.AddHook("CreateWindowExW",
+    sUser32Interceptor.AddDetour("CreateWindowExW",
                                reinterpret_cast<intptr_t>(CreateWindowExWHook),
                                (void**) &sCreateWindowExWStub);
   }
   if (!sCreateWindowExAStub) {
-    sUser32Interceptor.AddHook("CreateWindowExA",
+    sUser32Interceptor.AddDetour("CreateWindowExA",
                                reinterpret_cast<intptr_t>(CreateWindowExAHook),
                                (void**) &sCreateWindowExAStub);
   }
   if (!sCreateWindowWStub) {
-    sUser32Interceptor.AddHook("CreateWindowW",
+    sUser32Interceptor.AddDetour("CreateWindowW",
                                reinterpret_cast<intptr_t>(CreateWindowWHook),
                                (void**) &sCreateWindowWStub);
   }
   if (!sCreateWindowAStub) {
-    sUser32Interceptor.AddHook("CreateWindowA",
+    sUser32Interceptor.AddDetour("CreateWindowA",
                                reinterpret_cast<intptr_t>(CreateWindowAHook),
                                (void**) &sCreateWindowAStub);
   }

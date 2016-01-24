@@ -821,22 +821,6 @@ AbortGC(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-ValidateGC(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() != 1) {
-        RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return false;
-    }
-
-    cx->runtime()->gc.setValidate(ToBoolean(args[0]));
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 FullCompartmentChecks(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3360,10 +3344,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("abortgc", AbortGC, 1, 0,
 "abortgc()",
 "  Abort the current incremental GC."),
-
-    JS_FN_HELP("validategc", ValidateGC, 1, 0,
-"validategc(true|false)",
-"  If true, a separate validation step is performed after an incremental GC."),
 
     JS_FN_HELP("fullcompartmentchecks", FullCompartmentChecks, 1, 0,
 "fullcompartmentchecks(true|false)",

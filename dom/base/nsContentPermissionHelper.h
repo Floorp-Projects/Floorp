@@ -21,6 +21,7 @@
 
 class nsPIDOMWindow;
 class nsContentPermissionRequestProxy;
+class VisibilityChangeListener;
 
 // Forward declare IPC::Principal here which is defined in
 // PermissionMessageUtils.h. Include this file will transitively includes
@@ -31,25 +32,6 @@ class nsContentPermissionRequestProxy;
 namespace IPC {
 class Principal;
 } // namespace IPC
-
-class VisibilityChangeListener final : public nsIDOMEventListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-
-  explicit VisibilityChangeListener(nsPIDOMWindow* aWindow);
-
-  void RemoveListener();
-  void SetCallback(nsIContentPermissionRequestCallback* aCallback);
-  already_AddRefed<nsIContentPermissionRequestCallback> GetCallback();
-
-private:
-  virtual ~VisibilityChangeListener() {}
-
-  nsWeakPtr mWindow;
-  nsCOMPtr<nsIContentPermissionRequestCallback> mCallback;
-};
 
 namespace mozilla {
 namespace dom {
@@ -216,10 +198,7 @@ public:
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
 
 private:
-  virtual ~RemotePermissionRequest()
-  {
-    MOZ_ASSERT(!mIPCOpen, "Protocol must not be open when RemotePermissionRequest is destroyed.");
-  }
+  virtual ~RemotePermissionRequest();
 
   void DoAllow(JS::HandleValue aChoices);
   void DoCancel();

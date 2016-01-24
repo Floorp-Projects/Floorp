@@ -1,17 +1,17 @@
 {
   "name": "webidl2",
   "description": "A WebIDL Parser",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "author": "Robin Berjon <robin@berjon.com>",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "mocha": "2.1.0",
+    "mocha": "2.2.5",
     "expect.js": "0.3.1",
-    "underscore": "1.7.0",
-    "jsondiffpatch": "0.1.27",
+    "underscore": "1.8.3",
+    "jsondiffpatch": "0.1.31",
     "benchmark": "*",
-    "microtime": "1.1.0"
+    "microtime": "1.4.2"
   },
   "scripts": {
     "test": "mocha"

@@ -168,7 +168,7 @@ class TypedObjectPrediction {
 
     ScalarTypeDescr::Type scalarType() const;
     ReferenceTypeDescr::Type referenceType() const;
-    SimdTypeDescr::Type simdType() const;
+    SimdType simdType() const;
 
     ///////////////////////////////////////////////////////////////////////////
     // Queries valid only for arrays.

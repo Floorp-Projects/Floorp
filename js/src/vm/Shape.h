@@ -110,7 +110,7 @@
 namespace js {
 
 class Bindings;
-class StaticBlockObject;
+class StaticBlockScope;
 class TenuringTracer;
 
 typedef JSGetterOp GetterOp;
@@ -532,7 +532,7 @@ class Shape : public gc::TenuredCell
     friend class Bindings;
     friend class NativeObject;
     friend class PropertyTree;
-    friend class StaticBlockObject;
+    friend class StaticBlockScope;
     friend class TenuringTracer;
     friend struct StackBaseShape;
     friend struct StackShape;

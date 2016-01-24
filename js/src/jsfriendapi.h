@@ -243,6 +243,13 @@ namespace JS {
 extern JS_FRIEND_API(char*)
 FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bool showThisProps);
 
+/**
+ * Set all of the uninitialized lexicals on an object to undefined. Return
+ * true if any lexicals were initialized and false otherwise.
+ * */
+extern JS_FRIEND_API(bool)
+ForceLexicalInitialization(JSContext *cx, HandleObject obj);
+
 } // namespace JS
 
 /**

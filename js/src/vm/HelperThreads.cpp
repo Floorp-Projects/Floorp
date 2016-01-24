@@ -1401,7 +1401,7 @@ HelperThread::handleParseWorkload()
         // ! WARNING WARNING WARNING !
         ExclusiveContext* parseCx = task->cx;
         Rooted<ClonedBlockObject*> globalLexical(parseCx, &parseCx->global()->lexicalScope());
-        Rooted<ScopeObject*> staticScope(parseCx, &globalLexical->staticBlock());
+        Rooted<StaticScope*> staticScope(parseCx, &globalLexical->staticBlock());
         task->script = frontend::CompileScript(parseCx, &task->alloc,
                                                globalLexical, staticScope, nullptr,
                                                task->options, srcBuf,

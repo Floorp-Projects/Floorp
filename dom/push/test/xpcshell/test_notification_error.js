@@ -12,11 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID: userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.com/a',
-    'https://example.com/b',
-    'https://example.com/c'
-  );
   run_next_test();
 }
 
@@ -32,6 +27,7 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 1,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: '3c3930ba-44de-40dc-a7ca-8a133ec1a866',
     pushEndpoint: 'https://example.org/update/error',
@@ -39,6 +35,7 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: 'b63f7bef-0a0d-4236-b41e-086a69dfd316',
     pushEndpoint: 'https://example.org/update/success-2',
@@ -46,21 +43,15 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 3,
     quota: Infinity,
+    systemRecord: true,
   }];
   for (let record of records) {
     yield db.put(record);
   }
 
-  let notifyPromise = Promise.all([
-    promiseObserverNotification(
-      'push-notification',
-      (subject, data) => data == 'https://example.com/a'
-    ),
-    promiseObserverNotification(
-      'push-notification',
-      (subject, data) => data == 'https://example.com/c'
-    )
-  ]);
+  let scopes = [];
+  let notifyPromise = promiseObserverNotification('push-message', (subject, data) =>
+    scopes.push(data) == 2);
 
   let ackDone;
   let ackPromise = new Promise(resolve => ackDone = after(records.length, resolve));
@@ -96,20 +87,15 @@ add_task(function* test_notification_error() {
     }
   });
 
-  let [a, c] = yield waitForPromise(
+  yield waitForPromise(
     notifyPromise,
     DEFAULT_TIMEOUT,
     'Timed out waiting for notifications'
   );
-  let aPush = a.subject.QueryInterface(Ci.nsIPushObserverNotification);
-  equal(aPush.pushEndpoint, 'https://example.org/update/success-1',
-    'Wrong endpoint for notification A');
-  equal(aPush.version, 2, 'Wrong version for notification A');
-
-  let cPush = c.subject.QueryInterface(Ci.nsIPushObserverNotification);
-  equal(cPush.pushEndpoint, 'https://example.org/update/success-2',
-    'Wrong endpoint for notification C');
-  equal(cPush.version, 4, 'Wrong version for notification C');
+  ok(scopes.includes('https://example.com/a'),
+    'Missing scope for notification A');
+  ok(scopes.includes('https://example.com/c'),
+    'Missing scope for notification C');
 
   yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for acknowledgements');

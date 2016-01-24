@@ -6,8 +6,8 @@ config = {
             "ssl-only": False,
             "add-locales": False,  # Do not add locales to let "multi" work
             "paths": {
-                "android-api-11": {
-                    "path": "/mobile/releases/%(version)s/android-api-11/:lang/fennec-%(version)s.:lang.android-arm.apk",
+                "android-api-15": {
+                    "path": "/mobile/releases/%(version)s/android-api-15/:lang/fennec-%(version)s.:lang.android-arm.apk",
                     "bouncer-platform": "android",
                 },
                 "android-api-9": {

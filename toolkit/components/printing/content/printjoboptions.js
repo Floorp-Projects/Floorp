@@ -232,7 +232,6 @@ function createPaperSizeList(selectedInx)
 //---------------------------------------------------
 function loadDialog()
 {
-  var print_paper_type       = 0;
   var print_paper_unit       = 0;
   var print_paper_width      = 0.0;
   var print_paper_height     = 0.0;
@@ -243,7 +242,6 @@ function loadDialog()
   gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
   if (gPrintSettings) {
-    print_paper_type       = gPrintSettings.paperSizeType;
     print_paper_unit       = gPrintSettings.paperSizeUnit;
     print_paper_width      = gPrintSettings.paperWidth;
     print_paper_height     = gPrintSettings.paperHeight;
@@ -353,7 +351,6 @@ function onLoad()
 //---------------------------------------------------
 function onAccept()
 {
-  var print_paper_type        = gPrintSettingsInterface.kPaperSizeDefined;
   var print_paper_unit        = gPrintSettingsInterface.kPaperSizeInches;
   var print_paper_width       = 0.0;
   var print_paper_height      = 0.0;
@@ -370,7 +367,6 @@ function onAccept()
     print_paper_height     = gPaperArray[paperSelectedInx].height;
     print_paper_name       = gPaperArray[paperSelectedInx].name;
 
-    gPrintSettings.paperSizeType   = print_paper_type;
     gPrintSettings.paperSizeUnit   = print_paper_unit;
     gPrintSettings.paperWidth      = print_paper_width;
     gPrintSettings.paperHeight     = print_paper_height;
@@ -387,7 +383,6 @@ function onAccept()
 
     if (doDebug) {
       dump("onAccept******************************\n");
-      dump("paperSizeType    "+print_paper_type+" (should be 1)\n");
       dump("paperSizeUnit    "+print_paper_unit+"\n");
       dump("paperWidth       "+print_paper_width+"\n");
       dump("paperHeight      "+print_paper_height+"\n");

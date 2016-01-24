@@ -158,6 +158,9 @@ public:
   static void UnlinkGhostWindows();
 #endif
 
+  static nsWindowMemoryReporter* Get();
+  void ObserveDOMWindowDetached(nsGlobalWindow* aWindow);
+
 private:
   ~nsWindowMemoryReporter();
 
@@ -199,7 +202,6 @@ private:
    */
   uint32_t GetGhostTimeout();
 
-  void ObserveDOMWindowDetached(nsISupports* aWindow);
   void ObserveAfterMinimizeMemoryUsage();
 
   /**

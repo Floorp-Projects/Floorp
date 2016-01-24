@@ -53,7 +53,7 @@ BaselineFrame::replaceInnermostScope(ScopeObject& scope)
 }
 
 inline bool
-BaselineFrame::pushBlock(JSContext* cx, Handle<StaticBlockObject*> block)
+BaselineFrame::pushBlock(JSContext* cx, Handle<StaticBlockScope*> block)
 {
     MOZ_ASSERT(block->needsClone());
 

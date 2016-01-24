@@ -14,8 +14,8 @@
 "unpack": true
 },
 {
-"size": 193213220,
-"digest": "58b8ebd8de923117831dcbba71172a53e26c25bd16c2b2bb363a1254f2cd4e87f95e2c5f41e2dce10e18e43a17e0a395637c9ddcbf1e27673582792f9095c62e",
+"size": 80164520,
+"digest": "26fd5301aaf6174a0e4f2ac3a8d19f39573f78a051aa78e876c065d60421b2b62207c11fbf1f20f92ba61acc4b9ce58d05409bf5af886943891b04c3d22f5e04",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true

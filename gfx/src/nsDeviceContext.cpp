@@ -680,38 +680,13 @@ nsDeviceContext::CalcPrintingSize()
         return (mWidth > 0 && mHeight > 0);
     }
 
-    bool inPoints = true;
-
-    gfxSize size(0, 0);
-    switch (mPrintingSurface->GetType()) {
-#ifdef XP_WIN
-    case gfxSurfaceType::Win32Printing:
-        {
-            inPoints = false;
-            HDC dc = reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
-            if (!dc)
-                dc = GetDC((HWND)mWidget->GetNativeData(NS_NATIVE_WIDGET));
-            size.width = NSFloatPixelsToAppUnits(::GetDeviceCaps(dc, HORZRES)/mPrintingScale, AppUnitsPerDevPixel());
-            size.height = NSFloatPixelsToAppUnits(::GetDeviceCaps(dc, VERTRES)/mPrintingScale, AppUnitsPerDevPixel());
-            mDepth = (uint32_t)::GetDeviceCaps(dc, BITSPIXEL);
-            if (dc != reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC())
-                ReleaseDC((HWND)mWidget->GetNativeData(NS_NATIVE_WIDGET), dc);
-            break;
-        }
-#endif
-    default:
-        size = mPrintingSurface->GetSize();
-    }
-
-    if (inPoints) {
-        // For printing, CSS inches and physical inches are identical
-        // so it doesn't matter which we use here
-        mWidth = NSToCoordRound(float(size.width) * AppUnitsPerPhysicalInch() / 72);
-        mHeight = NSToCoordRound(float(size.height) * AppUnitsPerPhysicalInch() / 72);
-    } else {
-        mWidth = NSToIntRound(size.width);
-        mHeight = NSToIntRound(size.height);
-    }
+    gfxSize size = mPrintingSurface->GetSize();
+    // For printing, CSS inches and physical inches are identical
+    // so it doesn't matter which we use here
+    mWidth = NSToCoordRound(size.width * AppUnitsPerPhysicalInch()
+                            / POINTS_PER_INCH_FLOAT);
+    mHeight = NSToCoordRound(size.height * AppUnitsPerPhysicalInch()
+                             / POINTS_PER_INCH_FLOAT);
 
     return (mWidth > 0 && mHeight > 0);
 }
