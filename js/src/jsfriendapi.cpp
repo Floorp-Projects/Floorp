@@ -924,6 +924,28 @@ JS::FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bo
     return buf;
 }
 
+extern JS_FRIEND_API(bool)
+JS::ForceLexicalInitialization(JSContext *cx, HandleObject obj)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    bool initializedAny = false;
+    NativeObject* nobj = &obj->as<NativeObject>();
+
+    for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
+        Shape* s = &r.front();
+        Value v = nobj->getSlot(s->slot());
+        if (s->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+            nobj->setSlot(s->slot(), UndefinedValue());
+            initializedAny = true;
+        }
+
+    }
+    return initializedAny;
+}
+
 struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 {
     const char* prefix;

@@ -5,18 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FFVPXRuntimeLinker.h"
-#include "FFmpegRuntimeLinker.h"
+#include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
-#include "mozilla/Types.h"
 #include "nsIFile.h"
 #include "nsXPCOMPrivate.h" // for XUL_DLL
 #include "prmem.h"
 #include "prlink.h"
-
-#if defined(XP_WIN)
-#include "libavcodec/avcodec.h"
-#include "libavutil/avutil.h"
-#endif
 
 namespace mozilla
 {
@@ -24,27 +18,13 @@ namespace mozilla
 template <int V> class FFmpegDecoderModule
 {
 public:
-  static already_AddRefed<PlatformDecoderModule> Create();
+  static already_AddRefed<PlatformDecoderModule> Create(FFmpegLibWrapper*);
 };
 
-namespace ffvpx
-{
+static FFmpegLibWrapper sFFVPXLib;
 
 FFVPXRuntimeLinker::LinkStatus FFVPXRuntimeLinker::sLinkStatus =
   LinkStatus_INIT;
-
-PRLibrary* FFVPXRuntimeLinker::sLinkedLib = nullptr;
-PRLibrary* FFVPXRuntimeLinker::sLinkedUtilLib = nullptr;
-static unsigned (*avcodec_version)() = nullptr;
-
-#ifdef __GNUC__
-#define AV_FUNC(func, ver) void (*func)();
-#define LIBAVCODEC_ALLVERSION
-#else
-#define AV_FUNC(func, ver) decltype(func)* func;
-#endif
-#include "FFmpegFunctionList.h"
-#undef AV_FUNC
 
 static PRLibrary*
 MozAVLink(const char* aName)
@@ -56,7 +36,7 @@ MozAVLink(const char* aName)
 }
 
 /* static */ bool
-FFVPXRuntimeLinker::Link()
+FFVPXRuntimeLinker::Init()
 {
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
@@ -67,7 +47,7 @@ FFVPXRuntimeLinker::Link()
   // We retrieve the path of the XUL library as this is where mozavcodec and
   // mozavutil libs are located.
   char* path =
-    PR_GetLibraryFilePathname(XUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Link);
+    PR_GetLibraryFilePathname(XUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Init);
   if (!path) {
     return false;
   }
@@ -94,69 +74,29 @@ FFVPXRuntimeLinker::Link()
   if (!libname) {
     return false;
   }
-  sLinkedUtilLib = MozAVLink(libname);
+  sFFVPXLib.mAVUtilLib = MozAVLink(libname);
   PR_FreeLibraryName(libname);
   libname = PR_GetLibraryName(rootPath.get(), "mozavcodec");
   if (libname) {
-    sLinkedLib = MozAVLink(libname);
+    sFFVPXLib.mAVCodecLib = MozAVLink(libname);
     PR_FreeLibraryName(libname);
-    if (sLinkedLib && sLinkedUtilLib) {
-      if (Bind("mozavcodec")) {
-        sLinkStatus = LinkStatus_SUCCEEDED;
-        return true;
-      }
-    }
   }
-
-  Unlink();
-
+  if (sFFVPXLib.Link()) {
+    sLinkStatus = LinkStatus_SUCCEEDED;
+    return true;
+  }
   sLinkStatus = LinkStatus_FAILED;
+
   return false;
-}
-
-/* static */ bool
-FFVPXRuntimeLinker::Bind(const char* aLibName)
-{
-  int version = AV_FUNC_57;
-
-#define AV_FUNC(func, ver)                                                     \
-  if ((ver) & version) {                                                       \
-    if (!(func = (decltype(func))PR_FindSymbol(((ver) & AV_FUNC_AVUTIL_MASK) ? sLinkedUtilLib : sLinkedLib, #func))) { \
-      FFMPEG_LOG("Couldn't load function " #func " from %s.", aLibName);       \
-      return false;                                                            \
-    }                                                                          \
-  } else {                                                                     \
-    func = (decltype(func))nullptr;                                            \
-  }
-#include "FFmpegFunctionList.h"
-#undef AV_FUNC
-  return true;
 }
 
 /* static */ already_AddRefed<PlatformDecoderModule>
 FFVPXRuntimeLinker::CreateDecoderModule()
 {
-  if (!Link()) {
+  if (!Init()) {
     return nullptr;
   }
-  return FFmpegDecoderModule<FFVPX_VERSION>::Create();
+  return FFmpegDecoderModule<FFVPX_VERSION>::Create(&sFFVPXLib);
 }
 
-/* static */ void
-FFVPXRuntimeLinker::Unlink()
-{
-  if (sLinkedUtilLib && sLinkedUtilLib != sLinkedLib) {
-    PR_UnloadLibrary(sLinkedUtilLib);
-  }
-  if (sLinkedLib) {
-    PR_UnloadLibrary(sLinkedLib);
-    sLinkedLib = nullptr;
-    sLinkStatus = LinkStatus_INIT;
-    avcodec_version = nullptr;
-  }
-  sLinkedUtilLib = nullptr;
-}
-
-#undef LIBAVCODEC_ALLVERSION
-} // namespace ffvpx
 } // namespace mozilla

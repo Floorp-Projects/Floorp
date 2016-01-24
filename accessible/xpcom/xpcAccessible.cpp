@@ -346,7 +346,7 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
   *aX = rect.x;
   *aY = rect.y;
   *aWidth = rect.width;
-  *aHeight = rect.height;;
+  *aHeight = rect.height;
 
   return NS_OK;
 }

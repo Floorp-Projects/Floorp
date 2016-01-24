@@ -13,19 +13,6 @@
 namespace js {
 namespace jit {
 
-static SimdTypeDescr::Type
-MIRTypeToSimdTypeDescr(MIRType type)
-{
-    MOZ_ASSERT(IsSimdType(type));
-    switch (type) {
-      case MIRType_Float32x4:   return SimdTypeDescr::Float32x4;
-      case MIRType_Int32x4:     return SimdTypeDescr::Int32x4;
-      case MIRType_Bool32x4:    return SimdTypeDescr::Bool32x4;
-      default:                  break;
-    }
-    MOZ_CRASH("unexpected MIRType");
-}
-
 // Do not optimize any Phi instruction which has conflicting Unbox operations,
 // as this might imply some intended polymorphism.
 static bool
@@ -36,7 +23,7 @@ CanUnboxSimdPhi(const JitCompartment* jitCompartment, MPhi* phi, MIRType unboxTy
     // If we are unboxing, we are more than likely to have boxed this SIMD type
     // once in baseline, otherwise, we cannot create a MSimdBox as we have no
     // template object to use.
-    if (!jitCompartment->maybeGetSimdTemplateObjectFor(MIRTypeToSimdTypeDescr(unboxType)))
+    if (!jitCompartment->maybeGetSimdTemplateObjectFor(MIRTypeToSimdType(unboxType)))
         return false;
 
     MResumePoint* entry = phi->block()->entryResumePoint();
@@ -82,7 +69,7 @@ UnboxSimdPhi(const JitCompartment* jitCompartment, MIRGraph& graph, MPhi* phi, M
 
     // Add a MSimdBox, and replace all the Phi uses with it.
     JSObject* templateObject =
-        jitCompartment->maybeGetSimdTemplateObjectFor(MIRTypeToSimdTypeDescr(unboxType));
+        jitCompartment->maybeGetSimdTemplateObjectFor(MIRTypeToSimdType(unboxType));
     InlineTypedObject* inlineTypedObject = &templateObject->as<InlineTypedObject>();
     MSimdBox* recoverBox = MSimdBox::New(alloc, nullptr, phi, inlineTypedObject, gc::DefaultHeap);
     recoverBox->setRecoveredOnBailout();

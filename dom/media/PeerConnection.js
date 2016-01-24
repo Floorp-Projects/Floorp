@@ -1108,6 +1108,10 @@ RTCPeerConnection.prototype = {
     return this._receivers;
   },
 
+  mozSelectSsrc: function(receiver, ssrcIndex) {
+    this._impl.selectSsrc(receiver.track, ssrcIndex);
+  },
+
   get localDescription() {
     this._checkClosed();
     let sdp = this._impl.localDescription;

@@ -412,32 +412,41 @@ js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
  * Note: these are partially defined in SIMD.cpp
  */
 
+SimdType
+SimdTypeDescr::type() const {
+    uint32_t t = uint32_t(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
+    MOZ_ASSERT(t < uint32_t(SimdType::Count));
+    return SimdType(t);
+}
+
 int32_t
-SimdTypeDescr::size(Type t)
+SimdTypeDescr::size(SimdType t)
 {
-    MOZ_ASSERT(unsigned(t) <= SimdTypeDescr::Type::LAST_TYPE);
+    MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
     switch (t) {
-      case SimdTypeDescr::Int8x16:
-      case SimdTypeDescr::Int16x8:
-      case SimdTypeDescr::Int32x4:
-      case SimdTypeDescr::Uint8x16:
-      case SimdTypeDescr::Uint16x8:
-      case SimdTypeDescr::Uint32x4:
-      case SimdTypeDescr::Float32x4:
-      case SimdTypeDescr::Float64x2:
-      case SimdTypeDescr::Bool8x16:
-      case SimdTypeDescr::Bool16x8:
-      case SimdTypeDescr::Bool32x4:
-      case SimdTypeDescr::Bool64x2:
+      case SimdType::Int8x16:
+      case SimdType::Int16x8:
+      case SimdType::Int32x4:
+      case SimdType::Uint8x16:
+      case SimdType::Uint16x8:
+      case SimdType::Uint32x4:
+      case SimdType::Float32x4:
+      case SimdType::Float64x2:
+      case SimdType::Bool8x16:
+      case SimdType::Bool16x8:
+      case SimdType::Bool32x4:
+      case SimdType::Bool64x2:
         return 16;
+      case SimdType::Count:
+        break;
     }
     MOZ_CRASH("unexpected SIMD type");
 }
 
 int32_t
-SimdTypeDescr::alignment(Type t)
+SimdTypeDescr::alignment(SimdType t)
 {
-    MOZ_ASSERT(unsigned(t) <= SimdTypeDescr::Type::LAST_TYPE);
+    MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
     return size(t);
 }
 

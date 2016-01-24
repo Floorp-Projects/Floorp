@@ -32,7 +32,6 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId) override;
-    nsresult Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t) override;
     bool IsFake() override;
     dom::MediaSourceEnum GetMediaSource() const override {
       return dom::MediaSourceEnum::Browser;

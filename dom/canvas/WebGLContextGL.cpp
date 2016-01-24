@@ -1324,8 +1324,7 @@ IsFormatAndTypeUnpackable(GLenum format, GLenum type, bool isWebGL2)
         switch (format) {
         case LOCAL_GL_LUMINANCE:
         case LOCAL_GL_LUMINANCE_ALPHA:
-            if (!isWebGL2)
-                return false;
+            return isWebGL2;
         case LOCAL_GL_ALPHA:
         case LOCAL_GL_RED:
         case LOCAL_GL_RED_INTEGER:

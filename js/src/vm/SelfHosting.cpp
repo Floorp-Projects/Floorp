@@ -1652,11 +1652,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("std_SIMD_Int8x16_extractLane",        simd_int8x16_extractLane,     2,0),
     JS_FN("std_SIMD_Int16x8_extractLane",        simd_int16x8_extractLane,     2,0),
-    JS_INLINABLE_FN("std_SIMD_Int32x4_extractLane",   simd_int32x4_extractLane,  2,0, SimdInt32x4),
+    JS_INLINABLE_FN("std_SIMD_Int32x4_extractLane",   simd_int32x4_extractLane,  2,0, SimdInt32x4_extractLane),
     JS_FN("std_SIMD_Uint8x16_extractLane",       simd_uint8x16_extractLane,    2,0),
     JS_FN("std_SIMD_Uint16x8_extractLane",       simd_uint16x8_extractLane,    2,0),
     JS_FN("std_SIMD_Uint32x4_extractLane",       simd_uint32x4_extractLane,    2,0),
-    JS_INLINABLE_FN("std_SIMD_Float32x4_extractLane", simd_float32x4_extractLane,2,0, SimdFloat32x4),
+    JS_INLINABLE_FN("std_SIMD_Float32x4_extractLane", simd_float32x4_extractLane,2,0, SimdFloat32x4_extractLane),
     JS_FN("std_SIMD_Float64x2_extractLane",      simd_float64x2_extractLane,   2,0),
     JS_FN("std_SIMD_Bool8x16_extractLane",       simd_bool8x16_extractLane,    2,0),
     JS_FN("std_SIMD_Bool16x8_extractLane",       simd_bool16x8_extractLane,    2,0),
@@ -2326,7 +2326,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     // global lexical scope on the scope chain is for uniformity and engine
     // invariants.
     MOZ_ASSERT(IsStaticGlobalLexicalScope(sourceScript->enclosingStaticScope()));
-    Rooted<ScopeObject*> enclosingScope(cx, &cx->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> enclosingScope(cx, &cx->global()->lexicalScope().staticBlock());
     if (!CloneScriptIntoFunction(cx, enclosingScope, targetFun, sourceScript))
         return false;
     MOZ_ASSERT(!targetFun->isInterpretedLazy());

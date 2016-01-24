@@ -11,6 +11,7 @@ var prefs;
 var tlsProfile;
 var serverURL;
 var serverPort = -1;
+var db;
 
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
@@ -36,20 +37,19 @@ function run_test() {
 
   serverURL = "https://localhost:" + serverPort;
 
-  disableServiceWorkerEvents(
-    'https://example.org/1',
-    'https://example.org/no_receiptEndpoint'
-  );
-
   run_next_test();
 }
 
-add_task(function* test_pushSubscriptionSuccess() {
+add_task(function* test_setup() {
 
-  let db = PushServiceHttp2.newPushDB();
+  db = PushServiceHttp2.newPushDB();
   do_register_cleanup(() => {
     return db.drop().then(_ => db.close());
   });
+
+});
+
+add_task(function* test_pushSubscriptionSuccess() {
 
   PushService.init({
     serverURI: serverURL + "/pushSubscriptionSuccess/subscribe",
@@ -81,15 +81,10 @@ add_task(function* test_pushSubscriptionSuccess() {
   equal(record.scope, 'https://example.org/1',
     'Wrong scope in database record');
 
-  db.drop().then(PushService.uninit());
+  PushService.uninit()
 });
 
 add_task(function* test_pushSubscriptionMissingLink2() {
-
-  let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
-    return db.drop().then(_ => db.close());
-  });
 
   PushService.init({
     serverURI: serverURL + "/pushSubscriptionMissingLink2/subscribe",

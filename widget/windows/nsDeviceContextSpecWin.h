@@ -51,16 +51,11 @@ public:
   // helper functions
   nsresult GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* aPS = nullptr);
 
-  static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
-                                              LPDEVMODEW         aDevMode);
-
 protected:
 
   void SetDeviceName(char16ptr_t aDeviceName);
   void SetDriverName(char16ptr_t aDriverName);
   void SetDevMode(LPDEVMODEW aDevMode);
-
-  void SetupPaperInfoFromSettings();
 
   virtual ~nsDeviceContextSpecWin();
 
@@ -69,7 +64,6 @@ protected:
   LPDEVMODEW mDevMode;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  RefPtr<gfxASurface> mPrintingSurface;
 };
 
 

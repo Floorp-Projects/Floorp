@@ -42,12 +42,16 @@ public:
    */
   nsPrintSettingsWin& operator=(const nsPrintSettingsWin& rhs);
 
+  NS_IMETHOD GetEffectivePageSize(double *aWidth, double *aHeight) override;
+
 protected:
   void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW *& aOutDevMode);
 
   wchar_t*      mDeviceName;
   wchar_t*      mDriverName;
   LPDEVMODEW mDevMode;
+  double mPrintableWidthInInches = 0l;
+  double mPrintableHeightInInches = 0l;
 };
 
 

@@ -57,6 +57,8 @@ private:
 
   void SaveNetworkStats(bool aEnforce);
 
+  void CloseSocket();
+
   // lock protects access to mListener;
   // so mListener is not cleared while being used/locked.
   mozilla::Mutex                       mLock;

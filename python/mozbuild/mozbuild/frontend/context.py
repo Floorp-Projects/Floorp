@@ -1445,6 +1445,26 @@ VARIABLES = {
         """List of manifest files defining Android instrumentation tests.
         """),
 
+    'MARIONETTE_LAYOUT_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """List of manifest files defining marionette-layout tests.
+        """),
+
+    'MARIONETTE_LOOP_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """List of manifest files defining marionette-loop tests.
+        """),
+
+    'MARIONETTE_UNIT_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """List of manifest files defining marionette-unit tests.
+        """),
+
+    'MARIONETTE_UPDATE_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """List of manifest files defining marionette-update tests.
+        """),
+
+    'MARIONETTE_WEBAPI_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """List of manifest files defining marionette-webapi tests.
+        """),
+
     'METRO_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list,
         """List of manifest files defining metro browser chrome tests.
         """),

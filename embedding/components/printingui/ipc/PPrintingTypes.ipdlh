@@ -51,7 +51,6 @@ struct PrintData {
   bool showPrintProgress;
 
   nsString paperName;
-  short paperSizeType;
   short paperData;
   double paperWidth;
   double paperHeight;
@@ -75,6 +74,8 @@ struct PrintData {
   /* Windows-specific things */
   nsString driverName;
   nsString deviceName;
+  double printableWidthInInches;
+  double printableHeightInInches;
   bool isFramesetDocument;
   bool isFramesetFrameSelected;
   bool isIFrameSelected;
