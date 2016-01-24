@@ -414,12 +414,11 @@ public:
   virtual MediaStream* GetCameraStream() const { return nullptr; }
 
   /**
-   * Overridden in DOMLocalMediaStreams to allow getUserMedia to pass
-   * data directly to RTCPeerConnection without going through graph queuing.
-   * Returns a bool to let us know if direct data will be delivered.
+   * Allows users to get access to media data without going through graph
+   * queuing. Returns a bool to let us know if direct data will be delivered.
    */
-  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) { return false; }
-  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) {}
+  bool AddDirectListener(MediaStreamDirectListener *aListener);
+  void RemoveDirectListener(MediaStreamDirectListener *aListener);
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
