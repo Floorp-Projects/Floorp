@@ -17,6 +17,8 @@ generated = [
 
 SOURCES += ['!%s.cpp' % stem for stem in generated]
 
+EXPORTS += ['!%s.h' % stem for stem in generated]
+
 # We'd like to add these to a future GENERATED_EXPORTS list, but for now we mark
 # them as generated here and manually install them in Makefile.in.
 GENERATED_FILES += [stem + '.h' for stem in generated]
