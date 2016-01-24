@@ -14,9 +14,6 @@ function run_test() {
     requestTimeout: 1000,
     retryBaseInterval: 150
   });
-  disableServiceWorkerEvents(
-    'https://example.net/page/timeout'
-  );
   run_next_test();
 }
 

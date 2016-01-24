@@ -666,6 +666,7 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, FILE* out, bool compileOnly)
          */
         int startline = lineno;
         typedef Vector<char, 32> CharBuffer;
+        RootedObject globalLexical(cx, &cx->global()->lexicalScope());
         CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx->runtime(), -1);
@@ -700,6 +701,17 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, FILE* out, bool compileOnly)
         {
             // Catch the error, report it, and keep going.
             JS_ReportPendingException(cx);
+        }
+        // If a let or const fail to initialize they will remain in an unusable
+        // without further intervention. This call cleans up the global scope,
+        // setting uninitialized lexicals to undefined so that they may still
+        // be used. This behavior is _only_ acceptable in the context of the repl.
+        if (JS::ForceLexicalInitialization(cx, globalLexical)) {
+            fputs("Warning: According to the standard, after the above exception,\n"
+                  "Warning: the global bindings should be permanently uninitialized.\n"
+                  "Warning: We have non-standard-ly initialized them to `undefined`"
+                  "for you.\nWarning: This nicety only happens in the JS shell.\n",
+                  stderr);
         }
     } while (!hitEOF && !sr->quitting);
 
@@ -2845,7 +2857,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     CopyChars(chars, *str);
 
-    WorkerInput* input = js_new<WorkerInput>(cx->runtime(), chars, str->length());
+    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
     if (!input) {
         ReportOutOfMemory(cx);
         return false;

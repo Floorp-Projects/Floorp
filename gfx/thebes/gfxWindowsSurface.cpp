@@ -310,6 +310,15 @@ gfxWindowsSurface::EndPage()
 const mozilla::gfx::IntSize
 gfxWindowsSurface::GetSize() const
 {
+    if (mForPrinting) {
+        // On Windows we need to use the printable area of the page.
+        float width = (::GetDeviceCaps(mDC, HORZRES) * POINTS_PER_INCH_FLOAT)
+                      / ::GetDeviceCaps(mDC, LOGPIXELSX);
+        float height = (::GetDeviceCaps(mDC, VERTRES) * POINTS_PER_INCH_FLOAT)
+                       / ::GetDeviceCaps(mDC, LOGPIXELSY);
+        return mozilla::gfx::IntSize(width, height);
+    }
+
     if (!mSurfaceValid) {
         NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
         return mozilla::gfx::IntSize(-1, -1);

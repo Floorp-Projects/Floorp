@@ -35,7 +35,6 @@ nsPrintSettings::nsPrintSettings() :
   mShowPrintProgress(true),
   mPrintPageDelay(50),
   mPaperData(0),
-  mPaperSizeType(kPaperSizeDefined),
   mPaperWidth(8.5),
   mPaperHeight(11.0),
   mPaperSizeUnit(kPaperSizeInches),
@@ -846,18 +845,6 @@ NS_IMETHODIMP nsPrintSettings::SetPaperSizeUnit(int16_t aPaperSizeUnit)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPaperSizeType(int16_t *aPaperSizeType)
-{
-  NS_ENSURE_ARG_POINTER(aPaperSizeType);
-  *aPaperSizeType = mPaperSizeType;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPaperSizeType(int16_t aPaperSizeType)
-{
-  mPaperSizeType = aPaperSizeType;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPaperData(int16_t *aPaperData)
 {
   NS_ENSURE_ARG_POINTER(aPaperData);
@@ -1028,7 +1015,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs)
   mShrinkToFit         = rhs.mShrinkToFit;
   mShowPrintProgress   = rhs.mShowPrintProgress;
   mPaperName           = rhs.mPaperName;
-  mPaperSizeType       = rhs.mPaperSizeType;
   mPaperData           = rhs.mPaperData;
   mPaperWidth          = rhs.mPaperWidth;
   mPaperHeight         = rhs.mPaperHeight;

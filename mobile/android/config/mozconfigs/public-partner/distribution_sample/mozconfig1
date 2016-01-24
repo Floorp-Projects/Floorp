@@ -1,10 +1,10 @@
-# currently a copy of mobile/android/config/mozconfigs/android-api-11/nightly
+# currently a copy of mobile/android/config/mozconfigs/android-api-15/nightly
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 ac_add_options --enable-profiling
 
 # Android
-ac_add_options --with-android-min-sdk=11
+ac_add_options --with-android-min-sdk=15
 ac_add_options --target=arm-linux-androideabi
 
 ac_add_options --with-branding=mobile/android/branding/nightly

@@ -31,3 +31,6 @@ task:
       TARGET: 'emulator-kk'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.tt'
       B2G_DEBUG: 1
+      # This setting is to offset the number of arugments passsed into docker run
+      # for https://github.com/docker/docker/issues/14203
+      DOCKER_OVERRIDE: 1

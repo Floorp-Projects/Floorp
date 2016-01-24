@@ -1,0 +1,5 @@
+exclude MANIFEST.in
+recursive-include external_media_harness *
+recursive-include external_media_tests *
+
+

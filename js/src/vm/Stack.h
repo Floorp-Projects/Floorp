@@ -43,7 +43,7 @@ class ScopeObject;
 class ScriptFrameIter;
 class SPSProfiler;
 class InterpreterFrame;
-class StaticBlockObject;
+class StaticBlockScope;
 class ClonedBlockObject;
 
 class ScopeCoordinate;
@@ -560,7 +560,7 @@ class InterpreterFrame
      * bindings per iteration of a for-loop.
      */
 
-    bool pushBlock(JSContext* cx, StaticBlockObject& block);
+    bool pushBlock(JSContext* cx, StaticBlockScope& block);
     void popBlock(JSContext* cx);
     bool freshenBlock(JSContext* cx);
 
@@ -785,9 +785,8 @@ class InterpreterFrame
     }
 
   public:
-    void mark(JSTracer* trc);
-    void markValues(JSTracer* trc, unsigned start, unsigned end);
-    void markValues(JSTracer* trc, Value* sp, jsbytecode* pc);
+    void trace(JSTracer* trc, Value* sp, jsbytecode* pc);
+    void traceValues(JSTracer* trc, unsigned start, unsigned end);
 
     // Entered Baseline/Ion from the interpreter.
     bool runningInJit() const {

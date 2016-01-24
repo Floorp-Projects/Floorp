@@ -169,23 +169,6 @@ function makeStub(target, stubs) {
 }
 
 /**
- * Disables `push` and `pushsubscriptionchange` service worker events for the
- * given scopes. These events cause crashes in xpcshell, so we disable them
- * for testing nsIPushNotificationService.
- *
- * @param {String[]} scopes A list of scope URLs.
- */
-function disableServiceWorkerEvents(...scopes) {
-  for (let scope of scopes) {
-    Services.perms.add(
-      Services.io.newURI(scope, null, null),
-      'desktop-notification',
-      Ci.nsIPermissionManager.DENY_ACTION
-    );
-  }
-}
-
-/**
  * Sets default PushService preferences. All pref names are prefixed with
  * `dom.push.`; any additional preferences will override the defaults.
  *
@@ -221,6 +204,8 @@ function setPrefs(prefs = {}) {
     'http2.reset_retry_count_after_ms': 60000,
     maxQuotaPerSubscription: 16,
     quotaUpdateDelay: 3000,
+    'testing.notifyWorkers': false,
+    'testing.notifyAllObservers': true,
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);

@@ -11,7 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "builtin/TypedObject.h"
+#include "builtin/SIMD.h"
 #include "jit/CompileInfo.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonCode.h"
@@ -234,7 +234,9 @@ class JitRuntime
         // This two-arg constructor is provided for JSRuntime::createJitRuntime,
         // where we have a JitRuntime but didn't set rt->jitRuntime_ yet.
         AutoPreventBackedgePatching(JSRuntime* rt, JitRuntime* jrt)
-          : rt_(rt), jrt_(jrt)
+          : rt_(rt),
+            jrt_(jrt),
+            prev_(false)  // silence GCC warning
         {
             MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
             if (jrt_) {
@@ -414,7 +416,7 @@ class JitCompartment
     JitCode* regExpMatcherStub_;
     JitCode* regExpTesterStub_;
 
-    mozilla::Array<ReadBarrieredObject, SimdTypeDescr::LAST_TYPE + 1> simdTemplateObjects_;
+    mozilla::EnumeratedArray<SimdType, SimdType::Count, ReadBarrieredObject> simdTemplateObjects_;
 
     JitCode* generateStringConcatStub(JSContext* cx);
     JitCode* generateRegExpMatcherStub(JSContext* cx);
@@ -428,7 +430,7 @@ class JitCompartment
         return tpl.get();
     }
 
-    JSObject* maybeGetSimdTemplateObjectFor(SimdTypeDescr::Type type) const {
+    JSObject* maybeGetSimdTemplateObjectFor(SimdType type) const {
         const ReadBarrieredObject& tpl = simdTemplateObjects_[type];
 
         // This function is used by Eager Simd Unbox phase, so we cannot use the
@@ -439,7 +441,7 @@ class JitCompartment
 
     // This function is used to call the read barrier, to mark the SIMD template
     // type as used. This function can only be called from the main thread.
-    void registerSimdTemplateObjectFor(SimdTypeDescr::Type type) {
+    void registerSimdTemplateObjectFor(SimdType type) {
         ReadBarrieredObject& tpl = simdTemplateObjects_[type];
         MOZ_ASSERT(tpl.unbarrieredGet());
         tpl.get();

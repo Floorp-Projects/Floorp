@@ -273,11 +273,7 @@ nsUDPSocket::nsUDPSocket()
 
 nsUDPSocket::~nsUDPSocket()
 {
-  if (mFD) {
-    PR_Close(mFD);
-    mFD = nullptr;
-  }
-
+  CloseSocket();
   MOZ_COUNT_DTOR(nsUDPSocket);
 }
 
@@ -520,8 +516,7 @@ nsUDPSocket::OnSocketDetached(PRFileDesc *fd)
   if (mFD)
   {
     NS_ASSERTION(mFD == fd, "wrong file descriptor");
-    PR_Close(mFD);
-    mFD = nullptr;
+    CloseSocket();
   }
   SaveNetworkStats(true);
 
@@ -676,6 +671,41 @@ fail:
 }
 
 NS_IMETHODIMP
+nsUDPSocket::Connect(const NetAddr *aAddr)
+{
+  UDPSOCKET_LOG(("nsUDPSocket::Connect [this=%p]\n", this));
+
+  NS_ENSURE_ARG(aAddr);
+
+  bool onSTSThread = false;
+  mSts->IsOnCurrentThread(&onSTSThread);
+  NS_ASSERTION(onSTSThread, "NOT ON STS THREAD");
+  if (!onSTSThread) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddr prAddr;
+  NetAddrToPRNetAddr(aAddr, &prAddr);
+
+  if (PR_Connect(mFD, &prAddr, PR_INTERVAL_NO_WAIT) != PR_SUCCESS) {
+    NS_WARNING("Cannot PR_Connect");
+    return NS_ERROR_FAILURE;
+  }
+
+  // get the resulting socket address, which may have been updated.
+  PRNetAddr addr;
+  if (PR_GetSockName(mFD, &addr) != PR_SUCCESS)
+  {
+    NS_WARNING("cannot get socket name");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRNetAddrToNetAddr(&addr, &mAddr);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUDPSocket::Close()
 {
   {
@@ -684,13 +714,10 @@ nsUDPSocket::Close()
     // has been set.  otherwise, we should just close the socket here...
     if (!mListener)
     {
-      if (mFD)
-      {
-        // Here we want to go directly with closing the socket since some tests
-        // expects this happen synchronously.
-        PR_Close(mFD);
-        mFD = nullptr;
-      }
+      // Here we want to go directly with closing the socket since some tests
+      // expects this happen synchronously.
+      CloseSocket();
+
       SaveNetworkStats(true);
       return NS_OK;
     }
@@ -745,6 +772,22 @@ nsUDPSocket::SaveNetworkStats(bool aEnforce)
     mByteWriteCount = 0;
   }
 #endif
+}
+
+void
+nsUDPSocket::CloseSocket()
+{
+  if (mFD) {
+    if (gIOService->IsNetTearingDown() &&
+        ((PR_IntervalNow() - gIOService->NetTearingDownStarted()) >
+         gSocketTransportService->MaxTimeForPrClosePref())) {
+      // If shutdown last to long, let the socket leak and do not close it.
+      UDPSOCKET_LOG(("Intentional leak"));
+    } else {
+      PR_Close(mFD);
+    }
+    mFD = nullptr;
+  }
 }
 
 NS_IMETHODIMP

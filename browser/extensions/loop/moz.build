@@ -19,6 +19,7 @@ XPCSHELL_TESTS_MANIFESTS += ['chrome/test/xpcshell/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += [
     'chrome/test/mochitest/browser.ini',
 ]
+MARIONETTE_LOOP_MANIFESTS += ['manifest.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('Loop', 'Client')

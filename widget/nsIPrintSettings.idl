@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(04dd3a01-a74e-44aa-8d49-2c30478fd7b8)]
+[scriptable, uuid(ecc5cbad-57fc-4731-b0bd-09e865bd62ad)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -223,7 +223,6 @@ interface nsIPrintSettings : nsISupports
 
   /* Additional XP Related */
   attribute wstring paperName;     /* name of paper */
-  attribute short   paperSizeType; /* use native data or is defined here */
   attribute short   paperData;     /* native data value */
   attribute double  paperWidth;    /* width of the paper in inches or mm */
   attribute double  paperHeight;   /* height of the paper in inches or mm */

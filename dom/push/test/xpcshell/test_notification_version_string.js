@@ -12,9 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID: userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.net/case'
-  );
   run_next_test();
 }
 
@@ -28,9 +25,10 @@ add_task(function* test_notification_version_string() {
     originAttributes: '',
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   });
 
-  let notifyPromise = promiseObserverNotification('push-notification');
+  let notifyPromise = promiseObserverNotification('push-message');
 
   let ackDone;
   let ackPromise = new Promise(resolve => ackDone = resolve);
@@ -64,11 +62,7 @@ add_task(function* test_notification_version_string() {
     DEFAULT_TIMEOUT,
     'Timed out waiting for string notification'
   );
-  let message = notification.QueryInterface(Ci.nsIPushObserverNotification);
-  equal(scope, 'https://example.com/page/1', 'Wrong scope');
-  equal(message.pushEndpoint, 'https://example.org/updates/1',
-    'Wrong push endpoint');
-  strictEqual(message.version, 4, 'Wrong version');
+  equal(notification, null, 'Unexpected data for Simple Push message');
 
   yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for string acknowledgement');

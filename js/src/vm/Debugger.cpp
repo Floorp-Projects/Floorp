@@ -6693,19 +6693,19 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     MOZ_ASSERT_IF(frame, pc);
 
     /*
-     * Pass in a StaticEvalObject *not* linked to env for evalStaticScope, as
+     * Pass in a StaticEvalScope *not* linked to env for evalStaticScope, as
      * ScopeIter should stop at any non-ScopeObject or non-syntactic With
      * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
      * the scope chain.
      */
-    Rooted<ScopeObject*> enclosingStaticScope(cx);
+    Rooted<StaticScope*> enclosingStaticScope(cx);
     if (!IsGlobalLexicalScope(env)) {
         // If we are doing a global evalWithBindings, we will still need to
         // link the static global lexical scope to the static non-syntactic
         // scope.
         if (IsGlobalLexicalScope(env->enclosingScope()))
             enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
-        enclosingStaticScope = StaticNonSyntacticScopeObjects::create(cx, enclosingStaticScope);
+        enclosingStaticScope = StaticNonSyntacticScope::create(cx, enclosingStaticScope);
         if (!enclosingStaticScope)
             return false;
     } else {
@@ -6717,9 +6717,9 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     // circumvent the fresh lexical scope that all eval have, so that the
     // users of executeInGlobal, like the web console, may add new bindings to
     // the global scope.
-    Rooted<ScopeObject*> staticScope(cx);
+    Rooted<StaticScope*> staticScope(cx);
     if (frame) {
-        staticScope = StaticEvalObject::create(cx, enclosingStaticScope);
+        staticScope = StaticEvalScope::create(cx, enclosingStaticScope);
         if (!staticScope)
             return false;
     } else {
@@ -6745,7 +6745,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     // Again, executeInGlobal is not considered eval.
     if (frame) {
         if (script->strict())
-            staticScope->as<StaticEvalObject>().setStrict();
+            staticScope->as<StaticEvalScope>().setStrict();
         script->setActiveEval();
     }
 
@@ -8470,8 +8470,7 @@ AssertIsPromise(JSContext* cx, HandleObject promise)
 {
     MOZ_ASSERT(promise);
     assertSameCompartment(cx, promise);
-    MOZ_ASSERT(strcmp(promise->getClass()->name, "Promise") == 0 ||
-               strcmp(promise->getClass()->name, "MozAbortablePromise") == 0);
+    MOZ_ASSERT(strcmp(promise->getClass()->name, "Promise") == 0);
 }
 
 JS_PUBLIC_API(void)

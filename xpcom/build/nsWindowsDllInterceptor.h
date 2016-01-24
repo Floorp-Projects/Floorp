@@ -468,69 +468,6 @@ protected:
   int mMaxHooks;
   int mCurHooks;
 
-  // rex bits
-  static const BYTE kMaskHighNibble = 0xF0;
-  static const BYTE kRexOpcode = 0x40;
-  static const BYTE kMaskRexW = 0x08;
-  static const BYTE kMaskRexR = 0x04;
-  static const BYTE kMaskRexX = 0x02;
-  static const BYTE kMaskRexB = 0x01;
-
-  // mod r/m bits
-  static const BYTE kRegFieldShift = 3;
-  static const BYTE kMaskMod = 0xC0;
-  static const BYTE kMaskReg = 0x38;
-  static const BYTE kMaskRm = 0x07;
-  static const BYTE kRmNeedSib = 0x04;
-  static const BYTE kModReg = 0xC0;
-  static const BYTE kModDisp32 = 0x80;
-  static const BYTE kModDisp8 = 0x40;
-  static const BYTE kModNoRegDisp = 0x00;
-  static const BYTE kRmNoRegDispDisp32 = 0x05;
-
-  // sib bits
-  static const BYTE kMaskSibScale = 0xC0;
-  static const BYTE kMaskSibIndex = 0x38;
-  static const BYTE kMaskSibBase = 0x07;
-  static const BYTE kSibBaseEbp = 0x05;
-
-  int CountModRmSib(const BYTE *aModRm, BYTE* aSubOpcode)
-  {
-    if (!aModRm) {
-      return -1;
-    }
-    int numBytes = 1; // Start with 1 for mod r/m byte itself
-    switch (*aModRm & kMaskMod) {
-      case kModReg:
-        return numBytes;
-      case kModDisp8:
-        numBytes += 1;
-        break;
-      case kModDisp32:
-        numBytes += 4;
-        break;
-      case kModNoRegDisp:
-        if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32 ||
-            ((*aModRm & kMaskRm) == kRmNeedSib &&
-             (*(aModRm + 1) & kMaskSibBase) == kSibBaseEbp)) {
-          numBytes += 4;
-        }
-        break;
-      default:
-        // This should not be reachable
-        MOZ_ASSERT_UNREACHABLE("Impossible value for modr/m byte mod bits");
-        return -1;
-    }
-    if ((*aModRm & kMaskRm) == kRmNeedSib) {
-      // SIB byte
-      numBytes += 1;
-    }
-    if (aSubOpcode) {
-      *aSubOpcode = (*aModRm & kMaskReg) >> kRegFieldShift;
-    }
-    return numBytes;
-  }
-
 #if defined(_M_X64)
   // To patch for JMP and JE
 
@@ -801,31 +738,6 @@ protected:
           // not support yet!
           return;
         }
-      } else if (origBytes[nBytes] == 0x66) {
-        // operand override prefix
-        nBytes += 1;
-        // This is the same as the x86 version
-        if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
-          // various MOVs
-          unsigned char b = origBytes[nBytes + 1];
-          if (((b & 0xc0) == 0xc0) ||
-              (((b & 0xc0) == 0x00) &&
-               ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05))) {
-            // REG=r, R/M=r or REG=r, R/M=[r]
-            nBytes += 2;
-          } else if ((b & 0xc0) == 0x40) {
-            if ((b & 0x07) == 0x04) {
-              // REG=r, R/M=[SIB + disp8]
-              nBytes += 4;
-            } else {
-              // REG=r, R/M=[r + disp8]
-              nBytes += 3;
-            }
-          } else {
-            // complex MOV, bail
-            return;
-          }
-        }
       } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
         nBytes++;
@@ -835,20 +747,6 @@ protected:
       } else if (origBytes[nBytes] == 0xb8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
         nBytes += 5;
-      } else if (origBytes[nBytes] == 0x33) {
-        // xor r32, r/m32
-        nBytes += 2;
-      } else if (origBytes[nBytes] == 0xf6) {
-        // test r/m8, imm8 (used by ntdll on Windows 10 x64)
-        // (no flags are affected by near jmp since there is no task switch,
-        // so it is ok for a jmp to be written immediately after a test)
-        BYTE subOpcode = 0;
-        int nModRmSibBytes = CountModRmSib(&origBytes[nBytes + 1], &subOpcode);
-        if (nModRmSibBytes < 0 || subOpcode != 0) {
-          // Unsupported
-          return;
-        }
-        nBytes += 2 + nModRmSibBytes;
       } else if (origBytes[nBytes] == 0xc3) {
         // ret
         nBytes++;

@@ -12,6 +12,7 @@
 #include "nsNetUtil.h"
 #include "nsHttpHandler.h"
 #include "nsIHttpAuthenticator.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIInterfaceRequestor.h"
@@ -817,6 +818,16 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
 bool
 nsHttpChannelAuthProvider::BlockPrompt()
 {
+    // Verify that it's ok to prompt for credentials here, per spec
+    // http://xhr.spec.whatwg.org/#the-send%28%29-method
+
+    nsCOMPtr<nsIHttpChannelInternal> chanInternal = do_QueryInterface(mAuthChannel);
+    MOZ_ASSERT(chanInternal);
+
+    if (chanInternal->GetBlockAuthPrompt()) {
+        return true;
+    }
+
     nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
     nsCOMPtr<nsILoadInfo> loadInfo;
     chan->GetLoadInfo(getter_AddRefs(loadInfo));

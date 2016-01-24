@@ -260,7 +260,7 @@ class BaselineFrame
         return &flags_;
     }
 
-    inline bool pushBlock(JSContext* cx, Handle<StaticBlockObject*> block);
+    inline bool pushBlock(JSContext* cx, Handle<StaticBlockScope*> block);
     inline void popBlock(JSContext* cx);
     inline bool freshenBlock(JSContext* cx);
 

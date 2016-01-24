@@ -42,7 +42,7 @@
             <description when-mixedcontent="active-loaded">&identity.activeLoaded;</description>
             <description class="identity-popup-warning-yellow"
                          when-ciphers="weak">&identity.weakEncryption;</description>
-            <description when-loginforms="insecure">&identity.insecureLoginForms;</description>
+            <description when-loginforms="insecure">&identity.insecureLoginForms2;</description>
           </vbox>
         </vbox>
         <button id="identity-popup-security-expander"

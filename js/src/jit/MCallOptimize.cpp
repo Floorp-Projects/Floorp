@@ -3248,14 +3248,23 @@ IonBuilder::convertToBooleanSimdLane(MDefinition* scalar)
     return result;
 }
 
+static inline
+bool SimdTypeToMIRType(SimdType type, MIRType* mirType)
+{
+    switch (type) {
+      case SimdType::Int32x4:     *mirType = MIRType_Int32x4;   return true;
+      case SimdType::Float32x4:   *mirType = MIRType_Float32x4; return true;
+      case SimdType::Bool32x4:    *mirType = MIRType_Bool32x4;  return true;
+      default:                    return false;
+    }
+}
+
 IonBuilder::InliningStatus
 IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 {
     // Generic constructor of SIMD valuesX4.
-    MIRType simdType = SimdTypeDescrToMIRType(descr->type());
-
-    // TODO Happens for Float64x2 (Bug 1124205) and Int8x16/Int16x8 (Bug 1136226)
-    if (simdType == MIRType_Undefined)
+    MIRType simdType;
+    if (!SimdTypeToMIRType(descr->type(), &simdType))
         return InliningStatus_NotInlined;
 
     // Take the templateObject out of Baseline ICs, such that we can box
@@ -3318,7 +3327,7 @@ IonBuilder::canInlineSimd(CallInfo& callInfo, JSNative native, unsigned numArgs,
 
     JSObject* templateObject = inspector->getTemplateObjectForNative(pc, native);
     if (!templateObject)
-        return false;;
+        return false;
 
     *templateObj = &templateObject->as<InlineTypedObject>();
     return true;

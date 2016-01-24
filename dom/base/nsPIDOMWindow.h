@@ -17,6 +17,7 @@
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
 
+// Only fired for inner windows.
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"

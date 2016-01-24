@@ -8894,3 +8894,37 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
     }
   }
 }
+
+bool
+nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri)
+{
+  // aUri must start with about: or this isn't the right function to be using.
+  MOZ_ASSERT(strncmp(aUri, "about:", 6) == 0);
+
+  // Make sure the global is a window
+  nsGlobalWindow* win = xpc::WindowGlobalOrNull(aGlobal);
+  if (!win) {
+    return false;
+  }
+
+  // Make sure that the principal is about:feeds.
+  nsCOMPtr<nsIPrincipal> principal = win->GetPrincipal();
+  NS_ENSURE_TRUE(principal, false);
+  nsCOMPtr<nsIURI> uri;
+  principal->GetURI(getter_AddRefs(uri));
+  if (!uri) {
+    return false;
+  }
+
+  // First check the scheme to avoid getting long specs in the common case.
+  bool isAbout = false;
+  uri->SchemeIs("about", &isAbout);
+  if (!isAbout) {
+    return false;
+  }
+
+  // Now check the spec itself
+  nsAutoCString spec;
+  uri->GetSpec(spec);
+  return spec.EqualsASCII(aUri);
+}

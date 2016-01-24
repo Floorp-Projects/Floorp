@@ -37,13 +37,6 @@ public:
   void GetName(nsAString& aName) override;
   void GetUUID(nsACString& aUUID) override;
   void SetDirectListeners(bool aHasListeners) override;
-  nsresult Config(bool aEchoOn, uint32_t aEcho,
-                  bool aAgcOn, uint32_t aAGC,
-                  bool aNoiseOn, uint32_t aNoise,
-                  int32_t aPlayoutDelay) override
-  {
-    return NS_OK;
-  };
 
   bool IsFake() override
   {

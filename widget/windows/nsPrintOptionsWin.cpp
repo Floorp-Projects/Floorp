@@ -67,10 +67,12 @@ nsPrintOptionsWin::SerializeToPrintData(nsIPrintSettings* aSettings,
   free(deviceName);
   free(driverName);
 
-  // When creating the print dialog on Windows, the parent creates a DEVMODE
-  // which is used to convey print settings to the Windows printing backend.
-  // We don't, therefore, want or care about DEVMODEs sent up from the child.
+  // When creating the print dialog on Windows, we only need to send certain
+  // print settings information from the parent to the child not vice versa.
   if (XRE_IsParentProcess()) {
+    psWin->GetPrintableWidthInInches(&data->printableWidthInInches());
+    psWin->GetPrintableHeightInInches(&data->printableHeightInInches());
+
     // A DEVMODE can actually be of arbitrary size. If it turns out that it'll
     // make our IPC message larger than the limit, then we'll error out.
     LPDEVMODEW devModeRaw;
@@ -117,6 +119,9 @@ nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
   if (XRE_IsContentProcess()) {
     psWin->SetDeviceName(data.deviceName().get());
     psWin->SetDriverName(data.driverName().get());
+
+    psWin->SetPrintableWidthInInches(data.printableWidthInInches());
+    psWin->SetPrintableHeightInInches(data.printableHeightInInches());
 
     nsXPIDLString printerName;
     settings->GetPrinterName(getter_Copies(printerName));
