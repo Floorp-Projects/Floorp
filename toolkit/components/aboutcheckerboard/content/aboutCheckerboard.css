@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+table.listing {
+    width: 100%;
+}
+
+table th, table td {
+    padding: 5px;
+    border: inset 2px black;
+    margin: 0px;
+    width: 50%;
+    vertical-align: top;
+}
+
+hr {
+    clear: both;
+    margin: 10px;
+}
+
+iframe {
+    width: 100%;
+    height: 900px;
+}
+
+#player, #raw {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#controls {
+    text-align: center;
+}
+
+#canvas {
+    border: solid 1px black;
+}
+
+#active {
+    width: 100%;
+    border: solid 1px black;
+    margin-top: 0;
+}
+
+#trace {
+    width: 100%;
+}

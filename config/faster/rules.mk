@@ -68,10 +68,6 @@ endif
 # toolkit/content/buildconfig.html and browser/locales/jar.mn.
 ACDEFINES += -DBUILD_FASTER
 
-# Generic rule to fall back to the recursive make backend
-$(TOPOBJDIR)/%: FORCE
-	$(MAKE) -C $(dir $@) $(notdir $@)
-
 # Files under the faster/ sub-directory, however, are not meant to use the
 # fallback
 $(TOPOBJDIR)/faster/%: ;
@@ -82,6 +78,13 @@ $(TOPOBJDIR)/dist/%:
 	rm -f $@
 	mkdir -p $(@D)
 	cp $< $@
+
+# Generic rule to fall back to the recursive make backend.
+# This needs to stay after other $(TOPOBJDIR)/* rules because GNU Make
+# <3.82 apply pattern rules in definition order, not stem length like
+# modern GNU Make.
+$(TOPOBJDIR)/%: FORCE
+	$(MAKE) -C $(dir $@) $(notdir $@)
 
 # Install files using install manifests
 #
@@ -114,8 +117,12 @@ $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
 $(TOPOBJDIR)/toolkit/xre/platform.ini: $(TOPOBJDIR)/config/buildid
 
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
-# dist/idl to have been processed.
+# dist/idl to have been processed. When using the hybrid
+# FasterMake/RecursiveMake backend, this dependency is handled in the top-level
+# Makefile.
+ifndef FASTER_RECURSIVE_MAKE
 $(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(TOPOBJDIR)/install-dist_idl
+endif
 # It also requires all the install manifests for dist/bin to have been processed
 # because it adds interfaces.manifest references with buildlist.py.
 $(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(addprefix install-,$(filter dist/bin%,$(INSTALL_MANIFESTS)))

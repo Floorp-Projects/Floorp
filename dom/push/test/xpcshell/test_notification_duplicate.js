@@ -12,10 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID: userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.com/1',
-    'https://example.com/2'
-  );
   run_next_test();
 }
 
@@ -30,6 +26,7 @@ add_task(function* test_notification_duplicate() {
     originAttributes: "",
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: '27d1e393-03ef-4c72-a5e6-9e890dfccad0',
     pushEndpoint: 'https://example.org/update/2',
@@ -37,12 +34,13 @@ add_task(function* test_notification_duplicate() {
     originAttributes: "",
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   }];
   for (let record of records) {
     yield db.put(record);
   }
 
-  let notifyPromise = promiseObserverNotification('push-notification');
+  let notifyPromise = promiseObserverNotification('push-message');
 
   let acks = 0;
   let ackDone;

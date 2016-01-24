@@ -3382,19 +3382,19 @@ BaselineCompiler::emit_JSOP_RETSUB()
     return emitOpIC(stubCompiler.getStub(&stubSpace_));
 }
 
-typedef bool (*PushBlockScopeFn)(JSContext*, BaselineFrame*, Handle<StaticBlockObject*>);
+typedef bool (*PushBlockScopeFn)(JSContext*, BaselineFrame*, Handle<StaticBlockScope*>);
 static const VMFunction PushBlockScopeInfo = FunctionInfo<PushBlockScopeFn>(jit::PushBlockScope);
 
 bool
 BaselineCompiler::emit_JSOP_PUSHBLOCKSCOPE()
 {
-    StaticBlockObject& blockObj = script->getObject(pc)->as<StaticBlockObject>();
+    StaticBlockScope& blockScope = script->getObject(pc)->as<StaticBlockScope>();
 
     // Call a stub to push the block on the block chain.
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    pushArg(ImmGCPtr(&blockObj));
+    pushArg(ImmGCPtr(&blockScope));
     pushArg(R0.scratchReg());
 
     return callVM(PushBlockScopeInfo);
@@ -3466,13 +3466,13 @@ BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
     return callVM(DebugLeaveBlockInfo);
 }
 
-typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue, Handle<StaticWithObject*>);
+typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue, Handle<StaticWithScope*>);
 static const VMFunction EnterWithInfo = FunctionInfo<EnterWithFn>(jit::EnterWith);
 
 bool
 BaselineCompiler::emit_JSOP_ENTERWITH()
 {
-    StaticWithObject& withObj = script->getObject(pc)->as<StaticWithObject>();
+    StaticWithScope& withScope = script->getObject(pc)->as<StaticWithScope>();
 
     // Pop "with" object to R0.
     frame.popRegsAndSync(1);
@@ -3481,7 +3481,7 @@ BaselineCompiler::emit_JSOP_ENTERWITH()
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
-    pushArg(ImmGCPtr(&withObj));
+    pushArg(ImmGCPtr(&withScope));
     pushArg(R0);
     pushArg(R1.scratchReg());
 

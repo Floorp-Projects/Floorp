@@ -27,7 +27,7 @@ InitSharedArrayBufferClass(JSContext* cx, HandleObject obj);
 
 class Debugger;
 class TypedObjectModuleObject;
-class StaticBlockObject;
+class StaticBlockScope;
 class ClonedBlockObject;
 
 class SimdTypeDescr;
@@ -449,7 +449,7 @@ class GlobalObject : public NativeObject
         RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
         if (!globalSimdObject)
             return nullptr;
-        uint32_t typeSlotIndex(T::type);
+        uint32_t typeSlotIndex = uint32_t(T::type);
         if (globalSimdObject->as<NativeObject>().getReservedSlot(typeSlotIndex).isUndefined() &&
             !GlobalObject::initSimdType(cx, global, typeSlotIndex))
         {

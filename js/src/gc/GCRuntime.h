@@ -769,7 +769,6 @@ class GCRuntime
     JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
         JS::GCNurseryCollectionCallback callback);
 
-    void setValidate(bool enable);
     void setFullCompartmentChecks(bool enable);
 
     bool isManipulatingDeadZones() { return manipulatingDeadZones; }
@@ -1274,7 +1273,6 @@ class GCRuntime
     js::Vector<JSObject*, 0, js::SystemAllocPolicy> selectedForMarking;
 #endif
 
-    bool validate;
     bool fullCompartmentChecks;
 
     Callback<JSGCCallback> gcCallback;

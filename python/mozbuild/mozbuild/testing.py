@@ -260,6 +260,15 @@ TEST_MANIFESTS = dict(
     ANDROID_INSTRUMENTATION=('instrumentation', 'instrumentation', '.', False),
     JETPACK_PACKAGE=('jetpack-package', 'testing/mochitest', 'jetpack-package', True),
     JETPACK_ADDON=('jetpack-addon', 'testing/mochitest', 'jetpack-addon', False),
+
+    # marionette tests are run from the srcdir
+    # TODO(ato): make packaging work as for other test suites
+    MARIONETTE=('marionette', 'marionette', '.', False),
+    MARIONETTE_LOOP=('marionette', 'marionette', '.', False),
+    MARIONETTE_UNIT=('marionette', 'marionette', '.', False),
+    MARIONETTE_UPDATE=('marionette', 'marionette', '.', False),
+    MARIONETTE_WEBAPI=('marionette', 'marionette', '.', False),
+
     METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),
     MOCHITEST=('mochitest', 'testing/mochitest', 'tests', True),
     MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),

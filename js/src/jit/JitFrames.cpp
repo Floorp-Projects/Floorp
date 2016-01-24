@@ -1198,7 +1198,7 @@ MarkBailoutFrame(JSTracer* trc, const JitFrameIterator& frame)
         if (!snapIter.moreInstructions())
             break;
         snapIter.nextInstruction();
-    };
+    }
 
 }
 

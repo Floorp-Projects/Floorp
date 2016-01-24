@@ -137,6 +137,9 @@ interface RTCPeerConnection : EventTarget  {
   sequence<RTCRtpSender> getSenders();
   sequence<RTCRtpReceiver> getReceivers();
 
+  [ChromeOnly]
+  void mozSelectSsrc(RTCRtpReceiver receiver, unsigned short ssrcIndex);
+
   void close ();
   attribute EventHandler onnegotiationneeded;
   attribute EventHandler onicecandidate;

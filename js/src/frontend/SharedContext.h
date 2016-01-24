@@ -285,10 +285,10 @@ class SharedContext
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
 {
-    Rooted<ScopeObject*> staticScope_;
+    Rooted<StaticScope*> staticScope_;
 
   public:
-    GlobalSharedContext(ExclusiveContext* cx, ScopeObject* staticScope, Directives directives,
+    GlobalSharedContext(ExclusiveContext* cx, StaticScope* staticScope, Directives directives,
                         bool extraWarnings, JSFunction* maybeEvalCaller = nullptr)
       : SharedContext(cx, directives, extraWarnings),
         staticScope_(cx, staticScope)
@@ -530,7 +530,7 @@ struct StmtInfoBase
     RootedAtom      label;
 
     // Compile-time scope chain node for this scope.
-    Rooted<NestedScopeObject*> staticScope;
+    Rooted<NestedStaticScope*> staticScope;
 
     explicit StmtInfoBase(ExclusiveContext* cx)
         : isBlockScope(false), isForLetBlock(false),
@@ -554,10 +554,10 @@ struct StmtInfoBase
                type == StmtType::CATCH;
     }
 
-    StaticBlockObject& staticBlock() const {
+    StaticBlockScope& staticBlock() const {
         MOZ_ASSERT(staticScope);
         MOZ_ASSERT(isBlockScope);
-        return staticScope->as<StaticBlockObject>();
+        return staticScope->as<StaticBlockScope>();
     }
 
     bool isLoop() const {
@@ -604,7 +604,7 @@ class MOZ_STACK_CLASS StmtInfoStack
         innermostStmt_ = stmt;
     }
 
-    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
+    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedStaticScope& staticScope) {
         push(stmt, type);
         linkAsInnermostScopeStmt(stmt, staticScope);
     }
@@ -616,7 +616,7 @@ class MOZ_STACK_CLASS StmtInfoStack
             innermostScopeStmt_ = stmt->enclosingScope;
     }
 
-    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedScopeObject& staticScope) {
+    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedStaticScope& staticScope) {
         MOZ_ASSERT(stmt != innermostScopeStmt_);
         MOZ_ASSERT(!stmt->enclosingScope);
         stmt->enclosingScope = innermostScopeStmt_;
@@ -624,11 +624,11 @@ class MOZ_STACK_CLASS StmtInfoStack
         stmt->staticScope = &staticScope;
     }
 
-    void makeInnermostLexicalScope(StaticBlockObject& blockObj) {
+    void makeInnermostLexicalScope(StaticBlockScope& blockScope) {
         MOZ_ASSERT(!innermostStmt_->isBlockScope);
         MOZ_ASSERT(innermostStmt_->canBeBlockScope());
         innermostStmt_->isBlockScope = true;
-        linkAsInnermostScopeStmt(innermostStmt_, blockObj);
+        linkAsInnermostScopeStmt(innermostStmt_, blockScope);
     }
 };
 

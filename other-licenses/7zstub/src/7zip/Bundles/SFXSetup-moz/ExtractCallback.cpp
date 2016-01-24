@@ -205,7 +205,7 @@ STDMETHODIMP CExtractCallbackImp::PrepareOperation(Int32 askExtractMode)
     case NArchive::NExtract::NAskMode::kExtract:
       _extractMode = true;
       break;
-  };
+  }
   return S_OK;
 }
 

@@ -11,12 +11,12 @@ flags:
     - simulator
 
 builds:
-  android-api-11:
+  android-api-15:
     platforms:
       - Android
     types:
       opt:
-        task: tasks/builds/android_api_11.yml
+        task: tasks/builds/android_api_15.yml
   aries-dogfood:
     platforms:
       - b2g

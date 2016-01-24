@@ -79,7 +79,7 @@ nsTransactionStack::Clear()
 {
   while (!mDeque.empty()) {
     RefPtr<nsTransactionItem> tx = mType == FOR_UNDO ? Pop() : PopBottom();
-  };
+  }
 }
 
 void

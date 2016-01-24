@@ -383,7 +383,7 @@ nsConsoleService::GetMessageArray(uint32_t* aCount,
     nsCOMPtr<nsIConsoleMessage> m = e->Get();
     m.forget(&messageArray[i]);
     i++;
-  };
+  }
 
   MOZ_ASSERT(i == mCurrentSize);
 

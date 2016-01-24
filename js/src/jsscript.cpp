@@ -566,7 +566,7 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
 }
 
 static inline uint32_t
-FindScopeObjectIndex(JSScript* script, NestedScopeObject& scope)
+FindScopeObjectIndex(JSScript* script, NestedStaticScope& scope)
 {
     ObjectArray* objects = script->objects();
     HeapPtrObject* vector = objects->vector;
@@ -843,7 +843,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         if (scriptBits & (1 << HasNonSyntacticScope) &&
             IsStaticGlobalLexicalScope(enclosingScope))
         {
-            enclosingScope = StaticNonSyntacticScopeObjects::create(cx, enclosingScope);
+            enclosingScope = StaticNonSyntacticScope::create(cx, enclosingScope);
             if (!enclosingScope)
                 return false;
         }
@@ -1011,9 +1011,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 
         if (mode == XDR_ENCODE) {
             JSObject* obj = *objp;
-            if (obj->is<BlockObject>())
+            if (obj->is<StaticBlockScope>())
                 classk = CK_BlockObject;
-            else if (obj->is<StaticWithObject>())
+            else if (obj->is<StaticWithScope>())
                 classk = CK_WithObject;
             else if (obj->is<JSFunction>())
                 classk = CK_JSFunction;
@@ -1032,8 +1032,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             /* Code the nested block's enclosing scope. */
             uint32_t enclosingStaticScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                NestedScopeObject& scope = (*objp)->as<NestedScopeObject>();
-                if (NestedScopeObject* enclosing = scope.enclosingNestedScope()) {
+                NestedStaticScope& scope = (*objp)->as<NestedStaticScope>();
+                if (NestedStaticScope* enclosing = scope.enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosing))
                         enclosingStaticScopeIndex = UINT32_MAX;
                     else
@@ -1060,13 +1060,13 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             }
 
             if (classk == CK_BlockObject) {
-                Rooted<StaticBlockObject*> tmp(cx, static_cast<StaticBlockObject*>(objp->get()));
-                if (!XDRStaticBlockObject(xdr, enclosingStaticScope, &tmp))
+                Rooted<StaticBlockScope*> tmp(cx, static_cast<StaticBlockScope*>(objp->get()));
+                if (!XDRStaticBlockScope(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             } else {
-                Rooted<StaticWithObject*> tmp(cx, static_cast<StaticWithObject*>(objp->get()));
-                if (!XDRStaticWithObject(xdr, enclosingStaticScope, &tmp))
+                Rooted<StaticWithScope*> tmp(cx, static_cast<StaticWithScope*>(objp->get()));
+                if (!XDRStaticWithScope(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             }
@@ -3480,14 +3480,14 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
         for (unsigned i = 0; i < nobjects; i++) {
             RootedObject obj(cx, vector[i]);
             RootedObject clone(cx);
-            if (obj->is<NestedScopeObject>()) {
-                Rooted<NestedScopeObject*> innerBlock(cx, &obj->as<NestedScopeObject>());
+            if (obj->is<NestedStaticScope>()) {
+                Rooted<NestedStaticScope*> innerBlock(cx, &obj->as<NestedStaticScope>());
 
                 RootedObject enclosingScope(cx);
-                if (NestedScopeObject* enclosingBlock = innerBlock->enclosingNestedScope()) {
+                if (NestedStaticScope* enclosingBlock = innerBlock->enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosingBlock)) {
                         MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
-                                   scriptStaticScope->is<StaticNonSyntacticScopeObjects>());
+                                   scriptStaticScope->is<StaticNonSyntacticScope>());
                         enclosingScope = scriptStaticScope;
                     } else {
                         enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
@@ -3523,7 +3523,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                     } else if (ssi.type() == StaticScopeIter<CanGC>::Block) {
                         if (ssi.block().isGlobal()) {
                             MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
-                                       scriptStaticScope->is<StaticNonSyntacticScopeObjects>());
+                                       scriptStaticScope->is<StaticNonSyntacticScope>());
                             enclosingScope = scriptStaticScope;
                         } else {
                             enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
@@ -3679,10 +3679,10 @@ CreateEmptyScriptForClone(JSContext* cx, HandleObject enclosingScope, HandleScri
 }
 
 JSScript*
-js::CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScript src)
+js::CloneGlobalScript(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleScript src)
 {
     MOZ_ASSERT(IsStaticGlobalLexicalScope(enclosingScope) ||
-               enclosingScope->is<StaticNonSyntacticScopeObjects>());
+               enclosingScope->is<StaticNonSyntacticScope>());
 
     RootedScript dst(cx, CreateEmptyScriptForClone(cx, enclosingScope, src));
     if (!dst)
@@ -3997,18 +3997,18 @@ JSScript::calculateLiveFixed(jsbytecode* pc)
     size_t nlivefixed = nbodyfixed();
 
     if (nfixed() != nlivefixed) {
-        NestedScopeObject* staticScope = getStaticBlockScope(pc);
+        NestedStaticScope* staticScope = getStaticBlockScope(pc);
         if (staticScope)
             staticScope = MaybeForwarded(staticScope);
-        while (staticScope && !staticScope->is<StaticBlockObject>()) {
+        while (staticScope && !staticScope->is<StaticBlockScope>()) {
             staticScope = staticScope->enclosingNestedScope();
             if (staticScope)
                 staticScope = MaybeForwarded(staticScope);
         }
 
         if (staticScope && !IsStaticGlobalLexicalScope(staticScope)) {
-            StaticBlockObject& blockObj = staticScope->as<StaticBlockObject>();
-            nlivefixed = blockObj.localOffset() + blockObj.numVariables();
+            StaticBlockScope& blockScope = staticScope->as<StaticBlockScope>();
+            nlivefixed = blockScope.localOffset() + blockScope.numVariables();
         }
     }
 
@@ -4018,7 +4018,7 @@ JSScript::calculateLiveFixed(jsbytecode* pc)
     return nlivefixed;
 }
 
-NestedScopeObject*
+NestedStaticScope*
 JSScript::getStaticBlockScope(jsbytecode* pc)
 {
     MOZ_ASSERT(containsPC(pc));
@@ -4029,7 +4029,7 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
     size_t offset = pc - code();
 
     BlockScopeArray* scopes = blockScopes();
-    NestedScopeObject* blockChain = nullptr;
+    NestedStaticScope* blockChain = nullptr;
 
     // Find the innermost block chain using a binary search.
     size_t bottom = 0;
@@ -4054,7 +4054,7 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
                     if (checkNote->index == BlockScopeNote::NoBlockScopeIndex)
                         blockChain = nullptr;
                     else
-                        blockChain = &getObject(checkNote->index)->as<NestedScopeObject>();
+                        blockChain = &getObject(checkNote->index)->as<NestedStaticScope>();
                     break;
                 }
                 if (checkNote->parent == UINT32_MAX)

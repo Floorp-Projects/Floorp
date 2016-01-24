@@ -4951,7 +4951,7 @@ CodeGenerator::captureSimdTemplate(JSContext* cx)
     while (simdRefreshTemplatesDuringLink_) {
         uint32_t typeIndex = mozilla::CountTrailingZeroes32(simdRefreshTemplatesDuringLink_);
         simdRefreshTemplatesDuringLink_ ^= 1 << typeIndex;
-        SimdTypeDescr::Type type = SimdTypeDescr::Type(typeIndex);
+        SimdType type = SimdType(typeIndex);
 
         // Note: the weak-reference on the template object should not have been
         // garbage collected. It is either registered by IonBuilder, or verified
@@ -4991,21 +4991,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
       "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_KIND).isInt32())");
     masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrKind), Imm32(js::type::Simd), &bail);
 
-    // Convert the SIMD MIRType to a SimdTypeDescr::Type.
-    js::SimdTypeDescr::Type type;
-    switch (lir->mir()->type()) {
-      case MIRType_Bool32x4:
-        type = js::SimdTypeDescr::Bool32x4;
-        break;
-      case MIRType_Int32x4:
-        type = js::SimdTypeDescr::Int32x4;
-        break;
-      case MIRType_Float32x4:
-        type = js::SimdTypeDescr::Float32x4;
-        break;
-      default:
-        MOZ_CRASH("Unexpected SIMD Type.");
-    }
+    SimdType type = MIRTypeToSimdType(lir->mir()->type());
 
     // Check if the SimdTypeDescr /Type/ match the specialization of this
     // MSimdUnbox instruction.
@@ -5013,7 +4999,7 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     Address typeDescrType(temp, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_TYPE));
     masm.assertTestInt32(Assembler::Equal, typeDescrType,
       "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_TYPE).isInt32())");
-    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrType), Imm32(type), &bail);
+    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrType), Imm32(int32_t(type)), &bail);
 
     // Load the value from the data of the InlineTypedObject.
     Address objectData(object, InlineTypedObject::offsetOfDataStart());

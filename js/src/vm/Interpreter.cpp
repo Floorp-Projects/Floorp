@@ -928,7 +928,7 @@ bool
 js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
                        HandleObject staticWith)
 {
-    MOZ_ASSERT(staticWith->is<StaticWithObject>());
+    MOZ_ASSERT(staticWith->is<StaticWithScope>());
     RootedObject obj(cx);
     if (val.isObject()) {
         obj = &val.toObject();
@@ -3634,11 +3634,11 @@ END_CASE(JSOP_DEBUGGER)
 
 CASE(JSOP_PUSHBLOCKSCOPE)
 {
-    StaticBlockObject& blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
+    StaticBlockScope& blockScope = script->getObject(REGS.pc)->as<StaticBlockScope>();
 
-    MOZ_ASSERT(blockObj.needsClone());
+    MOZ_ASSERT(blockScope.needsClone());
     // Clone block and push on scope chain.
-    if (!REGS.fp()->pushBlock(cx, blockObj))
+    if (!REGS.fp()->pushBlock(cx, blockScope))
         goto error;
 }
 END_CASE(JSOP_PUSHBLOCKSCOPE)
@@ -3647,10 +3647,10 @@ CASE(JSOP_POPBLOCKSCOPE)
 {
 #ifdef DEBUG
     // Pop block from scope chain.
-    NestedScopeObject* scope = script->getStaticBlockScope(REGS.pc);
-    MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
-    StaticBlockObject& blockObj = scope->as<StaticBlockObject>();
-    MOZ_ASSERT(blockObj.needsClone());
+    NestedStaticScope* scope = script->getStaticBlockScope(REGS.pc);
+    MOZ_ASSERT(scope && scope->is<StaticBlockScope>());
+    StaticBlockScope& blockScope = scope->as<StaticBlockScope>();
+    MOZ_ASSERT(blockScope.needsClone());
 #endif
 
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
@@ -3664,8 +3664,8 @@ END_CASE(JSOP_POPBLOCKSCOPE)
 CASE(JSOP_DEBUGLEAVEBLOCK)
 {
     MOZ_ASSERT(script->getStaticBlockScope(REGS.pc));
-    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc)->is<StaticBlockObject>());
-    MOZ_ASSERT(!script->getStaticBlockScope(REGS.pc)->as<StaticBlockObject>().needsClone());
+    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc)->is<StaticBlockScope>());
+    MOZ_ASSERT(!script->getStaticBlockScope(REGS.pc)->as<StaticBlockScope>().needsClone());
 
     // FIXME: This opcode should not be necessary.  The debugger shouldn't need
     // help from bytecode to do its job.  See bug 927782.
@@ -4828,11 +4828,11 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
         // Failing that, it must be a block-local let.
         if (!name) {
             // Skip to the right scope.
-            Rooted<NestedScopeObject*> scope(cx, script->getStaticBlockScope(pc));
-            MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
-            Rooted<StaticBlockObject*> block(cx, &scope->as<StaticBlockObject>());
+            Rooted<NestedStaticScope*> scope(cx, script->getStaticBlockScope(pc));
+            MOZ_ASSERT(scope && scope->is<StaticBlockScope>());
+            Rooted<StaticBlockScope*> block(cx, &scope->as<StaticBlockScope>());
             while (slot < block->localOffset())
-                block = &block->enclosingNestedScope()->as<StaticBlockObject>();
+                block = &block->enclosingNestedScope()->as<StaticBlockScope>();
 
             // Translate the frame slot to the block slot, then find the name
             // of the slot.

@@ -811,7 +811,7 @@ WindowsVersionToOperatingSystem(int32_t aWindowsVersion)
     case kWindowsUnknown:
     default:
       return DRIVER_OS_UNKNOWN;
-    };
+    }
 }
 
 const nsTArray<GfxDriverInfo>&

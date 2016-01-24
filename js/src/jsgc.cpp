@@ -1169,7 +1169,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     deterministicOnly(false),
     incrementalLimit(0),
 #endif
-    validate(true),
     fullCompartmentChecks(false),
     mallocBytesUntilGC(0),
     mallocGCTriggered(false),
@@ -1208,7 +1207,7 @@ const char* gc::ZealModeHelpText =
     "    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
     "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
     "   10: Incremental GC in multiple slices\n"
-    "   11: unused\n"
+    "   11: Verify incremental marking\n"
     "   12: unused\n"
     "   13: Check internal hashtables on minor GC\n"
     "   14: Perform a shrinking collection every N allocations\n";
@@ -4261,7 +4260,7 @@ GCRuntime::markAllGrayReferences(gcstats::Phase phase)
     markGrayReferences<GCZonesIter, GCCompartmentsIter>(phase);
 }
 
-#ifdef DEBUG
+#ifdef JS_GC_ZEAL
 
 struct GCChunkHasher {
     typedef gc::Chunk* Lookup;
@@ -4297,10 +4296,6 @@ class js::gc::MarkingValidator
     typedef HashMap<Chunk*, ChunkBitmap*, GCChunkHasher, SystemAllocPolicy> BitmapMap;
     BitmapMap map;
 };
-
-#endif // DEBUG
-
-#ifdef JS_GC_MARKING_VALIDATION
 
 js::gc::MarkingValidator::MarkingValidator(GCRuntime* gc)
   : gc(gc),
@@ -4519,14 +4514,14 @@ js::gc::MarkingValidator::validate()
     }
 }
 
-#endif // JS_GC_MARKING_VALIDATION
+#endif // JS_GC_ZEAL
 
 void
 GCRuntime::computeNonIncrementalMarkingForValidation()
 {
-#ifdef JS_GC_MARKING_VALIDATION
+#ifdef JS_GC_ZEAL
     MOZ_ASSERT(!markingValidator);
-    if (isIncremental && validate)
+    if (isIncremental && zeal() == ZealIncrementalMarkingValidator)
         markingValidator = js_new<MarkingValidator>(this);
     if (markingValidator)
         markingValidator->nonIncrementalMark();
@@ -4536,7 +4531,7 @@ GCRuntime::computeNonIncrementalMarkingForValidation()
 void
 GCRuntime::validateIncrementalMarking()
 {
-#ifdef JS_GC_MARKING_VALIDATION
+#ifdef JS_GC_ZEAL
     if (markingValidator)
         markingValidator->validate();
 #endif
@@ -4545,7 +4540,7 @@ GCRuntime::validateIncrementalMarking()
 void
 GCRuntime::finishMarkingValidation()
 {
-#ifdef JS_GC_MARKING_VALIDATION
+#ifdef JS_GC_ZEAL
     js_delete(markingValidator);
     markingValidator = nullptr;
 #endif
@@ -6880,9 +6875,9 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
             for (uint32_t i = 0; i < scopes->length; i++) {
                 uint32_t scopeIndex = scopes->vector[i].index;
                 if (scopeIndex != BlockScopeNote::NoBlockScopeIndex) {
-                    ScopeObject* scope = &script->getObject(scopeIndex)->as<ScopeObject>();
+                    StaticScope* scope = &script->getObject(scopeIndex)->as<StaticScope>();
                     MOZ_ASSERT(!IsStaticGlobalLexicalScope(scope));
-                    JSObject* enclosing = &scope->enclosingScope();
+                    JSObject* enclosing = scope->enclosingScope();
                     if (IsStaticGlobalLexicalScope(enclosing))
                         scope->setEnclosingScope(targetStaticGlobalLexicalScope);
                 }
@@ -7005,13 +7000,6 @@ GCRuntime::runDebugGC()
     }
 
 #endif
-}
-
-void
-GCRuntime::setValidate(bool enabled)
-{
-    MOZ_ASSERT(!rt->isHeapMajorCollecting());
-    validate = enabled;
 }
 
 void

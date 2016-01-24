@@ -154,10 +154,12 @@ install-manifests: $(addprefix install-,$(install_manifests))
 
 # If we're using the hybrid FasterMake/RecursiveMake backend, we want
 # to recurse in the faster/ directory in parallel of install manifests.
+# But dist/idl needs to happen before (cf. dependencies in
+# config/faster/rules.mk)
 ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 install-manifests: faster
 .PHONY: faster
-faster:
+faster: install-dist/idl
 	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
 endif
 
@@ -181,7 +183,7 @@ endif
 	$(addprefix $(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
-install-dist_%: install-dist/% ;
+$(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
 
 # For compatibility
 .PHONY: install-tests

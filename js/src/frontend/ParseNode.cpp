@@ -304,7 +304,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       }
 
       // PNK_WITH is PN_BINARY_OBJ -- that is, PN_BINARY with (irrelevant for
-      // this method's purposes) the addition of the StaticWithObject as
+      // this method's purposes) the addition of the StaticWithScope as
       // pn_binary_obj.  Both left (expression) and right (statement) are
       // non-null.
       case PNK_WITH: {

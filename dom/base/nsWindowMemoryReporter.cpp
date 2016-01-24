@@ -111,10 +111,6 @@ nsWindowMemoryReporter::Init()
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    // DOM_WINDOW_DESTROYED_TOPIC announces what we call window "detachment",
-    // when a window's docshell is set to nullptr.
-    os->AddObserver(sWindowReporter, DOM_WINDOW_DESTROYED_TOPIC,
-                    /* weakRef = */ true);
     os->AddObserver(sWindowReporter, "after-minimize-memory-usage",
                     /* weakRef = */ true);
     os->AddObserver(sWindowReporter, "cycle-collector-begin",
@@ -125,6 +121,12 @@ nsWindowMemoryReporter::Init()
 
   RegisterStrongMemoryReporter(new GhostWindowsReporter());
   RegisterGhostWindowsDistinguishedAmount(GhostWindowsReporter::DistinguishedAmount);
+}
+
+/* static */ nsWindowMemoryReporter*
+nsWindowMemoryReporter::Get()
+{
+  return sWindowReporter;
 }
 
 static already_AddRefed<nsIURI>
@@ -614,9 +616,7 @@ NS_IMETHODIMP
 nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
                                 const char16_t *aData)
 {
-  if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
-    ObserveDOMWindowDetached(aSubject);
-  } else if (!strcmp(aTopic, "after-minimize-memory-usage")) {
+  if (!strcmp(aTopic, "after-minimize-memory-usage")) {
     ObserveAfterMinimizeMemoryUsage();
   } else if (!strcmp(aTopic, "cycle-collector-begin")) {
     if (mCheckTimer) {
@@ -638,9 +638,9 @@ nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
 }
 
 void
-nsWindowMemoryReporter::ObserveDOMWindowDetached(nsISupports* aWindow)
+nsWindowMemoryReporter::ObserveDOMWindowDetached(nsGlobalWindow* aWindow)
 {
-  nsWeakPtr weakWindow = do_GetWeakReference(aWindow);
+  nsWeakPtr weakWindow = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aWindow));
   if (!weakWindow) {
     NS_WARNING("Couldn't take weak reference to a window?");
     return;
