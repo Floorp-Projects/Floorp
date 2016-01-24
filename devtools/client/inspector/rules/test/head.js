@@ -281,6 +281,21 @@ function assertHoverTooltipOn(tooltip, element) {
 }
 
 /**
+ * When a tooltip is closed, this ends up "commiting" the value changed within
+ * the tooltip (e.g. the color in case of a colorpicker) which, in turn, ends up
+ * setting the value of the corresponding css property in the rule-view.
+ * Use this function to close the tooltip and make sure the test waits for the
+ * ruleview-changed event.
+ * @param {Tooltip} tooltip
+ * @param {CSSRuleView} view
+ */
+function* hideTooltipAndWaitForRuleviewChanged(tooltip, view) {
+  let onModified = view.once("ruleview-changed");
+  tooltip.hide();
+  yield onModified;
+}
+
+/**
  * Listen for a new tab to open and return a promise that resolves when one
  * does and completes the load event.
  *

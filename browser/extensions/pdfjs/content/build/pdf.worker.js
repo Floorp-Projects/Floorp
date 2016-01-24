@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.3.196';
-var pdfjsBuild = '5336a53';
+var pdfjsVersion = '1.3.231';
+var pdfjsBuild = '58329f7';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -9480,6 +9480,26 @@ function isValidUrl(url, allowRelative) {
 }
 PDFJS.isValidUrl = isValidUrl;
 
+/**
+ * Adds various attributes (href, title, target, rel) to hyperlinks.
+ * @param {HTMLLinkElement} link - The link element.
+ * @param {Object} params - An object with the properties:
+ * @param {string} params.url - An absolute URL.
+ */
+function addLinkAttributes(link, params) {
+  var url = params && params.url;
+  link.href = link.title = (url ? removeNullCharacters(url) : '');
+
+  if (url) {
+    if (isExternalLinkTargetSet()) {
+      link.target = LinkTargetStringMap[PDFJS.externalLinkTarget];
+    }
+    // Strip referrer from the URL.
+    link.rel = PDFJS.externalLinkRel;
+  }
+}
+PDFJS.addLinkAttributes = addLinkAttributes;
+
 function shadow(obj, prop, value) {
   Object.defineProperty(obj, prop, { value: value,
                                      enumerable: true,
@@ -9877,6 +9897,42 @@ var Util = PDFJS.Util = (function UtilClosure() {
 
   Util.sign = function Util_sign(num) {
     return num < 0 ? -1 : 1;
+  };
+
+  var ROMAN_NUMBER_MAP = [
+    '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
+    '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
+    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
+  ];
+  /**
+   * Converts positive integers to (upper case) Roman numerals.
+   * @param {integer} number - The number that should be converted.
+   * @param {boolean} lowerCase - Indicates if the result should be converted
+   *   to lower case letters. The default is false.
+   * @return {string} The resulting Roman number.
+   */
+  Util.toRoman = function Util_toRoman(number, lowerCase) {
+    assert(isInt(number) && number > 0,
+           'The number should be a positive integer.');
+    var pos, romanBuf = [];
+    // Thousands
+    while (number >= 1000) {
+      number -= 1000;
+      romanBuf.push('M');
+    }
+    // Hundreds
+    pos = (number / 100) | 0;
+    number %= 100;
+    romanBuf.push(ROMAN_NUMBER_MAP[pos]);
+    // Tens
+    pos = (number / 10) | 0;
+    number %= 10;
+    romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
+    // Ones
+    romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
+
+    var romanStr = romanBuf.join('');
+    return (lowerCase ? romanStr.toLowerCase() : romanStr);
   };
 
   Util.appendToArray = function Util_appendToArray(arr1, arr2) {
@@ -10503,6 +10559,7 @@ exports.isInt = isInt;
 exports.isNum = isNum;
 exports.isString = isString;
 exports.isValidUrl = isValidUrl;
+exports.addLinkAttributes = addLinkAttributes;
 exports.loadJpegStream = loadJpegStream;
 exports.log2 = log2;
 exports.readInt8 = readInt8;
@@ -22309,6 +22366,8 @@ var shadow = sharedUtil.shadow;
 var stringToPDFString = sharedUtil.stringToPDFString;
 var stringToUTF8String = sharedUtil.stringToUTF8String;
 var warn = sharedUtil.warn;
+var isValidUrl = sharedUtil.isValidUrl;
+var Util = sharedUtil.Util;
 var Ref = corePrimitives.Ref;
 var RefSet = corePrimitives.RefSet;
 var RefSetCache = corePrimitives.RefSetCache;
@@ -22408,9 +22467,17 @@ var Catalog = (function CatalogClosure() {
             if (!outlineDict.has('Title')) {
               error('Invalid outline item');
             }
-            var dest = outlineDict.get('A');
-            if (dest) {
-              dest = dest.get('D');
+            var actionDict = outlineDict.get('A'), dest = null, url = null;
+            if (actionDict) {
+              var destEntry = actionDict.get('D');
+              if (destEntry) {
+                dest = destEntry;
+              } else {
+                var uriEntry = actionDict.get('URI');
+                if (isString(uriEntry) && isValidUrl(uriEntry, false)) {
+                  url = uriEntry;
+                }
+              }
             } else if (outlineDict.has('Dest')) {
               dest = outlineDict.getRaw('Dest');
               if (isName(dest)) {
@@ -22420,6 +22487,7 @@ var Catalog = (function CatalogClosure() {
             var title = outlineDict.get('Title');
             var outlineItem = {
               dest: dest,
+              url: url,
               title: stringToPDFString(title),
               color: outlineDict.get('C') || [0, 0, 0],
               count: outlineDict.get('Count'),
@@ -22514,6 +22582,96 @@ var Catalog = (function CatalogClosure() {
       }
       return dest;
     },
+
+    get pageLabels() {
+      var obj = null;
+      try {
+        obj = this.readPageLabels();
+      } catch (ex) {
+        if (ex instanceof MissingDataException) {
+          throw ex;
+        }
+        warn('Unable to read page labels.');
+      }
+      return shadow(this, 'pageLabels', obj);
+    },
+    readPageLabels: function Catalog_readPageLabels() {
+      var obj = this.catDict.getRaw('PageLabels');
+      if (!obj) {
+        return null;
+      }
+      var pageLabels = new Array(this.numPages);
+      var style = null;
+      var prefix = '';
+      var start = 1;
+
+      var numberTree = new NumberTree(obj, this.xref);
+      var nums = numberTree.getAll();
+      var currentLabel = '', currentIndex = 1;
+
+      for (var i = 0, ii = this.numPages; i < ii; i++) {
+        if (nums.hasOwnProperty(i)) {
+          var labelDict = nums[i];
+          assert(isDict(labelDict), 'The PageLabel is not a dictionary.');
+
+          var type = labelDict.get('Type');
+          assert(!type || (isName(type) && type.name === 'PageLabel'),
+                 'Invalid type in PageLabel dictionary.');
+
+          var s = labelDict.get('S');
+          assert(!s || isName(s), 'Invalid style in PageLabel dictionary.');
+          style = (s ? s.name : null);
+
+          prefix = labelDict.get('P') || '';
+          assert(isString(prefix), 'Invalid prefix in PageLabel dictionary.');
+
+          start = labelDict.get('St') || 1;
+          assert(isInt(start), 'Invalid start in PageLabel dictionary.');
+          currentIndex = start;
+        }
+
+        switch (style) {
+          case 'D':
+            currentLabel = currentIndex;
+            break;
+          case 'R':
+          case 'r':
+            currentLabel = Util.toRoman(currentIndex, style === 'r');
+            break;
+          case 'A':
+          case 'a':
+            var LIMIT = 26; // Use only the characters A--Z, or a--z.
+            var A_UPPER_CASE = 0x41, A_LOWER_CASE = 0x61;
+
+            var baseCharCode = (style === 'a' ? A_LOWER_CASE : A_UPPER_CASE);
+            var letterIndex = currentIndex - 1;
+            var character = String.fromCharCode(baseCharCode +
+                                                (letterIndex % LIMIT));
+            var charBuf = [];
+            for (var j = 0, jj = (letterIndex / LIMIT) | 0; j <= jj; j++) {
+              charBuf.push(character);
+            }
+            currentLabel = charBuf.join('');
+            break;
+          default:
+            assert(!style,
+                   'Invalid style "' + style + '" in PageLabel dictionary.');
+        }
+        pageLabels[i] = prefix + currentLabel;
+
+        currentLabel = '';
+        currentIndex++;
+      }
+
+      // Ignore PageLabels if they correspond to standard page numbering.
+      for (i = 0, ii = this.numPages; i < ii; i++) {
+        if (pageLabels[i] !== (i + 1).toString()) {
+          break;
+        }
+      }
+      return (i === ii ? [] : pageLabels);
+    },
+
     get attachments() {
       var xref = this.xref;
       var attachments = null, nameTreeRef;
@@ -23389,24 +23547,23 @@ var XRef = (function XRefClosure() {
 })();
 
 /**
- * A NameTree is like a Dict but has some advantageous properties, see the
- * spec (7.9.6) for more details.
- * TODO: implement all the Dict functions and make this more efficent.
+ * A NameTree/NumberTree is like a Dict but has some advantageous properties,
+ * see the specification (7.9.6 and 7.9.7) for additional details.
+ * TODO: implement all the Dict functions and make this more efficient.
  */
-var NameTree = (function NameTreeClosure() {
-  function NameTree(root, xref) {
-    this.root = root;
-    this.xref = xref;
+var NameOrNumberTree = (function NameOrNumberTreeClosure() {
+  function NameOrNumberTree(root, xref) {
+    throw new Error('Cannot initialize NameOrNumberTree.');
   }
 
-  NameTree.prototype = {
-    getAll: function NameTree_getAll() {
+  NameOrNumberTree.prototype = {
+    getAll: function NameOrNumberTree_getAll() {
       var dict = {};
       if (!this.root) {
         return dict;
       }
       var xref = this.xref;
-      // reading name tree
+      // Reading Name/Number tree.
       var processed = new RefSet();
       processed.put(this.root);
       var queue = [this.root];
@@ -23420,45 +23577,43 @@ var NameTree = (function NameTreeClosure() {
           var kids = obj.get('Kids');
           for (i = 0, n = kids.length; i < n; i++) {
             var kid = kids[i];
-            if (processed.has(kid)) {
-              error('invalid destinations');
-            }
+            assert(!processed.has(kid),
+                   'Duplicate entry in "' + this._type + '" tree.');
             queue.push(kid);
             processed.put(kid);
           }
           continue;
         }
-        var names = obj.get('Names');
-        if (names) {
-          for (i = 0, n = names.length; i < n; i += 2) {
-            dict[xref.fetchIfRef(names[i])] = xref.fetchIfRef(names[i + 1]);
+        var entries = obj.get(this._type);
+        if (isArray(entries)) {
+          for (i = 0, n = entries.length; i < n; i += 2) {
+            dict[xref.fetchIfRef(entries[i])] = xref.fetchIfRef(entries[i + 1]);
           }
         }
       }
       return dict;
     },
 
-    get: function NameTree_get(destinationId) {
+    get: function NameOrNumberTree_get(key) {
       if (!this.root) {
         return null;
       }
 
       var xref = this.xref;
-      var kidsOrNames = xref.fetchIfRef(this.root);
+      var kidsOrEntries = xref.fetchIfRef(this.root);
       var loopCount = 0;
-      var MAX_NAMES_LEVELS = 10;
+      var MAX_LEVELS = 10;
       var l, r, m;
 
       // Perform a binary search to quickly find the entry that
-      // contains the named destination we are looking for.
-      while (kidsOrNames.has('Kids')) {
-        loopCount++;
-        if (loopCount > MAX_NAMES_LEVELS) {
-          warn('Search depth limit for named destionations has been reached.');
+      // contains the key we are looking for.
+      while (kidsOrEntries.has('Kids')) {
+        if (++loopCount > MAX_LEVELS) {
+          warn('Search depth limit reached for "' + this._type + '" tree.');
           return null;
         }
 
-        var kids = kidsOrNames.get('Kids');
+        var kids = kidsOrEntries.get('Kids');
         if (!isArray(kids)) {
           return null;
         }
@@ -23470,12 +23625,12 @@ var NameTree = (function NameTreeClosure() {
           var kid = xref.fetchIfRef(kids[m]);
           var limits = kid.get('Limits');
 
-          if (destinationId < xref.fetchIfRef(limits[0])) {
+          if (key < xref.fetchIfRef(limits[0])) {
             r = m - 1;
-          } else if (destinationId > xref.fetchIfRef(limits[1])) {
+          } else if (key > xref.fetchIfRef(limits[1])) {
             l = m + 1;
           } else {
-            kidsOrNames = xref.fetchIfRef(kids[m]);
+            kidsOrEntries = xref.fetchIfRef(kids[m]);
             break;
           }
         }
@@ -23484,31 +23639,55 @@ var NameTree = (function NameTreeClosure() {
         }
       }
 
-      // If we get here, then we have found the right entry. Now
-      // go through the named destinations in the Named dictionary
-      // until we find the exact destination we're looking for.
-      var names = kidsOrNames.get('Names');
-      if (isArray(names)) {
+      // If we get here, then we have found the right entry. Now go through the
+      // entries in the dictionary until we find the key we're looking for.
+      var entries = kidsOrEntries.get(this._type);
+      if (isArray(entries)) {
         // Perform a binary search to reduce the lookup time.
         l = 0;
-        r = names.length - 2;
+        r = entries.length - 2;
         while (l <= r) {
           // Check only even indices (0, 2, 4, ...) because the
-          // odd indices contain the actual D array.
+          // odd indices contain the actual data.
           m = (l + r) & ~1;
-          if (destinationId < xref.fetchIfRef(names[m])) {
+          var currentKey = xref.fetchIfRef(entries[m]);
+          if (key < currentKey) {
             r = m - 2;
-          } else if (destinationId > xref.fetchIfRef(names[m])) {
+          } else if (key > currentKey) {
             l = m + 2;
           } else {
-            return xref.fetchIfRef(names[m + 1]);
+            return xref.fetchIfRef(entries[m + 1]);
           }
         }
       }
       return null;
     }
   };
+  return NameOrNumberTree;
+})();
+
+var NameTree = (function NameTreeClosure() {
+  function NameTree(root, xref) {
+    this.root = root;
+    this.xref = xref;
+    this._type = 'Names';
+  }
+
+  Util.inherit(NameTree, NameOrNumberTree, {});
+
   return NameTree;
+})();
+
+var NumberTree = (function NumberTreeClosure() {
+  function NumberTree(root, xref) {
+    this.root = root;
+    this.xref = xref;
+    this._type = 'Nums';
+  }
+
+  Util.inherit(NumberTree, NameOrNumberTree, {});
+
+  return NumberTree;
 })();
 
 /**
@@ -28097,8 +28276,16 @@ var Font = (function FontClosure() {
         delete tables['cvt '];
         this.isOpenType = true;
       } else {
-        if (!tables.glyf || !tables.loca) {
-          error('Required "glyf" or "loca" tables are not found');
+        if (!tables.loca) {
+          error('Required "loca" table is not found');
+        }
+        if (!tables.glyf) {
+          warn('Required "glyf" table is not found -- trying to recover.');
+          // Note: We use `sanitizeGlyphLocations` to add dummy glyf data below.
+          tables.glyf = {
+            tag: 'glyf',
+            data: new Uint8Array(0),
+          };
         }
         this.isOpenType = false;
       }
@@ -28305,9 +28492,11 @@ var Font = (function FontClosure() {
               var glyphId = properties.glyphNames.indexOf(glyphName);
               if (glyphId > 0 && hasGlyph(glyphId, -1, -1)) {
                 charCodeToGlyphId[charCode] = glyphId;
-              } else {
-                charCodeToGlyphId[charCode] = 0; // notdef
+                found = true;
               }
+            }
+            if (!found) {
+              charCodeToGlyphId[charCode] = 0; // notdef
             }
           }
         } else if (cmapPlatformId === 0 && cmapEncodingId === 0) {
@@ -40408,6 +40597,12 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
     handler.on('GetDestination',
       function wphSetupGetDestination(data) {
         return pdfManager.ensureCatalog('getDestination', [data.id]);
+      }
+    );
+
+    handler.on('GetPageLabels',
+      function wphSetupGetPageLabels(data) {
+        return pdfManager.ensureCatalog('pageLabels');
       }
     );
 

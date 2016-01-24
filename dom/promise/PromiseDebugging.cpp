@@ -60,10 +60,10 @@ public:
 private:
   // `true` if an instance of `FlushRejections` is currently dispatched
   // and has not been executed yet.
-  static ThreadLocal<bool> sDispatched;
+  static MOZ_THREAD_LOCAL(bool) sDispatched;
 };
 
-/* static */ ThreadLocal<bool>
+/* static */ MOZ_THREAD_LOCAL(bool)
 FlushRejections::sDispatched;
 
 static Promise*
