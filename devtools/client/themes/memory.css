@@ -102,6 +102,11 @@ html, body, #app, #memory-tool {
 #take-snapshot::before {
   background-image: url(images/command-screenshot.png);
 }
+
+#clear-snapshots::before {
+  background-image: url(chrome://devtools/skin/images/clear.svg);
+}
+
 @media (min-resolution: 1.1dppx) {
   #take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
