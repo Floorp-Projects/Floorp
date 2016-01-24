@@ -19,7 +19,6 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.TabsAccessor;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
@@ -291,7 +290,7 @@ public class SendTab extends ShareMethod {
 
         @Override
         public void sync() {
-            fxAccount.requestSync(FirefoxAccounts.FORCE, STAGES_TO_SYNC, null);
+            fxAccount.requestImmediateSync(STAGES_TO_SYNC, null);
         }
     }
 }
