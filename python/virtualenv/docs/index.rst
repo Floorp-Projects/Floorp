@@ -77,8 +77,8 @@ Other Documentation and Links
   He also wrote `an example of using virtualenv to try IPython`__.
 
   .. _virtualenvwrapper: https://pypi.python.org/pypi/virtualenvwrapper/
-  .. __: http://www.doughellmann.com/articles/CompletelyDifferent-2008-05-virtualenvwrapper/index.html
-  .. __: http://www.doughellmann.com/articles/CompletelyDifferent-2008-02-ipython-and-virtualenv/index.html
+  .. __: https://doughellmann.com/blog/2008/05/01/virtualenvwrapper/
+  .. __: https://doughellmann.com/blog/2008/02/01/ipython-and-virtualenv/
 
 * `Pew`_ is another wrapper for virtualenv that makes use of a different
   activation technique.
