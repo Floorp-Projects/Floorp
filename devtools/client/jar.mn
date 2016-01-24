@@ -314,6 +314,7 @@ devtools.jar:
     skin/images/tool-memory-active.svg (themes/images/tool-memory-active.svg)
     skin/images/close.png (themes/images/close.png)
     skin/images/close@2x.png (themes/images/close@2x.png)
+    skin/images/clear.svg (themes/images/clear.svg)
     skin/images/vview-delete.png (themes/images/vview-delete.png)
     skin/images/vview-delete@2x.png (themes/images/vview-delete@2x.png)
     skin/images/vview-edit.png (themes/images/vview-edit.png)
