@@ -13,52 +13,41 @@
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:minHeight="@dimen/firstrun_min_height"
-                  android:background="@color/android:white"
+                  android:background="@color/about_page_header_grey"
                   android:gravity="center_horizontal"
                   android:orientation="vertical">
 
-        <FrameLayout android:layout_width="match_parent"
-                     android:layout_height="wrap_content"
-                     android:background="@color/link_blue">
 
-            <ImageView android:layout_width="wrap_content"
-                       android:layout_height="@dimen/firstrun_background_height"
-                       android:scaleType="fitCenter"
-                       android:layout_gravity="center"
-                       android:adjustViewBounds="true"
-                       android:src="@drawable/firstrun_background_devices"/>
-
-            <ImageView android:layout_width="@dimen/firstrun_brand_size"
-                       android:layout_height="@dimen/firstrun_brand_size"
-                       android:src="@drawable/large_icon"
-                       android:layout_gravity="center"/>
-        </FrameLayout>
+        <ImageView android:layout_width="wrap_content"
+                   android:layout_height="@dimen/firstrun_background_height"
+                   android:layout_marginTop="40dp"
+                   android:layout_marginBottom="40dp"
+                   android:scaleType="fitCenter"
+                   android:layout_gravity="center"
+                   android:adjustViewBounds="true"
+                   android:src="@drawable/firstrun_signin"/>
 
         <TextView android:layout_width="@dimen/firstrun_content_width"
                   android:layout_height="wrap_content"
                   android:gravity="center"
-                  android:paddingTop="30dp"
+                  android:paddingBottom="40dp"
                   android:textAppearance="@style/TextAppearance.FirstrunLight.Main"
-                  android:text="@string/firstrun_welcome_message"/>
-
-        <TextView android:layout_width="@dimen/firstrun_content_width"
-                  android:layout_height="wrap_content"
-                  android:paddingTop="20dp"
-                  android:paddingBottom="30dp"
-                  android:gravity="center"
-                  android:textAppearance="@style/TextAppearance.FirstrunRegular.Body"
-                  android:text="@string/firstrun_welcome_subtext"/>
+                  android:text="@string/firstrun_signin_message"/>
 
         <Button android:id="@+id/welcome_account"
                 style="@style/Widget.Firstrun.Button"
                 android:background="@drawable/button_background_action_orange_round"
                 android:layout_gravity="center"
-                android:text="@string/firstrun_welcome_button_account"/>
+                android:text="@string/firstrun_signin_button"/>
+
+        <View android:layout_weight="1"
+              android:layout_height="0dp"
+              android:layout_width="match_parent"/>
 
         <TextView android:id="@+id/welcome_browse"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:padding="20dp"
+                  android:padding="30dp"
                   android:gravity="center"
                   android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
                   android:text="@string/firstrun_welcome_button_browser"/>

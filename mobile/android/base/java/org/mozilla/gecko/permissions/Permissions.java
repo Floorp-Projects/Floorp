@@ -6,6 +6,7 @@
 package org.mozilla.gecko.permissions;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 
@@ -46,9 +47,12 @@ public class Permissions {
 
     /**
      * Entry point for checking (and optionally prompting for) runtime permissions.
+     *
+     * Note: The provided context needs to be an Activity context in order to prompt. Use doNotPrompt()
+     * for all other contexts.
      */
-    public static PermissionBlock from(@NonNull Activity activity) {
-        return new PermissionBlock(activity, permissionHelper);
+    public static PermissionBlock from(@NonNull Context context) {
+        return new PermissionBlock(context, permissionHelper);
     }
 
     /**
@@ -99,7 +103,7 @@ public class Permissions {
     public static synchronized void onRequestPermissionsResult(@NonNull Activity activity, @NonNull String[] permissions, @NonNull int[] grantResults) {
         processGrantResults(permissions, grantResults);
 
-        processQueue(activity);
+        processQueue(activity, permissions, grantResults);
     }
 
     /* package-private */ static synchronized void prompt(Activity activity, PermissionBlock block) {
@@ -112,10 +116,10 @@ public class Permissions {
     }
 
     private static synchronized void processGrantResults(@NonNull String[] permissions, @NonNull int[] grantResults) {
-        HashSet<String> grantedPermissions = collectGrantedPermissions(permissions, grantResults);
+        final HashSet<String> grantedPermissions = collectGrantedPermissions(permissions, grantResults);
 
         while (!prompt.isEmpty()) {
-            PermissionBlock block = prompt.poll();
+            final PermissionBlock block = prompt.poll();
 
             if (allPermissionsGranted(block, grantedPermissions)) {
                 block.onPermissionsGranted();
@@ -125,14 +129,22 @@ public class Permissions {
         }
     }
 
-    private static synchronized void processQueue(Activity activity) {
+    private static synchronized void processQueue(Activity activity, String[] permissions, int[] grantResults) {
+        final HashSet<String> deniedPermissions = collectDeniedPermissions(permissions, grantResults);
+
         while (!waiting.isEmpty()) {
-            PermissionBlock block = waiting.poll();
+            final PermissionBlock block = waiting.poll();
 
             if (block.hasPermissions(activity)) {
                 block.onPermissionsGranted();
             } else {
-                prompt.add(block);
+                if (atLeastOnePermissionDenied(block, deniedPermissions)) {
+                    // We just prompted the user and one of the permissions of this block has been denied:
+                    // There's no reason to instantly prompt again; Just reject without prompting.
+                    block.onPermissionsDenied();
+                } else {
+                    prompt.add(block);
+                }
             }
         }
 
@@ -152,9 +164,17 @@ public class Permissions {
     }
 
     private static HashSet<String> collectGrantedPermissions(@NonNull String[] permissions, @NonNull int[] grantResults) {
+        return filterPermissionsByResult(permissions, grantResults, PackageManager.PERMISSION_GRANTED);
+    }
+
+    private static HashSet<String> collectDeniedPermissions(@NonNull String[] permissions, @NonNull int[] grantResults) {
+        return filterPermissionsByResult(permissions, grantResults, PackageManager.PERMISSION_DENIED);
+    }
+
+    private static HashSet<String> filterPermissionsByResult(@NonNull String[] permissions, @NonNull int[] grantResults, int result) {
         HashSet<String> grantedPermissions = new HashSet<>(permissions.length);
         for (int i = 0; i < permissions.length; i++) {
-            if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults[i] == result) {
                 grantedPermissions.add(permissions[i]);
             }
         }
@@ -169,5 +189,15 @@ public class Permissions {
         }
 
         return true;
+    }
+
+    private static boolean atLeastOnePermissionDenied(PermissionBlock block, HashSet<String> deniedPermissions) {
+        for (String permission : block.getPermissions()) {
+            if (deniedPermissions.contains(permission)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -258,7 +258,7 @@ const Heap = module.exports = createClass({
         && census.report.children.length === 1
         && census.report.children[0].name === "noStack") {
       contents.push(dom.div({ className: "error no-allocation-stacks" },
-                           L10N.getStr("heapview.noAllocationStacks")));
+                            L10N.getStr("heapview.noAllocationStacks")));
     }
 
     contents.push(CensusHeader());

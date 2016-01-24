@@ -16,19 +16,26 @@ add_task(function*() {
     .querySelector(".ruleview-filterswatch");
 
   let filterTooltip = view.tooltips.filterEditor;
-  let onShow = filterTooltip.tooltip.once("shown");
+  // Clicking on a cssfilter swatch sets the current filter value in the tooltip
+  // which, in turn, makes the FilterWidget emit an "updated" event that causes
+  // the rule-view to refresh. So we must wait for the ruleview-changed event.
+  let onRuleViewChanged = view.once("ruleview-changed");
   swatch.click();
-  yield onShow;
+  yield onRuleViewChanged;
 
   let widget = yield filterTooltip.widget;
 
+  onRuleViewChanged = view.once("ruleview-changed");
   widget.setCssValue("blur(2px)");
   yield waitForComputedStyleProperty("body", null, "filter", "blur(2px)");
+  yield onRuleViewChanged;
 
   ok(true, "Changes previewed on the element");
 
+  onRuleViewChanged = view.once("ruleview-changed");
   info("Pressing RETURN to commit changes");
   EventUtils.sendKey("RETURN", widget.styleWindow);
+  yield onRuleViewChanged;
 
   const computed = content.getComputedStyle(content.document.body);
   is(computed.filter, "blur(2px)",

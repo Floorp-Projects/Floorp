@@ -332,7 +332,7 @@ html, body, #app, #memory-tool {
   display: flex;
 }
 
-.tree-node:nth-child(2n) {
+.tree-node-odd {
   background-color: var(--row-alt-background-color);
 }
 

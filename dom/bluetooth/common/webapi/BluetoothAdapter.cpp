@@ -458,7 +458,11 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Name")) {
     RemoteNameToString(value.get_BluetoothRemoteName(), mName);
   } else if (name.EqualsLiteral("Address")) {
-    AddressToString(value.get_BluetoothAddress(), mAddress);
+    if (value.get_BluetoothAddress().IsCleared()) {
+      mAddress.Truncate(); // Reset to empty string
+    } else {
+      AddressToString(value.get_BluetoothAddress(), mAddress);
+    }
   } else if (name.EqualsLiteral("Discoverable")) {
     mDiscoverable = value.get_bool();
   } else if (name.EqualsLiteral("Discovering")) {

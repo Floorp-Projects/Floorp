@@ -39,10 +39,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   // Wait for the dominator tree to be computed and fetched.
 
-  yield waitUntilState(store, state =>
-    state.snapshots[0] &&
-    state.snapshots[0].dominatorTree &&
-    state.snapshots[0].dominatorTree.state === dominatorTreeState.LOADED);
+  yield waitUntilDominatorTreeState(store, [dominatorTreeState.LOADED]);
   ok(true, "Computed and fetched the dominator tree.");
 
   // Expand all the dominator tree nodes that are eagerly fetched, except for

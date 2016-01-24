@@ -73,6 +73,9 @@ public class FirstrunPager extends ViewPager {
             panels = FirstrunPagerConfig.getRestricted();
         } else {
             panels = FirstrunPagerConfig.getDefault(appContext);
+            if (panels.size() == 1) {
+                mTabStrip.setVisibility(GONE);
+            }
         }
 
         setAdapter(new ViewPagerAdapter(fm, panels));
@@ -80,7 +83,7 @@ public class FirstrunPager extends ViewPager {
             @Override
             public void next() {
                 final int currentPage = FirstrunPager.this.getCurrentItem();
-                if (currentPage < FirstrunPager.this.getChildCount() - 1) {
+                if (currentPage < FirstrunPager.this.getAdapter().getCount() - 1) {
                     FirstrunPager.this.setCurrentItem(currentPage + 1);
                 }
             }
@@ -109,6 +112,9 @@ public class FirstrunPager extends ViewPager {
         });
 
         animateLoad();
+
+        // Record telemetry for first onboarding panel, for baseline.
+        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.PANEL, "onboarding.0");
     }
 
     public void cleanup() {
@@ -155,7 +161,8 @@ public class FirstrunPager extends ViewPager {
         public Fragment getItem(int i) {
             Fragment fragment = this.fragments[i];
             if (fragment == null) {
-                fragment = Fragment.instantiate(context, panels.get(i).getClassname());
+                FirstrunPagerConfig.FirstrunPanelConfig panelConfig = panels.get(i);
+                fragment = Fragment.instantiate(context, panelConfig.getClassname(), panelConfig.getArgs());
                 ((FirstrunPanel) fragment).setPagerNavigation(pagerNavigation);
                 fragments[i] = fragment;
             }
