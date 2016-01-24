@@ -29,7 +29,7 @@ namespace gl {
 StaticMutex GLLibraryEGL::sMutex;
 GLLibraryEGL sEGLLibrary;
 #ifdef MOZ_B2G
-ThreadLocal<EGLContext> GLLibraryEGL::sCurrentContext;
+MOZ_THREAD_LOCAL(EGLContext) GLLibraryEGL::sCurrentContext;
 #endif
 
 // should match the order of EGLExtensions, and be null-terminated.

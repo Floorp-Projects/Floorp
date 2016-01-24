@@ -41,7 +41,8 @@ addMessageListener("devtools:test:console", function ({ data }) {
  *        { method: the request method (default: "GET"),
  *          url: the url to request (default: content.location.href),
  *          body: the request body to send (default: ""),
- *          nocache: append an unique token to the query string (default: true)
+ *          nocache: append an unique token to the query string (default: true),
+ *          requestHeaders: set request headers (default: none)
  *        }
  *
  * @return Promise A promise that's resolved with object
@@ -67,9 +68,16 @@ function promiseXHR(data) {
   });
 
   xhr.open(method, url);
+
+  // Set request headers
+  if (data.requestHeaders) {
+    data.requestHeaders.forEach(header => {
+      xhr.setRequestHeader(header.name, header.value);
+    });
+  }
+
   xhr.send(body);
   return deferred.promise;
-
 }
 
 /**
@@ -83,7 +91,11 @@ function promiseXHR(data) {
  *   method: "GET",
  *   url: content.location.href,
  *   body: "",
- *   nocache: true, // Adds a cache busting random token to the URL
+ *   nocache: true, // Adds a cache busting random token to the URL,
+ *   requestHeaders: [{
+ *     name: "Content-Type",
+ *     value: "application/json"
+ *   }]
  * }
  *
  * The handler will respond with devtools:test:xhr message after all requests

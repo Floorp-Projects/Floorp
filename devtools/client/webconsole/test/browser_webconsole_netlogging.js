@@ -1,171 +1,109 @@
 /* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * Contributor(s):
- *  Julian Viereck <jviereck@mozilla.com>
- *  Patrick Walton <pcwalton@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Tests that network log messages bring up the network panel.
+// Tests response logging for different request types.
 
 "use strict";
-
-const TEST_URI = "data:text/html;charset=utf-8,Web Console network " +
-                 "logging tests";
 
 const TEST_NETWORK_REQUEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/" +
   "test-network-request.html";
 
-const TEST_IMG = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-image.png";
-
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
-var lastRequest = null;
-var requestCallback = null;
-var browser, hud;
+add_task(function* testPageLoad() {
+  let finishedRequest = waitForFinishedRequest();
+  let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
+  let request = yield finishedRequest;
 
-function test() {
-  loadTab(TEST_URI).then((tab) => {
-    browser = tab.browser;
+  ok(request, "Page load was logged");
 
-    openConsole().then((aHud) => {
-      hud = aHud;
+  let client = hud.ui.webConsoleClient;
+  let args = [request.actor];
+  const postData = yield getPacket(client, "getRequestPostData", args);
+  const responseContent = yield getPacket(client, "getResponseContent", args);
 
-      HUDService.lastFinishedRequest.callback = requestCallbackWrapper;
+  is(request.request.url, TEST_NETWORK_REQUEST_URI,
+    "Logged network entry is page load");
+  is(request.request.method, "GET", "Method is correct");
+  ok(!postData.postData.text, "No request body was stored");
+  ok(!postData.postDataDiscarded,
+    "Request body was not discarded");
+  is(responseContent.content.text.indexOf("<!DOCTYPE HTML>"), 0,
+    "Response body's beginning is okay");
+});
 
-      executeSoon(testPageLoad);
-    });
-  });
-}
+add_task(function* testXhrGet() {
+  let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
 
-function requestCallbackWrapper(request) {
-  lastRequest = request;
-
-  hud.ui.webConsoleClient.getResponseContent(lastRequest.actor,
-    function(aResponse) {
-      lastRequest.response.content = aResponse.content;
-      lastRequest.discardResponseBody = aResponse.contentDiscarded;
-
-      hud.ui.webConsoleClient.getRequestPostData(lastRequest.actor,
-        function(response) {
-          lastRequest.request.postData = response.postData;
-          lastRequest.discardRequestBody = response.postDataDiscarded;
-
-          if (requestCallback) {
-            requestCallback();
-          }
-        });
-    });
-}
-
-function testPageLoad() {
-  requestCallback = function() {
-    // Check if page load was logged correctly.
-    ok(lastRequest, "Page load was logged");
-
-    is(lastRequest.request.url, TEST_NETWORK_REQUEST_URI,
-      "Logged network entry is page load");
-    is(lastRequest.request.method, "GET", "Method is correct");
-    ok(!lastRequest.request.postData.text, "No request body was stored");
-    ok(!lastRequest.discardRequestBody, "Request body was not discarded");
-    is(lastRequest.response.content.text.indexOf("<!DOCTYPE HTML>"), 0,
-      "Response body's beginning is okay");
-
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testXhrGet);
-  };
-
-  content.location = TEST_NETWORK_REQUEST_URI;
-}
-
-function testXhrGet() {
-  requestCallback = function() {
-    ok(lastRequest, "testXhrGet() was logged");
-    is(lastRequest.request.method, "GET", "Method is correct");
-    ok(!lastRequest.request.postData.text, "No request body was sent");
-    ok(!lastRequest.discardRequestBody, "Request body was not discarded");
-    is(lastRequest.response.content.text, TEST_DATA_JSON_CONTENT,
-      "Response is correct");
-
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testXhrPost);
-  };
-
-  // Start the XMLHttpRequest() GET test.
+  let finishedRequest = waitForFinishedRequest();
   content.wrappedJSObject.testXhrGet();
-}
+  let request = yield finishedRequest;
 
-function testXhrPost() {
-  requestCallback = function() {
-    ok(lastRequest, "testXhrPost() was logged");
-    is(lastRequest.request.method, "POST", "Method is correct");
-    is(lastRequest.request.postData.text, "Hello world!",
-      "Request body was logged");
-    is(lastRequest.response.content.text, TEST_DATA_JSON_CONTENT,
-      "Response is correct");
+  ok(request, "testXhrGet() was logged");
 
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testFormSubmission);
-  };
+  let client = hud.ui.webConsoleClient;
+  let args = [request.actor];
+  const postData = yield getPacket(client, "getRequestPostData", args);
+  const responseContent = yield getPacket(client, "getResponseContent", args);
 
-  // Start the XMLHttpRequest() POST test.
+  is(request.request.method, "GET", "Method is correct");
+  ok(!postData.postData.text, "No request body was sent");
+  ok(!postData.postDataDiscarded,
+    "Request body was not discarded");
+  is(responseContent.content.text, TEST_DATA_JSON_CONTENT,
+    "Response is correct");
+});
+
+add_task(function* testXhrPost() {
+  let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
+
+  let finishedRequest = waitForFinishedRequest();
   content.wrappedJSObject.testXhrPost();
-}
+  let request = yield finishedRequest;
 
-function testFormSubmission() {
-  // Start the form submission test. As the form is submitted, the page is
-  // loaded again. Bind to the load event to catch when this is done.
-  requestCallback = function() {
-    ok(lastRequest, "testFormSubmission() was logged");
-    is(lastRequest.request.method, "POST", "Method is correct");
-    isnot(lastRequest.request.postData.text
-      .indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
-      "Content-Type is correct");
-    isnot(lastRequest.request.postData.text
-      .indexOf("Content-Length: 20"), -1, "Content-length is correct");
-    isnot(lastRequest.request.postData.text
-      .indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
-    is(lastRequest.response.content.text.indexOf("<!DOCTYPE HTML>"), 0,
-      "Response body's beginning is okay");
+  ok(request, "testXhrPost() was logged");
 
-    executeSoon(testNetworkPanel);
-  };
+  let client = hud.ui.webConsoleClient;
+  let args = [request.actor];
+  const postData = yield getPacket(client, "getRequestPostData", args);
+  const responseContent = yield getPacket(client, "getResponseContent", args);
+
+  is(request.request.method, "POST", "Method is correct");
+  is(postData.postData.text, "Hello world!", "Request body was logged");
+  is(responseContent.content.text, TEST_DATA_JSON_CONTENT,
+    "Response is correct");
+});
+
+add_task(function* testFormSubmission() {
+  let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
+
+  let finishedRequest = waitForFinishedRequest();
   ContentTask.spawn(gBrowser.selectedBrowser, { }, `function()
   {
     let form = content.document.querySelector("form");
     form.submit();
   }`);
-}
+  let request = yield finishedRequest;
 
-function testNetworkPanel() {
-  // Open the NetworkPanel. The functionality of the NetworkPanel is tested
-  // within separate test files.
-  hud.ui.openNetworkPanel(lastRequest.actor).then(() => {
-    let toolbox = gDevTools.getToolbox(hud.target);
-    is(toolbox.currentToolId, "netmonitor", "Network panel was opened");
-    let panel = toolbox.getCurrentPanel();
-    let selected = panel.panelWin.NetMonitorView.RequestsMenu.selectedItem;
-    is(selected.attachment.method, lastRequest.request.method,
-       "The correct request is selected");
-    is(selected.attachment.url, lastRequest.request.url,
-       "The correct request is definitely selected");
+  ok(request, "testFormSubmission() was logged");
 
-    // All tests are done. Shutdown.
-    lastRequest = null;
-    HUDService.lastFinishedRequest.callback = null;
-    browser = requestCallback = hud = null;
-    executeSoon(finishTest);
-  }).then(null, error => {
-    ok(false, "Got an error: " + error.message + "\n" + error.stack);
-  });
-}
+  let client = hud.ui.webConsoleClient;
+  let args = [request.actor];
+  const postData = yield getPacket(client, "getRequestPostData", args);
+  const responseContent = yield getPacket(client, "getResponseContent", args);
+
+  is(request.request.method, "POST", "Method is correct");
+  isnot(postData.postData.text
+    .indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
+    "Content-Type is correct");
+  isnot(postData.postData.text
+    .indexOf("Content-Length: 20"), -1, "Content-length is correct");
+  isnot(postData.postData.text
+    .indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
+  is(responseContent.content.text.indexOf("<!DOCTYPE HTML>"), 0,
+    "Response body's beginning is okay");
+});

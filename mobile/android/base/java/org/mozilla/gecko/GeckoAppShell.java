@@ -508,6 +508,7 @@ public class GeckoAppShell
                 .from((Activity) getContext())
                 .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
                 .onUIThread()
+                .doNotPromptIf(!enable)
                 .run(new Runnable() {
                     @Override
                     public void run() {

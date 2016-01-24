@@ -14,17 +14,16 @@
                     android:id="@+id/firstrun_pager"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@color/firstrun_pager_background">
+                    android:background="@android:color/white">
 
         <org.mozilla.gecko.home.TabMenuStrip android:layout_width="match_parent"
                                              android:layout_height="@dimen/tabs_strip_height"
-                                             android:background="@color/firstrun_tabstrip"
+                                             android:background="@color/firstrun_pager_header"
                                              android:visibility="visible"
                                              android:layout_gravity="top"
                                              gecko:strip="@drawable/home_tab_menu_strip"
-                                             gecko:titlebarFill="true"
-                                             gecko:activeTextColor="@android:color/white"
-                                             gecko:inactiveTextColor="@color/toolbar_divider_grey" />
+                                             gecko:activeTextColor="@color/placeholder_grey"
+                                             gecko:inactiveTextColor="@color/tab_text_color" />
 
     </org.mozilla.gecko.firstrun.FirstrunPager>
 </org.mozilla.gecko.firstrun.FirstrunAnimationContainer>

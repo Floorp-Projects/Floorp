@@ -17,7 +17,7 @@ add_task(function* () {
                 "logging test");
   let hud = yield openConsole();
 
-  content.location = TEST_NETWORK_URI;
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_NETWORK_URI);
 
   yield waitForMessages({
     webconsole: hud,
