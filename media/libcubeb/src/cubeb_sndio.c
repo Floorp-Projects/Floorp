@@ -103,7 +103,7 @@ sndio_mainloop(void *arg)
         break;
       }
       pthread_mutex_unlock(&s->mtx);
-      nfr = s->data_cb(s, s->arg, s->buf, s->nfr);
+      nfr = s->data_cb(s, s->arg, NULL, s->buf, s->nfr);
       pthread_mutex_lock(&s->mtx);
       if (nfr < 0) {
         DPR("sndio_mainloop() cb err\n");
