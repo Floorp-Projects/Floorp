@@ -676,10 +676,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   color: GrayText;
 }
 
-/* The boxes with "instructions" get extra padding for space around the
-   illustration and buttons */
+/* The boxes with "instructions" get extra top and bottom padding for space
+   around the illustration and buttons */
 .PanelUI-remotetabs-instruction-box {
-  padding: 30px 15px 15px 15px;
+  padding-bottom: 30px;
+  padding-top: 15px;
 }
 
 .PanelUI-remotetabs-prefs-button {

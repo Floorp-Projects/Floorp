@@ -41,6 +41,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -286,7 +287,9 @@ public class TabQueueService extends Service {
                 Context applicationContext = getApplicationContext();
                 final GeckoProfile profile = GeckoProfile.get(applicationContext);
                 int tabsQueued = TabQueueHelper.queueURL(profile, intentData, filename);
-                TabQueueHelper.showNotification(applicationContext, tabsQueued);
+                List<String> urls = TabQueueHelper.getLastURLs(applicationContext, filename);
+
+                TabQueueHelper.showNotification(applicationContext, tabsQueued, urls);
 
                 // Store the number of URLs queued so that we don't have to read and process the file to see if we have
                 // any urls to open.

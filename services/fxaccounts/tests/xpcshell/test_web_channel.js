@@ -137,6 +137,27 @@ add_test(function test_can_link_account_message() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
+add_test(function test_sync_preferences_message() {
+  let mockMessage = {
+    command: 'fxaccounts:sync_preferences',
+    data: { entryPoint: 'fxa:verification_complete' }
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      openSyncPreferences: function (browser, entryPoint) {
+        do_check_eq(entryPoint, 'fxa:verification_complete');
+        do_check_eq(browser, mockSendingContext.browser);
+        run_next_test();
+      }
+    }
+  });
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
 add_test(function test_unrecognized_message() {
   let mockMessage = {
     command: 'fxaccounts:unrecognized',
@@ -280,6 +301,22 @@ add_test(function test_helpers_login_with_customize_sync_and_declined_engines() 
     customizeSync: true,
     declinedSyncEngines: ['addons', 'prefs']
   });
+});
+
+add_test(function test_helpers_open_sync_preferences() {
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+    }
+  });
+
+  let mockBrowser = {
+    loadURI(uri) {
+      do_check_eq(uri, "about:preferences?entrypoint=fxa%3Averification_complete#sync");
+      run_next_test();
+    }
+  };
+
+  helpers.openSyncPreferences(mockBrowser, "fxa:verification_complete");
 });
 
 function run_test() {

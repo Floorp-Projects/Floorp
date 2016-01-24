@@ -9,18 +9,24 @@
 <!ENTITY firstrun_panel_title_welcome "Welcome">
 <!ENTITY  onboard_start_message3 "Browse with &brandShortName;">
 <!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
-<!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
+
+<!ENTITY firstrun_urlbar_message "Welcome to &brandShortName;">
+<!ENTITY firstrun_urlbar_subtext "Find things faster with helpful search suggestion shortcuts.">
+<!ENTITY firstrun_bookmarks_title "History">
+<!ENTITY firstrun_bookmarks_message "Your faves, front and center">
+<!ENTITY firstrun_bookmarks_subtext "Get results from your bookmarks and history when you search.">
+<!ENTITY firstrun_data_title "Data">
+<!ENTITY firstrun_data_message "Less data, more savings">
+<!ENTITY firstrun_data_subtext "Block images to spend less data on every site you visit.">
+<!ENTITY firstrun_sync_title "Sync">
+<!ENTITY firstrun_sync_message "&brandShortName;, always by your side">
+<!ENTITY firstrun_sync_subtext "Sync your tabs, passwords, and more everywhere you use it.">
+<!ENTITY firstrun_signin_message "Get connected, get started">
+<!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
 <!ENTITY firstrun_button_next "Next">
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
-
-<!ENTITY firstrun_import_title "Import">
-<!ENTITY firstrun_import_message "Welcome to &brandShortName;">
-<!ENTITY firstrun_import_subtext "Import your bookmarks and history from another browser.">
-<!ENTITY firstrun_import_action "Transfer to &brandShortName;">
-<!ENTITY firstrun_import_dialog_button "Transfer">
-<!ENTITY firstrun_import_progress_title "Transferring">
 
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
@@ -658,7 +664,14 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_apply_title2 "Update available for &brandShortName;">
 <!ENTITY updater_apply_select2 "Touch to update">
 
-<!-- Guest mode -->
+<!-- Localization note (updater_permission_text): This text is shown in a notification and as a snackbar
+     if the app requires a runtime permission to download updates. Currently, the updater only sees
+     remotely advertised updates in the Nightly and Aurora channels. -->
+<!ENTITY updater_permission_text "To download files and updates, allow &brandShortName; permission to access storage.">
+<!-- LOCALIZATION NOTE (updater_permission_allow): This action is shown in a snackbar along with updater_permission_text. -->
+<!ENTITY updater_permission_allow "Allow">
+
+    <!-- Guest mode -->
 <!ENTITY new_guest_session "New Guest Session">
 <!ENTITY exit_guest_session "Exit Guest Session">
 <!ENTITY guest_session_dialog_continue "Continue">

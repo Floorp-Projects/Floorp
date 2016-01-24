@@ -85,7 +85,7 @@ public:
 
 protected:
   virtual ~AbstractThread() {}
-  static ThreadLocal<AbstractThread*> sCurrentThreadTLS;
+  static MOZ_THREAD_LOCAL(AbstractThread*) sCurrentThreadTLS;
 
   // True if we want to require that every task dispatched from tasks running in
   // this queue go through our queue's tail dispatcher.
