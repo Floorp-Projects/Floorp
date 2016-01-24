@@ -76,7 +76,6 @@ browser/components/sessionstore/**
 browser/components/shell/**
 browser/components/tabview/**
 browser/components/translation/**
-browser/components/uitour/**
 browser/extensions/pdfjs/**
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/extensions/shumway/**
