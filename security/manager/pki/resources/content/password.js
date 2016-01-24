@@ -46,7 +46,7 @@ function onLoad()
      var i=0;
      var menu = document.getElementById("tokenMenu");
      try {
-        for ( ; !tokenList.isDone(); tokenList.next()) {
+        for (; !tokenList.isDone(); tokenList.next()) {
            enumElement = tokenList.currentItem();
            var token = enumElement.QueryInterface(nsIPK11Token);
            if(token.needsLogin() || !(token.needsUserInit)) {
@@ -61,14 +61,14 @@ function onLoad()
               i++;
            }
         }
-     }catch(exception){}
+     } catch (exception) {}
   } else {
     var sel = document.getElementById("tokenMenu");
     sel.setAttribute("hidden", "true");
     var tag = document.getElementById("tokenName");
     tag.setAttribute("value",tokenName);
   }
-	 	 
+
   process();
 }
 
@@ -223,53 +223,50 @@ function setP12Password()
 
 function setPasswordStrength()
 {
-// Here is how we weigh the quality of the password
-// number of characters
-// numbers
-// non-alpha-numeric chars
-// upper and lower case characters
+  // We weigh the quality of the password by checking the number of:
+  //  - Characters
+  //  - Numbers
+  //  - Non-alphanumeric chars
+  //  - Upper and lower case characters
 
-  var pw=document.getElementById('pw1').value;
-//  doPrompt("password='" + pw +"'");
+  let pw = document.getElementById("pw1").value;
 
-//length of the password
-  var pwlength=(pw.length);
-  if (pwlength>5)
-    pwlength=5;
+  let pwlength = pw.length;
+  if (pwlength > 5) {
+    pwlength = 5;
+  }
 
+  let numnumeric = pw.replace(/[0-9]/g, "");
+  let numeric= pw.length - numnumeric.length;
+  if (numeric > 3) {
+    numeric = 3;
+  }
 
-//use of numbers in the password
-  var numnumeric = pw.replace (/[0-9]/g, "");
-  var numeric=(pw.length - numnumeric.length);
-  if (numeric>3)
-    numeric=3;
+  let symbols = pw.replace(/\W/g, "");
+  let numsymbols = pw.length - symbols.length;
+  if (numsymbols > 3) {
+    numsymbols = 3;
+  }
 
-//use of symbols in the password
-  var symbols = pw.replace (/\W/g, "");
-  var numsymbols=(pw.length - symbols.length);
-  if (numsymbols>3)
-    numsymbols=3;
+  let numupper = pw.replace(/[A-Z]/g, "");
+  let upper = pw.length - numupper.length;
+  if (upper > 3) {
+    upper = 3;
+  }
 
-//use of uppercase in the password
-  var numupper = pw.replace (/[A-Z]/g, "");
-  var upper=(pw.length - numupper.length);
-  if (upper>3)
-    upper=3;
+  let pwstrength = (pwlength * 10) - 20 + (numeric * 10) + (numsymbols * 15) +
+                   (upper * 10);
 
-
-  var pwstrength=((pwlength*10)-20) + (numeric*10) + (numsymbols*15) + (upper*10);
-
-  // make sure we're give a value between 0 and 100
-  if ( pwstrength < 0 ) {
+  // Clamp strength to [0, 100].
+  if (pwstrength < 0) {
     pwstrength = 0;
   }
-  
-  if ( pwstrength > 100 ) {
+  if (pwstrength > 100) {
     pwstrength = 100;
   }
 
-  var mymeter=document.getElementById('pwmeter');
-  mymeter.setAttribute("value",pwstrength);
+  let meter = document.getElementById("pwmeter");
+  meter.setAttribute("value", pwstrength);
 
   return;
 }
