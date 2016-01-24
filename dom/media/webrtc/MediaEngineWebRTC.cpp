@@ -44,6 +44,9 @@ GetUserMediaLog()
 
 namespace mozilla {
 
+// statics from AudioInputCubeb
+nsTArray<int>* AudioInputCubeb::mDeviceIndexes;
+nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
 cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
 bool AudioInputCubeb::mAnyInUse = false;
 
@@ -322,7 +325,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
     if (uniqueId[0] == '\0') {
       // Mac and Linux don't set uniqueId!
       MOZ_ASSERT(sizeof(deviceName) == sizeof(uniqueId)); // total paranoia
-      strcpy(uniqueId,deviceName); // safe given assert and initialization/error-check
+      strcpy(uniqueId, deviceName); // safe given assert and initialization/error-check
     }
 
     RefPtr<MediaEngineAudioSource> aSource;
@@ -338,7 +341,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
         // For cubeb, it has state (the selected ID)
         // XXX just use the uniqueID for cubeb and support it everywhere, and get rid of this
         // XXX Small window where the device list/index could change!
-        audioinput = new mozilla::AudioInputCubeb(mVoiceEngine);
+        audioinput = new mozilla::AudioInputCubeb(mVoiceEngine, i);
       }
       aSource = new MediaEngineWebRTCMicrophoneSource(mThread, mVoiceEngine, audioinput,
                                                       i, deviceName, uniqueId);

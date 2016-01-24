@@ -480,7 +480,7 @@ NativeFileWatcherIOTask::RunInternal()
     }
 
     rawNotificationBuffer += notificationInfo->NextEntryOffset;
-  };
+  }
 
   // We need to keep watching for further changes.
   nsresult rv = AddDirectoryToWatchList(changedRes);

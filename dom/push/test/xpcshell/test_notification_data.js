@@ -26,6 +26,7 @@ function putRecord(channelID, scope, publicKey, privateKey, authSecret) {
     lastPush: 0,
     originAttributes: '',
     quota: Infinity,
+    systemRecord: true,
     p256dhPublicKey: base64UrlDecode(publicKey),
     p256dhPrivateKey: privateKey,
     authenticationSecret: base64UrlDecode(authSecret),
@@ -217,9 +218,9 @@ add_task(function* test_notification_ack_data() {
   ];
 
   let sendAndReceive = testData => {
-    let messageReceived = promiseObserverNotification('push-notification', (subject, data) => {
-      let notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
-      equal(notification.data, testData.receive.data,
+    let messageReceived = promiseObserverNotification('push-message', (subject, data) => {
+      let notification = subject.QueryInterface(Ci.nsIPushMessage);
+      equal(notification.text(), testData.receive.data,
             'Check data for notification ' + testData.version);
       equal(data, testData.receive.scope,
             'Check scope for notification ' + testData.version);

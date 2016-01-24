@@ -125,6 +125,9 @@ const SNAPSHOT_SCHEMA = {
           type: "boolean",
           required: true,
         },
+        autoStartStatus: {
+          type: "number",
+        },
         numTotalWindows: {
           type: "number",
         },

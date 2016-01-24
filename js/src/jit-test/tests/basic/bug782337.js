@@ -11,6 +11,5 @@ function recur(n)
     var obj = new Object();
 }
 
-validategc(false);
 gcslice(1);
 recur(10);

@@ -71,10 +71,10 @@ JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
 namespace js {
 namespace frontend {
 
-typedef Rooted<StaticBlockObject*> RootedStaticBlockObject;
-typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
-typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
-typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
+typedef Rooted<StaticBlockScope*> RootedStaticBlockScope;
+typedef Handle<StaticBlockScope*> HandleStaticBlockScope;
+typedef Rooted<NestedStaticScope*> RootedNestedStaticScope;
+typedef Handle<NestedStaticScope*> HandleNestedStaticScope;
 
 /* Read a token. Report an error and return null() if that token isn't of type tt. */
 #define MUST_MATCH_TOKEN_MOD(tt, modifier, errno)                                           \
@@ -874,7 +874,7 @@ Parser<ParseHandler>::parse()
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    Rooted<ScopeObject*> staticLexical(context, &context->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticLexical(context, &context->global()->lexicalScope().staticBlock());
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, staticLexical, directives,
                                  options().extraWarningsOption);
@@ -1484,9 +1484,9 @@ template <typename ParseHandler>
 struct BindData
 {
     struct LetData {
-        explicit LetData(ExclusiveContext* cx) : blockObj(cx) {}
+        explicit LetData(ExclusiveContext* cx) : blockScope(cx) {}
         VarContext varContext;
-        RootedStaticBlockObject blockObj;
+        RootedStaticBlockScope blockScope;
         unsigned overflow;
     };
 
@@ -1494,12 +1494,12 @@ struct BindData
       : kind_(Uninitialized), nameNode_(ParseHandler::null()), letData_(cx)
     {}
 
-    void initLexical(VarContext varContext, JSOp op, StaticBlockObject* blockObj,
+    void initLexical(VarContext varContext, JSOp op, StaticBlockScope* blockScope,
                      unsigned overflow)
     {
         init(LexicalBinding, op, op == JSOP_DEFCONST, false);
         letData_.varContext = varContext;
-        letData_.blockObj = blockObj;
+        letData_.blockScope = blockScope;
         letData_.overflow = overflow;
     }
 
@@ -1740,8 +1740,8 @@ LexicalLookup(ContextT* ct, HandleAtom atom, StmtInfoPC* stmt = nullptr)
         if (!stmt->isBlockScope)
             continue;
 
-        StaticBlockObject& blockObj = stmt->staticBlock();
-        Shape* shape = blockObj.lookup(ct->sc->context, id);
+        StaticBlockScope& blockScope = stmt->staticBlock();
+        Shape* shape = blockScope.lookup(ct->sc->context, id);
         if (shape)
             return stmt;
     }
@@ -3601,10 +3601,10 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
         return false;
     }
 
-    Rooted<StaticBlockObject*> blockObj(cx, data->letData().blockObj);
+    Rooted<StaticBlockScope*> blockScope(cx, data->letData().blockScope);
 
-    uint32_t index = StaticBlockObject::LOCAL_INDEX_LIMIT;
-    if (blockObj) {
+    uint32_t index = StaticBlockScope::LOCAL_INDEX_LIMIT;
+    if (blockScope) {
         // Leave the scope coordinate free on global lexicals.
         //
         // For block-level lets, assign block-local index to pn->pn_scopecoord
@@ -3616,9 +3616,9 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
         // XXXshu: I should like to optimize global lexicals, but we rely on
         // being able to clone JSScripts to run on multiple globals and to be
         // able to parse scripts off-thread in a different compartment.
-        if (!blockObj->isGlobal()) {
-            index = blockObj->numVariables();
-            if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
+        if (!blockScope->isGlobal()) {
+            index = blockScope->numVariables();
+            if (index >= StaticBlockScope::LOCAL_INDEX_LIMIT) {
                 parser->report(ParseError, false, pn, data->letData().overflow);
                 return false;
             }
@@ -3659,12 +3659,12 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
             return false;
     }
 
-    if (blockObj) {
-        if (!blockObj->isGlobal()) {
+    if (blockScope) {
+        if (!blockScope->isGlobal()) {
             bool redeclared;
             RootedId id(cx, NameToId(name));
-            RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id,
-                                                            data->isConst(), index, &redeclared));
+            RootedShape shape(cx, StaticBlockScope::addVar(cx, blockScope, id,
+                                                           data->isConst(), index, &redeclared));
             if (!shape) {
                 if (redeclared) {
                     // The only way to be redeclared without a previous definition is if we're in a
@@ -3678,7 +3678,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
             }
 
             /* Store pn in the static block object. */
-            blockObj->setDefinitionParseNode(index, reinterpret_cast<Definition*>(pn));
+            blockScope->setDefinitionParseNode(index, reinterpret_cast<Definition*>(pn));
         }
     } else {
         // Body-level lets are hoisted and need to have been defined via
@@ -3704,16 +3704,16 @@ Parser<SyntaxParseHandler>::bindLexical(BindData<SyntaxParseHandler>* data,
 template <typename ParseHandler, class Op>
 static inline bool
 ForEachLetDef(TokenStream& ts, ParseContext<ParseHandler>* pc,
-              HandleStaticBlockObject blockObj, Op op)
+              HandleStaticBlockScope blockScope, Op op)
 {
-    for (Shape::Range<CanGC> r(ts.context(), blockObj->lastProperty()); !r.empty(); r.popFront()) {
+    for (Shape::Range<CanGC> r(ts.context(), blockScope->lastProperty()); !r.empty(); r.popFront()) {
         Shape& shape = r.front();
 
         /* Beware the destructuring dummy slots. */
         if (JSID_IS_INT(shape.propid()))
             continue;
 
-        if (!op(ts, pc, blockObj, shape, JSID_TO_ATOM(shape.propid())))
+        if (!op(ts, pc, blockScope, shape, JSID_TO_ATOM(shape.propid())))
             return false;
     }
     return true;
@@ -3721,7 +3721,7 @@ ForEachLetDef(TokenStream& ts, ParseContext<ParseHandler>* pc,
 
 template <typename ParseHandler>
 struct PopLetDecl {
-    bool operator()(TokenStream&, ParseContext<ParseHandler>* pc, HandleStaticBlockObject,
+    bool operator()(TokenStream&, ParseContext<ParseHandler>* pc, HandleStaticBlockScope,
                     const Shape&, JSAtom* atom)
     {
         pc->popLetDecl(atom);
@@ -3746,7 +3746,7 @@ AccumulateBlockScopeDepth(ParseContext<ParseHandler>* pc)
     StmtInfoPC* outer = stmt->enclosing;
 
     if (stmt->isBlockScope)
-        innerDepth += stmt->staticScope->template as<StaticBlockObject>().numVariables();
+        innerDepth += stmt->staticScope->template as<StaticBlockScope>().numVariables();
 
     if (outer) {
         if (outer->innerBlockScopeDepth < innerDepth)
@@ -3770,7 +3770,7 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::AutoPushStmtInfoPC(Parser<ParseHandler
 template <typename ParseHandler>
 Parser<ParseHandler>::AutoPushStmtInfoPC::AutoPushStmtInfoPC(Parser<ParseHandler>& parser,
                                                              StmtType type,
-                                                             NestedScopeObject& staticScope)
+                                                             NestedStaticScope& staticScope)
   : parser_(parser),
     stmt_(parser.context)
 {
@@ -3791,18 +3791,18 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::~AutoPushStmtInfoPC()
     TokenStream& ts = parser_.tokenStream;
 
     MOZ_ASSERT(pc->innermostStmt() == &stmt_);
-    RootedNestedScopeObject scopeObj(parser_.context, stmt_.staticScope);
+    RootedNestedStaticScope scope(parser_.context, stmt_.staticScope);
 
     AccumulateBlockScopeDepth(pc);
     pc->stmtStack.pop();
 
-    if (scopeObj) {
-        if (scopeObj->is<StaticBlockObject>()) {
-            RootedStaticBlockObject blockObj(parser_.context, &scopeObj->as<StaticBlockObject>());
-            MOZ_ASSERT(!blockObj->inDictionaryMode());
-            ForEachLetDef(ts, pc, blockObj, PopLetDecl<ParseHandler>());
+    if (scope) {
+        if (scope->is<StaticBlockScope>()) {
+            RootedStaticBlockScope blockScope(parser_.context, &scope->as<StaticBlockScope>());
+            MOZ_ASSERT(!blockScope->inDictionaryMode());
+            ForEachLetDef(ts, pc, blockScope, PopLetDecl<ParseHandler>());
         }
-        scopeObj->resetEnclosingScopeFromParser();
+        scope->resetEnclosingScopeFromParser();
     }
 }
 
@@ -3815,10 +3815,10 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::generateBlockId()
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::AutoPushStmtInfoPC::makeInnermostLexicalScope(StaticBlockObject& blockObj)
+Parser<ParseHandler>::AutoPushStmtInfoPC::makeInnermostLexicalScope(StaticBlockScope& blockScope)
 {
     MOZ_ASSERT(parser_.pc->stmtStack.innermost() == &stmt_);
-    parser_.pc->stmtStack.makeInnermostLexicalScope(blockObj);
+    parser_.pc->stmtStack.makeInnermostLexicalScope(blockScope);
     return generateBlockId();
 }
 
@@ -4285,10 +4285,10 @@ Parser<ParseHandler>::destructuringExprWithoutYield(YieldHandling yieldHandling,
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockObject blockObj,
+Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockScope blockScope,
                                        AutoPushStmtInfoPC& stmt)
 {
-    ObjectBox* blockbox = newObjectBox(blockObj);
+    ObjectBox* blockbox = newObjectBox(blockScope);
     if (!blockbox)
         return null();
 
@@ -4296,8 +4296,8 @@ Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockObject blockObj,
     if (!pn)
         return null();
 
-    blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
-    if (!stmt.makeInnermostLexicalScope(*blockObj))
+    blockScope->initEnclosingScopeFromParser(pc->innermostStaticScope());
+    if (!stmt.makeInnermostLexicalScope(*blockScope))
         return null();
     handler.setBlockId(pn, stmt->blockid);
     return pn;
@@ -4307,11 +4307,11 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::pushLexicalScope(AutoPushStmtInfoPC& stmt)
 {
-    RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
-    if (!blockObj)
+    RootedStaticBlockScope blockScope(context, StaticBlockScope::create(context));
+    if (!blockScope)
         return null();
 
-    return pushLexicalScope(blockObj, stmt);
+    return pushLexicalScope(blockScope, stmt);
 }
 
 struct AddLetDecl
@@ -4321,9 +4321,9 @@ struct AddLetDecl
     explicit AddLetDecl(uint32_t blockid) : blockid(blockid) {}
 
     bool operator()(TokenStream& ts, ParseContext<FullParseHandler>* pc,
-                    HandleStaticBlockObject blockObj, const Shape& shape, JSAtom*)
+                    HandleStaticBlockScope blockScope, const Shape& shape, JSAtom*)
     {
-        ParseNode* def = (ParseNode*) blockObj->getSlot(shape.slot()).toPrivate();
+        ParseNode* def = (ParseNode*) blockScope->getSlot(shape.slot()).toPrivate();
         def->pn_blockid = blockid;
         RootedPropertyName name(ts.context(), def->name());
         return pc->define(ts, name, def, Definition::LET);
@@ -4332,17 +4332,17 @@ struct AddLetDecl
 
 template <>
 ParseNode*
-Parser<FullParseHandler>::pushLetScope(HandleStaticBlockObject blockObj, AutoPushStmtInfoPC& stmt)
+Parser<FullParseHandler>::pushLetScope(HandleStaticBlockScope blockScope, AutoPushStmtInfoPC& stmt)
 {
-    MOZ_ASSERT(blockObj);
-    ParseNode* pn = pushLexicalScope(blockObj, stmt);
+    MOZ_ASSERT(blockScope);
+    ParseNode* pn = pushLexicalScope(blockScope, stmt);
     if (!pn)
         return null();
 
     pn->pn_dflags |= PND_LEXICAL;
 
     /* Populate the new scope with decls found in the head with updated blockid. */
-    if (!ForEachLetDef(tokenStream, pc, blockObj, AddLetDecl(stmt->blockid)))
+    if (!ForEachLetDef(tokenStream, pc, blockScope, AddLetDecl(stmt->blockid)))
         return null();
 
     return pn;
@@ -4350,7 +4350,7 @@ Parser<FullParseHandler>::pushLetScope(HandleStaticBlockObject blockObj, AutoPus
 
 template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::pushLetScope(HandleStaticBlockObject blockObj,
+Parser<SyntaxParseHandler>::pushLetScope(HandleStaticBlockScope blockScope,
                                          AutoPushStmtInfoPC& stmt)
 {
     JS_ALWAYS_FALSE(abortIfSyntaxParser());
@@ -4685,7 +4685,7 @@ Parser<ParseHandler>::declarationName(Node decl, TokenKind tt, BindData<ParseHan
 }
 
 /*
- * The 'blockObj' parameter is non-null when parsing the 'vars' in a let
+ * The 'blockScope' parameter is non-null when parsing the 'vars' in a let
  * expression, block statement, non-top-level let declaration in statement
  * context, and the let-initializer of a for-statement.
  */
@@ -4693,12 +4693,12 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::declarationList(YieldHandling yieldHandling,
                                       ParseNodeKind kind,
-                                      StaticBlockObject* blockObj /* = nullptr */,
+                                      StaticBlockScope* blockScope /* = nullptr */,
                                       ParseNodeKind* forHeadKind /* = nullptr */,
                                       Node* forInOrOfExpression /* = nullptr */)
 {
     MOZ_ASSERT(kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST);
-    MOZ_ASSERT_IF(blockObj != nullptr, kind == PNK_LET || kind == PNK_CONST);
+    MOZ_ASSERT_IF(blockScope != nullptr, kind == PNK_LET || kind == PNK_CONST);
 
     JSOp op;
     switch (kind) {
@@ -4716,7 +4716,7 @@ Parser<ParseHandler>::declarationList(YieldHandling yieldHandling,
     if (kind == PNK_VAR)
         data.initVar(op);
     else
-        data.initLexical(HoistVars, op, blockObj, JSMSG_TOO_MANY_LOCALS);
+        data.initLexical(HoistVars, op, blockScope, JSMSG_TOO_MANY_LOCALS);
 
     bool matched;
     bool initialDeclaration = true;
@@ -4812,12 +4812,12 @@ Parser<FullParseHandler>::checkAndPrepareLexical(PrepareLexicalKind prepareWhat,
         MOZ_ASSERT(pc->innermostScopeStmt() == stmt);
     } else {
         /* Convert the block statement into a scope statement. */
-        StaticBlockObject* blockObj = StaticBlockObject::create(context);
-        if (!blockObj)
+        StaticBlockScope* blockScope = StaticBlockScope::create(context);
+        if (!blockScope)
             return false;
-        blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
+        blockScope->initEnclosingScopeFromParser(pc->innermostStaticScope());
 
-        ObjectBox* blockbox = newObjectBox(blockObj);
+        ObjectBox* blockbox = newObjectBox(blockScope);
         if (!blockbox)
             return false;
 
@@ -4829,12 +4829,12 @@ Parser<FullParseHandler>::checkAndPrepareLexical(PrepareLexicalKind prepareWhat,
         MOZ_ASSERT(stmt->canBeBlockScope() && stmt->type != StmtType::CATCH);
         if (prepareWhat == PrepareFunction) {
             stmt->isBlockScope = true;
-            pc->stmtStack.linkAsInnermostScopeStmt(stmt, *blockObj);
+            pc->stmtStack.linkAsInnermostScopeStmt(stmt, *blockScope);
         } else {
-            pc->stmtStack.makeInnermostLexicalScope(*blockObj);
+            pc->stmtStack.makeInnermostLexicalScope(*blockScope);
         }
         MOZ_ASSERT(!blockScopes[stmt->blockid]);
-        blockScopes[stmt->blockid].set(blockObj);
+        blockScopes[stmt->blockid].set(blockScope);
 
 #ifdef DEBUG
         ParseNode* tmp = pc->blockNode;
@@ -4850,11 +4850,11 @@ Parser<FullParseHandler>::checkAndPrepareLexical(PrepareLexicalKind prepareWhat,
     return true;
 }
 
-static StaticBlockObject*
+static StaticBlockScope*
 CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 {
-    if (pc->innermostStaticScope()->is<StaticBlockObject>())
-        return &pc->innermostStaticScope()->as<StaticBlockObject>();
+    if (pc->innermostStaticScope()->is<StaticBlockScope>())
+        return &pc->innermostStaticScope()->as<StaticBlockScope>();
     MOZ_ASSERT(pc->atBodyLevel() &&
                (!pc->sc->isGlobalContext() ||
                 HasNonSyntacticStaticScopeChain(pc->innermostStaticScope())));
@@ -4864,16 +4864,16 @@ CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 template <>
 void
 Parser<SyntaxParseHandler>::assertCurrentLexicalStaticBlockIs(ParseContext<SyntaxParseHandler>* pc,
-                                                              Handle<StaticBlockObject*> blockObj)
+                                                              Handle<StaticBlockScope*> blockScope)
 {
 }
 
 template <>
 void
 Parser<FullParseHandler>::assertCurrentLexicalStaticBlockIs(ParseContext<FullParseHandler>* pc,
-                                                            Handle<StaticBlockObject*> blockObj)
+                                                            Handle<StaticBlockScope*> blockScope)
 {
-    MOZ_ASSERT(CurrentLexicalStaticBlock(pc) == blockObj);
+    MOZ_ASSERT(CurrentLexicalStaticBlock(pc) == blockScope);
 }
 
 template <>
@@ -5685,7 +5685,7 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
                                    ParseNodeKind* forHeadKind,
                                    Node* forInitialPart,
                                    Maybe<AutoPushStmtInfoPC>& letStmt,
-                                   MutableHandle<StaticBlockObject*> blockObj,
+                                   MutableHandle<StaticBlockScope*> blockScope,
                                    Node* forLetImpliedBlock,
                                    Node* forInOrOfExpression)
 {
@@ -5740,19 +5740,19 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
         handler.disableSyntaxParser();
 
         // Set up the block chain for the lexical declaration.
-        blockObj.set(StaticBlockObject::create(context));
-        if (!blockObj)
+        blockScope.set(StaticBlockScope::create(context));
+        if (!blockScope)
             return false;
-        blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
+        blockScope->initEnclosingScopeFromParser(pc->innermostStaticScope());
         letStmt.emplace(*this, StmtType::BLOCK);
-        *forLetImpliedBlock = pushLetScope(blockObj, *letStmt);
+        *forLetImpliedBlock = pushLetScope(blockScope, *letStmt);
         if (!*forLetImpliedBlock)
             return false;
         (*letStmt)->isForLetBlock = true;
 
-        assertCurrentLexicalStaticBlockIs(pc, blockObj);
+        assertCurrentLexicalStaticBlockIs(pc, blockScope);
         *forInitialPart = declarationList(yieldHandling, tt == TOK_CONST ? PNK_CONST : PNK_LET,
-                                          blockObj, forHeadKind, forInOrOfExpression);
+                                          blockScope, forHeadKind, forInOrOfExpression);
         return *forInitialPart != null();
     }
 
@@ -5856,10 +5856,10 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
     //
     // All three variables remain null/none if the loop is any other form.
     //
-    // blockObj is the static block object for the implicit block scope.
-    RootedStaticBlockObject blockObj(context);
+    // blockScope is the static block scope for the implicit block scope.
+    RootedStaticBlockScope blockScope(context);
 
-    // The PNK_LEXICALSCOPE node containing blockObj's ObjectBox.
+    // The PNK_LEXICALSCOPE node containing blockScope's ObjectBox.
     Node forLetImpliedBlock = null();
 
     // letStmt is the BLOCK StmtInfo for the implicit block.
@@ -5887,7 +5887,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
     //
     // In either case the subsequent token can be consistently accessed using
     // TokenStream::None semantics.
-    if (!forHeadStart(yieldHandling, &headKind, &startNode, letStmt, &blockObj,
+    if (!forHeadStart(yieldHandling, &headKind, &startNode, letStmt, &blockScope,
                       &forLetImpliedBlock, &iteratedExpr))
     {
         return null();
@@ -6459,7 +6459,7 @@ Parser<FullParseHandler>::withStatement(YieldHandling yieldHandling)
         return null();
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
 
-    Rooted<StaticWithObject*> staticWith(context, StaticWithObject::create(context));
+    Rooted<StaticWithScope*> staticWith(context, StaticWithScope::create(context));
     if (!staticWith)
         return null();
 
@@ -6634,9 +6634,9 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
              * an intentional change that anticipates ECMA Ed. 4.
              */
             data.initLexical(HoistVars, JSOP_DEFLET,
-                             &stmtInfo->staticScope->template as<StaticBlockObject>(),
+                             &stmtInfo->staticScope->template as<StaticBlockScope>(),
                              JSMSG_TOO_MANY_CATCH_VARS);
-            MOZ_ASSERT(data.letData().blockObj);
+            MOZ_ASSERT(data.letData().blockScope);
 
             if (!tokenStream.getToken(&tt))
                 return null();
@@ -8067,22 +8067,22 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
     AutoPushStmtInfoPC stmtInfo(*this, StmtType::BLOCK);
     BindData<ParseHandler> data(context);
 
-    RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
-    if (!blockObj)
+    RootedStaticBlockScope blockScope(context, StaticBlockScope::create(context));
+    if (!blockScope)
         return null();
 
     // Initialize the enclosing scope manually for the call to |bind|
     // below, which is before the call to |pushLetScope|.
-    blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
+    blockScope->initEnclosingScopeFromParser(pc->innermostStaticScope());
 
-    data.initLexical(DontHoistVars, JSOP_DEFLET, blockObj, JSMSG_TOO_MANY_LOCALS);
+    data.initLexical(DontHoistVars, JSOP_DEFLET, blockScope, JSMSG_TOO_MANY_LOCALS);
     Node decls = handler.newComprehensionBinding(lhs);
     if (!decls)
         return null();
     data.setNameNode(lhs);
     if (!data.bind(name, this))
         return null();
-    Node letScope = pushLetScope(blockObj, stmtInfo);
+    Node letScope = pushLetScope(blockScope, stmtInfo);
     if (!letScope)
         return null();
     handler.setLexicalScopeBody(letScope, decls);

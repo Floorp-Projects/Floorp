@@ -139,7 +139,7 @@ CreateSourceEvent(SourceEventType aType)
 #include "SourceEventTypeMap.h"
     default:
       MOZ_CRASH("Unknown SourceEvent.");
-  };
+  }
 #undef CREATE_SOURCE_EVENT_NAME
 
   // Log a fake dispatch and start for this source event.

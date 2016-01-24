@@ -51,13 +51,6 @@ function findCurrentProfile() {
   }
 }
 
-function initializeUI() {
-  document.getElementById('about-profile-action-box').style.display = 'block';
-  document.getElementById('profile-manager-action-box').style.display = 'none';
-
-  refreshUI();
-}
-
 function refreshUI() {
   let parent = document.getElementById('profiles');
   while (parent.firstChild) {
@@ -321,5 +314,5 @@ function restart(safeMode) {
 
 window.addEventListener('DOMContentLoaded', function load() {
   window.removeEventListener('DOMContentLoaded', load);
-  initializeUI();
+  refreshUI();
 });

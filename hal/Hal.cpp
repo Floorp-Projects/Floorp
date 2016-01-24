@@ -1150,7 +1150,7 @@ GetFMBandSettings(FMRadioCountry aCountry) {
     default:
       MOZ_ASSERT(0);
       break;
-    };
+    }
     return settings;
 }
 

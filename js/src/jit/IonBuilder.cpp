@@ -11262,26 +11262,6 @@ IonBuilder::getPropTryConstant(bool* emitted, MDefinition* obj, jsid id, Tempora
     return true;
 }
 
-MIRType
-IonBuilder::SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
-{
-    switch (type) {
-      case SimdTypeDescr::Int32x4:   return MIRType_Int32x4;
-      case SimdTypeDescr::Float32x4: return MIRType_Float32x4;
-      case SimdTypeDescr::Bool32x4:  return MIRType_Bool32x4;
-      case SimdTypeDescr::Int8x16:
-      case SimdTypeDescr::Int16x8:
-      case SimdTypeDescr::Uint8x16:
-      case SimdTypeDescr::Uint16x8:
-      case SimdTypeDescr::Uint32x4:
-      case SimdTypeDescr::Float64x2:
-      case SimdTypeDescr::Bool8x16:
-      case SimdTypeDescr::Bool16x8:
-      case SimdTypeDescr::Bool64x2: return MIRType_Undefined;
-    }
-    MOZ_CRASH("unimplemented MIR type for a SimdTypeDescr::Type");
-}
-
 bool
 IonBuilder::getPropTryTypedObject(bool* emitted,
                                   MDefinition* obj,

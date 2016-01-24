@@ -15,10 +15,6 @@ function run_test() {
     requestTimeout: 1000,
     retryBaseInterval: 150
   });
-  disableServiceWorkerEvents(
-    'https://example.com/page/1',
-    'https://example.com/page/2'
-  );
   run_next_test();
 }
 
@@ -32,10 +28,11 @@ add_task(function* test_register_flush() {
     originAttributes: '',
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   };
   yield db.put(record);
 
-  let notifyPromise = promiseObserverNotification('push-notification');
+  let notifyPromise = promiseObserverNotification('push-message');
 
   let ackDone;
   let ackPromise = new Promise(resolve => ackDone = after(2, resolve));

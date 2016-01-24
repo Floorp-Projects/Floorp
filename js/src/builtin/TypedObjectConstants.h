@@ -101,8 +101,8 @@
 #define JS_REFERENCETYPEREPR_STRING     2
 
 // These constants are for use exclusively in JS code. In C++ code, prefer
-// SimdTypeDescr::Int32x4 etc, since that allows you to write a switch which
-// will receive a warning if you omit a case.
+// SimdType::Int32x4 etc, since that allows you to write a switch which will
+// receive a warning if you omit a case.
 #define JS_SIMDTYPEREPR_INT8X16         0
 #define JS_SIMDTYPEREPR_INT16X8         1
 #define JS_SIMDTYPEREPR_INT32X4         2

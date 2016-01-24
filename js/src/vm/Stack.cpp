@@ -76,7 +76,7 @@ bool
 InterpreterFrame::isNonGlobalEvalFrame() const
 {
     return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalObject>().isNonGlobal();
+           script()->enclosingStaticScope()->as<StaticEvalScope>().isNonGlobal();
 }
 
 bool
@@ -312,11 +312,11 @@ InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv)
 }
 
 bool
-InterpreterFrame::pushBlock(JSContext* cx, StaticBlockObject& block)
+InterpreterFrame::pushBlock(JSContext* cx, StaticBlockScope& block)
 {
     MOZ_ASSERT(block.needsClone());
 
-    Rooted<StaticBlockObject*> blockHandle(cx, &block);
+    Rooted<StaticBlockScope*> blockHandle(cx, &block);
     ClonedBlockObject* clone = ClonedBlockObject::create(cx, blockHandle, this);
     if (!clone)
         return false;

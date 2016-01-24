@@ -324,7 +324,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 
     default:
       aSeverity = NS_DEBUG_WARNING;
-  };
+  }
 
 #  define PrintToBuffer(...) PR_sxprintf(StuffFixedBuffer, &buf, __VA_ARGS__)
 

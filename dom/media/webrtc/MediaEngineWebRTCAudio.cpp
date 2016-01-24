@@ -196,70 +196,6 @@ MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID)
   return;
 }
 
-nsresult
-MediaEngineWebRTCMicrophoneSource::Config(bool aEchoOn, uint32_t aEcho,
-                                          bool aAgcOn, uint32_t aAGC,
-                                          bool aNoiseOn, uint32_t aNoise,
-                                          int32_t aPlayoutDelay)
-{
-  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d",
-       aEchoOn ? aEcho : -1,
-       aAgcOn ? aAGC : -1,
-       aNoiseOn ? aNoise : -1,
-       aPlayoutDelay));
-
-  bool update_echo = (mEchoOn != aEchoOn);
-  bool update_agc = (mAgcOn != aAgcOn);
-  bool update_noise = (mNoiseOn != aNoiseOn);
-  mEchoOn = aEchoOn;
-  mAgcOn = aAgcOn;
-  mNoiseOn = aNoiseOn;
-
-  if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged) {
-    if (mEchoCancel != (webrtc::EcModes) aEcho) {
-      update_echo = true;
-      mEchoCancel = (webrtc::EcModes) aEcho;
-    }
-  }
-  if ((webrtc::AgcModes) aAGC != webrtc::kAgcUnchanged) {
-    if (mAGC != (webrtc::AgcModes) aAGC) {
-      update_agc = true;
-      mAGC = (webrtc::AgcModes) aAGC;
-    }
-  }
-  if ((webrtc::NsModes) aNoise != webrtc::kNsUnchanged) {
-    if (mNoiseSuppress != (webrtc::NsModes) aNoise) {
-      update_noise = true;
-      mNoiseSuppress = (webrtc::NsModes) aNoise;
-    }
-  }
-  mPlayoutDelay = aPlayoutDelay;
-
-  if (mInitDone) {
-    int error;
-
-    if (update_echo &&
-      0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aEcho))) {
-      LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
-      // Overhead of capturing all the time is very low (<0.1% of an audio only call)
-      if (mEchoOn) {
-        if (0 != (error = mVoEProcessing->SetEcMetricsStatus(true))) {
-          LOG(("%s Error setting Echo Metrics: %d ",__FUNCTION__, error));
-        }
-      }
-    }
-    if (update_agc &&
-      0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aAGC))) {
-      LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
-    }
-    if (update_noise &&
-      0 != (error = mVoEProcessing->SetNsStatus(mNoiseOn, (webrtc::NsModes) aNoise))) {
-      LOG(("%s Error setting NoiseSuppression Status: %d ",__FUNCTION__, error));
-    }
-  }
-  return NS_OK;
-}
-
 // GetBestFitnessDistance returns the best distance the capture device can offer
 // as a whole, given an accumulated number of ConstraintSets.
 // Ideal values are considered in the first ConstraintSet only.
@@ -307,6 +243,75 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
     }
   }
   ++mNrAllocations;
+  return Restart(aConstraints, aPrefs, aDeviceId);
+}
+
+nsresult
+MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                           const MediaEnginePrefs &aPrefs,
+                                           const nsString& aDeviceId)
+{
+  FlattenedConstraints c(aConstraints);
+
+  bool aec_on = c.mEchoCancellation.Get(aPrefs.mAecOn);
+  bool agc_on = c.mMozAutoGainControl.Get(aPrefs.mAgcOn);
+  bool noise_on = c.mMozNoiseSuppression.Get(aPrefs.mNoiseOn);
+
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d",
+       aec_on ? aPrefs.mAec : -1,
+       agc_on ? aPrefs.mAgc : -1,
+       noise_on ? aPrefs.mNoise : -1,
+       aPrefs.mPlayoutDelay));
+
+  bool update_echo = (mEchoOn != aec_on);
+  bool update_agc = (mAgcOn != agc_on);
+  bool update_noise = (mNoiseOn != noise_on);
+  mEchoOn = aec_on;
+  mAgcOn = agc_on;
+  mNoiseOn = noise_on;
+
+  mPlayoutDelay = aPrefs.mPlayoutDelay;
+  if ((webrtc::EcModes) aPrefs.mAec != webrtc::kEcUnchanged) {
+    if (mEchoCancel != (webrtc::EcModes) aPrefs.mAec) {
+      update_echo = true;
+      mEchoCancel = (webrtc::EcModes) aPrefs.mAec;
+    }
+  }
+  if ((webrtc::AgcModes) aPrefs.mAgc != webrtc::kAgcUnchanged) {
+    if (mAGC != (webrtc::AgcModes) aPrefs.mAgc) {
+      update_agc = true;
+      mAGC = (webrtc::AgcModes) aPrefs.mAgc;
+    }
+  }
+  if ((webrtc::NsModes) aPrefs.mNoise != webrtc::kNsUnchanged) {
+    if (mNoiseSuppress != (webrtc::NsModes) aPrefs.mNoise) {
+      update_noise = true;
+      mNoiseSuppress = (webrtc::NsModes) aPrefs.mNoise;
+    }
+  }
+
+  if (mInitDone) {
+    int error;
+
+    if (update_echo &&
+      0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aPrefs.mAec))) {
+      LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
+      // Overhead of capturing all the time is very low (<0.1% of an audio only call)
+      if (mEchoOn) {
+        if (0 != (error = mVoEProcessing->SetEcMetricsStatus(true))) {
+          LOG(("%s Error setting Echo Metrics: %d ",__FUNCTION__, error));
+        }
+      }
+    }
+    if (update_agc &&
+      0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aPrefs.mAgc))) {
+      LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
+    }
+    if (update_noise &&
+      0 != (error = mVoEProcessing->SetNsStatus(mNoiseOn, (webrtc::NsModes) aPrefs.mNoise))) {
+      LOG(("%s Error setting NoiseSuppression Status: %d ",__FUNCTION__, error));
+    }
+  }
   return NS_OK;
 }
 
@@ -366,12 +371,6 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   MOZ_ASSERT(gFarendObserver);
   gFarendObserver->Clear();
 
-  // Configure audio processing in webrtc code
-  Config(mEchoOn, webrtc::kEcUnchanged,
-         mAgcOn, webrtc::kAgcUnchanged,
-         mNoiseOn, webrtc::kNsUnchanged,
-         mPlayoutDelay);
-
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
   }
@@ -424,14 +423,6 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
   if (mVoEBase->StopReceive(mChannel)) {
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
-}
-
-nsresult
-MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aConstraints,
-                                           const MediaEnginePrefs &aPrefs,
-                                           const nsString& aDeviceId)
-{
   return NS_OK;
 }
 

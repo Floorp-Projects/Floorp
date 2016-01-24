@@ -207,9 +207,10 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
                 default:
                 {
-                    break;
+                    MOZ_CRASH("Unexpected mType?!");
                 }
             }
+            MOZ_CRASH("Inner mType switch should have returned!");
         }
         case POSITION:
         {

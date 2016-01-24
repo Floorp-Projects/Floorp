@@ -25,14 +25,15 @@ class FunctionBox;
 class ModuleBox;
 }
 
-class StaticWithObject;
-class StaticEvalObject;
-class StaticNonSyntacticScopeObjects;
+class StaticWithScope;
+class StaticEvalScope;
+class StaticNonSyntacticScope;
 
 class ModuleObject;
 typedef Handle<ModuleObject*> HandleModuleObject;
 
-/*****************************************************************************/
+
+/*** Static scopes *******************************************************************************/
 
 /*
  * The static scope chain is the canonical truth for lexical scope contour of
@@ -46,7 +47,7 @@ typedef Handle<ModuleObject*> HandleModuleObject;
  *
  * The following are syntactic static scopes:
  *
- * StaticBlockObject
+ * StaticBlockScope
  *   Scope for non-function body blocks. e.g., |{ let x; }|
  *
  * JSFunction
@@ -55,26 +56,400 @@ typedef Handle<ModuleObject*> HandleModuleObject;
  * ModuleObject
  *   Scope for moddules.
  *
- * StaticWithObject
+ * StaticWithScope
  *   Scope for |with|. e.g., |with ({}) { ... }|
  *
- * StaticEvalObject
+ * StaticEvalScope
  *   Scope for |eval|. e.g., |eval(...)|
  *
  * The following are non-syntactic static scopes:
  *
- * StaticNonSyntacticScopeObjects
- *   Signals presence of "polluting" scope objects. Used by Gecko.
+ * StaticNonSyntacticScope
+ *   Signals presence of "polluting" scopes. Used by Gecko.
  *
  * There is an additional scope for named lambdas without a static scope
  * object. E.g., in:
  *
  *   (function f() { var x; function g() { } })
  *
- * All static scope objects are ScopeObjects with the exception of JSFunction
- * and ModuleObject, which keeps their enclosing scope link on
+ * All static scope objects are StaticScope objects with the exception of
+ * JSFunction and ModuleObject, which keep their enclosing scope link on
  * |JSScript::enclosingStaticScope()|.
  */
+class StaticScope : public NativeObject
+{
+  public:
+    static const uint32_t ENCLOSING_SCOPE_SLOT = 0;
+    static const unsigned RESERVED_SLOTS = ENCLOSING_SCOPE_SLOT + 1;
+
+    inline JSObject* enclosingScope() const {
+        return getFixedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    }
+
+    void initEnclosingScope(JSObject* obj) {
+        MOZ_ASSERT(getReservedSlot(ENCLOSING_SCOPE_SLOT).isUndefined());
+        setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(obj));
+    }
+
+    void setEnclosingScope(HandleObject obj);
+};
+
+class NestedStaticScope : public StaticScope
+{
+  public:
+    /*
+     * A refinement of enclosingScope that returns nullptr if the enclosing
+     * scope is not a NestedScopeObject.
+     */
+    inline NestedStaticScope* enclosingNestedScope() const;
+
+    /*
+     * Note: in the case of hoisting, this prev-link will not ultimately be
+     * the same as enclosingNestedScope; initEnclosingNestedScope must be
+     * called separately in the emitter. 'reset' is just for asserting
+     * stackiness.
+     */
+    void initEnclosingScopeFromParser(JSObject* prev) {
+        setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(prev));
+    }
+
+    void resetEnclosingScopeFromParser() {
+        setReservedSlot(ENCLOSING_SCOPE_SLOT, UndefinedValue());
+    }
+};
+
+/*
+ * A block scope. This may represent a syntactic Block that immediately
+ * contains a LexicalDeclaration, but we also create these for the implicit
+ * block introduced by a for-loop and for the global lexical scope.
+ *
+ * These are implemented as instances of ClonedBlockObject::_class,
+ * a trick that allows static and cloned blocks to share a Shape.
+ * The static block keeps the Shape rooted, and cloning the block
+ * is fast.
+ */
+class StaticBlockScope : public NestedStaticScope
+{
+    static const unsigned LOCAL_OFFSET_SLOT = NestedStaticScope::RESERVED_SLOTS;
+
+  public:
+    static const unsigned RESERVED_SLOTS = LOCAL_OFFSET_SLOT + 1;
+
+    /* Return the number of variables associated with this block. */
+    uint32_t numVariables() const {
+        // TODO: propertyCount() is O(n), use O(1) lastProperty()->slot() instead
+        return propertyCount();
+    }
+
+  private:
+    /*
+     * Even static blocks contain an object slot for each binding i,
+     * 0 <= i < slotCount.
+     */
+    const Value& slotValue(unsigned i) {
+        return getSlotRef(RESERVED_SLOTS + i);
+    }
+
+    void setSlotValue(unsigned i, const Value& v) {
+        setSlot(RESERVED_SLOTS + i, v);
+    }
+
+  public:
+    static StaticBlockScope* create(ExclusiveContext* cx);
+
+    /*
+     * Among block scopes, only the global lexical scope is extensible.
+     * (Non-syntactic scopes and some function scopes are also extensible.)
+     */
+    bool isExtensible() const;
+
+    /* See StaticScopeIter comment. */
+    JSObject* enclosingStaticScope() const {
+        return getFixedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    }
+
+    /*
+     * Return the index (in the range [0, numVariables()) corresponding to the
+     * given shape of a block object.
+     */
+    uint32_t shapeToIndex(const Shape& shape) {
+        uint32_t slot = shape.slot();
+        MOZ_ASSERT(slot - RESERVED_SLOTS < numVariables());
+        return slot - RESERVED_SLOTS;
+    }
+
+    /*
+     * A refinement of enclosingStaticScope that returns nullptr if the enclosing
+     * static scope is a JSFunction.
+     */
+    inline StaticBlockScope* enclosingBlock() const;
+
+    uint32_t localOffset() {
+        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32();
+    }
+
+    // Return the local corresponding to the 'var'th binding where 'var' is in the
+    // range [0, numVariables()).
+    uint32_t blockIndexToLocalIndex(uint32_t index) {
+        MOZ_ASSERT(index < numVariables());
+        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + index;
+    }
+
+    // Return the slot corresponding to block index 'index', where 'index' is
+    // in the range [0, numVariables()).  The result is in the range
+    // [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
+    uint32_t blockIndexToSlot(uint32_t index) {
+        MOZ_ASSERT(index < numVariables());
+        return RESERVED_SLOTS + index;
+    }
+
+    // Return the slot corresponding to local variable 'local', where 'local' is
+    // in the range [localOffset(), localOffset() + numVariables()).  The result is
+    // in the range [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
+    uint32_t localIndexToSlot(uint32_t local) {
+        MOZ_ASSERT(local >= localOffset());
+        return blockIndexToSlot(local - localOffset());
+    }
+
+    /*
+     * A let binding is aliased if accessed lexically by nested functions or
+     * dynamically through dynamic name lookup (eval, with, function::, etc).
+     */
+    bool isAliased(unsigned i) {
+        return slotValue(i).isTrue();
+    }
+
+    // Look up if the block has an aliased binding named |name|.
+    Shape* lookupAliasedName(PropertyName* name);
+
+    /*
+     * A static block object is cloned (when entering the block) iff some
+     * variable of the block isAliased.
+     */
+    bool needsClone() {
+        return numVariables() > 0 && !getSlot(RESERVED_SLOTS).isFalse();
+    }
+
+    // Is this the static global lexical scope?
+    bool isGlobal() const {
+        return !enclosingStaticScope();
+    }
+
+    bool isSyntactic() const {
+        return !isExtensible() || isGlobal();
+    }
+
+    /* Frontend-only functions ***********************************************/
+
+    /* Initialization functions for above fields. */
+    void setAliased(unsigned i, bool aliased) {
+        MOZ_ASSERT_IF(i > 0, slotValue(i-1).isBoolean());
+        setSlotValue(i, BooleanValue(aliased));
+        if (aliased && !needsClone()) {
+            setSlotValue(0, MagicValue(JS_BLOCK_NEEDS_CLONE));
+            MOZ_ASSERT(needsClone());
+        }
+    }
+
+    void setLocalOffset(uint32_t offset) {
+        MOZ_ASSERT(getReservedSlot(LOCAL_OFFSET_SLOT).isUndefined());
+        initReservedSlot(LOCAL_OFFSET_SLOT, PrivateUint32Value(offset));
+    }
+
+    /*
+     * Frontend compilation temporarily uses the object's slots to link
+     * a let var to its associated Definition parse node.
+     */
+    void setDefinitionParseNode(unsigned i, frontend::Definition* def) {
+        MOZ_ASSERT(slotValue(i).isUndefined());
+        setSlotValue(i, PrivateValue(def));
+    }
+
+    frontend::Definition* definitionParseNode(unsigned i) {
+        Value v = slotValue(i);
+        return reinterpret_cast<frontend::Definition*>(v.toPrivate());
+    }
+
+    // Called by BytecodeEmitter to mark regular block scopes as
+    // non-extensible. By contrast, the global lexical scope is extensible.
+    bool makeNonExtensible(ExclusiveContext* cx);
+
+    /*
+     * While ScopeCoordinate can generally reference up to 2^24 slots, block objects have an
+     * additional limitation that all slot indices must be storable as uint16_t short-ids in the
+     * associated Shape. If we could remove the block dependencies on shape->shortid, we could
+     * remove INDEX_LIMIT.
+     */
+    static const unsigned LOCAL_INDEX_LIMIT = JS_BIT(16);
+
+    static Shape* addVar(ExclusiveContext* cx, Handle<StaticBlockScope*> block, HandleId id,
+                         bool constant, unsigned index, bool* redeclared);
+};
+
+// Represents the lexical scope of a 'with' statement.
+class StaticWithScope : public NestedStaticScope
+{
+  public:
+    static const Class class_;
+
+    static StaticWithScope* create(ExclusiveContext* cx);
+};
+
+template <XDRMode mode>
+bool
+XDRStaticWithScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+                   MutableHandle<StaticWithScope*> objp);
+
+/*
+ * Static eval scope placeholder objects on the static scope chain. Created at
+ * the time of compiling the eval script, and set as its static enclosing
+ * scope.
+ */
+class StaticEvalScope : public StaticScope
+{
+    static const uint32_t STRICT_SLOT = StaticScope::RESERVED_SLOTS;
+    static const unsigned RESERVED_SLOTS = STRICT_SLOT + 1;
+
+  public:
+    static const Class class_;
+
+    static StaticEvalScope* create(JSContext* cx, HandleObject enclosing);
+
+    JSObject* enclosingScopeForStaticScopeIter() {
+        return getReservedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    }
+
+    void setStrict() {
+        setReservedSlot(STRICT_SLOT, BooleanValue(true));
+    }
+
+    bool isStrict() const {
+        return getReservedSlot(STRICT_SLOT).isTrue();
+    }
+
+    inline bool isNonGlobal() const;
+};
+
+/*
+ * Non-syntactic scopes
+ *
+ * A non-syntactic scope is one that was not created due to source code. On
+ * the static scope chain, a single StaticNonSyntacticScope maps to 0+
+ * non-syntactic dynamic scope objects. This is contrasted with syntactic
+ * scopes, where each syntactic static scope corresponds to 0 or 1 dynamic
+ * scope objects.
+ *
+ * There are 3 kinds of dynamic non-syntactic scopes:
+ *
+ * 1. DynamicWithObject
+ *
+ *    When the embedding compiles or executes a script, it has the option to
+ *    pass in a vector of objects to be used as the initial scope chain. Each
+ *    of those objects is wrapped by a DynamicWithObject.
+ *
+ *    The innermost scope passed in by the embedding becomes a qualified
+ *    variables object that captures 'var' bindings. That is, it wraps the
+ *    holder object of 'var' bindings.
+ *
+ *    Does not hold 'let' or 'const' bindings.
+ *
+ * 2. NonSyntacticVariablesObject
+ *
+ *    When the embedding wants qualified 'var' bindings and unqualified
+ *    bareword assignments to go on a different object than the global
+ *    object. While any object can be made into a qualified variables object,
+ *    only the GlobalObject and NonSyntacticVariablesObject are considered
+ *    unqualified variables objects.
+ *
+ *    Unlike DynamicWithObjects, this object is itself the holder of 'var'
+ *    bindings.
+ *
+ *    Does not hold 'let' or 'const' bindings.
+ *
+ * 3. ClonedBlockObject
+ *
+ *    Each non-syntactic object used as a qualified variables object needs to
+ *    enclose a non-syntactic ClonedBlockObject to hold 'let' and 'const'
+ *    bindings. There is a bijection per compartment between the non-syntactic
+ *    variables objects and their non-syntactic ClonedBlockObjects.
+ *
+ *    Does not hold 'var' bindings.
+ *
+ * The embedding (Gecko) uses non-syntactic scopes for various things, some of
+ * which are detailed below. All scope chain listings below are, from top to
+ * bottom, outermost to innermost.
+ *
+ * A. Component loading
+ *
+ * Components may be loaded in "reuse loader global" mode, where to save on
+ * memory, all JSMs and JS-implemented XPCOM modules are loaded into a single
+ * global. Each individual JSMs are compiled as functions with their own
+ * FakeBackstagePass. They have the following dynamic scope chain:
+ *
+ *   BackstagePass global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   DynamicWithObject wrapping FakeBackstagePass
+ *       |
+ *   ClonedBlockObject
+ *
+ * B. Subscript loading
+ *
+ * Subscripts may be loaded into a target object. They have the following
+ * dynamic scope chain:
+ *
+ *   Loader global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   DynamicWithObject wrapping target
+ *       |
+ *   ClonedBlockObject
+ *
+ * C. Frame scripts
+ *
+ * XUL frame scripts are always loaded with a NonSyntacticVariablesObject as a
+ * "polluting global". This is done exclusively in
+ * js::ExecuteInGlobalAndReturnScope.
+ *
+ *   Loader global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   NonSyntacticVariablesObject
+ *       |
+ *   ClonedBlockObject
+ *
+ * D. XBL
+ *
+ * XBL methods are compiled as functions with XUL elements on the scope chain.
+ * For a chain of elements e0,...,eN:
+ *
+ *      ...
+ *       |
+ *   DynamicWithObject wrapping eN
+ *       |
+ *      ...
+ *       |
+ *   DynamicWithObject wrapping e0
+ *       |
+ *   ClonedBlockObject
+ *
+ */
+class StaticNonSyntacticScope : public StaticScope
+{
+  public:
+    static const unsigned RESERVED_SLOTS = StaticScope::RESERVED_SLOTS;
+    static const Class class_;
+
+    static StaticNonSyntacticScope* create(JSContext* cx, HandleObject enclosing);
+
+    JSObject* enclosingScopeForStaticScopeIter() {
+        return getReservedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    }
+};
+
 template <AllowGC allowGC>
 class StaticScopeIter
 {
@@ -82,10 +457,10 @@ class StaticScopeIter
     bool onNamedLambda;
 
     static bool IsStaticScope(JSObject* obj) {
-        return obj->is<StaticBlockObject>() ||
-               obj->is<StaticWithObject>() ||
-               obj->is<StaticEvalObject>() ||
-               obj->is<StaticNonSyntacticScopeObjects>() ||
+        return obj->is<StaticBlockScope>() ||
+               obj->is<StaticWithScope>() ||
+               obj->is<StaticEvalScope>() ||
+               obj->is<StaticNonSyntacticScope>() ||
                obj->is<JSFunction>() ||
                obj->is<ModuleObject>();
     }
@@ -137,16 +512,17 @@ class StaticScopeIter
     enum Type { Module, Function, Block, With, NamedLambda, Eval, NonSyntactic };
     Type type() const;
 
-    StaticBlockObject& block() const;
-    StaticWithObject& staticWith() const;
-    StaticEvalObject& eval() const;
-    StaticNonSyntacticScopeObjects& nonSyntactic() const;
+    StaticBlockScope& block() const;
+    StaticWithScope& staticWith() const;
+    StaticEvalScope& eval() const;
+    StaticNonSyntacticScope& nonSyntactic() const;
     JSScript* funScript() const;
     JSFunction& fun() const;
     frontend::FunctionBox* maybeFunctionBox() const;
     JSScript* moduleScript() const;
     ModuleObject& module() const;
 };
+
 
 /*****************************************************************************/
 
@@ -204,22 +580,29 @@ ScopeCoordinateName(ScopeCoordinateNameCache& cache, JSScript* script, jsbytecod
 extern JSScript*
 ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
 
-/*****************************************************************************/
+
+/*** Scope objects *******************************************************************************/
 
 /*
- * Scope objects
- *
  * Scope objects are technically real JSObjects but only belong on the scope
  * chain (that is, fp->scopeChain() or fun->environment()). The hierarchy of
  * scope objects is:
  *
- *   JSObject                      Generic object
- *     |
- *   ScopeObject---+---+           Engine-internal scope
- *     |   |   |   |   |
- *     |   |   |   |  StaticNonSyntacticScopeObjects  See "Non-syntactic scope objects"
+ *   JSObject                       Generic object
+ *     |   |
+ *     |  StaticScope               Created at compile time
  *     |   |   |   |
- *     |   |   |  StaticEvalObject  Placeholder so eval scopes may be iterated through
+ *     |   |   |  StaticNonSyntacticScope   See "Non-syntactic scopes"
+ *     |   |   |
+ *     |   |  StaticEvalScope       Placeholder so eval scopes may be iterated through
+ *     |   |
+ *     |  NestedStaticScope         Enclosing scope is in the same JSScript
+ *     |   |   |
+ *     |   |  StaticBlockScope      See NB
+ *     |   |
+ *     |  StaticWithScope           Template for "with" object in static scope chain
+ *     |
+ *   ScopeObject                    Engine-internal scope
  *     |   |   |
  *     |   |  DeclEnvObject         Holds name of recursive/needsCallObject named lambda
  *     |   |
@@ -230,16 +613,10 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *     |  ModuleEnvironmentObject   Module top-level scope on run-time scope chain
  *     |
  *   NestedScopeObject              Statement scopes; don't cross script boundaries
- *     |   |   |
- *     |   |  StaticWithObject      Template for "with" object in static scope chain
  *     |   |
  *     |  DynamicWithObject         Run-time "with" object on scope chain
  *     |
- *   BlockObject                    Shared interface of cloned/static block objects
- *     |   |
- *     |  ClonedBlockObject         let, switch, catch, for
- *     |
- *   StaticBlockObject              See NB
+ *   ClonedBlockObject              let, switch, catch, for
  *
  * This hierarchy represents more than just the interface hierarchy: reserved
  * slots in base classes are fixed for all derived classes. Thus, for example,
@@ -446,154 +823,6 @@ class DeclEnvObject : public ScopeObject
     }
 };
 
-// Static eval scope placeholder objects on the static scope chain. Created at
-// the time of compiling the eval script, and set as its static enclosing
-// scope.
-class StaticEvalObject : public ScopeObject
-{
-    static const uint32_t STRICT_SLOT = 1;
-
-  public:
-    static const unsigned RESERVED_SLOTS = 2;
-    static const Class class_;
-
-    static StaticEvalObject* create(JSContext* cx, HandleObject enclosing);
-
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    }
-
-    void setStrict() {
-        setReservedSlot(STRICT_SLOT, BooleanValue(true));
-    }
-
-    bool isStrict() const {
-        return getReservedSlot(STRICT_SLOT).isTrue();
-    }
-
-    inline bool isNonGlobal() const;
-};
-
-/*
- * Non-syntactic scope objects
- *
- * A non-syntactic scope is one that was not created due to source code. On
- * the static scope chain, a single StaticNonSyntacticScopeObjects maps to 0+
- * non-syntactic dynamic scope objects. This is contrasted with syntactic
- * scopes, where each syntactic static scope corresponds to 0 or 1 dynamic
- * scope objects.
- *
- * There are 3 kinds of dynamic non-syntactic scopes:
- *
- * 1. DynamicWithObject
- *
- *    When the embedding compiles or executes a script, it has the option to
- *    pass in a vector of objects to be used as the initial scope chain. Each
- *    of those objects is wrapped by a DynamicWithObject.
- *
- *    The innermost scope passed in by the embedding becomes a qualified
- *    variables object that captures 'var' bindings. That is, it wraps the
- *    holder object of 'var' bindings.
- *
- *    Does not hold 'let' or 'const' bindings.
- *
- * 2. NonSyntacticVariablesObject
- *
- *    When the embedding wants qualified 'var' bindings and unqualified
- *    bareword assignments to go on a different object than the global
- *    object. While any object can be made into a qualified variables object,
- *    only the GlobalObject and NonSyntacticVariablesObject are considered
- *    unqualified variables objects.
- *
- *    Unlike DynamicWithObjects, this object is itself the holder of 'var'
- *    bindings.
- *
- *    Does not hold 'let' or 'const' bindings.
- *
- * 3. ClonedBlockObject
- *
- *    Each non-syntactic object used as a qualified variables object needs to
- *    enclose a non-syntactic ClonedBlockObject to hold 'let' and 'const'
- *    bindings. There is a bijection per compartment between the non-syntactic
- *    variables objects and their non-syntactic ClonedBlockObjects.
- *
- *    Does not hold 'var' bindings.
- *
- * The embedding (Gecko) uses non-syntactic scopes for various things, some of
- * which are detailed below. All scope chain listings below are, from top to
- * bottom, outermost to innermost.
- *
- * A. Component loading
- *
- * Components may be loaded in "reuse loader global" mode, where to save on
- * memory, all JSMs and JS-implemented XPCOM modules are loaded into a single
- * global. Each individual JSMs are compiled as functions with their own
- * FakeBackstagePass. They have the following dynamic scope chain:
- *
- *   BackstagePass global
- *       |
- *   Global lexical scope
- *       |
- *   DynamicWithObject wrapping FakeBackstagePass
- *       |
- *   Non-syntactic lexical scope
- *
- * B. Subscript loading
- *
- * Subscripts may be loaded into a target object. They have the following
- * dynamic scope chain:
- *
- *   Loader global
- *       |
- *   Global lexical scope
- *       |
- *   DynamicWithObject wrapping target
- *       |
- *   ClonedBlockObject
- *
- * C. Frame scripts
- *
- * XUL frame scripts are always loaded with a NonSyntacticVariablesObject as a
- * "polluting global". This is done exclusively in
- * js::ExecuteInGlobalAndReturnScope.
- *
- *   Loader global
- *       |
- *   Global lexical scope
- *       |
- *   NonSyntacticVariablesObject
- *       |
- *   ClonedBlockObject
- *
- * D. XBL
- *
- * XBL methods are compiled as functions with XUL elements on the scope chain.
- * For a chain of elements e0,...,eN:
- *
- *      ...
- *       |
- *   DynamicWithObject wrapping eN
- *       |
- *      ...
- *       |
- *   DynamicWithObject wrapping e0
- *       |
- *   ClonedBlockObject
- *
- */
-class StaticNonSyntacticScopeObjects : public ScopeObject
-{
-  public:
-    static const unsigned RESERVED_SLOTS = 1;
-    static const Class class_;
-
-    static StaticNonSyntacticScopeObjects* create(JSContext* cx, HandleObject enclosing);
-
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    }
-};
-
 // A non-syntactic dynamic scope object that captures non-lexical
 // bindings. That is, a scope object that captures both qualified var
 // assignments and unqualified bareword assignments. Its parent is always the
@@ -614,54 +843,15 @@ class NonSyntacticVariablesObject : public ScopeObject
 class NestedScopeObject : public ScopeObject
 {
   public:
-    /*
-     * A refinement of enclosingScope that returns nullptr if the enclosing
-     * scope is not a NestedScopeObject.
-     */
-    inline NestedScopeObject* enclosingNestedScope() const;
-
-    // Return true if this object is a compile-time scope template.
-    inline bool isStatic() { return !getProto(); }
-
     // Return the static scope corresponding to this scope chain object.
-    inline NestedScopeObject* staticScope() {
-        MOZ_ASSERT(!isStatic());
-        return &getProto()->as<NestedScopeObject>();
-    }
-
-    // At compile-time it's possible for the scope chain to be null.
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
+    inline NestedStaticScope* staticScope() {
+        return &getProto()->as<NestedStaticScope>();
     }
 
     void initEnclosingScope(JSObject* obj) {
         MOZ_ASSERT(getReservedSlot(SCOPE_CHAIN_SLOT).isUndefined());
         setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(obj));
     }
-
-    /*
-     * Note: in the case of hoisting, this prev-link will not ultimately be
-     * the same as enclosingNestedScope; initEnclosingNestedScope must be
-     * called separately in the emitter. 'reset' is just for asserting
-     * stackiness.
-     */
-    void initEnclosingScopeFromParser(JSObject* prev) {
-        setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(prev));
-    }
-
-    void resetEnclosingScopeFromParser() {
-        setReservedSlot(SCOPE_CHAIN_SLOT, UndefinedValue());
-    }
-};
-
-// With scope template objects on the static scope chain.
-class StaticWithObject : public NestedScopeObject
-{
-  public:
-    static const unsigned RESERVED_SLOTS = 1;
-    static const Class class_;
-
-    static StaticWithObject* create(ExclusiveContext* cx);
 };
 
 // With scope objects on the run-time scope chain.
@@ -684,8 +874,8 @@ class DynamicWithObject : public NestedScopeObject
     create(JSContext* cx, HandleObject object, HandleObject enclosing, HandleObject staticWith,
            WithKind kind = SyntacticWith);
 
-    StaticWithObject& staticWith() const {
-        return getProto()->as<StaticWithObject>();
+    StaticWithScope& staticWith() const {
+        return getProto()->as<StaticWithScope>();
     }
 
     /* Return the 'o' in 'with (o)'. */
@@ -717,11 +907,29 @@ class DynamicWithObject : public NestedScopeObject
     }
 };
 
-class BlockObject : public NestedScopeObject
+class ClonedBlockObject : public NestedScopeObject
 {
+    static const unsigned THIS_VALUE_SLOT = 1;
+
   public:
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
+
+  private:
+    static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockScope*> block,
+                                     HandleObject enclosing);
+
+  public:
+    static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockScope*> block,
+                                     AbstractFramePtr frame);
+
+    static ClonedBlockObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
+
+    static ClonedBlockObject* createNonSyntactic(JSContext* cx, HandleObject enclosingStatic,
+                                                 HandleObject enclosingScope);
+
+    static ClonedBlockObject* createHollowForDebug(JSContext* cx,
+                                                   Handle<StaticBlockScope*> block);
 
     /* Return the number of variables associated with this block. */
     uint32_t numVariables() const {
@@ -733,7 +941,7 @@ class BlockObject : public NestedScopeObject
     // not.
     bool isExtensible() const;
 
-  protected:
+  private:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
     const Value& slotValue(unsigned i) {
         return getSlotRef(RESERVED_SLOTS + i);
@@ -742,160 +950,11 @@ class BlockObject : public NestedScopeObject
     void setSlotValue(unsigned i, const Value& v) {
         setSlot(RESERVED_SLOTS + i, v);
     }
-};
-
-class StaticBlockObject : public BlockObject
-{
-    static const unsigned LOCAL_OFFSET_SLOT = 1;
 
   public:
-    static StaticBlockObject* create(ExclusiveContext* cx);
-
-    /* See StaticScopeIter comment. */
-    JSObject* enclosingStaticScope() const {
-        return getFixedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    }
-
-    /*
-     * Return the index (in the range [0, numVariables()) corresponding to the
-     * given shape of a block object.
-     */
-    uint32_t shapeToIndex(const Shape& shape) {
-        uint32_t slot = shape.slot();
-        MOZ_ASSERT(slot - RESERVED_SLOTS < numVariables());
-        return slot - RESERVED_SLOTS;
-    }
-
-    /*
-     * A refinement of enclosingStaticScope that returns nullptr if the enclosing
-     * static scope is a JSFunction.
-     */
-    inline StaticBlockObject* enclosingBlock() const;
-
-    uint32_t localOffset() {
-        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32();
-    }
-
-    // Return the local corresponding to the 'var'th binding where 'var' is in the
-    // range [0, numVariables()).
-    uint32_t blockIndexToLocalIndex(uint32_t index) {
-        MOZ_ASSERT(index < numVariables());
-        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + index;
-    }
-
-    // Return the slot corresponding to block index 'index', where 'index' is
-    // in the range [0, numVariables()).  The result is in the range
-    // [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
-    uint32_t blockIndexToSlot(uint32_t index) {
-        MOZ_ASSERT(index < numVariables());
-        return RESERVED_SLOTS + index;
-    }
-
-    // Return the slot corresponding to local variable 'local', where 'local' is
-    // in the range [localOffset(), localOffset() + numVariables()).  The result is
-    // in the range [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
-    uint32_t localIndexToSlot(uint32_t local) {
-        MOZ_ASSERT(local >= localOffset());
-        return blockIndexToSlot(local - localOffset());
-    }
-
-    /*
-     * A let binding is aliased if accessed lexically by nested functions or
-     * dynamically through dynamic name lookup (eval, with, function::, etc).
-     */
-    bool isAliased(unsigned i) {
-        return slotValue(i).isTrue();
-    }
-
-    // Look up if the block has an aliased binding named |name|.
-    Shape* lookupAliasedName(PropertyName* name);
-
-    /*
-     * A static block object is cloned (when entering the block) iff some
-     * variable of the block isAliased.
-     */
-    bool needsClone() {
-        return numVariables() > 0 && !getSlot(RESERVED_SLOTS).isFalse();
-    }
-
-    // Is this the static global lexical scope?
-    bool isGlobal() const {
-        return !enclosingStaticScope();
-    }
-
-    bool isSyntactic() const {
-        return !isExtensible() || isGlobal();
-    }
-
-    /* Frontend-only functions ***********************************************/
-
-    /* Initialization functions for above fields. */
-    void setAliased(unsigned i, bool aliased) {
-        MOZ_ASSERT_IF(i > 0, slotValue(i-1).isBoolean());
-        setSlotValue(i, BooleanValue(aliased));
-        if (aliased && !needsClone()) {
-            setSlotValue(0, MagicValue(JS_BLOCK_NEEDS_CLONE));
-            MOZ_ASSERT(needsClone());
-        }
-    }
-
-    void setLocalOffset(uint32_t offset) {
-        MOZ_ASSERT(getReservedSlot(LOCAL_OFFSET_SLOT).isUndefined());
-        initReservedSlot(LOCAL_OFFSET_SLOT, PrivateUint32Value(offset));
-    }
-
-    /*
-     * Frontend compilation temporarily uses the object's slots to link
-     * a let var to its associated Definition parse node.
-     */
-    void setDefinitionParseNode(unsigned i, frontend::Definition* def) {
-        MOZ_ASSERT(slotValue(i).isUndefined());
-        setSlotValue(i, PrivateValue(def));
-    }
-
-    frontend::Definition* definitionParseNode(unsigned i) {
-        Value v = slotValue(i);
-        return reinterpret_cast<frontend::Definition*>(v.toPrivate());
-    }
-
-    // Called by BytecodeEmitter to mark regular block scopes as
-    // non-extensible. By contrast, the global lexical scope is extensible.
-    bool makeNonExtensible(ExclusiveContext* cx);
-
-    /*
-     * While ScopeCoordinate can generally reference up to 2^24 slots, block objects have an
-     * additional limitation that all slot indices must be storable as uint16_t short-ids in the
-     * associated Shape. If we could remove the block dependencies on shape->shortid, we could
-     * remove INDEX_LIMIT.
-     */
-    static const unsigned LOCAL_INDEX_LIMIT = JS_BIT(16);
-
-    static Shape* addVar(ExclusiveContext* cx, Handle<StaticBlockObject*> block, HandleId id,
-                         bool constant, unsigned index, bool* redeclared);
-};
-
-class ClonedBlockObject : public BlockObject
-{
-    static const unsigned THIS_VALUE_SLOT = 1;
-
-    static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockObject*> block,
-                                     HandleObject enclosing);
-
-  public:
-    static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockObject*> block,
-                                     AbstractFramePtr frame);
-
-    static ClonedBlockObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
-
-    static ClonedBlockObject* createNonSyntactic(JSContext* cx, HandleObject enclosingStatic,
-                                                 HandleObject enclosingScope);
-
-    static ClonedBlockObject* createHollowForDebug(JSContext* cx,
-                                                   Handle<StaticBlockObject*> block);
-
     /* The static block from which this block was cloned. */
-    StaticBlockObject& staticBlock() const {
-        return getProto()->as<StaticBlockObject>();
+    StaticBlockScope& staticBlock() const {
+        return getProto()->as<StaticBlockScope>();
     }
 
     /* Assuming 'put' has been called, return the value of the ith let var. */
@@ -973,16 +1032,13 @@ class RuntimeLexicalErrorObject : public ScopeObject
 
 template<XDRMode mode>
 bool
-XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
-                     MutableHandle<StaticBlockObject*> objp);
-
-template<XDRMode mode>
-bool
-XDRStaticWithObject(XDRState<mode>* xdr, HandleObject enclosingScope,
-                    MutableHandle<StaticWithObject*> objp);
+XDRStaticBlockScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+                    MutableHandle<StaticBlockScope*> objp);
 
 extern JSObject*
-CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope, Handle<NestedScopeObject*> src);
+CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope,
+                       Handle<NestedStaticScope*> src);
+
 
 /*****************************************************************************/
 
@@ -1036,10 +1092,10 @@ class MOZ_RAII ScopeIter
     ScopeObject& scope() const;
 
     JSObject* maybeStaticScope() const;
-    StaticBlockObject& staticBlock() const { return ssi_.block(); }
-    StaticWithObject& staticWith() const { return ssi_.staticWith(); }
-    StaticEvalObject& staticEval() const { return ssi_.eval(); }
-    StaticNonSyntacticScopeObjects& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
+    StaticBlockScope& staticBlock() const { return ssi_.block(); }
+    StaticWithScope& staticWith() const { return ssi_.staticWith(); }
+    StaticEvalScope& staticEval() const { return ssi_.eval(); }
+    StaticNonSyntacticScope& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
     JSFunction& fun() const { return ssi_.fun(); }
     ModuleObject& module() const { return ssi_.module(); }
 
@@ -1117,6 +1173,7 @@ class LiveScopeVal
 
     bool needsSweep();
 };
+
 
 /*****************************************************************************/
 
@@ -1271,10 +1328,40 @@ class DebugScopes
 
 template<>
 inline bool
+JSObject::is<js::StaticBlockScope>() const
+{
+    return hasClass(&js::ClonedBlockObject::class_) && !getProto();
+}
+
+template<>
+inline bool
+JSObject::is<js::NestedStaticScope>() const
+{
+    return is<js::StaticBlockScope>() ||
+           is<js::StaticWithScope>();
+}
+
+template<>
+inline bool
+JSObject::is<js::StaticScope>() const
+{
+    return is<js::NestedStaticScope>() ||
+           is<js::StaticEvalScope>() ||
+           is<js::StaticNonSyntacticScope>();
+}
+
+template<>
+inline bool
+JSObject::is<js::ClonedBlockObject>() const
+{
+    return hasClass(&js::ClonedBlockObject::class_) && !!getProto();
+}
+
+template<>
+inline bool
 JSObject::is<js::NestedScopeObject>() const
 {
-    return is<js::BlockObject>() ||
-           is<js::StaticWithObject>() ||
+    return is<js::ClonedBlockObject>() ||
            is<js::DynamicWithObject>();
 }
 
@@ -1301,20 +1388,6 @@ template<>
 bool
 JSObject::is<js::DebugScopeObject>() const;
 
-template<>
-inline bool
-JSObject::is<js::ClonedBlockObject>() const
-{
-    return is<js::BlockObject>() && !!getProto();
-}
-
-template<>
-inline bool
-JSObject::is<js::StaticBlockObject>() const
-{
-    return is<js::BlockObject>() && !getProto();
-}
-
 namespace js {
 
 inline bool
@@ -1336,6 +1409,12 @@ IsSyntacticScope(JSObject* scope)
 }
 
 inline bool
+IsStaticGlobalLexicalScope(JSObject* scope)
+{
+    return scope->is<StaticBlockScope>() && scope->as<StaticBlockScope>().isGlobal();
+}
+
+inline bool
 IsExtensibleLexicalScope(JSObject* scope)
 {
     return scope->is<ClonedBlockObject>() && scope->as<ClonedBlockObject>().isExtensible();
@@ -1347,10 +1426,21 @@ IsGlobalLexicalScope(JSObject* scope)
     return scope->is<ClonedBlockObject>() && scope->as<ClonedBlockObject>().isGlobal();
 }
 
-inline bool
-IsStaticGlobalLexicalScope(JSObject* scope)
+inline NestedStaticScope*
+NestedStaticScope::enclosingNestedScope() const
 {
-    return scope->is<StaticBlockObject>() && scope->as<StaticBlockObject>().isGlobal();
+    JSObject* obj = getReservedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    return obj && obj->is<NestedStaticScope>()
+           ? &obj->as<NestedStaticScope>()
+           : nullptr;
+}
+
+inline bool
+StaticEvalScope::isNonGlobal() const
+{
+    if (isStrict())
+        return true;
+    return !IsStaticGlobalLexicalScope(&getReservedSlot(ENCLOSING_SCOPE_SLOT).toObject());
 }
 
 inline const Value&
@@ -1358,21 +1448,6 @@ ScopeObject::aliasedVar(ScopeCoordinate sc)
 {
     MOZ_ASSERT(is<LexicalScopeBase>() || is<ClonedBlockObject>());
     return getSlot(sc.slot());
-}
-
-inline NestedScopeObject*
-NestedScopeObject::enclosingNestedScope() const
-{
-    JSObject* obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-    return obj && obj->is<NestedScopeObject>() ? &obj->as<NestedScopeObject>() : nullptr;
-}
-
-inline bool
-StaticEvalObject::isNonGlobal() const
-{
-    if (isStrict())
-        return true;
-    return !IsStaticGlobalLexicalScope(&getReservedSlot(SCOPE_CHAIN_SLOT).toObject());
 }
 
 inline bool

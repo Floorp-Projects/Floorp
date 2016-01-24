@@ -207,10 +207,10 @@ TypedObjectPrediction::referenceType() const
     return extractType<ReferenceTypeDescr>();
 }
 
-SimdTypeDescr::Type
+SimdType
 TypedObjectPrediction::simdType() const
 {
-    return extractType<SimdTypeDescr>();
+    return descr().as<SimdTypeDescr>().type();
 }
 
 bool

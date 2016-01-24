@@ -34,10 +34,6 @@ function run_test() {
 
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
-  disableServiceWorkerEvents(
-    'https://example.com/page/unregister-success'
-  );
-
   run_next_test();
 }
 
