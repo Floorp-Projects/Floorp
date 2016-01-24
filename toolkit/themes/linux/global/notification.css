@@ -7,6 +7,9 @@
 notification {
   color: -moz-gtk-info-bar-text;
   -moz-appearance: -moz-gtk-info-bar;
+%if MOZ_WIDGET_GTK == 2
+  background-color: InfoBackground;
+%endif
   text-shadow: none;
 }
 

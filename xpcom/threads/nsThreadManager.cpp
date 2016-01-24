@@ -18,7 +18,7 @@
 
 using namespace mozilla;
 
-static mozilla::ThreadLocal<bool> sTLSIsMainThread;
+static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
 
 bool
 NS_IsMainThread()
@@ -29,12 +29,10 @@ NS_IsMainThread()
 void
 NS_SetMainThread()
 {
-  if (!sTLSIsMainThread.initialized()) {
-    if (!sTLSIsMainThread.init()) {
-      MOZ_CRASH();
-    }
-    sTLSIsMainThread.set(true);
+  if (!sTLSIsMainThread.init()) {
+    MOZ_CRASH();
   }
+  sTLSIsMainThread.set(true);
   MOZ_ASSERT(NS_IsMainThread());
 }
 

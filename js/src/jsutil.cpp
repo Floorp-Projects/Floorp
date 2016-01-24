@@ -37,11 +37,11 @@ namespace js {
 namespace oom {
 
 JS_PUBLIC_DATA(uint32_t) targetThread = 0;
-JS_PUBLIC_DATA(mozilla::ThreadLocal<uint32_t>) threadType;
+JS_PUBLIC_DATA(MOZ_THREAD_LOCAL(uint32_t)) threadType;
 
 bool
 InitThreadType(void) {
-    return threadType.initialized() || threadType.init();
+    return threadType.init();
 }
 
 void

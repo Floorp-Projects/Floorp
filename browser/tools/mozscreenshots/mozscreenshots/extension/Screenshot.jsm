@@ -80,8 +80,8 @@ let Screenshot = {
       let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
       exe.append("screenshot.exe");
       if (!exe.exists()) {
-        exe = this._extensionPath.QueryInterface(Ci.nsIFileURL).file;
-        exe.append("lib");
+        exe = Services.dirsvc.get("CurWorkD", Ci.nsIFile).parent;
+        exe.append("bin");
         exe.append("screenshot.exe");
       }
       let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
@@ -143,10 +143,15 @@ let Screenshot = {
 
   _screenshotLinux(filename) {
     return new Promise((resolve, reject) => {
-      let file = Services.dirsvc.get("GreBinD", Ci.nsIFile);
-      file.append("screentopng");
+      let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+      exe.append("screentopng");
+      if (!exe.exists()) {
+        exe = Services.dirsvc.get("CurWorkD", Ci.nsIFile).parent;
+        exe.append("bin");
+        exe.append("screentopng");
+      }
       let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-      process.init(file);
+      process.init(exe);
 
       let args = [filename];
       process.runAsync(args, args.length, this._processObserver(resolve, reject));

@@ -64,9 +64,10 @@ const TreeNode = createFactory(createClass({
       onCollapse: this.props.onCollapse
     });
 
+    let isOddRow = this.props.index % 2;
     return dom.div(
       {
-        className: "tree-node div",
+        className: `tree-node div ${isOddRow ? "tree-node-odd" : ""}`,
         onFocus: this.props.onFocus,
         onClick: this.props.onFocus,
         onBlur: this.props.onBlur,
@@ -251,6 +252,7 @@ const Tree = module.exports = createClass({
       let { item, depth } = toRender[i];
       nodes.push(TreeNode({
         key: this.props.getKey(item),
+        index: begin + i,
         item: item,
         depth: depth,
         renderItem: this.props.renderItem,

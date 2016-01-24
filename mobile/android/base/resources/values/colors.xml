@@ -66,9 +66,8 @@
 
   <color name="dark_transparent_overlay">#99000000</color>
 
-  <!-- Firstrun tour-->
-  <color name="firstrun_tabstrip">#1193CB</color>
-  <color name="firstrun_pager_background">#16A3DF</color>
+  <!-- Firstrun tour -->
+  <color name="firstrun_pager_header">#E8E8E8</color>
 
   <!-- Tab Queue -->
   <color name="tab_queue_dismiss_button_foreground">#16A3DF</color>

@@ -2,9 +2,6 @@
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * Contributor(s):
- *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
 "use strict";
@@ -12,54 +9,45 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 614793: jsterm result scroll";
 
-"use strict";
-
 add_task(function* () {
   yield loadTab(TEST_URI);
-
   let hud = yield openConsole();
 
-  yield consoleOpened(hud);
+  yield testScrollPosition(hud);
 });
 
-function consoleOpened(hud) {
-  let deferred = promise.defer();
-
+function* testScrollPosition(hud) {
   hud.jsterm.clearOutput();
 
   let scrollNode = hud.ui.outputWrapper;
 
   for (let i = 0; i < 150; i++) {
-    content.console.log("test message " + i);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function*(i) {
+      content.console.log("test message " + i);
+    });
   }
 
   let oldScrollTop = -1;
 
-  waitForMessages({
+  yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test message 149",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(() => {
-    oldScrollTop = scrollNode.scrollTop;
-    isnot(oldScrollTop, 0, "scroll location is not at the top");
-
-    hud.jsterm.execute("'hello world'").then(onExecute);
   });
 
-  function onExecute(msg) {
-    isnot(scrollNode.scrollTop, oldScrollTop, "scroll location updated");
+  oldScrollTop = scrollNode.scrollTop;
+  isnot(oldScrollTop, 0, "scroll location is not at the top");
 
-    oldScrollTop = scrollNode.scrollTop;
+  let msg = yield hud.jsterm.execute("'hello world'");
 
-    msg.scrollIntoView(false);
+  isnot(scrollNode.scrollTop, oldScrollTop, "scroll location updated");
 
-    is(scrollNode.scrollTop, oldScrollTop, "scroll location is the same");
+  oldScrollTop = scrollNode.scrollTop;
 
-    deferred.resolve();
-  }
+  msg.scrollIntoView(false);
 
-  return deferred.promise;
+  is(scrollNode.scrollTop, oldScrollTop, "scroll location is the same");
 }

@@ -8,6 +8,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LaterRun",
+                                  "resource:///modules/LaterRun.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -353,7 +355,7 @@ nsBrowserContentHandler.prototype = {
     var uriparam;
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
-        var uri = resolveURIInternal(cmdLine, uriparam);
+        let uri = resolveURIInternal(cmdLine, uriparam);
         if (!shouldLoadURI(uri))
           continue;
         openWindow(null, this.chromeURL, "_blank",
@@ -368,7 +370,7 @@ nsBrowserContentHandler.prototype = {
 
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
-        var uri = resolveURIInternal(cmdLine, uriparam);
+        let uri = resolveURIInternal(cmdLine, uriparam);
         handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine);
         cmdLine.preventDefault = true;
       }
@@ -386,18 +388,18 @@ nsBrowserContentHandler.prototype = {
         openPreferences();
         cmdLine.preventDefault = true;
       } else try {
-        var uri = resolveURIInternal(cmdLine, chromeParam);
-        let isLocal = (uri) => {
+        let resolvedURI = resolveURIInternal(cmdLine, chromeParam);
+        let isLocal = uri => {
           let localSchemes = new Set(["chrome", "file", "resource"]);
           if (uri instanceof Components.interfaces.nsINestedURI) {
             uri = uri.QueryInterface(Components.interfaces.nsINestedURI).innerMostURI;
           }
           return localSchemes.has(uri.scheme);
         };
-        if (isLocal(uri)) {
+        if (isLocal(resolvedURI)) {
           // If the URI is local, we are sure it won't wrongly inherit chrome privs
           var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-          openWindow(null, uri.spec, "_blank", features);
+          openWindow(null, resolvedURI.spec, "_blank", features);
           cmdLine.preventDefault = true;
         } else {
           dump("*** Preventing load of web URI as chrome\n");
@@ -418,11 +420,14 @@ nsBrowserContentHandler.prototype = {
     try {
       var privateWindowParam = cmdLine.handleFlagWithParam("private-window", false);
       if (privateWindowParam) {
-        var uri = resolveURIInternal(cmdLine, privateWindowParam);
-        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, true);
+        let resolvedURI = resolveURIInternal(cmdLine, privateWindowParam);
+        handURIToExistingBrowser(resolvedURI, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, true);
         cmdLine.preventDefault = true;
       }
-    } catch (e if e.result == Components.results.NS_ERROR_INVALID_ARG) {
+    } catch (e) {
+      if (e.result != Components.results.NS_ERROR_INVALID_ARG) {
+        throw e;
+      }
       // NS_ERROR_INVALID_ARG is thrown when flag exists, but has no param.
       if (cmdLine.handleFlag("private-window", false)) {
         openWindow(null, this.chromeURL, "_blank",
@@ -449,10 +454,10 @@ nsBrowserContentHandler.prototype = {
       var file = cmdLine.resolveFile(fileParam);
       var ios = Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService);
-      var uri = ios.newFileURI(file);
-      openWindow(null, this.chromeURL, "_blank", 
+      var fileURI = ios.newFileURI(file);
+      openWindow(null, this.chromeURL, "_blank",
                  "chrome,dialog=no,all" + this.getFeatures(cmdLine),
-                 uri.spec);
+                 fileURI.spec);
       cmdLine.preventDefault = true;
     }
 
@@ -520,6 +525,8 @@ nsBrowserContentHandler.prototype = {
             // New profile.
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_welcome_url");
             additionalPage = Services.urlFormatter.formatURLPref("startup.homepage_welcome_url.additional");
+            // Turn on 'later run' pages for new profiles.
+            LaterRun.enabled = true;
             break;
           case OVERRIDE_NEW_MSTONE:
             // Check whether we will restore a session. If we will, we assume
@@ -559,6 +566,10 @@ nsBrowserContentHandler.prototype = {
           additionalPage += "&utm_content=firstrun";
         }
       }
+    }
+
+    if (!additionalPage) {
+      additionalPage = LaterRun.getURL() || "";
     }
 
     if (additionalPage && additionalPage != "about:blank") {

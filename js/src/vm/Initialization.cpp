@@ -75,7 +75,7 @@ JS_Init(void)
 #endif
 
     using js::TlsPerThreadData;
-    if (!TlsPerThreadData.initialized() && !TlsPerThreadData.init())
+    if (!TlsPerThreadData.init())
         return false;
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
