@@ -2014,10 +2014,12 @@ this.UITour = {
         for (let engine of engines) {
           if (engine.identifier == aID) {
             Services.search.defaultEngine = engine;
-            return resolve();
+            resolve();
+            return;
           }
         }
         reject("selectSearchEngine could not find engine with given ID");
+        return;
       });
     });
   },

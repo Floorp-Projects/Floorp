@@ -257,7 +257,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
         public void onRefresh() {
             if (FirefoxAccounts.firefoxAccountsExist(getActivity())) {
                 final Account account = FirefoxAccounts.getFirefoxAccount(getActivity());
-                FirefoxAccounts.requestSync(account, FirefoxAccounts.FORCE, STAGES_TO_SYNC_ON_REFRESH, null);
+                FirefoxAccounts.requestImmediateSync(account, STAGES_TO_SYNC_ON_REFRESH, null);
             } else {
                 Log.wtf(LOGTAG, "No Firefox Account found; this should never happen. Ignoring.");
                 mRefreshLayout.setRefreshing(false);
