@@ -29,6 +29,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'layout_base'
 
 EXPORTS += [
+    '!nsStyleStructList.h',
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
