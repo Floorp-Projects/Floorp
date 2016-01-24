@@ -635,6 +635,24 @@ DOMMediaStream::OwnsTrack(const MediaStreamTrack& aTrack) const
 }
 
 bool
+DOMMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
+{
+  if (GetInputStream() && GetInputStream()->AsSourceStream()) {
+    GetInputStream()->AsSourceStream()->AddDirectListener(aListener);
+    return true; // application should ignore NotifyQueuedTrackData
+  }
+  return false;
+}
+
+void
+DOMMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
+{
+  if (GetInputStream() && GetInputStream()->AsSourceStream()) {
+    GetInputStream()->AsSourceStream()->RemoveDirectListener(aListener);
+  }
+}
+
+bool
 DOMMediaStream::IsFinished()
 {
   return !mPlaybackStream || mPlaybackStream->IsFinished();
