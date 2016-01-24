@@ -95,16 +95,19 @@
         if (tech)
           tech.textContent = getDescription();
 
-        addDomainErrorLink();
+        addDomainErrorLinks();
       }
 
-      /* In the case of SSL error pages about domain mismatch, see if
+      /* Try to preserve the links contained in the error description, like
+         the error code.
+
+         Also, in the case of SSL error pages about domain mismatch, see if
          we can hyperlink the user to the correct site.  We don't want
          to do this generically since it allows MitM attacks to redirect
          users to a site under attacker control, but in certain cases
          it is safe (and helpful!) to do so.  Bug 402210
       */
-      function addDomainErrorLink() {
+      function addDomainErrorLinks() {
         // Rather than textContent, we need to treat description as HTML
         var sd = document.getElementById("technicalContentText");
         if (sd) {
@@ -112,30 +115,40 @@
 
           // sanitize description text - see bug 441169
 
-          // First, find the index of the <a> tag we care about, being careful not to
-          // use an over-greedy regex
-          var re = /<a id="cert_domain_link" title="([^"]+)">/;
-          var result = re.exec(desc);
-          if(!result)
+          // First, find the index of the <a> tags we care about, being
+          // careful not to use an over-greedy regex.
+          var codeRe = /<a id="errorCode" title="([^"]+)">/;
+          var codeResult = codeRe.exec(desc);
+          var domainRe = /<a id="cert_domain_link" title="([^"]+)">/;
+          var domainResult = domainRe.exec(desc);
+
+          // The order of these links in the description is fixed in
+          // TransportSecurityInfo.cpp:formatOverridableCertErrorMessage.
+          var firstResult = domainResult;
+          if (!domainResult)
+            firstResult = codeResult;
+          if (!firstResult)
             return;
 
           // Remove sd's existing children
           sd.textContent = "";
 
-          // Everything up to the link should be text content
-          sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
+          // Everything up to the first link should be text content.
+          sd.appendChild(document.createTextNode(desc.slice(0, firstResult.index)));
 
-          // Now create the link itself
-          var anchorEl = document.createElement("a");
-          anchorEl.setAttribute("id", "cert_domain_link");
-          anchorEl.setAttribute("title", result[1]);
-          anchorEl.appendChild(document.createTextNode(result[1]));
-          sd.appendChild(anchorEl);
+          // Now create the actual links.
+          if (domainResult) {
+            createLink(sd, "cert_domain_link", domainResult[1])
+            // Append text for anything between the two links.
+            sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length, codeResult.index)));
+          }
+          createLink(sd, "errorCode", codeResult[1])
 
-          // Finally, append text for anything after the closing </a>
-          sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
+          // Finally, append text for anything after the last closing </a>.
+          sd.appendChild(document.createTextNode(desc.slice(desc.lastIndexOf("</a>") + "</a>".length)));
         }
 
+        // Then initialize the cert domain link.
         var link = document.getElementById('cert_domain_link');
         if (!link)
           return;
@@ -162,7 +175,7 @@
          * domain names are famous for having '.' characters in them,
          * which would allow spurious and possibly hostile matches.
          */
-        if (endsWith(okHost, "." + thisHost))
+        if (okHost.endsWith("." + thisHost))
           link.href = proto + okHost;
 
         /* case #2:
@@ -170,7 +183,7 @@
          *
          * The certificate is only valid for garage.maemo.org
          */
-        if (endsWith(thisHost, "." + okHost))
+        if (thisHost.endsWith("." + okHost))
           link.href = proto + okHost;
 
         // If we set a link, meaning there's something helpful for
@@ -179,8 +192,12 @@
           toggle("technicalContent");
       }
 
-      function endsWith(haystack, needle) {
-        return haystack.slice(-needle.length) == needle;
+      function createLink(el, id, text) {
+        var anchorEl = document.createElement("a");
+        anchorEl.setAttribute("id", id);
+        anchorEl.setAttribute("title", text);
+        anchorEl.appendChild(document.createTextNode(text));
+        el.appendChild(anchorEl);
       }
 
       function toggle(id) {
