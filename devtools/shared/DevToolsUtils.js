@@ -21,168 +21,6 @@ for (let key of Object.keys(ThreadSafeDevToolsUtils)) {
 }
 
 /**
- * Turn the error |aError| into a string, without fail.
- */
-exports.safeErrorString = function safeErrorString(aError) {
-  try {
-    let errorString = aError.toString();
-    if (typeof errorString == "string") {
-      // Attempt to attach a stack to |errorString|. If it throws an error, or
-      // isn't a string, don't use it.
-      try {
-        if (aError.stack) {
-          let stack = aError.stack.toString();
-          if (typeof stack == "string") {
-            errorString += "\nStack: " + stack;
-          }
-        }
-      } catch (ee) { }
-
-      // Append additional line and column number information to the output,
-      // since it might not be part of the stringified error.
-      if (typeof aError.lineNumber == "number" && typeof aError.columnNumber == "number") {
-        errorString += "Line: " + aError.lineNumber + ", column: " + aError.columnNumber;
-      }
-
-      return errorString;
-    }
-  } catch (ee) { }
-
-  // We failed to find a good error description, so do the next best thing.
-  return Object.prototype.toString.call(aError);
-}
-
-/**
- * Report that |aWho| threw an exception, |aException|.
- */
-exports.reportException = function reportException(aWho, aException) {
-  let msg = aWho + " threw an exception: " + exports.safeErrorString(aException);
-
-  dump(msg + "\n");
-
-  if (Cu && Cu.reportError) {
-    /*
-     * Note that the xpcshell test harness registers an observer for
-     * console messages, so when we're running tests, this will cause
-     * the test to quit.
-     */
-    Cu.reportError(msg);
-  }
-}
-
-/**
- * Given a handler function that may throw, return an infallible handler
- * function that calls the fallible handler, and logs any exceptions it
- * throws.
- *
- * @param aHandler function
- *      A handler function, which may throw.
- * @param aName string
- *      A name for aHandler, for use in error messages. If omitted, we use
- *      aHandler.name.
- *
- * (SpiderMonkey does generate good names for anonymous functions, but we
- * don't have a way to get at them from JavaScript at the moment.)
- */
-exports.makeInfallible = function makeInfallible(aHandler, aName) {
-  if (!aName)
-    aName = aHandler.name;
-
-  return function (/* arguments */) {
-    try {
-      return aHandler.apply(this, arguments);
-    } catch (ex) {
-      let who = "Handler function";
-      if (aName) {
-        who += " " + aName;
-      }
-      return exports.reportException(who, ex);
-    }
-  }
-}
-/**
- * Interleaves two arrays element by element, returning the combined array, like
- * a zip. In the case of arrays with different sizes, undefined values will be
- * interleaved at the end along with the extra values of the larger array.
- *
- * @param Array a
- * @param Array b
- * @returns Array
- *          The combined array, in the form [a1, b1, a2, b2, ...]
- */
-exports.zip = function zip(a, b) {
-  if (!b) {
-    return a;
-  }
-  if (!a) {
-    return b;
-  }
-  const pairs = [];
-  for (let i = 0, aLength = a.length, bLength = b.length;
-       i < aLength || i < bLength;
-       i++) {
-    pairs.push([a[i], b[i]]);
-  }
-  return pairs;
-};
-
-
-/**
- * Converts an object into an array with 2-element arrays as key/value
- * pairs of the object. `{ foo: 1, bar: 2}` would become
- * `[[foo, 1], [bar 2]]` (order not guaranteed).
- *
- * @param object obj
- * @returns array
- */
-exports.entries = function entries(obj) {
-  return Object.keys(obj).map(k => [k, obj[k]]);
-}
-
-/*
- * Takes an array of 2-element arrays as key/values pairs and
- * constructs an object using them.
- */
-exports.toObject = function(arr) {
-  const obj = {};
-  for(let pair of arr) {
-    obj[pair[0]] = pair[1];
-  }
-  return obj;
-}
-
-/**
- * Takes an array of 2-element arrays as key/values pairs and
- * constructs an object using them.
- */
-exports.toObject = function(arr) {
-  const obj = {};
-  for(let pair of arr) {
-    obj[pair[0]] = pair[1];
-  }
-  return obj;
-}
-
-/**
- * Composes the given functions into a single function, which will
- * apply the results of each function right-to-left, starting with
- * applying the given arguments to the right-most function.
- * `compose(foo, bar, baz)` === `args => foo(bar(baz(args)`
- *
- * @param ...function funcs
- * @returns function
- */
-exports.compose = function compose(...funcs) {
-  return (...args) => {
-    const initialValue = funcs[funcs.length - 1].apply(null, args);
-    const leftFuncs = funcs.slice(0, -1);
-    return leftFuncs.reduceRight((composed, f) => f(composed),
-                                 initialValue);
-  };
-}
-
-
-/**
  * Waits for the next tick in the event loop to execute a callback.
  */
 exports.executeSoon = function executeSoon(aFn) {
@@ -279,7 +117,7 @@ exports.yieldingEach = function yieldingEach(aArray, aFn) {
   }());
 
   return promise.all(outstanding);
-}
+};
 
 /**
  * Like XPCOMUtils.defineLazyGetter, but with a |this| sensitive getter that
@@ -399,7 +237,7 @@ exports.dumpn = function dumpn(str) {
   if (exports.dumpn.wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
   }
-}
+};
 
 // We want wantLogging to be writable. The exports object is frozen by the
 // loader, so define it on dumpn instead.
@@ -417,40 +255,6 @@ exports.dumpv = function(msg) {
 // We want wantLogging to be writable. The exports object is frozen by the
 // loader, so define it on dumpn instead.
 exports.dumpv.wantVerbose = false;
-
-/**
- * Utility function for updating an object with the properties of
- * other objects.
- *
- * @param aTarget Object
- *        The object being updated.
- * @param aNewAttrs Object
- *        The rest params are objects to update aTarget with. You
- *        can pass as many as you like.
- */
-exports.update = function update(aTarget, ...aArgs) {
-  for (let attrs of aArgs) {
-    for (let key in attrs) {
-      let desc = Object.getOwnPropertyDescriptor(attrs, key);
-
-      if (desc) {
-        Object.defineProperty(aTarget, key, desc);
-      }
-    }
-  }
-
-  return aTarget;
-}
-
-/**
- * Utility function for getting the values from an object as an array
- *
- * @param aObject Object
- *        The object to iterate over
- */
-exports.values = function values(aObject) {
-  return Object.keys(aObject).map(k => aObject[k]);
-}
 
 /**
  * Defines a getter on a specified object that will be created upon first use.
@@ -511,15 +315,12 @@ function reallyAssert(condition, message) {
  * assertion failure is logged and then an error is thrown.
  *
  * If assertions are not enabled, then this function is a no-op.
- *
- * This is an improvement over `dbg_assert`, which doesn't actually cause any
- * fatal behavior, and is therefore much easier to accidentally ignore.
  */
 Object.defineProperty(exports, "assert", {
   get: () => (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES || this.testing)
     ? reallyAssert
     : exports.noop,
-})
+});
 
 /**
  * Defines a getter on a specified object for a module.  The module will not
@@ -716,7 +517,7 @@ if (!this.isWorker) {
   // issuing an rpc request, to fetch the URL on our behalf.
   exports.fetch = function (url, options) {
     return rpc("fetch", url, options);
-  }
+  };
 }
 
 /**
@@ -828,30 +629,4 @@ exports.openFileStream = function (filePath) {
       }
     );
   });
-}
-
-exports.isGenerator = function (fn) {
-  if (typeof fn !== "function") {
-    return false;
-  }
-  let proto = Object.getPrototypeOf(fn);
-  if (!proto) {
-    return false;
-  }
-  let ctor = proto.constructor;
-  if (!ctor) {
-    return false;
-  }
-  return ctor.name == "GeneratorFunction";
-};
-
-exports.isPromise = function (p) {
-  return p && typeof p.then === "function";
-};
-
-/**
- * Return true if `thing` is a SavedFrame, false otherwise.
- */
-exports.isSavedFrame = function (thing) {
-  return Object.prototype.toString.call(thing) === "[object SavedFrame]";
 };

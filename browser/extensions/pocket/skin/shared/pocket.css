@@ -14,51 +14,52 @@ panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-vi
 }
 
 #pocket-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  list-style-image: url("chrome://pocket/skin/Toolbar.png");
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
 
 toolbar[brighttext] #pocket-button {
-  list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
+  list-style-image: url(chrome://pocket/skin/Toolbar-inverted.png);
 }
 
 @media not all and (min-resolution: 1.1dppx) {
   #pocket-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #pocket-button {
-    list-style-image: var(--menupanel-list-style-image);
-    -moz-image-region: rect(0px, 992px, 32px, 960px);
+    list-style-image: url(chrome://pocket/skin/menuPanel.png);
+    -moz-image-region: rect(0, 32px, 32px, 0);
   }
 
   #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(32px, 992px, 64px, 960px);
+    -moz-image-region: rect(32px, 32px, 64px, 0);
   }
 }
 
 @media (min-resolution: 1.1dppx) {
   #pocket-button {
-    list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
+    list-style-image: url("chrome://pocket/skin/Toolbar@2x.png");
   }
 
   toolbar[brighttext] #pocket-button {
-    list-style-image: url("chrome://browser/skin/Toolbar-inverted@2x.png");
+    list-style-image: url("chrome://pocket/skin/Toolbar-inverted@2x.png");
   }
 
   #pocket-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #pocket-button {
-    list-style-image: var(--menupanel-list-style-image-2x);
-    -moz-image-region: rect(0px, 1984px, 64px, 1920px);
+    list-style-image: url(chrome://pocket/skin/menuPanel@2x.png);
+    -moz-image-region: rect(0px, 64px, 64px, 0);
   }
 
   #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 1984px, 128px, 1920px);
+    -moz-image-region: rect(64px, 64px, 128px, 0);
   }
 }
 
 #pocket-button[cui-areatype="toolbar"] {
-  -moz-image-region: rect(0, 774px, 18px, 756px);
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
 
 #pocket-button[cui-areatype="toolbar"][open] {
-  -moz-image-region: rect(18px, 774px, 36px, 756px);
+  -moz-image-region: rect(18px, 18px, 36px, 0);
 }
 
 #panelMenu_pocket,
