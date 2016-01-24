@@ -398,7 +398,7 @@ GonkDisplayJB::NotifyBootAnimationStopped()
 void
 GonkDisplayJB::PowerOnDisplay(int aDpy)
 {
-    MOZ_ASSERT(mHwc);;
+    MOZ_ASSERT(mHwc);
 #if ANDROID_VERSION >= 21
     if (mHwc->common.version >= HWC_DEVICE_API_VERSION_1_4) {
         mHwc->setPowerMode(mHwc, aDpy, HWC_POWER_MODE_NORMAL);

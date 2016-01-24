@@ -2565,6 +2565,14 @@ public:
                                     bool aDescendentsOnly,
                                     nsAString& aOut);
 
+  /*
+   * Returns true iff the provided JSObject is a global, and its URI matches
+   * the provided about: URI.
+   * @param aGlobal the JSObject whose URI to check, if it is a global.
+   * @param aUri the URI to match, e.g. "about:feeds"
+   */
+  static bool IsSpecificAboutPage(JSObject* aGlobal, const char* aUri);
+
 private:
   static bool InitializeEventTable();
 

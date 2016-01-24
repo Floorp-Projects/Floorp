@@ -1,0 +1,41 @@
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+/**
+ * Fires service worker events for push messages sent to content subscriptions,
+ * and XPCOM observer notifications for system subscriptions. This service
+ * can only be used from the parent process.
+ */
+[scriptable, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
+interface nsIPushNotifier : nsISupports
+{
+  void notifyPush(in ACString scope, in nsIPrincipal principal);
+
+  void notifyPushWithData(in ACString scope, in nsIPrincipal principal,
+                          [optional] in uint32_t dataLen,
+                          [array, size_is(dataLen)] in uint8_t data);
+
+  void notifySubscriptionChange(in ACString scope, in nsIPrincipal principal);
+};
+
+/**
+ * A push message sent to a system subscription, used as the subject of a
+ * `push-message` observer notification. System subscriptions are created by
+ * the system principal, and do not use worker events.
+ *
+ * This interface resembles the `PushMessageData` WebIDL interface.
+ */
+[scriptable, uuid(136dc8fd-8c56-4176-9170-eaa86b6ba99e)]
+interface nsIPushMessage : nsISupports
+{
+  /** Extracts the data as a UTF-8 text string. */
+  DOMString text();
+
+  /** Extracts the data as a JSON value. */
+  [implicit_jscontext] jsval json();
+
+  /** Extracts the raw binary data. */
+  void binary([optional] out uint32_t dataLen,
+              [array, retval, size_is(dataLen)] out uint8_t data);
+};

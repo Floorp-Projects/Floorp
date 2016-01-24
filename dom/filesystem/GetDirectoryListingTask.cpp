@@ -192,7 +192,7 @@ GetDirectoryListingTask::Work()
                    NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
         isLink || isSpecial) {
       continue;
-    };
+    }
     if (NS_WARN_IF(NS_FAILED(currFile->IsFile(&isFile)) ||
                    NS_FAILED(currFile->IsDirectory(&isDir))) ||
         !(isFile || isDir)) {

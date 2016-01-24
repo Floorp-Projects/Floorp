@@ -633,8 +633,8 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
         }
 
         if (stmt->isBlockScope) {
-            StaticBlockObject& blockObj = stmt->staticBlock();
-            if (blockObj.needsClone()) {
+            StaticBlockScope& blockScope = stmt->staticBlock();
+            if (blockScope.needsClone()) {
                 if (!bce->emit1(JSOP_POPBLOCKSCOPE))
                     return false;
             } else {
@@ -743,7 +743,7 @@ BytecodeEmitter::innermostStaticScope() const
 
 #ifdef DEBUG
 static bool
-AllLocalsAliased(StaticBlockObject& obj)
+AllLocalsAliased(StaticBlockScope& obj)
 {
     for (unsigned i = 0; i < obj.numVariables(); i++)
         if (!obj.isAliased(i))
@@ -753,12 +753,12 @@ AllLocalsAliased(StaticBlockObject& obj)
 #endif
 
 bool
-BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockObject*> blockObj)
+BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockScope*> blockScope)
 {
     uint32_t numAliased = script->bindings.numAliasedBodyLevelLocals();
 
-    for (unsigned i = 0; i < blockObj->numVariables(); i++) {
-        Definition* dn = blockObj->definitionParseNode(i);
+    for (unsigned i = 0; i < blockScope->numVariables(); i++) {
+        Definition* dn = blockScope->definitionParseNode(i);
 
         MOZ_ASSERT(dn->isDefn());
 
@@ -766,14 +766,14 @@ BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockObject*> blockObj)
         uint32_t slot;
 
         if (isAliasedName(this, dn)) {
-            slot = blockObj->blockIndexToSlot(index);
-            blockObj->setAliased(i, true);
+            slot = blockScope->blockIndexToSlot(index);
+            blockScope->setAliased(i, true);
         } else {
             // blockIndexToLocalIndex returns the frame slot following the
             // unaliased locals. We add numAliased so that the slot value
             // comes after all (aliased and unaliased) body level locals.
-            slot = numAliased + blockObj->blockIndexToLocalIndex(index);
-            blockObj->setAliased(i, false);
+            slot = numAliased + blockScope->blockIndexToLocalIndex(index);
+            blockScope->setAliased(i, false);
         }
 
         if (!dn->pn_scopecoord.setSlot(parser->tokenStream, slot))
@@ -789,13 +789,13 @@ BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockObject*> blockObj)
 
     }
 
-    MOZ_ASSERT_IF(sc->allLocalsAliased(), AllLocalsAliased(*blockObj));
+    MOZ_ASSERT_IF(sc->allLocalsAliased(), AllLocalsAliased(*blockScope));
 
     return true;
 }
 
 void
-BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
+BytecodeEmitter::computeLocalOffset(Handle<StaticBlockScope*> blockScope)
 {
     unsigned nbodyfixed = !sc->isGlobalContext()
                           ? script->bindings.numUnaliasedBodyLevelLocals()
@@ -803,20 +803,20 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
     unsigned localOffset = nbodyfixed;
 
     if (StmtInfoBCE* stmt = innermostScopeStmt()) {
-        Rooted<NestedScopeObject*> outer(cx, stmt->staticScope);
+        Rooted<NestedStaticScope*> outer(cx, stmt->staticScope);
         for (; outer; outer = outer->enclosingNestedScope()) {
-            if (outer->is<StaticBlockObject>() && !IsStaticGlobalLexicalScope(outer)) {
-                StaticBlockObject& outerBlock = outer->as<StaticBlockObject>();
+            if (outer->is<StaticBlockScope>() && !IsStaticGlobalLexicalScope(outer)) {
+                StaticBlockScope& outerBlock = outer->as<StaticBlockScope>();
                 localOffset = outerBlock.localOffset() + outerBlock.numVariables();
                 break;
             }
         }
     }
 
-    MOZ_ASSERT(localOffset + blockObj->numVariables()
+    MOZ_ASSERT(localOffset + blockScope->numVariables()
                <= nbodyfixed + script->bindings.numBlockScoped());
 
-    blockObj->setLocalOffset(localOffset);
+    blockScope->setLocalOffset(localOffset);
 }
 
 // ~ Nested Scopes ~
@@ -839,9 +839,9 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 // To help debuggers, the bytecode emitter arranges to record the PC ranges
 // comprehended by a nested scope, and ultimately attach them to the JSScript.
 // An element in the "block scope array" specifies the PC range, and links to a
-// NestedScopeObject in the object list of the script.  That scope object is
-// linked to the previous link in the static scope chain, if any.  The static
-// scope chain at any pre-retire PC can be retrieved using
+// NestedStaticScope in the object list of the script.  That scope object
+// is linked to the previous link in the static scope chain, if any.  The
+// static scope chain at any pre-retire PC can be retrieved using
 // JSScript::getStaticScope(jsbytecode* pc).
 //
 // Block scopes store their locals in the fixed part of a stack frame, after the
@@ -874,32 +874,32 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 bool
 BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType stmtType)
 {
-    Rooted<NestedScopeObject*> scopeObj(cx, &objbox->object->as<NestedScopeObject>());
+    Rooted<NestedStaticScope*> scope(cx, &objbox->object->as<NestedStaticScope>());
     uint32_t scopeObjectIndex = objectList.add(objbox);
 
     switch (stmtType) {
       case StmtType::BLOCK: {
-        Rooted<StaticBlockObject*> blockObj(cx, &scopeObj->as<StaticBlockObject>());
+        Rooted<StaticBlockScope*> blockScope(cx, &scope->as<StaticBlockScope>());
 
-        computeLocalOffset(blockObj);
+        computeLocalOffset(blockScope);
 
-        if (!computeAliasedSlots(blockObj))
+        if (!computeAliasedSlots(blockScope))
             return false;
 
-        if (blockObj->needsClone()) {
+        if (blockScope->needsClone()) {
             if (!emitInternedObjectOp(scopeObjectIndex, JSOP_PUSHBLOCKSCOPE))
                 return false;
         }
 
         // Non-global block scopes are non-extensible. At this point the
-        // Parser has added all bindings to the StaticBlockObject, so we make
+        // Parser has added all bindings to the StaticBlockScope, so we make
         // it non-extensible.
-        if (!blockObj->makeNonExtensible(cx))
+        if (!blockScope->makeNonExtensible(cx))
             return false;
         break;
       }
       case StmtType::WITH:
-        MOZ_ASSERT(scopeObj->is<StaticWithObject>());
+        MOZ_ASSERT(scope->is<StaticWithScope>());
         if (!emitInternedObjectOp(scopeObjectIndex, JSOP_ENTERWITH))
             return false;
         break;
@@ -916,8 +916,8 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
         return false;
 
     pushStatement(stmt, stmtType, offset());
-    scopeObj->initEnclosingScope(innermostStaticScope());
-    stmtStack.linkAsInnermostScopeStmt(stmt, *scopeObj);
+    scope->initEnclosingScope(innermostStaticScope());
+    stmtStack.linkAsInnermostScopeStmt(stmt, *scope);
     MOZ_ASSERT(stmt->linksScope());
     stmt->isBlockScope = (stmtType == StmtType::BLOCK);
 
@@ -946,17 +946,17 @@ BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
 
 #ifdef DEBUG
     MOZ_ASSERT(blockScopeList.list[blockScopeIndex].length == 0);
-    uint32_t blockObjIndex = blockScopeList.list[blockScopeIndex].index;
-    ObjectBox* blockObjBox = objectList.find(blockObjIndex);
-    NestedScopeObject* staticScope = &blockObjBox->object->as<NestedScopeObject>();
+    uint32_t blockIndex = blockScopeList.list[blockScopeIndex].index;
+    ObjectBox* blockObjBox = objectList.find(blockIndex);
+    NestedStaticScope* staticScope = &blockObjBox->object->as<NestedStaticScope>();
     MOZ_ASSERT(stmt->staticScope == staticScope);
-    MOZ_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
+    MOZ_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithScope>());
 #endif
 
     popStatement();
 
     if (stmt->isBlockScope) {
-        if (stmt->staticScope->as<StaticBlockObject>().needsClone()) {
+        if (stmt->staticScope->as<StaticBlockScope>().needsClone()) {
             if (!emit1(JSOP_POPBLOCKSCOPE))
                 return false;
         } else {
@@ -1359,11 +1359,11 @@ BytecodeEmitter::atBodyLevel(StmtInfoBCE* stmt) const
     // 'eval' and non-syntactic scripts are always under an invisible lexical
     // scope, but since it is not syntactic, it should still be considered at
     // body level.
-    if (sc->staticScope()->is<StaticEvalObject>()) {
+    if (sc->staticScope()->is<StaticEvalScope>()) {
         bool bl = !stmt->enclosing;
         MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
         MOZ_ASSERT_IF(bl, stmt->staticScope
-                              ->as<StaticBlockObject>()
+                              ->as<StaticBlockScope>()
                               .enclosingStaticScope() == sc->staticScope());
         return bl;
     }
@@ -3017,13 +3017,13 @@ BytecodeEmitter::pushInitialConstants(JSOp op, unsigned n)
 }
 
 bool
-BytecodeEmitter::initializeBlockScopedLocalsFromStack(Handle<StaticBlockObject*> blockObj)
+BytecodeEmitter::initializeBlockScopedLocalsFromStack(Handle<StaticBlockScope*> blockScope)
 {
-    for (unsigned i = blockObj->numVariables(); i > 0; --i) {
-        if (blockObj->isAliased(i - 1)) {
+    for (unsigned i = blockScope->numVariables(); i > 0; --i) {
+        if (blockScope->isAliased(i - 1)) {
             ScopeCoordinate sc;
             sc.setHops(0);
-            sc.setSlot(BlockObject::RESERVED_SLOTS + i - 1);
+            sc.setSlot(ClonedBlockObject::RESERVED_SLOTS + i - 1);
             if (!emitAliasedVarOp(JSOP_INITALIASEDLEXICAL, sc, DontCheckLexical))
                 return false;
         } else {
@@ -3032,7 +3032,7 @@ BytecodeEmitter::initializeBlockScopedLocalsFromStack(Handle<StaticBlockObject*>
             // to include both unaliased and aliased locals, so we have to add the
             // number of aliased locals.
             uint32_t numAliased = script->bindings.numAliasedBodyLevelLocals();
-            unsigned local = blockObj->blockIndexToLocalIndex(i - 1) + numAliased;
+            unsigned local = blockScope->blockIndexToLocalIndex(i - 1) + numAliased;
             if (!emitUnaliasedVarOp(JSOP_INITLEXICAL, local, DontCheckLexical))
                 return false;
         }
@@ -3048,7 +3048,7 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
 {
     // This is so terrible. The eval body-level lexical scope needs to be
     // emitted in the prologue so DEFFUN can pick up the right scope chain.
-    bool isEvalBodyLexicalScope = sc->staticScope()->is<StaticEvalObject>() &&
+    bool isEvalBodyLexicalScope = sc->staticScope()->is<StaticEvalScope>() &&
                                   !innermostStmt();
     if (isEvalBodyLexicalScope) {
         MOZ_ASSERT(code().length() == 0);
@@ -3062,11 +3062,11 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
     // JS_UNINITIALIZED_LEXICAL magic value depends on the context. The
     // current way we emit for-in and for-of heads means its let bindings will
     // always be initialized, so we can initialize them to undefined.
-    Rooted<StaticBlockObject*> blockObj(cx, &objbox->object->as<StaticBlockObject>());
-    if (!pushInitialConstants(initialValueOp, blockObj->numVariables() - alreadyPushed))
+    Rooted<StaticBlockScope*> blockScope(cx, &objbox->object->as<StaticBlockScope>());
+    if (!pushInitialConstants(initialValueOp, blockScope->numVariables() - alreadyPushed))
         return false;
 
-    if (!initializeBlockScopedLocalsFromStack(blockObj))
+    if (!initializeBlockScopedLocalsFromStack(blockScope))
         return false;
 
     if (isEvalBodyLexicalScope)
@@ -5924,7 +5924,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn)
         MOZ_ASSERT(enclosing->type == StmtType::BLOCK);
         MOZ_ASSERT(enclosing->isBlockScope);
 
-        if (enclosing->staticScope->as<StaticBlockObject>().needsClone()) {
+        if (enclosing->staticScope->as<StaticBlockScope>().needsClone()) {
             if (!emit1(JSOP_FRESHENBLOCKSCOPE))
                 return false;
         }
@@ -8441,7 +8441,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
 
     StmtInfoBCE stmtInfo(cx);
     if (names) {
-        if (!enterBlockScope(&stmtInfo, classNode.scopeObject(), JSOP_UNINITIALIZED))
+        if (!enterBlockScope(&stmtInfo, classNode.scopeObjectBox(), JSOP_UNINITIALIZED))
             return false;
     }
 
@@ -9286,13 +9286,13 @@ CGTryNoteList::finish(TryNoteArray* array)
 }
 
 bool
-CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset, bool inPrologue,
+CGBlockScopeList::append(uint32_t scopeObjectIndex, uint32_t offset, bool inPrologue,
                          uint32_t parent)
 {
     CGBlockScopeNote note;
     mozilla::PodZero(&note);
 
-    note.index = scopeObject;
+    note.index = scopeObjectIndex;
     note.start = offset;
     note.parent = parent;
     note.startInPrologue = inPrologue;

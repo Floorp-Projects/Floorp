@@ -259,7 +259,7 @@ class CompileInfo
     jsbytecode* osrPc() const {
         return osrPc_;
     }
-    NestedScopeObject* osrStaticScope() const {
+    NestedStaticScope* osrStaticScope() const {
         return osrStaticScope_;
     }
     InlineScriptTree* inlineScriptTree() const {
@@ -407,7 +407,7 @@ class CompileInfo
         return nimplicit() + nargs() + nlocals();
     }
 
-    bool isSlotAliased(uint32_t index, NestedScopeObject* staticScope) const {
+    bool isSlotAliased(uint32_t index, NestedStaticScope* staticScope) const {
         MOZ_ASSERT(index >= startArgSlot());
 
         if (funMaybeLazy() && index == thisSlot())
@@ -431,12 +431,12 @@ class CompileInfo
 
             // Otherwise, it might be part of a block scope.
             for (; staticScope; staticScope = staticScope->enclosingNestedScope()) {
-                if (!staticScope->is<StaticBlockObject>())
+                if (!staticScope->is<StaticBlockScope>())
                     continue;
-                StaticBlockObject& blockObj = staticScope->as<StaticBlockObject>();
-                if (blockObj.localOffset() < local) {
-                    if (local - blockObj.localOffset() < blockObj.numVariables())
-                        return blockObj.isAliased(local - blockObj.localOffset());
+                StaticBlockScope& blockScope = staticScope->as<StaticBlockScope>();
+                if (blockScope.localOffset() < local) {
+                    if (local - blockScope.localOffset() < blockScope.numVariables())
+                        return blockScope.isAliased(local - blockScope.localOffset());
                     return false;
                 }
             }
@@ -570,7 +570,7 @@ class CompileInfo
     JSScript* script_;
     JSFunction* fun_;
     jsbytecode* osrPc_;
-    NestedScopeObject* osrStaticScope_;
+    NestedStaticScope* osrStaticScope_;
     bool constructing_;
     AnalysisMode analysisMode_;
 

@@ -87,6 +87,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mAllRedirectsSameOrigin(true)
   , mAllRedirectsPassTimingAllowCheck(true)
   , mResponseCouldBeSynthesized(false)
+  , mBlockAuthPrompt(false)
   , mAllowStaleCacheContent(false)
   , mSuspendCount(0)
   , mInitialRwin(0)
@@ -3156,6 +3157,26 @@ HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHe
 
   mRequireCORSPreflight = true;
   mUnsafeHeaders = aUnsafeHeaders;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetBlockAuthPrompt(bool* aValue)
+{
+  if (!aValue) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aValue = mBlockAuthPrompt;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetBlockAuthPrompt(bool aValue)
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+
+  mBlockAuthPrompt = aValue;
+  return NS_OK;
 }
 
 // static

@@ -12,11 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.com/page/1',
-    'https://example.com/page/2',
-    'https://example.com/page/3'
-  );
   run_next_test();
 }
 

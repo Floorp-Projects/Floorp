@@ -641,7 +641,7 @@ int main(int argc, char** argv)
       paramName.str("");
       paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
       param = getenv(paramName.str().c_str());
-    };
+    }
 
     // allow override of the server url via environment variable
     //XXX: remove this in the far future when our robot

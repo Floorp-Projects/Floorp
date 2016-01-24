@@ -15,9 +15,6 @@ function run_test() {
     requestTimeout: 1000,
     retryBaseInterval: 150
   });
-  disableServiceWorkerEvents(
-    'https://example.com/storage-error'
-  );
   run_next_test();
 }
 

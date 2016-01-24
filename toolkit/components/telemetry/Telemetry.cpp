@@ -2349,7 +2349,7 @@ TelemetryImpl::CreateHistogramSnapshots(JSContext *cx,
       DebugOnly<nsresult> rv = GetHistogramByEnumId(Telemetry::ID(i), &h);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  };
+  }
 
   StatisticsRecorder::Histograms hs;
   StatisticsRecorder::GetHistograms(&hs);

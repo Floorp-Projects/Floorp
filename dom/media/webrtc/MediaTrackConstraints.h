@@ -72,10 +72,17 @@ struct NormalizedConstraintSet
                 bool advanced);
   };
 
+  struct BooleanRange : public Range<bool>
+  {
+    BooleanRange(const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
+                 bool advanced);
+  };
+
   // Do you need to add your constraint here? Only if your code uses flattening
   LongRange mWidth, mHeight;
   DoubleRange mFrameRate;
   LongRange mViewportOffsetX, mViewportOffsetY, mViewportWidth, mViewportHeight;
+  BooleanRange mEchoCancellation, mMozNoiseSuppression, mMozAutoGainControl;
 
   NormalizedConstraintSet(const dom::MediaTrackConstraintSet& aOther,
                           bool advanced)
@@ -85,7 +92,10 @@ struct NormalizedConstraintSet
   , mViewportOffsetX(aOther.mViewportOffsetX, advanced)
   , mViewportOffsetY(aOther.mViewportOffsetY, advanced)
   , mViewportWidth(aOther.mViewportWidth, advanced)
-  , mViewportHeight(aOther.mViewportHeight, advanced) {}
+  , mViewportHeight(aOther.mViewportHeight, advanced)
+  , mEchoCancellation(aOther.mEchoCancellation, advanced)
+  , mMozNoiseSuppression(aOther.mMozNoiseSuppression, advanced)
+  , mMozAutoGainControl(aOther.mMozAutoGainControl, advanced) {}
 };
 
 struct FlattenedConstraints : public NormalizedConstraintSet

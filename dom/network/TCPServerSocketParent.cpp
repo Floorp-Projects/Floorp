@@ -72,7 +72,7 @@ TCPServerSocketParent::GetAppId()
   } else {
     return nsIScriptSecurityManager::UNKNOWN_APP_ID;
   }
-};
+}
 
 bool
 TCPServerSocketParent::GetInBrowser()
@@ -113,7 +113,7 @@ TCPServerSocketParent::SendCallbackAccept(TCPSocketParent *socket)
     }
     else {
       NS_ERROR("Sending data from PTCPSocketParent was failed.");
-    };
+    }
   }
   else {
     NS_ERROR("The member value for NeckoParent is wrong.");

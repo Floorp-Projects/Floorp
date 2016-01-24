@@ -995,17 +995,17 @@ nsXULAppInfo::GetProcessID(uint32_t* aResult)
 }
 
 static bool gBrowserTabsRemoteAutostart = false;
-static nsString gBrowserTabsRemoteDisabledReason;
+static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
 
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
   if (!nsCRT::strcmp(aTopic, "getE10SBlocked")) {
-    nsCOMPtr<nsISupportsString> ret = do_QueryInterface(aSubject);
+    nsCOMPtr<nsISupportsPRUint64> ret = do_QueryInterface(aSubject);
     if (!ret)
       return NS_ERROR_FAILURE;
 
-    ret->SetData(gBrowserTabsRemoteDisabledReason);
+    ret->SetData(gBrowserTabsRemoteStatus);
 
     return NS_OK;
   }
@@ -4631,19 +4631,7 @@ XRE_IsContentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Content;
 }
 
-static void
-LogE10sBlockedReason(const char *reason) {
-  gBrowserTabsRemoteDisabledReason.Assign(NS_ConvertASCIItoUTF16(reason));
-
-  nsAutoString msg(NS_LITERAL_STRING("==================\nE10s has been blocked from running because:\n"));
-  msg.Append(gBrowserTabsRemoteDisabledReason);
-  msg.AppendLiteral("\n==================\n");
-  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
-  if (console) {
-    console->LogStringMessage(msg.get());
-  }
-}
-
+// If you add anything to this enum, please update about:support to reflect it
 enum {
   kE10sEnabledByUser = 0,
   kE10sEnabledByDefault = 1,
@@ -4652,6 +4640,7 @@ enum {
   kE10sDisabledForAccessibility = 4,
   kE10sDisabledForMacGfx = 5,
   kE10sDisabledForBidi = 6,
+  kE10sDisabledForAddons = 7,
 };
 
 #ifdef XP_WIN
@@ -4760,13 +4749,22 @@ mozilla::BrowserTabsRemoteAutostart()
                      gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
 #endif
 
+  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
+  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
+                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
+                                                      : NS_LITERAL_CSTRING("0"));
+#endif
+
   if (e10sAllowed && prefEnabled) {
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
-      LogE10sBlockedReason("An accessibility tool is or was active. See bug 1198459.");
     } else if (disabledForBidi) {
       status = kE10sDisabledForBidi;
-      LogE10sBlockedReason("Disabled for RTL locales due to broken bidi detection.");
+    } else if (addonsCanDisable && disabledByAddons) {
+      status = kE10sDisabledForAddons;
     } else {
       gBrowserTabsRemoteAutostart = true;
     }
@@ -4804,9 +4802,7 @@ mozilla::BrowserTabsRemoteAutostart()
 
     if (accelDisabled) {
       gBrowserTabsRemoteAutostart = false;
-
       status = kE10sDisabledForMacGfx;
-      LogE10sBlockedReason("Hardware acceleration is disabled");
     }
   }
 #endif // defined(XP_MACOSX)
@@ -4817,6 +4813,8 @@ mozilla::BrowserTabsRemoteAutostart()
     prefEnabled = true;
     status = kE10sEnabledByUser;
   }
+
+  gBrowserTabsRemoteStatus = status;
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STATUS, status);
   if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {

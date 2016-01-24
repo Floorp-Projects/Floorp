@@ -881,11 +881,20 @@ ExtendableEvent::GetPromise()
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
-  GlobalObject global(worker->GetJSContext(), worker->GlobalScope()->GetGlobalJSObject());
+  nsIGlobalObject* globalObj = worker->GlobalScope();
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(globalObj)) {
+    return nullptr;
+  }
+  jsapi.TakeOwnershipOfErrorReporting();
+  JSContext* cx = jsapi.cx();
+
+  GlobalObject global(cx, globalObj->GetGlobalJSObject());
 
   ErrorResult result;
   RefPtr<Promise> p = Promise::All(global, Move(mPromises), result);
-  if (NS_WARN_IF(result.Failed())) {
+  if (NS_WARN_IF(result.MaybeSetPendingException(cx))) {
     return nullptr;
   }
 

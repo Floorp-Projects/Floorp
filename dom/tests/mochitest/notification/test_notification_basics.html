@@ -28,38 +28,51 @@
     },
 
     function () {
-      info("Test blank requestPermission");
+      info("Test requestPermission without callback");
       Notification.requestPermission();
     },
 
     function (done) {
       info("Test requestPermission deny");
-      NotificationTest.denyNotifications();
-      Notification.requestPermission(function(perm) {
+      function assertPermissionDenied(perm) {
         is(perm, "denied", "Permission should be denied.");
         is(Notification.permission, "denied", "Permission should be denied.");
-        done();
-      });
+      }
+      NotificationTest.denyNotifications();
+      Notification.requestPermission()
+        .then(assertPermissionDenied)
+        .then(_ => Notification.requestPermission(assertPermissionDenied))
+        .catch(err => {
+          ok(!err, "requestPermission should not reject promise");
+        })
+        .then(done);
     },
 
     function (done) {
       info("Test requestPermission grant");
-      NotificationTest.allowNotifications();
-      Notification.requestPermission(function (perm) {
+      function assertPermissionGranted(perm) {
         is(perm, "granted", "Permission should be granted.");
         is(Notification.permission, "granted", "Permission should be granted");
-        done();
-      });
+      }
+      NotificationTest.allowNotifications();
+      Notification.requestPermission()
+        .then(assertPermissionGranted)
+        .then(_ => Notification.requestPermission(assertPermissionGranted))
+        .catch(err => {
+          ok(!err, "requestPermission should not reject promise");
+        })
+        .then(done);
     },
 
-    function () {
+    function (done) {
       info("Test invalid requestPermission");
-      try {
-        Notification.requestPermission({});
-        ok(false, "Non callable arg to requestPermission should throw");
-      } catch (e) {
-        ok(true, "Non callable arg to requestPermission should throw");
-      }
+      Notification.requestPermission({})
+        .then(_ => {
+          ok(false, "Non callable arg to requestPermission should reject promise");
+        }, err => {
+          ok(true, "Non callable arg to requestPermission should reject promise");
+        })
+        .then(done);
     },
 
     function (done) {

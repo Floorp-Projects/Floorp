@@ -133,10 +133,14 @@ TEST_FLAVORS = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
     },
-    'chrashtest': { },
+    'crashtest': {},
     'chrome': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': []},
+    },
+    'marionette': {
+        'mach_command': 'marionette-test',
+        'kwargs': {'tests': []},
     },
     'mochitest': {
         'mach_command': 'mochitest',
@@ -146,7 +150,7 @@ TEST_FLAVORS = {
         'mach_command': 'reftest',
         'kwargs': {'tests': []}
     },
-    'steeplechase': { },
+    'steeplechase': {},
     'web-platform-tests': {
         'mach_command': 'web-platform-tests',
         'kwargs': {'include': []}
@@ -160,7 +164,6 @@ TEST_FLAVORS = {
         'kwargs': {'test_paths': []},
     },
 }
-
 
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
     TEST_SUITES['mochitest-%d' %i] = {

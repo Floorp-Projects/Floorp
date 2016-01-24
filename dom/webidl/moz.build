@@ -16,7 +16,6 @@ PREPROCESSED_WEBIDL_FILES = [
 ]
 
 WEBIDL_FILES = [
-    'AbortablePromise.webidl',
     'AbstractWorker.webidl',
     'ActivityRequestHandler.webidl',
     'AlarmsManager.webidl',
@@ -75,6 +74,7 @@ WEBIDL_FILES = [
     'ChannelMergerNode.webidl',
     'ChannelSplitterNode.webidl',
     'CharacterData.webidl',
+    'CheckerboardReportService.webidl',
     'ChildNode.webidl',
     'ChromeNodeList.webidl',
     'ChromeNotifications.webidl',
