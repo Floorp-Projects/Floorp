@@ -1,0 +1,123 @@
+{
+  "rules": {
+    // Braces only needed for multi-line arrow function blocks
+    "arrow-body-style": [2, "as-needed"],
+
+    // Require spacing around =>
+    "arrow-spacing": 2,
+
+    // Commas at the end of the line not the start
+    "comma-style": 2,
+
+    // Functions must always return something or nothing
+    "consistent-return": 2,
+
+    // Always require a trailing EOL
+    "eol-last": 2,
+
+    // Require function* name()
+    "generator-star-spacing": [2, {"before": false, "after": true}],
+
+    // Space after colon not before in property declarations
+    "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
+
+    // Unix linebreaks
+    "linebreak-style": [2, "unix"],
+
+    // Always require parenthesis for new calls
+    "new-parens": 2,
+
+    // No duplicate arguments in function declarations
+    "no-dupe-args": 2,
+
+    // No duplicate keys in object declarations
+    "no-dupe-keys": 2,
+
+    // No duplicate cases in switch statements
+    "no-duplicate-case": 2,
+
+    // No labels
+    "no-labels": 2,
+
+    // No empty character classes in regex
+    "no-empty-character-class": 2,
+
+    // Disallow empty destructuring
+    "no-empty-pattern": 2,
+
+    // No assigning to exception variable
+    "no-ex-assign": 2,
+
+    // No using !! where casting to boolean is already happening
+    "no-extra-boolean-cast": 2,
+
+    // No double semicolon
+    "no-extra-semi": 2,
+
+    // No overwriting defined functions
+    "no-func-assign": 2,
+
+    // No invalid regular expressions
+    "no-invalid-regexp": 2,
+
+    // No odd whitespace characters
+    "no-irregular-whitespace": 2,
+
+    // No mixing spaces and tabs in indent
+    "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
+
+    // No reassigning native JS objects
+    "no-native-reassign": 2,
+
+    // No (!foo in bar)
+    "no-negated-in-lhs": 2,
+
+    // Use {} instead of new Object()
+    "no-new-object": 2,
+
+    // No Math() or JSON()
+    "no-obj-calls": 2,
+
+    // No unnecessary comparisons
+    "no-self-compare": 2,
+
+    // No declaring variables that hide things like arguments
+    "no-shadow-restricted-names": 2,
+
+    // No spaces between function name and parentheses
+    "no-spaced-func": 2,
+
+    // Error on newline where a semicolon is needed
+    "no-unexpected-multiline": 2,
+
+    // No unreachable statements
+    "no-unreachable": 2,
+
+    // No expressions where a statement is expected
+    "no-unused-expressions": 2,
+
+    // No using with
+    "no-with": 2,
+
+    // Require space before blocks
+    "space-before-blocks": 2,
+
+    // Require spaces before finally, catch, etc.
+    "space-before-keywords": [2, "always"],
+
+    // No space padding in parentheses
+    "space-in-parens": [2, "never"],
+
+    // Require spaces after return, throw and case
+    "space-return-throw-case": 2,
+
+    // ++ and -- should not need spacing
+    "space-unary-ops": [2, { "words": true, "nonwords": false }],
+
+    // No comparisons to NaN
+    "use-isnan": 2,
+
+    // Only check typeof against valid results
+    "valid-typeof": 2,
+  }
+}

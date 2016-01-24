@@ -128,7 +128,7 @@ function test_mitm() {
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_UNKNOWN_ISSUER);
   add_clear_override("unknownissuer.test-mode.pinning.example.com");
-};
+}
 
 function test_disabled() {
   // Disable pinning.
