@@ -57,6 +57,10 @@ public:
   nsresult Drain() override;
   nsresult Shutdown() override;
   nsresult Input(MediaRawData* aSample) override;
+  const char* GetDescriptionName() const override
+  {
+    return "android decoder";
+  }
 
 protected:
   enum ModuleState {

@@ -9,7 +9,7 @@ const kToolbarName = "test-specials-toolbar";
 registerCleanupFunction(removeCustomToolbars);
 
 // Add a toolbar with two springs and the downloads button.
-add_task(function addToolbarWith2SpringsAndDownloadsButton() {
+add_task(function* addToolbarWith2SpringsAndDownloadsButton() {
   // Create the toolbar with a single spring:
   createToolbarWithPlacements(kToolbarName, ["spring"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
@@ -33,7 +33,7 @@ add_task(function addToolbarWith2SpringsAndDownloadsButton() {
 });
 
 // Add separators around the downloads button.
-add_task(function addSeparatorsAroundDownloadsButton() {
+add_task(function* addSeparatorsAroundDownloadsButton() {
   createToolbarWithPlacements(kToolbarName, ["separator"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
 
@@ -54,7 +54,7 @@ add_task(function addSeparatorsAroundDownloadsButton() {
 });
 
 // Add spacers around the downloads button.
-add_task(function addSpacersAroundDownloadsButton() {
+add_task(function* addSpacersAroundDownloadsButton() {
   createToolbarWithPlacements(kToolbarName, ["spacer"]);
   ok(document.getElementById(kToolbarName), "Toolbar should be created.");
 
@@ -74,6 +74,6 @@ add_task(function addSpacersAroundDownloadsButton() {
   yield removeCustomToolbars();
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });
