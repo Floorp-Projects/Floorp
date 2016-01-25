@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-/* Header file with all of the structures and types that will be exported 
+/* Header file with all of the structures and types that will be exported
  * by the security library for implementation of CRMF.
  */
 
@@ -47,7 +46,7 @@ typedef enum {
 } CRMFPublicationAction;
 
 /*
- * An enumeration for the possible for pubMethod which is a part of 
+ * An enumeration for the possible for pubMethod which is a part of
  * the SinglePubInfo ASN1 type.
  */
 typedef enum {
@@ -79,7 +78,7 @@ typedef enum {
 } CRMFPOPChoice;
 
 /*
- * An enumertion type for options for the authInfo field of the 
+ * An enumertion type for options for the authInfo field of the
  * CRMFPOPOSigningKeyInput structure.
  */
 typedef enum {
@@ -132,41 +131,41 @@ typedef enum {
  *         The number of DER encoded bytes to write out.
  *
  */
-typedef void (*CRMFEncoderOutputCallback) (void *arg,
-					   const char *buf,
-					   unsigned long len);
+typedef void (*CRMFEncoderOutputCallback)(void *arg,
+                                          const char *buf,
+                                          unsigned long len);
 
 /*
  * Type for the function that gets a password.  Just in case we ever
  * need to support publicKeyMAC for POPOSigningKeyInput
  */
-typedef SECItem* (*CRMFMACPasswordCallback) (void *arg);
+typedef SECItem *(*CRMFMACPasswordCallback)(void *arg);
 
-typedef struct CRMFOptionalValidityStr      CRMFOptionalValidity;
-typedef struct CRMFValidityCreationInfoStr  CRMFGetValidity;
-typedef struct CRMFCertTemplateStr          CRMFCertTemplate;
-typedef struct CRMFCertRequestStr           CRMFCertRequest;
-typedef struct CRMFCertReqMsgStr            CRMFCertReqMsg;
-typedef struct CRMFCertReqMessagesStr       CRMFCertReqMessages;
-typedef struct CRMFProofOfPossessionStr     CRMFProofOfPossession;
-typedef struct CRMFPOPOSigningKeyStr        CRMFPOPOSigningKey;
-typedef struct CRMFPOPOSigningKeyInputStr   CRMFPOPOSigningKeyInput;
-typedef struct CRMFPOPOPrivKeyStr           CRMFPOPOPrivKey;
-typedef struct CRMFPKIPublicationInfoStr    CRMFPKIPublicationInfo;
-typedef struct CRMFSinglePubInfoStr         CRMFSinglePubInfo;
-typedef struct CRMFPKIArchiveOptionsStr     CRMFPKIArchiveOptions;
-typedef struct CRMFEncryptedKeyStr          CRMFEncryptedKey;
-typedef struct CRMFEncryptedValueStr        CRMFEncryptedValue;
-typedef struct CRMFCertIDStr                CRMFCertID;
-typedef struct CRMFCertIDStr                CRMFOldCertID;
-typedef CERTSubjectPublicKeyInfo            CRMFProtocolEncrKey;
-typedef struct CRMFValidityCreationInfoStr  CRMFValidityCreationInfo;
-typedef struct CRMFCertExtCreationInfoStr   CRMFCertExtCreationInfo;
-typedef struct CRMFPKMACValueStr            CRMFPKMACValue;
-typedef struct CRMFAttributeStr             CRMFAttribute;
-typedef struct CRMFControlStr               CRMFControl;
-typedef CERTGeneralName                     CRMFGeneralName;
-typedef struct CRMFCertExtensionStr         CRMFCertExtension;
+typedef struct CRMFOptionalValidityStr CRMFOptionalValidity;
+typedef struct CRMFValidityCreationInfoStr CRMFGetValidity;
+typedef struct CRMFCertTemplateStr CRMFCertTemplate;
+typedef struct CRMFCertRequestStr CRMFCertRequest;
+typedef struct CRMFCertReqMsgStr CRMFCertReqMsg;
+typedef struct CRMFCertReqMessagesStr CRMFCertReqMessages;
+typedef struct CRMFProofOfPossessionStr CRMFProofOfPossession;
+typedef struct CRMFPOPOSigningKeyStr CRMFPOPOSigningKey;
+typedef struct CRMFPOPOSigningKeyInputStr CRMFPOPOSigningKeyInput;
+typedef struct CRMFPOPOPrivKeyStr CRMFPOPOPrivKey;
+typedef struct CRMFPKIPublicationInfoStr CRMFPKIPublicationInfo;
+typedef struct CRMFSinglePubInfoStr CRMFSinglePubInfo;
+typedef struct CRMFPKIArchiveOptionsStr CRMFPKIArchiveOptions;
+typedef struct CRMFEncryptedKeyStr CRMFEncryptedKey;
+typedef struct CRMFEncryptedValueStr CRMFEncryptedValue;
+typedef struct CRMFCertIDStr CRMFCertID;
+typedef struct CRMFCertIDStr CRMFOldCertID;
+typedef CERTSubjectPublicKeyInfo CRMFProtocolEncrKey;
+typedef struct CRMFValidityCreationInfoStr CRMFValidityCreationInfo;
+typedef struct CRMFCertExtCreationInfoStr CRMFCertExtCreationInfo;
+typedef struct CRMFPKMACValueStr CRMFPKMACValue;
+typedef struct CRMFAttributeStr CRMFAttribute;
+typedef struct CRMFControlStr CRMFControl;
+typedef CERTGeneralName CRMFGeneralName;
+typedef struct CRMFCertExtensionStr CRMFCertExtension;
 
 struct CRMFValidityCreationInfoStr {
     PRTime *notBefore;
@@ -183,6 +182,5 @@ struct CRMFCertExtCreationInfoStr {
  */
 extern const SEC_ASN1Template CRMFCertReqMessagesTemplate[];
 extern const SEC_ASN1Template CRMFCertRequestTemplate[];
-
 
 #endif /*_CRMFT_H_*/

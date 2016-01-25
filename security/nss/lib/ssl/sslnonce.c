@@ -179,6 +179,9 @@ ssl_DestroySID(sslSessionID *sid)
         if (sid->u.ssl3.srvName.data) {
             SECITEM_FreeItem(&sid->u.ssl3.srvName, PR_FALSE);
         }
+        if (sid->u.ssl3.signedCertTimestamps.data) {
+            SECITEM_FreeItem(&sid->u.ssl3.signedCertTimestamps, PR_FALSE);
+        }
 
         if (sid->u.ssl3.lock) {
             PR_DestroyRWLock(sid->u.ssl3.lock);

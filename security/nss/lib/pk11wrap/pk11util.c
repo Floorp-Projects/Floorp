@@ -640,6 +640,11 @@ SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
 						PR_TRUE: PR_FALSE;
                         result = PK11_UpdateSlotAttribute(slot, 
 					&(PK11_DefaultArray[i]),  add);
+                        if (result != SECSuccess) {
+                            SECMOD_ReleaseReadLock(moduleLock);
+                            SECMOD_DestroyModule(module);
+                            return result;
+                        }
                     } /* for each mechanism */
                     /* disable each slot if the defaultFlags say so */
                     if (defaultMechanismFlags & PK11_DISABLE_FLAG) {
