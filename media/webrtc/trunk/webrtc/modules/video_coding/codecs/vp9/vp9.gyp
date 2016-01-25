@@ -24,7 +24,11 @@
           'dependencies': [
             '<(libvpx_dir)/libvpx.gyp:libvpx_new',
           ],
-        }],
+        }, {
+          'include_dirs': [
+            '../../../../../../../libvpx',
+          ],
+	}],
         ['build_vp9==1', {
           'sources': [
             'include/vp9.h',

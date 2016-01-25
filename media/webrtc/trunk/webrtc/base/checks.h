@@ -91,6 +91,8 @@ namespace rtc {
   LAZY_STREAM(rtc::FatalMessage(__FILE__, __LINE__).stream(), !(condition)) \
   << "Check failed: " #condition << std::endl << "# "
 
+#define RTC_CHECK(condition) CHECK(condition)
+
 // Helper macro for binary operators.
 // Don't use this macro directly in your code, use CHECK_EQ et al below.
 //
@@ -183,6 +185,36 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define DCHECK_LT(v1, v2) EAT_STREAM_PARAMETERS((v1) < (v2))
 #define DCHECK_GE(v1, v2) EAT_STREAM_PARAMETERS((v1) >= (v2))
 #define DCHECK_GT(v1, v2) EAT_STREAM_PARAMETERS((v1) > (v2))
+#endif
+
+#define RTC_CHECK_EQ(val1, val2) CHECK_OP(EQ, ==, val1, val2)
+#define RTC_CHECK_NE(val1, val2) CHECK_OP(NE, !=, val1, val2)
+#define RTC_CHECK_LE(val1, val2) CHECK_OP(LE, <=, val1, val2)
+#define RTC_CHECK_LT(val1, val2) CHECK_OP(LT, < , val1, val2)
+#define RTC_CHECK_GE(val1, val2) CHECK_OP(GE, >=, val1, val2)
+#define RTC_CHECK_GT(val1, val2) CHECK_OP(GT, > , val1, val2)
+
+// The RTC_DCHECK macro is equivalent to RTC_CHECK except that it only generates
+// code in debug builds. It does reference the condition parameter in all cases,
+// though, so callers won't risk getting warnings about unused variables.
+#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#define RTC_DCHECK_IS_ON 1
+#define RTC_DCHECK(condition) CHECK(condition)
+#define RTC_DCHECK_EQ(v1, v2) CHECK_EQ(v1, v2)
+#define RTC_DCHECK_NE(v1, v2) CHECK_NE(v1, v2)
+#define RTC_DCHECK_LE(v1, v2) CHECK_LE(v1, v2)
+#define RTC_DCHECK_LT(v1, v2) CHECK_LT(v1, v2)
+#define RTC_DCHECK_GE(v1, v2) CHECK_GE(v1, v2)
+#define RTC_DCHECK_GT(v1, v2) CHECK_GT(v1, v2)
+#else
+#define RTC_DCHECK_IS_ON 0
+#define RTC_DCHECK(condition) EAT_STREAM_PARAMETERS(condition)
+#define RTC_DCHECK_EQ(v1, v2) EAT_STREAM_PARAMETERS((v1) == (v2))
+#define RTC_DCHECK_NE(v1, v2) EAT_STREAM_PARAMETERS((v1) != (v2))
+#define RTC_DCHECK_LE(v1, v2) EAT_STREAM_PARAMETERS((v1) <= (v2))
+#define RTC_DCHECK_LT(v1, v2) EAT_STREAM_PARAMETERS((v1) < (v2))
+#define RTC_DCHECK_GE(v1, v2) EAT_STREAM_PARAMETERS((v1) >= (v2))
+#define RTC_DCHECK_GT(v1, v2) EAT_STREAM_PARAMETERS((v1) > (v2))
 #endif
 
 // This is identical to LogMessageVoidify but in name.

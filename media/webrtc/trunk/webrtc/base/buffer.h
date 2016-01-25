@@ -13,7 +13,8 @@
 
 #include <string.h>
 
-#include "webrtc/base/common.h"
+// common.h isn't in the rtc_approved list
+//#include "webrtc/base/common.h"
 #include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
@@ -52,12 +53,12 @@ class Buffer {
   }
 
   void SetData(const void* data, size_t size) {
-    ASSERT(data != NULL || size == 0);
+    assert(data != NULL || size == 0);
     SetSize(size);
     memcpy(data_.get(), data, size);
   }
   void AppendData(const void* data, size_t size) {
-    ASSERT(data != NULL || size == 0);
+    assert(data != NULL || size == 0);
     size_t old_size = size_;
     SetSize(size_ + size);
     memcpy(data_.get() + old_size, data, size);
@@ -76,7 +77,7 @@ class Buffer {
   }
 
   void TransferTo(Buffer* buf) {
-    ASSERT(buf != NULL);
+    assert(buf != NULL);
     buf->data_.reset(data_.release());
     buf->size_ = size_;
     buf->capacity_ = capacity_;
