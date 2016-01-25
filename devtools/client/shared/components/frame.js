@@ -26,7 +26,7 @@ const Frame = module.exports = createClass({
       functionDisplayName: PropTypes.string,
       source: PropTypes.string.isRequired,
       line: PropTypes.number.isRequired,
-      column: PropTypes.number.isRequired,
+      column: PropTypes.number,
     }).isRequired,
     // Clicking on the frame link -- probably should link to the debugger.
     onClick: PropTypes.func.isRequired,
@@ -46,7 +46,7 @@ const Frame = module.exports = createClass({
       tooltip += `:${frame.column}`;
     }
 
-    let sourceString = `${frame.source}:${frame.line}`;
+    let sourceString = `${long}:${frame.line}`;
     if (frame.column) {
       sourceString += `:${frame.column}`;
     }
