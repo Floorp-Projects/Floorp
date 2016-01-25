@@ -465,39 +465,6 @@ html, body, #app, #memory-tool {
   margin-right: .5em;
 }
 
-.focused .frame-link-filename,
-.focused .frame-link-column,
-.focused .frame-link-line,
-.focused .frame-link-host,
-.focused .frame-link-colon {
-  color: var(--theme-selection-color);
-}
-
-.frame-link-filename {
-  color: var(--theme-highlight-blue);
-  cursor: pointer;
-}
-
-.frame-link-filename:hover {
-  text-decoration: underline;
-}
-
-.frame-link-column,
-.frame-link-line,
-.frame-link-colon {
-  color: var(--theme-highlight-orange);
-}
-
-.frame-link-host {
-  margin-inline-start: 5px;
-  font-size: 90%;
-  color: var(--theme-content-color2);
-}
-
-.frame-link-function-display-name {
-  margin-inline-end: 5px;
-}
-
 .no-allocation-stacks {
   border-color: var(--theme-splitter-color);
   border-style: solid;

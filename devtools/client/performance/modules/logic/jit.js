@@ -52,7 +52,7 @@ const SUCCESSFUL_OUTCOMES = [
  * a "getter" optimization, `a[b]`, has site `a` (the "Receiver") and `b` (the "Index").
  *
  * Generally the more ObservedTypes, the more deoptimized this OptimizationSite is.
- * There could be no ObservedTypes, in which case `types` is undefined.
+ * There could be no ObservedTypes, in which case `typeset` is undefined.
  *
  * @type {?Array<ObservedType>} typeset
  * @type {string} site
@@ -184,23 +184,33 @@ const JITOptimizations = function (rawSites, stringTable) {
     let data = site.data;
     let STRATEGY_SLOT = data.attempts.schema.strategy;
     let OUTCOME_SLOT = data.attempts.schema.outcome;
+    let attempts = data.attempts.data.map((a) => {
+      return {
+        id: site.id,
+        strategy: stringTable[a[STRATEGY_SLOT]],
+        outcome: stringTable[a[OUTCOME_SLOT]]
+      }
+    });
+    let types = data.types.map((t) => {
+      let typeset = maybeTypeset(t.typeset, stringTable);
+      if (typeset) {
+        typeset.forEach(t => t.id = site.id);
+      }
+
+      return {
+        id: site.id,
+        typeset,
+        site: stringTable[t.site],
+        mirType: stringTable[t.mirType]
+      };
+    });
+    // Add IDs to to all children objects, so we can correllate sites when
+    // just looking at a specific type, attempt, etc..
+    attempts.id = types.id = site.id;
 
     site.data = {
-      attempts: data.attempts.data.map((a) => {
-        return {
-          strategy: stringTable[a[STRATEGY_SLOT]],
-          outcome: stringTable[a[OUTCOME_SLOT]]
-        }
-      }),
-
-      types: data.types.map((t) => {
-        return {
-          typeset: maybeTypeset(t.typeset, stringTable),
-          site: stringTable[t.site],
-          mirType: stringTable[t.mirType]
-        };
-      }),
-
+      attempts,
+      types,
       propertyName: maybeString(stringTable, data.propertyName),
       line: data.line,
       column: data.column
