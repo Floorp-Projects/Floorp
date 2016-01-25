@@ -264,10 +264,10 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
     MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
                   newContents.data() == buffer->dataPointer());
 
-    // When neutering a buffer with typed object views, any jitcode which
-    // accesses such views needs to be deoptimized so that neuter checks are
-    // performed. This is done by setting a compartment wide flag indicating
-    // that buffers with typed object views have been neutered.
+    // When detaching a buffer with typed object views, any jitcode accessing
+    // such views must be deoptimized so that detachment checks are performed.
+    // This is done by setting a compartment-wide flag indicating that buffers
+    // with typed object views have been detached.
     if (buffer->hasTypedObjectViews()) {
         // Make sure the global object's group has been instantiated, so the
         // flag change will be observed.
@@ -275,7 +275,7 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         if (!cx->global()->getGroup(cx))
             oomUnsafe.crash("ArrayBufferObject::neuter");
         MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
-        cx->compartment()->neuteredTypedObjects = 1;
+        cx->compartment()->detachedTypedObjects = 1;
     }
 
     // Neuter all views on the buffer, clear out the list of views and the
