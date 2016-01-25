@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Bug 1242338</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out");
+    }
+  };
+  manager.started(token, handler);
+
+  video.src = test.name;
+  video.name = test.name;
+
+  function finish() {
+    video.finished = true;
+    video.removeEventListener("loadedmetadata", onLoadedmetadata, false);
+    video.removeEventListener("ended", onEnded, false);
+    removeNodeAndSource(video);
+    manager.finished(video.token);
+  }
+
+  function onLoadedmetadata() {
+    // seek to the media's duration
+    var duration = video.duration;
+    console.log("onloadedmetadata(), duration = " + duration);
+    video.currentTime = duration;
+  }
+
+  function onEnded() {
+    ok(video.ended, test.name + " checking playback has ended");
+    ok(!video.finished, test.name + " shouldn't be finished");
+    ok(!video.seenEnded, test.name + " shouldn't be ended");
+    video.seenEnded = true;
+
+    ok(true, "Seeking to the duration triggers ended event");
+    finish();
+  }
+
+  video.addEventListener("loadedmetadata", onLoadedmetadata, false);
+  video.addEventListener("ended", onEnded, false);
+
+  document.body.appendChild(video);
+}
+
+manager.runTests(gSeekTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
