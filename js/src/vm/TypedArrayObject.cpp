@@ -410,7 +410,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         MOZ_ASSERT(obj->numFixedSlots() == TypedArrayObject::DATA_SLOT);
 #endif
 
-        // ArrayBufferObjects track their views to support neutering.
+        // ArrayBufferObjects track their views to support detaching.
         if (buffer && buffer->is<ArrayBufferObject>()) {
             if (!buffer->as<ArrayBufferObject>().addView(cx, obj))
                 return nullptr;

@@ -43,8 +43,8 @@ class ArrayBufferViewObject;
 // ArrayBufferObject and SharedArrayBufferObject are unrelated data types:
 // the racy memory of the latter cannot substitute for the non-racy memory of
 // the former; the non-racy memory of the former cannot be used with the atomics;
-// the former can be neutered and the latter not.  Hence they have been separated
-// completely.
+// the former can be detached and the latter not.  Hence they have been
+// separated completely.
 //
 // Most APIs will only accept ArrayBufferObject.  ArrayBufferObjectMaybeShared
 // exists as a join point to allow APIs that can take or use either, notably AsmJS.
@@ -136,7 +136,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         // The flags also store the BufferKind
         BUFFER_KIND_MASK    = BufferKind::KIND_MASK,
 
-        NEUTERED            = 0x4,
+        DETACHED            = 0x4,
 
         // The dataPointer() is owned by this buffer and should be released
         // when no longer in use. Releasing the pointer may be done by either
@@ -159,9 +159,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         TYPED_OBJECT_VIEWS  = 0x20
     };
 
-    static_assert(JS_ARRAYBUFFER_NEUTERED_FLAG == NEUTERED,
+    static_assert(JS_ARRAYBUFFER_NEUTERED_FLAG == DETACHED,
                   "self-hosted code with burned-in constants must use the "
-                  "correct NEUTERED bit value");
+                  "correct DETACHED bit value");
   public:
 
     class BufferContents {
@@ -301,7 +301,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
-     * ArrayBuffer.prototype and neutered ArrayBuffers.
+     * ArrayBuffer.prototype and detached ArrayBuffers.
      */
     bool hasData() const {
         return getClass() == &class_;
@@ -313,7 +313,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isAsmJSMalloced() const { return bufferKind() == ASMJS_MALLOCED; }
     bool isAsmJS() const { return isAsmJSMapped() || isAsmJSMalloced(); }
     bool isMapped() const { return bufferKind() == MAPPED; }
-    bool isNeutered() const { return flags() & NEUTERED; }
+    bool isNeutered() const { return flags() & DETACHED; }
 
     static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                 bool usesSignalHandlers);
@@ -329,8 +329,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static size_t offsetOfDataSlot() {
         return getFixedSlotOffset(DATA_SLOT);
     }
-
-    static uint32_t neuteredFlag() { return NEUTERED; }
 
     void setForInlineTypedObject() {
         setFlags(flags() | FOR_INLINE_TYPED_OBJECT);
@@ -356,7 +354,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
     void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }
-    void setIsNeutered() { setFlags(flags() | NEUTERED); }
+    void setIsNeutered() { setFlags(flags() | DETACHED); }
 
     void initialize(size_t byteLength, BufferContents contents, OwnsState ownsState) {
         setByteLength(byteLength);

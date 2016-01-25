@@ -928,7 +928,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
             newIdentity = &p->value().get().toObject();
 
             // When we remove origv from the wrapper map, its wrapper, newIdentity,
-            // must immediately cease to be a cross-compartment wrapper. Neuter it.
+            // must immediately cease to be a cross-compartment wrapper. Nuke it.
             destination->removeWrapper(p);
             NukeCrossCompartmentWrapper(cx, newIdentity);
 
