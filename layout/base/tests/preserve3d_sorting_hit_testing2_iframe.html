@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+  background: #333;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+div {
+  margin: 0;
+  padding: 0;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  position: absolute;
+}
+
+#container {
+  font-family: UnifrakturMaguntia;
+  width: 350px;
+  height: 70%;
+  max-height: 500px;
+  -webkit-perspective: 5000px;
+  perspective: 5000px;
+  transform: translate(-50%, -50%) rotateY(20deg);
+}
+
+#container p {
+  padding: 0 5px 0 5px;
+}
+
+#container hr {
+  margin: 0 20px 0 20px;
+}
+
+#content {
+  -ms-overflow-style: none;
+  overflow: -moz-scrollbars-none;
+  overflow-y: scroll;
+  height: 100%;
+  background: #fefee0;
+}
+
+
+#lorem {
+  font-size: 7em;
+  float: left;
+  color: red;
+  border: 1px solid black;
+  margin-right: 5px;
+}
+
+#tree {
+  float: right;
+  width: 10em;
+  height: 10em;
+  border: 1px solid black;
+  margin: 0 5px 0 2px;
+}
+</style>
+</head>
+<body>
+  <div id="container">
+    <div id="content">
+        <p>
+      <span id="lorem">L</span>orem ipsum dolor sit amet, consectetur adipiscing elit. Integer sagittis nisi urna, a ultrices est facilisis a. Morbi porttitor vulputate odio, eu lacinia nisi. Suspendisse felis sapien, facilisis nec ex in, blandit tincidunt tellus. Sed at commodo nunc. In nibh lectus, facilisis nec magna nec, bibendum egestas nunc. Nam varius lorem in fringilla cursus. Integer dignissim, lectus vitae sodales molestie, libero purus malesuada arcu, vitae facilisis nunc dolor non mi. In nunc tortor, tempor non pharetra vitae, mattis a purus. Nulla rhoncus vitae metus vel ornare. Nunc augue dui, suscipit ac urna vel, consectetur volutpat ipsum. Nunc ac nulla ut enim laoreet placerat. Sed luctus aliquam purus, sollicitudin blandit dui blandit id. Aenean venenatis risus dolor, at viverra urna aliquam non. Morbi sit amet pellentesque justo, eget viverra augue.
+      </p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;
+      Praesent posuere ultricies orci sit amet lacinia. Suspendisse lacinia scelerisque risus, sodales egestas turpis cursus sed. Proin sed mollis mauris, vitae ultricies nibh. Nulla bibendum leo a mauris luctus, sit amet iaculis arcu blandit. Etiam pulvinar, odio et rutrum egestas, elit mi maximus ex, id elementum est tortor id turpis. Duis rhoncus et lorem vel maximus. Aenean at justo sagittis, aliquet eros eget, iaculis magna. Nam non orci congue, dapibus dui eget, sagittis nisl. Phasellus venenatis id est et tempor. Aenean condimentum tristique nibh sit amet varius. Vestibulum et lectus quis eros dapibus consectetur nec auctor dolor. Sed euismod eu felis aliquam fermentum. Donec lacinia fringilla erat, at eleifend velit tempus at.
+      </p>
+      <hr>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;
+      Cras justo turpis, vulputate eget venenatis sit amet, bibendum quis dolor. Cras at interdum libero. Quisque convallis rutrum magna in ultrices. Donec ut magna dolor. Mauris pulvinar ut sapien a posuere. Sed nisi elit, tincidunt vitae magna eu, dapibus suscipit purus. Maecenas tincidunt mollis eros et dictum. Duis est nulla, rhoncus tincidunt velit at, venenatis elementum velit. Phasellus lobortis sem tellus, id sodales quam dignissim nec. Phasellus pulvinar metus ex, nec gravida nunc elementum vel. Ut mattis varius fringilla. Phasellus imperdiet sit amet risus a elementum. Donec pulvinar ante sit amet massa blandit ullamcorper. Donec vitae malesuada nisl, et laoreet sem.
+      </p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;
+      Suspendisse bibendum elit blandit arcu vulputate, nec hendrerit dui vehicula. Vestibulum porta finibus odio vitae maximus. Duis in vulputate risus. Donec mattis turpis ex, vitae semper sem ultrices eu. Aliquam in ex blandit erat ultrices sollicitudin. Vestibulum porta nisl in porttitor rutrum. Integer consectetur porttitor ligula facilisis malesuada. Proin placerat enim sed lacus commodo mollis nec eu arcu. In hac habitasse platea dictumst. Curabitur luctus est risus, sit amet fringilla nunc condimentum vel. Integer mauris lorem, molestie ut nisl sit amet, pellentesque mollis quam. Aliquam posuere purus non nisi molestie semper.
+      </p>
+      <hr>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;
+      Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris facilisis nisi diam, eu pulvinar ex sollicitudin sed. Maecenas sed eros id quam suscipit ultricies ut tincidunt quam. Donec iaculis, justo at fringilla laoreet, quam sem dapibus urna, ut eleifend odio eros et ligula. Proin urna ante, condimentum vitae sollicitudin sit amet, egestas ac nunc. Aenean sapien velit, porta a eros quis, iaculis dignissim felis. Suspendisse mollis vulputate metus vel interdum. Aliquam hendrerit elementum erat, sit amet commodo velit suscipit et. Sed semper sem at mauris rhoncus, id efficitur arcu molestie. Nam feugiat lorem pretium, consectetur felis et, fringilla dolor. Nunc dui velit, elementum non hendrerit nec, sagittis vitae odio. Curabitur nec leo tincidunt, pellentesque metus at, condimentum risus.
+      </p>
+    </div>
+  </div>
+</body>
+
+<script type="application/javascript">
+  window.onload = function() {
+    opener.child_opened(document);
+  };
+</script>
+
+</html>

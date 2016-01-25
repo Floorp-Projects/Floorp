@@ -81,6 +81,11 @@ public:
     return true;
   }
 
+  const char* GetDescriptionName() const override
+  {
+    return "apple VDA decoder";
+  }
+
   // Access from the taskqueue and the decoder's thread.
   // OutputFrame is thread-safe.
   nsresult OutputFrame(CVPixelBufferRef aImage,

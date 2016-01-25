@@ -737,6 +737,7 @@ void HTMLMediaElement::AbortExistingLoads()
   }
 
   mError = nullptr;
+  mCurrentPlayRangeStart = -1.0;
   mLoadedDataFired = false;
   mAutoplaying = true;
   mIsLoadingFromSourceChildren = false;

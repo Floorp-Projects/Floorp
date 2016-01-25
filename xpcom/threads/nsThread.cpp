@@ -643,9 +643,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
     while (wrapper->IsPending()) {
       NS_ProcessNextEvent(thread, true);
     }
-    // NOTE that, unlike the behavior above, the event is not leaked by
-    // this place, while it is possible that the result is an error.
-    return wrapper->Result();
+    return NS_OK;
   }
 
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");

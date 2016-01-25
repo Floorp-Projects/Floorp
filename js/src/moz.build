@@ -711,6 +711,7 @@ selfhosted.inputs = [
     'builtin/RegExp.js',
     'builtin/String.js',
     'builtin/Set.js',
+    'builtin/Sorting.js',
     'builtin/TypedArray.js',
     'builtin/TypedObject.js',
     'builtin/WeakSet.js'

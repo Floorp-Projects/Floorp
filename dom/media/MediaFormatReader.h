@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Monitor.h"
 
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
@@ -213,6 +214,8 @@ private:
                 uint32_t aDecodeAhead)
       : mOwner(aOwner)
       , mType(aType)
+      , mMonitor("DecoderData")
+      , mDescription("shutdown")
       , mDecodeAhead(aDecodeAhead)
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
@@ -240,13 +243,26 @@ private:
     // Disambiguate Audio vs Video.
     MediaData::Type mType;
     RefPtr<MediaTrackDemuxer> mTrackDemuxer;
-    // The platform decoder.
-    RefPtr<MediaDataDecoder> mDecoder;
     // TaskQueue on which decoder can choose to decode.
     // Only non-null up until the decoder is created.
     RefPtr<FlushableTaskQueue> mTaskQueue;
     // Callback that receives output and error notifications from the decoder.
     nsAutoPtr<DecoderCallback> mCallback;
+
+    // Monitor protecting mDescription and mDecoder.
+    Monitor mMonitor;
+    // The platform decoder.
+    RefPtr<MediaDataDecoder> mDecoder;
+    const char* mDescription;
+    void ShutdownDecoder()
+    {
+      MonitorAutoLock mon(mMonitor);
+      if (mDecoder) {
+        mDecoder->Shutdown();
+      }
+      mDescription = "shutdown";
+      mDecoder = nullptr;
+    }
 
     // Only accessed from reader's task queue.
     uint32_t mDecodeAhead;

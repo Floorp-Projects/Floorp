@@ -524,6 +524,10 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
   int r,_status;
   nr_p_buf *n1, *n2;
 
+  if (sock->read_state == NR_ICE_SOCKET_READ_FAILED) {
+    ABORT(R_FAILED);
+  }
+
   /* Try to flush */
   STAILQ_FOREACH_SAFE(n1, &sock->pending_writes, entry, n2) {
     size_t written = 0;

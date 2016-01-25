@@ -6113,6 +6113,21 @@
     "description": "Whether Ogg audio/video encountered are chained or not.",
     "bug_numbers": [1230295]
   },
+  "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Does the WMF video decoder return success but null output? 0 = playback successful, 1 = excessive null output but able to decode some frames, 2 = excessive null output and gave up, 3 = null output but recovered, 4 = non-excessive null output without being able to decode frames.",
+    "bug_numbers": [1176071]
+  },
+  "AUDIO_MFT_OUTPUT_NULL_SAMPLES": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "How many times the audio MFT decoder returns success but output nothing.",
+    "bug_numbers": [1176071]
+  },
   "VIDEO_CAN_CREATE_AAC_DECODER": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "50",

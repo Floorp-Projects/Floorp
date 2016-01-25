@@ -1124,6 +1124,9 @@ pref("dom.audiochannel.mutedByDefault", true);
 // requests.
 pref("dom.bluetooth.app-origin", "app://bluetooth.gaiamobile.org");
 
+// Enable W3C WebBluetooth API and disable B2G only GATT client API.
+pref("dom.bluetooth.webbluetooth.enabled", false);
+
 // Default device name for Presentation API
 pref("dom.presentation.device.name", "Firefox OS");
 

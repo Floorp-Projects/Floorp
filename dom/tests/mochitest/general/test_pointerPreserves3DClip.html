@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for pointer events with preserve-3d and clips</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <style type="text/css">
+      .outer {
+      transform-style: preserve-3d;
+      }
+      .container {
+      overflow-y: scroll;
+      overflow-x: hidden;
+      width: 200px;
+      height: 300px;
+      }
+      .content {
+      width: 200px;
+      height: 1000px;
+      transform-style: preserve-3d;
+      }
+      #container1 {
+      background-color: green;
+      transform: translateZ(2px);
+      }
+      #container2 {
+      height: 100px;
+      transform: translateY(-200px) translateZ(10px);
+      background-color: red;
+      }
+    </style>
+  </head>
+  <body onload="runTest();">
+    <div class="outer" id="outer">
+      <div class="container" id="container1">
+	<div class="content"></div>
+      </div>
+      <div class="container" id="container2">
+	<div class="content"></div>
+      </div>
+    </div>
+<script class="testbody" type="text/javascript">
+function runTest() {
+    var outer = document.getElementById("outer");
+    var x = outer.offsetLeft;
+    var y = outer.offsetTop;
+    var target = document.elementFromPoint(x + 100, y + 250);
+    ok(target.parentNode == document.getElementById("container1"), "Find the right target.");
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+  </body>
+</html>

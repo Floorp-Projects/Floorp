@@ -69,7 +69,10 @@ public:
 class AutoTaskDispatcher : public TaskDispatcher
 {
 public:
-  explicit AutoTaskDispatcher(bool aIsTailDispatcher = false) : mIsTailDispatcher(aIsTailDispatcher) {}
+  explicit AutoTaskDispatcher(bool aIsTailDispatcher = false)
+    : mIsTailDispatcher(aIsTailDispatcher)
+  {}
+
   ~AutoTaskDispatcher()
   {
     // Given that direct tasks may trigger other code that uses the tail
@@ -81,25 +84,33 @@ public:
     // potentially not true for other hypothetical AutoTaskDispatchers). Feel
     // free to loosen this restriction to apply only to mIsTailDispatcher if a
     // use-case requires it.
-    MOZ_ASSERT(mDirectTasks.empty());
+    MOZ_ASSERT(!HaveDirectTasks());
 
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
       DispatchTaskGroup(Move(mTaskGroups[i]));
     }
   }
 
+  bool HaveDirectTasks() const
+  {
+    return mDirectTasks.isSome() && !mDirectTasks->empty();
+  }
+
   void DrainDirectTasks() override
   {
-    while (!mDirectTasks.empty()) {
-      nsCOMPtr<nsIRunnable> r = mDirectTasks.front();
-      mDirectTasks.pop();
+    while (HaveDirectTasks()) {
+      nsCOMPtr<nsIRunnable> r = mDirectTasks->front();
+      mDirectTasks->pop();
       r->Run();
     }
   }
 
   void AddDirectTask(already_AddRefed<nsIRunnable> aRunnable) override
   {
-    mDirectTasks.push(Move(aRunnable));
+    if (mDirectTasks.isNothing()) {
+      mDirectTasks.emplace();
+    }
+    mDirectTasks->push(Move(aRunnable));
   }
 
   void AddStateChangeTask(AbstractThread* aThread,
@@ -124,7 +135,8 @@ public:
 
   bool HasTasksFor(AbstractThread* aThread) override
   {
-    return !!GetTaskGroup(aThread) || (aThread == AbstractThread::GetCurrent() && !mDirectTasks.empty());
+    return !!GetTaskGroup(aThread) ||
+           (aThread == AbstractThread::GetCurrent() && HaveDirectTasks());
   }
 
   void DispatchTasksFor(AbstractThread* aThread) override
@@ -232,8 +244,11 @@ private:
     thread->Dispatch(r.forget(), failureHandling, reason);
   }
 
-  // Direct tasks.
-  std::queue<nsCOMPtr<nsIRunnable>> mDirectTasks;
+  // Direct tasks. We use a Maybe<> because (a) this class is hot, (b)
+  // mDirectTasks often doesn't get anything put into it, and (c) the
+  // std::queue implementation in GNU libstdc++ does two largish heap
+  // allocations when creating a new std::queue.
+  mozilla::Maybe<std::queue<nsCOMPtr<nsIRunnable>>> mDirectTasks;
 
   // Task groups, organized by thread.
   nsTArray<UniquePtr<PerThreadTaskGroup>> mTaskGroups;

@@ -74,6 +74,10 @@ public:
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;
+  const char* GetDescriptionName() const override
+  {
+    return "GMP audio decoder";
+  }
 
 protected:
   virtual void InitTags(nsTArray<nsCString>& aTags);

@@ -30,6 +30,10 @@ public:
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;
+  const char* GetDescriptionName() const override
+  {
+    return "vorbis audio decoder";
+  }
 
   // Return true if mimetype is Vorbis
   static bool IsVorbis(const nsACString& aMimeType);
