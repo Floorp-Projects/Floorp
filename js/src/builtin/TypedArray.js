@@ -32,7 +32,7 @@ function IsDetachedBuffer(buffer) {
 	return false;
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
-    return (flags & JS_ARRAYBUFFER_NEUTERED_FLAG) !== 0;
+    return (flags & JS_ARRAYBUFFER_DETACHED_FLAG) !== 0;
 }
 
 function GetAttachedArrayBuffer(tarray) {
