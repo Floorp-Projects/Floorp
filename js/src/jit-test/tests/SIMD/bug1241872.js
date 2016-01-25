@@ -1,5 +1,5 @@
 if (typeof SIMD !== 'object')
-    exit(0);
+    quit(0);
 
 function test() {
     return SIMD.Float32x4().toSource();
