@@ -860,12 +860,10 @@ void SkLinearGradient::LinearGradientContext::shade4_dx_clamp(SkPMColor dstC[], 
         }
 
         fx += n * dx;
-        count -= n;
-        SkASSERT(count >= 0);
         if (dx_is_pos) {
-            SkASSERT(0 == count || fx >= p1);
+            fx = SkTMax(fx, p1);
         } else {
-            SkASSERT(0 == count || fx <= p0);
+            fx = SkTMin(fx, p0);
         }
 
         ramp<apply_alpha>(dstC, n, c, dc, dither0, dither1);
@@ -875,6 +873,9 @@ void SkLinearGradient::LinearGradientContext::shade4_dx_clamp(SkPMColor dstC[], 
         if (n & 1) {
             SkTSwap(dither0, dither1);
         }
+
+        count -= n;
+        SkASSERT(count >= 0);
     }
 }
 
