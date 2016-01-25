@@ -34,7 +34,6 @@ DEFAULT_HOSTNAME = 'localhost'
 SRCDIR = mozpath.abspath(mozpath.dirname(__file__))
 
 STORAGE_SERVER_SCRIPT = mozpath.join(SRCDIR, 'run_storage_server.js')
-BAGHEERA_SERVER_SCRIPT = mozpath.join(SRCDIR, 'run_bagheera_server.js')
 
 def SyncStorageCommand(func):
     """Decorator that adds shared command arguments to services commands."""
@@ -110,8 +109,3 @@ class SyncTestCommands(MachCommandBase):
     @SyncStorageCommand
     def run_storage_server(self, port=DEFAULT_PORT, address=DEFAULT_HOSTNAME):
         exit(self.run_server(STORAGE_SERVER_SCRIPT, address, port))
-
-    @Command('bagheera-server', category='services',
-             description='Run a bagheera server.')
-    def run_bagheera_server(self, port=DEFAULT_PORT, address=DEFAULT_HOSTNAME):
-        exit(self.run_server(BAGHEERA_SERVER_SCRIPT, address, port))
