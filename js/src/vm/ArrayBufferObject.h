@@ -273,12 +273,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     void setNewOwnedData(FreeOp* fop, BufferContents newContents);
     void changeContents(JSContext* cx, BufferContents newContents);
 
-    /*
-     * Ensure data is not stored inline in the object. Used when handing back a
-     * GC-safe pointer.
-     */
-    static bool ensureNonInline(JSContext* cx, Handle<ArrayBufferObject*> buffer);
-
     /* Neuter this buffer and all its views. */
     static MOZ_WARN_UNUSED_RESULT bool
     neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
