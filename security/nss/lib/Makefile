@@ -46,6 +46,10 @@ ifndef NSS_DISABLE_DBM
 DBM_SRCDIR = dbm  # Add the dbm directory to DIRS.
 endif
 
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+SYSINIT_SRCDIR=
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
@@ -62,14 +66,28 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1)
-# Not included when building nss without softoken
-UTIL_SRCDIR =
-FREEBL_SRCDIR =
-SOFTOKEN_SRCDIR =
+ifeq ($(NSS_BUILD_UTIL_ONLY),1)
+  UTIL_SRCDIR = util
+  FREEBL_SRCDIR =
+  SOFTOKEN_SRCDIR =
 else
-# default is to include all
-UTIL_SRCDIR = util
-FREEBL_SRCDIR = freebl
-SOFTOKEN_SRCDIR = softoken
+  ifeq ($(NSS_BUILD_SOFTOKEN_ONLY),1)
+      UTIL_SRCDIR =
+      FREEBL_SRCDIR = freebl
+      SOFTOKEN_SRCDIR = softoken
+  else
+    ifeq ($(NSS_BUILD_WITHOUT_SOFTOKEN),1)
+      # Not included when building nss without softoken
+      # This build type uses the build results of the prior
+      # NSS_BUILD_UTIL_ONLY and NSS_BUILD_SOFTOKEN_ONLY builds
+      UTIL_SRCDIR =
+      FREEBL_SRCDIR =
+      SOFTOKEN_SRCDIR =
+    else
+      # default is to include all
+      UTIL_SRCDIR = util
+      FREEBL_SRCDIR = freebl
+      SOFTOKEN_SRCDIR = softoken
+    endif
+  endif
 endif

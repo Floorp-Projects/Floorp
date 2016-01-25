@@ -2,8 +2,8 @@ GTest-based Unit Tests
 
 This directory contains GTest-based unit tests for NSS libssl.
 
-These aren't built by default, because they require C++.
-To build them, set ``NSS_BUILD_GTESTS=1''
+If your environment doesn't have C++ compiler suitable to build these tests,
+you may disable them using ``NSS_DISABLE_GTESTS=1''
 
 Once built, they are run as part of running ``test/all.sh''
 You can run just the GTests by running ``tests/ssl_gtests/ssl_gtests.sh''

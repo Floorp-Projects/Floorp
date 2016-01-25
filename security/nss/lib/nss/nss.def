@@ -1090,3 +1090,10 @@ SECMOD_CreateModuleEx;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.22 { 	# NSS 3.22 release
+;+    global:
+PK11_SignWithMechanism;
+PK11_VerifyWithMechanism;
+;+    local:
+;+       *;
+;+};

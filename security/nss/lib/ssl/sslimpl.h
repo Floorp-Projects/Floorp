@@ -38,12 +38,6 @@
 */
 typedef SSLKEAType      SSL3KEAType;
 typedef SSLMACAlgorithm SSL3MACAlgorithm;
-typedef SSLSignType     SSL3SignType;
-
-#define sign_null	ssl_sign_null
-#define sign_rsa	ssl_sign_rsa
-#define sign_dsa	ssl_sign_dsa
-#define sign_ecdsa	ssl_sign_ecdsa
 
 #define calg_null	ssl_calg_null
 #define calg_rc4	ssl_calg_rc4
@@ -338,6 +332,7 @@ typedef struct sslOptionsStr {
     unsigned int enableFallbackSCSV     : 1;  /* 29 */
     unsigned int enableServerDhe        : 1;  /* 30 */
     unsigned int enableExtendedMS       : 1;  /* 31 */
+    unsigned int enableSignedCertTimestamps : 1;  /* 32 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -497,9 +492,9 @@ typedef PRUint16 DTLSEpoch;
 
 typedef void (*DTLSTimerCb)(sslSocket *);
 
-#define MAX_MAC_CONTEXT_BYTES 400  /* 400 is large enough for MD5, SHA-1, and
-                                    * SHA-256. For SHA-384 support, increase
-                                    * it to 712. */
+/* 400 is large enough for MD5, SHA-1, and SHA-256.
+ * For SHA-384 support, increase it to 712. */
+#define MAX_MAC_CONTEXT_BYTES 400
 #define MAX_MAC_CONTEXT_LLONGS (MAX_MAC_CONTEXT_BYTES / 8)
 
 #define MAX_CIPHER_CONTEXT_BYTES 2080
@@ -701,6 +696,11 @@ struct sslSessionIDStr {
 
 	    SECItem           srvName;
 
+	    /* Signed certificate timestamps received in a TLS extension.
+	    ** (used only in client).
+	    */
+	    SECItem	      signedCertTimestamps;
+
 	    /* This lock is lazily initialized by CacheSID when a sid is first
 	     * cached. Before then, there is no need to lock anything because
 	     * the sid isn't being shared by anything.
@@ -735,7 +735,7 @@ typedef struct ssl3CipherSuiteDefStr {
 typedef struct {
     SSL3KeyExchangeAlgorithm kea;
     SSL3KEAType              exchKeyType;
-    SSL3SignType             signKeyType;
+    SSLSignType signKeyType;
     /* For export cipher suites:
      * is_limited identifies a suite as having a limit on the key size.
      * key_size_limit provides the corresponding limit. */
@@ -745,6 +745,8 @@ typedef struct {
     /* True if the key exchange for the suite is ephemeral.  Or to be more
      * precise: true if the ServerKeyExchange message is always required. */
     PRBool                   ephemeral;
+    /* An OID describing the key exchange */
+    SECOidTag                oid;
 } ssl3KEADef;
 
 /*
@@ -760,6 +762,7 @@ struct ssl3BulkCipherDefStr {
     int             block_size;
     int             tag_size;  /* authentication tag size for AEAD ciphers. */
     int             explicit_nonce_size;               /* for AEAD ciphers. */
+    SECOidTag       oid;
 };
 
 /*
@@ -770,6 +773,7 @@ struct ssl3MACDefStr {
     CK_MECHANISM_TYPE mmech;
     int              pad_size;
     int              mac_size;
+    SECOidTag        oid;
 };
 
 typedef enum {
@@ -815,6 +819,18 @@ struct TLSExtensionDataStr {
      * is beyond ssl3_HandleClientHello function. */
     SECItem *sniNameArr;
     PRUint32 sniNameArrSize;
+
+    /* Signed Certificate Timestamps extracted from the TLS extension.
+     * (client only).
+     * This container holds a temporary pointer to the extension data,
+     * until a session structure (the sec.ci.sid of an sslSocket) is setup
+     * that can hold a permanent copy of the data
+     * (in sec.ci.sid.u.ssl3.signedCertTimestamps).
+     * The data pointed to by this structure is neither explicitly allocated
+     * nor copied: the pointer points to the handshake message buffer and is
+     * only valid in the scope of ssl3_HandleServerHello.
+     */
+    SECItem signedCertTimestamps;
 };
 
 typedef SECStatus (*sslRestartTarget)(sslSocket *);
@@ -1011,8 +1027,9 @@ struct ssl3StateStr {
     unsigned int signatureAlgorithmCount;
 };
 
-#define DTLS_MAX_MTU  1500U     /* Ethernet MTU but without subtracting the
-				 * headers, so slightly larger than expected */
+/* Ethernet MTU but without subtracting the headers,
+ * so slightly larger than expected */
+#define DTLS_MAX_MTU  1500U
 #define IS_DTLS(ss) (ss->protocolVariant == ssl_variant_datagram)
 
 typedef struct {
@@ -1314,6 +1331,11 @@ const unsigned char *  preferredCipher;
     sslServerCerts        serverCerts[kt_kea_size];
     /* each cert needs its own status */
     SECItemArray *        certStatusArray[kt_kea_size];
+    /* Serialized signed certificate timestamps to be sent to the client
+    ** in a TLS extension (server only). Each certificate needs its own
+    ** timestamps item.
+    */
+    SECItem               signedCertTimestamps[kt_kea_size];
 
     ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED];
     ssl3KeyPair *         ephemeralECDHKeyPair; /* for ECDHE-* handshake */
@@ -1459,6 +1481,13 @@ extern void      ssl3_SetAlwaysBlock(sslSocket *ss);
 extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
 
 extern void      ssl_FinishHandshake(sslSocket *ss);
+
+extern SECStatus ssl_CipherPolicySet(PRInt32 which, PRInt32 policy);
+
+extern SECStatus ssl_CipherPrefSetDefault(PRInt32 which, PRBool enabled);
+
+extern SECStatus ssl3_ConstrainRangeByPolicy(void);
+
 
 /* Returns PR_TRUE if we are still waiting for the server to respond to our
  * client second round. Once we've received any part of the server's second
@@ -1648,11 +1677,13 @@ extern PRUint32  ssl3_GetSupportedECCurveMask(sslSocket *ss);
 
 
 /* Macro for finding a curve equivalent in strength to RSA key's */
+/* clang-format off */
 #define SSL_RSASTRENGTH_TO_ECSTRENGTH(s) \
         ((s <= 1024) ? 160 \
 	  : ((s <= 2048) ? 224 \
 	    : ((s <= 3072) ? 256 \
 	      : ((s <= 7168) ? 384 : 521 ) ) ) )
+/* clang-format on */
 
 /* Types and names of elliptic curves used in TLS */
 typedef enum { ec_type_explicitPrime      = 1,
@@ -1945,6 +1976,8 @@ extern void SSL_AtomicIncrementLong(long * x);
 SECStatus SSL_DisableDefaultExportCipherSuites(void);
 SECStatus SSL_DisableExportCipherSuites(PRFileDesc * fd);
 PRBool    SSL_IsExportCipherSuite(PRUint16 cipherSuite);
+
+SECStatus ssl3_ApplyNSSPolicy(void);
 
 extern SECStatus
 ssl3_TLSPRFWithMasterSecret(ssl3CipherSpec *spec,

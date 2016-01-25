@@ -12,80 +12,70 @@
  */
 
 static NSSUTF8 *
-ckmk_mdSlot_GetSlotDescription
-(
-  NSSCKMDSlot *mdSlot,
-  NSSCKFWSlot *fwSlot,
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance,
-  CK_RV *pError
-)
+ckmk_mdSlot_GetSlotDescription(
+    NSSCKMDSlot *mdSlot,
+    NSSCKFWSlot *fwSlot,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    CK_RV *pError)
 {
-  return (NSSUTF8 *)nss_ckmk_SlotDescription;
+    return (NSSUTF8 *)nss_ckmk_SlotDescription;
 }
 
 static NSSUTF8 *
-ckmk_mdSlot_GetManufacturerID
-(
-  NSSCKMDSlot *mdSlot,
-  NSSCKFWSlot *fwSlot,
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance,
-  CK_RV *pError
-)
+ckmk_mdSlot_GetManufacturerID(
+    NSSCKMDSlot *mdSlot,
+    NSSCKFWSlot *fwSlot,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    CK_RV *pError)
 {
-  return (NSSUTF8 *)nss_ckmk_ManufacturerID;
+    return (NSSUTF8 *)nss_ckmk_ManufacturerID;
 }
 
 static CK_VERSION
-ckmk_mdSlot_GetHardwareVersion
-(
-  NSSCKMDSlot *mdSlot,
-  NSSCKFWSlot *fwSlot,
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance
-)
+ckmk_mdSlot_GetHardwareVersion(
+    NSSCKMDSlot *mdSlot,
+    NSSCKFWSlot *fwSlot,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance)
 {
-  return nss_ckmk_HardwareVersion;
+    return nss_ckmk_HardwareVersion;
 }
 
 static CK_VERSION
-ckmk_mdSlot_GetFirmwareVersion
-(
-  NSSCKMDSlot *mdSlot,
-  NSSCKFWSlot *fwSlot,
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance
-)
+ckmk_mdSlot_GetFirmwareVersion(
+    NSSCKMDSlot *mdSlot,
+    NSSCKFWSlot *fwSlot,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance)
 {
-  return nss_ckmk_FirmwareVersion;
+    return nss_ckmk_FirmwareVersion;
 }
 
 static NSSCKMDToken *
-ckmk_mdSlot_GetToken
-(
-  NSSCKMDSlot *mdSlot,
-  NSSCKFWSlot *fwSlot,
-  NSSCKMDInstance *mdInstance,
-  NSSCKFWInstance *fwInstance,
-  CK_RV *pError
-)
+ckmk_mdSlot_GetToken(
+    NSSCKMDSlot *mdSlot,
+    NSSCKFWSlot *fwSlot,
+    NSSCKMDInstance *mdInstance,
+    NSSCKFWInstance *fwInstance,
+    CK_RV *pError)
 {
-  return (NSSCKMDToken *)&nss_ckmk_mdToken;
+    return (NSSCKMDToken *)&nss_ckmk_mdToken;
 }
 
 NSS_IMPLEMENT_DATA const NSSCKMDSlot
-nss_ckmk_mdSlot = {
-  (void *)NULL, /* etc */
-  NULL, /* Initialize */
-  NULL, /* Destroy */
-  ckmk_mdSlot_GetSlotDescription,
-  ckmk_mdSlot_GetManufacturerID,
-  NULL, /* GetTokenPresent -- defaults to true */
-  NULL, /* GetRemovableDevice -- defaults to false */
-  NULL, /* GetHardwareSlot -- defaults to false */
-  ckmk_mdSlot_GetHardwareVersion,
-  ckmk_mdSlot_GetFirmwareVersion,
-  ckmk_mdSlot_GetToken,
-  (void *)NULL /* null terminator */
-};
+    nss_ckmk_mdSlot = {
+        (void *)NULL, /* etc */
+        NULL,         /* Initialize */
+        NULL,         /* Destroy */
+        ckmk_mdSlot_GetSlotDescription,
+        ckmk_mdSlot_GetManufacturerID,
+        NULL, /* GetTokenPresent -- defaults to true */
+        NULL, /* GetRemovableDevice -- defaults to false */
+        NULL, /* GetHardwareSlot -- defaults to false */
+        ckmk_mdSlot_GetHardwareVersion,
+        ckmk_mdSlot_GetFirmwareVersion,
+        ckmk_mdSlot_GetToken,
+        (void *)NULL /* null terminator */
+    };
