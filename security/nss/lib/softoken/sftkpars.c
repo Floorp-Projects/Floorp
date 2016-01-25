@@ -42,7 +42,7 @@ sftk_parseTokenParameters(char *param, sftk_token_parameters *parsed)
 {
     int next;
     char *tmp = NULL;
-    char *index;
+    const char *index;
     index = NSSUTIL_ArgStrip(param);
 
     while (*index) {
@@ -72,7 +72,7 @@ sftk_parseTokenParameters(char *param, sftk_token_parameters *parsed)
 static void
 sftk_parseTokens(char *tokenParams, sftk_parameters *parsed)
 {
-    char *tokenIndex;
+    const char *tokenIndex;
     sftk_token_parameters *tokens = NULL;
     int i=0,count = 0,next;
 
@@ -120,7 +120,7 @@ sftk_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS)
 {
     int next;
     char *tmp = NULL;
-    char *index;
+    const char *index;
     char *certPrefix = NULL, *keyPrefix = NULL;
     char *tokdes = NULL, *ptokdes = NULL, *pupdtokdes = NULL;
     char *slotdes = NULL, *pslotdes = NULL;

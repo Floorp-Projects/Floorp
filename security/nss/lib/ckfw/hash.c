@@ -31,24 +31,22 @@
  */
 
 struct nssCKFWHashStr {
-  NSSCKFWMutex *mutex;
+    NSSCKFWMutex *mutex;
 
-  /*
-   * The invariant that mutex protects is:
-   *   The count accurately reflects the hashtable state.
-   */
+    /*
+     * The invariant that mutex protects is:
+     *   The count accurately reflects the hashtable state.
+     */
 
-  PLHashTable *plHashTable;
-  CK_ULONG count;
+    PLHashTable *plHashTable;
+    CK_ULONG count;
 };
 
 static PLHashNumber
-nss_ckfw_identity_hash
-(
-  const void *key
-)
+nss_ckfw_identity_hash(
+    const void *key)
 {
-  return (PLHashNumber)((char *)key - (char *)NULL);
+    return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 /*
@@ -56,53 +54,51 @@ nss_ckfw_identity_hash
  *
  */
 NSS_IMPLEMENT nssCKFWHash *
-nssCKFWHash_Create
-(
-  NSSCKFWInstance *fwInstance,
-  NSSArena *arena,
-  CK_RV *pError
-)
+nssCKFWHash_Create(
+    NSSCKFWInstance *fwInstance,
+    NSSArena *arena,
+    CK_RV *pError)
 {
-  nssCKFWHash *rv;
+    nssCKFWHash *rv;
 
 #ifdef NSSDEBUG
-  if (!pError) {
-    return (nssCKFWHash *)NULL;
-  }
+    if (!pError) {
+        return (nssCKFWHash *)NULL;
+    }
 
-  if( PR_SUCCESS != nssArena_verifyPointer(arena) ) {
-    *pError = CKR_ARGUMENTS_BAD;
-    return (nssCKFWHash *)NULL;
-  }
+    if (PR_SUCCESS != nssArena_verifyPointer(arena)) {
+        *pError = CKR_ARGUMENTS_BAD;
+        return (nssCKFWHash *)NULL;
+    }
 #endif /* NSSDEBUG */
 
-  rv = nss_ZNEW(arena, nssCKFWHash);
-  if (!rv) {
-    *pError = CKR_HOST_MEMORY;
-    return (nssCKFWHash *)NULL;
-  }
-
-  rv->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
-  if (!rv->mutex) {
-    if( CKR_OK == *pError ) {
-      *pError = CKR_GENERAL_ERROR;
+    rv = nss_ZNEW(arena, nssCKFWHash);
+    if (!rv) {
+        *pError = CKR_HOST_MEMORY;
+        return (nssCKFWHash *)NULL;
     }
-    (void)nss_ZFreeIf(rv);
-    return (nssCKFWHash *)NULL;
-  }
 
-  rv->plHashTable = PL_NewHashTable(0, nss_ckfw_identity_hash, 
-    PL_CompareValues, PL_CompareValues, &nssArenaHashAllocOps, arena);
-  if (!rv->plHashTable) {
-    (void)nssCKFWMutex_Destroy(rv->mutex);
-    (void)nss_ZFreeIf(rv);
-    *pError = CKR_HOST_MEMORY;
-    return (nssCKFWHash *)NULL;
-  }
+    rv->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
+    if (!rv->mutex) {
+        if (CKR_OK == *pError) {
+            *pError = CKR_GENERAL_ERROR;
+        }
+        (void)nss_ZFreeIf(rv);
+        return (nssCKFWHash *)NULL;
+    }
 
-  rv->count = 0;
+    rv->plHashTable = PL_NewHashTable(0, nss_ckfw_identity_hash,
+                                      PL_CompareValues, PL_CompareValues, &nssArenaHashAllocOps, arena);
+    if (!rv->plHashTable) {
+        (void)nssCKFWMutex_Destroy(rv->mutex);
+        (void)nss_ZFreeIf(rv);
+        *pError = CKR_HOST_MEMORY;
+        return (nssCKFWHash *)NULL;
+    }
 
-  return rv;
+    rv->count = 0;
+
+    return rv;
 }
 
 /*
@@ -110,14 +106,12 @@ nssCKFWHash_Create
  *
  */
 NSS_IMPLEMENT void
-nssCKFWHash_Destroy
-(
-  nssCKFWHash *hash
-)
+nssCKFWHash_Destroy(
+    nssCKFWHash *hash)
 {
-  (void)nssCKFWMutex_Destroy(hash->mutex);
-  PL_HashTableDestroy(hash->plHashTable);
-  (void)nss_ZFreeIf(hash);
+    (void)nssCKFWMutex_Destroy(hash->mutex);
+    PL_HashTableDestroy(hash->plHashTable);
+    (void)nss_ZFreeIf(hash);
 }
 
 /*
@@ -125,31 +119,30 @@ nssCKFWHash_Destroy
  *
  */
 NSS_IMPLEMENT CK_RV
-nssCKFWHash_Add
-(
-  nssCKFWHash *hash,
-  const void *key,
-  const void *value
-)
+nssCKFWHash_Add(
+    nssCKFWHash *hash,
+    const void *key,
+    const void *value)
 {
-  CK_RV error = CKR_OK;
-  PLHashEntry *he;
+    CK_RV error = CKR_OK;
+    PLHashEntry *he;
 
-  error = nssCKFWMutex_Lock(hash->mutex);
-  if( CKR_OK != error ) {
+    error = nssCKFWMutex_Lock(hash->mutex);
+    if (CKR_OK != error) {
+        return error;
+    }
+
+    he = PL_HashTableAdd(hash->plHashTable, key, (void *)value);
+    if (!he) {
+        error = CKR_HOST_MEMORY;
+    }
+    else {
+        hash->count++;
+    }
+
+    (void)nssCKFWMutex_Unlock(hash->mutex);
+
     return error;
-  }
-  
-  he = PL_HashTableAdd(hash->plHashTable, key, (void *)value);
-  if (!he) {
-    error = CKR_HOST_MEMORY;
-  } else {
-    hash->count++;
-  }
-
-  (void)nssCKFWMutex_Unlock(hash->mutex);
-
-  return error;
 }
 
 /*
@@ -157,25 +150,23 @@ nssCKFWHash_Add
  *
  */
 NSS_IMPLEMENT void
-nssCKFWHash_Remove
-(
-  nssCKFWHash *hash,
-  const void *it
-)
+nssCKFWHash_Remove(
+    nssCKFWHash *hash,
+    const void *it)
 {
-  PRBool found;
+    PRBool found;
 
-  if( CKR_OK != nssCKFWMutex_Lock(hash->mutex) ) {
+    if (CKR_OK != nssCKFWMutex_Lock(hash->mutex)) {
+        return;
+    }
+
+    found = PL_HashTableRemove(hash->plHashTable, it);
+    if (found) {
+        hash->count--;
+    }
+
+    (void)nssCKFWMutex_Unlock(hash->mutex);
     return;
-  }
-
-  found = PL_HashTableRemove(hash->plHashTable, it);
-  if( found ) {
-    hash->count--;
-  }
-
-  (void)nssCKFWMutex_Unlock(hash->mutex);
-  return;
 }
 
 /*
@@ -183,22 +174,20 @@ nssCKFWHash_Remove
  *
  */
 NSS_IMPLEMENT CK_ULONG
-nssCKFWHash_Count
-(
-  nssCKFWHash *hash
-)
+nssCKFWHash_Count(
+    nssCKFWHash *hash)
 {
-  CK_ULONG count;
+    CK_ULONG count;
 
-  if( CKR_OK != nssCKFWMutex_Lock(hash->mutex) ) {
-    return (CK_ULONG)0;
-  }
+    if (CKR_OK != nssCKFWMutex_Lock(hash->mutex)) {
+        return (CK_ULONG)0;
+    }
 
-  count = hash->count;
+    count = hash->count;
 
-  (void)nssCKFWMutex_Unlock(hash->mutex);
+    (void)nssCKFWMutex_Unlock(hash->mutex);
 
-  return count;
+    return count;
 }
 
 /*
@@ -206,27 +195,26 @@ nssCKFWHash_Count
  *
  */
 NSS_IMPLEMENT CK_BBOOL
-nssCKFWHash_Exists
-(
-  nssCKFWHash *hash,
-  const void *it
-)
+nssCKFWHash_Exists(
+    nssCKFWHash *hash,
+    const void *it)
 {
-  void *value;
+    void *value;
 
-  if( CKR_OK != nssCKFWMutex_Lock(hash->mutex) ) {
-    return CK_FALSE;
-  }
+    if (CKR_OK != nssCKFWMutex_Lock(hash->mutex)) {
+        return CK_FALSE;
+    }
 
-  value = PL_HashTableLookup(hash->plHashTable, it);
+    value = PL_HashTableLookup(hash->plHashTable, it);
 
-  (void)nssCKFWMutex_Unlock(hash->mutex);
+    (void)nssCKFWMutex_Unlock(hash->mutex);
 
-  if (!value) {
-    return CK_FALSE;
-  } else {
-    return CK_TRUE;
-  }
+    if (!value) {
+        return CK_FALSE;
+    }
+    else {
+        return CK_TRUE;
+    }
 }
 
 /*
@@ -234,41 +222,37 @@ nssCKFWHash_Exists
  *
  */
 NSS_IMPLEMENT void *
-nssCKFWHash_Lookup
-(
-  nssCKFWHash *hash,
-  const void *it
-)
+nssCKFWHash_Lookup(
+    nssCKFWHash *hash,
+    const void *it)
 {
-  void *rv;
+    void *rv;
 
-  if( CKR_OK != nssCKFWMutex_Lock(hash->mutex) ) {
-    return (void *)NULL;
-  }
+    if (CKR_OK != nssCKFWMutex_Lock(hash->mutex)) {
+        return (void *)NULL;
+    }
 
-  rv = PL_HashTableLookup(hash->plHashTable, it);
+    rv = PL_HashTableLookup(hash->plHashTable, it);
 
-  (void)nssCKFWMutex_Unlock(hash->mutex);
+    (void)nssCKFWMutex_Unlock(hash->mutex);
 
-  return rv;
+    return rv;
 }
 
 struct arg_str {
-  nssCKFWHashIterator fcn;
-  void *closure;
+    nssCKFWHashIterator fcn;
+    void *closure;
 };
 
 static PRIntn
-nss_ckfwhash_enumerator
-(
-  PLHashEntry *he,
-  PRIntn index,
-  void *arg
-)
+nss_ckfwhash_enumerator(
+    PLHashEntry *he,
+    PRIntn index,
+    void *arg)
 {
-  struct arg_str *as = (struct arg_str *)arg;
-  as->fcn(he->key, he->value, as->closure);
-  return HT_ENUMERATE_NEXT;
+    struct arg_str *as = (struct arg_str *)arg;
+    as->fcn(he->key, he->value, as->closure);
+    return HT_ENUMERATE_NEXT;
 }
 
 /*
@@ -277,24 +261,22 @@ nss_ckfwhash_enumerator
  * NOTE that the iteration function will be called with the hashtable locked.
  */
 NSS_IMPLEMENT void
-nssCKFWHash_Iterate
-(
-  nssCKFWHash *hash,
-  nssCKFWHashIterator fcn,
-  void *closure
-)
+nssCKFWHash_Iterate(
+    nssCKFWHash *hash,
+    nssCKFWHashIterator fcn,
+    void *closure)
 {
-  struct arg_str as;
-  as.fcn = fcn;
-  as.closure = closure;
+    struct arg_str as;
+    as.fcn = fcn;
+    as.closure = closure;
 
-  if( CKR_OK != nssCKFWMutex_Lock(hash->mutex) ) {
+    if (CKR_OK != nssCKFWMutex_Lock(hash->mutex)) {
+        return;
+    }
+
+    PL_HashTableEnumerateEntries(hash->plHashTable, nss_ckfwhash_enumerator, &as);
+
+    (void)nssCKFWMutex_Unlock(hash->mutex);
+
     return;
-  }
-
-  PL_HashTableEnumerateEntries(hash->plHashTable, nss_ckfwhash_enumerator, &as);
-
-  (void)nssCKFWMutex_Unlock(hash->mutex);
-
-  return;
 }
