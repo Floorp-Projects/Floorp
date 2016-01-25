@@ -14,15 +14,15 @@ function ViewedArrayBufferIfReified(tarray) {
 }
 
 function IsDetachedBuffer(buffer) {
-    // Typed arrays whose buffers are null use inline storage and can't have
-    // been neutered.
+    // A typed array with a null buffer has never had its buffer exposed to
+    // become detached.
     if (buffer === null)
         return false;
 
     assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
            "non-ArrayBuffer passed to IsDetachedBuffer");
 
-    // Typed arrays whose buffers map shared memory can't have been neutered.
+    // Shared array buffers are not detachable.
     //
     // This check is more expensive than desirable, but IsDetachedBuffer is
     // only hot for non-shared memory in SetFromNonTypedArray, so there is an
@@ -100,8 +100,9 @@ function TypedArrayCopyWithin(target, start, end = undefined) {
     // Steps 15-17.
     //
     // Note that getting or setting a typed array element must throw if the
-    // typed array is neutered, so the intrinsic below checks for neutering.
-    // This happens *only* if a get/set occurs, i.e. when |count > 0|.
+    // underlying buffer is detached, so the intrinsic below checks for
+    // detachment.  This happens *only* if a get/set occurs, i.e. when
+    // |count > 0|.
     //
     // Also note that this copies elements effectively by memmove, *not* in
     // step 17's specified order.  This is unobservable, but it would be if we
