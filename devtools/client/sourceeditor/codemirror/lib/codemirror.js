@@ -1258,6 +1258,7 @@
       });
 
       function prepareCopyCut(e) {
+        if (signalDOMEvent(cm, e)) return
         if (cm.somethingSelected()) {
           lastCopied = cm.getSelections();
           if (input.inaccurateSelection) {
@@ -1615,6 +1616,7 @@
       });
 
       function onCopyCut(e) {
+        if (signalDOMEvent(cm, e)) return
         if (cm.somethingSelected()) {
           lastCopied = cm.getSelections();
           if (e.type == "cut") cm.replaceSelection("", null, "cut");
@@ -3433,7 +3435,7 @@
       return dx * dx + dy * dy > 20 * 20;
     }
     on(d.scroller, "touchstart", function(e) {
-      if (!isMouseLikeTouchEvent(e)) {
+      if (!signalDOMEvent(cm, e) && !isMouseLikeTouchEvent(e)) {
         clearTimeout(touchFinished);
         var now = +new Date;
         d.activeTouch = {start: now, moved: false,
@@ -3562,7 +3564,7 @@
   // not interfere with, such as a scrollbar or widget.
   function onMouseDown(e) {
     var cm = this, display = cm.display;
-    if (display.activeTouch && display.input.supportsTouch() || signalDOMEvent(cm, e)) return;
+    if (signalDOMEvent(cm, e) || display.activeTouch && display.input.supportsTouch()) return;
     display.shift = e.shiftKey;
 
     if (eventInWidget(display, e)) {
@@ -4814,10 +4816,9 @@
   function findPosH(doc, pos, dir, unit, visually) {
     var line = pos.line, ch = pos.ch, origDir = dir;
     var lineObj = getLine(doc, line);
-    var possible = true;
     function findNextLine() {
       var l = line + dir;
-      if (l < doc.first || l >= doc.first + doc.size) return (possible = false);
+      if (l < doc.first || l >= doc.first + doc.size) return false
       line = l;
       return lineObj = getLine(doc, l);
     }
@@ -4827,14 +4828,16 @@
         if (!boundToLine && findNextLine()) {
           if (visually) ch = (dir < 0 ? lineRight : lineLeft)(lineObj);
           else ch = dir < 0 ? lineObj.text.length : 0;
-        } else return (possible = false);
+        } else return false
       } else ch = next;
       return true;
     }
 
-    if (unit == "char") moveOnce();
-    else if (unit == "column") moveOnce(true);
-    else if (unit == "word" || unit == "group") {
+    if (unit == "char") {
+      moveOnce()
+    } else if (unit == "column") {
+      moveOnce(true)
+    } else if (unit == "word" || unit == "group") {
       var sawType = null, group = unit == "group";
       var helper = doc.cm && doc.cm.getHelper(pos, "wordChars");
       for (var first = true;; first = false) {
@@ -4855,7 +4858,7 @@
       }
     }
     var result = skipAtomic(doc, Pos(line, ch), pos, origDir, true);
-    if (!possible) result.hitSide = true;
+    if (!cmp(pos, result)) result.hitSide = true;
     return result;
   }
 
@@ -7113,14 +7116,14 @@
         if (endStyles) for (var j = 0; j < endStyles.length; j += 2)
           if (endStyles[j + 1] == nextChange) spanEndStyle += " " + endStyles[j]
 
+        if (!collapsed || collapsed.from == pos) for (var j = 0; j < foundBookmarks.length; ++j)
+          buildCollapsedSpan(builder, 0, foundBookmarks[j]);
         if (collapsed && (collapsed.from || 0) == pos) {
           buildCollapsedSpan(builder, (collapsed.to == null ? len + 1 : collapsed.to) - pos,
                              collapsed.marker, collapsed.from == null);
           if (collapsed.to == null) return;
           if (collapsed.to == pos) collapsed = false;
         }
-        if (!collapsed && foundBookmarks.length) for (var j = 0; j < foundBookmarks.length; ++j)
-          buildCollapsedSpan(builder, 0, foundBookmarks[j]);
       }
       if (pos >= len) break;
 
@@ -8881,7 +8884,7 @@
 
   // THE END
 
-  CodeMirror.version = "5.10.0";
+  CodeMirror.version = "5.11.0";
 
   return CodeMirror;
 });
