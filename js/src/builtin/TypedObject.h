@@ -647,7 +647,7 @@ class OutlineTypedObject : public TypedObject
     void attach(JSContext* cx, TypedObject& typedObj, int32_t offset);
 
     // Invoked when array buffer is transferred elsewhere
-    void neuter(void* newData);
+    void notifyBufferDetached(void* newData);
 
     static void obj_trace(JSTracer* trace, JSObject* object);
 };

@@ -151,7 +151,7 @@ class TypedArrayObject : public NativeObject
     Value getElement(uint32_t index);
     static void setElement(TypedArrayObject& obj, uint32_t index, double d);
 
-    void neuter(void* newData);
+    void notifyBufferDetached(void* newData);
 
     /*
      * Byte length above which created typed arrays and data views will have
@@ -500,7 +500,7 @@ class DataViewObject : public NativeObject
     static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
 
     static bool initClass(JSContext* cx);
-    static void neuter(JSObject* view);
+    static void notifyBufferDetached(JSObject* view);
     template<typename NativeType>
     static bool read(JSContext* cx, Handle<DataViewObject*> obj,
                      const CallArgs& args, NativeType* val, const char* method);
@@ -508,7 +508,7 @@ class DataViewObject : public NativeObject
     static bool write(JSContext* cx, Handle<DataViewObject*> obj,
                       const CallArgs& args, const char* method);
 
-    void neuter(void* newData);
+    void notifyBufferDetached(void* newData);
 
   private:
     static const JSFunctionSpec jsfuncs[];

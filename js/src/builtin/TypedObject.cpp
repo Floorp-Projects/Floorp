@@ -2102,7 +2102,7 @@ TypedObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& proper
 }
 
 void
-OutlineTypedObject::neuter(void* newData)
+OutlineTypedObject::notifyBufferDetached(void* newData)
 {
     setData(reinterpret_cast<uint8_t*>(newData));
 }

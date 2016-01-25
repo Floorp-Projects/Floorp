@@ -243,7 +243,7 @@ void
 ArrayBufferObject::neuterView(JSContext* cx, ArrayBufferViewObject* view,
                               BufferContents newContents)
 {
-    view->neuter(newContents.data());
+    view->notifyBufferDetached(newContents.data());
 
     // Notify compiled jit code that the base pointer has moved.
     MarkObjectStateChange(cx, view);
@@ -1026,17 +1026,17 @@ JSObject::is<js::ArrayBufferObjectMaybeShared>() const
 }
 
 void
-ArrayBufferViewObject::neuter(void* newData)
+ArrayBufferViewObject::notifyBufferDetached(void* newData)
 {
     MOZ_ASSERT(newData != nullptr);
     if (is<DataViewObject>()) {
-        as<DataViewObject>().neuter(newData);
+        as<DataViewObject>().notifyBufferDetached(newData);
     } else if (is<TypedArrayObject>()) {
         if (as<TypedArrayObject>().isSharedMemory())
             return;
-        as<TypedArrayObject>().neuter(newData);
+        as<TypedArrayObject>().notifyBufferDetached(newData);
     } else {
-        as<OutlineTypedObject>().neuter(newData);
+        as<OutlineTypedObject>().notifyBufferDetached(newData);
     }
 }
 
