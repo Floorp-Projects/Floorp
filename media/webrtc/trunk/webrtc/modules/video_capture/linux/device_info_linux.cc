@@ -164,7 +164,7 @@ int32_t DeviceInfoLinux::GetDeviceName(
     } else {
         // if there's no bus info to use for uniqueId, invent one - and it has to be repeatable
         if (snprintf(deviceUniqueIdUTF8, deviceUniqueIdUTF8Length, "fake_%u", device_index) >=
-            deviceUniqueIdUTF8Length)
+            (int) deviceUniqueIdUTF8Length)
         {
             WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                        "buffer passed is too small");

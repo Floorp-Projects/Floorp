@@ -92,6 +92,8 @@
         'source/rtp_format_h264.h',
         'source/rtp_format_vp8.cc',
         'source/rtp_format_vp8.h',
+        'source/rtp_format_vp9.cc',
+        'source/rtp_format_vp9.h',
         'source/rtp_format_video_generic.cc',
         'source/rtp_format_video_generic.h',
         'source/vp8_partition_aggregator.cc',

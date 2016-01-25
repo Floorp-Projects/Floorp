@@ -8,12 +8,12 @@
 #include "APZTestCommon.h"
 #include "InputUtils.h"
 
-class APZOverscrollHandoffTester : public APZCTreeManagerTester {
+class APZScrollHandoffTester : public APZCTreeManagerTester {
 protected:
   UniquePtr<ScopedLayerTreeRegistration> registration;
   TestAsyncPanZoomController* rootApzc;
 
-  void CreateOverscrollHandoffLayerTree1() {
+  void CreateScrollHandoffLayerTree1() {
     const char* layerTreeSyntax = "c(t)";
     nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
@@ -26,9 +26,10 @@ protected:
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
     manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
     rootApzc = ApzcOf(root);
+    rootApzc->GetFrameMetrics().SetIsRootContent(true);  // make root APZC zoomable
   }
 
-  void CreateOverscrollHandoffLayerTree2() {
+  void CreateScrollHandoffLayerTree2() {
     const char* layerTreeSyntax = "c(c(t))";
     nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
@@ -48,7 +49,7 @@ protected:
     rootApzc = ApzcOf(root);
   }
 
-  void CreateOverscrollHandoffLayerTree3() {
+  void CreateScrollHandoffLayerTree3() {
     const char* layerTreeSyntax = "c(c(t)c(t))";
     nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),  // root
@@ -126,9 +127,9 @@ protected:
 // Here we test that if the processing of a touch block is deferred while we
 // wait for content to send a prevent-default message, overscroll is still
 // handed off correctly when the block is processed.
-TEST_F(APZOverscrollHandoffTester, DeferredInputEventProcessing) {
+TEST_F(APZScrollHandoffTester, DeferredInputEventProcessing) {
   // Set up the APZC tree.
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
@@ -154,9 +155,9 @@ TEST_F(APZOverscrollHandoffTester, DeferredInputEventProcessing) {
 // one has been queued, overscroll handoff for the first block follows
 // the original layer structure while overscroll handoff for the second block
 // follows the new layer structure.
-TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
+TEST_F(APZScrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
   // Set up an initial APZC tree.
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   TestAsyncPanZoomController* childApzc = ApzcOf(layers[1]);
 
@@ -170,7 +171,7 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
 
   // Modify the APZC tree to insert a new APZC 'middle' into the handoff chain
   // between the child and the root.
-  CreateOverscrollHandoffLayerTree2();
+  CreateScrollHandoffLayerTree2();
   RefPtr<Layer> middle = layers[1];
   childApzc->SetWaitForMainThread();
   TestAsyncPanZoomController* middleApzc = ApzcOf(middle);
@@ -202,11 +203,11 @@ TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
 
 // Test that putting a second finger down on an APZC while a down-chain APZC
 // is overscrolled doesn't result in being stuck in overscroll.
-TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1073250) {
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
 
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
@@ -239,11 +240,11 @@ TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1073250) {
 // This is almost exactly like StuckInOverscroll_Bug1073250, except the
 // APZC receiving the input events for the first touch block is the child
 // (and thus not the same APZC that overscrolls, which is the parent).
-TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1231228) {
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
 
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
@@ -273,17 +274,95 @@ TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1231228) {
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
 
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateScrollHandoffLayerTree1();
+
+  TestAsyncPanZoomController* child = ApzcOf(layers[1]);
+
+  // Pan, causing the parent APZC to overscroll.
+  Pan(manager, mcc, 60, 90, true /* keep finger down */);
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Lift the finger, triggering an overscroll animation
+  // (but don't allow it to run).
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put the finger down again, interrupting the animation
+  // and entering the TOUCHING state.
+  TouchDown(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Lift the finger once again.
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Allow any animations to run their course.
+  child->AdvanceAnimationsUntilEnd();
+  rootApzc->AdvanceAnimationsUntilEnd();
+
+  // Make sure nothing is overscrolled.
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
+TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateScrollHandoffLayerTree1();
+
+  TestAsyncPanZoomController* child = ApzcOf(layers[1]);
+
+  // Pan, causing the parent APZC to overscroll.
+  Pan(manager, mcc, 60, 90, true /* keep finger down */);
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Lift the finger, triggering an overscroll animation
+  // (but don't allow it to run).
+  TouchUp(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put the finger down again, interrupting the animation
+  // and entering the TOUCHING state.
+  TouchDown(manager, ScreenIntPoint(10, 90), mcc->Time());
+
+  // Put a second finger down. Since we're in the TOUCHING state,
+  // the "are we panned into overscroll" check will fail and we
+  // will not ignore the second finger, instead entering the
+  // PINCHING state.
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as TouchDown(). (A bit hacky.)
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 90), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(10, 80), ScreenSize(0, 0), 0, 0));
+  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+
+  // Release the fingers.
+  MultiTouchInput fingersUp = secondFingerDown;
+  fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
+  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
+
+  // Allow any animations to run their course.
+  child->AdvanceAnimationsUntilEnd();
+  rootApzc->AdvanceAnimationsUntilEnd();
+
+  // Make sure nothing is overscrolled.
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
 // Test that flinging in a direction where one component of the fling goes into
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the
 // other direction.
-TEST_F(APZOverscrollHandoffTester, PartialFlingHandoff) {
-  CreateOverscrollHandoffLayerTree1();
+TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
+  CreateScrollHandoffLayerTree1();
 
   // Fling up and to the left. The child APZC has room to scroll up, but not
   // to the left, so the horizontal component of the fling should be handed
   // off to the parent APZC.
-  Pan(manager, mcc, ScreenPoint(90, 90), ScreenPoint(55, 55));
+  Pan(manager, mcc, ScreenIntPoint(90, 90), ScreenIntPoint(55, 55));
 
   RefPtr<TestAsyncPanZoomController> parent = ApzcOf(root);
   RefPtr<TestAsyncPanZoomController> child = ApzcOf(layers[1]);
@@ -300,9 +379,9 @@ TEST_F(APZOverscrollHandoffTester, PartialFlingHandoff) {
 
 // Here we test that if two flings are happening simultaneously, overscroll
 // is handed off correctly for each.
-TEST_F(APZOverscrollHandoffTester, SimultaneousFlings) {
+TEST_F(APZScrollHandoffTester, SimultaneousFlings) {
   // Set up an initial APZC tree.
-  CreateOverscrollHandoffLayerTree3();
+  CreateScrollHandoffLayerTree3();
 
   RefPtr<TestAsyncPanZoomController> parent1 = ApzcOf(layers[1]);
   RefPtr<TestAsyncPanZoomController> child1 = ApzcOf(layers[2]);
@@ -330,7 +409,7 @@ TEST_F(APZOverscrollHandoffTester, SimultaneousFlings) {
   parent2->AssertStateIsFling();
 }
 
-TEST_F(APZOverscrollHandoffTester, Scrollgrab) {
+TEST_F(APZScrollHandoffTester, Scrollgrab) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
@@ -345,7 +424,7 @@ TEST_F(APZOverscrollHandoffTester, Scrollgrab) {
   EXPECT_EQ(15, childApzc->GetFrameMetrics().GetScrollOffset().y);
 }
 
-TEST_F(APZOverscrollHandoffTester, ScrollgrabFling) {
+TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
@@ -359,20 +438,20 @@ TEST_F(APZOverscrollHandoffTester, ScrollgrabFling) {
   childApzc->AssertStateIsReset();
 }
 
-TEST_F(APZOverscrollHandoffTester, ScrollgrabFlingAcceleration1) {
+TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
   TestFlingAcceleration();
 }
 
-TEST_F(APZOverscrollHandoffTester, ScrollgrabFlingAcceleration2) {
+TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
   TestFlingAcceleration();
 }
 
-TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
+TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
   SCOPED_GFX_PREF(APZAllowImmediateHandoff, bool, false);
 
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(root);
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
@@ -394,10 +473,10 @@ TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
   EXPECT_EQ(10, parentApzc->GetFrameMetrics().GetScrollOffset().y);
 }
 
-TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
+TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   SCOPED_GFX_PREF(APZAllowImmediateHandoff, bool, false);
 
-  CreateOverscrollHandoffLayerTree1();
+  CreateScrollHandoffLayerTree1();
 
   RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(root);
   RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);

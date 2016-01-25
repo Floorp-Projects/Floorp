@@ -75,6 +75,15 @@ bool VCMFrameBuffer::NonReference() const {
   return _sessionInfo.NonReference();
 }
 
+void VCMFrameBuffer::SetGofInfo(const GofInfoVP9& gof_info, size_t idx) {
+  _sessionInfo.SetGofInfo(gof_info, idx);
+  // TODO(asapersson): Consider adding hdr->VP9.ref_picture_id for testing.
+  _codecSpecificInfo.codecSpecific.VP9.temporal_idx =
+      gof_info.temporal_idx[idx];
+  _codecSpecificInfo.codecSpecific.VP9.temporal_up_switch =
+      gof_info.temporal_up_switch[idx];
+}
+
 bool
 VCMFrameBuffer::IsSessionComplete() const {
     return _sessionInfo.complete();

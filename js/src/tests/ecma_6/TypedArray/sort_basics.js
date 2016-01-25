@@ -2,20 +2,6 @@
 // setting "const SEED" to that value will recreate the data from any such run.
 const SEED = (Math.random() * 10) + 1;
 
-// An xorshift pseudo-random number generator see:
-// https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
-// This generator will always produce a value, n, where
-// 0 <= n <= 255
-function *xorShiftGenerator(seed, size) {
-    let x = seed;
-    for (let i = 0; i < size; i++) {
-        x ^= x >> 12;
-        x ^= x << 25;
-        x ^= x >> 27;
-        yield x % 256;
-    }
-}
-
 // Fill up an array buffer with random values and return it in raw form.
 // 'size' is the desired length of the view we will place atop the buffer,
 // 'width' is the bit-width of the view we plan on placing atop the buffer,
@@ -26,7 +12,7 @@ function genRandomArrayBuffer(size, width, seed) {
     let len = 0;
     // We generate a random number, n, where 0 <= n <= 255 for every space
     // available in our buffer.
-    for (let n of xorShiftGenerator(seed, buf.byteLength))
+    for (let n of XorShiftGenerator(seed, buf.byteLength))
         arr[len++] = n;
     return buf;
 }

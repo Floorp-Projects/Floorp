@@ -28,6 +28,7 @@ public:
   virtual ~GonkDecoderManager() {}
 
   virtual RefPtr<InitPromise> Init() = 0;
+  virtual const char* GetDescriptionName() const = 0;
 
   // Asynchronously send sample into mDecoder. If out of input buffer, aSample
   // will be queued for later re-send.
@@ -198,6 +199,11 @@ public:
   nsresult Drain() override;
 
   nsresult Shutdown() override;
+
+  const char* GetDescriptionName() const override
+  {
+    return "gonk decoder";
+  }
 
 private:
 

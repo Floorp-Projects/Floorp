@@ -17,6 +17,8 @@
 #undef DISALLOW_ASSIGN
 #define DISALLOW_ASSIGN(TypeName) \
   void operator=(const TypeName&)
+#define RTC_DISALLOW_ASSIGN(TypeName) \
+  void operator=(const TypeName&) = delete
 
 // A macro to disallow the evil copy constructor and operator= functions
 // This should be used in the private: declarations for a class.
@@ -24,6 +26,9 @@
 #define DISALLOW_COPY_AND_ASSIGN(TypeName)    \
   TypeName(const TypeName&);                    \
   DISALLOW_ASSIGN(TypeName)
+#define RTC_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&) = delete;          \
+  RTC_DISALLOW_ASSIGN(TypeName)
 
 // Alternative, less-accurate legacy name.
 #undef DISALLOW_EVIL_CONSTRUCTORS
@@ -40,6 +45,9 @@
 #define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
   TypeName();                                    \
   DISALLOW_EVIL_CONSTRUCTORS(TypeName)
+#define RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
+  TypeName() = delete;                               \
+  RTC_DISALLOW_COPY_AND_ASSIGN(TypeName)
 
 
 #endif  // WEBRTC_BASE_CONSTRUCTORMAGIC_H_

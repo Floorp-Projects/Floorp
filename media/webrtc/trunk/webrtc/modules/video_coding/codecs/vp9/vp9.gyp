@@ -22,12 +22,20 @@
       'conditions': [
         ['build_libvpx==1', {
           'dependencies': [
-            '<(libvpx_dir)/libvpx.gyp:libvpx',
+            '<(libvpx_dir)/libvpx.gyp:libvpx_new',
           ],
-        }],
+        }, {
+          'include_dirs': [
+            '../../../../../../../libvpx',
+          ],
+	}],
         ['build_vp9==1', {
           'sources': [
             'include/vp9.h',
+            'screenshare_layers.cc',
+            'screenshare_layers.h',
+            'vp9_frame_buffer_pool.cc',
+            'vp9_frame_buffer_pool.h',
             'vp9_impl.cc',
             'vp9_impl.h',
           ],

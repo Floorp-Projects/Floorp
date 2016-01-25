@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1241394
+-->
+<head>
+  <title>Test for Bug 1241394</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1241394">Mozilla Bug 1241394</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1241394 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var win;
+
+  window.child_opened = function(doc) {
+    var container= doc.getElementById("container");
+
+    isnot(doc.elementFromPoint(60, 50).id, container.id,
+          "point (50, 50): should not hit background");
+
+    win.close();
+    SimpleTest.finish();
+  }
+
+  win = window.open("preserve3d_sorting_hit_testing2_iframe.html");
+}
+
+
+</script>
+</pre>
+</body>
+</html>
