@@ -9,14 +9,12 @@
 #ifndef _OCSP_H_
 #define _OCSP_H_
 
-
 #include "plarena.h"
 #include "seccomon.h"
 #include "secoidt.h"
 #include "keyt.h"
 #include "certt.h"
 #include "ocspt.h"
-
 
 /************************************************************************/
 SEC_BEGIN_PROTOS
@@ -134,7 +132,7 @@ CERT_DisableOCSPChecking(CERTCertDBHandle *handle);
  */
 extern SECStatus
 CERT_SetOCSPDefaultResponder(CERTCertDBHandle *handle,
-			     const char *url, const char *name);
+                             const char *url, const char *name);
 
 /*
  * FUNCTION: CERT_EnableOCSPDefaultResponder
@@ -174,7 +172,7 @@ CERT_DisableOCSPDefaultResponder(CERTCertDBHandle *handle);
 /* If forcePost is set, OCSP requests will only be sent using the HTTP POST
  * method. When forcePost is not set, OCSP requests will be sent using the
  * HTTP GET method, with a fallback to POST when we fail to receive a response
- * and/or when we receive an uncacheable response like "Unknown." 
+ * and/or when we receive an uncacheable response like "Unknown."
  *
  * The default is to use GET and fallback to POST.
  */
@@ -191,7 +189,7 @@ extern SECStatus CERT_ForcePostMethodForOCSP(PRBool forcePost);
 
 /*
  * FUNCTION: CERT_CreateOCSPRequest
- *   Creates a CERTOCSPRequest, requesting the status of the certs in 
+ *   Creates a CERTOCSPRequest, requesting the status of the certs in
  *   the given list.
  * INPUTS:
  *   CERTCertList *certList
@@ -203,7 +201,7 @@ extern SECStatus CERT_ForcePostMethodForOCSP(PRBool forcePost);
  *     to this routine), who knows about where the request(s) are being
  *     sent and whether there are any trusted responders in place.
  *   PRTime time
- *     Indicates the time for which the certificate status is to be 
+ *     Indicates the time for which the certificate status is to be
  *     determined -- this may be used in the search for the cert's issuer
  *     but has no effect on the request itself.
  *   PRBool addServiceLocator
@@ -221,9 +219,9 @@ extern SECStatus CERT_ForcePostMethodForOCSP(PRBool forcePost);
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
 extern CERTOCSPRequest *
-CERT_CreateOCSPRequest(CERTCertList *certList, PRTime time, 
-		       PRBool addServiceLocator,
-		       CERTCertificate *signerCert);
+CERT_CreateOCSPRequest(CERTCertList *certList, PRTime time,
+                       PRBool addServiceLocator,
+                       CERTCertificate *signerCert);
 
 /*
  * FUNCTION: CERT_AddOCSPAcceptableResponses
@@ -243,13 +241,13 @@ CERT_CreateOCSPRequest(CERTCertList *certList, PRTime time,
  */
 extern SECStatus
 CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
-				SECOidTag responseType0, ...);
+                                SECOidTag responseType0, ...);
 
-/* 
+/*
  * FUNCTION: CERT_EncodeOCSPRequest
  *   DER encodes an OCSP Request, possibly adding a signature as well.
  *   XXX Signing is not yet supported, however; see comments in code.
- * INPUTS: 
+ * INPUTS:
  *   PLArenaPool *arena
  *     The return value is allocated from here.
  *     If a NULL is passed in, allocation is done from the heap instead.
@@ -264,8 +262,8 @@ CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
  *   (e.g. no memory).
  */
 extern SECItem *
-CERT_EncodeOCSPRequest(PLArenaPool *arena, CERTOCSPRequest *request, 
-		       void *pwArg);
+CERT_EncodeOCSPRequest(PLArenaPool *arena, CERTOCSPRequest *request,
+                       void *pwArg);
 
 /*
  * FUNCTION: CERT_DecodeOCSPRequest
@@ -341,7 +339,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  *   const char *location
  *     The location of the OCSP responder (a URL).
  *   PRTime time
- *     Indicates the time for which the certificate status is to be 
+ *     Indicates the time for which the certificate status is to be
  *     determined -- this may be used in the search for the cert's issuer
  *     but has no other bearing on the operation.
  *   PRBool addServiceLocator
@@ -369,10 +367,10 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  */
 extern SECItem *
 CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
-			    const char *location, PRTime time,
-			    PRBool addServiceLocator,
-			    CERTCertificate *signerCert, void *pwArg,
-			    CERTOCSPRequest **pRequest);
+                            const char *location, PRTime time,
+                            PRBool addServiceLocator,
+                            CERTCertificate *signerCert, void *pwArg,
+                            CERTOCSPRequest **pRequest);
 
 /*
  * FUNCTION: CERT_VerifyOCSPResponseSignature
@@ -406,10 +404,10 @@ CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
  *   verifying the signer's cert, or low-level problems (no memory, etc.)
  */
 extern SECStatus
-CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,	
-				 CERTCertDBHandle *handle, void *pwArg,
-				 CERTCertificate **pSignerCert,
-				 CERTCertificate *issuerCert);
+CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
+                                 CERTCertDBHandle *handle, void *pwArg,
+                                 CERTCertificate **pSignerCert,
+                                 CERTCertificate *issuerCert);
 
 /*
  * FUNCTION: CERT_GetOCSPAuthorityInfoAccessLocation
@@ -425,7 +423,7 @@ CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,
  *     extension is not present or it does not contain an entry for OCSP,
  *     SEC_ERROR_EXTENSION_NOT_FOUND will be set and a NULL returned.
  *     Any other error will also result in a NULL being returned.
- *     
+ *
  *     This result should be freed (via PORT_Free) when no longer in use.
  */
 extern char *
@@ -433,21 +431,21 @@ CERT_GetOCSPAuthorityInfoAccessLocation(const CERTCertificate *cert);
 
 /*
  * FUNCTION: CERT_RegisterAlternateOCSPAIAInfoCallBack
- *   This function serves two purposes.  
- *   1) It registers the address of a callback function that will be 
- *   called for certs that have no OCSP AIA extension, to see if the 
+ *   This function serves two purposes.
+ *   1) It registers the address of a callback function that will be
+ *   called for certs that have no OCSP AIA extension, to see if the
  *   callback wishes to supply an alternative URL for such an OCSP inquiry.
- *   2) It outputs the previously registered function's address to the 
+ *   2) It outputs the previously registered function's address to the
  *   address supplied by the caller, unless that is NULL.
- *   The registered callback function returns NULL, or an allocated string 
+ *   The registered callback function returns NULL, or an allocated string
  *   that may be subsequently freed by calling PORT_Free().
  * RETURN:
  *   SECSuccess or SECFailure (if the library is not yet intialized)
  */
 extern SECStatus
 CERT_RegisterAlternateOCSPAIAInfoCallBack(
-			CERT_StringFromCertFcn   newCallback,
-			CERT_StringFromCertFcn * oldCallback);
+    CERT_StringFromCertFcn newCallback,
+    CERT_StringFromCertFcn *oldCallback);
 
 /*
  * FUNCTION: CERT_ParseURL
@@ -521,10 +519,10 @@ CERT_ParseURL(const char *url, char **pHostname, PRUint16 *pPort, char **pPath);
  *   (e.g. SEC_ERROR_REVOKED_CERTIFICATE, SEC_ERROR_UNTRUSTED_ISSUER) when
  *   verifying the signer's cert, or low-level problems (error allocating
  *   memory, error performing ASN.1 decoding, etc.).
- */    
-extern SECStatus 
+ */
+extern SECStatus
 CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
-		     PRTime time, void *pwArg);
+                     PRTime time, void *pwArg);
 
 /*
  * FUNCTION: CERT_CacheOCSPResponseFromSideChannel
@@ -556,10 +554,10 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
  */
 extern SECStatus
 CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
-				      CERTCertificate *cert,
-				      PRTime time,
-				      const SECItem *encodedResponse,
-				      void *pwArg);
+                                      CERTCertificate *cert,
+                                      PRTime time,
+                                      const SECItem *encodedResponse,
+                                      void *pwArg);
 
 /*
  * FUNCTION: CERT_GetOCSPStatusForCertID
@@ -581,11 +579,11 @@ CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
  *    Return values are the same as those for CERT_CheckOCSPStatus
  */
 extern SECStatus
-CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle, 
-			    CERTOCSPResponse *response,
-			    CERTOCSPCertID   *certID,
-			    CERTCertificate  *signerCert,
-                            PRTime            time);
+CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle,
+                            CERTOCSPResponse *response,
+                            CERTOCSPCertID *certID,
+                            CERTCertificate *signerCert,
+                            PRTime time);
 
 /*
  * FUNCTION CERT_GetOCSPResponseStatus
@@ -619,10 +617,10 @@ CERT_GetOCSPResponseStatus(CERTOCSPResponse *response);
  *    the issuing CA may be an older expired certificate.
  *  RETURN:
  *    A new copy of a CERTOCSPCertID*.  The memory for this certID
- *    should be freed by calling CERT_DestroyOCSPCertID when the 
+ *    should be freed by calling CERT_DestroyOCSPCertID when the
  *    certID is no longer necessary.
  */
-extern CERTOCSPCertID*
+extern CERTOCSPCertID *
 CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time);
 
 /*
@@ -630,7 +628,7 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time);
  *  Frees the memory associated with the certID passed in.
  * INPUTS:
  *  CERTOCSPCertID* certID
- *    The certID that the caller no longer needs and wants to 
+ *    The certID that the caller no longer needs and wants to
  *    free the associated memory.
  * RETURN:
  *  SECSuccess if freeing the memory was successful.  Returns
@@ -638,31 +636,30 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time);
  *  a call to CERT_CreateOCSPCertID.
  */
 extern SECStatus
-CERT_DestroyOCSPCertID(CERTOCSPCertID* certID);
+CERT_DestroyOCSPCertID(CERTOCSPCertID *certID);
 
-
-extern CERTOCSPSingleResponse*
+extern CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseGood(PLArenaPool *arena,
                                   CERTOCSPCertID *id,
                                   PRTime thisUpdate,
                                   const PRTime *nextUpdate);
 
-extern CERTOCSPSingleResponse*
+extern CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseUnknown(PLArenaPool *arena,
                                      CERTOCSPCertID *id,
                                      PRTime thisUpdate,
                                      const PRTime *nextUpdate);
 
-extern CERTOCSPSingleResponse*
+extern CERTOCSPSingleResponse *
 CERT_CreateOCSPSingleResponseRevoked(
     PLArenaPool *arena,
     CERTOCSPCertID *id,
     PRTime thisUpdate,
     const PRTime *nextUpdate,
     PRTime revocationTime,
-    const CERTCRLEntryReasonCode* revocationReason);
+    const CERTCRLEntryReasonCode *revocationReason);
 
-extern SECItem*
+extern SECItem *
 CERT_CreateEncodedOCSPSuccessResponse(
     PLArenaPool *arena,
     CERTCertificate *responderCert,
@@ -703,7 +700,7 @@ CERT_CreateEncodedOCSPSuccessResponse(
  *	SEC_ERROR_INVALID_ARGS
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
-extern SECItem*
+extern SECItem *
 CERT_CreateEncodedOCSPErrorResponse(PLArenaPool *arena, int error);
 
 /* Sends an OCSP request using the HTTP POST method to the location addressed
@@ -717,7 +714,7 @@ CERT_CreateEncodedOCSPErrorResponse(PLArenaPool *arena, int error);
  * SEC_RegisterDefaultHttpClient then that client is used. Otherwise, an
  * internal HTTP client is used.
  */
-SECItem* CERT_PostOCSPRequest(PLArenaPool *arena, const char *location,
+SECItem *CERT_PostOCSPRequest(PLArenaPool *arena, const char *location,
                               const SECItem *encodedRequest);
 
 /************************************************************************/

@@ -12,73 +12,53 @@
 #include "base.h"
 #endif /* BASE_H */
 
-static void * PR_CALLBACK
-nss_arena_hash_alloc_table
-(
-  void *pool,
-  PRSize size
-)
+static void *PR_CALLBACK
+nss_arena_hash_alloc_table(void *pool, PRSize size)
 {
-  NSSArena *arena = (NSSArena *)NULL;
+    NSSArena *arena = (NSSArena *)NULL;
 
 #ifdef NSSDEBUG
-  if( (void *)NULL != arena ) {
-    if( PR_SUCCESS != nssArena_verifyPointer(arena) ) {
-      return (void *)NULL;
+    if ((void *)NULL != arena) {
+        if (PR_SUCCESS != nssArena_verifyPointer(arena)) {
+            return (void *)NULL;
+        }
     }
-  }
 #endif /* NSSDEBUG */
 
-  return nss_ZAlloc(arena, size);
+    return nss_ZAlloc(arena, size);
 }
 
 static void PR_CALLBACK
-nss_arena_hash_free_table
-(
-  void *pool, 
-  void *item
-)
+nss_arena_hash_free_table(void *pool, void *item)
 {
-  (void)nss_ZFreeIf(item);
+    (void)nss_ZFreeIf(item);
 }
 
-static PLHashEntry * PR_CALLBACK
-nss_arena_hash_alloc_entry
-(
-  void *pool,
-  const void *key
-)
+static PLHashEntry *PR_CALLBACK
+nss_arena_hash_alloc_entry(void *pool, const void *key)
 {
-  NSSArena *arena = NULL;
+    NSSArena *arena = NULL;
 
 #ifdef NSSDEBUG
-  if( (void *)NULL != arena ) {
-    if( PR_SUCCESS != nssArena_verifyPointer(arena) ) {
-      return (void *)NULL;
+    if ((void *)NULL != arena) {
+        if (PR_SUCCESS != nssArena_verifyPointer(arena)) {
+            return (void *)NULL;
+        }
     }
-  }
 #endif /* NSSDEBUG */
 
-  return nss_ZNEW(arena, PLHashEntry);
+    return nss_ZNEW(arena, PLHashEntry);
 }
 
 static void PR_CALLBACK
-nss_arena_hash_free_entry
-(
-  void *pool,
-  PLHashEntry *he,
-  PRUintn flag
-)
+nss_arena_hash_free_entry(void *pool, PLHashEntry *he, PRUintn flag)
 {
-  if( HT_FREE_ENTRY == flag ) {
-    (void)nss_ZFreeIf(he);
-  }
+    if (HT_FREE_ENTRY == flag) {
+        (void)nss_ZFreeIf(he);
+    }
 }
 
-NSS_IMPLEMENT_DATA PLHashAllocOps 
-nssArenaHashAllocOps = {
-  nss_arena_hash_alloc_table,
-  nss_arena_hash_free_table,
-  nss_arena_hash_alloc_entry,
-  nss_arena_hash_free_entry
+NSS_IMPLEMENT_DATA PLHashAllocOps nssArenaHashAllocOps = {
+    nss_arena_hash_alloc_table, nss_arena_hash_free_table,
+    nss_arena_hash_alloc_entry, nss_arena_hash_free_entry
 };
