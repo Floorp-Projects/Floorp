@@ -1094,15 +1094,7 @@ public:
       internalChannel->GetRedirectMode(&redirectMode);
       mRequestRedirect = static_cast<RequestRedirect>(redirectMode);
 
-      if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        mRequestCredentials = RequestCredentials::Omit;
-      } else {
-        bool includeCrossOrigin;
-        internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
-        if (includeCrossOrigin) {
-          mRequestCredentials = RequestCredentials::Include;
-        }
-      }
+      mRequestCredentials = InternalRequest::MapChannelToRequestCredentials(channel);
 
       rv = httpChannel->VisitNonDefaultRequestHeaders(this);
       NS_ENSURE_SUCCESS(rv, rv);

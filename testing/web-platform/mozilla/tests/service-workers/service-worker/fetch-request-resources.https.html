@@ -58,30 +58,6 @@ function font_face_test(frame, url, expexted_mode, expected_credentials) {
   return frame.contentWindow.load_font(actual_url);
 }
 
-function css_image_test(frame, url, type, expexted_mode,
-                        expected_credentials) {
-  var actual_url = url + (++url_count);
-  expected_results[actual_url] = {
-      url: actual_url,
-      mode: expexted_mode,
-      credentials: expected_credentials,
-      message: 'CSSImage load (url:' + actual_url + ' type:' + type + ')'
-    };
-  return frame.contentWindow.load_css_image(actual_url, type);
-}
-
-function css_image_set_test(frame, url, type, expexted_mode,
-                            expected_credentials) {
-  var actual_url = url + (++url_count);
-  expected_results[actual_url] = {
-      url: actual_url,
-      mode: expexted_mode,
-      credentials: expected_credentials,
-      message: 'CSSImageSet load (url:' + actual_url + ' type:' + type + ')'
-    };
-  return frame.contentWindow.load_css_image_set(actual_url, type);
-}
-
 async_test(function(t) {
     var SCOPE = 'resources/fetch-request-resources-iframe.https.html';
     var SCRIPT = 'resources/fetch-request-resources-worker.js';
@@ -132,39 +108,33 @@ async_test(function(t) {
       .then(function() { return with_iframe(SCOPE); })
       .then(function(f) {
         frame = f;
-        image_test(f, LOCAL_URL, '', 'no-cors', 'same-origin');
-        image_test(f, LOCAL_URL, 'anonymous', 'cors', 'omit');
+
+        // TODO: Disable 'no-cors' tests for image and stylesheet until
+        //       AsyncOpen2 and cookie policy is supported.
+        // image_test(f, LOCAL_URL, '', 'no-cors', 'include');
+        // image_test(f, REMOTE_URL, '', 'no-cors', 'include');
+        // css_test(f, LOCAL_URL, '', 'no-cors', 'include');
+        // css_test(f, REMOTE_URL, '', 'no-cors', 'include');
+
+        image_test(f, LOCAL_URL, 'anonymous', 'cors', 'same-origin');
         image_test(f, LOCAL_URL, 'use-credentials', 'cors', 'include');
-        image_test(f, REMOTE_URL, '', 'no-cors', 'same-origin');
         image_test(f, REMOTE_URL, 'anonymous', 'cors', 'omit');
         image_test(f, REMOTE_URL, 'use-credentials', 'cors', 'include');
 
-        script_test(f, LOCAL_URL, '', 'no-cors', 'same-origin');
-        script_test(f, LOCAL_URL, 'anonymous', 'cors', 'omit');
+        script_test(f, LOCAL_URL, '', 'no-cors', 'include');
+        script_test(f, LOCAL_URL, 'anonymous', 'cors', 'same-origin');
         script_test(f, LOCAL_URL, 'use-credentials', 'cors', 'include');
-        script_test(f, REMOTE_URL, '', 'no-cors', 'same-origin');
-        script_test(f, REMOTE_URL, 'anonymous', 'cors', 'omit');
+        script_test(f, REMOTE_URL, '', 'no-cors', 'include');
+        script_test(f, REMOTE_URL, 'anonymous', 'cors', 'same-origin');
         script_test(f, REMOTE_URL, 'use-credentials', 'cors', 'include');
 
-        css_test(f, LOCAL_URL, '', 'no-cors', 'same-origin');
-        css_test(f, LOCAL_URL, 'anonymous', 'cors', 'omit');
+        css_test(f, LOCAL_URL, 'anonymous', 'cors', 'same-origin');
         css_test(f, LOCAL_URL, 'use-credentials', 'cors', 'include');
-        css_test(f, REMOTE_URL, '', 'no-cors', 'same-origin');
         css_test(f, REMOTE_URL, 'anonymous', 'cors', 'omit');
         css_test(f, REMOTE_URL, 'use-credentials', 'cors', 'include');
 
-        font_face_test(f, LOCAL_URL, 'no-cors', 'same-origin');
+        font_face_test(f, LOCAL_URL, 'cors', 'same-origin');
         font_face_test(f, REMOTE_URL, 'cors', 'omit');
-
-        css_image_test(f, LOCAL_URL, 'backgroundImage', 'no-cors', 'same-origin');
-        css_image_test(f, REMOTE_URL, 'backgroundImage', 'no-cors', 'same-origin');
-        css_image_test(f, LOCAL_URL, 'shapeOutside', 'cors', 'omit');
-        css_image_test(f, REMOTE_URL, 'shapeOutside', 'cors', 'omit');
-
-        css_image_set_test(f, LOCAL_URL, 'backgroundImage', 'no-cors', 'same-origin');
-        css_image_set_test(f, REMOTE_URL, 'backgroundImage', 'no-cors', 'same-origin');
-        css_image_set_test(f, LOCAL_URL, 'shapeOutside', 'cors', 'omit');
-        css_image_set_test(f, REMOTE_URL, 'shapeOutside', 'cors', 'omit');
 
       })
       .catch(unreached_rejection(t));
