@@ -41,88 +41,72 @@
  *
  */
 NSS_EXTERN nssCKFWHash *
-nssCKFWHash_Create
-(
-  NSSCKFWInstance *fwInstance,
-  NSSArena *arena,
-  CK_RV *pError
-);
+nssCKFWHash_Create(
+    NSSCKFWInstance *fwInstance,
+    NSSArena *arena,
+    CK_RV *pError);
 
 /*
  * nssCKFWHash_Destroy
  *
  */
 NSS_EXTERN void
-nssCKFWHash_Destroy
-(
-  nssCKFWHash *hash
-);
+nssCKFWHash_Destroy(
+    nssCKFWHash *hash);
 
 /*
  * nssCKFWHash_Add
  *
  */
 NSS_EXTERN CK_RV
-nssCKFWHash_Add
-(
-  nssCKFWHash *hash,
-  const void *key,
-  const void *value
-);
+nssCKFWHash_Add(
+    nssCKFWHash *hash,
+    const void *key,
+    const void *value);
 
 /*
  * nssCKFWHash_Remove
  *
  */
 NSS_EXTERN void
-nssCKFWHash_Remove
-(
-  nssCKFWHash *hash,
-  const void *it
-);
+nssCKFWHash_Remove(
+    nssCKFWHash *hash,
+    const void *it);
 
 /*
  * nssCKFWHash_Count
  *
  */
 NSS_EXTERN CK_ULONG
-nssCKFWHash_Count
-(
-  nssCKFWHash *hash
-);
+nssCKFWHash_Count(
+    nssCKFWHash *hash);
 
 /*
  * nssCKFWHash_Exists
  *
  */
 NSS_EXTERN CK_BBOOL
-nssCKFWHash_Exists
-(
-  nssCKFWHash *hash,
-  const void *it
-);
+nssCKFWHash_Exists(
+    nssCKFWHash *hash,
+    const void *it);
 
 /*
  * nssCKFWHash_Lookup
  *
  */
 NSS_EXTERN void *
-nssCKFWHash_Lookup
-(
-  nssCKFWHash *hash,
-  const void *it
-);
+nssCKFWHash_Lookup(
+    nssCKFWHash *hash,
+    const void *it);
 
 /*
  * nssCKFWHash_Iterate
  *
  */
 NSS_EXTERN void
-nssCKFWHash_Iterate
-(
-  nssCKFWHash *hash,
-  nssCKFWHashIterator fcn,
-  void *closure
-);
+nssCKFWHash_Iterate(
+    nssCKFWHash *hash,
+    nssCKFWHashIterator fcn,
+    void *closure);
 
 #endif /* CKFWM_H */

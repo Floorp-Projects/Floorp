@@ -9,6 +9,9 @@ add_task(function* () {
   const ENGINE_NAME = "Foo";
   var contextMenu;
 
+  // We want select events to be fired.
+  yield new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [["dom.select_events.enabled", true]]}, resolve));
+
   let envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
   let originalValue = envService.get("XPCSHELL_TEST_PROFILE_DIR");
   envService.set("XPCSHELL_TEST_PROFILE_DIR", "1");

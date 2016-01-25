@@ -225,6 +225,7 @@ PrintParameterUsage()
 "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
 "-c Restrict ciphers\n"
 "-Y prints cipher values allowed for parameter -c and exits\n"
+"-G enables the extended master secret extension [RFC7627]\n"
     , stderr);
 }
 

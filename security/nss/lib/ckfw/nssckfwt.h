@@ -51,7 +51,6 @@ typedef struct NSSCKFWMechanismStr NSSCKFWMechanism;
 struct NSSCKFWCryptoOperationStr;
 typedef struct NSSCKFWCryptoOperationStr NSSCKFWCryptoOperation;
 
-
 /*
  * NSSCKFWSession
  *
@@ -87,7 +86,7 @@ typedef struct NSSCKFWMutexStr NSSCKFWMutex;
 typedef enum {
     SingleThreaded,
     MultiThreaded
-} CryptokiLockingState ;
+} CryptokiLockingState;
 
 /* used as an index into an array, make sure it starts at '0' */
 typedef enum {

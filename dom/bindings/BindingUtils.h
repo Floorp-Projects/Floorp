@@ -2309,7 +2309,7 @@ public:
 
 // Rooter class for MozMap; this is what we mostly use in the codegen.
 template<typename T>
-class MOZ_RAII MozMapRooter : private JS::CustomAutoRooter
+class MOZ_RAII MozMapRooter final : private JS::CustomAutoRooter
 {
 public:
   MozMapRooter(JSContext *aCx, MozMap<T>* aMozMap

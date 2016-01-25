@@ -420,6 +420,9 @@ SECU_DefaultSSLDir(void)
     if (!dir)
 	return NULL;
 
+    if (strlen(dir) >= PR_ARRAY_SIZE(sslDir)) {
+	return NULL;
+    }
     sprintf(sslDir, "%s", dir);
 
     if (sslDir[strlen(sslDir)-1] == '/')
@@ -3300,6 +3303,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 		    errstr = "[unknown usage].";
 		    break;
 		}
+		break;
 	    case SEC_ERROR_INADEQUATE_CERT_TYPE:
 		flags = (unsigned int)((char *)node->arg - (char *)NULL);
 		switch (flags) {
@@ -3326,6 +3330,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 		    errstr = "[unknown usage].";
 		    break;
 		}
+		break;
 	    case SEC_ERROR_UNKNOWN_ISSUER:
 	    case SEC_ERROR_UNTRUSTED_ISSUER:
 	    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:

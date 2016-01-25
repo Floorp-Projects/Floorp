@@ -5344,9 +5344,9 @@ rsa_siggen_test(char *reqfn)
             NSSLOWKEYPublicKey  * rsa_public_key;
             NSSLOWKEYPrivateKey * rsa_private_key;
             NSSLOWKEYPrivateKey   low_RSA_private_key = { NULL,
-                                                NSSLOWKEYRSAKey, };
+                                                NSSLOWKEYRSAKey };
             NSSLOWKEYPublicKey    low_RSA_public_key = { NULL,
-                                                NSSLOWKEYRSAKey, };
+                                                NSSLOWKEYRSAKey };
 
             low_RSA_private_key.u.rsa = *rsaBlapiPrivKey;
             low_RSA_public_key.u.rsa = *rsaBlapiPublicKey;
@@ -5610,7 +5610,7 @@ rsa_sigver_test(char *reqfn)
             SECStatus rv = SECFailure;
             NSSLOWKEYPublicKey  * rsa_public_key;
             NSSLOWKEYPublicKey    low_RSA_public_key = { NULL,
-                                                  NSSLOWKEYRSAKey, };
+                                                  NSSLOWKEYRSAKey };
 
             /* convert to a low RSA public key */
             low_RSA_public_key.u.rsa = rsaBlapiPublicKey;

@@ -58,13 +58,14 @@ ssl_init()
 
   PORT=${PORT-8443}
   NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="stapling cov auth stress"
+  nss_ssl_run="stapling signed_cert_timestamps cov auth stress"
   NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
 
   # Test case files
   SSLCOV=${QADIR}/ssl/sslcov.txt
   SSLAUTH=${QADIR}/ssl/sslauth.txt
   SSLSTRESS=${QADIR}/ssl/sslstress.txt
+  SSLPOLICY=${QADIR}/ssl/sslpolicy.txt
   REQUEST_FILE=${QADIR}/ssl/sslreq.dat
 
   #temparary files
@@ -533,6 +534,43 @@ ssl_stapling()
   html "</TABLE><BR>"
 }
 
+############################ ssl_signed_cert_timestamps #################
+# local shell function to perform SSL Signed Certificate Timestamp tests
+#########################################################################
+ssl_signed_cert_timestamps()
+{
+  html_head "SSL Signed Certificate Timestamps $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE $ECC_STRING"
+
+    testname="ssl_signed_cert_timestamps"
+    value=0
+
+    if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
+        return 0
+    fi
+
+    echo "${testname}"
+
+    start_selfserv
+
+    # Since we don't have server-side support, this test only covers advertising the
+    # extension in the client hello.
+    echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
+    echo "        -U -V tls1.0: < ${REQUEST_FILE}"
+    rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+    ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
+            -d ${P_R_CLIENTDIR} -v -U -V tls1.0: < ${REQUEST_FILE} \
+            >${TMP}/$HOST.tmp.$$  2>&1
+    ret=$?
+    cat ${TMP}/$HOST.tmp.$$
+    rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+
+    html_msg $ret $value "${testname}" \
+            "produced a returncode of $ret, expected is $value"
+    kill_selfserv
+  html "</TABLE><BR>"
+}
+
 
 ############################## ssl_stress ##############################
 # local shell function to perform SSL stress test
@@ -685,6 +723,127 @@ ssl_crl_ssl()
   html "</TABLE><BR>"
 }
 
+############################## ssl_cov #################################
+# local shell function to perform SSL Policy tests
+########################################################################
+ssl_policy()
+{
+  html_head "SSL POLICY $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE $ECC_STRING"
+
+  testname=""
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
+      sparam="$CLONG"
+  else
+      sparam="$CSHORT"
+  fi
+
+  if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
+      return;
+  fi
+
+  echo "Saving pkcs11.txt"
+  cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
+
+  mixed=0
+  start_selfserv # Launch the server
+
+  VMIN="ssl3"
+  VMAX="tls1.2"
+
+  exec < ${SSLPOLICY}
+  while read value ectype testmax param policy testname
+  do
+      SSL2_FLAGS=
+      VMIN="ssl3"
+
+      if [ "$ectype" = "ECC" -a -n "$NSS_DISABLE_ECC" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname (ECC only)"
+      elif [ "`echo $value | cut -b 1`" != "#" ] ; then
+          echo "$SCRIPTNAME: running $testname ----------------------------"
+          VMAX="ssl3"
+          if [ "$testmax" = "TLS10" ]; then
+              VMAX="tls1.0"
+          fi
+          if [ "$testmax" = "TLS11" ]; then
+              VMAX="tls1.1"
+          fi
+          if [ "$testmax" = "TLS12" ]; then
+              VMAX="tls1.2"
+          fi
+
+# These five tests need an EC cert signed with RSA
+# This requires a different certificate loaded in selfserv
+# due to a (current) NSS limitation of only loaded one cert
+# per type so the default selfserv setup will not work.
+#:C00B TLS ECDH RSA WITH NULL SHA
+#:C00C TLS ECDH RSA WITH RC4 128 SHA
+#:C00D TLS ECDH RSA WITH 3DES EDE CBC SHA
+#:C00E TLS ECDH RSA WITH AES 128 CBC SHA
+#:C00F TLS ECDH RSA WITH AES 256 CBC SHA
+
+          if [ $mixed -eq 0 ]; then
+            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
+              kill_selfserv
+              start_selfserv mixed
+              mixed=1
+            else
+              is_selfserv_alive
+            fi
+          else
+            if [ "${param}" = ":C00B" -o "${param}" = ":C00C" -o "${param}" = ":C00D" -o "${param}" = ":C00E" -o "${param}" = ":C00F" ]; then
+              is_selfserv_alive
+            else
+              kill_selfserv
+              start_selfserv
+              mixed=0
+            fi
+          fi
+
+          # load the policy
+          policy=`echo ${policy} | sed -e 's;_; ;g'`
+
+          cat  > ${P_R_CLIENTDIR}/pkcs11.txt << ++EOF++
+library=
+name=NSS Internal PKCS #11 Module
+parameters=configdir='./client' certPrefix='' keyPrefix='' secmod='secmod.db' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription='' 
+NSS=Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SEED,SHA256,SHA512] askpw=any timeout=30})
+++EOF++
+          echo "config=${policy}" >> ${P_R_CLIENTDIR}/pkcs11.txt
+          echo "" >> ${P_R_CLIENTDIR}/pkcs11.txt
+          echo "library=${DIST}/${OBJDIR}/lib/libnssckbi.so" >> ${P_R_CLIENTDIR}/pkcs11.txt >> ${P_R_CLIENTDIR}/pkcs11.txt
+          cat  >> ${P_R_CLIENTDIR}/pkcs11.txt << ++EOF++
+name=RootCerts
+NSS=trustOrder=100
+++EOF++
+
+          echo "******************************Testing with: "
+	  cat ${P_R_CLIENTDIR}/pkcs11.txt
+          echo "******************************"
+
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
+          echo "        -f -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE}"
+
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} -f \
+                  -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE} \
+                  >${TMP}/$HOST.tmp.$$  2>&1
+          ret=$?
+          cat ${TMP}/$HOST.tmp.$$ 
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+
+          #workaround for bug #402058
+          [ $ret -ne 0 ] && ret=1
+          [ ${value} -ne 0 ] && value=1
+
+          html_msg $ret ${value} "${testname}" \
+                   "produced a returncode of $ret, expected is ${value}"
+      fi
+  done
+  cp ${P_R_CLIENTDIR}/pkcs11.txt.sav ${P_R_CLIENTDIR}/pkcs11.txt
+
+  kill_selfserv
+  html "</TABLE><BR>"
+}
 ############################# is_revoked ###############################
 # local shell function to check if certificate is revoked
 ########################################################################
@@ -794,6 +953,7 @@ _EOF_REQUEST_
     ret=$?
     echo "================= CRL Reloaded ============="
 }
+
 
 ########################### ssl_crl_cache ##############################
 # local shell function to perform SSL test for crl cache functionality
@@ -933,6 +1093,9 @@ ssl_run()
         "stapling")
             ssl_stapling
             ;;
+        "signed_cert_timestamps")
+            ssl_signed_cert_timestamps
+            ;;
         "cov")
             ssl_cov
             ;;
@@ -1053,6 +1216,11 @@ ssl_run_tests()
     for SSL_TEST in ${NSS_SSL_TESTS}
     do
         case "${SSL_TEST}" in
+        "policy")
+            if [ "${TEST_MODE}" = "SHARED_DB" ] ; then
+	        ssl_policy
+            fi
+            ;;
         "crl")
             ssl_crl_ssl
             ssl_crl_cache

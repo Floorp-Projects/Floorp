@@ -35,13 +35,15 @@ ocsp_VerifyResponseSignature(CERTCertificate *signerCert,
                              void *pwArg);
 
 CERTOCSPRequest *
-cert_CreateSingleCertOCSPRequest(CERTOCSPCertID *certID, 
-                                 CERTCertificate *singleCert, 
+cert_CreateSingleCertOCSPRequest(CERTOCSPCertID *certID,
+                                 CERTCertificate *singleCert,
                                  PRTime time,
                                  PRBool addServiceLocator,
                                  CERTCertificate *signerCert);
 
-typedef enum { ocspMissing, ocspFresh, ocspStale } OCSPFreshness;
+typedef enum { ocspMissing,
+               ocspFresh,
+               ocspStale } OCSPFreshness;
 
 SECStatus
 ocsp_GetCachedOCSPResponseStatus(CERTOCSPCertID *certID,
@@ -84,13 +86,13 @@ ocsp_GetCachedOCSPResponseStatus(CERTOCSPCertID *certID,
  */
 
 SECStatus
-cert_ProcessOCSPResponse(CERTCertDBHandle *handle, 
-                         CERTOCSPResponse *response, 
-                         CERTOCSPCertID   *certID,
-                         CERTCertificate  *signerCert,
-                         PRTime            time,
-                         PRBool           *certIDWasConsumed,
-                         SECStatus        *cacheUpdateStatus);
+cert_ProcessOCSPResponse(CERTCertDBHandle *handle,
+                         CERTOCSPResponse *response,
+                         CERTOCSPCertID *certID,
+                         CERTCertificate *signerCert,
+                         PRTime time,
+                         PRBool *certIDWasConsumed,
+                         SECStatus *cacheUpdateStatus);
 
 /*
  * FUNCTION: cert_RememberOCSPProcessingFailure
@@ -109,7 +111,7 @@ cert_ProcessOCSPResponse(CERTCertDBHandle *handle,
 
 SECStatus
 cert_RememberOCSPProcessingFailure(CERTOCSPCertID *certID,
-                                   PRBool         *certIDWasConsumed);
+                                   PRBool *certIDWasConsumed);
 
 /*
  * FUNCTION: ocsp_GetResponderLocation
@@ -146,11 +148,11 @@ size_t
 ocsp_UrlEncodeBase64Buf(const char *base64Buf, char *outputBuf);
 
 SECStatus
-ocsp_GetVerifiedSingleResponseForCertID(CERTCertDBHandle *handle, 
-                                        CERTOCSPResponse *response, 
-                                        CERTOCSPCertID   *certID,
-                                        CERTCertificate  *signerCert,
-                                        PRTime            time,
+ocsp_GetVerifiedSingleResponseForCertID(CERTCertDBHandle *handle,
+                                        CERTOCSPResponse *response,
+                                        CERTOCSPCertID *certID,
+                                        CERTCertificate *signerCert,
+                                        PRTime time,
                                         CERTOCSPSingleResponse **pSingleResponse);
 
 SECStatus
@@ -158,7 +160,7 @@ ocsp_CertHasGoodStatus(ocspCertStatus *status, PRTime time);
 
 void
 ocsp_CacheSingleResponse(CERTOCSPCertID *certID,
-			 CERTOCSPSingleResponse *single,
-			 PRBool *certIDWasConsumed);
+                         CERTOCSPSingleResponse *single,
+                         PRBool *certIDWasConsumed);
 
 #endif /* _OCSPI_H_ */
