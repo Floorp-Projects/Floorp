@@ -6,7 +6,7 @@ Telemetry behaviour is controlled through the preferences listed here.
 Default behaviors
 -----------------
 
-Sending only happens on official builds (i.e. with ``MOZILLA_OFFICIAL``set) with ``MOZ_TELEMETRY_REPORTING`` defined.
+Sending only happens on official builds (i.e. with ``MOZILLA_OFFICIAL`` set) with ``MOZ_TELEMETRY_REPORTING`` defined.
 All other builds drop all outgoing pings, so they will also not retry sending them later.
 
 Preferences
