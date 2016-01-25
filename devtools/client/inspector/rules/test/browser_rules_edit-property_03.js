@@ -33,14 +33,16 @@ add_task(function*() {
   yield focusEditableField(view, propEditor.valueSpan);
 
   info("Deleting all the text out of a value field");
-  let waitForUpdates = view.once("ruleview-changed");
+  let onRuleViewChanged = view.once("ruleview-changed");
   yield sendCharsAndWaitForFocus(view, ruleEditor.element,
     ["VK_DELETE", "VK_RETURN"]);
-  yield waitForUpdates;
+  yield onRuleViewChanged;
 
   info("Pressing enter a couple times to cycle through editors");
   yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
+  onRuleViewChanged = view.once("ruleview-changed");
   yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
+  yield onRuleViewChanged;
 
   isnot(ruleEditor.rule.textProps[1].editor.nameSpan.style.display, "none",
     "The name span is visible");

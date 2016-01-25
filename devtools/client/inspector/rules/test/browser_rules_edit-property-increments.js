@@ -10,8 +10,8 @@
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8,sample document for bug 722691");
   createDocument();
-  let {toolbox, inspector, view} = yield openRuleView();
 
+  let {inspector, view} = yield openRuleView();
   yield selectNode("#test", inspector);
 
   yield testMarginIncrements(view);
@@ -23,16 +23,16 @@ add_task(function*() {
 });
 
 function createDocument() {
-  content.document.body.innerHTML = '' +
-    '<style>' +
-    '  #test {' +
-    '    margin-top:0px;' +
-    '    padding-top: 0px;' +
-    '    color:#000000;' +
-    '    background-color: #000000;' +
-    '  }' +
-    '</style>' +
-    '<div id="test"></div>';
+  content.document.body.innerHTML = "" +
+    "<style>" +
+    "  #test {" +
+    "    margin-top:0px;" +
+    "    padding-top: 0px;" +
+    "    color:#000000;" +
+    "    background-color: #000000;" +
+    "  }" +
+    "</style>" +
+    "<div id=\"test\"></div>";
 }
 
 function* testMarginIncrements(view) {
@@ -64,13 +64,13 @@ function* testVariousUnitIncrements(view) {
     2: {start: "0pt", end: "1pt", selectAll: true},
     3: {start: "0pc", end: "1pc", selectAll: true},
     4: {start: "0em", end: "1em", selectAll: true},
-    5: {start: "0%",  end: "1%",  selectAll: true},
+    5: {start: "0%", end: "1%", selectAll: true},
     6: {start: "0in", end: "1in", selectAll: true},
     7: {start: "0cm", end: "1cm", selectAll: true},
     8: {start: "0mm", end: "1mm", selectAll: true},
     9: {start: "0ex", end: "1ex", selectAll: true}
   });
-};
+}
 
 function* testHexIncrements(view) {
   info("Testing keyboard increments with hex colors");
@@ -81,12 +81,12 @@ function* testHexIncrements(view) {
   yield runIncrementTest(hexColorPropEditor, view, {
     1: {start: "#CCCCCC", end: "#CDCDCD", selectAll: true},
     2: {shift: true, start: "#CCCCCC", end: "#DCDCDC", selectAll: true},
-    3: {start: "#CCCCCC", end: "#CDCCCC", selection: [1,3]},
-    4: {shift: true, start: "#CCCCCC", end: "#DCCCCC", selection: [1,3]},
+    3: {start: "#CCCCCC", end: "#CDCCCC", selection: [1, 3]},
+    4: {shift: true, start: "#CCCCCC", end: "#DCCCCC", selection: [1, 3]},
     5: {start: "#FFFFFF", end: "#FFFFFF", selectAll: true},
     6: {down: true, shift: true, start: "#000000", end: "#000000", selectAll: true}
   });
-};
+}
 
 function* testRgbIncrements(view) {
   info("Testing keyboard increments with rgb colors");
@@ -95,14 +95,14 @@ function* testRgbIncrements(view) {
   let rgbColorPropEditor = idRuleEditor.rule.textProps[3].editor;
 
   yield runIncrementTest(rgbColorPropEditor, view, {
-    1: {start: "rgb(0,0,0)", end: "rgb(0,1,0)", selection: [6,7]},
-    2: {shift: true, start: "rgb(0,0,0)", end: "rgb(0,10,0)", selection: [6,7]},
-    3: {start: "rgb(0,255,0)", end: "rgb(0,255,0)", selection: [6,9]},
-    4: {shift: true, start: "rgb(0,250,0)", end: "rgb(0,255,0)", selection: [6,9]},
-    5: {down: true, start: "rgb(0,0,0)", end: "rgb(0,0,0)", selection: [6,7]},
-    6: {down: true, shift: true, start: "rgb(0,5,0)", end: "rgb(0,0,0)", selection: [6,7]}
+    1: {start: "rgb(0,0,0)", end: "rgb(0,1,0)", selection: [6, 7]},
+    2: {shift: true, start: "rgb(0,0,0)", end: "rgb(0,10,0)", selection: [6, 7]},
+    3: {start: "rgb(0,255,0)", end: "rgb(0,255,0)", selection: [6, 9]},
+    4: {shift: true, start: "rgb(0,250,0)", end: "rgb(0,255,0)", selection: [6, 9]},
+    5: {down: true, start: "rgb(0,0,0)", end: "rgb(0,0,0)", selection: [6, 7]},
+    6: {down: true, shift: true, start: "rgb(0,5,0)", end: "rgb(0,0,0)", selection: [6, 7]}
   });
-};
+}
 
 function* testShorthandIncrements(view) {
   info("Testing keyboard increments within shorthand values");
@@ -111,17 +111,17 @@ function* testShorthandIncrements(view) {
   let paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
 
   yield runIncrementTest(paddingPropEditor, view, {
-    1: {start: "0px 0px 0px 0px", end: "0px 1px 0px 0px", selection: [4,7]},
-    2: {shift: true, start: "0px 0px 0px 0px", end: "0px 10px 0px 0px", selection: [4,7]},
+    1: {start: "0px 0px 0px 0px", end: "0px 1px 0px 0px", selection: [4, 7]},
+    2: {shift: true, start: "0px 0px 0px 0px", end: "0px 10px 0px 0px", selection: [4, 7]},
     3: {start: "0px 0px 0px 0px", end: "1px 0px 0px 0px", selectAll: true},
     4: {shift: true, start: "0px 0px 0px 0px", end: "10px 0px 0px 0px", selectAll: true},
-    5: {down: true, start: "0px 0px 0px 0px", end: "0px 0px -1px 0px", selection: [8,11]},
+    5: {down: true, start: "0px 0px 0px 0px", end: "0px 0px -1px 0px", selection: [8, 11]},
     6: {down: true, shift: true, start: "0px 0px 0px 0px", end: "-10px 0px 0px 0px", selectAll: true},
     7: {up: true, start: "0.1em .1em 0em 0em", end: "0.1em 1.1em 0em 0em", selection: [6, 9]},
     8: {up: true, alt: true, start: "0.1em .9em 0em 0em", end: "0.1em 1em 0em 0em", selection: [6, 9]},
     9: {up: true, shift: true, start: "0.2em .2em 0em 0em", end: "0.2em 10.2em 0em 0em", selection: [6, 9]}
   });
-};
+}
 
 function* testOddCases(view) {
   info("Testing some more odd cases");
@@ -130,32 +130,38 @@ function* testOddCases(view) {
   let marginPropEditor = idRuleEditor.rule.textProps[0].editor;
 
   yield runIncrementTest(marginPropEditor, view, {
-    1: {start: "98.7%", end: "99.7%", selection: [3,3]},
-    2: {alt: true, start: "98.7%", end: "98.8%", selection: [3,3]},
+    1: {start: "98.7%", end: "99.7%", selection: [3, 3]},
+    2: {alt: true, start: "98.7%", end: "98.8%", selection: [3, 3]},
     3: {start: "0", end: "1"},
     4: {down: true, start: "0", end: "-1"},
-    5: {start: "'a=-1'", end: "'a=0'", selection: [4,4]},
-    6: {start: "0 -1px", end: "0 0px", selection: [2,2]},
-    7: {start: "url(-1)", end: "url(-1)", selection: [4,4]},
-    8: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11,11]},
-    9: {start: "url('test1.png')", end: "url('test2.png')", selection: [9,9]},
-    10: {shift: true, start: "url('test1.1.png')", end: "url('test11.1.png')", selection: [9,9]},
-    11: {down: true, start: "url('test-1.png')", end: "url('test-2.png')", selection: [9,11]},
-    12: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11,12]},
-    13: {down: true, alt: true, start: "url('test-0.png')", end: "url('test--0.1.png')", selection: [10,11]},
-    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')", selection: [10,14]}
+    5: {start: "'a=-1'", end: "'a=0'", selection: [4, 4]},
+    6: {start: "0 -1px", end: "0 0px", selection: [2, 2]},
+    7: {start: "url(-1)", end: "url(-1)", selection: [4, 4]},
+    8: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11, 11]},
+    9: {start: "url('test1.png')", end: "url('test2.png')", selection: [9, 9]},
+    10: {shift: true, start: "url('test1.1.png')", end: "url('test11.1.png')", selection: [9, 9]},
+    11: {down: true, start: "url('test-1.png')", end: "url('test-2.png')", selection: [9, 11]},
+    12: {start: "url('test1.1.png')", end: "url('test1.2.png')", selection: [11, 12]},
+    13: {down: true, alt: true, start: "url('test-0.png')", end: "url('test--0.1.png')", selection: [10, 11]},
+    14: {alt: true, start: "url('test--0.1.png')", end: "url('test-0.png')", selection: [10, 14]}
   });
-};
+}
 
 function* runIncrementTest(propertyEditor, view, tests) {
   let editor = yield focusEditableField(view, propertyEditor.valueSpan);
 
-  for(let test in tests) {
+  for (let test in tests) {
     yield testIncrement(editor, tests[test], view, propertyEditor);
   }
+
+  // Blur the field to put back the UI in its initial state (and avoid pending
+  // requests when the test ends).
+  let onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  yield onRuleViewChanged;
 }
 
-function* testIncrement(editor, options, view, {ruleEditor}) {
+function* testIncrement(editor, options, view) {
   editor.input.value = options.start;
   let input = editor.input;
 
