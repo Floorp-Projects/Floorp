@@ -678,7 +678,7 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
     }
 
     // Invalidate the popup.
-    popup->Invalidate();
+    popup->Invalidate(nsIAutoCompletePopup::INVALIDATE_REASON_DELETE);
   } else {
     // Nothing left in the popup, clear any pending search timers and
     // close the popup.
@@ -1618,7 +1618,7 @@ nsAutoCompleteController::ProcessResult(int32_t aSearchIndex, nsIAutoCompleteRes
     nsCOMPtr<nsIAutoCompletePopup> popup;
     input->GetPopup(getter_AddRefs(popup));
     NS_ENSURE_TRUE(popup != nullptr, NS_ERROR_FAILURE);
-    popup->Invalidate();
+    popup->Invalidate(nsIAutoCompletePopup::INVALIDATE_REASON_NEW_RESULT);
 
     uint32_t minResults;
     input->GetMinResultsForPopup(&minResults);
