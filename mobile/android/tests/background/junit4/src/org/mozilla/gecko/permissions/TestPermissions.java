@@ -167,6 +167,62 @@ public class TestPermissions {
         verify(helper, never()).prompt(anyActivity(), any(String[].class));
     }
 
+    @Test
+    public void testDoNotPromptBehavior() {
+        PermissionsHelper helper = mockDenyingHelper();
+        Permissions.setPermissionHelper(helper);
+
+        Permissions.from(mockActivity())
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .doNotPrompt()
+                .andFallback(mock(Runnable.class))
+                .run(mock(Runnable.class));
+
+        verify(helper, never()).prompt(anyActivity(), any(String[].class));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testThrowsExceptionIfNeedstoPromptWithNonActivityContext() {
+        Permissions.setPermissionHelper(mockDenyingHelper());
+
+        Permissions.from(mock(Context.class))
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .andFallback(mock(Runnable.class))
+                .run(mock(Runnable.class));
+    }
+
+    @Test
+    public void testDoNotPromptIfFalse() {
+        Activity activity = mockActivity();
+
+        PermissionsHelper helper = mockDenyingHelper();
+        Permissions.setPermissionHelper(helper);
+
+        Permissions.from(activity)
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .doNotPromptIf(false)
+                .andFallback(mock(Runnable.class))
+                .run(mock(Runnable.class));
+
+        verify(helper).prompt(anyActivity(), any(String[].class));
+
+        Permissions.onRequestPermissionsResult(activity, new String[0], new int[0]);
+    }
+
+    @Test
+    public void testDoNotPromptIfTrue() {
+        PermissionsHelper helper = mockDenyingHelper();
+        Permissions.setPermissionHelper(helper);
+
+        Permissions.from(mockActivity())
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .doNotPromptIf(true)
+                .andFallback(mock(Runnable.class))
+                .run(mock(Runnable.class));
+
+        verify(helper, never()).prompt(anyActivity(), any(String[].class));
+    }
+
     private Activity mockActivity() {
         return mock(Activity.class);
     }
