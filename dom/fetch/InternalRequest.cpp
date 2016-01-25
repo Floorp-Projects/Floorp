@@ -306,14 +306,6 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
 
   // TODO: remove following code once securityMode is fully implemented (bug 1189945)
 
-  // We only support app:// protocol interception in non-release builds.
-#ifndef RELEASE_BUILD
-  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aChannel);
-  if (jarChannel) {
-    return RequestMode::No_cors;
-  }
-#endif
-
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   uint32_t corsMode;
