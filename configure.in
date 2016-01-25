@@ -1637,7 +1637,6 @@ dnl ========================================================
 if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
   AC_MSG_CHECKING([if we're targeting 32-bit])
   if test -z "$HAVE_64BIT_BUILD"; then
-    RUSTC="$RUSTC --target=i686-apple-darwin"
     AC_MSG_RESULT([using $RUSTC])
   else
     AC_MSG_RESULT([no])
