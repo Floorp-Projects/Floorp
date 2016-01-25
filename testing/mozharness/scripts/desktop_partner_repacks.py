@@ -68,6 +68,12 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
           "dest": "hgrepo",
           "help": "Use a different base repo for retrieving files",
           }],
+        [["--require-buildprops"], {
+            "action": "store_true",
+            "dest": "require_buildprops",
+            "default": False,
+            "help": "Read in config options (like partner) from the buildbot properties file."
+          }],
     ]
 
     def __init__(self):
@@ -76,7 +82,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             'all_actions': DesktopPartnerRepacks.actions,
             'default_actions': DesktopPartnerRepacks.actions,
             'config': {
-                "buildbot_json_path": "buildprops.json",
+                'buildbot_json_path': os.environ.get('PROPERTIES_FILE'),
                 "log_name": "partner-repacks",
                 "hashType": "sha512",
                 'virtualenv_modules': [
@@ -105,6 +111,17 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             self.fatal("repo_file not supplied.")
         if 'repack_manifests_url' not in self.config:
             self.fatal("repack_manifests_url not supplied.")
+
+    def _pre_config_lock(self, rw_config):
+        if self.config.get('require_buildprops', False) is True:
+            self.read_buildbot_config()
+            if not self.buildbot_config:
+                self.fatal("Unable to load properties from file: %s" % self.config.get('buildbot_json_path'))
+            buildbot_props = self.buildbot_config.get('properties', {})
+            partner = buildbot_props.get('partner')
+            if not partner:
+                self.fatal("No partner specified in buildprops.json.")
+            self.config['partner'] = partner
 
     def query_abs_dirs(self):
         if self.abs_dirs:
