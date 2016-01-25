@@ -8683,7 +8683,7 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
         // optimize if the array buffer can't have been neutered.
         TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
         if (globalKey->hasFlags(constraints(), OBJECT_FLAG_TYPED_OBJECT_NEUTERED)) {
-            trackOptimizationOutcome(TrackedOutcome::TypedObjectNeutered);
+            trackOptimizationOutcome(TrackedOutcome::TypedObjectHasDetachedBuffer);
             return false;
         }
     } else {
