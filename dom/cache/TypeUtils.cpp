@@ -417,8 +417,7 @@ TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
   if (aSchemeValidOut) {
     nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
     *aSchemeValidOut = scheme.LowerCaseEqualsLiteral("http") ||
-                       scheme.LowerCaseEqualsLiteral("https") ||
-                       scheme.LowerCaseEqualsLiteral("app");
+                       scheme.LowerCaseEqualsLiteral("https");
   }
 
   uint32_t queryPos;
