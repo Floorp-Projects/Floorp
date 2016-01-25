@@ -5,6 +5,9 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>mochikit@mozilla.org</em:id>
     <em:version>1.0</em:version>
+#ifdef MOCHITEST_BOOTSTRAP
+    <em:bootstrap>true</em:bootstrap>
+#endif
     <em:targetApplication>
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
