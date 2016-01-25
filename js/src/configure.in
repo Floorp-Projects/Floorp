@@ -1775,13 +1775,9 @@ ia64*-hpux*)
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS="-O2"
         MOZ_FIX_LINK_PATHS=
-        # Disable these flags on clang-cl since it doesn't ignore unknown arguments by default, and
-        # autoconf insists on passing $LDFLAGS to the compiler.
-        if test -z "$CLANG_CL"; then
-            LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
-            if test -z "$DEVELOPER_OPTIONS"; then
-                LDFLAGS="$LDFLAGS -RELEASE"
-            fi
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        if test -z "$DEVELOPER_OPTIONS"; then
+            LDFLAGS="$LDFLAGS -RELEASE"
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
@@ -1835,11 +1831,7 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
-            # Disable this flag on clang-cl since it doesn't ignore unknown arguments by default, and
-            # autoconf insists on passing $LDFLAGS to the compiler.
-            if test -z "$CLANG_CL"; then
-                LDFLAGS="$LDFLAGS -SAFESEH"
-            fi
+            LDFLAGS="$LDFLAGS -SAFESEH"
         fi
 
     	AC_DEFINE(_X86_)
