@@ -195,6 +195,36 @@ function ArrayStaticSome(list, callbackfn/*, thisArg*/) {
     return callFunction(ArraySome, list, callbackfn, T);
 }
 
+/* ES6 draft 2016-1-15 22.1.3.25 Array.prototype.sort (comparefn) */
+function ArraySort(comparefn) {
+    /* Step 1. */
+    var O = ToObject(this);
+
+    /* Step 2. */
+    var len = TO_UINT32(O.length);
+
+    /* 22.1.3.25.1 Runtime Semantics: SortCompare( x, y ) */
+    var wrappedCompareFn = comparefn;
+    comparefn = function(x, y) {
+        /* Steps 1-3. */
+        if (x === undefined) {
+            if (y === undefined)
+                return 0;
+           return 1;
+        }
+        if (y === undefined)
+            return -1;
+
+        /* Step 4.a. */
+        var v = ToNumber(wrappedCompareFn(x, y));
+
+        /* Step 4.b-c. */
+        return v !== v ? 0 : v;
+    }
+
+    return MergeSort(O, len, comparefn);
+}
+
 /* ES5 15.4.4.18. */
 function ArrayForEach(callbackfn/*, thisArg*/) {
     /* Step 1. */
