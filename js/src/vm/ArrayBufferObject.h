@@ -279,8 +279,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     detach(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
 
   private:
-    void neuterView(JSContext* cx, ArrayBufferViewObject* view,
-                    BufferContents newContents);
     void changeViewContents(JSContext* cx, ArrayBufferViewObject* view,
                             uint8_t* oldDataPointer, BufferContents newContents);
     void setFirstView(ArrayBufferViewObject* view);
