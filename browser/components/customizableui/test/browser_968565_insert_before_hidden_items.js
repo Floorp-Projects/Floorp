@@ -12,7 +12,7 @@ var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 // When we drag an item onto a customizable area, and not over a specific target, we
 // should assume that we're appending them to the area. If doing so, we should scan
 // backwards over any hidden items and insert the item before those hidden items.
-add_task(function() {
+add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should be in the default state");
 
   // Iterate backwards over the items in the nav-bar until we find the first

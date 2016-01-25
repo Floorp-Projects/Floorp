@@ -81,6 +81,12 @@ EXTRA_JS_MODULES += [
     'ZipUtils.jsm',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
+    DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
+    DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
+
 EXTRA_PP_JS_MODULES += [
     'AppConstants.jsm',
 ]
@@ -111,6 +117,7 @@ for var in ('ANDROID_PACKAGE_NAME',
             DEFINES[var] = CONFIG[var]
 
 for var in ('MOZ_TOOLKIT_SEARCH',
+            'MOZ_REQUIRE_SIGNING',
             'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
