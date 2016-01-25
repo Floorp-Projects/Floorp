@@ -28,53 +28,66 @@ localStorage.setItem("ls2", "foobar-2");
 sessionStorage.setItem("ss1", "foobar-3");
 dump("added cookies and stuff from main page\n");
 
-function success(event) {
-  setupIDB.next(event);
-}
-
-window.idbGenerator = function*(callback) {
+let idbGenerator = function*() {
   let request = indexedDB.open("idb1", 1);
-  request.onupgradeneeded = success;
-  request.onsuccess = success;
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let event = yield undefined;
-  let db = event.target.result;
-  let store1 = db.createObjectStore("obj1", { keyPath: "id" });
-  store1.createIndex("name", "name", { unique: false });
-  store1.createIndex("email", "email", { unique: true });
-  let store2 = db.createObjectStore("obj2", { keyPath: "id2" });
+  let db = yield new Promise(done => {
+    request.onupgradeneeded = event => {
+      let db = event.target.result;
+      let store1 = db.createObjectStore("obj1", { keyPath: "id" });
+      store1.createIndex("name", "name", { unique: false });
+      store1.createIndex("email", "email", { unique: true });
+      let store2 = db.createObjectStore("obj2", { keyPath: "id2" });
+      store1.transaction.oncomplete = () => {
+        done(db);
+      };
+    };
+  });
 
-  store1.add({id: 1, name: "foo", email: "foo@bar.com"}).onsuccess = success;
-  yield undefined;
-  store1.add({id: 2, name: "foo2", email: "foo2@bar.com"}).onsuccess = success;
-  yield undefined;
-  store1.add({id: 3, name: "foo2", email: "foo3@bar.com"}).onsuccess = success;
-  yield undefined;
+  // Prevents AbortError
+  yield new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  let transaction = db.transaction(["obj1", "obj2"], "readwrite");
+  let store1 = transaction.objectStore("obj1");
+  let store2 = transaction.objectStore("obj2");
+  store1.add({id: 1, name: "foo", email: "foo@bar.com"});
+  store1.add({id: 2, name: "foo2", email: "foo2@bar.com"});
+  store1.add({id: 3, name: "foo2", email: "foo3@bar.com"});
   store2.add({
     id2: 1,
     name: "foo",
     email: "foo@bar.com",
-    extra: "baz"}).onsuccess = success;
-  yield undefined;
+    extra: "baz"
+  });
+  // Prevents AbortError during close()
+  yield new Promise(success => {
+    transaction.oncomplete = success;
+  });
 
-  yield undefined;
   db.close();
 
   request = indexedDB.open("idb2", 1);
-  request.onupgradeneeded = success;
-  request.onsuccess = success;
-  event = yield undefined;
-
-  let db2 = event.target.result;
-  let store3 = db2.createObjectStore("obj3", { keyPath: "id3" });
-  store3.createIndex("name2", "name2", { unique: true });
-
-  yield undefined;
+  let db2 = yield new Promise(done => {
+    request.onupgradeneeded = event => {
+      let db2 = event.target.result;
+      let store3 = db2.createObjectStore("obj3", { keyPath: "id3" });
+      store3.createIndex("name2", "name2", { unique: true });
+      store3.transaction.oncomplete = () => {
+        done(db2);
+      }
+    };
+  });
+  // Prevents AbortError during close()
+  yield new Promise(done => {
+    request.onsuccess = done;
+  });
   db2.close();
+
   dump("added cookies and stuff from main page\n");
-  callback();
 };
 
 function deleteDB(dbName) {
@@ -83,6 +96,10 @@ function deleteDB(dbName) {
     indexedDB.deleteDatabase(dbName).onsuccess = resolve;
   });
 }
+
+window.setup = function*() {
+  yield idbGenerator();
+};
 
 window.clear = function*() {
   document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/browser";

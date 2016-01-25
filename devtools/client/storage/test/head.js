@@ -82,35 +82,20 @@ function addTab(url) {
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 function* openTabAndSetupStorage(url) {
-  /**
-   * This method iterates over iframes in a window and setups the indexed db
-   * required for this test.
-   */
-  let setupIDBInFrames = (w, i, c) => {
-    if (w[i] && w[i].idbGenerator) {
-      w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
-      w[i].setupIDB.next();
-    } else if (w[i] && w[i + 1]) {
-      setupIDBInFrames(w, i + 1, c);
-    } else {
-      c();
-    }
-  };
-
   let content = yield addTab(url);
 
-  let def = promise.defer();
-  // Setup the indexed db in main window.
   gWindow = content.wrappedJSObject;
-  if (gWindow.idbGenerator) {
-    gWindow.setupIDB = gWindow.idbGenerator(() => {
-      setupIDBInFrames(gWindow, 0, () => {
-        def.resolve();
-      });
-    });
-    gWindow.setupIDB.next();
-    yield def.promise;
+
+  // Setup the async storages in main window and for all its iframes
+  let callSetup = function*(win) {
+    if (typeof(win.setup) == "function") {
+      yield win.setup();
+    }
+    for(var i = 0; i < win.frames.length; i++) {
+      yield callSetup(win.frames[i]);
+    }
   }
+  yield callSetup(gWindow);
 
   // open storage inspector
   return yield openStoragePanel();
