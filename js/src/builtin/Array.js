@@ -14,8 +14,8 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
     if (len === 0)
         return -1;
 
-    /* Step 5. */
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) : 0;
+    /* Step 5.  Add zero to convert -0 to +0, per ES6 5.2. */
+    var n = arguments.length > 1 ? ToInteger(arguments[1]) + 0 : 0;
 
     /* Step 6. */
     if (n >= len)
@@ -70,8 +70,8 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
     if (len === 0)
         return -1;
 
-    /* Step 5. */
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
+    /* Step 5.  Add zero to convert -0 to +0, per ES6 5.2. */
+    var n = arguments.length > 1 ? ToInteger(arguments[1]) + 0 : len - 1;
 
     /* Steps 6-7. */
     var k;
