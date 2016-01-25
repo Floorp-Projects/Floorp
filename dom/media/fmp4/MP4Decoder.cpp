@@ -213,7 +213,8 @@ static const uint8_t sTestH264ExtraData[] = {
 
 static already_AddRefed<MediaDataDecoder>
 CreateTestH264Decoder(layers::LayersBackend aBackend,
-                      VideoInfo& aConfig)
+                      VideoInfo& aConfig,
+                      FlushableTaskQueue* aTaskQueue)
 {
   aConfig.mMimeType = "video/avc";
   aConfig.mId = 1;
@@ -229,23 +230,60 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   RefPtr<MediaDataDecoder> decoder(
-    platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
+    platform->CreateDecoder(aConfig, aTaskQueue, nullptr, aBackend, nullptr));
 
   return decoder.forget();
 }
 
-/* static */ bool
-MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFailureReason)
+/* static */ already_AddRefed<dom::Promise>
+MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* aParent)
 {
-  VideoInfo config;
-  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
-  if (!decoder) {
-    aFailureReason.AssignLiteral("Failed to create H264 decoder");
-    return false;
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise;
+  promise = dom::Promise::Create(aParent, rv);
+  if (rv.Failed()) {
+    rv.SuppressException();
+    return nullptr;
   }
-  bool result = decoder->IsHardwareAccelerated(aFailureReason);
-  decoder->Shutdown();
-  return result;
+  RefPtr<FlushableTaskQueue> taskQueue =
+    new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  VideoInfo config;
+  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config, taskQueue));
+  if (!decoder) {
+    promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to create H264 decoder"));
+    return promise.forget();
+  }
+
+  decoder->Init()
+    ->Then(AbstractThread::MainThread(), __func__,
+           [promise, decoder, taskQueue] (TrackInfo::TrackType aTrack) {
+             nsCString failureReason;
+             bool ok = decoder->IsHardwareAccelerated(failureReason);
+             nsAutoString result;
+             if (ok) {
+               result.AssignLiteral("Yes");
+             } else {
+               result.AssignLiteral("No");
+               if (failureReason.Length()) {
+                 result.AppendLiteral("; ");
+                 AppendUTF8toUTF16(failureReason, result);
+               }
+             }
+             promise->MaybeResolve(result);
+             decoder->Shutdown();
+             taskQueue->BeginShutdown();
+             taskQueue->AwaitShutdownAndIdle();
+           },
+           [promise, decoder, taskQueue] (MediaDataDecoder::DecoderFailureReason aResult) {
+             promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to initialize H264 decoder"));
+             decoder->Shutdown();
+             taskQueue->BeginShutdown();
+             taskQueue->AwaitShutdownAndIdle();
+           });
+
+  return promise.forget();
 }
 
 void
