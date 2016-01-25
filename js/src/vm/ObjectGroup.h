@@ -554,14 +554,14 @@ class ObjectGroupCompartment
 
     struct PlainObjectKey;
     struct PlainObjectEntry;
-    struct PlainObjectGCPolicy : public DefaultMapGCPolicy<PlainObjectKey, PlainObjectEntry> {
+    struct PlainObjectTableSweepPolicy {
         static bool needsSweep(PlainObjectKey* key, PlainObjectEntry* entry);
     };
     using PlainObjectTable = js::GCHashMap<PlainObjectKey,
                                            PlainObjectEntry,
                                            PlainObjectKey,
                                            SystemAllocPolicy,
-                                           PlainObjectGCPolicy>;
+                                           PlainObjectTableSweepPolicy>;
 
     // Tables for managing groups common to the contents of large script
     // singleton objects and JSON objects. These are vanilla ArrayObjects and

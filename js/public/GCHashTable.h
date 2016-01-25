@@ -15,12 +15,9 @@ namespace js {
 
 // Define a reasonable default GC policy for GC-aware Maps.
 template <typename Key, typename Value>
-struct DefaultMapGCPolicy {
-    using KeyPolicy = DefaultGCPolicy<Key>;
-    using ValuePolicy = DefaultGCPolicy<Value>;
-
+struct DefaultMapSweepPolicy {
     static bool needsSweep(Key* key, Value* value) {
-        return KeyPolicy::needsSweep(key) || ValuePolicy::needsSweep(value);
+        return DefaultGCPolicy<Key>::needsSweep(key) || DefaultGCPolicy<Value>::needsSweep(value);
     }
 };
 
@@ -50,7 +47,7 @@ template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
-          typename GCPolicy = DefaultMapGCPolicy<Key, Value>>
+          typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
 class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
                   public JS::Traceable
 {
@@ -64,8 +61,8 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            GCPolicy::ValuePolicy::trace(trc, &e.front().value(), "hashmap value");
-            GCPolicy::KeyPolicy::trace(trc, &e.front().mutableKey(), "hashmap key");
+            DefaultGCPolicy<Value>::trace(trc, &e.front().value(), "hashmap value");
+            DefaultGCPolicy<Key>::trace(trc, &e.front().mutableKey(), "hashmap key");
         }
     }
 
@@ -74,7 +71,7 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
             return;
 
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            if (GCPolicy::needsSweep(&e.front().mutableKey(), &e.front().value()))
+            if (MapSweepPolicy::needsSweep(&e.front().mutableKey(), &e.front().value()))
                 e.removeFront();
         }
     }
@@ -97,8 +94,8 @@ template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
-          typename GCPolicy = DefaultMapGCPolicy<Key, Value>>
-class GCRekeyableHashMap : public GCHashMap<Key, Value, HashPolicy, AllocPolicy, GCPolicy>
+          typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
+class GCRekeyableHashMap : public GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>
 {
     using Base = GCHashMap<Key, Value, HashPolicy, AllocPolicy>;
 
@@ -111,7 +108,7 @@ class GCRekeyableHashMap : public GCHashMap<Key, Value, HashPolicy, AllocPolicy,
 
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
             Key key(e.front().key());
-            if (GCPolicy::needsSweep(&key, &e.front().value()))
+            if (MapSweepPolicy::needsSweep(&key, &e.front().value()))
                 e.removeFront();
             else if (!HashPolicy::match(key, e.front().key()))
                 e.rekeyFront(key);
@@ -227,8 +224,7 @@ class HandleBase<GCHashMap<A,B,C,D,E>>
 // manually.
 template <typename T,
           typename HashPolicy = DefaultHasher<T>,
-          typename AllocPolicy = TempAllocPolicy,
-          typename GCPolicy = DefaultGCPolicy<T>>
+          typename AllocPolicy = TempAllocPolicy>
 class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
                   public JS::Traceable
 {
@@ -242,14 +238,14 @@ class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront())
-            GCPolicy::trace(trc, &e.mutableFront(), "hashset element");
+            DefaultGCPolicy<T>::trace(trc, &e.mutableFront(), "hashset element");
     }
 
     void sweep() {
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            if (GCPolicy::needsSweep(&e.mutableFront()))
+            if (DefaultGCPolicy<T>::needsSweep(&e.mutableFront()))
                 e.removeFront();
         }
     }
@@ -336,40 +332,40 @@ class MutableGCHashSetOperations
     }
 };
 
-template <typename T, typename HP, typename AP, typename GP>
-class RootedBase<GCHashSet<T, HP, AP, GP>>
-  : public MutableGCHashSetOperations<JS::Rooted<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
+template <typename T, typename HP, typename AP>
+class RootedBase<GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::Rooted<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP>;
 
-    friend class GCHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
+    friend class GCHashSetOperations<JS::Rooted<Set>, T, HP, AP>;
     const Set& extract() const { return *static_cast<const JS::Rooted<Set>*>(this)->address(); }
 
-    friend class MutableGCHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
+    friend class MutableGCHashSetOperations<JS::Rooted<Set>, T, HP, AP>;
     Set& extract() { return *static_cast<JS::Rooted<Set>*>(this)->address(); }
 };
 
-template <typename T, typename HP, typename AP, typename GP>
-class MutableHandleBase<GCHashSet<T, HP, AP, GP>>
-  : public MutableGCHashSetOperations<JS::MutableHandle<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
+template <typename T, typename HP, typename AP>
+class MutableHandleBase<GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::MutableHandle<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP>;
 
-    friend class GCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
+    friend class GCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP>;
     const Set& extract() const {
         return *static_cast<const JS::MutableHandle<Set>*>(this)->address();
     }
 
-    friend class MutableGCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
+    friend class MutableGCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP>;
     Set& extract() { return *static_cast<JS::MutableHandle<Set>*>(this)->address(); }
 };
 
-template <typename T, typename HP, typename AP, typename GP>
-class HandleBase<GCHashSet<T, HP, AP, GP>>
-  : public GCHashSetOperations<JS::Handle<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
+template <typename T, typename HP, typename AP>
+class HandleBase<GCHashSet<T, HP, AP>>
+  : public GCHashSetOperations<JS::Handle<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP, GP>;
-    friend class GCHashSetOperations<JS::Handle<Set>, T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP>;
+    friend class GCHashSetOperations<JS::Handle<Set>, T, HP, AP>;
     const Set& extract() const { return *static_cast<const JS::Handle<Set>*>(this)->address(); }
 };
 
