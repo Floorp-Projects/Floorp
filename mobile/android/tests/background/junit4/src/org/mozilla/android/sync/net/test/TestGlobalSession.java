@@ -114,7 +114,7 @@ public class TestGlobalSession {
 
       final HttpResponse response = new BasicHttpResponse(
         new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 503, "Illegal method/protocol"));
-      response.addHeader("X-Weave-Backoff", Long.toString(TEST_BACKOFF_IN_SECONDS)); // Backoff given in seconds.
+      response.setHeader("X-Weave-Backoff", Long.toString(TEST_BACKOFF_IN_SECONDS)); // Backoff given in seconds.
 
       getTestWaiter().performWait(WaitHelper.onThreadRunnable(new Runnable() {
         @Override
@@ -245,7 +245,7 @@ public class TestGlobalSession {
       @Override
       public void handle(Request request, Response response) {
         if (stageShouldBackoff) {
-          response.set("X-Weave-Backoff", Long.toString(TEST_BACKOFF_IN_SECONDS));
+          response.addValue("X-Weave-Backoff", Long.toString(TEST_BACKOFF_IN_SECONDS));
         }
         super.handle(request, response);
       }

@@ -88,6 +88,8 @@ class VCMSessionInfo {
   int Tl0PicId() const;
   bool NonReference() const;
 
+  void SetGofInfo(const GofInfoVP9& gof_info, size_t idx);
+
   // The number of packets discarded because the decoder can't make use of
   // them.
   int packets_not_decodable() const;

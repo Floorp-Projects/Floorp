@@ -14,7 +14,7 @@ function insertClassNameToMenuChildren(parentMenu) {
 }
 
 function checkSubviewButtonClass(menuId, buttonId, subviewId) {
-  return function() {
+  return function*() {
     info("Checking for items without the subviewbutton class in " + buttonId + " widget");
     let menu = document.getElementById(menuId);
     insertClassNameToMenuChildren(menu);

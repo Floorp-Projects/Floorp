@@ -12,7 +12,7 @@ registerCleanupFunction(function() {
 
 // Right-click on an item within the overflow panel should
 // show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
 
   overflowPanel.setAttribute("animate", "false");
 

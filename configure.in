@@ -1692,15 +1692,6 @@ if test -n "$MOZ_USE_SYSTRACE"; then
     AC_DEFINE(MOZ_USE_SYSTRACE)
 fi
 
-# For profiling builds keep the symbol information
-if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
-    case "$OS_TARGET" in
-    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-        STRIP_FLAGS="--strip-debug"
-        ;;
-    esac
-fi
-
 dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
@@ -1798,6 +1789,38 @@ if test -n "$MOZ_VTUNE"; then
     MOZ_PROFILING=1
     AC_DEFINE(MOZ_VTUNE)
 fi
+
+# For profiling builds keep the symbol information
+if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
+    case "$OS_TARGET" in
+    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+        STRIP_FLAGS="--strip-debug"
+        ;;
+    esac
+fi
+
+dnl ========================================================
+dnl = Enable DMD
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(dmd,
+[  --enable-dmd            Enable DMD; also enables jemalloc, replace-malloc and profiling],
+    MOZ_DMD=1,
+    MOZ_DMD= )
+
+if test "$MOZ_DMD"; then
+    AC_DEFINE(MOZ_DMD)
+
+    if test "${CPU_ARCH}" = "arm"; then
+        CFLAGS="$CFLAGS -funwind-tables"
+        CXXFLAGS="$CXXFLAGS -funwind-tables"
+    fi
+
+    MOZ_MEMORY=1                        # DMD enables jemalloc
+    MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
+    MOZ_PROFILING=1                     # DMD enables profiling
+fi
+AC_SUBST(MOZ_DMD)
 
 dnl ========================================================
 dnl Profiling
@@ -7061,28 +7084,6 @@ fi
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_DUMP_PAINTING)
 fi
-
-dnl ========================================================
-dnl = Enable DMD
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc],
-    MOZ_DMD=1,
-    MOZ_DMD= )
-
-if test "$MOZ_DMD"; then
-    AC_DEFINE(MOZ_DMD)
-
-    if test "${CPU_ARCH}" = "arm"; then
-        CFLAGS="$CFLAGS -funwind-tables"
-        CXXFLAGS="$CXXFLAGS -funwind-tables"
-    fi
-
-    MOZ_MEMORY=1                        # DMD enables jemalloc
-    MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
-fi
-AC_SUBST(MOZ_DMD)
 
 dnl ========================================================
 dnl = Enable jemalloc
