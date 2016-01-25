@@ -6,7 +6,10 @@
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
-add_task(function* test() {
+add_task(function* capture() {
+  if (!shouldCapture()) {
+    return;
+  }
   let { TestRunner } = Cu.import("chrome://mozscreenshots/content/TestRunner.jsm", {});
   let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
   let setsEnv = env.get("MOZSCREENSHOTS_SETS");
