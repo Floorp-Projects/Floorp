@@ -2068,13 +2068,14 @@ Neuter(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    NeuterDataDisposition changeData;
     RootedString str(cx, JS::ToString(cx, args[1]));
     if (!str)
         return false;
     JSAutoByteString dataDisposition(cx, str);
     if (!dataDisposition)
         return false;
+
+    DetachDataDisposition changeData;
     if (strcmp(dataDisposition.ptr(), "same-data") == 0) {
         changeData = KeepData;
     } else if (strcmp(dataDisposition.ptr(), "change-data") == 0) {
@@ -2084,7 +2085,7 @@ Neuter(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!JS_NeuterArrayBuffer(cx, obj, changeData))
+    if (!JS_DetachArrayBuffer(cx, obj, changeData))
         return false;
 
     args.rval().setUndefined();
