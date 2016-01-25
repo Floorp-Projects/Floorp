@@ -75,7 +75,7 @@
  *   which can be either an array buffer or an inline typed object. Outline
  *   typed objects may be attached or unattached. An unattached typed object
  *   has no data associated with it. When first created, objects are always
- *   attached, but they can become unattached if their buffer is neutered.
+ *   attached, but they can become unattached if their buffer becomes detached.
  *
  * Note that whether a typed object is opaque is not directly
  * connected to its type. That is, opaque types are *always*
