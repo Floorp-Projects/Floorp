@@ -33,6 +33,10 @@ public:
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;
+  const char* GetDescriptionName() const override
+  {
+    return "libvpx video decoder";
+  }
 
   // Return true if mimetype is a VPX codec
   static bool IsVPX(const nsACString& aMimeType);

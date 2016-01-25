@@ -5880,7 +5880,6 @@ private:
     RefPtr<FullscreenTransitionTask> mTask;
   };
 
-  static const uint32_t kNextPaintTimeout = 1000; // ms
   static const char* const kPaintedTopic;
 
   RefPtr<nsGlobalWindow> mWindow;
@@ -5940,8 +5939,14 @@ FullscreenTransitionTask::Run()
     // Completely fixing those cases seems to be tricky, and since they
     // should rarely happen, it probably isn't worth to fix. Hence we
     // simply add a timeout here to ensure we never hang forever.
+    // In addition, if the page is complicated or the machine is less
+    // powerful, layout could take a long time, in which case, staying
+    // in black screen for that long could hurt user experience even
+    // more than exposing an intermediate state.
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mTimer->Init(observer, kNextPaintTimeout, nsITimer::TYPE_ONE_SHOT);
+    uint32_t timeout =
+      Preferences::GetUint("full-screen-api.transition.timeout", 500);
+    mTimer->Init(observer, timeout, nsITimer::TYPE_ONE_SHOT);
   } else if (stage == eAfterToggle) {
     mWidget->PerformFullscreenTransition(nsIWidget::eAfterFullscreenToggle,
                                          mDuration.mFadeOut, mTransitionData,

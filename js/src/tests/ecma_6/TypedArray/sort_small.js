@@ -1,22 +1,3 @@
-function swapElements(arr, i, j) {
-    var swap = arr[i];
-    arr[i] = arr[j];
-    arr[j] = swap;
-}
-
-// Yield every permutation of the elements in some iterable.
-function *permutations(items) {
-    if (items.length == 0) {
-        yield [];
-    } else {
-        for (let i = 0; i < items.length; i++) {
-            swapElements(items, 0, i);
-            for (let e of permutations(items.slice(1, items.length)))
-                yield [items[0]].concat(e);
-        }
-    }
-}
-
 // Pre-sorted test data, it's important that these arrays remain in ascending order.
 let i32  = [-2147483648, -320000, -244000, 2147483647]
 let u32  = [0, 987632, 4294967295]
@@ -35,7 +16,7 @@ let nans = [1/undefined, NaN, Number.NaN]
 // Sort every possible permutation of an arrays
 function sortAllPermutations(dataType, testData) {
     let reference = new dataType(testData);
-    for (let permutation of permutations(testData))
+    for (let permutation of Permutations(testData))
         assertDeepEq((new dataType(permutation)).sort(), reference);
 }
 
