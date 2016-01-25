@@ -7,7 +7,7 @@
 const kButton = "test_button_for_addon";
 var initialLocation = gBrowser.currentURI.spec;
 
-add_task(function() {
+add_task(function*() {
   info("Check addon button functionality");
 
   // create mocked addon button on the navigation bar
@@ -43,7 +43,7 @@ add_task(function() {
   yield checkButtonFunctionality(addonButtonInPanel[0]);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   resetTabs();
 
   // reset the UI to the default state
@@ -65,7 +65,7 @@ function resetTabs() {
   gBrowser.removeTab(gBrowser.selectedTab);
 }
 
-function checkButtonFunctionality(aButton) {
+function* checkButtonFunctionality(aButton) {
   aButton.click();
   yield waitForCondition(() => gBrowser.currentURI &&
                                gBrowser.currentURI.spec == "about:addons");

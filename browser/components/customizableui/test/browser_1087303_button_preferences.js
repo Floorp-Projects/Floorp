@@ -6,7 +6,7 @@
 
 var newTab = null;
 
-add_task(function() {
+add_task(function*() {
   info("Check preferences button existence and functionality");
 
   yield PanelUI.show();
