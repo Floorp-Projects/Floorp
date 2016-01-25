@@ -48,11 +48,30 @@ struct CodecSpecificInfoVP9 {
   bool hasReceivedRPSI;
   uint64_t pictureIdRPSI;
   int16_t pictureId;  // Negative value to skip pictureId.
-  bool nonReference;
-  uint8_t temporalIdx;
-  bool layerSync;
-  int tl0PicIdx;  // Negative value to skip tl0PicIdx.
-  int8_t keyIdx;  // Negative value to skip keyIdx.
+
+  bool inter_pic_predicted;  // This layer frame is dependent on previously
+                             // coded frame(s).
+  bool flexible_mode;
+  bool ss_data_available;
+
+  int tl0_pic_idx;  // Negative value to skip tl0PicIdx.
+  uint8_t temporal_idx;
+  uint8_t spatial_idx;
+  bool temporal_up_switch;
+  bool inter_layer_predicted;  // Frame is dependent on directly lower spatial
+                               // layer frame.
+  uint8_t gof_idx;
+
+  // SS data.
+  size_t num_spatial_layers;  // Always populated.
+  bool spatial_layer_resolution_present;
+  uint16_t width[kMaxVp9NumberOfSpatialLayers];
+  uint16_t height[kMaxVp9NumberOfSpatialLayers];
+  GofInfoVP9 gof;
+
+  // Frame reference data.
+  uint8_t num_ref_pics;
+  uint8_t p_diff[kMaxVp9RefPics];
 };
 
 struct CodecSpecificInfoGeneric {
