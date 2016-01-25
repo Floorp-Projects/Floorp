@@ -40,8 +40,8 @@ BEGIN_TEST(testMappedArrayBuffer_bug945152)
     // Release the mapped content.
     CHECK(TestReleaseContents());
 
-    // Neuter mapped array buffer.
-    CHECK(TestNeuterObject());
+    // Detach mapped array buffer.
+    CHECK(TestDetachObject());
 
     // Clone mapped array buffer.
     CHECK(TestCloneObject());
@@ -112,11 +112,11 @@ bool TestReleaseContents()
     return true;
 }
 
-bool TestNeuterObject()
+bool TestDetachObject()
 {
     JS::RootedObject obj(cx, CreateNewObject(8, 12));
     CHECK(obj);
-    JS_NeuterArrayBuffer(cx, obj, ChangeData);
+    JS_DetachArrayBuffer(cx, obj, ChangeData);
     CHECK(isNeutered(obj));
 
     return true;
