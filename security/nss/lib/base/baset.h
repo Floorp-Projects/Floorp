@@ -32,7 +32,7 @@ typedef struct nssArenaMarkStr nssArenaMark;
 #ifdef DEBUG
 /*
  * ARENA_THREADMARK
- * 
+ *
  * Optionally, this arena implementation can be compiled with some
  * runtime checking enabled, which will catch the situation where
  * one thread "marks" the arena, another thread allocates memory,
@@ -68,14 +68,13 @@ typedef struct nssArenaMarkStr nssArenaMark;
 
 typedef struct nssListStr nssList;
 typedef struct nssListIteratorStr nssListIterator;
-typedef PRBool (* nssListCompareFunc)(void *a, void *b);
-typedef PRIntn (* nssListSortFunc)(void *a, void *b);
-typedef void (* nssListElementDestructorFunc)(void *el);
+typedef PRBool (*nssListCompareFunc)(void *a, void *b);
+typedef PRIntn (*nssListSortFunc)(void *a, void *b);
+typedef void (*nssListElementDestructorFunc)(void *el);
 
 typedef struct nssHashStr nssHash;
-typedef void (PR_CALLBACK *nssHashIterator)(const void *key, 
-                                            void *value, 
-                                            void *arg);
+typedef void(PR_CALLBACK *nssHashIterator)(const void *key, void *value,
+                                           void *arg);
 
 /*
  * nssPointerTracker
@@ -89,9 +88,9 @@ typedef void (PR_CALLBACK *nssHashIterator)(const void *key,
 
 #ifdef DEBUG
 struct nssPointerTrackerStr {
-  PRCallOnceType once;
-  PZLock *lock;
-  PLHashTable *table;
+    PRCallOnceType once;
+    PZLock *lock;
+    PLHashTable *table;
 };
 typedef struct nssPointerTrackerStr nssPointerTracker;
 #endif /* DEBUG */
@@ -107,16 +106,16 @@ typedef struct nssPointerTrackerStr nssPointerTracker;
  */
 
 enum nssStringTypeEnum {
-  nssStringType_DirectoryString,
-  nssStringType_TeletexString, /* Not "teletext" with trailing 't' */
-  nssStringType_PrintableString,
-  nssStringType_UniversalString,
-  nssStringType_BMPString,
-  nssStringType_UTF8String,
-  nssStringType_PHGString,
-  nssStringType_GeneralString,
+    nssStringType_DirectoryString,
+    nssStringType_TeletexString, /* Not "teletext" with trailing 't' */
+    nssStringType_PrintableString,
+    nssStringType_UniversalString,
+    nssStringType_BMPString,
+    nssStringType_UTF8String,
+    nssStringType_PHGString,
+    nssStringType_GeneralString,
 
-  nssStringType_Unknown = -1
+    nssStringType_Unknown = -1
 };
 typedef enum nssStringTypeEnum nssStringType;
 
