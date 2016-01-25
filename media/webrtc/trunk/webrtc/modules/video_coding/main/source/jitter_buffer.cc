@@ -16,7 +16,7 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/base/trace_event.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/frame_buffer.h"
 #include "webrtc/modules/video_coding/main/source/inter_frame_delay.h"
@@ -195,7 +195,7 @@ bool Vp9SsMap::TimeForCleanup(uint32_t timestamp) const {
 }
 
 void Vp9SsMap::AdvanceFront(uint32_t timestamp) {
-  RTC_DCHECK(!ss_map_.empty());
+  DCHECK(!ss_map_.empty());
   GofInfoVP9 gof = ss_map_.begin()->second;
   ss_map_.erase(ss_map_.begin());
   ss_map_[timestamp] = gof;

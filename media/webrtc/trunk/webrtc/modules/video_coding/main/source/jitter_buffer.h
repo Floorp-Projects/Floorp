@@ -75,6 +75,37 @@ class FrameList
   void Reset(UnorderedFrameList* free_frames);
 };
 
+class Vp9SsMap {
+ public:
+  typedef std::map<uint32_t, GofInfoVP9, TimestampLessThan> SsMap;
+  bool Insert(const VCMPacket& packet);
+  void Reset();
+
+  // Removes SS data that are older than |timestamp|.
+  // The |timestamp| should be an old timestamp, i.e. packets with older
+  // timestamps should no longer be inserted.
+  void RemoveOld(uint32_t timestamp);
+
+  bool UpdatePacket(VCMPacket* packet);
+  void UpdateFrames(FrameList* frames);
+
+  // Public for testing.
+  // Returns an iterator to the corresponding SS data for the input |timestamp|.
+  bool Find(uint32_t timestamp, SsMap::iterator* it);
+
+ private:
+  // These two functions are called by RemoveOld.
+  // Checks if it is time to do a clean up (done each kSsCleanupIntervalSec).
+  bool TimeForCleanup(uint32_t timestamp) const;
+
+  // Advances the oldest SS data to handle timestamp wrap in cases where SS data
+  // are received very seldom (e.g. only once in beginning, second when
+  // IsNewerTimestamp is not true).
+  void AdvanceFront(uint32_t timestamp);
+
+  SsMap ss_map_;
+};
+
 class VCMJitterBuffer {
  public:
   VCMJitterBuffer(Clock* clock,
@@ -214,6 +245,12 @@ class VCMJitterBuffer {
   // Returns true if |frame| is continuous in the |last_decoded_state_|, taking
   // all decodable frames into account.
   bool IsContinuous(const VCMFrameBuffer& frame) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  // Looks for frames in |incomplete_frames_| which are continuous in the
+  // provided |decoded_state|. Starts the search from the timestamp of
+  // |decoded_state|.
+  void FindAndInsertContinuousFramesWithState(
+      const VCMDecodingState& decoded_state)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
   // Looks for frames in |incomplete_frames_| which are continuous in
   // |last_decoded_state_| taking all decodable frames into account. Starts
