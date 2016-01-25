@@ -1856,7 +1856,7 @@ struct FramesWithDepth
   {}
 
   bool operator<(const FramesWithDepth& aOther) const {
-    if (mDepth != aOther.mDepth) {
+    if (!FuzzyEqual(mDepth,aOther.mDepth, 0.1)) {
       // We want to sort so that the shallowest item (highest depth value) is first
       return mDepth > aOther.mDepth;
     }
