@@ -1,0 +1,55 @@
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+xul|scrollbar {
+  -moz-appearance: none !important;
+  position: relative;
+  background-color: transparent;
+  background-image: none;
+  z-index: 2147483647;
+  padding: 2px;
+}
+
+:root[platform="mac"] xul|scrollbar {
+  border: none;
+}
+
+/* Scrollbar code will reset the margin to the correct side depending on
+   where layout actually puts the scrollbar */
+xul|scrollbar[orient="vertical"] {
+  margin-left: -10px;
+  min-width: 10px;
+  max-width: 10px;
+}
+
+xul|scrollbar[orient="horizontal"] {
+  margin-top: -10px;
+  min-height: 10px;
+  max-height: 10px;
+}
+
+:root[platform="mac"] xul|slider {
+  -moz-appearance: none !important;
+}
+
+:root[platform="mac"] xul|thumb {
+  -moz-appearance: none !important;
+  border-radius: 3px;
+}
+
+xul|scrollbar xul|thumb {
+  background-color: rgba(170,170,170,0.2) !important;
+}
+
+:root[platform="win"] xul|thumb,
+:root[platform="linux"] xul|thumb {
+  -moz-appearance: none !important;
+  border-width: 0px !important;
+  border-radius: 3px !important;
+}
+
+:root[platform="win"] xul|scrollbar xul|scrollbarbutton,
+:root[platform="linux"] xul|scrollbar xul|scrollbarbutton,
+:root[platform="win"] xul|scrollbar xul|gripper,
+:root[platform="linux"] xul|scrollbar xul|gripper {
+  display: none;
+}
