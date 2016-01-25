@@ -154,7 +154,7 @@ function removeXULButtonForWindow(win) {
 var otherWin;
 
 // Moving widgets in two windows, one with customize mode and one without, should work.
-add_task(function MoveWidgetsInTwoWindows() {
+add_task(function* MoveWidgetsInTwoWindows() {
   yield startCustomizing();
   otherWin = yield openAndLoadWindow(null, true);
   yield otherWin.PanelUI.ensureReady();
@@ -180,6 +180,6 @@ add_task(function MoveWidgetsInTwoWindows() {
   removeXULButtonForWindow(window);
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });

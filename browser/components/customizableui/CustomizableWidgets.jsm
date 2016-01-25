@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = ["CustomizableWidgets"];
 Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -40,8 +41,21 @@ const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kWidePanelItemClass = "panel-wide-item";
 
-var gModuleName = "[CustomizableWidgets]";
-#include logging.js
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let scope = {};
+  Cu.import("resource://gre/modules/Console.jsm", scope);
+  let debug;
+  try {
+    debug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
+  } catch (ex) {}
+  let consoleOptions = {
+    maxLogLevel: debug ? "all" : "log",
+    prefix: "CustomizableWidgets",
+  };
+  return new scope.ConsoleAPI(consoleOptions);
+});
+
+
 
 function setAttributes(aNode, aAttrs) {
   let doc = aNode.ownerDocument;
@@ -215,16 +229,16 @@ const CustomizableWidgets = [
               }
               fragment.appendChild(item);
             } catch (e) {
-              ERROR("Error while showing history subview: " + e);
+              log.error("Error while showing history subview: " + e);
             }
           }
           items.appendChild(fragment);
         },
         handleError: function (aError) {
-          LOG("History view tried to show but had an error: " + aError);
+          log.debug("History view tried to show but had an error: " + aError);
         },
         handleCompletion: function (aReason) {
-          LOG("History view is being shown!");
+          log.debug("History view is being shown!");
         },
       });
 
@@ -280,7 +294,7 @@ const CustomizableWidgets = [
       recentlyClosedWindows.addEventListener("click", onRecentlyClosedClick);
     },
     onViewHiding: function(aEvent) {
-      LOG("History view is being hidden!");
+      log.debug("History view is being hidden!");
     }
   }, {
     id: "sync-button",
@@ -540,11 +554,9 @@ const CustomizableWidgets = [
     viewId: "PanelUI-developer",
     shortcutId: "key_devToolboxMenuItem",
     tooltiptext: "developer-button.tooltiptext2",
-#ifdef MOZ_DEV_EDITION
-    defaultArea: CustomizableUI.AREA_NAVBAR,
-#else
-    defaultArea: CustomizableUI.AREA_PANEL,
-#endif
+    defaultArea: AppConstants.MOZ_DEV_EDITION ?
+                   CustomizableUI.AREA_NAVBAR :
+                   CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate the subview with whatever menuitems are in the developer
       // menu. We skip menu elements, because the menu panel has no way
@@ -642,28 +654,6 @@ const CustomizableWidgets = [
                 aEvent.target.ownerDocument.defaultView;
       if (win && typeof win.BrowserOpenAddonsMgr == "function") {
         win.BrowserOpenAddonsMgr();
-      }
-    }
-  }, {
-    id: "preferences-button",
-    defaultArea: CustomizableUI.AREA_PANEL,
-#ifdef XP_WIN
-    label: "preferences-button.labelWin",
-    tooltiptext: "preferences-button.tooltipWin2",
-#else
-#ifdef XP_MACOSX
-    tooltiptext: "preferences-button.tooltiptext.withshortcut",
-    shortcutId: "key_preferencesCmdMac",
-#else
-    tooltiptext: "preferences-button.tooltiptext2",
-#endif
-#endif
-    onCommand: function(aEvent) {
-      let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
-      if (win && typeof win.openPreferences == "function") {
-        win.openPreferences();
       }
     }
   }, {
@@ -1143,6 +1133,29 @@ const CustomizableWidgets = [
     }
   }];
 
+let preferencesButton = {
+  id: "preferences-button",
+  defaultArea: CustomizableUI.AREA_PANEL,
+  onCommand: function(aEvent) {
+    let win = aEvent.target &&
+              aEvent.target.ownerDocument &&
+              aEvent.target.ownerDocument.defaultView;
+    if (win && typeof win.openPreferences == "function") {
+      win.openPreferences();
+    }
+  }
+};
+if (AppConstants.platform == "win") {
+  preferencesButton.label = "preferences-button.labelWin";
+  preferencesButton.tooltiptext = "preferences-button.tooltipWin2";
+} else if (AppConstants.platform == "macosx") {
+  preferencesButton.tooltiptext = "preferences-button.tooltiptext.withshortcut";
+  preferencesButton.shortcutId = "key_preferencesCmdMac";
+} else {
+  preferencesButton.tooltiptext = "preferences-button.tooltiptext2";
+}
+CustomizableWidgets.push(preferencesButton);
+
 if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
   CustomizableWidgets.push({
     id: "panic-button",
@@ -1207,29 +1220,30 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
   });
 }
 
-#ifdef E10S_TESTING_ONLY
-var e10sDisabled = false;
-#ifdef XP_MACOSX
-// On OS X, "Disable Hardware Acceleration" also disables OMTC and forces
-// a fallback to Basic Layers. This is incompatible with e10s.
-e10sDisabled |= Services.prefs.getBoolPref("layers.acceleration.disabled");
-#endif
+if (AppConstants.E10S_TESTING_ONLY) {
+  var e10sDisabled = false;
 
-if (Services.appinfo.browserTabsRemoteAutostart) {
-  CustomizableWidgets.push({
-    id: "e10s-button",
-    disabled: e10sDisabled,
-    defaultArea: CustomizableUI.AREA_PANEL,
-    onBuild: function(aDocument) {
-        node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
-        node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
-    },
-    onCommand: function(aEvent) {
-      let win = aEvent.view;
-      if (win && typeof win.OpenBrowserWindow == "function") {
-        win.OpenBrowserWindow({remote: false});
-      }
-    },
-  });
+  if (AppConstants.platform == "macosx") {
+    // On OS X, "Disable Hardware Acceleration" also disables OMTC and forces
+    // a fallback to Basic Layers. This is incompatible with e10s.
+    e10sDisabled |= Services.prefs.getBoolPref("layers.acceleration.disabled");
+  }
+
+  if (Services.appinfo.browserTabsRemoteAutostart) {
+    CustomizableWidgets.push({
+      id: "e10s-button",
+      disabled: e10sDisabled,
+      defaultArea: CustomizableUI.AREA_PANEL,
+      onBuild: function(aDocument) {
+          node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+          node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      },
+      onCommand: function(aEvent) {
+        let win = aEvent.view;
+        if (win && typeof win.OpenBrowserWindow == "function") {
+          win.OpenBrowserWindow({remote: false});
+        }
+      },
+    });
+  }
 }
-#endif

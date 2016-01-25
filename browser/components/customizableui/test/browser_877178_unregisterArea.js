@@ -45,6 +45,6 @@ add_task(function checkRegisteringAndUnregistering() {
      "everything will return to the default state.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });
