@@ -227,36 +227,6 @@
           </intent-filter>
         </receiver>
 
-        <!-- Activity used for launching non-privileged WebApps via a URL -->
-        <activity android:name="org.mozilla.gecko.Webapp"
-                  android:label="@string/webapp_generic_name"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"
-                  android:launchMode="singleTask"
-                  android:taskAffinity="org.mozilla.gecko.WEBAPP"
-                  android:process=":@ANDROID_PACKAGE_NAME@.Webapp"
-                  android:excludeFromRecents="true"
-                  android:exported="true"
-                  android:theme="@style/Gecko.App">
-          <!-- We export this activity so that it can be launched by explicit
-               intents, in particular old-style WebApp launching homescreen
-               shortcuts. Such shortcuts were made before the new "synthetic
-               APK" WebApps were deployed. See Bug 1032217. -->
-        </activity>
-
-        <!-- Alias Webapp so we can launch it from the package namespace. Prefer
-             to launch with the fully qualified name "org.mozilla.gecko.Webapp". -->
-        <activity-alias android:name=".Webapp"
-                        android:label="@string/webapp_generic_name"
-                        android:targetActivity="org.mozilla.gecko.Webapp">
-            <intent-filter>
-                <action android:name="org.mozilla.gecko.WEBAPP" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
-            </intent-filter>
-        </activity-alias>
-
         <!-- Declare a predefined number of Webapp<num> activities. These are
              used so that each web app can launch in its own process. Keep
              this number in sync with the total number of web apps handled in
