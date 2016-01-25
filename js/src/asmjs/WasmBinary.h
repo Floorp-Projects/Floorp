@@ -27,6 +27,20 @@ class PropertyName;
 
 namespace wasm {
 
+// Module header constants
+static const uint32_t MagicNumber = 0x6d736100; // "\0asm"
+static const uint32_t EncodingVersion = -1;     // experimental
+
+// Module section names:
+static const char SigSection[] =     "sig";
+static const char DeclSection[] =    "decl";
+static const char ExportSection[] =  "export";
+static const char CodeSection[] =    "code";
+static const char EndSection[] =     "";
+
+// Subsection names:
+static const char FuncSubsection[] = "func";
+
 enum class Expr : uint8_t
 {
     // Control opcodes
@@ -331,6 +345,15 @@ class Encoder
         bytecode_[pc] = uint8_t(v);
     }
 
+    template <class T>
+    static const T load(const uint8_t* p) {
+        T t;
+        memcpy(&t, p, sizeof(T));
+        return t;
+    }
+
+    static const uint32_t BadSectionLength = uint32_t(-1);
+
   public:
     explicit Encoder(Bytecode& bytecode)
       : bytecode_(bytecode)
@@ -355,9 +378,11 @@ class Encoder
     }
 
     MOZ_WARN_UNUSED_RESULT bool
-    writeExpr(Expr expr, size_t* offset = nullptr) {
-        return writeEnum(expr, offset);
-    }
+    writeExpr(Expr expr, size_t* offset = nullptr)         { return writeEnum(expr, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeValType(ValType type, size_t* offset = nullptr)   { return writeEnum(type, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeExprType(ExprType type, size_t* offset = nullptr) { return writeEnum(type, offset); }
 
     MOZ_WARN_UNUSED_RESULT bool
     writeU8(uint8_t i, size_t* offset = nullptr)   { return write<uint8_t>(i, offset); }
@@ -389,6 +414,25 @@ class Encoder
                 return false;
         }
         return true;
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool writeCString(const char* cstr) {
+        MOZ_ASSERT(cstr);
+        return bytecode_.append(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr) + 1);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool startSection(size_t* offset) {
+        if (!writeU32(BadSectionLength))
+            return false;
+        *offset = bytecode_.length();
+        return true;
+    }
+    void finishSection(size_t offset) {
+        uint8_t* patchAt = bytecode_.begin() + offset - sizeof(uint32_t);
+        MOZ_ASSERT(patchAt <= bytecode_.end() - sizeof(uint32_t));
+        MOZ_ASSERT(load<uint32_t>(patchAt) == BadSectionLength);
+        uint32_t numBytes = bytecode_.length() - offset;
+        memcpy(patchAt, &numBytes, sizeof(uint32_t));
     }
 
 #ifdef DEBUG
@@ -427,7 +471,8 @@ class Decoder
     read(T* out) {
         if (uintptr_t(end_ - cur_) < sizeof(T))
             return false;
-        memcpy((void*)out, cur_, sizeof(T));
+        if (out)
+            memcpy((void*)out, cur_, sizeof(T));
         cur_ += sizeof(T);
         return true;
     }
@@ -440,7 +485,8 @@ class Decoder
         uint8_t u8;
         if (!read(&u8))
             return false;
-        *out = T(u8);
+        if (out)
+            *out = T(u8);
         return true;
     }
 
@@ -474,6 +520,13 @@ class Decoder
     }
 
   public:
+    Decoder(const uint8_t* begin, const uint8_t* end)
+      : beg_(begin),
+        end_(end),
+        cur_(begin)
+    {
+        MOZ_ASSERT(begin <= end);
+    }
     explicit Decoder(const Bytecode& bytecode)
       : beg_(bytecode.begin()),
         end_(bytecode.end()),
@@ -485,58 +538,120 @@ class Decoder
         return cur_ == end_;
     }
 
+    const uint8_t* currentPosition() const {
+        return cur_;
+    }
+    size_t currentOffset() const {
+        return cur_ - beg_;
+    }
     void assertCurrentIs(const DebugOnly<size_t> offset) const {
-        MOZ_ASSERT(size_t(cur_ - beg_) == offset);
+        MOZ_ASSERT(currentOffset() == offset);
     }
 
     // The fallible unpacking API should be used when we're not assuming
     // anything about the bytecode, in particular if it is well-formed.
-    MOZ_WARN_UNUSED_RESULT bool readU8 (uint8_t* i)         { return read(i); }
-    MOZ_WARN_UNUSED_RESULT bool readI32(int32_t* i)         { return read(i); }
-    MOZ_WARN_UNUSED_RESULT bool readF32(float* f)           { return read(f); }
-    MOZ_WARN_UNUSED_RESULT bool readU32(uint32_t* u)        { return read(u); }
-    MOZ_WARN_UNUSED_RESULT bool readF64(double* d)          { return read(d); }
+    MOZ_WARN_UNUSED_RESULT bool readU8 (uint8_t* i = nullptr)  { return read(i); }
+    MOZ_WARN_UNUSED_RESULT bool readI32(int32_t* i = nullptr)  { return read(i); }
+    MOZ_WARN_UNUSED_RESULT bool readF32(float* f = nullptr)    { return read(f); }
+    MOZ_WARN_UNUSED_RESULT bool readU32(uint32_t* u = nullptr) { return read(u); }
+    MOZ_WARN_UNUSED_RESULT bool readF64(double* d = nullptr)   { return read(d); }
 
-    MOZ_WARN_UNUSED_RESULT bool readI32X4(jit::SimdConstant* c) {
+    MOZ_WARN_UNUSED_RESULT bool readI32X4(jit::SimdConstant* c = nullptr) {
         int32_t v[4] = { 0, 0, 0, 0 };
         for (size_t i = 0; i < 4; i++) {
             if (!readI32(&v[i]))
                 return false;
         }
-        *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+        if (c)
+            *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readF32X4(jit::SimdConstant* c) {
+    MOZ_WARN_UNUSED_RESULT bool readF32X4(jit::SimdConstant* c = nullptr) {
         float v[4] = { 0., 0., 0., 0. };
         for (size_t i = 0; i < 4; i++) {
             if (!readF32(&v[i]))
                 return false;
         }
-        *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+        if (c)
+            *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
         return true;
     }
 
-    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* decoded) {
-        *decoded = 0;
+    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* out = nullptr) {
+        uint32_t u32 = 0;
         uint8_t byte;
         uint32_t shift = 0;
         do {
             if (!readU8(&byte))
                 return false;
             if (!(byte & 0x80)) {
-                *decoded |= uint32_t(byte & 0x7F) << shift;
+                if (out)
+                    *out = u32 | uint32_t(byte & 0x7F) << shift;
                 return true;
             }
-            *decoded |= uint32_t(byte & 0x7F) << shift;
+            u32 |= uint32_t(byte & 0x7F) << shift;
             shift += 7;
         } while (shift != 28);
         if (!readU8(&byte) || (byte & 0xF0))
             return false;
-        *decoded |= uint32_t(byte) << 28;
+        if (out)
+            *out = u32 | uint32_t(byte) << 28;
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
+    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr = nullptr) {
         return readEnum(expr);
+    }
+    MOZ_WARN_UNUSED_RESULT bool readValType(ValType* type = nullptr) {
+        return readEnum(type);
+    }
+    MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type = nullptr) {
+        return readEnum(type);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool readCString(const char** cstr = nullptr) {
+        if (cstr)
+            *cstr = reinterpret_cast<const char*>(cur_);
+        for (; cur_ != end_; cur_++) {
+            if (!*cur_) {
+                cur_++;
+                return true;
+            }
+        }
+        return false;
+    }
+    MOZ_WARN_UNUSED_RESULT bool readCStringIf(const char* tag) {
+        for (const uint8_t* p = cur_; p != end_; p++, tag++) {
+            if (*p != *tag)
+                return false;
+            if (!*p) {
+                cur_ = p + 1;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool startSection(uint32_t* offset) {
+        uint32_t unused;
+        if (!readU32(&unused))
+            return false;
+        *offset = currentOffset();
+        return true;
+    }
+    MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t offset) {
+        const uint8_t* start = beg_ + offset;
+        uint32_t numBytes;
+        memcpy(&numBytes, start - sizeof(uint32_t), sizeof(uint32_t));
+        return numBytes == uintptr_t(cur_ - start);
+    }
+    MOZ_WARN_UNUSED_RESULT bool skipSection() {
+        uint32_t numBytes;
+        if (!readU32(&numBytes))
+            return false;
+        if (uintptr_t(end_ - cur_) < numBytes)
+            return false;
+        cur_ += numBytes;
+        return true;
     }
 
     // The infallible unpacking API should be used when we are sure that the
