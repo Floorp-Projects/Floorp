@@ -5,16 +5,30 @@
 "use strict";
 
 const {AddonWatcher} = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
-let TestRunner;
 
 function setup() {
   requestLongerTimeout(10);
 
   info("Checking for mozscreenshots extension");
-  AddonManager.getAddonByID("mozscreenshots@mozilla.org", function(aAddon) {
-    isnot(aAddon, null, "The mozscreenshots extension should be installed");
-    AddonWatcher.ignoreAddonPermanently(aAddon.id);
+  return new Promise((resolve) => {
+    AddonManager.getAddonByID("mozscreenshots@mozilla.org", function(aAddon) {
+      isnot(aAddon, null, "The mozscreenshots extension should be installed");
+      AddonWatcher.ignoreAddonPermanently(aAddon.id);
+      resolve();
+    });
   });
+}
+
+function shouldCapture() {
+  // Automation isn't able to schedule test jobs to only run on nightlies so we handle it here
+  // (see also: bug 1116275). Try pushes and local builds should also capture.
+  let capture = AppConstants.MOZ_UPDATE_CHANNEL == "nightly" ||
+                AppConstants.SOURCE_REVISION_URL.includes("/try/rev/") ||
+                AppConstants.SOURCE_REVISION_URL == "";
+  if (!capture) {
+    ok(true, "Capturing is disabled for this MOZ_UPDATE_CHANNEL or REPO");
+  }
+  return capture;
 }
 
 add_task(setup);
