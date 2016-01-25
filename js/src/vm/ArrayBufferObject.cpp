@@ -274,7 +274,7 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!cx->global()->getGroup(cx))
             oomUnsafe.crash("ArrayBufferObject::neuter");
-        MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
+        MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
         cx->compartment()->neuteredTypedObjects = 1;
     }
 
