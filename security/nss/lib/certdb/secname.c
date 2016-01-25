@@ -4,7 +4,7 @@
 
 #include "cert.h"
 #include "secoid.h"
-#include "secder.h"	/* XXX remove this when remove the DERTemplates */
+#include "secder.h" /* XXX remove this when remove the DERTemplates */
 #include "secasn1.h"
 #include "secitem.h"
 #include <stdarg.h>
@@ -12,29 +12,25 @@
 #include "certi.h"
 
 static const SEC_ASN1Template cert_AVATemplate[] = {
-    { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(CERTAVA) },
-    { SEC_ASN1_OBJECT_ID,
-	  offsetof(CERTAVA,type), },
-    { SEC_ASN1_ANY,
-	  offsetof(CERTAVA,value), },
-    { 0, }
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CERTAVA) },
+    { SEC_ASN1_OBJECT_ID, offsetof(CERTAVA, type) },
+    { SEC_ASN1_ANY, offsetof(CERTAVA, value) },
+    { 0 }
 };
 
 const SEC_ASN1Template CERT_RDNTemplate[] = {
-    { SEC_ASN1_SET_OF,
-	  offsetof(CERTRDN,avas), cert_AVATemplate, sizeof(CERTRDN) }
+    { SEC_ASN1_SET_OF, offsetof(CERTRDN, avas), cert_AVATemplate,
+      sizeof(CERTRDN) }
 };
-
 
 static int
 CountArray(void **array)
 {
     int count = 0;
     if (array) {
-	while (*array++) {
-	    count++;
-	}
+        while (*array++) {
+            count++;
+        }
     }
     return count;
 }
@@ -49,36 +45,37 @@ AddToArray(PLArenaPool *arena, void **array, void *element)
     count = 0;
     ap = array;
     if (ap) {
-	while (*ap++) {
-	    count++;
-	}
+        while (*ap++) {
+            count++;
+        }
     }
 
     if (array) {
-	array = (void**) PORT_ArenaGrow(arena, array,
-					(count + 1) * sizeof(void *),
-					(count + 2) * sizeof(void *));
-    } else {
-	array = (void**) PORT_ArenaAlloc(arena, (count + 2) * sizeof(void *));
+        array =
+            (void **)PORT_ArenaGrow(arena, array, (count + 1) * sizeof(void *),
+                                    (count + 2) * sizeof(void *));
+    }
+    else {
+        array = (void **)PORT_ArenaAlloc(arena, (count + 2) * sizeof(void *));
     }
     if (array) {
-	array[count] = element;
-	array[count+1] = 0;
+        array[count] = element;
+        array[count + 1] = 0;
     }
     return array;
 }
-
 
 SECOidTag
 CERT_GetAVATag(CERTAVA *ava)
 {
     SECOidData *oid;
-    if (!ava->type.data) return (SECOidTag)-1;
+    if (!ava->type.data)
+        return (SECOidTag)-1;
 
     oid = SECOID_FindOID(&ava->type);
-    
-    if ( oid ) {
-	return(oid->offset);
+
+    if (oid) {
+        return (oid->offset);
     }
     return (SECOidTag)-1;
 }
@@ -89,25 +86,25 @@ SetupAVAType(PLArenaPool *arena, SECOidTag type, SECItem *it, unsigned *maxLenp)
     unsigned char *oid;
     unsigned oidLen;
     unsigned char *cp;
-    int      maxLen;
+    int maxLen;
     SECOidData *oidrec;
 
     oidrec = SECOID_FindOIDByTag(type);
     if (oidrec == NULL)
-	return SECFailure;
+        return SECFailure;
 
     oid = oidrec->oid.data;
     oidLen = oidrec->oid.len;
 
     maxLen = cert_AVAOidTagToMaxLen(type);
     if (maxLen < 0) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
-    it->data = cp = (unsigned char*) PORT_ArenaAlloc(arena, oidLen);
+    it->data = cp = (unsigned char *)PORT_ArenaAlloc(arena, oidLen);
     if (cp == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
     it->len = oidLen;
     PORT_Memcpy(cp, oid, oidLen);
@@ -123,65 +120,66 @@ SetupAVAValue(PLArenaPool *arena, int valueType, const SECItem *in,
     unsigned valueLen, valueLenLen, total;
     unsigned ucs4Len = 0, ucs4MaxLen;
 
-    value    = in->data;
+    value = in->data;
     valueLen = in->len;
     switch (valueType) {
-      case SEC_ASN1_PRINTABLE_STRING:
-      case SEC_ASN1_IA5_STRING:
-      case SEC_ASN1_T61_STRING:
-      case SEC_ASN1_UTF8_STRING: /* no conversion required */
-	break;
-      case SEC_ASN1_UNIVERSAL_STRING:
-	ucs4MaxLen = valueLen * 6;
-	ucs4Val = (PRUint8 *)PORT_ArenaZAlloc(arena, ucs4MaxLen);
-	if(!ucs4Val || !PORT_UCS4_UTF8Conversion(PR_TRUE, value, valueLen,
-					ucs4Val, ucs4MaxLen, &ucs4Len)) {
-	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	    return SECFailure;
-	}
-	value = ucs4Val;
-	valueLen = ucs4Len;
-    	maxLen *= 4;
-	break;
-      default:
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+        case SEC_ASN1_PRINTABLE_STRING:
+        case SEC_ASN1_IA5_STRING:
+        case SEC_ASN1_T61_STRING:
+        case SEC_ASN1_UTF8_STRING: /* no conversion required */
+            break;
+        case SEC_ASN1_UNIVERSAL_STRING:
+            ucs4MaxLen = valueLen * 6;
+            ucs4Val = (PRUint8 *)PORT_ArenaZAlloc(arena, ucs4MaxLen);
+            if (!ucs4Val ||
+                !PORT_UCS4_UTF8Conversion(PR_TRUE, value, valueLen, ucs4Val,
+                                          ucs4MaxLen, &ucs4Len)) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return SECFailure;
+            }
+            value = ucs4Val;
+            valueLen = ucs4Len;
+            maxLen *= 4;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
     }
 
     if (valueLen > maxLen) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    } 
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     valueLenLen = DER_LengthLength(valueLen);
     total = 1 + valueLenLen + valueLen;
-    cp = (PRUint8*)PORT_ArenaAlloc(arena, total);
+    cp = (PRUint8 *)PORT_ArenaAlloc(arena, total);
     if (!cp) {
-	return SECFailure;
+        return SECFailure;
     }
     out->data = cp;
-    out->len  = total;
+    out->len = total;
     cp = (PRUint8 *)DER_StoreHeader(cp, valueType, valueLen);
     PORT_Memcpy(cp, value, valueLen);
     return SECSuccess;
 }
 
 CERTAVA *
-CERT_CreateAVAFromRaw(PLArenaPool *pool, const SECItem * OID,
-                      const SECItem * value)
+CERT_CreateAVAFromRaw(PLArenaPool *pool, const SECItem *OID,
+                      const SECItem *value)
 {
     CERTAVA *ava;
     int rv;
 
     ava = PORT_ArenaZNew(pool, CERTAVA);
     if (ava) {
-	rv = SECITEM_CopyItem(pool, &ava->type, OID);
-	if (rv) 
-	    return NULL;
+        rv = SECITEM_CopyItem(pool, &ava->type, OID);
+        if (rv)
+            return NULL;
 
-	rv = SECITEM_CopyItem(pool, &ava->value, value);
-	if (rv) 
-	    return NULL;
+        rv = SECITEM_CopyItem(pool, &ava->value, value);
+        if (rv)
+            return NULL;
     }
     return ava;
 }
@@ -194,18 +192,18 @@ CERT_CreateAVAFromSECItem(PLArenaPool *arena, SECOidTag kind, int valueType,
     int rv;
     unsigned maxLen;
 
-    ava = (CERTAVA*) PORT_ArenaZAlloc(arena, sizeof(CERTAVA));
+    ava = (CERTAVA *)PORT_ArenaZAlloc(arena, sizeof(CERTAVA));
     if (ava) {
-	rv = SetupAVAType(arena, kind, &ava->type, &maxLen);
-	if (rv) {
-	    /* Illegal AVA type */
-	    return NULL;
-	}
-	rv = SetupAVAValue(arena, valueType, value, &ava->value, maxLen);
-	if (rv) {
-	    /* Illegal value type */
-	    return NULL;
-	}
+        rv = SetupAVAType(arena, kind, &ava->type, &maxLen);
+        if (rv) {
+            /* Illegal AVA type */
+            return NULL;
+        }
+        rv = SetupAVAValue(arena, valueType, value, &ava->value, maxLen);
+        if (rv) {
+            /* Illegal value type */
+            return NULL;
+        }
     }
     return ava;
 }
@@ -216,7 +214,7 @@ CERT_CreateAVA(PLArenaPool *arena, SECOidTag kind, int valueType, char *value)
     SECItem item = { siBuffer, NULL, 0 };
 
     item.data = (PRUint8 *)value;
-    item.len  = PORT_Strlen(value);
+    item.len = PORT_Strlen(value);
 
     return CERT_CreateAVAFromSECItem(arena, kind, valueType, &item);
 }
@@ -227,16 +225,18 @@ CERT_CopyAVA(PLArenaPool *arena, CERTAVA *from)
     CERTAVA *ava;
     int rv;
 
-    ava = (CERTAVA*) PORT_ArenaZAlloc(arena, sizeof(CERTAVA));
+    ava = (CERTAVA *)PORT_ArenaZAlloc(arena, sizeof(CERTAVA));
     if (ava) {
-	rv = SECITEM_CopyItem(arena, &ava->type, &from->type);
-	if (rv) goto loser;
-	rv = SECITEM_CopyItem(arena, &ava->value, &from->value);
-	if (rv) goto loser;
+        rv = SECITEM_CopyItem(arena, &ava->type, &from->type);
+        if (rv)
+            goto loser;
+        rv = SECITEM_CopyItem(arena, &ava->value, &from->value);
+        if (rv)
+            goto loser;
     }
     return ava;
 
-  loser:
+loser:
     return 0;
 }
 
@@ -249,34 +249,34 @@ CERT_CreateRDN(PLArenaPool *arena, CERTAVA *ava0, ...)
     unsigned count;
     CERTAVA **avap;
 
-    rdn = (CERTRDN*) PORT_ArenaAlloc(arena, sizeof(CERTRDN));
+    rdn = (CERTRDN *)PORT_ArenaAlloc(arena, sizeof(CERTRDN));
     if (rdn) {
-	/* Count number of avas going into the rdn */
-	count = 0;
-	if (ava0) {
-	    count++;
-	    va_start(ap, ava0);
-	    while ((ava = va_arg(ap, CERTAVA*)) != 0) {
-		count++;
-	    }
-	    va_end(ap);
-	}
+        /* Count number of avas going into the rdn */
+        count = 0;
+        if (ava0) {
+            count++;
+            va_start(ap, ava0);
+            while ((ava = va_arg(ap, CERTAVA *)) != 0) {
+                count++;
+            }
+            va_end(ap);
+        }
 
-	/* Now fill in the pointers */
-	rdn->avas = avap =
-	    (CERTAVA**) PORT_ArenaAlloc( arena, (count + 1)*sizeof(CERTAVA*));
-	if (!avap) {
-	    return 0;
-	}
-	if (ava0) {
-	    *avap++ = ava0;
-	    va_start(ap, ava0);
-	    while ((ava = va_arg(ap, CERTAVA*)) != 0) {
-		*avap++ = ava;
-	    }
-	    va_end(ap);
-	}
-	*avap++ = 0;
+        /* Now fill in the pointers */
+        rdn->avas = avap =
+            (CERTAVA **)PORT_ArenaAlloc(arena, (count + 1) * sizeof(CERTAVA *));
+        if (!avap) {
+            return 0;
+        }
+        if (ava0) {
+            *avap++ = ava0;
+            va_start(ap, ava0);
+            while ((ava = va_arg(ap, CERTAVA *)) != 0) {
+                *avap++ = ava;
+            }
+            va_end(ap);
+        }
+        *avap++ = 0;
     }
     return rdn;
 }
@@ -284,7 +284,7 @@ CERT_CreateRDN(PLArenaPool *arena, CERTAVA *ava0, ...)
 SECStatus
 CERT_AddAVA(PLArenaPool *arena, CERTRDN *rdn, CERTAVA *ava)
 {
-    rdn->avas = (CERTAVA**) AddToArray(arena, (void**) rdn->avas, ava);
+    rdn->avas = (CERTAVA **)AddToArray(arena, (void **)rdn->avas, ava);
     return rdn->avas ? SECSuccess : SECFailure;
 }
 
@@ -297,20 +297,20 @@ CERT_CopyRDN(PLArenaPool *arena, CERTRDN *to, CERTRDN *from)
     /* Copy each ava from from */
     avas = from->avas;
     if (avas) {
-	if (avas[0] == NULL) {
-	    rv = CERT_AddAVA(arena, to, NULL);
-	    return rv;
-	}
-	while ((fava = *avas++) != 0) {
-	    tava = CERT_CopyAVA(arena, fava);
-	    if (!tava) {
-	    	rv = SECFailure;
-		break;
-	    }
-	    rv = CERT_AddAVA(arena, to, tava);
-	    if (rv != SECSuccess) 
-	    	break;
-	}
+        if (avas[0] == NULL) {
+            rv = CERT_AddAVA(arena, to, NULL);
+            return rv;
+        }
+        while ((fava = *avas++) != 0) {
+            tava = CERT_CopyAVA(arena, fava);
+            if (!tava) {
+                rv = SECFailure;
+                break;
+            }
+            rv = CERT_AddAVA(arena, to, tava);
+            if (rv != SECSuccess)
+                break;
+        }
     }
     return rv;
 }
@@ -318,8 +318,8 @@ CERT_CopyRDN(PLArenaPool *arena, CERTRDN *to, CERTRDN *from)
 /************************************************************************/
 
 const SEC_ASN1Template CERT_NameTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF,
-	  offsetof(CERTName,rdns), CERT_RDNTemplate, sizeof(CERTName) }
+    { SEC_ASN1_SEQUENCE_OF, offsetof(CERTName, rdns), CERT_RDNTemplate,
+      sizeof(CERTName) }
 };
 
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_NameTemplate)
@@ -333,71 +333,72 @@ CERT_CreateName(CERTRDN *rdn0, ...)
     unsigned count;
     CERTRDN **rdnp;
     PLArenaPool *arena;
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
-	return(0);
+    if (!arena) {
+        return (0);
     }
-    
-    name = (CERTName*) PORT_ArenaAlloc(arena, sizeof(CERTName));
+
+    name = (CERTName *)PORT_ArenaAlloc(arena, sizeof(CERTName));
     if (name) {
-	name->arena = arena;
-	
-	/* Count number of RDNs going into the Name */
-	if (!rdn0) {
-	    count = 0;
-	} else {
-	    count = 1;
-	    va_start(ap, rdn0);
-	    while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
-		count++;
-	    }
-	    va_end(ap);
-	}
+        name->arena = arena;
 
-	/* Allocate space (including space for terminal null ptr) */
-	name->rdns = rdnp =
-	    (CERTRDN**) PORT_ArenaAlloc(arena, (count + 1) * sizeof(CERTRDN*));
-	if (!name->rdns) {
-	    goto loser;
-	}
+        /* Count number of RDNs going into the Name */
+        if (!rdn0) {
+            count = 0;
+        }
+        else {
+            count = 1;
+            va_start(ap, rdn0);
+            while ((rdn = va_arg(ap, CERTRDN *)) != 0) {
+                count++;
+            }
+            va_end(ap);
+        }
 
-	/* Now fill in the pointers */
-	if (count > 0) {
-	    *rdnp++ = rdn0;
-	    va_start(ap, rdn0);
-	    while ((rdn = va_arg(ap, CERTRDN*)) != 0) {
-		*rdnp++ = rdn;
-	    }
-	    va_end(ap);
-	}
+        /* Allocate space (including space for terminal null ptr) */
+        name->rdns = rdnp =
+            (CERTRDN **)PORT_ArenaAlloc(arena, (count + 1) * sizeof(CERTRDN *));
+        if (!name->rdns) {
+            goto loser;
+        }
 
-	/* null terminate the list */
-	*rdnp++ = 0;
+        /* Now fill in the pointers */
+        if (count > 0) {
+            *rdnp++ = rdn0;
+            va_start(ap, rdn0);
+            while ((rdn = va_arg(ap, CERTRDN *)) != 0) {
+                *rdnp++ = rdn;
+            }
+            va_end(ap);
+        }
+
+        /* null terminate the list */
+        *rdnp++ = 0;
     }
     return name;
 
 loser:
     PORT_FreeArena(arena, PR_FALSE);
-    return(0);
+    return (0);
 }
 
 void
 CERT_DestroyName(CERTName *name)
 {
-    if (name)
-    {
+    if (name) {
         PLArenaPool *arena = name->arena;
         name->rdns = NULL;
-	name->arena = NULL;
-	if (arena) PORT_FreeArena(arena, PR_FALSE);
+        name->arena = NULL;
+        if (arena)
+            PORT_FreeArena(arena, PR_FALSE);
     }
 }
 
 SECStatus
 CERT_AddRDN(CERTName *name, CERTRDN *rdn)
 {
-    name->rdns = (CERTRDN**) AddToArray(name->arena, (void**) name->rdns, rdn);
+    name->rdns = (CERTRDN **)AddToArray(name->arena, (void **)name->rdns, rdn);
     return name->rdns ? SECSuccess : SECFailure;
 }
 
@@ -408,8 +409,8 @@ CERT_CopyName(PLArenaPool *arena, CERTName *to, const CERTName *from)
     SECStatus rv = SECSuccess;
 
     if (!to || !from) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     CERT_DestroyName(to);
@@ -418,23 +419,23 @@ CERT_CopyName(PLArenaPool *arena, CERTName *to, const CERTName *from)
     /* Copy each rdn from from */
     rdns = from->rdns;
     if (rdns) {
-    	if (rdns[0] == NULL) {
-	    rv = CERT_AddRDN(to, NULL);
-	    return rv;
-	}
-	while ((frdn = *rdns++) != NULL) {
-	    trdn = CERT_CreateRDN(arena, NULL);
-	    if (!trdn) {
-		rv = SECFailure;
-		break;
-	    }
-	    rv = CERT_CopyRDN(arena, trdn, frdn);
-	    if (rv != SECSuccess) 
-	        break;
-	    rv = CERT_AddRDN(to, trdn);
-	    if (rv != SECSuccess) 
-	        break;
-	}
+        if (rdns[0] == NULL) {
+            rv = CERT_AddRDN(to, NULL);
+            return rv;
+        }
+        while ((frdn = *rdns++) != NULL) {
+            trdn = CERT_CreateRDN(arena, NULL);
+            if (!trdn) {
+                rv = SECFailure;
+                break;
+            }
+            rv = CERT_CopyRDN(arena, trdn, frdn);
+            if (rv != SECSuccess)
+                break;
+            rv = CERT_AddRDN(to, trdn);
+            if (rv != SECSuccess)
+                break;
+        }
     }
     return rv;
 }
@@ -442,34 +443,36 @@ CERT_CopyName(PLArenaPool *arena, CERTName *to, const CERTName *from)
 /************************************************************************/
 
 static void
-canonicalize(SECItem * foo)
+canonicalize(SECItem *foo)
 {
     int ch, lastch, len, src, dest;
 
     /* strip trailing whitespace. */
     len = foo->len;
-    while (len > 0 && ((ch = foo->data[len - 1]) == ' ' || 
-           ch == '\t' || ch == '\r' || ch == '\n')) {
-	len--;
+    while (len > 0 && ((ch = foo->data[len - 1]) == ' ' || ch == '\t' ||
+                       ch == '\r' || ch == '\n')) {
+        len--;
     }
 
     src = 0;
     /* strip leading whitespace. */
-    while (src < len && ((ch = foo->data[src]) == ' ' || 
-           ch == '\t' || ch == '\r' || ch == '\n')) {
-	src++;
+    while (src < len && ((ch = foo->data[src]) == ' ' || ch == '\t' ||
+                         ch == '\r' || ch == '\n')) {
+        src++;
     }
-    dest = 0; lastch = ' ';
+    dest = 0;
+    lastch = ' ';
     while (src < len) {
         ch = foo->data[src++];
-	if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
-	    ch = ' ';
-	    if (ch == lastch)
-	        continue;
-	} else if (ch >= 'A' && ch <= 'Z') {
-	    ch |= 0x20;  /* downshift */
-	}
-	foo->data[dest++] = lastch = ch;
+        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
+            ch = ' ';
+            if (ch == lastch)
+                continue;
+        }
+        else if (ch >= 'A' && ch <= 'Z') {
+            ch |= 0x20; /* downshift */
+        }
+        foo->data[dest++] = lastch = ch;
     }
     foo->len = dest;
 }
@@ -479,14 +482,13 @@ SECComparison
 CERT_CompareDERPrintableStrings(const SECItem *a, const SECItem *b)
 {
     SECComparison rv = SECLessThan;
-    SECItem * aVal = CERT_DecodeAVAValue(a);
-    SECItem * bVal = CERT_DecodeAVAValue(b);
+    SECItem *aVal = CERT_DecodeAVAValue(a);
+    SECItem *bVal = CERT_DecodeAVAValue(b);
 
-    if (aVal && aVal->len && aVal->data &&
-	bVal && bVal->len && bVal->data) {
-	canonicalize(aVal);
-	canonicalize(bVal);
-	rv = SECITEM_CompareItem(aVal, bVal);
+    if (aVal && aVal->len && aVal->data && bVal && bVal->len && bVal->data) {
+        canonicalize(aVal);
+        canonicalize(bVal);
+        rv = SECITEM_CompareItem(aVal, bVal);
     }
     SECITEM_FreeItem(aVal, PR_TRUE);
     SECITEM_FreeItem(bVal, PR_TRUE);
@@ -500,30 +502,31 @@ CERT_CompareAVA(const CERTAVA *a, const CERTAVA *b)
 
     rv = SECITEM_CompareItem(&a->type, &b->type);
     if (SECEqual != rv)
-	return rv;  /* Attribute types don't match. */
+        return rv; /* Attribute types don't match. */
     /* Let's be optimistic.  Maybe the values will just compare equal. */
     rv = SECITEM_CompareItem(&a->value, &b->value);
     if (SECEqual == rv)
-        return rv;  /* values compared exactly. */
+        return rv; /* values compared exactly. */
     if (a->value.len && a->value.data && b->value.len && b->value.data) {
-	/* Here, the values did not match.  
-	** If the values had different encodings, convert them to the same
-	** encoding and compare that way.
-	*/
-	if (a->value.data[0] != b->value.data[0]) {
-	    /* encodings differ.  Convert both to UTF-8 and compare. */
-	    SECItem * aVal = CERT_DecodeAVAValue(&a->value);
-	    SECItem * bVal = CERT_DecodeAVAValue(&b->value);
-	    if (aVal && aVal->len && aVal->data &&
-	        bVal && bVal->len && bVal->data) {
-		rv = SECITEM_CompareItem(aVal, bVal);
-	    }
-	    SECITEM_FreeItem(aVal, PR_TRUE);
-	    SECITEM_FreeItem(bVal, PR_TRUE);
-	} else if (a->value.data[0] == 0x13) { /* both are printable strings. */
-	    /* printable strings */
-	    rv = CERT_CompareDERPrintableStrings(&a->value, &b->value);
-	}
+        /* Here, the values did not match.
+        ** If the values had different encodings, convert them to the same
+        ** encoding and compare that way.
+        */
+        if (a->value.data[0] != b->value.data[0]) {
+            /* encodings differ.  Convert both to UTF-8 and compare. */
+            SECItem *aVal = CERT_DecodeAVAValue(&a->value);
+            SECItem *bVal = CERT_DecodeAVAValue(&b->value);
+            if (aVal && aVal->len && aVal->data && bVal && bVal->len &&
+                bVal->data) {
+                rv = SECITEM_CompareItem(aVal, bVal);
+            }
+            SECITEM_FreeItem(aVal, PR_TRUE);
+            SECITEM_FreeItem(bVal, PR_TRUE);
+        }
+        else if (a->value.data[0] == 0x13) { /* both are printable strings. */
+            /* printable strings */
+            rv = CERT_CompareDERPrintableStrings(&a->value, &b->value);
+        }
     }
     return rv;
 }
@@ -543,23 +546,25 @@ CERT_CompareRDN(const CERTRDN *a, const CERTRDN *b)
     ** Make sure array of ava's are the same length. If not, then we are
     ** not equal
     */
-    ac = CountArray((void**) aavas);
-    bc = CountArray((void**) bavas);
-    if (ac < bc) return SECLessThan;
-    if (ac > bc) return SECGreaterThan;
+    ac = CountArray((void **)aavas);
+    bc = CountArray((void **)bavas);
+    if (ac < bc)
+        return SECLessThan;
+    if (ac > bc)
+        return SECGreaterThan;
 
     while (NULL != (aava = *aavas++)) {
-	for (bavas = b->avas; NULL != (bava = *bavas++); ) {
-	    rv = SECITEM_CompareItem(&aava->type, &bava->type);
-	    if (SECEqual == rv) {
-		rv = CERT_CompareAVA(aava, bava);
-		if (SECEqual != rv) 
-		    return rv;
-		break;
-	    }
-    	}
-	if (!bava)  /* didn't find a match */
-	    return SECGreaterThan;
+        for (bavas = b->avas; NULL != (bava = *bavas++);) {
+            rv = SECITEM_CompareItem(&aava->type, &bava->type);
+            if (SECEqual == rv) {
+                rv = CERT_CompareAVA(aava, bava);
+                if (SECEqual != rv)
+                    return rv;
+                break;
+            }
+        }
+        if (!bava) /* didn't find a match */
+            return SECGreaterThan;
     }
     return rv;
 }
@@ -579,19 +584,22 @@ CERT_CompareName(const CERTName *a, const CERTName *b)
     ** Make sure array of rdn's are the same length. If not, then we are
     ** not equal
     */
-    ac = CountArray((void**) ardns);
-    bc = CountArray((void**) brdns);
-    if (ac < bc) return SECLessThan;
-    if (ac > bc) return SECGreaterThan;
+    ac = CountArray((void **)ardns);
+    bc = CountArray((void **)brdns);
+    if (ac < bc)
+        return SECLessThan;
+    if (ac > bc)
+        return SECGreaterThan;
 
     for (;;) {
-	ardn = *ardns++;
-	brdn = *brdns++;
-	if (!ardn) {
-	    break;
-	}
-	rv = CERT_CompareRDN(ardn, brdn);
-	if (rv) return rv;
+        ardn = *ardns++;
+        brdn = *brdns++;
+        if (!ardn) {
+            break;
+        }
+        rv = CERT_CompareRDN(ardn, brdn);
+        if (rv)
+            return rv;
     }
     return rv;
 }
@@ -600,47 +608,47 @@ CERT_CompareName(const CERTName *a, const CERTName *b)
 SECItem *
 CERT_DecodeAVAValue(const SECItem *derAVAValue)
 {
-          SECItem          *retItem; 
-    const SEC_ASN1Template *theTemplate       = NULL;
-          enum { conv_none, conv_ucs4, conv_ucs2, conv_iso88591 } convert = conv_none;
-          SECItem           avaValue          = {siBuffer, 0}; 
-          PLArenaPool      *newarena          = NULL;
+    SECItem *retItem;
+    const SEC_ASN1Template *theTemplate = NULL;
+    enum { conv_none, conv_ucs4, conv_ucs2, conv_iso88591 } convert = conv_none;
+    SECItem avaValue = { siBuffer, 0 };
+    PLArenaPool *newarena = NULL;
 
     if (!derAVAValue || !derAVAValue->len || !derAVAValue->data) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return NULL;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
     }
 
-    switch(derAVAValue->data[0]) {
-	case SEC_ASN1_UNIVERSAL_STRING:
-	    convert = conv_ucs4;
-	    theTemplate = SEC_ASN1_GET(SEC_UniversalStringTemplate);
-	    break;
-	case SEC_ASN1_IA5_STRING:
-	    theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
-	    break;
-	case SEC_ASN1_PRINTABLE_STRING:
-	    theTemplate = SEC_ASN1_GET(SEC_PrintableStringTemplate);
-	    break;
-	case SEC_ASN1_T61_STRING:
-	    /*
-	     * Per common practice, we're not decoding actual T.61, but instead
-	     * treating T61-labeled strings as containing ISO-8859-1.
-	     */
-	    convert = conv_iso88591;
-	    theTemplate = SEC_ASN1_GET(SEC_T61StringTemplate);
-	    break;
-	case SEC_ASN1_BMP_STRING:
-	    convert = conv_ucs2;
-	    theTemplate = SEC_ASN1_GET(SEC_BMPStringTemplate);
-	    break;
-	case SEC_ASN1_UTF8_STRING:
-	    /* No conversion needed ! */
-	    theTemplate = SEC_ASN1_GET(SEC_UTF8StringTemplate);
-	    break;
-	default:
-	    PORT_SetError(SEC_ERROR_INVALID_AVA);
-	    return NULL;
+    switch (derAVAValue->data[0]) {
+        case SEC_ASN1_UNIVERSAL_STRING:
+            convert = conv_ucs4;
+            theTemplate = SEC_ASN1_GET(SEC_UniversalStringTemplate);
+            break;
+        case SEC_ASN1_IA5_STRING:
+            theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
+            break;
+        case SEC_ASN1_PRINTABLE_STRING:
+            theTemplate = SEC_ASN1_GET(SEC_PrintableStringTemplate);
+            break;
+        case SEC_ASN1_T61_STRING:
+            /*
+             * Per common practice, we're not decoding actual T.61, but instead
+             * treating T61-labeled strings as containing ISO-8859-1.
+             */
+            convert = conv_iso88591;
+            theTemplate = SEC_ASN1_GET(SEC_T61StringTemplate);
+            break;
+        case SEC_ASN1_BMP_STRING:
+            convert = conv_ucs2;
+            theTemplate = SEC_ASN1_GET(SEC_BMPStringTemplate);
+            break;
+        case SEC_ASN1_UTF8_STRING:
+            /* No conversion needed ! */
+            theTemplate = SEC_ASN1_GET(SEC_UTF8StringTemplate);
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_AVA);
+            return NULL;
     }
 
     PORT_Memset(&avaValue, 0, sizeof(SECItem));
@@ -648,51 +656,54 @@ CERT_DecodeAVAValue(const SECItem *derAVAValue)
     if (!newarena) {
         return NULL;
     }
-    if(SEC_QuickDERDecodeItem(newarena, &avaValue, theTemplate, derAVAValue) 
-				!= SECSuccess) {
-	PORT_FreeArena(newarena, PR_FALSE);
-	return NULL;
+    if (SEC_QuickDERDecodeItem(newarena, &avaValue, theTemplate, derAVAValue) !=
+        SECSuccess) {
+        PORT_FreeArena(newarena, PR_FALSE);
+        return NULL;
     }
 
     if (convert != conv_none) {
-	unsigned int   utf8ValLen = avaValue.len * 3;
-	unsigned char *utf8Val    = (unsigned char*)
-				    PORT_ArenaZAlloc(newarena, utf8ValLen);
+        unsigned int utf8ValLen = avaValue.len * 3;
+        unsigned char *utf8Val =
+            (unsigned char *)PORT_ArenaZAlloc(newarena, utf8ValLen);
 
         switch (convert) {
-        case conv_ucs4:
-           if(avaValue.len % 4 != 0 ||
-              !PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
-					utf8Val, utf8ValLen, &utf8ValLen)) {
-                PORT_FreeArena(newarena, PR_FALSE);
-                PORT_SetError(SEC_ERROR_INVALID_AVA);
-		return NULL;
-	   }
-	   break;
-	case conv_ucs2:
-           if(avaValue.len % 2 != 0 ||
-              !PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
-					utf8Val, utf8ValLen, &utf8ValLen)) {
-                PORT_FreeArena(newarena, PR_FALSE);
-                PORT_SetError(SEC_ERROR_INVALID_AVA);
-		return NULL;
-	   }
-	   break;
-	case conv_iso88591:
-           if(!PORT_ISO88591_UTF8Conversion(avaValue.data, avaValue.len,
-					utf8Val, utf8ValLen, &utf8ValLen)) {
-                PORT_FreeArena(newarena, PR_FALSE);
-                PORT_SetError(SEC_ERROR_INVALID_AVA);
-		return NULL;
-	   }
-	   break;
-	case conv_none:
-	   PORT_Assert(0); /* not reached */
-	   break;
-	}
-	  
-	avaValue.data = utf8Val;
-	avaValue.len = utf8ValLen;
+            case conv_ucs4:
+                if (avaValue.len % 4 != 0 ||
+                    !PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data,
+                                              avaValue.len, utf8Val, utf8ValLen,
+                                              &utf8ValLen)) {
+                    PORT_FreeArena(newarena, PR_FALSE);
+                    PORT_SetError(SEC_ERROR_INVALID_AVA);
+                    return NULL;
+                }
+                break;
+            case conv_ucs2:
+                if (avaValue.len % 2 != 0 ||
+                    !PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data,
+                                              avaValue.len, utf8Val, utf8ValLen,
+                                              &utf8ValLen)) {
+                    PORT_FreeArena(newarena, PR_FALSE);
+                    PORT_SetError(SEC_ERROR_INVALID_AVA);
+                    return NULL;
+                }
+                break;
+            case conv_iso88591:
+                if (!PORT_ISO88591_UTF8Conversion(avaValue.data, avaValue.len,
+                                                  utf8Val, utf8ValLen,
+                                                  &utf8ValLen)) {
+                    PORT_FreeArena(newarena, PR_FALSE);
+                    PORT_SetError(SEC_ERROR_INVALID_AVA);
+                    return NULL;
+                }
+                break;
+            case conv_none:
+                PORT_Assert(0); /* not reached */
+                break;
+        }
+
+        avaValue.data = utf8Val;
+        avaValue.len = utf8ValLen;
     }
 
     retItem = SECITEM_DupItem(&avaValue);
