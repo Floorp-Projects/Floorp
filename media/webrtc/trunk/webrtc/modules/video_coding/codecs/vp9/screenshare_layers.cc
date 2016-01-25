@@ -18,8 +18,8 @@ ScreenshareLayersVP9::ScreenshareLayersVP9(uint8_t num_layers)
       start_layer_(0),
       last_timestamp_(0),
       timestamp_initialized_(false) {
-  RTC_DCHECK_GT(num_layers, 0);
-  RTC_DCHECK_LE(num_layers, kMaxVp9NumberOfSpatialLayers);
+  DCHECK_GT(num_layers, 0);
+  DCHECK_LE(num_layers, kMaxVp9NumberOfSpatialLayers);
   memset(bits_used_, 0, sizeof(bits_used_));
   memset(threshold_kbps_, 0, sizeof(threshold_kbps_));
 }
@@ -34,13 +34,13 @@ void ScreenshareLayersVP9::ConfigureBitrate(int threshold_kbps,
   // to when the bitrate becomes to high, therefore setting
   // a max limit is not allowed. The top layer bitrate is
   // never used either so configuring it makes no difference.
-  RTC_DCHECK_LT(layer_id, num_layers_ - 1);
+  DCHECK_LT(layer_id, num_layers_ - 1);
   threshold_kbps_[layer_id] = threshold_kbps;
 }
 
 void ScreenshareLayersVP9::LayerFrameEncoded(unsigned int size_bytes,
                                              uint8_t layer_id) {
-  RTC_DCHECK_LT(layer_id, num_layers_);
+  DCHECK_LT(layer_id, num_layers_);
   bits_used_[layer_id] += size_bytes * 8;
 }
 

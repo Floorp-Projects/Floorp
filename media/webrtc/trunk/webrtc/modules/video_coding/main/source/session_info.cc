@@ -59,31 +59,52 @@ int VCMSessionInfo::HighSequenceNumber() const {
 }
 
 int VCMSessionInfo::PictureId() const {
-  if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
+  if (packets_.empty())
     return kNoPictureId;
-  return packets_.front().codecSpecificHeader.codecHeader.VP8.pictureId;
+  if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp8) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP8.pictureId;
+  } else if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp9) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP9.picture_id;
+  } else {
+    return kNoPictureId;
+  }
 }
 
 int VCMSessionInfo::TemporalId() const {
-  if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
+  if (packets_.empty())
     return kNoTemporalIdx;
-  return packets_.front().codecSpecificHeader.codecHeader.VP8.temporalIdx;
+  if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp8) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP8.temporalIdx;
+  } else if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp9) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP9.temporal_idx;
+  } else {
+    return kNoTemporalIdx;
+  }
 }
 
 bool VCMSessionInfo::LayerSync() const {
-  if (packets_.empty() ||
-        packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
+  if (packets_.empty())
     return false;
-  return packets_.front().codecSpecificHeader.codecHeader.VP8.layerSync;
+  if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp8) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP8.layerSync;
+  } else if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp9) {
+    return
+        packets_.front().codecSpecificHeader.codecHeader.VP9.temporal_up_switch;
+  } else {
+    return false;
+  }
 }
 
 int VCMSessionInfo::Tl0PicId() const {
-  if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
+  if (packets_.empty())
     return kNoTl0PicIdx;
-  return packets_.front().codecSpecificHeader.codecHeader.VP8.tl0PicIdx;
+  if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp8) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP8.tl0PicIdx;
+  } else if (packets_.front().codecSpecificHeader.codec == kRtpVideoVp9) {
+    return packets_.front().codecSpecificHeader.codecHeader.VP9.tl0_pic_idx;
+  } else {
+    return kNoTl0PicIdx;
+  }
 }
 
 bool VCMSessionInfo::NonReference() const {
@@ -91,6 +112,24 @@ bool VCMSessionInfo::NonReference() const {
       packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return false;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.nonReference;
+}
+
+void VCMSessionInfo::SetGofInfo(const GofInfoVP9& gof_info, size_t idx) {
+  if (packets_.empty() ||
+      packets_.front().codecSpecificHeader.codec != kRtpVideoVp9 ||
+      packets_.front().codecSpecificHeader.codecHeader.VP9.flexible_mode) {
+    return;
+  }
+  packets_.front().codecSpecificHeader.codecHeader.VP9.temporal_idx =
+      gof_info.temporal_idx[idx];
+  packets_.front().codecSpecificHeader.codecHeader.VP9.temporal_up_switch =
+      gof_info.temporal_up_switch[idx];
+  packets_.front().codecSpecificHeader.codecHeader.VP9.num_ref_pics =
+      gof_info.num_ref_pics[idx];
+  for (uint8_t i = 0; i < gof_info.num_ref_pics[idx]; ++i) {
+    packets_.front().codecSpecificHeader.codecHeader.VP9.pid_diff[i] =
+        gof_info.pid_diff[idx][i];
+  }
 }
 
 void VCMSessionInfo::Reset() {
