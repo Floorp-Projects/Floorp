@@ -27,6 +27,10 @@ public:
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;
+  const char* GetDescriptionName() const override
+  {
+    return "opus audio decoder";
+  }
 
   // Return true if mimetype is Opus
   static bool IsOpus(const nsACString& aMimeType);

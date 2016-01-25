@@ -138,6 +138,11 @@ public:
   nsresult Drain() override;
   nsresult Shutdown() override;
 
+  const char* GetDescriptionName() const override
+  {
+    return "GMP proxy data decoder";
+  }
+
   // Called by MediaDataDecoderCallbackProxy.
   void FlushComplete();
 

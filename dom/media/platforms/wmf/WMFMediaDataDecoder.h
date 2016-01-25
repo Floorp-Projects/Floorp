@@ -54,6 +54,8 @@ public:
 
   virtual void ConfigurationChanged(const TrackInfo& aConfig) {}
 
+  virtual const char* GetDescriptionName() const = 0;
+
 protected:
   // IMFTransform wrapper that performs the decoding.
   RefPtr<MFTDecoder> mDecoder;
@@ -84,6 +86,11 @@ public:
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
   nsresult ConfigurationChanged(const TrackInfo& aConfig) override;
+
+  const char* GetDescriptionName() const override
+  {
+    return mMFTManager ? mMFTManager->GetDescriptionName() : "";
+  }
 
 private:
 
