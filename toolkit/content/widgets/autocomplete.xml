@@ -1087,18 +1087,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       </method>
 
       <method name="invalidate">
+        <parameter name="reason"/>
         <body>
           <![CDATA[
           // Don't bother doing work if we're not even showing
           if (!this.mPopupOpen)
             return;
 
-          this._invalidate();
+          this._invalidate(reason);
           ]]>
         </body>
       </method>
 
       <method name="_invalidate">
+        <parameter name="reason"/>
         <body>
           <![CDATA[
           // collapsed if no matches
@@ -1117,7 +1119,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (this._appendResultTimeout) {
             clearTimeout(this._appendResultTimeout);
           }
-          this._appendCurrentResult();
+          this._appendCurrentResult(reason);
         ]]>
         </body>
       </method>
@@ -1209,6 +1211,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       </method>
 
       <method name="_appendCurrentResult">
+        <parameter name="invalidateReason"/>
         <body>
           <![CDATA[
           var controller = this.mInput.controller;
@@ -1234,13 +1237,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
 
-              // Completely re-use the existing richlistitem if it's the same.
-              // Also re-use it if we are about to replace the currently mouse
-              // selected item, to avoid surprising the user.
+              // Completely reuse the existing richlistitem for invalidation
+              // due to new results, but only when: the item is the same, *OR*
+              // we are about to replace the currently mouse-selected item, to
+              // avoid surprising the user.
+              let iface = Components.interfaces.nsIAutoCompletePopup;
               if (item.getAttribute("text") == trimmedSearchString &&
-                   (item.getAttribute("url") == url ||
-                    this.richlistbox.mouseSelectedIndex === this._currentIndex)
-                  ) {
+                  invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
+                  (item.getAttribute("url") == url ||
+                   this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
                 item.collapsed = false;
                 this._currentIndex++;
                 continue;
