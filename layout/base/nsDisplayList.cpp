@@ -1919,13 +1919,16 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     bool snap;
     nsRect r = item->GetBounds(aBuilder, &snap).Intersect(aRect);
     auto itemType = item->GetType();
-    bool alwaysIntersect =
+    bool same3DContext =
       (itemType == nsDisplayItem::TYPE_TRANSFORM &&
        static_cast<nsDisplayTransform*>(item)->IsParticipating3DContext()) ||
       (itemType == nsDisplayItem::TYPE_PERSPECTIVE &&
        static_cast<nsDisplayPerspective*>(item)->Frame()->Extend3DContext());
-    if (alwaysIntersect &&
+    if (same3DContext &&
         !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
+      if (!item->GetClip().MayIntersect(aRect)) {
+        continue;
+      }
       nsAutoTArray<nsIFrame*, 1> neverUsed;
       // Start gethering leaves of the 3D rendering context, and
       // append leaves at the end of mItemBuffer.  Leaves are
@@ -1936,7 +1939,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       i = aState->mItemBuffer.Length();
       continue;
     }
-    if (alwaysIntersect || item->GetClip().MayIntersect(r)) {
+    if (same3DContext || item->GetClip().MayIntersect(r)) {
       nsAutoTArray<nsIFrame*, 16> outFrames;
       item->HitTest(aBuilder, aRect, aState, &outFrames);
 
