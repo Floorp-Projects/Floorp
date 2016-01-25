@@ -273,9 +273,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     void setNewOwnedData(FreeOp* fop, BufferContents newContents);
     void changeContents(JSContext* cx, BufferContents newContents);
 
-    /* Neuter this buffer and all its views. */
+    // Detach this buffer from its original memory.  (This necessarily makes
+    // views of this buffer unusable for modifying that original memory.)
     static MOZ_WARN_UNUSED_RESULT bool
-    neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
+    detach(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
 
   private:
     void neuterView(JSContext* cx, ArrayBufferViewObject* view,

@@ -250,7 +250,7 @@ ArrayBufferObject::neuterView(JSContext* cx, ArrayBufferViewObject* view,
 }
 
 /* static */ bool
-ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
+ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
     if (buffer->isAsmJS()) {
@@ -258,7 +258,7 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         return false;
     }
 
-    // When neutering buffers where we don't know all views, the new data must
+    // When detaching buffers where we don't know all views, the new data must
     // match the old data. All missing views are typed objects, which do not
     // expect their data to ever change.
     MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
@@ -273,13 +273,13 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         // flag change will be observed.
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!cx->global()->getGroup(cx))
-            oomUnsafe.crash("ArrayBufferObject::neuter");
+            oomUnsafe.crash("ArrayBufferObject::detach");
         MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
         cx->compartment()->detachedTypedObjects = 1;
     }
 
-    // Neuter all views on the buffer, clear out the list of views and the
-    // buffer's data.
+    // Update all views of the buffer to account for the buffer having been
+    // detached, and clear the buffer's data and list of views.
 
     if (InnerViewTable::ViewVector* views = cx->compartment()->innerViews.maybeViewsUnbarriered(buffer)) {
         for (size_t i = 0; i < views->length(); i++)
@@ -687,11 +687,11 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
         return BufferContents::createPlain(nullptr);
 
     if (hasStealableContents) {
-        // Return the old contents and give the neutered buffer a pointer to
+        // Return the old contents and give the detached buffer a pointer to
         // freshly allocated memory that we will never write to and should
         // never get committed.
         buffer->setOwnsData(DoesntOwnData);
-        if (!ArrayBufferObject::neuter(cx, buffer, newContents)) {
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
             js_free(newContents.data());
             return BufferContents::createPlain(nullptr);
         }
@@ -701,7 +701,7 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
     // Create a new chunk of memory to return since we cannot steal the
     // existing contents away from the buffer.
     memcpy(newContents.data(), oldContents.data(), buffer->byteLength());
-    if (!ArrayBufferObject::neuter(cx, buffer, oldContents)) {
+    if (!ArrayBufferObject::detach(cx, buffer, oldContents)) {
         js_free(newContents.data());
         return BufferContents::createPlain(nullptr);
     }
@@ -1142,12 +1142,12 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj,
             AllocateArrayBufferContents(cx, buffer->byteLength());
         if (!newContents)
             return false;
-        if (!ArrayBufferObject::neuter(cx, buffer, newContents)) {
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
             js_free(newContents.data());
             return false;
         }
     } else {
-        if (!ArrayBufferObject::neuter(cx, buffer, buffer->contents()))
+        if (!ArrayBufferObject::detach(cx, buffer, buffer->contents()))
             return false;
     }
 
