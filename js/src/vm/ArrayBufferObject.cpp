@@ -239,9 +239,10 @@ AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes)
     return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(p);
 }
 
-void
-ArrayBufferObject::neuterView(JSContext* cx, ArrayBufferViewObject* view,
-                              BufferContents newContents)
+static void
+NoteViewBufferWasDetached(ArrayBufferViewObject* view,
+                          ArrayBufferObject::BufferContents newContents,
+                          JSContext* cx)
 {
     view->notifyBufferDetached(newContents.data());
 
@@ -283,7 +284,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
 
     if (InnerViewTable::ViewVector* views = cx->compartment()->innerViews.maybeViewsUnbarriered(buffer)) {
         for (size_t i = 0; i < views->length(); i++)
-            buffer->neuterView(cx, (*views)[i], newContents);
+            NoteViewBufferWasDetached((*views)[i], newContents, cx);
         cx->compartment()->innerViews.removeViews(buffer);
     }
     if (buffer->firstView()) {
@@ -292,7 +293,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
             // this pointer alive we don't clear out the first view.
             MOZ_ASSERT(buffer->firstView()->is<InlineTransparentTypedObject>());
         } else {
-            buffer->neuterView(cx, buffer->firstView(), newContents);
+            NoteViewBufferWasDetached(buffer->firstView(), newContents, cx);
             buffer->setFirstView(nullptr);
         }
     }
