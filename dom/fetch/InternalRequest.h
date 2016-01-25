@@ -375,6 +375,9 @@ public:
   static RequestMode
   MapChannelToRequestMode(nsIChannel* aChannel);
 
+  static RequestCredentials
+  MapChannelToRequestCredentials(nsIChannel* aChannel);
+
 private:
   // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
   explicit InternalRequest(const InternalRequest& aOther);
