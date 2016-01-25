@@ -244,12 +244,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         if (!ownsData())
             return false;
 
-        // Neutered contents aren't transferrable because we want a neutered
-        // array's contents to be backed by zeroed memory equal in length to
+        // Detached contents aren't transferrable because we want a detached
+        // buffer's contents to be backed by zeroed memory equal in length to
         // the original buffer contents.  Transferring these contents would
         // allocate new ones based on the current byteLength, which is 0 for a
-        // neutered array -- not the original byteLength.
-        return !isNeutered();
+        // detached buffer -- not the original byteLength.
+        return !isDetached();
     }
 
     // Return whether the buffer is allocated by js_malloc and should be freed
@@ -313,7 +313,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isAsmJSMalloced() const { return bufferKind() == ASMJS_MALLOCED; }
     bool isAsmJS() const { return isAsmJSMapped() || isAsmJSMalloced(); }
     bool isMapped() const { return bufferKind() == MAPPED; }
-    bool isNeutered() const { return flags() & DETACHED; }
+    bool isDetached() const { return flags() & DETACHED; }
 
     static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                 bool usesSignalHandlers);
@@ -354,7 +354,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
     void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }
-    void setIsNeutered() { setFlags(flags() | DETACHED); }
+    void setIsDetached() { setFlags(flags() | DETACHED); }
 
     void initialize(size_t byteLength, BufferContents contents, OwnsState ownsState) {
         setByteLength(byteLength);

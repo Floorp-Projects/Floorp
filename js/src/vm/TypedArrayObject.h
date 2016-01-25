@@ -207,8 +207,18 @@ class TypedArrayObject : public NativeObject
         return viewDataEither_();
     }
 
-    bool isNeutered() const {
-        return !isSharedMemory() && bufferUnshared() && bufferUnshared()->isNeutered();
+    bool hasDetachedBuffer() const {
+        // Shared buffers can't be detached.
+        if (isSharedMemory())
+            return false;
+
+        // A typed array with a null buffer has never had its buffer exposed to
+        // become detached.
+        ArrayBufferObject* buffer = bufferUnshared();
+        if (!buffer)
+            return false;
+
+        return buffer->isDetached();
     }
 
   private:

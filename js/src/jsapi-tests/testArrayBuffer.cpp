@@ -106,7 +106,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
         GC(cx);
-        CHECK(isNeutered(view));
+        CHECK(hasDetachedBuffer(view));
         CHECK(JS_IsDetachedArrayBufferObject(buffer));
         view = nullptr;
         GC(cx);
@@ -131,8 +131,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
 
-        CHECK(isNeutered(view1));
-        CHECK(isNeutered(view2));
+        CHECK(hasDetachedBuffer(view1));
+        CHECK(hasDetachedBuffer(view2));
         CHECK(JS_IsDetachedArrayBufferObject(buffer));
 
         view1 = nullptr;
@@ -152,7 +152,7 @@ static void GC(JSContext* cx)
     JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end
 }
 
-bool isNeutered(JS::HandleObject obj) {
+bool hasDetachedBuffer(JS::HandleObject obj) {
     JS::RootedValue v(cx);
     return JS_GetProperty(cx, obj, "byteLength", &v) && v.toInt32() == 0;
 }
