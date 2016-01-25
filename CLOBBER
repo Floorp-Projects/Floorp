@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1240627 - Enable AVX2 optimizations in ffvpx on Mac
 
+Merge day clobber

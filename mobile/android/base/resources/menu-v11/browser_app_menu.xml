@@ -54,6 +54,12 @@
     <item android:id="@+id/new_private_tab"
           android:title="@string/new_private_tab"/>
 
+    <item android:id="@+id/bookmarks_list"
+          android:title="@string/bookmarks_title"/>
+
+    <item android:id="@+id/history_list"
+          android:title="@string/history_title"/>
+
     <item android:id="@+id/find_in_page"
           android:title="@string/find_in_page" />
 

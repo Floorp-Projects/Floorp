@@ -1,0 +1,10 @@
+[
+{
+"size": 2020690,
+"visibility": "public",
+"digest": "a057e96cc087d6108ae6b5cfa9829101628172bb58807257301224f552158f72a87bcfa85eb09991b5e7487a8154690a352bae63f599b8a4f3f02f346961fe8e",
+"algorithm": "sha512",
+"filename": "jimdb-arm-pie-linux_x64.tar.bz2",
+"unpack": true
+}
+]

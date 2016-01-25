@@ -24,6 +24,8 @@ import android.content.res.Configuration;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.squareup.leakcanary.LeakCanary;
+
 import java.io.File;
 
 public class GeckoApplication extends Application 
@@ -126,6 +128,8 @@ public class GeckoApplication extends Application
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
+
+        LeakCanary.install(this);
 
         final Context context = getApplicationContext();
         HardwareUtils.init(context);

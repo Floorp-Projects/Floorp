@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var TrackingProtection = {
+  // If the user ignores the doorhanger, we stop showing it after some time.
   MAX_INTROS: 0,
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
@@ -106,11 +107,13 @@ var TrackingProtection = {
       this.content.setAttribute("state", "blocked-tracking-content");
 
       // Open the tracking protection introduction panel, if applicable.
-      let introCount = gPrefService.getIntPref("privacy.trackingprotection.introCount");
-      if (introCount < TrackingProtection.MAX_INTROS) {
-        gPrefService.setIntPref("privacy.trackingprotection.introCount", ++introCount);
-        gPrefService.savePrefFile(null);
-        this.showIntroPanel();
+      if (this.enabledGlobally) {
+        let introCount = gPrefService.getIntPref("privacy.trackingprotection.introCount");
+        if (introCount < TrackingProtection.MAX_INTROS) {
+          gPrefService.setIntPref("privacy.trackingprotection.introCount", ++introCount);
+          gPrefService.savePrefFile(null);
+          this.showIntroPanel();
+        }
       }
 
       this.shieldHistogramAdd(2);
@@ -183,6 +186,16 @@ var TrackingProtection = {
     BrowserReload();
   },
 
+  dontShowIntroPanelAgain() {
+    // This function may be called in private windows, but it does not change
+    // any preference unless Tracking Protection is enabled globally.
+    if (this.enabledGlobally) {
+      gPrefService.setIntPref("privacy.trackingprotection.introCount",
+                              this.MAX_INTROS);
+      gPrefService.savePrefFile(null);
+    }
+  },
+
   showIntroPanel: Task.async(function*() {
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
@@ -190,12 +203,10 @@ var TrackingProtection = {
     let openStep2 = () => {
       // When the user proceeds in the tour, adjust the counter to indicate that
       // the user doesn't need to see the intro anymore.
-      gPrefService.setIntPref("privacy.trackingprotection.introCount",
-                              this.MAX_INTROS);
-      gPrefService.savePrefFile(null);
+      this.dontShowIntroPanelAgain();
 
       let nextURL = Services.urlFormatter.formatURLPref("privacy.trackingprotection.introURL") +
-                    "#step2";
+                    "?step=2&newtab=true";
       switchToTabHavingURI(nextURL, true, {
         // Ignore the fragment in case the intro is shown on the tour page
         // (e.g. if the user manually visited the tour or clicked the link from
@@ -220,8 +231,9 @@ var TrackingProtection = {
     UITour.initForBrowser(gBrowser.selectedBrowser, window);
     UITour.showInfo(window, panelTarget,
                     gNavigatorBundle.getString("trackingProtection.intro.title"),
-                    gNavigatorBundle.getFormattedString("trackingProtection.intro.description",
+                    gNavigatorBundle.getFormattedString("trackingProtection.intro.description2",
                                                         [brandShortName]),
-                    undefined, buttons);
+                    undefined, buttons,
+                    { closeButtonCallback: () => this.dontShowIntroPanelAgain() });
   }),
 };

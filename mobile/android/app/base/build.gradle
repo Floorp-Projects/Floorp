@@ -122,6 +122,10 @@ dependencies {
         compile 'com.google.android.gms:play-services-gcm:8.1.0'
     }
 
+    // Gradle based builds include LeakCanary. Mach based builds only include the no-op version of
+    // this library.
+    compile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+
     compile project(':thirdparty')
 
     testCompile 'junit:junit:4.12'

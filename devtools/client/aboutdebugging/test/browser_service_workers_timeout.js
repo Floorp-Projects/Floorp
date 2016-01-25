@@ -49,11 +49,24 @@ add_task(function *() {
 
   assertHasWorker(true, document, "service-workers", SERVICE_WORKER);
 
-  // XXX: race, the WorkerDebugger is ready whereas ServiceWorkerInfo
-  // doesn't has the worker registered yet on its side
+  // Ensure that the registration resolved before trying to connect to the sw
+  let frameScript = function () {
+    // Retrieve the `sw` promise created in the html page
+    let { sw } = content.wrappedJSObject;
+    sw.then(function (registration) {
+      sendAsyncMessage("sw-registered");
+    });
+  };
+  let mm = swTab.linkedBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+
   yield new Promise(done => {
-    require("sdk/timers").setTimeout(done, 250);
+    mm.addMessageListener("sw-registered", function listener() {
+      mm.removeMessageListener("sw-registered", listener);
+      done();
+    });
   });
+  ok(true, "Service worker registration resolved");
 
   // Retrieve the DEBUG button for the worker
   let names = [...document.querySelectorAll("#service-workers .target-name")];
@@ -93,7 +106,7 @@ add_task(function *() {
 
   // Finally, unregister the service worker itself
   // Use message manager to work with e10s
-  let frameScript = function () {
+  frameScript = function () {
     // Retrieve the `sw` promise created in the html page
     let { sw } = content.wrappedJSObject;
     sw.then(function (registration) {
@@ -105,7 +118,7 @@ add_task(function *() {
       });
     });
   };
-  let mm = swTab.linkedBrowser.messageManager;
+  mm = swTab.linkedBrowser.messageManager;
   mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
 
   yield new Promise(done => {

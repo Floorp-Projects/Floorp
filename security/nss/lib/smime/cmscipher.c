@@ -693,8 +693,12 @@ NSS_CMSCipherContext_Encrypt(NSSCMSCipherContext *cc, unsigned char *output,
     }
 
     if (final) {
-	padlen = padsize - (pcount % padsize);
-	PORT_Memset (pbuf + pcount, padlen, padlen);
+	if (padsize <= 0) {
+	    padlen = 0;
+	} else {
+	    padlen = padsize - (pcount % padsize);
+	    PORT_Memset (pbuf + pcount, padlen, padlen);
+	}
 	rv = (* cc->doit) (cc->cx, output, &ofraglen, max_output_len,
 			    pbuf, pcount+padlen);
 	if (rv != SECSuccess)
