@@ -108,8 +108,9 @@ OptionsPanel.prototype = {
       this.setupToolsList();
       this.setupToolbarButtonsList();
       this.setupThemeList();
-      this.populatePreferences();
       this.updateDefaultTheme();
+    }).then(() => {
+      return this.populatePreferences();
     }).then(() => {
       this.isReady = true;
       this.emit("ready");
@@ -315,7 +316,7 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab) {
-      this.target.client.attachTab(this.target.activeTab._actor, (response) => {
+      return this.target.client.attachTab(this.target.activeTab._actor).then(([response,client]) => {
         this._origJavascriptEnabled = !response.javascriptEnabled;
         this.disableJSNode.checked = this._origJavascriptEnabled;
         this.disableJSNode.addEventListener("click", this._disableJSClicked, false);
