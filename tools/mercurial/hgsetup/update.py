@@ -53,6 +53,7 @@ class MercurialUpdater(object):
             'bzpost',
             'firefoxtree',
             'hgwatchman',
+            'mozext',
             'mqext',
             'qimportbz',
             'push-to-try',
