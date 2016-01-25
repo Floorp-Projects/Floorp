@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs neuter()
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
@@ -9,7 +9,7 @@ var gTestfile = "DataView-construct-arguments-neutering.js";
 var BUGNUMBER = 991981;
 var summary =
   "new DataView(...) shouldn't misbehave horribly if index-argument " +
-  "conversion neuters the ArrayBuffer to be viewed";
+  "conversion detaches the ArrayBuffer to be viewed";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -25,7 +25,7 @@ function testByteOffset(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         gc();
         return 0x800;
       }
@@ -41,7 +41,7 @@ function testByteOffset(dataType)
     ok = true;
   }
   assertEq(ok, true, "byteOffset weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "neutering should work for byteOffset weirdness");
+  assertEq(ab.byteLength, 0, "detaching should work for byteOffset weirdness");
 }
 testByteOffset("change-data");
 testByteOffset("same-data");
@@ -54,7 +54,7 @@ function testByteLength(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         gc();
         return 0x800;
       }
@@ -70,7 +70,7 @@ function testByteLength(dataType)
     ok = true;
   }
   assertEq(ok, true, "byteLength weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "neutering should work for byteLength weirdness");
+  assertEq(ab.byteLength, 0, "detaching should work for byteLength weirdness");
 }
 testByteLength("change-data");
 testByteLength("same-data");

@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs neuter()
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
@@ -9,7 +9,7 @@ var gTestfile = "typedarray-copyWithin-arguments-neutering.js";
 var BUGNUMBER = 991981;
 var summary =
   "%TypedArray.prototype.copyWithin shouldn't misbehave horribly if " +
-  "index-argument conversion neuters the underlying ArrayBuffer";
+  "index-argument conversion detaches the underlying ArrayBuffer";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -25,7 +25,7 @@ function testBegin(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         return 0x800;
       }
     };
@@ -42,7 +42,7 @@ function testBegin(dataType)
     ok = true;
   }
   assertEq(ok, true, "start weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "neutering should work for start weirdness");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testBegin("change-data");
 testBegin("same-data");
@@ -55,7 +55,7 @@ function testEnd(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         return 0x1000;
       }
     };
@@ -72,7 +72,7 @@ function testEnd(dataType)
     ok = true;
   }
   assertEq(ok, true, "start weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "neutering should work for start weirdness");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testEnd("change-data");
 testEnd("same-data");
@@ -85,7 +85,7 @@ function testDest(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         return 0;
       }
     };
@@ -102,7 +102,7 @@ function testDest(dataType)
     ok = true;
   }
   assertEq(ok, true, "start weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "neutering should work for start weirdness");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testDest("change-data");
 testDest("same-data");
