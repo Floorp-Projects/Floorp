@@ -66,5 +66,5 @@ function* testAppears(view, swatch) {
   ok(true, "The cubic-bezier tooltip was shown on click of the cibuc swatch");
   ok(!inplaceEditor(swatch.parentNode),
     "The inplace editor wasn't shown as a result of the cibuc swatch click");
-  yield hideTooltipAndWaitForRuleviewChanged(bezier, view);
+  yield hideTooltipAndWaitForRuleViewChanged(bezier, view);
 }
