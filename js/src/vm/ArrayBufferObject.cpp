@@ -1155,7 +1155,7 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj,
 }
 
 JS_FRIEND_API(bool)
-JS_IsNeuteredArrayBufferObject(JSObject* obj)
+JS_IsDetachedArrayBufferObject(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)

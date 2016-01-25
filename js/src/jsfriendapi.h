@@ -1899,7 +1899,7 @@ JS_GetSharedArrayBufferByteLength(JSObject* obj);
 
 /**
  * Return true if the arrayBuffer contains any data. This will return false for
- * ArrayBuffer.prototype and neutered ArrayBuffers.
+ * ArrayBuffer.prototype and detached ArrayBuffers.
  *
  * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
@@ -2020,9 +2020,8 @@ extern JS_FRIEND_API(void*)
 JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
- * Return the ArrayBuffer or SharedArrayBuffer underlying an
- * ArrayBufferView. If the buffer has been neutered, this will still
- * return the neutered buffer. |obj| must be an object that would
+ * Return the ArrayBuffer or SharedArrayBuffer underlying an ArrayBufferView.
+ * This may return a detached buffer.  |obj| must be an object that would
  * return true for JS_IsArrayBufferViewObject().
  */
 extern JS_FRIEND_API(JSObject*)
@@ -2049,12 +2048,12 @@ JS_DetachArrayBuffer(JSContext* cx, JS::HandleObject obj,
                      DetachDataDisposition changeData);
 
 /**
- * Check whether the obj is ArrayBufferObject and neutered. Note that this
- * may return false if a security wrapper is encountered that denies the
+ * Check whether the obj is a detached ArrayBufferObject. Note that this may
+ * return false if a security wrapper is encountered that denies the
  * unwrapping.
  */
 extern JS_FRIEND_API(bool)
-JS_IsNeuteredArrayBufferObject(JSObject* obj);
+JS_IsDetachedArrayBufferObject(JSObject* obj);
 
 /**
  * Check whether obj supports JS_GetDataView* APIs.

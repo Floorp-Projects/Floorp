@@ -58,20 +58,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         void* contents = JS_StealArrayBufferContents(cx, obj);
         CHECK(contents != nullptr);
 
-        // Check that the original ArrayBuffer is neutered
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
-        CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "byteLength", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "byteOffset", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "length", &v));
-        CHECK(v.isInt32(0));
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
-        v.setUndefined();
-        JS_GetElement(cx, obj, 0, &v);
-        CHECK(v.isUndefined());
+        CHECK(JS_IsDetachedArrayBufferObject(obj));
 
         // Transfer to a new ArrayBuffer
         JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, size, contents));
@@ -120,7 +107,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         JS_free(nullptr, contents);
         GC(cx);
         CHECK(isNeutered(view));
-        CHECK(isNeutered(buffer));
+        CHECK(JS_IsDetachedArrayBufferObject(buffer));
         view = nullptr;
         GC(cx);
         buffer = nullptr;
@@ -146,7 +133,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 
         CHECK(isNeutered(view1));
         CHECK(isNeutered(view2));
-        CHECK(isNeutered(buffer));
+        CHECK(JS_IsDetachedArrayBufferObject(buffer));
 
         view1 = nullptr;
         GC(cx);
