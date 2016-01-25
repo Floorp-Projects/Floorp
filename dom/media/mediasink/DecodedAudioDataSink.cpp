@@ -202,10 +202,16 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     UniquePtr<AudioDataValue[]> mData;
   };
 
-  if (!mCurrentData) {
+  while (!mCurrentData) {
     // No data in the queue. Return an empty chunk.
     if (AudioQueue().GetSize() == 0) {
       return MakeUnique<Chunk>();
+    }
+
+    // Ignore the element with 0 frames and try next.
+    if (AudioQueue().PeekFront()->mFrames == 0) {
+      RefPtr<MediaData> releaseMe = AudioQueue().PopFront();
+      continue;
     }
 
     // See if there's a gap in the audio. If there is, push silence into the
@@ -239,6 +245,7 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
                                             mCurrentData->mChannels,
                                             mCurrentData->mFrames);
+    MOZ_ASSERT(mCurrentData->mFrames > 0);
   }
 
   auto framesToPop = std::min(aFrames, mCursor->Available());

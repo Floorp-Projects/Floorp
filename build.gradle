@@ -25,10 +25,6 @@ buildscript {
         maven {
             url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
-        // For spoon SNAPSHOT releases.
-        maven {
-            url 'https://oss.sonatype.org/content/repositories/snapshots'
-        }
     }
 
     dependencies {

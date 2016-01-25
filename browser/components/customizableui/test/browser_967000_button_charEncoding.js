@@ -9,7 +9,7 @@ const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizabl
 var newTab;
 var initialLocation = gBrowser.currentURI.spec;
 
-add_task(function() {
+add_task(function*() {
   info("Check Character Encoding button functionality");
 
   // add the Character Encoding button to the panel
@@ -55,7 +55,7 @@ add_task(function() {
   yield panelHidePromise;
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   // reset the panel to the default state
   yield resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");

@@ -38,6 +38,11 @@ public:
     return TrackInfo::kAudioTrack;
   }
 
+  const char* GetDescriptionName() const override
+  {
+    return "wmf audio decoder";
+  }
+
 private:
 
   HRESULT UpdateOutputType();

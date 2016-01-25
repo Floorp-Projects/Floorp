@@ -93,6 +93,11 @@ public:
     return NS_OK;
   }
 
+  const char* GetDescriptionName() const override
+  {
+    return "blank media data decoder";
+  }
+
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
   RefPtr<FlushableTaskQueue> mTaskQueue;

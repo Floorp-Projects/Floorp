@@ -8,7 +8,7 @@ var addonbarID = CustomizableUI.AREA_ADDONBAR;
 var addonbar = document.getElementById(addonbarID);
 
 // Check that currentset is correctly updated after a reset:
-add_task(function() {
+add_task(function*() {
   let placements = CustomizableUI.getWidgetIdsInArea(addonbarID);
   is(placements.join(','), addonbar.getAttribute("currentset"), "Addon-bar currentset should match default placements");
   ok(CustomizableUI.inDefaultState, "Should be in default state");

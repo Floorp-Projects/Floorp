@@ -46,7 +46,7 @@ add_task(function() {
   ok(noError, "Shouldn't throw an exception for a widget that was added to a not-yet-constructed area");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   let lazyArea = document.getElementById(kLazyAreaId);
   if (lazyArea) {
     lazyArea.remove();

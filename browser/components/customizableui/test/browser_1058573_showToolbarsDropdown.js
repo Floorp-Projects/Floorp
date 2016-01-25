@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function() {
+add_task(function*() {
   info("Check that toggleable toolbars dropdown in always shown");
 
   info("Remove all possible custom toolbars");
@@ -19,7 +19,7 @@ add_task(function() {
      "The toolbars toggle dropdown is displayed");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   info("Exit customization mode");
   yield endCustomizing();
 });

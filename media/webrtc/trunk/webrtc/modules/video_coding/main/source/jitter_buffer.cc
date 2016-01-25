@@ -14,6 +14,9 @@
 #include <algorithm>
 #include <utility>
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/trace_event.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/frame_buffer.h"
 #include "webrtc/modules/video_coding/main/source/inter_frame_delay.h"
@@ -26,9 +29,11 @@
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/metrics.h"
-#include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
+
+// Interval for updating SS data.
+static const uint32_t kSsCleanupIntervalSec = 60;
 
 // Use this rtt if no value has been reported.
 static const int64_t kDefaultRtt = 200;
@@ -146,6 +151,98 @@ void FrameList::Reset(UnorderedFrameList* free_frames) {
   }
 }
 
+bool Vp9SsMap::Insert(const VCMPacket& packet) {
+  if (!packet.codecSpecificHeader.codecHeader.VP9.ss_data_available)
+    return false;
+
+  ss_map_[packet.timestamp] = packet.codecSpecificHeader.codecHeader.VP9.gof;
+  return true;
+}
+
+void Vp9SsMap::Reset() {
+  ss_map_.clear();
+}
+
+bool Vp9SsMap::Find(uint32_t timestamp, SsMap::iterator* it_out) {
+  bool found = false;
+  for (SsMap::iterator it = ss_map_.begin(); it != ss_map_.end(); ++it) {
+    if (it->first == timestamp || IsNewerTimestamp(timestamp, it->first)) {
+      *it_out = it;
+      found = true;
+    }
+  }
+  return found;
+}
+
+void Vp9SsMap::RemoveOld(uint32_t timestamp) {
+  if (!TimeForCleanup(timestamp))
+    return;
+
+  SsMap::iterator it;
+  if (!Find(timestamp, &it))
+    return;
+
+  ss_map_.erase(ss_map_.begin(), it);
+  AdvanceFront(timestamp);
+}
+
+bool Vp9SsMap::TimeForCleanup(uint32_t timestamp) const {
+  if (ss_map_.empty() || !IsNewerTimestamp(timestamp, ss_map_.begin()->first))
+    return false;
+
+  uint32_t diff = timestamp - ss_map_.begin()->first;
+  return diff / kVideoPayloadTypeFrequency >= kSsCleanupIntervalSec;
+}
+
+void Vp9SsMap::AdvanceFront(uint32_t timestamp) {
+  DCHECK(!ss_map_.empty());
+  GofInfoVP9 gof = ss_map_.begin()->second;
+  ss_map_.erase(ss_map_.begin());
+  ss_map_[timestamp] = gof;
+}
+
+// TODO(asapersson): Update according to updates in RTP payload profile.
+bool Vp9SsMap::UpdatePacket(VCMPacket* packet) {
+  uint8_t gof_idx = packet->codecSpecificHeader.codecHeader.VP9.gof_idx;
+  if (gof_idx == kNoGofIdx)
+    return false;  // No update needed.
+
+  SsMap::iterator it;
+  if (!Find(packet->timestamp, &it))
+    return false;  // Corresponding SS not yet received.
+
+  if (gof_idx >= it->second.num_frames_in_gof)
+    return false;  // Assume corresponding SS not yet received.
+
+  RTPVideoHeaderVP9* vp9 = &packet->codecSpecificHeader.codecHeader.VP9;
+  vp9->temporal_idx = it->second.temporal_idx[gof_idx];
+  vp9->temporal_up_switch = it->second.temporal_up_switch[gof_idx];
+
+  // TODO(asapersson): Set vp9.ref_picture_id[i] and add usage.
+  vp9->num_ref_pics = it->second.num_ref_pics[gof_idx];
+  for (uint8_t i = 0; i < it->second.num_ref_pics[gof_idx]; ++i) {
+    vp9->pid_diff[i] = it->second.pid_diff[gof_idx][i];
+  }
+  return true;
+}
+
+void Vp9SsMap::UpdateFrames(FrameList* frames) {
+  for (const auto& frame_it : *frames) {
+    uint8_t gof_idx =
+        frame_it.second->CodecSpecific()->codecSpecific.VP9.gof_idx;
+    if (gof_idx == kNoGofIdx) {
+      continue;
+    }
+    SsMap::iterator ss_it;
+    if (Find(frame_it.second->TimeStamp(), &ss_it)) {
+      if (gof_idx >= ss_it->second.num_frames_in_gof) {
+        continue;  // Assume corresponding SS not yet received.
+      }
+      frame_it.second->SetGofInfo(ss_it->second, gof_idx);
+    }
+  }
+}
+
 VCMJitterBuffer::VCMJitterBuffer(Clock* clock, EventFactory* event_factory)
     : clock_(clock),
       running_(false),
@@ -204,7 +301,7 @@ VCMJitterBuffer::~VCMJitterBuffer() {
 }
 
 void VCMJitterBuffer::UpdateHistograms() {
-  if (num_packets_ <= 0) {
+  if (num_packets_ <= 0 || !running_) {
     return;
   }
   int64_t elapsed_sec =
@@ -624,6 +721,9 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
     last_decoded_state_.UpdateOldPacket(&packet);
     DropPacketsFromNackList(last_decoded_state_.sequence_num());
 
+    // Also see if this old packet made more incomplete frames continuous.
+    FindAndInsertContinuousFramesWithState(last_decoded_state_);
+
     if (num_consecutive_old_packets_ > kMaxConsecutiveOldPackets) {
       LOG(LS_WARNING)
           << num_consecutive_old_packets_
@@ -800,6 +900,16 @@ void VCMJitterBuffer::FindAndInsertContinuousFrames(
   VCMDecodingState decoding_state;
   decoding_state.CopyFrom(last_decoded_state_);
   decoding_state.SetState(&new_frame);
+  FindAndInsertContinuousFramesWithState(decoding_state);
+}
+
+void VCMJitterBuffer::FindAndInsertContinuousFramesWithState(
+    const VCMDecodingState& original_decoded_state) {
+  // Copy original_decoded_state so we can move the state forward with each
+  // decodable frame we find.
+  VCMDecodingState decoding_state;
+  decoding_state.CopyFrom(original_decoded_state);
+
   // When temporal layers are available, we search for a complete or decodable
   // frame until we hit one of the following:
   // 1. Continuous base or sync layer.
@@ -807,7 +917,8 @@ void VCMJitterBuffer::FindAndInsertContinuousFrames(
   for (FrameList::iterator it = incomplete_frames_.begin();
        it != incomplete_frames_.end();)  {
     VCMFrameBuffer* frame = it->second;
-    if (IsNewerTimestamp(new_frame.TimeStamp(), frame->TimeStamp())) {
+    if (IsNewerTimestamp(original_decoded_state.time_stamp(),
+                         frame->TimeStamp())) {
       ++it;
       continue;
     }
@@ -858,7 +969,7 @@ void VCMJitterBuffer::SetNackMode(VCMNackMode mode,
   low_rtt_nack_threshold_ms_ = low_rtt_nack_threshold_ms;
   high_rtt_nack_threshold_ms_ = high_rtt_nack_threshold_ms;
   // Don't set a high start rtt if high_rtt_nack_threshold_ms_ is used, to not
-  // disable NACK in hybrid mode.
+  // disable NACK in |kNack| mode.
   if (rtt_ms_ == kDefaultRtt && high_rtt_nack_threshold_ms_ != -1) {
     rtt_ms_ = 0;
   }

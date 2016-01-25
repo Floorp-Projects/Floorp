@@ -27,6 +27,13 @@ public:
     return mIsHardwareAccelerated;
   }
 
+  const char* GetDescriptionName() const override
+  {
+    return mIsHardwareAccelerated
+      ? "apple hardware VT decoder"
+      : "apple software VT decoder";
+  }
+
 protected:
   void ProcessFlush() override;
   void ProcessDrain() override;
@@ -43,7 +50,7 @@ private:
   nsresult WaitForAsynchronousFrames();
   CFDictionaryRef CreateDecoderSpecification();
   CFDictionaryRef CreateDecoderExtensions();
-  bool mIsHardwareAccelerated;
+  Atomic<bool> mIsHardwareAccelerated;
 };
 
 } // namespace mozilla

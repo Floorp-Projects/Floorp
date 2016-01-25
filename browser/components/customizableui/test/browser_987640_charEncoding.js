@@ -7,7 +7,7 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
 var newTab = null;
 
-add_task(function() {
+add_task(function*() {
   info("Check Character Encoding panel functionality");
 
   // add the Character Encoding button to the panel
@@ -52,7 +52,7 @@ add_task(function() {
   is(checkedButtons[0].getAttribute("label"), "Unicode", "The encoding was reset to Unicode");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   // reset the panel to the default state
   yield resetCustomization();
   ok(CustomizableUI.inDefaultState, "The UI is in default state again.");

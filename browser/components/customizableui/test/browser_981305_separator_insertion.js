@@ -24,7 +24,7 @@ function insertTempItemsIntoMenu(parentMenu) {
 }
 
 function checkSeparatorInsertion(menuId, buttonId, subviewId) {
-  return function() {
+  return function*() {
     info("Checking for duplicate separators in " + buttonId + " widget");
     let menu = document.getElementById(menuId);
     insertTempItemsIntoMenu(menu);
