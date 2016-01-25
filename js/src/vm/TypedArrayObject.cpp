@@ -77,7 +77,7 @@ TypedArrayObject::dataOffset()
 }
 
 void
-TypedArrayObject::neuter(void* newData)
+TypedArrayObject::notifyBufferDetached(void* newData)
 {
     MOZ_ASSERT(!isSharedMemory());
     setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
@@ -2164,7 +2164,7 @@ DataViewObject::initClass(JSContext* cx)
 }
 
 void
-DataViewObject::neuter(void* newData)
+DataViewObject::notifyBufferDetached(void* newData)
 {
     setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
     setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
