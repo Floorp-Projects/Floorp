@@ -137,7 +137,7 @@ function mode_credentials_test() {
       })
     .then(function(response){
         assert_equals(response.mode, 'cors');
-        assert_equals(response.credentials, 'omit');
+        assert_equals(response.credentials, 'same-origin');
         return xhr_send(host_info['HTTPS_REMOTE_ORIGIN'], 'GET', '', true);
       })
     .then(function(response){
