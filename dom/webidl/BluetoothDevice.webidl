@@ -16,7 +16,12 @@ interface BluetoothDevice : EventTarget
   /**
    * Retrieve the BluetoothGatt interface to interact with remote BLE devices.
    * This attribute is null if the device type is not dual or le.
+   *
+   * [B2G only GATT client API]
+   * gatt attribute is exposed only if "dom.bluetooth.webbluetooth.enabled"
+   * preference is false.
    */
+  [Func="mozilla::dom::bluetooth::BluetoothManager::B2GGattClientEnabled"]
   readonly attribute BluetoothGatt?         gatt;
 
   [Cached, Pure]

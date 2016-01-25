@@ -44,9 +44,11 @@ protected:
 
     int touchInputId = 0;
     if (mGestureBehavior == AsyncPanZoomController::USE_GESTURE_DETECTOR) {
-      PinchWithTouchInputAndCheckStatus(apzc, 250, 300, 1.25, touchInputId, aShouldTriggerPinch, aAllowedTouchBehaviors);
+      PinchWithTouchInputAndCheckStatus(apzc, ScreenIntPoint(250, 300), 1.25,
+          touchInputId, aShouldTriggerPinch, aAllowedTouchBehaviors);
     } else {
-      PinchWithPinchInputAndCheckStatus(apzc, 250, 300, 1.25, aShouldTriggerPinch);
+      PinchWithPinchInputAndCheckStatus(apzc, ScreenIntPoint(250, 300), 1.25,
+          aShouldTriggerPinch);
     }
 
     FrameMetrics fm = apzc->GetFrameMetrics();
@@ -72,9 +74,11 @@ protected:
     // the visible area of the document in CSS pixels is x=930 y=5 w=50 h=100
 
     if (mGestureBehavior == AsyncPanZoomController::USE_GESTURE_DETECTOR) {
-      PinchWithTouchInputAndCheckStatus(apzc, 250, 300, 0.5, touchInputId, aShouldTriggerPinch, aAllowedTouchBehaviors);
+      PinchWithTouchInputAndCheckStatus(apzc, ScreenIntPoint(250, 300), 0.5,
+          touchInputId, aShouldTriggerPinch, aAllowedTouchBehaviors);
     } else {
-      PinchWithPinchInputAndCheckStatus(apzc, 250, 300, 0.5, aShouldTriggerPinch);
+      PinchWithPinchInputAndCheckStatus(apzc, ScreenIntPoint(250, 300), 0.5,
+          aShouldTriggerPinch);
     }
 
     fm = apzc->GetFrameMetrics();
@@ -142,7 +146,8 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
 
   int touchInputId = 0;
   uint64_t blockId = 0;
-  PinchWithTouchInput(apzc, 250, 300, 1.25, touchInputId, nullptr, nullptr, &blockId);
+  PinchWithTouchInput(apzc, ScreenIntPoint(250, 300), 1.25, touchInputId,
+      nullptr, nullptr, &blockId);
 
   // Send the prevent-default notification for the touch block
   apzc->ContentReceivedInputBlock(blockId, true);
@@ -162,7 +167,8 @@ TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
   MakeApzcUnzoomable();
 
   nsEventStatus statuses[3];  // scalebegin, scale, scaleend
-  PinchWithPinchInput(apzc, 250, 350, 200, 300, 10, &statuses);
+  PinchWithPinchInput(apzc, ScreenIntPoint(250, 350), ScreenIntPoint(200, 300),
+      10, &statuses);
 
   FrameMetrics fm = apzc->GetFrameMetrics();
 

@@ -61,6 +61,8 @@ class VCMFrameBuffer : public VCMEncodedFrame {
   int Tl0PicId() const;
   bool NonReference() const;
 
+  void SetGofInfo(const GofInfoVP9& gof_info, size_t idx);
+
   // Increments a counter to keep track of the number of packets of this frame
   // which were NACKed before they arrived.
   void IncrementNackCount();

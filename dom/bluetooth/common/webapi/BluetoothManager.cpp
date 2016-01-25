@@ -13,6 +13,7 @@
 #include "mozilla/dom/bluetooth/BluetoothManager.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothManagerBinding.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -283,4 +284,11 @@ JSObject*
 BluetoothManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return BluetoothManagerBinding::Wrap(aCx, this, aGivenProto);
+}
+
+// static
+bool
+BluetoothManager::B2GGattClientEnabled(JSContext* cx, JSObject* aGlobal)
+{
+  return !Preferences::GetBool("dom.bluetooth.webbluetooth.enabled");
 }

@@ -1150,7 +1150,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     arenasAllocatedDuringSweep(nullptr),
     startedCompacting(false),
     relocatedArenasToRelease(nullptr),
-#ifdef JS_GC_MARKING_VALIDATION
+#ifdef JS_GC_ZEAL
     markingValidator(nullptr),
 #endif
     interFrameGC(false),

@@ -268,8 +268,7 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
   }
 
   if (flags & eFailAtStart) {
-    aTask->DispatchError(0, 0);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(

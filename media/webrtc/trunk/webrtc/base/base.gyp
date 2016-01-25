@@ -29,8 +29,13 @@
       'target_name': 'rtc_base_approved',
       'type': 'static_library',
       'sources': [
+        'bitbuffer.cc',
+        'bitbuffer.h',
+        'buffer.cc',
+        'buffer.h',
         'checks.cc',
         'checks.h',
+        'constructormagic.h',
         'event.cc',
         'event.h',
         'event_tracer.cc',

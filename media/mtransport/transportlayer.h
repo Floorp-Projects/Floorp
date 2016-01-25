@@ -57,10 +57,6 @@ class TransportLayer : public sigslot::has_slots<> {
   // Downward interface
   TransportLayer *downward() { return downward_; }
 
-  // Dispatch a call onto our thread (or run on the same thread if
-  // thread is not set). This is always synchronous.
-  nsresult RunOnThread(nsIRunnable *event);
-
   // Get the state
   State state() const { return state_; }
   // Must be implemented by derived classes

@@ -49,19 +49,4 @@ void TransportLayer::SetState(State state, const char *file, unsigned line) {
   }
 }
 
-nsresult TransportLayer::RunOnThread(nsIRunnable *event) {
-  if (target_) {
-    nsIThread *thr;
-
-    DebugOnly<nsresult> rv = NS_GetCurrentThread(&thr);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    if (target_ != thr) {
-      return target_->Dispatch(event, NS_DISPATCH_SYNC);
-    }
-  }
-
-  return event->Run();
-}
-
 }  // close namespace

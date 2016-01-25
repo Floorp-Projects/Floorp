@@ -465,12 +465,12 @@ TEST_F(APZHitTestingTester, Bug1148350) {
     EXPECT_CALL(check, Call("Tapped with interleaved transform"));
   }
 
-  Tap(manager, 100, 100, mcc, TimeDuration::FromMilliseconds(100));
+  Tap(manager, ScreenIntPoint(100, 100), mcc, TimeDuration::FromMilliseconds(100));
   mcc->RunThroughDelayedTasks();
   check.Call("Tapped without transform");
 
   uint64_t blockId;
-  TouchDown(manager, 100, 100, mcc->Time(), &blockId);
+  TouchDown(manager, ScreenIntPoint(100, 100), mcc->Time(), &blockId);
   if (gfxPrefs::TouchActionEnabled()) {
     SetDefaultAllowedTouchBehavior(manager, blockId);
   }
@@ -480,7 +480,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
   layers[0]->SetBaseTransform(Matrix4x4::Translation(0, 50, 0));
   manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
 
-  TouchUp(manager, 100, 100, mcc->Time());
+  TouchUp(manager, ScreenIntPoint(100, 100), mcc->Time());
   mcc->RunThroughDelayedTasks();
   check.Call("Tapped with interleaved transform");
 }
