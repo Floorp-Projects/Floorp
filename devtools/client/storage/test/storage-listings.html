@@ -97,8 +97,15 @@ function deleteDB(dbName) {
   });
 }
 
+let cacheGenerator = function*() {
+  let cache = yield caches.open("plop");
+  yield cache.add("404_cached_file.js");
+  yield cache.add("browser_storage_basic.js");
+};
+
 window.setup = function*() {
   yield idbGenerator();
+  yield cacheGenerator();
 };
 
 window.clear = function*() {
@@ -114,6 +121,8 @@ window.clear = function*() {
 
   yield deleteDB("idb1");
   yield deleteDB("idb2");
+
+  yield caches.delete("plop");
 
   dump("removed cookies, localStorage, sessionStorage and indexedDB data " +
        "from " + document.location + "\n");
