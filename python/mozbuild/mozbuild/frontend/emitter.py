@@ -63,7 +63,6 @@ from .data import (
     Sources,
     StaticLibrary,
     TestHarnessFiles,
-    TestingFiles,
     TestWebIDLFile,
     TestManifest,
     UnifiedSources,
@@ -790,9 +789,6 @@ class TreeMetadataEmitter(LoggingMixin):
             generated_files.add(str(sub.relpath))
             yield sub
 
-        for obj in self._process_test_harness_files(context):
-            yield obj
-
         defines = context.get('DEFINES')
         if defines:
             yield Defines(context, defines)
@@ -835,18 +831,21 @@ class TreeMetadataEmitter(LoggingMixin):
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
             ('SDK_FILES', SdkFiles),
-            ('TESTING_FILES', TestingFiles),
+            ('TEST_HARNESS_FILES', TestHarnessFiles),
         ):
             all_files = context.get(var)
             if not all_files:
                 continue
-            if dist_install is False and var != 'TESTING_FILES':
+            if dist_install is False and var != 'TEST_HARNESS_FILES':
                 raise SandboxValidationError(
                     '%s cannot be used with DIST_INSTALL = False' % var,
                     context)
             has_prefs = False
             has_resources = False
             for base, files in all_files.walk():
+                if var == 'TEST_HARNESS_FILES' and not base:
+                    raise SandboxValidationError(
+                        'Cannot install files to the root of TEST_HARNESS_FILES', context)
                 if base == 'components':
                     components.extend(files)
                 if base == 'defaults/pref':
@@ -862,12 +861,17 @@ class TreeMetadataEmitter(LoggingMixin):
                                 % (f,), context)
                     if not isinstance(f, ObjDirPath):
                         path = f.full_path
-                        if not os.path.exists(path):
+                        if '*' not in path and not os.path.exists(path):
                             raise SandboxValidationError(
                                 'File listed in %s does not exist: %s'
                                 % (var, path), context)
                     else:
-                        if f.target_basename not in generated_files:
+                        # TODO: Bug 1254682 - The '/' check is to allow
+                        # installing files generated from other directories,
+                        # which is done occasionally for tests. However, it
+                        # means we don't fail early if the file isn't actually
+                        # created by the other moz.build file.
+                        if f.target_basename not in generated_files and '/' not in f:
                             raise SandboxValidationError(
                                 ('Objdir file listed in %s not in ' +
                                  'GENERATED_FILES: %s') % (var, f), context)
@@ -1017,47 +1021,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 script = None
                 method = None
             yield GeneratedFile(context, script, method, output, inputs)
-
-    def _process_test_harness_files(self, context):
-        test_harness_files = context.get('TEST_HARNESS_FILES')
-        if not test_harness_files:
-            return
-
-        srcdir_files = defaultdict(list)
-        srcdir_pattern_files = defaultdict(list)
-        objdir_files = defaultdict(list)
-
-        for path, strings in test_harness_files.walk():
-            if not path and strings:
-                raise SandboxValidationError(
-                    'Cannot install files to the root of TEST_HARNESS_FILES', context)
-
-            for s in strings:
-                # Ideally, TEST_HARNESS_FILES would expose Path instances, but
-                # subclassing HierarchicalStringList to be ContextDerived is
-                # painful, so until we actually kill HierarchicalStringList,
-                # just do Path manipulation here.
-                p = Path(context, s)
-                if isinstance(p, ObjDirPath):
-                    objdir_files[path].append(p.full_path)
-                elif '*' in s:
-                    resolved = p.full_path
-                    if s[0] == '/':
-                        pattern_start = resolved.index('*')
-                        base_path = mozpath.dirname(resolved[:pattern_start])
-                        pattern = resolved[len(base_path)+1:]
-                    else:
-                        base_path = context.srcdir
-                        pattern = s
-                    srcdir_pattern_files[path].append((base_path, pattern));
-                elif not os.path.exists(p.full_path):
-                    raise SandboxValidationError(
-                        'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
-                else:
-                    srcdir_files[path].append(p.full_path)
-
-        yield TestHarnessFiles(context, srcdir_files,
-                               srcdir_pattern_files, objdir_files)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

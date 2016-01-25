@@ -321,7 +321,7 @@ class TestEmitterBasic(unittest.TestCase):
             'testing/mochitest': ['mochitest.py', 'mochitest.ini'],
         }
 
-        for path, strings in objs[0].srcdir_files.iteritems():
+        for path, strings in objs[0].files.walk():
             self.assertTrue(path in expected)
             basenames = sorted(mozpath.basename(s) for s in strings)
             self.assertEqual(sorted(expected[path]), basenames)
