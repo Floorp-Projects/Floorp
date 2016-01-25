@@ -28,6 +28,10 @@ android {
                 if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
                     exclude 'com/adjust/**'
                 }
+
+                // Exclude LeakCanary: It will be added again via a gradle dependency. This version
+                // here is only the no-op library for mach-based builds.
+                exclude 'com/squareup/leakcanary/**'
             }
         }
     }
