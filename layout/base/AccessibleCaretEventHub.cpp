@@ -327,9 +327,16 @@ public:
       rv = nsEventStatus_eConsumeNoDefault;
     }
 
+    return rv;
+  }
+
+  virtual nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) override
+  {
     aContext->SetState(aContext->NoActionState());
 
-    return rv;
+    // Do not consume the release since the press is not consumed in
+    // PressNoCaretState either.
+    return nsEventStatus_eIgnore;
   }
 
   virtual void OnReflow(AccessibleCaretEventHub* aContext) override
