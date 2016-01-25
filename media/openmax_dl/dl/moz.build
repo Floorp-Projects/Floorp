@@ -68,6 +68,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
         'sp/src/omxSP_FFTFwd_RToCCS_S16S32_Sfs_s.S',
         'sp/src/omxSP_FFTFwd_RToCCS_S32_Sfs_s.S',
         'sp/src/omxSP_FFTInv_CCSToR_F32_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CCSToR_F32_Sfs_unscaled_s.S',
         'sp/src/omxSP_FFTInv_CCSToR_S32_Sfs_s.S',
         'sp/src/omxSP_FFTInv_CCSToR_S32S16_Sfs_s.S',
         'sp/src/omxSP_FFTInv_CToC_FC32_Sfs_s.S',
