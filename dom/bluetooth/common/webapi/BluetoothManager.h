@@ -77,6 +77,12 @@ public:
    */
   void AppendAdapter(const BluetoothValue& aValue);
 
+  /**
+   * Check whether B2G only GATT client API is enabled (true) or W3C
+   * WebBluetooth API is enabled (false).
+   */
+  static bool B2GGattClientEnabled(JSContext* cx, JSObject* aGlobal);
+
 private:
   BluetoothManager(nsPIDOMWindow* aWindow);
   ~BluetoothManager();
