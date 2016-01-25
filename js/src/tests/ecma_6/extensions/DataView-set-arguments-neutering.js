@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs neuter()
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
@@ -9,7 +9,7 @@ var gTestfile = "DataView-set-arguments-neutering.js";
 var BUGNUMBER = 991981;
 var summary =
   "DataView.prototype.set* methods shouldn't misbehave horribly if " +
-  "index-argument conversion neuters the ArrayBuffer being modified";
+  "index-argument conversion detaches the ArrayBuffer being modified";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -27,7 +27,7 @@ function testIndex(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         gc();
         return 0xFFF;
       }
@@ -43,7 +43,7 @@ function testIndex(dataType)
     ok = true;
   }
   assertEq(ok, true, "should have thrown");
-  assertEq(ab.byteLength, 0, "should have been neutered correctly");
+  assertEq(ab.byteLength, 0, "should have been detached correctly");
 }
 testIndex("change-data");
 testIndex("same-data");
@@ -58,7 +58,7 @@ function testValue(dataType)
     {
       valueOf: function()
       {
-        neuter(ab, dataType);
+        detachArrayBuffer(ab, dataType);
         gc();
         return 0x42;
       }
@@ -74,7 +74,7 @@ function testValue(dataType)
     ok = true;
   }
   assertEq(ok, true, "should have thrown");
-  assertEq(ab.byteLength, 0, "should have been neutered correctly");
+  assertEq(ab.byteLength, 0, "should have been detached correctly");
 }
 testValue("change-data");
 testValue("same-data");

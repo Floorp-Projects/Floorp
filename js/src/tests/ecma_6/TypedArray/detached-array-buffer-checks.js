@@ -1,11 +1,11 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer
 
 // Nearly every %TypedArray%.prototype method should throw a TypeError when called
 // atop a detached array buffer. Here we check verify that this holds true for
 // all relevant functions.
 let buffer = new ArrayBuffer(32);
 let array  = new Int32Array(buffer);
-neuter(buffer, "change-data");
+detachArrayBuffer(buffer, "change-data");
 
 // A nice poisoned callable to ensure that we fail on a detached buffer check
 // before a method attempts to do anything with its arguments.
@@ -34,7 +34,7 @@ assertThrowsInstanceOf(() => {
 }, TypeError);
 
 assertThrowsInstanceOf(() => {
-    array.filter((x) => x);
+    array.filter(POISON);
 }, TypeError);
 
 assertThrowsInstanceOf(() => {
@@ -58,7 +58,7 @@ assertThrowsInstanceOf(() => {
 }, TypeError);
 
 assertThrowsInstanceOf(() => {
-    array.join();
+    array.join(POISON);
 }, TypeError);
 
 assertThrowsInstanceOf(() => {
