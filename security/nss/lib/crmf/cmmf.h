@@ -6,7 +6,7 @@
 #ifndef _CMMF_H_
 #define _CMMF_H_
 /*
- * These are the functions exported by the security library for 
+ * These are the functions exported by the security library for
  * implementing Certificate Management Message Formats (CMMF).
  *
  * This API is designed against July 1998 CMMF draft.  Please read this
@@ -25,20 +25,20 @@ SEC_BEGIN_PROTOS
  * INPUTS:
  *    NONE
  * NOTES:
- *    This function will create an empty CMMFCertRepContent Structure.  
+ *    This function will create an empty CMMFCertRepContent Structure.
  *    The client of the library must set the CMMFCertResponses.
  *    Call CMMF_CertRepContentSetCertResponse to accomplish this task.
- *    If the client of the library also wants to include the chain of 
- *    CA certs required to make the certificates in CMMFCertResponse valid, 
+ *    If the client of the library also wants to include the chain of
+ *    CA certs required to make the certificates in CMMFCertResponse valid,
  *    then the user must also set the caPubs field of CMMFCertRepContent.
  *    Call CMMF_CertRepContentSetCAPubs to accomplish this.  After setting
- *    the desired fields, the user can then call CMMF_EncodeCertRepContent 
+ *    the desired fields, the user can then call CMMF_EncodeCertRepContent
  *    to DER-encode the CertRepContent.
  * RETURN:
- *    A pointer to the CMMFCertRepContent.  A NULL return value indicates 
+ *    A pointer to the CMMFCertRepContent.  A NULL return value indicates
  *    an error in allocating memory or failure to initialize the structure.
  */
-extern CMMFCertRepContent* CMMF_CreateCertRepContent(void);
+extern CMMFCertRepContent *CMMF_CreateCertRepContent(void);
 
 /*
  * FUNCTION: CMMF_CreateCertRepContentFromDER
@@ -46,24 +46,24 @@ extern CMMFCertRepContent* CMMF_CreateCertRepContent(void);
  *    db
  *        The certificate database where the certificates will be placed.
  *        The certificates will be placed in the temporary database associated
- *        with the handle. 
+ *        with the handle.
  *    buf
  *        A buffer to the DER-encoded CMMFCertRepContent
  *    len
  *        The length in bytes of the buffer 'buf'
  * NOTES:
  *    This function passes the buffer to the ASN1 decoder and creates a
- *    CMMFCertRepContent structure.  The user must call 
+ *    CMMFCertRepContent structure.  The user must call
  *    CMMF_DestroyCertRepContent after the return value is no longer needed.
  *
  * RETURN:
  *    A pointer to the CMMFCertRepContent structure.  A NULL return
  *    value indicates the library was unable to parse the DER.
  */
-extern CMMFCertRepContent* 
-       CMMF_CreateCertRepContentFromDER(CERTCertDBHandle *db, 
-					const char       *buf, 
-					long              len);
+extern CMMFCertRepContent *
+CMMF_CreateCertRepContentFromDER(CERTCertDBHandle *db,
+                                 const char *buf,
+                                 long len);
 
 /*
  * FUNCTION: CMMF_CreateCertResponse
@@ -73,17 +73,17 @@ extern CMMFCertRepContent*
  * NOTES:
  *    This creates a CMMFCertResponse.  This response should correspond
  *    to a request that was received via CRMF.  From the CRMF message you
- *    can get the Request Id to pass in as inCertReqId, in essence binding 
+ *    can get the Request Id to pass in as inCertReqId, in essence binding
  *    a CMRFCertRequest message to the CMMFCertResponse created by this
  *    function.  If no requuest id is associated with the response to create
  *    then the user should pass in -1 for 'inCertReqId'.
  *
  * RETURN:
- *    A pointer to the new CMMFCertResponse corresponding to the request id 
- *    passed in.  A NULL return value indicates an error while trying to 
+ *    A pointer to the new CMMFCertResponse corresponding to the request id
+ *    passed in.  A NULL return value indicates an error while trying to
  *    create the CMMFCertResponse.
  */
-extern CMMFCertResponse* CMMF_CreateCertResponse(long inCertReqId);
+extern CMMFCertResponse *CMMF_CreateCertResponse(long inCertReqId);
 
 /*
  * FUNCTION: CMMF_CreateKeyRecRepContent
@@ -91,7 +91,7 @@ extern CMMFCertResponse* CMMF_CreateCertResponse(long inCertReqId);
  *    NONE
  * NOTES:
  *    This function creates a new empty CMMFKeyRecRepContent structure.
- *    At the very minimum, the user  must call 
+ *    At the very minimum, the user  must call
  *    CMMF_KeyRecRepContentSetPKIStatusInfoStatus field to have an
  *    encodable structure.  Depending on what the response is, the user may
  *    have to set other fields as well to properly build up the structure so
@@ -111,26 +111,26 @@ extern CMMFKeyRecRepContent *CMMF_CreateKeyRecRepContent(void);
  * FUNCTION: CMMF_CreateKeyRecRepContentFromDER
  * INPUTS:
  *    db
- *        The handle for the certificate database where the decoded 
+ *        The handle for the certificate database where the decoded
  *        certificates will be placed.  The decoded certificates will
- *        be placed in the temporary database associated with the 
+ *        be placed in the temporary database associated with the
  *        handle.
  *    buf
  *        A buffer contatining the DER-encoded CMMFKeyRecRepContent
  *    len
  *        The length in bytes of the buffer 'buf'
  * NOTES
- *    This function passes the buffer to the ASN1 decoder and creates a 
+ *    This function passes the buffer to the ASN1 decoder and creates a
  *    CMMFKeyRecRepContent structure.
  *
  * RETURN:
  *    A pointer to the CMMFKeyRecRepContent structure.  A NULL return
  *    value indicates the library was unable to parse the DER.
  */
-extern CMMFKeyRecRepContent* 
-       CMMF_CreateKeyRecRepContentFromDER(CERTCertDBHandle *db,
-					  const char       *buf,
-					  long              len);
+extern CMMFKeyRecRepContent *
+CMMF_CreateKeyRecRepContentFromDER(CERTCertDBHandle *db,
+                                   const char *buf,
+                                   long len);
 
 /*
  * FUNCTION: CMMF_CreatePOPODecKeyChallContent
@@ -139,18 +139,18 @@ extern CMMFKeyRecRepContent*
  * NOTES:
  *    This function creates an empty CMMFPOPODecKeyChallContent.  The user
  *    must add the challenges individually specifying the random number to
- *    be used and the public key to be used when creating each individual 
- *    challenge.  User can accomplish this by calling the function 
+ *    be used and the public key to be used when creating each individual
+ *    challenge.  User can accomplish this by calling the function
  *    CMMF_POPODecKeyChallContentSetNextChallenge.
  * RETURN:
  *    A pointer to a CMMFPOPODecKeyChallContent structure.  Ther user can
  *    then call CMMF_EncodePOPODecKeyChallContent passing in the return
- *    value from this function after setting all of the challenges.  A 
- *    return value of NULL indicates an error while creating the 
+ *    value from this function after setting all of the challenges.  A
+ *    return value of NULL indicates an error while creating the
  *    CMMFPOPODecKeyChallContent structure.
  */
-extern CMMFPOPODecKeyChallContent*
-       CMMF_CreatePOPODecKeyChallContent(void);
+extern CMMFPOPODecKeyChallContent *
+CMMF_CreatePOPODecKeyChallContent(void);
 
 /*
  * FUNCTION: CMMF_CreatePOPODecKeyChallContentFromDER
@@ -161,14 +161,14 @@ extern CMMFPOPODecKeyChallContent*
  *        The length in bytes of the buffer 'buf'
  * NOTES:
  *    This function passes the buffer to the ASN1 decoder and creates a
- *    CMMFPOPODecKeyChallContent structure.  
+ *    CMMFPOPODecKeyChallContent structure.
  *
  * RETURN:
  *    A pointer to the CMMFPOPODecKeyChallContent structure.  A NULL return
  *    value indicates the library was unable to parse the DER.
  */
-extern CMMFPOPODecKeyChallContent*
-       CMMF_CreatePOPODecKeyChallContentFromDER(const char *buf, long len);
+extern CMMFPOPODecKeyChallContent *
+CMMF_CreatePOPODecKeyChallContentFromDER(const char *buf, long len);
 
 /*
  * FUNCTION: CMMF_CreatePOPODecKeyRespContentFromDER
@@ -178,15 +178,15 @@ extern CMMFPOPODecKeyChallContent*
  *    len
  *        The length in bytes of the buffer 'buf'
  * NOTES
- *    This function passes the buffer to the ASN1 decoder and creates a 
+ *    This function passes the buffer to the ASN1 decoder and creates a
  *    CMMFPOPODecKeyRespContent structure.
  *
  * RETURN:
  *    A pointer to the CMMFPOPODecKeyRespContent structure.  A NULL return
  *    value indicates the library was unable to parse the DER.
  */
-extern CMMFPOPODecKeyRespContent*
-       CMMF_CreatePOPODecKeyRespContentFromDER(const char *buf, long len);
+extern CMMFPOPODecKeyRespContent *
+CMMF_CreatePOPODecKeyRespContentFromDER(const char *buf, long len);
 
 /************************** Set Functions *************************/
 
@@ -196,16 +196,16 @@ extern CMMFPOPODecKeyRespContent*
  *    inCertRepContent
  *        The CMMFCertRepContent to operate on.
  *    inCertResponses
- *        An array of pointers to CMMFCertResponse structures to 
+ *        An array of pointers to CMMFCertResponse structures to
  *        add to the CMMFCertRepContent structure.
  *    inNumResponses
  *        The length of the array 'inCertResponses'
  * NOTES:
- *    This function will add the CMMFCertResponse structure to the 
- *    CMMFCertRepContent passed in.  The CMMFCertResponse field of 
+ *    This function will add the CMMFCertResponse structure to the
+ *    CMMFCertRepContent passed in.  The CMMFCertResponse field of
  *    CMMFCertRepContent is required, so the client must call this function
- *    before calling CMMF_EncodeCertRepContent.  If the user calls 
- *    CMMF_EncodeCertRepContent before calling this function, 
+ *    before calling CMMF_EncodeCertRepContent.  If the user calls
+ *    CMMF_EncodeCertRepContent before calling this function,
  *    CMMF_EncodeCertRepContent will fail.
  *
  * RETURN:
@@ -213,10 +213,10 @@ extern CMMFPOPODecKeyRespContent*
  *    structure was successful.  Any other return value indicates an error
  *    while trying to add the CMMFCertResponses.
  */
-extern SECStatus 
-      CMMF_CertRepContentSetCertResponses(CMMFCertRepContent *inCertRepContent,
-					  CMMFCertResponse  **inCertResponses,
-					  int                 inNumResponses);
+extern SECStatus
+CMMF_CertRepContentSetCertResponses(CMMFCertRepContent *inCertRepContent,
+                                    CMMFCertResponse **inCertResponses,
+                                    int inNumResponses);
 
 /*
  * FUNCTION: CMMF_CertRepContentSetCAPubs
@@ -228,19 +228,19 @@ extern SECStatus
  *        required to make the issued cert valid.
  * NOTES:
  *    This function will set the the certificates in the CA chain as part
- *    of the CMMFCertRepContent.  This field is an optional member of the 
+ *    of the CMMFCertRepContent.  This field is an optional member of the
  *    CMMFCertRepContent structure, so the client is not required to call
  *    this function before calling CMMF_EncodeCertRepContent.
  *
  * RETURN:
  *    SECSuccess if adding the 'inCAPubs' to the CERTRepContent was successful.
- *    Any other return value indicates an error while adding 'inCAPubs' to the 
+ *    Any other return value indicates an error while adding 'inCAPubs' to the
  *    CMMFCertRepContent structure.
- * 
+ *
  */
-extern SECStatus 
-       CMMF_CertRepContentSetCAPubs (CMMFCertRepContent  *inCertRepContent,
-				     CERTCertList        *inCAPubs);
+extern SECStatus
+CMMF_CertRepContentSetCAPubs(CMMFCertRepContent *inCertRepContent,
+                             CERTCertList *inCAPubs);
 
 /*
  * FUNCTION: CMMF_CertResponseSetPKIStatusInfoStatus
@@ -250,7 +250,7 @@ extern SECStatus
  *     inPKIStatus
  *        The value to set for the PKIStatusInfo.status field.
  * NOTES:
- *    This function will set the CertResponse.status.status field of 
+ *    This function will set the CertResponse.status.status field of
  *    the CMMFCertResponse structure.  (View the definition of CertResponse
  *    in the CMMF draft to see exactly which value this talks about.)  This
  *    field is a required member of the structure, so the user must call this
@@ -260,9 +260,9 @@ extern SECStatus
  *    SECSuccess if setting the field with the passed in value was successful.
  *    Any other return value indicates an error while trying to set the field.
  */
-extern SECStatus 
-     CMMF_CertResponseSetPKIStatusInfoStatus (CMMFCertResponse *inCertResp,
-					      CMMFPKIStatus     inPKIStatus);
+extern SECStatus
+CMMF_CertResponseSetPKIStatusInfoStatus(CMMFCertResponse *inCertResp,
+                                        CMMFPKIStatus inPKIStatus);
 
 /*
  * FUNCTION: CMMF_CertResponseSetCertificate
@@ -270,7 +270,7 @@ extern SECStatus
  *    inCertResp
  *        The CMMFCertResponse to operate on.
  *    inCertificate
- *        The certificate to add to the 
+ *        The certificate to add to the
  *        CertResponse.CertifiedKeyPair.certOrEncCert.certificate field.
  * NOTES:
  *    This function will take the certificate and make it a member of the
@@ -282,13 +282,13 @@ extern SECStatus
  *    Any other return value indicates an error in adding the certificate to
  *    the CertResponse.
  */
-extern SECStatus 
-       CMMF_CertResponseSetCertificate (CMMFCertResponse *inCertResp,
-					CERTCertificate  *inCertificate);
+extern SECStatus
+CMMF_CertResponseSetCertificate(CMMFCertResponse *inCertResp,
+                                CERTCertificate *inCertificate);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentSetPKIStatusInfoStatus
- * INPUTS: 
+ * INPUTS:
  *    inKeyRecRep
  *        The CMMFKeyRecRepContent to operate on.
  *    inPKIStatus
@@ -296,17 +296,17 @@ extern SECStatus
  * NOTES:
  *    This function sets the only required field for the KeyRecRepContent.
  *    In most cases, the user will set this field and other fields of the
- *    structure to properly create the CMMFKeyRecRepContent structure.  
+ *    structure to properly create the CMMFKeyRecRepContent structure.
  *    Refer to the CMMF draft to see which fields need to be set in order
  *    to create the desired CMMFKeyRecRepContent.
- * 
+ *
  * RETURN:
  *    SECSuccess if setting the PKIStatusInfo.status field was successful.
  *    Any other return value indicates an error in setting the field.
  */
-extern SECStatus 
+extern SECStatus
 CMMF_KeyRecRepContentSetPKIStatusInfoStatus(CMMFKeyRecRepContent *inKeyRecRep,
-					    CMMFPKIStatus         inPKIStatus);
+                                            CMMFPKIStatus inPKIStatus);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentSetNewSignCert
@@ -320,13 +320,13 @@ CMMF_KeyRecRepContentSetPKIStatusInfoStatus(CMMFKeyRecRepContent *inKeyRecRep,
  *    structure.
  *
  * RETURN:
- *    SECSuccess if setting the new signing cert was successful.  Any other 
+ *    SECSuccess if setting the new signing cert was successful.  Any other
  *    return value indicates an error occurred while trying to add the
  *    new signing certificate.
  */
-extern SECStatus 
-       CMMF_KeyRecRepContentSetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep,
-					   CERTCertificate     *inNewSignCert);
+extern SECStatus
+CMMF_KeyRecRepContentSetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep,
+                                    CERTCertificate *inNewSignCert);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentSetCACerts
@@ -334,21 +334,21 @@ extern SECStatus
  *    inKeyRecRep
  *        The CMMFKeyRecRepContent to operate on.
  *    inCACerts
- *        The list of CA certificates required to construct a valid 
+ *        The list of CA certificates required to construct a valid
  *        certificate chain with the certificates that will be returned
  *        to the end user via this KeyRecRepContent.
  * NOTES:
  *    This function sets the caCerts that are required to form a chain with the
- *    end entity certificates that are being re-issued in this 
+ *    end entity certificates that are being re-issued in this
  *    CMMFKeyRecRepContent structure.
  *
  * RETURN:
  *    SECSuccess if adding the caCerts was successful.  Any other return value
  *    indicates an error while tring to add the caCerts.
  */
-extern SECStatus 
-       CMMF_KeyRecRepContentSetCACerts(CMMFKeyRecRepContent *inKeyRecRep,
-				       CERTCertList         *inCACerts);
+extern SECStatus
+CMMF_KeyRecRepContentSetCACerts(CMMFKeyRecRepContent *inKeyRecRep,
+                                CERTCertList *inCACerts);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentSetCertifiedKeyPair
@@ -362,21 +362,21 @@ extern SECStatus
  *    inPubKey
  *        The public key to use for wrapping the private key.
  * NOTES:
- *    This function adds another certificate-key pair to the 
- *    CMMFKeyRecRepcontent structure.  There may be more than one 
- *    certificate-key pair in the structure, so the user must call this 
+ *    This function adds another certificate-key pair to the
+ *    CMMFKeyRecRepcontent structure.  There may be more than one
+ *    certificate-key pair in the structure, so the user must call this
  *    function multiple times to add more than one cert-key pair.
  *
  * RETURN:
  *    SECSuccess if adding the certified key pair was successful.  Any other
- *    return value indicates an error in adding certified key pair to 
+ *    return value indicates an error in adding certified key pair to
  *    CMMFKeyRecRepContent structure.
  */
-extern SECStatus 
-    CMMF_KeyRecRepContentSetCertifiedKeyPair(CMMFKeyRecRepContent *inKeyRecRep,
-					     CERTCertificate      *inCert,
-					     SECKEYPrivateKey     *inPrivKey,
-					     SECKEYPublicKey      *inPubKey);
+extern SECStatus
+CMMF_KeyRecRepContentSetCertifiedKeyPair(CMMFKeyRecRepContent *inKeyRecRep,
+                                         CERTCertificate *inCert,
+                                         SECKEYPrivateKey *inPrivKey,
+                                         SECKEYPublicKey *inPubKey);
 
 /*
  * FUNCTION: CMMF_POPODecKeyChallContentSetNextChallenge
@@ -392,15 +392,15 @@ extern SECStatus
  *    passwdArg
  *        This value will be passed to the function used for getting a
  *        password.  The password for getting a password should be registered
- *        by calling PK11_SetPasswordFunc before this function is called. 
- *        If no password callback is registered and the library needs to 
+ *        by calling PK11_SetPasswordFunc before this function is called.
+ *        If no password callback is registered and the library needs to
  *        authenticate to the slot for any reason, this function will fail.
  * NOTES:
  *    This function adds a challenge to the end of the list of challenges
  *    contained by 'inDecKeyChall'.  Refer to the CMMF draft on how the
  *    the random number passed in and the sender's GeneralName are used
  *    to generate the challenge and witness fields of the challenge.  This
- *    library will use SHA1 as the one-way function for generating the 
+ *    library will use SHA1 as the one-way function for generating the
  *    witess field of the challenge.
  *
  * RETURN:
@@ -409,13 +409,11 @@ extern SECStatus
  *    while trying to generate the challenge.
  */
 extern SECStatus
-CMMF_POPODecKeyChallContentSetNextChallenge
-                                   (CMMFPOPODecKeyChallContent *inDecKeyChall,
-				    long                        inRandom,
-				    CERTGeneralName            *inSender,
-				    SECKEYPublicKey            *inPubKey,
-				    void                       *passwdArg);
-
+CMMF_POPODecKeyChallContentSetNextChallenge(CMMFPOPODecKeyChallContent *inDecKeyChall,
+                                            long inRandom,
+                                            CERTGeneralName *inSender,
+                                            SECKEYPublicKey *inPubKey,
+                                            void *passwdArg);
 
 /************************** Encoding Functions *************************/
 
@@ -425,30 +423,30 @@ CMMF_POPODecKeyChallContentSetNextChallenge
  *    inCertRepContent
  *        The CMMFCertRepContent to DER-encode.
  *    inCallback
- *        A callback function that the ASN1 encoder will call whenever it 
- *        wants to write out DER-encoded bytes.  Look at the defintion of 
+ *        A callback function that the ASN1 encoder will call whenever it
+ *        wants to write out DER-encoded bytes.  Look at the defintion of
  *        CRMFEncoderOutputCallback in crmft.h for a description of the
  *        parameters to the function.
  *    inArg
  *        An opaque pointer to a user-supplied argument that will be passed
  *        to the callback funtion whenever the function is called.
  * NOTES:
- *    The CMMF library will use the same DER-encoding scheme as the CRMF 
+ *    The CMMF library will use the same DER-encoding scheme as the CRMF
  *    library.  In other words, when reading CRMF comments that pertain to
- *    encoding, those comments apply to the CMMF libray as well.  
+ *    encoding, those comments apply to the CMMF libray as well.
  *    The callback function will be called multiple times, each time supplying
- *    the next chunk of DER-encoded bytes.  The user must concatenate the 
+ *    the next chunk of DER-encoded bytes.  The user must concatenate the
  *    output of each successive call to the callback in order to get the
  *    entire DER-encoded CMMFCertRepContent structure.
  *
  * RETURN:
- *    SECSuccess if encoding the CMMFCertRepContent was successful.  Any 
+ *    SECSuccess if encoding the CMMFCertRepContent was successful.  Any
  *    other return value indicates an error while decoding the structure.
  */
-extern SECStatus 
-       CMMF_EncodeCertRepContent (CMMFCertRepContent        *inCertRepContent,
-				  CRMFEncoderOutputCallback  inCallback,
-				  void                      *inArg);
+extern SECStatus
+CMMF_EncodeCertRepContent(CMMFCertRepContent *inCertRepContent,
+                          CRMFEncoderOutputCallback inCallback,
+                          void *inArg);
 
 /*
  * FUNCTION: CMMF_EncodeKeyRecRepContent
@@ -456,30 +454,30 @@ extern SECStatus
  *    inKeyRecRep
  *        The CMMFKeyRepContent to DER-encode.
  *    inCallback
- *        A callback function that the ASN1 encoder will call whenever it 
- *        wants to write out DER-encoded bytes.  Look at the defintion of 
+ *        A callback function that the ASN1 encoder will call whenever it
+ *        wants to write out DER-encoded bytes.  Look at the defintion of
  *        CRMFEncoderOutputCallback in crmft.h for a description of the
  *        parameters to the function.
  *    inArg
  *        An opaque pointer to a user-supplied argument that will be passed
  *        to the callback funtion whenever the function is called.
  * NOTES:
- *    The CMMF library will use the same DER-encoding scheme as the CRMF 
+ *    The CMMF library will use the same DER-encoding scheme as the CRMF
  *    library.  In other words, when reading CRMF comments that pertain to
- *    encoding, those comments apply to the CMMF libray as well.  
+ *    encoding, those comments apply to the CMMF libray as well.
  *    The callback function will be called multiple times, each time supplying
- *    the next chunk of DER-encoded bytes.  The user must concatenate the 
+ *    the next chunk of DER-encoded bytes.  The user must concatenate the
  *    output of each successive call to the callback in order to get the
  *    entire DER-encoded CMMFCertRepContent structure.
  *
  * RETURN:
- *    SECSuccess if encoding the CMMFKeyRecRepContent was successful.  Any 
+ *    SECSuccess if encoding the CMMFKeyRecRepContent was successful.  Any
  *    other return value indicates an error while decoding the structure.
  */
 extern SECStatus
-       CMMF_EncodeKeyRecRepContent(CMMFKeyRecRepContent      *inKeyRecRep,
-				   CRMFEncoderOutputCallback  inCallback,
-				   void                      *inArg);
+CMMF_EncodeKeyRecRepContent(CMMFKeyRecRepContent *inKeyRecRep,
+                            CRMFEncoderOutputCallback inCallback,
+                            void *inArg);
 
 /*
  * FUNCTION: CMMF_EncodePOPODecKeyChallContent
@@ -487,19 +485,19 @@ extern SECStatus
  *    inDecKeyChall
  *        The CMMFDecKeyChallContent to operate on.
  *    inCallback
- *        A callback function that the ASN1 encoder will call whenever it 
- *        wants to write out DER-encoded bytes.  Look at the defintion of 
+ *        A callback function that the ASN1 encoder will call whenever it
+ *        wants to write out DER-encoded bytes.  Look at the defintion of
  *        CRMFEncoderOutputCallback in crmft.h for a description of the
  *        parameters to the function.
  *    inArg
  *        An opaque pointer to a user-supplied argument that will be passed
  *        to the callback function whenever the function is called.
  * NOTES:
- *    The CMMF library will use the same DER-encoding scheme as the CRMF 
+ *    The CMMF library will use the same DER-encoding scheme as the CRMF
  *    library.  In other words, when reading CRMF comments that pertain to
- *    encoding, those comments apply to the CMMF libray as well.  
+ *    encoding, those comments apply to the CMMF libray as well.
  *    The callback function will be called multiple times, each time supplying
- *    the next chunk of DER-encoded bytes.  The user must concatenate the 
+ *    the next chunk of DER-encoded bytes.  The user must concatenate the
  *    output of each successive call to the callback in order to get the
  *    entire DER-encoded CMMFCertRepContent structure.
  *    The DER will be an encoding of the type POPODecKeyChallContents, which
@@ -509,34 +507,34 @@ extern SECStatus
  *    SECSuccess if encoding was successful.  Any other return value indicates
  *    an error in trying to encode the Challenges.
  */
-extern SECStatus 
+extern SECStatus
 CMMF_EncodePOPODecKeyChallContent(CMMFPOPODecKeyChallContent *inDecKeyChall,
-				  CRMFEncoderOutputCallback inCallback,
-				  void                     *inArg);
+                                  CRMFEncoderOutputCallback inCallback,
+                                  void *inArg);
 
 /*
  * FUNCTION: CMMF_EncodePOPODecKeyRespContent
  * INPUTS:
  *    inDecodedRand
- *        An array of integers to encode as the responses to 
+ *        An array of integers to encode as the responses to
  *        CMMFPOPODecKeyChallContent.  The integers must be in the same order
  *        as the challenges extracted from CMMFPOPODecKeyChallContent.
  *    inNumRand
  *        The number of random integers contained in the array 'inDecodedRand'
  *    inCallback
- *        A callback function that the ASN1 encoder will call whenever it 
- *        wants to write out DER-encoded bytes.  Look at the defintion of 
+ *        A callback function that the ASN1 encoder will call whenever it
+ *        wants to write out DER-encoded bytes.  Look at the defintion of
  *        CRMFEncoderOutputCallback in crmft.h for a description of the
  *        parameters to the function.
  *    inArg
  *        An opaque pointer to a user-supplied argument that will be passed
  *        to the callback funtion whenever the function is called.
  * NOTES:
- *    The CMMF library will use the same DER-encoding scheme as the CRMF 
+ *    The CMMF library will use the same DER-encoding scheme as the CRMF
  *    library.  In other words, when reading CRMF comments that pertain to
- *    encoding, those comments apply to the CMMF libray as well.  
+ *    encoding, those comments apply to the CMMF libray as well.
  *    The callback function will be called multiple times, each time supplying
- *    the next chunk of DER-encoded bytes.  The user must concatenate the 
+ *    the next chunk of DER-encoded bytes.  The user must concatenate the
  *    output of each successive call to the callback in order to get the
  *    entire DER-encoded  POPODecKeyRespContent.
  *
@@ -544,11 +542,11 @@ CMMF_EncodePOPODecKeyChallContent(CMMFPOPODecKeyChallContent *inDecKeyChall,
  *    SECSuccess if encoding was successful.  Any other return value indicates
  *    an error in trying to encode the Challenges.
  */
-extern SECStatus 
-      CMMF_EncodePOPODecKeyRespContent(long                     *inDecodedRand,
-				       int                       inNumRand,
-				       CRMFEncoderOutputCallback inCallback,
-				       void                     *inArg); 
+extern SECStatus
+CMMF_EncodePOPODecKeyRespContent(long *inDecodedRand,
+                                 int inNumRand,
+                                 CRMFEncoderOutputCallback inCallback,
+                                 void *inArg);
 
 /***************  Accessor function  ***********************************/
 
@@ -560,27 +558,26 @@ extern SECStatus
  * NOTES:
  *    This function will return a copy of the list of certificates that
  *    make up the chain of CA's required to make the cert issued valid.
- *    The user must call CERT_DestroyCertList on the return value when 
- *    done using the return value.  
+ *    The user must call CERT_DestroyCertList on the return value when
+ *    done using the return value.
  *
  *    Only call this function on a CertRepContent that has been decoded.
  *    The client must call CERT_DestroyCertList when the certificate list
- *    is no longer needed. 
+ *    is no longer needed.
  *
  *    The certs in the list will not be in the temporary database.  In order
  *    to make these certificates a part of the permanent CA internal database,
- *    the user must collect the der for all of these certs and call 
+ *    the user must collect the der for all of these certs and call
  *    CERT_ImportCAChain.  Afterwards the certs will be part of the permanent
  *    database.
- *    
+ *
  * RETURN:
- *    A pointer to the CERTCertList representing the CA chain associated 
+ *    A pointer to the CERTCertList representing the CA chain associated
  *    with the issued cert.  A NULL return value indicates  that no CA Pubs
- *    were available in the CMMFCertRepContent structure. 
+ *    were available in the CMMFCertRepContent structure.
  */
-extern CERTCertList* 
-       CMMF_CertRepContentGetCAPubs (CMMFCertRepContent *inCertRepContent);
-
+extern CERTCertList *
+CMMF_CertRepContentGetCAPubs(CMMFCertRepContent *inCertRepContent);
 
 /*
  * FUNCTION: CMMF_CertRepContentGetNumResponses
@@ -590,12 +587,12 @@ extern CERTCertList*
  * NOTES:
  *    This function will return the number of CertResponses that are contained
  *    by the CMMFCertRepContent passed in.
- * 
+ *
  * RETURN:
  *    The number of CMMFCertResponses contained in the structure passed in.
  */
-extern int 
- CMMF_CertRepContentGetNumResponses (CMMFCertRepContent *inCertRepContent);
+extern int
+CMMF_CertRepContentGetNumResponses(CMMFCertRepContent *inCertRepContent);
 
 /*
  * FUNCTION: CMMF_CertRepContentGetResponseAtIndex
@@ -605,20 +602,20 @@ extern int
  *    inIndex
  *        The index of the CMMFCertResponse the user wants a copy of.
  * NOTES:
- *    This function creates a copy of the CMMFCertResponse at the index 
+ *    This function creates a copy of the CMMFCertResponse at the index
  *    corresponding to the parameter 'inIndex'.  Indexing is done like a
  *    traditional C array, ie the valid indexes are (0...numResponses-1).
- *    The user must call CMMF_DestroyCertResponse after the return value is 
+ *    The user must call CMMF_DestroyCertResponse after the return value is
  *    no longer needed.
  *
  * RETURN:
- *    A pointer to the CMMFCertResponse at the index corresponding to 
- *    'inIndex'.  A return value of NULL indicates an error in copying 
+ *    A pointer to the CMMFCertResponse at the index corresponding to
+ *    'inIndex'.  A return value of NULL indicates an error in copying
  *    the CMMFCertResponse.
  */
-extern CMMFCertResponse*
-CMMF_CertRepContentGetResponseAtIndex (CMMFCertRepContent *inCertRepContent,
-				       int                 inIndex);
+extern CMMFCertResponse *
+CMMF_CertRepContentGetResponseAtIndex(CMMFCertRepContent *inCertRepContent,
+                                      int inIndex);
 
 /*
  * FUNCTION: CMMF_CertResponseGetCertReqId
@@ -626,11 +623,11 @@ CMMF_CertRepContentGetResponseAtIndex (CMMFCertRepContent *inCertRepContent,
  *    inCertResp
  *        The CMMFCertResponse to operate on.
  * NOTES:
- *    This function returns the CertResponse.certReqId from the 
+ *    This function returns the CertResponse.certReqId from the
  *    CMMFCertResponse structure passed in.  If the return value is -1, that
  *    means there is no associated certificate request with the CertResponse.
  * RETURN:
- *    A long representing the id of the certificate request this 
+ *    A long representing the id of the certificate request this
  *    CMMFCertResponse corresponds to.  A return value of -1 indicates an
  *    error in extracting the value of the integer.
  */
@@ -642,7 +639,7 @@ extern long CMMF_CertResponseGetCertReqId(CMMFCertResponse *inCertResp);
  *    inCertResp
  *        The CMMFCertResponse to operate on.
  * NOTES:
- *    This function returns the CertResponse.status.status field of the 
+ *    This function returns the CertResponse.status.status field of the
  *    CMMFCertResponse structure.
  *
  * RETURN:
@@ -650,8 +647,8 @@ extern long CMMF_CertResponseGetCertReqId(CMMFCertResponse *inCertResp);
  *    draft.  See the CMMF draft for the definition of PKIStatus.  See crmft.h
  *    for the definition of CMMFPKIStatus.
  */
-extern CMMFPKIStatus 
-       CMMF_CertResponseGetPKIStatusInfoStatus(CMMFCertResponse *inCertResp);
+extern CMMFPKIStatus
+CMMF_CertResponseGetPKIStatusInfoStatus(CMMFCertResponse *inCertResp);
 
 /*
  * FUNCTION: CMMF_CertResponseGetCertificate
@@ -664,18 +661,18 @@ extern CMMFPKIStatus
  * NOTES:
  *    This function retrieves the CertResponse.certifiedKeyPair.certificate
  *    from the CMMFCertResponse.  The user will get a copy of that certificate
- *    so  the user must call CERT_DestroyCertificate when the return value is 
- *    no longer needed.  The certificate returned will be in the temporary 
+ *    so  the user must call CERT_DestroyCertificate when the return value is
+ *    no longer needed.  The certificate returned will be in the temporary
  *    certificate database.
  *
  * RETURN:
- *    A pointer to a copy of the certificate contained within the 
+ *    A pointer to a copy of the certificate contained within the
  *    CMMFCertResponse.  A return value of NULL indicates an error while trying
  *    to make a copy of the certificate.
  */
-extern CERTCertificate*
-       CMMF_CertResponseGetCertificate(CMMFCertResponse *inCertResp,
-                                       CERTCertDBHandle *inCertdb);
+extern CERTCertificate *
+CMMF_CertResponseGetCertificate(CMMFCertResponse *inCertResp,
+                                CERTCertDBHandle *inCertdb);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentGetPKIStatusInfoStatus
@@ -683,13 +680,13 @@ extern CERTCertificate*
  *    inKeyRecRep
  *        The CMMFKeyRecRepContent structure to operate on.
  * NOTES:
- *    This function retrieves the KeyRecRepContent.status.status field of 
+ *    This function retrieves the KeyRecRepContent.status.status field of
  *    the CMMFKeyRecRepContent structure.
  * RETURN:
- *    The CMMFPKIStatus corresponding to the value held in the 
+ *    The CMMFPKIStatus corresponding to the value held in the
  *    CMMFKeyRecRepContent structure.
  */
-extern CMMFPKIStatus 
+extern CMMFPKIStatus
 CMMF_KeyRecRepContentGetPKIStatusInfoStatus(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
@@ -699,15 +696,15 @@ CMMF_KeyRecRepContentGetPKIStatusInfoStatus(CMMFKeyRecRepContent *inKeyRecRep);
  *        The CMMFKeyRecRepContent to operate on.
  * NOTES:
  *    This function retrieves the KeyRecRepContent.newSignCert field of the
- *    CMMFKeyRecRepContent structure.  The user must call 
+ *    CMMFKeyRecRepContent structure.  The user must call
  *    CERT_DestroyCertificate when the return value is no longer needed. The
- *    returned certificate will be in the temporary database.  The user 
+ *    returned certificate will be in the temporary database.  The user
  *    must then place the certificate permanently in whatever token the
  *    user determines is the proper destination.  A return value of NULL
  *    indicates the newSigCert field was not present.
  */
-extern CERTCertificate*
-       CMMF_KeyRecRepContentGetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep);
+extern CERTCertificate *
+CMMF_KeyRecRepContentGetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentGetCACerts
@@ -715,22 +712,22 @@ extern CERTCertificate*
  *    inKeyRecRep
  *        The CMMFKeyRecRepContent to operate on.
  * NOTES:
- *    This function returns a CERTCertList which contains all of the 
+ *    This function returns a CERTCertList which contains all of the
  *    certficates that are in the sequence KeyRecRepContent.caCerts
- *    User must call CERT_DestroyCertList when the return value is no longer 
+ *    User must call CERT_DestroyCertList when the return value is no longer
  *    needed.  All of these certificates will be placed in the tempoaray
  *    database.
  *
  * RETURN:
  *    A pointer to the list of caCerts contained in the CMMFKeyRecRepContent
- *    structure.  A return value of NULL indicates the library was not able to 
+ *    structure.  A return value of NULL indicates the library was not able to
  *    make a copy of the certifcates.  This may be because there are no caCerts
  *    included in the CMMFKeyRecRepContent strucure or an internal error.  Call
- *    CMMF_KeyRecRepContentHasCACerts to find out if there are any caCerts 
+ *    CMMF_KeyRecRepContentHasCACerts to find out if there are any caCerts
  *    included in 'inKeyRecRep'.
  */
-extern CERTCertList*
-       CMMF_KeyRecRepContentGetCACerts(CMMFKeyRecRepContent *inKeyRecRep);
+extern CERTCertList *
+CMMF_KeyRecRepContentGetCACerts(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentGetNumKeyPairs
@@ -741,8 +738,8 @@ extern CERTCertList*
  *    This function returns the number of CMMFCertifiedKeyPair structures that
  *    that are stored in the KeyRecRepContent structure.
  */
-extern int 
-       CMMF_KeyRecRepContentGetNumKeyPairs(CMMFKeyRecRepContent *inKeyRecRep);
+extern int
+CMMF_KeyRecRepContentGetNumKeyPairs(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentGetCertKeyAtIndex
@@ -753,17 +750,17 @@ extern int
  *        The index of the desired CMMFCertifiedKeyPair
  * NOTES:
  *    This function retrieves the CMMFCertifiedKeyPair structure at the index
- *    'inIndex'.  Valid indexes are 0...(numKeyPairs-1)  The user must call 
+ *    'inIndex'.  Valid indexes are 0...(numKeyPairs-1)  The user must call
  *    CMMF_DestroyCertifiedKeyPair when the return value is no longer needed.
  *
  * RETURN:
  *    A pointer to the Certified Key Pair at the desired index.  A return value
- *    of NULL indicates an error in extracting the Certified Key Pair at the 
+ *    of NULL indicates an error in extracting the Certified Key Pair at the
  *    desired index.
  */
-extern CMMFCertifiedKeyPair*
-      CMMF_KeyRecRepContentGetCertKeyAtIndex(CMMFKeyRecRepContent *inKeyRecRep,
-					     int                   inIndex);
+extern CMMFCertifiedKeyPair *
+CMMF_KeyRecRepContentGetCertKeyAtIndex(CMMFKeyRecRepContent *inKeyRecRep,
+                                       int inIndex);
 
 /*
  * FUNCTION: CMMF_CertifiedKeyPairGetCertificate
@@ -774,21 +771,21 @@ extern CMMFCertifiedKeyPair*
  *        The database handle for the database you want this certificate
  *        to wind up in.
  * NOTES:
- *    This function retrieves the certificate at 
+ *    This function retrieves the certificate at
  *    CertifiedKeyPair.certOrEncCert.certificate
  *    The user must call CERT_DestroyCertificate when the return value is no
  *    longer needed.  The user must import this certificate as a token object
  *    onto PKCS#11 slot in order to make it a permanent object.  The returned
  *    certificate will be in the temporary database.
- * 
+ *
  * RETURN:
  *    A pointer to the certificate contained within the certified key pair.
- *    A return value of NULL indicates an error in creating the copy of the 
+ *    A return value of NULL indicates an error in creating the copy of the
  *    certificate.
  */
-extern CERTCertificate*
-      CMMF_CertifiedKeyPairGetCertificate(CMMFCertifiedKeyPair *inCertKeyPair,
-					  CERTCertDBHandle     *inCertdb);
+extern CERTCertificate *
+CMMF_CertifiedKeyPairGetCertificate(CMMFCertifiedKeyPair *inCertKeyPair,
+                                    CERTCertDBHandle *inCertdb);
 
 /*
  * FUNCTION: CMMF_POPODecKeyChallContentGetNumChallenges
@@ -796,11 +793,10 @@ extern CERTCertificate*
  *    inKeyChallCont
  *        The CMMFPOPODecKeyChallContent to operate on.
  * RETURN:
- *    This function returns the number of CMMFChallenges are contained in 
+ *    This function returns the number of CMMFChallenges are contained in
  *    the CMMFPOPODecKeyChallContent structure.
  */
-extern int CMMF_POPODecKeyChallContentGetNumChallenges
-                                  (CMMFPOPODecKeyChallContent *inKeyChallCont);
+extern int CMMF_POPODecKeyChallContentGetNumChallenges(CMMFPOPODecKeyChallContent *inKeyChallCont);
 
 /*
  * FUNCTION: CMMF_POPODecKeyChallContentGetPublicValue
@@ -816,14 +812,12 @@ extern int CMMF_POPODecKeyChallContentGetNumChallenges
  * This function retrieves the public value stored away in the Challenge at
  * index inIndex of inKeyChallCont.
  * RETURN:
- * A pointer to a SECItem containing the public value.  User must call 
+ * A pointer to a SECItem containing the public value.  User must call
  * SECITEM_FreeItem on the return value when the value is no longer necessary.
  * A return value of NULL indicates an error while retrieving the public value.
  */
-extern SECItem* CMMF_POPODecKeyChallContentGetPublicValue
-                                   (CMMFPOPODecKeyChallContent *inKeyChallCont,
-				    int                         inIndex);
-
+extern SECItem *CMMF_POPODecKeyChallContentGetPublicValue(CMMFPOPODecKeyChallContent *inKeyChallCont,
+                                                          int inIndex);
 
 /*
  * FUNCTION: CMMF_POPODecKeyChallContentGetRandomNumber
@@ -839,9 +833,9 @@ extern SECItem* CMMF_POPODecKeyChallContentGetPublicValue
  *        challenge.
  * NOTES:
  *    This function returns the value held in the decrypted Rand structure
- *    corresponding to the random integer.  The user must call 
- *    CMMF_POPODecKeyChallContentDecryptChallenge before calling this function.  Call 
- *    CMMF_ChallengeIsDecrypted to find out if the challenge has been 
+ *    corresponding to the random integer.  The user must call
+ *    CMMF_POPODecKeyChallContentDecryptChallenge before calling this function.  Call
+ *    CMMF_ChallengeIsDecrypted to find out if the challenge has been
  *    decrypted.
  *
  * RETURN:
@@ -850,10 +844,9 @@ extern SECItem* CMMF_POPODecKeyChallContentGetPublicValue
  *    Any other return value indicates an error and that the value at *inDest
  *    is not a valid value.
  */
-extern SECStatus CMMF_POPODecKeyChallContentGetRandomNumber
-                                      (CMMFPOPODecKeyChallContent *inKeyChallCont,
-				       int                          inIndex,
-				       long                        *inDest);
+extern SECStatus CMMF_POPODecKeyChallContentGetRandomNumber(CMMFPOPODecKeyChallContent *inKeyChallCont,
+                                                            int inIndex,
+                                                            long *inDest);
 
 /*
  * FUNCTION: CMMF_POPODecKeyRespContentGetNumResponses
@@ -863,8 +856,8 @@ extern SECStatus CMMF_POPODecKeyChallContentGetRandomNumber
  * RETURN:
  * This function returns the number of responses contained in inRespContent.
  */
-extern int 
- CMMF_POPODecKeyRespContentGetNumResponses(CMMFPOPODecKeyRespContent *inRespCont);
+extern int
+CMMF_POPODecKeyRespContentGetNumResponses(CMMFPOPODecKeyRespContent *inRespCont);
 
 /*
  * FUNCTION: CMMF_POPODecKeyRespContentGetResponse
@@ -876,22 +869,22 @@ extern int
  *        The Nth response is at index N-1, ie the 1st response is at index 0,
  *        the 2nd response is at index 1, and so on.
  *    inDest
- *        A pointer to a pre-allocated buffer where the library can put the 
+ *        A pointer to a pre-allocated buffer where the library can put the
  *        value of the response located at inIndex.
  * NOTES:
- * The function returns the response contained at index inIndex.  
- * CMMFPOPODecKeyRespContent is a structure that the server will generally 
+ * The function returns the response contained at index inIndex.
+ * CMMFPOPODecKeyRespContent is a structure that the server will generally
  * get in response to a CMMFPOPODecKeyChallContent.  The server will expect
- * to see the responses in the same order as it constructed them in 
+ * to see the responses in the same order as it constructed them in
  * the CMMFPOPODecKeyChallContent structure.
  * RETURN:
  * SECSuccess if getting the response at the desired index was successful.  Any
  * other return value indicates an errror.
  */
 extern SECStatus
-     CMMF_POPODecKeyRespContentGetResponse (CMMFPOPODecKeyRespContent *inRespCont,
-					    int                        inIndex,
-					    long                      *inDest);
+CMMF_POPODecKeyRespContentGetResponse(CMMFPOPODecKeyRespContent *inRespCont,
+                                      int inIndex,
+                                      long *inDest);
 
 /************************* Destructor Functions ******************************/
 
@@ -918,12 +911,12 @@ extern SECStatus CMMF_DestroyCertResponse(CMMFCertResponse *inCertResp);
  *    This function frees the memory associated with the CMMFCertRepContent
  *    passed in.
  * RETURN:
- *    SECSuccess if freeing all the memory associated with the 
- *    CMMFCertRepContent passed in is successful.  Any other return value 
+ *    SECSuccess if freeing all the memory associated with the
+ *    CMMFCertRepContent passed in is successful.  Any other return value
  *    indicates an error while freeing the memory.
  */
-extern SECStatus 
-       CMMF_DestroyCertRepContent (CMMFCertRepContent *inCertRepContent);
+extern SECStatus
+CMMF_DestroyCertRepContent(CMMFCertRepContent *inCertRepContent);
 
 /*
  * FUNCTION: CMMF_DestroyKeyRecRepContent
@@ -931,22 +924,22 @@ extern SECStatus
  *    inKeyRecRep
  *        The CMMFKeyRecRepContent to destroy.
  * NOTES:
- *    This function destroys all the memory associated with the 
+ *    This function destroys all the memory associated with the
  *    CMMFKeyRecRepContent passed in.
  *
  * RETURN:
- *    SECSuccess if freeing all the memory is successful.  Any other return 
+ *    SECSuccess if freeing all the memory is successful.  Any other return
  *    value indicates an error in freeing the memory.
  */
-extern SECStatus 
-       CMMF_DestroyKeyRecRepContent(CMMFKeyRecRepContent *inKeyRecRep);
+extern SECStatus
+CMMF_DestroyKeyRecRepContent(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
  * FUNCTION: CMMF_DestroyCertifiedKeyPair
  * INPUTS:
  *    inCertKeyPair
  *        The CMMFCertifiedKeyPair to operate on.
- * NOTES: 
+ * NOTES:
  *    This function frees up all the memory associated with 'inCertKeyPair'
  *
  * RETURN:
@@ -954,8 +947,8 @@ extern SECStatus
  *    is successful.  Any other return value indicates an error while trying
  *    to free the memory.
  */
-extern SECStatus 
-       CMMF_DestroyCertifiedKeyPair(CMMFCertifiedKeyPair *inCertKeyPair);
+extern SECStatus
+CMMF_DestroyCertifiedKeyPair(CMMFCertifiedKeyPair *inCertKeyPair);
 
 /*
  * FUNCTION: CMMF_DestroyPOPODecKeyRespContent
@@ -963,7 +956,7 @@ extern SECStatus
  *    inDecKeyResp
  *        The CMMFPOPODecKeyRespContent structure to free.
  * NOTES:
- *    This function frees up all the memory associate with the 
+ *    This function frees up all the memory associate with the
  *    CMMFPOPODecKeyRespContent.
  *
  * RETURN:
@@ -972,11 +965,10 @@ extern SECStatus
  *    return value indicates an error while freeing the memory.
  */
 extern SECStatus
-       CMMF_DestroyPOPODecKeyRespContent(CMMFPOPODecKeyRespContent *inDecKeyResp);
-
+CMMF_DestroyPOPODecKeyRespContent(CMMFPOPODecKeyRespContent *inDecKeyResp);
 
 /************************** Miscellaneous Functions *************************/
- 
+
 /*
  * FUNCTION: CMMF_CertifiedKeyPairUnwrapPrivKey
  * INPUTS:
@@ -997,25 +989,25 @@ extern SECStatus
  *    wincx
  *        An opaque pointer that the library will use in a callback function
  *        to get the password if necessary.
- *    
+ *
  * NOTES:
  *    This function uses the private key passed in to unwrap the private key
- *    contained within the CMMFCertifiedKeyPair structure. After this 
+ *    contained within the CMMFCertifiedKeyPair structure. After this
  *    function successfully returns, the private key has been unwrapped and
- *    placed in the specified slot. 
+ *    placed in the specified slot.
  *
  * RETURN:
- *    SECSuccess if unwrapping the private key was successful.  Any other 
+ *    SECSuccess if unwrapping the private key was successful.  Any other
  *    return value indicates an error while trying to un-wrap the private key.
  */
-extern SECStatus 
-       CMMF_CertifiedKeyPairUnwrapPrivKey(CMMFCertifiedKeyPair *inKeyPair,
-					  SECKEYPrivateKey     *inPrivKey,
-					  SECItem              *inNickName,
-					  PK11SlotInfo         *inSlot,
-                                          CERTCertDBHandle     *inCertdb,
-					  SECKEYPrivateKey    **destPrivKey,
-					  void                 *wincx);
+extern SECStatus
+CMMF_CertifiedKeyPairUnwrapPrivKey(CMMFCertifiedKeyPair *inKeyPair,
+                                   SECKEYPrivateKey *inPrivKey,
+                                   SECItem *inNickName,
+                                   PK11SlotInfo *inSlot,
+                                   CERTCertDBHandle *inCertdb,
+                                   SECKEYPrivateKey **destPrivKey,
+                                   void *wincx);
 
 /*
  * FUNCTION: CMMF_KeyRecRepContentHasCACerts
@@ -1023,13 +1015,13 @@ extern SECStatus
  *    inKeyRecRecp
  *        The CMMFKeyRecRepContent to operate on.
  * RETURN:
- *    This function returns PR_TRUE if there are one or more certificates in 
+ *    This function returns PR_TRUE if there are one or more certificates in
  *    the sequence KeyRecRepContent.caCerts within the CMMFKeyRecRepContent
  *    structure.  The function will return PR_FALSE if there are 0 certificate
  *    in the above mentioned sequence.
  */
-extern PRBool 
-       CMMF_KeyRecRepContentHasCACerts(CMMFKeyRecRepContent *inKeyRecRep);
+extern PRBool
+CMMF_KeyRecRepContentHasCACerts(CMMFKeyRecRepContent *inKeyRecRep);
 
 /*
  * FUNCTION: CMMF_POPODecKeyChallContDecryptChallenge
@@ -1043,12 +1035,12 @@ extern PRBool
  *        The private key to use to decrypt the witness field.
  * NOTES:
  *    This function uses the private key to decrypt the challenge field
- *    contained in the appropriate challenge.  Make sure the private key matches 
- *    the public key that was used to encrypt the witness.  Use 
+ *    contained in the appropriate challenge.  Make sure the private key matches
+ *    the public key that was used to encrypt the witness.  Use
  *    CMMF_POPODecKeyChallContentGetPublicValue to get the public value of
  *    the key used to encrypt the witness and then use that to determine the
  *    appropriate private key.  This can be done by calling PK11_MakeIDFromPubKey
- *    and then passing that return value to PK11_FindKeyByKeyID.  The creator of 
+ *    and then passing that return value to PK11_FindKeyByKeyID.  The creator of
  *    the challenge will most likely be an RA that has the public key
  *    from a Cert request.  So the private key should be the private key
  *    associated with public key in that request.  This function will also
@@ -1057,17 +1049,17 @@ extern PRBool
  *
  * RETURN:
  *    SECSuccess if decrypting the witness field was successful.  This does
- *    not indicate that the decrypted data is valid, since the private key 
- *    passed in may not be the actual key needed to properly decrypt the 
+ *    not indicate that the decrypted data is valid, since the private key
+ *    passed in may not be the actual key needed to properly decrypt the
  *    witness field.  Meaning that there is a decrypted structure now, but
  *    may be garbage because the private key was incorrect.
  *    Any other return value indicates the function could not complete the
  *    decryption process.
  */
-extern SECStatus 
-  CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
-					   int                         inIndex,
-					   SECKEYPrivateKey           *inPrivKey);
+extern SECStatus
+CMMF_POPODecKeyChallContDecryptChallenge(CMMFPOPODecKeyChallContent *inChalCont,
+                                         int inIndex,
+                                         SECKEYPrivateKey *inPrivKey);
 
 /*
  * FUNCTION: CMMF_DestroyPOPODecKeyChallContent
@@ -1075,16 +1067,16 @@ extern SECStatus
  *    inDecKeyCont
  *        The CMMFPOPODecKeyChallContent to free
  * NOTES:
- *    This function frees up all the memory associated with the 
- *    CMMFPOPODecKeyChallContent 
+ *    This function frees up all the memory associated with the
+ *    CMMFPOPODecKeyChallContent
  * RETURN:
- *    SECSuccess if freeing up all the memory associatd with the 
+ *    SECSuccess if freeing up all the memory associatd with the
  *    CMMFPOPODecKeyChallContent is successful.  Any other return value
  *    indicates an error while freeing the memory.
  *
  */
-extern SECStatus 
- CMMF_DestroyPOPODecKeyChallContent (CMMFPOPODecKeyChallContent *inDecKeyCont);
+extern SECStatus
+CMMF_DestroyPOPODecKeyChallContent(CMMFPOPODecKeyChallContent *inDecKeyCont);
 
 SEC_END_PROTOS
 #endif /* _CMMF_H_ */

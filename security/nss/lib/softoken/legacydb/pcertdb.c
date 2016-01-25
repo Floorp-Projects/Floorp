@@ -3651,11 +3651,17 @@ UpdateV6DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 		    PORT_Free(tmpbuf);
 		    tmpbuf = NULL;
 		}
+		if (ret) {
+		    return SECFailure;
+		}
 	    }
 	}
     } while ( (* updatedb->seq)(updatedb, &key, &data, R_NEXT) == 0 );
 
     ret = certdb_Sync(handle->permCertDB, 0);
+    if (ret) {
+	return SECFailure;
+    }
 
     ret = (* updatedb->seq)(updatedb, &key, &data, R_FIRST);
     if ( ret ) {
@@ -3742,6 +3748,9 @@ endloop:
     } while ( (* updatedb->seq)(updatedb, &key, &data, R_NEXT) == 0 );
 
     ret = certdb_Sync(handle->permCertDB, 0);
+    if (ret) {
+	return SECFailure;
+    }
 
     (* updatedb->close)(updatedb);
     return(SECSuccess);
