@@ -56,33 +56,6 @@ RestyleTracker::Document() const {
 
 #define RESTYLE_ARRAY_STACKSIZE 128
 
-struct LaterSiblingCollector {
-  RestyleTracker* tracker;
-  nsTArray< RefPtr<dom::Element> >* elements;
-};
-
-static PLDHashOperator
-CollectLaterSiblings(nsISupports* aElement,
-                     nsAutoPtr<RestyleTracker::RestyleData>& aData,
-                     void* aSiblingCollector)
-{
-  dom::Element* element =
-    static_cast<dom::Element*>(aElement);
-  LaterSiblingCollector* collector =
-    static_cast<LaterSiblingCollector*>(aSiblingCollector);
-  // Only collect the entries that actually need restyling by us (and
-  // haven't, for example, already been restyled).
-  // It's important to not mess with the flags on entries not in our
-  // document.
-  if (element->GetCrossShadowCurrentDoc() == collector->tracker->Document() &&
-      element->HasFlag(collector->tracker->RestyleBit()) &&
-      (aData->mRestyleHint & eRestyle_LaterSiblings)) {
-    collector->elements->AppendElement(element);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
@@ -266,8 +239,18 @@ RestyleTracker::DoProcessRestyles()
       if (mHaveLaterSiblingRestyles) {
         // Convert them to individual restyles on all the later siblings
         nsAutoTArray<RefPtr<Element>, RESTYLE_ARRAY_STACKSIZE> laterSiblingArr;
-        LaterSiblingCollector siblingCollector = { this, &laterSiblingArr };
-        mPendingRestyles.Enumerate(CollectLaterSiblings, &siblingCollector);
+        for (auto iter = mPendingRestyles.Iter(); !iter.Done(); iter.Next()) {
+          auto element = static_cast<dom::Element*>(iter.Key());
+          // Only collect the entries that actually need restyling by us (and
+          // haven't, for example, already been restyled).
+          // It's important to not mess with the flags on entries not in our
+          // document.
+          if (element->GetCrossShadowCurrentDoc() == Document() &&
+              element->HasFlag(RestyleBit()) &&
+              (iter.Data()->mRestyleHint & eRestyle_LaterSiblings)) {
+            laterSiblingArr.AppendElement(element);
+          }
+        }
         for (uint32_t i = 0; i < laterSiblingArr.Length(); ++i) {
           Element* element = laterSiblingArr[i];
           for (nsIContent* sibling = element->GetNextSibling();
