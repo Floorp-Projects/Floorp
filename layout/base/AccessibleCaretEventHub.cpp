@@ -630,7 +630,7 @@ AccessibleCaretEventHub::CancelLongTapInjector()
 AccessibleCaretEventHub::FireLongTap(nsITimer* aTimer,
                                      void* aAccessibleCaretEventHub)
 {
-  auto self = static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
+  auto* self = static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
   self->mState->OnLongTap(self, self->mPressPoint);
 }
 
@@ -716,7 +716,7 @@ AccessibleCaretEventHub::CancelScrollEndInjector()
 AccessibleCaretEventHub::FireScrollEnd(nsITimer* aTimer,
                                        void* aAccessibleCaretEventHub)
 {
-  auto self = static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
+  auto* self = static_cast<AccessibleCaretEventHub*>(aAccessibleCaretEventHub);
   self->mState->OnScrollEnd(self);
 }
 
