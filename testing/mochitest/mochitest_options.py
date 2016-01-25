@@ -545,13 +545,17 @@ class MochitestArguments(ArgumentContainer):
           "help": "Enable logging of unsafe CPOW usage, which is disabled by default for tests",
           "suppress": True,
           }],
+        [["--marionette"],
+         {"default": None,
+          "help": "host:port to use when connecting to Marionette",
+          }],
     ]
 
     defaults = {
         # Bug 1065098 - The geckomediaplugin process fails to produce a leak
         # log for some reason.
         'ignoreMissingLeaks': ["geckomediaplugin"],
-
+        'extensionsToExclude': ['specialpowers'],
         # Set server information on the args object
         'webServer': '127.0.0.1',
         'httpPort': DEFAULT_PORTS['http'],
@@ -809,10 +813,6 @@ class B2GArguments(ArgumentContainer):
           "help": "Path to B2G repo or QEMU directory.",
           "suppress": True,
           }],
-        [["--marionette"],
-         {"default": None,
-          "help": "host:port to use when connecting to Marionette",
-          }],
         [["--emulator"],
          {"default": None,
           "help": "Architecture of emulator to use, x86 or arm",
@@ -906,6 +906,8 @@ class B2GArguments(ArgumentContainer):
         # Specialpowers is integrated with marionette for b2g,
         # see marionette's jar.mn.
         'extensionsToExclude': ['specialpowers'],
+        # mochijar doesn't get installed via marionette on android
+        'extensionsToInstall': [os.path.join(here, 'mochijar')],
         # See dependencies of bug 1038943.
         'defaultLeakThreshold': 5536,
     }
@@ -1058,6 +1060,10 @@ class AndroidArguments(ArgumentContainer):
 
     defaults = {
         'dm': None,
+        # we don't want to exclude specialpowers on android just yet
+        'extensionsToExclude': [],
+        # mochijar doesn't get installed via marionette on android
+        'extensionsToInstall': [os.path.join(here, 'mochijar')],
         'logFile': 'mochitest.log',
         'utilityPath': None,
     }
