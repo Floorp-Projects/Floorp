@@ -2,21 +2,13 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- "use strict";
+"use strict";
 
 const {Cu} = require("chrome");
 const Editor = require("devtools/client/sourceeditor/editor");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
-exports.HTMLEditor = HTMLEditor;
-
-function ctrl(k) {
-  return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + k;
-}
-function stopPropagation(e) {
-  e.stopPropagation();
-}
 /**
  * A wrapper around the Editor component, that allows editing of HTML.
  *
@@ -32,8 +24,7 @@ function stopPropagation(e) {
  *        The document to attach the editor to.  Will also use this
  *        document as a basis for listening resize events.
  */
-function HTMLEditor(htmlDocument)
-{
+function HTMLEditor(htmlDocument) {
   this.doc = htmlDocument;
   this.container = this.doc.createElement("div");
   this.container.className = "html-editor theme-body";
@@ -60,8 +51,8 @@ function HTMLEditor(htmlDocument)
   };
 
   config.extraKeys[ctrl("Enter")] = this.hide;
-  config.extraKeys["F2"] = this.hide;
-  config.extraKeys["Esc"] = this.hide.bind(this, false);
+  config.extraKeys.F2 = this.hide;
+  config.extraKeys.Esc = this.hide.bind(this, false);
 
   this.container.addEventListener("click", this.hide, false);
   this.editorInner.addEventListener("click", stopPropagation, false);
@@ -98,8 +89,7 @@ HTMLEditor.prototype = {
    *        The element that the editor will be anchored to.
    *        Should belong to the HTMLDocument passed into the constructor.
    */
-  _attach: function(element)
-  {
+  _attach: function(element) {
     this._detach();
     this._attachedElement = element;
     element.classList.add("html-editor-container");
@@ -109,8 +99,7 @@ HTMLEditor.prototype = {
   /**
    * Unanchor the editor from an element.
    */
-  _detach: function()
-  {
+  _detach: function() {
     if (this._attachedElement) {
       this._attachedElement.classList.remove("html-editor-container");
       this._attachedElement = undefined;
@@ -128,8 +117,7 @@ HTMLEditor.prototype = {
    * @param function cb
    *        The function to call when hiding
    */
-  show: function(element, text)
-  {
+  show: function(element, text) {
     if (this._visible) {
       return;
     }
@@ -153,8 +141,7 @@ HTMLEditor.prototype = {
    *             A change will be committed by default.  If this param
    *             strictly equals false, no change will occur.
    */
-  hide: function(shouldCommit)
-  {
+  hide: function(shouldCommit) {
     if (!this._visible) {
       return;
     }
@@ -173,8 +160,7 @@ HTMLEditor.prototype = {
   /**
    * Destroy this object and unbind all event handlers
    */
-  destroy: function()
-  {
+  destroy: function() {
     this.doc.defaultView.removeEventListener("resize",
       this.refresh, true);
     this.container.removeEventListener("click", this.hide, false);
@@ -185,3 +171,13 @@ HTMLEditor.prototype = {
     this.editor.destroy();
   }
 };
+
+function ctrl(k) {
+  return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + k;
+}
+
+function stopPropagation(e) {
+  e.stopPropagation();
+}
+
+exports.HTMLEditor = HTMLEditor;
