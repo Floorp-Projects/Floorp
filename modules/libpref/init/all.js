@@ -382,6 +382,7 @@ pref("media.navigator.video.h264.level", 12); // 0x42E00C - level 1.2
 pref("media.navigator.video.h264.max_br", 700); // 8x10
 pref("media.navigator.video.h264.max_mbps", 11880); // CIF@30fps
 pref("media.peerconnection.video.h264_enabled", false);
+pref("media.peerconnection.video.vp9_enabled", false);
 pref("media.getusermedia.aec", 4);
 // Gonk typically captures at QVGA, and so min resolution is QQVGA or
 // 160x120; 100Kbps is plenty for that.
@@ -4499,6 +4500,8 @@ pref("full-screen-api.pointer-lock.enabled", true);
 // transition duration of fade-to-black and fade-from-black, unit: ms
 pref("full-screen-api.transition-duration.enter", "200 200");
 pref("full-screen-api.transition-duration.leave", "200 200");
+// timeout for black screen in fullscreen transition, unit: ms
+pref("full-screen-api.transition.timeout", 500);
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("full-screen-api.warning.timeout", 3000);
 // delay for the warning box to show when pointer stays on the top, unit: ms
