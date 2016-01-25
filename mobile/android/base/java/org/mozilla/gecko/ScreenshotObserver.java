@@ -6,8 +6,10 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.ContentObserver;
@@ -49,23 +51,43 @@ public class ScreenshotObserver {
                     MediaStore.Images.ImageColumns.TITLE
     };
 
+    /**
+     * Start ScreenshotObserver if this device is supported and all required runtime permissions
+     * have been granted by the user. Calling this method will not prompt for permissions.
+     */
     public void start() {
         if (!Versions.feature14Plus) {
             return;
         }
 
-        try {
-            if (mediaObserver == null) {
-                mediaObserver = new MediaObserver();
-                context.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, mediaObserver);
+        Permissions.from(context)
+                   .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                   .doNotPrompt()
+                   .run(startObserverRunnable());
+    }
+
+    private Runnable startObserverRunnable() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (mediaObserver == null) {
+                        mediaObserver = new MediaObserver();
+                        context.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, mediaObserver);
+                    }
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Failure to start watching media: ", e);
+                }
             }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Failure to start watching media: ", e);
-        }
+        };
     }
 
     public void stop() {
         if (!Versions.feature14Plus) {
+            return;
+        }
+
+        if (mediaObserver == null) {
             return;
         }
 
