@@ -14,8 +14,6 @@ const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
 const DEBUGGERLOG_PREF = "devtools.debugger.log";
-// Allows Cache API to be working on usage `http` test page
-const CACHES_ON_HTTP_PREF = "dom.caches.testing.enabled";
 const PATH = "browser/devtools/client/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
@@ -29,7 +27,6 @@ var gToolbox, gPanelWindow, gWindow, gUI;
 // Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
 
 Services.prefs.setBoolPref(STORAGE_PREF, true);
-Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gWindow = gUI = null;
@@ -37,7 +34,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
-  Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
   DevToolsUtils.testing = false;
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
@@ -86,20 +82,35 @@ function addTab(url) {
  * @return {Promise} A promise that resolves after storage inspector is ready
  */
 function* openTabAndSetupStorage(url) {
+  /**
+   * This method iterates over iframes in a window and setups the indexed db
+   * required for this test.
+   */
+  let setupIDBInFrames = (w, i, c) => {
+    if (w[i] && w[i].idbGenerator) {
+      w[i].setupIDB = w[i].idbGenerator(() => setupIDBInFrames(w, i + 1, c));
+      w[i].setupIDB.next();
+    } else if (w[i] && w[i + 1]) {
+      setupIDBInFrames(w, i + 1, c);
+    } else {
+      c();
+    }
+  };
+
   let content = yield addTab(url);
 
+  let def = promise.defer();
+  // Setup the indexed db in main window.
   gWindow = content.wrappedJSObject;
-
-  // Setup the async storages in main window and for all its iframes
-  let callSetup = function*(win) {
-    if (typeof(win.setup) == "function") {
-      yield win.setup();
-    }
-    for(var i = 0; i < win.frames.length; i++) {
-      yield callSetup(win.frames[i]);
-    }
+  if (gWindow.idbGenerator) {
+    gWindow.setupIDB = gWindow.idbGenerator(() => {
+      setupIDBInFrames(gWindow, 0, () => {
+        def.resolve();
+      });
+    });
+    gWindow.setupIDB.next();
+    yield def.promise;
   }
-  yield callSetup(gWindow);
 
   // open storage inspector
   return yield openStoragePanel();
@@ -487,7 +498,6 @@ function* selectTreeItem(ids) {
 
   let selector = "[data-id='" + JSON.stringify(ids) + "'] > .tree-widget-item";
   let target = gPanelWindow.document.querySelector(selector);
-  ok(target, "tree item found with ids " + JSON.stringify(ids));
 
   let updated = gUI.once("store-objects-updated");
 
@@ -504,7 +514,6 @@ function* selectTreeItem(ids) {
 function* selectTableItem(id) {
   let selector = ".table-widget-cell[data-id='" + id + "']";
   let target = gPanelWindow.document.querySelector(selector);
-  ok(target, "table item found with ids " + id);
 
   yield click(target);
   yield gUI.once("sidebar-updated");
