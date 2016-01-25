@@ -14,5 +14,4 @@
 /*
  * Version information
  */
-const char __nss_ckmk_version[] = "Version: NSS Access to the MAC OS X Key Ring "
-        NSS_CKMK_LIBRARY_VERSION _DEBUG_STRING;
+const char __nss_ckmk_version[] = "Version: NSS Access to the MAC OS X Key Ring " NSS_CKMK_LIBRARY_VERSION _DEBUG_STRING;

@@ -10,4 +10,3 @@ typedef CK_ATTRIBUTE_TYPE CK_PTR CK_ATTRIBUTE_TYPE_PTR;
 #define CK_ENTRY
 
 #endif /* _NSSCKT_H_ */
-

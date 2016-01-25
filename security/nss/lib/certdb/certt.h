@@ -23,49 +23,49 @@ struct NSSCertificateStr;
 struct NSSTrustDomainStr;
 
 /* Non-opaque objects */
-typedef struct CERTAVAStr                        CERTAVA;
-typedef struct CERTAttributeStr                  CERTAttribute;
-typedef struct CERTAuthInfoAccessStr             CERTAuthInfoAccess;
-typedef struct CERTAuthKeyIDStr                  CERTAuthKeyID;
-typedef struct CERTBasicConstraintsStr           CERTBasicConstraints;
-typedef struct NSSTrustDomainStr                 CERTCertDBHandle;
-typedef struct CERTCertExtensionStr              CERTCertExtension;
-typedef struct CERTCertKeyStr                    CERTCertKey;
-typedef struct CERTCertListStr                   CERTCertList;
-typedef struct CERTCertListNodeStr               CERTCertListNode;
-typedef struct CERTCertNicknamesStr              CERTCertNicknames;
-typedef struct CERTCertTrustStr                  CERTCertTrust;
-typedef struct CERTCertificateStr                CERTCertificate;
-typedef struct CERTCertificateListStr            CERTCertificateList;
-typedef struct CERTCertificateRequestStr         CERTCertificateRequest;
-typedef struct CERTCrlStr                        CERTCrl;
-typedef struct CERTCrlDistributionPointsStr      CERTCrlDistributionPoints; 
-typedef struct CERTCrlEntryStr                   CERTCrlEntry;
-typedef struct CERTCrlHeadNodeStr                CERTCrlHeadNode;
-typedef struct CERTCrlKeyStr                     CERTCrlKey;
-typedef struct CERTCrlNodeStr                    CERTCrlNode;
-typedef struct CERTDERCertsStr                   CERTDERCerts;
-typedef struct CERTDistNamesStr                  CERTDistNames;
-typedef struct CERTGeneralNameStr                CERTGeneralName;
-typedef struct CERTGeneralNameListStr            CERTGeneralNameList;
-typedef struct CERTIssuerAndSNStr                CERTIssuerAndSN;
-typedef struct CERTNameStr                       CERTName;
-typedef struct CERTNameConstraintStr             CERTNameConstraint;
-typedef struct CERTNameConstraintsStr            CERTNameConstraints;
-typedef struct CERTOKDomainNameStr               CERTOKDomainName;
-typedef struct CERTPrivKeyUsagePeriodStr         CERTPrivKeyUsagePeriod;
-typedef struct CERTPublicKeyAndChallengeStr      CERTPublicKeyAndChallenge;
-typedef struct CERTRDNStr                        CERTRDN;
-typedef struct CERTSignedCrlStr                  CERTSignedCrl;
-typedef struct CERTSignedDataStr                 CERTSignedData;
-typedef struct CERTStatusConfigStr               CERTStatusConfig;
-typedef struct CERTSubjectListStr                CERTSubjectList;
-typedef struct CERTSubjectNodeStr                CERTSubjectNode;
-typedef struct CERTSubjectPublicKeyInfoStr       CERTSubjectPublicKeyInfo;
-typedef struct CERTValidityStr                   CERTValidity;
-typedef struct CERTVerifyLogStr                  CERTVerifyLog;
-typedef struct CERTVerifyLogNodeStr              CERTVerifyLogNode;
-typedef struct CRLDistributionPointStr           CRLDistributionPoint;
+typedef struct CERTAVAStr CERTAVA;
+typedef struct CERTAttributeStr CERTAttribute;
+typedef struct CERTAuthInfoAccessStr CERTAuthInfoAccess;
+typedef struct CERTAuthKeyIDStr CERTAuthKeyID;
+typedef struct CERTBasicConstraintsStr CERTBasicConstraints;
+typedef struct NSSTrustDomainStr CERTCertDBHandle;
+typedef struct CERTCertExtensionStr CERTCertExtension;
+typedef struct CERTCertKeyStr CERTCertKey;
+typedef struct CERTCertListStr CERTCertList;
+typedef struct CERTCertListNodeStr CERTCertListNode;
+typedef struct CERTCertNicknamesStr CERTCertNicknames;
+typedef struct CERTCertTrustStr CERTCertTrust;
+typedef struct CERTCertificateStr CERTCertificate;
+typedef struct CERTCertificateListStr CERTCertificateList;
+typedef struct CERTCertificateRequestStr CERTCertificateRequest;
+typedef struct CERTCrlStr CERTCrl;
+typedef struct CERTCrlDistributionPointsStr CERTCrlDistributionPoints;
+typedef struct CERTCrlEntryStr CERTCrlEntry;
+typedef struct CERTCrlHeadNodeStr CERTCrlHeadNode;
+typedef struct CERTCrlKeyStr CERTCrlKey;
+typedef struct CERTCrlNodeStr CERTCrlNode;
+typedef struct CERTDERCertsStr CERTDERCerts;
+typedef struct CERTDistNamesStr CERTDistNames;
+typedef struct CERTGeneralNameStr CERTGeneralName;
+typedef struct CERTGeneralNameListStr CERTGeneralNameList;
+typedef struct CERTIssuerAndSNStr CERTIssuerAndSN;
+typedef struct CERTNameStr CERTName;
+typedef struct CERTNameConstraintStr CERTNameConstraint;
+typedef struct CERTNameConstraintsStr CERTNameConstraints;
+typedef struct CERTOKDomainNameStr CERTOKDomainName;
+typedef struct CERTPrivKeyUsagePeriodStr CERTPrivKeyUsagePeriod;
+typedef struct CERTPublicKeyAndChallengeStr CERTPublicKeyAndChallenge;
+typedef struct CERTRDNStr CERTRDN;
+typedef struct CERTSignedCrlStr CERTSignedCrl;
+typedef struct CERTSignedDataStr CERTSignedData;
+typedef struct CERTStatusConfigStr CERTStatusConfig;
+typedef struct CERTSubjectListStr CERTSubjectList;
+typedef struct CERTSubjectNodeStr CERTSubjectNode;
+typedef struct CERTSubjectPublicKeyInfoStr CERTSubjectPublicKeyInfo;
+typedef struct CERTValidityStr CERTValidity;
+typedef struct CERTVerifyLogStr CERTVerifyLog;
+typedef struct CERTVerifyLogNodeStr CERTVerifyLogNode;
+typedef struct CRLDistributionPointStr CRLDistributionPoint;
 
 /* CRL extensions type */
 typedef unsigned long CERTCrlNumber;
@@ -150,10 +150,13 @@ typedef enum SECTrustTypeEnum {
     trustTypeNone = 3
 } SECTrustType;
 
-#define SEC_GET_TRUST_FLAGS(trust,type) \
-        (((type)==trustSSL)?((trust)->sslFlags): \
-	 (((type)==trustEmail)?((trust)->emailFlags): \
-	  (((type)==trustObjectSigning)?((trust)->objectSigningFlags):0)))
+#define SEC_GET_TRUST_FLAGS(trust, type)                                       \
+    (((type) == trustSSL)                                                      \
+         ? ((trust)->sslFlags)                                                 \
+         : (((type) == trustEmail) ? ((trust)->emailFlags)                     \
+                                   : (((type) == trustObjectSigning)           \
+                                          ? ((trust)->objectSigningFlags)      \
+                                          : 0)))
 
 /*
 ** An X.509.3 certificate extension
@@ -195,12 +198,12 @@ struct CERTCertificateStr {
     /* The following fields are static after the cert has been decoded */
     char *subjectName;
     char *issuerName;
-    CERTSignedData signatureWrap;	/* XXX */
-    SECItem derCert;			/* original DER for the cert */
-    SECItem derIssuer;			/* DER for issuer name */
-    SECItem derSubject;			/* DER for subject name */
-    SECItem derPublicKey;		/* DER for the public key */
-    SECItem certKey;			/* database key for this cert */
+    CERTSignedData signatureWrap; /* XXX */
+    SECItem derCert;              /* original DER for the cert */
+    SECItem derIssuer;            /* DER for issuer name */
+    SECItem derSubject;           /* DER for subject name */
+    SECItem derPublicKey;         /* DER for the public key */
+    SECItem certKey;              /* database key for this cert */
     SECItem version;
     SECItem serialNumber;
     SECAlgorithmID signature;
@@ -213,21 +216,21 @@ struct CERTCertificateStr {
     CERTCertExtension **extensions;
     char *emailAddr;
     CERTCertDBHandle *dbhandle;
-    SECItem subjectKeyID;	/* x509v3 subject key identifier */
-    PRBool keyIDGenerated;	/* was the keyid generated? */
-    unsigned int keyUsage;	/* what uses are allowed for this cert */
-    unsigned int rawKeyUsage;	/* value of the key usage extension */
-    PRBool keyUsagePresent;	/* was the key usage extension present */
-    PRUint32 nsCertType;	/* value of the ns cert type extension */
-				/* must be 32-bit for PR_ATOMIC_SET */
+    SECItem subjectKeyID;     /* x509v3 subject key identifier */
+    PRBool keyIDGenerated;    /* was the keyid generated? */
+    unsigned int keyUsage;    /* what uses are allowed for this cert */
+    unsigned int rawKeyUsage; /* value of the key usage extension */
+    PRBool keyUsagePresent;   /* was the key usage extension present */
+    PRUint32 nsCertType;      /* value of the ns cert type extension */
+                              /* must be 32-bit for PR_ATOMIC_SET */
 
     /* these values can be set by the application to bypass certain checks
      * or to keep the cert in memory for an entire session.
      * XXX - need an api to set these
      */
-    PRBool keepSession;			/* keep this cert for entire session*/
-    PRBool timeOK;			/* is the bad validity time ok? */
-    CERTOKDomainName *domainOK;		/* these domain names are ok */
+    PRBool keepSession;         /* keep this cert for entire session*/
+    PRBool timeOK;              /* is the bad validity time ok? */
+    CERTOKDomainName *domainOK; /* these domain names are ok */
 
     /*
      * these values can change when the cert changes state.  These state
@@ -238,7 +241,7 @@ struct CERTCertificateStr {
     PRBool istemp;
     char *nickname;
     char *dbnickname;
-    struct NSSCertificateStr *nssCertificate;	/* This is Stan stuff. */
+    struct NSSCertificateStr *nssCertificate; /* This is Stan stuff. */
     CERTCertTrust *trust;
 
     /* the reference count is modified whenever someone looks up, dups
@@ -255,8 +258,8 @@ struct CERTCertificateStr {
     /* these belong in the static section, but are here to maintain
      * the structure's integrity
      */
-    CERTAuthKeyID * authKeyID;  /* x509v3 authority key identifier */
-    PRBool isRoot;              /* cert is the end of a chain */
+    CERTAuthKeyID *authKeyID; /* x509v3 authority key identifier */
+    PRBool isRoot;            /* cert is the end of a chain */
 
     /* these fields are used by client GUI code to keep track of ssl sockets
      * that are blocked waiting on GUI feedback related to this cert.
@@ -264,33 +267,33 @@ struct CERTCertificateStr {
      *       data structure.  They are only used by the browser right now.
      */
     union {
-        void* apointer; /* was struct SECSocketNode* authsocketlist */
+        void *apointer; /* was struct SECSocketNode* authsocketlist */
         struct {
-            unsigned int hasUnsupportedCriticalExt :1;
+            unsigned int hasUnsupportedCriticalExt : 1;
             /* add any new option bits needed here */
         } bits;
     } options;
     int series; /* was int authsocketcount; record the series of the pkcs11ID */
 
     /* This is PKCS #11 stuff. */
-    PK11SlotInfo *slot;		/*if this cert came of a token, which is it*/
-    CK_OBJECT_HANDLE pkcs11ID;	/*and which object on that token is it */
-    PRBool ownSlot;		/*true if the cert owns the slot reference */
+    PK11SlotInfo *slot;        /*if this cert came of a token, which is it*/
+    CK_OBJECT_HANDLE pkcs11ID; /*and which object on that token is it */
+    PRBool ownSlot;            /*true if the cert owns the slot reference */
 };
-#define SEC_CERTIFICATE_VERSION_1		0	/* default created */
-#define SEC_CERTIFICATE_VERSION_2		1	/* v2 */
-#define SEC_CERTIFICATE_VERSION_3		2	/* v3 extensions */
+#define SEC_CERTIFICATE_VERSION_1 0 /* default created */
+#define SEC_CERTIFICATE_VERSION_2 1 /* v2 */
+#define SEC_CERTIFICATE_VERSION_3 2 /* v3 extensions */
 
-#define SEC_CRL_VERSION_1		0	/* default */
-#define SEC_CRL_VERSION_2		1	/* v2 extensions */
+#define SEC_CRL_VERSION_1 0 /* default */
+#define SEC_CRL_VERSION_2 1 /* v2 extensions */
 
 /*
  * used to identify class of cert in mime stream code
  */
-#define SEC_CERT_CLASS_CA	1
-#define SEC_CERT_CLASS_SERVER	2
-#define SEC_CERT_CLASS_USER	3
-#define SEC_CERT_CLASS_EMAIL	4
+#define SEC_CERT_CLASS_CA 1
+#define SEC_CERT_CLASS_SERVER 2
+#define SEC_CERT_CLASS_USER 3
+#define SEC_CERT_CLASS_EMAIL 4
 
 struct CERTDERCertsStr {
     PLArenaPool *arena;
@@ -318,15 +321,14 @@ struct CERTCertificateRequestStr {
     CERTSubjectPublicKeyInfo subjectPublicKeyInfo;
     CERTAttribute **attributes;
 };
-#define SEC_CERTIFICATE_REQUEST_VERSION		0	/* what we *create* */
-
+#define SEC_CERTIFICATE_REQUEST_VERSION 0 /* what we *create* */
 
 /*
 ** A certificate list object.
 */
 struct CERTCertificateListStr {
     SECItem *certs;
-    int len;					/* number of certs */
+    int len; /* number of certs */
     PLArenaPool *arena;
 };
 
@@ -344,13 +346,13 @@ struct CERTCertListStr {
 #define CERT_LIST_HEAD(l) ((CERTCertListNode *)PR_LIST_HEAD(&l->list))
 #define CERT_LIST_TAIL(l) ((CERTCertListNode *)PR_LIST_TAIL(&l->list))
 #define CERT_LIST_NEXT(n) ((CERTCertListNode *)n->links.next)
-#define CERT_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
+#define CERT_LIST_END(n, l) (((void *)n) == ((void *)&l->list))
 #define CERT_LIST_EMPTY(l) CERT_LIST_END(CERT_LIST_HEAD(l), l)
 
 struct CERTCrlEntryStr {
     SECItem serialNumber;
     SECItem revocationDate;
-    CERTCertExtension **extensions;    
+    CERTCertExtension **extensions;
 };
 
 struct CERTCrlStr {
@@ -360,18 +362,18 @@ struct CERTCrlStr {
     SECItem derName;
     CERTName name;
     SECItem lastUpdate;
-    SECItem nextUpdate;				/* optional for x.509 CRL  */
+    SECItem nextUpdate; /* optional for x.509 CRL  */
     CERTCrlEntry **entries;
-    CERTCertExtension **extensions;    
+    CERTCertExtension **extensions;
     /* can't add anything there for binary backwards compatibility reasons */
 };
 
 struct CERTCrlKeyStr {
     SECItem derName;
-    SECItem dummy;			/* The decoder can not skip a primitive,
-					   this serves as a place holder for the
-					   decoder to finish its task only
-					*/
+    SECItem dummy; /* The decoder can not skip a primitive,
+                      this serves as a place holder for the
+                      decoder to finish its task only
+                   */
 };
 
 struct CERTSignedCrlStr {
@@ -383,14 +385,13 @@ struct CERTSignedCrlStr {
     PRBool istemp;
     int referenceCount;
     CERTCertDBHandle *dbhandle;
-    CERTSignedData signatureWrap;	/* XXX */
+    CERTSignedData signatureWrap; /* XXX */
     char *url;
     SECItem *derCrl;
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE pkcs11ID;
-    void* opaque; /* do not touch */
+    void *opaque; /* do not touch */
 };
-
 
 struct CERTCrlHeadNodeStr {
     PLArenaPool *arena;
@@ -399,13 +400,11 @@ struct CERTCrlHeadNodeStr {
     CERTCrlNode *last;
 };
 
-
 struct CERTCrlNodeStr {
     CERTCrlNode *next;
-    int 	type;
+    int type;
     CERTSignedCrl *crl;
 };
-
 
 /*
  * Array of X.500 Distinguished Names
@@ -413,32 +412,29 @@ struct CERTCrlNodeStr {
 struct CERTDistNamesStr {
     PLArenaPool *arena;
     int nnames;
-    SECItem  *names;
+    SECItem *names;
     void *head; /* private */
 };
 
+#define NS_CERT_TYPE_SSL_CLIENT (0x80)        /* bit 0 */
+#define NS_CERT_TYPE_SSL_SERVER (0x40)        /* bit 1 */
+#define NS_CERT_TYPE_EMAIL (0x20)             /* bit 2 */
+#define NS_CERT_TYPE_OBJECT_SIGNING (0x10)    /* bit 3 */
+#define NS_CERT_TYPE_RESERVED (0x08)          /* bit 4 */
+#define NS_CERT_TYPE_SSL_CA (0x04)            /* bit 5 */
+#define NS_CERT_TYPE_EMAIL_CA (0x02)          /* bit 6 */
+#define NS_CERT_TYPE_OBJECT_SIGNING_CA (0x01) /* bit 7 */
 
-#define NS_CERT_TYPE_SSL_CLIENT		(0x80)	/* bit 0 */
-#define NS_CERT_TYPE_SSL_SERVER		(0x40)  /* bit 1 */
-#define NS_CERT_TYPE_EMAIL		(0x20)  /* bit 2 */
-#define NS_CERT_TYPE_OBJECT_SIGNING	(0x10)  /* bit 3 */
-#define NS_CERT_TYPE_RESERVED		(0x08)  /* bit 4 */
-#define NS_CERT_TYPE_SSL_CA		(0x04)  /* bit 5 */
-#define NS_CERT_TYPE_EMAIL_CA		(0x02)  /* bit 6 */
-#define NS_CERT_TYPE_OBJECT_SIGNING_CA	(0x01)  /* bit 7 */
+#define EXT_KEY_USAGE_TIME_STAMP (0x8000)
+#define EXT_KEY_USAGE_STATUS_RESPONDER (0x4000)
 
-#define EXT_KEY_USAGE_TIME_STAMP        (0x8000)
-#define EXT_KEY_USAGE_STATUS_RESPONDER	(0x4000)
+#define NS_CERT_TYPE_APP                                                       \
+    (NS_CERT_TYPE_SSL_CLIENT | NS_CERT_TYPE_SSL_SERVER | NS_CERT_TYPE_EMAIL |  \
+     NS_CERT_TYPE_OBJECT_SIGNING)
 
-#define NS_CERT_TYPE_APP ( NS_CERT_TYPE_SSL_CLIENT | \
-			  NS_CERT_TYPE_SSL_SERVER | \
-			  NS_CERT_TYPE_EMAIL | \
-			  NS_CERT_TYPE_OBJECT_SIGNING )
-
-#define NS_CERT_TYPE_CA ( NS_CERT_TYPE_SSL_CA | \
-			 NS_CERT_TYPE_EMAIL_CA | \
-			 NS_CERT_TYPE_OBJECT_SIGNING_CA | \
-			 EXT_KEY_USAGE_STATUS_RESPONDER )
+#define NS_CERT_TYPE_CA                                                        \
+    (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |                             \
+     NS_CERT_TYPE_OBJECT_SIGNING_CA | EXT_KEY_USAGE_STATUS_RESPONDER)
 typedef enum SECCertUsageEnum {
     certUsageSSLClient = 0,
     certUsageSSLServer = 1,
@@ -456,19 +452,19 @@ typedef enum SECCertUsageEnum {
 
 typedef PRInt64 SECCertificateUsage;
 
-#define certificateUsageCheckAllUsages         (0x0000)
-#define certificateUsageSSLClient              (0x0001)
-#define certificateUsageSSLServer              (0x0002)
-#define certificateUsageSSLServerWithStepUp    (0x0004)
-#define certificateUsageSSLCA                  (0x0008)
-#define certificateUsageEmailSigner            (0x0010)
-#define certificateUsageEmailRecipient         (0x0020)
-#define certificateUsageObjectSigner           (0x0040)
-#define certificateUsageUserCertImport         (0x0080)
-#define certificateUsageVerifyCA               (0x0100)
-#define certificateUsageProtectedObjectSigner  (0x0200)
-#define certificateUsageStatusResponder        (0x0400)
-#define certificateUsageAnyCA                  (0x0800)
+#define certificateUsageCheckAllUsages (0x0000)
+#define certificateUsageSSLClient (0x0001)
+#define certificateUsageSSLServer (0x0002)
+#define certificateUsageSSLServerWithStepUp (0x0004)
+#define certificateUsageSSLCA (0x0008)
+#define certificateUsageEmailSigner (0x0010)
+#define certificateUsageEmailRecipient (0x0020)
+#define certificateUsageObjectSigner (0x0040)
+#define certificateUsageUserCertImport (0x0080)
+#define certificateUsageVerifyCA (0x0100)
+#define certificateUsageProtectedObjectSigner (0x0200)
+#define certificateUsageStatusResponder (0x0400)
+#define certificateUsageAnyCA (0x0800)
 
 #define certificateUsageHighest certificateUsageAnyCA
 
@@ -498,9 +494,8 @@ typedef enum SECCertTimeValidityEnum {
  * CERT_CompareValidityTimes.
  */
 
-typedef enum CERTCompareValidityStatusEnum
-{
-    certValidityUndetermined = 0, /* the function is unable to select one cert 
+typedef enum CERTCompareValidityStatusEnum {
+    certValidityUndetermined = 0, /* the function is unable to select one cert
                                      over another */
     certValidityChooseB = 1,      /* cert B should be preferred */
     certValidityEqual = 2,        /* both certs have the same validity period */
@@ -512,10 +507,10 @@ typedef enum CERTCompareValidityStatusEnum
  */
 
 /* these are values for the what argument below */
-#define SEC_CERT_NICKNAMES_ALL		1
-#define SEC_CERT_NICKNAMES_USER		2
-#define SEC_CERT_NICKNAMES_SERVER	3
-#define SEC_CERT_NICKNAMES_CA		4
+#define SEC_CERT_NICKNAMES_ALL 1
+#define SEC_CERT_NICKNAMES_USER 2
+#define SEC_CERT_NICKNAMES_SERVER 3
+#define SEC_CERT_NICKNAMES_CA 4
 
 struct CERTCertNicknamesStr {
     PLArenaPool *arena;
@@ -532,24 +527,19 @@ struct CERTIssuerAndSNStr {
     SECItem serialNumber;
 };
 
-
 /* X.509 v3 Key Usage Extension flags */
-#define KU_DIGITAL_SIGNATURE		(0x80)	/* bit 0 */
-#define KU_NON_REPUDIATION		(0x40)  /* bit 1 */
-#define KU_KEY_ENCIPHERMENT		(0x20)  /* bit 2 */
-#define KU_DATA_ENCIPHERMENT		(0x10)  /* bit 3 */
-#define KU_KEY_AGREEMENT		(0x08)  /* bit 4 */
-#define KU_KEY_CERT_SIGN		(0x04)  /* bit 5 */
-#define KU_CRL_SIGN			(0x02)  /* bit 6 */
-#define KU_ENCIPHER_ONLY		(0x01)  /* bit 7 */
-#define KU_ALL				(KU_DIGITAL_SIGNATURE | \
-					 KU_NON_REPUDIATION | \
-					 KU_KEY_ENCIPHERMENT | \
-					 KU_DATA_ENCIPHERMENT | \
-					 KU_KEY_AGREEMENT | \
-					 KU_KEY_CERT_SIGN | \
-					 KU_CRL_SIGN | \
-					 KU_ENCIPHER_ONLY)
+#define KU_DIGITAL_SIGNATURE (0x80) /* bit 0 */
+#define KU_NON_REPUDIATION (0x40)   /* bit 1 */
+#define KU_KEY_ENCIPHERMENT (0x20)  /* bit 2 */
+#define KU_DATA_ENCIPHERMENT (0x10) /* bit 3 */
+#define KU_KEY_AGREEMENT (0x08)     /* bit 4 */
+#define KU_KEY_CERT_SIGN (0x04)     /* bit 5 */
+#define KU_CRL_SIGN (0x02)          /* bit 6 */
+#define KU_ENCIPHER_ONLY (0x01)     /* bit 7 */
+#define KU_ALL                                                                 \
+    (KU_DIGITAL_SIGNATURE | KU_NON_REPUDIATION | KU_KEY_ENCIPHERMENT |         \
+     KU_DATA_ENCIPHERMENT | KU_KEY_AGREEMENT | KU_KEY_CERT_SIGN |              \
+     KU_CRL_SIGN | KU_ENCIPHER_ONLY)
 
 /* This value will not occur in certs.  It is used internally for the case
  * when either digital signature or non-repudiation is the correct value.
@@ -565,40 +555,40 @@ struct CERTIssuerAndSNStr {
 /* internal bits that do not match bits in the x509v3 spec, but are used
  * for similar purposes
  */
-#define KU_NS_GOVT_APPROVED		(0x8000) /*don't make part of KU_ALL!*/
+#define KU_NS_GOVT_APPROVED (0x8000) /*don't make part of KU_ALL!*/
 /*
- * x.509 v3 Basic Constraints Extension
- * If isCA is false, the pathLenConstraint is ignored.
- * Otherwise, the following pathLenConstraint values will apply:
- *	< 0 - there is no limit to the certificate path
- *	0   - CA can issues end-entity certificates only
- *	> 0 - the number of certificates in the certificate path is
- *	      limited to this number
- */
+* x.509 v3 Basic Constraints Extension
+* If isCA is false, the pathLenConstraint is ignored.
+* Otherwise, the following pathLenConstraint values will apply:
+*	< 0 - there is no limit to the certificate path
+*	0   - CA can issues end-entity certificates only
+*	> 0 - the number of certificates in the certificate path is
+*	      limited to this number
+*/
 #define CERT_UNLIMITED_PATH_CONSTRAINT -2
 
 struct CERTBasicConstraintsStr {
-    PRBool isCA;			/* on if is CA */
-    int pathLenConstraint;		/* maximum number of certificates that can be
-					   in the cert path.  Only applies to a CA
-					   certificate; otherwise, it's ignored.
-					 */
+    PRBool isCA;           /* on if is CA */
+    int pathLenConstraint; /* maximum number of certificates that can be
+                              in the cert path.  Only applies to a CA
+                              certificate; otherwise, it's ignored.
+                            */
 };
 
 /* Maximum length of a certificate chain */
 #define CERT_MAX_CERT_CHAIN 20
 
-#define CERT_MAX_SERIAL_NUMBER_BYTES  20    /* from RFC 3280 */
-#define CERT_MAX_DN_BYTES             4096  /* arbitrary */
+#define CERT_MAX_SERIAL_NUMBER_BYTES 20 /* from RFC 3280 */
+#define CERT_MAX_DN_BYTES 4096          /* arbitrary */
 
 /* x.509 v3 Reason Flags, used in CRLDistributionPoint Extension */
-#define RF_UNUSED			(0x80)	/* bit 0 */
-#define RF_KEY_COMPROMISE		(0x40)  /* bit 1 */
-#define RF_CA_COMPROMISE		(0x20)  /* bit 2 */
-#define RF_AFFILIATION_CHANGED		(0x10)  /* bit 3 */
-#define RF_SUPERSEDED			(0x08)  /* bit 4 */
-#define RF_CESSATION_OF_OPERATION	(0x04)  /* bit 5 */
-#define RF_CERTIFICATE_HOLD		(0x02)  /* bit 6 */
+#define RF_UNUSED (0x80)                 /* bit 0 */
+#define RF_KEY_COMPROMISE (0x40)         /* bit 1 */
+#define RF_CA_COMPROMISE (0x20)          /* bit 2 */
+#define RF_AFFILIATION_CHANGED (0x10)    /* bit 3 */
+#define RF_SUPERSEDED (0x08)             /* bit 4 */
+#define RF_CESSATION_OF_OPERATION (0x04) /* bit 5 */
+#define RF_CERTIFICATE_HOLD (0x02)       /* bit 6 */
 
 /* enum for CRL Entry Reason Code */
 typedef enum CERTCRLEntryReasonCodeEnum {
@@ -628,23 +618,20 @@ typedef enum CERTGeneralNameTypeEnum {
     certRegisterID = 9
 } CERTGeneralNameType;
 
-
 typedef struct OtherNameStr {
-    SECItem          name;
-    SECItem          oid;
-}OtherName;
-
-
+    SECItem name;
+    SECItem oid;
+} OtherName;
 
 struct CERTGeneralNameStr {
-    CERTGeneralNameType type;		/* name type */
+    CERTGeneralNameType type; /* name type */
     union {
-	CERTName directoryName;         /* distinguish name */
-	OtherName  OthName;		/* Other Name */
-	SECItem other;                  /* the rest of the name forms */
-    }name;
-    SECItem derDirectoryName;		/* this is saved to simplify directory name
-					   comparison */
+        CERTName directoryName; /* distinguish name */
+        OtherName OthName;      /* Other Name */
+        SECItem other;          /* the rest of the name forms */
+    } name;
+    SECItem derDirectoryName; /* this is saved to simplify directory name
+                                 comparison */
     PRCList l;
 };
 
@@ -657,21 +644,19 @@ struct CERTGeneralNameListStr {
 };
 
 struct CERTNameConstraintStr {
-    CERTGeneralName  name;
-    SECItem          DERName;
-    SECItem          min;
-    SECItem          max;
-    PRCList          l;
+    CERTGeneralName name;
+    SECItem DERName;
+    SECItem min;
+    SECItem max;
+    PRCList l;
 };
-
 
 struct CERTNameConstraintsStr {
-    CERTNameConstraint  *permited;
-    CERTNameConstraint  *excluded;
-    SECItem             **DERPermited;
-    SECItem             **DERExcluded;
+    CERTNameConstraint *permited;
+    CERTNameConstraint *excluded;
+    SECItem **DERPermited;
+    SECItem **DERExcluded;
 };
-
 
 /* Private Key Usage Period extension struct. */
 struct CERTPrivKeyUsagePeriodStr {
@@ -684,14 +669,14 @@ struct CERTPrivKeyUsagePeriodStr {
    issuer field, we only support URI now.
  */
 struct CERTAuthKeyIDStr {
-    SECItem keyID;			/* unique key identifier */
-    CERTGeneralName *authCertIssuer;	/* CA's issuer name.  End with a NULL */
-    SECItem authCertSerialNumber;	/* CA's certificate serial number */
-    SECItem **DERAuthCertIssuer;	/* This holds the DER encoded format of
-					   the authCertIssuer field. It is used
-					   by the encoding engine. It should be
-					   used as a read only field by the caller.
-					*/
+    SECItem keyID;                   /* unique key identifier */
+    CERTGeneralName *authCertIssuer; /* CA's issuer name.  End with a NULL */
+    SECItem authCertSerialNumber;    /* CA's certificate serial number */
+    SECItem **DERAuthCertIssuer;     /* This holds the DER encoded format of
+                                        the authCertIssuer field. It is used
+                                        by the encoding engine. It should be
+                                        used as a read only field by the caller.
+                                     */
 };
 
 /* x.509 v3 CRL Distributeion Point */
@@ -700,19 +685,19 @@ struct CERTAuthKeyIDStr {
  * defined the types of CRL Distribution points
  */
 typedef enum DistributionPointTypesEnum {
-    generalName = 1,			/* only support this for now */
+    generalName = 1, /* only support this for now */
     relativeDistinguishedName = 2
 } DistributionPointTypes;
 
 struct CRLDistributionPointStr {
     DistributionPointTypes distPointType;
     union {
-	CERTGeneralName *fullName;
-	CERTRDN relativeName;
+        CERTGeneralName *fullName;
+        CERTRDN relativeName;
     } distPoint;
     SECItem reasons;
     CERTGeneralName *crlIssuer;
-    
+
     /* Reserved for internal use only*/
     SECItem derDistPoint;
     SECItem derRelativeName;
@@ -731,14 +716,13 @@ struct CERTCrlDistributionPointsStr {
  * once.
  */
 struct CERTVerifyLogNodeStr {
-    CERTCertificate *cert;	/* what cert had the error */
-    long error;			/* what error was it? */
-    unsigned int depth;		/* how far up the chain are we */
-    void *arg;			/* error specific argument */
+    CERTCertificate *cert;             /* what cert had the error */
+    long error;                        /* what error was it? */
+    unsigned int depth;                /* how far up the chain are we */
+    void *arg;                         /* error specific argument */
     struct CERTVerifyLogNodeStr *next; /* next in the list */
     struct CERTVerifyLogNodeStr *prev; /* next in the list */
 };
-
 
 struct CERTVerifyLogStr {
     PLArenaPool *arena;
@@ -747,36 +731,32 @@ struct CERTVerifyLogStr {
     struct CERTVerifyLogNodeStr *tail;
 };
 
-
 struct CERTOKDomainNameStr {
     CERTOKDomainName *next;
-    char              name[1]; /* actual length may be longer. */
+    char name[1]; /* actual length may be longer. */
 };
 
+typedef SECStatus(PR_CALLBACK *CERTStatusChecker)(CERTCertDBHandle *handle,
+                                                  CERTCertificate *cert,
+                                                  PRTime time, void *pwArg);
 
-typedef SECStatus (PR_CALLBACK *CERTStatusChecker) (CERTCertDBHandle *handle,
-						    CERTCertificate *cert,
-						    PRTime time,
-						    void *pwArg);
-
-typedef SECStatus (PR_CALLBACK *CERTStatusDestroy) (CERTStatusConfig *handle);
+typedef SECStatus(PR_CALLBACK *CERTStatusDestroy)(CERTStatusConfig *handle);
 
 struct CERTStatusConfigStr {
-    CERTStatusChecker statusChecker;	/* NULL means no checking enabled */
-    CERTStatusDestroy statusDestroy;	/* enabled or no, will clean up */
-    void *statusContext;		/* cx specific to checking protocol */
+    CERTStatusChecker statusChecker; /* NULL means no checking enabled */
+    CERTStatusDestroy statusDestroy; /* enabled or no, will clean up */
+    void *statusContext;             /* cx specific to checking protocol */
 };
 
 struct CERTAuthInfoAccessStr {
     SECItem method;
     SECItem derLocation;
-    CERTGeneralName *location;		/* decoded location */
+    CERTGeneralName *location; /* decoded location */
 };
-
 
 /* This is the typedef for the callback passed to CERT_OpenCertDB() */
 /* callback to return database name based on version number */
-typedef char * (*CERTDBNameFunc)(void *arg, int dbVersion);
+typedef char *(*CERTDBNameFunc)(void *arg, int dbVersion);
 
 /*
  * types of cert packages that we can decode
@@ -875,10 +855,8 @@ typedef struct {
  * to indicate an fatal error that will cause path validation to fail
  * immediately.
  */
-typedef SECStatus (*CERTChainVerifyCallbackFunc)
-                                             (void *isChainValidArg,
-                                              const CERTCertList *currentChain,
-                                              PRBool *chainOK);
+typedef SECStatus (*CERTChainVerifyCallbackFunc)(
+    void *isChainValidArg, const CERTCertList *currentChain, PRBool *chainOK);
 
 /*
  * Note: If extending this structure, it will be necessary to change the
@@ -895,87 +873,91 @@ typedef struct {
  */
 
 typedef enum {
-   cert_pi_end             = 0, /* SPECIAL: signifies end of array of  
-				 * CERTValParam* */
-   cert_pi_nbioContext     = 1, /* specify a non-blocking IO context used to
-			         * resume a session. If this argument is 
-				 * specified, no other arguments should be.
-				 * Specified in value.pointer.p. If the 
-				 * operation completes the context will be 
-				 * freed. */
-   cert_pi_nbioAbort       = 2, /* specify a non-blocking IO context for an 
-				 * existing operation which the caller wants
-			         * to abort. If this argument is 
-				 * specified, no other arguments should be.
-				 * Specified in value.pointer.p. If the 
-			         * operation succeeds the context will be 
-				 * freed. */
-   cert_pi_certList        = 3, /* specify the chain to validate against. If
-				 * this value is given, then the path 
-				 * construction step in the validation is 
-				 * skipped. Specified in value.pointer.chain */
-   cert_pi_policyOID       = 4, /* validate certificate for policy OID.
-				 * Specified in value.array.oids. Cert must
-				 * be good for at least one OID in order
-				 * to validate. Default is that the user is not
-				 * concerned about certificate policy. */
-   cert_pi_policyFlags     = 5, /* flags for each policy specified in policyOID.
-				 * Specified in value.scalar.ul. Policy flags
-				 * apply to all specified oids. 
-				 * Use CERT_POLICY_FLAG_* macros below. If not
-				 * specified policy flags default to 0 */
-   cert_pi_keyusage        = 6, /* specify what the keyusages the certificate 
-				 * will be evaluated against, specified in
-				 * value.scalar.ui. The cert must validate for
-				 * at least one of the specified key usages.
-				 * Values match the KU_  bit flags defined
-				 * in this file. Default is derived from
-				 * the 'usages' function argument */
-   cert_pi_extendedKeyusage= 7, /* specify what the required extended key 
-				 * usage of the certificate. Specified as
-				 * an array of oidTags in value.array.oids.
-				 * The cert must validate for at least one
-				 * of the specified extended key usages.
-				 * If not specified, no extended key usages
-				 * will be checked. */
-   cert_pi_date            = 8, /* validate certificate is valid as of date 
-				 * specified in value.scalar.time. A special 
-				 * value '0' indicates 'now'. default is '0' */
-   cert_pi_revocationFlags = 9, /* Specify what revocation checking to do.
-				 * See CERT_REV_FLAG_* macros below
-				 * Set in value.pointer.revocation */
-   cert_pi_certStores      = 10,/* Bitmask of Cert Store flags (see below)
-				 * Set in value.scalar.ui */
-   cert_pi_trustAnchors    = 11,/* Specify the list of trusted roots to 
-				 * validate against. 
-				 * The default set of trusted roots, these are
-				 * root CA certs from libnssckbi.so or CA
-				 * certs trusted by user, are used in any of
-				 * the following cases:
-				 *      * when the parameter is not set.
-				 *      * when the list of trust anchors is empty.
-				 * Note that this handling can be further altered by altering the
-				 * cert_pi_useOnlyTrustAnchors flag
-				 * Specified in value.pointer.chain */
-   cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
-				 * In NSS 3.12.1 or later. Default is off.
-				 * Value is in value.scalar.b */
-   cert_pi_chainVerifyCallback = 13,
-                                /* The callback container for doing extra
-                                 * validation on the currently calculated chain.
-                                 * Value is in value.pointer.chainVerifyCallback */
-   cert_pi_useOnlyTrustAnchors = 14,/* If true, disables trusting any
-				 * certificates other than the ones passed in via cert_pi_trustAnchors.
-				 * If false, then the certificates specified via cert_pi_trustAnchors
-				 * will be combined with the pre-existing trusted roots, but only for
-				 * the certificate validation being performed.
-				 * If no value has been supplied via cert_pi_trustAnchors, this has no
-				 * effect.
-				 * The default value is true, meaning if this is not supplied, only
-				 * trust anchors supplied via cert_pi_trustAnchors are trusted.
-				 * Specified in value.scalar.b */
-   cert_pi_max                  /* SPECIAL: signifies maximum allowed value,
-				 *  can increase in future releases */
+    cert_pi_end = 0,         /* SPECIAL: signifies end of array of
+                              * CERTValParam* */
+    cert_pi_nbioContext = 1, /* specify a non-blocking IO context used to
+                              * resume a session. If this argument is
+                              * specified, no other arguments should be.
+                              * Specified in value.pointer.p. If the
+                              * operation completes the context will be
+                              * freed. */
+    cert_pi_nbioAbort = 2,   /* specify a non-blocking IO context for an
+                              * existing operation which the caller wants
+                              * to abort. If this argument is
+                              * specified, no other arguments should be.
+                              * Specified in value.pointer.p. If the
+                              * operation succeeds the context will be
+                              * freed. */
+    cert_pi_certList = 3,    /* specify the chain to validate against. If
+                              * this value is given, then the path
+                              * construction step in the validation is
+                              * skipped. Specified in value.pointer.chain */
+    cert_pi_policyOID = 4,   /* validate certificate for policy OID.
+                              * Specified in value.array.oids. Cert must
+                              * be good for at least one OID in order
+                              * to validate. Default is that the user is not
+                              * concerned about certificate policy. */
+    cert_pi_policyFlags = 5, /* flags for each policy specified in policyOID.
+                              * Specified in value.scalar.ul. Policy flags
+                              * apply to all specified oids.
+                              * Use CERT_POLICY_FLAG_* macros below. If not
+                              * specified policy flags default to 0 */
+    cert_pi_keyusage = 6,    /* specify what the keyusages the certificate
+                              * will be evaluated against, specified in
+                              * value.scalar.ui. The cert must validate for
+                              * at least one of the specified key usages.
+                              * Values match the KU_  bit flags defined
+                              * in this file. Default is derived from
+                              * the 'usages' function argument */
+    cert_pi_extendedKeyusage = 7, /* specify what the required extended key
+                                   * usage of the certificate. Specified as
+                                   * an array of oidTags in value.array.oids.
+                                   * The cert must validate for at least one
+                                   * of the specified extended key usages.
+                                   * If not specified, no extended key usages
+                                   * will be checked. */
+    cert_pi_date = 8,             /* validate certificate is valid as of date
+                                   * specified in value.scalar.time. A special
+                                   * value '0' indicates 'now'. default is '0' */
+    cert_pi_revocationFlags = 9,  /* Specify what revocation checking to do.
+                                   * See CERT_REV_FLAG_* macros below
+                                   * Set in value.pointer.revocation */
+    cert_pi_certStores = 10,      /* Bitmask of Cert Store flags (see below)
+                                   * Set in value.scalar.ui */
+    cert_pi_trustAnchors =
+        11,                       /* Specify the list of trusted roots to
+                                   * validate against.
+                                   * The default set of trusted roots, these are
+                                   * root CA certs from libnssckbi.so or CA
+                                   * certs trusted by user, are used in any of
+                                   * the following cases:
+                                   *      * when the parameter is not set.
+                                   *      * when the list of trust anchors is
+                                   *        empty.
+                                   * Note that this handling can be further
+                                   * altered by altering the
+                                   * cert_pi_useOnlyTrustAnchors flag
+                                   * Specified in value.pointer.chain */
+    cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
+                                  * In NSS 3.12.1 or later. Default is off.
+                                  * Value is in value.scalar.b */
+    cert_pi_chainVerifyCallback = 13,
+    /* The callback container for doing extra
+     * validation on the currently calculated chain.
+     * Value is in value.pointer.chainVerifyCallback */
+    cert_pi_useOnlyTrustAnchors = 14,
+        /* If true, disables trusting any
+        * certificates other than the ones passed in via cert_pi_trustAnchors.
+        * If false, then the certificates specified via cert_pi_trustAnchors
+        * will be combined with the pre-existing trusted roots, but only
+        * for the certificate validation being performed.
+        * If no value has been supplied via cert_pi_trustAnchors, this has
+        * no effect.
+        * The default value is true, meaning if this is not supplied, only
+        * trust anchors supplied via cert_pi_trustAnchors are trusted.
+        * Specified in value.scalar.b */
+    cert_pi_max /* SPECIAL: signifies maximum allowed value,
+                 *  can increase in future releases */
 } CERTValParamInType;
 
 /*
@@ -987,39 +969,39 @@ typedef enum {
  * If SECWouldBlock is returned, only cert_pi_nbioContext is returned.
  */
 typedef enum {
-   cert_po_end             = 0, /* SPECIAL: signifies end of array of  
-				 * CERTValParam* */
-   cert_po_nbioContext     = 1, /* Return a nonblocking context. If no
-				 * non-blocking context is specified, then
-				 * blocking IO will be used. 
-				 * Returned in value.pointer.p. The context is 
-				 * freed after an abort or a complete operation.
-				 * This value is only returned on SECWouldBlock.
-				 */
-   cert_po_trustAnchor     = 2, /* Return the trust anchor for the chain that
-				 * was validated. Returned in 
-				 * value.pointer.cert, this value is only 
-				 * returned on SECSuccess. */
-   cert_po_certList        = 3, /* Return the entire chain that was validated.
-				 * Returned in value.pointer.certList. If no 
-				 * chain could be constructed, this value 
-				 * would be NULL. */
-   cert_po_policyOID       = 4, /* Return the policies that were found to be
-				 * valid. Returned in value.array.oids as an 
-				 * array. This is only returned on 
-				 * SECSuccess. */
-   cert_po_errorLog        = 5, /* Return a log of problems with the chain.
-				 * Returned in value.pointer.log  */
-   cert_po_usages          = 6, /* Return what usages the certificate is valid
-				   for. Returned in value.scalar.usages */
-   cert_po_keyUsage        = 7, /* Return what key usages the certificate
-				 * is valid for.
-				 * Returned in value.scalar.usage */
-   cert_po_extendedKeyusage= 8, /* Return what extended key usages the
-				 * certificate is valid for.
-				 * Returned in value.array.oids */
-   cert_po_max                  /* SPECIAL: signifies maximum allowed value,
-				 *  can increase in future releases */
+    cert_po_end = 0,              /* SPECIAL: signifies end of array of
+                                   * CERTValParam* */
+    cert_po_nbioContext = 1,      /* Return a nonblocking context. If no
+                                   * non-blocking context is specified, then
+                                   * blocking IO will be used.
+                                   * Returned in value.pointer.p. The context is
+                                   * freed after an abort or a complete operation.
+                                   * This value is only returned on SECWouldBlock.
+                                   */
+    cert_po_trustAnchor = 2,      /* Return the trust anchor for the chain that
+                                   * was validated. Returned in
+                                   * value.pointer.cert, this value is only
+                                   * returned on SECSuccess. */
+    cert_po_certList = 3,         /* Return the entire chain that was validated.
+                                   * Returned in value.pointer.certList. If no
+                                   * chain could be constructed, this value
+                                   * would be NULL. */
+    cert_po_policyOID = 4,        /* Return the policies that were found to be
+                                   * valid. Returned in value.array.oids as an
+                                   * array. This is only returned on
+                                   * SECSuccess. */
+    cert_po_errorLog = 5,         /* Return a log of problems with the chain.
+                                   * Returned in value.pointer.log  */
+    cert_po_usages = 6,           /* Return what usages the certificate is valid
+                                     for. Returned in value.scalar.usages */
+    cert_po_keyUsage = 7,         /* Return what key usages the certificate
+                                   * is valid for.
+                                   * Returned in value.scalar.usage */
+    cert_po_extendedKeyusage = 8, /* Return what extended key usages the
+                                   * certificate is valid for.
+                                   * Returned in value.array.oids */
+    cert_po_max                   /* SPECIAL: signifies maximum allowed value,
+                                   *  can increase in future releases */
 
 } CERTValParamOutType;
 
@@ -1028,7 +1010,6 @@ typedef enum {
     cert_revocation_method_ocsp,
     cert_revocation_method_count
 } CERTRevocationMethodIndex;
-
 
 /*
  * The following flags are supposed to be used to control bits in
@@ -1042,8 +1023,8 @@ typedef enum {
  * Whether or not to use a method for revocation testing.
  * If set to "do not test", then all other flags are ignored.
  */
-#define CERT_REV_M_DO_NOT_TEST_USING_THIS_METHOD     0UL
-#define CERT_REV_M_TEST_USING_THIS_METHOD            1UL
+#define CERT_REV_M_DO_NOT_TEST_USING_THIS_METHOD 0UL
+#define CERT_REV_M_TEST_USING_THIS_METHOD 1UL
 
 /*
  * Whether or not NSS is allowed to attempt to fetch fresh information
@@ -1051,8 +1032,8 @@ typedef enum {
  * (Although fetching will never happen if fresh information for the
  *           method is already locally available.)
  */
-#define CERT_REV_M_ALLOW_NETWORK_FETCHING            0UL
-#define CERT_REV_M_FORBID_NETWORK_FETCHING           2UL
+#define CERT_REV_M_ALLOW_NETWORK_FETCHING 0UL
+#define CERT_REV_M_FORBID_NETWORK_FETCHING 2UL
 
 /*
  * Example for an implicit default source:
@@ -1060,14 +1041,14 @@ typedef enum {
  * IGNORE means:
  *        ignore the implicit default source, whether it's configured or not.
  * ALLOW means:
- *       if an implicit default source is configured, 
+ *       if an implicit default source is configured,
  *          then it overrides any available or missing source in the cert.
  *       if no implicit default source is configured,
- *          then we continue to use what's available (or not available) 
+ *          then we continue to use what's available (or not available)
  *          in the certs.
- */ 
-#define CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE     0UL
-#define CERT_REV_M_IGNORE_IMPLICIT_DEFAULT_SOURCE    4UL
+ */
+#define CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE 0UL
+#define CERT_REV_M_IGNORE_IMPLICIT_DEFAULT_SOURCE 4UL
 
 /*
  * Defines the behavior if no fresh information is available,
@@ -1075,14 +1056,14 @@ typedef enum {
  *   information is unknown (even after considering implicit sources,
  *   if allowed by other flags).
  * SKIPT_TEST means:
- *          We ignore that no fresh information is available and 
+ *          We ignore that no fresh information is available and
  *          skip this test.
  * REQUIRE_INFO means:
  *          We still require that fresh information is available.
  *          Other flags define what happens on missing fresh info.
  */
-#define CERT_REV_M_SKIP_TEST_ON_MISSING_SOURCE       0UL
-#define CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE    8UL
+#define CERT_REV_M_SKIP_TEST_ON_MISSING_SOURCE 0UL
+#define CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE 8UL
 
 /*
  * Defines the behavior if we are unable to obtain fresh information.
@@ -1091,8 +1072,8 @@ typedef enum {
  * FAIL means:
  *      Return "cert revoked".
  */
-#define CERT_REV_M_IGNORE_MISSING_FRESH_INFO         0UL
-#define CERT_REV_M_FAIL_ON_MISSING_FRESH_INFO        16UL
+#define CERT_REV_M_IGNORE_MISSING_FRESH_INFO 0UL
+#define CERT_REV_M_FAIL_ON_MISSING_FRESH_INFO 16UL
 
 /*
  * What should happen if we were able to find fresh information using
@@ -1104,8 +1085,8 @@ typedef enum {
  *                  We will continue and test the next allowed
  *                  specified method.
  */
-#define CERT_REV_M_STOP_TESTING_ON_FRESH_INFO        0UL
-#define CERT_REV_M_CONTINUE_TESTING_ON_FRESH_INFO    32UL
+#define CERT_REV_M_STOP_TESTING_ON_FRESH_INFO 0UL
+#define CERT_REV_M_CONTINUE_TESTING_ON_FRESH_INFO 32UL
 
 /* When this flag is used, libpkix will never attempt to use the GET HTTP
  * method for OCSP requests; it will always use POST.
@@ -1131,8 +1112,8 @@ typedef enum {
  *      which are already locally available. Only after that is done
  *      consider to fetch from the network (as allowed by other flags).
  */
-#define CERT_REV_MI_TEST_EACH_METHOD_SEPARATELY       0UL
-#define CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST  1UL
+#define CERT_REV_MI_TEST_EACH_METHOD_SEPARATELY 0UL
+#define CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST 1UL
 
 /*
  * Use this flag to specify that it's necessary that fresh information
@@ -1147,9 +1128,8 @@ typedef enum {
  *     This setting overrides the CERT_REV_M_FAIL_ON_MISSING_FRESH_INFO
  *     flag on all methods.
  */
-#define CERT_REV_MI_NO_OVERALL_INFO_REQUIREMENT       0UL
+#define CERT_REV_MI_NO_OVERALL_INFO_REQUIREMENT 0UL
 #define CERT_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE 2UL
-
 
 typedef struct {
     /*
@@ -1163,20 +1143,20 @@ typedef struct {
      * A pointer to an array of integers.
      * Each integer defines revocation checking for a single method,
      *      by having individual CERT_REV_M_* bits set or not set.
-     * The meaning of index numbers into this array are defined by 
+     * The meaning of index numbers into this array are defined by
      *     enum CERTRevocationMethodIndex
      * The size of the array must be specified by the caller in the separate
      *     variable number_of_defined_methods.
-     * The size of the array may be smaller than 
+     * The size of the array may be smaller than
      *     cert_revocation_method_count, it can happen if a caller
      *     is not yet aware of the latest revocation methods
      *     (or does not want to use them).
-     */ 
+     */
     PRUint64 *cert_rev_flags_per_method;
 
     /*
      * How many preferred methods are specified?
-     * This is equivalent to the size of the array that 
+     * This is equivalent to the size of the array that
      *      preferred_methods points to.
      * It's allowed to set this value to zero,
      *      then NSS will decide which methods to prefer.
@@ -1207,50 +1187,49 @@ typedef struct {
 
 typedef struct CERTValParamInValueStr {
     union {
-        PRBool   b;
-        PRInt32  i;
+        PRBool b;
+        PRInt32 i;
         PRUint32 ui;
-        PRInt64  l;
+        PRInt64 l;
         PRUint64 ul;
         PRTime time;
     } scalar;
     union {
-        const void*    p;
-        const char*    s;
-        const CERTCertificate* cert;
+        const void *p;
+        const char *s;
+        const CERTCertificate *cert;
         const CERTCertList *chain;
         const CERTRevocationFlags *revocation;
         const CERTChainVerifyCallback *chainVerifyCallback;
     } pointer;
     union {
-        const PRInt32  *pi;
+        const PRInt32 *pi;
         const PRUint32 *pui;
-        const PRInt64  *pl;
+        const PRInt64 *pl;
         const PRUint64 *pul;
         const SECOidTag *oids;
     } array;
     int arraySize;
 } CERTValParamInValue;
 
-
 typedef struct CERTValParamOutValueStr {
     union {
-        PRBool   b;
-        PRInt32  i;
+        PRBool b;
+        PRInt32 i;
         PRUint32 ui;
-        PRInt64  l;
+        PRInt64 l;
         PRUint64 ul;
         SECCertificateUsage usages;
     } scalar;
     union {
-        void*    p;
-        char*    s;
+        void *p;
+        char *s;
         CERTVerifyLog *log;
-        CERTCertificate* cert;
+        CERTCertificate *cert;
         CERTCertList *chain;
     } pointer;
     union {
-        void 	  *p;
+        void *p;
         SECOidTag *oids;
     } array;
     int arraySize;
@@ -1270,35 +1249,35 @@ typedef struct {
  * Levels of standards conformance strictness for CERT_NameToAsciiInvertible
  */
 typedef enum CertStrictnessLevels {
-    CERT_N2A_READABLE   =  0, /* maximum human readability */
-    CERT_N2A_STRICT     = 10, /* strict RFC compliance    */
-    CERT_N2A_INVERTIBLE = 20  /* maximum invertibility,
-                                 all DirectoryStrings encoded in hex */
+    CERT_N2A_READABLE = 0,   /* maximum human readability */
+    CERT_N2A_STRICT = 10,    /* strict RFC compliance    */
+    CERT_N2A_INVERTIBLE = 20 /* maximum invertibility,
+                                all DirectoryStrings encoded in hex */
 } CertStrictnessLevel;
 
 /*
  * policy flag defines
  */
-#define CERT_POLICY_FLAG_NO_MAPPING    1
-#define CERT_POLICY_FLAG_EXPLICIT      2
-#define CERT_POLICY_FLAG_NO_ANY        4
+#define CERT_POLICY_FLAG_NO_MAPPING 1
+#define CERT_POLICY_FLAG_EXPLICIT 2
+#define CERT_POLICY_FLAG_NO_ANY 4
 
 /*
  * CertStore flags
  */
-#define CERT_ENABLE_LDAP_FETCH          1
-#define CERT_ENABLE_HTTP_FETCH          2
+#define CERT_ENABLE_LDAP_FETCH 1
+#define CERT_ENABLE_HTTP_FETCH 2
 
 /* This functin pointer type may be used for any function that takes
  * a CERTCertificate * and returns an allocated string, which must be
  * freed by a call to PORT_Free.
  */
-typedef char * (*CERT_StringFromCertFcn)(CERTCertificate *cert);
+typedef char *(*CERT_StringFromCertFcn)(CERTCertificate *cert);
 
 /* XXX Lisa thinks the template declarations belong in cert.h, not here? */
 
-#include "secasn1t.h"	/* way down here because I expect template stuff to
-			 * move out of here anyway */
+#include "secasn1t.h" /* way down here because I expect template stuff to
+                       * move out of here anyway */
 
 SEC_BEGIN_PROTOS
 
