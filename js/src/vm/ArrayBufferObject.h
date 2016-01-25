@@ -159,7 +159,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         TYPED_OBJECT_VIEWS  = 0x20
     };
 
-    static_assert(JS_ARRAYBUFFER_NEUTERED_FLAG == DETACHED,
+    static_assert(JS_ARRAYBUFFER_DETACHED_FLAG == DETACHED,
                   "self-hosted code with burned-in constants must use the "
                   "correct DETACHED bit value");
   public:
