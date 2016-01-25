@@ -5,6 +5,38 @@
 CORE_DEPTH = ..
 DEPTH      = ..
 
+# Building softoken (and freebl) only requires that the paths
+# to the locations where the util headers and libraries were
+# previously installed by a prior util-only build - likely in
+# in a system location that varies with the distribution. This
+# cannot be addressed here and requires that downstream package
+# mantainers add suitable modifications. Building full nss will
+# not have that problem as everything is available.
+
+SOFTOKEN_SRCDIRS=
+NSS_SRCDIRS=
+
+ifndef NSS_BUILD_UTIL_ONLY
+SOFTOKEN_SRCDIRS = \
+	$(FREEBL_SRCDIR) \
+	$(SQLITE_SRCDIR) \
+	$(DBM_SRCDIR) \
+	$(SOFTOKEN_SRCDIR) \
+	$(NULL)
+ifndef NSS_BUILD_SOFTOKEN_ONLY
+# the rest of nss
+NSS_SRCDIRS = \
+	base dev pki \
+	libpkix \
+	certdb certhigh pk11wrap cryptohi nss \
+	$(ZLIB_SRCDIR) ssl \
+	pkcs7 pkcs12 smime \
+	crmf jar \
+	ckfw $(SYSINIT_SRCDIR) \
+	$(NULL)
+endif
+endif
+
 #
 # organized by DLL
 #
@@ -18,17 +50,8 @@ DEPTH      = ..
 #  crmf jar (not dll's)
 DIRS = \
 	$(UTIL_SRCDIR) \
-	$(FREEBL_SRCDIR) \
-	$(SQLITE_SRCDIR) \
-	$(DBM_SRCDIR) \
-	$(SOFTOKEN_SRCDIR) \
-	base dev pki \
-	libpkix \
-	certdb certhigh pk11wrap cryptohi nss \
-	$(ZLIB_SRCDIR) ssl \
-	pkcs7 pkcs12 smime \
-	crmf jar \
-	ckfw $(SYSINIT_SRCDIR) \
+	$(SOFTOKEN_SRCDIRS) \
+	$(NSS_SRCDIRS) \
 	$(NULL)
 
 #  fortcrypt  is no longer built

@@ -609,6 +609,110 @@ TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmConfiguration) {
   }
 }
 
+/*
+ * Tests for Certificate Transparency (RFC 6962)
+ */
+
+// Helper class - stores signed certificate timestamps as provided
+// by the relevant callbacks on the client.
+class SignedCertificateTimestampsExtractor {
+ public:
+  SignedCertificateTimestampsExtractor(TlsAgent& client) {
+    client.SetAuthCertificateCallback(
+      [&](TlsAgent& agent, PRBool checksig, PRBool isServer) {
+        const SECItem *scts = SSL_PeerSignedCertTimestamps(agent.ssl_fd());
+        ASSERT_TRUE(scts);
+        auth_timestamps_.reset(new DataBuffer(scts->data, scts->len));
+      }
+    );
+    client.SetHandshakeCallback(
+      [&](TlsAgent& agent) {
+        const SECItem *scts = SSL_PeerSignedCertTimestamps(agent.ssl_fd());
+        ASSERT_TRUE(scts);
+        handshake_timestamps_.reset(new DataBuffer(scts->data, scts->len));
+      }
+    );
+  }
+
+  void assertTimestamps(const DataBuffer& timestamps) {
+    ASSERT_TRUE(auth_timestamps_);
+    ASSERT_EQ(timestamps, *auth_timestamps_);
+
+    ASSERT_TRUE(handshake_timestamps_);
+    ASSERT_EQ(timestamps, *handshake_timestamps_);
+  }
+
+ private:
+  std::unique_ptr<DataBuffer> auth_timestamps_;
+  std::unique_ptr<DataBuffer> handshake_timestamps_;
+};
+
+// Test timestamps extraction during a successful handshake.
+TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsHandshake) {
+  uint8_t val[] = { 0x01, 0x23, 0x45, 0x67, 0x89 };
+  const SECItem si_timestamps = { siBuffer, val, sizeof(val) };
+  const DataBuffer timestamps(val, sizeof(val));
+
+  server_->StartConnect();
+  ASSERT_EQ(SECSuccess,
+    SSL_SetSignedCertTimestamps(server_->ssl_fd(),
+      &si_timestamps, server_->kea()));
+
+  client_->StartConnect();
+  ASSERT_EQ(SECSuccess,
+    SSL_OptionSet(client_->ssl_fd(),
+      SSL_ENABLE_SIGNED_CERT_TIMESTAMPS, PR_TRUE));
+
+  SignedCertificateTimestampsExtractor timestamps_extractor(*client_);
+  Handshake();
+  CheckConnected();
+  timestamps_extractor.assertTimestamps(timestamps);
+}
+
+// Test SSL_PeerSignedCertTimestamps returning zero-length SECItem
+// when the client / the server / both have not enabled the feature.
+TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveClient) {
+  uint8_t val[] = { 0x01, 0x23, 0x45, 0x67, 0x89 };
+  const SECItem si_timestamps = { siBuffer, val, sizeof(val) };
+
+  server_->StartConnect();
+  ASSERT_EQ(SECSuccess,
+    SSL_SetSignedCertTimestamps(server_->ssl_fd(),
+      &si_timestamps, server_->kea()));
+
+  client_->StartConnect();
+
+  SignedCertificateTimestampsExtractor timestamps_extractor(*client_);
+  Handshake();
+  CheckConnected();
+  timestamps_extractor.assertTimestamps(DataBuffer());
+}
+
+TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveServer) {
+  server_->StartConnect();
+
+  client_->StartConnect();
+  ASSERT_EQ(SECSuccess,
+    SSL_OptionSet(client_->ssl_fd(),
+      SSL_ENABLE_SIGNED_CERT_TIMESTAMPS, PR_TRUE));
+
+  SignedCertificateTimestampsExtractor timestamps_extractor(*client_);
+  Handshake();
+  CheckConnected();
+  timestamps_extractor.assertTimestamps(DataBuffer());
+}
+
+TEST_P(TlsExtensionTestGeneric, SignedCertificateTimestampsInactiveBoth) {
+  server_->StartConnect();
+  client_->StartConnect();
+
+  SignedCertificateTimestampsExtractor timestamps_extractor(*client_);
+  Handshake();
+  CheckConnected();
+  timestamps_extractor.assertTimestamps(DataBuffer());
+}
+
+
 INSTANTIATE_TEST_CASE_P(ExtensionTls10, TlsExtensionTestGeneric,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,

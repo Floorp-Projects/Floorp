@@ -1122,6 +1122,9 @@ nssCRL_Create (
                                           &rvCRL->url,
                                           &rvCRL->isKRL);
     if (status != PR_SUCCESS) {
+	if (!arena) {
+	    nssPKIObject_Destroy((nssPKIObject *)rvCRL);
+	}
 	return (NSSCRL *)NULL;
     }
     return rvCRL;

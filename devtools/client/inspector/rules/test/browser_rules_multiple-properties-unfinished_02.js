@@ -13,14 +13,16 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("div", inspector);
-  yield testCreateNewMultiPartialUnfinished(inspector, view);
-});
 
-function* testCreateNewMultiPartialUnfinished(inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 0);
+  // Note that we wait for a markup mutation here because this new rule will end
+  // up creating a style attribute on the node shown in the markup-view.
+  // (we also wait for the rule-view to refresh).
   let onMutation = inspector.once("markupmutation");
+  let onRuleViewChanged = view.once("ruleview-changed");
   yield createNewRuleViewProperty(ruleEditor, "width: 100px; heig");
   yield onMutation;
+  yield onRuleViewChanged;
 
   is(ruleEditor.rule.textProps.length, 2,
     "Should have created a new text property.");
@@ -29,10 +31,12 @@ function* testCreateNewMultiPartialUnfinished(inspector, view) {
 
   // Value is focused, lets add multiple rules here and make sure they get added
   onMutation = inspector.once("markupmutation");
+  onRuleViewChanged = view.once("ruleview-changed");
   let valueEditor = ruleEditor.propertyList.children[1].querySelector("input");
   valueEditor.value = "10px;background:orangered;color: black;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onMutation;
+  yield onRuleViewChanged;
 
   is(ruleEditor.rule.textProps.length, 4,
     "Should have added the changed value.");
@@ -58,4 +62,4 @@ function* testCreateNewMultiPartialUnfinished(inspector, view) {
     "Should have correct property name");
   is(ruleEditor.rule.textProps[3].value, "black",
     "Should have correct property value");
-}
+});

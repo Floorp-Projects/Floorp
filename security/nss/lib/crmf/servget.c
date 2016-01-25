@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "cmmf.h"
 #include "cmmfi.h"
 #include "secitem.h"
@@ -20,15 +19,15 @@ CRMF_EncryptedKeyGetChoice(CRMFEncryptedKey *inEncrKey)
     return inEncrKey->encKeyChoice;
 }
 
-CRMFEncryptedValue*
+CRMFEncryptedValue *
 CRMF_EncryptedKeyGetEncryptedValue(CRMFEncryptedKey *inEncrKey)
 {
     CRMFEncryptedValue *newEncrValue = NULL;
-    SECStatus           rv;
+    SECStatus rv;
 
     PORT_Assert(inEncrKey != NULL);
     if (inEncrKey == NULL ||
-	CRMF_EncryptedKeyGetChoice(inEncrKey) != crmfEncryptedValueChoice) {
+        CRMF_EncryptedKeyGetChoice(inEncrKey) != crmfEncryptedValueChoice) {
         goto loser;
     }
     newEncrValue = PORT_ZNew(CRMFEncryptedValue);
@@ -36,24 +35,24 @@ CRMF_EncryptedKeyGetEncryptedValue(CRMFEncryptedKey *inEncrKey)
         goto loser;
     }
     rv = crmf_copy_encryptedvalue(NULL, &inEncrKey->value.encryptedValue,
-				  newEncrValue);
+                                  newEncrValue);
     if (rv != SECSuccess) {
         goto loser;
     }
     return newEncrValue;
- loser:
+loser:
     if (newEncrValue != NULL) {
         CRMF_DestroyEncryptedValue(newEncrValue);
     }
     return NULL;
 }
 
-static SECItem*
+static SECItem *
 crmf_get_encvalue_bitstring(SECItem *srcItem)
 {
-    SECItem   *newItem = NULL;
+    SECItem *newItem = NULL;
     SECStatus rv;
-    
+
     if (srcItem->data == NULL) {
         return NULL;
     }
@@ -66,14 +65,14 @@ crmf_get_encvalue_bitstring(SECItem *srcItem)
         goto loser;
     }
     return newItem;
- loser:
+loser:
     if (newItem != NULL) {
         SECITEM_FreeItem(newItem, PR_TRUE);
     }
     return NULL;
 }
 
-SECItem*
+SECItem *
 CRMF_EncryptedValueGetEncSymmKey(CRMFEncryptedValue *inEncValue)
 {
     if (inEncValue == NULL) {
@@ -82,7 +81,7 @@ CRMF_EncryptedValueGetEncSymmKey(CRMFEncryptedValue *inEncValue)
     return crmf_get_encvalue_bitstring(&inEncValue->encSymmKey);
 }
 
-SECItem*
+SECItem *
 CRMF_EncryptedValueGetEncValue(CRMFEncryptedValue *inEncrValue)
 {
     if (inEncrValue == NULL || inEncrValue->encValue.data == NULL) {
@@ -91,12 +90,12 @@ CRMF_EncryptedValueGetEncValue(CRMFEncryptedValue *inEncrValue)
     return crmf_get_encvalue_bitstring(&inEncrValue->encValue);
 }
 
-static SECAlgorithmID*
+static SECAlgorithmID *
 crmf_get_encvalue_algid(SECAlgorithmID *srcAlg)
 {
-    SECStatus       rv;
+    SECStatus rv;
     SECAlgorithmID *newAlgID;
-    
+
     if (srcAlg == NULL) {
         return NULL;
     }
@@ -107,7 +106,7 @@ crmf_get_encvalue_algid(SECAlgorithmID *srcAlg)
     return newAlgID;
 }
 
-SECAlgorithmID*
+SECAlgorithmID *
 CRMF_EncryptedValueGetIntendedAlg(CRMFEncryptedValue *inEncValue)
 {
     if (inEncValue == NULL) {
@@ -116,7 +115,7 @@ CRMF_EncryptedValueGetIntendedAlg(CRMFEncryptedValue *inEncValue)
     return crmf_get_encvalue_algid(inEncValue->intendedAlg);
 }
 
-SECAlgorithmID*
+SECAlgorithmID *
 CRMF_EncryptedValueGetKeyAlg(CRMFEncryptedValue *inEncValue)
 {
     if (inEncValue == NULL) {
@@ -125,7 +124,7 @@ CRMF_EncryptedValueGetKeyAlg(CRMFEncryptedValue *inEncValue)
     return crmf_get_encvalue_algid(inEncValue->keyAlg);
 }
 
-SECAlgorithmID*
+SECAlgorithmID *
 CRMF_EncryptedValueGetSymmAlg(CRMFEncryptedValue *inEncValue)
 {
     if (inEncValue == NULL) {
@@ -134,7 +133,7 @@ CRMF_EncryptedValueGetSymmAlg(CRMFEncryptedValue *inEncValue)
     return crmf_get_encvalue_algid(inEncValue->symmAlg);
 }
 
-SECItem*
+SECItem *
 CRMF_EncryptedValueGetValueHint(CRMFEncryptedValue *inEncValue)
 {
     if (inEncValue == NULL || inEncValue->valueHint.data == NULL) {
@@ -144,28 +143,28 @@ CRMF_EncryptedValueGetValueHint(CRMFEncryptedValue *inEncValue)
 }
 
 SECStatus
-CRMF_PKIArchiveOptionsGetArchiveRemGenPrivKey(CRMFPKIArchiveOptions *inOpt, 
-					      PRBool                *destVal)
+CRMF_PKIArchiveOptionsGetArchiveRemGenPrivKey(CRMFPKIArchiveOptions *inOpt,
+                                              PRBool *destVal)
 {
     if (inOpt == NULL || destVal == NULL ||
-	CRMF_PKIArchiveOptionsGetOptionType(inOpt) != crmfArchiveRemGenPrivKey){
+        CRMF_PKIArchiveOptionsGetOptionType(inOpt) != crmfArchiveRemGenPrivKey) {
         return SECFailure;
     }
-    *destVal = (inOpt->option.archiveRemGenPrivKey.data[0] == hexFalse) 
-                                                                 ? PR_FALSE:
-                                                                   PR_TRUE;
+    *destVal = (inOpt->option.archiveRemGenPrivKey.data[0] == hexFalse)
+                   ? PR_FALSE
+                   : PR_TRUE;
     return SECSuccess;
 }
-			     
-CRMFEncryptedKey*
+
+CRMFEncryptedKey *
 CRMF_PKIArchiveOptionsGetEncryptedPrivKey(CRMFPKIArchiveOptions *inOpts)
 {
     CRMFEncryptedKey *newEncrKey = NULL;
-    SECStatus         rv;
+    SECStatus rv;
 
     PORT_Assert(inOpts != NULL);
     if (inOpts == NULL ||
-	CRMF_PKIArchiveOptionsGetOptionType(inOpts) != crmfEncryptedPrivateKey){
+        CRMF_PKIArchiveOptionsGetOptionType(inOpts) != crmfEncryptedPrivateKey) {
         return NULL;
     }
     newEncrKey = PORT_ZNew(CRMFEncryptedKey);
@@ -173,24 +172,24 @@ CRMF_PKIArchiveOptionsGetEncryptedPrivKey(CRMFPKIArchiveOptions *inOpts)
         goto loser;
     }
     rv = crmf_copy_encryptedkey(NULL, &inOpts->option.encryptedKey,
-				newEncrKey);
+                                newEncrKey);
     if (rv != SECSuccess) {
         goto loser;
     }
     return newEncrKey;
- loser:
+loser:
     if (newEncrKey != NULL) {
         CRMF_DestroyEncryptedKey(newEncrKey);
     }
     return NULL;
 }
 
-SECItem*
+SECItem *
 CRMF_PKIArchiveOptionsGetKeyGenParameters(CRMFPKIArchiveOptions *inOptions)
 {
     if (inOptions == NULL ||
-	CRMF_PKIArchiveOptionsGetOptionType(inOptions) != crmfKeyGenParameters ||
-	inOptions->option.keyGenParameters.data == NULL) {
+        CRMF_PKIArchiveOptionsGetOptionType(inOptions) != crmfKeyGenParameters ||
+        inOptions->option.keyGenParameters.data == NULL) {
         return NULL;
     }
     return SECITEM_DupItem(&inOptions->option.keyGenParameters);
@@ -199,7 +198,7 @@ CRMF_PKIArchiveOptionsGetKeyGenParameters(CRMFPKIArchiveOptions *inOptions)
 CRMFPKIArchiveOptionsType
 CRMF_PKIArchiveOptionsGetOptionType(CRMFPKIArchiveOptions *inOptions)
 {
-    PORT_Assert (inOptions != NULL);
+    PORT_Assert(inOptions != NULL);
     if (inOptions == NULL) {
         return crmfNoArchiveOptions;
     }
@@ -214,30 +213,30 @@ crmf_extract_long_from_item(SECItem *intItem, long *destLong)
 }
 
 SECStatus
-CRMF_POPOPrivGetKeySubseqMess(CRMFPOPOPrivKey       *inKey,
-			      CRMFSubseqMessOptions *destOpt)
+CRMF_POPOPrivGetKeySubseqMess(CRMFPOPOPrivKey *inKey,
+                              CRMFSubseqMessOptions *destOpt)
 {
-    long      value;
+    long value;
     SECStatus rv;
 
     PORT_Assert(inKey != NULL);
     if (inKey == NULL ||
-	inKey->messageChoice != crmfSubsequentMessage) {
+        inKey->messageChoice != crmfSubsequentMessage) {
         return SECFailure;
     }
-    rv = crmf_extract_long_from_item(&inKey->message.subsequentMessage,&value);
+    rv = crmf_extract_long_from_item(&inKey->message.subsequentMessage, &value);
     if (rv != SECSuccess) {
         return SECFailure;
     }
     switch (value) {
-    case 0:
-        *destOpt = crmfEncrCert;
-	break;
-    case 1:
-        *destOpt = crmfChallengeResp;
-	break;
-    default:
-        rv = SECFailure;
+        case 0:
+            *destOpt = crmfEncrCert;
+            break;
+        case 1:
+            *destOpt = crmfChallengeResp;
+            break;
+        default:
+            rv = SECFailure;
     }
     if (rv != SECSuccess) {
         return rv;
@@ -266,24 +265,24 @@ CRMF_POPOPrivKeyGetDHMAC(CRMFPOPOPrivKey *inKey, SECItem *destMAC)
 }
 
 SECStatus
-CRMF_POPOPrivKeyGetThisMessage(CRMFPOPOPrivKey  *inKey,
-			       SECItem          *destString)
+CRMF_POPOPrivKeyGetThisMessage(CRMFPOPOPrivKey *inKey,
+                               SECItem *destString)
 {
     PORT_Assert(inKey != NULL);
-    if (inKey == NULL           ||
-	inKey->messageChoice != crmfThisMessage) {
+    if (inKey == NULL ||
+        inKey->messageChoice != crmfThisMessage) {
         return SECFailure;
     }
 
-    return crmf_make_bitstring_copy(NULL, destString, 
-				    &inKey->message.thisMessage);
+    return crmf_make_bitstring_copy(NULL, destString,
+                                    &inKey->message.thisMessage);
 }
 
-SECAlgorithmID*
+SECAlgorithmID *
 CRMF_POPOSigningKeyGetAlgID(CRMFPOPOSigningKey *inSignKey)
 {
     SECAlgorithmID *newAlgId = NULL;
-    SECStatus       rv;
+    SECStatus rv;
 
     PORT_Assert(inSignKey != NULL);
     if (inSignKey == NULL) {
@@ -293,21 +292,21 @@ CRMF_POPOSigningKeyGetAlgID(CRMFPOPOSigningKey *inSignKey)
     if (newAlgId == NULL) {
         goto loser;
     }
-    rv = SECOID_CopyAlgorithmID(NULL, newAlgId, 
-				inSignKey->algorithmIdentifier);
+    rv = SECOID_CopyAlgorithmID(NULL, newAlgId,
+                                inSignKey->algorithmIdentifier);
     if (rv != SECSuccess) {
         goto loser;
     }
     return newAlgId;
 
- loser:
+loser:
     if (newAlgId != NULL) {
         SECOID_DestroyAlgorithmID(newAlgId, PR_TRUE);
     }
     return NULL;
 }
 
-SECItem*
+SECItem *
 CRMF_POPOSigningKeyGetInput(CRMFPOPOSigningKey *inSignKey)
 {
     PORT_Assert(inSignKey != NULL);
@@ -317,11 +316,11 @@ CRMF_POPOSigningKeyGetInput(CRMFPOPOSigningKey *inSignKey)
     return SECITEM_DupItem(&inSignKey->derInput);
 }
 
-SECItem*
+SECItem *
 CRMF_POPOSigningKeyGetSignature(CRMFPOPOSigningKey *inSignKey)
 {
-    SECItem   *newSig = NULL;
-    SECStatus  rv;
+    SECItem *newSig = NULL;
+    SECStatus rv;
 
     PORT_Assert(inSignKey != NULL);
     if (inSignKey == NULL) {
@@ -336,47 +335,48 @@ CRMF_POPOSigningKeyGetSignature(CRMFPOPOSigningKey *inSignKey)
         goto loser;
     }
     return newSig;
- loser:
+loser:
     if (newSig != NULL) {
         SECITEM_FreeItem(newSig, PR_TRUE);
     }
     return NULL;
 }
 
-static SECStatus 
-crmf_copy_poposigningkey(PLArenaPool        *poolp,
-			 CRMFPOPOSigningKey *inPopoSignKey,
-			 CRMFPOPOSigningKey *destPopoSignKey)
+static SECStatus
+crmf_copy_poposigningkey(PLArenaPool *poolp,
+                         CRMFPOPOSigningKey *inPopoSignKey,
+                         CRMFPOPOSigningKey *destPopoSignKey)
 {
     SECStatus rv;
 
-    /* We don't support use of the POPOSigningKeyInput, so we'll only 
+    /* We don't support use of the POPOSigningKeyInput, so we'll only
      * store away the DER encoding.
      */
     if (inPopoSignKey->derInput.data != NULL) {
-        rv = SECITEM_CopyItem(poolp, &destPopoSignKey->derInput, 
-			      &inPopoSignKey->derInput);
+        rv = SECITEM_CopyItem(poolp, &destPopoSignKey->derInput,
+                              &inPopoSignKey->derInput);
     }
-    destPopoSignKey->algorithmIdentifier = (poolp == NULL) ? 
-                                         PORT_ZNew(SECAlgorithmID) :
-                                         PORT_ArenaZNew(poolp, SECAlgorithmID);
+    destPopoSignKey->algorithmIdentifier = (poolp == NULL) ?
+                                                           PORT_ZNew(SECAlgorithmID)
+                                                           :
+                                                           PORT_ArenaZNew(poolp, SECAlgorithmID);
 
     if (destPopoSignKey->algorithmIdentifier == NULL) {
         goto loser;
     }
     rv = SECOID_CopyAlgorithmID(poolp, destPopoSignKey->algorithmIdentifier,
-				inPopoSignKey->algorithmIdentifier);
+                                inPopoSignKey->algorithmIdentifier);
     if (rv != SECSuccess) {
         goto loser;
     }
-    
-    rv = crmf_make_bitstring_copy(poolp, &destPopoSignKey->signature, 
-				  &inPopoSignKey->signature);
+
+    rv = crmf_make_bitstring_copy(poolp, &destPopoSignKey->signature,
+                                  &inPopoSignKey->signature);
     if (rv != SECSuccess) {
         goto loser;
     }
     return SECSuccess;
- loser:
+loser:
     if (poolp == NULL) {
         CRMF_DestroyPOPOSigningKey(destPopoSignKey);
     }
@@ -384,28 +384,28 @@ crmf_copy_poposigningkey(PLArenaPool        *poolp,
 }
 
 static SECStatus
-crmf_copy_popoprivkey(PLArenaPool     *poolp,
-		      CRMFPOPOPrivKey *srcPrivKey,
-		      CRMFPOPOPrivKey *destPrivKey)
+crmf_copy_popoprivkey(PLArenaPool *poolp,
+                      CRMFPOPOPrivKey *srcPrivKey,
+                      CRMFPOPOPrivKey *destPrivKey)
 {
-    SECStatus        rv;
+    SECStatus rv;
 
     destPrivKey->messageChoice = srcPrivKey->messageChoice;
     switch (destPrivKey->messageChoice) {
-    case crmfThisMessage:
-    case crmfDHMAC:
-        /* I've got a union, so taking the address of one, will also give
-	 * me a pointer to the other (eg, message.dhMAC)
-	 */
-        rv = crmf_make_bitstring_copy(poolp, &destPrivKey->message.thisMessage,
-				      &srcPrivKey->message.thisMessage);
-	break;
-    case crmfSubsequentMessage:
-        rv = SECITEM_CopyItem(poolp, &destPrivKey->message.subsequentMessage,
-			      &srcPrivKey->message.subsequentMessage);
-	break;
-    default:
-        rv = SECFailure;
+        case crmfThisMessage:
+        case crmfDHMAC:
+            /* I've got a union, so taking the address of one, will also give
+             * me a pointer to the other (eg, message.dhMAC)
+             */
+            rv = crmf_make_bitstring_copy(poolp, &destPrivKey->message.thisMessage,
+                                          &srcPrivKey->message.thisMessage);
+            break;
+        case crmfSubsequentMessage:
+            rv = SECITEM_CopyItem(poolp, &destPrivKey->message.subsequentMessage,
+                                  &srcPrivKey->message.subsequentMessage);
+            break;
+        default:
+            rv = SECFailure;
     }
 
     if (rv != SECSuccess && poolp == NULL) {
@@ -414,13 +414,13 @@ crmf_copy_popoprivkey(PLArenaPool     *poolp,
     return rv;
 }
 
-static CRMFProofOfPossession*
+static CRMFProofOfPossession *
 crmf_copy_pop(PLArenaPool *poolp, CRMFProofOfPossession *srcPOP)
 {
     CRMFProofOfPossession *newPOP;
-    SECStatus              rv;
+    SECStatus rv;
 
-    /* 
+    /*
      * Proof Of Possession structures are always part of the Request
      * message, so there will always be an arena for allocating memory.
      */
@@ -432,43 +432,43 @@ crmf_copy_pop(PLArenaPool *poolp, CRMFProofOfPossession *srcPOP)
         return NULL;
     }
     switch (srcPOP->popUsed) {
-    case crmfRAVerified:
-        newPOP->popChoice.raVerified.data = NULL;
-	newPOP->popChoice.raVerified.len  = 0;
-	break;
-    case crmfSignature:
-        rv = crmf_copy_poposigningkey(poolp, &srcPOP->popChoice.signature,
-				      &newPOP->popChoice.signature);
-	if (rv != SECSuccess) {
-	    goto loser;
-	}
-	break;
-    case crmfKeyEncipherment:
-    case crmfKeyAgreement:
-        /* We've got a union, so a pointer to one, is a pointer to the
-	 * other one.
-	 */
-        rv = crmf_copy_popoprivkey(poolp, &srcPOP->popChoice.keyEncipherment,
-				   &newPOP->popChoice.keyEncipherment);
-	if (rv != SECSuccess) {
-	    goto loser;
-	}
-	break;
-    default:
-        goto loser;
+        case crmfRAVerified:
+            newPOP->popChoice.raVerified.data = NULL;
+            newPOP->popChoice.raVerified.len = 0;
+            break;
+        case crmfSignature:
+            rv = crmf_copy_poposigningkey(poolp, &srcPOP->popChoice.signature,
+                                          &newPOP->popChoice.signature);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            break;
+        case crmfKeyEncipherment:
+        case crmfKeyAgreement:
+            /* We've got a union, so a pointer to one, is a pointer to the
+             * other one.
+             */
+            rv = crmf_copy_popoprivkey(poolp, &srcPOP->popChoice.keyEncipherment,
+                                       &newPOP->popChoice.keyEncipherment);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            break;
+        default:
+            goto loser;
     }
     newPOP->popUsed = srcPOP->popUsed;
     return newPOP;
 
- loser:
+loser:
     return NULL;
 }
 
-static CRMFCertReqMsg*
+static CRMFCertReqMsg *
 crmf_copy_cert_req_msg(CRMFCertReqMsg *srcReqMsg)
 {
     CRMFCertReqMsg *newReqMsg;
-    PLArenaPool    *poolp;
+    PLArenaPool *poolp;
 
     poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
     if (poolp == NULL) {
@@ -494,16 +494,16 @@ crmf_copy_cert_req_msg(CRMFCertReqMsg *srcReqMsg)
      */
     return newReqMsg;
 
- loser:
+loser:
     if (newReqMsg != NULL) {
         CRMF_DestroyCertReqMsg(newReqMsg);
     }
     return NULL;
 }
 
-CRMFCertReqMsg*
+CRMFCertReqMsg *
 CRMF_CertReqMessagesGetCertReqMsgAtIndex(CRMFCertReqMessages *inReqMsgs,
-					 int                  index)
+                                         int index)
 {
     int numMsgs;
 
@@ -533,10 +533,10 @@ CRMF_CertReqMessagesGetNumMessages(CRMFCertReqMessages *inCertReqMsgs)
     return numMessages;
 }
 
-CRMFCertRequest*
+CRMFCertRequest *
 CRMF_CertReqMsgGetCertRequest(CRMFCertReqMsg *inCertReqMsg)
 {
-    PLArenaPool     *poolp      = NULL;
+    PLArenaPool *poolp = NULL;
     CRMFCertRequest *newCertReq = NULL;
 
     PORT_Assert(inCertReqMsg != NULL);
@@ -551,7 +551,7 @@ CRMF_CertReqMsgGetCertRequest(CRMFCertReqMsg *inCertReqMsg)
     }
     newCertReq->poolp = poolp;
     return newCertReq;
- loser:
+loser:
     if (poolp != NULL) {
         PORT_FreeArena(poolp, PR_FALSE);
     }
@@ -565,17 +565,17 @@ CRMF_CertReqMsgGetID(CRMFCertReqMsg *inCertReqMsg, long *destID)
     if (inCertReqMsg == NULL || inCertReqMsg->certReq == NULL) {
         return SECFailure;
     }
-    return crmf_extract_long_from_item(&inCertReqMsg->certReq->certReqId, 
-				       destID);
+    return crmf_extract_long_from_item(&inCertReqMsg->certReq->certReqId,
+                                       destID);
 }
 
 SECStatus
-CRMF_CertReqMsgGetPOPKeyAgreement(CRMFCertReqMsg   *inCertReqMsg,
-				  CRMFPOPOPrivKey **destKey)
+CRMF_CertReqMsgGetPOPKeyAgreement(CRMFCertReqMsg *inCertReqMsg,
+                                  CRMFPOPOPrivKey **destKey)
 {
     PORT_Assert(inCertReqMsg != NULL && destKey != NULL);
     if (inCertReqMsg == NULL || destKey == NULL ||
-	CRMF_CertReqMsgGetPOPType(inCertReqMsg) != crmfKeyAgreement) {
+        CRMF_CertReqMsgGetPOPType(inCertReqMsg) != crmfKeyAgreement) {
         return SECFailure;
     }
     *destKey = PORT_ZNew(CRMFPOPOPrivKey);
@@ -583,38 +583,39 @@ CRMF_CertReqMsgGetPOPKeyAgreement(CRMFCertReqMsg   *inCertReqMsg,
         return SECFailure;
     }
     return crmf_copy_popoprivkey(NULL,
-				 &inCertReqMsg->pop->popChoice.keyAgreement,
-				 *destKey);
+                                 &inCertReqMsg->pop->popChoice.keyAgreement,
+                                 *destKey);
 }
 
 SECStatus
-CRMF_CertReqMsgGetPOPKeyEncipherment(CRMFCertReqMsg   *inCertReqMsg,
-				     CRMFPOPOPrivKey **destKey)
+CRMF_CertReqMsgGetPOPKeyEncipherment(CRMFCertReqMsg *inCertReqMsg,
+                                     CRMFPOPOPrivKey **destKey)
 {
     PORT_Assert(inCertReqMsg != NULL && destKey != NULL);
     if (inCertReqMsg == NULL || destKey == NULL ||
-	CRMF_CertReqMsgGetPOPType(inCertReqMsg) != crmfKeyEncipherment) {
+        CRMF_CertReqMsgGetPOPType(inCertReqMsg) != crmfKeyEncipherment) {
         return SECFailure;
     }
     *destKey = PORT_ZNew(CRMFPOPOPrivKey);
     if (*destKey == NULL) {
-       return SECFailure;
+        return SECFailure;
     }
     return crmf_copy_popoprivkey(NULL,
-				 &inCertReqMsg->pop->popChoice.keyEncipherment,
-				 *destKey);
+                                 &inCertReqMsg->pop->popChoice.keyEncipherment,
+                                 *destKey);
 }
 
 SECStatus
-CRMF_CertReqMsgGetPOPOSigningKey(CRMFCertReqMsg      *inCertReqMsg,
-				 CRMFPOPOSigningKey **destKey)
+CRMF_CertReqMsgGetPOPOSigningKey(CRMFCertReqMsg *inCertReqMsg,
+                                 CRMFPOPOSigningKey **destKey)
 {
     CRMFProofOfPossession *pop;
     PORT_Assert(inCertReqMsg != NULL);
-    if (inCertReqMsg  == NULL) {
+    if (inCertReqMsg == NULL) {
         return SECFailure;
     }
-    pop = inCertReqMsg->pop;;
+    pop = inCertReqMsg->pop;
+    ;
     if (pop->popUsed != crmfSignature) {
         return SECFailure;
     }
@@ -622,50 +623,51 @@ CRMF_CertReqMsgGetPOPOSigningKey(CRMFCertReqMsg      *inCertReqMsg,
     if (*destKey == NULL) {
         return SECFailure;
     }
-    return crmf_copy_poposigningkey(NULL,&pop->popChoice.signature, *destKey);
+    return crmf_copy_poposigningkey(NULL, &pop->popChoice.signature, *destKey);
 }
 
 static SECStatus
 crmf_copy_name(CERTName *destName, CERTName *srcName)
 {
-  PLArenaPool *poolp = NULL;
-  SECStatus rv;
+    PLArenaPool *poolp = NULL;
+    SECStatus rv;
 
-  if (destName->arena != NULL) {
-    poolp = destName->arena;
-  } else {
-    poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
-  }
-  if (poolp == NULL) {
-    return SECFailure;
-  }
-  /* Need to do this so that CERT_CopyName doesn't free out
-   * the arena from underneath us.
-   */
-  destName->arena = NULL;
-  rv = CERT_CopyName(poolp, destName, srcName); 
-  destName->arena = poolp;
-  return rv;
+    if (destName->arena != NULL) {
+        poolp = destName->arena;
+    }
+    else {
+        poolp = PORT_NewArena(CRMF_DEFAULT_ARENA_SIZE);
+    }
+    if (poolp == NULL) {
+        return SECFailure;
+    }
+    /* Need to do this so that CERT_CopyName doesn't free out
+     * the arena from underneath us.
+     */
+    destName->arena = NULL;
+    rv = CERT_CopyName(poolp, destName, srcName);
+    destName->arena = poolp;
+    return rv;
 }
 
 SECStatus
 CRMF_CertRequestGetCertTemplateIssuer(CRMFCertRequest *inCertReq,
-				      CERTName        *destIssuer)
+                                      CERTName *destIssuer)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfIssuer)) {
-        return crmf_copy_name(destIssuer, 
-			      inCertReq->certTemplate.issuer);
+        return crmf_copy_name(destIssuer,
+                              inCertReq->certTemplate.issuer);
     }
     return SECFailure;
 }
 
-SECStatus 
+SECStatus
 CRMF_CertRequestGetCertTemplateIssuerUID(CRMFCertRequest *inCertReq,
-					 SECItem         *destIssuerUID)
+                                         SECItem *destIssuerUID)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
@@ -673,146 +675,145 @@ CRMF_CertRequestGetCertTemplateIssuerUID(CRMFCertRequest *inCertReq,
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfIssuerUID)) {
         return crmf_make_bitstring_copy(NULL, destIssuerUID,
-					&inCertReq->certTemplate.issuerUID);
+                                        &inCertReq->certTemplate.issuerUID);
     }
     return SECFailure;
 }
 
 SECStatus
-CRMF_CertRequestGetCertTemplatePublicKey(CRMFCertRequest          *inCertReq,
-				       CERTSubjectPublicKeyInfo *destPublicKey)
+CRMF_CertRequestGetCertTemplatePublicKey(CRMFCertRequest *inCertReq,
+                                         CERTSubjectPublicKeyInfo *destPublicKey)
 {
-    PORT_Assert (inCertReq != NULL);
+    PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfPublicKey)) {
         return SECKEY_CopySubjectPublicKeyInfo(NULL, destPublicKey,
-					inCertReq->certTemplate.publicKey);
+                                               inCertReq->certTemplate.publicKey);
     }
     return SECFailure;
 }
 
 SECStatus
 CRMF_CertRequestGetCertTemplateSerialNumber(CRMFCertRequest *inCertReq,
-					    long            *serialNumber)
+                                            long *serialNumber)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfSerialNumber)) {
-        return 
-	  crmf_extract_long_from_item(&inCertReq->certTemplate.serialNumber,
-				      serialNumber);
+        return crmf_extract_long_from_item(&inCertReq->certTemplate.serialNumber,
+                                           serialNumber);
     }
     return SECFailure;
 }
 
 SECStatus
 CRMF_CertRequestGetCertTemplateSigningAlg(CRMFCertRequest *inCertReq,
-					  SECAlgorithmID  *destAlg)
+                                          SECAlgorithmID *destAlg)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfSigningAlg)) {
-        return SECOID_CopyAlgorithmID(NULL, destAlg, 
-				      inCertReq->certTemplate.signingAlg);
+        return SECOID_CopyAlgorithmID(NULL, destAlg,
+                                      inCertReq->certTemplate.signingAlg);
     }
     return SECFailure;
 }
 
-SECStatus 
+SECStatus
 CRMF_CertRequestGetCertTemplateSubject(CRMFCertRequest *inCertReq,
-				       CERTName        *destSubject)
+                                       CERTName *destSubject)
 {
-  PORT_Assert(inCertReq != NULL);
-  if (inCertReq == NULL) {
-      return SECFailure;
-  }
-  if (CRMF_DoesRequestHaveField(inCertReq, crmfSubject)) {
-      return crmf_copy_name(destSubject, inCertReq->certTemplate.subject);
-  }
-  return SECFailure;
+    PORT_Assert(inCertReq != NULL);
+    if (inCertReq == NULL) {
+        return SECFailure;
+    }
+    if (CRMF_DoesRequestHaveField(inCertReq, crmfSubject)) {
+        return crmf_copy_name(destSubject, inCertReq->certTemplate.subject);
+    }
+    return SECFailure;
 }
 
 SECStatus
 CRMF_CertRequestGetCertTemplateSubjectUID(CRMFCertRequest *inCertReq,
-					  SECItem         *destSubjectUID)
+                                          SECItem *destSubjectUID)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfSubjectUID)) {
-        return crmf_make_bitstring_copy(NULL, destSubjectUID, 
-					&inCertReq->certTemplate.subjectUID);
+        return crmf_make_bitstring_copy(NULL, destSubjectUID,
+                                        &inCertReq->certTemplate.subjectUID);
     }
     return SECFailure;
 }
 
-SECStatus 
-CRMF_CertRequestGetCertTemplateVersion(CRMFCertRequest *inCertReq, 
-				       long            *version)
+SECStatus
+CRMF_CertRequestGetCertTemplateVersion(CRMFCertRequest *inCertReq,
+                                       long *version)
 {
-    PORT_Assert (inCertReq != NULL);
+    PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfVersion)) {
         return crmf_extract_long_from_item(&inCertReq->certTemplate.version,
-					   version);
-    } 
+                                           version);
+    }
     return SECFailure;
 }
 
 static SECStatus
-crmf_copy_validity(CRMFGetValidity      *destValidity,
-		   CRMFOptionalValidity *src)
+crmf_copy_validity(CRMFGetValidity *destValidity,
+                   CRMFOptionalValidity *src)
 {
     SECStatus rv;
-    
+
     destValidity->notBefore = destValidity->notAfter = NULL;
     if (src->notBefore.data != NULL) {
-        rv = crmf_create_prtime(&src->notBefore, 
-				&destValidity->notBefore);
-	if (rv != SECSuccess) {
-	    return rv;
-	}
+        rv = crmf_create_prtime(&src->notBefore,
+                                &destValidity->notBefore);
+        if (rv != SECSuccess) {
+            return rv;
+        }
     }
     if (src->notAfter.data != NULL) {
         rv = crmf_create_prtime(&src->notAfter,
-				&destValidity->notAfter);
-	if (rv != SECSuccess) {
-	    return rv;
-	}
+                                &destValidity->notAfter);
+        if (rv != SECSuccess) {
+            return rv;
+        }
     }
     return SECSuccess;
 }
 
-SECStatus 
+SECStatus
 CRMF_CertRequestGetCertTemplateValidity(CRMFCertRequest *inCertReq,
-					CRMFGetValidity *destValidity)
+                                        CRMFGetValidity *destValidity)
 {
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
         return SECFailure;
     }
     if (CRMF_DoesRequestHaveField(inCertReq, crmfValidity)) {
-        return crmf_copy_validity(destValidity, 
-				  inCertReq->certTemplate.validity);
+        return crmf_copy_validity(destValidity,
+                                  inCertReq->certTemplate.validity);
     }
     return SECFailure;
 }
 
-CRMFControl*
+CRMFControl *
 CRMF_CertRequestGetControlAtIndex(CRMFCertRequest *inCertReq, int index)
 {
     CRMFControl *newControl, *srcControl;
-    int          numControls;
-    SECStatus    rv;
+    int numControls;
+    SECStatus rv;
 
     PORT_Assert(inCertReq != NULL);
     if (inCertReq == NULL) {
@@ -828,63 +829,63 @@ CRMF_CertRequestGetControlAtIndex(CRMFCertRequest *inCertReq, int index)
     }
     srcControl = inCertReq->controls[index];
     newControl->tag = srcControl->tag;
-    rv = SECITEM_CopyItem (NULL, &newControl->derTag, &srcControl->derTag);
+    rv = SECITEM_CopyItem(NULL, &newControl->derTag, &srcControl->derTag);
     if (rv != SECSuccess) {
         goto loser;
     }
 
-    rv = SECITEM_CopyItem(NULL, &newControl->derValue, 
-			  &srcControl->derValue);
+    rv = SECITEM_CopyItem(NULL, &newControl->derValue,
+                          &srcControl->derValue);
     if (rv != SECSuccess) {
         goto loser;
     }
     /* Copy over the PKIArchiveOptions stuff */
     switch (srcControl->tag) {
-    case SEC_OID_PKIX_REGCTRL_REGTOKEN:
-    case SEC_OID_PKIX_REGCTRL_AUTHENTICATOR:
-        /* No further processing necessary for these types. */
-        rv = SECSuccess;
-	break;
-    case SEC_OID_PKIX_REGCTRL_OLD_CERT_ID:
-    case SEC_OID_PKIX_REGCTRL_PKIPUBINFO:
-    case SEC_OID_PKIX_REGCTRL_PROTOCOL_ENC_KEY:
-        /* These aren't supported yet, so no post-processing will
-	 * be done at this time.  But we don't want to fail in case
-	 * we read in DER that has one of these options.
-	 */
-        rv = SECSuccess;
-	break;
-    case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
-        rv = crmf_copy_pkiarchiveoptions(NULL, 
-					 &newControl->value.archiveOptions,
-					 &srcControl->value.archiveOptions);
-	break;
-    default:
-        rv = SECFailure;
+        case SEC_OID_PKIX_REGCTRL_REGTOKEN:
+        case SEC_OID_PKIX_REGCTRL_AUTHENTICATOR:
+            /* No further processing necessary for these types. */
+            rv = SECSuccess;
+            break;
+        case SEC_OID_PKIX_REGCTRL_OLD_CERT_ID:
+        case SEC_OID_PKIX_REGCTRL_PKIPUBINFO:
+        case SEC_OID_PKIX_REGCTRL_PROTOCOL_ENC_KEY:
+            /* These aren't supported yet, so no post-processing will
+             * be done at this time.  But we don't want to fail in case
+             * we read in DER that has one of these options.
+             */
+            rv = SECSuccess;
+            break;
+        case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
+            rv = crmf_copy_pkiarchiveoptions(NULL,
+                                             &newControl->value.archiveOptions,
+                                             &srcControl->value.archiveOptions);
+            break;
+        default:
+            rv = SECFailure;
     }
     if (rv != SECSuccess) {
         goto loser;
     }
     return newControl;
- loser:
+loser:
     if (newControl != NULL) {
         CRMF_DestroyControl(newControl);
     }
     return NULL;
 }
 
-static SECItem*
+static SECItem *
 crmf_copy_control_value(CRMFControl *inControl)
 {
     return SECITEM_DupItem(&inControl->derValue);
 }
 
-SECItem*
+SECItem *
 CRMF_ControlGetAuthenticatorControlValue(CRMFControl *inControl)
 {
-    PORT_Assert (inControl!= NULL);
+    PORT_Assert(inControl != NULL);
     if (inControl == NULL ||
-	CRMF_ControlGetControlType(inControl) != crmfAuthenticatorControl) {
+        CRMF_ControlGetControlType(inControl) != crmfAuthenticatorControl) {
         return NULL;
     }
     return crmf_copy_control_value(inControl);
@@ -897,31 +898,31 @@ CRMF_ControlGetControlType(CRMFControl *inControl)
 
     PORT_Assert(inControl != NULL);
     switch (inControl->tag) {
-    case SEC_OID_PKIX_REGCTRL_REGTOKEN:
-        retType = crmfRegTokenControl;
-	break;
-    case SEC_OID_PKIX_REGCTRL_AUTHENTICATOR:
-        retType = crmfAuthenticatorControl;
-	break;
-    case SEC_OID_PKIX_REGCTRL_PKIPUBINFO:
-        retType = crmfPKIPublicationInfoControl;
-	break;
-    case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
-        retType = crmfPKIArchiveOptionsControl;
-	break;
-    case SEC_OID_PKIX_REGCTRL_OLD_CERT_ID:
-        retType = crmfOldCertIDControl;
-	break;
-    case SEC_OID_PKIX_REGCTRL_PROTOCOL_ENC_KEY:
-        retType = crmfProtocolEncrKeyControl;
-	break;
-    default:
-        retType = crmfNoControl;
+        case SEC_OID_PKIX_REGCTRL_REGTOKEN:
+            retType = crmfRegTokenControl;
+            break;
+        case SEC_OID_PKIX_REGCTRL_AUTHENTICATOR:
+            retType = crmfAuthenticatorControl;
+            break;
+        case SEC_OID_PKIX_REGCTRL_PKIPUBINFO:
+            retType = crmfPKIPublicationInfoControl;
+            break;
+        case SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS:
+            retType = crmfPKIArchiveOptionsControl;
+            break;
+        case SEC_OID_PKIX_REGCTRL_OLD_CERT_ID:
+            retType = crmfOldCertIDControl;
+            break;
+        case SEC_OID_PKIX_REGCTRL_PROTOCOL_ENC_KEY:
+            retType = crmfProtocolEncrKeyControl;
+            break;
+        default:
+            retType = crmfNoControl;
     }
     return retType;
 }
 
-CRMFPKIArchiveOptions*
+CRMFPKIArchiveOptions *
 CRMF_ControlGetPKIArchiveOptions(CRMFControl *inControl)
 {
     CRMFPKIArchiveOptions *newOpt = NULL;
@@ -929,40 +930,41 @@ CRMF_ControlGetPKIArchiveOptions(CRMFControl *inControl)
 
     PORT_Assert(inControl != NULL);
     if (inControl == NULL ||
-	CRMF_ControlGetControlType(inControl) != crmfPKIArchiveOptionsControl){
+        CRMF_ControlGetControlType(inControl) != crmfPKIArchiveOptionsControl) {
         goto loser;
     }
     newOpt = PORT_ZNew(CRMFPKIArchiveOptions);
     if (newOpt == NULL) {
         goto loser;
     }
-    rv = crmf_copy_pkiarchiveoptions(NULL, newOpt, 
-				     &inControl->value.archiveOptions);
+    rv = crmf_copy_pkiarchiveoptions(NULL, newOpt,
+                                     &inControl->value.archiveOptions);
     if (rv != SECSuccess) {
         goto loser;
     }
 
- loser:
+loser:
     if (newOpt != NULL) {
         CRMF_DestroyPKIArchiveOptions(newOpt);
     }
     return NULL;
 }
 
-SECItem*
+SECItem *
 CRMF_ControlGetRegTokenControlValue(CRMFControl *inControl)
 {
     PORT_Assert(inControl != NULL);
     if (inControl == NULL ||
-	CRMF_ControlGetControlType(inControl) != crmfRegTokenControl) {
+        CRMF_ControlGetControlType(inControl) != crmfRegTokenControl) {
         return NULL;
     }
-    return crmf_copy_control_value(inControl);;
+    return crmf_copy_control_value(inControl);
+    ;
 }
 
-CRMFCertExtension*
+CRMFCertExtension *
 CRMF_CertRequestGetExtensionAtIndex(CRMFCertRequest *inCertReq,
-				    int              index)
+                                    int index)
 {
     int numExtensions;
 
@@ -971,8 +973,6 @@ CRMF_CertRequestGetExtensionAtIndex(CRMFCertRequest *inCertReq,
     if (index >= numExtensions || index < 0) {
         return NULL;
     }
-    return 
-      crmf_copy_cert_extension(NULL, 
-			       inCertReq->certTemplate.extensions[index]);
+    return crmf_copy_cert_extension(NULL,
+                                    inCertReq->certTemplate.extensions[index]);
 }
-
