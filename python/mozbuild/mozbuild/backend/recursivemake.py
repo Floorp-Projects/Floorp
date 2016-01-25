@@ -63,7 +63,6 @@ from ..frontend.data import (
     SimpleProgram,
     Sources,
     StaticLibrary,
-    TestHarnessFiles,
     TestManifest,
     VariablePassthru,
     XPIDLFile,
@@ -525,9 +524,6 @@ class RecursiveMakeBackend(CommonBackend):
            script=obj.script,
            method=obj.method))
 
-        elif isinstance(obj, TestHarnessFiles):
-            self._process_test_harness_files(obj, backend_file)
-
         elif isinstance(obj, JARManifest):
             self._no_skip['libs'].add(backend_file.relobjdir)
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path.full_path)
@@ -907,29 +903,6 @@ class RecursiveMakeBackend(CommonBackend):
             defines = ' '.join(shell_quote(d) for d in defines)
             backend_file.write_once('%s += %s\n' % (which, defines))
 
-    def _process_test_harness_files(self, obj, backend_file):
-        for path, files in obj.srcdir_files.iteritems():
-            for source in files:
-                dest = '%s/%s' % (path, mozpath.basename(source))
-                self._install_manifests['_tests'].add_symlink(source, dest)
-
-        for path, patterns in obj.srcdir_pattern_files.iteritems():
-            for p in patterns:
-                self._install_manifests['_tests'].add_pattern_symlink(p[0], p[1], path)
-
-        for path, files in obj.objdir_files.iteritems():
-            self._no_skip['misc'].add(backend_file.relobjdir)
-            prefix = 'TEST_HARNESS_%s' % path.replace('/', '_')
-            backend_file.write("""
-%(prefix)s_FILES := %(files)s
-%(prefix)s_DEST := %(dest)s
-%(prefix)s_TARGET := misc
-INSTALL_TARGETS += %(prefix)s
-""" % { 'prefix': prefix,
-        'dest': '$(DEPTH)/_tests/%s' % path,
-        'files': ' '.join(mozpath.relpath(f, backend_file.objdir)
-                          for f in files) })
-
     def _process_installation_target(self, obj, backend_file):
         # A few makefiles need to be able to override the following rules via
         # make XPI_NAME=blah commands, so we default to the lazy evaluation as
@@ -1267,7 +1240,15 @@ INSTALL_TARGETS += %(prefix)s
                 assert not isinstance(f, RenamedSourcePath)
                 dest = mozpath.join(reltarget, path, f.target_basename)
                 if not isinstance(f, ObjDirPath):
-                    install_manifest.add_symlink(f.full_path, dest)
+                    if '*' in f:
+                        if not isinstance(f, SourcePath):
+                            raise Exception("Wildcards are only supported in "
+                                            "SourcePath objects in %s. Path is: %s" % (
+                                                type(obj), f
+                                            ))
+                        install_manifest.add_pattern_symlink(f.srcdir, f, path)
+                    else:
+                        install_manifest.add_symlink(f.full_path, dest)
                 else:
                     install_manifest.add_optional_exists(dest)
                     backend_file.write('%s_FILES += %s\n' % (

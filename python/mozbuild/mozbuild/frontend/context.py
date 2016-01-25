@@ -1087,12 +1087,6 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
 
-    'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
-        """List of files to be installed in the _tests directory.
-
-        This works similarly to FINAL_TARGET_FILES.
-        """),
-
     'FINAL_LIBRARY': (unicode, unicode,
         """Library in which the objects of the current directory will be linked.
 
@@ -1743,7 +1737,7 @@ VARIABLES = {
            This variable only has an effect on Windows.
         """),
 
-    'TEST_HARNESS_FILES': (HierarchicalStringList, list,
+    'TEST_HARNESS_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed for test harnesses.
 
         ``TEST_HARNESS_FILES`` can be used to install files to any directory
@@ -2082,7 +2076,7 @@ SPECIAL_VARIABLES = {
         ``$(FINAL_TARGET)/modules``, after preprocessing.
         """),
 
-    'TESTING_JS_MODULES': (lambda context: context['TESTING_FILES'].modules, list,
+    'TESTING_JS_MODULES': (lambda context: context['TEST_HARNESS_FILES'].modules, list,
         """JavaScript modules to install in the test-only destination.
 
         Some JavaScript modules (JSMs) are test-only and not distributed
