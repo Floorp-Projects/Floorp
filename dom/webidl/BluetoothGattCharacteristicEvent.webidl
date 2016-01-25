@@ -4,7 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * [B2G only GATT client API]
+ * BluetoothGattCharacteristicEvent interface is exposed only if
+ * "dom.bluetooth.webbluetooth.enabled" preference is false.
+ */
 [CheckAnyPermissions="bluetooth",
+ Func="mozilla::dom::bluetooth::BluetoothManager::B2GGattClientEnabled",
  Constructor(DOMString type,
              optional BluetoothGattCharacteristicEventInit eventInitDict)]
 interface BluetoothGattCharacteristicEvent : Event

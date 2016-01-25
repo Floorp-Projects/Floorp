@@ -27,7 +27,7 @@ function* waitForSearchBarFocus()
 }
 
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
-add_task(function() {
+add_task(function*() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
@@ -46,7 +46,7 @@ add_task(function() {
 });
 
 // Ctrl+K should give focus to the searchbar when the searchbar is in the menupanel and the panel is already opened.
-add_task(function() {
+add_task(function*() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
@@ -67,7 +67,7 @@ add_task(function() {
 });
 
 // Ctrl+K should open the overflow panel and focus the search bar if the search bar is overflowed.
-add_task(function() {
+add_task(function*() {
   this.originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
@@ -96,7 +96,7 @@ add_task(function() {
 });
 
 // Ctrl+K should focus the search bar if it is in the navbar and not overflowing.
-add_task(function() {
+add_task(function*() {
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in nav-bar");
 
@@ -106,7 +106,7 @@ add_task(function() {
 });
 
 // Ctrl+K should open the search page if the search bar has been customized out.
-add_task(function() {
+add_task(function*() {
   try {
     expectOpenUILinkInCall = true;
     CustomizableUI.removeWidgetFromArea("search-container");

@@ -10,7 +10,7 @@ const isOSX = (Services.appinfo.OS === "Darwin");
 
 // Right-click on the home button should
 // show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("home-button");
@@ -40,7 +40,7 @@ add_task(function() {
 // Right-click on an empty bit of tabstrip should
 // show a context menu without options to move it,
 // but with tab-specific options instead.
-add_task(function() {
+add_task(function*() {
   // ensure there are tabs to reload/bookmark:
   let extraTab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(extraTab, "http://example.com/");
@@ -78,7 +78,7 @@ add_task(function() {
 // Right-click on an empty bit of extra toolbar should
 // show a context menu with moving options disabled,
 // and a toggle option for the extra toolbar
-add_task(function() {
+add_task(function*() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let toolbar = createToolbarWithPlacements("880164_empty_toolbar", []);
@@ -112,7 +112,7 @@ add_task(function() {
 
 // Right-click on the urlbar-container should
 // show a context menu with disabled options to move it.
-add_task(function() {
+add_task(function*() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let urlBarContainer = document.getElementById("urlbar-container");
@@ -143,7 +143,7 @@ add_task(function() {
 
 // Right-click on the searchbar and moving it to the menu
 // and back should move the search-container instead.
-add_task(function() {
+add_task(function*() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
@@ -169,7 +169,7 @@ add_task(function() {
 
 // Right-click on an item within the menu panel should
 // show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
   let shownPanelPromise = promisePanelShown(window);
   PanelUI.toggle({type: "command"});
   yield shownPanelPromise;
@@ -202,7 +202,7 @@ add_task(function() {
 
 // Right-click on the home button while in customization mode
 // should show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
@@ -232,7 +232,7 @@ add_task(function() {
 
 // Right-click on an item in the palette should
 // show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
   let contextMenu = document.getElementById("customizationPaletteItemContextMenu");
   let shownPromise = popupShown(contextMenu);
   let openFileButton = document.getElementById("wrapper-open-file-button");
@@ -252,7 +252,7 @@ add_task(function() {
 
 // Right-click on an item in the panel while in customization mode
 // should show a context menu with options to move it.
-add_task(function() {
+add_task(function*() {
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
   let shownPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("wrapper-new-window-button");
@@ -275,7 +275,7 @@ add_task(function() {
 
 // Test the toolbarbutton panel context menu in customization mode
 // without opening the panel before customization mode
-add_task(function() {
+add_task(function*() {
   this.otherWin = yield openAndLoadWindow(null, true);
 
   yield new Promise(resolve => waitForFocus(resolve, this.otherWin));
@@ -308,7 +308,7 @@ add_task(function() {
 
 // Bug 945191 - Combined buttons show wrong context menu options
 // when they are in the toolbar.
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
   let shownPromise = popupShown(contextMenu);
@@ -352,7 +352,7 @@ add_task(function() {
 });
 
 // Bug 947586 - After customization, panel items show wrong context menu options
-add_task(function() {
+add_task(function*() {
   yield startCustomizing();
   yield endCustomizing();
 
@@ -386,7 +386,7 @@ add_task(function() {
 
 
 // Bug 982027 - moving icon around removes custom context menu.
-add_task(function() {
+add_task(function*() {
   let widgetId = "custom-context-menu-toolbarbutton";
   let expectedContext = "myfancycontext";
   let widget = createDummyXULButton(widgetId, "Test ctxt menu");
