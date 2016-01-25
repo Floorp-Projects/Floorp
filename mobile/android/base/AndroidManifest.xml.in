@@ -44,6 +44,11 @@
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 #endif
 
+        <!-- Fennec is shipped as the Android package named
+             org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java
+             package hierarchy inside the Android package used to have an
+             org.mozilla.{fennec,firefox,firefox_beta} subtree *and* an
+             org.mozilla.gecko subtree; it now only has org.mozilla.gecko. -->
         <activity android:name="@MOZ_ANDROID_BROWSER_INTENT_CLASS@"
                   android:label="@string/moz_app_displayname"
                   android:taskAffinity="@ANDROID_PACKAGE_NAME@.BROWSER"
@@ -53,25 +58,7 @@
                   android:launchMode="singleTask"
                   android:exported="true"
                   android:theme="@style/Gecko.App">
-          <!-- We export this activity so that it can be launched by explicit
-               intents, in particular homescreen shortcuts.  See Bug 1032217.
-               In future we would prefer to move all intent filters off the .App
-               alias and onto BrowserApp so that we can deprecate activities
-               that refer to pre-processed class names. -->
-        </activity>
 
-        <!-- Fennec is shipped as the Android package named
-             org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java package
-             hierarchy inside the Android package has both an
-             org.mozilla.{fennec,firefox,firefox_beta} subtree *and* an
-             org.mozilla.gecko subtree.  The non-org.mozilla.gecko is deprecated
-             and we would like to get rid of it entirely.  Until that happens, we
-             have external consumers (such as intents and bookmarks) of
-             non-org.mozilla.gecko Activity classes, so we define activity aliases
-             for backwards compatibility. -->
-        <activity-alias android:name=".App"
-                        android:label="@MOZ_APP_DISPLAYNAME@"
-                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
             <!-- android:priority ranges between -1000 and 1000.  We never want
                  another activity to usurp the MAIN action, so we ratchet our
                  priority up. -->
@@ -152,7 +139,7 @@
                 <action android:name="org.mozilla.gecko.DEBUG" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </activity-alias>
+        </activity>
 
         <service android:name="org.mozilla.gecko.GeckoService" />
 
