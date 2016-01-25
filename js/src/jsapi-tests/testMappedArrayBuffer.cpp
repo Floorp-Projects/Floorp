@@ -117,7 +117,7 @@ bool TestDetachObject()
     JS::RootedObject obj(cx, CreateNewObject(8, 12));
     CHECK(obj);
     JS_DetachArrayBuffer(cx, obj, ChangeData);
-    CHECK(isNeutered(obj));
+    CHECK(JS_IsDetachedArrayBufferObject(obj));
 
     return true;
 }
@@ -144,7 +144,7 @@ bool TestStealContents()
     void* contents = JS_StealArrayBufferContents(cx, obj);
     CHECK(contents);
     CHECK(memcmp(contents, test_data + 8, 12) == 0);
-    CHECK(isNeutered(obj));
+    CHECK(JS_IsDetachedArrayBufferObject(obj));
 
     return true;
 }
@@ -168,15 +168,9 @@ bool TestTransferObject()
     CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
     JS::RootedObject obj2(cx, v2.toObjectOrNull());
     CHECK(VerifyObject(obj2, 8, 12, true));
-    CHECK(isNeutered(obj1));
+    CHECK(JS_IsDetachedArrayBufferObject(obj1));
 
     return true;
-}
-
-bool isNeutered(JS::HandleObject obj)
-{
-    JS::RootedValue v(cx);
-    return JS_GetProperty(cx, obj, "byteLength", &v) && v.toInt32() == 0;
 }
 
 static void GC(JSContext* cx)
