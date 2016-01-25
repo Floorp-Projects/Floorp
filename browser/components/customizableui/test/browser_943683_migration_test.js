@@ -14,7 +14,7 @@ var btn;
 var btn2;
 
 // Check we migrate normal stuff to the navbar
-add_task(function() {
+add_task(function*() {
   btn = createDummyXULButton(kWidgetId, "Test");
   btn2 = createDummyXULButton(kWidgetId2, "Test2");
   addonbar.insertItem(btn.id);

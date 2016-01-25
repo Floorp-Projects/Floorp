@@ -6,7 +6,7 @@
 
 const isOSX = (Services.appinfo.OS === "Darwin");
 
-add_task(function() {
+add_task(function*() {
   info("Check print button existence and functionality");
 
   yield PanelUI.show();
@@ -31,7 +31,7 @@ add_task(function() {
   }
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
     // close print preview
     if (gInPrintPreviewMode) {
       PrintUtils.exitPrintPreview();

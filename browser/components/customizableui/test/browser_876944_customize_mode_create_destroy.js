@@ -8,7 +8,7 @@ const kTestWidget1 = "test-customize-mode-create-destroy1";
 const kTestWidget2 = "test-customize-mode-create-destroy2";
 
 // Creating and destroying a widget should correctly wrap/unwrap stuff
-add_task(function testWrapUnwrap() {
+add_task(function* testWrapUnwrap() {
   yield startCustomizing();
   CustomizableUI.createWidget({id: kTestWidget1, label: 'Pretty label', tooltiptext: 'Pretty tooltip'});
   let elem = document.getElementById(kTestWidget1);
@@ -25,7 +25,7 @@ add_task(function testWrapUnwrap() {
 });
 
 // Creating and destroying a widget should correctly deal with panel placeholders
-add_task(function testPanelPlaceholders() {
+add_task(function* testPanelPlaceholders() {
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   // The value of expectedPlaceholders depends on the default palette layout.
   // Bug 1229236 is for these tests to be smarter so the test doesn't need to
@@ -49,7 +49,7 @@ add_task(function testPanelPlaceholders() {
   yield endCustomizing();
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield endCustomizing();
   try {
     CustomizableUI.destroyWidget(kTestWidget1);

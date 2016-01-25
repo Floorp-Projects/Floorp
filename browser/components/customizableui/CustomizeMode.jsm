@@ -28,6 +28,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DragPositionManager",
                                   "resource:///modules/DragPositionManager.jsm");
@@ -36,9 +37,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
-
-var gModuleName = "[CustomizeMode]";
-#include logging.js
+let gDebug;
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let scope = {};
+  Cu.import("resource://gre/modules/Console.jsm", scope);
+  let ConsoleAPI = scope.ConsoleAPI;
+  try {
+    gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
+  } catch (ex) {}
+  let consoleOptions = {
+    maxLogLevel: gDebug ? "all" : "log",
+    prefix: "CustomizeMode",
+  };
+  return new scope.ConsoleAPI(consoleOptions);
+});
 
 var gDisableAnimation = null;
 
@@ -65,10 +77,10 @@ function CustomizeMode(aWindow) {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
     lwthemeButton.setAttribute("hidden", "true");
   }
-#ifdef CAN_DRAW_IN_TITLEBAR
-  this._updateTitlebarButton();
-  Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
-#endif
+  if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+    this._updateTitlebarButton();
+    Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
+  }
   this.window.addEventListener("unload", this);
 };
 
@@ -101,9 +113,9 @@ CustomizeMode.prototype = {
   },
 
   uninit: function() {
-#ifdef CAN_DRAW_IN_TITLEBAR
-    Services.prefs.removeObserver(kDrawInTitlebarPref, this);
-#endif
+    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      Services.prefs.removeObserver(kDrawInTitlebarPref, this);
+    }
   },
 
   toggle: function() {
@@ -137,8 +149,8 @@ CustomizeMode.prototype = {
 
     // Exiting; want to re-enter once we've done that.
     if (this._handler.isExitingCustomizeMode) {
-      LOG("Attempted to enter while we're in the middle of exiting. " +
-          "We'll exit after we've entered");
+      log.debug("Attempted to enter while we're in the middle of exiting. " +
+                "We'll exit after we've entered");
       return;
     }
 
@@ -162,7 +174,7 @@ CustomizeMode.prototype = {
     let resetButton = this.document.getElementById("customization-reset-button");
     resetButton.setAttribute("disabled", "true");
 
-    Task.spawn(function() {
+    Task.spawn(function*() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
         let delayedStartupDeferred = Promise.defer();
@@ -309,7 +321,7 @@ CustomizeMode.prototype = {
         this.exit();
       }
     }.bind(this)).then(null, function(e) {
-      ERROR("Error entering customize mode", e);
+      log.error("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isEnteringCustomizeMode = false;
@@ -327,14 +339,14 @@ CustomizeMode.prototype = {
 
     // Entering; want to exit once we've done that.
     if (this._handler.isEnteringCustomizeMode) {
-      LOG("Attempted to exit while we're in the middle of entering. " +
-          "We'll exit after we've entered");
+      log.debug("Attempted to exit while we're in the middle of entering. " +
+                "We'll exit after we've entered");
       return;
     }
 
     if (this.resetting) {
-      LOG("Attempted to exit while we're resetting. " +
-          "We'll exit after resetting has finished.");
+      log.debug("Attempted to exit while we're resetting. " +
+                "We'll exit after resetting has finished.");
       return;
     }
 
@@ -382,7 +394,7 @@ CustomizeMode.prototype = {
 
     this._transitioning = true;
 
-    Task.spawn(function() {
+    Task.spawn(function*() {
       yield this.depopulatePalette();
 
       yield this._doTransition(false);
@@ -400,7 +412,7 @@ CustomizeMode.prototype = {
           try {
             custBrowser.goBack();
           } catch (ex) {
-            ERROR(ex);
+            log.error(ex);
           }
         } else {
           // If we can't go back, we're removing the about:customization tab.
@@ -484,7 +496,7 @@ CustomizeMode.prototype = {
         this.enter();
       }
     }.bind(this)).then(null, function(e) {
-      ERROR("Error exiting customize mode", e);
+      log.error("Error exiting customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isExitingCustomizeMode = false;
@@ -578,15 +590,15 @@ CustomizeMode.prototype = {
     let toolboxRect = this.window.gNavToolbox.getBoundingClientRect();
     let height = toolboxRect.bottom;
 
-#ifdef XP_MACOSX
-    let drawingInTitlebar = !docElement.hasAttribute("drawtitle");
-    let titlebar = this.document.getElementById("titlebar");
-    if (drawingInTitlebar) {
-      titlebar.style.backgroundImage = headerImageRef;
-    } else {
-      titlebar.style.removeProperty("background-image");
+    if (AppConstants.platform == "macosx") {
+      let drawingInTitlebar = !docElement.hasAttribute("drawtitle");
+      let titlebar = this.document.getElementById("titlebar");
+      if (drawingInTitlebar) {
+        titlebar.style.backgroundImage = headerImageRef;
+      } else {
+        titlebar.style.removeProperty("background-image");
+      }
     }
-#endif
 
     let limitedBG = "-moz-image-rect(" + headerImageRef + ", 0, 100%, " +
                     height + ", 0)";
@@ -611,11 +623,9 @@ CustomizeMode.prototype = {
   },
 
   removeLWTStyling: function() {
-#ifdef XP_MACOSX
-    let affectedNodes = ["tab-view-deck", "titlebar"];
-#else
-    let affectedNodes = ["tab-view-deck"];
-#endif
+    let affectedNodes = AppConstants.platform == "macosx" ?
+                          ["tab-view-deck", "titlebar"] :
+                          ["tab-view-deck"];
     for (let id of affectedNodes) {
       let node = this.document.getElementById(id);
       node.style.removeProperty("background-image");
@@ -755,7 +765,7 @@ CustomizeMode.prototype = {
       this._stowedPalette = this.window.gNavToolbox.palette;
       this.window.gNavToolbox.palette = this.visiblePalette;
     } catch (ex) {
-      ERROR(ex);
+      log.error(ex);
     }
   },
 
@@ -766,7 +776,7 @@ CustomizeMode.prototype = {
   makePaletteItem: function(aWidget, aPlace) {
     let widgetNode = aWidget.forWindow(this.window).node;
     if (!widgetNode) {
-      ERROR("Widget with id " + aWidget.id + " does not return a valid node");
+      log.error("Widget with id " + aWidget.id + " does not return a valid node");
       return null;
     }
     // Do not build a palette item for hidden widgets; there's not much to show.
@@ -780,7 +790,7 @@ CustomizeMode.prototype = {
   },
 
   depopulatePalette: function() {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       this.visiblePalette.hidden = true;
       let paletteChild = this.visiblePalette.firstChild;
       let nextChild;
@@ -806,7 +816,7 @@ CustomizeMode.prototype = {
       }
       this.visiblePalette.hidden = false;
       this.window.gNavToolbox.palette = this._stowedPalette;
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, log.error);
   },
 
   isCustomizableItem: function(aNode) {
@@ -959,7 +969,7 @@ CustomizeMode.prototype = {
 
     let toolbarItem = aWrapper.firstChild;
     if (!toolbarItem) {
-      ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
+      log.error("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
       aWrapper.remove();
       return null;
     }
@@ -1008,7 +1018,7 @@ CustomizeMode.prototype = {
     this._addDragHandlers(target);
     for (let child of target.children) {
       if (this.isCustomizableItem(child) && !this.isWrappedToolbarItem(child)) {
-        yield this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).then(null, ERROR);
+        yield this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child)).then(null, log.error);
       }
     }
     this.areas.add(target);
@@ -1029,7 +1039,7 @@ CustomizeMode.prototype = {
         }
       }
     } catch (ex) {
-      ERROR(ex, ex.stack);
+      log.error(ex, ex.stack);
     }
 
     this.areas.add(target);
@@ -1075,7 +1085,7 @@ CustomizeMode.prototype = {
   },
 
   _unwrapToolbarItems: function() {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       for (let target of this.areas) {
         for (let toolbarItem of target.children) {
           if (this.isWrappedToolbarItem(toolbarItem)) {
@@ -1085,7 +1095,7 @@ CustomizeMode.prototype = {
         this._removeDragHandlers(target);
       }
       this.areas.clear();
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, log.error);
   },
 
   _removeExtraToolbarsIfEmpty: function() {
@@ -1119,7 +1129,7 @@ CustomizeMode.prototype = {
     let btn = this.document.getElementById("customization-reset-button");
     BrowserUITelemetry.countCustomizationEvent("reset");
     btn.disabled = true;
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       this._removePanelCustomizationPlaceholders();
       yield this.depopulatePalette();
       yield this._unwrapToolbarItems();
@@ -1139,13 +1149,13 @@ CustomizeMode.prototype = {
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, log.error);
   },
 
   undoReset: function() {
     this.resetting = true;
 
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       this._removePanelCustomizationPlaceholders();
       yield this.depopulatePalette();
       yield this._unwrapToolbarItems();
@@ -1161,7 +1171,7 @@ CustomizeMode.prototype = {
       this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
       this.resetting = false;
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, log.error);
   },
 
   _onToolbarVisibilityChange: function(aEvent) {
@@ -1484,9 +1494,9 @@ CustomizeMode.prototype = {
       case "nsPref:changed":
         this._updateResetButton();
         this._updateUndoResetButton();
-#ifdef CAN_DRAW_IN_TITLEBAR
-        this._updateTitlebarButton();
-#endif
+        if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+          this._updateTitlebarButton();
+        }
         break;
       case "lightweight-theme-window-updated":
         if (aSubject == this.window) {
@@ -1501,8 +1511,10 @@ CustomizeMode.prototype = {
     }
   },
 
-#ifdef CAN_DRAW_IN_TITLEBAR
   _updateTitlebarButton: function() {
+    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      return;
+    }
     let drawInTitlebar = true;
     try {
       drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref);
@@ -1517,10 +1529,12 @@ CustomizeMode.prototype = {
   },
 
   toggleTitlebar: function(aShouldShowTitlebar) {
+    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
+      return;
+    }
     // Drawing in the titlebar means not showing the titlebar, hence the negation:
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
   },
-#endif
 
   _onDragStart: function(aEvent) {
     __dumpDragData(aEvent);
@@ -1723,7 +1737,7 @@ CustomizeMode.prototype = {
     try {
       this._applyDrop(aEvent, targetArea, originArea, draggedItemId, targetNode);
     } catch (ex) {
-      ERROR(ex, ex.stack);
+      log.error(ex, ex.stack);
     }
 
     this._showPanelCustomizationPlaceholders();
@@ -1830,7 +1844,7 @@ CustomizeMode.prototype = {
       placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
     if (!placement) {
-      LOG("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
+      log.debug("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
     let position = placement ? placement.position : null;
 
@@ -2151,7 +2165,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseDown: function(aEvent) {
-    LOG("_onMouseDown");
+    log.debug("_onMouseDown");
     if (aEvent.button != 0) {
       return;
     }
@@ -2165,7 +2179,7 @@ CustomizeMode.prototype = {
   },
 
   _onMouseUp: function(aEvent) {
-    LOG("_onMouseUp");
+    log.debug("_onMouseUp");
     if (aEvent.button != 0) {
       return;
     }
@@ -2284,7 +2298,7 @@ function __dumpDragData(aEvent, caller) {
     }
   }
   str += "}";
-  LOG(str);
+  log.debug(str);
 }
 
 function dispatchFunction(aFunc) {

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for privilege escalation into iframe with content script APIs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<!-- WORKAROUND: this textarea hack is used to contain the html page source without escaping it -->
+<textarea id="test-asset">
+  <!DOCTYPE HTML>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <script type="text/javascript" src="./content_script_iframe.js">
+      </script>
+    </head>
+  </html>
+</textarea>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript_api_injection() {
+  function contentScript() {
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("src", browser.runtime.getURL("content_script_iframe.html"));
+    document.body.appendChild(iframe);
+  }
+
+  function contentScriptIframe() {
+    const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+    window.location = `${BASE}/file_privilege_escalation.html`;
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle",
+        },
+      ],
+      "web_accessible_resources": [
+        "content_script_iframe.html",
+      ],
+    },
+
+    files: {
+      "content_script.js": "new " + contentScript,
+      "content_script_iframe.js": "new " + contentScriptIframe,
+      "content_script_iframe.html": document.querySelector("#test-asset").textContent,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  let awaitConsole = new Promise(resolve => {
+    let chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("file_ext_test_api_injection.js"));
+
+    chromeScript.addMessageListener("console-message", resolve);
+  });
+
+  yield extension.startup();
+  info("extension loaded");
+
+  let win = window.open("file_sample.html");
+
+  let message = yield awaitConsole;
+
+  ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
+     "Document does not have `browser` APIs.");
+
+  win.close();
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>
