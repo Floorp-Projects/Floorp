@@ -12,11 +12,20 @@ android {
         applicationId mozconfig.substs.ANDROID_PACKAGE_NAME
         testApplicationId 'org.mozilla.roboexample.test'
         testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
+        manifestPlaceholders = [
+            ANDROID_PACKAGE_NAME: mozconfig.substs.ANDROID_PACKAGE_NAME,
+            MOZ_ANDROID_MIN_SDK_VERSION: mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION,
+            MOZ_ANDROID_SHARED_ID: "${mozconfig.substs.ANDROID_PACKAGE_NAME}.sharedID",
+        ]
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
+    }
+ 
+    dexOptions {
+        javaMaxHeapSize "2g"
     }
 
     lintOptions {
@@ -25,8 +34,31 @@ android {
 
     buildTypes {
         release {
+            shrinkResources true
             minifyEnabled true
             proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
+        }
+    }
+
+    productFlavors {
+        // For fast local development.  If you have an API 21 device, you should
+        // use this.
+        local {
+            // Setting `minSdkVersion 21` allows the Android gradle plugin to
+            // pre-DEX each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming DEX merging processes.
+            minSdkVersion 21
+            dexOptions {
+                preDexLibraries true
+                multiDexEnabled true
+            }
+        }
+        // For local development on older devices.  Use this only if you only
+        // have a pre-API 21 device, or if you want to test API-specific things.
+        localOld {
+        }
+        // Automation builds.
+        automation {
         }
     }
 
@@ -36,7 +68,6 @@ android {
         }
 
         androidTest {
-            manifest.srcFile "${topobjdir}/mobile/android/tests/browser/robocop/AndroidManifest.xml"
             java {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
                 srcDir "${topsrcdir}/mobile/android/tests/background/junit3/src"
@@ -123,21 +154,25 @@ task buildOmnijar(type:Exec) {
 }
 
 android.applicationVariants.all { variant ->
-    // We only insert omni.ja and the .so libraries into debug builds.
-    def name = variant.buildType.name
-    if (!name.contains(com.android.builder.core.BuilderConstants.DEBUG)) {
+    // Like 'local' or 'localOld'.
+    def productFlavor = variant.productFlavors[0].name
+    // Like 'debug' or 'release'.
+    def buildType = variant.buildType.name
+
+    // We insert omni.ja and the .so libraries into all local builds.
+    if (!productFlavor.startsWith('local')) {
         return
     }
 
     syncOmnijarFromDistDir.dependsOn buildOmnijar
-    def generateAssetsTask = tasks.findByName("generate${name.capitalize()}Assets")
+    def generateAssetsTask = tasks.findByName("generate${productFlavor.capitalize()}${buildType.capitalize()}Assets")
     generateAssetsTask.dependsOn syncOmnijarFromDistDir
     generateAssetsTask.dependsOn syncLibsFromDistDir
     generateAssetsTask.dependsOn syncAssetsFromDistDir
 
-    android.sourceSets.debug.assets.srcDir syncOmnijarFromDistDir.destinationDir
-    android.sourceSets.debug.assets.srcDir syncAssetsFromDistDir.destinationDir
-    android.sourceSets.debug.jniLibs.srcDir syncLibsFromDistDir.destinationDir
+    android.sourceSets."${productFlavor}${buildType.capitalize()}".assets.srcDir syncOmnijarFromDistDir.destinationDir
+    android.sourceSets."${productFlavor}${buildType.capitalize()}".assets.srcDir syncAssetsFromDistDir.destinationDir
+    android.sourceSets."${productFlavor}${buildType.capitalize()}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
 }
 
 apply plugin: 'spoon'
@@ -166,15 +201,15 @@ spoon {
 
 // See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
 afterEvaluate {
-    tasks["spoon${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
+    tasks["spoonLocal${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
 
     // This is an awkward way to define different sets of instrumentation tests.
     // The task name itself is fished at runtime and the package name configured
     // in the spoon configuration.
     task runBrowserTests {
-        dependsOn tasks["spoonDebugAndroidTest"]
+        dependsOn tasks["spoonLocalDebugAndroidTest"]
     }
     task runBackgroundTests {
-        dependsOn tasks["spoonDebugAndroidTest"]
+        dependsOn tasks["spoonLocalDebugAndroidTest"]
     }
 }

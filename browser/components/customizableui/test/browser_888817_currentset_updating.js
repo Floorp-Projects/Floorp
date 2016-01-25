@@ -5,7 +5,7 @@
 "use strict";
 
 // Adding, moving and removing items should update the relevant currentset attributes
-add_task(function() {
+add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should be in the default state when we start");
   let personalbar = document.getElementById(CustomizableUI.AREA_BOOKMARKS);
   setToolbarVisibility(personalbar, true);
@@ -50,7 +50,7 @@ add_task(function() {
   // Reset in asyncCleanup will put our button back for us.
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   let personalbar = document.getElementById(CustomizableUI.AREA_BOOKMARKS);
   setToolbarVisibility(personalbar, false);
   yield resetCustomization();

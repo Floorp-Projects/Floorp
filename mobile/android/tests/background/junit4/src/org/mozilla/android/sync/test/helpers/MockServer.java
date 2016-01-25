@@ -39,13 +39,13 @@ public class MockServer implements Container {
 
     PrintStream bodyStream = response.getPrintStream();
     response.setCode(code);
-    response.set("Content-Type", contentType);
-    response.set("Server", "HelloWorld/1.0 (Simple 4.0)");
+    response.setValue("Content-Type", contentType);
+    response.setValue("Server", "HelloWorld/1.0 (Simple 4.0)");
     response.setDate("Date", time);
     response.setDate("Last-Modified", time);
 
     final String timestampHeader = Utils.millisecondsToDecimalSecondsString(time);
-    response.set("X-Weave-Timestamp", timestampHeader);
+    response.setValue("X-Weave-Timestamp", timestampHeader);
     Logger.debug(LOG_TAG, "> X-Weave-Timestamp header: " + timestampHeader);
     return bodyStream;
   }

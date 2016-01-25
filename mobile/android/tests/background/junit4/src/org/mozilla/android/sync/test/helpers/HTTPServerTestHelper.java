@@ -6,6 +6,7 @@ package org.mozilla.android.sync.test.helpers;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
+import org.simpleframework.http.core.ContainerSocketProcessor;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
@@ -180,7 +181,7 @@ public class HTTPServerTestHelper {
 
     try {
       this.server = server;
-      connection = new SocketConnection(server);
+      connection = new SocketConnection(new ContainerSocketProcessor(server));
       SocketAddress address = new InetSocketAddress(port);
       connection.connect(address);
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(function() {
+add_task(function*() {
   info("Check history button existence and functionality");
 
   yield PanelUI.show();

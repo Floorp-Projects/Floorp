@@ -55,9 +55,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565388
 
   var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].
   createInstance(Ci.nsIPrincipal);
-  var docShell = Cc["@mozilla.org/appshell/appShellService;1"].
+  var webNav = Cc["@mozilla.org/appshell/appShellService;1"].
   getService(Ci.nsIAppShellService).
-  createWindowlessBrowser(true).
+  createWindowlessBrowser(true);
+  var docShell = webNav.
   QueryInterface(Ci.nsIInterfaceRequestor).
   getInterface(Ci.nsIDocShell);
   docShell.createAboutBlankContentViewer(systemPrincipal);
@@ -65,6 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565388
 
   progressListener.add(docShell, function(){
     is(win.document.documentURI, "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>");
+    webNav.close();
     SimpleTest.finish();
   });
 

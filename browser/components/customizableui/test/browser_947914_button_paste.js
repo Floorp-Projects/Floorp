@@ -7,7 +7,7 @@
 var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
-add_task(function() {
+add_task(function*() {
   info("Check paste button existence and functionality");
 
   let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
@@ -34,7 +34,7 @@ add_task(function() {
   is(gURLBar.value, text, "Text pasted successfully");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   // clear the clipboard
   Services.clipboard.emptyClipboard(globalClipboard);
   info("Clipboard was cleared");

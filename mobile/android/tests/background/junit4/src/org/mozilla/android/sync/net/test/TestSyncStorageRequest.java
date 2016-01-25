@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -149,7 +150,7 @@ public class TestSyncStorageRequest {
     @Override
     public void handle(Request request, Response response) {
       String errorBody = EXPECTED_RETRY_AFTER_ERROR_MESSAGE;
-      response.set("Retry-After", "3001");
+      response.setValue("Retry-After", "3001");
       super.handle(request, response, 503, errorBody);
     }
   }
@@ -185,7 +186,7 @@ public class TestSyncStorageRequest {
   public class WeaveBackoffMockServer extends MockServer {
     @Override
     public void handle(Request request, Response response) {
-      response.set("X-Weave-Backoff", "1801");
+      response.setValue("X-Weave-Backoff", "1801");
       super.handle(request, response);
     }
   }
@@ -226,10 +227,10 @@ public class TestSyncStorageRequest {
   public class HeadersMockServer extends MockServer {
     @Override
     public void handle(Request request, Response response) {
-      response.set("X-Weave-Quota-Remaining", "65536");
-      response.set("X-Weave-Alert", "First weave alert string");
-      response.add("X-Weave-Alert", "Second weave alert string");
-      response.set("X-Weave-Records", "50");
+      response.setValue("X-Weave-Quota-Remaining", "65536");
+      response.setValue("X-Weave-Alert", "First weave alert string");
+      response.addValue("X-Weave-Alert", "Second weave alert string");
+      response.setValue("X-Weave-Records", "50");
 
       super.handle(request, response);
     }
@@ -249,7 +250,7 @@ public class TestSyncStorageRequest {
   public class DeleteMockServer extends MockServer {
     @Override
     public void handle(Request request, Response response) {
-      assertTrue(request.contains("x-confirm-delete"));
+      assertNotNull(request.getValue("x-confirm-delete"));
       assertEquals("1", request.getValue("x-confirm-delete"));
       super.handle(request, response);
     }

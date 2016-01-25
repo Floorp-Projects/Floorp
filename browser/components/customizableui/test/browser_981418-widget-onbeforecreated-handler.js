@@ -6,7 +6,7 @@
 const kWidgetId = 'test-981418-widget-onbeforecreated';
 
 // Should be able to add broken view widget
-add_task(function testAddOnBeforeCreatedWidget() {
+add_task(function* testAddOnBeforeCreatedWidget() {
   let viewShownDeferred = Promise.defer();
   let onBeforeCreatedCalled = false;
   let widgetSpec = {
@@ -85,6 +85,6 @@ add_task(function testAddOnBeforeCreatedWidget() {
   ok(noError, "Should not throw an exception trying to remove the broken view widget.");
 });
 
-add_task(function asyncCleanup() {
+add_task(function* asyncCleanup() {
   yield resetCustomization();
 });
