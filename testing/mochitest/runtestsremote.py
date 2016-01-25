@@ -196,6 +196,20 @@ class MochiRemote(MochitestDesktop):
         options.profilePath = self.remoteProfile
         return manifest
 
+    def addChromeToProfile(self, options):
+        manifest = MochitestDesktop.addChromeToProfile(self, options)
+
+        # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
+        # Runtime (webapp).
+        if options.chrome:
+            # append overlay to chrome.manifest
+            chrome = "overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul"
+            path = os.path.join(options.profilePath, 'extensions', 'staged',
+                                'mochikit@mozilla.org', 'chrome.manifest')
+            with open(path, "a") as f:
+                f.write(chrome)
+        return manifest
+
     def buildURLOptions(self, options, env):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
@@ -281,8 +295,9 @@ class MochiRemote(MochitestDesktop):
         if 'profileDir' not in kwargs and 'profile' in kwargs:
             kwargs['profileDir'] = kwargs.pop('profile').profile
 
-        if 'quiet' in kwargs:
-            kwargs.pop('quiet')
+        # remove args not supported by automation.py
+        kwargs.pop('marionette_args', None)
+        kwargs.pop('quiet', None)
 
         return self._automation.runApp(*args, **kwargs)
 
