@@ -48,6 +48,9 @@ ZoomConstraintsClient::~ZoomConstraintsClient()
 static nsIWidget*
 GetWidget(nsIPresShell* aShell)
 {
+  if (!aShell) {
+    return nullptr;
+  }
   if (nsIFrame* rootFrame = aShell->GetRootFrame()) {
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
     return rootFrame->GetNearestWidget();
