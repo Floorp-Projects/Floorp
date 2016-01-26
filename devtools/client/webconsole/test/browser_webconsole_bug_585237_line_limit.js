@@ -1,13 +1,8 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * Contributor(s):
- *  Patrick Walton <pcwalton@mozilla.com>
- *  Mihai Șucan <mihai.sucan@gmail.com>
- *
- * ***** END LICENSE BLOCK ***** */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Tests that the Web Console limits the number of lines displayed according to
 // the user's preferences.
@@ -23,7 +18,6 @@ add_task(function* () {
 
   let hud = yield openConsole();
 
-  let console = content.console;
   outputNode = hud.outputNode;
 
   hud.jsterm.clearOutput();
@@ -32,8 +26,10 @@ add_task(function* () {
   prefBranch.setIntPref("console", 20);
 
   for (let i = 0; i < 30; i++) {
-    // must change message to prevent repeats
-    console.log("foo #" + i);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function(i) {
+      // must change message to prevent repeats
+      content.console.log("foo #" + i);
+    });
   }
 
   yield waitForMessages({
@@ -48,7 +44,9 @@ add_task(function* () {
   is(countMessageNodes(), 20, "there are 20 message nodes in the output " +
      "when the log limit is set to 20");
 
-  console.log("bar bug585237");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.console.log("bar bug585237");
+  });
 
   yield waitForMessages({
     webconsole: hud,
@@ -64,8 +62,10 @@ add_task(function* () {
 
   prefBranch.setIntPref("console", 30);
   for (let i = 0; i < 20; i++) {
-    // must change message to prevent repeats
-    console.log("boo #" + i);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function(i) {
+      // must change message to prevent repeats
+      content.console.log("boo #" + i);
+    });
   }
 
   yield waitForMessages({

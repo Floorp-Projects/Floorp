@@ -39,7 +39,7 @@ const SHARED_L10N = new ViewHelpers.L10N("chrome://devtools/locale/shared.proper
 
 var ActiveTabs = new Map();
 
-this.ResponsiveUIManager = {
+var Manager = {
   /**
    * Check if the a tab is in a responsive mode.
    * Leave the responsive mode if active,
@@ -113,7 +113,18 @@ this.ResponsiveUIManager = {
   }
 }
 
-EventEmitter.decorate(ResponsiveUIManager);
+EventEmitter.decorate(Manager);
+
+// If the experimental HTML UI is enabled, delegate the ResponsiveUIManager API
+// over to that tool instead.  Performing this delegation here allows us to
+// contain the pref check to a single place.
+if (Services.prefs.getBoolPref("devtools.responsive.html.enabled")) {
+  let { ResponsiveUIManager } =
+    require("devtools/client/responsive.html/manager");
+  this.ResponsiveUIManager = ResponsiveUIManager;
+} else {
+  this.ResponsiveUIManager = Manager;
+}
 
 var presets = [
   // Phones
