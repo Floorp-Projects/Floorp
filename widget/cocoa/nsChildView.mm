@@ -53,6 +53,7 @@
 #include "Layers.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "GfxTexturesReporter.h"
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
@@ -2984,10 +2985,12 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   data += srcPoint.y * stride + srcPoint.x * bpp;
 
   UploadImageDataToTexture(mGLContext, data, stride, format,
-                           updateRegion.ToUnknownRegion(), mTexture,
+                           updateRegion.ToUnknownRegion(), mTexture, nullptr,
                            overwriteTexture, /* aPixelBuffer = */ false,
                            LOCAL_GL_TEXTURE0,
                            LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+
+
 
   if (!aKeepSurface) {
     mUpdateDrawTarget = nullptr;
