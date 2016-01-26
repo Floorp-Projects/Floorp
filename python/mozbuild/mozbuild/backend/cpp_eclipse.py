@@ -168,7 +168,6 @@ class CppEclipseBackend(CommonBackend):
         settings = settings.replace('@IPDL_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'ipc/ipdl/_ipdlheaders'))
         settings = settings.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
         settings = settings.replace('@DEFINE_MOZILLA_INTERNAL_API@', self._define_entry('MOZILLA_INTERNAL_API', '1'))
-        settings = settings.replace('@DEFINE_MDCPUCFG@', self._define_entry('MDCPUCFG', self.environment.substs['TARGET_NSPR_MDCPUCFG']))
         settings = settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
 
         fh.write(settings)
@@ -428,7 +427,6 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                                   MOZILLA_EXTERNAL_API code will suffer.
                                                 -->
                                                 @DEFINE_MOZILLA_INTERNAL_API@
-                                                @DEFINE_MDCPUCFG@
                                         </resource>
                                 </language>
                         </provider>

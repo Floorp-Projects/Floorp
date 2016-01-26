@@ -55,4 +55,4 @@ class Introspection(MachCommandBase):
             return
 
         print(' '.join(shell_quote(arg)
-                       for arg in shell_split(build_vars[name])))
+                       for arg in util.sanitize_cflags(shell_split(build_vars[name]))))
