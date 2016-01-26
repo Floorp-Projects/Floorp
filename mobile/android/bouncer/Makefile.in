@@ -22,4 +22,9 @@ manifest_FLAGS += \
   -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
   $(NULL)
 
+# Targets built very early during a Gradle build.
+gradle-targets: $(abspath AndroidManifest.xml)
+
+.PHONY: gradle-targets
+
 libs:: $(ANDROID_APK_NAME).apk
