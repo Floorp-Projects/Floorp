@@ -205,6 +205,8 @@ var Management = {
 // extension pages (which run in the chrome process).
 var globalBroker = new MessageBroker([Services.mm, Services.ppmm]);
 
+var gContextId = 0;
+
 // An extension page is an execution context for any extension content
 // that runs in the chrome process. It's used for background pages
 // (type="background"), popups (type="popup"), and any extension
@@ -224,6 +226,8 @@ ExtensionPage = function(extension, params) {
   this.uri = uri || extension.baseURI;
   this.incognito = params.incognito || false;
   this.onClose = new Set();
+  this.contextId = gContextId++;
+  this.unloaded = false;
 
   // This is the MessageSender property passed to extension.
   // It can be augmented by the "page-open" hook.
@@ -272,6 +276,17 @@ ExtensionPage.prototype = {
     return true;
   },
 
+  // A wrapper around MessageChannel.sendMessage which adds the extension ID
+  // to the recipient object, and ensures replies are not processed after the
+  // context has been unloaded.
+  sendMessage(target, messageName, data, recipient = {}, sender = {}) {
+    recipient.extensionId = this.extension.id;
+    sender.extensionId = this.extension.id;
+    sender.contextId = this.contextId;
+
+    return MessageChannel.sendMessage(target, messageName, data, recipient, sender);
+  },
+
   callOnClose(obj) {
     this.onClose.add(obj);
   },
@@ -289,6 +304,20 @@ ExtensionPage.prototype = {
   // This method is called when an extension page navigates away or
   // its tab is closed.
   unload() {
+    // Note that without this guard, we end up running unload code
+    // multiple times for tab pages closed by the "page-unload" handlers
+    // triggered below.
+    if (this.unloaded) {
+      return;
+    }
+
+    this.unloaded = true;
+
+    MessageChannel.abortResponses({
+      extensionId: this.extension.id,
+      contextId: this.contextId,
+    });
+
     Management.emit("page-unload", this);
 
     this.extension.views.delete(this);
