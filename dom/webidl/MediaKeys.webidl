@@ -12,6 +12,7 @@
 
 enum SessionType { "temporary", "persistent" };
 
+[Pref="media.eme.apiVisible"]
 interface MediaKeys {
   readonly attribute DOMString keySystem;
 

@@ -1500,6 +1500,7 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 // Encrypted media extensions.
 pref("media.eme.enabled", true);
+pref("media.eme.apiVisible", true);
 
 // Decode using Gecko Media Plugins in <video>, if a system decoder is not
 // availble and the preferred GMP is available.
