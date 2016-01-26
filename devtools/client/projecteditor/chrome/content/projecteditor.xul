@@ -6,7 +6,6 @@
 <?xml-stylesheet href="chrome://devtools/skin/projecteditor/projecteditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/debugger/debugger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/inspector/markup/markup.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/markup.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
