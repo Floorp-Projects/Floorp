@@ -27,26 +27,32 @@ function test() {
 }
 
 var tests = {
-  testMarkMicroformats: function(next) {
+  testMarkMicrodata: function(next) {
     // emulates context menu action using target element, calling SocialMarks.markLink
     let provider = Social._getProviderFromOrigin(manifest.origin);
     let port = provider.getWorkerPort();
     let target, testTab;
 
-    // browser_share tests microformats on the full page, this is testing a
+    // browser_share tests microdata on the full page, this is testing a
     // specific target element.
     let expecting = JSON.stringify({
-      "url": "https://example.com/browser/browser/base/content/test/social/microformats.html",
-      "microformats": {
+      "url": "https://example.com/browser/browser/base/content/test/social/microdata.html",
+      "microdata": {
         "items": [{
-            "type": ["h-review"],
+            "types": ["http://schema.org/UserComments"],
             "properties": {
-              "rating": ["4.5"]
+              "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c2"],
+              "creator": [{
+                  "types": ["http://schema.org/Person"],
+                  "properties": {
+                    "name": ["Charlotte"]
+                  }
+                }
+              ],
+              "commentTime": ["2013-08-29"]
             }
           }
-        ],
-        "rels": {},
-        "rel-urls": {}
+        ]
       }
     });
 
@@ -54,7 +60,7 @@ var tests = {
       let topic = e.data.topic;
       switch (topic) {
         case "got-share-data-message":
-          is(JSON.stringify(e.data.result), expecting, "microformats data ok");
+          is(JSON.stringify(e.data.result), expecting, "microdata data ok");
           gBrowser.removeTab(testTab);
           port.close();
           next();
@@ -63,11 +69,11 @@ var tests = {
     }
     port.postMessage({topic: "test-init"});
 
-    let url = "https://example.com/browser/browser/base/content/test/social/microformats.html"
+    let url = "https://example.com/browser/browser/base/content/test/social/microdata.html"
     addTab(url, function(tab) {
       testTab = tab;
       let doc = tab.linkedBrowser.contentDocument;
-      target = doc.getElementById("test-review");
+      target = doc.getElementById("test-comment");
       SocialMarks.markLink(manifest.origin, url, target);
     });
   }
