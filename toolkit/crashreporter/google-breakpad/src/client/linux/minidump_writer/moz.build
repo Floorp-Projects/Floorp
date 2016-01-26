@@ -1,0 +1,27 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'linux_dumper.cc',
+    'linux_ptrace_dumper.cc',
+    'minidump_writer.cc',
+]
+
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    DEFINES['ELFSIZE'] = 32
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+    ]
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')

@@ -46,6 +46,8 @@ ALLOW_COMPILER_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
 
-CMFLAGS += ['-std=c99']
+LOCAL_INCLUDES += [
+    '../..',
+]
 
-include('/toolkit/crashreporter/crashreporter.mozbuild')
+CMFLAGS += ['-std=c99']
