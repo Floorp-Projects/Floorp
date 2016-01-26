@@ -81,6 +81,8 @@
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/android.png                         (../shared/fxa/android.png)
   skin/classic/browser/fxa/android@2x.png                      (../shared/fxa/android@2x.png)
+  skin/classic/browser/fxa/ios.png                             (../shared/fxa/ios.png)
+  skin/classic/browser/fxa/ios@2x.png                          (../shared/fxa/ios@2x.png)
   skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
   skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
   skin/classic/browser/search-indicator@2x.png                 (../shared/search/search-indicator@2x.png)
