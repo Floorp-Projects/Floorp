@@ -4,7 +4,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = "TypedArray-subarray-arguments-neutering.js";
+var gTestfile = "TypedArray-subarray-arguments-detaching.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 991981;
 var summary =

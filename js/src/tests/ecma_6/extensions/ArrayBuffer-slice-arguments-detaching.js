@@ -4,12 +4,12 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = "DataView-set-arguments-neutering.js";
+var gTestfile = "ArrayBuffer-slice-arguments-detaching.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 991981;
 var summary =
-  "DataView.prototype.set* methods shouldn't misbehave horribly if " +
-  "index-argument conversion detaches the ArrayBuffer being modified";
+  "ArrayBuffer.prototype.slice shouldn't misbehave horribly if " +
+  "index-argument conversion detaches the ArrayBuffer being sliced";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -17,11 +17,9 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-function testIndex(dataType)
+function testStart(dataType)
 {
   var ab = new ArrayBuffer(0x1000);
-
-  var dv = new DataView(ab);
 
   var start =
     {
@@ -29,55 +27,53 @@ function testIndex(dataType)
       {
         detachArrayBuffer(ab, dataType);
         gc();
-        return 0xFFF;
+        return 0x800;
       }
     };
 
   var ok = false;
   try
   {
-    dv.setUint8(start, 0x42);
+    ab.slice(start);
   }
   catch (e)
   {
     ok = true;
   }
-  assertEq(ok, true, "should have thrown");
-  assertEq(ab.byteLength, 0, "should have been detached correctly");
+  assertEq(ok, true, "start weirdness should have thrown");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
-testIndex("change-data");
-testIndex("same-data");
+testStart("change-data");
+testStart("same-data");
 
-function testValue(dataType)
+function testEnd(dataType)
 {
-  var ab = new ArrayBuffer(0x100000);
+  var ab = new ArrayBuffer(0x1000);
 
-  var dv = new DataView(ab);
-
-  var value =
+  var end =
     {
       valueOf: function()
       {
         detachArrayBuffer(ab, dataType);
         gc();
-        return 0x42;
+        return 0x1000;
       }
     };
 
   var ok = false;
   try
   {
-    dv.setUint8(0xFFFFF, value);
+    ab.slice(0x800, end);
   }
   catch (e)
   {
     ok = true;
   }
-  assertEq(ok, true, "should have thrown");
-  assertEq(ab.byteLength, 0, "should have been detached correctly");
+  assertEq(ok, true, "byteLength weirdness should have thrown");
+  assertEq(ab.byteLength, 0, "detaching should work for byteLength weirdness");
 }
-testValue("change-data");
-testValue("same-data");
+testEnd("change-data");
+testEnd("same-data");
 
 /******************************************************************************/
 
