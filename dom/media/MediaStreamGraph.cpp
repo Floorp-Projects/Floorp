@@ -315,6 +315,72 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
   }
 }
 
+template<typename C, typename Chunk>
+void
+MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
+                                                      TrackID aTrackID,
+                                                      C& aSegment,
+                                                      StreamTime aStart,
+                                                      StreamTime aEnd)
+{
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
+
+  StreamTime offset = 0;
+  for (typename C::ConstChunkIterator chunk(aSegment);
+         !chunk.IsEnded(); chunk.Next()) {
+    if (offset >= aEnd) {
+      break;
+    }
+    offset += chunk->GetDuration();
+    if (chunk->IsNull() || offset < aStart) {
+      continue;
+    }
+    PrincipalHandle principalHandle = chunk->GetPrincipalHandle();
+    if (principalHandle != aSegment.GetLastPrincipalHandle()) {
+      aSegment.SetLastPrincipalHandle(principalHandle);
+      STREAM_LOG(LogLevel::Debug, ("MediaStream %p track %d, principalHandle "
+                                   "changed in %sChunk with duration %lld",
+                                   aStream, aTrackID,
+                                   aSegment.GetType() == MediaSegment::AUDIO
+                                       ? "Audio" : "Video",
+                                   (long long) chunk->GetDuration()));
+      for (const TrackBound<MediaStreamTrackListener>& listener : aStream->mTrackListeners) {
+        if (listener.mTrackID == aTrackID) {
+          listener.mListener->NotifyPrincipalHandleChanged(this, principalHandle);
+        }
+      }
+    }
+  }
+}
+
+void
+MediaStreamGraphImpl::ProcessChunkMetadata(GraphTime aPrevCurrentTime)
+{
+  for (MediaStream* stream : AllStreams()) {
+    StreamTime iterationStart = stream->GraphTimeToStreamTime(aPrevCurrentTime);
+    StreamTime iterationEnd = stream->GraphTimeToStreamTime(mProcessedTime);
+    for (StreamBuffer::TrackIter tracks(stream->mBuffer);
+            !tracks.IsEnded(); tracks.Next()) {
+      MediaSegment* segment = tracks->GetSegment();
+      if (!segment) {
+        continue;
+      }
+      if (tracks->GetType() == MediaSegment::AUDIO) {
+        AudioSegment* audio = static_cast<AudioSegment*>(segment);
+        ProcessChunkMetadataForInterval<AudioSegment, AudioChunk>(
+            stream, tracks->GetID(), *audio, iterationStart, iterationEnd);
+      } else if (tracks->GetType() == MediaSegment::VIDEO) {
+        VideoSegment* video = static_cast<VideoSegment*>(segment);
+        ProcessChunkMetadataForInterval<VideoSegment, VideoChunk>(
+            stream, tracks->GetID(), *video, iterationStart, iterationEnd);
+      } else {
+        MOZ_CRASH("Unknown track type");
+      }
+    }
+  }
+}
+
 GraphTime
 MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
                                    GraphTime aEndBlockingDecisions)
@@ -1454,6 +1520,8 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 
   UpdateCurrentTimeForStreams(oldProcessedTime);
 
+  ProcessChunkMetadata(oldProcessedTime);
+
   // Process graph messages queued from RunMessageAfterProcessing() on this
   // thread during the iteration.
   RunMessagesInQueue();
@@ -2286,6 +2354,14 @@ MediaStream::AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aLi
   TrackBound<MediaStreamTrackListener>* l = mTrackListeners.AppendElement();
   l->mListener = aListener;
   l->mTrackID = aTrackID;
+
+  StreamBuffer::Track* track = FindTrack(aTrackID);
+  if (!track) {
+    return;
+  }
+  PrincipalHandle lastPrincipalHandle =
+    track->GetSegment()->GetLastPrincipalHandle();
+  l->mListener->NotifyPrincipalHandleChanged(Graph(), lastPrincipalHandle);
 }
 
 void
