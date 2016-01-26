@@ -2884,7 +2884,7 @@ JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
 
 JS_PUBLIC_API(bool)
 JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS::HandleValueArray& args,
-              MutableHandleObject objp)
+              MutableHandleValue rval)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2906,12 +2906,12 @@ JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS:
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return js::Construct(cx, fval, cargs, newTargetVal, objp);
+    return js::Construct(cx, fval, cargs, newTargetVal, rval);
 }
 
 JS_PUBLIC_API(bool)
 JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
-              MutableHandleObject objp)
+              MutableHandleValue rval)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2927,7 +2927,7 @@ JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return js::Construct(cx, fval, cargs, fval, objp);
+    return js::Construct(cx, fval, cargs, fval, rval);
 }
 
 
@@ -4577,11 +4577,11 @@ JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& input
     if (!FillArgumentsFromArraylike(cx, args, inputArgs))
         return nullptr;
 
-    RootedObject obj(cx);
-    if (!js::Construct(cx, ctorVal, args, ctorVal, &obj))
+    RootedValue rval(cx);
+    if (!js::Construct(cx, ctorVal, args, ctorVal, &rval))
         return nullptr;
 
-    return obj;
+    return &rval.toObject();
 }
 
 JS_PUBLIC_API(JSObject*)

@@ -425,15 +425,13 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId& objId,
         ContextOptionsRef(cx).setDontReportUncaught(true);
 
         HandleValueArray args = HandleValueArray::subarray(vals, 2, vals.length() - 2);
-        if (construct) {
-            RootedObject obj(cx);
-            if (!JS::Construct(cx, vals[0], args, &obj))
-                return fail(aes, rs);
-            rval.setObject(*obj);
-        } else {
-            if(!JS::Call(cx, vals[1], vals[0], args, &rval))
-                return fail(aes, rs);
-        }
+        bool success;
+        if (construct)
+            success = JS::Construct(cx, vals[0], args, &rval);
+        else
+            success = JS::Call(cx, vals[1], vals[0], args, &rval);
+        if (!success)
+            return fail(aes, rs);
     }
 
     if (!toVariant(cx, rval, result))

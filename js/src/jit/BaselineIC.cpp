@@ -6090,12 +6090,8 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
                    "either callee == newTarget, or the initial |new| checked "
                    "that IsConstructor(newTarget)");
 
-        RootedObject obj(cx);
-        if (!Construct(cx, callee, cargs, newTarget, &obj))
+        if (!Construct(cx, callee, cargs, newTarget, res))
             return false;
-
-        res.setObject(*obj);
-
     } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
                frame->scopeChain()->global().valueIsEval(callee))
     {
