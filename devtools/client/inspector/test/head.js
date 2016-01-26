@@ -170,31 +170,14 @@ function getActiveInspector() {
 var openInspectorSidebarTab = Task.async(function*(id, hostType) {
   let {toolbox, inspector} = yield openInspector();
 
-  if (!hasSideBarTab(inspector, id)) {
-    info("Waiting for the " + id + " sidebar to be ready");
-    yield inspector.sidebar.once(id + "-ready");
-  }
-
   info("Selecting the " + id + " sidebar");
   inspector.sidebar.select(id);
 
   return {
-    toolbox: toolbox,
-    inspector: inspector,
-    view: inspector.sidebar.getWindowForTab(id)[id]
+    toolbox,
+    inspector
   };
 });
-
-/**
- * Checks whether the inspector's sidebar corresponding to the given id already
- * exists
- * @param {InspectorPanel}
- * @param {String}
- * @return {Boolean}
- */
-function hasSideBarTab(inspector, id) {
-  return !!inspector.sidebar.getWindowForTab(id);
-}
 
 /**
  * Get the NodeFront for a node that matches a given css selector, via the
