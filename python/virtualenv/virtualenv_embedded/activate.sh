@@ -2,15 +2,16 @@
 # you cannot run it directly
 
 deactivate () {
-    unset pydoc
+    unset -f pydoc
 
     # reset old environment variables
-    if [ -n "$_OLD_VIRTUAL_PATH" ] ; then
+    # ! [ -z ${VAR+_} ] returns true if VAR is declared at all
+    if ! [ -z "${_OLD_VIRTUAL_PATH+_}" ] ; then
         PATH="$_OLD_VIRTUAL_PATH"
         export PATH
         unset _OLD_VIRTUAL_PATH
     fi
-    if [ -n "$_OLD_VIRTUAL_PYTHONHOME" ] ; then
+    if ! [ -z "${_OLD_VIRTUAL_PYTHONHOME+_}" ] ; then
         PYTHONHOME="$_OLD_VIRTUAL_PYTHONHOME"
         export PYTHONHOME
         unset _OLD_VIRTUAL_PYTHONHOME
@@ -19,18 +20,18 @@ deactivate () {
     # This should detect bash and zsh, which have a hash command that must
     # be called to get it to forget past commands.  Without forgetting
     # past commands the $PATH changes we made may not be respected
-    if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
+    if [ -n "${BASH-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
         hash -r 2>/dev/null
     fi
 
-    if [ -n "$_OLD_VIRTUAL_PS1" ] ; then
+    if ! [ -z "${_OLD_VIRTUAL_PS1+_}" ] ; then
         PS1="$_OLD_VIRTUAL_PS1"
         export PS1
         unset _OLD_VIRTUAL_PS1
     fi
 
     unset VIRTUAL_ENV
-    if [ ! "$1" = "nondestructive" ] ; then
+    if [ ! "${1-}" = "nondestructive" ] ; then
     # Self destruct!
         unset -f deactivate
     fi
@@ -47,34 +48,31 @@ PATH="$VIRTUAL_ENV/__BIN_NAME__:$PATH"
 export PATH
 
 # unset PYTHONHOME if set
-# this will fail if PYTHONHOME is set to the empty string (which is bad anyway)
-# could use `if (set -u; : $PYTHONHOME) ;` in bash
-if [ -n "$PYTHONHOME" ] ; then
+if ! [ -z "${PYTHONHOME+_}" ] ; then
     _OLD_VIRTUAL_PYTHONHOME="$PYTHONHOME"
     unset PYTHONHOME
 fi
 
-if [ -z "$VIRTUAL_ENV_DISABLE_PROMPT" ] ; then
+if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT-}" ] ; then
     _OLD_VIRTUAL_PS1="$PS1"
     if [ "x__VIRTUAL_PROMPT__" != x ] ; then
         PS1="__VIRTUAL_PROMPT__$PS1"
     else
-    if [ "`basename \"$VIRTUAL_ENV\"`" = "__" ] ; then
-        # special case for Aspen magic directories
-        # see http://www.zetadev.com/software/aspen/
-        PS1="[`basename \`dirname \"$VIRTUAL_ENV\"\``] $PS1"
-    else
-        PS1="(`basename \"$VIRTUAL_ENV\"`)$PS1"
-    fi
+        PS1="(`basename \"$VIRTUAL_ENV\"`) $PS1"
     fi
     export PS1
 fi
 
-alias pydoc="python -m pydoc"
+# Make sure to unalias pydoc if it's already there
+alias pydoc 2>/dev/null >/dev/null && unalias pydoc
+
+pydoc () {
+    python -m pydoc "$@"
+}
 
 # This should detect bash and zsh, which have a hash command that must
 # be called to get it to forget past commands.  Without forgetting
 # past commands the $PATH changes we made may not be respected
-if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
+if [ -n "${BASH-}" ] || [ -n "${ZSH_VERSION-}" ] ; then
     hash -r 2>/dev/null
 fi

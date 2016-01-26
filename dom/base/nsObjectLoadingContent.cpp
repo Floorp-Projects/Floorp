@@ -1527,6 +1527,7 @@ nsObjectLoadingContent::ShouldRewriteYoutubeEmbed(nsIURI* aURI)
   nsAutoCString uri;
   aURI->GetSpec(uri);
   if (uri.Find("enablejsapi=1", true, 0, -1) != kNotFound) {
+    Telemetry::Accumulate(Telemetry::YOUTUBE_NONREWRITABLE_EMBED_SEEN, 1);
     return false;
   }
 

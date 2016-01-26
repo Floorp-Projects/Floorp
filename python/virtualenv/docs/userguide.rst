@@ -125,6 +125,15 @@ below.
 
 .. _`execution policies`: http://technet.microsoft.com/en-us/library/dd347641.aspx
 
+Removing an Environment
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Removing a virtual environment is simply done by deactivating it and deleting the
+environment folder with all its contents::
+
+    (ENV)$ deactivate
+    $ rm -r /path/to/ENV
+
 The :option:`--system-site-packages` Option
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -245,5 +254,3 @@ As well as the extra directories, the search order includes:
 #. The directory where virtualenv.py is located.
 #. The current directory.
 
-If no satisfactory local distributions are found, virtualenv will
-fail. Virtualenv will never download packages.

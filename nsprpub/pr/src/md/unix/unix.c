@@ -2715,7 +2715,7 @@ static void* _MD_Unix_mmap64(
 
 /* Android <= 19 doesn't have mmap64. */
 #if defined(ANDROID) && __ANDROID_API__ <= 19
-extern void *__mmap2(void *, size_t, int, int, int, size_t);
+PR_IMPORT(void) *__mmap2(void *, size_t, int, int, int, size_t);
 
 #define ANDROID_PAGE_SIZE 4096
 
