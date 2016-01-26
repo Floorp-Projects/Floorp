@@ -30,6 +30,7 @@ dictionary MediaKeySystemConfiguration {
   DOMString            videoType = "";
 };
 
+[Pref="media.eme.apiVisible"]
 interface MediaKeySystemAccess {
   readonly    attribute DOMString keySystem;
   [NewObject]

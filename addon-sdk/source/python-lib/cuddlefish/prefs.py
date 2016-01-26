@@ -238,7 +238,8 @@ DEFAULT_TEST_PREFS = {
     'dom.mozApps.debug': True,
     'dom.apps.customization.enabled': True,
     'media.eme.enabled': True,
-    # Don't forcibly kill content processes after a timeout
+    'media.eme.apiVisible': True,
+    # Don't forceably kill content processes after a timeout
     'dom.ipc.tabs.shutdownTimeoutSecs': 0,
     'general.useragent.locale': "en-US",
     'intl.locale.matchOS': "en-US",
