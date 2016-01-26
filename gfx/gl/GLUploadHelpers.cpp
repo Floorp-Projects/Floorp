@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"  // For BytesPerPixel
 #include "nsRegion.h"
+#include "GfxTexturesReporter.h"
 
 namespace mozilla {
 
@@ -379,6 +380,50 @@ TexImage2DHelper(GLContext *gl,
     }
 }
 
+static uint32_t
+GetBytesPerTexel(GLenum format, GLenum type)
+{
+    // If there is no defined format or type, we're not taking up any memory
+    if (!format || !type) {
+        return 0;
+    }
+
+    if (format == LOCAL_GL_DEPTH_COMPONENT) {
+        if (type == LOCAL_GL_UNSIGNED_SHORT)
+            return 2;
+        else if (type == LOCAL_GL_UNSIGNED_INT)
+            return 4;
+    } else if (format == LOCAL_GL_DEPTH_STENCIL) {
+        if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
+            return 4;
+    }
+
+    if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
+        uint32_t multiplier = type == LOCAL_GL_FLOAT ? 4 : 1;
+        switch (format) {
+            case LOCAL_GL_ALPHA:
+            case LOCAL_GL_LUMINANCE:
+                return 1 * multiplier;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                return 2 * multiplier;
+            case LOCAL_GL_RGB:
+                return 3 * multiplier;
+            case LOCAL_GL_RGBA:
+                return 4 * multiplier;
+            default:
+                break;
+        }
+    } else if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
+    {
+        return 2;
+    }
+
+    MOZ_RELEASE_ASSERT(false, "Unknown type and/or format");
+    return 0;
+}
+
 SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
@@ -386,6 +431,7 @@ UploadImageDataToTexture(GLContext* gl,
                          SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
+                         size_t* aOutUploadSize,
                          bool aOverwrite,
                          bool aPixelBuffer,
                          GLenum aTextureUnit,
@@ -505,6 +551,10 @@ UploadImageDataToTexture(GLContext* gl,
     // Top left point of the region's bounding rectangle.
     IntPoint topLeft = paintRegion.GetBounds().TopLeft();
 
+    if (aOutUploadSize) {
+        *aOutUploadSize = 0;
+    }
+
     for (auto iter = paintRegion.RectIter(); !iter.Done(); iter.Next()) {
         const IntRect& rect = iter.Get();
         // The inital data pointer is at the top left point of the region's
@@ -544,6 +594,11 @@ UploadImageDataToTexture(GLContext* gl,
                              rectData);
         }
 
+        if (aOutUploadSize && !textureInited) {
+            uint32_t texelSize = GetBytesPerTexel(internalFormat, type);
+            size_t numTexels = size_t(rect.width) * size_t(rect.height);
+            *aOutUploadSize += texelSize * numTexels;
+        }
     }
 
     return surfaceFormat;
@@ -551,9 +606,10 @@ UploadImageDataToTexture(GLContext* gl,
 
 SurfaceFormat
 UploadSurfaceToTexture(GLContext* gl,
-                       DataSourceSurface *aSurface,
+                       DataSourceSurface* aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
+                       size_t* aOutUploadSize,
                        bool aOverwrite,
                        const gfx::IntPoint& aSrcPoint,
                        bool aPixelBuffer,
@@ -565,8 +621,8 @@ UploadSurfaceToTexture(GLContext* gl,
     SurfaceFormat format = aSurface->GetFormat();
     data += DataOffset(aSrcPoint, stride, format);
     return UploadImageDataToTexture(gl, data, stride, format,
-                                    aDstRegion, aTexture, aOverwrite,
-                                    aPixelBuffer, aTextureUnit,
+                                    aDstRegion, aTexture, aOutUploadSize,
+                                    aOverwrite, aPixelBuffer, aTextureUnit,
                                     aTextureTarget);
 }
 
