@@ -203,6 +203,7 @@ function run_test() {
     do_check_true(a1.isActive);
     do_check_false(a1.strictCompatibility);
     do_check_false(a1.foreignInstall);
+    do_check_true(a1.seen);
     // addon2 was disabled in the database
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
@@ -210,6 +211,7 @@ function run_test() {
     do_check_false(a2.isActive);
     do_check_false(a2.strictCompatibility);
     do_check_false(a2.foreignInstall);
+    do_check_true(a2.seen);
     // addon3 was pending-disable in the database
     do_check_neq(a3, null);
     do_check_true(a3.userDisabled);
@@ -217,6 +219,7 @@ function run_test() {
     do_check_false(a3.isActive);
     do_check_false(a3.strictCompatibility);
     do_check_false(a3.foreignInstall);
+    do_check_true(a3.seen);
     // addon4 was pending-enable in the database
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
@@ -224,6 +227,7 @@ function run_test() {
     do_check_true(a4.isActive);
     do_check_true(a4.strictCompatibility);
     do_check_false(a4.foreignInstall);
+    do_check_true(a4.seen);
     // addon5 was enabled in the database but needed a compatibility update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
@@ -231,6 +235,7 @@ function run_test() {
     do_check_true(a5.isActive);
     do_check_false(a5.strictCompatibility);
     do_check_false(a5.foreignInstall);
+    do_check_true(a5.seen);
     // addon6 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
     do_check_neq(a6, null);
@@ -239,6 +244,7 @@ function run_test() {
     do_check_false(a6.isActive);
     do_check_false(a6.strictCompatibility);
     do_check_false(a6.foreignInstall);
+    do_check_true(a6.seen);
     // addon7 is in the global install location so should be a foreignInstall
     do_check_neq(a7, null);
     do_check_false(a7.userDisabled);
@@ -246,6 +252,7 @@ function run_test() {
     do_check_true(a7.isActive);
     do_check_false(a7.strictCompatibility);
     do_check_true(a7.foreignInstall);
+    do_check_true(a7.seen);
     // addon8 is in the user install location so should be a foreignInstall
     do_check_neq(a8, null);
     do_check_false(a8.userDisabled);
@@ -253,6 +260,7 @@ function run_test() {
     do_check_true(a8.isActive);
     do_check_false(a8.strictCompatibility);
     do_check_true(a8.foreignInstall);
+    do_check_true(a8.seen);
 
     do_execute_soon(do_test_finished);
   });
