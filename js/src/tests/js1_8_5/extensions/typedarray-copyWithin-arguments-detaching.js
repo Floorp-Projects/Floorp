@@ -4,12 +4,12 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = "ArrayBuffer-slice-arguments-neutering.js";
+var gTestfile = "typedarray-copyWithin-arguments-detaching.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 991981;
 var summary =
-  "ArrayBuffer.prototype.slice shouldn't misbehave horribly if " +
-  "index-argument conversion detaches the ArrayBuffer being sliced";
+  "%TypedArray.prototype.copyWithin shouldn't misbehave horribly if " +
+  "index-argument conversion detaches the underlying ArrayBuffer";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -17,24 +17,25 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-function testStart(dataType)
+function testBegin(dataType)
 {
   var ab = new ArrayBuffer(0x1000);
 
-  var start =
+  var begin =
     {
       valueOf: function()
       {
         detachArrayBuffer(ab, dataType);
-        gc();
         return 0x800;
       }
     };
 
+  var ta = new Uint8Array(ab);
+
   var ok = false;
   try
   {
-    ab.slice(start);
+    ta.copyWithin(0, begin, 0x1000);
   }
   catch (e)
   {
@@ -43,8 +44,8 @@ function testStart(dataType)
   assertEq(ok, true, "start weirdness should have thrown");
   assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
-testStart("change-data");
-testStart("same-data");
+testBegin("change-data");
+testBegin("same-data");
 
 function testEnd(dataType)
 {
@@ -55,25 +56,56 @@ function testEnd(dataType)
       valueOf: function()
       {
         detachArrayBuffer(ab, dataType);
-        gc();
         return 0x1000;
       }
     };
 
+  var ta = new Uint8Array(ab);
+
   var ok = false;
   try
   {
-    ab.slice(0x800, end);
+    ta.copyWithin(0, 0x800, end);
   }
   catch (e)
   {
     ok = true;
   }
-  assertEq(ok, true, "byteLength weirdness should have thrown");
-  assertEq(ab.byteLength, 0, "detaching should work for byteLength weirdness");
+  assertEq(ok, true, "start weirdness should have thrown");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testEnd("change-data");
 testEnd("same-data");
+
+function testDest(dataType)
+{
+  var ab = new ArrayBuffer(0x1000);
+
+  var dest =
+    {
+      valueOf: function()
+      {
+        detachArrayBuffer(ab, dataType);
+        return 0;
+      }
+    };
+
+  var ta = new Uint8Array(ab);
+
+  var ok = false;
+  try
+  {
+    ta.copyWithin(dest, 0x800, 0x1000);
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assertEq(ok, true, "start weirdness should have thrown");
+  assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
+}
+testDest("change-data");
+testDest("same-data");
 
 /******************************************************************************/
 

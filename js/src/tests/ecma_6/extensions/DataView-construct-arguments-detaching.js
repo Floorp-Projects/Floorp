@@ -4,7 +4,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = "DataView-construct-arguments-neutering.js";
+var gTestfile = "DataView-construct-arguments-detaching.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 991981;
 var summary =
