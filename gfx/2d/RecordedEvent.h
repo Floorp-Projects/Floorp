@@ -658,7 +658,7 @@ private:
 
 class RecordedPopLayer : public RecordedDrawingEvent {
 public:
-  RecordedPopLayer(DrawTarget* aDT)
+  MOZ_IMPLICIT RecordedPopLayer(DrawTarget* aDT)
     : RecordedDrawingEvent(POPLAYER, aDT)
   {
   }
