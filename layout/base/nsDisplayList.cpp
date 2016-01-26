@@ -347,16 +347,20 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(const ComputedTimingFunction& aCTF)
+ToTimingFunction(Maybe<ComputedTimingFunction> aCTF)
 {
-  if (aCTF.HasSpline()) {
-    const nsSMILKeySpline* spline = aCTF.GetFunction();
+  if (aCTF.isNothing()) {
+    return TimingFunction(null_t());
+  }
+
+  if (aCTF->HasSpline()) {
+    const nsSMILKeySpline* spline = aCTF->GetFunction();
     return TimingFunction(CubicBezierFunction(spline->X1(), spline->Y1(),
                                               spline->X2(), spline->Y2()));
   }
 
-  uint32_t type = aCTF.GetType() == nsTimingFunction::Type::StepStart ? 1 : 2;
-  return TimingFunction(StepFunction(aCTF.GetSteps(), type));
+  uint32_t type = aCTF->GetType() == nsTimingFunction::Type::StepStart ? 1 : 2;
+  return TimingFunction(StepFunction(aCTF->GetSteps(), type));
 }
 
 static void
@@ -421,7 +425,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
     animSegment->startPortion() = segment.mFromKey;
     animSegment->endPortion() = segment.mToKey;
-    animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
+    animSegment->sampleFn() = ToTimingFunction(Some(segment.mTimingFunction));
   }
 }
 
