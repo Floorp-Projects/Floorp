@@ -446,6 +446,11 @@ private:
                        RefPtr<CSSStyleSheet>& aSheet,
                        void* aUserData);
 
+  nsresult CheckContentPolicy(nsIPrincipal* aSourcePrincipal,
+                              nsIURI* aTargetURI,
+                              nsISupports* aContext,
+                              bool aIsPreload);
+
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
