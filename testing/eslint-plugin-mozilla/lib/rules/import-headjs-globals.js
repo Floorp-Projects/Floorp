@@ -24,7 +24,7 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    Program: function() {
+    Program: function(node) {
       if (!helpers.getIsTest(this)) {
         return;
       }
@@ -32,10 +32,17 @@ module.exports = function(context) {
       var currentFilePath = helpers.getAbsoluteFilePath(context);
       var dirName = path.dirname(currentFilePath);
       var fullHeadjsPath = path.resolve(dirName, "head.js");
-      if (fs.existsSync(fullHeadjsPath)) {
-        let globals = helpers.getGlobalsForFile(fullHeadjsPath);
-        helpers.addGlobals(globals, context);
+      if (!fs.existsSync(fullHeadjsPath)) {
+        return;
       }
+
+      let globals = helpers.getGlobalsForFile(fullHeadjsPath);
+      helpers.addGlobals(globals, context);
+
+      // Also add any globals from import-globals-from comments
+      var content = fs.readFileSync(fullHeadjsPath, "utf8");
+      var comments = helpers.getAST(content).comments;
+      helpers.addGlobalsFromComments(fullHeadjsPath, comments, node, context);
     }
   };
 };
