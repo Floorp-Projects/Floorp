@@ -715,20 +715,20 @@ addEventListener("pageshow", function(event) {
 var PageMetadataMessenger = {
   init() {
     addMessageListener("PageMetadata:GetPageData", this);
-    addMessageListener("PageMetadata:GetMicroformats", this);
+    addMessageListener("PageMetadata:GetMicrodata", this);
   },
   receiveMessage(message) {
     switch(message.name) {
       case "PageMetadata:GetPageData": {
-        let target = message.objects.target;
-        let result = PageMetadata.getData(content.document, target);
+        let result = PageMetadata.getData(content.document);
         sendAsyncMessage("PageMetadata:PageDataResult", result);
         break;
       }
-      case "PageMetadata:GetMicroformats": {
+
+      case "PageMetadata:GetMicrodata": {
         let target = message.objects.target;
-        let result = PageMetadata.getMicroformats(content.document, target);
-        sendAsyncMessage("PageMetadata:MicroformatsResult", result);
+        let result = PageMetadata.getMicrodata(content.document, target);
+        sendAsyncMessage("PageMetadata:MicrodataResult", result);
         break;
       }
     }
