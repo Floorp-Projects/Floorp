@@ -358,7 +358,7 @@ public:
    * frame's display items (i.e. zero, or more than one).
    * This function is for testing purposes and not performance sensitive.
    */
-  static Layer* GetDebugSingleOldLayerForFrame(nsIFrame* aFrame);
+  static PaintedLayer* GetDebugSingleOldPaintedLayerForFrame(nsIFrame* aFrame);
 
   /**
    * Destroy any stored LayerManagerDataProperty and the associated data for

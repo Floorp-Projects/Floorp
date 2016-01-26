@@ -2245,7 +2245,6 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
                                                    const nsStyleBackground* aBackgroundStyle)
   : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
-  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
   , mLayer(aLayer)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
@@ -2432,7 +2431,13 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, bg);
-    bgItemList.AppendNewToTop(bgItem);
+
+    if (bgItem->ShouldFixToViewport(aBuilder)) {
+      bgItemList.AppendNewToTop(
+        nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, aFrame, bgItem, i));
+    } else {
+      bgItemList.AppendNewToTop(bgItem);
+    }
   }
 
   if (needBlendContainer) {
@@ -2994,6 +2999,13 @@ nsDisplayBackgroundImage::GetPerFrameKey()
 {
   return (mLayer << nsDisplayItem::TYPE_BITS) |
     nsDisplayItem::GetPerFrameKey();
+}
+
+void
+nsDisplayBackgroundImage::MarkBoundsAsVisible(nsDisplayListBuilder* aBuilder)
+{
+  bool snap;
+  mVisibleRect = GetBounds(aBuilder, &snap);
 }
 
 nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder,
@@ -4622,6 +4634,117 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->AsContainerLayer()->SetScaleToResolution(
       presShell->ScaleToResolution(), presShell->GetResolution());
   return layer.forget();
+}
+
+nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame,
+                                               nsDisplayList* aList)
+  : nsDisplayOwnLayer(aBuilder, aFrame, aList)
+  , mIndex(0)
+  , mIsFixedBackground(false)
+{
+  MOZ_COUNT_CTOR(nsDisplayFixedPosition);
+  Init(aBuilder);
+}
+
+nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame,
+                                               nsDisplayList* aList,
+                                               uint32_t aIndex)
+  : nsDisplayOwnLayer(aBuilder, aFrame, aList)
+  , mIndex(aIndex)
+  , mIsFixedBackground(true)
+{
+  MOZ_COUNT_CTOR(nsDisplayFixedPosition);
+  Init(aBuilder);
+}
+
+void
+nsDisplayFixedPosition::Init(nsDisplayListBuilder* aBuilder)
+{
+  bool snap;
+  mVisibleRect = GetBounds(aBuilder, &snap);
+  mAnimatedGeometryRootForScrollMetadata = mAnimatedGeometryRoot;
+  if (ShouldFixToViewport(aBuilder)) {
+    mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
+  }
+}
+
+/* static */ nsDisplayFixedPosition*
+nsDisplayFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
+                                                 nsIFrame* aFrame,
+                                                 nsDisplayBackgroundImage* aImage,
+                                                 uint32_t aIndex)
+{
+  // Clear clipping on the child item, since we will apply it to the
+  // fixed position item as well.
+  aImage->SetClip(aBuilder, DisplayItemClip());
+  aImage->SetScrollClip(nullptr);
+  aImage->MarkBoundsAsVisible(aBuilder);
+
+  nsDisplayList temp;
+  temp.AppendToTop(aImage);
+
+  return new (aBuilder) nsDisplayFixedPosition(aBuilder, aFrame, &temp, aIndex + 1);
+}
+
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayFixedPosition::~nsDisplayFixedPosition() {
+  MOZ_COUNT_DTOR(nsDisplayFixedPosition);
+}
+#endif
+
+already_AddRefed<Layer>
+nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aContainerParameters) {
+  RefPtr<Layer> layer =
+    nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+
+  layer->SetIsFixedPosition(true);
+
+  nsPresContext* presContext = Frame()->PresContext();
+  nsIFrame* fixedFrame = mIsFixedBackground ? presContext->PresShell()->GetRootFrame() : Frame();
+
+  const nsIFrame* viewportFrame = fixedFrame->GetParent();
+  // anchorRect will be in the container's coordinate system (aLayer's parent layer).
+  // This is the same as the display items' reference frame.
+  nsRect anchorRect;
+  if (viewportFrame) {
+    // Fixed position frames are reflowed into the scroll-port size if one has
+    // been set.
+    if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+      anchorRect.SizeTo(presContext->PresShell()->GetScrollPositionClampingScrollPortSize());
+    } else {
+      anchorRect.SizeTo(viewportFrame->GetSize());
+    }
+  } else {
+    // A display item directly attached to the viewport.
+    // For background-attachment:fixed items, the anchor point is always the
+    // top-left of the viewport currently.
+    viewportFrame = fixedFrame;
+  }
+  // The anchorRect top-left is always the viewport top-left.
+  anchorRect.MoveTo(viewportFrame->GetOffsetToCrossDoc(ReferenceFrame()));
+
+  nsLayoutUtils::SetFixedPositionLayerData(layer,
+      viewportFrame, anchorRect, fixedFrame, presContext, aContainerParameters, !mIsFixedBackground);
+
+  return layer.forget();
+}
+
+bool nsDisplayFixedPosition::TryMerge(nsDisplayItem* aItem) {
+  if (aItem->GetType() != TYPE_FIXED_POSITION)
+    return false;
+  // Items with the same fixed position frame can be merged.
+  nsDisplayFixedPosition* other = static_cast<nsDisplayFixedPosition*>(aItem);
+  if (other->mFrame != mFrame)
+    return false;
+  if (aItem->GetClip() != GetClip())
+    return false;
+  MergeFromTrackingMergedFrames(other);
+  return true;
 }
 
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
