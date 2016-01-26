@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
@@ -337,11 +338,13 @@ this.FxAccountsStorageManager.prototype = {
         }
       }
       this._needToReadSecure = false;
-    } catch (ex if ex instanceof this.secureStorage.STORAGE_LOCKED) {
-      log.debug("setAccountData: secure storage is locked trying to read");
     } catch (ex) {
-      log.error("failed to read secure storage", ex);
-      throw ex;
+      if (ex instanceof this.secureStorage.STORAGE_LOCKED) {
+        log.debug("setAccountData: secure storage is locked trying to read");
+      } else {
+        log.error("failed to read secure storage", ex);
+        throw ex;
+      }
     }
   }),
 
@@ -389,7 +392,10 @@ this.FxAccountsStorageManager.prototype = {
     }
     try {
       yield this.secureStorage.set(this.cachedPlain.email, toWriteSecure);
-    } catch (ex if ex instanceof this.secureStorage.STORAGE_LOCKED) {
+    } catch (ex) {
+      if (!ex instanceof this.secureStorage.STORAGE_LOCKED) {
+        throw ex;
+      }
       // This shouldn't be possible as once it is unlocked it can't be
       // re-locked, and we can only be here if we've previously managed to
       // read.
@@ -402,7 +408,7 @@ this.FxAccountsStorageManager.prototype = {
     return this._queueStorageOperation(() => this._deleteAccountData());
   },
 
-  _deleteAccountData: Task.async(function() {
+  _deleteAccountData: Task.async(function* () {
     log.debug("removing account data");
     yield this._promiseInitialized;
     yield this.plainStorage.set(null);
@@ -539,9 +545,10 @@ LoginManagerStorage.prototype = {
         Services.logins.addLogin(login);
       }
       log.trace("finished write of user data to the login manager");
-    } catch (ex if ex instanceof this.STORAGE_LOCKED) {
-      throw ex;
     } catch (ex) {
+      if (ex instanceof this.STORAGE_LOCKED) {
+        throw ex;
+      }
       // just log and consume the error here - it may be a 3rd party login
       // manager replacement that's simply broken.
       log.error("Failed to save data to the login manager", ex);
@@ -575,9 +582,10 @@ LoginManagerStorage.prototype = {
       }
       log.info("username in the login manager doesn't match - ignoring it");
       yield this._clearLoginMgrData();
-    } catch (ex if ex instanceof this.STORAGE_LOCKED) {
-      throw ex;
     } catch (ex) {
+      if (ex instanceof this.STORAGE_LOCKED) {
+        throw ex;
+      }
       // just log and consume the error here - it may be a 3rd party login
       // manager replacement that's simply broken.
       log.error("Failed to get data from the login manager", ex);
@@ -590,9 +598,4 @@ LoginManagerStorage.prototype = {
 // exist on b2g. Defined here as the use of preprocessor directives skews line
 // numbers in the runtime, meaning stack-traces etc end up off by a few lines.
 // Doing it at the end of the file makes that less of a pita.
-var haveLoginManager =
-#if defined(MOZ_B2G)
-                       false;
-#else
-                       true;
-#endif
+var haveLoginManager = !AppConstants.MOZ_B2G;
