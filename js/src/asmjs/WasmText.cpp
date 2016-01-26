@@ -408,9 +408,11 @@ class WasmTokenStream
         const char16_t* begin = cur_++;
         switch (*begin) {
           case '"':
-            while (cur_ != end_ && *cur_ != '"')
-                cur_++;
-            return WasmToken(WasmToken::Text, begin, ++cur_);
+            do {
+                if (cur_ == end_)
+                    return fail(begin);
+            } while (*cur_++ != '"');
+            return WasmToken(WasmToken::Text, begin, cur_);
 
           case '$':
             while (cur_ != end_ && IsNameAfterDollar(*cur_))
