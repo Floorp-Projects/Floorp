@@ -7,22 +7,14 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
 Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
 
 var tmp = {};
-Cu.import("resource://gre/modules/Promise.jsm", tmp);
 Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cu.import("resource:///modules/DirectoryLinksProvider.jsm", tmp);
 Cu.import("resource://testing-common/PlacesTestUtils.jsm", tmp);
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
-Cu.import("resource://gre/modules/Timer.jsm", tmp);
-var {Promise, NewTabUtils, Sanitizer, clearTimeout, setTimeout, DirectoryLinksProvider, PlacesTestUtils} = tmp;
+var {NewTabUtils, Sanitizer, DirectoryLinksProvider, PlacesTestUtils} = tmp;
 
-var uri = Services.io.newURI("about:newtab", null, null);
-var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-
-var isMac = ("nsILocalFileMac" in Ci);
-var isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 var gWindow = window;
 
 // Default to dummy/empty directory links
@@ -150,83 +142,11 @@ add_task(function* setup() {
   yield promiseReady;
 });
 
-/**
- * The test runner that controls the execution flow of our tests.
- */
-var TestRunner = {
-  /**
-   * Starts the test runner.
-   */
-  run: function () {
-    this._iter = runTests();
-    this.next();
-  },
-
-  /**
-   * Runs the next available test or finishes if there's no test left.
-   */
-  next: function () {
-    try {
-      TestRunner._iter.next();
-    } catch (e if e instanceof StopIteration) {
-      TestRunner.finish();
-    }
-  },
-
-  /**
-   * Finishes all tests and cleans up.
-   */
-  finish: function () {
-    function cleanupAndFinish() {
-      PlacesTestUtils.clearHistory().then(() => {
-        whenPagesUpdated().then(finish);
-        NewTabUtils.restore();
-      });
-    }
-
-    let callbacks = NewTabUtils.links._populateCallbacks;
-    let numCallbacks = callbacks.length;
-
-    if (numCallbacks)
-      callbacks.splice(0, numCallbacks, cleanupAndFinish);
-    else
-      cleanupAndFinish();
-  }
-};
-
-/**
- * Returns the selected tab's content window.
- * @return The content window.
- */
-function getContentWindow() {
-  return gWindow.gBrowser.selectedBrowser.contentWindow;
-}
-
-/**
- * Returns the selected tab's content document.
- * @return The content document.
- */
-function getContentDocument() {
-  return gWindow.gBrowser.selectedBrowser.contentDocument;
-}
-
-/**
- * Returns the newtab grid of the selected tab.
- * @return The newtab grid.
- */
-function getGrid() {
-  return getContentWindow().gGrid;
-}
-
-/**
- * Returns the cell at the given index of the selected tab's newtab grid.
- * @param aIndex The cell index.
- * @return The newtab cell.
- */
-function getCell(aIndex) {
-  return getGrid().cells[aIndex];
-}
-
+/** Perform an action on a cell within the newtab page.
+  * @param aIndex index of cell
+  * @param aFn function to call in child process or tab.
+  * @returns result of calling the function.
+  */
 function performOnCell(aIndex, aFn) {
   return ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
                            { index: aIndex, fn: aFn.toString() }, function* (args) {
@@ -477,20 +397,6 @@ function unpinCell(aIndex) {
 }
 
 /**
- * Simulates a drag and drop operation.
- * @param aSourceIndex The cell index containing the dragged site.
- * @param aDestIndex The cell index of the drop target.
- */
-function simulateDrop(aSourceIndex, aDestIndex) {
-  let src = getCell(aSourceIndex).site.node;
-  let dest = getCell(aDestIndex).node;
-
-  // Drop 'src' onto 'dest' and continue testing when all newtab
-  // pages have been updated (i.e. the drop operation is completed).
-  startAndCompleteDragOperation(src, dest, whenPagesUpdated);
-}
-
-/**
  * Simulates a drag and drop operation. Instead of rearranging a site that is
  * is already contained in the newtab grid, this is used to simulate dragging
  * an external link onto the grid e.g. the text from the URL bar.
@@ -546,185 +452,7 @@ function* simulateExternalDrop(aDestIndex) {
 }
 
 /**
- * Starts and complete a drag-and-drop operation.
- * @param aSource The node that is being dragged.
- * @param aDest The node we're dragging aSource onto.
- * @param aCallback The function that is called when we're done.
- */
-function startAndCompleteDragOperation(aSource, aDest, aCallback) {
-  // The implementation of this function varies by platform because each
-  // platform has particular quirks that we need to deal with
-
-  if (isMac) {
-    // On OS X once the drag starts, Cocoa manages the drag session and
-    // gives us a limited amount of time to complete the drag operation. In
-    // some cases as soon as the first mouse-move event is received (the one
-    // that starts the drag session), Cocoa becomes blind to subsequent mouse
-    // events and completes the drag session all by itself. Therefore it is
-    // important that the first mouse-move we send is already positioned at
-    // the destination.
-    synthesizeNativeMouseLDown(aSource);
-    synthesizeNativeMouseDrag(aDest);
-    // In some tests, aSource and aDest are at the same position, so to ensure
-    // a drag session is created (instead of it just turning into a click) we
-    // move the mouse 10 pixels away and then back.
-    synthesizeNativeMouseDrag(aDest, 10);
-    synthesizeNativeMouseDrag(aDest);
-    // Finally, release the drag and have it run the callback when done.
-    synthesizeNativeMouseLUp(aDest).then(aCallback, Cu.reportError);
-  } else if (isWindows) {
-    // on Windows once the drag is initiated, Windows doesn't spin our
-    // message loop at all, so with async event synthesization the async
-    // messages never get processed while a drag is in progress. So if
-    // we did a mousedown followed by a mousemove, we would never be able
-    // to successfully dispatch the mouseup. Instead, we just skip the move
-    // entirely, so and just generate the up at the destination. This way
-    // Windows does the drag and also terminates it right away. Note that
-    // this only works for tests where aSource and aDest are sufficiently
-    // far to trigger a drag, otherwise it may just end up doing a click.
-    synthesizeNativeMouseLDown(aSource);
-    synthesizeNativeMouseLUp(aDest).then(aCallback, Cu.reportError);
-  } else if (isLinux) {
-    // Start by pressing the left mouse button.
-    synthesizeNativeMouseLDown(aSource);
-
-    // Move the mouse in 5px steps until the drag operation starts.
-    // Note that we need to do this with pauses in between otherwise the
-    // synthesized events get coalesced somewhere in the guts of GTK. In order
-    // to successfully initiate a drag session in the case where aSource and
-    // aDest are at the same position, we synthesize a bunch of drags until
-    // we know the drag session has started, and then move to the destination.
-    let offset = 0;
-    let interval = setInterval(() => {
-      synthesizeNativeMouseDrag(aSource, offset += 5);
-    }, 10);
-
-    // When the drag operation has started we'll move
-    // the dragged element to its target position.
-    aSource.addEventListener("dragstart", function onDragStart() {
-      aSource.removeEventListener("dragstart", onDragStart);
-      clearInterval(interval);
-
-      // Place the cursor above the drag target.
-      synthesizeNativeMouseMove(aDest);
-    });
-
-    // As soon as the dragged element hovers the target, we'll drop it.
-    // Note that we need to actually wait for the dragenter event here, because
-    // the mousemove synthesization is "more async" than the mouseup
-    // synthesization - they use different gdk APIs. If we don't wait, the
-    // up could get processed before the moves, dropping the item in the
-    // wrong position.
-    aDest.addEventListener("dragenter", function onDragEnter() {
-      aDest.removeEventListener("dragenter", onDragEnter);
-
-      // Finish the drop operation.
-      synthesizeNativeMouseLUp(aDest).then(aCallback, Cu.reportError);
-    });
-  } else {
-    throw "Unsupported platform";
-  }
-}
-
-/**
- * Fires a synthetic 'mousedown' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseLDown(aElement) {
-  if (isLinux) {
-    let win = aElement.ownerDocument.defaultView;
-    EventUtils.synthesizeMouseAtCenter(aElement, {type: "mousedown"}, win);
-  } else {
-    let msg = isWindows ? 2 : 1;
-    synthesizeNativeMouseEvent(aElement, msg);
-  }
-}
-
-/**
- * Fires a synthetic 'mouseup' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseLUp(aElement) {
-  let msg = isWindows ? 4 : (isMac ? 2 : 7);
-  return synthesizeNativeMouseEvent(aElement, msg);
-}
-
-/**
- * Fires a synthetic mouse drag event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- * @param aOffsetX The left offset that is added to the position.
- */
-function synthesizeNativeMouseDrag(aElement, aOffsetX) {
-  let msg = isMac ? 6 : 1;
-  synthesizeNativeMouseEvent(aElement, msg, aOffsetX);
-}
-
-/**
- * Fires a synthetic 'mousemove' event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- */
-function synthesizeNativeMouseMove(aElement) {
-  let msg = isMac ? 5 : 1;
-  synthesizeNativeMouseEvent(aElement, msg);
-}
-
-/**
- * Fires a synthetic mouse event on the current about:newtab page.
- * @param aElement The element used to determine the cursor position.
- * @param aOffsetX The left offset that is added to the position (optional).
- * @param aOffsetY The top offset that is added to the position (optional).
- */
-function synthesizeNativeMouseEvent(aElement, aMsg, aOffsetX = 0, aOffsetY = 0) {
-  return new Promise((resolve, reject) => {
-    let rect = aElement.getBoundingClientRect();
-    let win = aElement.ownerDocument.defaultView;
-    let x = aOffsetX + win.mozInnerScreenX + rect.left + rect.width / 2;
-    let y = aOffsetY + win.mozInnerScreenY + rect.top + rect.height / 2;
-
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils);
-
-    let scale = utils.screenPixelsPerCSSPixel;
-    let observer = {
-      observe: function(aSubject, aTopic, aData) {
-        if (aTopic == "mouseevent") {
-          resolve();
-        }
-      }
-    };
-    utils.sendNativeMouseEvent(x * scale, y * scale, aMsg, 0, null, observer);
-  });
-}
-
-/**
- * Sends a custom drag event to a given DOM element.
- * @param aEventType The drag event's type.
- * @param aTarget The DOM element that the event is dispatched to.
- * @param aData The event's drag data (optional).
- */
-function sendDragEvent(aEventType, aTarget, aData) {
-  aTarget.dispatchEvent(createDragEvent(aEventType, aData));
-}
-
-/**
- * Creates a custom drag event.
- * @param aEventType The drag event's type.
- * @param aData The event's drag data (optional).
- * @return The drag event.
- */
-function createDragEvent(aEventType, aData) {
-  let dataTransfer = new (getContentWindow()).DataTransfer("dragstart", false);
-  dataTransfer.mozSetDataAt("text/x-moz-url", aData, 0);
-  let event = getContentDocument().createEvent("DragEvents");
-  event.initDragEvent(aEventType, true, true, getContentWindow(), 0, 0, 0, 0, 0,
-                      false, false, false, false, 0, null, dataTransfer);
-
-  return event;
-}
-
-/**
  * Resumes testing when all pages have been updated.
- * @param aCallback Called when done. If not specified, TestRunner.next is used.
  */
 function whenPagesUpdated() {
   return new Promise(resolve => {
