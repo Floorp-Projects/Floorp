@@ -36,7 +36,14 @@ public:
     , mFirstFrameTimeout(0)
     , mAnimationMode(aAnimationMode)
     , mDoneDecoding(false)
-  { }
+  {
+     MOZ_COUNT_CTOR(FrameAnimator);
+  }
+
+  ~FrameAnimator()
+  {
+    MOZ_COUNT_DTOR(FrameAnimator);
+  }
 
   /**
    * Return value from RequestRefresh. Tells callers what happened in that call
