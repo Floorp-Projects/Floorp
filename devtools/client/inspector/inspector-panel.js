@@ -22,6 +22,7 @@ loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspec
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspector/inspector-search").InspectorSearch);
 loader.lazyGetter(this, "RuleViewTool", () => require("devtools/client/inspector/rules/rules").RuleViewTool);
+loader.lazyGetter(this, "ComputedViewTool", () => require("devtools/client/inspector/computed/computed").ComputedViewTool);
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -356,10 +357,7 @@ InspectorPanel.prototype = {
     this.sidebar.on("select", this._setDefaultSidebar);
 
     this.ruleview = new RuleViewTool(this, this.panelWin);
-
-    this.sidebar.addTab("computedview",
-                        "chrome://devtools/content/inspector/computed/computed.xhtml",
-                        "computedview" == defaultTab);
+    this.computedview = new ComputedViewTool(this, this.panelWin);
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
       this.sidebar.addTab("fontinspector",
@@ -589,6 +587,10 @@ InspectorPanel.prototype = {
 
     if (this.ruleview) {
       this.ruleview.destroy();
+    }
+
+    if (this.computedview) {
+      this.computedview.destroy();
     }
 
     this.sidebar.off("select", this._setDefaultSidebar);

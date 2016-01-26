@@ -19,8 +19,7 @@ add_task(function*() {
   is(getRuleViewPropertyValue(view, "element", "color"), "red",
     "The rule-view shows the properties for test node one");
 
-  let cView = inspector.sidebar.getWindowForTab("computedview")
-    .computedview.view;
+  let cView = inspector.computedview.view;
   let prop = getComputedViewProperty(cView, "color");
   ok(!prop, "The computed-view doesn't show the properties for test node one");
 

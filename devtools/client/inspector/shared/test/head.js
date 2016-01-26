@@ -250,18 +250,13 @@ function waitForToolboxFrameFocus(toolbox) {
 var openInspectorSideBar = Task.async(function*(id) {
   let {toolbox, inspector} = yield openInspector();
 
-  if (!hasSideBarTab(inspector, id)) {
-    info("Waiting for the " + id + " sidebar to be ready");
-    yield inspector.sidebar.once(id + "-ready");
-  }
-
   info("Selecting the " + id + " sidebar");
   inspector.sidebar.select(id);
 
   return {
     toolbox: toolbox,
     inspector: inspector,
-    view: inspector.sidebar.getWindowForTab(id)[id].view
+    view: inspector[id].view
   };
 });
 
