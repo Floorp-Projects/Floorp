@@ -10,7 +10,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"

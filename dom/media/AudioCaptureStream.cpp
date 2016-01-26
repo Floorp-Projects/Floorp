@@ -71,7 +71,7 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 
   uint32_t inputCount = mInputs.Length();
-  StreamBuffer::Track* track = EnsureTrack(mTrackId);
+  StreamTracks::Track* track = EnsureTrack(mTrackId);
   // Notify the DOM everything is in order.
   if (!mTrackCreated) {
     for (uint32_t i = 0; i < mListeners.Length(); i++) {
@@ -101,7 +101,7 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     AudioSegment output;
     for (uint32_t i = 0; i < inputCount; i++) {
       MediaStream* s = mInputs[i]->GetSource();
-      StreamBuffer::TrackIter tracks(s->GetStreamBuffer(), MediaSegment::AUDIO);
+      StreamTracks::TrackIter tracks(s->GetStreamTracks(), MediaSegment::AUDIO);
       while (!tracks.IsEnded()) {
         AudioSegment* inputSegment = tracks->Get<AudioSegment>();
         StreamTime inputStart = s->GraphTimeToStreamTimeWithBlocking(aFrom);
@@ -121,7 +121,7 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 
   // Regardless of the status of the input tracks, we go foward.
-  mBuffer.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking((aTo)));
+  mTracks.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking((aTo)));
 }
 
 void

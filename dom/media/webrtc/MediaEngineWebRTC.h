@@ -27,7 +27,7 @@
 #include "MediaEngineCameraVideoSource.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include "MediaStreamGraph.h"
 #include "cubeb/cubeb.h"
 #include "CubebUtils.h"

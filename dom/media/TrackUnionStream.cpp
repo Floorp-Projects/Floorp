@@ -87,14 +87,14 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
         allHaveCurrentData = false;
       }
       bool trackAdded = false;
-      for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer());
+      for (StreamTracks::TrackIter tracks(stream->GetStreamTracks());
            !tracks.IsEnded(); tracks.Next()) {
         bool found = false;
         for (uint32_t j = 0; j < mTrackMap.Length(); ++j) {
           TrackMapEntry* map = &mTrackMap[j];
           if (map->mInputPort == mInputs[i] && map->mInputTrackID == tracks->GetID()) {
-            bool trackFinished;
-            StreamBuffer::Track* outputTrack = mBuffer.FindTrack(map->mOutputTrackID);
+            bool trackFinished = false;
+            StreamTracks::Track* outputTrack = mTracks.FindTrack(map->mOutputTrackID);
             found = true;
             if (!outputTrack || outputTrack->IsEnded() ||
                 !mInputs[i]->PassTrackThrough(tracks->GetID())) {
@@ -138,7 +138,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       // so we're finished now.
       FinishOnGraphThread();
     } else {
-      mBuffer.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking(aTo));
+      mTracks.AdvanceKnownTracksTime(GraphTimeToStreamTimeWithBlocking(aTo));
     }
     if (allHaveCurrentData) {
       // We can make progress if we're not blocked
@@ -146,7 +146,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     }
   }
 
-  uint32_t TrackUnionStream::AddTrack(MediaInputPort* aPort, StreamBuffer::Track* aTrack,
+  uint32_t TrackUnionStream::AddTrack(MediaInputPort* aPort, StreamTracks::Track* aTrack,
                     GraphTime aFrom)
   {
     STREAM_LOG(LogLevel::Verbose, ("TrackUnionStream %p adding track %d for "
@@ -205,8 +205,8 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
                                   aPort->GetSource(), aTrack->GetID());
     }
     segment->AppendNullData(outputStart);
-    StreamBuffer::Track* track =
-      &mBuffer.AddTrack(id, outputStart, segment.forget());
+    StreamTracks::Track* track =
+      &mTracks.AddTrack(id, outputStart, segment.forget());
     STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p added track %d for input stream %p track %d, start ticks %lld",
                                  this, track->GetID(), aPort->GetSource(), aTrack->GetID(),
                                  (long long)outputStart));
@@ -246,7 +246,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
 
   void TrackUnionStream::EndTrack(uint32_t aIndex)
   {
-    StreamBuffer::Track* outputTrack = mBuffer.FindTrack(mTrackMap[aIndex].mOutputTrackID);
+    StreamTracks::Track* outputTrack = mTracks.FindTrack(mTrackMap[aIndex].mOutputTrackID);
     if (!outputTrack || outputTrack->IsEnded())
       return;
     STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p ending track %d", this, outputTrack->GetID()));
@@ -269,12 +269,12 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     outputTrack->SetEnded();
   }
 
-  void TrackUnionStream::CopyTrackData(StreamBuffer::Track* aInputTrack,
+  void TrackUnionStream::CopyTrackData(StreamTracks::Track* aInputTrack,
                      uint32_t aMapIndex, GraphTime aFrom, GraphTime aTo,
                      bool* aOutputTrackFinished)
   {
     TrackMapEntry* map = &mTrackMap[aMapIndex];
-    StreamBuffer::Track* outputTrack = mBuffer.FindTrack(map->mOutputTrackID);
+    StreamTracks::Track* outputTrack = mTracks.FindTrack(map->mOutputTrackID);
     MOZ_ASSERT(outputTrack && !outputTrack->IsEnded(), "Can't copy to ended track");
 
     MediaSegment* segment = map->mSegment;
