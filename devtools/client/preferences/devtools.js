@@ -17,6 +17,9 @@ pref("devtools.devedition.promo.url", "https://www.mozilla.org/firefox/developer
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
 
+// DevTools development workflow
+pref("devtools.loader.hotreload", false);
+
 // Developer toolbar preferences
 pref("devtools.toolbar.enabled", true);
 pref("devtools.toolbar.visible", false);
