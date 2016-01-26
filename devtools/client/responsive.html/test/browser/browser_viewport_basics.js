@@ -3,9 +3,6 @@
 
 "use strict";
 
-/* TODO: Bug 1242584 should make the following comment unnecessary */
-/* import-globals-from ../../../framework/test/shared-redux-head.js */
-
 // Test viewports basics after opening, like size and location
 
 const TEST_URL = "http://example.org/";

@@ -269,6 +269,49 @@ module.exports = {
   },
 
   /**
+   * Process comments looking for import-globals-from statements.  Add globals
+   * from those files, if any.
+   *
+   * @param {String} currentFilePath
+   *        Absolute path to the file containing the comments.
+   * @param {Array} comments
+   *        The comments to be processed.
+   * @param {Object} node
+   *        The AST node for error reporting.
+   * @param {ASTContext} context
+   *        The current context.
+   */
+  addGlobalsFromComments: function(currentFilePath, comments, node, context) {
+    comments.forEach(comment => {
+      var value = comment.value.trim();
+      var match = /^import-globals-from\s+(.*)$/.exec(value);
+
+      if (match) {
+        var filePath = match[1];
+
+        if (!path.isAbsolute(filePath)) {
+          var dirName = path.dirname(currentFilePath);
+          filePath = path.resolve(dirName, filePath);
+        }
+
+        try {
+          let globals = this.getGlobalsForFile(filePath);
+          this.addGlobals(globals, context);
+        } catch (e) {
+          context.report(
+            node,
+            "Could not load globals from file {{filePath}}: {{error}}",
+            {
+              filePath: filePath,
+              error: e
+            }
+          );
+        }
+      }
+    });
+  },
+
+  /**
    * To allow espree to parse almost any JavaScript we need as many features as
    * possible turned on. This method returns that config.
    *
@@ -277,6 +320,7 @@ module.exports = {
    */
   getPermissiveConfig: function() {
     return {
+      comment: true,
       range: true,
       loc: true,
       tolerant: true,
