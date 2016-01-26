@@ -219,7 +219,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
     autoSelect: true,
     theme: "auto"
   };
-  this.popup = new AutocompletePopup(this.styleWindow.parent.document, options);
+  this.popup = new AutocompletePopup(this.styleDocument, options);
 
   this._showEmpty();
 

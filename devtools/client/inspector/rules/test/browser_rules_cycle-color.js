@@ -17,15 +17,15 @@ const TEST_URI = `
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+  let {view} = yield openRuleView();
   let container = getRuleViewProperty(view, "body", "color").valueSpan;
-  checkColorCycling(container, inspector);
+  checkColorCycling(container, view);
 });
 
-function checkColorCycling(container, inspector) {
+function checkColorCycling(container, view) {
   let swatch = container.querySelector(".ruleview-colorswatch");
   let valueNode = container.querySelector(".ruleview-color");
-  let win = inspector.sidebar.getWindowForTab("ruleview");
+  let win = view.styleWindow;
 
   // Hex
   is(valueNode.textContent, "#f00", "Color displayed as a hex value.");
