@@ -32,7 +32,6 @@ devtools.jar:
     content/inspector/layout/layout.js (inspector/layout/layout.js)
     content/inspector/layout/layout.xhtml (inspector/layout/layout.xhtml)
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
-    content/inspector/rules/rules.xhtml (inspector/rules/rules.xhtml)
     content/animationinspector/animation-controller.js (animationinspector/animation-controller.js)
     content/animationinspector/animation-panel.js (animationinspector/animation-panel.js)
     content/animationinspector/animation-inspector.xhtml (animationinspector/animation-inspector.xhtml)

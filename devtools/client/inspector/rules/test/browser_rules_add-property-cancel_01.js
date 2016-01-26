@@ -43,6 +43,6 @@ function* testCancelNew(view) {
     "Should have cancelled creating a new text property.");
   ok(!elementRuleEditor.propertyList.hasChildNodes(),
     "Should not have any properties.");
-  is(view.styleDocument.body, view.styleDocument.activeElement,
+  is(view.styleDocument.activeElement, view.styleDocument.documentElement,
     "Correct element has focus");
 }
