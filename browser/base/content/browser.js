@@ -853,19 +853,14 @@ function _loadURIWithFlags(browser, uri, params) {
       });
     }
   } catch (e) {
-    // If anything goes wrong when switching remoteness, just switch remoteness
-    // manually and load the URI.
+    // If anything goes wrong just switch remoteness manually and load the URI.
     // We might lose history that way but at least the browser loaded a page.
     // This might be necessary if SessionStore wasn't initialized yet i.e.
     // when the homepage is a non-remote page.
-    if (mustChangeProcess) {
-      Cu.reportError(e);
-      gBrowser.updateBrowserRemotenessByURL(browser, uri);
-      browser.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                               postData, null, null);
-    } else {
-      throw e;
-    }
+    Cu.reportError(e);
+    gBrowser.updateBrowserRemotenessByURL(browser, uri);
+    browser.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
+                                             postData, null, null);
   } finally {
     if (browser.userTypedClear) {
       browser.userTypedClear--;
