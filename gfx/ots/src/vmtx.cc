@@ -4,7 +4,6 @@
 
 #include "vmtx.h"
 
-#include "gsub.h"
 #include "maxp.h"
 #include "vhea.h"
 
@@ -33,10 +32,8 @@ bool ots_vmtx_parse(Font *font, const uint8_t *data, size_t length) {
 }
 
 bool ots_vmtx_should_serialise(Font *font) {
-  // vmtx should serialise when vhea and GSUB are preserved.
-  // See the comment in ots_vhea_should_serialise().
-  return font->vmtx != NULL && font->vhea != NULL &&
-      ots_gsub_should_serialise(font);
+  // vmtx should serialise when vhea is preserved.
+  return font->vmtx != NULL && font->vhea != NULL;
 }
 
 bool ots_vmtx_serialise(OTSStream *out, Font *font) {
