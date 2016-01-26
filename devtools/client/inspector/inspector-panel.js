@@ -24,6 +24,7 @@ loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspec
 loader.lazyGetter(this, "RuleViewTool", () => require("devtools/client/inspector/rules/rules").RuleViewTool);
 loader.lazyGetter(this, "ComputedViewTool", () => require("devtools/client/inspector/computed/computed").ComputedViewTool);
 loader.lazyGetter(this, "FontInspector", () => require("devtools/client/inspector/fonts/fonts").FontInspector);
+loader.lazyGetter(this, "LayoutView", () => require("devtools/client/inspector/layout/layout").LayoutView);
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -366,9 +367,7 @@ InspectorPanel.prototype = {
       this.panelDoc.getElementById("sidebar-tab-fontinspector").hidden = false;
     }
 
-    this.sidebar.addTab("layoutview",
-                        "chrome://devtools/content/inspector/layout/layout.xhtml",
-                        "layoutview" == defaultTab);
+    this.layoutview = new LayoutView(this, this.panelWin);
 
     if (this.target.form.animationsActor) {
       this.sidebar.addTab("animationinspector",
@@ -596,6 +595,10 @@ InspectorPanel.prototype = {
 
     if (this.fontInspector) {
       this.fontInspector.destroy();
+    }
+
+    if (this.layoutview) {
+      this.layoutview.destroy();
     }
 
     this.sidebar.off("select", this._setDefaultSidebar);

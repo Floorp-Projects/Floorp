@@ -26,7 +26,7 @@ function* assertLayoutView(inspector, view) {
   yield selectNode("p", inspector);
 
   info("Checking that the layout-view shows the right value");
-  let paddingElt = view.doc.querySelector(".padding.top > span");
+  let paddingElt = view.doc.querySelector(".layout-padding.layout-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for layout-view changes and modifying the padding");
