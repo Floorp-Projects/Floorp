@@ -18,11 +18,16 @@
 
 #include "asmjs/Wasm.h"
 
+#include "jsprf.h"
+
+#include "asmjs/AsmJS.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmText.h"
 
 using namespace js;
 using namespace js::wasm;
+
+using mozilla::PodCopy;
 
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
