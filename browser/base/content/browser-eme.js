@@ -98,11 +98,13 @@ var gEMEHandler = {
     let msgPrefix = "emeNotifications." + notificationId + ".";
     let msgId = msgPrefix + "message";
 
-    // Special-case Adobe's CDM message on unsupported platforms to be more informative:
+    // Specialcase Adobe's CDM on unsupported platforms to be more informative:
     if (notificationId == "drmContentCDMNotSupported" &&
         keySystem.startsWith("com.adobe")) {
       let os = Services.appinfo.OS.toLowerCase();
-      if (os.startsWith("linux") || os.startsWith("darwin")) {
+      if (os.startsWith("win") && Services.appinfo.XPCOMABI.startsWith("x86_64")) {
+        msgId = msgPrefix + "64bit.message";
+      } else if (os.startsWith("linux") || os.startsWith("darwin")) {
         msgId = msgPrefix + "unsupportedOS.message";
         labelParams.splice(1, 0, os.startsWith("linux") ? "Linux" : "Mac OS X");
       }
@@ -169,6 +171,7 @@ var gEMEHandler = {
     } else {
       document.getElementById(anchorId).removeAttribute("firstplay");
     }
+
 
     let mainAction = {
       label: gNavigatorBundle.getString(btnLabelId),
