@@ -39,6 +39,32 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Unwrapping a PBKDF2 key in PKCS8 format should fail",
+  function() {
+    var that = this;
+    var pbkdf2Key = new TextEncoder("utf-8").encode("password");
+    var alg = {name: "AES-GCM", length: 256, iv: new Uint8Array(16)};
+    var wrappingKey;
+
+    function wrap(x) {
+      wrappingKey = x;
+      return crypto.subtle.encrypt(alg, wrappingKey, pbkdf2Key);
+    }
+
+    function unwrap(x) {
+      return crypto.subtle.unwrapKey(
+        "pkcs8", x, wrappingKey, alg, "PBKDF2", false, ["deriveBits"]);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["encrypt", "unwrapKey"])
+      .then(wrap, error(that))
+      .then(unwrap, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Import raw PBKDF2 key and derive bits using HMAC-SHA-1",
   function() {
     var that = this;
@@ -61,6 +87,34 @@ TestArray.addTest(
     function fail(x) { console.log("failing"); error(that)(x); }
 
     crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+      .then( doDerive, fail )
+      .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import a PBKDF2 key in JWK format and derive bits using HMAC-SHA-1",
+  function() {
+    var that = this;
+    var alg = "PBKDF2";
+
+    function doDerive(x) {
+      if (!hasKeyFields(x)) {
+        throw "Invalid key; missing field(s)";
+      }
+
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations
+      };
+      return crypto.subtle.deriveBits(alg, x, tv.pbkdf2_sha1.length);
+    }
+    function fail(x) { console.log("failing"); error(that)(x); }
+
+    crypto.subtle.importKey("jwk", tv.pbkdf2_sha1.jwk, alg, false, ["deriveBits"])
       .then( doDerive, fail )
       .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
   }

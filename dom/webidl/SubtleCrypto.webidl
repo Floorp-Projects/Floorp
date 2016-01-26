@@ -104,6 +104,12 @@ dictionary EcKeyImportParams : Algorithm {
   NamedCurve namedCurve;
 };
 
+dictionary HkdfParams : Algorithm {
+  required AlgorithmIdentifier hash;
+  required CryptoOperationData salt;
+  required CryptoOperationData info;
+};
+
 /***** JWK *****/
 
 dictionary RsaOtherPrimesInfo {
