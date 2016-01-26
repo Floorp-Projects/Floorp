@@ -69,6 +69,8 @@ AccessibleCaretManager::sSelectionBarEnabled = false;
 /*static*/ bool
 AccessibleCaretManager::sCaretsExtendedVisibility = false;
 /*static*/ bool
+AccessibleCaretManager::sCaretsScriptUpdates = false;
+/*static*/ bool
 AccessibleCaretManager::sHapticFeedback = false;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
@@ -89,6 +91,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
                                  "layout.accessiblecaret.bar.enabled");
     Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
                                  "layout.accessiblecaret.extendedvisibility");
+    Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
+      "layout.accessiblecaret.allow_script_change_updates");
     Preferences::AddBoolVarCache(&sHapticFeedback,
                                  "layout.accessiblecaret.hapticfeedback");
     addedPrefs = true;
@@ -128,9 +132,8 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
 
   // Move the cursor by Javascript / or unknown internal.
   if (aReason == nsISelectionListener::NO_REASON) {
-    // Extended visibility won't make hidden carets visible. Visible carets will
-    // be updated or hidden as appropriate.
-    if (sCaretsExtendedVisibility &&
+    // Update visible carets, if javascript changes are allowed.
+    if (sCaretsScriptUpdates &&
         (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible())) {
         FlushLayout();
         UpdateCarets();
