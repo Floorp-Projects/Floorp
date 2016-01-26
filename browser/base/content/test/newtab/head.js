@@ -479,8 +479,12 @@ function pinCell(aIndex, aPinIndex) {
  * @param aIndex The cell index.
  */
 function unpinCell(aIndex) {
-  whenPagesUpdated();
-  getCell(aIndex).site.unpin();
+  return new Promise(resolve => {
+    whenPagesUpdated().then(resolve);
+    performOnCell(aIndex, cell => {
+      cell.site.unpin();
+    });
+  });
 }
 
 /**
