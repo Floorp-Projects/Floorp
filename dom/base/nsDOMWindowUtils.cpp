@@ -2732,8 +2732,8 @@ nsDOMWindowUtils::IsPartOfOpaqueLayer(nsIDOMElement* aElement, bool* aResult)
     return NS_ERROR_FAILURE;
   }
 
-  Layer* layer = FrameLayerBuilder::GetDebugSingleOldLayerForFrame(frame);
-  if (!layer || !layer->AsPaintedLayer()) {
+  PaintedLayer* layer = FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(frame);
+  if (!layer) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2761,12 +2761,12 @@ nsDOMWindowUtils::NumberOfAssignedPaintedLayers(nsIDOMElement** aElements,
       return NS_ERROR_FAILURE;
     }
 
-    Layer* layer = FrameLayerBuilder::GetDebugSingleOldLayerForFrame(frame);
-    if (!layer || !layer->AsPaintedLayer()) {
+    PaintedLayer* layer = FrameLayerBuilder::GetDebugSingleOldPaintedLayerForFrame(frame);
+    if (!layer) {
       return NS_ERROR_FAILURE;
     }
 
-    layers.PutEntry(layer->AsPaintedLayer());
+    layers.PutEntry(layer);
   }
 
   *aResult = layers.Count();

@@ -12,6 +12,7 @@ task:
     name: '[TC] Linux64 mochitest-plain e10s {{chunk}}'
     description: Mochitest plain e10s run {{chunk}}
   payload:
+    maxRunTime: 5400
     capabilities:
       devices:
         loopbackVideo: true

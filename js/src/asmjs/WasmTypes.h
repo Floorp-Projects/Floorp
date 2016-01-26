@@ -226,21 +226,10 @@ class Sig
     const ExprType& ret() const { return ret_; }
 
     HashNumber hash() const {
-        HashNumber hn = HashNumber(ret_);
-        for (unsigned i = 0; i < args_.length(); i++)
-            hn = mozilla::AddToHash(hn, HashNumber(args_[i]));
-        return hn;
+        return AddContainerToHash(args_, HashNumber(ret_));
     }
     bool operator==(const Sig& rhs) const {
-        if (ret() != rhs.ret())
-            return false;
-        if (args().length() != rhs.args().length())
-            return false;
-        for (unsigned i = 0; i < args().length(); i++) {
-            if (arg(i) != rhs.arg(i))
-                return false;
-        }
-        return true;
+        return ret() == rhs.ret() && EqualContainers(args(), rhs.args());
     }
     bool operator!=(const Sig& rhs) const {
         return !(*this == rhs);
