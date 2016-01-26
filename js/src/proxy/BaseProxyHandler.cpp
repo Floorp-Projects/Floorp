@@ -72,29 +72,52 @@ BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
 {
     assertEnteredPolicy(cx, proxy, id, GET);
 
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
-        return false;
-    if (!desc.object()) {
-        vp.setUndefined();
-        return true;
-    }
-    desc.assertComplete();
-    MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-    if (!desc.getter()) {
-        vp.set(desc.value());
-        return true;
-    }
-    if (desc.hasGetterObject())
-        return InvokeGetter(cx, receiver, ObjectValue(*desc.getterObject()), vp);
-    if (!desc.isShared())
-        vp.set(desc.value());
-    else
-        vp.setUndefined();
+    // This method is not covered by any spec, but we follow ES 2016
+    // (January 21, 2016) 9.1.8 fairly closely.
 
-    // A proxy object should never have own JSGetterOps.
-    MOZ_ASSERT(desc.object() != proxy);
-    return CallJSGetterOp(cx, desc.getter(), desc.object(), id, vp);
+    // Step 2. (Step 1 is a superfluous assertion.)
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
+        return false;
+    desc.assertCompleteIfFound();
+
+    // Step 3.
+    if (!desc.object()) {
+        // The spec calls this variable "parent", but that word has weird
+        // connotations in SpiderMonkey, so let's go with "proto".
+        // Step 3.a.
+        RootedObject proto(cx);
+        if (!GetPrototype(cx, proxy, &proto))
+            return false;
+
+        // Step 3.b.
+        if (!proto) {
+            vp.setUndefined();
+            return true;
+        }
+
+        // Step 3.c.
+        return GetProperty(cx, proto, receiver, id, vp);
+    }
+
+    // Step 4.
+    if (desc.isDataDescriptor()) {
+        vp.set(desc.value());
+        return true;
+    }
+
+    // Step 5.
+    MOZ_ASSERT(desc.isAccessorDescriptor());
+    RootedObject getter(cx, desc.getterObject());
+
+    // Step 6.
+    if (!getter) {
+        vp.setUndefined();
+        return true;
+    }
+
+    // Step 7.
+    return InvokeGetter(cx, receiver, ObjectValue(*getter), vp);
 }
 
 bool
