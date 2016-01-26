@@ -33,6 +33,7 @@
 #include "asmjs/WasmSerialize.h"
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
+#include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "jit/MIR.h"
 #include "js/Class.h"

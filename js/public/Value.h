@@ -1703,6 +1703,9 @@ template <>
 struct GCPolicy<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
+    static void trace(JSTracer* trc, JS::Value* v, const char* name) {
+        js::UnsafeTraceManuallyBarrieredEdge(trc, v, name);
+    }
 };
 
 template <>

@@ -172,6 +172,9 @@ template <>
 struct GCPolicy<jsid>
 {
     static jsid initial() { return JSID_VOID; }
+    static void trace(JSTracer* trc, jsid* idp, const char* name) {
+        js::UnsafeTraceManuallyBarrieredEdge(trc, idp, name);
+    }
 };
 
 template <>

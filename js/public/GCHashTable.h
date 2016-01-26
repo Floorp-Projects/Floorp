@@ -7,6 +7,7 @@
 #ifndef GCHashTable_h
 #define GCHashTable_h
 
+#include "js/GCPolicyAPI.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
@@ -17,7 +18,7 @@ namespace js {
 template <typename Key, typename Value>
 struct DefaultMapSweepPolicy {
     static bool needsSweep(Key* key, Value* value) {
-        return DefaultGCPolicy<Key>::needsSweep(key) || DefaultGCPolicy<Value>::needsSweep(value);
+        return GCPolicy<Key>::needsSweep(key) || GCPolicy<Value>::needsSweep(value);
     }
 };
 
@@ -31,11 +32,11 @@ struct DefaultMapSweepPolicy {
 // appropriately.
 //
 // Most types of GC pointers as keys and values can be traced with no extra
-// infrastructure. For structs, the DefaultGCPolicy<T> will call a trace()
-// method on the struct. For other structs and non-gc-pointer members, ensure
-// that there is a specialization of DefaultGCPolicy<T> with an appropriate
-// trace() static method available to handle the custom type. Generic helpers
-// can be found in js/public/TracingAPI.h.
+// infrastructure. For structs, the GCPolicy<T> will call a trace() method on
+// the struct. For other structs and non-gc-pointer members, ensure that there
+// is a specialization of GCPolicy<T> with an appropriate trace() static method
+// available to handle the custom type. Generic helpers can be found in
+// js/public/TracingAPI.h.
 //
 // Note that this HashMap only knows *how* to trace and sweep (and the tracing
 // can handle keys that move), but it does not itself cause tracing or sweeping
@@ -61,8 +62,8 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            DefaultGCPolicy<Value>::trace(trc, &e.front().value(), "hashmap value");
-            DefaultGCPolicy<Key>::trace(trc, &e.front().mutableKey(), "hashmap key");
+            GCPolicy<Value>::trace(trc, &e.front().value(), "hashmap value");
+            GCPolicy<Key>::trace(trc, &e.front().mutableKey(), "hashmap key");
         }
     }
 
@@ -215,8 +216,8 @@ class HandleBase<GCHashMap<A,B,C,D,E>>
 //
 // Most types of GC pointers can be traced with no extra infrastructure. For
 // structs and non-gc-pointer members, ensure that there is a specialization of
-// DefaultGCPolicy<T> with an appropriate trace method available to handle the
-// custom type. Generic helpers can be found in js/public/TracingAPI.h.
+// GCPolicy<T> with an appropriate trace method available to handle the custom
+// type. Generic helpers can be found in js/public/TracingAPI.h.
 //
 // Note that although this HashSet's trace will deal correctly with moved
 // elements, it does not itself know when to barrier or trace elements. To
@@ -238,14 +239,14 @@ class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront())
-            DefaultGCPolicy<T>::trace(trc, &e.mutableFront(), "hashset element");
+            GCPolicy<T>::trace(trc, &e.mutableFront(), "hashset element");
     }
 
     void sweep() {
         if (!this->initialized())
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            if (DefaultGCPolicy<T>::needsSweep(&e.mutableFront()))
+            if (GCPolicy<T>::needsSweep(&e.mutableFront()))
                 e.removeFront();
         }
     }
