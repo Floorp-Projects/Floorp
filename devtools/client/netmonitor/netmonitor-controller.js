@@ -253,7 +253,9 @@ var NetMonitorController = {
     this._disconnection = promise.defer();
 
     // Wait for the connection to finish first.
-    yield this._connection.promise;
+    if (!this.isConnected()) {
+      yield this._connection.promise;
+    }
 
     // When debugging local or a remote instance, the connection is closed by
     // the RemoteTarget. The webconsole actor is stopped on disconnect.
