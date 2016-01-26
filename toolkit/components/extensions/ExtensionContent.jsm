@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 
@@ -109,11 +111,13 @@ var api = context => {
 };
 
 // Represents a content script.
-function Script(options) {
+function Script(options, deferred = PromiseUtils.defer()) {
   this.options = options;
   this.run_at = this.options.run_at;
   this.js = this.options.js || [];
   this.css = this.options.css || [];
+
+  this.deferred = deferred;
 
   this.matches_ = new MatchPattern(this.options.matches);
   this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
@@ -146,6 +150,7 @@ Script.prototype = {
 
   tryInject(extension, window, sandbox, shouldRun) {
     if (!this.matches(window)) {
+      this.deferred.reject();
       return;
     }
 
@@ -164,6 +169,7 @@ Script.prototype = {
       }
     }
 
+    let result;
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
       for (let url of this.js) {
@@ -181,13 +187,26 @@ Script.prototype = {
           charset: "UTF-8",
           async: AppConstants.platform == "gonk",
         };
-        runSafeSyncWithoutClone(Services.scriptloader.loadSubScriptWithOptions, url, options);
+        try {
+          result = Services.scriptloader.loadSubScriptWithOptions(url, options);
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
 
       if (this.options.jsCode) {
-        Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        try {
+          result = Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
     }
+
+    // TODO: Handle this correctly when we support runAt and allFrames.
+    this.deferred.resolve(result);
   },
 };
 
@@ -673,10 +692,13 @@ class ExtensionGlobal {
   receiveMessage({ target, messageName, recipient, data }) {
     switch (messageName) {
       case "Extension:Execute":
-        let script = new Script(data.options);
+        let deferred = PromiseUtils.defer();
+
+        let script = new Script(data.options, deferred);
         let { extensionId } = recipient;
         DocumentManager.executeScript(target, extensionId, script);
-        break;
+
+        return deferred.promise;
     }
   }
 }
