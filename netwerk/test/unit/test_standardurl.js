@@ -38,7 +38,7 @@ function pairToURLs(pair) {
   return pair.map(stringToURL);
 }
 
-function test_setEmptyPath()
+add_test(function test_setEmptyPath()
 {
   var pairs =
     [
@@ -60,9 +60,10 @@ function test_setEmptyPath()
     do_check_eq(provided.spec, target.spec);
     symmetricEquality(true, target, provided);
   }
-}
+  run_next_test();
+});
 
-function test_setQuery()
+add_test(function test_setQuery()
 {
   var pairs =
     [
@@ -99,10 +100,10 @@ function test_setQuery()
 
   do_check_eq(newProvided.spec, target.spec);
   symmetricEquality(true, newProvided, target);
+  run_next_test();
+});
 
-}
-		      
-function test_setRef()
+add_test(function test_setRef()
 {
   var tests =
     [
@@ -160,10 +161,11 @@ function test_setRef()
     a.ref = ref;
     symmetricEquality(true, a, b);
   }
-}
+  run_next_test();
+});
 
 // Bug 960014 - Make nsStandardURL::SetHost less magical around IPv6
-function test_ipv6()
+add_test(function test_ipv6()
 {
   var url = stringToURL("http://example.com");
   url.host = "[2001::1]";
@@ -180,9 +182,10 @@ function test_ipv6()
   do_check_eq(url.host, "2001");
   do_check_eq(url.port, 1);
   do_check_eq(url.hostPort, "2001:1");
-}
+  run_next_test();
+});
 
-function test_ipv6_fail()
+add_test(function test_ipv6_fail()
 {
   var url = stringToURL("http://example.com");
 
@@ -206,9 +209,10 @@ function test_ipv6_fail()
   Assert.throws(() => { url.hostPort = ""; }, "Empty hostPort should fail");
   Assert.throws(() => { url.hostPort = "[2001::1]:"; }, "missing port number");
   Assert.throws(() => { url.hostPort = "[2001::1]:bad"; }, "bad port number");
-}
+  run_next_test();
+});
 
-function test_clearedSpec()
+add_test(function test_clearedSpec()
 {
   var url = stringToURL("http://example.com/path");
   Assert.throws(() => { url.spec = "http: example"; }, "set bad spec");
@@ -218,9 +222,10 @@ function test_clearedSpec()
 
   var ref = stringToURL("http://allizom.org/path");
   symmetricEquality(true, url, ref);
-}
+  run_next_test();
+});
 
-function test_escapeBrackets()
+add_test(function test_escapeBrackets()
 {
   // Query
   var url = stringToURL("http://example.com/?a[x]=1");
@@ -241,18 +246,19 @@ function test_escapeBrackets()
 
   url = stringToURL("http://example.com/a%5Bx%5D/test");
   do_check_eq(url.spec, "http://example.com/a%5Bx%5D/test");
+  run_next_test();
+});
 
-}
-
-function test_apostropheEncoding()
+add_test(function test_apostropheEncoding()
 {
   // For now, single quote is escaped everywhere _except_ the path.
   // This policy is controlled by the bitmask in nsEscape.cpp::EscapeChars[]
   var url = stringToURL("http://example.com/dir'/file'.ext'");
   do_check_eq(url.spec, "http://example.com/dir'/file'.ext'");
-}
+  run_next_test();
+});
 
-function test_accentEncoding()
+add_test(function test_accentEncoding()
 {
   var url = stringToURL("http://example.com/?hello=`");
   do_check_eq(url.spec, "http://example.com/?hello=`");
@@ -261,9 +267,10 @@ function test_accentEncoding()
   url = stringToURL("http://example.com/?hello=%2C");
   do_check_eq(url.spec, "http://example.com/?hello=%2C");
   do_check_eq(url.query, "hello=%2C");
-}
+  run_next_test();
+});
 
-function test_percentDecoding()
+add_test(function test_percentDecoding()
 {
   var url = stringToURL("http://%70%61%73%74%65%62%69%6E.com");
   do_check_eq(url.spec, "http://pastebin.com/");
@@ -271,18 +278,25 @@ function test_percentDecoding()
   // We shouldn't unescape characters that are not allowed in the hostname.
   url = stringToURL("http://example.com%0a%23.google.com/");
   do_check_eq(url.spec, "http://example.com%0a%23.google.com/");
-}
+  run_next_test();
+});
 
-function run_test()
+add_test(function test_hugeStringThrows()
 {
-  test_setEmptyPath();
-  test_setQuery();
-  test_setRef();
-  test_ipv6();
-  test_ipv6_fail();
-  test_clearedSpec();
-  test_escapeBrackets();
-  test_apostropheEncoding();
-  test_accentEncoding();
-  test_percentDecoding();
-}
+  let prefs = Cc["@mozilla.org/preferences-service;1"]
+                .getService(Ci.nsIPrefService);
+  let maxLen = prefs.getIntPref("network.standard-url.max-length");
+  let url = stringToURL("http://test:test@example.com");
+
+  let hugeString = new Array(maxLen + 1).fill("a").join("");
+  let properties = ["spec", "scheme", "userPass", "username",
+                    "password", "hostPort", "host", "path", "ref",
+                    "query", "fileName", "filePath", "fileBaseName", "fileExtension"];
+  for (let prop of properties) {
+    Assert.throws(() => url[prop] = hugeString,
+                  /NS_ERROR_MALFORMED_URI/,
+                  `Passing a huge string to "${prop}" should throw`);
+  }
+
+  run_next_test();
+});
