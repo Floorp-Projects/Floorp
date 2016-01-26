@@ -572,7 +572,7 @@ exports['test user global'] = function(assert) {
 exports['test custom require caching'] = function(assert) {
   const loader = Loader({
     paths: { '': root + "/" },
-    require: (id, require) => {
+    requireHook: (id, require) => {
       // Just load it normally
       return require(id);
     }
@@ -594,7 +594,7 @@ exports['test caching when proxying a loader'] = function(assert) {
   const parentRequire = require;
   const loader = Loader({
     paths: { '': root + "/" },
-    require: (id, childRequire) => {
+    requireHook: (id, childRequire) => {
       if(id === 'gimmejson') {
         return childRequire('fixtures/loader/json/mutation.json')
       }

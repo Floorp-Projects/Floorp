@@ -283,7 +283,7 @@ Loader.evaluate = evaluate;
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 const load = iced(function load(loader, module) {
-  let { sandboxes, globals } = loader;
+  let { sandboxes, globals, loadModuleHook } = loader;
   let require = Require(loader, module);
 
   // We expose set of properties defined by `CommonJS` specification via
@@ -366,6 +366,10 @@ const load = iced(function load(loader, module) {
       stack: { value: serializeStack(frames), writable: true, configurable: true },
       toString: { value: () => toString, writable: true, configurable: true },
     });
+  }
+
+  if(loadModuleHook) {
+    module = loadModuleHook(module, require);
   }
 
   if (loader.checkCompatibility) {
@@ -588,7 +592,7 @@ const Require = iced(function Require(loader, requirer) {
   let {
     modules, mapping, resolve: loaderResolve, load,
     manifest, rootURI, isNative, requireMap,
-    overrideRequire
+    requireHook
   } = loader;
 
   function require(id) {
@@ -596,8 +600,8 @@ const Require = iced(function Require(loader, requirer) {
       throw Error('You must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
-    if (overrideRequire) {
-      return overrideRequire(id, _require);
+    if (requireHook) {
+      return requireHook(id, _require);
     }
 
     return _require(id);
@@ -930,7 +934,8 @@ function Loader(options) {
                            value: options.invisibleToDebugger || false },
     load: { enumerable: false, value: options.load || load },
     checkCompatibility: { enumerable: false, value: checkCompatibility },
-    overrideRequire: { enumerable: false, value: options.require },
+    requireHook: { enumerable: false, value: options.requireHook },
+    loadModuleHook: { enumerable: false, value: options.loadModuleHook },
     // Main (entry point) module, it can be set only once, since loader
     // instance can have only one main module.
     main: new function() {
