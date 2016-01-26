@@ -24,6 +24,7 @@
 #endif
 #include "mozilla/StateWatching.h"
 #include "nsGkAtoms.h"
+#include "PrincipalChangeObserver.h"
 
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
@@ -76,7 +77,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
                          public nsIObserver,
                          public MediaDecoderOwner,
-                         public nsIAudioChannelAgentCallback
+                         public nsIAudioChannelAgentCallback,
+                         public PrincipalChangeObserver<DOMMediaStream>
 {
   friend AutoNotifyAudioChannelAgent;
 
@@ -226,6 +228,11 @@ public:
   B2G_ACL_EXPORT virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer();
 
+  // From PrincipalChangeObserver<DOMMediaStream>.
+  void PrincipalChanged(DOMMediaStream* aStream) override;
+
+  void UpdateSrcStreamVideoPrincipal(nsIPrincipal* aPrincipal);
+
   // Dispatch events
   virtual nsresult DispatchAsyncEvent(const nsAString& aName) final override;
 
@@ -263,6 +270,13 @@ public:
   // of this element must have a principal that subsumes this principal.
   // Returns null if nothing is playing.
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+
+  // Principal of the currently playing video resource. Anything accessing the
+  // image container of this element must have a principal that subsumes this
+  // principal. If there are no live video tracks but content has been rendered
+  // to the image container, we return the last video principal we had. Should
+  // the image container be empty with no live video tracks, we return nullptr.
+  already_AddRefed<nsIPrincipal> GetCurrentVideoPrincipal();
 
   // called to notify that the principal of the decoder's media resource has changed.
   void NotifyDecoderPrincipalChanged() final override;
@@ -1489,6 +1503,10 @@ protected:
   RefPtr<VideoTrackList> mVideoTrackList;
 
   RefPtr<MediaStreamTrackListener> mMediaStreamTrackListener;
+
+  // The principal guarding mVideoFrameContainer access when playing a
+  // MediaStream.
+  nsCOMPtr<nsIPrincipal> mSrcStreamVideoPrincipal;
 
   enum ElementInTreeState {
     // The MediaElement is not in the DOM tree now.

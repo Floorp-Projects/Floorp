@@ -883,11 +883,21 @@ void
 DOMMediaStream::RecomputePrincipal()
 {
   nsCOMPtr<nsIPrincipal> previousPrincipal = mPrincipal.forget();
+  nsCOMPtr<nsIPrincipal> previousVideoPrincipal = mVideoPrincipal.forget();
   for (const RefPtr<TrackPort>& info : mTracks) {
+    if (info->GetTrack()->Ended()) {
+      continue;
+    }
     nsContentUtils::CombineResourcePrincipals(&mPrincipal,
                                               info->GetTrack()->GetPrincipal());
+    if (info->GetTrack()->AsVideoStreamTrack()) {
+      nsContentUtils::CombineResourcePrincipals(&mVideoPrincipal,
+                                                info->GetTrack()->GetPrincipal());
+    }
   }
-  if (previousPrincipal != mPrincipal) {
+
+  if (previousPrincipal != mPrincipal ||
+      previousVideoPrincipal != mVideoPrincipal) {
     NotifyPrincipalChanged();
   }
 }
