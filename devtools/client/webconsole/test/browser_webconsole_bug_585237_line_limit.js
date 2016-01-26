@@ -23,7 +23,6 @@ add_task(function* () {
 
   let hud = yield openConsole();
 
-  let console = content.console;
   outputNode = hud.outputNode;
 
   hud.jsterm.clearOutput();
@@ -32,8 +31,10 @@ add_task(function* () {
   prefBranch.setIntPref("console", 20);
 
   for (let i = 0; i < 30; i++) {
-    // must change message to prevent repeats
-    console.log("foo #" + i);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function(i) {
+      // must change message to prevent repeats
+      content.console.log("foo #" + i);
+    });
   }
 
   yield waitForMessages({
@@ -48,7 +49,9 @@ add_task(function* () {
   is(countMessageNodes(), 20, "there are 20 message nodes in the output " +
      "when the log limit is set to 20");
 
-  console.log("bar bug585237");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.console.log("bar bug585237");
+  });
 
   yield waitForMessages({
     webconsole: hud,
@@ -64,8 +67,10 @@ add_task(function* () {
 
   prefBranch.setIntPref("console", 30);
   for (let i = 0; i < 20; i++) {
-    // must change message to prevent repeats
-    console.log("boo #" + i);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function(i) {
+      // must change message to prevent repeats
+      content.console.log("boo #" + i);
+    });
   }
 
   yield waitForMessages({
