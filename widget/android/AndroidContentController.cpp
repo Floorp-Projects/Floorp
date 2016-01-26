@@ -18,6 +18,13 @@ namespace mozilla {
 namespace widget {
 
 void
+AndroidContentController::Destroy()
+{
+    mAndroidWindow = nullptr;
+    ChromeProcessController::Destroy();
+}
+
+void
 AndroidContentController::NotifyDefaultPrevented(APZCTreeManager* aManager,
                                                  uint64_t aInputBlockId,
                                                  bool aDefaultPrevented)
@@ -74,6 +81,21 @@ void
 AndroidContentController::PostDelayedTask(Task* aTask, int aDelayMs)
 {
     AndroidBridge::Bridge()->PostTaskToUiThread(aTask, aDelayMs);
+}
+void
+AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY)
+{
+  if (mAndroidWindow) {
+    mAndroidWindow->UpdateOverscrollVelocity(aX, aY);
+  }
+}
+
+void
+AndroidContentController::UpdateOverscrollOffset(const float aX,const  float aY)
+{
+  if (mAndroidWindow) {
+    mAndroidWindow->UpdateOverscrollOffset(aX, aY);
+  }
 }
 
 } // namespace widget
