@@ -9,10 +9,10 @@ protocol PTestOpens {
     child opens PTestOpensOpened;
 
 child:
-    Start();
+    async Start();
 
 parent:
-    __delete__();
+    async __delete__();
 
 state START:
     send Start goto DEAD;

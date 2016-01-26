@@ -9,8 +9,8 @@ protocol PTestSelfManage {
     manages PTestSelfManage;
 
 child:
-    PTestSelfManage();
-    __delete__();
+    async PTestSelfManage();
+    async __delete__();
 
 state LIVE:
     send PTestSelfManage goto LIVE;

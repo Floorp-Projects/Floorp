@@ -31,27 +31,27 @@ parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
 
-  SetPriority(uint16_t priority);
-  SetClassOfService(uint32_t cos);
+  async SetPriority(uint16_t priority);
+  async SetClassOfService(uint32_t cos);
 
-  SetCacheTokenCachedCharset(nsCString charset);
+  async SetCacheTokenCachedCharset(nsCString charset);
 
-  UpdateAssociatedContentSecurity(int32_t broken,
-                                  int32_t no);
-  Suspend();
-  Resume();
+  async UpdateAssociatedContentSecurity(int32_t broken,
+                                        int32_t no);
+  async Suspend();
+  async Resume();
 
-  Cancel(nsresult status);
+  async Cancel(nsresult status);
 
   // Reports approval/veto of redirect by child process redirect observers
-  Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
-                  uint32_t loadFlags, OptionalURIParams apiRedirectTo,
-                  OptionalCorsPreflightArgs corsPreflightArgs);
+  async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
+                        uint32_t loadFlags, OptionalURIParams apiRedirectTo,
+                        OptionalCorsPreflightArgs corsPreflightArgs);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
   // partial cleanup on parent.
-  DocumentChannelCleanup();
+  async DocumentChannelCleanup();
 
   // This might have to be sync. If this fails we must fail the document load
   // to avoid endless loop.
@@ -66,96 +66,96 @@ parent:
   // we reload the document to take the effect. If we fail to mark the entry
   // as foreign, we will end up in the same situation and reload again and
   // again, indefinitely.
-  MarkOfflineCacheEntryAsForeign();
+  async MarkOfflineCacheEntryAsForeign();
 
   // Divert OnDataAvailable to the parent.
-  DivertOnDataAvailable(nsCString data,
-                        uint64_t  offset,
-                        uint32_t  count);
+  async DivertOnDataAvailable(nsCString data,
+                              uint64_t  offset,
+                              uint32_t  count);
 
   // Divert OnStopRequest to the parent.
-  DivertOnStopRequest(nsresult statusCode);
+  async DivertOnStopRequest(nsresult statusCode);
 
   // Child has no more events/messages to divert to the parent.
-  DivertComplete();
+  async DivertComplete();
 
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
-  RemoveCorsPreflightCacheEntry(URIParams uri,
-                                PrincipalInfo requestingPrincipal);
+  async RemoveCorsPreflightCacheEntry(URIParams uri,
+                                      PrincipalInfo requestingPrincipal);
 
-  __delete__();
+  async __delete__();
 
 child:
-  OnStartRequest(nsresult            channelStatus,
-                 nsHttpResponseHead  responseHead,
-                 bool                useResponseHead,
-                 nsHttpHeaderArray   requestHeaders,
-                 bool                isFromCache,
-                 bool                cacheEntryAvailable,
-                 uint32_t            cacheExpirationTime,
-                 nsCString           cachedCharset,
-                 nsCString           securityInfoSerialization,
-                 NetAddr             selfAddr,
-                 NetAddr             peerAddr,
-                 int16_t             redirectCount,
-                 uint32_t            cacheKey);
+  async OnStartRequest(nsresult            channelStatus,
+                       nsHttpResponseHead  responseHead,
+                       bool                useResponseHead,
+                       nsHttpHeaderArray   requestHeaders,
+                       bool                isFromCache,
+                       bool                cacheEntryAvailable,
+                       uint32_t            cacheExpirationTime,
+                       nsCString           cachedCharset,
+                       nsCString           securityInfoSerialization,
+                       NetAddr             selfAddr,
+                       NetAddr             peerAddr,
+                       int16_t             redirectCount,
+                       uint32_t            cacheKey);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
-  OnTransportAndData(nsresult  channelStatus,
-                     nsresult  transportStatus,
-                     uint64_t  progress,
-                     uint64_t  progressMax,
-                     nsCString data,
-                     uint64_t  offset,
-                     uint32_t  count);
+  async OnTransportAndData(nsresult  channelStatus,
+                           nsresult  transportStatus,
+                           uint64_t  progress,
+                           uint64_t  progressMax,
+                           nsCString data,
+                           uint64_t  offset,
+                           uint32_t  count);
 
-  OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
+  async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
 
-  OnProgress(int64_t progress, int64_t progressMax);
+  async OnProgress(int64_t progress, int64_t progressMax);
 
-  OnStatus(nsresult status);
+  async OnStatus(nsresult status);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
-  FailedAsyncOpen(nsresult status);
+  async FailedAsyncOpen(nsresult status);
 
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
-  Redirect1Begin(uint32_t           newChannelId,
-                 URIParams          newUri,
-                 uint32_t           redirectFlags,
-                 nsHttpResponseHead responseHead,
-                 nsCString          securityInfoSerialization);
+  async Redirect1Begin(uint32_t           newChannelId,
+                       URIParams          newUri,
+                       uint32_t           redirectFlags,
+                       nsHttpResponseHead responseHead,
+                       nsCString          securityInfoSerialization);
 
   // Called if redirect successful so that child can complete setup.
-  Redirect3Complete();
+  async Redirect3Complete();
 
   // Associate the child with an application ids
-  AssociateApplicationCache(nsCString groupID,
-                            nsCString clientID);
+  async AssociateApplicationCache(nsCString groupID,
+                                  nsCString clientID);
 
   // Tell the child that tracking protection was disabled for this load.
-  NotifyTrackingProtectionDisabled();
+  async NotifyTrackingProtectionDisabled();
 
   // Parent has been suspended for diversion; no more events to be enqueued.
-  FlushedForDiversion();
+  async FlushedForDiversion();
 
   // Child should resume processing the ChannelEventQueue, i.e. diverting any
   // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
-  DivertMessages();
+  async DivertMessages();
 
   // Report a security message to the console associated with this
   // channel.
-  ReportSecurityMessage(nsString messageTag, nsString messageCategory);
+  async ReportSecurityMessage(nsString messageTag, nsString messageCategory);
 
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
-  DeleteSelf();
+  async DeleteSelf();
 
   // Tell the child to issue a deprecation warning.
-  IssueDeprecationWarning(uint32_t warning, bool asError);
+  async IssueDeprecationWarning(uint32_t warning, bool asError);
 };
 
 

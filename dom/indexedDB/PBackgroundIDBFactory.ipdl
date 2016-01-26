@@ -49,17 +49,17 @@ sync protocol PBackgroundIDBFactory
   manages PBackgroundIDBFactoryRequest;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  PBackgroundIDBFactoryRequest(FactoryRequestParams params);
+  async PBackgroundIDBFactoryRequest(FactoryRequestParams params);
 
-  IncrementLoggingRequestSerialNumber();
+  async IncrementLoggingRequestSerialNumber();
 
 child:
-  __delete__();
+  async __delete__();
 
-  PBackgroundIDBDatabase(DatabaseSpec spec,
-                         PBackgroundIDBFactoryRequest request);
+  async PBackgroundIDBDatabase(DatabaseSpec spec,
+                               PBackgroundIDBFactoryRequest request);
 };
 
 } // namespace indexedDB

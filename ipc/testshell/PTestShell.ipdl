@@ -16,11 +16,11 @@ async protocol PTestShell
   manages PTestShellCommand;
 
 child:
-  __delete__();
+  async __delete__();
 
-  ExecuteCommand(nsString aCommand);
+  async ExecuteCommand(nsString aCommand);
 
-  PTestShellCommand(nsString aCommand);
+  async PTestShellCommand(nsString aCommand);
 };
 
 } // namespace ipc

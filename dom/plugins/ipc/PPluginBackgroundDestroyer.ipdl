@@ -27,7 +27,7 @@ protocol PPluginBackgroundDestroyer {
     // notification that that the background is stale.
 
 parent:
-    __delete__();
+    async __delete__();
 
 state DESTROYING:
     recv __delete__;

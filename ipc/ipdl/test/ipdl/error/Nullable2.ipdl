@@ -4,5 +4,5 @@ union Union {
 
 protocol Nullable2 {
 child:
-    Msg(Union i);
+    async Msg(Union i);
 };

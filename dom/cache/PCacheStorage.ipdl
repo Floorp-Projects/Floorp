@@ -22,11 +22,11 @@ protocol PCacheStorage
   manages PCacheOp;
 
 parent:
-  PCacheOp(CacheOpArgs aOpArgs);
-  Teardown();
+  async PCacheOp(CacheOpArgs aOpArgs);
+  async Teardown();
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 } // namespace cache

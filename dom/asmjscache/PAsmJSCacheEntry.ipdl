@@ -19,18 +19,18 @@ protocol PAsmJSCacheEntry
   // origin's Metadata so the child process can select the cache entry to open
   // (based on hash) and notify the parent (via SelectCacheFileToRead).
 child:
-  OnOpenMetadataForRead(Metadata metadata);
+  async OnOpenMetadataForRead(Metadata metadata);
 parent:
-  SelectCacheFileToRead(uint32_t moduleIndex);
-  CacheMiss();
+  async SelectCacheFileToRead(uint32_t moduleIndex);
+  async CacheMiss();
 
 child:
   // Once the cache file has been opened, the child is notified and sent an
   // open file descriptor.
-  OnOpenCacheFile(int64_t fileSize, FileDescriptor fileDesc);
+  async OnOpenCacheFile(int64_t fileSize, FileDescriptor fileDesc);
 
 both:
-  __delete__(AsmJSCacheResult result);
+  async __delete__(AsmJSCacheResult result);
 };
 
 } // namespace asmjscache
