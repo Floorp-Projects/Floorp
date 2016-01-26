@@ -10,10 +10,12 @@
 <?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/rules.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/computed.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/fonts.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
   <!ENTITY % styleinspectorDTD SYSTEM "chrome://devtools/locale/styleinspector.dtd"> %styleinspectorDTD;
+  <!ENTITY % fontinspectorDTD SYSTEM "chrome://devtools/locale/font-inspector.dtd"> %fontinspectorDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -180,6 +182,10 @@
         <tab id="sidebar-tab-computedview"
              label="&computedViewTitle;"
              crop="end"/>
+        <tab id="sidebar-tab-fontinspector"
+             label="&fontInspectorTitle;"
+             crop="end"
+             hidden="true"/>
       </tabs>
       <tabpanels flex="1">
         <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar">
@@ -224,6 +230,41 @@
 
           <html:div id="noResults" hidden="">
             &noPropertiesFound;
+          </html:div>
+        </tabpanel>
+
+        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar">
+          <html:div class="devtools-toolbar devtools-sidebar-toolbar">
+            <html:div class="devtools-searchbox">
+              <html:input id="font-preview-text-input"
+                          class="devtools-textinput"
+                          type="search"
+                          placeholder="&previewHint;"/>
+            </html:div>
+          </html:div>
+
+          <html:div id="font-container">
+            <html:ul id="all-fonts"></html:ul>
+            <html:button id="font-showall">&showAllFonts;</html:button>
+          </html:div>
+
+          <html:div id="font-template">
+            <html:section class="font">
+              <html:div class="font-preview-container">
+                <html:img class="font-preview"></html:img>
+              </html:div>
+              <html:div class="font-info">
+                <html:h1 class="font-name"></html:h1>
+                <html:span class="font-is-local">&system;</html:span>
+                <html:span class="font-is-remote">&remote;</html:span>
+                <html:p class="font-format-url">
+                  <html:input readonly="readonly" class="font-url"></html:input>
+                  <html:span class="font-format"></html:span>
+                </html:p>
+                <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
+                <html:pre class="font-css-code"></html:pre>
+              </html:div>
+            </html:section>
           </html:div>
         </tabpanel>
       </tabpanels>
