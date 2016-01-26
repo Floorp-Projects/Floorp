@@ -44,182 +44,217 @@ const ENGINE_SUGGESTIONS = {
   numLogos: 0,
 };
 
-const SERVICE_EVENT_NAME = "ContentSearchService";
-
-const LOGO_1X_DPI_SIZE = [65, 26];
-const LOGO_2X_DPI_SIZE = [130, 52];
-
 // The test has an expected search event queue and a search event listener.
 // Search events that are expected to happen are added to the queue, and the
 // listener consumes the queue and ensures that each event it receives is at
 // the head of the queue.
-//
-// Each item in the queue is an object { type, deferred }.  type is the
-// expected search event type.  deferred is a Promise.defer() value that is
-// resolved when the event is consumed.
-var gExpectedSearchEventQueue = [];
+let gExpectedSearchEventQueue = [];
+let gExpectedSearchEventResolver = null;
 
-var gNewEngines = [];
+let gNewEngines = [];
 
-function runTests() {
-  runTaskifiedTests().then(TestRunner.next, TestRunner.next);
-  yield;
-}
-
-var runTaskifiedTests = Task.async(function* () {
+add_task(function* () {
   let oldCurrentEngine = Services.search.currentEngine;
 
-  yield addNewTabPageTabPromise();
+  yield* addNewTabPageTab();
 
   // The tab is removed at the end of the test, so there's no need to remove
   // this listener at the end of the test.
   info("Adding search event listener");
-  getContentWindow().addEventListener(SERVICE_EVENT_NAME, searchEventListener);
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    const SERVICE_EVENT_NAME = "ContentSearchService";
+    content.addEventListener(SERVICE_EVENT_NAME, function (event) {
+      sendAsyncMessage("test:search-event", { eventType: event.detail.type });
+    });
+  });
+
+  let mm = gBrowser.selectedBrowser.messageManager;
+  mm.addMessageListener("test:search-event", function (message) {
+    let eventType = message.data.eventType;
+    if (!gExpectedSearchEventResolver) {
+      ok(false, "Got search event " + eventType + " with no promise assigned");
+    }
+
+    let expectedEventType = gExpectedSearchEventQueue.shift();
+    is(eventType, expectedEventType, "Got expected search event " + expectedEventType);
+    if (!gExpectedSearchEventQueue.length) {
+      gExpectedSearchEventResolver();
+      gExpectedSearchEventResolver = null;
+    }
+  });
 
   // Add the engine without any logos and switch to it.
   let noLogoEngine = yield promiseNewSearchEngine(ENGINE_NO_LOGO);
+  let searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = noLogoEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_NO_LOGO);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_NO_LOGO);
 
   // Add the engine with favicon and switch to it.
   let faviconEngine = yield promiseNewSearchEngine(ENGINE_FAVICON);
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = faviconEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_FAVICON);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_FAVICON);
 
   // Add the engine with a 1x-DPI logo and switch to it.
   let logo1xEngine = yield promiseNewSearchEngine(ENGINE_1X_LOGO);
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = logo1xEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_1X_LOGO);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_1X_LOGO);
 
   // Add the engine with a 2x-DPI logo and switch to it.
   let logo2xEngine = yield promiseNewSearchEngine(ENGINE_2X_LOGO);
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = logo2xEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_2X_LOGO);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_2X_LOGO);
 
   // Add the engine with 1x- and 2x-DPI logos and switch to it.
   let logo1x2xEngine = yield promiseNewSearchEngine(ENGINE_1X_2X_LOGO);
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = logo1x2xEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_1X_2X_LOGO);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_1X_2X_LOGO);
 
   // Add the engine that provides search suggestions and switch to it.
   let suggestionEngine = yield promiseNewSearchEngine(ENGINE_SUGGESTIONS);
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = suggestionEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
-  yield checkCurrentEngine(ENGINE_SUGGESTIONS);
+  yield searchEventsPromise;
+  yield* checkCurrentEngine(ENGINE_SUGGESTIONS);
 
   // Avoid intermittent failures.
-  gSearch().remoteTimeout = 5000;
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    content.gSearch._contentSearchController.remoteTimeout = 5000;
+  });
 
   // Type an X in the search input.  This is only a smoke test.  See
   // browser_searchSuggestionUI.js for comprehensive content search suggestion
   // UI tests.
-  let input = $("text");
-  input.focus();
-  EventUtils.synthesizeKey("x", {});
+  let suggestionsOpenPromise = new Promise(resolve => {
+    mm.addMessageListener("test:newtab-suggestions-open", function onResponse(message) {
+      mm.removeMessageListener("test:newtab-suggestions-open", onResponse);
+      resolve();
+    });
+  });
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    let table = content.document.getElementById("searchSuggestionTable");
+
+    let input = content.document.getElementById("newtab-search-text");
+    input.focus();
+
+    info("Waiting for suggestions table to open");
+    let observer = new content.MutationObserver(() => {
+      if (input.getAttribute("aria-expanded") == "true") {
+        observer.disconnect();
+        ok(!table.hidden, "Search suggestion table unhidden");
+        sendAsyncMessage("test:newtab-suggestions-open", {});
+      }
+    });
+    observer.observe(input, {
+      attributes: true,
+      attributeFilter: ["aria-expanded"],
+    });
+  });
+
   let suggestionsPromise = promiseSearchEvents(["Suggestions"]);
+
+  EventUtils.synthesizeKey("x", {});
 
   // Wait for the search suggestions to become visible and for the Suggestions
   // message.
-  let suggestionsUnhiddenDefer = Promise.defer();
-  let table = getContentDocument().getElementById("searchSuggestionTable");
-  info("Waiting for suggestions table to open");
-  let observer = new MutationObserver(() => {
-    if (input.getAttribute("aria-expanded") == "true") {
-      observer.disconnect();
-      ok(!table.hidden, "Search suggestion table unhidden");
-      suggestionsUnhiddenDefer.resolve();
-    }
-  });
-  observer.observe(input, {
-    attributes: true,
-    attributeFilter: ["aria-expanded"],
-  });
-  yield suggestionsUnhiddenDefer.promise;
+  yield suggestionsOpenPromise;
   yield suggestionsPromise;
 
   // Empty the search input, causing the suggestions to be hidden.
   EventUtils.synthesizeKey("a", { accelKey: true });
   EventUtils.synthesizeKey("VK_DELETE", {});
-  ok(table.hidden, "Search suggestion table hidden");
+
+  let tableHidden = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    return content.document.getElementById("searchSuggestionTable").hidden;
+  });
+  ok(tableHidden, "Search suggestion table hidden");
 
   // Remove the search bar from toolbar
   CustomizableUI.removeWidgetFromArea("search-container");
   // Focus a different element than the search input from the page.
-  let btn = getContentDocument().getElementById("newtab-customize-button");
-  yield promiseClick(btn);
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-customize-button", { }, gBrowser.selectedBrowser);
 
-  isnot(input, getContentDocument().activeElement, "Search input should not be focused");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    let input = content.document.getElementById("newtab-search-text");
+    isnot(input, content.document.activeElement, "Search input should not be focused");
+  });
+
   // Test that Ctrl/Cmd + K will focus the input field from the page.
+  let focusPromise = promiseSearchEvents(["FocusInput"]);
   EventUtils.synthesizeKey("k", { accelKey: true });
-  yield promiseSearchEvents(["FocusInput"]);
-  is(input, getContentDocument().activeElement, "Search input should be focused");
+  yield focusPromise;
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    let input = content.document.getElementById("newtab-search-text");
+    is(input, content.document.activeElement, "Search input should be focused");
+  });
+
   // Reset changes made to toolbar
   CustomizableUI.reset();
 
   // Test that Ctrl/Cmd + K will focus the search bar from toolbar.
-  let searchBar = gWindow.document.getElementById("searchbar");
   EventUtils.synthesizeKey("k", { accelKey: true });
-  is(searchBar.textbox.inputField, gWindow.document.activeElement, "Toolbar's search bar should be focused");
+  let searchBar = document.getElementById("searchbar");
+  is(searchBar.textbox.inputField, document.activeElement, "Toolbar's search bar should be focused");
 
   // Test that Ctrl/Cmd + K will focus the search bar from a new about:home page if
   // the newtab is disabled from `NewTabUtils.allPages.enabled`.
-  yield addNewTabPageTabPromise();
+  let tab = yield* addNewTabPageTab();
   // Remove the search bar from toolbar
   CustomizableUI.removeWidgetFromArea("search-container");
   NewTabUtils.allPages.enabled = false;
   EventUtils.synthesizeKey("k", { accelKey: true });
-  let waitEvent = "AboutHomeLoadSnippetsCompleted";
-  yield promiseTabLoadEvent(gWindow.gBrowser.selectedTab, "about:home", waitEvent);
 
-  is(getContentDocument().documentURI.toLowerCase(), "about:home", "New tab's uri should be about:home");
-  let searchInput = getContentDocument().getElementById("searchText");
-  is(searchInput, getContentDocument().activeElement, "Search input must be the selected element");
+  
+  let aboutHomeLoaded = new Promise(resolve => {
+    tab.linkedBrowser.addEventListener("AboutHomeLoadSnippetsCompleted", function loadListener(event) {
+      tab.linkedBrowser.removeEventListener("AboutHomeLoadSnippetsCompleted", loadListener, true);
+      resolve();
+    }, true, true);
+  });
+
+  tab.linkedBrowser.loadURI("about:home");
+  yield aboutHomeLoaded;
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    is(content.document.documentURI.toLowerCase(), "about:home", "New tab's uri should be about:home");
+    let searchInput = content.document.getElementById("searchText");
+    is(searchInput, content.document.activeElement, "Search input must be the selected element");
+  });
 
   NewTabUtils.allPages.enabled = true;
   CustomizableUI.reset();
-  gBrowser.removeCurrentTab();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Done.  Revert the current engine and remove the new engines.
+  searchEventsPromise = promiseSearchEvents(["CurrentEngine"]);
   Services.search.currentEngine = oldCurrentEngine;
-  yield promiseSearchEvents(["CurrentEngine"]);
+  yield searchEventsPromise;
 
-  let events = [];
+  let events = Array(gNewEngines.length).fill("CurrentState", 0, gNewEngines.length);
+  searchEventsPromise = promiseSearchEvents(events);
+
   for (let engine of gNewEngines) {
     Services.search.removeEngine(engine);
-    events.push("CurrentState");
   }
-  yield promiseSearchEvents(events);
+  yield searchEventsPromise;
 });
-
-function searchEventListener(event) {
-  info("Got search event " + event.detail.type);
-  let nonempty = gExpectedSearchEventQueue.length > 0;
-  ok(nonempty, "Expected search event queue should be nonempty");
-  if (nonempty) {
-    let { type, deferred } = gExpectedSearchEventQueue.shift();
-    is(event.detail.type, type, "Got expected search event " + type);
-    if (event.detail.type == type) {
-      deferred.resolve();
-    } else {
-      deferred.reject();
-    }
-  }
-}
-
-function $(idSuffix) {
-  return getContentDocument().getElementById("newtab-search-" + idSuffix);
-}
 
 function promiseSearchEvents(events) {
   info("Expecting search events: " + events);
-  events = events.map(e => ({ type: e, deferred: Promise.defer() }));
-  gExpectedSearchEventQueue.push(...events);
-  return Promise.all(events.map(e => e.deferred.promise));
+  return new Promise(resolve => {
+    gExpectedSearchEventQueue.push(...events);
+    gExpectedSearchEventResolver = resolve;
+  });
 }
 
 function promiseNewSearchEngine({name: basename, numLogos}) {
@@ -235,121 +270,35 @@ function promiseNewSearchEngine({name: basename, numLogos}) {
   let eventPromise = promiseSearchEvents(expectedSearchEvents);
 
   // Wait for addEngine().
-  let addDeferred = Promise.defer();
-  let url = getRootDirectory(gTestPath) + basename;
-  Services.search.addEngine(url, null, "", false, {
-    onSuccess: function (engine) {
-      info("Search engine added: " + basename);
-      gNewEngines.push(engine);
-      addDeferred.resolve(engine);
-    },
-    onError: function (errCode) {
-      ok(false, "addEngine failed with error code " + errCode);
-      addDeferred.reject();
-    },
+  let addEnginePromise = new Promise((resolve, reject) => {
+    let url = getRootDirectory(gTestPath) + basename;
+    Services.search.addEngine(url, null, "", false, {
+      onSuccess: function (engine) {
+        info("Search engine added: " + basename);
+        gNewEngines.push(engine);
+        resolve(engine);
+      },
+      onError: function (errCode) {
+        ok(false, "addEngine failed with error code " + errCode);
+        reject();
+      },
+    });
   });
 
-  return Promise.all([addDeferred.promise, eventPromise]).then(([newEngine, _]) => {
+  return Promise.all([addEnginePromise, eventPromise]).then(([newEngine, _]) => {
     return newEngine;
   });
 }
 
-function objectURLToBlob(url) {
-  return new Promise(function (resolve, reject) {
-    let xhr = new XMLHttpRequest();
-    xhr.open("get", url, true);
-    xhr.responseType = "blob";
-    xhr.overrideMimeType("image/png");
-    xhr.onload = function(e) {
-      if (this.status == 200) {
-        return resolve(this.response);
-      }
-      reject("Failed to get logo, xhr returned status: " + this.status);
-    };
-    xhr.onerror = reject;
-    xhr.send();
-  });
-}
-
-function blobToBase64(blob) {
-  return new Promise(function (resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function() {
-      resolve(reader.result);
-    }
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-var checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, logoPrefix2x}) {
+function* checkCurrentEngine(engineInfo)
+{
   let engine = Services.search.currentEngine;
-  ok(engine.name.includes(basename),
+  ok(engine.name.includes(engineInfo.name),
      "Sanity check: current engine: engine.name=" + engine.name +
-     " basename=" + basename);
+     " basename=" + engineInfo.name);
 
-  // gSearch.currentEngineName
-  is(gSearch().defaultEngine.name, engine.name,
-     "currentEngineName: " + engine.name);
-});
-
-function promiseClick(node) {
-  let deferred = Promise.defer();
-  let win = getContentWindow();
-  SimpleTest.waitForFocus(() => {
-    EventUtils.synthesizeMouseAtCenter(node, {}, win);
-    deferred.resolve();
-  }, win);
-  return deferred.promise;
-}
-
-function logoImg() {
-  return $("logo");
-}
-
-function gSearch() {
-  return getContentWindow().gSearch._contentSearchController;
-}
-
-/**
- * Waits for a load (or custom) event to finish in a given tab. If provided
- * load an uri into the tab.
- *
- * @param tab
- *        The tab to load into.
- * @param [optional] url
- *        The url to load, or the current url.
- * @param [optional] event
- *        The load event type to wait for.  Defaults to "load".
- * @return {Promise} resolved when the event is handled.
- * @resolves to the received event
- * @rejects if a valid load event is not received within a meaningful interval
- */
-function promiseTabLoadEvent(tab, url, eventType="load") {
-  let deferred = Promise.defer();
-  info("Wait tab event: " + eventType);
-
-  function handle(event) {
-    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank" ||
-        (url && event.target.location.href != url)) {
-      info("Skipping spurious '" + eventType + "'' event" +
-           " for " + event.target.location.href);
-      return;
-    }
-    clearTimeout(timeout);
-    tab.linkedBrowser.removeEventListener(eventType, handle, true);
-    info("Tab event received: " + eventType);
-    deferred.resolve(event);
-  }
-
-  let timeout = setTimeout(() => {
-    tab.linkedBrowser.removeEventListener(eventType, handle, true);
-    deferred.reject(new Error("Timed out while waiting for a '" + eventType + "'' event"));
-  }, 20000);
-
-  tab.linkedBrowser.addEventListener(eventType, handle, true, true);
-  if (url)
-    tab.linkedBrowser.loadURI(url);
-  return deferred.promise;
+  let engineName = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    return content.gSearch._contentSearchController.defaultEngine.name;
+  });
+  is(engineName, engine.name, "currentEngineName: " + engine.name);
 }
