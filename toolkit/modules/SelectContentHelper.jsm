@@ -99,6 +99,10 @@ function buildOptionListForChildren(node) {
     let tagName = child.tagName.toUpperCase();
 
     if (tagName == 'OPTION' || tagName == 'OPTGROUP') {
+      if (child.hidden) {
+        continue;
+      }
+
       let textContent =
         tagName == 'OPTGROUP' ? child.getAttribute("label")
                               : child.text;
