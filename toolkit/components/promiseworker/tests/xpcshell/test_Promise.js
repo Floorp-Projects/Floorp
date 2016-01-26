@@ -68,12 +68,12 @@ add_task(function* test_transfer_args() {
   for (let i = 0; i < 4; ++i) {
     array[i] = i;
   }
-  Assert.equal(array.buffer.byteLength, 4, "The buffer is not neutered yet");
+  Assert.equal(array.buffer.byteLength, 4, "The buffer is not detached yet");
 
   let result = (yield worker.post("bounce", [array.buffer], [], [array.buffer]))[0];
 
   // Check that the buffer has been sent
-  Assert.equal(array.buffer.byteLength, 0, "The buffer has been neutered");
+  Assert.equal(array.buffer.byteLength, 0, "The buffer has been detached");
 
   // Check that the result is correct
   Assert.equal(result.byteLength, 4, "The result has the right size");
@@ -89,13 +89,13 @@ add_task(function* test_transfer_with_meta() {
   for (let i = 0; i < 4; ++i) {
     array[i] = i;
   }
-  Assert.equal(array.buffer.byteLength, 4, "The buffer is not neutered yet");
+  Assert.equal(array.buffer.byteLength, 4, "The buffer is not detached yet");
 
   let message = new BasePromiseWorker.Meta(array, {transfers: [array.buffer]});
   let result = (yield worker.post("bounce", [message]))[0];
 
   // Check that the buffer has been sent
-  Assert.equal(array.buffer.byteLength, 0, "The buffer has been neutered");
+  Assert.equal(array.buffer.byteLength, 0, "The buffer has been detached");
 
   // Check that the result is correct
   Assert.equal(result.toString(), "[object Uint8Array]", "The result appears to be a Typed Array");

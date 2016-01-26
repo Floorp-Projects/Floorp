@@ -95,7 +95,7 @@ function runTests() {
   // task: throw exception: general: source is a null
   WORKER_TASKS.tasks.push(new TaskWithCrop("testException", 0, 0, "createImageBitmap should throw with null source", null, 0, 0, 0, 0));
 
-  // task: throw exception: ImageData: an ImageData object whose data is data attribute has been neutered
+  // task: throw exception: ImageData: an ImageData object whose data attribute is backed by a detached buffer
   var neuturedImageData = function getNeuturedImageData(imageData) {
   	worker.postMessage(imageData.data.buffer, [imageData.data.buffer]);
   	return imageData;
