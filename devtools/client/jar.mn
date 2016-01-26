@@ -28,7 +28,6 @@ devtools.jar:
     content/storage/storage.xul (storage/storage.xul)
     content/inspector/fonts/fonts.js (inspector/fonts/fonts.js)
     content/inspector/layout/layout.js (inspector/layout/layout.js)
-    content/inspector/layout/layout.xhtml (inspector/layout/layout.xhtml)
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
     content/animationinspector/animation-controller.js (animationinspector/animation-controller.js)
     content/animationinspector/animation-panel.js (animationinspector/animation-panel.js)
