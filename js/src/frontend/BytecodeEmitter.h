@@ -234,11 +234,6 @@ struct BytecodeEmitter
 
     const EmitterMode emitterMode;
 
-    // The end location of a function body that is being emitted.
-    uint32_t functionBodyEndPos;
-    // Whether functionBodyEndPos was set.
-    bool functionBodyEndPosSet;
-
     /*
      * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
      * space above their tempMark points. This means that you cannot alloc from
@@ -249,14 +244,6 @@ struct BytecodeEmitter
                     HandleScript script, Handle<LazyScript*> lazyScript,
                     bool insideEval, HandleScript evalCaller,
                     bool insideNonGlobalEval, uint32_t lineNum, EmitterMode emitterMode = Normal);
-
-    // An alternate constructor that uses a TokenPos for the starting
-    // line and that sets functionBodyEndPos as well.
-    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler>* parser, SharedContext* sc,
-                    HandleScript script, Handle<LazyScript*> lazyScript,
-                    bool insideEval, HandleScript evalCaller,
-                    bool insideNonGlobalEval, TokenPos bodyPosition, EmitterMode emitterMode = Normal);
-
     bool init();
     bool updateLocalsToFrameSlots();
 
@@ -316,11 +303,6 @@ struct BytecodeEmitter
     ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
     unsigned currentLine() const { return current->currentLine; }
     unsigned lastColumn() const { return current->lastColumn; }
-
-    void setFunctionBodyEndPos(TokenPos pos) {
-        functionBodyEndPos = pos.end;
-        functionBodyEndPosSet = true;
-    }
 
     bool reportError(ParseNode* pn, unsigned errorNumber, ...);
     bool reportStrictWarning(ParseNode* pn, unsigned errorNumber, ...);
