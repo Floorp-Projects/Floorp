@@ -3956,10 +3956,6 @@ public:
     return nsDisplayItem::ReferenceFrameForChildren(); 
   }
 
-  AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
-    return mAnimatedGeometryRootForScrollMetadata;
-  }
-
   virtual const nsRect& GetVisibleRectForChildren() const override
   {
     return mChildrenVisibleRect;
@@ -4107,8 +4103,6 @@ public:
                                                 bool aLogAnimations = false);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
-  bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
-
   /**
    * This will return if it's possible for this element to be prerendered.
    * This should never return false if we're going to prerender.
@@ -4198,7 +4192,6 @@ private:
   Matrix4x4 mTransformPreserves3D;
   ComputeTransformFunction mTransformGetter;
   AnimatedGeometryRoot* mAnimatedGeometryRootForChildren;
-  AnimatedGeometryRoot* mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenVisibleRect;
   uint32_t mIndex;
   nsRect mBounds;
