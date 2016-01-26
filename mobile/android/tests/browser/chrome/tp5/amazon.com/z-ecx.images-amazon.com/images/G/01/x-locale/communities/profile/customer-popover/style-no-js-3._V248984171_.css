@@ -1,0 +1,5 @@
+span.custPopLeft, span.custPopRight, img.custPopLeft, img.custPopRight {
+  display: none;
+  margin-left: 0;
+  margin-right: 0;
+}
