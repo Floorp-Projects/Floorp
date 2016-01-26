@@ -638,6 +638,16 @@ public:
         });
         return true;
     }
+
+    void UpdateOverscrollVelocity(const float x, const float y)
+    {
+        mNPZC->UpdateOverscrollVelocity(x, y);
+    }
+
+    void UpdateOverscrollOffset(const float x, const float y)
+    {
+        mNPZC->UpdateOverscrollOffset(x, y);
+    }
 };
 
 /**
@@ -1736,6 +1746,22 @@ nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
     }
 
     event.time = PR_Now() / 1000;
+}
+
+void
+nsWindow::UpdateOverscrollVelocity(const float aX, const float aY)
+{
+    if (mNPZCSupport) {
+        mNPZCSupport->UpdateOverscrollVelocity(aX, aY);
+    }
+}
+
+void
+nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
+{
+    if (mNPZCSupport) {
+        mNPZCSupport->UpdateOverscrollOffset(aX, aY);
+    }
 }
 
 gfx::IntSize
