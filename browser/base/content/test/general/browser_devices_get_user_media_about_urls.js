@@ -2,23 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const kObservedTopics = [
-  "getUserMedia:response:allow",
-  "getUserMedia:revoke",
-  "getUserMedia:response:deny",
-  "getUserMedia:request",
-  "recording-device-events",
-  "recording-window-ended"
-];
-
-const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";
 const PREF_LOOP_CSP = "loop.CSP";
 
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
-                                   "@mozilla.org/mediaManagerService;1",
-                                   "nsIMediaManagerService");
+const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
+Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader)
+  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
+                 this);
 
 var gTab;
 
@@ -53,135 +43,6 @@ function isLinux() {
   return navigator.platform.indexOf("Linux") != -1;
 }
 
-var gObservedTopics = {};
-function observer(aSubject, aTopic, aData) {
-  if (!(aTopic in gObservedTopics))
-    gObservedTopics[aTopic] = 1;
-  else
-    ++gObservedTopics[aTopic];
-}
-
-function promiseObserverCalled(aTopic, aAction) {
-  let deferred = Promise.defer();
-  info("Waiting for " + aTopic);
-
-  Services.obs.addObserver(function observer(aSubject, topic, aData) {
-    ok(true, "got " + aTopic + " notification");
-    info("Message: " + aData);
-    Services.obs.removeObserver(observer, aTopic);
-
-    if (kObservedTopics.indexOf(aTopic) != -1) {
-      if (!(aTopic in gObservedTopics))
-        gObservedTopics[aTopic] = -1;
-      else
-        --gObservedTopics[aTopic];
-    }
-
-    deferred.resolve();
-  }, aTopic, false);
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function promisePopupNotification(aName) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName),
-       aName + " notification appeared");
-
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
-
-  return deferred.promise;
-}
-
-function promiseNoPopupNotification(aName) {
-  let deferred = Promise.defer();
-  info("Waiting for " + aName + " to be removed");
-
-  waitForCondition(() => !PopupNotifications.getNotification(aName),
-                   () => {
-    ok(!PopupNotifications.getNotification(aName),
-       aName + " notification removed");
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName + " to disappear");
-
-  return deferred.promise;
-}
-
-function expectObserverCalled(aTopic) {
-  is(gObservedTopics[aTopic], 1, "expected notification " + aTopic);
-  if (aTopic in gObservedTopics)
-    --gObservedTopics[aTopic];
-}
-
-function expectNoObserverCalled() {
-  for (let topic in gObservedTopics) {
-    if (gObservedTopics[topic])
-      is(gObservedTopics[topic], 0, topic + " notification unexpected");
-  }
-  gObservedTopics = {};
-}
-
-function promiseMessage(aMessage, aAction) {
-  let deferred = Promise.defer();
-
-  content.addEventListener("message", function messageListener(event) {
-    content.removeEventListener("message", messageListener);
-    is(event.data, aMessage, "received " + aMessage);
-    if (event.data == aMessage)
-      deferred.resolve();
-    else
-      deferred.reject();
-  });
-
-  if (aAction)
-    aAction();
-
-  return deferred.promise;
-}
-
-function getMediaCaptureState() {
-  let hasVideo = {};
-  let hasAudio = {};
-  let hasScreenShare = {};
-  let hasWindowShare = {};
-  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio,
-                                              hasScreenShare, hasWindowShare);
-  if (hasVideo.value && hasAudio.value)
-    return "CameraAndMicrophone";
-  if (hasVideo.value)
-    return "Camera";
-  if (hasAudio.value)
-    return "Microphone";
-  if (hasScreenShare)
-    return "Screen";
-  if (hasWindowShare)
-    return "Window";
-  return "none";
-}
-
-function* closeStream(aAlreadyClosed) {
-  expectNoObserverCalled();
-
-  info("closing the stream");
-  content.wrappedJSObject.closeStream();
-
-  if (!aAlreadyClosed)
-    yield promiseObserverCalled("recording-device-events");
-
-  yield promiseNoPopupNotification("webRTC-sharingDevices");
-  if (!aAlreadyClosed)
-    expectObserverCalled("recording-window-ended");
-
-  yield* assertWebRTCIndicatorStatus(null);
-}
-
 function loadPage(aUrl) {
   let deferred = Promise.defer();
 
@@ -214,6 +75,7 @@ fakeLoopAboutModule.prototype = {
   getURIFlags: function (aURI) {
     return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
            Ci.nsIAboutModule.ALLOW_SCRIPT |
+           Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD |
            Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
   }
 };
@@ -221,14 +83,12 @@ fakeLoopAboutModule.prototype = {
 var factory = XPCOMUtils._getFactory(fakeLoopAboutModule);
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-var originalLoopCsp = Services.prefs.getCharPref(PREF_LOOP_CSP);
+var classIDLoopconversation, classIDEvil;
+
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
-  kObservedTopics.forEach(topic => {
-    Services.obs.removeObserver(observer, topic);
-  });
-  Services.prefs.clearUserPref(PREF_PERMISSION_FAKE);
-  Services.prefs.setCharPref(PREF_LOOP_CSP, originalLoopCsp);
+  registrar.unregisterFactory(classIDLoopconversation, factory);
+  registrar.unregisterFactory(classIDEvil, factory);
 });
 
 const permissionError = "error: SecurityError: The operation is insecure.";
@@ -238,31 +98,27 @@ var gTests = [
 {
   desc: "getUserMedia about:loopconversation shouldn't prompt",
   run: function checkAudioVideoLoop() {
-    Services.prefs.setCharPref(PREF_LOOP_CSP, "default-src 'unsafe-inline'");
-
-    let classID = Cc["@mozilla.org/uuid-generator;1"]
-                    .getService(Ci.nsIUUIDGenerator).generateUUID();
-    registrar.registerFactory(classID, "",
-                              "@mozilla.org/network/protocol/about;1?what=loopconversation",
-                              factory);
+    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+      "set": [[PREF_LOOP_CSP, "default-src 'unsafe-inline'"]],
+    }, resolve));
 
     yield loadPage("about:loopconversation");
 
-    yield promiseObserverCalled("recording-device-events", () => {
-      info("requesting devices");
-      content.wrappedJSObject.requestDevice(true, true);
-    });
+    info("requesting devices");
+    let promise = promiseObserverCalled("recording-device-events");
+    yield promiseRequestDevice(true, true);
+    yield promise;
+
     // Wait for the devices to actually be captured and running before
     // proceeding.
     yield promisePopupNotification("webRTC-sharingDevices");
 
-    is(getMediaCaptureState(), "CameraAndMicrophone",
+    is((yield getMediaCaptureState()), "CameraAndMicrophone",
        "expected camera and microphone to be shared");
 
     yield closeStream();
 
-    registrar.unregisterFactory(classID, factory);
-    Services.prefs.setCharPref(PREF_LOOP_CSP, originalLoopCsp);
+    yield new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
   }
 },
 
@@ -273,59 +129,45 @@ var gTests = [
       return;
     }
 
-    Services.prefs.setCharPref(PREF_LOOP_CSP, "default-src 'unsafe-inline'");
-
-    let classID = Cc["@mozilla.org/uuid-generator;1"]
-                    .getService(Ci.nsIUUIDGenerator).generateUUID();
-    registrar.registerFactory(classID, "",
-                              "@mozilla.org/network/protocol/about;1?what=loopconversation",
-                              factory);
+    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+      "set": [[PREF_LOOP_CSP, "default-src 'unsafe-inline'"]],
+    }, resolve));
 
     yield loadPage("about:loopconversation");
 
-    yield promiseObserverCalled("getUserMedia:request", () => {
-      info("requesting screen");
-      content.wrappedJSObject.requestDevice(false, true, "window");
-    });
+    info("requesting screen");
+    let promise = promiseObserverCalled("getUserMedia:request");
+    yield promiseRequestDevice(false, true, null, "window");
+
     // Wait for the devices to actually be captured and running before
     // proceeding.
     yield promisePopupNotification("webRTC-shareDevices");
 
-    isnot(getMediaCaptureState(), "Window",
+    is((yield getMediaCaptureState()), "none",
        "expected camera and microphone not to be shared");
 
     yield promiseMessage(permissionError, () => {
       PopupNotifications.panel.firstChild.button.click();
     });
 
-    expectObserverCalled("getUserMedia:response:deny");
-    expectObserverCalled("recording-window-ended");
+    yield expectObserverCalled("getUserMedia:response:deny");
+    yield expectObserverCalled("recording-window-ended");
 
-    registrar.unregisterFactory(classID, factory);
-    Services.prefs.setCharPref(PREF_LOOP_CSP, originalLoopCsp);
+    yield new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
   }
 },
 
 {
   desc: "getUserMedia about:evil should prompt",
   run: function checkAudioVideoNonLoop() {
-    let classID = Cc["@mozilla.org/uuid-generator;1"]
-                    .getService(Ci.nsIUUIDGenerator).generateUUID();
-    registrar.registerFactory(classID, "",
-                              "@mozilla.org/network/protocol/about;1?what=evil",
-                              factory);
-
     yield loadPage("about:evil");
 
-    yield promiseObserverCalled("getUserMedia:request", () => {
-      info("requesting devices");
-      content.wrappedJSObject.requestDevice(true, true);
-    });
+    let promise = promiseObserverCalled("getUserMedia:request");
+    yield promiseRequestDevice(true, true);
+    yield promise;
 
-    isnot(getMediaCaptureState(), "CameraAndMicrophone",
+    is((yield getMediaCaptureState()), "none",
        "expected camera and microphone not to be shared");
-
-    registrar.unregisterFactory(classID, factory);
   }
 },
 
@@ -334,18 +176,29 @@ var gTests = [
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref(PREF_PERMISSION_FAKE, true);
-  // Ensure this is always true
-  Services.prefs.setBoolPref("media.getusermedia.screensharing.enabled", true);
-
   gTab = gBrowser.addTab();
   gBrowser.selectedTab = gTab;
 
-  kObservedTopics.forEach(topic => {
-    Services.obs.addObserver(observer, topic, false);
-  });
+  gTab.linkedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
+
+  classIDLoopconversation = Cc["@mozilla.org/uuid-generator;1"]
+                              .getService(Ci.nsIUUIDGenerator).generateUUID();
+  registrar.registerFactory(classIDLoopconversation, "",
+                            "@mozilla.org/network/protocol/about;1?what=loopconversation",
+                            factory);
+
+  classIDEvil = Cc["@mozilla.org/uuid-generator;1"]
+                  .getService(Ci.nsIUUIDGenerator).generateUUID();
+  registrar.registerFactory(classIDEvil, "",
+                            "@mozilla.org/network/protocol/about;1?what=evil",
+                            factory);
 
   Task.spawn(function () {
+    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+      "set": [[PREF_PERMISSION_FAKE, true],
+              ["media.getusermedia.screensharing.enabled", true]],
+    }, resolve));
+
     for (let test of gTests) {
       info(test.desc);
       yield test.run();
@@ -357,10 +210,4 @@ function test() {
     ok(false, "Unexpected Exception: " + ex);
     finish();
   });
-}
-
-function wait(time) {
-  let deferred = Promise.defer();
-  setTimeout(deferred.resolve, time);
-  return deferred.promise;
 }
