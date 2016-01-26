@@ -27,7 +27,7 @@ const uint32_t kMagicInt = 0xc001feed;
 const uint16_t kMajorRevision = 4;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
-const uint16_t kMinorRevision = 0;
+const uint16_t kMinorRevision = 1;
 
 struct ReferencePtr
 {
@@ -192,6 +192,8 @@ public:
     FILTERNODESETINPUT,
     CREATESIMILARDRAWTARGET,
     FONTDATA,
+    PUSHLAYER,
+    POPLAYER,
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 
@@ -622,6 +624,55 @@ private:
   friend class RecordedEvent;
 
   MOZ_IMPLICIT RecordedPopClip(std::istream &aStream);
+};
+
+class RecordedPushLayer : public RecordedDrawingEvent {
+public:
+  RecordedPushLayer(DrawTarget* aDT, bool aOpaque, Float aOpacity,
+                    SourceSurface* aMask, const Matrix& aMaskTransform,
+                    const IntRect& aBounds, bool aCopyBackground)
+    : RecordedDrawingEvent(PUSHLAYER, aDT), mOpaque(aOpaque)
+    , mOpacity(aOpacity), mMask(aMask), mMaskTransform(aMaskTransform)
+    , mBounds(aBounds), mCopyBackground(aCopyBackground)
+  {
+  }
+
+  virtual void PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "PushLayer"; }
+private:
+  friend class RecordedEvent;
+
+  MOZ_IMPLICIT RecordedPushLayer(std::istream &aStream);
+
+  bool mOpaque;
+  Float mOpacity;
+  ReferencePtr mMask;
+  Matrix mMaskTransform;
+  IntRect mBounds;
+  bool mCopyBackground;
+};
+
+class RecordedPopLayer : public RecordedDrawingEvent {
+public:
+  RecordedPopLayer(DrawTarget* aDT)
+    : RecordedDrawingEvent(POPLAYER, aDT)
+  {
+  }
+
+  virtual void PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "PopLayer"; }
+private:
+  friend class RecordedEvent;
+
+  MOZ_IMPLICIT RecordedPopLayer(std::istream &aStream);
 };
 
 class RecordedSetTransform : public RecordedDrawingEvent {
