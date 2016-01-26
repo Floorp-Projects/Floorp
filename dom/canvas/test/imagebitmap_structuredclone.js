@@ -5,6 +5,7 @@ function ok(expect, msg) {
 onmessage = function(event) {
   ok(!!event.data.bitmap1, "Get the 1st ImageBitmap from the main script.");
   ok(!!event.data.bitmap2, "Get the 2nd ImageBitmap from the main script.");
+  ok(!!event.data.bitmap3, "Get the 3rd ImageBitmap from the main script.");
 
   // send the first original ImageBitmap back to the main-thread
   postMessage({"type":"bitmap1",
@@ -27,4 +28,8 @@ onmessage = function(event) {
       ok(false, "Cannot create a new bitmap from the original bitmap in worker.");
     }
   );
+
+  // send the third original ImageBitmap back to the main-thread
+  postMessage({"type":"bitmap3",
+               "bitmap":event.data.bitmap3});
 }
