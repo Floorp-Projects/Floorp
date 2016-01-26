@@ -20,6 +20,8 @@ const DRAG_DROP_MIN_AUTOSCROLL_SPEED = 5;
 const DRAG_DROP_MAX_AUTOSCROLL_SPEED = 15;
 const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
 const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
+const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
+const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
 
 const {UndoStack} = require("devtools/client/shared/undo");
 const {editableField, InplaceEditor} =
@@ -37,6 +39,7 @@ const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
       Ci.nsIPrefLocalizedString).data;
 const {Task} = require("resource://gre/modules/Task.jsm");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
+const {PrefObserver} = require("devtools/client/styleeditor/utils");
 
 Cu.import("resource://devtools/shared/gcli/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -87,8 +90,10 @@ function MarkupView(inspector, frame, controllerWindow) {
     this.maxChildren = DEFAULT_MAX_CHILDREN;
   }
 
+  this.collapseAttributes =
+    Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);
   this.collapseAttributeLength =
-    Services.prefs.getIntPref("devtools.markup.collapseAttributeLength");
+    Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
 
   // Creating the popup to be used to show CSS suggestions.
   let options = {
@@ -118,6 +123,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onMouseMove = this._onMouseMove.bind(this);
   this._onMouseLeave = this._onMouseLeave.bind(this);
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
+  this._onCollapseAttributesPrefChange =
+    this._onCollapseAttributesPrefChange.bind(this);
 
   // Listening to various events.
   this._elt.addEventListener("click", this._onMouseClick, false);
@@ -134,6 +141,12 @@ function MarkupView(inspector, frame, controllerWindow) {
 
   this._onNewSelection();
   this._initTooltips();
+
+  this._prefObserver = new PrefObserver("devtools.markup");
+  this._prefObserver.on(ATTR_COLLAPSE_ENABLED_PREF,
+                        this._onCollapseAttributesPrefChange);
+  this._prefObserver.on(ATTR_COLLAPSE_LENGTH_PREF,
+                        this._onCollapseAttributesPrefChange);
 
   EventEmitter.decorate(this);
 }
@@ -265,6 +278,14 @@ MarkupView.prototype = {
     if (this._autoScrollInterval) {
       clearInterval(this._autoScrollInterval);
     }
+  },
+
+  _onCollapseAttributesPrefChange: function() {
+    this.collapseAttributes =
+      Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);
+    this.collapseAttributeLength =
+      Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
+    this.update();
   },
 
   cancelDragging: function() {
@@ -1592,6 +1613,12 @@ MarkupView.prototype = {
     this._inspector.toolbox.off("picker-node-hovered",
                                 this._onToolboxPickerHover);
 
+    this._prefObserver.off(ATTR_COLLAPSE_ENABLED_PREF,
+                           this._onCollapseAttributesPrefChange);
+    this._prefObserver.off(ATTR_COLLAPSE_LENGTH_PREF,
+                           this._onCollapseAttributesPrefChange);
+    this._prefObserver.destroy();
+
     this._elt = null;
 
     for (let [, container] of this._containers) {
@@ -2687,7 +2714,7 @@ ElementEditor.prototype = {
     for (let attr of nodeAttributes) {
       let el = this.attrElements.get(attr.name);
       let valueChanged = el &&
-        el.querySelector(".attr-value").textContent !== attr.value;
+        el.dataset.value !== attr.value;
       let isEditing = el && el.querySelector(".editable").inplaceEditor;
       let canSimplyShowEditor = el && (!valueChanged || isEditing);
 
@@ -2873,9 +2900,9 @@ ElementEditor.prototype = {
       if (value && value.match(COLLAPSE_DATA_URL_REGEX)) {
         return truncateString(value, COLLAPSE_DATA_URL_LENGTH);
       }
-      return this.markup.collapseAttributeLength < 0
-        ? value :
-        truncateString(value, this.markup.collapseAttributeLength);
+      return this.markup.collapseAttributes
+        ? truncateString(value, this.markup.collapseAttributeLength)
+        : value;
     };
 
     val.innerHTML = "";
