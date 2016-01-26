@@ -334,14 +334,12 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
     NS_WARNING("No D3D device to update the texture.");
     return false;
   }
-
-  uint32_t bpp = BytesPerPixel(aSurface->GetFormat());
-  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
-
   mSize = aSurface->GetSize();
-  mFormat = aSurface->GetFormat();
+
+  uint32_t bpp = 0;
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
+  mFormat = aSurface->GetFormat();
   switch (mFormat) {
   case SurfaceFormat::B8G8R8X8:
     format = D3DFMT_X8R8G8B8;
@@ -361,87 +359,18 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   }
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
+  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
-    (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
-
-    if (mTexture) {
-      D3DSURFACE_DESC currentDesc;
-      mTexture->GetLevelDesc(0, &currentDesc);
-
-      // Make sure there's no size mismatch, if there is, recreate.
-      if (currentDesc.Width != mSize.width || currentDesc.Height != mSize.height ||
-        currentDesc.Format != format) {
-        mTexture = nullptr;
-        // Make sure we upload the whole surface.
-        aDestRegion = nullptr;
-      }
-    }
-
+      (mFlags & TextureFlags::DISALLOW_BIGIMAGE)) {
+    mTexture = DataToTexture(deviceManager,
+                             aSurface->GetData(), aSurface->Stride(),
+                             IntSize(mSize), format, bpp);
     if (!mTexture) {
-      // TODO Improve: Reallocating this texture is costly enough
-      //      that it causes us to skip frames on scrolling
-      //      important pages like Facebook.
-      mTexture = deviceManager->CreateTexture(mSize, format, D3DPOOL_DEFAULT, this);
-      mIsTiled = false;
-      if (!mTexture) {
-        Reset();
-        return false;
-      }
-
-      if (mFlags & TextureFlags::COMPONENT_ALPHA) {
-        aDestRegion = nullptr;
-      }
-    }
-
-    DataSourceSurface::MappedSurface map;
-    if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-      gfxCriticalError() << "Failed to map surface.";
+      NS_WARNING("Could not upload texture");
       Reset();
       return false;
     }
-
-    nsIntRegion regionToUpdate = aDestRegion ? *aDestRegion : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height));
-
-    RefPtr<IDirect3DSurface9> srcSurface;
-    HRESULT hr = mCompositor->device()->CreateOffscreenPlainSurface(mSize.width, mSize.height, format, D3DPOOL_SYSTEMMEM, getter_AddRefs(srcSurface), nullptr);
-    if (FAILED(hr)) {
-      return false;
-    }
-
-    RefPtr<IDirect3DSurface9> destSurface;
-    mTexture->GetSurfaceLevel(0, getter_AddRefs(destSurface));
-
-    D3DLOCKED_RECT rect;
-    srcSurface->LockRect(&rect, nullptr, 0);
-
-    nsIntRegionRectIterator iter(regionToUpdate);
-    const IntRect *iterRect;
-    while ((iterRect = iter.Next())) {
-      uint8_t* src = map.mData + map.mStride * iterRect->y + BytesPerPixel(aSurface->GetFormat()) * iterRect->x;
-      uint8_t* dest = reinterpret_cast<uint8_t*>(rect.pBits) + rect.Pitch * iterRect->y + BytesPerPixel(aSurface->GetFormat()) * iterRect->x;
-
-      for (int y = 0; y < iterRect->height; y++) {
-        memcpy(dest + rect.Pitch * y,
-          src + map.mStride * y,
-          iterRect->width * bpp);
-      }
-    }
-
-    srcSurface->UnlockRect();
-    aSurface->Unmap();
-
-    iter = nsIntRegionRectIterator(regionToUpdate);
-    while ((iterRect = iter.Next())) {
-
-      RECT updateRect;
-      updateRect.left = iterRect->x;
-      updateRect.top = iterRect->y;
-      updateRect.right = iterRect->XMost();
-      updateRect.bottom = iterRect->YMost();
-      POINT point = { updateRect.left, updateRect.top };
-
-      mCompositor->device()->UpdateSurface(srcSurface, &updateRect, destSurface, &point);
-    }
+    mIsTiled = false;
   } else {
     mIsTiled = true;
     uint32_t tileCount = GetRequiredTilesD3D9(mSize.width, maxSize) *
