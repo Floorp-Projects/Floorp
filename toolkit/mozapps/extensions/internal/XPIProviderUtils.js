@@ -78,7 +78,8 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "skinnable", "size", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall", "hasBinaryComponents",
                           "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms", "multiprocessCompatible", "signedState"];
+                          "targetPlatforms", "multiprocessCompatible", "signedState",
+                          "seen"];
 
 // Properties that should be migrated where possible from an old database. These
 // shouldn't include properties that can be read directly from install.rdf files
@@ -281,7 +282,8 @@ function copyProperties(aObject, aProperties, aTarget) {
   if (!aTarget)
     aTarget = {};
   aProperties.forEach(function(aProp) {
-    aTarget[aProp] = aObject[aProp];
+    if (aProp in aObject)
+      aTarget[aProp] = aObject[aProp];
   });
   return aTarget;
 }
@@ -1302,6 +1304,7 @@ this.XPIDatabase = {
     aNewAddon.installDate = aOldAddon.installDate;
     aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
     aNewAddon.foreignInstall = aOldAddon.foreignInstall;
+    aNewAddon.seen = aOldAddon.seen;
     aNewAddon.active = (aNewAddon.visible && !aNewAddon.disabled && !aNewAddon.pendingUninstall);
 
     // addAddonMetadata does a saveChanges()
@@ -1706,6 +1709,7 @@ this.XPIDatabaseReconcile = {
         logger.warn("Disabling foreign installed add-on " + aNewAddon.id + " in "
             + aInstallLocation.name);
         aNewAddon.userDisabled = true;
+        aNewAddon.seen = false;
       }
     }
 

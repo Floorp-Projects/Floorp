@@ -1939,9 +1939,11 @@ function do_exception_wrap(func) {
 /**
  * Change the schema version of the JSON extensions database
  */
-function changeXPIDBVersion(aNewVersion) {
+function changeXPIDBVersion(aNewVersion, aMutator = undefined) {
   let jData = loadJSON(gExtensionsJSON);
   jData.schemaVersion = aNewVersion;
+  if (aMutator)
+    aMutator(jData);
   saveJSON(jData, gExtensionsJSON);
 }
 

@@ -166,6 +166,7 @@ function run_test() {
     do_check_false(a1.appDisabled);
     do_check_true(a1.isActive);
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    do_check_true(a1.seen);
 
     // addon2 was user disabled and app enabled in the old extensions.rdf
     do_check_neq(a2, null);
@@ -173,6 +174,7 @@ function run_test() {
     do_check_false(a2.appDisabled);
     do_check_false(a2.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+    do_check_true(a2.seen);
 
     // addon3 was pending user disable and app disabled in the old extensions.rdf
     do_check_neq(a3, null);
@@ -180,6 +182,7 @@ function run_test() {
     do_check_true(a3.appDisabled);
     do_check_false(a3.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+    do_check_true(a3.seen);
 
     // addon4 was pending user enable and app disabled in the old extensions.rdf
     do_check_neq(a4, null);
@@ -187,6 +190,7 @@ function run_test() {
     do_check_true(a4.appDisabled);
     do_check_false(a4.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+    do_check_true(a4.seen);
 
     // addon5 was disabled and compatible but a new version has been installed
     // since, it should still be disabled but should be incompatible
@@ -195,6 +199,7 @@ function run_test() {
     do_check_true(a5.appDisabled);
     do_check_false(a5.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, a5.id));
+    do_check_true(a5.seen);
 
     // addon6 and addon7 will have been lost as they were staged in the
     // pre-Firefox 4.0 directory
@@ -208,14 +213,16 @@ function run_test() {
     do_check_false(t1.isActive);
     do_check_true(isThemeInAddonsList(profileDir, t1.id));
     do_check_true(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_true(t1.seen);
 
     // Theme 2 was previously disabled
-    do_check_neq(t1, null);
+    do_check_neq(t2, null);
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
     do_check_false(t2.isActive);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_true(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_true(t2.seen);
 
     do_execute_soon(do_test_finished);
   });
