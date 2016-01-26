@@ -19,6 +19,7 @@
 #include "nsJSEnvironment.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Base64.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
@@ -276,11 +277,17 @@ FileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
     NS_ASSERTION(bytesRead == aCount, "failed to read data");
   }
   else {
-    //Update memory buffer to reflect the contents of the file
-    if (mDataLen + aCount > UINT32_MAX) {
-      // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
+    CheckedInt<uint64_t> size = mDataLen;
+    size += aCount;
+
+    // Update memory buffer to reflect the contents of the file
+    if (!size.isValid() ||
+        // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
+        size.value() > UINT32_MAX ||
+        size.value() > mTotal) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
     if (mDataFormat != FILE_AS_ARRAYBUFFER) {
       mFileData = (char *) realloc(mFileData, mDataLen + aCount);
       NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
