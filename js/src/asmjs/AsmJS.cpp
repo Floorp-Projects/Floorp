@@ -1099,6 +1099,7 @@ class Type
           case ValType::I32x4: return Int32x4;
           case ValType::F32x4: return Float32x4;
           case ValType::B32x4: return Bool32x4;
+          case ValType::Limit: break;
         }
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
     }
@@ -1113,6 +1114,7 @@ class Type
           case ExprType::I32x4:  return Int32x4;
           case ExprType::F32x4:  return Float32x4;
           case ExprType::B32x4:  return Bool32x4;
+          case ExprType::Limit:  break;
         }
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
     }
@@ -1161,6 +1163,7 @@ class Type
           case ValType::I32x4:  return isInt32x4();
           case ValType::F32x4:  return isFloat32x4();
           case ValType::B32x4:  return isBool32x4();
+          case ValType::Limit:  break;
         }
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected rhs type");
     }
@@ -4639,6 +4642,7 @@ CheckCoercionArg(FunctionValidator& f, ParseNode* arg, ValType expected, Type* t
         break;
       case ValType::I32:
       case ValType::F64:
+      case ValType::Limit:
         MOZ_CRASH("not call coercions");
     }
 
@@ -5457,6 +5461,8 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
             return f.failf(expr, "%s is not a subtype of bool32x4", actual.toChars());
         f.patchOp(patchAt, Expr::Id);
         break;
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
     }
 
     *type = Type::ret(expected);
@@ -7079,6 +7085,8 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
           case ValType::F32x4:
             memcpy(datum, v.f32x4(), Simd128DataSize);
             break;
+          case ValType::Limit:
+            MOZ_CRASH("Limit");
         }
         break;
       }
@@ -7129,6 +7137,8 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
             memcpy(datum, simdConstant.asInt32x4(), Simd128DataSize);
             break;
           }
+          case ValType::Limit:
+            MOZ_CRASH("Limit");
         }
         break;
       }
