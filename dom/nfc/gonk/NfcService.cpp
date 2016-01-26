@@ -6,12 +6,12 @@
 
 #include "NfcService.h"
 #include <binder/Parcel.h>
-#include <cutils/properties.h>
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/NfcOptionsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/Endian.h"
+#include "mozilla/Hal.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/ipc/ListenSocketConsumer.h"
 #include "mozilla/ipc/NfcConnector.h"
@@ -32,6 +32,7 @@
 using namespace android;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
+using namespace mozilla::hal;
 
 namespace mozilla {
 
@@ -109,7 +110,7 @@ NfcConsumer::Start()
   // If we could not cleanup properly before and an old
   // instance of the daemon is still running, we kill it
   // here.
-  Unused << NS_WARN_IF(property_set("ctl.stop", "nfcd") < 0);
+  StopSystemService("nfcd");
 
   mHandler = new NfcMessageHandler();
 
@@ -377,9 +378,10 @@ NfcConsumer::OnConnectSuccess(int aIndex)
 
   switch (aIndex) {
     case LISTEN_SOCKET: {
-      nsCString value("nfcd:-S -a ");
-      value.Append(mListenSocketName);
-      if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
+      nsCString args("-S -a ");
+      args.Append(mListenSocketName);
+      nsresult rv = StartSystemService("nfcd", args.get());
+      if (NS_FAILED(rv)) {
         OnConnectError(STREAM_SOCKET);
       }
       break;
