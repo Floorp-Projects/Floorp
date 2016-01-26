@@ -747,6 +747,7 @@
         "name": "captureVisibleTab",
         "type": "function",
         "description": "Captures the visible area of the currently active tab in the specified window. You must have $(topic:declare_permissions)[&lt;all_urls&gt;] permission to use this method.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
