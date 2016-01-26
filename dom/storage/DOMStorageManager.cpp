@@ -516,7 +516,10 @@ DOMStorageManager::Observe(const char* aTopic,
                            const nsACString& aOriginScope)
 {
   OriginAttributesPattern pattern;
-  pattern.Init(aOriginAttributesPattern);
+  if (!pattern.Init(aOriginAttributesPattern)) {
+    NS_ERROR("Cannot parse origin attributes pattern");
+    return NS_ERROR_FAILURE;
+  }
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
