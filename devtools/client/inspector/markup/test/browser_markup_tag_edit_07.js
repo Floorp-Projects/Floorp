@@ -73,14 +73,14 @@ var TEST_DATA = [{
     is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
   }
 }, {
-  desc: "Try to add long attribute with collapseAttributeLength == -1" +
+  desc: "Try to add long attribute with collapseAttributes == false" +
   "to make sure it isn't collapsed in attribute editor.",
   text: 'data-long="' + LONG_ATTRIBUTE + '"',
   expectedAttributes: {
     "data-long": LONG_ATTRIBUTE
   },
   setUp: function(inspector) {
-    inspector.markup.collapseAttributeLength = -1;
+    Services.prefs.setBoolPref("devtools.markup.collapseAttributes", false);
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
@@ -91,7 +91,30 @@ var TEST_DATA = [{
     is(visibleAttrText, LONG_ATTRIBUTE);
   },
   tearDown: function(inspector) {
-    inspector.markup.collapseAttributeLength = 120;
+    Services.prefs.clearUserPref("devtools.markup.collapseAttributes");
+  }
+}, {
+  desc: "Try to collapse attributes with collapseAttributeLength == 5",
+  text: 'data-long="' + LONG_ATTRIBUTE + '"',
+  expectedAttributes: {
+    "data-long": LONG_ATTRIBUTE
+  },
+  setUp: function(inspector) {
+    Services.prefs.setIntPref("devtools.markup.collapseAttributeLength", 2);
+  },
+  validate: (element, container, inspector) => {
+    let firstChar = LONG_ATTRIBUTE[0];
+    let lastChar = LONG_ATTRIBUTE[LONG_ATTRIBUTE.length - 1];
+    let collapsed = firstChar + "\u2026" + lastChar;
+    let editor = container.editor;
+    let visibleAttrText = editor.attrElements
+      .get("data-long")
+      .querySelector(".attr-value")
+      .textContent;
+    is(visibleAttrText, collapsed);
+  },
+  tearDown: function(inspector) {
+    Services.prefs.clearUserPref("devtools.markup.collapseAttributeLength");
   }
 }];
 
