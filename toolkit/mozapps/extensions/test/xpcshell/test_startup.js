@@ -212,7 +212,6 @@ function run_test_1() {
     do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a1.sourceURI, null);
     do_check_true(a1.foreignInstall);
-    do_check_false(a1.seen);
 
     do_check_neq(a2, null);
     do_check_eq(a2.id, "addon2@tests.mozilla.org");
@@ -227,7 +226,6 @@ function run_test_1() {
     do_check_eq(a2.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a2.sourceURI, null);
     do_check_true(a2.foreignInstall);
-    do_check_false(a2.seen);
 
     do_check_neq(a3, null);
     do_check_eq(a3.id, "addon3@tests.mozilla.org");
@@ -242,7 +240,6 @@ function run_test_1() {
     do_check_eq(a3.scope, AddonManager.SCOPE_PROFILE);
     do_check_eq(a3.sourceURI, null);
     do_check_true(a3.foreignInstall);
-    do_check_false(a3.seen);
 
     do_check_eq(a4, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon4@tests.mozilla.org"));
