@@ -25,6 +25,8 @@ namespace js {
 
 class PropertyName;
 
+enum class SimdOperation : uint8_t;
+
 namespace wasm {
 
 // Module header constants
@@ -219,53 +221,8 @@ enum class Expr : uint8_t
     I32AtomicsBinOp,
 
     // SIMD
-    I32X4Const,
-    B32X4Const,
-    F32X4Const,
-
-    I32I32X4ExtractLane,
-    I32B32X4ExtractLane,
-    I32B32X4AllTrue,
-    I32B32X4AnyTrue,
-
-    F32F32X4ExtractLane,
-
-    I32X4Ctor,
-    I32X4Unary,
-    I32X4Binary,
-    I32X4BinaryBitwise,
-    I32X4BinaryShift,
-    I32X4ReplaceLane,
-    I32X4FromF32X4,
-    I32X4FromF32X4Bits,
-    I32X4Swizzle,
-    I32X4Shuffle,
-    I32X4Select,
-    I32X4Splat,
-    I32X4Load,
-    I32X4Store,
-
-    F32X4Ctor,
-    F32X4Unary,
-    F32X4Binary,
-    F32X4ReplaceLane,
-    F32X4FromI32X4,
-    F32X4FromI32X4Bits,
-    F32X4Swizzle,
-    F32X4Shuffle,
-    F32X4Select,
-    F32X4Splat,
-    F32X4Load,
-    F32X4Store,
-
-    B32X4Ctor,
-    B32X4Unary,
-    B32X4Binary,
-    B32X4BinaryCompI32X4,
-    B32X4BinaryCompF32X4,
-    B32X4BinaryBitwise,
-    B32X4ReplaceLane,
-    B32X4Splat,
+    SimdConst,
+    SimdOp,
 
     // I32 asm.js opcodes
     I32Not,
@@ -383,6 +340,8 @@ class Encoder
     writeValType(ValType type, size_t* offset = nullptr)   { return writeEnum(type, offset); }
     MOZ_WARN_UNUSED_RESULT bool
     writeExprType(ExprType type, size_t* offset = nullptr) { return writeEnum(type, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeSimdOp(SimdOperation op, size_t* offset = nullptr) { return writeEnum(op, offset); }
 
     MOZ_WARN_UNUSED_RESULT bool
     writeU8(uint8_t i, size_t* offset = nullptr)   { return write<uint8_t>(i, offset); }
@@ -607,6 +566,9 @@ class Decoder
     MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type = nullptr) {
         return readEnum(type);
     }
+    MOZ_WARN_UNUSED_RESULT bool readSimdOp(SimdOperation* op = nullptr) {
+        return readEnum(op);
+    }
 
     MOZ_WARN_UNUSED_RESULT bool readCString(const char** cstr = nullptr) {
         if (cstr)
@@ -695,6 +657,12 @@ class Decoder
     }
     Expr uncheckedReadExpr() {
         return uncheckedReadEnum<Expr>();
+    }
+    ExprType uncheckedReadExprType() {
+        return uncheckedReadEnum<ExprType>();
+    }
+    SimdOperation uncheckedReadSimdOp() {
+        return uncheckedReadEnum<SimdOperation>();
     }
     Expr uncheckedPeekExpr() const {
         return uncheckedPeekEnum<Expr>();
