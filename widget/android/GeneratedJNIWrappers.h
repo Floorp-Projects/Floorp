@@ -4093,44 +4093,6 @@ public:
     auto RequestContentRepaintWrapper(float, float, float, float, float) const -> void;
 
 public:
-    struct UpdateOverscrollOffset_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float> Args;
-        static constexpr char name[] = "updateOverscrollOffset";
-        static constexpr char signature[] =
-                "(FF)V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto UpdateOverscrollOffset(float, float) const -> void;
-
-public:
-    struct UpdateOverscrollVelocity_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float> Args;
-        static constexpr char name[] = "updateOverscrollVelocity";
-        static constexpr char signature[] =
-                "(FF)V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto UpdateOverscrollVelocity(float, float) const -> void;
-
-public:
     template<class Impl> class Natives;
 };
 

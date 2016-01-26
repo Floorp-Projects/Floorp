@@ -12,7 +12,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsTArray.h"
-#include "nsWindow.h"
 
 namespace mozilla {
 namespace layers {
@@ -25,26 +24,20 @@ class AndroidContentController final
     : public mozilla::layers::ChromeProcessController
 {
 public:
-    AndroidContentController(nsWindow* aWindow,
+    AndroidContentController(nsIWidget* aWidget,
                              mozilla::layers::APZEventState* aAPZEventState,
                              mozilla::layers::APZCTreeManager* aAPZCTreeManager)
-      : mozilla::layers::ChromeProcessController(aWindow, aAPZEventState, aAPZCTreeManager)
-      , mAndroidWindow(aWindow)
+      : mozilla::layers::ChromeProcessController(aWidget, aAPZEventState, aAPZCTreeManager)
     {}
 
     // ChromeProcessController methods
-    virtual void Destroy() override;
     void HandleSingleTap(const CSSPoint& aPoint,
                          Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid) override;
     void PostDelayedTask(Task* aTask, int aDelayMs) override;
-    void UpdateOverscrollVelocity(const float aX, const float aY) override;
-    void UpdateOverscrollOffset(const float aX,const  float aY) override;
 
     static void NotifyDefaultPrevented(mozilla::layers::APZCTreeManager* aManager,
                                        uint64_t aInputBlockId, bool aDefaultPrevented);
-private:
-    RefPtr<nsWindow> mAndroidWindow;
 };
 
 } // namespace widget

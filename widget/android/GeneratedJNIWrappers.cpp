@@ -1470,22 +1470,6 @@ auto NativePanZoomController::RequestContentRepaintWrapper(float a0, float a1, f
     return mozilla::jni::Method<RequestContentRepaintWrapper_t>::Call(this, nullptr, a0, a1, a2, a3, a4);
 }
 
-constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];
-constexpr char NativePanZoomController::UpdateOverscrollOffset_t::signature[];
-
-auto NativePanZoomController::UpdateOverscrollOffset(float a0, float a1) const -> void
-{
-    return mozilla::jni::Method<UpdateOverscrollOffset_t>::Call(this, nullptr, a0, a1);
-}
-
-constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::name[];
-constexpr char NativePanZoomController::UpdateOverscrollVelocity_t::signature[];
-
-auto NativePanZoomController::UpdateOverscrollVelocity(float a0, float a1) const -> void
-{
-    return mozilla::jni::Method<UpdateOverscrollVelocity_t>::Call(this, nullptr, a0, a1);
-}
-
 constexpr char ProgressiveUpdateData::name[];
 
 constexpr char ProgressiveUpdateData::New_t::name[];
