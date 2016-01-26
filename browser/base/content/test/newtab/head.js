@@ -404,18 +404,6 @@ function* addNewTabPageTab() {
   return tab;
 }
 
-function waitForBrowserLoad(browser) {
-  if (browser.contentDocument.readyState == "complete") {
-    executeSoon(callback);
-    return;
-  }
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    executeSoon(callback);
-  }, true);
-}
-
 /**
  * Compares the current grid arrangement with the given pattern.
  * @param the pattern (see below)
