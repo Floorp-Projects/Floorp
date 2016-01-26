@@ -915,7 +915,12 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(reportChannel));
-    NS_ASSERTION(uploadChannel, "nsIUploadChannel is needed but not available to send CSP violation reports");
+    if (!uploadChannel) {
+      // It's possible the URI provided can't be uploaded to, in which case
+      // we skip this one. We'll already have warned about a non-HTTP URI earlier.
+      continue;
+    }
+
     rv = uploadChannel->SetUploadStream(sis, NS_LITERAL_CSTRING("application/json"), -1);
     NS_ENSURE_SUCCESS(rv, rv);
 
