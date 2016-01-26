@@ -24,35 +24,35 @@ async protocol PWebSocket
 
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  AsyncOpen(URIParams aURI,
-            nsCString aOrigin,
-            uint64_t aInnerWindowID,
-            nsCString aProtocol,
-            bool aSecure,
-            // ping values only meaningful if client set them
-            uint32_t aPingInterval,
-            bool aClientSetPingInterval,
-            uint32_t aPingTimeout,
-            bool aClientSetPingTimeout,
-            OptionalLoadInfoArgs aLoadInfoArgs);
-  Close(uint16_t code, nsCString reason);
-  SendMsg(nsCString aMsg);
-  SendBinaryMsg(nsCString aMsg);
-  SendBinaryStream(InputStreamParams aStream, uint32_t aLength);
+  async AsyncOpen(URIParams aURI,
+                  nsCString aOrigin,
+                  uint64_t aInnerWindowID,
+                  nsCString aProtocol,
+                  bool aSecure,
+                  // ping values only meaningful if client set them
+                  uint32_t aPingInterval,
+                  bool aClientSetPingInterval,
+                  uint32_t aPingTimeout,
+                  bool aClientSetPingTimeout,
+                  OptionalLoadInfoArgs aLoadInfoArgs);
+  async Close(uint16_t code, nsCString reason);
+  async SendMsg(nsCString aMsg);
+  async SendBinaryMsg(nsCString aMsg);
+  async SendBinaryStream(InputStreamParams aStream, uint32_t aLength);
 
-  DeleteSelf();
+  async DeleteSelf();
 
 child:
   // Forwarded notifications corresponding to the nsIWebSocketListener interface
-  OnStart(nsCString aProtocol, nsCString aExtensions,
-          nsString aEffectiveURL, bool aEncrypted);
-  OnStop(nsresult aStatusCode);
-  OnMessageAvailable(nsCString aMsg);
-  OnBinaryMessageAvailable(nsCString aMsg);
-  OnAcknowledge(uint32_t aSize);
-  OnServerClose(uint16_t code, nsCString aReason);
+  async OnStart(nsCString aProtocol, nsCString aExtensions,
+                nsString aEffectiveURL, bool aEncrypted);
+  async OnStop(nsresult aStatusCode);
+  async OnMessageAvailable(nsCString aMsg);
+  async OnBinaryMessageAvailable(nsCString aMsg);
+  async OnAcknowledge(uint32_t aSize);
+  async OnServerClose(uint16_t code, nsCString aReason);
 
-  __delete__();
+  async __delete__();
 
 };
 

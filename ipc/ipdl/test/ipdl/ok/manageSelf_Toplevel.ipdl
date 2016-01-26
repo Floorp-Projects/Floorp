@@ -5,5 +5,5 @@ protocol manageSelf_Toplevel {
 
 child:
     manageSelf();
-    __delete__();
+    async __delete__();
 };

@@ -20,16 +20,16 @@ sync protocol PBackgroundMutableFile
   manages PBackgroundFileHandle;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  PBackgroundFileHandle(FileMode mode);
+  async PBackgroundFileHandle(FileMode mode);
 
   // Use only for testing!
   sync GetFileId()
     returns (int64_t fileId);
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 } // namespace dom

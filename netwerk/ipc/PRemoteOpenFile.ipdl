@@ -20,7 +20,7 @@ protocol PRemoteOpenFile
 
 child:
   // Your file handle is ready, Sir...
-  __delete__(FileDescriptor fd);
+  async __delete__(FileDescriptor fd);
 };
 
 

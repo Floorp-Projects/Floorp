@@ -3,5 +3,5 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 protocol multipleUsingCxxTypes {
 child:
-    Msg(void_t foo);
+    async Msg(void_t foo);
 };

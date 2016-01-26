@@ -20,70 +20,70 @@ async protocol PGMPDecryptor
   manager PGMPContent;
 child:
 
-  Init();
+  async Init();
 
-  CreateSession(uint32_t aCreateSessionToken,
-                uint32_t aPromiseId,
-                nsCString aInitDataType,
-                uint8_t[] aInitData,
-                GMPSessionType aSessionType);
+  async CreateSession(uint32_t aCreateSessionToken,
+                      uint32_t aPromiseId,
+                      nsCString aInitDataType,
+                      uint8_t[] aInitData,
+                      GMPSessionType aSessionType);
 
-  LoadSession(uint32_t aPromiseId,
-              nsCString aSessionId);
+  async LoadSession(uint32_t aPromiseId,
+                    nsCString aSessionId);
 
-  UpdateSession(uint32_t aPromiseId,
-                nsCString aSessionId,
-                uint8_t[] aResponse);
+  async UpdateSession(uint32_t aPromiseId,
+                      nsCString aSessionId,
+                      uint8_t[] aResponse);
 
-  CloseSession(uint32_t aPromiseId,
-               nsCString aSessionId);
+  async CloseSession(uint32_t aPromiseId,
+                     nsCString aSessionId);
 
-  RemoveSession(uint32_t aPromiseId,
-                nsCString aSessionId);
+  async RemoveSession(uint32_t aPromiseId,
+                      nsCString aSessionId);
 
-  SetServerCertificate(uint32_t aPromiseId,
-                       uint8_t[] aServerCert);
+  async SetServerCertificate(uint32_t aPromiseId,
+                             uint8_t[] aServerCert);
 
-  Decrypt(uint32_t aId,
-          uint8_t[] aBuffer,
-          GMPDecryptionData aMetadata);
+  async Decrypt(uint32_t aId,
+                uint8_t[] aBuffer,
+                GMPDecryptionData aMetadata);
 
-  DecryptingComplete();
+  async DecryptingComplete();
 
 parent:
-  __delete__();
+  async __delete__();
 
-  SetSessionId(uint32_t aCreateSessionToken,
-               nsCString aSessionId);
+  async SetSessionId(uint32_t aCreateSessionToken,
+                     nsCString aSessionId);
 
-  ResolveLoadSessionPromise(uint32_t aPromiseId,
-                            bool aSuccess);
+  async ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                  bool aSuccess);
 
-  ResolvePromise(uint32_t aPromiseId);
+  async ResolvePromise(uint32_t aPromiseId);
 
-  RejectPromise(uint32_t aPromiseId,
-                GMPDOMException aDOMExceptionCode,
-                nsCString aMessage);
+  async RejectPromise(uint32_t aPromiseId,
+                      GMPDOMException aDOMExceptionCode,
+                      nsCString aMessage);
 
-  SessionMessage(nsCString aSessionId,
-                 GMPSessionMessageType aMessageType,
-                 uint8_t[] aMessage);
+  async SessionMessage(nsCString aSessionId,
+                       GMPSessionMessageType aMessageType,
+                       uint8_t[] aMessage);
 
-  ExpirationChange(nsCString aSessionId, double aExpiryTime);
+  async ExpirationChange(nsCString aSessionId, double aExpiryTime);
 
-  SessionClosed(nsCString aSessionId);
+  async SessionClosed(nsCString aSessionId);
 
-  SessionError(nsCString aSessionId,
-               GMPDOMException aDOMExceptionCode,
-               uint32_t aSystemCode,
-               nsCString aMessage);
+  async SessionError(nsCString aSessionId,
+                     GMPDOMException aDOMExceptionCode,
+                     uint32_t aSystemCode,
+                     nsCString aMessage);
 
-  KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
-                   GMPMediaKeyStatus aStatus);
+  async KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
+                         GMPMediaKeyStatus aStatus);
 
-  SetCaps(uint64_t aCaps);
+  async SetCaps(uint64_t aCaps);
 
-  Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
+  async Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
 
   async Shutdown();
 };

@@ -7,14 +7,14 @@ namespace _ipdltest2 {
 // that opened them)
 intr protocol PTestEndpointOpensOpened {
 child:
-    Hi();
+    async Hi();
     intr HiRpc();
 
 parent:
-    Hello();
+    async Hello();
     sync HelloSync();
     intr HelloRpc();
-    __delete__();
+    async __delete__();
 
 state START:       recv Hello goto HI;
 state HI:          send Hi goto HELLO_SYNC;

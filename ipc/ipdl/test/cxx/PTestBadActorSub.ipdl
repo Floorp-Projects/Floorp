@@ -10,7 +10,7 @@ child:
   intr __delete__();
 
 parent:
-  Ping();
+  async Ping();
 };
 
 } // namespace _ipdltest

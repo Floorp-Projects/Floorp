@@ -23,12 +23,12 @@ parent:
 
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
-  CancelDNSRequest(nsCString hostName, uint32_t flags,
-                   nsCString networkInterface, nsresult reason);
-   __delete__();
+  async CancelDNSRequest(nsCString hostName, uint32_t flags,
+                         nsCString networkInterface, nsresult reason);
+  async __delete__();
 
 child:
-  LookupCompleted(DNSRequestResponse reply);
+  async LookupCompleted(DNSRequestResponse reply);
 
 };
 
