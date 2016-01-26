@@ -12,14 +12,8 @@
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 #include "FakeMediaStreams.h"
-#else
-#include "DOMMediaStream.h"
-#include "MediaStreamGraph.h"
-#include "VideoUtils.h"
 #endif
 #include "MediaConduitInterface.h"
-#include "MediaPipelineFilter.h"
-#include "AudioSegment.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
 #include "SrtpFlow.h"
@@ -27,16 +21,23 @@
 #include "runnable_utils.h"
 #include "transportflow.h"
 #include "AudioPacketizer.h"
-
-#if defined(MOZILLA_INTERNAL_API)
-#include "VideoSegment.h"
-#endif
+#include "StreamBuffer.h"
 
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 
-namespace mozilla {
+class nsIPrincipal;
 
+namespace mozilla {
+class MediaPipelineFilter;
 class PeerIdentity;
+
+#ifndef USE_FAKE_MEDIA_STREAMS
+namespace dom {
+  class MediaStreamTrack;
+} // namespace dom
+
+class SourceMediaStream;
+#endif // USE_FAKE_MEDIA_STREAMS
 
 // A class that represents the pipeline of audio and video
 // The dataflow looks like:
@@ -82,34 +83,7 @@ class MediaPipeline : public sigslot::has_slots<> {
                 RefPtr<MediaSessionConduit> conduit,
                 RefPtr<TransportFlow> rtp_transport,
                 RefPtr<TransportFlow> rtcp_transport,
-                nsAutoPtr<MediaPipelineFilter> filter)
-      : direction_(direction),
-        track_id_(track_id),
-        level_(level),
-        conduit_(conduit),
-        rtp_(rtp_transport, rtcp_transport ? RTP : MUX),
-        rtcp_(rtcp_transport ? rtcp_transport : rtp_transport,
-              rtcp_transport ? RTCP : MUX),
-        main_thread_(main_thread),
-        sts_thread_(sts_thread),
-        rtp_packets_sent_(0),
-        rtcp_packets_sent_(0),
-        rtp_packets_received_(0),
-        rtcp_packets_received_(0),
-        rtp_bytes_sent_(0),
-        rtp_bytes_received_(0),
-        pc_(pc),
-        description_(),
-        filter_(filter),
-        rtp_parser_(webrtc::RtpHeaderParser::Create()) {
-      // To indicate rtcp-mux rtcp_transport should be nullptr.
-      // Therefore it's an error to send in the same flow for
-      // both rtp and rtcp.
-      MOZ_ASSERT(rtp_transport != rtcp_transport);
-
-      // PipelineTransport() will access this->sts_thread_; moved here for safety
-      transport_ = new PipelineTransport(this);
-    }
+                nsAutoPtr<MediaPipelineFilter> filter);
 
   // Must be called on the STS thread.  Must be called after ShutdownMedia_m().
   void DetachTransport_s();
@@ -301,73 +275,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   bool IsRtp(const unsigned char *data, size_t len);
 };
 
-class GenericReceiveListener : public MediaStreamListener
-{
- public:
-  GenericReceiveListener(SourceMediaStream *source, TrackID track_id,
-                         TrackRate track_rate, bool queue_track)
-    : source_(source),
-      track_id_(track_id),
-      track_rate_(track_rate),
-      played_ticks_(0),
-      queue_track_(queue_track),
-      principal_handle_(PRINCIPAL_HANDLE_NONE) {}
-
-  virtual ~GenericReceiveListener() {}
-
-  void AddSelf(MediaSegment* segment);
-
-  void SetPlayedTicks(TrackTicks time) {
-    played_ticks_ = time;
-  }
-
-  void EndTrack() {
-    source_->EndTrack(track_id_);
-  }
-
-#ifndef USE_FAKE_MEDIA_STREAMS
-  // Must be called on the main thread
-  void SetPrincipalHandle_m(const PrincipalHandle& aPrincipal);
-
-  // Must be called on the MediaStreamGraph thread
-  void SetPrincipalHandle_msg(const PrincipalHandle& aPrincipal);
-#endif // USE_FAKE_MEDIA_STREAMS
-
- protected:
-  SourceMediaStream *source_;
-  TrackID track_id_;
-  TrackRate track_rate_;
-  TrackTicks played_ticks_;
-  bool queue_track_;
-  PrincipalHandle principal_handle_;
-};
-
-class TrackAddedCallback {
- public:
-  virtual void TrackAdded(TrackTicks current_ticks) = 0;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackAddedCallback);
-
- protected:
-  virtual ~TrackAddedCallback() {}
-};
-
-class GenericReceiveListener;
-
-class GenericReceiveCallback : public TrackAddedCallback
-{
- public:
-  explicit GenericReceiveCallback(GenericReceiveListener* listener)
-    : listener_(listener) {}
-
-  void TrackAdded(TrackTicks time) {
-    listener_->SetPlayedTicks(time);
-  }
-
- private:
-  RefPtr<GenericReceiveListener> listener_;
-};
-
 class ConduitDeleteEvent: public nsRunnable
 {
 public:
@@ -394,12 +301,7 @@ public:
                         RefPtr<MediaSessionConduit> conduit,
                         RefPtr<TransportFlow> rtp_transport,
                         RefPtr<TransportFlow> rtcp_transport,
-                        nsAutoPtr<MediaPipelineFilter> filter) :
-      MediaPipeline(pc, TRANSMIT, main_thread, sts_thread, track_id, level,
-                    conduit, rtp_transport, rtcp_transport, filter),
-      listener_(new PipelineListener(conduit)),
-      domtrack_(domtrack)
-  {}
+                        nsAutoPtr<MediaPipelineFilter> filter);
 
   // Initialize (stuff here may fail)
   nsresult Init() override;
@@ -430,101 +332,8 @@ public:
   // multiple tracks of a type in a stream yet).  bug 1056650
   virtual nsresult ReplaceTrack(dom::MediaStreamTrack& domtrack);
 
-
   // Separate class to allow ref counting
-  class PipelineListener : public MediaStreamTrackDirectListener {
-   friend class MediaPipelineTransmit;
-   public:
-    explicit PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
-      : conduit_(conduit),
-        track_id_(TRACK_INVALID),
-        mMutex("MediaPipelineTransmit::PipelineListener"),
-        track_id_external_(TRACK_INVALID),
-        active_(false),
-        enabled_(false),
-        direct_connect_(false),
-        packetizer_(nullptr)
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-        , last_img_(-1)
-#endif // MOZILLA_INTERNAL_API
-    {
-    }
-
-    ~PipelineListener()
-    {
-      if (!NS_IsMainThread()) {
-        // release conduit on mainthread.  Must use forget()!
-        nsresult rv = NS_DispatchToMainThread(new
-                                              ConduitDeleteEvent(conduit_.forget()));
-        MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-        if (NS_FAILED(rv)) {
-          MOZ_CRASH();
-        }
-      } else {
-        conduit_ = nullptr;
-      }
-    }
-
-    // Dispatches setting the internal TrackID to TRACK_INVALID to the media
-    // graph thread to keep it in sync with other MediaStreamGraph operations
-    // like RemoveListener() and AddListener(). The TrackID will be updated on
-    // the next NewData() callback.
-    void UnsetTrackId(MediaStreamGraphImpl* graph);
-
-    void SetActive(bool active) { active_ = active; }
-    void SetEnabled(bool enabled) { enabled_ = enabled; }
-
-    // Implement MediaStreamTrackListener
-    void NotifyQueuedChanges(MediaStreamGraph* aGraph,
-                             StreamTime aTrackOffset,
-                             const MediaSegment& aQueuedMedia) override;
-
-    // Implement MediaStreamTrackDirectListener
-    void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                                 StreamTime aTrackOffset,
-                                 const MediaSegment& aMedia) override;
-    void NotifyDirectListenerInstalled(InstallationResult aResult) override;
-    void NotifyDirectListenerUninstalled() override;
-
-   private:
-    void UnsetTrackIdImpl() {
-      MutexAutoLock lock(mMutex);
-      track_id_ = track_id_external_ = TRACK_INVALID;
-    }
-
-    void NewData(MediaStreamGraph* graph,
-                 StreamTime offset,
-                 const MediaSegment& media);
-
-    virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
-                                   TrackRate rate, AudioChunk& chunk);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
-                                   VideoChunk& chunk);
-#endif
-    RefPtr<MediaSessionConduit> conduit_;
-
-    // May be TRACK_INVALID until we see data from the track
-    TrackID track_id_; // this is the current TrackID this listener is attached to
-    Mutex mMutex;
-    // protected by mMutex
-    // May be TRACK_INVALID until we see data from the track
-    TrackID track_id_external_; // this is queried from other threads
-
-    // active is true if there is a transport to send on
-    mozilla::Atomic<bool> active_;
-    // enabled is true if the media access control permits sending
-    // actual content; when false you get black/silence
-    mozilla::Atomic<bool> enabled_;
-
-    // Written and read on the MediaStreamGraph thread
-    bool direct_connect_;
-
-    nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    int32_t last_img_; // serial number of last Image
-#endif // MOZILLA_INTERNAL_API
-  };
+  class PipelineListener;
 
  private:
   RefPtr<PipelineListener> listener_;
@@ -546,14 +355,7 @@ class MediaPipelineReceive : public MediaPipeline {
                        RefPtr<MediaSessionConduit> conduit,
                        RefPtr<TransportFlow> rtp_transport,
                        RefPtr<TransportFlow> rtcp_transport,
-                       nsAutoPtr<MediaPipelineFilter> filter) :
-      MediaPipeline(pc, RECEIVE, main_thread, sts_thread,
-                    track_id, level, conduit, rtp_transport,
-                    rtcp_transport, filter),
-      stream_(stream),
-      segments_added_(0) {
-    MOZ_ASSERT(stream_);
-  }
+                       nsAutoPtr<MediaPipelineFilter> filter);
 
   int segments_added() const { return segments_added_; }
 
@@ -563,9 +365,7 @@ class MediaPipelineReceive : public MediaPipeline {
   virtual void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) = 0;
 #endif // USE_FAKE_MEDIA_STREAMS
  protected:
-  ~MediaPipelineReceive() {
-    MOZ_ASSERT(!stream_);  // Check that we have shut down already.
-  }
+  ~MediaPipelineReceive();
 
   RefPtr<SourceMediaStream> stream_;
   int segments_added_;
@@ -594,67 +394,20 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport,
                             nsAutoPtr<MediaPipelineFilter> filter,
-                            bool queue_track) :
-      MediaPipelineReceive(pc, main_thread, sts_thread,
-                           stream, media_stream_track_id, level, conduit,
-                           rtp_transport, rtcp_transport, filter),
-      listener_(new PipelineListener(stream, numeric_track_id, conduit,
-                                     queue_track)) {
-  }
+                            bool queue_track);
 
-  void DetachMedia() override {
-    ASSERT_ON_THREAD(main_thread_);
-    if (stream_) {
-      stream_->RemoveListener(listener_);
-      stream_ = nullptr;
-    }
-  }
+  void DetachMedia() override;
 
   nsresult Init() override;
   bool IsVideo() const override { return false; }
 
 #ifndef USE_FAKE_MEDIA_STREAMS
-  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
-  {
-    listener_->SetPrincipalHandle_m(principal_handle);
-  }
+  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override;
 #endif // USE_FAKE_MEDIA_STREAMS
 
  private:
   // Separate class to allow ref counting
-  class PipelineListener : public GenericReceiveListener {
-   public:
-    PipelineListener(SourceMediaStream * source, TrackID track_id,
-                     const RefPtr<MediaSessionConduit>& conduit,
-                     bool queue_track);
-
-    ~PipelineListener()
-    {
-      if (!NS_IsMainThread()) {
-        // release conduit on mainthread.  Must use forget()!
-        nsresult rv = NS_DispatchToMainThread(new
-                                              ConduitDeleteEvent(conduit_.forget()));
-        MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-        if (NS_FAILED(rv)) {
-          MOZ_CRASH();
-        }
-      } else {
-        conduit_ = nullptr;
-      }
-    }
-
-    // Implement MediaStreamListener
-    void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                  StreamTime offset,
-                                  uint32_t events,
-                                  const MediaSegment& queued_media,
-                                  MediaStream* input_stream,
-                                  TrackID input_tid) override {}
-    void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
-
-   private:
-    RefPtr<MediaSessionConduit> conduit_;
-  };
+  class PipelineListener;
 
   RefPtr<PipelineListener> listener_;
 };
@@ -680,139 +433,29 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport,
                             nsAutoPtr<MediaPipelineFilter> filter,
-                            bool queue_track) :
-      MediaPipelineReceive(pc, main_thread, sts_thread,
-                           stream, media_stream_track_id, level, conduit,
-                           rtp_transport, rtcp_transport, filter),
-      renderer_(new PipelineRenderer(this)),
-      listener_(new PipelineListener(stream, numeric_track_id, queue_track)) {
-  }
+                            bool queue_track);
 
   // Called on the main thread.
-  void DetachMedia() override {
-    ASSERT_ON_THREAD(main_thread_);
-
-    listener_->EndTrack();
-    // stop generating video and thus stop invoking the PipelineRenderer
-    // and PipelineListener - the renderer has a raw ptr to the Pipeline to
-    // avoid cycles, and the render callbacks are invoked from a different
-    // thread so simple null-checks would cause TSAN bugs without locks.
-    static_cast<VideoSessionConduit*>(conduit_.get())->DetachRenderer();
-    if (stream_) {
-      stream_->RemoveListener(listener_);
-      stream_ = nullptr;
-    }
-  }
+  void DetachMedia() override;
 
   nsresult Init() override;
   bool IsVideo() const override { return true; }
 
 #ifndef USE_FAKE_MEDIA_STREAMS
-  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override
-  {
-    listener_->SetPrincipalHandle_m(principal_handle);
-  }
+  void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override;
 #endif // USE_FAKE_MEDIA_STREAMS
 
  private:
-  class PipelineRenderer : public VideoRenderer {
-   public:
-    explicit PipelineRenderer(MediaPipelineReceiveVideo *pipeline) :
-      pipeline_(pipeline) {}
-
-    void Detach() { pipeline_ = nullptr; }
-
-    // Implement VideoRenderer
-    void FrameSizeChange(unsigned int width,
-                         unsigned int height,
-                         unsigned int number_of_streams) override {
-      pipeline_->listener_->FrameSizeChange(width, height, number_of_streams);
-    }
-
-    void RenderVideoFrame(const unsigned char* buffer,
-                          size_t buffer_size,
-                          uint32_t time_stamp,
-                          int64_t render_time,
-                          const ImageHandle& handle) override {
-      pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
-                                             time_stamp, render_time,
-                                             handle.GetImage());
-    }
-
-    void RenderVideoFrame(const unsigned char* buffer,
-                          size_t buffer_size,
-                          uint32_t y_stride,
-                          uint32_t cbcr_stride,
-                          uint32_t time_stamp,
-                          int64_t render_time,
-                          const ImageHandle& handle) override {
-      pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
-                                             y_stride, cbcr_stride,
-                                             time_stamp, render_time,
-                                             handle.GetImage());
-    }
-
-   private:
-    MediaPipelineReceiveVideo *pipeline_;  // Raw pointer to avoid cycles
-  };
+  class PipelineRenderer;
+  friend class PipelineRenderer;
 
   // Separate class to allow ref counting
-  class PipelineListener : public GenericReceiveListener {
-   public:
-    PipelineListener(SourceMediaStream * source, TrackID track_id,
-                     bool queue_track);
-
-    // Implement MediaStreamListener
-    void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                  StreamTime offset,
-                                  uint32_t events,
-                                  const MediaSegment& queued_media,
-                                  MediaStream* input_stream,
-                                  TrackID input_tid) override {}
-    void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
-
-    // Accessors for external writes from the renderer
-    void FrameSizeChange(unsigned int width,
-                         unsigned int height,
-                         unsigned int number_of_streams) {
-      ReentrantMonitorAutoEnter enter(monitor_);
-
-      width_ = width;
-      height_ = height;
-    }
-
-    void RenderVideoFrame(const unsigned char* buffer,
-                          size_t buffer_size,
-                          uint32_t time_stamp,
-                          int64_t render_time,
-                          const RefPtr<layers::Image>& video_image);
-    void RenderVideoFrame(const unsigned char* buffer,
-                          size_t buffer_size,
-                          uint32_t y_stride,
-                          uint32_t cbcr_stride,
-                          uint32_t time_stamp,
-                          int64_t render_time,
-                          const RefPtr<layers::Image>& video_image);
-
-   private:
-    int width_;
-    int height_;
-#if defined(MOZILLA_INTERNAL_API)
-    RefPtr<layers::ImageContainer> image_container_;
-    RefPtr<layers::Image> image_;
-#endif
-    mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
-                                        // Protects image_ against:
-                                        // - Writing from the GIPS thread
-                                        // - Reading from the MSG thread
-  };
-
-  friend class PipelineRenderer;
+  class PipelineListener;
 
   RefPtr<PipelineRenderer> renderer_;
   RefPtr<PipelineListener> listener_;
 };
 
 
-}  // end namespace
+}  // namespace mozilla
 #endif

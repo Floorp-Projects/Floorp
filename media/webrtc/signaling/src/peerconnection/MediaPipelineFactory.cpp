@@ -9,6 +9,7 @@
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
 #include "MediaPipelineFactory.h"
+#include "MediaPipelineFilter.h"
 #include "transportflow.h"
 #include "transportlayer.h"
 #include "transportlayerdtls.h"

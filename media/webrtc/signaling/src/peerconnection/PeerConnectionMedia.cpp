@@ -28,6 +28,9 @@
 #include "FakeMediaStreams.h"
 #else
 #include "MediaSegment.h"
+#ifdef MOZILLA_INTERNAL_API
+#include "MediaStreamGraph.h"
+#endif
 #endif
 
 #include "nsNetCID.h"
