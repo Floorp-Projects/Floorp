@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test that stroke-linecap != "butt" is not ignored on circles and
+  ellipses with dashed stroke</title>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1242147 -->
+
+  <rect width="100%" height="100%" fill="lime" />
+
+  <circle cx="100" cy="100" r="25" fill="red" />
+  <circle cx="500" cy="100" r="25" fill="red" />
+  <!-- a half circle -->
+  <circle cx="300" cy="100" r="200" stroke="lime" fill="none"
+          stroke-width="80" stroke-linecap="round"
+          stroke-dasharray="628.318 1000" />
+
+  <path d="M 100,400 l 0,0" stroke="red" stroke-width="50"
+        stroke-linecap="square" />
+  <path d="M 500,400 l 0,0" stroke="red" stroke-width="50"
+        stroke-linecap="square" />
+  <!-- another half circle -->
+  <ellipse cx="300" cy="400" rx="200" ry="200" fill="none"
+           stroke="lime" stroke-width="80" stroke-linecap="square"
+           stroke-dasharray="628.318 1000" />
+
+</svg>
