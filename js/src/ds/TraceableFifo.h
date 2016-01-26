@@ -20,8 +20,8 @@ namespace js {
 //
 // Most types of GC pointers as keys and values can be traced with no extra
 // infrastructure. For structs and non-gc-pointer members, ensure that there is
-// a specialization of DefaultGCPolicy<T> with an appropriate trace method
-// available to handle the custom type. Generic helpers can be found in
+// a specialization of GCPolicy<T> with an appropriate trace method available
+// to handle the custom type. Generic helpers can be found in
 // js/public/TracingAPI.h. Generic helpers can be found in
 // js/public/TracingAPI.h.
 //
@@ -48,9 +48,9 @@ class TraceableFifo
 
     static void trace(TraceableFifo* tf, JSTracer* trc) {
         for (size_t i = 0; i < tf->front_.length(); ++i)
-            DefaultGCPolicy<T>::trace(trc, &tf->front_[i], "fifo element");
+            GCPolicy<T>::trace(trc, &tf->front_[i], "fifo element");
         for (size_t i = 0; i < tf->rear_.length(); ++i)
-            DefaultGCPolicy<T>::trace(trc, &tf->rear_[i], "fifo element");
+            GCPolicy<T>::trace(trc, &tf->rear_[i], "fifo element");
     }
 };
 

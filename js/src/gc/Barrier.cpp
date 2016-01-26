@@ -9,6 +9,7 @@
 #include "jscompartment.h"
 #include "jsobj.h"
 
+#include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "js/Value.h"

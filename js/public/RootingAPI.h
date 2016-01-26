@@ -17,6 +17,7 @@
 #include "jspubtd.h"
 
 #include "js/GCAPI.h"
+#include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -106,11 +107,6 @@ namespace js {
 
 template <typename T>
 struct BarrierMethods {
-};
-
-template <typename T>
-struct GCPolicy {
-    static T initial() { return T(); }
 };
 
 template <typename T>
