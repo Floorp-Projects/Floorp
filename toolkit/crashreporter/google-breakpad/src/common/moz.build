@@ -9,28 +9,47 @@ if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
 
 UNIFIED_SOURCES += [
     'convert_UTF.c',
+    'logging.cc',
+    'module.cc',
+    'pathname_stripper.cc',
     'string_conversion.cc',
+    'unique_string.cc',
 ]
 
 if CONFIG['OS_ARCH'] != 'WINNT':
     UNIFIED_SOURCES += [
+        'arm_ex_reader.cc',
+        'arm_ex_to_module.cc',
+        'dwarf/bytereader.cc',
+        'dwarf/dwarf2diehandler.cc',
+        'dwarf/dwarf2reader.cc',
+        'dwarf_cfi_to_module.cc',
+        'dwarf_cu_to_module.cc',
+        'dwarf_line_to_module.cc',
+        'language.cc',
         'md5.cc',
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
+    UNIFIED_SOURCES += [
+        'linux/dump_symbols.cc',
+        'linux/elf_symbols_to_module.cc',
+    ]
     HOST_DEFINES['HAVE_A_OUT_H'] = True
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    HOST_DEFINES['HAVE_MACH_O_NLIST_H'] = True
-    HOST_SOURCES += [
+    DEFINES['HAVE_A_OUT_H'] = True
+
+if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['HOST_OS_ARCH'] != 'Darwin':
+    HOST_CXXFLAGS += [
+        '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
+    ]
+
+if CONFIG['OS_TARGET'] != 'Android' and CONFIG['OS_ARCH'] != 'WINNT':
+    UNIFIED_SOURCES += [
         'stabs_reader.cc',
         'stabs_to_module.cc',
     ]
-    if CONFIG['HOST_OS_ARCH'] != 'Darwin':
-        HOST_CXXFLAGS += [
-            '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
-        ]
 
-if CONFIG['OS_ARCH'] != 'WINNT':
+if CONFIG['OS_ARCH'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     HOST_SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
@@ -39,15 +58,27 @@ if CONFIG['OS_ARCH'] != 'WINNT':
         'dwarf_cu_to_module.cc',
         'dwarf_line_to_module.cc',
         'language.cc',
+        'logging.cc',
         'md5.cc',
         'module.cc',
+        'pathname_stripper.cc',
+        'stabs_reader.cc',
+        'stabs_to_module.cc',
         'string_conversion.cc',
+        'unique_string.cc',
     ]
     HOST_CXXFLAGS += [
         '-O2',
         '-g',
     ]
     HostLibrary('host_breakpad_common_s')
+
+if CONFIG['OS_ARCH'] == 'Darwin':
+    UNIFIED_SOURCES += [
+        'mac/dump_syms.cc',
+    ]
+    HOST_DEFINES['HAVE_MACH_O_NLIST_H'] = True
+    DEFINES['HAVE_MACH_O_NLIST_H'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     # We don't support unifying assembly files.
@@ -62,4 +93,17 @@ ALLOW_COMPILER_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    DEFINES['ELFSIZE'] = 32
+
+if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['NO_STABS_SUPPORT'] = True
+
+DEFINES['BP_LOGGING_INCLUDE'] = '"BreakpadLogging.h"'
+
 include('/toolkit/crashreporter/crashreporter.mozbuild')
+
+LOCAL_INCLUDES += [
+    '..',
+    '../../../breakpad-logging',
+]
