@@ -375,7 +375,7 @@ InspectorPanel.prototype = {
                           "animationinspector" == defaultTab);
     }
 
-    this.sidebar.show();
+    this.sidebar.show(defaultTab);
 
     this.setupSidebarToggle();
   },
