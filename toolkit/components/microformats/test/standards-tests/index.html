@@ -1,0 +1,178 @@
+<html><head><title>Mocha</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../static/css/mocha.css" />
+<script src="../static/javascript/chai.js"></script>
+<script src="../static/javascript/mocha.js"></script>
+<link rel="stylesheet" href="../static/css/mocha-custom.css" />
+
+<script src="../static/javascript/DOMParser.js"></script>
+
+<script data-cover src="../../microformat-shiv.js"></script>
+
+<script>
+var uncaughtError;
+
+window.addEventListener("error", function(error) {
+uncaughtError = error;
+});
+
+var consoleWarn = console.warn;
+var caughtWarnings = [];
+
+console.warn = function() {
+var args = Array.slice(arguments);
+caughtWarnings.push(args);
+consoleWarn.apply(console, args);
+};
+</script>
+
+<script>
+chai.config.includeStack = true;
+mocha.setup({ui: 'bdd', timeout: 10000});
+</script>
+
+<script src="../standards-tests/mf-mixed-h-card-mixedpropertries.js"></script>
+<script src="../standards-tests/mf-mixed-h-card-tworoots.js"></script>
+<script src="../standards-tests/mf-mixed-h-entry-mixedroots.js"></script>
+<script src="../standards-tests/mf-mixed-h-resume-mixedroots.js"></script>
+<script src="../standards-tests/mf-v1-adr-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v1-geo-abbrpattern.js"></script>
+<script src="../standards-tests/mf-v1-geo-hidden.js"></script>
+<script src="../standards-tests/mf-v1-geo-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v1-geo-valuetitleclass.js"></script>
+<script src="../standards-tests/mf-v1-hcalendar-ampm.js"></script>
+<script src="../standards-tests/mf-v1-hcalendar-attendees.js"></script>
+<script src="../standards-tests/mf-v1-hcalendar-combining.js"></script>
+<script src="../standards-tests/mf-v1-hcalendar-concatenate.js"></script>
+<script src="../standards-tests/mf-v1-hcalendar-time.js"></script>
+<script src="../standards-tests/mf-v1-hcard-email.js"></script>
+<script src="../standards-tests/mf-v1-hcard-format.js"></script>
+<script src="../standards-tests/mf-v1-hcard-hyperlinkedphoto.js"></script>
+<script src="../standards-tests/mf-v1-hcard-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v1-hcard-justaname.js"></script>
+<script src="../standards-tests/mf-v1-hcard-multiple.js"></script>
+<script src="../standards-tests/mf-v1-hcard-name.js"></script>
+<script src="../standards-tests/mf-v1-hcard-single.js"></script>
+<script src="../standards-tests/mf-v1-hentry-summarycontent.js"></script>
+<script src="../standards-tests/mf-v1-hfeed-simple.js"></script>
+<script src="../standards-tests/mf-v1-hnews-all.js"></script>
+<script src="../standards-tests/mf-v1-hnews-minimum.js"></script>
+<script src="../standards-tests/mf-v1-hproduct-aggregate.js"></script>
+<script src="../standards-tests/mf-v1-hproduct-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v1-hresume-affiliation.js"></script>
+<script src="../standards-tests/mf-v1-hresume-contact.js"></script>
+<script src="../standards-tests/mf-v1-hresume-education.js"></script>
+<script src="../standards-tests/mf-v1-hresume-skill.js"></script>
+<script src="../standards-tests/mf-v1-hresume-work.js"></script>
+<script src="../standards-tests/mf-v1-hreview-item.js"></script>
+<script src="../standards-tests/mf-v1-hreview-vcard.js"></script>
+<script src="../standards-tests/mf-v1-hreview-aggregate-hcard.js"></script>
+<script src="../standards-tests/mf-v1-hreview-aggregate-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v1-hreview-aggregate-vevent.js"></script>
+<script src="../standards-tests/mf-v1-includes-hcarditemref.js"></script>
+<script src="../standards-tests/mf-v1-includes-heventitemref.js"></script>
+<script src="../standards-tests/mf-v1-includes-hyperlink.js"></script>
+<script src="../standards-tests/mf-v1-includes-object.js"></script>
+<script src="../standards-tests/mf-v1-includes-table.js"></script>
+<script src="../standards-tests/mf-v2-h-adr-geo.js"></script>
+<script src="../standards-tests/mf-v2-h-adr-geourl.js"></script>
+<script src="../standards-tests/mf-v2-h-adr-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-adr-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v2-h-as-note-note.js"></script>
+<script src="../standards-tests/mf-v2-h-card-baseurl.js"></script>
+<script src="../standards-tests/mf-v2-h-card-childimplied.js"></script>
+<script src="../standards-tests/mf-v2-h-card-extendeddescription.js"></script>
+<script src="../standards-tests/mf-v2-h-card-hcard.js"></script>
+<script src="../standards-tests/mf-v2-h-card-horghcard.js"></script>
+<script src="../standards-tests/mf-v2-h-card-hyperlinkedphoto.js"></script>
+<script src="../standards-tests/mf-v2-h-card-impliedname.js"></script>
+<script src="../standards-tests/mf-v2-h-card-impliedphoto.js"></script>
+<script src="../standards-tests/mf-v2-h-card-impliedurl.js"></script>
+<script src="../standards-tests/mf-v2-h-card-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-card-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-card-nested.js"></script>
+<script src="../standards-tests/mf-v2-h-card-p-property.js"></script>
+<script src="../standards-tests/mf-v2-h-card-relativeurls.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-impliedvalue-nested.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-summarycontent.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-u-property.js"></script>
+<script src="../standards-tests/mf-v2-h-entry-urlincontent.js"></script>
+<script src="../standards-tests/mf-v2-h-event-ampm.js"></script>
+<script src="../standards-tests/mf-v2-h-event-attendees.js"></script>
+<script src="../standards-tests/mf-v2-h-event-combining.js"></script>
+<script src="../standards-tests/mf-v2-h-event-concatenate.js"></script>
+<script src="../standards-tests/mf-v2-h-event-dates.js"></script>
+<script src="../standards-tests/mf-v2-h-event-dt-property.js"></script>
+<script src="../standards-tests/mf-v2-h-event-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-event-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-event-time.js"></script>
+<script src="../standards-tests/mf-v2-h-feed-implied-title.js"></script>
+<script src="../standards-tests/mf-v2-h-feed-simple.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-abbrpattern.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-altitude.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-hidden.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v2-h-geo-valuetitleclass.js"></script>
+<script src="../standards-tests/mf-v2-h-news-all.js"></script>
+<script src="../standards-tests/mf-v2-h-news-minimum.js"></script>
+<script src="../standards-tests/mf-v2-h-org-hyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-org-simple.js"></script>
+<script src="../standards-tests/mf-v2-h-org-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v2-h-product-aggregate.js"></script>
+<script src="../standards-tests/mf-v2-h-product-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-product-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-product-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v2-h-recipe-all.js"></script>
+<script src="../standards-tests/mf-v2-h-recipe-minimum.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-affiliation.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-contact.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-education.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-skill.js"></script>
+<script src="../standards-tests/mf-v2-h-resume-work.js"></script>
+<script src="../standards-tests/mf-v2-h-review-hyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-review-implieditem.js"></script>
+<script src="../standards-tests/mf-v2-h-review-item.js"></script>
+<script src="../standards-tests/mf-v2-h-review-justaname.js"></script>
+<script src="../standards-tests/mf-v2-h-review-photo.js"></script>
+<script src="../standards-tests/mf-v2-h-review-vcard.js"></script>
+<script src="../standards-tests/mf-v2-h-review-aggregate-hevent.js"></script>
+<script src="../standards-tests/mf-v2-h-review-aggregate-justahyperlink.js"></script>
+<script src="../standards-tests/mf-v2-h-review-aggregate-simpleproperties.js"></script>
+<script src="../standards-tests/mf-v2-rel-duplicate-rels.js"></script>
+<script src="../standards-tests/mf-v2-rel-license.js"></script>
+<script src="../standards-tests/mf-v2-rel-nofollow.js"></script>
+<script src="../standards-tests/mf-v2-rel-rel-urls.js"></script>
+<script src="../standards-tests/mf-v2-rel-varying-text-duplicate-rels.js"></script>
+<script src="../standards-tests/mf-v2-rel-xfn-all.js"></script>
+<script src="../standards-tests/mf-v2-rel-xfn-elsewhere.js"></script>
+</head><body>
+<h3 class="capitalize">Microformats-shiv: standards tests</h3>
+<p>Standards tests built on Fri Sep 25 2015 13:26:26 GMT+0100 (BST). Downloaded from github repo: microformats/tests version v0.1.24</p>
+<div id="mocha"></div>
+</body>
+<script>
+describe("Uncaught Error Check", function() {
+it("should load the tests without errors", function() {
+chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
+});
+});
+
+describe("Unexpected Warnings Check", function() {
+it("should long only the warnings we expect", function() {
+chai.expect(caughtWarnings.length).to.eql(0);
+});
+});
+
+mocha.run(function () {
+var completeNode = document.createElement("p");
+completeNode.setAttribute("id", "complete");
+completeNode.appendChild(document.createTextNode("Complete"));
+document.getElementById("mocha").appendChild(completeNode);
+});
+
+</script>
+</body></html>
