@@ -1,0 +1,1 @@
+(function(A){A.fn.dismissable=function(B){var D=A(this);var C={authenticity_token:twttr.form_authenticity_token,_method:"put"};C["user["+B.userAttribute+"]"]="1";D.find("a.dismiss").click(function(){D.hide();A.ajax({type:"POST",url:B.userUrl,data:C});return false});return this}})(jQuery);
