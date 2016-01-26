@@ -530,6 +530,13 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
     // will now be owned by the RequestSendLocationEvent
     Update(lastPosition.position);
   } else {
+    // if it is not a watch request and timeout is 0,
+    // invoke the errorCallback (if present) with TIMEOUT code
+    if (mOptions && mOptions->mTimeout == 0 && !mIsWatchPositionRequest) {
+      NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+      return NS_OK;
+    }
+
     // Kick off the geo device, if it isn't already running
     nsresult rv = gs->StartDevice(GetPrincipal());
 
