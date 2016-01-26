@@ -23,6 +23,7 @@
 #include "mozilla/layers/APZUtils.h"    // for CompleteAsyncTransform
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorParent.h" // for CompositorParent, etc
+#include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels, etc
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
@@ -595,6 +596,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     // example, while they are waiting to be removed) we currently just
     // assume that we should fill.
     timing.mFill = dom::FillMode::Both;
+    timing.mFunction =
+      AnimationUtils::TimingFunctionToComputedTimingFunction(
+        animation.easingFunction());
 
     ComputedTiming computedTiming =
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(

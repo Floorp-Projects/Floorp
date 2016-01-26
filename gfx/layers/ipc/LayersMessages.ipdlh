@@ -200,6 +200,8 @@ struct Animation {
   nsCSSProperty property;
   AnimationData data;
   float playbackRate;
+  // This is used in the transformed progress calculation.
+  TimingFunction easingFunction;
 };
 
 // Change a layer's attributes
