@@ -36,7 +36,7 @@ var openFontInspectorForURL = Task.async(function*(url) {
   return {
     toolbox,
     inspector,
-    view: inspector.sidebar.getWindowForTab("fontinspector").fontInspector
+    view: inspector.fontInspector
   };
 });
 
