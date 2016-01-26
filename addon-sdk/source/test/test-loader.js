@@ -351,9 +351,38 @@ exports['test console global by default'] = function (assert) {
 exports['test shared globals'] = function(assert) {
   let uri = root + '/fixtures/loader/cycles/';
   let loader = Loader({ paths: { '': uri }, sharedGlobal: true,
+                        sharedGlobalBlocklist: ['b'] });
+
+  let program = main(loader, 'main');
+
+  // As it is hard to verify what is the global of an object
+  // (due to wrappers) we check that we see the `foo` symbol
+  // being manually injected into the shared global object
+  loader.sharedGlobalSandbox.foo = true;
+
+  let m = loader.sandboxes[uri + 'main.js'];
+  let a = loader.sandboxes[uri + 'a.js'];
+  let b = loader.sandboxes[uri + 'b.js'];
+
+  assert.ok(Cu.getGlobalForObject(m).foo, "main is shared");
+  assert.ok(Cu.getGlobalForObject(a).foo, "a is shared");
+  assert.ok(!Cu.getGlobalForObject(b).foo, "b isn't shared");
+
+  unload(loader);
+}
+
+exports['test deprecated shared globals exception name'] = function(assert) {
+  let uri = root + '/fixtures/loader/cycles/';
+  let loader = Loader({ paths: { '': uri }, sharedGlobal: true,
                         sharedGlobalBlacklist: ['b'] });
 
   let program = main(loader, 'main');
+
+  assert.ok(loader.sharedGlobalBlocklist.includes("b"), "b should be in the blocklist");
+  assert.equal(loader.sharedGlobalBlocklist.length, loader.sharedGlobalBlacklist.length,
+               "both blocklists should have the same number of items.");
+  assert.equal(loader.sharedGlobalBlocklist.join(","), loader.sharedGlobalBlacklist.join(","),
+               "both blocklists should have the same items.");
 
   // As it is hard to verify what is the global of an object
   // (due to wrappers) we check that we see the `foo` symbol
