@@ -144,6 +144,9 @@ public:
    */
   virtual void NotifyFlushComplete() = 0;
 
+  virtual void UpdateOverscrollVelocity(const float aX, const float aY) {}
+  virtual void UpdateOverscrollOffset(const float aX,const  float aY) {}
+
   GeckoContentController() {}
   virtual void Destroy() {}
 
