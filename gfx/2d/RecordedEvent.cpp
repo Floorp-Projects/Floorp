@@ -80,6 +80,8 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
     LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
     LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
     LOAD_EVENT_TYPE(FONTDATA, RecordedFontData);
+    LOAD_EVENT_TYPE(PUSHLAYER, RecordedPushLayer);
+    LOAD_EVENT_TYPE(POPLAYER, RecordedPopLayer);
   default:
     return nullptr;
   }
@@ -157,6 +159,10 @@ RecordedEvent::GetEventName(EventType aType)
     return "CreateSimilarDrawTarget";
   case FONTDATA:
     return "FontData";
+  case PUSHLAYER:
+    return "PushLayer";
+  case POPLAYER:
+    return "PopLayer";
   default:
     return "Unknown";
   }
@@ -925,6 +931,68 @@ void
 RecordedPopClip::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
   aStringStream << "[" << mDT << "] PopClip";
+}
+
+void
+RecordedPushLayer::PlayEvent(Translator *aTranslator) const
+{
+  SourceSurface* mask = mMask ? aTranslator->LookupSourceSurface(mMask)
+                              : nullptr;
+  aTranslator->LookupDrawTarget(mDT)->
+    PushLayer(mOpaque, mOpacity, mask, mMaskTransform, mBounds, mCopyBackground);
+}
+
+void
+RecordedPushLayer::RecordToStream(ostream &aStream) const
+{
+  RecordedDrawingEvent::RecordToStream(aStream);
+  WriteElement(aStream, mOpaque);
+  WriteElement(aStream, mOpacity);
+  WriteElement(aStream, mMask);
+  WriteElement(aStream, mMaskTransform);
+  WriteElement(aStream, mBounds);
+  WriteElement(aStream, mCopyBackground);
+}
+
+RecordedPushLayer::RecordedPushLayer(istream &aStream)
+  : RecordedDrawingEvent(PUSHLAYER, aStream)
+{
+  ReadElement(aStream, mOpaque);
+  ReadElement(aStream, mOpacity);
+  ReadElement(aStream, mMask);
+  ReadElement(aStream, mMaskTransform);
+  ReadElement(aStream, mBounds);
+  ReadElement(aStream, mCopyBackground);
+}
+
+void
+RecordedPushLayer::OutputSimpleEventInfo(stringstream &aStringStream) const
+{
+  aStringStream << "[" << mDT << "] PushPLayer (Opaque=" << mOpaque <<
+    ", Opacity=" << mOpacity << ", Mask Ref=" << mMask << ") ";
+}
+
+void
+RecordedPopLayer::PlayEvent(Translator *aTranslator) const
+{
+  aTranslator->LookupDrawTarget(mDT)->PopLayer();
+}
+
+void
+RecordedPopLayer::RecordToStream(ostream &aStream) const
+{
+  RecordedDrawingEvent::RecordToStream(aStream);
+}
+
+RecordedPopLayer::RecordedPopLayer(istream &aStream)
+  : RecordedDrawingEvent(POPLAYER, aStream)
+{
+}
+
+void
+RecordedPopLayer::OutputSimpleEventInfo(stringstream &aStringStream) const
+{
+  aStringStream << "[" << mDT << "] PopLayer";
 }
 
 void
