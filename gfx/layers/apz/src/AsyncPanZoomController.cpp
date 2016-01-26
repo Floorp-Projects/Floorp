@@ -2385,15 +2385,22 @@ void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   // scroll to begin with.
   bool xCanScroll = mX.CanScroll();
   bool yCanScroll = mY.CanScroll();
-
   bool xConsumed = FuzzyEqualsAdditive(aOverscroll.x, 0.0f, COORDINATE_EPSILON);
+  bool yConsumed = FuzzyEqualsAdditive(aOverscroll.y, 0.0f, COORDINATE_EPSILON);
+
+#if defined(MOZ_ANDROID_APZ)
+  RefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller && ((xCanScroll && !xConsumed) || (yCanScroll && !yConsumed))) {
+    controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y);
+    aOverscroll.x = aOverscroll.y = 0.0f;
+  }
+#else
   if (xCanScroll && !xConsumed) {
     mX.OverscrollBy(aOverscroll.x);
     aOverscroll.x = 0;
     xConsumed = true;
   }
 
-  bool yConsumed = FuzzyEqualsAdditive(aOverscroll.y, 0.0f, COORDINATE_EPSILON);
   if (yCanScroll && !yConsumed) {
     mY.OverscrollBy(aOverscroll.y);
     aOverscroll.y = 0;
@@ -2403,6 +2410,7 @@ void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   if ((xCanScroll && xConsumed) || (yCanScroll && yConsumed)) {
     ScheduleComposite();
   }
+#endif
 }
 
 RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHandoffChain() {
@@ -2501,7 +2509,14 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelo
                                    aScrolledApzc};
     treeManagerLocal->DispatchFling(this, handoffState);
     if (!IsZero(handoffState.mVelocity) && IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
+#if defined(MOZ_ANDROID_APZ)
+      RefPtr<GeckoContentController> controller = GetGeckoContentController();
+      if (controller) {
+        controller->UpdateOverscrollVelocity(handoffState.mVelocity.x, handoffState.mVelocity.y);
+      }
+#else
       StartOverscrollAnimation(handoffState.mVelocity);
+#endif
     }
   }
 }
