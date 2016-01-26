@@ -93,6 +93,7 @@ struct StepFunction {
 };
 
 union TimingFunction {
+  null_t;
   CubicBezierFunction;
   StepFunction;
 };
