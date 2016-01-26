@@ -40,6 +40,7 @@ class GLContext;
   * \param aData Image data to upload.
   * \param aDstRegion Region of texture to upload to.
   * \param aTexture Texture to use, or 0 to have one created for you.
+  * \param aOutUploadSize if set, the number of bytes the texture requires will be returned here
   * \param aOverwrite Over an existing texture with a new one.
   * \param aSrcPoint Offset into aSrc where the region's bound's
   *  TopLeft() sits.
@@ -59,6 +60,7 @@ UploadImageDataToTexture(GLContext* gl,
                          gfx::SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
+                         size_t* aOutUploadSize = nullptr,
                          bool aOverwrite = false,
                          bool aPixelBuffer = false,
                          GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
@@ -72,6 +74,7 @@ UploadSurfaceToTexture(GLContext* gl,
                        gfx::DataSourceSurface *aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
+                       size_t* aOutUploadSize = nullptr,
                        bool aOverwrite = false,
                        const gfx::IntPoint& aSrcPoint = gfx::IntPoint(0, 0),
                        bool aPixelBuffer = false,
