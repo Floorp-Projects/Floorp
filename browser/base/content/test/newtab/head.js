@@ -419,22 +419,21 @@ function waitForBrowserLoad(browser) {
 /**
  * Compares the current grid arrangement with the given pattern.
  * @param the pattern (see below)
- * @param the array of sites to compare with (optional)
  *
  * Example: checkGrid("3p,2,,1p")
  * Result: We expect the first cell to contain the pinned site 'http://example3.com/'.
  *         The second cell contains 'http://example2.com/'. The third cell is empty.
  *         The fourth cell contains the pinned site 'http://example4.com/'.
  */
-function* checkGrid(aSitesPattern, aSites) {
+function* checkGrid(aSitesPattern) {
   let length = aSitesPattern.split(",").length;
 
   let foundPattern = 
     yield ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
-                            { length: length, sites: aSites }, function* (args) {
+                            { length: length }, function* (args) {
       let grid = content.wrappedJSObject.gGrid;
 
-      let sites = (args.sites || grid.sites).slice(0, args.length);
+      let sites = grid.sites.slice(0, args.length);
       return sites.map(function (aSite) {
         if (!aSite)
           return "";
