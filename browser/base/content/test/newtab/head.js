@@ -228,7 +228,7 @@ function getCell(aIndex) {
 }
 
 function performOnCell(aIndex, aFn) {
-  return ContentTask.spawn(gBrowser.selectedBrowser,
+  return ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
                            { index: aIndex, fn: aFn.toString() }, function* (args) {
     let cell = content.gGrid.cells[args.index];
     return eval("(" + args.fn + ")(cell)");
@@ -384,7 +384,7 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
  * Creates a new tab containing 'about:newtab'.
  */
 function* addNewTabPageTab() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gWindow.gBrowser, "about:newtab", false);
   let browser = tab.linkedBrowser;
 
   // Wait for the document to become visible in case it was preloaded.
@@ -430,7 +430,7 @@ function* checkGrid(aSitesPattern, aSites) {
   let length = aSitesPattern.split(",").length;
 
   let foundPattern = 
-    yield ContentTask.spawn(gBrowser.selectedBrowser,
+    yield ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
                             { length: length, sites: aSites }, function* (args) {
       let grid = content.wrappedJSObject.gGrid;
 
@@ -470,8 +470,10 @@ function blockCell(aIndex) {
  * @param aIndex The cell index.
  * @param aPinIndex The index the defines where the site should be pinned.
  */
-function pinCell(aIndex, aPinIndex) {
-  getCell(aIndex).site.pin(aPinIndex);
+function pinCell(aIndex) {
+  performOnCell(aIndex, cell => {
+    cell.site.pin();
+  });
 }
 
 /**
@@ -796,7 +798,7 @@ function whenSearchInitDone() {
  *        Can be any of("blank"|"classic"|"enhanced")
  */
 function customizeNewTabPage(aTheme) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aTheme, function*(aTheme) {
+  return ContentTask.spawn(gWindow.gBrowser.selectedBrowser, aTheme, function*(aTheme) {
 
     let document = content.document;
     let panel = document.getElementById("newtab-customize-panel");
