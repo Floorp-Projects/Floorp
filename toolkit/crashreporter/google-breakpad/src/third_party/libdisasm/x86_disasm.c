@@ -8,7 +8,7 @@
 #include "x86_operand_list.h"
 
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
         #define snprintf        _snprintf
         #define inline          __inline
 #endif
@@ -165,7 +165,7 @@ unsigned int x86_disasm_forward( unsigned char *buf, unsigned int buf_len,
                         if (next_addr != -1 ) {
                                 next_offset = next_addr - buf_rva;
                                 /* if offset is in this buffer... */
-                                if ( (uint32_t)next_addr >= buf_rva &&
+                                if ( next_addr >= buf_rva &&
                                      next_offset < buf_len ) {
                                         /* go ahead and disassemble */
                                         count += x86_disasm_forward( buf,

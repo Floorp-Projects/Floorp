@@ -44,8 +44,13 @@
 #include <string>
 #include <vector>
 
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "common/symbol_data.h"
 #include "common/using_std_string.h"
+#include "common/unique_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
@@ -74,10 +79,8 @@ class Module {
 
   // A source file.
   struct File {
-    explicit File(const string &name_input) : name(name_input), source_id(0) {}
-
     // The name of the source file.
-    const string name;
+    string name;
 
     // The file's source id.  The Write member function clears this
     // field and assigns source ids a fresh, so any value placed here
@@ -87,9 +90,6 @@ class Module {
 
   // A function.
   struct Function {
-    Function(const string &name_input, const Address &address_input) :
-        name(name_input), address(address_input), size(0), parameter_size(0) {}
-
     // For sorting by address.  (Not style-guide compliant, but it's
     // stupid not to put this in the struct.)
     static bool CompareByAddress(const Function *x, const Function *y) {
@@ -97,11 +97,10 @@ class Module {
     }
 
     // The function's name.
-    const string name;
+    string name;
 
     // The start address and length of the function's code.
-    const Address address;
-    Address size;
+    Address address, size;
 
     // The function's parameter size.
     Address parameter_size;
@@ -126,16 +125,150 @@ class Module {
 
   // An exported symbol.
   struct Extern {
-    explicit Extern(const Address &address_input) : address(address_input) {}
-    const Address address;
+    Address address;
     string name;
   };
 
-  // A map from register names to postfix expressions that recover
-  // their their values. This can represent a complete set of rules to
+  // Representation of an expression.  This can either be a postfix
+  // expression, in which case it is stored as a string, or a simple
+  // expression of the form (identifier + imm) or *(identifier + imm).
+  // It can also be invalid (denoting "no value").
+  enum ExprHow {
+    kExprInvalid = 1,
+    kExprPostfix,
+    kExprSimple,
+    kExprSimpleMem
+  };
+  struct Expr {
+    // Construct a simple-form expression
+    Expr(const UniqueString* ident, long offset, bool deref) {
+      if (ident == ustr__empty()) {
+        Expr();
+      } else {
+        postfix_ = "";
+        ident_ = ident;
+        offset_ = offset;
+        how_ = deref ? kExprSimpleMem : kExprSimple;
+      }
+    }
+    // Construct an expression from a postfix string
+    Expr(string postfix) {
+      if (postfix.empty()) {
+        Expr();
+      } else {
+        postfix_ = postfix;
+        ident_ = NULL;
+        offset_ = 0;
+        how_ = kExprPostfix;
+      }
+    }
+    // Construct an invalid expression
+    Expr() {
+      postfix_ = "";
+      ident_ = NULL;
+      offset_ = 0;
+      how_ = kExprInvalid;
+    }
+    bool isExprInvalid() const { return how_ == kExprInvalid; }
+
+    // Return the postfix expression string, either directly,
+    // if this is a postfix expression, or by synthesising it
+    // for a simple expression.
+    string getExprPostfix() const {
+      switch (how_) {
+        case kExprPostfix:
+          return postfix_;
+        case kExprSimple:
+        case kExprSimpleMem: {
+          char buf[40];
+          sprintf(buf, " %ld %c%s", labs(offset_), offset_ < 0 ? '-' : '+',
+                                    how_ == kExprSimple ? "" : " ^");
+          return string(FromUniqueString(ident_)) + string(buf);
+        }
+        case kExprInvalid:
+        default:
+          assert(0 && "getExprPostfix: invalid Module::Expr type");
+          return "Expr::genExprPostfix: kExprInvalid";
+      }
+    }
+
+    bool operator==(const Expr& other) const {
+      return how_ == other.how_ &&
+          ident_ == other.ident_ &&
+          offset_ == other.offset_ &&
+          postfix_ == other.postfix_;
+    }
+
+    // Returns an Expr which evaluates to |this| + |delta|
+    Expr add_delta(long delta) {
+      if (delta == 0) {
+        return *this;
+      }
+      // If it's a simple form expression of the form "identifier + offset",
+      // simply add |delta| on to |offset|.  In the other two possible
+      // cases:
+      //    *(identifier + offset)
+      //    completely arbitrary postfix expression string
+      // the only option is to "downgrade" it to a postfix expression and add
+      // "+/- delta" at the end of the string, since the result can't be
+      // represented in the simple form.
+      switch (how_) {
+        case kExprSimpleMem:
+        case kExprPostfix: {
+          char buf[40];
+          sprintf(buf, " %ld %c", labs(delta), delta < 0 ? '-' : '+');
+          return Expr(getExprPostfix() + string(buf));
+        }
+        case kExprSimple:
+          return Expr(ident_, offset_ + delta, false);
+        case kExprInvalid:
+        default:
+          assert(0 && "add_delta: invalid Module::Expr type");
+          // Invalid inputs produce an invalid result
+          return Expr();
+      }
+    }
+
+    // Returns an Expr which evaluates to *|this|
+    Expr deref() {
+      // In the simplest case, a kExprSimple can be changed into a
+      // kExprSimpleMem.  In all other cases it has to be dumped as a
+      // postfix string, and " ^" added at the end.
+      switch (how_) {
+        case kExprSimple: {
+          Expr t = *this;
+          t.how_ = kExprSimpleMem;
+          return t;
+        }
+        case kExprSimpleMem:
+        case kExprPostfix: {
+          return Expr(getExprPostfix() + " ^");
+        }
+        case kExprInvalid:
+        default:
+          assert(0 && "deref: invalid Module::Expr type");
+          // Invalid inputs produce an invalid result
+          return Expr();
+      }
+    }
+
+    // The identifier that gives the starting value for simple expressions.
+    const UniqueString* ident_;
+    // The offset to add for simple expressions.
+    long    offset_;
+    // The Postfix expression string to evaluate for non-simple expressions.
+    string  postfix_;
+    // The operation expressed by this expression.
+    ExprHow how_;
+
+    friend std::ostream& operator<<(std::ostream& stream, const Expr& expr);
+  };
+
+  // A map from register names to expressions that recover
+  // their values. This can represent a complete set of rules to
   // follow at some address, or a set of changes to be applied to an
   // extant set of rules.
-  typedef map<string, string> RuleMap;
+  typedef map<const UniqueString*, Expr> RuleMap;
 
   // A map from addresses to RuleMaps, representing changes that take
   // effect at given addresses.
@@ -242,12 +375,20 @@ class Module {
   // appropriate interface.)
   void GetFunctions(vector<Function *> *vec, vector<Function *>::iterator i);
 
+  // If this module has a function at ADDRESS, return a pointer to it.
+  // Otherwise, return NULL.
+  Function* FindFunctionByAddress(Address address);
+
   // Insert pointers to the externs added to this module at I in
   // VEC. The pointed-to Externs are still owned by this module.
   // (Since this is effectively a copy of the extern list, this is
   // mostly useful for testing; other uses should probably get a more
   // appropriate interface.)
   void GetExterns(vector<Extern *> *vec, vector<Extern *>::iterator i);
+
+  // If this module has an extern whose base address is less than ADDRESS,
+  // return a pointer to it. Otherwise, return NULL.
+  Extern* FindExternByAddress(Address address);
 
   // Clear VEC and fill it with pointers to the Files added to this
   // module, sorted by name. The pointed-to Files are still owned by
@@ -261,7 +402,7 @@ class Module {
   // effectively a copy of the stack frame entry list, this is mostly
   // useful for testing; other uses should probably get
   // a more appropriate interface.)
-  void GetStackFrameEntries(vector<StackFrameEntry *> *vec) const;
+  void GetStackFrameEntries(vector<StackFrameEntry *> *vec);
 
   // If this module has a StackFrameEntry whose address range covers
   // ADDRESS, return it. Otherwise return NULL.
@@ -287,11 +428,6 @@ class Module {
   // Addresses in the output are all relative to the load address
   // established by SetLoadAddress.
   bool Write(std::ostream &stream, SymbolData symbol_data);
-
-  string name() const { return name_; }
-  string os() const { return os_; }
-  string architecture() const { return architecture_; }
-  string identifier() const { return id_; }
 
  private:
   // Report an error that has occurred writing the symbol file, using

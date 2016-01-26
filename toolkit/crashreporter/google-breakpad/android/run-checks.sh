@@ -326,9 +326,6 @@ case $ARCH in
   x86)
     GNU_CONFIG=i686-linux-android
     ;;
-  mips)
-    GNU_CONFIG=mipsel-linux-android
-    ;;
   *)
     GNU_CONFIG="$ARCH-linux-android"
     ;;

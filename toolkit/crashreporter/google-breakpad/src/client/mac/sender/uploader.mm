@@ -205,11 +205,6 @@ NSDictionary *readConfigurationData(const char *configFile) {
 }
 
 //=============================================================================
-+ (NSDictionary *)readConfigurationDataFromFile:(NSString *)configFile {
-  return readConfigurationData([configFile fileSystemRepresentation]);
-}
-
-//=============================================================================
 - (void)translateConfigurationData:(NSDictionary *)config {
   parameters_ = [[NSMutableDictionary alloc] init];
 
@@ -492,46 +487,6 @@ NSDictionary *readConfigurationData(const char *configFile) {
 }
 
 //=============================================================================
-- (void)handleNetworkResponse:(NSData *)data withError:(NSError *)error {
-  NSString *result = [[NSString alloc] initWithData:data
-                                           encoding:NSUTF8StringEncoding];
-  const char *reportID = "ERR";
-  if (error) {
-    fprintf(stderr, "Breakpad Uploader: Send Error: %s\n",
-            [[error description] UTF8String]);
-  } else {
-    NSCharacterSet *trimSet =
-        [NSCharacterSet whitespaceAndNewlineCharacterSet];
-    reportID = [[result stringByTrimmingCharactersInSet:trimSet] UTF8String];
-    [self logUploadWithID:reportID];
-  }
-
-  // rename the minidump file according to the id returned from the server
-  NSString *minidumpDir =
-      [parameters_ objectForKey:@kReporterMinidumpDirectoryKey];
-  NSString *minidumpID = [parameters_ objectForKey:@kReporterMinidumpIDKey];
-
-  NSString *srcString = [NSString stringWithFormat:@"%@/%@.dmp",
-                                  minidumpDir, minidumpID];
-  NSString *destString = [NSString stringWithFormat:@"%@/%s.dmp",
-                                   minidumpDir, reportID];
-
-  const char *src = [srcString fileSystemRepresentation];
-  const char *dest = [destString fileSystemRepresentation];
-
-  if (rename(src, dest) == 0) {
-    GTMLoggerInfo(@"Breakpad Uploader: Renamed %s to %s after successful " \
-                  "upload",src, dest);
-  }
-  else {
-    // can't rename - don't worry - it's not important for users
-    GTMLoggerDebug(@"Breakpad Uploader: successful upload report ID = %s\n",
-                   reportID );
-  }
-  [result release];
-}
-
-//=============================================================================
 - (void)report {
   NSURL *url = [NSURL URLWithString:[parameters_ objectForKey:@BREAKPAD_URL]];
   HTTPMultipartUpload *upload = [[HTTPMultipartUpload alloc] initWithURL:url];
@@ -556,16 +511,43 @@ NSDictionary *readConfigurationData(const char *configFile) {
     // Send it
     NSError *error = nil;
     NSData *data = [upload send:&error];
+    NSString *result = [[NSString alloc] initWithData:data
+                                         encoding:NSUTF8StringEncoding];
+    const char *reportID = "ERR";
 
-    if (![url isFileURL]) {
-      [self handleNetworkResponse:data withError:error];
+    if (error) {
+      fprintf(stderr, "Breakpad Uploader: Send Error: %s\n",
+              [[error description] UTF8String]);
     } else {
-      if (error) {
-        fprintf(stderr, "Breakpad Uploader: Error writing request file: %s\n",
-                [[error description] UTF8String]);
-      }
+      NSCharacterSet *trimSet =
+          [NSCharacterSet whitespaceAndNewlineCharacterSet];
+      reportID = [[result stringByTrimmingCharactersInSet:trimSet] UTF8String];
+      [self logUploadWithID:reportID];
     }
 
+    // rename the minidump file according to the id returned from the server
+    NSString *minidumpDir =
+        [parameters_ objectForKey:@kReporterMinidumpDirectoryKey];
+    NSString *minidumpID = [parameters_ objectForKey:@kReporterMinidumpIDKey];
+
+    NSString *srcString = [NSString stringWithFormat:@"%@/%@.dmp",
+                                    minidumpDir, minidumpID];
+    NSString *destString = [NSString stringWithFormat:@"%@/%s.dmp",
+                                     minidumpDir, reportID];
+
+    const char *src = [srcString fileSystemRepresentation];
+    const char *dest = [destString fileSystemRepresentation];
+
+    if (rename(src, dest) == 0) {
+      GTMLoggerInfo(@"Breakpad Uploader: Renamed %s to %s after successful " \
+                    "upload",src, dest);
+    }
+    else {
+      // can't rename - don't worry - it's not important for users
+      GTMLoggerDebug(@"Breakpad Uploader: successful upload report ID = %s\n",
+                     reportID );
+    }
+    [result release];
   } else {
     // Minidump is missing -- upload just the log file.
     if (logFileData_) {

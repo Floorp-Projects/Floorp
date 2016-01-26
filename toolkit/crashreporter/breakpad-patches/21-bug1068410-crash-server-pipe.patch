@@ -1,0 +1,40 @@
+commit 634161872e2dcddcea95784651a985e8ebe3e937
+Author: Jed Davis <jld@mozilla.com>
+Date:   Wed Sep 17 11:35:34 2014 -0700
+
+    Bug 1068410 - Convert remote crash dump to use pipe instead of socketpair in the child.
+
+diff --git a/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_client.cc b/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_client.cc
+index 6ede779..df069e4 100644
+--- a/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_client.cc
++++ b/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_client.cc
+@@ -45,7 +45,8 @@ bool
+ CrashGenerationClient::RequestDump(const void* blob, size_t blob_size)
+ {
+   int fds[2];
+-  sys_socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
++  if (sys_pipe(fds) != 0)
++    return false;
+   static const unsigned kControlMsgSize = CMSG_SPACE(sizeof(int));
+ 
+   struct kernel_msghdr msg;
+diff --git a/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_server.cc b/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_server.cc
+index 420e4b2..721078c 100644
+--- a/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_server.cc
++++ b/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/crash_generation_server.cc
+@@ -275,14 +275,7 @@ CrashGenerationServer::ClientEvent(short revents)
+   }
+ 
+   // Send the done signal to the process: it can exit now.
+-  memset(&msg, 0, sizeof(msg));
+-  struct iovec done_iov;
+-  done_iov.iov_base = const_cast<char*>("\x42");
+-  done_iov.iov_len = 1;
+-  msg.msg_iov = &done_iov;
+-  msg.msg_iovlen = 1;
+-
+-  HANDLE_EINTR(sendmsg(signal_fd, &msg, MSG_DONTWAIT | MSG_NOSIGNAL));
++  // (Closing this will make the child's sys_read unblock and return 0.)
+   HANDLE_EINTR(close(signal_fd));
+ 
+   return true;

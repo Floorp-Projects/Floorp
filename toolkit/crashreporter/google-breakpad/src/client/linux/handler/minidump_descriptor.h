@@ -35,29 +35,20 @@
 
 #include <string>
 
-#include "client/linux/handler/microdump_extra_info.h"
 #include "common/using_std_string.h"
 
-// This class describes how a crash dump should be generated, either:
-// - Writing a full minidump to a file in a given directory (the actual path,
-//   inside the directory, is determined by this class).
-// - Writing a full minidump to a given fd.
-// - Writing a reduced microdump to the console (logcat on Android).
+// The MinidumpDescriptor describes how to access a minidump: it can contain
+// either a file descriptor or a path.
+// Note that when using files, it is created with the path to a directory.
+// The actual path where the minidump is generated is created by this class.
 namespace google_breakpad {
 
 class MinidumpDescriptor {
  public:
-  struct MicrodumpOnConsole {};
-  static const MicrodumpOnConsole kMicrodumpOnConsole;
-
-  MinidumpDescriptor()
-      : mode_(kUninitialized),
-        fd_(-1),
-        size_limit_(-1) {}
+  MinidumpDescriptor() : fd_(-1), size_limit_(-1) {}
 
   explicit MinidumpDescriptor(const string& directory)
-      : mode_(kWriteMinidumpToFile),
-        fd_(-1),
+      : fd_(-1),
         directory_(directory),
         c_path_(NULL),
         size_limit_(-1) {
@@ -65,34 +56,22 @@ class MinidumpDescriptor {
   }
 
   explicit MinidumpDescriptor(int fd)
-      : mode_(kWriteMinidumpToFd),
-        fd_(fd),
+      : fd_(fd),
         c_path_(NULL),
         size_limit_(-1) {
     assert(fd != -1);
   }
 
-  explicit MinidumpDescriptor(const MicrodumpOnConsole&)
-      : mode_(kWriteMicrodumpToConsole),
-        fd_(-1),
-        size_limit_(-1) {}
-
   explicit MinidumpDescriptor(const MinidumpDescriptor& descriptor);
   MinidumpDescriptor& operator=(const MinidumpDescriptor& descriptor);
 
-  static MinidumpDescriptor getMicrodumpDescriptor();
-
-  bool IsFD() const { return mode_ == kWriteMinidumpToFd; }
+  bool IsFD() const { return fd_ != -1; }
 
   int fd() const { return fd_; }
 
   string directory() const { return directory_; }
 
   const char* path() const { return c_path_; }
-
-  bool IsMicrodumpOnConsole() const {
-    return mode_ == kWriteMicrodumpToConsole;
-  }
 
   // Updates the path so it is unique.
   // Should be called from a normal context: this methods uses the heap.
@@ -101,47 +80,19 @@ class MinidumpDescriptor {
   off_t size_limit() const { return size_limit_; }
   void set_size_limit(off_t limit) { size_limit_ = limit; }
 
-  MicrodumpExtraInfo* microdump_extra_info() {
-    assert(IsMicrodumpOnConsole());
-    return &microdump_extra_info_;
-  };
-
  private:
-  enum DumpMode {
-    kUninitialized = 0,
-    kWriteMinidumpToFile,
-    kWriteMinidumpToFd,
-    kWriteMicrodumpToConsole
-  };
-
-  // Specifies the dump mode (see DumpMode).
-  DumpMode mode_;
-
   // The file descriptor where the minidump is generated.
   int fd_;
 
   // The directory where the minidump should be generated.
   string directory_;
-
   // The full path to the generated minidump.
   string path_;
-
   // The C string of |path_|. Precomputed so it can be access from a compromised
   // context.
   const char* c_path_;
 
   off_t size_limit_;
-
-  // The extra microdump data (e.g. product name/version, build
-  // fingerprint, gpu fingerprint) that should be appended to the dump
-  // (microdump only). Microdumps don't have the ability of appending
-  // extra metadata after the dump is generated (as opposite to
-  // minidumps MIME fields), therefore the extra data must be provided
-  // upfront. Any memory pointed to by members of the
-  // MicrodumpExtraInfo struct must be valid for the lifetime of the
-  // process (read: the caller has to guarantee that it is stored in
-  // global static storage.)
-  MicrodumpExtraInfo microdump_extra_info_;
 };
 
 }  // namespace google_breakpad
