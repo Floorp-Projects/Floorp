@@ -242,6 +242,9 @@ public:
                                    StreamTime aTrackOffset,
                                    const MediaSegment& aQueuedMedia) {}
 
+  virtual void NotifyPrincipalHandleChanged(MediaStreamGraph* aGraph,
+                                            const PrincipalHandle& aNewPrincipalHandle) {}
+
   virtual void NotifyEnded() {}
 
   virtual void NotifyRemoved() {}
