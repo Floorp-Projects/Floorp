@@ -118,6 +118,7 @@ for var in ('ANDROID_PACKAGE_NAME',
 
 for var in ('MOZ_TOOLKIT_SEARCH',
             'MOZ_REQUIRE_SIGNING',
+            'MOZ_NATIVE_NSS',
             'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
