@@ -23,6 +23,7 @@
 
 #include "jsnum.h"
 #include "jsprf.h"
+#include "jsstr.h"
 
 #include "asmjs/WasmBinary.h"
 #include "ds/LifoAlloc.h"
