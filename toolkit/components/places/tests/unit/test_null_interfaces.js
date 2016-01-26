@@ -9,23 +9,31 @@
 // Make an array of services to test, each specifying a class id, interface
 // and an array of function names that don't throw when passed nulls
 var testServices = [
-  ["browser/nav-history-service;1", "nsINavHistoryService",
+  ["browser/nav-history-service;1",
+    ["nsINavHistoryService"],
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost",
-     "removeVisitsByTimeframe", "getObservers"]],
-  ["browser/nav-bookmarks-service;1","nsINavBookmarksService",
-    ["createFolder", "getObservers"]],
-  ["browser/livemark-service;2","mozIAsyncLivemarks", ["reloadLivemarks"]],
-  ["browser/annotation-service;1","nsIAnnotationService", []],
-  ["browser/favicon-service;1","nsIFaviconService", []],
-  ["browser/tagging-service;1","nsITaggingService", []],
+     "removeVisitsByTimeframe", "getObservers"]
+  ],
+  ["browser/nav-bookmarks-service;1",
+    ["nsINavBookmarksService", "nsINavHistoryObserver", "nsIAnnotationObserver"],
+    ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged",
+     "onPageAnnotationSet", "onPageAnnotationRemoved"]
+  ],
+  ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
+  ["browser/annotation-service;1", ["nsIAnnotationService"], []],
+  ["browser/favicon-service;1", ["nsIFaviconService"], []],
+  ["browser/tagging-service;1", ["nsITaggingService"], []],
 ];
 do_print(testServices.join("\n"));
 
 function run_test()
 {
-  for (let [cid, iface, nothrow] of testServices) {
-    do_print(`Running test with ${cid} ${iface} ${nothrow}`);
-    let s = Cc["@mozilla.org/" + cid].getService(Ci[iface]);
+  for (let [cid, ifaces, nothrow] of testServices) {
+    do_print(`Running test with ${cid} ${ifaces.join(", ")} ${nothrow}`);
+    let s = Cc["@mozilla.org/" + cid].getService(Ci.nsISupports);
+    for (let iface of ifaces) {
+      s.QueryInterface(Ci[iface]);
+    }
 
     let okName = function(name) {
       do_print(`Checking if function is okay to test: ${name}`);
@@ -49,7 +57,7 @@ function run_test()
 
     do_print(`Generating an array of functions to test service: ${s}`);
     for (let n of Object.keys(s).filter(i => okName(i)).sort()) {
-      do_print(`\nTesting ${iface} function with null args: ${n}`);
+      do_print(`\nTesting ${ifaces.join(", ")} function with null args: ${n}`);
 
       let func = s[n];
       let num = func.length;
@@ -61,7 +69,7 @@ function run_test()
         try {
           do_print(`Calling with args: ${JSON.stringify(args)}`);
           func.apply(s, args);
-  
+
           do_print(`The function did not throw! Is it one of the nothrow? ${nothrow}`);
           Assert.notEqual(nothrow.indexOf(n), -1);
 

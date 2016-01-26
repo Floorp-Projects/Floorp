@@ -96,8 +96,11 @@ struct VisitData {
   , titleChanged(false)
   , shouldUpdateFrecency(true)
   {
-    (void)aURI->GetSpec(spec);
-    (void)GetReversedHostname(aURI, revHost);
+    MOZ_ASSERT(aURI);
+    if (aURI) {
+      (void)aURI->GetSpec(spec);
+      (void)GetReversedHostname(aURI, revHost);
+    }
     if (aReferrer) {
       (void)aReferrer->GetSpec(referrerSpec);
     }
@@ -647,7 +650,10 @@ public:
     }
 
     nsCOMPtr<nsIURI> uri;
-    (void)NS_NewURI(getter_AddRefs(uri), mPlace.spec);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mPlace.spec)));
+    if (!uri) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     // Notify the visit.  Note that TRANSITION_EMBED visits are never added
     // to the database, thus cannot be queried and we don't notify them.
@@ -708,7 +714,11 @@ public:
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
     nsCOMPtr<nsIURI> uri;
-    (void)NS_NewURI(getter_AddRefs(uri), mSpec);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mSpec)));
+    if (!uri) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     navHistory->NotifyTitleChange(uri, mTitle, mGUID);
 
     return NS_OK;
@@ -742,13 +752,16 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
+    bool hasValidURIs = true;
     nsCOMPtr<nsIURI> referrerURI;
     if (!mPlace.referrerSpec.IsEmpty()) {
-      (void)NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(referrerURI), mPlace.referrerSpec)));
+      hasValidURIs = !!referrerURI;
     }
 
     nsCOMPtr<nsIURI> uri;
-    (void)NS_NewURI(getter_AddRefs(uri), mPlace.spec);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mPlace.spec)));
+    hasValidURIs = hasValidURIs && !!uri;
 
     nsCOMPtr<mozIPlaceInfo> place;
     if (mIsSingleVisit) {
@@ -771,10 +784,9 @@ public:
                       -1);
     }
 
-    if (NS_SUCCEEDED(mResult)) {
+    if (NS_SUCCEEDED(mResult) && hasValidURIs) {
       (void)mCallback->HandleResult(place);
-    }
-    else {
+    } else {
       (void)mCallback->HandleError(mResult, place);
     }
 
@@ -996,7 +1008,7 @@ private:
 
 #ifdef DEBUG
       nsCOMPtr<nsIURI> uri;
-      (void)NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec);
+      MOZ_ASSERT(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec)));
       NS_ASSERTION(CanAddURI(uri),
                    "Passed a VisitData with a URI we cannot add to history!");
 #endif
@@ -1624,25 +1636,30 @@ public:
       PlaceHashKey* entry = iter.Get();
       const nsTArray<VisitData>& visits = entry->mVisits;
       nsCOMPtr<nsIURI> uri;
-      (void)NS_NewURI(getter_AddRefs(uri), visits[0].spec);
-      bool removingPage = visits.Length() == entry->VisitCount() &&
-                          !entry->IsBookmarked();
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), visits[0].spec)));
+      // Notify an expiration only if we have a valid uri, otherwise
+      // the observer couldn't gather any useful data from the notification.
+      // This should be false only if there's a bug in the code preceding us.
+      if (uri) {
+        bool removingPage = visits.Length() == entry->VisitCount() &&
+                            !entry->IsBookmarked();
 
-      // FindRemovableVisits only sets the transition type on the VisitData
-      // objects it collects if the visits were filtered by transition type.
-      // RemoveVisitsFilter currently only supports filtering by transition
-      // type, so FindRemovableVisits will either find all visits, or all
-      // visits of a given type. Therefore, if transitionType is set on this
-      // visit, we pass the transition type to NotifyOnPageExpired which in
-      // turns passes it to OnDeleteVisits to indicate that all visits of a
-      // given type were removed.
-      uint32_t transition = visits[0].transitionType < UINT32_MAX
-                          ? visits[0].transitionType
-                          : 0;
-      navHistory->NotifyOnPageExpired(uri, visits[0].visitTime, removingPage,
-                                      visits[0].guid,
-                                      nsINavHistoryObserver::REASON_DELETED,
-                                      transition);
+        // FindRemovableVisits only sets the transition type on the VisitData
+        // objects it collects if the visits were filtered by transition type.
+        // RemoveVisitsFilter currently only supports filtering by transition
+        // type, so FindRemovableVisits will either find all visits, or all
+        // visits of a given type. Therefore, if transitionType is set on this
+        // visit, we pass the transition type to NotifyOnPageExpired which in
+        // turns passes it to OnDeleteVisits to indicate that all visits of a
+        // given type were removed.
+        uint32_t transition = visits[0].transitionType < UINT32_MAX
+                            ? visits[0].transitionType
+                            : 0;
+        navHistory->NotifyOnPageExpired(uri, visits[0].visitTime, removingPage,
+                                        visits[0].guid,
+                                        nsINavHistoryObserver::REASON_DELETED,
+                                        transition);
+      }
     }
     (void)navHistory->EndUpdateBatch();
 
@@ -1909,7 +1926,7 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
 
   nsCOMPtr<nsIURI> uri;
-  (void)NS_NewURI(getter_AddRefs(uri), aPlace.spec);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aPlace.spec)));
 
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   if (!navHistory || !uri) {
@@ -2407,7 +2424,8 @@ History::VisitURI(nsIURI* aURI,
                   nsIURI* aLastVisitedURI,
                   uint32_t aFlags)
 {
-  NS_PRECONDITION(aURI, "URI should not be NULL.");
+  NS_ENSURE_ARG(aURI);
+
   if (mShuttingDown) {
     return NS_OK;
   }
@@ -2424,7 +2442,7 @@ History::VisitURI(nsIURI* aURI,
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     (void)cpc->SendVisitURI(uri, lastVisitedURI, aFlags);
     return NS_OK;
-  } 
+  }
 
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
@@ -2614,7 +2632,8 @@ History::UnregisterVisitedCallback(nsIURI* aURI,
 NS_IMETHODIMP
 History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
 {
-  NS_PRECONDITION(aURI, "Must pass a non-null URI!");
+  NS_ENSURE_ARG(aURI);
+
   if (mShuttingDown) {
     return NS_OK;
   }
