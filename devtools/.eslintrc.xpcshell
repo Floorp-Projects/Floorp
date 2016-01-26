@@ -1,4 +1,4 @@
-// Parent config file for all devtools browser mochitest files.
+// Parent config file for all devtools xpcshell files.
 {
   "extends": [
     "../testing/xpcshell/xpcshell.eslintrc"
@@ -12,6 +12,8 @@
     // Note that bug 1168340 will eventually help auto-registering globals
     // from head.js files.
     "no-undef": 0,
-    "block-scoped-var": 0
+    "block-scoped-var": 0,
+    // Allow run_test to be unused in xpcshell
+    "no-unused-vars": [2, { "varsIgnorePattern": "run_test" }],
   }
 }

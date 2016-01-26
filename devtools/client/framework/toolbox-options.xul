@@ -47,6 +47,9 @@
           <checkbox label="&options.showUserAgentStyles.label;"
                     tooltiptext="&options.showUserAgentStyles.tooltip;"
                     data-pref="devtools.inspector.showUserAgentStyles"/>
+          <checkbox label="&options.collapseAttrs.label;"
+                    tooltiptext="&options.collapseAttrs.tooltip;"
+                    data-pref="devtools.markup.collapseAttributes"/>
           <description>
             <label control="defaultColorUnitMenuList"
                    accesskey="&options.defaultColorUnit.accesskey;"

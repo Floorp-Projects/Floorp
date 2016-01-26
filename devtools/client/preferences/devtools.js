@@ -66,8 +66,10 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the MDN docs tooltip
 pref("devtools.inspector.mdnDocsTooltip.enabled", true);
 
-// Collapse attributes that are too long.
-// Use -1 to not collapse attributes at all.
+// Enable to collapse attributes that are too long.
+pref("devtools.markup.collapseAttributes", true);
+
+// Length to collapse attributes
 pref("devtools.markup.collapseAttributeLength", 120);
 
 // DevTools default color unit
@@ -325,3 +327,7 @@ pref("devtools.telemetry.tools.opened.version", "{}");
 #else
   pref("devtools.jsonview.enabled", false);
 #endif
+
+// Disable the HTML responsive design tool by default.  Currently disabled until
+// ready to replace the legacy XUL version.
+pref("devtools.responsive.html.enabled", false);

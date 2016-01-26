@@ -8,6 +8,11 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
+// Load the shared Redux helpers into this compartment.
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
+  this);
+
 var { snapshotState: states } = require("devtools/client/memory/constants");
 var { breakdownEquals, breakdownNameToSpec } = require("devtools/client/memory/utils");
 
@@ -65,24 +70,6 @@ function makeMemoryTest(url, generator) {
 
     finish();
   });
-}
-
-
-function waitUntilState (store, predicate) {
-  let deferred = promise.defer();
-  let unsubscribe = store.subscribe(check);
-
-  function check () {
-    if (predicate(store.getState())) {
-      unsubscribe();
-      deferred.resolve()
-    }
-  }
-
-  // Fire the check immediately incase the action has already occurred
-  check();
-
-  return deferred.promise;
 }
 
 function waitUntilSnapshotState (store, expected) {

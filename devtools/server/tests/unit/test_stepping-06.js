@@ -43,7 +43,7 @@ function test_simple_stepping()
     gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
       // Check that the return value is 10.
       do_check_eq(aPacket.type, "paused");
-      do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 4);
+      do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);
       do_check_eq(aPacket.why.type, "resumeLimit");
       do_check_eq(aPacket.why.frameFinished.return, 10);
 
@@ -51,7 +51,7 @@ function test_simple_stepping()
         gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
           // Check that the return value is undefined.
           do_check_eq(aPacket.type, "paused");
-          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 7);
+          do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 8);
           do_check_eq(aPacket.why.type, "resumeLimit");
           do_check_eq(aPacket.why.frameFinished.return.type, "undefined");
 
