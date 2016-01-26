@@ -92,12 +92,7 @@ DirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs&
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    RootedObject obj(cx);
-    if (!Construct(cx, target, cargs, args.newTarget(), &obj))
-        return false;
-
-    args.rval().setObject(*obj);
-    return true;
+    return Construct(cx, target, cargs, args.newTarget(), args.rval());
 }
 
 bool

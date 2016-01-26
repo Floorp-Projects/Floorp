@@ -1376,12 +1376,7 @@ intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
     for (uint32_t index = 0; index < len; index++)
         constructArgs[index].set(argsList->getDenseElement(index));
 
-    RootedObject res(cx);
-    if (!Construct(cx, args[0], constructArgs, args[0], &res))
-        return false;
-
-    args.rval().setObject(*res);
-    return true;
+    return Construct(cx, args[0], constructArgs, args.rval());
 }
 
 

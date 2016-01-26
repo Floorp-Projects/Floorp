@@ -83,13 +83,7 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
         if (thisv.isMagic()) {
             MOZ_ASSERT(thisv.whyMagic() == JS_IS_CONSTRUCTING ||
                        thisv.whyMagic() == JS_UNINITIALIZED_LEXICAL);
-
-            RootedObject obj(cx);
-            if (!Construct(cx, fval, cargs, newTarget, &obj))
-                return false;
-
-            rval.setObject(*obj);
-            return true;
+            return Construct(cx, fval, cargs, newTarget, rval);
         }
 
         // Otherwise the default |this| has already been created.  We could
