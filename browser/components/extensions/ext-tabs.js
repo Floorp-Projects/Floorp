@@ -8,8 +8,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
@@ -453,7 +451,6 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         };
 
         let recipient = {
-          extensionId: extension.id,
           innerWindowID: tab.linkedBrowser.innerWindowID,
         };
 
@@ -486,16 +483,20 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = details.runAt;
         }
 
-        MessageChannel.sendMessage(mm, "Extension:Execute", { options }, recipient);
-
-        // TODO: Call the callback with the result (which is what???).
+        // TODO: Set lastError.
+        context.sendMessage(mm, "Extension:Execute", { options }, recipient)
+          .then(result => {
+            if (callback) {
+              runSafe(context, callback, result);
+            }
+          });
       },
 
       executeScript: function(tabId, details, callback) {
         self.tabs._execute(tabId, details, "js", callback);
       },
 
-      insertCss: function(tabId, details, callback) {
+      insertCSS: function(tabId, details, callback) {
         self.tabs._execute(tabId, details, "css", callback);
       },
 
