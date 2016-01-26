@@ -27,7 +27,7 @@ Object.defineProperty(exports, "TargetFactory", {
 });
 
 const unloadObserver = {
-  observe: function(subject, topic, data) {
+  observe: function(subject) {
     if (subject.wrappedJSObject === require("@loader/unload")) {
       Services.obs.removeObserver(unloadObserver, "sdk:loader:destroy");
       for (let definition of gDevTools.getToolDefinitionArray()) {
