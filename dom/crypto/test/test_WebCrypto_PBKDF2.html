@@ -151,7 +151,7 @@ TestArray.addTest(
 );
 
 // -----------------------------------------------------------------------------
-/*TestArray.addTest(
+TestArray.addTest(
   "Import raw PBKDF2 key and derive bits using HMAC-SHA-256",
   function() {
     var that = this;
@@ -173,11 +173,11 @@ TestArray.addTest(
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 
-    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
       .then( doDerive, fail )
       .then( memcmp_complete(that, tv.pbkdf2_sha256.derived), fail );
   }
-);*/
+);
 /*]]>*/</script>
 </head>
 

@@ -417,8 +417,14 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (bg->mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
         needBlendContainer = true;
       }
-      aLists.BorderBackground()->AppendNewToTop(
-        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg));
+      nsDisplayCanvasBackgroundImage* bgItem =
+        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg);
+      if (bgItem->ShouldFixToViewport(aBuilder)) {
+        aLists.BorderBackground()->AppendNewToTop(
+          nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
+      } else {
+        aLists.BorderBackground()->AppendNewToTop(bgItem);
+      }
     }
 
     if (needBlendContainer) {
