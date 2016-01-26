@@ -394,6 +394,8 @@ function* addNewTabPageTab() {
       resolve();
     }
   });
+
+  return tab;
 }
 
 function waitForBrowserLoad(browser) {
