@@ -2137,7 +2137,34 @@ XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
       thisv = receiver;
     else
       thisv.setObject(*wrapper);
-    return js::BaseProxyHandler::get(cx, wrapper, thisv, id, vp);
+
+    // This uses getPropertyDescriptor for backward compatibility with
+    // the old BaseProxyHandler::get implementation.
+    Rooted<JSPropertyDescriptor> desc(cx);
+    if (!getPropertyDescriptor(cx, wrapper, id, &desc))
+        return false;
+    desc.assertCompleteIfFound();
+
+    if (!desc.object()) {
+        vp.setUndefined();
+        return true;
+    }
+
+    // Everything after here follows [[Get]] for ordinary objects.
+    if (desc.isDataDescriptor()) {
+        vp.set(desc.value());
+        return true;
+    }
+
+    MOZ_ASSERT(desc.isAccessorDescriptor());
+    RootedObject getter(cx, desc.getterObject());
+
+    if (!getter) {
+        vp.setUndefined();
+        return true;
+    }
+
+    return Call(cx, thisv, getter, HandleValueArray::empty(), vp);
 }
 
 template <typename Base, typename Traits>
