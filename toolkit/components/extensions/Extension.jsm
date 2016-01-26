@@ -1015,9 +1015,8 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
     let whitelist = [];
     for (let perm of permissions) {
-      if (/^\w+(\.\w+)*$/.test(perm)) {
-        this.permissions.add(perm);
-      } else {
+      this.permissions.add(perm);
+      if (!/^\w+(\.\w+)*$/.test(perm)) {
         whitelist.push(perm);
       }
     }
