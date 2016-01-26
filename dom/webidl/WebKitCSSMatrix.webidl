@@ -20,19 +20,19 @@ interface WebKitCSSMatrix : DOMMatrix {
     // Immutable transform methods
     WebKitCSSMatrix multiply(WebKitCSSMatrix other);
     WebKitCSSMatrix inverse();
-    WebKitCSSMatrix translate(unrestricted double tx,
-                              unrestricted double ty,
-                              unrestricted double tz);
+    WebKitCSSMatrix translate(optional unrestricted double tx = 0,
+                              optional unrestricted double ty = 0,
+                              optional unrestricted double tz = 0);
     WebKitCSSMatrix scale(optional unrestricted double scaleX = 1,
                           optional unrestricted double scaleY,
                           optional unrestricted double scaleZ = 1);
     WebKitCSSMatrix rotate(optional unrestricted double rotX = 0,
                            optional unrestricted double rotY,
                            optional unrestricted double rotZ);
-    WebKitCSSMatrix rotateAxisAngle(unrestricted double x,
-                                    unrestricted double y,
-                                    unrestricted double z,
-                                    unrestricted double angle);
-    WebKitCSSMatrix skewX(unrestricted double sx);
-    WebKitCSSMatrix skewY(unrestricted double sy);
+    WebKitCSSMatrix rotateAxisAngle(optional unrestricted double x = 0,
+                                    optional unrestricted double y = 0,
+                                    optional unrestricted double z = 0,
+                                    optional unrestricted double angle = 0);
+    WebKitCSSMatrix skewX(optional unrestricted double sx = 0);
+    WebKitCSSMatrix skewY(optional unrestricted double sy = 0);
 };
