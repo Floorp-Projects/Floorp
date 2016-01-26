@@ -4,7 +4,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = "set-object-funky-length-neuters.js";
+var gTestfile = "set-object-funky-length-detaches.js";
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 991981;
 var summary =
