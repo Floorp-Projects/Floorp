@@ -666,6 +666,7 @@ class ExtensionGlobal {
   constructor(global) {
     this.global = global;
 
+    MessageChannel.addListener(global, "Extension:Capture", this);
     MessageChannel.addListener(global, "Extension:Execute", this);
 
     this.broker = new MessageBroker([global]);
@@ -693,6 +694,28 @@ class ExtensionGlobal {
 
   receiveMessage({ target, messageName, recipient, data }) {
     switch (messageName) {
+      case "Extension:Capture":
+        let win = this.global.content;
+
+        const XHTML_NS = "http://www.w3.org/1999/xhtml";
+        let canvas = win.document.createElementNS(XHTML_NS, "canvas");
+        canvas.width = data.width;
+        canvas.height = data.height;
+        canvas.mozOpaque = true;
+
+        let ctx = canvas.getContext("2d");
+
+        // We need to scale the image to the visible size of the browser,
+        // in order for the result to appear as the user sees it when
+        // settings like full zoom come into play.
+        ctx.scale(canvas.width / win.innerWidth,
+                  canvas.height / win.innerHeight);
+
+        ctx.drawWindow(win, win.scrollX, win.scrollY, win.innerWidth, win.innerHeight, "#fff");
+
+        return canvas.toDataURL(`image/${data.options.format}`,
+                                data.options.quality / 100);
+
       case "Extension:Execute":
         let deferred = PromiseUtils.defer();
 
