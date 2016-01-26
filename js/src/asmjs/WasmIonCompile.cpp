@@ -135,6 +135,8 @@ class FunctionCompiler
                 // Bool32x4 uses the same data layout as Int32x4.
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType_Bool32x4);
                 break;
+              case ValType::Limit:
+                MOZ_CRASH("Limit");
             }
 
             curBlock_->add(ins);
@@ -1292,24 +1294,6 @@ class FunctionCompiler
     }
 };
 
-// A Type or Undefined, implicitly constructed from an ExprType and usabled as
-// an ExprType. Has two functions:
-// - in debug, will ensure that the expected type and the actual type of some
-// expressions match.
-// - provides a way to mean "no type" in the context of expression statements,
-// and will provoke assertions if we're trying to use an expected type when we
-// don't have one.
-class MaybeType
-{
-    Maybe<ExprType> maybe_;
-    MaybeType() {}
-  public:
-    MOZ_IMPLICIT MaybeType(ExprType t) : maybe_() { maybe_.emplace(t); }
-    static MaybeType Undefined() { return MaybeType(); }
-    explicit operator bool() { return maybe_.isSome(); }
-    MOZ_IMPLICIT operator ExprType() { return maybe_.value(); }
-};
-
 static bool
 EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
@@ -1348,7 +1332,8 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition** def)
         *def = f.constant(lit, MIRType_Bool32x4);
         return true;
       }
-      case ExprType::Void: {
+      case ExprType::Void:
+      case ExprType::Limit: {
         break;
       }
     }
@@ -1356,25 +1341,25 @@ EmitLiteral(FunctionCompiler& f, ExprType type, MDefinition** def)
 }
 
 static bool
-EmitGetLocal(FunctionCompiler& f, MaybeType type, MDefinition** def)
+EmitGetLocal(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
     uint32_t slot = f.readVarU32();
     *def = f.getLocalDef(slot);
-    MOZ_ASSERT_IF(type, f.localType(slot) == type);
+    MOZ_ASSERT_IF(type != ExprType::Limit, f.localType(slot) == type);
     return true;
 }
 
 static bool
-EmitLoadGlobal(FunctionCompiler& f, MaybeType type, MDefinition** def)
+EmitLoadGlobal(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
     uint32_t index = f.readVarU32();
     const AsmJSGlobalVariable& global = f.mg().globalVar(index);
     *def = f.loadGlobalVar(global.globalDataOffset, global.isConst, ToMIRType(global.type));
-    MOZ_ASSERT_IF(type, global.type == type);
+    MOZ_ASSERT_IF(type != ExprType::Limit, global.type == type);
     return true;
 }
 
-static bool EmitExpr(FunctionCompiler&, MaybeType, MDefinition**, LabelVector* = nullptr);
+static bool EmitExpr(FunctionCompiler&, ExprType, MDefinition**, LabelVector* = nullptr);
 static bool EmitExprStmt(FunctionCompiler&, MDefinition**, LabelVector* = nullptr);
 
 static bool
@@ -1450,12 +1435,12 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 }
 
 static bool
-EmitSetLocal(FunctionCompiler& f, MaybeType expected, MDefinition** def)
+EmitSetLocal(FunctionCompiler& f, ExprType expected, MDefinition** def)
 {
     uint32_t slot = f.readVarU32();
     MDefinition* expr;
     ExprType actual = f.localType(slot);
-    MOZ_ASSERT_IF(expected, actual == expected);
+    MOZ_ASSERT_IF(expected != ExprType::Limit, actual == expected);
     if (!EmitExpr(f, actual, &expr))
         return false;
     f.assign(slot, expr);
@@ -1464,11 +1449,11 @@ EmitSetLocal(FunctionCompiler& f, MaybeType expected, MDefinition** def)
 }
 
 static bool
-EmitStoreGlobal(FunctionCompiler& f, MaybeType type, MDefinition**def)
+EmitStoreGlobal(FunctionCompiler& f, ExprType type, MDefinition**def)
 {
     uint32_t index = f.readVarU32();
     const AsmJSGlobalVariable& global = f.mg().globalVar(index);
-    MOZ_ASSERT_IF(type, global.type == type);
+    MOZ_ASSERT_IF(type != ExprType::Limit, global.type == type);
     MDefinition* expr;
     if (!EmitExpr(f, global.type, &expr))
         return false;
@@ -1589,6 +1574,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
           case ValType::I32x4:  if (!EmitExpr(f, ExprType::I32x4, &arg)) return false; break;
           case ValType::F32x4:  if (!EmitExpr(f, ExprType::F32x4, &arg)) return false; break;
           case ValType::B32x4:  if (!EmitExpr(f, ExprType::B32x4, &arg)) return false; break;
+          case ValType::Limit:  MOZ_CRASH("Limit");
         }
         if (!f.passArg(arg, sig.arg(i), call))
             return false;
@@ -1598,12 +1584,12 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 }
 
 static bool
-EmitInternalCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
+EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t funcIndex = f.readU32();
 
     const Sig& sig = f.mg().funcSig(funcIndex);
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
     uint32_t lineno, column;
     f.readCallLineCol(&lineno, &column);
@@ -1616,14 +1602,14 @@ EmitInternalCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 }
 
 static bool
-EmitFuncPtrCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
+EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t mask = f.readU32();
     uint32_t globalDataOffset = f.readU32();
     uint32_t sigIndex = f.readU32();
 
     const Sig& sig = f.mg().sig(sigIndex);
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
     uint32_t lineno, column;
     f.readCallLineCol(&lineno, &column);
@@ -1640,7 +1626,7 @@ EmitFuncPtrCall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 }
 
 static bool
-EmitFFICall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
+EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t importIndex = f.readU32();
 
@@ -1649,7 +1635,7 @@ EmitFFICall(FunctionCompiler& f, MaybeType ret, MDefinition** def)
 
     const ModuleImportGeneratorData& import = f.mg().import(importIndex);
     const Sig& sig = *import.sig;
-    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret, sig.ret() == ret);
+    MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
@@ -1805,7 +1791,8 @@ SimdToLaneType(ExprType type)
       case ExprType::I64:
       case ExprType::F32:
       case ExprType::F64:
-      case ExprType::Void:;
+      case ExprType::Void:
+      case ExprType::Limit:;
     }
     MOZ_CRASH("bad simd type");
 }
@@ -2065,6 +2052,7 @@ EmitSimdCtor(FunctionCompiler& f, ExprType type, MDefinition** def)
       case ExprType::F32:
       case ExprType::F64:
       case ExprType::Void:
+      case ExprType::Limit:
         break;
     }
     MOZ_CRASH("unexpected SIMD type");
@@ -2093,7 +2081,7 @@ EmitUnaryMir(FunctionCompiler& f, ExprType type, MDefinition** def)
 }
 
 static bool
-EmitTernary(FunctionCompiler& f, MaybeType type, MDefinition** def)
+EmitTernary(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
     MDefinition* cond;
     if (!EmitExpr(f, ExprType::I32, &cond))
@@ -2645,7 +2633,7 @@ EmitRet(FunctionCompiler& f)
 }
 
 static bool
-EmitBlock(FunctionCompiler& f, MaybeType type, MDefinition** def)
+EmitBlock(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
     size_t numStmt = f.readU32();
     for (size_t i = 1; i < numStmt; i++) {
@@ -2680,7 +2668,7 @@ EmitBreak(FunctionCompiler& f, bool hasLabel)
 }
 
 static bool
-EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* maybeLabels)
+EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* maybeLabels)
 {
     if (!f.mirGen().ensureBallast())
         return false;
@@ -2982,6 +2970,8 @@ EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* ma
       case Expr::DebugCheckPoint:
       case Expr::Unreachable:
         break;
+      case Expr::Limit:
+        MOZ_CRASH("Limit");
     }
 
     MOZ_CRASH("unexpected wasm opcode");
@@ -2990,7 +2980,7 @@ EmitExpr(FunctionCompiler& f, MaybeType type, MDefinition** def, LabelVector* ma
 static bool
 EmitExprStmt(FunctionCompiler& f, MDefinition** def, LabelVector* maybeLabels)
 {
-    return EmitExpr(f, MaybeType::Undefined(), def, maybeLabels);
+    return EmitExpr(f, ExprType::Limit, def, maybeLabels);
 }
 
 bool

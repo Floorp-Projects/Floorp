@@ -269,7 +269,9 @@ enum class Expr : uint16_t
     F64FromS32,
     F64FromU32,
 
-    F64StoreMemF32
+    F64StoreMemF32,
+
+    Limit
 };
 
 enum NeedsBoundsCheck : uint8_t
@@ -296,7 +298,7 @@ class Encoder
         return bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
     }
 
-    template <class T>
+    template <class IntT, class T>
     MOZ_WARN_UNUSED_RESULT
     bool writeEnum(T v, size_t* offset) {
         // For now, just write a u16 instead of a variable-length integer.
@@ -304,16 +306,17 @@ class Encoder
         // pre-order encoding and back-patching; let's see if we switch to
         // post-order first.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        MOZ_ASSERT(uint64_t(v) < UINT16_MAX);
-        return write<uint16_t>(uint16_t(v), offset);
+        MOZ_ASSERT(uint64_t(v) < IntT(-1));
+        MOZ_ASSERT(v != T::Limit);
+        return write<IntT>(IntT(v), offset);
     }
 
-    template <class T>
+    template <class IntT, class T>
     void patchEnum(size_t pc, T v) {
         // See writeEnum comment.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         MOZ_ASSERT(uint64_t(v) < UINT16_MAX);
-        memcpy(&bytecode_[pc], &v, sizeof(uint16_t));
+        memcpy(&bytecode_[pc], &v, sizeof(IntT));
     }
 
     template <class T>
@@ -349,11 +352,11 @@ class Encoder
     }
 
     MOZ_WARN_UNUSED_RESULT bool
-    writeExpr(Expr expr, size_t* offset = nullptr)         { return writeEnum(expr, offset); }
+    writeExpr(Expr expr, size_t* offset = nullptr)         { return writeEnum<uint16_t>(expr, offset); }
     MOZ_WARN_UNUSED_RESULT bool
-    writeValType(ValType type, size_t* offset = nullptr)   { return writeEnum(type, offset); }
+    writeValType(ValType type, size_t* offset = nullptr)   { return writeEnum<uint8_t>(type, offset); }
     MOZ_WARN_UNUSED_RESULT bool
-    writeExprType(ExprType type, size_t* offset = nullptr) { return writeEnum(type, offset); }
+    writeExprType(ExprType type, size_t* offset = nullptr) { return writeEnum<uint8_t>(type, offset); }
 
     MOZ_WARN_UNUSED_RESULT bool
     writeU8(uint8_t i, size_t* offset = nullptr)   { return write<uint8_t>(i, offset); }
@@ -421,7 +424,7 @@ class Encoder
     void patchExpr(size_t pc, Expr expr) {
         // See comment in writeEnum
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint16_t)));
-        patchEnum(pc, expr);
+        patchEnum<uint16_t>(pc, expr);
     }
     template<class T>
     void patch32(size_t pc, T i) {
@@ -449,16 +452,16 @@ class Decoder
         return true;
     }
 
-    template <class T>
+    template <class IntT, class T>
     MOZ_WARN_UNUSED_RESULT bool
     readEnum(T* out) {
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         // See Encoder::writeEnum.
-        uint16_t u16;
-        if (!read(&u16))
+        IntT i;
+        if (!read(&i) || i >= IntT(T::Limit))
             return false;
         if (out)
-            *out = T(u16);
+            *out = T(i);
         return true;
     }
 
@@ -470,11 +473,11 @@ class Decoder
         return ret;
     }
 
-    template <class T>
+    template <class IntT, class T>
     T uncheckedPeekEnum() const {
         // See Encoder::writeEnum.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        return (T)uncheckedPeek<uint16_t>();
+        return (T)uncheckedPeek<IntT>();
     }
 
     template <class T>
@@ -484,11 +487,11 @@ class Decoder
         return ret;
     }
 
-    template <class T>
+    template <class IntT, class T>
     T uncheckedReadEnum() {
         // See Encoder::writeEnum.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        return (T)uncheckedRead<uint16_t>();
+        return (T)uncheckedRead<IntT>();
     }
 
   public:
@@ -571,13 +574,13 @@ class Decoder
         return true;
     }
     MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr = nullptr) {
-        return readEnum(expr);
+        return readEnum<uint16_t>(expr);
     }
     MOZ_WARN_UNUSED_RESULT bool readValType(ValType* type = nullptr) {
-        return readEnum(type);
+        return readEnum<uint8_t>(type);
     }
     MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type = nullptr) {
-        return readEnum(type);
+        return readEnum<uint8_t>(type);
     }
 
     MOZ_WARN_UNUSED_RESULT bool readCString(const char** cstr = nullptr) {
@@ -666,10 +669,10 @@ class Decoder
         return decoded;
     }
     Expr uncheckedReadExpr() {
-        return uncheckedReadEnum<Expr>();
+        return uncheckedReadEnum<uint16_t, Expr>();
     }
     Expr uncheckedPeekExpr() const {
-        return uncheckedPeekEnum<Expr>();
+        return uncheckedPeekEnum<uint16_t, Expr>();
     }
 };
 
