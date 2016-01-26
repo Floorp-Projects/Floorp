@@ -134,6 +134,7 @@ class EmptyConfig(object):
         self.substs_unicode = self.PopulateOnGetDict(EmptyValue, udict)
         self.defines = self.substs
         self.external_source_dir = None
+        self.error_is_fatal = False
 
 
 def is_read_allowed(path, config):
@@ -325,7 +326,10 @@ class MozbuildSandbox(Sandbox):
         print('WARNING: %s' % message, file=sys.stderr)
 
     def _error(self, message):
-        raise SandboxCalledError(self._context.source_stack, message)
+        if self._context.error_is_fatal:
+            raise SandboxCalledError(self._context.source_stack, message)
+        else:
+            self._warning(message)
 
     def _template_decorator(self, func):
         """Registers a template function."""
