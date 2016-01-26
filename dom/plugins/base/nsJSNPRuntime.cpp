@@ -61,7 +61,7 @@ struct JSObjWrapperHasher
 
 namespace js {
 template <>
-struct DefaultGCPolicy<nsJSObjWrapper*> {
+struct GCPolicy<nsJSObjWrapper*> {
     static void trace(JSTracer* trc, nsJSObjWrapper** wrapper, const char* name) {
         MOZ_ASSERT(wrapper);
         MOZ_ASSERT(*wrapper);

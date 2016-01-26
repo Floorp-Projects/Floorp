@@ -9,6 +9,7 @@
 
 #include "mozilla/Vector.h"
 
+#include "js/GCPolicyAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/Vector.h"
@@ -121,7 +122,7 @@ class GCVector : public JS::Traceable
 
     void trace(JSTracer* trc) {
         for (auto& elem : vector)
-            DefaultGCPolicy<T>::trace(trc, &elem, "vector element");
+            GCPolicy<T>::trace(trc, &elem, "vector element");
     }
 };
 

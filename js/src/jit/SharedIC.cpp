@@ -13,6 +13,7 @@
 #include "jslibmath.h"
 #include "jstypes.h"
 
+#include "gc/Policy.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineIC.h"
 #include "jit/JitSpewer.h"
