@@ -10,12 +10,13 @@
 window.onmessage = function(event) {
   compareImageBitmapWithImageElement(event.data.bitmap1, gImage1);
   compareImageBitmapWithImageElement(event.data.bitmap2, gImage2);
+  compareImageBitmapWithImageData(event.data.bitmap3, gImageData, "Check preserving alpha");
   SimpleTest.finish();
 }
 
 function runTests() {
   prepareImageBitmaps().then(function(){
-    window.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2}, "*");
+    window.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2, "bitmap3":gImageBitmap3}, "*");
   });
 }
 

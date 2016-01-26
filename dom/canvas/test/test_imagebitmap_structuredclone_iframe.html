@@ -18,6 +18,8 @@ function runTests() {
       compareImageBitmapWithImageElement(event.data.bitmap, gImage1);
     } else if (event.data.type == "bitmap2") {
       compareImageBitmapWithImageElement(event.data.bitmap, gImage2);
+    } else if (event.data.type == "bitmap3") {
+      compareImageBitmapWithImageData(event.data.bitmap, gImageData, "Check preserving alpha");
     }
   }
 
@@ -31,7 +33,7 @@ function runTests() {
 
   function iframeLoaded() {
     prepareImageBitmaps().then(function(){
-      ifr.contentWindow.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2}, "*");
+      ifr.contentWindow.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2, "bitmap3":gImageBitmap3}, "*");
     });
   }
 }
