@@ -105,6 +105,9 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 bool
 ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
 {
+    if (!funcIndexToExport_.init())
+        return false;
+
     module_ = MakeUnique<ModuleData>();
     if (!module_)
         return false;
@@ -383,9 +386,6 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!startedFuncDefs());
     threadView_ = MakeUnique<ModuleGeneratorThreadView>(*shared_);
     if (!threadView_)
-        return false;
-
-    if (!funcIndexToExport_.init())
         return false;
 
     uint32_t numTasks;
