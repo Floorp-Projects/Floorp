@@ -98,10 +98,16 @@ class RLogRingBuffer {
     void Log(std::string&& log);
     void Clear();
 
+    // Methods to signal when a PeerConnection exists in a Private Window.
+    void EnterPrivateMode();
+    void ExitPrivateMode();
+
   private:
     RLogRingBuffer();
     ~RLogRingBuffer();
     void RemoveOld();
+    void AddMsg(std::string&& msg);
+
     static RLogRingBuffer* instance;
 
     /*
@@ -113,6 +119,7 @@ class RLogRingBuffer {
     /* Max size of log buffer (should we use time-depth instead/also?) */
     uint32_t log_limit_;
     OffTheBooksMutex mutex_;
+    uint32_t disableCount_;
 
     DISALLOW_COPY_ASSIGN(RLogRingBuffer);
 }; // class RLogRingBuffer
