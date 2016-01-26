@@ -54,7 +54,9 @@ enum class ValType
     F64,
     I32x4,
     F32x4,
-    B32x4
+    B32x4,
+
+    Limit
 };
 
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
@@ -76,6 +78,7 @@ ToMIRType(ValType vt)
       case ValType::I32x4: return jit::MIRType_Int32x4;
       case ValType::F32x4: return jit::MIRType_Float32x4;
       case ValType::B32x4: return jit::MIRType_Bool32x4;
+      case ValType::Limit: break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -147,7 +150,9 @@ enum class ExprType : uint16_t
     I32x4 = uint8_t(ValType::I32x4),
     F32x4 = uint8_t(ValType::F32x4),
     B32x4 = uint8_t(ValType::B32x4),
-    Void
+    Void,
+
+    Limit
 };
 
 static inline bool

@@ -238,18 +238,21 @@ ModuleGenerator::allocateGlobalVar(ValType type, bool isConst, uint32_t* index)
     MOZ_ASSERT(!startedFuncDefs());
     unsigned width = 0;
     switch (type) {
-      case wasm::ValType::I32:
-      case wasm::ValType::F32:
+      case ValType::I32:
+      case ValType::F32:
         width = 4;
         break;
-      case wasm::ValType::I64:
-      case wasm::ValType::F64:
+      case ValType::I64:
+      case ValType::F64:
         width = 8;
         break;
-      case wasm::ValType::I32x4:
-      case wasm::ValType::F32x4:
-      case wasm::ValType::B32x4:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B32x4:
         width = 16;
+        break;
+      case ValType::Limit:
+        MOZ_CRASH("Limit");
         break;
     }
 
