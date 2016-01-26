@@ -49,13 +49,20 @@ addMessageListener("Test:ExpectNoObserverCalled", data => {
 function _getMediaCaptureState() {
   let hasVideo = {};
   let hasAudio = {};
-  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio);
+  let hasScreenShare = {};
+  let hasWindowShare = {};
+  MediaManagerService.mediaCaptureWindowState(content, hasVideo, hasAudio,
+                                              hasScreenShare, hasWindowShare);
   if (hasVideo.value && hasAudio.value)
     return "CameraAndMicrophone";
   if (hasVideo.value)
     return "Camera";
   if (hasAudio.value)
     return "Microphone";
+  if (hasScreenShare.value)
+    return "Screen";
+  if (hasWindowShare.value)
+    return "Window";
   return "none";
 }
 

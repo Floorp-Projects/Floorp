@@ -161,15 +161,15 @@ function getMediaCaptureState() {
   });
 }
 
-function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId) {
+function promiseRequestDevice(aRequestAudio, aRequestVideo, aFrameId, aType) {
   info("requesting devices");
   return ContentTask.spawn(gBrowser.selectedBrowser,
-                           {aRequestAudio, aRequestVideo, aFrameId},
+                           {aRequestAudio, aRequestVideo, aFrameId, aType},
                            function*(args) {
     let global = content.wrappedJSObject;
     if (args.aFrameId)
       global = global.document.getElementById(args.aFrameId).contentWindow;
-    global.requestDevice(args.aRequestAudio, args.aRequestVideo);
+    global.requestDevice(args.aRequestAudio, args.aRequestVideo, args.aType);
   });
 }
 
