@@ -12541,9 +12541,13 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel* aChannel)
   }
 
   // figure out if SH should be saving layout state
-  bool noStore = false;
+  nsCOMPtr<nsISupports> securityInfo;
+  bool noStore = false, noCache = false;
+  aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
   aChannel->IsNoStoreResponse(&noStore);
-  return noStore;
+  aChannel->IsNoCacheResponse(&noCache);
+
+  return (noStore || (noCache && securityInfo));
 }
 
 NS_IMETHODIMP
