@@ -462,7 +462,7 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
         js::MakeUnique<FuncBytecode>(funcIndex,
                                      funcSig(funcIndex),
                                      Move(fg->bytecode_),
-                                     Move(fg->localVars_),
+                                     Move(fg->locals_),
                                      fg->lineOrBytecode_,
                                      Move(fg->callSourceCoords_),
                                      generateTime);

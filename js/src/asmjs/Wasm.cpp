@@ -80,13 +80,125 @@ class FunctionDecoder
     }
 };
 
+static const char*
+ToCString(ExprType type)
+{
+    switch (type) {
+      case ExprType::Void:  return "void";
+      case ExprType::I32:   return "i32";
+      case ExprType::I64:   return "i64";
+      case ExprType::F32:   return "f32";
+      case ExprType::F64:   return "f64";
+      case ExprType::I32x4: return "i32x4";
+      case ExprType::F32x4: return "f32x4";
+      case ExprType::B32x4: return "b32x4";
+      case ExprType::Limit:;
+    }
+    MOZ_CRASH("bad expression type");
+}
+
 static bool
 CheckType(FunctionDecoder& f, ExprType actual, ExprType expected)
 {
     if (actual == expected || expected == ExprType::Void)
         return true;
 
-    return f.fail("type mismatch");
+    UniqueChars error(JS_smprintf("type mismatch: expression has type %s but expected %s",
+                                  ToCString(actual), ToCString(expected)));
+    if (!error)
+        return false;
+
+    return f.fail(error.get());
+}
+
+static bool
+DecodeExpr(FunctionDecoder& f, ExprType expected);
+
+static bool
+DecodeValType(JSContext* cx, Decoder& d, ValType *type)
+{
+    if (!d.readValType(type))
+        return Fail(cx, d, "bad value type");
+
+    switch (*type) {
+      case ValType::I32:
+      case ValType::F32:
+      case ValType::F64:
+        break;
+      case ValType::I64:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B32x4:
+        return Fail(cx, d, "value type NYI");
+      case ValType::Limit:
+        MOZ_CRASH("Limit");
+    }
+
+    return true;
+}
+
+static bool
+DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
+{
+    if (!d.readExprType(type))
+        return Fail(cx, d, "bad expression type");
+
+    switch (*type) {
+      case ExprType::I32:
+      case ExprType::F32:
+      case ExprType::F64:
+      case ExprType::Void:
+        break;
+      case ExprType::I64:
+      case ExprType::I32x4:
+      case ExprType::F32x4:
+      case ExprType::B32x4:
+        return Fail(cx, d, "expression type NYI");
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
+    }
+
+    return true;
+}
+
+static bool
+DecodeConst(FunctionDecoder& f, ExprType expected)
+{
+    if (!f.d().readVarU32())
+        return f.fail("unable to read i32.const immediate");
+
+    return CheckType(f, ExprType::I32, expected);
+}
+
+static bool
+DecodeGetLocal(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t localIndex;
+    if (!f.d().readVarU32(&localIndex))
+        return f.fail("unable to read get_local index");
+
+    if (localIndex >= f.fg().locals().length())
+        return f.fail("get_local index out of range");
+
+    return CheckType(f, ToExprType(f.fg().locals()[localIndex]), expected);
+}
+
+static bool
+DecodeSetLocal(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t localIndex;
+    if (!f.d().readVarU32(&localIndex))
+        return f.fail("unable to read set_local index");
+
+    if (localIndex >= f.fg().locals().length())
+        return f.fail("set_local index out of range");
+
+    ExprType localType = ToExprType(f.fg().locals()[localIndex]);
+
+    if (!DecodeExpr(f, localType))
+        return false;
+
+    return CheckType(f, localType, expected);
 }
 
 static bool
@@ -100,9 +212,11 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::Nop:
         return CheckType(f, ExprType::Void, expected);
       case Expr::I32Const:
-        if (!f.d().readVarU32())
-            return f.fail("unable to read i32.const immediate");
-        return CheckType(f, ExprType::I32, expected);
+        return DecodeConst(f, expected);
+      case Expr::GetLocal:
+        return DecodeGetLocal(f, expected);
+      case Expr::SetLocal:
+        return DecodeSetLocal(f, expected);
       default:
         break;
     }
@@ -155,16 +269,16 @@ DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return Fail(cx, d, "bad number of signature args");
 
         ExprType result;
-        if (!d.readExprType(&result))
-            return Fail(cx, d, "bad result type");
+        if (!DecodeExprType(cx, d, &result))
+            return false;
 
         ValTypeVector args;
         if (!args.resize(numArgs))
             return false;
 
         for (uint32_t i = 0; i < numArgs; i++) {
-            if (!d.readValType(&args[i]))
-                return Fail(cx, d, "bad arg type");
+            if (!DecodeValType(cx, d, &args[i]))
+                return false;
         }
 
         init->sigs[sigIndex] = Sig(Move(args), result);
@@ -297,6 +411,24 @@ DecodeFunc(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     uint32_t sectionStart;
     if (!d.startSection(&sectionStart))
         return Fail(cx, d, "expected func section byte size");
+
+    const DeclaredSig& sig = mg.funcSig(funcIndex);
+    for (ValType type : sig.args()) {
+        if (!fg.addLocal(type))
+            return false;
+    }
+
+    uint32_t numVars;
+    if (!d.readVarU32(&numVars))
+        return Fail(cx, d, "expected number of local vars");
+
+    for (uint32_t i = 0; i < numVars; i++) {
+        ValType type;
+        if (!DecodeValType(cx, d, &type))
+            return false;
+        if (!fg.addLocal(type))
+            return false;
+    }
 
     if (!DecodeFuncBody(cx, d, mg, fg, funcIndex))
         return false;
