@@ -142,10 +142,11 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   mRustState.reset(mp4parse_new());
   int32_t rust_mp4parse_success = try_rust(mRustState, mSource);
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
-                        rust_mp4parse_success == 0);
-  if (rust_mp4parse_success < 0) {
+                        rust_mp4parse_success == MP4PARSE_OK);
+  if (rust_mp4parse_success != MP4PARSE_OK) {
+    MOZ_ASSERT(rust_mp4parse_success > 0);
     Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE,
-                          -rust_mp4parse_success);
+                          rust_mp4parse_success);
   }
   uint32_t rust_tracks = mp4parse_get_track_count(mRustState.get());
   MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %u tracks", rust_tracks));
@@ -179,7 +180,7 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 #ifdef MOZ_RUST_MP4PARSE
   uint32_t rust_total = 0;
   const char* rust_track_type = nullptr;
-  if (rust_mp4parse_success && rust_tracks > 0) {
+  if (rust_mp4parse_success == MP4PARSE_OK && rust_tracks > 0) {
     for (uint32_t i = 0; i < rust_tracks; ++i) {
       mp4parse_track_info track_info;
       int32_t r = mp4parse_get_track_info(mRustState.get(), i, &track_info);
