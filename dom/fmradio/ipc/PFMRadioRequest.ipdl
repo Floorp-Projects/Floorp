@@ -35,7 +35,7 @@ async protocol PFMRadioRequest
   manager PFMRadio;
 
 child:
-  __delete__(FMRadioResponseType response);
+  async __delete__(FMRadioResponseType response);
 };
 
 } // namespace dom

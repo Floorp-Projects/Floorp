@@ -16,19 +16,19 @@ async protocol PGMPStorage
   manager PGMP;
 
 child:
-  OpenComplete(nsCString aRecordName, GMPErr aStatus);
-  ReadComplete(nsCString aRecordName, GMPErr aStatus, uint8_t[] aBytes);
-  WriteComplete(nsCString aRecordName, GMPErr aStatus);
-  RecordNames(nsCString[] aRecordNames, GMPErr aStatus);
-  Shutdown();
+  async OpenComplete(nsCString aRecordName, GMPErr aStatus);
+  async ReadComplete(nsCString aRecordName, GMPErr aStatus, uint8_t[] aBytes);
+  async WriteComplete(nsCString aRecordName, GMPErr aStatus);
+  async RecordNames(nsCString[] aRecordNames, GMPErr aStatus);
+  async Shutdown();
 
 parent:
-  Open(nsCString aRecordName);
-  Read(nsCString aRecordName);
-  Write(nsCString aRecordName, uint8_t[] aBytes);
-  Close(nsCString aRecordName);
-  GetRecordNames();
-  __delete__();
+  async Open(nsCString aRecordName);
+  async Read(nsCString aRecordName);
+  async Write(nsCString aRecordName, uint8_t[] aBytes);
+  async Close(nsCString aRecordName);
+  async GetRecordNames();
+  async __delete__();
 
 };
 

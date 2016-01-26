@@ -19,11 +19,11 @@ parent:
   // this is at worst just a constant-factor increase in memory usage.
   // Also, Chromium does the same thing; see
   // content::RenderViewImpl::didSerializeDataForFrame.
-  WriteData(uint8_t[] aData);
+  async WriteData(uint8_t[] aData);
 
   // This is the onFinish method.
-  __delete__(nsCString aContentType,
-             nsresult aStatus);
+  async __delete__(nsCString aContentType,
+                   nsresult aStatus);
 };
 
 } // namespace mozilla

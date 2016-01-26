@@ -39,42 +39,42 @@ parent:
   // Forward calling to child's open() method to parent, expect TCPOptions
   // is expanded to |useSSL| (from TCPOptions.useSecureTransport) and
   // |binaryType| (from TCPOption.binaryType).
-  Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
+  async Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
 
   // Ask parent to open a socket and bind the newly-opened socket to a local
   // address specified in |localAddr| and |localPort|.
-  OpenBind(nsCString host, uint16_t port,
-           nsCString localAddr, uint16_t localPort,
-           bool useSSL, bool aUseArrayBuffers);
+  async OpenBind(nsCString host, uint16_t port,
+                 nsCString localAddr, uint16_t localPort,
+                 bool useSSL, bool aUseArrayBuffers);
 
   // When child's send() is called, this message requrests parent to send
   // data and update it's trackingNumber.
-  Data(SendableData data, uint32_t trackingNumber);
+  async Data(SendableData data, uint32_t trackingNumber);
 
   // Forward calling to child's upgradeToSecure() method to parent.
-  StartTLS();
+  async StartTLS();
 
   // Forward calling to child's send() method to parent.
-  Suspend();
+  async Suspend();
 
   // Forward calling to child's resume() method to parent.
-  Resume();
+  async Resume();
 
   // Forward calling to child's close() method to parent.
-  Close();
+  async Close();
 
 child:
   // Forward events that are dispatched by parent.
-  Callback(nsString type, CallbackData data, uint32_t readyState);
+  async Callback(nsString type, CallbackData data, uint32_t readyState);
 
   // Update child's bufferedAmount when parent's bufferedAmount is updated.
   // trackingNumber is also passed back to child to ensure the bufferedAmount
   // is corresponding the last call to send().
-  UpdateBufferedAmount(uint32_t bufferedAmount, uint32_t trackingNumber);
+  async UpdateBufferedAmount(uint32_t bufferedAmount, uint32_t trackingNumber);
 
 both:
-  RequestDelete();
-  __delete__();
+  async RequestDelete();
+  async __delete__();
 };
 
 

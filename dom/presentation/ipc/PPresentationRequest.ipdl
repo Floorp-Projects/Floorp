@@ -14,7 +14,7 @@ sync protocol PPresentationRequest
   manager PPresentation;
 
 child:
-  __delete__(nsresult result);
+  async __delete__(nsresult result);
 };
 
 } // namespace dom

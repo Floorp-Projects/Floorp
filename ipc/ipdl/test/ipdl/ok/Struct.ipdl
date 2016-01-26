@@ -6,5 +6,5 @@ struct S {
 sync protocol Struct {
 parent:
     sync test(S s) returns (S ss);
-    __delete__();
+    async __delete__();
 };

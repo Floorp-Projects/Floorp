@@ -13,15 +13,15 @@ protocol PExternalHelperApp
   manager PContent;
 
 parent:
-  OnStartRequest(nsCString entityID);
-  OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
-  OnStopRequest(nsresult code);
+  async OnStartRequest(nsCString entityID);
+  async OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
+  async OnStopRequest(nsresult code);
 
-  DivertToParentUsing(PChannelDiverter diverter);
+  async DivertToParentUsing(PChannelDiverter diverter);
 
 child:
-  Cancel(nsresult aStatus);
-  __delete__();
+  async Cancel(nsresult aStatus);
+  async __delete__();
 };
 
 

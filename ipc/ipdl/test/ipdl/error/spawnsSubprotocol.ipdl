@@ -7,7 +7,7 @@ protocol spawnsSubprotocol {
 
 child:
     subprotocolSpawns();
-    __delete__();
+    async __delete__();
 
 state DEAD: send __delete__;
 };

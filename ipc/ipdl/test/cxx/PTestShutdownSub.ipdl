@@ -12,7 +12,7 @@ both:
     intr StackFrame();
 
 parent:
-    PTestShutdownSubsub(bool expectParentDeleted);
+    async PTestShutdownSubsub(bool expectParentDeleted);
     sync __delete__();
 
 state CREATING:
