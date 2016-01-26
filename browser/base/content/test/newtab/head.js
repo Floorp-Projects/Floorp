@@ -98,6 +98,11 @@ registerCleanupFunction(function () {
   return watchLinksChangeOnce();
 });
 
+function pushPrefs(...aPrefs) {
+  return new Promise(resolve =>
+                     SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve));
+}
+
 /**
  * Resolves promise when directory links are downloaded and written to disk
  */
@@ -114,61 +119,36 @@ function watchLinksChangeOnce() {
   return deferred.promise;
 };
 
-/**
- * Provide the default test function to start our test runner.
- *
- * We need different code paths for tests that are still wired for
- * `TestRunner` and tests that have been ported to `add_task` as
- * we cannot have both in the same file.
- */
-function isTestPortedToAddTask() {
-  return gTestPath.endsWith("browser_newtab_bug722273.js");
-}
-if (!isTestPortedToAddTask()) {
-  this.test = function() {
-    waitForExplicitFinish();
-    // start TestRunner.run() after directory links is downloaded and written to disk
-    watchLinksChangeOnce().then(() => {
-      // Wait for hidden page to update with the desired links
-      whenPagesUpdated(() => TestRunner.run(), true);
+add_task(function* setup() {
+  registerCleanupFunction(function() {
+    return new Promise(resolve => {
+      function cleanupAndFinish() {
+        PlacesTestUtils.clearHistory().then(() => {
+          whenPagesUpdated(resolve);
+          NewTabUtils.restore();
+        });
+      }
+
+      let callbacks = NewTabUtils.links._populateCallbacks;
+      let numCallbacks = callbacks.length;
+
+      if (numCallbacks)
+        callbacks.splice(0, numCallbacks, cleanupAndFinish);
+      else
+        cleanupAndFinish();
     });
-
-    // Save the original directory source (which is set globally for tests)
-    gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
-    Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
-  }
-} else {
-  add_task(function* setup() {
-    registerCleanupFunction(function() {
-      return new Promise(resolve => {
-        function cleanupAndFinish() {
-          PlacesTestUtils.clearHistory().then(() => {
-            whenPagesUpdated(resolve);
-            NewTabUtils.restore();
-          });
-        }
-
-        let callbacks = NewTabUtils.links._populateCallbacks;
-        let numCallbacks = callbacks.length;
-
-        if (numCallbacks)
-          callbacks.splice(0, numCallbacks, cleanupAndFinish);
-        else
-          cleanupAndFinish();
-      });
-    });
-
-    let promiseReady = Task.spawn(function*() {
-      yield watchLinksChangeOnce();
-      yield new Promise(resolve => whenPagesUpdated(resolve, true));
-    });
-
-    // Save the original directory source (which is set globally for tests)
-    gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
-    Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
-    yield promiseReady;
   });
-}
+
+  let promiseReady = Task.spawn(function*() {
+    yield watchLinksChangeOnce();
+    yield new Promise(resolve => whenPagesUpdated(resolve, true));
+  });
+
+  // Save the original directory source (which is set globally for tests)
+  gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
+  yield promiseReady;
+});
 
 /**
  * The test runner that controls the execution flow of our tests.
@@ -389,37 +369,26 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
 /**
  * Creates a new tab containing 'about:newtab'.
  */
-function addNewTabPageTab() {
-  addNewTabPageTabPromise().then(TestRunner.next);
-}
-
-function addNewTabPageTabPromise() {
-  let deferred = Promise.defer();
-
-  let tab = gWindow.gBrowser.selectedTab = gWindow.gBrowser.addTab("about:newtab");
+function* addNewTabPageTab() {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
   let browser = tab.linkedBrowser;
 
-  function whenNewTabLoaded() {
+  // Wait for the document to become visible in case it was preloaded.
+  yield waitForCondition(() => !browser.contentDocument.hidden)
+
+  yield new Promise(resolve => {
     if (NewTabUtils.allPages.enabled) {
       // Continue when the link cache has been populated.
       NewTabUtils.links.populateCache(function () {
-        deferred.resolve(whenSearchInitDone());
+        whenSearchInitDone().then(resolve);
       });
     } else {
-      deferred.resolve();
+      resolve();
     }
-  }
-
-  // Wait for the new tab page to be loaded.
-  waitForBrowserLoad(browser, function () {
-    // Wait for the document to become visible in case it was preloaded.
-    waitForCondition(() => !browser.contentDocument.hidden).then(whenNewTabLoaded);
   });
-
-  return deferred.promise;
 }
 
-function waitForBrowserLoad(browser, callback = TestRunner.next) {
+function waitForBrowserLoad(browser) {
   if (browser.contentDocument.readyState == "complete") {
     executeSoon(callback);
     return;
@@ -441,23 +410,30 @@ function waitForBrowserLoad(browser, callback = TestRunner.next) {
  *         The second cell contains 'http://example2.com/'. The third cell is empty.
  *         The fourth cell contains the pinned site 'http://example4.com/'.
  */
-function checkGrid(aSitesPattern, aSites) {
+function* checkGrid(aSitesPattern, aSites) {
   let length = aSitesPattern.split(",").length;
-  let sites = (aSites || getGrid().sites).slice(0, length);
-  let current = sites.map(function (aSite) {
-    if (!aSite)
-      return "";
 
-    let pinned = aSite.isPinned();
-    let hasPinnedAttr = aSite.node.hasAttribute("pinned");
+  let foundPattern = 
+    yield ContentTask.spawn(gBrowser.selectedBrowser,
+                            { length: length, sites: aSites }, function* (args) {
+      let grid = content.wrappedJSObject.gGrid;
 
-    if (pinned != hasPinnedAttr)
-      ok(false, "invalid state (site.isPinned() != site[pinned])");
+      let sites = (args.sites || grid.sites).slice(0, args.length);
+      return sites.map(function (aSite) {
+        if (!aSite)
+          return "";
 
-    return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");
+        let pinned = aSite.isPinned();
+        let hasPinnedAttr = aSite.node.hasAttribute("pinned");
+
+        if (pinned != hasPinnedAttr)
+          ok(false, "invalid state (site.isPinned() != site[pinned])");
+
+        return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");
+      });
   });
 
-  is(current, aSitesPattern, "grid status = " + aSitesPattern);
+  is(foundPattern, aSitesPattern, "grid status = " + aSitesPattern);
 }
 
 /**
@@ -762,27 +738,32 @@ function whenPagesUpdated(aCallback = TestRunner.next) {
  * Waits for the response to the page's initial search state request.
  */
 function whenSearchInitDone() {
-  let deferred = Promise.defer();
-  let searchController = getContentWindow().gSearch._contentSearchController;
-  if (searchController.defaultEngine) {
-    return Promise.resolve();
-  }
-  let eventName = "ContentSearchService";
-  getContentWindow().addEventListener(eventName, function onEvent(event) {
-    if (event.detail.type == "State") {
-      getContentWindow().removeEventListener(eventName, onEvent);
-      // Wait for the search controller to receive the event, then resolve.
-      let resolver = function() {
+  return ContentTask.spawn(gWindow.gBrowser.selectedBrowser, {}, function*() {
+    return new Promise(resolve => {
+      if (content.gSearch) {
+        let searchController = content.gSearch._contentSearchController;
         if (searchController.defaultEngine) {
-          deferred.resolve();
+          resolve();
           return;
         }
-        executeSoon(resolver);
       }
-      executeSoon(resolver);
-    }
+
+      let eventName = "ContentSearchService";
+      content.addEventListener(eventName, function onEvent(event) {
+        if (event.detail.type == "State") {
+          content.removeEventListener(eventName, onEvent);
+          let resolver = function() {
+            // Wait for the search controller to receive the event, then resolve.
+            if (content.gSearch._contentSearchController.defaultEngine) {
+              resolve();
+              return;
+            }
+          }
+          content.setTimeout(resolver, 0);
+        }
+      });
+    });
   });
-  return deferred.promise;
 }
 
 /**
