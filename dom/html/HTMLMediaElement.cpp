@@ -3371,6 +3371,9 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   mMediaStreamTrackListener = new MediaStreamTrackListener(this);
   mSrcStream->RegisterTrackListener(mMediaStreamTrackListener);
 
+  mSrcStream->AddPrincipalChangeObserver(this);
+  mSrcStreamVideoPrincipal = mSrcStream->GetVideoPrincipal();
+
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
   CheckAutoplayDataReady();
@@ -3395,6 +3398,9 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
   mMediaStreamTrackListener = nullptr;
+
+  mSrcStream->RemovePrincipalChangeObserver(this);
+  mSrcStreamVideoPrincipal = nullptr;
 
   mSrcStream = nullptr;
 }
@@ -4179,6 +4185,27 @@ VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
   return mVideoFrameContainer;
 }
 
+void
+HTMLMediaElement::PrincipalChanged(DOMMediaStream* aStream)
+{
+  LOG(LogLevel::Info, ("HTMLMediaElement %p Stream principal changed.", this));
+  nsContentUtils::CombineResourcePrincipals(&mSrcStreamVideoPrincipal,
+                                            aStream->GetVideoPrincipal());
+
+  LOG(LogLevel::Debug, ("HTMLMediaElement %p Stream video principal changed to "
+                        "%p. Waiting for it to reach VideoFrameContainer before "
+                        "setting.", this, aStream->GetVideoPrincipal()));
+  if (mVideoFrameContainer) {
+    UpdateSrcStreamVideoPrincipal(aStream->GetVideoPrincipal());
+  }
+}
+
+void
+HTMLMediaElement::UpdateSrcStreamVideoPrincipal(nsIPrincipal* aPrincipal)
+{
+  mSrcStreamVideoPrincipal = aPrincipal;
+}
+
 nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)
 {
   LOG_EVENT(LogLevel::Debug, ("%p Dispatching event %s", this,
@@ -4272,7 +4299,19 @@ already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentPrincipal()
     return mDecoder->GetCurrentPrincipal();
   }
   if (mSrcStream) {
-    RefPtr<nsIPrincipal> principal = mSrcStream->GetPrincipal();
+    nsCOMPtr<nsIPrincipal> principal = mSrcStream->GetPrincipal();
+    return principal.forget();
+  }
+  return nullptr;
+}
+
+already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentVideoPrincipal()
+{
+  if (mDecoder) {
+    return mDecoder->GetCurrentPrincipal();
+  }
+  if (mSrcStream) {
+    nsCOMPtr<nsIPrincipal> principal = mSrcStreamVideoPrincipal;
     return principal.forget();
   }
   return nullptr;

@@ -446,6 +446,12 @@ public:
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
   /**
+   * Returns a principal indicating who may access video data of this stream.
+   * The video principal will be a combination of all live video tracks.
+   */
+  nsIPrincipal* GetVideoPrincipal() { return mVideoPrincipal; }
+
+  /**
    * These are used in WebRTC.  A peerIdentity constrained MediaStream cannot be sent
    * across the network to anything other than a peer with the provided identity.
    * If this is set, then mPrincipal should be an instance of nsNullPrincipal.
@@ -676,6 +682,9 @@ private:
   // Principal identifying who may access the collected contents of this stream.
   // If null, this stream can be used by anyone because it has no content yet.
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  // Video principal is used by video element as access is requested to its
+  // image data.
+  nsCOMPtr<nsIPrincipal> mVideoPrincipal;
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
   // this is used in gUM and WebRTC to identify peers that this stream
   // is allowed to be sent to
