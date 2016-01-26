@@ -293,6 +293,7 @@ fuzzy-if(cocoaWidget,4,15982) fuzzy-if(winWidget,4,92) == radialGradient-basic-0
 == script-empty-01.svg pass.svg
 == selector-01.svg pass.svg
 == stroke-linecap-circle-ellipse-01.svg stroke-linecap-circle-ellipse-01-ref.svg
+== stroke-linecap-circle-ellipse-dashed-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 == stroke-width-percentage-02a.svg stroke-width-percentage-02-ref.svg
 == stroke-width-percentage-02b.svg stroke-width-percentage-02-ref.svg
