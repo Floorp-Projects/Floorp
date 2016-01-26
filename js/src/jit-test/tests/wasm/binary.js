@@ -106,5 +106,5 @@ wasmEval(toBuf(moduleWithSections([sigSection([])])));
 wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}])])));
 wasmEval(toBuf(moduleWithSections([sigSection([{args:[I32Code], ret:VoidCode}])])));
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:100}])]))), Error, /bad result type/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), Error, /bad arg type/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:100}])]))), Error, /bad expression type/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), Error, /bad value type/);

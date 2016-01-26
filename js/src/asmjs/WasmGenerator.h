@@ -243,7 +243,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     // FuncBytecode in ModuleGenerator::finishFunc().
     UniqueBytecode     bytecode_;
     SourceCoordsVector callSourceCoords_;
-    ValTypeVector      localVars_;
+    ValTypeVector      locals_;
 
     uint32_t lineOrBytecode_;
 
@@ -260,7 +260,10 @@ class MOZ_STACK_CLASS FunctionGenerator
         return callSourceCoords_.append(sc);
     }
     bool addLocal(ValType v) {
-        return localVars_.append(v);
+        return locals_.append(v);
+    }
+    const ValTypeVector& locals() const {
+        return locals_;
     }
 };
 
