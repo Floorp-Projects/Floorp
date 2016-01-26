@@ -23,6 +23,7 @@ DIRS += [
     'preferences',
     'projecteditor',
     'promisedebugger',
+    'responsive.html',
     'responsivedesign',
     'scratchpad',
     'shadereditor',

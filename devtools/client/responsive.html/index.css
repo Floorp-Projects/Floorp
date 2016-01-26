@@ -1,0 +1,6 @@
+/* TODO: May break up into component local CSS.  Pending future discussions by
+ * React component group on how to best handle CSS. */
+
+iframe {
+  border: 0;
+}

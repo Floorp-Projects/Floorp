@@ -1,13 +1,8 @@
-/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * Contributor(s):
- *  zmgmoz <zmgmoz@gmail.com>
- *
- * ***** END LICENSE BLOCK ***** */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Test navigation of webconsole contents via ctrl-a, ctrl-e, ctrl-p, ctrl-n
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=804845
