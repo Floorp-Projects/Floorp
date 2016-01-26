@@ -6,7 +6,10 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
+const {Cu} = require("chrome");
+const {setTimeout, clearTimeout} =
+      Cu.import("resource://gre/modules/Timer.jsm", {});
+
 const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;
 
@@ -16,8 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
 
-function FontInspector(inspector, window)
-{
+function FontInspector(inspector, window) {
   this.inspector = inspector;
   this.pageStyle = this.inspector.pageStyle;
   this.chromeDoc = window.document;
@@ -32,10 +34,11 @@ FontInspector.prototype = {
     this.inspector.selection.on("new-node", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
     this.showAll = this.showAll.bind(this);
-    this.showAllButton = this.chromeDoc.getElementById("showall");
+    this.showAllButton = this.chromeDoc.getElementById("font-showall");
     this.showAllButton.addEventListener("click", this.showAll);
     this.previewTextChanged = this.previewTextChanged.bind(this);
-    this.previewInput = this.chromeDoc.getElementById("preview-text-input");
+    this.previewInput =
+      this.chromeDoc.getElementById("font-preview-text-input");
     this.previewInput.addEventListener("input", this.previewTextChanged);
 
     // Listen for theme changes as the color of the previews depend on the theme
@@ -123,7 +126,8 @@ FontInspector.prototype = {
    * Hide the font list. No node are selected.
    */
   dim: function() {
-    this.chromeDoc.body.classList.add("dim");
+    let panel = this.chromeDoc.getElementById("sidebar-panel-fontinspector");
+    panel.classList.add("dim");
     this.clear();
   },
 
@@ -131,7 +135,8 @@ FontInspector.prototype = {
    * Show the font list. A node is selected.
    */
   undim: function() {
-    this.chromeDoc.body.classList.remove("dim");
+    let panel = this.chromeDoc.getElementById("sidebar-panel-fontinspector");
+    panel.classList.remove("dim");
   },
 
   /**
@@ -146,12 +151,13 @@ FontInspector.prototype = {
   */
   update: Task.async(function*(showAllFonts) {
     let node = this.inspector.selection.nodeFront;
+    let panel = this.chromeDoc.getElementById("sidebar-panel-fontinspector");
 
     if (!node ||
         !this.isActive() ||
         !this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode() ||
-        this.chromeDoc.body.classList.contains("dim")) {
+        panel.classList.contains("dim")) {
       return;
     }
 
@@ -205,7 +211,7 @@ FontInspector.prototype = {
    * Display the information of one font.
    */
   render: function(font) {
-    let s = this.chromeDoc.querySelector("#template > section");
+    let s = this.chromeDoc.querySelector("#font-template > section");
     s = s.cloneNode(true);
 
     s.querySelector(".font-name").textContent = font.name;
@@ -247,12 +253,4 @@ FontInspector.prototype = {
   },
 };
 
-window.setPanel = function(panel) {
-  window.fontInspector = new FontInspector(panel, window);
-};
-
-window.onunload = function() {
-  if (window.fontInspector) {
-    window.fontInspector.destroy();
-  }
-};
+exports.FontInspector = FontInspector;
