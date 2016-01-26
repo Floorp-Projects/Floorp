@@ -1443,7 +1443,7 @@ DOMHwMediaStream::SetImageSize(uint32_t width, uint32_t height)
 #endif
 
   SourceMediaStream* srcStream = GetInputStream()->AsSourceStream();
-  StreamBuffer::Track* track = srcStream->FindTrack(TRACK_VIDEO_PRIMARY);
+  StreamTracks::Track* track = srcStream->FindTrack(TRACK_VIDEO_PRIMARY);
 
   if (!track || !track->GetSegment()) {
     return;
@@ -1479,7 +1479,7 @@ DOMHwMediaStream::SetOverlayImage(OverlayImage* aImage)
 #endif
 
   SourceMediaStream* srcStream = GetInputStream()->AsSourceStream();
-  StreamBuffer::Track* track = srcStream->FindTrack(TRACK_VIDEO_PRIMARY);
+  StreamTracks::Track* track = srcStream->FindTrack(TRACK_VIDEO_PRIMARY);
 
   if (!track || !track->GetSegment()) {
     return;

@@ -403,7 +403,7 @@ public:
   void PlayVideo(MediaStream* aStream);
   /**
    * No more data will be forthcoming for aStream. The stream will end
-   * at the current buffer end point. The StreamBuffer's tracks must be
+   * at the current buffer end point. The StreamTracks's tracks must be
    * explicitly set to finished by the caller.
    */
   void OpenAudioInputImpl(int aID,
