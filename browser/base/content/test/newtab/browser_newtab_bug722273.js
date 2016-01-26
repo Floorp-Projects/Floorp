@@ -11,24 +11,20 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 var {Sanitizer} = tmp;
 
-add_task(function*() {
+add_task(function* () {
   yield promiseSanitizeHistory();
   yield promiseAddFakeVisits();
-  yield addNewTabPageTabPromise();
-  is(getCell(0).site.url, URL, "first site is our fake site");
+  yield* addNewTabPageTab();
 
-  whenPagesUpdated(() => {});
+  let cellUrl = yield performOnCell(0, cell => { return cell.site.url; });
+  is(cellUrl, URL, "first site is our fake site");
+
+  let updatedPromise = whenPagesUpdated();
   yield promiseSanitizeHistory();
+  yield updatedPromise;
 
-  // Now wait until the grid is updated
-  while (true) {
-    if (!getCell(0).site) {
-      break;
-    }
-    info("the fake site is still present");
-    yield new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  ok(!getCell(0).site, "fake site is gone");
+  let isGone = yield performOnCell(0, cell => { return cell.site == null; });
+  ok(isGone, "fake site is gone");
 });
 
 function promiseAddFakeVisits() {
