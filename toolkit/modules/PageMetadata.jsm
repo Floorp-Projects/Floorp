@@ -10,7 +10,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/microformat-shiv.js");
 
 XPCOMUtils.defineLazyServiceGetter(this, "UnescapeService",
                                    "@mozilla.org/feed-unescapehtml;1",
@@ -26,7 +25,7 @@ const DISCOVER_IMAGES_MAX  = 5;
 
 
 /**
- * Extract metadata and microformats from a HTML document.
+ * Extract metadata and microdata from a HTML document.
  * @type {Object}
  */
 this.PageMetadata = {
@@ -37,14 +36,14 @@ this.PageMetadata = {
    * - Metadata specified in <meta> tags, including OpenGraph data
    * - Links specified in <link> tags (short, canonical, preview images, alternative)
    * - Content that can be found in the page content that we consider useful metadata
-   * - Microformats
+   * - Microdata, as defined by the spec:
+   *   http://www.whatwg.org/specs/web-apps/current-work/multipage/microdata-2.html
    *
    * @param {Document} document - Document to extract data from.
-   * @param {Element} [target] - Optional element to restrict microformats lookup to.
    * @returns {Object} Object containing the various metadata, normalized to
    *                   merge some common alternative names for metadata.
    */
-  getData(document, target = null) {
+  getData(document) {
     let result = {
       url: this._validateURL(document, document.documentURI),
       title: document.title,
@@ -69,16 +68,84 @@ this.PageMetadata = {
     this._getMetaData(document, result);
     this._getLinkData(document, result);
     this._getPageData(document, result);
-    result.microformats = this.getMicroformats(document, target);
+    result.microdata = this.getMicrodata(document);
 
     return result;
   },
 
-  getMicroformats(document, target = null) {
-    if (target) {
-      return Microformats.getParent(target, {node: document});
+  /**
+   * Get all microdata from an HTML document, or from only a given element.
+   *
+   * Returns an object in the format:
+   *   {
+   *     "items": [
+   *       {
+   *         "type": [ "<TYPE>" ],
+   *         "properties": {
+   *            "<PROPERTY-NAME>": [ "<PROPERTY-VALUE>", ... ],
+   *            ...,
+   *         }
+   *       },
+   *       ...,
+   *     ]
+   *   }
+   *
+   * @note This is based on wg algorythm to convert microdata to json
+   *      http://www.whatwg.org/specs/web-apps/current-work/multipage/microdata-2.html#json
+   *
+   * @param {Document} document - Document to extract data from.
+   * @param {Element} [target] - Optional element to restrict microdata lookup to.
+   * @return {Object} Object describing the found microdata.
+   */
+  getMicrodata(document, target = null) {
+    function getObject(item) {
+      let result = {};
+
+      if (item.itemType.length) {
+        result.types = [...item.itemType];
+      }
+
+      if (item.itemId) {
+        result.itemId = item.itemId;
+      }
+
+      if (item.properties.length) {
+        result.properties = {};
+      }
+
+      for (let elem of item.properties) {
+        let value;
+        if (elem.itemScope) {
+          value = getObject(elem);
+        } else if (elem.itemValue) {
+          value = elem.itemValue;
+        } else if (elem.hasAttribute("content")) {
+          // Handle mis-formatted microdata.
+          value = elem.getAttribute("content");
+        }
+
+        for (let prop of elem.itemProp) {
+          if (!result.properties[prop]) {
+            result.properties[prop] = [];
+          }
+
+          result.properties[prop].push(value);
+        }
+      }
+
+      return result;
     }
-    return Microformats.get({node: document});
+
+    let result = { items: [] };
+    let elements = target ? [target] : document.getItems();
+
+    for (let element of elements) {
+      if (element.itemScope) {
+        result.items.push(getObject(element));
+      }
+    }
+
+    return result;
   },
 
   /**
