@@ -40,7 +40,6 @@
 
 #include <algorithm>
 
-#include "common/linux/elf_gnu_compat.h"
 #include "common/linux/elfutils.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/memory_mapped_file.h"
@@ -48,7 +47,13 @@
 
 namespace google_breakpad {
 
-FileID::FileID(const char* path) : path_(path) {}
+#ifndef NT_GNU_BUILD_ID
+#define NT_GNU_BUILD_ID 3
+#endif
+
+FileID::FileID(const char* path) {
+  strncpy(path_, path, sizeof(path_));
+}
 
 // ELF note name and desc are 32-bits word padded.
 #define NOTE_PADDING(a) ((a + 3) & ~3)
@@ -57,7 +62,7 @@ FileID::FileID(const char* path) : path_(path) {}
 // and use the syscall/libc wrappers instead of direct syscalls or libc.
 
 template<typename ElfClass>
-static bool ElfClassBuildIDNoteIdentifier(const void *section, size_t length,
+static bool ElfClassBuildIDNoteIdentifier(const void *section, int length,
                                           uint8_t identifier[kMDGUIDSize]) {
   typedef typename ElfClass::Nhdr Nhdr;
 
@@ -92,8 +97,7 @@ static bool ElfClassBuildIDNoteIdentifier(const void *section, size_t length,
 static bool FindElfBuildIDNote(const void *elf_mapped_base,
                                uint8_t identifier[kMDGUIDSize]) {
   void* note_section;
-  size_t note_size;
-  int elfclass;
+  int note_size, elfclass;
   if ((!FindElfSegment(elf_mapped_base, PT_NOTE,
                        (const void**)&note_section, &note_size, &elfclass) ||
       note_size == 0)  &&
@@ -119,7 +123,7 @@ static bool FindElfBuildIDNote(const void *elf_mapped_base,
 static bool HashElfTextSection(const void *elf_mapped_base,
                                uint8_t identifier[kMDGUIDSize]) {
   void* text_section;
-  size_t text_size;
+  int text_size;
   if (!FindElfSection(elf_mapped_base, ".text", SHT_PROGBITS,
                       (const void**)&text_section, &text_size, NULL) ||
       text_size == 0) {
@@ -128,7 +132,7 @@ static bool HashElfTextSection(const void *elf_mapped_base,
 
   my_memset(identifier, 0, kMDGUIDSize);
   const uint8_t* ptr = reinterpret_cast<const uint8_t*>(text_section);
-  const uint8_t* ptr_end = ptr + std::min(text_size, static_cast<size_t>(4096));
+  const uint8_t* ptr_end = ptr + std::min(text_size, 4096);
   while (ptr < ptr_end) {
     for (unsigned i = 0; i < kMDGUIDSize; i++)
       identifier[i] ^= ptr[i];
@@ -149,7 +153,7 @@ bool FileID::ElfFileIdentifierFromMappedFile(const void* base,
 }
 
 bool FileID::ElfFileIdentifier(uint8_t identifier[kMDGUIDSize]) {
-  MemoryMappedFile mapped_file(path_.c_str(), 0);
+  MemoryMappedFile mapped_file(path_);
   if (!mapped_file.data())  // Should probably check if size >= ElfW(Ehdr)?
     return false;
 

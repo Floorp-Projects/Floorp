@@ -39,36 +39,66 @@
 #define CLIENT_LINUX_MINIDUMP_WRITER_LINUX_DUMPER_H_
 
 #include <elf.h>
-#if defined(__ANDROID__)
-#include <link.h>
-#endif
 #include <linux/limits.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/user.h>
 
-#include "client/linux/dump_writer_common/mapping_info.h"
-#include "client/linux/dump_writer_common/thread_info.h"
 #include "common/memory.h"
 #include "google_breakpad/common/minidump_format.h"
 
 namespace google_breakpad {
 
+#if defined(__i386) || defined(__x86_64)
+typedef typeof(((struct user*) 0)->u_debugreg[0]) debugreg_t;
+#endif
+
 // Typedef for our parsing of the auxv variables in /proc/pid/auxv.
-#if defined(__i386) || defined(__ARM_EABI__) || \
- (defined(__mips__) && _MIPS_SIM == _ABIO32)
+#if defined(__i386) || defined(__ARM_EABI__)
 typedef Elf32_auxv_t elf_aux_entry;
-#elif defined(__x86_64) || defined(__aarch64__) || \
-     (defined(__mips__) && _MIPS_SIM != _ABIO32)
+#elif defined(__x86_64)
 typedef Elf64_auxv_t elf_aux_entry;
 #endif
 
-typedef __typeof__(((elf_aux_entry*) 0)->a_un.a_val) elf_aux_val_t;
+typedef typeof(((elf_aux_entry*) 0)->a_un.a_val) elf_aux_val_t;
 
 // When we find the VDSO mapping in the process's address space, this
 // is the name we use for it when writing it to the minidump.
 // This should always be less than NAME_MAX!
 const char kLinuxGateLibraryName[] = "linux-gate.so";
+
+// We produce one of these structures for each thread in the crashed process.
+struct ThreadInfo {
+  pid_t tgid;   // thread group id
+  pid_t ppid;   // parent process
+
+  uintptr_t stack_pointer;  // thread stack pointer
+
+
+#if defined(__i386) || defined(__x86_64)
+  user_regs_struct regs;
+  user_fpregs_struct fpregs;
+  static const unsigned kNumDebugRegisters = 8;
+  debugreg_t dregs[8];
+#if defined(__i386)
+  user_fpxregs_struct fpxregs;
+#endif  // defined(__i386)
+
+#elif defined(__ARM_EABI__)
+  // Mimicking how strace does this(see syscall.c, search for GETREGS)
+  struct user_regs regs;
+  struct user_fpregs fpregs;
+#endif
+};
+
+// One of these is produced for each mapping in the process (i.e. line in
+// /proc/$x/maps).
+struct MappingInfo {
+  uintptr_t start_addr;
+  size_t size;
+  size_t offset;  // offset into the backed file.
+  char name[NAME_MAX];
+};
 
 class LinuxDumper {
  public:
@@ -78,12 +108,6 @@ class LinuxDumper {
 
   // Parse the data for |threads| and |mappings|.
   virtual bool Init();
-
-  // Take any actions that could not be taken in Init(). LateInit() is
-  // called after all other caller's initialization is complete, and in
-  // particular after it has called ThreadsSuspend(), so that ptrace is
-  // available.
-  virtual bool LateInit();
 
   // Return true if the dumper performs a post-mortem dump.
   virtual bool IsPostMortem() const = 0;
@@ -111,8 +135,8 @@ class LinuxDumper {
   PageAllocator* allocator() { return &allocator_; }
 
   // Copy content of |length| bytes from a given process |child|,
-  // starting from |src|, into |dest|. Returns true on success.
-  virtual bool CopyFromProcess(void* dest, pid_t child, const void* src,
+  // starting from |src|, into |dest|.
+  virtual void CopyFromProcess(void* dest, pid_t child, const void* src,
                                size_t length) = 0;
 
   // Builds a proc path for a certain pid for a node (/proc/<pid>/<node>).
@@ -122,8 +146,7 @@ class LinuxDumper {
   virtual bool BuildProcPath(char* path, pid_t pid, const char* node) const = 0;
 
   // Generate a File ID from the .text section of a mapped entry.
-  // If not a member, mapping_id is ignored. This method can also manipulate the
-  // |mapping|.name to truncate "(deleted)" from the file name if necessary.
+  // If not a member, mapping_id is ignored.
   bool ElfFileIdentifierForMapping(const MappingInfo& mapping,
                                    bool member,
                                    unsigned int mapping_id,
@@ -139,17 +162,6 @@ class LinuxDumper {
 
   pid_t crash_thread() const { return crash_thread_; }
   void set_crash_thread(pid_t crash_thread) { crash_thread_ = crash_thread; }
-
-  // Extracts the effective path and file name of from |mapping|. In most cases
-  // the effective name/path are just the mapping's path and basename. In some
-  // other cases, however, a library can be mapped from an archive (e.g., when
-  // loading .so libs from an apk on Android) and this method is able to
-  // reconstruct the original file name.
-  static void GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
-                                             char* file_path,
-                                             size_t file_path_size,
-                                             char* file_name,
-                                             size_t file_name_size);
 
  protected:
   bool ReadAuxv();
@@ -191,62 +203,6 @@ class LinuxDumper {
 
   // Info from /proc/<pid>/auxv
   wasteful_vector<elf_aux_val_t> auxv_;
-
-#if defined(__ANDROID__)
- private:
-  // Android M and later support packed ELF relocations in shared libraries.
-  // Packing relocations changes the vaddr of the LOAD segments, such that
-  // the effective load bias is no longer the same as the start address of
-  // the memory mapping containing the executable parts of the library. The
-  // packing is applied to the stripped library run on the target, but not to
-  // any other library, and in particular not to the library used to generate
-  // breakpad symbols. As a result, we need to adjust the |start_addr| for
-  // any mapping that results from a shared library that contains Android
-  // packed relocations, so that it properly represents the effective library
-  // load bias. The following functions support this adjustment.
-
-  // Check that a given mapping at |start_addr| is for an ELF shared library.
-  // If it is, place the ELF header in |ehdr| and return true.
-  // The first LOAD segment in an ELF shared library has offset zero, so the
-  // ELF file header is at the start of this map entry, and in already mapped
-  // memory.
-  bool GetLoadedElfHeader(uintptr_t start_addr, ElfW(Ehdr)* ehdr);
-
-  // For the ELF file mapped at |start_addr|, iterate ELF program headers to
-  // find the min vaddr of all program header LOAD segments, the vaddr for
-  // the DYNAMIC segment, and a count of DYNAMIC entries. Return values in
-  // |min_vaddr_ptr|, |dyn_vaddr_ptr|, and |dyn_count_ptr|.
-  // The program header table is also in already mapped memory.
-  void ParseLoadedElfProgramHeaders(ElfW(Ehdr)* ehdr,
-                                    uintptr_t start_addr,
-                                    uintptr_t* min_vaddr_ptr,
-                                    uintptr_t* dyn_vaddr_ptr,
-                                    size_t* dyn_count_ptr);
-
-  // Search the DYNAMIC tags for the ELF file with the given |load_bias|, and
-  // return true if the tags indicate that the file contains Android packed
-  // relocations. Dynamic tags are found at |dyn_vaddr| past the |load_bias|.
-  bool HasAndroidPackedRelocations(uintptr_t load_bias,
-                                   uintptr_t dyn_vaddr,
-                                   size_t dyn_count);
-
-  // If the ELF file mapped at |start_addr| contained Android packed
-  // relocations, return the load bias that the system linker (or Chromium
-  // crazy linker) will have used. If the file did not contain Android
-  // packed relocations, returns |start_addr|, indicating that no adjustment
-  // is necessary.
-  // The effective load bias is |start_addr| adjusted downwards by the
-  // min vaddr in the library LOAD segments.
-  uintptr_t GetEffectiveLoadBias(ElfW(Ehdr)* ehdr, uintptr_t start_addr);
-
-  // Called from LateInit(). Iterates |mappings_| and rewrites the |start_addr|
-  // field of any that represent ELF shared libraries with Android packed
-  // relocations, so that |start_addr| is the load bias that the system linker
-  // (or Chromium crazy linker) used. This value matches the addresses produced
-  // when the non-relocation-packed library is used for breakpad symbol
-  // generation.
-  void LatePostprocessMappings();
-#endif  // __ANDROID__
 };
 
 }  // namespace google_breakpad

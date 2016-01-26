@@ -48,17 +48,6 @@
 
 namespace {
 
-const NXArchInfo* ArchInfo_arm64() {
-  NXArchInfo* arm64 = new NXArchInfo;
-  *arm64 = *NXGetArchInfoFromCpuType(CPU_TYPE_ARM,
-                                     CPU_SUBTYPE_ARM_V7);
-  arm64->name = "arm64";
-  arm64->cputype = CPU_TYPE_ARM64;
-  arm64->cpusubtype = CPU_SUBTYPE_ARM64_ALL;
-  arm64->description = "arm 64";
-  return arm64;
-}
-
 const NXArchInfo* ArchInfo_armv7s() {
   NXArchInfo* armv7s = new NXArchInfo;
   *armv7s = *NXGetArchInfoFromCpuType(CPU_TYPE_ARM,
@@ -74,32 +63,19 @@ const NXArchInfo* ArchInfo_armv7s() {
 namespace google_breakpad {
 
 const NXArchInfo* BreakpadGetArchInfoFromName(const char* arch_name) {
-  // TODO: Remove this when the OS knows about arm64.
-  if (!strcmp("arm64", arch_name))
-    return BreakpadGetArchInfoFromCpuType(CPU_TYPE_ARM64,
-                                          CPU_SUBTYPE_ARM64_ALL);
-
   // TODO: Remove this when the OS knows about armv7s.
   if (!strcmp("armv7s", arch_name))
     return BreakpadGetArchInfoFromCpuType(CPU_TYPE_ARM, CPU_SUBTYPE_ARM_V7S);
-
   return NXGetArchInfoFromName(arch_name);
 }
 
 const NXArchInfo* BreakpadGetArchInfoFromCpuType(cpu_type_t cpu_type,
                                                  cpu_subtype_t cpu_subtype) {
-  // TODO: Remove this when the OS knows about arm64.
-  if (cpu_type == CPU_TYPE_ARM64 && cpu_subtype == CPU_SUBTYPE_ARM64_ALL) {
-    static const NXArchInfo* arm64 = ArchInfo_arm64();
-    return arm64;
-  }
-
   // TODO: Remove this when the OS knows about armv7s.
   if (cpu_type == CPU_TYPE_ARM && cpu_subtype == CPU_SUBTYPE_ARM_V7S) {
     static const NXArchInfo* armv7s = ArchInfo_armv7s();
     return armv7s;
   }
-
   return NXGetArchInfoFromCpuType(cpu_type, cpu_subtype);
 }
 
@@ -184,7 +160,7 @@ const NXArchInfo *NXGetArchInfoFromName(const char *name) {
       return &kKnownArchitectures[arch];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 const NXArchInfo *NXGetArchInfoFromCpuType(cpu_type_t cputype,
@@ -194,7 +170,7 @@ const NXArchInfo *NXGetArchInfoFromCpuType(cpu_type_t cputype,
       return &kKnownArchitectures[arch];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 struct fat_arch *NXFindBestFatArch(cpu_type_t cputype,
@@ -206,6 +182,6 @@ struct fat_arch *NXFindBestFatArch(cpu_type_t cputype,
       return &fat_archs[f];
     }
   }
-  return NULL;
+  return nullptr;
 }
 #endif  // !__APPLE__
