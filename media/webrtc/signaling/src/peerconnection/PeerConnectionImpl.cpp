@@ -375,6 +375,24 @@ bool PCUuidGenerator::Generate(std::string* idp) {
   return true;
 }
 
+bool IsPrivateBrowsing(nsPIDOMWindow* aWindow)
+{
+#if defined(MOZILLA_EXTERNAL_LINKAGE)
+  return false;
+#else
+  if (!aWindow) {
+    return false;
+  }
+
+  nsIDocument *doc = aWindow->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
+
+  nsILoadContext *loadContext = doc->GetLoadContext();
+  return loadContext && loadContext->UsePrivateBrowsing();
+#endif
+}
 
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 : mTimeCard(MOZ_LOG_TEST(signalingLogInfo(),LogLevel::Error) ?
@@ -403,11 +421,17 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mAddCandidateErrorCount(0)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
   , mNegotiationNeeded(false)
+  , mPrivateWindow(false)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   MOZ_ASSERT(NS_IsMainThread());
+  auto log = RLogRingBuffer::CreateInstance();
   if (aGlobal) {
     mWindow = do_QueryInterface(aGlobal->GetAsSupports());
+    if (IsPrivateBrowsing(mWindow)) {
+      mPrivateWindow = true;
+      log->EnterPrivateMode();
+    }
   }
 #endif
   CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %s",
@@ -433,6 +457,15 @@ PeerConnectionImpl::~PeerConnectionImpl()
   }
   // This aborts if not on main thread (in Debug builds)
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  if (mPrivateWindow) {
+    auto * log = RLogRingBuffer::GetInstance();
+    if (log) {
+      log->ExitPrivateMode();
+    }
+    mPrivateWindow = false;
+  }
+#endif
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
   } else {
@@ -2667,7 +2700,9 @@ PeerConnectionImpl::CloseInt()
   // for all trickle ICE candidates to come in; this can happen well after we've
   // transitioned to connected. As a bonus, this allows us to detect race
   // conditions where a stats dispatch happens right as the PC closes.
-  RecordLongtermICEStatistics();
+  if (!mPrivateWindow) {
+    RecordLongtermICEStatistics();
+  }
   RecordEndOfCallTelemetry();
   CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
              "ending call", __FUNCTION__, mHandle.c_str());
