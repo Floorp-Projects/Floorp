@@ -401,9 +401,7 @@ GlobalManager = {
 
             let promise;
             try {
-              // TODO: Stop passing the callback once all APIs return
-              // promises.
-              promise = schemaApi[ns][name](...args, callback);
+              promise = schemaApi[ns][name](...args);
             } catch (e) {
               if (e instanceof context.cloneScope.Error) {
                 promise = Promise.reject(e);
@@ -413,12 +411,7 @@ GlobalManager = {
               }
             }
 
-            // TODO: This check should no longer be necessary
-            // once all async methods return promises.
-            if (promise) {
-              return context.wrapPromise(promise, callback);
-            }
-            return undefined;
+            return context.wrapPromise(promise || Promise.resolve(), callback);
           },
 
           getProperty(ns, name) {
