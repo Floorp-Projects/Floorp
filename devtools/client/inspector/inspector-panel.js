@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+"use strict";
+
+const {Cc, Ci, Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -19,6 +21,7 @@ loader.lazyGetter(this, "MarkupView", () => require("devtools/client/inspector/m
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspector/inspector-search").InspectorSearch);
+loader.lazyGetter(this, "RuleViewTool", () => require("devtools/client/inspector/rules/rules").RuleViewTool);
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -352,9 +355,7 @@ InspectorPanel.prototype = {
 
     this.sidebar.on("select", this._setDefaultSidebar);
 
-    this.sidebar.addTab("ruleview",
-                        "chrome://devtools/content/inspector/rules/rules.xhtml",
-                        "ruleview" == defaultTab);
+    this.ruleview = new RuleViewTool(this, this.panelWin);
 
     this.sidebar.addTab("computedview",
                         "chrome://devtools/content/inspector/computed/computed.xhtml",
@@ -585,6 +586,10 @@ InspectorPanel.prototype = {
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
     this._toolbox.off("select", this.updateDebuggerPausedWarning);
     this._toolbox.off("host-changed", this.onToolboxHostChanged);
+
+    if (this.ruleview) {
+      this.ruleview.destroy();
+    }
 
     this.sidebar.off("select", this._setDefaultSidebar);
     let sidebarDestroyer = this.sidebar.destroy();

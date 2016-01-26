@@ -291,6 +291,12 @@ ToolSidebar.prototype = {
       // Find an ID for this unknown tab
       let id = tab.getAttribute("id") || "untitled-tab-" + (this.untitledTabsIndex++);
 
+      // If the existing tab contains the tab ID prefix, extract the ID of the
+      // tab
+      if (id.startsWith(this.TAB_ID_PREFIX)) {
+        id = id.split(this.TAB_ID_PREFIX).pop();
+      }
+
       // Register the tab
       this._tabs.set(id, tab);
       this.emit("new-tab-registered", id);

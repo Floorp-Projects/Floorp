@@ -369,7 +369,7 @@ StyleInspectorMenu.prototype = {
    */
   _onSelectAll: function() {
     let selection = this.styleWindow.getSelection();
-    selection.selectAllChildren(this.styleDocument.documentElement);
+    selection.selectAllChildren(this.view.element);
   },
 
   /**

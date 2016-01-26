@@ -8,12 +8,15 @@
 <?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/rules.css" type="text/css"?>
+
 <!DOCTYPE window [
-  <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd" >
-   %inspectorDTD;
+  <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
+  <!ENTITY % styleinspectorDTD SYSTEM "chrome://devtools/locale/styleinspector.dtd"> %styleinspectorDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
@@ -169,8 +172,34 @@
     </vbox>
     <splitter class="devtools-side-splitter"/>
     <tabbox id="inspector-sidebar" handleCtrlTab="false" class="devtools-sidebar-tabs" hidden="true">
-      <tabs/>
-      <tabpanels flex="1"/>
+      <tabs>
+        <tab id="sidebar-tab-ruleview"
+             label="&ruleViewTitle;"
+             crop="end"/>
+      </tabs>
+      <tabpanels flex="1">
+        <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar">
+          <html:div id="ruleview-toolbar" class="devtools-toolbar devtools-sidebar-toolbar">
+            <html:div class="devtools-searchbox">
+              <html:input id="ruleview-searchbox"
+                          class="devtools-searchinput devtools-rule-searchbox"
+                          type="search"
+                          placeholder="&filterStylesPlaceholder;"/>
+              <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
+            </html:div>
+            <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
+            <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
+          </html:div>
+          <html:div id="pseudo-class-panel" class="devtools-toolbar devtools-sidebar-toolbar" hidden="true" tabindex="-1">
+            <html:label><html:input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</html:label>
+            <html:label><html:input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</html:label>
+            <html:label><html:input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</html:label>
+          </html:div>
+
+          <html:div id="ruleview-container" class="ruleview">
+          </html:div>
+        </tabpanel>
+      </tabpanels>
     </tabbox>
   </box>
 </window>
