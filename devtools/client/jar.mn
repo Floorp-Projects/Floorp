@@ -26,7 +26,6 @@ devtools.jar:
     content/styleeditor/styleeditor.xul (styleeditor/styleeditor.xul)
     content/styleeditor/styleeditor.css (styleeditor/styleeditor.css)
     content/storage/storage.xul (storage/storage.xul)
-    content/inspector/computed/computed.xhtml (inspector/computed/computed.xhtml)
     content/inspector/fonts/fonts.js (inspector/fonts/fonts.js)
     content/inspector/fonts/fonts.xhtml (inspector/fonts/fonts.xhtml)
     content/inspector/layout/layout.js (inspector/layout/layout.js)

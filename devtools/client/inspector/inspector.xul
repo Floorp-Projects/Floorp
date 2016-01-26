@@ -9,6 +9,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/rules.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/computed.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
@@ -176,6 +177,9 @@
         <tab id="sidebar-tab-ruleview"
              label="&ruleViewTitle;"
              crop="end"/>
+        <tab id="sidebar-tab-computedview"
+             label="&computedViewTitle;"
+             crop="end"/>
       </tabs>
       <tabpanels flex="1">
         <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar">
@@ -197,6 +201,29 @@
           </html:div>
 
           <html:div id="ruleview-container" class="ruleview">
+          </html:div>
+        </tabpanel>
+
+        <tabpanel id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar">
+          <html:div class="devtools-toolbar devtools-sidebar-toolbar">
+            <html:div class="devtools-searchbox">
+              <html:input id="computedview-searchbox"
+                          class="devtools-searchinput devtools-rule-searchbox"
+                          type="search"
+                          placeholder="&filterStylesPlaceholder;"/>
+              <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
+            </html:div>
+            <checkbox id="browser-style-checkbox"
+                      class="includebrowserstyles"
+                      checked="false"
+                      label="&browserStylesLabel;"/>
+          </html:div>
+
+          <html:div id="propertyContainer">
+          </html:div>
+
+          <html:div id="noResults" hidden="">
+            &noPropertiesFound;
           </html:div>
         </tabpanel>
       </tabpanels>
