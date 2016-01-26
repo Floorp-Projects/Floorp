@@ -114,6 +114,12 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
             default:
               break;
         }
+
+#ifdef GL_PROVIDER_GLX
+        if (!factory && sGLXLibrary.UseSurfaceSharing()) {
+            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
+        }
+#endif
     }
 
     return factory;
