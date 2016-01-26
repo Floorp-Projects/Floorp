@@ -38,11 +38,17 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.util.Log;
 
 public final class GeckoProfile {
     private static final String LOGTAG = "GeckoProfile";
+
+    // The path in the profile to the file containing the client ID.
+    private static final String CLIENT_ID_FILE_PATH = "datareporting/state.json";
+    // In the client ID file, the attribute title in the JSON object containing the client ID value.
+    private static final String CLIENT_ID_JSON_ATTR = "clientID";
 
     // Only tests should need to do this.
     // We can default this to AppConstants.RELEASE_BUILD once we fix Bug 1069687.
@@ -586,6 +592,39 @@ public final class GeckoProfile {
             return null;
 
         return new File(f, aFile);
+    }
+
+    /**
+     * Retrieves the Gecko client ID from the filesystem.
+     *
+     * This method assumes the client ID is located in a file at a hard-coded path within the profile. The format of
+     * this file is a JSONObject which at the bottom level contains a String -> String mapping containing the client ID.
+     *
+     * WARNING: the platform provides a JSM to retrieve the client ID [1] and this would be a
+     * robust way to access it. However, we don't want to rely on Gecko running in order to get
+     * the client ID so instead we access the file this module accesses directly. However, it's
+     * possible the format of this file (and the access calls in the jsm) will change, leaving
+     * this code to fail.
+     *
+     * TODO: Write tests to prevent regressions. Mention them here. Test both file location and file format.
+     *
+     * [1]: https://mxr.mozilla.org/mozilla-central/source/toolkit/modules/ClientID.jsm
+     */
+    @WorkerThread
+    public String getClientId() throws IOException {
+        final String clientIdFileContents;
+        try {
+            clientIdFileContents = readFile(CLIENT_ID_FILE_PATH);
+        } catch (final IOException e) {
+            throw new IOException("Could not read client ID file to retrieve client ID", e);
+        }
+
+        try {
+            final org.json.JSONObject json = new org.json.JSONObject(clientIdFileContents);
+            return json.getString(CLIENT_ID_JSON_ATTR);
+        } catch (final JSONException e) {
+            throw new IOException("Could not parse JSON to retrieve client ID", e);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@
 package org.mozilla.gecko.util;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants.Versions;
@@ -239,5 +240,11 @@ public class StringUtils {
         } while (start < query.length());
 
         return Collections.unmodifiableSet(names);
+    }
+
+    public static String safeSubstring(@NonNull final String str, final int start, final int end) {
+        return str.substring(
+                Math.max(0, start),
+                Math.min(end, str.length()));
     }
 }
