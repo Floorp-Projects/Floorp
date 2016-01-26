@@ -112,7 +112,7 @@ MP4Metadata::~MP4Metadata()
 
 #ifdef MOZ_RUST_MP4PARSE
 // Helper to test the rust parser on a data source.
-static bool try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource)
+static int32_t try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource)
 {
   static LazyLogModule sLog("MP4Metadata");
   int64_t length;
