@@ -57,7 +57,7 @@ function BrowserLoader(baseURI, window) {
     sandboxPrototype: window,
     paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
-    require: (id, require) => {
+    requireHook: (id, require) => {
       const uri = require.resolve(id);
       const isBrowserDir = BROWSER_BASED_DIRS.filter(dir => {
         return uri.startsWith(dir);
