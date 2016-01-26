@@ -465,3 +465,14 @@ partial interface Navigator {
   readonly attribute boolean mozE10sEnabled;
 };
 #endif
+
+#ifdef MOZ_PAY
+partial interface Navigator {
+  [Throws, NewObject, Pref="dom.mozPay.enabled"]
+  // The 'jwts' parameter can be either a single DOMString or an array of
+  // DOMStrings. In both cases, it represents the base64url encoded and
+  // digitally signed payment information. Each payment provider should
+  // define its supported JWT format.
+  DOMRequest mozPay(any jwts);
+};
+#endif
