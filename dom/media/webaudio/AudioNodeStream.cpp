@@ -384,9 +384,9 @@ public:
   void Run() override
   {
     auto ns = static_cast<AudioNodeStream*>(mStream);
-    ns->mBufferStartTime -= mAdvance;
+    ns->mTracksStartTime -= mAdvance;
 
-    StreamBuffer::Track* track = ns->EnsureTrack(AUDIO_TRACK);
+    StreamTracks::Track* track = ns->EnsureTrack(AUDIO_TRACK);
     track->Get<AudioSegment>()->AppendNullData(mAdvance);
 
     ns->GraphImpl()->DecrementSuspendCount(mStream);
@@ -631,9 +631,9 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
 void
 AudioNodeStream::AdvanceOutputSegment()
 {
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
+  StreamTracks::Track* track = EnsureTrack(AUDIO_TRACK);
   // No more tracks will be coming
-  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
+  mTracks.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   AudioSegment* segment = track->Get<AudioSegment>();
 
@@ -656,7 +656,7 @@ AudioNodeStream::AdvanceOutputSegment()
 void
 AudioNodeStream::FinishOutput()
 {
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
+  StreamTracks::Track* track = EnsureTrack(AUDIO_TRACK);
   track->SetEnded();
 
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
