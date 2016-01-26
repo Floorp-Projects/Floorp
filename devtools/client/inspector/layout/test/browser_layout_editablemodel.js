@@ -34,7 +34,7 @@ function*(inspector, view) {
   is(getStyle(node, "margin-top"), "", "Should be no margin-top on the element.")
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".margin.top > span");
+  let span = view.doc.querySelector(".layout-margin.layout-top > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -60,7 +60,7 @@ function*(inspector, view) {
   is(getStyle(node, "margin-left"), "", "Should be no margin-top on the element.")
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".margin.left > span");
+  let span = view.doc.querySelector(".layout-margin.layout-left > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -97,7 +97,7 @@ function*(inspector, view) {
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".margin.left > span");
+  let span = view.doc.querySelector(".layout-margin.layout-left > span");
   is(span.textContent, 20, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -127,7 +127,7 @@ function*(inspector, view) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".margin.right > span");
+  let span = view.doc.querySelector(".layout-margin.layout-right > span");
   is(span.textContent, 15, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -153,7 +153,7 @@ function*(inspector, view) {
 
   yield selectNode("#div4", inspector);
 
-  let span = view.doc.querySelector(".margin.top > span");
+  let span = view.doc.querySelector(".layout-margin.layout-top > span");
   is(span.textContent, 1, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
