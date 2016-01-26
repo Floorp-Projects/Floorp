@@ -345,10 +345,8 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
 
         RootedValue fval(cx, ObjectValue(*unwrappedFun));
         if (args.isConstructing()) {
-            RootedObject obj(cx);
-            if (!JS::Construct(cx, fval, args, &obj))
+            if (!JS::Construct(cx, fval, args, args.rval()))
                 return false;
-            args.rval().setObject(*obj);
         } else {
             if (!JS_CallFunctionValue(cx, thisObj, fval, args, args.rval()))
                 return false;

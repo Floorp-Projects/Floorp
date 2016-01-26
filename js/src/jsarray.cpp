@@ -3095,8 +3095,11 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
             return false;
         cargs[0].setNumber(args.length());
 
-        if (!Construct(cx, args.thisv(), cargs, args.thisv(), &obj))
+        RootedValue v(cx);
+        if (!Construct(cx, args.thisv(), cargs, args.thisv(), &v))
             return false;
+
+        obj = &v.toObject();
     }
 
     // Step 8.
