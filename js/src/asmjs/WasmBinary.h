@@ -20,6 +20,7 @@
 #define wasm_binary_h
 
 #include "asmjs/WasmTypes.h"
+#include "builtin/SIMD.h"
 
 namespace js {
 
@@ -41,7 +42,7 @@ static const char EndSection[] =     "";
 // Subsection names:
 static const char FuncSubsection[] = "func";
 
-enum class Expr : uint8_t
+enum class Expr : uint16_t
 {
     // Control opcodes
     Nop,
@@ -219,53 +220,23 @@ enum class Expr : uint8_t
     I32AtomicsBinOp,
 
     // SIMD
-    I32X4Const,
-    B32X4Const,
-    F32X4Const,
-
-    I32I32X4ExtractLane,
-    I32B32X4ExtractLane,
-    I32B32X4AllTrue,
-    I32B32X4AnyTrue,
-
-    F32F32X4ExtractLane,
-
-    I32X4Ctor,
-    I32X4Unary,
-    I32X4Binary,
-    I32X4BinaryBitwise,
-    I32X4BinaryShift,
-    I32X4ReplaceLane,
-    I32X4FromF32X4,
-    I32X4FromF32X4Bits,
-    I32X4Swizzle,
-    I32X4Shuffle,
-    I32X4Select,
-    I32X4Splat,
-    I32X4Load,
-    I32X4Store,
-
-    F32X4Ctor,
-    F32X4Unary,
-    F32X4Binary,
-    F32X4ReplaceLane,
-    F32X4FromI32X4,
-    F32X4FromI32X4Bits,
-    F32X4Swizzle,
-    F32X4Shuffle,
-    F32X4Select,
-    F32X4Splat,
-    F32X4Load,
-    F32X4Store,
-
-    B32X4Ctor,
-    B32X4Unary,
-    B32X4Binary,
-    B32X4BinaryCompI32X4,
-    B32X4BinaryCompF32X4,
-    B32X4BinaryBitwise,
-    B32X4ReplaceLane,
-    B32X4Splat,
+#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
+#define _(OP) SIMD_OPCODE(I32x4, OP)
+    FORALL_INT32X4_ASMJS_OP(_)
+    I32x4Constructor,
+    I32x4Const,
+#undef _
+#define _(OP) SIMD_OPCODE(F32x4, OP)
+    FORALL_FLOAT32X4_ASMJS_OP(_)
+    F32x4Constructor,
+    F32x4Const,
+#undef _
+#define _(OP) SIMD_OPCODE(B32x4, OP)
+    FORALL_BOOL_SIMD_OP(_)
+    B32x4Constructor,
+    B32x4Const,
+#undef _
+#undef OPCODE
 
     // I32 asm.js opcodes
     I32Not,
@@ -328,21 +299,21 @@ class Encoder
     template <class T>
     MOZ_WARN_UNUSED_RESULT
     bool writeEnum(T v, size_t* offset) {
-        // For now, just write a u8 instead of a variable-length integer.
+        // For now, just write a u16 instead of a variable-length integer.
         // Variable-length is somewhat annoying at the moment due to the
         // pre-order encoding and back-patching; let's see if we switch to
         // post-order first.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        MOZ_ASSERT(uint64_t(v) < UINT8_MAX);
-        return writeU8(uint8_t(v), offset);
+        MOZ_ASSERT(uint64_t(v) < UINT16_MAX);
+        return write<uint16_t>(uint16_t(v), offset);
     }
 
     template <class T>
     void patchEnum(size_t pc, T v) {
         // See writeEnum comment.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        MOZ_ASSERT(uint64_t(v) < UINT8_MAX);
-        bytecode_[pc] = uint8_t(v);
+        MOZ_ASSERT(uint64_t(v) < UINT16_MAX);
+        memcpy(&bytecode_[pc], &v, sizeof(uint16_t));
     }
 
     template <class T>
@@ -448,7 +419,8 @@ class Encoder
         bytecode_[pc] = i;
     }
     void patchExpr(size_t pc, Expr expr) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
+        // See comment in writeEnum
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint16_t)));
         patchEnum(pc, expr);
     }
     template<class T>
@@ -482,11 +454,11 @@ class Decoder
     readEnum(T* out) {
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         // See Encoder::writeEnum.
-        uint8_t u8;
-        if (!read(&u8))
+        uint16_t u16;
+        if (!read(&u16))
             return false;
         if (out)
-            *out = T(u8);
+            *out = T(u16);
         return true;
     }
 
@@ -502,7 +474,7 @@ class Decoder
     T uncheckedPeekEnum() const {
         // See Encoder::writeEnum.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        return (T)uncheckedPeek<uint8_t>();
+        return (T)uncheckedPeek<uint16_t>();
     }
 
     template <class T>
@@ -516,7 +488,7 @@ class Decoder
     T uncheckedReadEnum() {
         // See Encoder::writeEnum.
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
-        return (T)uncheckedReadU8();
+        return (T)uncheckedRead<uint16_t>();
     }
 
   public:
