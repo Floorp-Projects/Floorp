@@ -20,6 +20,10 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 {
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
     : nsSVGClipPathFrameBase(aContext)
@@ -39,31 +43,46 @@ public:
   // nsSVGClipPathFrame methods:
 
   /**
-   * If the SVG clipPath is simple (as determined by the IsTrivial() method),
-   * calling this method simply pushes a clip path onto the DrawTarget.  If the
-   * SVG clipPath is not simple then calling this method will paint the
-   * clipPath's contents (geometry being filled only, with opaque black) to the
-   * DrawTarget.
+   * Applies the clipPath by pushing a clip path onto the DrawTarget.
    *
-   * XXXjwatt Maybe split this into two methods.
+   * This method must only be used if IsTrivial() returns true, otherwise use
+   * GetClipMask.
+   *
+   * @param aContext The context that the clip path is to be applied to.
+   * @param aClippedFrame The/an nsIFrame of the element that references this
+   *   clipPath that is currently being processed.
+   * @param aMatrix The transform from aClippedFrame's user space to aContext's
+   *   current transform.
    */
-  nsresult ApplyClipOrPaintClipMask(gfxContext& aContext,
-                                    nsIFrame* aClippedFrame,
-                                    const gfxMatrix &aMatrix);
+  void ApplyClipPath(gfxContext& aContext,
+                     nsIFrame* aClippedFrame,
+                     const gfxMatrix &aMatrix);
 
   /**
-   * If the SVG clipPath is simple (as determined by the IsTrivial() method),
-   * calling this method simply returns null.  If the SVG clipPath is not
-   * simple then calling this method will return a mask surface containing
-   * the clipped geometry. The reference context will be used to determine the
-   * backend for the SourceSurface as well as the size, which will be limited
-   * to the device clip extents on the context.
+   * Returns an alpha mask surface containing the clipping geometry.
+   *
+   * This method must only be used if IsTrivial() returns false, otherwise use
+   * ApplyClipPath.
+   *
+   * @param aReferenceContext Used to determine the backend for and size of the
+   *   returned SourceSurface, the size being limited to the device space clip
+   *   extents on the context.
+   * @param aClippedFrame The/an nsIFrame of the element that references this
+   *   clipPath that is currently being processed.
+   * @param aMatrix The transform from aClippedFrame's user space to aContext's
+   *   current transform.
+   * @param [out] aMaskTransform The transform to use with the returned
+   *   surface.
+   * @param [in, optional] aExtraMask An extra surface that the returned
+   *   surface should be masked with.
+   * @param [in, optional] aExtraMasksTransform The transform to use with
+   *   aExtraMask. Should be passed when aExtraMask is passed.
    */
-  already_AddRefed<mozilla::gfx::SourceSurface>
+  already_AddRefed<SourceSurface>
     GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
                 const gfxMatrix& aMatrix, Matrix* aMaskTransform,
-                mozilla::gfx::SourceSurface* aInputMask = nullptr,
-                const mozilla::gfx::Matrix& aInputMaskTransform = mozilla::gfx::Matrix());
+                SourceSurface* aExtraMask = nullptr,
+                const Matrix& aExtraMasksTransform = Matrix());
 
   /**
    * aPoint is expected to be in aClippedFrame's SVG user space.
