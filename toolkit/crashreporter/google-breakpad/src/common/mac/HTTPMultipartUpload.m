@@ -143,7 +143,7 @@
 
 //=============================================================================
 - (NSData *)send:(NSError **)error {
-  NSMutableURLRequest *req =
+  NSMutableURLRequest *req = 
     [[NSMutableURLRequest alloc]
           initWithURL:url_ cachePolicy:NSURLRequestUseProtocolCachePolicy
       timeoutInterval:10.0 ];
@@ -190,17 +190,12 @@
 
   [response_ release];
   response_ = nil;
+  
+  NSData *data =  [NSURLConnection sendSynchronousRequest:req
+                               returningResponse:&response_
+                                           error:error];
 
-  NSData *data = nil;
-  if ([[req URL] isFileURL]) {
-    [[req HTTPBody] writeToURL:[req URL] options:0 error:error];
-  } else {
-    NSURLResponse *response = nil;
-    data = [NSURLConnection sendSynchronousRequest:req
-                                 returningResponse:&response
-                                             error:error];
-    response_ = (NSHTTPURLResponse *)[response retain];
-  }
+  [response_ retain];
   [req release];
 
   return data;

@@ -40,24 +40,25 @@
 #include <vector>
 
 #include "breakpad_googletest_includes.h"
-#include "common/linux/dump_symbols.h"
 #include "common/linux/synth_elf.h"
 #include "common/module.h"
 #include "common/using_std_string.h"
 
 namespace google_breakpad {
-
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
                             const std::vector<string>& debug_dir,
-                            const DumpOptions& options,
+                            SymbolData symbol_data,
                             Module** module);
+}
 
 using google_breakpad::synth_elf::ELF;
 using google_breakpad::synth_elf::StringTable;
 using google_breakpad::synth_elf::SymbolTable;
 using google_breakpad::test_assembler::kLittleEndian;
 using google_breakpad::test_assembler::Section;
+using google_breakpad::Module;
+using google_breakpad::ReadSymbolDataInternal;
 using std::stringstream;
 using std::vector;
 using ::testing::Test;
@@ -82,11 +83,10 @@ TEST_F(DumpSymbols, Invalid) {
   Elf32_Ehdr header;
   memset(&header, 0, sizeof(header));
   Module* module;
-  DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_FALSE(ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(&header),
                                       "foo",
                                       vector<string>(),
-                                      options,
+                                      ALL_SYMBOL_DATA,
                                       &module));
 }
 
@@ -115,11 +115,10 @@ TEST_F(DumpSymbols, SimplePublic32) {
   GetElfContents(elf);
 
   Module* module;
-  DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
                                      "foo",
                                      vector<string>(),
-                                     options,
+                                     ALL_SYMBOL_DATA,
                                      &module));
 
   stringstream s;
@@ -155,11 +154,10 @@ TEST_F(DumpSymbols, SimplePublic64) {
   GetElfContents(elf);
 
   Module* module;
-  DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_TRUE(ReadSymbolDataInternal(elfdata,
                                      "foo",
                                      vector<string>(),
-                                     options,
+                                     ALL_SYMBOL_DATA,
                                      &module));
 
   stringstream s;
@@ -168,5 +166,3 @@ TEST_F(DumpSymbols, SimplePublic64) {
             "PUBLIC 1000 0 superfunc\n",
             s.str());
 }
-
-}  // namespace google_breakpad

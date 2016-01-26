@@ -11,7 +11,7 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//    * Neither the name of Google Inc. nor the names of its
+//     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
@@ -32,10 +32,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <string>
-
 #include "common/scoped_ptr.h"
-#include "common/using_std_string.h"
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/minidump.h"
 #include "google_breakpad/processor/process_state.h"
@@ -43,7 +40,6 @@
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
 #include "processor/logging.h"
 #include "processor/stackwalker_x86.h"
-#include "processor/symbolic_constants_win.h"
 
 namespace google_breakpad {
 
@@ -51,8 +47,7 @@ MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
                                      SourceLineResolverInterface *resolver)
     : frame_symbolizer_(new StackFrameSymbolizer(supplier, resolver)),
       own_frame_symbolizer_(true),
-      enable_exploitability_(false),
-      enable_objdump_(false) {
+      enable_exploitability_(false) {
 }
 
 MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
@@ -60,16 +55,14 @@ MinidumpProcessor::MinidumpProcessor(SymbolSupplier *supplier,
                                      bool enable_exploitability)
     : frame_symbolizer_(new StackFrameSymbolizer(supplier, resolver)),
       own_frame_symbolizer_(true),
-      enable_exploitability_(enable_exploitability),
-      enable_objdump_(false) {
+      enable_exploitability_(enable_exploitability) {
 }
 
 MinidumpProcessor::MinidumpProcessor(StackFrameSymbolizer *frame_symbolizer,
                                      bool enable_exploitability)
     : frame_symbolizer_(frame_symbolizer),
       own_frame_symbolizer_(false),
-      enable_exploitability_(enable_exploitability),
-      enable_objdump_(false) {
+      enable_exploitability_(enable_exploitability) {
   assert(frame_symbolizer_);
 }
 
@@ -90,9 +83,6 @@ ProcessResult MinidumpProcessor::Process(
     return PROCESS_ERROR_NO_MINIDUMP_HEADER;
   }
   process_state->time_date_stamp_ = header->time_date_stamp;
-
-  bool has_process_create_time =
-      GetProcessCreateTime(dump, &process_state->process_create_time_);
 
   bool has_cpu_info = GetCPUInfo(dump, &process_state->system_info_);
   bool has_os_info = GetOSInfo(dump, &process_state->system_info_);
@@ -129,12 +119,6 @@ ProcessResult MinidumpProcessor::Process(
   if (module_list)
     process_state->modules_ = module_list->Copy();
 
-  MinidumpMemoryList *memory_list = dump->GetMemoryList();
-  if (memory_list) {
-    BPLOG(INFO) << "Found " << memory_list->region_count()
-                << " memory regions.";
-  }
-
   MinidumpThreadList *threads = dump->GetThreadList();
   if (!threads) {
     BPLOG(ERROR) << "Minidump " << dump->path() << " has no thread list";
@@ -142,15 +126,14 @@ ProcessResult MinidumpProcessor::Process(
   }
 
   BPLOG(INFO) << "Minidump " << dump->path() << " has " <<
-      (has_cpu_info            ? "" : "no ") << "CPU info, " <<
-      (has_os_info             ? "" : "no ") << "OS info, " <<
-      (breakpad_info != NULL   ? "" : "no ") << "Breakpad info, " <<
-      (exception != NULL       ? "" : "no ") << "exception, " <<
-      (module_list != NULL     ? "" : "no ") << "module list, " <<
-      (threads != NULL         ? "" : "no ") << "thread list, " <<
-      (has_dump_thread         ? "" : "no ") << "dump thread, " <<
-      (has_requesting_thread   ? "" : "no ") << "requesting thread, and " <<
-      (has_process_create_time ? "" : "no ") << "process create time";
+      (has_cpu_info           ? "" : "no ") << "CPU info, " <<
+      (has_os_info            ? "" : "no ") << "OS info, " <<
+      (breakpad_info != NULL  ? "" : "no ") << "Breakpad info, " <<
+      (exception != NULL      ? "" : "no ") << "exception, " <<
+      (module_list != NULL    ? "" : "no ") << "module list, " <<
+      (threads != NULL        ? "" : "no ") << "thread list, " <<
+      (has_dump_thread        ? "" : "no ") << "dump thread, and " <<
+      (has_requesting_thread  ? "" : "no ") << "requesting thread";
 
   bool interrupted = false;
   bool found_requesting_thread = false;
@@ -222,17 +205,7 @@ ProcessResult MinidumpProcessor::Process(
       }
     }
 
-    // If the memory region for the stack cannot be read using the RVA stored
-    // in the memory descriptor inside MINIDUMP_THREAD, try to locate and use
-    // a memory region (containing the stack) from the minidump memory list.
     MinidumpMemoryRegion *thread_memory = thread->GetMemory();
-    if (!thread_memory && memory_list) {
-      uint64_t start_stack_memory_range = thread->GetStartOfStackMemoryRange();
-      if (start_stack_memory_range) {
-        thread_memory = memory_list->GetMemoryRegionForAddress(
-           start_stack_memory_range);
-      }
-    }
     if (!thread_memory) {
       BPLOG(ERROR) << "No memory region for " << thread_string;
     }
@@ -255,8 +228,7 @@ ProcessResult MinidumpProcessor::Process(
     scoped_ptr<CallStack> stack(new CallStack());
     if (stackwalker.get()) {
       if (!stackwalker->Walk(stack.get(),
-                             &process_state->modules_without_symbols_,
-                             &process_state->modules_with_corrupt_symbols_)) {
+                             &process_state->modules_without_symbols_)) {
         BPLOG(INFO) << "Stackwalker interrupt (missing symbols?) at "
                     << thread_string;
         interrupted = true;
@@ -292,9 +264,7 @@ ProcessResult MinidumpProcessor::Process(
   // rating.
   if (enable_exploitability_) {
     scoped_ptr<Exploitability> exploitability(
-        Exploitability::ExploitabilityForPlatform(dump,
-                                                  process_state,
-                                                  enable_objdump_));
+        Exploitability::ExploitabilityForPlatform(dump, process_state));
     // The engine will be null if the platform is not supported
     if (exploitability != NULL) {
       process_state->exploitability_ = exploitability->CheckExploitability();
@@ -333,128 +303,6 @@ static const MDRawSystemInfo* GetSystemInfo(Minidump *dump,
     *system_info = minidump_system_info;
 
   return minidump_system_info->system_info();
-}
-
-// Extract CPU info string from ARM-specific MDRawSystemInfo structure.
-// raw_info: pointer to source MDRawSystemInfo.
-// cpu_info: address of target string, cpu info text will be appended to it.
-static void GetARMCpuInfo(const MDRawSystemInfo* raw_info,
-                          string* cpu_info) {
-  assert(raw_info != NULL && cpu_info != NULL);
-
-  // Write ARM architecture version.
-  char cpu_string[32];
-  snprintf(cpu_string, sizeof(cpu_string), "ARMv%d",
-           raw_info->processor_level);
-  cpu_info->append(cpu_string);
-
-  // There is no good list of implementer id values, but the following
-  // pages provide some help:
-  //   http://comments.gmane.org/gmane.linux.linaro.devel/6903
-  //   http://forum.xda-developers.com/archive/index.php/t-480226.html
-  const struct {
-    uint32_t id;
-    const char* name;
-  } vendors[] = {
-    { 0x41, "ARM" },
-    { 0x51, "Qualcomm" },
-    { 0x56, "Marvell" },
-    { 0x69, "Intel/Marvell" },
-  };
-  const struct {
-    uint32_t id;
-    const char* name;
-  } parts[] = {
-    { 0x4100c050, "Cortex-A5" },
-    { 0x4100c080, "Cortex-A8" },
-    { 0x4100c090, "Cortex-A9" },
-    { 0x4100c0f0, "Cortex-A15" },
-    { 0x4100c140, "Cortex-R4" },
-    { 0x4100c150, "Cortex-R5" },
-    { 0x4100b360, "ARM1136" },
-    { 0x4100b560, "ARM1156" },
-    { 0x4100b760, "ARM1176" },
-    { 0x4100b020, "ARM11-MPCore" },
-    { 0x41009260, "ARM926" },
-    { 0x41009460, "ARM946" },
-    { 0x41009660, "ARM966" },
-    { 0x510006f0, "Krait" },
-    { 0x510000f0, "Scorpion" },
-  };
-
-  const struct {
-    uint32_t hwcap;
-    const char* name;
-  } features[] = {
-    { MD_CPU_ARM_ELF_HWCAP_SWP, "swp" },
-    { MD_CPU_ARM_ELF_HWCAP_HALF, "half" },
-    { MD_CPU_ARM_ELF_HWCAP_THUMB, "thumb" },
-    { MD_CPU_ARM_ELF_HWCAP_26BIT, "26bit" },
-    { MD_CPU_ARM_ELF_HWCAP_FAST_MULT, "fastmult" },
-    { MD_CPU_ARM_ELF_HWCAP_FPA, "fpa" },
-    { MD_CPU_ARM_ELF_HWCAP_VFP, "vfpv2" },
-    { MD_CPU_ARM_ELF_HWCAP_EDSP, "edsp" },
-    { MD_CPU_ARM_ELF_HWCAP_JAVA, "java" },
-    { MD_CPU_ARM_ELF_HWCAP_IWMMXT, "iwmmxt" },
-    { MD_CPU_ARM_ELF_HWCAP_CRUNCH, "crunch" },
-    { MD_CPU_ARM_ELF_HWCAP_THUMBEE, "thumbee" },
-    { MD_CPU_ARM_ELF_HWCAP_NEON, "neon" },
-    { MD_CPU_ARM_ELF_HWCAP_VFPv3, "vfpv3" },
-    { MD_CPU_ARM_ELF_HWCAP_VFPv3D16, "vfpv3d16" },
-    { MD_CPU_ARM_ELF_HWCAP_TLS, "tls" },
-    { MD_CPU_ARM_ELF_HWCAP_VFPv4, "vfpv4" },
-    { MD_CPU_ARM_ELF_HWCAP_IDIVA, "idiva" },
-    { MD_CPU_ARM_ELF_HWCAP_IDIVT, "idivt" },
-  };
-
-  uint32_t cpuid = raw_info->cpu.arm_cpu_info.cpuid;
-  if (cpuid != 0) {
-    // Extract vendor name from CPUID
-    const char* vendor = NULL;
-    uint32_t vendor_id = (cpuid >> 24) & 0xff;
-    for (size_t i = 0; i < sizeof(vendors)/sizeof(vendors[0]); ++i) {
-      if (vendors[i].id == vendor_id) {
-        vendor = vendors[i].name;
-        break;
-      }
-    }
-    cpu_info->append(" ");
-    if (vendor) {
-      cpu_info->append(vendor);
-    } else {
-      snprintf(cpu_string, sizeof(cpu_string), "vendor(0x%x)", vendor_id);
-      cpu_info->append(cpu_string);
-    }
-
-    // Extract part name from CPUID
-    uint32_t part_id = (cpuid & 0xff00fff0);
-    const char* part = NULL;
-    for (size_t i = 0; i < sizeof(parts)/sizeof(parts[0]); ++i) {
-      if (parts[i].id == part_id) {
-        part = parts[i].name;
-        break;
-      }
-    }
-    cpu_info->append(" ");
-    if (part != NULL) {
-      cpu_info->append(part);
-    } else {
-      snprintf(cpu_string, sizeof(cpu_string), "part(0x%x)", part_id);
-      cpu_info->append(cpu_string);
-    }
-  }
-  uint32_t elf_hwcaps = raw_info->cpu.arm_cpu_info.elf_hwcaps;
-  if (elf_hwcaps != 0) {
-    cpu_info->append(" features: ");
-    const char* comma = "";
-    for (size_t i = 0; i < sizeof(features)/sizeof(features[0]); ++i) {
-      if (elf_hwcaps & features[i].hwcap) {
-        cpu_info->append(comma);
-        cpu_info->append(features[i].name);
-        comma = ",";
-      }
-    }
-  }
 }
 
 // static
@@ -499,11 +347,6 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
 
-    case MD_CPU_ARCHITECTURE_PPC64: {
-      info->cpu = "ppc64";
-      break;
-    }
-
     case MD_CPU_ARCHITECTURE_SPARC: {
       info->cpu = "sparc";
       break;
@@ -511,17 +354,6 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
 
     case MD_CPU_ARCHITECTURE_ARM: {
       info->cpu = "arm";
-      GetARMCpuInfo(raw_system_info, &info->cpu_info);
-      break;
-    }
-
-    case MD_CPU_ARCHITECTURE_ARM64: {
-      info->cpu = "arm64";
-      break;
-    }
-
-    case MD_CPU_ARCHITECTURE_MIPS: {
-      info->cpu = "mips";
       break;
     }
 
@@ -592,16 +424,6 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
 
-    case MD_OS_PS3: {
-      info->os = "PS3";
-      break;
-    }
-
-    case MD_OS_NACL: {
-      info->os = "NaCl";
-      break;
-    }
-
     default: {
       // Assign the numeric platform ID into the OS string.
       char os_string[11];
@@ -625,32 +447,6 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
     info->os_version.append(*csd_version);
   }
 
-  return true;
-}
-
-// static
-bool MinidumpProcessor::GetProcessCreateTime(Minidump* dump,
-                                             uint32_t* process_create_time) {
-  assert(dump);
-  assert(process_create_time);
-
-  *process_create_time = 0;
-
-  MinidumpMiscInfo* minidump_misc_info = dump->GetMiscInfo();
-  if (!minidump_misc_info) {
-    return false;
-  }
-
-  const MDRawMiscInfo* md_raw_misc_info = minidump_misc_info->misc_info();
-  if (!md_raw_misc_info) {
-    return false;
-  }
-
-  if (!(md_raw_misc_info->flags1 & MD_MISCINFO_FLAGS1_PROCESS_TIMES)) {
-    return false;
-  }
-
-  *process_create_time = md_raw_misc_info->process_create_time;
   return true;
 }
 
@@ -709,9 +505,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
             default:
               // arm and ppc overlap
               if (raw_system_info->processor_architecture ==
-                  MD_CPU_ARCHITECTURE_ARM ||
-                  raw_system_info->processor_architecture ==
-                  MD_CPU_ARCHITECTURE_ARM64) {
+                  MD_CPU_ARCHITECTURE_ARM) {
                 switch (exception_flags) {
                   case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
                     reason.append("EXC_ARM_DA_ALIGN");
@@ -751,8 +545,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
         case MD_EXCEPTION_MAC_BAD_INSTRUCTION:
           reason = "EXC_BAD_INSTRUCTION / ";
           switch (raw_system_info->processor_architecture) {
-            case MD_CPU_ARCHITECTURE_ARM:
-            case MD_CPU_ARCHITECTURE_ARM64: {
+            case MD_CPU_ARCHITECTURE_ARM: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_ARM_UNDEFINED:
                   reason.append("EXC_ARM_UNDEFINED");
@@ -931,8 +724,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
         case MD_EXCEPTION_MAC_BREAKPOINT:
           reason = "EXC_BREAKPOINT / ";
           switch (raw_system_info->processor_architecture) {
-            case MD_CPU_ARCHITECTURE_ARM:
-            case MD_CPU_ARCHITECTURE_ARM64: {
+            case MD_CPU_ARCHITECTURE_ARM: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
                   reason.append("EXC_ARM_DA_ALIGN");
@@ -1021,8 +813,8 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           // For EXCEPTION_ACCESS_VIOLATION, Windows puts the address that
           // caused the fault in exception_information[1].
           // exception_information[0] is 0 if the violation was caused by
-          // an attempt to read data, 1 if it was an attempt to write data,
-          // and 8 if this was a data execution violation.
+          // an attempt to read data and 1 if it was an attempt to write
+          // data.
           // This information is useful in addition to the code address, which
           // will be present in the crash thread's instruction field anyway.
           if (raw_exception->exception_record.number_parameters >= 1) {
@@ -1053,48 +845,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           }
           break;
         case MD_EXCEPTION_CODE_WIN_IN_PAGE_ERROR:
-          // For EXCEPTION_IN_PAGE_ERROR, Windows puts the address that
-          // caused the fault in exception_information[1].
-          // exception_information[0] is 0 if the violation was caused by
-          // an attempt to read data, 1 if it was an attempt to write data,
-          // and 8 if this was a data execution violation.
-          // exception_information[2] contains the underlying NTSTATUS code,
-          // which is the explanation for why this error occured.
-          // This information is useful in addition to the code address, which
-          // will be present in the crash thread's instruction field anyway.
-          if (raw_exception->exception_record.number_parameters >= 1) {
-            MDInPageErrorTypeWin av_type =
-                static_cast<MDInPageErrorTypeWin>
-                (raw_exception->exception_record.exception_information[0]);
-            switch (av_type) {
-              case MD_IN_PAGE_ERROR_WIN_READ:
-                reason = "EXCEPTION_IN_PAGE_ERROR_READ";
-                break;
-              case MD_IN_PAGE_ERROR_WIN_WRITE:
-                reason = "EXCEPTION_IN_PAGE_ERROR_WRITE";
-                break;
-              case MD_IN_PAGE_ERROR_WIN_EXEC:
-                reason = "EXCEPTION_IN_PAGE_ERROR_EXEC";
-                break;
-              default:
-                reason = "EXCEPTION_IN_PAGE_ERROR";
-                break;
-            }
-          } else {
-            reason = "EXCEPTION_IN_PAGE_ERROR";
-          }
-          if (address &&
-              raw_exception->exception_record.number_parameters >= 2) {
-            *address =
-                raw_exception->exception_record.exception_information[1];
-          }
-          if (raw_exception->exception_record.number_parameters >= 3) {
-            uint32_t ntstatus =
-                static_cast<uint32_t>
-                (raw_exception->exception_record.exception_information[2]);
-            reason.append(" / ");
-            reason.append(NTStatusToString(ntstatus));
-          }
+          reason = "EXCEPTION_IN_PAGE_ERROR";
           break;
         case MD_EXCEPTION_CODE_WIN_INVALID_HANDLE:
           reason = "EXCEPTION_INVALID_HANDLE";
@@ -1393,84 +1144,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           break;
         default:
           BPLOG(INFO) << "Unknown exception reason " << reason;
-          break;
-      }
-      break;
-    }
-
-    case MD_OS_PS3: {
-      switch (exception_code) {
-        case MD_EXCEPTION_CODE_PS3_UNKNOWN:
-          reason = "UNKNOWN";
-          break;
-        case MD_EXCEPTION_CODE_PS3_TRAP_EXCEP:
-          reason = "TRAP_EXCEP";
-          break;
-        case MD_EXCEPTION_CODE_PS3_PRIV_INSTR:
-          reason = "PRIV_INSTR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_ILLEGAL_INSTR:
-          reason = "ILLEGAL_INSTR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_INSTR_STORAGE:
-          reason = "INSTR_STORAGE";
-          break;
-        case MD_EXCEPTION_CODE_PS3_INSTR_SEGMENT:
-          reason = "INSTR_SEGMENT";
-          break;
-        case MD_EXCEPTION_CODE_PS3_DATA_STORAGE:
-          reason = "DATA_STORAGE";
-          break;
-        case MD_EXCEPTION_CODE_PS3_DATA_SEGMENT:
-          reason = "DATA_SEGMENT";
-          break;
-        case MD_EXCEPTION_CODE_PS3_FLOAT_POINT:
-          reason = "FLOAT_POINT";
-          break;
-        case MD_EXCEPTION_CODE_PS3_DABR_MATCH:
-          reason = "DABR_MATCH";
-          break;
-        case MD_EXCEPTION_CODE_PS3_ALIGN_EXCEP:
-          reason = "ALIGN_EXCEP";
-          break;
-        case MD_EXCEPTION_CODE_PS3_MEMORY_ACCESS:
-          reason = "MEMORY_ACCESS";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_ALIGN:
-          reason = "COPRO_ALIGN";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_INVALID_COM:
-          reason = "COPRO_INVALID_COM";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_ERR:
-          reason = "COPRO_ERR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_FIR:
-          reason = "COPRO_FIR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_DATA_SEGMENT:
-          reason = "COPRO_DATA_SEGMENT";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_DATA_STORAGE:
-          reason = "COPRO_DATA_STORAGE";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_STOP_INSTR:
-          reason = "COPRO_STOP_INSTR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_HALT_INSTR:
-          reason = "COPRO_HALT_INSTR";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_HALTINST_UNKNOWN:
-          reason = "COPRO_HALTINSTR_UNKNOWN";
-          break;
-        case MD_EXCEPTION_CODE_PS3_COPRO_MEMORY_ACCESS:
-          reason = "COPRO_MEMORY_ACCESS";
-          break;
-        case MD_EXCEPTION_CODE_PS3_GRAPHIC:
-          reason = "GRAPHIC";
-          break;
-        default:
-          BPLOG(INFO) << "Unknown exception reason "<< reason;
           break;
       }
       break;
