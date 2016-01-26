@@ -36,6 +36,11 @@ project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
+if (json.substs.MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER) {
+    include ':bouncer'
+    project(':bouncer').projectDir = new File("${json.topsrcdir}/mobile/android/bouncer")
+}
+
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see
 // http://forums.gradle.org/gradle/topics/define_extension_properties_from_settings_xml).
