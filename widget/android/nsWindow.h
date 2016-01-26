@@ -78,9 +78,6 @@ public:
     void InitEvent(mozilla::WidgetGUIEvent& event,
                    LayoutDeviceIntPoint* aPoint = 0);
 
-    void UpdateOverscrollVelocity(const float aX, const float aY);
-    void UpdateOverscrollOffset(const float aX, const float aY);
-
     //
     // nsIWidget
     //
