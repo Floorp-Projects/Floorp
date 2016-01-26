@@ -4691,12 +4691,6 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
     return NS_OK;
   }
 
-
-  if (IsReadLocked()) {
-    // XXX Why don't we mark mPendingOnSelectionChange as true here?
-    return NS_OK;
-  }
-
   mSelection.SetSelection(
     selectionChangeData.mOffset,
     selectionChangeData.Length(),
