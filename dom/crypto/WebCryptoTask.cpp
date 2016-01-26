@@ -70,6 +70,7 @@ enum TelemetryAlgorithm {
   TA_ECDH            = 20,
   TA_PBKDF2          = 21,
   TA_ECDSA           = 22,
+  TA_HKDF            = 23,
 };
 
 // Convenience functions for extracting / converting information
@@ -839,9 +840,6 @@ public:
     // Otherwise mLabel remains the empty octet string, as intended
 
     // Look up the MGF based on the KeyAlgorithm.
-    // static_cast is safe because we only get here if the algorithm name
-    // is RSA-OAEP, and that only happens if we've constructed
-    // an RsaHashedKeyAlgorithm.
     mHashMechanism = KeyAlgorithmProxy::GetMechanism(aKey.Algorithm().mRsa.mHash);
 
     switch (mHashMechanism) {
@@ -1443,6 +1441,13 @@ public:
       return;
     }
 
+    // This task only supports raw and JWK format.
+    if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
+        !mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      return;
+    }
+
     // If this is an HMAC key, import the hash name
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
       RootedDictionary<HmacImportParams> params(aCx);
@@ -1507,14 +1512,15 @@ public:
           !mJwk.mUse.Value().EqualsLiteral(JWK_USE_ENC)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
+    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HKDF) ||
+               mAlgName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
       if (mKey->HasUsageOtherThan(CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS)) {
         return NS_ERROR_DOM_DATA_ERR;
       }
       mKey->Algorithm().MakeAes(mAlgName, length);
 
       if (mDataIsJwk && mJwk.mUse.WasPassed()) {
-        // There is not a 'use' value consistent with PBKDF
+        // There is not a 'use' value consistent with PBKDF or HKDF
         return NS_ERROR_DOM_DATA_ERR;
       };
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
@@ -2497,6 +2503,156 @@ GenerateAsymmetricKeyTask::Cleanup()
   mKeyPair = nullptr;
 }
 
+class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask
+{
+public:
+  DeriveHkdfBitsTask(JSContext* aCx,
+      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
+    : mSymKey(aKey.GetSymKey())
+  {
+    Init(aCx, aAlgorithm, aKey, aLength);
+  }
+
+  DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+    : mSymKey(aKey.GetSymKey())
+  {
+    size_t length;
+    mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
+
+    if (NS_SUCCEEDED(mEarlyRv)) {
+      Init(aCx, aAlgorithm, aKey, length);
+    }
+  }
+
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
+            uint32_t aLength)
+  {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_HKDF);
+    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HKDF);
+
+    // Check that we have a key.
+    if (mSymKey.Length() == 0) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+
+    RootedDictionary<HkdfParams> params(aCx);
+    mEarlyRv = Coerce(aCx, params, aAlgorithm);
+    if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+
+    // length must be greater than zero.
+    if (aLength == 0) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+
+    // Extract the hash algorithm.
+    nsString hashName;
+    mEarlyRv = GetAlgorithmName(aCx, params.mHash, hashName);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    // Check the given hash algorithm.
+    switch (MapAlgorithmNameToMechanism(hashName)) {
+      case CKM_SHA_1: mMechanism = CKM_NSS_HKDF_SHA1; break;
+      case CKM_SHA256: mMechanism = CKM_NSS_HKDF_SHA256; break;
+      case CKM_SHA384: mMechanism = CKM_NSS_HKDF_SHA384; break;
+      case CKM_SHA512: mMechanism = CKM_NSS_HKDF_SHA512; break;
+      default:
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+    }
+
+    ATTEMPT_BUFFER_INIT(mSalt, params.mSalt)
+    ATTEMPT_BUFFER_INIT(mInfo, params.mInfo)
+    mLengthInBytes = ceil((double)aLength / 8);
+    mLengthInBits = aLength;
+  }
+
+private:
+  size_t mLengthInBits;
+  size_t mLengthInBytes;
+  CryptoBuffer mSalt;
+  CryptoBuffer mInfo;
+  CryptoBuffer mSymKey;
+  CK_MECHANISM_TYPE mMechanism;
+
+  virtual nsresult DoCrypto() override
+  {
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // Import the key
+    SECItem keyItem = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &keyItem, mSymKey);
+
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    if (!slot.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    ScopedPK11SymKey baseKey(PK11_ImportSymKey(slot, mMechanism,
+                                               PK11_OriginUnwrap, CKA_WRAP,
+                                               &keyItem, nullptr));
+    if (!baseKey) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    SECItem salt = { siBuffer, nullptr, 0 };
+    SECItem info = { siBuffer, nullptr, 0 };
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &salt, mSalt);
+    ATTEMPT_BUFFER_TO_SECITEM(arena, &info, mInfo);
+
+    CK_NSS_HKDFParams hkdfParams = { true, salt.data, salt.len,
+                                     true, info.data, info.len };
+    SECItem params = { siBuffer, (unsigned char*)&hkdfParams,
+                       sizeof(hkdfParams) };
+
+    // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
+    // derived symmetric key and don't matter because we ignore them anyway.
+    ScopedPK11SymKey symKey(PK11_Derive(baseKey, mMechanism, &params,
+                                        CKM_SHA512_HMAC, CKA_SIGN,
+                                        mLengthInBytes));
+
+    if (!symKey.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    nsresult rv = MapSECStatus(PK11_ExtractKeyValue(symKey));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // This doesn't leak, because the SECItem* returned by PK11_GetKeyData
+    // just refers to a buffer managed by symKey. The assignment copies the
+    // data, so mResult manages one copy, while symKey manages another.
+    ATTEMPT_BUFFER_ASSIGN(mResult, PK11_GetKeyData(symKey));
+
+    if (mLengthInBytes > mResult.Length()) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    if (!mResult.SetLength(mLengthInBytes, fallible)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    // If the number of bits to derive is not a multiple of 8 we need to
+    // zero out the remaining bits that were derived but not requested.
+    if (mLengthInBits % 8) {
+      mResult[mResult.Length() - 1] &= 0xff << (mLengthInBits % 8);
+    }
+
+    return NS_OK;
+  }
+};
+
 class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask
 {
 public:
@@ -3103,6 +3259,7 @@ WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_AES_KW) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_HKDF) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
     return new ImportSymmetricKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                       aExtractable, aKeyUsages);
@@ -3227,6 +3384,12 @@ WebCryptoTask::CreateDeriveKeyTask(JSContext* aCx,
     return new FailureTask(rv);
   }
 
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_HKDF)) {
+    return new DeriveKeyTask<DeriveHkdfBitsTask>(aCx, aAlgorithm, aBaseKey,
+                                                 aDerivedKeyType, aExtractable,
+                                                 aKeyUsages);
+  }
+
   if (algName.EqualsASCII(WEBCRYPTO_ALG_PBKDF2)) {
     return new DeriveKeyTask<DerivePbkdfBitsTask>(aCx, aAlgorithm, aBaseKey,
                                                   aDerivedKeyType, aExtractable,
@@ -3271,6 +3434,10 @@ WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_DH)) {
     return new DeriveDhBitsTask(aCx, aAlgorithm, aKey, aLength);
+  }
+
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_HKDF)) {
+    return new DeriveHkdfBitsTask(aCx, aAlgorithm, aKey, aLength);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -3358,6 +3525,7 @@ WebCryptoTask::CreateUnwrapKeyTask(JSContext* aCx,
   if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CBC) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CTR) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_GCM) ||
+      keyAlgName.EqualsASCII(WEBCRYPTO_ALG_HKDF) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_HMAC)) {
     importTask = new ImportSymmetricKeyTask(aCx, aFormat,
                                             aUnwrappedKeyAlgorithm,

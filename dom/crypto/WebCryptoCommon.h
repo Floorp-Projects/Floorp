@@ -23,6 +23,7 @@
 #define WEBCRYPTO_ALG_SHA384        "SHA-384"
 #define WEBCRYPTO_ALG_SHA512        "SHA-512"
 #define WEBCRYPTO_ALG_HMAC          "HMAC"
+#define WEBCRYPTO_ALG_HKDF          "HKDF"
 #define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
@@ -238,6 +239,8 @@ NormalizeToken(const nsString& aName, nsString& aDest)
     aDest.AssignLiteral(WEBCRYPTO_ALG_SHA512);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_HMAC)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_HMAC);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_HKDF)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_HKDF);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_PBKDF2)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_PBKDF2);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSASSA_PKCS1)) {
