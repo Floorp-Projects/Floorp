@@ -33,16 +33,6 @@ var gEMEHandler = {
     return "<label class='text-link' href='" + baseURL + "drm-content'>" +
            text + "</label>";
   },
-  onDontAskAgain: function(menuPopupItem) {
-    let button = menuPopupItem.parentNode.anchorNode;
-    let bar = button.parentNode;
-    Services.prefs.setBoolPref("browser.eme.ui." + bar.value + ".disabled", true);
-    bar.close();
-  },
-  onNotNow: function(menuPopupItem) {
-    let button = menuPopupItem.parentNode.anchorNode;
-    button.parentNode.close();
-  },
   receiveMessage: function({target: browser, data: data}) {
     let parsedData;
     try {
@@ -105,13 +95,6 @@ var gEMEHandler = {
       return;
     }
 
-    // If the user turned these off, bail out:
-    try {
-      if (Services.prefs.getBoolPref("browser.eme.ui." + notificationId + ".disabled")) {
-        return;
-      }
-    } catch (ex) { /* Don't care if the pref doesn't exist */ }
-
     let msgPrefix = "emeNotifications." + notificationId + ".";
     let msgId = msgPrefix + "message";
 
@@ -139,13 +122,6 @@ var gEMEHandler = {
         label: gNavigatorBundle.getString(btnLabelId),
         accessKey: gNavigatorBundle.getString(btnAccessKeyId),
         callback: callback
-      });
-
-      let optionsId = "emeNotifications.optionsButton";
-      buttons.push({
-        label: gNavigatorBundle.getString(optionsId + ".label"),
-        accessKey: gNavigatorBundle.getString(optionsId + ".accesskey"),
-        popup: "emeNotificationsPopup"
       });
     }
 
