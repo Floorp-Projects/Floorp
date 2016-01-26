@@ -572,7 +572,7 @@ MessageChannel::Send(Message* aMsg)
 class CancelMessage : public IPC::Message
 {
 public:
-    explicit CancelMessage(int transaction) :
+    CancelMessage(int transaction) :
         IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
     {
         set_transaction_id(transaction);
