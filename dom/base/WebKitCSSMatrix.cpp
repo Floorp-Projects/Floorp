@@ -74,12 +74,31 @@ WebKitCSSMatrix::Multiply(const WebKitCSSMatrix& other) const
 }
 
 already_AddRefed<WebKitCSSMatrix>
-WebKitCSSMatrix::Inverse() const
+WebKitCSSMatrix::Inverse(ErrorResult& aRv) const
 {
   RefPtr<WebKitCSSMatrix> retval = new WebKitCSSMatrix(mParent, *this);
-  retval->InvertSelf();
+  retval->InvertSelfThrow(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   return retval.forget();
+}
+
+WebKitCSSMatrix*
+WebKitCSSMatrix::InvertSelfThrow(ErrorResult& aRv)
+{
+  if (mMatrix3D) {
+    if (!mMatrix3D->Invert()) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return nullptr;
+    }
+  } else if (!mMatrix2D->Invert()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  return this;
 }
 
 already_AddRefed<WebKitCSSMatrix>
