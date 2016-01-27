@@ -473,10 +473,9 @@ nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
   int32_t colIndex, rowIndex;
   aCell.GetColIndex(colIndex);
   aCell.GetRowIndex(rowIndex);
-  bool ignore;
 
   if (aCellMap)
-    return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex, ignore);
+    return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex);
   else
     return tableCellMap->GetEffectiveColSpan(rowIndex, colIndex);
 }
@@ -775,21 +774,6 @@ nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
     if (numColsNotRemoved > 0) {
       aCellMap->AddColsAtEnd(numColsNotRemoved);
     }
-  }
-  if (numColsToAdd && HasZeroColSpans()) {
-    SetNeedColSpanExpansion(true);
-  }
-  if (NeedColSpanExpansion()) {
-    // This flag can be set in two ways -- either by changing
-    // the number of columns (that happens in the block above),
-    // or by adding a cell with colspan="0" to the cellmap.  To
-    // handle the latter case we need to explicitly check the
-    // flag here -- it may be set even if the number of columns
-    // did not change.
-    //
-    // @see nsCellMap::AppendCell
-
-    aCellMap->ExpandZeroColSpans();
   }
 }
 
