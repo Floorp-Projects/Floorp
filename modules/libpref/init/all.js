@@ -206,6 +206,12 @@ pref("dom.url.getters_decode_hash", false);
 // significantly increase the number of compartments in the system.
 pref("dom.compartment_per_addon", true);
 
+#ifdef NIGHTLY_BUILD
+pref("dom.document.scrollingElement.enabled", true);
+#else
+pref("dom.document.scrollingElement.enabled", false);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
