@@ -384,12 +384,18 @@ WidgetWheelEvent::ComputeOverriddenDelta(double aDelta, bool aIsForVertical)
 double
 WidgetWheelEvent::OverriddenDeltaX() const
 {
+  if (!mAllowToOverrideSystemScrollSpeed) {
+    return deltaX;
+  }
   return ComputeOverriddenDelta(deltaX, false);
 }
 
 double
 WidgetWheelEvent::OverriddenDeltaY() const
 {
+  if (!mAllowToOverrideSystemScrollSpeed) {
+    return deltaY;
+  }
   return ComputeOverriddenDelta(deltaY, true);
 }
 
