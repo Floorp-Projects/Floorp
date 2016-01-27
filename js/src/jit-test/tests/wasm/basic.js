@@ -1,13 +1,5 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
-function mismatchError(actual, expect) {
-    var str = "type mismatch: expression has type " + actual + " but expected " + expect;
-    return RegExp(str);
-}
-
 // ----------------------------------------------------------------------------
 // exports
 
