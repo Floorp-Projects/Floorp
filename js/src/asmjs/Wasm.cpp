@@ -312,7 +312,7 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         if (!d.readVarU32(&sigIndex))
             return Fail(cx, d, "expected declaration signature index");
 
-        if (sigIndex > init->sigs.length())
+        if (sigIndex >= init->sigs.length())
             return Fail(cx, d, "declaration signature index out of range");
 
         init->funcSigs[i] = &init->sigs[sigIndex];

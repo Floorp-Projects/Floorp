@@ -108,3 +108,15 @@ wasmEval(toBuf(moduleWithSections([sigSection([{args:[I32Code], ret:VoidCode}])]
 
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:100}])]))), Error, /bad expression type/);
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), Error, /bad value type/);
+
+function declSection(decls) {
+    var body = [];
+    body.push(...varU32(decls.length));
+    for (var decl of decls)
+        body.push(...varU32(decl));
+    return { name: declSectionStr, body };
+}
+
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), Error, /signature index out of range/);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([1])]))), Error, /signature index out of range/);
+wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([0])])));
