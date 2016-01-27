@@ -1321,6 +1321,8 @@ TSFTextStore::TSFTextStore()
   , mDeferClearingLockedContent(false)
   , mNativeCaretIsCreated(false)
   , mDeferNotifyingTSF(false)
+  , mDeferCommittingComposition(false)
+  , mDeferCancellingComposition(false)
   , mDestroyed(false)
 {
   for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
@@ -1874,19 +1876,33 @@ TSFTextStore::FlushPendingActions()
 void
 TSFTextStore::MaybeFlushPendingNotifications()
 {
+  if (IsReadLocked()) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
+       "putting off flushing pending notifications due to being the "
+       "document locked...", this));
+    return;
+  }
+
+  if (mDeferCommittingComposition) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+      ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
+       "calling TSFTextStore::CommitCompositionInternal(false)...", this));
+    mDeferCommittingComposition = mDeferCancellingComposition = false;
+    CommitCompositionInternal(false);
+  } else if (mDeferCancellingComposition) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+      ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
+       "calling TSFTextStore::CommitCompositionInternal(true)...", this));
+    mDeferCommittingComposition = mDeferCancellingComposition = false;
+    CommitCompositionInternal(true);
+  }
+
   if (mDeferNotifyingTSF) {
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
            ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
             "putting off flushing pending notifications due to being "
             "dispatching events...", this));
-    return;
-  }
-
-  if (IsReadLocked()) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-           ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
-            "putting off flushing pending notifications due to being the "
-            "document locked...", this));
     return;
   }
 
@@ -5121,10 +5137,35 @@ TSFTextStore::CommitCompositionInternal(bool aDiscard)
           mComposition.mView.get(),
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
+  // If the document is locked, TSF will fail to commit composition since
+  // TSF needs another document lock.  So, let's put off the request.
+  // Note that TextComposition will commit composition in the focused editor
+  // with the latest composition string for web apps and waits asynchronous
+  // committing messages.  Therefore, we can and need to perform this
+  // asynchronously.
+  if (IsReadLocked()) {
+    if (mDeferCommittingComposition || mDeferCancellingComposition) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+        ("TSF: 0x%p   TSFTextStore::CommitCompositionInternal(), "
+         "does nothing because already called and waiting unlock...", this));
+      return;
+    }
+    if (aDiscard) {
+      mDeferCancellingComposition = true;
+    } else {
+      mDeferCommittingComposition = true;
+    }
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+      ("TSF: 0x%p   TSFTextStore::CommitCompositionInternal(), "
+       "putting off to request to %s composition after unlocking the document",
+       this, aDiscard ? "cancel" : "commit"));
+    return;
+  }
+
   if (mComposition.IsComposing() && aDiscard) {
     LONG endOffset = mComposition.EndOffset();
     mComposition.mString.Truncate(0);
-    if (mSink && !mLock) {
+    if (mSink) {
       TS_TEXTCHANGE textChange;
       textChange.acpStart = mComposition.mStart;
       textChange.acpOldEnd = endOffset;
