@@ -20,7 +20,7 @@
 
     function stopAccessFu() {
       SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
-      AccessFuTest.once_log("EventManager.stop", AccessFuTest.finish);
+      AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
     }
 
     function hide(id) {
