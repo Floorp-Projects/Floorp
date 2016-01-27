@@ -423,6 +423,14 @@ ExtensionTabManager.prototype = {
   convert(tab) {
     let window = tab.ownerDocument.defaultView;
 
+    let mutedInfo = { muted: tab.muted };
+    if (tab.muteReason === null) {
+      mutedInfo.reason = "user";
+    } else if (tab.muteReason) {
+      mutedInfo.reason = "extension";
+      mutedInfo.extensionId = tab.muteReason;
+    }
+
     let result = {
       id: TabManager.getId(tab),
       index: tab._tPos,
@@ -435,6 +443,8 @@ ExtensionTabManager.prototype = {
       incognito: PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser),
       width: tab.linkedBrowser.clientWidth,
       height: tab.linkedBrowser.clientHeight,
+      audible: tab.soundPlaying,
+      mutedInfo,
     };
 
     if (this.hasTabPermission(tab)) {
