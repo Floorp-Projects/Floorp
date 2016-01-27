@@ -214,7 +214,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mFragmentEndTime(-1),
   mReader(aReader),
   mDecodedAudioEndTime(0),
-  mDecodedVideoEndTime(-1),
+  mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
@@ -901,7 +901,9 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
   MOZ_ASSERT(video);
   mVideoDataRequest.Complete();
   aVideoSample->AdjustForStartTime(StartTime());
-  mDecodedVideoEndTime = video ? video->GetEndTime() : mDecodedVideoEndTime;
+
+  // Handle abnormal or negative timestamps.
+  mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, video->GetEndTime());
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
              (video ? video->mTime : -1),
@@ -2389,7 +2391,7 @@ MediaDecoderStateMachine::Reset()
   // crash for no samples to be popped.
   StopMediaSink();
 
-  mDecodedVideoEndTime = -1;
+  mDecodedVideoEndTime = 0;
   mDecodedAudioEndTime = 0;
   mAudioCompleted = false;
   mVideoCompleted = false;
