@@ -42,7 +42,7 @@ typedef RootedValueMap::Enum RootEnum;
 template <typename T>
 using TraceFunction = void (*)(JSTracer* trc, T* ref, const char* name);
 
-template <class T, TraceFunction<T> TraceFn = TraceNullableRoot>
+template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
 static inline void
 MarkExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* name)
 {
@@ -72,6 +72,56 @@ MarkExactStackRoots(JSRuntime* rt, JSTracer* trc)
     for (ContextIter cx(rt); !cx.done(); cx.next())
         cx->roots.traceStackRoots(trc);
     rt->mainThread.roots.traceStackRoots(trc);
+}
+
+template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
+static inline void
+MarkPersistentRootedList(JSTracer* trc, mozilla::LinkedList<PersistentRooted<void*>>& list,
+                         const char* name)
+{
+    for (PersistentRooted<void*>* r : list)
+        TraceFn(trc, reinterpret_cast<PersistentRooted<T>*>(r)->address(), name);
+}
+
+void
+js::RootLists::tracePersistentRoots(JSTracer* trc)
+{
+#define MARK_ROOTS(name, type, _) \
+    MarkPersistentRootedList<type*>(trc, heapRoots_[JS::RootKind::name], "persistent-" #name);
+JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
+#undef MARK_ROOTS
+    MarkPersistentRootedList<jsid>(trc, heapRoots_[JS::RootKind::Id], "persistent-id");
+    MarkPersistentRootedList<Value>(trc, heapRoots_[JS::RootKind::Value], "persistent-value");
+    MarkPersistentRootedList<JS::Traceable, js::DispatchWrapper<JS::Traceable>::TraceWrapped>(trc,
+            heapRoots_[JS::RootKind::Traceable], "persistent-traceable");
+}
+
+static void
+MarkPersistentRooted(JSRuntime* rt, JSTracer* trc)
+{
+    for (ContextIter cx(rt); !cx.done(); cx.next())
+        cx->roots.tracePersistentRoots(trc);
+    rt->mainThread.roots.tracePersistentRoots(trc);
+}
+
+template <typename T>
+static void
+FinishPersistentRootedChain(mozilla::LinkedList<PersistentRooted<void*>>& listArg)
+{
+    while (!listArg.isEmpty())
+        listArg.getFirst()->reset();
+}
+
+void
+js::RootLists::finishPersistentRoots()
+{
+#define FINISH_ROOT_LIST(name, type, _) \
+    FinishPersistentRootedChain<type*>(heapRoots_[JS::RootKind::name]);
+JS_FOR_EACH_TRACEKIND(FINISH_ROOT_LIST)
+#undef FINISH_ROOT_LIST
+    FinishPersistentRootedChain<jsid>(heapRoots_[JS::RootKind::Id]);
+    FinishPersistentRootedChain<Value>(heapRoots_[JS::RootKind::Value]);
+    FinishPersistentRootedChain<JS::Traceable>(heapRoots_[JS::RootKind::Traceable]);
 }
 
 inline void
@@ -199,58 +249,6 @@ PropertyDescriptor::trace(JSTracer* trc)
     }
 }
 
-namespace js {
-namespace gc {
-
-template<typename T>
-struct PersistentRootedMarker
-{
-    typedef PersistentRooted<T> Element;
-    typedef mozilla::LinkedList<Element> List;
-    typedef void (*MarkFunc)(JSTracer* trc, T* ref, const char* name);
-
-    template <TraceFunction<T> TraceFn = TraceNullableRoot>
-    static void
-    markChain(JSTracer* trc, List& list, const char* name)
-    {
-        for (Element* r : list)
-            TraceFn(trc, r->address(), name);
-    }
-};
-
-} // namespace gc
-} // namespace js
-
-void
-js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
-{
-    PersistentRootedMarker<JSObject*>::markChain(trc, roots.getPersistentRootedList<JSObject*>(),
-                                                 "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChain(trc, roots.getPersistentRootedList<JSScript*>(),
-                                                 "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChain(trc, roots.getPersistentRootedList<JSString*>(),
-                                                 "PersistentRooted<JSString*>");
-
-    PersistentRootedMarker<jsid>::markChain(trc, roots.getPersistentRootedList<jsid>(),
-                                            "PersistentRooted<jsid>");
-    PersistentRootedMarker<Value>::markChain(trc, roots.getPersistentRootedList<Value>(),
-                                             "PersistentRooted<Value>");
-
-    PersistentRootedMarker<JS::Traceable>::markChain<
-        js::DispatchWrapper<JS::Traceable>::TraceWrapped>(trc,
-            reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::Traceable>>&>(
-                roots.heapRoots_[JS::RootKind::Traceable]),
-            "PersistentRooted<Traceable>");
-}
-
-void
-js::gc::MarkPersistentRootedChains(JSTracer* trc)
-{
-    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
-        MarkPersistentRootedChainsInLists(cx->roots, trc);
-    MarkPersistentRootedChainsInLists(trc->runtime()->mainThread.roots, trc);
-}
-
 void
 js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
 {
@@ -280,7 +278,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
             TraceRoot(trc, entry.key(), entry.value());
         }
 
-        MarkPersistentRootedChains(trc);
+        MarkPersistentRooted(rt, trc);
     }
 
     if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
