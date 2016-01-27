@@ -1275,6 +1275,11 @@ protected:
                                              nsIFrame*         aPrevInFlow,
                                              nsFrameState      aTypeBit);
 
+  static nsIFrame* CreateBackdropFrameFor(nsIPresShell* aPresShell,
+                                          nsIContent* aContent,
+                                          nsIFrame* aFrame,
+                                          nsContainerFrame* aParentFrame);
+
 private:
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
