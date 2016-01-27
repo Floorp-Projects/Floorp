@@ -104,8 +104,38 @@ public:
     // OK, we have found appId and inBrowser flag, create the suffix from it
     // and take the rest as the origin key.
 
-    PrincipalOriginAttributes attrs(appId, inBrowser);
-    attrs.CreateSuffix(suffix);
+    // If the profile went through schema 1 -> schema 0 -> schema 1 switching
+    // we may have stored the full attributes origin suffix when there were
+    // more than just appid and inbrowser set on storage principal's
+    // OriginAttributes.
+    //
+    // To preserve full uniqueness we store this suffix to the scope key.
+    // Schema 0 code will just ignore it while keeping the scoping unique.
+    //
+    // The whole scope string is in one of the following forms (when we are here):
+    //
+    // "1001:f:^appId=1001&inBrowser=false&addonId=101:gro.allizom.rxd.:https:443"
+    // "1001:f:gro.allizom.rxd.:https:443"
+    //         |
+    //         +- the parser cursor position.
+    //
+    // If there is '^', the full origin attributes suffix follows.  We search
+    // for ':' since it is the delimiter used in the scope string and is never
+    // contained in the origin attributes suffix.  Remaning string after
+    // the comma is the reversed-domain+schema+port tuple.
+    Record();
+    if (CheckChar('^')) {
+      Token t;
+      while (Next(t)) {
+        if (t.Equals(Token::Char(':'))) {
+          Claim(suffix);
+          break;
+        }
+      }
+    } else {
+      PrincipalOriginAttributes attrs(appId, inBrowser);
+      attrs.CreateSuffix(suffix);
+    }
 
     // Consume the rest of the input as "origin".
     origin.Assign(Substring(mCursor, mEnd));
@@ -345,6 +375,11 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
     MOZ_FALLTHROUGH;
   }
   case CURRENT_SCHEMA_VERSION:
+    // Ensure the tables and indexes are up.  This is mostly a no-op
+    // in common scenarios.
+    rv = CreateSchema1Tables(aWorkerConnection);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Nothing more to do here, this is the current schema version
     break;
 
