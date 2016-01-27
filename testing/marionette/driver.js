@@ -138,7 +138,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.actions = new ActionChain(utils);
+  this.actions = new actions.Chain(utils);
 
   this.sessionCapabilities = {
     // mandated capabilities
