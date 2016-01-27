@@ -133,8 +133,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x6dc8ce1f, 0xbb55, 0x47c1, \
-  { 0xa1, 0x6f, 0x4e, 0x12, 0x37, 0xa1, 0xc2, 0xf4 } }
+{ 0x06396bf6, 0x2dd8, 0x45e5, \
+  { 0xac, 0x45, 0x75, 0x26, 0x53, 0xb1, 0xc9, 0x80 } }
 
 /*
  * Window shadow styles
@@ -1895,32 +1895,6 @@ public:
      * The button's rectangle should be supplied in aButtonRect.
      */
     NS_IMETHOD OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
-
-    /**
-     * Compute the overridden system mouse scroll speed on the root content of
-     * web pages.  The widget may set the same value as aOriginalDelta.  E.g.,
-     * when the system scrolling settings were customized, widget can respect
-     * the will of the user.
-     *
-     * This is called only when the mouse wheel event scrolls the root content
-     * of the web pages by line.  In other words, this isn't called when the
-     * mouse wheel event is used for zoom, page scroll and other special
-     * actions.  And also this isn't called when the user doesn't use the
-     * system wheel speed settings.
-     *
-     * @param aOriginalDeltaX   The X delta value of the current mouse wheel
-     *                          scrolling event.
-     * @param aOriginalDeltaX   The Y delta value of the current mouse wheel
-     *                          scrolling event.
-     * @param aOverriddenDeltaX The overridden mouse scrolling speed along X
-     *                          axis. This value may be same as aOriginalDeltaX.
-     * @param aOverriddenDeltaY The overridden mouse scrolling speed along Y
-     *                          axis. This value may be same as aOriginalDeltaY.
-     */
-    NS_IMETHOD OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                              double aOriginalDeltaY,
-                                              double& aOverriddenDeltaX,
-                                              double& aOverriddenDeltaY) = 0;
 
     /**
      * Return true if this process shouldn't use platform widgets, and

@@ -1527,51 +1527,6 @@ nsBaseWidget::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect)
   return false;
 }
 
-NS_IMETHODIMP
-nsBaseWidget::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                             double aOriginalDeltaY,
-                                             double& aOverriddenDeltaX,
-                                             double& aOverriddenDeltaY)
-{
-  aOverriddenDeltaX = aOriginalDeltaX;
-  aOverriddenDeltaY = aOriginalDeltaY;
-
-  static bool sInitialized = false;
-  static bool sIsOverrideEnabled = false;
-  static int32_t sIntFactorX = 0;
-  static int32_t sIntFactorY = 0;
-
-  if (!sInitialized) {
-    Preferences::AddBoolVarCache(&sIsOverrideEnabled,
-      "mousewheel.system_scroll_override_on_root_content.enabled", false);
-    Preferences::AddIntVarCache(&sIntFactorX,
-      "mousewheel.system_scroll_override_on_root_content.horizontal.factor", 0);
-    Preferences::AddIntVarCache(&sIntFactorY,
-      "mousewheel.system_scroll_override_on_root_content.vertical.factor", 0);
-    sIntFactorX = std::max(sIntFactorX, 0);
-    sIntFactorY = std::max(sIntFactorY, 0);
-    sInitialized = true;
-  }
-
-  if (!sIsOverrideEnabled) {
-    return NS_OK;
-  }
-
-  // The pref value must be larger than 100, otherwise, we don't override the
-  // delta value.
-  if (sIntFactorX > 100) {
-    double factor = static_cast<double>(sIntFactorX) / 100;
-    aOverriddenDeltaX *= factor;
-  }
-  if (sIntFactorY > 100) {
-    double factor = static_cast<double>(sIntFactorY) / 100;
-    aOverriddenDeltaY *= factor;
-  }
-
-  return NS_OK;
-}
-
-
 /**
  * Modifies aFile to point at an icon file with the given name and suffix.  The
  * suffix may correspond to a file extension with leading '.' if appropriate.
