@@ -164,7 +164,7 @@ static void PrintRegisters(const CallStack *stack, const string &cpu) {
     const StackFramePPC *frame_ppc =
       reinterpret_cast<const StackFramePPC*>(frame);
 
-    if (frame_ppc->context_validity & StackFramePPC::CONTEXT_VALID_ALL ==
+    if ((frame_ppc->context_validity & StackFramePPC::CONTEXT_VALID_ALL) ==
         StackFramePPC::CONTEXT_VALID_ALL) {
       sequence = PrintRegister("srr0", frame_ppc->context.srr0, sequence);
       sequence = PrintRegister("srr1", frame_ppc->context.srr1, sequence);
@@ -280,7 +280,7 @@ static void ProcessSingleReport(Options *options, NSString *file_path) {
 
   // Print all of the threads in the dump.
   int thread_count = static_cast<int>(process_state.threads()->size());
-  const std::vector<google_breakpad::MinidumpMemoryRegion*>
+  const std::vector<google_breakpad::MemoryRegion*>
     *thread_memory_regions = process_state.thread_memory_regions();
 
   for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
@@ -289,7 +289,7 @@ static void ProcessSingleReport(Options *options, NSString *file_path) {
       printf("\n");
       printf("Thread %d\n", thread_index);
       PrintStack(process_state.threads()->at(thread_index), cpu);
-      google_breakpad::MinidumpMemoryRegion *thread_stack_bytes =
+      google_breakpad::MemoryRegion *thread_stack_bytes =
         thread_memory_regions->at(thread_index);
       if (options->printThreadMemory) {
         thread_stack_bytes->Print();

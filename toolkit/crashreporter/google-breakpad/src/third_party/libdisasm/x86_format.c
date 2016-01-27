@@ -5,7 +5,7 @@
 #include "libdis.h"
 #include <inttypes.h>
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#ifdef _MSC_VER
         #define snprintf        _snprintf
         #define inline          __inline
 #endif

@@ -74,8 +74,8 @@ public:
   MinidumpFileWriter();
   ~MinidumpFileWriter();
 
-  // Open |path| as the destination of the minidump data.  Any existing file
-  // will be overwritten.
+  // Open |path| as the destination of the minidump data. If |path| already
+  // exists, then Open() will fail.
   // Return true on success, or false on failure.
   bool Open(const char *path);
 

@@ -73,7 +73,7 @@ BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
-static int kCustomInfoCount = 2;
+static size_t kCustomInfoCount = 2;
 static CustomInfoEntry kCustomInfoEntries[] = {
     CustomInfoEntry(L"prod", L"CrashTestApp"),
     CustomInfoEntry(L"ver", L"1.0"),
@@ -197,8 +197,8 @@ bool ShowDumpResults(const wchar_t* dump_path,
   return succeeded;
 }
 
-static void _cdecl ShowClientConnected(void* context,
-                                       const ClientInfo* client_info) {
+static void ShowClientConnected(void* context,
+                                const ClientInfo* client_info) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
   line[0] = _T('\0');
   int result = swprintf_s(line,
@@ -214,9 +214,9 @@ static void _cdecl ShowClientConnected(void* context,
   QueueUserWorkItem(AppendTextWorker, line, WT_EXECUTEDEFAULT);
 }
 
-static void _cdecl ShowClientCrashed(void* context,
-                                     const ClientInfo* client_info,
-                                     const wstring* dump_path) {
+static void ShowClientCrashed(void* context,
+                              const ClientInfo* client_info,
+                              const wstring* dump_path) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
   line[0] = _T('\0');
   int result = swprintf_s(line,
@@ -259,8 +259,8 @@ static void _cdecl ShowClientCrashed(void* context,
   QueueUserWorkItem(AppendTextWorker, line, WT_EXECUTEDEFAULT);
 }
 
-static void _cdecl ShowClientExited(void* context,
-                                    const ClientInfo* client_info) {
+static void ShowClientExited(void* context,
+                             const ClientInfo* client_info) {
   TCHAR* line = new TCHAR[kMaximumLineLength];
   line[0] = _T('\0');
   int result = swprintf_s(line,
@@ -283,6 +283,12 @@ void CrashServerStart() {
   }
 
   std::wstring dump_path = L"C:\\Dumps\\";
+
+  if (_wmkdir(dump_path.c_str()) && (errno != EEXIST)) {
+    MessageBoxW(NULL, L"Unable to create dump directory", L"Dumper", MB_OK);
+    return;
+  }
+
   crash_server = new CrashGenerationServer(kPipeName,
                                            NULL,
                                            ShowClientConnected,
@@ -345,9 +351,9 @@ void CleanUp() {
 
 // Processes messages for the main window.
 //
-// WM_COMMAND	- process the application menu.
-// WM_PAINT	- Paint the main window.
-// WM_DESTROY	- post a quit message and return.
+// WM_COMMAND - process the application menu.
+// WM_PAINT   - Paint the main window.
+// WM_DESTROY - post a quit message and return.
 LRESULT CALLBACK WndProc(HWND wnd,
                          UINT message,
                          WPARAM w_param,
@@ -357,13 +363,7 @@ LRESULT CALLBACK WndProc(HWND wnd,
   PAINTSTRUCT ps;
   HDC hdc;
 
-#pragma warning(push)
-#pragma warning(disable:4312)
-  // Disable warning	C4312: 'type cast' : conversion from 'LONG' to
-  // 'HINSTANCE' of greater size.
-  // The value returned by GetwindowLong in the case below returns unsigned.
-  HINSTANCE instance = (HINSTANCE)GetWindowLong(wnd, GWL_HINSTANCE);
-#pragma warning(pop)
+  HINSTANCE instance = (HINSTANCE)GetWindowLongPtr(wnd, GWLP_HINSTANCE);
 
   switch (message) {
     case WM_COMMAND:
@@ -415,16 +415,16 @@ LRESULT CALLBACK WndProc(HWND wnd,
                                             instance,
                                             NULL);
       break;
-    case WM_SIZE: 
-      // Make the edit control the size of the window's client area. 
-      MoveWindow(client_status_edit_box, 
+    case WM_SIZE:
+      // Make the edit control the size of the window's client area.
+      MoveWindow(client_status_edit_box,
                  0,
                  0,
                  LOWORD(l_param),        // width of client area.
                  HIWORD(l_param),        // height of client area.
                  TRUE);                  // repaint window.
       break;
-    case WM_SETFOCUS: 
+    case WM_SETFOCUS:
       SetFocus(client_status_edit_box);
       break;
     case WM_PAINT:
@@ -501,7 +501,7 @@ int APIENTRY _tWinMain(HINSTANCE instance,
   MyRegisterClass(instance);
 
   // Perform application initialization.
-  if (!InitInstance (instance, command_show)) {
+  if (!InitInstance(instance, command_show)) {
     return FALSE;
   }
 
@@ -518,5 +518,5 @@ int APIENTRY _tWinMain(HINSTANCE instance,
     }
   }
 
-  return (int)msg.wParam;
+  return static_cast<int>(msg.wParam);
 }

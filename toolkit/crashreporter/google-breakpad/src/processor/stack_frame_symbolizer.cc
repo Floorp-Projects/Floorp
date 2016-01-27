@@ -44,7 +44,7 @@
 #include "google_breakpad/processor/symbol_supplier.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
-#include "common/logging.h"
+#include "processor/logging.h"
 
 namespace google_breakpad {
 
@@ -74,7 +74,8 @@ StackFrameSymbolizer::SymbolizerResult StackFrameSymbolizer::FillSourceLineInfo(
   // If module is already loaded, go ahead to fill source line info and return.
   if (resolver_->HasModule(frame->module)) {
     resolver_->FillSourceLineInfo(frame);
-    return kNoError;
+    return resolver_->IsModuleCorrupt(frame->module) ?
+        kWarningCorruptSymbols : kNoError;
   }
 
   // Module needs to fetch symbol file. First check to see if supplier exists.
@@ -85,20 +86,24 @@ StackFrameSymbolizer::SymbolizerResult StackFrameSymbolizer::FillSourceLineInfo(
   // Start fetching symbol from supplier.
   string symbol_file;
   char* symbol_data = NULL;
+  size_t symbol_data_size;
   SymbolSupplier::SymbolResult symbol_result = supplier_->GetCStringSymbolData(
-      module, system_info, &symbol_file, &symbol_data);
+      module, system_info, &symbol_file, &symbol_data, &symbol_data_size);
 
   switch (symbol_result) {
     case SymbolSupplier::FOUND: {
-      bool load_success = resolver_->LoadModuleUsingMemoryBuffer(frame->module,
-                                                                 symbol_data);
+      bool load_success = resolver_->LoadModuleUsingMemoryBuffer(
+          frame->module,
+          symbol_data,
+          symbol_data_size);
       if (resolver_->ShouldDeleteMemoryBufferAfterLoadModule()) {
         supplier_->FreeSymbolData(module);
       }
 
       if (load_success) {
         resolver_->FillSourceLineInfo(frame);
-        return kNoError;
+        return resolver_->IsModuleCorrupt(frame->module) ?
+            kWarningCorruptSymbols : kNoError;
       } else {
         BPLOG(ERROR) << "Failed to load symbol file in resolver.";
         no_symbol_modules_.insert(module->code_file());
