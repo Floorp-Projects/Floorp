@@ -1,6 +1,33 @@
 /* TODO: May break up into component local CSS.  Pending future discussions by
  * React component group on how to best handle CSS. */
 
-iframe {
+html, body, #app, #viewports {
+  height: 100%;
+}
+
+#viewports {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/**
+ * Viewport Container
+ */
+
+.viewport {
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+}
+
+.viewport-header {
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-body-color-alt);
+  height: 16px;
+}
+
+.browser {
+  display: block;
   border: 0;
 }
