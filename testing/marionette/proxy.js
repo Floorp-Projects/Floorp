@@ -6,17 +6,12 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("chrome://marionette/content/modal.js");
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
-const MARIONETTE_OK = "Marionette:ok";
-const MARIONETTE_DONE = "Marionette:done";
-const MARIONETTE_ERROR = "Marionette:error";
-
-const logger = Log.repository.getLogger("Marionette");
-const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const uuidgen = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator);
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.
@@ -35,9 +30,8 @@ this.proxy = {};
  * Creates a transparent interface between the chrome- and content
  * contexts.
  *
- * Calls to this object will be proxied via the message manager to the active
- * browsing context (content) and responses will be provided back as
- * promises.
+ * Calls to this object will be proxied via the message manager to a
+ * content frame script, and responses are returend as promises.
  *
  * The argument sequence is serialised and passed as an array, unless it
  * consists of a single object type that isn't null, in which case it's
@@ -45,42 +39,37 @@ this.proxy = {};
  * backwards compatibility with listener.js.
  *
  * @param {function(): (nsIMessageSender|nsIMessageBroadcaster)} mmFn
- *     Function returning the current message manager.
+ *     Closure function returning the current message manager.
  * @param {function(string, Object, number)} sendAsyncFn
- *     Callback for sending async messages to the current listener.
+ *     Callback for sending async messages.
  */
 proxy.toListener = function(mmFn, sendAsyncFn) {
-  let sender = new AsyncContentSender(mmFn, sendAsyncFn);
+  let sender = new proxy.AsyncContentSender(mmFn, sendAsyncFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
 /**
- * The AsyncContentSender allows one to make synchronous calls to the
- * message listener of the content frame of the current browsing context.
+ * With the AsyncContentSender it is possible to make asynchronous calls
+ * to the message listener in a frame script.
  *
- * Presumptions about the responses from content space are made so we
- * can provide a nicer API on top of the message listener primitives that
- * make calls from chrome- to content space seem synchronous by leveraging
- * promises.
- *
- * The promise is guaranteed not to resolve until the execution of the
- * command in content space is complete.
+ * The responses from content are expected to be JSON Objects, where an
+ * {@code error} key indicates that an error occured, and a {@code value}
+ * entry that the operation was successful.  It is the value of the
+ * {@code value} key that is returned to the consumer through a promise.
  */
-this.AsyncContentSender = class {
+proxy.AsyncContentSender = class {
   constructor(mmFn, sendAsyncFn) {
-    this.curId = null;
     this.sendAsync = sendAsyncFn;
+    // TODO(ato): Bug 1242595
+    this.activeMessageId = null;
+
     this.mmFn_ = mmFn;
-    this._listeners = [];
+    this.listeners_ = new Map();
+    this.dialogueObserver_ = null;
   }
 
   get mm() {
     return this.mmFn_();
-  }
-
-  removeListeners() {
-    this._listeners.map(l => this.mm.removeMessageListener(l[0], l[1]));
-    this._listeners = [];
   }
 
   /**
@@ -88,9 +77,9 @@ this.AsyncContentSender = class {
    * current browsing context's content frame.
    *
    * @param {string} name
-   *     Function to call in the listener, e.g. for "Marionette:foo8",
-   *     use "foo".
-   * @param {Array} args
+   *     Function to call in the listener, e.g. for the message listener
+   *     "Marionette:foo8", use "foo".
+   * @param {Array.<?>=} args
    *     Argument list to pass the function.  If args has a single entry
    *     that is an object, we assume it's an old style dispatch, and
    *     the object will passed literally.
@@ -98,59 +87,68 @@ this.AsyncContentSender = class {
    * @return {Promise}
    *     A promise that resolves to the result of the command.
    */
-  send(name, args) {
-    if (this._listeners[0]) {
-      // A prior (probably timed-out) request has left listeners behind.
-      // Remove them before proceeding.
-      logger.warn("A previous failed command left content listeners behind!");
-      this.removeListeners();
-    }
+  send(name, args = []) {
+    let uuid = uuidgen.generateUUID().toString();
+    // TODO(ato): Bug 1242595
+    this.activeMessageId = uuid;
 
-    this.curId = uuidgen.generateUUID().toString();
-
-    let proxy = new Promise((resolve, reject) => {
-      let removeListeners = (n, fn) => {
-        let rmFn = msg => {
-          if (this.curId !== msg.json.command_id) {
-            logger.warn("Skipping out-of-sync response from listener: " +
-                `Expected response to ${name} with ID ${this.curId}, ` +
-                "but got: " + msg.name + msg.json.toSource());
-            return;
-          }
-
-          this.removeListeners();
-          modal.removeHandler(handleDialog);
-
-          fn(msg);
-          this.curId = null;
-        };
-
-        this._listeners.push([n, rmFn]);
-        return rmFn;
+    return new Promise((resolve, reject) => {
+      let path = proxy.AsyncContentSender.makeReplyPath(uuid);
+      let cb = msg => {
+        this.activeMessageId = null;
+        if ("error" in msg.json) {
+          reject(msg.objects.error);
+        } else {
+          resolve(msg.json.value);
+        }
       };
-
-      let okListener = () => resolve();
-      let valListener = msg => resolve(msg.json.value);
-      let errListener = msg => reject(msg.objects.error);
-
-      let handleDialog = (subject, topic) => {
-        this.removeListeners()
-        modal.removeHandler(handleDialog);
-        this.sendAsync("cancelRequest");
+      this.dialogueObserver_ = (subject, topic) => {
+        this.cancelAll();
         resolve();
       };
 
-      // start content process listeners, and install observers for global-
-      // and tab modal dialogues
-      this.mm.addMessageListener(MARIONETTE_OK, removeListeners(MARIONETTE_OK, okListener));
-      this.mm.addMessageListener(MARIONETTE_DONE, removeListeners(MARIONETTE_DONE, valListener));
-      this.mm.addMessageListener(MARIONETTE_ERROR, removeListeners(MARIONETTE_ERROR, errListener));
-      modal.addHandler(handleDialog);
+      // start content message listener
+      // and install observers for global- and tab modal dialogues
+      this.addListener_(path, cb);
+      modal.addHandler(this.dialogueObserver_);
 
-      this.sendAsync(name, marshal(args), this.curId);
+      this.sendAsync(name, marshal(args), uuid);
     });
+  }
 
-    return proxy;
+  cancelAll() {
+    this.removeAllListeners_();
+    modal.removeHandler(this.dialogueObserver_);
+    this.sendAsync("cancelRequest");
+  }
+
+  addListener_(path, callback) {
+    let autoRemover = msg => {
+      this.removeListener_(path);
+      modal.removeHandler(this.dialogueObserver_);
+      callback(msg);
+    };
+
+    this.mm.addMessageListener(path, autoRemover);
+    this.listeners_.set(path, autoRemover);
+  }
+
+  removeListener_(path) {
+    let l = this.listeners_.get(path);
+    this.mm.removeMessageListener(path, l[1]);
+    return this.listeners_.delete(path);
+  }
+
+  removeAllListeners_() {
+    let ok = true;
+    for (let [p, cb] of this.listeners_) {
+      ok |= this.removeListener_(p);
+    }
+    return ok;
+  }
+
+  static makeReplyPath(uuid) {
+    return "Marionette:asyncReply:" + uuid;
   }
 };
 
@@ -170,7 +168,7 @@ this.AsyncContentSender = class {
  *     The frame message manager's sendSyncMessage function.
  */
 proxy.toChrome = function(sendSyncMessageFn) {
-  let sender = new SyncChromeSender(sendSyncMessageFn);
+  let sender = new proxy.SyncChromeSender(sendSyncMessageFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
@@ -183,7 +181,7 @@ proxy.toChrome = function(sendSyncMessageFn) {
  *     let sender = new SyncChromeSender(sendSyncMessage.bind(this));
  *     let res = sender.send("addCookie", cookie);
  */
-this.SyncChromeSender = class {
+proxy.SyncChromeSender = class {
   constructor(sendSyncMessage) {
     this.sendSyncMessage_ = sendSyncMessage;
   }

@@ -1,10 +1,10 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer
 
 // Ensure that TypedArrays throw when attempting to sort a detached ArrayBuffer
 assertThrowsInstanceOf(() => {
     let buffer = new ArrayBuffer(32);
     let array  = new Int32Array(buffer);
-    neuter(buffer, "change-data");
+    detachArrayBuffer(buffer, "change-data");
     array.sort();
 }, TypeError);
 

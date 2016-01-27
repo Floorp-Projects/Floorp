@@ -1212,11 +1212,11 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
         if (obj && JS_IsArrayBufferObject(obj)) {
           // Use cached response if the arraybuffer has been transfered.
           if (mProxy->mArrayBufferResponseWasTransferred) {
-            MOZ_ASSERT(JS_IsNeuteredArrayBufferObject(obj));
+            MOZ_ASSERT(JS_IsDetachedArrayBufferObject(obj));
             mUseCachedArrayBufferResponse = true;
             doClone = false;
           } else {
-            MOZ_ASSERT(!JS_IsNeuteredArrayBufferObject(obj));
+            MOZ_ASSERT(!JS_IsDetachedArrayBufferObject(obj));
             JS::AutoValueArray<1> argv(aCx);
             argv[0].set(response);
             obj = JS_NewArrayObject(aCx, argv);

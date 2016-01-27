@@ -2,11 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * These tests make sure that focusing the 'New Tage Page' works as expected.
+ * These tests make sure that focusing the 'New Tab Page' works as expected.
  */
-function runTests() {
-  // Handle the OSX full keyboard access setting
-  Services.prefs.setIntPref("accessibility.tabfocus", 7);
+add_task(function* () {
+  yield pushPrefs(["accessibility.tabfocus", 7]);
 
   // Focus count in new tab page.
   // 30 = 9 * 3 + 3 = 9 sites, each with link, pin and remove buttons; search
@@ -18,43 +17,32 @@ function runTests() {
   yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
 
-  yield addNewTabPageTab();
+  yield* addNewTabPageTab();
   gURLBar.focus();
 
   // Count the focus with the enabled page.
-  yield countFocus(FOCUS_COUNT);
+  countFocus(FOCUS_COUNT);
 
   // Disable page and count the focus with the disabled page.
   NewTabUtils.allPages.enabled = false;
-  yield countFocus(1);
 
-  Services.prefs.clearUserPref("accessibility.tabfocus");
+  countFocus(4);
+
   NewTabUtils.allPages.enabled = true;
-}
+});
 
 /**
  * Focus the urlbar and count how many focus stops to return again to the urlbar.
  */
 function countFocus(aExpectedCount) {
   let focusCount = 0;
-  let contentDoc = getContentDocument();
-
-  window.addEventListener("focus", function onFocus() {
-    let focusedElement = document.commandDispatcher.focusedElement;
-    if (focusedElement && focusedElement.classList.contains("urlbar-input")) {
-      window.removeEventListener("focus", onFocus, true);
-      // account for a potential presence of a scroll bar
-      ok(focusCount == aExpectedCount || focusCount == (aExpectedCount + 1),
-         "Validate focus count in the new tab page.");
-      executeSoon(TestRunner.next);
-    } else {
-      if (focusedElement && focusedElement.ownerDocument == contentDoc &&
-          focusedElement instanceof HTMLElement) {
-        focusCount++;
-      }
-      document.commandDispatcher.advanceFocus();
+  do {
+    EventUtils.synthesizeKey("VK_TAB", {});
+    if (document.activeElement == gBrowser.selectedBrowser) {
+      focusCount++;
     }
-  }, true);
+  } while (document.activeElement != gURLBar.inputField);
 
-  document.commandDispatcher.advanceFocus();
+  ok(focusCount == aExpectedCount || focusCount == (aExpectedCount + 1),
+     "Validate focus count in the new tab page.");
 }

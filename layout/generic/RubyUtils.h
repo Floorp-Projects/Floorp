@@ -9,6 +9,7 @@
 
 #include "nsTArray.h"
 #include "nsGkAtoms.h"
+#include "nsCSSAnonBoxes.h"
 
 #define RTC_ARRAY_SIZE 1
 
@@ -75,6 +76,15 @@ public:
   {
     nsIAtom* type = aFrame->GetType();
     return IsRubyContentBox(type) || IsRubyContainerBox(type);
+  }
+
+  static inline bool IsRubyPseudo(nsIAtom* aPseudo)
+  {
+    return aPseudo == nsCSSAnonBoxes::ruby ||
+           aPseudo == nsCSSAnonBoxes::rubyBase ||
+           aPseudo == nsCSSAnonBoxes::rubyText ||
+           aPseudo == nsCSSAnonBoxes::rubyBaseContainer ||
+           aPseudo == nsCSSAnonBoxes::rubyTextContainer;
   }
 
   static void SetReservedISize(nsIFrame* aFrame, nscoord aISize);

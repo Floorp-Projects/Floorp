@@ -44,7 +44,7 @@ using mozilla::MallocSizeOf;
 // The ValType enum represents the WebAssembly "value type", which are used to
 // specify the type of locals and parameters.
 
-// FIXME: uint8_t would make more sense for the underlying storage class, but
+// FIXME: uint16_t would make more sense for the underlying storage class, but
 // causes miscompilations in GCC (fixed in 4.8.5 and 4.9.3).
 enum class ValType
 {
@@ -54,7 +54,9 @@ enum class ValType
     F64,
     I32x4,
     F32x4,
-    B32x4
+    B32x4,
+
+    Limit
 };
 
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
@@ -76,6 +78,7 @@ ToMIRType(ValType vt)
       case ValType::I32x4: return jit::MIRType_Int32x4;
       case ValType::F32x4: return jit::MIRType_Float32x4;
       case ValType::B32x4: return jit::MIRType_Bool32x4;
+      case ValType::Limit: break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -138,7 +141,7 @@ class Val
 // void represented by the empty list). For now it's easier to have a flat enum
 // and be explicit about conversions to/from value types.
 
-enum class ExprType : uint8_t
+enum class ExprType : uint16_t
 {
     I32 = uint8_t(ValType::I32),
     I64 = uint8_t(ValType::I64),
@@ -147,7 +150,9 @@ enum class ExprType : uint8_t
     I32x4 = uint8_t(ValType::I32x4),
     F32x4 = uint8_t(ValType::F32x4),
     B32x4 = uint8_t(ValType::B32x4),
-    Void
+    Void,
+
+    Limit
 };
 
 static inline bool

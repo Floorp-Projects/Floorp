@@ -439,6 +439,12 @@ WifiCertService::WifiCertService()
 WifiCertService::~WifiCertService()
 {
   MOZ_ASSERT(!gWifiCertService);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  shutdown(calledFromObject);
 }
 
 already_AddRefed<WifiCertService>

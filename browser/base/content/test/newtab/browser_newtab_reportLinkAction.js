@@ -13,79 +13,71 @@ gDirectorySource = "data:application/json," + JSON.stringify({
   }]
 });
 
-function runTests() {
-  Services.prefs.setBoolPref(PRELOAD_PREF, false);
+add_task(function* () {
+  yield pushPrefs([PRELOAD_PREF, false]);
 
   let originalReportSitesAction  = DirectoryLinksProvider.reportSitesAction;
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(PRELOAD_PREF);
     DirectoryLinksProvider.reportSitesAction = originalReportSitesAction;
   });
 
   let expected = {};
-  DirectoryLinksProvider.reportSitesAction = function(sites, action, siteIndex) {
-    let {link} = sites[siteIndex];
-    is(link.type, expected.type, "got expected type");
-    is(action, expected.action, "got expected action");
-    is(NewTabUtils.pinnedLinks.isPinned(link), expected.pinned, "got expected pinned");
-    executeSoon(TestRunner.next);
+
+  function expectReportSitesAction() {
+    return new Promise(resolve => {
+      DirectoryLinksProvider.reportSitesAction = function(sites, action, siteIndex) {
+        let {link} = sites[siteIndex];
+        is(link.type, expected.type, "got expected type");
+        is(action, expected.action, "got expected action");
+        is(NewTabUtils.pinnedLinks.isPinned(link), expected.pinned, "got expected pinned");
+        resolve();
+      }
+    });
   }
 
   // Test that the last visible site (index 1) is reported
+  let reportSitesPromise = expectReportSitesAction();
   expected.type = "sponsored";
   expected.action = "view";
   expected.pinned = false;
-  addNewTabPageTab();
+  yield* addNewTabPageTab();
+  yield reportSitesPromise;
 
-  // Wait for addNewTabPageTab and reportSitesAction
-  yield null;
-  yield null;
-
-  whenPagesUpdated();
   // Click the pin button on the link in the 1th tile spot
-  let siteNode = getCell(1).node.querySelector(".newtab-site");
-  let pinButton = siteNode.querySelector(".newtab-control-pin");
   expected.action = "pin";
   // tiles become "history" when pinned
   expected.type = "history";
   expected.pinned = true;
-  EventUtils.synthesizeMouseAtCenter(pinButton, {}, getContentWindow());
+  let pagesUpdatedPromise = whenPagesUpdated();
+  reportSitesPromise = expectReportSitesAction();
 
-  // Wait for whenPagesUpdated and reportSitesAction
-  yield null;
-  yield null;
+  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-cell + .newtab-cell .newtab-control-pin", {}, gBrowser.selectedBrowser);
+  yield pagesUpdatedPromise;
+  yield reportSitesPromise;
 
   // Unpin that link
   expected.action = "unpin";
   expected.pinned = false;
-  whenPagesUpdated();
-  // need to reget siteNode for it could have been re-rendered after pin
-  siteNode = getCell(1).node.querySelector(".newtab-site");
-  pinButton = siteNode.querySelector(".newtab-control-pin");
-  EventUtils.synthesizeMouseAtCenter(pinButton, {}, getContentWindow());
-
-  // Wait for whenPagesUpdated and reportSitesAction
-  yield null;
-  yield null;
+  pagesUpdatedPromise = whenPagesUpdated();
+  reportSitesPromise = expectReportSitesAction();
+  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-cell + .newtab-cell .newtab-control-pin", {}, gBrowser.selectedBrowser);
+  yield pagesUpdatedPromise;
+  yield reportSitesPromise;
 
   // Block the site in the 0th tile spot
-  let blockedSite = getCell(0).node.querySelector(".newtab-site");
-  let blockButton = blockedSite.querySelector(".newtab-control-block");
   expected.type = "organic";
   expected.action = "block";
   expected.pinned = false;
-  whenPagesUpdated();
-  EventUtils.synthesizeMouseAtCenter(blockButton, {}, getContentWindow());
-
-  // Wait for whenPagesUpdated and reportSitesAction
-  yield null;
-  yield null;
+  pagesUpdatedPromise = whenPagesUpdated();
+  reportSitesPromise = expectReportSitesAction();
+  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-site .newtab-control-block", {}, gBrowser.selectedBrowser);
+  yield pagesUpdatedPromise;
+  yield reportSitesPromise;
 
   // Click the 1th link now in the 0th tile spot
   expected.type = "history";
   expected.action = "click";
-  EventUtils.synthesizeMouseAtCenter(siteNode, {}, getContentWindow());
-
-  // Wait for reportSitesAction
-  yield null;
-}
+  reportSitesPromise = expectReportSitesAction();
+  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-site", {}, gBrowser.selectedBrowser);
+  yield reportSitesPromise;
+});

@@ -2,7 +2,7 @@ for (var variant of ["same-data", "change-data"]) {
   var ab = new ArrayBuffer(4);
   var i32 = new Int32Array(ab);
   i32[0] = 42;
-  neuter(ab, variant);
+  detachArrayBuffer(ab, variant);
   assertEq(i32.length, 0);
   assertEq(ab.byteLength, 0);
   assertEq(i32[0], undefined);
@@ -10,7 +10,7 @@ for (var variant of ["same-data", "change-data"]) {
   var ab = new ArrayBuffer(12);
   var i32 = new Int32Array(ab);
   i32[0] = 42;
-  neuter(ab, variant);
+  detachArrayBuffer(ab, variant);
   assertEq(i32.length, 0);
   assertEq(ab.byteLength, 0);
   assertEq(i32[0], undefined);
@@ -18,7 +18,7 @@ for (var variant of ["same-data", "change-data"]) {
   var ab = new ArrayBuffer(4096);
   var i32 = new Int32Array(ab);
   i32[0] = 42;
-  neuter(ab, variant);
+  detachArrayBuffer(ab, variant);
   assertEq(i32.length, 0);
   assertEq(ab.byteLength, 0);
   assertEq(i32[0], undefined);

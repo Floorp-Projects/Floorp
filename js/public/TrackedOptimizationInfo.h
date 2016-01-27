@@ -88,7 +88,7 @@ namespace JS {
     _(ArrayDoubleConversion)                                            \
     _(ArrayRange)                                                       \
     _(ArraySeenNegativeIndex)                                           \
-    _(TypedObjectNeutered)                                              \
+    _(TypedObjectHasDetachedBuffer)                                     \
     _(TypedObjectArrayRange)                                            \
     _(AccessNotDense)                                                   \
     _(AccessNotSimdObject)                                              \

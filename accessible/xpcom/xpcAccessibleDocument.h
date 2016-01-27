@@ -25,7 +25,11 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
 {
 public:
   explicit xpcAccessibleDocument(DocAccessible* aIntl) :
-    xpcAccessibleHyperText(aIntl), mCache(kDefaultCacheLength) { }
+    xpcAccessibleHyperText(aIntl), mCache(kDefaultCacheLength), mRemote(false) { }
+
+  xpcAccessibleDocument(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleHyperText(aProxy, aInterfaces), mCache(kDefaultCacheLength),
+    mRemote(true) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(xpcAccessibleDocument,
@@ -51,6 +55,7 @@ public:
    * Return XPCOM wrapper for the internal accessible.
    */
   xpcAccessibleGeneric* GetAccessible(Accessible* aAccessible);
+  xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
   virtual void Shutdown() override;
 
@@ -58,10 +63,18 @@ protected:
   virtual ~xpcAccessibleDocument() {}
 
 private:
-  DocAccessible* Intl() { return mIntl->AsDoc(); }
+  DocAccessible* Intl()
+  {
+    if (Accessible* acc = mIntl.AsAccessible()) {
+      return acc->AsDoc();
+    }
+
+    return nullptr;
+  }
 
   void NotifyOfShutdown(Accessible* aAccessible)
   {
+    MOZ_ASSERT(!mRemote);
     xpcAccessibleGeneric* xpcAcc = mCache.GetWeak(aAccessible);
     if (xpcAcc)
       xpcAcc->Shutdown();
@@ -69,13 +82,26 @@ private:
     mCache.Remove(aAccessible);
   }
 
+  void NotifyOfShutdown(ProxyAccessible* aProxy)
+  {
+    MOZ_ASSERT(mRemote);
+    xpcAccessibleGeneric* acc = mCache.GetWeak(aProxy);
+    if (acc) {
+      acc->Shutdown();
+    }
+
+    mCache.Remove(aProxy);
+  }
+
   friend class DocManager;
   friend class DocAccessible;
+  friend class ProxyAccessible;
 
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
   xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) = delete;
 
-  nsRefPtrHashtable<nsPtrHashKey<const Accessible>, xpcAccessibleGeneric> mCache;
+  nsRefPtrHashtable<nsPtrHashKey<const void>, xpcAccessibleGeneric> mCache;
+  bool mRemote;
 };
 
 inline xpcAccessibleGeneric*

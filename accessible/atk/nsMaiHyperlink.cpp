@@ -100,7 +100,7 @@ mai_atk_hyperlink_get_type(void)
     return type;
 }
 
-MaiHyperlink::MaiHyperlink(uintptr_t aHyperLink) :
+MaiHyperlink::MaiHyperlink(AccessibleOrProxy aHyperLink) :
     mHyperlink(aHyperLink),
     mMaiAtkHyperlink(nullptr)
 {
