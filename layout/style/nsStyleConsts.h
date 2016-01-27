@@ -120,8 +120,9 @@ enum class StyleBoxSizing : uint8_t {
 #define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
 
 // -moz-window-dragging
-#define NS_STYLE_WINDOW_DRAGGING_DRAG    0
-#define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 1
+#define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
+#define NS_STYLE_WINDOW_DRAGGING_DRAG    1
+#define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
 
 // box-align
 #define NS_STYLE_BOX_ALIGN_STRETCH     0
