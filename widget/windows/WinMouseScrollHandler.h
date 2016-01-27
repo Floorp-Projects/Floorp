@@ -300,6 +300,11 @@ private:
                             (uint32_t(mScrollChars) == WHEEL_PAGESCROLL);
     }
 
+    // The default vertical and horizontal scrolling speed is 3, this is defined
+    // on the document of SystemParametersInfo in MSDN.
+    static int32_t DefaultScrollLines() { return 3; }
+    static int32_t DefaultScrollChars() { return 3; }
+
   private:
     bool mInitialized;
     // The result of SystemParametersInfo() may not be reliable since it may
