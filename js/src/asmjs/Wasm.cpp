@@ -494,6 +494,9 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
             return Fail(cx, d, "code section byte size mismatch");
     }
 
+    if (funcIndex != mg.numFuncSigs())
+        return Fail(cx, d, "fewer function definitions than declarations");
+
     if (!mg.finishFuncDefs())
         return false;
 
