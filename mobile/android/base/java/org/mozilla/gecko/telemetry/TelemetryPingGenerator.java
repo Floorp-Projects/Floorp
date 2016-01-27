@@ -5,10 +5,13 @@
 
 package org.mozilla.gecko.telemetry;
 
+import android.content.Context;
 import android.os.Build;
 import java.io.IOException;
 import java.util.Locale;
 
+import com.keepsafe.switchboard.SwitchBoard;
+import org.json.JSONArray;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -57,14 +60,15 @@ public class TelemetryPingGenerator {
      * @param serverURLSchemeHostPort The server url with the scheme, host, and port (e.g. "http://mozilla.org:80")
      * @throws IOException when client ID could not be created
      */
-    public static TelemetryPing createCorePing(final String docId, final String clientId,
+    public static TelemetryPing createCorePing(final Context context, final String docId, final String clientId,
             final String serverURLSchemeHostPort, final int seq) {
         final String serverURL = getTelemetryServerURL(docId, serverURLSchemeHostPort, CorePing.NAME);
-        final ExtendedJSONObject payload = createCorePingPayload(clientId, seq);
+        final ExtendedJSONObject payload = createCorePingPayload(context, clientId, seq);
         return new TelemetryPing(serverURL, payload);
     }
 
-    private static ExtendedJSONObject createCorePingPayload(final String clientId, final int seq) {
+    private static ExtendedJSONObject createCorePingPayload(final Context context, final String clientId,
+            final int seq) {
         final ExtendedJSONObject ping = new ExtendedJSONObject();
         ping.put(CorePing.VERSION_ATTR, CorePing.VERSION_VALUE);
         ping.put(CorePing.OS_ATTR, CorePing.OS_VALUE);
@@ -81,6 +85,16 @@ public class TelemetryPingGenerator {
         ping.put(CorePing.LOCALE, Locales.getLanguageTag(Locale.getDefault()));
         ping.put(CorePing.OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
         ping.put(CorePing.SEQ, seq);
+        if (AppConstants.MOZ_SWITCHBOARD) {
+            ping.put(CorePing.EXPERIMENTS, getActiveExperiments(context));
+        }
         return ping;
+    }
+
+    private static JSONArray getActiveExperiments(final Context context) {
+        if (!AppConstants.MOZ_SWITCHBOARD) {
+            throw new IllegalStateException("This method should not be called with switchboard disabled");
+        }
+        return new JSONArray(SwitchBoard.getActiveExperiments(context));
     }
 }
