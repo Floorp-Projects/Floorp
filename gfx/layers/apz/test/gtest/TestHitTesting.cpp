@@ -435,7 +435,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
   for (int i = 0; i < 3; i++) {
     ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
       ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
-      origin, 0, 10);
+      origin, 0, 10, false);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(swi, nullptr, nullptr));
     EXPECT_EQ(origin, swi.mOrigin);
 
