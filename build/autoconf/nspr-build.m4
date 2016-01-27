@@ -159,9 +159,8 @@ if test -n "$MOZ_NATIVE_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
 elif test -z "$JS_POSIX_NSPR"; then
     NSPR_CFLAGS="-I${DIST}/include/nspr"
     if test -n "$GNU_CC"; then
-        NSPR_LIBS="-L${DIST}/bin -lnspr${NSPR_VERSION} -lplc${NSPR_VERSION} -lplds${NSPR_VERSION}"
+        NSPR_LIBS="-L${DIST}/lib -lnspr${NSPR_VERSION} -lplc${NSPR_VERSION} -lplds${NSPR_VERSION}"
     else
-        # NSS needs actual static libs to link to, and this is where they are.
         NSPR_LIBS="${DIST}/lib/nspr${NSPR_VERSION}.lib ${DIST}/lib/plc${NSPR_VERSION}.lib ${DIST}/lib/plds${NSPR_VERSION}.lib "
     fi
 fi
