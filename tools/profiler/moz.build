@@ -45,11 +45,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'gecko/ThreadResponsiveness.cpp',
     ]
 
-    # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
-    SOURCES += [
-        'gecko/local_debug_info_symbolizer.cc',
-    ]
-
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
         UNIFIED_SOURCES += [
             'lul/AutoObjectMapper.cpp',
@@ -65,6 +60,14 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'core/platform-linux.cc',
             'core/shared-libraries-linux.cc',
         ]
+        if not CONFIG['MOZ_CRASHREPORTER']:
+            SOURCES += [
+                '/toolkit/crashreporter/google-breakpad/src/common/linux/elfutils.cc',
+                '/toolkit/crashreporter/google-breakpad/src/common/linux/file_id.cc',
+                '/toolkit/crashreporter/google-breakpad/src/common/linux/guid_creator.cc',
+                '/toolkit/crashreporter/google-breakpad/src/common/linux/linux_libc_support.cc',
+                '/toolkit/crashreporter/google-breakpad/src/common/linux/memory_mapped_file.cc',
+            ]
         if CONFIG['CPU_ARCH'] == 'arm':
             SOURCES += [
                 'core/EHABIStackWalk.cpp',
@@ -73,7 +76,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         UNIFIED_SOURCES += [
             'core/platform-macos.cc',
             'core/shared-libraries-macos.cc',
-            'core/shim_mac_dump_syms.mm',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += [
@@ -93,7 +95,11 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     ]
 
     # We need access to Breakpad's getcontext(3) which is suitable for Android
-    if CONFIG['OS_TARGET'] == 'Android':
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/gonk-include',
+        ]
+    elif CONFIG['OS_TARGET'] == 'Android':
         LOCAL_INCLUDES += [
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',
         ]
