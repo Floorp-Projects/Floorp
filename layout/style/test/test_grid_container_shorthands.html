@@ -17,12 +17,12 @@ var isGridTemplateSubgridValueEnabled =
 
 var initial_values = {
     gridTemplateAreas: "none",
-    gridTemplateColumns: "none",
     gridTemplateRows: "none",
+    gridTemplateColumns: "none",
     gridAutoFlow: "row",
     // Computed value for 'auto'
-    gridAutoColumns: "auto",
     gridAutoRows: "auto",
+    gridAutoColumns: "auto",
 };
 
 // For various specified values of the grid-template shorthand,
@@ -33,78 +33,78 @@ var grid_template_test_cases = [
     },
     {
         specified: "40px / 100px",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "100px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "100px",
     },
     {
         specified: "[foo] 40px [bar] / [baz] 100px [fizz]",
-        gridTemplateColumns: "[foo] 40px [bar]",
-        gridTemplateRows: "[baz] 100px [fizz]",
+        gridTemplateRows: "[foo] 40px [bar]",
+        gridTemplateColumns: "[baz] 100px [fizz]",
     },
     {
         specified: " none/100px",
-        gridTemplateColumns: "none",
-        gridTemplateRows: "100px",
+        gridTemplateRows: "none",
+        gridTemplateColumns: "100px",
     },
     {
         specified: "40px/none",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "none",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "none",
     },
     {
         specified: "40px/repeat(1, 20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "20px",
     },
     {
         specified: "40px/[a]repeat(1, 20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a] 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a] 20px",
     },
     {
         specified: "40px/repeat(1, [a] 20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a] 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a] 20px",
     },
     {
         specified: "40px/[a]repeat(2, [b]20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a b] 20px [b] 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a b] 20px [b] 20px",
     },
     {
         specified: "40px/[a]repeat(2, 20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a] 20px 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a] 20px 20px",
     },
     {
         specified: "40px/repeat(2, [a] 20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a] 20px [a] 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a] 20px [a] 20px",
     },
     {
         specified: "40px/[a]repeat(2, [b]20px)",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a b] 20px [b] 20px",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a b] 20px [b] 20px",
     },
     {
         specified: "40px/repeat(2, 20px[a])",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "20px [a] 20px [a]",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "20px [a] 20px [a]",
     },
     {
         specified: "40px/repeat(2, 20px[a]) [b]",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "20px [a] 20px [a b]",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "20px [a] 20px [a b]",
     },
     {
         specified: "40px/repeat(2, [a] 20px[b]) [c]",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a] 20px [b a] 20px [b c]",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a] 20px [b a] 20px [b c]",
     },
     {
         specified: "40px/[a] repeat(3, [b c] 20px [d] 100px [e f]) [g]",
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "[a b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f g]",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "[a b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f b c] 20px [d] 100px [e f g]",
     },
     {
         specified: "'fizz'",
@@ -117,28 +117,28 @@ var grid_template_test_cases = [
         gridTemplateRows: "[bar] auto",
     },
     {
-        specified: "[foo] 40px / 'fizz'",
+        specified: "'fizz' / [foo] 40px",
         gridTemplateAreas: "\"fizz\"",
-        gridTemplateColumns: "[foo] 40px",
         gridTemplateRows: "auto",
+        gridTemplateColumns: "[foo] 40px",
     },
     {
-        specified: "[foo] 40px / [bar] 'fizz'",
+        specified: "[bar] 'fizz' / [foo] 40px",
         gridTemplateAreas: "\"fizz\"",
-        gridTemplateColumns: "[foo] 40px",
         gridTemplateRows: "[bar] auto",
+        gridTemplateColumns: "[foo] 40px",
     },
     {
-        specified: "[foo] 40px / 'fizz' 100px",
+        specified: "'fizz' 100px / [foo] 40px",
         gridTemplateAreas: "\"fizz\"",
-        gridTemplateColumns: "[foo] 40px",
         gridTemplateRows: "100px",
+        gridTemplateColumns: "[foo] 40px",
     },
     {
-        specified: "[foo] 40px / [bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b]",
+        specified: "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
         gridTemplateAreas: "\"fizz\" \".\"",
-        gridTemplateColumns: "[foo] 40px",
         gridTemplateRows: "[bar] 100px [buzz a] 200px [b]",
+        gridTemplateColumns: "[foo] 40px",
     },
     {
         specified: "subgrid",
@@ -151,19 +151,19 @@ var grid_template_test_cases = [
         gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
     },
     {
-        specified: "subgrid / subgrid [foo]",
+        specified: "subgrid [foo] / subgrid",
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
         gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [foo]" : "none",
     },
     {
-        specified: "subgrid / subgrid [foo] repeat(3, [] [a b] [c])",
+        specified: "subgrid [foo] repeat(3, [] [a b] [c]) / subgrid",
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
         gridTemplateRows: isGridTemplateSubgridValueEnabled ?
             "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]" : "none",
     },
     {
         // Test that the number of lines is clamped to kMaxLine = 10000.
-        specified: "subgrid / subgrid [foo] repeat(999999999, [a])",
+        specified: "subgrid [foo] repeat(999999999, [a]) / subgrid",
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
         // Array(n).join(s) is a hack for the non-standard s.repeat(n - 1) .
         // [foo] + 9999 [a] gives us 10000 lines.
@@ -171,7 +171,7 @@ var grid_template_test_cases = [
             "subgrid [foo]" + Array(10000).join(" [a]") : "none",
     },
     {
-        specified: "subgrid [] [foo]/ subgrid [bar",
+        specified: "subgrid [bar]/ subgrid [] [foo",
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid [] [foo]" : "none",
         gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [bar]" : "none",
     },
@@ -189,28 +189,28 @@ grid_test_cases = grid_template_test_cases.concat([
     {
         specified: "row 40px",
         gridAutoFlow: "row",
-        gridAutoColumns: "40px",
+        gridAutoRows: "40px",
     },
     {
         specified: "column 40px",
         gridAutoFlow: "column",
-        gridAutoColumns: "40px",
+        gridAutoRows: "40px",
     },
     {
         specified: "column dense auto",
         gridAutoFlow: "column dense",
-        gridAutoColumns: "auto",
+        gridAutoRows: "auto",
     },
     {
         specified: "dense row minmax(min-content, 2fr)",
         gridAutoFlow: "row dense",
-        gridAutoColumns: "minmax(min-content, 2fr)",
+        gridAutoRows: "minmax(min-content, 2fr)",
     },
     {
         specified: "row 40px / 100px",
         gridAutoFlow: "row",
-        gridAutoColumns: "40px",
-        gridAutoRows: "100px",
+        gridAutoRows: "40px",
+        gridAutoColumns: "100px",
     },
 ]);
 
