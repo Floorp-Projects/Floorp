@@ -72,7 +72,9 @@ def extract_zip(src, dest):
             _dest.write(bundle.read(name))
             _dest.close()
         mode = bundle.getinfo(name).external_attr >> 16 & 0x1FF
-        os.chmod(filename, mode)
+        # Only update permissions if attributes are set. Otherwise fallback to the defaults.
+        if mode:
+            os.chmod(filename, mode)
     bundle.close()
     return namelist
 
