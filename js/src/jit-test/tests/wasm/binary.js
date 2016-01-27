@@ -119,4 +119,5 @@ function declSection(decls) {
 
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), Error, /signature index out of range/);
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([1])]))), Error, /signature index out of range/);
-wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([0])])));
+
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([0])]))), Error, /fewer function definitions than declarations/);
