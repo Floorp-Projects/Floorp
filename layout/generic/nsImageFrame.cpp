@@ -219,7 +219,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mDisplayingIcon)
     gIconLoad->RemoveIconObserver(this);
 
-  nsSplittableFrame::DestroyFrom(aDestructRoot);
+  ImageFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -255,7 +255,7 @@ nsImageFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
                    nsIFrame*         aPrevInFlow)
 {
-  nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
+  ImageFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
   mListener = new nsImageListener(this);
 
@@ -2069,7 +2069,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     }
   }
 
-  return nsSplittableFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return ImageFrameSuper::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 nsresult
@@ -2106,8 +2106,8 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
                                int32_t aModType)
 {
-  nsresult rv = nsSplittableFrame::AttributeChanged(aNameSpaceID,
-                                                    aAttribute, aModType);
+  nsresult rv = ImageFrameSuper::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
   if (NS_FAILED(rv)) {
     return rv;
   }
