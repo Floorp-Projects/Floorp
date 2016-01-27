@@ -7679,8 +7679,10 @@ ICTableSwitch::Compiler::getStub(ICStubSpace* space)
     pc += JUMP_OFFSET_LEN;
 
     void** table = (void**) space->alloc(sizeof(void*) * length);
-    if (!table)
+    if (!table) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     jsbytecode* defaultpc = pc_ + GET_JUMP_OFFSET(pc_);
 
