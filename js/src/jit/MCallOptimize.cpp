@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsmath.h"
+#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
@@ -264,6 +265,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &ListIteratorObject::class_);
       case InlinableNative::IntrinsicDefineDataProperty:
         return inlineDefineDataProperty(callInfo);
+      case InlinableNative::IntrinsicObjectHasPrototype:
+        return inlineObjectHasPrototype(callInfo);
 
       // Map intrinsics.
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
@@ -1608,6 +1611,58 @@ IonBuilder::inlineStringSplit(CallInfo& callInfo)
     current->add(ins);
     current->push(ins);
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineObjectHasPrototype(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* objArg = callInfo.getArg(0);
+    MDefinition* protoArg = callInfo.getArg(1);
+
+    if (objArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (protoArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    // Inline only when both obj and proto are singleton objects and
+    // obj does not have uncacheable proto and obj.__proto__ is proto.
+    TemporaryTypeSet* objTypes = objArg->resultTypeSet();
+    if (!objTypes || objTypes->unknownObject() || objTypes->getObjectCount() != 1)
+        return InliningStatus_NotInlined;
+
+    TypeSet::ObjectKey* objKey = objTypes->getObject(0);
+    if (!objKey || !objKey->hasStableClassAndProto(constraints()))
+        return InliningStatus_NotInlined;
+    if (!objKey->isSingleton() || !objKey->singleton()->is<NativeObject>())
+        return InliningStatus_NotInlined;
+
+    JSObject* obj = &objKey->singleton()->as<NativeObject>();
+    if (obj->hasUncacheableProto())
+        return InliningStatus_NotInlined;
+
+    JSObject* actualProto = checkNurseryObject(objKey->proto().toObjectOrNull());
+    if (actualProto == nullptr)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* protoTypes = protoArg->resultTypeSet();
+    if (!protoTypes || protoTypes->unknownObject() || protoTypes->getObjectCount() != 1)
+        return InliningStatus_NotInlined;
+
+    TypeSet::ObjectKey* protoKey = protoTypes->getObject(0);
+    if (!protoKey || !protoKey->hasStableClassAndProto(constraints()))
+        return InliningStatus_NotInlined;
+    if (!protoKey->isSingleton() || !protoKey->singleton()->is<NativeObject>())
+        return InliningStatus_NotInlined;
+
+    JSObject* proto = &protoKey->singleton()->as<NativeObject>();
+    pushConstant(BooleanValue(proto == actualProto));
+    callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
 
