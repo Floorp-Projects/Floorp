@@ -1877,14 +1877,17 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
     return false;
   }
 
-  int64_t endOfDecodedVideoData = INT64_MAX;
-  if (HasVideo() && !VideoQueue().AtEndOfStream()) {
-    endOfDecodedVideoData = VideoQueue().Peek() ? VideoQueue().Peek()->GetEndTime() : VideoEndTime();
-  }
-  int64_t endOfDecodedAudioData = INT64_MAX;
-  if (HasAudio() && !AudioQueue().AtEndOfStream()) {
-    endOfDecodedAudioData = mDecodedAudioEndTime;
-  }
+  // We are never low in decoded data when we don't have audio/video or have
+  // decoded all audio/video samples.
+  int64_t endOfDecodedVideoData =
+    (HasVideo() && !VideoQueue().IsFinished()) ?
+      mDecodedVideoEndTime :
+      INT64_MAX;
+  int64_t endOfDecodedAudioData =
+    (HasAudio() && !AudioQueue().IsFinished()) ?
+      mDecodedAudioEndTime :
+      INT64_MAX;
+
   int64_t endOfDecodedData = std::min(endOfDecodedVideoData, endOfDecodedAudioData);
   if (Duration().ToMicroseconds() < endOfDecodedData) {
     // Our duration is not up to date. No point buffering.
