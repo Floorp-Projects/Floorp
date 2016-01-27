@@ -922,6 +922,7 @@ class IonBuilder
                                   const Class* clasp4 = nullptr);
     InliningStatus inlineIsConstructing(CallInfo& callInfo);
     InliningStatus inlineSubstringKernel(CallInfo& callInfo);
+    InliningStatus inlineObjectHasPrototype(CallInfo& callInfo);
 
     // Testing functions.
     InliningStatus inlineBailout(CallInfo& callInfo);
