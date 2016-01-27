@@ -19,6 +19,7 @@ interface WebKitCSSMatrix : DOMMatrix {
 
     // Immutable transform methods
     WebKitCSSMatrix multiply(WebKitCSSMatrix other);
+    [Throws]
     WebKitCSSMatrix inverse();
     WebKitCSSMatrix translate(optional unrestricted double tx = 0,
                               optional unrestricted double ty = 0,
