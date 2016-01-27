@@ -4975,7 +4975,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
                                 ScrollWheelInput::SCROLLDELTA_PIXEL,
                                 position,
                                 preciseDelta.x,
-                                preciseDelta.y);
+                                preciseDelta.y,
+                                false);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
     wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
@@ -4990,7 +4991,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
                                 ScrollWheelInput::SCROLLDELTA_LINE,
                                 position,
                                 lineOrPageDeltaX,
-                                lineOrPageDeltaY);
+                                lineOrPageDeltaY,
+                                false);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
     mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent, false);
