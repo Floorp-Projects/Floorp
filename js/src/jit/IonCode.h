@@ -160,7 +160,7 @@ class JitCode : public gc::TenuredCell
                         ExecutablePool* pool, CodeKind kind);
 
   public:
-    static inline ThingRootKind rootKind() { return THING_ROOT_JIT_CODE; }
+    static const JS::TraceKind TraceKind = JS::TraceKind::JitCode;
 };
 
 class SnapshotWriter;
