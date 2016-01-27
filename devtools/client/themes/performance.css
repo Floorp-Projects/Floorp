@@ -105,6 +105,10 @@
 
 /* Sidebar & recording items */
 
+#recordings-list {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+}
+
 .recording-item {
   padding: 4px;
 }
