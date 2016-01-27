@@ -16,6 +16,12 @@
 #include <stdint.h>
 #include <vector>
 
+#ifdef MOZ_RUST_MP4PARSE
+#include "mp4parse.h"
+
+struct FreeMP4ParseState { void operator()(mp4parse_state* aPtr) { mp4parse_free(aPtr); } };
+#endif
+
 using namespace stagefright;
 
 namespace mp4_demuxer
@@ -68,6 +74,90 @@ private:
   RefPtr<Stream> mSource;
 };
 
+class MP4MetadataStagefright
+{
+public:
+  explicit MP4MetadataStagefright(Stream* aSource);
+  ~MP4MetadataStagefright();
+
+  static bool HasCompleteMetadata(Stream* aSource);
+  static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
+  uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
+  mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
+                                                      size_t aTrackNumber) const;
+  bool CanSeek() const;
+
+  const CryptoFile& Crypto() const;
+
+  bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
+
+private:
+  int32_t GetTrackNumber(mozilla::TrackID aTrackID);
+  void UpdateCrypto(const stagefright::MetaData* aMetaData);
+  mozilla::UniquePtr<mozilla::TrackInfo> CheckTrack(const char* aMimeType,
+                                                    stagefright::MetaData* aMetaData,
+                                                    int32_t aIndex) const;
+  nsAutoPtr<StageFrightPrivate> mPrivate;
+  CryptoFile mCrypto;
+  RefPtr<Stream> mSource;
+
+#ifdef MOZ_RUST_MP4PARSE
+  mutable mozilla::UniquePtr<mp4parse_state, FreeMP4ParseState> mRustState;
+#endif
+};
+
+MP4Metadata::MP4Metadata(Stream* aSource)
+ : mStagefright(MakeUnique<MP4MetadataStagefright>(aSource))
+{
+}
+
+MP4Metadata::~MP4Metadata()
+{
+}
+
+/*static*/ bool
+MP4Metadata::HasCompleteMetadata(Stream* aSource)
+{
+  return MP4MetadataStagefright::HasCompleteMetadata(aSource);
+}
+
+/*static*/ already_AddRefed<mozilla::MediaByteBuffer>
+MP4Metadata::Metadata(Stream* aSource)
+{
+  return MP4MetadataStagefright::Metadata(aSource);
+}
+
+uint32_t
+MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
+{
+  return mStagefright->GetNumberTracks(aType);
+}
+
+mozilla::UniquePtr<mozilla::TrackInfo>
+MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
+                          size_t aTrackNumber) const
+{
+  return mStagefright->GetTrackInfo(aType, aTrackNumber);
+}
+
+bool
+MP4Metadata::CanSeek() const
+{
+  return mStagefright->CanSeek();
+}
+
+const CryptoFile&
+MP4Metadata::Crypto() const
+{
+  return mStagefright->Crypto();
+}
+
+bool
+MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
+{
+  return mStagefright->ReadTrackIndex(aDest, aTrackID);
+}
+
 static inline bool
 ConvertIndex(FallibleTArray<Index::Indice>& aDest,
              const nsTArray<stagefright::MediaSource::Indice>& aIndex,
@@ -91,7 +181,7 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
   return true;
 }
 
-MP4Metadata::MP4Metadata(Stream* aSource)
+MP4MetadataStagefright::MP4MetadataStagefright(Stream* aSource)
   : mPrivate(new StageFrightPrivate)
   , mSource(aSource)
 {
@@ -106,7 +196,7 @@ MP4Metadata::MP4Metadata(Stream* aSource)
   }
 }
 
-MP4Metadata::~MP4Metadata()
+MP4MetadataStagefright::~MP4MetadataStagefright()
 {
 }
 
@@ -134,7 +224,7 @@ static int32_t try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRus
 #endif
 
 uint32_t
-MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
+MP4MetadataStagefright::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
 #ifdef MOZ_RUST_MP4PARSE
   static LazyLogModule sLog("MP4Metadata");
@@ -221,8 +311,8 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 }
 
 mozilla::UniquePtr<mozilla::TrackInfo>
-MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
-                          size_t aTrackNumber) const
+MP4MetadataStagefright::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
+                                     size_t aTrackNumber) const
 {
   size_t tracks = mPrivate->mMetadataExtractor->countTracks();
   if (!tracks) {
@@ -280,9 +370,9 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
 }
 
 mozilla::UniquePtr<mozilla::TrackInfo>
-MP4Metadata::CheckTrack(const char* aMimeType,
-                        stagefright::MetaData* aMetaData,
-                        int32_t aIndex) const
+MP4MetadataStagefright::CheckTrack(const char* aMimeType,
+                                   stagefright::MetaData* aMetaData,
+                                   int32_t aIndex) const
 {
   sp<MediaSource> track = mPrivate->mMetadataExtractor->getTrack(aIndex);
   if (!track.get()) {
@@ -308,13 +398,19 @@ MP4Metadata::CheckTrack(const char* aMimeType,
 }
 
 bool
-MP4Metadata::CanSeek() const
+MP4MetadataStagefright::CanSeek() const
 {
   return mPrivate->mCanSeek;
 }
 
+const CryptoFile&
+MP4MetadataStagefright::Crypto() const
+{
+  return mCrypto;
+}
+
 void
-MP4Metadata::UpdateCrypto(const MetaData* aMetaData)
+MP4MetadataStagefright::UpdateCrypto(const MetaData* aMetaData)
 {
   const void* data;
   size_t size;
@@ -329,7 +425,7 @@ MP4Metadata::UpdateCrypto(const MetaData* aMetaData)
 }
 
 bool
-MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
+MP4MetadataStagefright::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
   size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
   int32_t trackNumber = GetTrackNumber(aTrackID);
@@ -352,7 +448,7 @@ MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::Track
 }
 
 int32_t
-MP4Metadata::GetTrackNumber(mozilla::TrackID aTrackID)
+MP4MetadataStagefright::GetTrackNumber(mozilla::TrackID aTrackID)
 {
   size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
   for (size_t i = 0; i < numTracks; i++) {
@@ -369,14 +465,14 @@ MP4Metadata::GetTrackNumber(mozilla::TrackID aTrackID)
 }
 
 /*static*/ bool
-MP4Metadata::HasCompleteMetadata(Stream* aSource)
+MP4MetadataStagefright::HasCompleteMetadata(Stream* aSource)
 {
   auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
   return parser->HasMetadata();
 }
 
 /*static*/ already_AddRefed<mozilla::MediaByteBuffer>
-MP4Metadata::Metadata(Stream* aSource)
+MP4MetadataStagefright::Metadata(Stream* aSource)
 {
   auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
   return parser->Metadata();
