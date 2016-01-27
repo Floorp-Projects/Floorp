@@ -3,6 +3,7 @@ $inherits:
   from: 'tasks/tests/fx_desktop_generic.yml'
 task:
   payload:
+    maxRunTime: 7200
     command:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}
@@ -22,7 +23,7 @@ task:
     description: Web platform e10s tests run {{chunk}}
   extra:
     chunks:
-      total: 12
+      total: 8
     treeherder:
       groupName: Desktop web-platform-tests
       groupSymbol: tc-W-e10s
