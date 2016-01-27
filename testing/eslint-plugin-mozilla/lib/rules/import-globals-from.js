@@ -26,35 +26,8 @@ module.exports = function(context) {
   return {
     Program: function(node) {
       var comments = context.getSourceCode().getAllComments();
-
-      comments.forEach(function(comment) {
-        var value = comment.value.trim();
-        var match = /^import-globals-from\s+(.*)$/.exec(value);
-
-        if (match) {
-          var currentFilePath = helpers.getAbsoluteFilePath(context);
-          var filePath = match[1];
-
-          if (!path.isAbsolute(filePath)) {
-            var dirName = path.dirname(currentFilePath);
-            filePath = path.resolve(dirName, filePath);
-          }
-
-          try {
-            let globals = helpers.getGlobalsForFile(filePath);
-            helpers.addGlobals(globals, context);
-          } catch (e) {
-            context.report(
-              node,
-              "Could not load globals from file {{filePath}}: {{error}}",
-              {
-                filePath: filePath,
-                error: e
-              }
-            );
-          }
-        }
-      });
+      var currentFilePath = helpers.getAbsoluteFilePath(context);
+      helpers.addGlobalsFromComments(currentFilePath, comments, node, context);
     }
   };
 };

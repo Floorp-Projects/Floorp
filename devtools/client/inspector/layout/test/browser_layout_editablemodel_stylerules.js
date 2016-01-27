@@ -32,7 +32,7 @@ function*(inspector, view) {
   is(getStyle(node, "padding-top"), "", "Should have the right padding");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".padding.top > span");
+  let span = view.doc.querySelector(".layout-padding.layout-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -65,7 +65,7 @@ function*(inspector, view) {
   is(getStyle(node, "border-bottom-width"), "", "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
-  let span = view.doc.querySelector(".border.bottom > span");
+  let span = view.doc.querySelector(".layout-border.layout-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -91,7 +91,7 @@ function*(inspector, view) {
   is(getStyle(node, "padding-right"), "", "Should have the right padding");
   yield selectNode("#div3", inspector);
 
-  let span = view.doc.querySelector(".padding.right > span");
+  let span = view.doc.querySelector(".layout-padding.layout-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);

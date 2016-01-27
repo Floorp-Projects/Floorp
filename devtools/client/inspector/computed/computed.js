@@ -963,13 +963,15 @@ PropertyView.prototype = {
     };
     this.element.addEventListener("keydown", this.onKeyDown, false);
 
+    let nameContainer = doc.createElementNS(HTML_NS, "div");
+    nameContainer.className = "property-name-container";
+    this.element.appendChild(nameContainer);
+
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.matchedExpander.className = "expander theme-twisty";
     this.matchedExpander.addEventListener("click", this.onMatchedToggle, false);
-    this.element.appendChild(this.matchedExpander);
-
-    this.focusElement = () => this.element.focus();
+    nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "div");
@@ -981,7 +983,11 @@ PropertyView.prototype = {
     // Make it hand over the focus to the container
     this.onFocus = () => this.element.focus();
     this.nameNode.addEventListener("click", this.onFocus, false);
-    this.element.appendChild(this.nameNode);
+    nameContainer.appendChild(this.nameNode);
+
+    let valueContainer = doc.createElementNS(HTML_NS, "div");
+    valueContainer.className = "property-value-container";
+    this.element.appendChild(valueContainer);
 
     // Build the style value element
     this.valueNode = doc.createElementNS(HTML_NS, "div");
@@ -992,7 +998,7 @@ PropertyView.prototype = {
     this.valueNode.setAttribute("dir", "ltr");
     // Make it hand over the focus to the container
     this.valueNode.addEventListener("click", this.onFocus, false);
-    this.element.appendChild(this.valueNode);
+    valueContainer.appendChild(this.valueNode);
 
     return this.element;
   },

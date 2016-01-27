@@ -557,13 +557,6 @@ public:
                                                 void* closure);
 
   // finding children: THESE DO NOT ADDREF
-  nsNavHistoryResultNode* FindChildURI(nsIURI* aURI, uint32_t* aNodeIndex)
-  {
-    nsAutoCString spec;
-    if (NS_FAILED(aURI->GetSpec(spec)))
-      return nullptr;
-    return FindChildURI(spec, aNodeIndex);
-  }
   nsNavHistoryResultNode* FindChildURI(const nsACString& aSpec,
                                        uint32_t* aNodeIndex);
   // returns the index of the given node, -1 if not found

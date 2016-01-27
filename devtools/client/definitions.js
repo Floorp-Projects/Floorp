@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 
 const { Services } = require("resource://gre/modules/Services.jsm");
 
@@ -41,7 +41,7 @@ const scratchpadProps = "chrome://devtools/locale/scratchpad.properties";
 const memoryProps = "chrome://devtools/locale/memory.properties";
 
 loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
-loader.lazyGetter(this, "performanceStrings",() => Services.strings.createBundle(performanceProps));
+loader.lazyGetter(this, "performanceStrings", () => Services.strings.createBundle(performanceProps));
 loader.lazyGetter(this, "webConsoleStrings", () => Services.strings.createBundle(webConsoleProps));
 loader.lazyGetter(this, "debuggerStrings", () => Services.strings.createBundle(debuggerProps));
 loader.lazyGetter(this, "styleEditorStrings", () => Services.strings.createBundle(styleEditorProps));
@@ -71,14 +71,14 @@ Tools.options = {
   tooltip: l10n("optionsButton.tooltip", toolboxStrings),
   inMenu: false,
 
-  isTargetSupported: function(target) {
+  isTargetSupported: function() {
     return true;
   },
 
   build: function(iframeWindow, toolbox) {
     return new OptionsPanel(iframeWindow, toolbox);
   }
-}
+};
 
 Tools.inspector = {
   id: "inspector",
@@ -93,7 +93,7 @@ Tools.inspector = {
   panelLabel: l10n("inspector.panelLabel", inspectorStrings),
   get tooltip() {
     return l10n("inspector.tooltip2", inspectorStrings,
-    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
   commands: [
@@ -127,20 +127,21 @@ Tools.webConsole = {
   panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
   get tooltip() {
     return l10n("ToolboxWebconsole.tooltip2", webConsoleStrings,
-    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
   commands: "devtools/client/webconsole/console-commands",
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
-    if (toolbox.splitConsole)
+    if (toolbox.splitConsole) {
       return toolbox.focusConsoleInput();
+    }
 
     panel.focusInput();
   },
 
-  isTargetSupported: function(target) {
+  isTargetSupported: function() {
     return true;
   },
 
@@ -163,12 +164,12 @@ Tools.jsdebugger = {
   panelLabel: l10n("ToolboxDebugger.panelLabel", debuggerStrings),
   get tooltip() {
     return l10n("ToolboxDebugger.tooltip2", debuggerStrings,
-    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
   commands: "devtools/client/debugger/debugger-commands",
 
-  isTargetSupported: function(target) {
+  isTargetSupported: function() {
     return true;
   },
 
@@ -241,7 +242,7 @@ Tools.canvasDebugger = {
     return target.hasActor("canvas") && !target.chrome;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build: function(iframeWindow, toolbox) {
     return new CanvasDebuggerPanel(iframeWindow, toolbox);
   }
 };
@@ -265,11 +266,11 @@ Tools.performance = {
   modifiers: "shift",
   inMenu: true,
 
-  isTargetSupported: function (target) {
+  isTargetSupported: function(target) {
     return target.hasActor("profiler");
   },
 
-  build: function (frame, target) {
+  build: function(frame, target) {
     return new PerformancePanel(frame, target);
   }
 };
@@ -286,11 +287,11 @@ Tools.memory = {
   panelLabel: l10n("memory.panelLabel", memoryStrings),
   tooltip: l10n("memory.tooltip", memoryStrings),
 
-  isTargetSupported: function (target) {
+  isTargetSupported: function(target) {
     return target.getTrait("heapSnapshots");
   },
 
-  build: function (frame, target) {
+  build: function(frame, target) {
     return new MemoryPanel(frame, target);
   }
 };
@@ -309,7 +310,7 @@ Tools.netMonitor = {
   panelLabel: l10n("netmonitor.panelLabel", netMonitorStrings),
   get tooltip() {
     return l10n("netmonitor.tooltip2", netMonitorStrings,
-    ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
 
@@ -343,8 +344,7 @@ Tools.storage = {
 
   isTargetSupported: function(target) {
     return target.isLocalTab ||
-           ( target.hasActor("storage") &&
-             target.getTrait("storageInspector") );
+           (target.hasActor("storage") && target.getTrait("storageInspector"));
   },
 
   build: function(iframeWindow, toolbox) {
@@ -442,8 +442,7 @@ exports.defaultThemes = [
  *        The key to lookup.
  * @returns A localized version of the given key.
  */
-function l10n(name, bundle, arg)
-{
+function l10n(name, bundle, arg) {
   try {
     return arg ? bundle.formatStringFromName(name, [arg], 1)
     : bundle.GetStringFromName(name);
@@ -453,7 +452,6 @@ function l10n(name, bundle, arg)
   }
 }
 
-function functionkey(shortkey)
-{
+function functionkey(shortkey) {
   return shortkey.split("_")[1];
 }

@@ -37,36 +37,42 @@ function* testEditableFieldFocus(inspector, view, commitKey, options={}) {
 
   ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  yield focusNextEditableField(view, ruleEditor, commitKey, options);
+  yield focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 
   for (let textProp of ruleEditor.rule.textProps.slice(0).reverse()) {
     let propEditor = textProp.editor;
 
-    yield focusNextEditableField(view, ruleEditor, commitKey, options);
+    yield focusNextField(view, ruleEditor, commitKey, options);
     yield assertEditor(view, propEditor.valueSpan,
       "Focus should have moved to the property value");
 
-    yield focusNextEditableField(view, ruleEditor, commitKey, options);
+    yield focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options);
     yield assertEditor(view, propEditor.nameSpan,
       "Focus should have moved to the property name");
   }
 
   ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  yield focusNextEditableField(view, ruleEditor, commitKey, options);
+  yield focusNextField(view, ruleEditor, commitKey, options);
   yield assertEditor(view, ruleEditor.selectorText,
     "Focus should have moved to the '#testid' rule selector");
 
   ruleEditor = getRuleViewRuleEditor(view, 0);
 
-  yield focusNextEditableField(view, ruleEditor, commitKey, options);
+  yield focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 }
 
-function* focusNextEditableField(view, ruleEditor, commitKey, options) {
+function* focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options) {
+  let onRuleViewChanged = view.once("ruleview-changed");
+  yield focusNextField(view, ruleEditor, commitKey, options);
+  yield onRuleViewChanged;
+}
+
+function* focusNextField(view, ruleEditor, commitKey, options) {
   let onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey(commitKey, options, view.styleWindow);
   yield onFocus;
