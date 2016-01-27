@@ -638,14 +638,17 @@ public:
   double OverriddenDeltaX() const;
   double OverriddenDeltaY() const;
 
+  // Compute the overridden delta value.  This may be useful for suppressing
+  // too fast scroll by system scroll speed overriding when widget sets
+  // mAllowToOverrideSystemScrollSpeed.
+  static double ComputeOverriddenDelta(double aDelta, bool aIsForVertical);
+
 private:
   static bool sInitialized;
   static bool sIsSystemScrollSpeedOverrideEnabled;
   static int32_t sOverrideFactorX;
   static int32_t sOverrideFactorY;
   static void Initialize();
-
-  static double ComputeOverriddenDelta(double aDelta, bool aIsForVertical);
 };
 
 /******************************************************************************
