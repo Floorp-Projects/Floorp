@@ -3871,10 +3871,9 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
     // Subtract from mSurfaceDifferenceRect area which is overlapping with rect
     nsIntRegion result;
     result.Sub(mSurfaceDifferenceRect, nsIntRegion(rect));
-    nsIntRegionRectIterator iter(result);
-    const nsIntRect* r;
-    while ((r = iter.Next()) != nullptr) {
-        dt->CopySurface(source, *r, r->TopLeft());
+    for (auto iter = result.RectIter(); !iter.Done(); iter.Next()) {
+        const nsIntRect& r = iter.Get();
+        dt->CopySurface(source, r, r.TopLeft());
     }
 
     return true;

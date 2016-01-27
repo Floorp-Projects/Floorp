@@ -217,6 +217,35 @@ public:
    */
   virtual void PopClip() override;
 
+  /**
+   * Push a 'layer' to the DrawTarget, a layer is a temporary surface that all
+   * drawing will be redirected to, this is used for example to support group
+   * opacity or the masking of groups. Clips must be balanced within a layer,
+   * i.e. between a matching PushLayer/PopLayer pair there must be as many
+   * PushClip(Rect) calls as there are PopClip calls.
+   *
+   * @param aOpaque Whether the layer will be opaque
+   * @param aOpacity Opacity of the layer
+   * @param aMask Mask applied to the layer
+   * @param aMaskTransform Transform applied to the layer mask
+   * @param aBounds Optional bounds in device space to which the layer is
+   *                limited in size.
+   * @param aCopyBackground Whether to copy the background into the layer, this
+   *                        is only supported when aOpaque is true.
+   */
+  virtual void PushLayer(bool aOpaque, Float aOpacity,
+                         SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
+                         bool aCopyBackground = false) override;
+
+  /**
+   * This balances a call to PushLayer and proceeds to blend the layer back
+   * onto the background. This blend will blend the temporary surface back
+   * onto the target in device space using POINT sampling and operator over.
+   */
+  virtual void PopLayer() override;
+
   /*
    * Create a SourceSurface optimized for use with this DrawTarget from
    * existing bitmap data in memory.
@@ -285,6 +314,10 @@ public:
    * draw target cannot convert to this surface type.
    */
   virtual void *GetNativeSurface(NativeSurfaceType aType) override { return mFinalDT->GetNativeSurface(aType); }
+
+  virtual bool IsCurrentGroupOpaque() override {
+    return mFinalDT->IsCurrentGroupOpaque();
+  }
 
 private:
   Path *GetPathForPathRecording(const Path *aPath) const;

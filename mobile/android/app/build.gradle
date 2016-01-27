@@ -207,9 +207,9 @@ afterEvaluate {
     // The task name itself is fished at runtime and the package name configured
     // in the spoon configuration.
     task runBrowserTests {
-        dependsOn tasks["spoonLocalDebugAndroidTest"]
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
     }
     task runBackgroundTests {
-        dependsOn tasks["spoonLocalDebugAndroidTest"]
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
     }
 }

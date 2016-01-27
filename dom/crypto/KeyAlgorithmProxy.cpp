@@ -193,6 +193,19 @@ KeyAlgorithmProxy::JwkAlg() const
     }
   }
 
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
+    nsString hashName = mRsa.mHash.mName;
+    if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
+      return NS_LITERAL_STRING(JWK_ALG_PS1);
+    } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+      return NS_LITERAL_STRING(JWK_ALG_PS256);
+    } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
+      return NS_LITERAL_STRING(JWK_ALG_PS384);
+    } else if (hashName.EqualsLiteral(WEBCRYPTO_ALG_SHA512)) {
+      return NS_LITERAL_STRING(JWK_ALG_PS512);
+    }
+  }
+
   return nsString();
 }
 

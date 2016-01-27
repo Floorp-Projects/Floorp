@@ -96,12 +96,20 @@ private:
 
 struct nsAttrSelector {
 public:
+  enum class ValueCaseSensitivity : uint8_t {
+    CaseSensitive,
+    CaseInsensitive,
+    CaseInsensitiveInHTML
+  };
+
   nsAttrSelector(int32_t aNameSpace, const nsString& aAttr);
   nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction, 
-                 const nsString& aValue, bool aCaseSensitive);
+                 const nsString& aValue,
+                 ValueCaseSensitivity aValueCaseSensitivity);
   nsAttrSelector(int32_t aNameSpace, nsIAtom* aLowercaseAttr, 
                  nsIAtom* aCasedAttr, uint8_t aFunction, 
-                 const nsString& aValue, bool aCaseSensitive);
+                 const nsString& aValue,
+                 ValueCaseSensitivity aValueCaseSensitivity);
   ~nsAttrSelector(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
@@ -109,14 +117,20 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  bool IsValueCaseSensitive(bool aInHTML) const {
+    return mValueCaseSensitivity == ValueCaseSensitivity::CaseSensitive ||
+      (!aInHTML &&
+       mValueCaseSensitivity == ValueCaseSensitivity::CaseInsensitiveInHTML);
+  }
+
   nsString        mValue;
   nsAttrSelector* mNext;
   nsCOMPtr<nsIAtom> mLowercaseAttr;
   nsCOMPtr<nsIAtom> mCasedAttr;
   int32_t         mNameSpace;
   uint8_t         mFunction;
-  bool            mCaseSensitive; // If we are in an HTML document,
-                                  // is the value case sensitive?
+  ValueCaseSensitivity mValueCaseSensitivity;
+
 private: 
   nsAttrSelector* Clone(bool aDeep) const;
 
@@ -145,7 +159,8 @@ public:
                       nsCSSSelectorList* aSelectorList);
   void AddAttribute(int32_t aNameSpace, const nsString& aAttr);
   void AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
-                    const nsString& aValue, bool aCaseSensitive);
+                    const nsString& aValue,
+                    nsAttrSelector::ValueCaseSensitivity aValueCaseSensitivity);
   void SetOperator(char16_t aOperator);
 
   inline bool HasTagSelector() const {

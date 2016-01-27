@@ -131,6 +131,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNContext,
                                           SGNContext,
                                           mozilla::psm::SGN_DestroyContext_true)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNDigestInfo,
+                                          SGNDigestInfo,
+                                          SGN_DestroyDigestInfo)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedVFYContext,
                                           VFYContext,
                                           mozilla::psm::VFY_DestroyContext_true)

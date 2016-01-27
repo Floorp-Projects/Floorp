@@ -343,20 +343,7 @@ FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
 
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (mFormData[i].value.IsBlob()) {
-      RefPtr<File> file = mFormData[i].value.GetAsBlob()->ToFile();
-      if (file) {
-        fs.AddNameBlobPair(mFormData[i].name, file);
-        continue;
-      }
-
-      ErrorResult rv;
-      file =
-        mFormData[i].value.GetAsBlob()->ToFile(NS_LITERAL_STRING("blob"), rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        return rv.StealNSResult();
-      }
-
-      fs.AddNameBlobPair(mFormData[i].name, file);
+      fs.AddNameBlobPair(mFormData[i].name, mFormData[i].value.GetAsBlob());
     } else if (mFormData[i].value.IsUSVString()) {
       fs.AddNameValuePair(mFormData[i].name,
                           mFormData[i].value.GetAsUSVString());

@@ -24,6 +24,7 @@ if CONFIG['ACCESSIBILITY']:
     LOCAL_INCLUDES += [
         '../base',
         '../generic',
+        '../xpcom',
     ]
 
     if CONFIG['MOZ_ENABLE_GTK']:

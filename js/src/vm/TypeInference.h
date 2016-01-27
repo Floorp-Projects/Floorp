@@ -156,9 +156,9 @@ enum : uint32_t {
 
     /*
      * For a global object, whether any array buffers in this compartment with
-     * typed object views have been neutered.
+     * typed object views have ever been detached.
      */
-    OBJECT_FLAG_TYPED_OBJECT_NEUTERED = 0x00400000,
+    OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER = 0x00400000,
 
     /*
      * Whether objects with this type should be allocated directly in the
