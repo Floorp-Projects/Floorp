@@ -100,6 +100,7 @@ enum class WasmAstExprKind
     Const,
     ConversionOperator,
     GetLocal,
+    IfElse,
     Nop,
     SetLocal,
     UnaryOperator,
@@ -208,6 +209,31 @@ class WasmAstCall : public WasmAstExpr
     Expr expr() const { return expr_; }
     uint32_t index() const { return index_; }
     const WasmAstExprVector& args() const { return args_; }
+};
+
+class WasmAstIfElse : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* cond_;
+    WasmAstExpr* ifBody_;
+    WasmAstExpr* elseBody_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::IfElse;
+    explicit WasmAstIfElse(Expr expr, WasmAstExpr* cond, WasmAstExpr* ifBody,
+                           WasmAstExpr* elseBody = nullptr)
+      : WasmAstExpr(Kind),
+        expr_(expr),
+        cond_(cond),
+        ifBody_(ifBody),
+        elseBody_(elseBody)
+    {}
+
+    bool hasElse() const { return expr_ == Expr::IfElse; }
+    Expr expr() const { return expr_; }
+    WasmAstExpr& cond() const { return *cond_; }
+    WasmAstExpr& ifBody() const { return *ifBody_; }
+    WasmAstExpr& elseBody() const { return *elseBody_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -404,6 +430,8 @@ class WasmToken
         Export,
         Func,
         GetLocal,
+        If,
+        IfElse,
         Import,
         Integer,
         Local,
@@ -1034,6 +1062,11 @@ class WasmTokenStream
             }
             if (consume(MOZ_UTF16("import")))
                 return WasmToken(WasmToken::Import, begin, cur_);
+            if (consume(MOZ_UTF16("if"))) {
+                if (consume(MOZ_UTF16("_else")))
+                    return WasmToken(WasmToken::IfElse, begin, cur_);
+                return WasmToken(WasmToken::If, begin, cur_);
+            }
             break;
 
           case 'l':
@@ -1291,6 +1324,27 @@ ParseConversionOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstConversionOperator(expr, op);
 }
 
+static WasmAstIfElse*
+ParseIfElse(WasmParseContext& c, Expr expr)
+{
+    WasmAstExpr* cond = ParseExpr(c);
+    if (!cond)
+        return nullptr;
+
+    WasmAstExpr* ifBody = ParseExpr(c);
+    if (!ifBody)
+        return nullptr;
+
+    WasmAstExpr* elseBody = nullptr;
+    if (expr == Expr::IfElse) {
+        elseBody = ParseExpr(c);
+        if (!elseBody)
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstIfElse(expr, cond, ifBody, elseBody);
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -1313,6 +1367,10 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseConst(c, token);
       case WasmToken::ConversionOpcode:
         return ParseConversionOperator(c, token.expr());
+      case WasmToken::If:
+        return ParseIfElse(c, Expr::If);
+      case WasmToken::IfElse:
+        return ParseIfElse(c, Expr::IfElse);
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::SetLocal:
@@ -1597,6 +1655,15 @@ EncodeConversionOperator(Encoder& e, WasmAstConversionOperator& b)
 }
 
 static bool
+EncodeIfElse(Encoder& e, WasmAstIfElse& ie)
+{
+    return e.writeExpr(ie.expr()) &&
+           EncodeExpr(e, ie.cond()) &&
+           EncodeExpr(e, ie.ifBody()) &&
+           (!ie.hasElse() || EncodeExpr(e, ie.elseBody()));
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -1616,6 +1683,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeConversionOperator(e, expr.as<WasmAstConversionOperator>());
       case WasmAstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
+      case WasmAstExprKind::IfElse:
+        return EncodeIfElse(e, expr.as<WasmAstIfElse>());
       case WasmAstExprKind::SetLocal:
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::UnaryOperator:
