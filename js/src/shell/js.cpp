@@ -6809,7 +6809,7 @@ main(int argc, char** argv, char** envp)
             )
 #endif
         || !op.addStringOption('\0', "ion-shared-stubs", "on/off",
-                               "Use shared stubs (default: on, off to enable)")
+                               "Use shared stubs (default: off, on to enable)")
         || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",
                                "Scalar Replacement (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
