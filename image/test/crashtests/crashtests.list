@@ -16,6 +16,7 @@ load 1205923-1.html
 load 1212954-1.svg
 load 1235605.gif
 load 1241728-1.html
+load 1241729-1.html
 load 1242778-1.png
 load colormap-range.gif
 HTTP load delayedframe.sjs # A 3-frame animated GIF with an inordinate delay between the second and third frame
