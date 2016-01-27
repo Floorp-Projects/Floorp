@@ -1,0 +1,54 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="@ANDROID_PACKAGE_NAME@"
+      android:installLocation="auto"
+      android:versionCode="@ANDROID_VERSION_CODE@"
+      android:versionName="@MOZ_APP_VERSION@"
+#ifdef MOZ_ANDROID_SHARED_ID
+      android:sharedUserId="@MOZ_ANDROID_SHARED_ID@"
+#endif
+      >
+    <uses-sdk android:minSdkVersion="@MOZ_ANDROID_MIN_SDK_VERSION@"
+#ifdef MOZ_ANDROID_MAX_SDK_VERSION
+              android:maxSdkVersion="@MOZ_ANDROID_MAX_SDK_VERSION@"
+#endif
+              android:targetSdkVersion="23"/>
+
+<!-- The bouncer APK and the main APK should define the same set of
+     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
+     the likelihood of permission-related surprises when installing the main APK
+     on top of a pre-installed bouncer APK.  Add such shared elements in the
+     fileincluded here, so that they can be referenced by both APKs. -->
+#include ../base/FennecManifest_permissions.xml.in
+
+    <application android:label="@MOZ_APP_DISPLAYNAME@"
+                 android:icon="@drawable/icon"
+                 android:logo="@drawable/logo"
+                 android:hardwareAccelerated="true"
+                 android:allowBackup="false"
+# The preprocessor does not yet support arbitrary parentheses, so this cannot
+# be parenthesized thus to clarify that the logical AND operator has precedence:
+#   !defined(MOZILLA_OFFICIAL) || (defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG))
+#if !defined(MOZILLA_OFFICIAL) || defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG)
+                 android:debuggable="true">
+#else
+                 android:debuggable="false">
+#endif
+
+        <activity
+            android:name="@MOZ_ANDROID_BROWSER_INTENT_CLASS@"
+            android:label="@MOZ_APP_DISPLAYNAME@"
+            android:theme="@android:style/Theme.Translucent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="org.mozilla.bouncer.BouncerService"
+            android:exported="false" />
+
+    </application>
+</manifest>
