@@ -79,6 +79,7 @@ $(foreach extra_package,$(ANDROID_EXTRA_PACKAGES), \
 	@$(TOUCH) $@
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar $(_ANDROID_RES_FLAG) $(_ANDROID_ASSETS_FLAG) \
 		--custom-package $(ANDROID_APK_PACKAGE) \
+		--rename-manifest-package $(ANDROID_APK_PACKAGE) \
 		--non-constant-id \
 		--auto-add-overlay \
 		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $(subst $(NULL) ,:,$(strip $(ANDROID_EXTRA_PACKAGES)))) \
