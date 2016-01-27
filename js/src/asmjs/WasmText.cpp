@@ -188,7 +188,7 @@ class WasmAstBlock : public WasmAstExpr
 
   public:
     static const WasmAstKind Kind = WasmAstKind::Block;
-    WasmAstBlock(WasmAstExprVector&& exprs)
+    explicit WasmAstBlock(WasmAstExprVector&& exprs)
       : WasmAstExpr(Kind),
         exprs_(Move(exprs))
     {}
