@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -135,16 +137,6 @@ Script.prototype = {
 
     if (!this.options.all_frames && window.top != window) {
       return false;
-    }
-
-    if ("innerWindowID" in this.options) {
-      let innerWindowID = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils)
-                                .currentInnerWindowID;
-
-      if (innerWindowID !== this.options.innerWindowID) {
-        return false;
-      }
     }
 
     // TODO: match_about_blank.
@@ -404,6 +396,8 @@ var DocumentManager = {
     } else if (topic == "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
+      MessageChannel.abortResponses({ innerWindowID: windowId });
+
       // Close any existent content-script context for the destroyed window.
       if (this.contentScriptWindows.has(windowId)) {
         let extensions = this.contentScriptWindows.get(windowId);
@@ -446,7 +440,7 @@ var DocumentManager = {
     let window = global.content;
     let context = this.getContentScriptContext(extensionId, window);
     if (!context) {
-      return;
+      throw new Error("Unexpected add-on ID");
     }
 
     // TODO: Somehow make sure we have the right permissions for this origin!
@@ -534,6 +528,8 @@ var DocumentManager = {
         this.extensionPageWindows.delete(winId);
       }
     }
+
+    MessageChannel.abortResponses({ extensionId });
 
     this.extensionCount--;
     if (this.extensionCount == 0) {
@@ -645,44 +641,60 @@ ExtensionManager = {
   },
 };
 
+class ExtensionGlobal {
+  constructor(global) {
+    this.global = global;
+
+    MessageChannel.addListener(global, "Extension:Execute", this);
+
+    this.broker = new MessageBroker([global]);
+
+    this.windowId = global.content
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils)
+                          .outerWindowID;
+
+    global.sendAsyncMessage("Extension:TopWindowID", { windowId: this.windowId });
+  }
+
+  uninit() {
+    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", { windowId: this.windowId });
+  }
+
+  get messageFilter() {
+    return {
+      innerWindowID: this.global.content
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils)
+                         .currentInnerWindowID,
+    };
+  }
+
+  receiveMessage({ target, messageName, recipient, data }) {
+    switch (messageName) {
+      case "Extension:Execute":
+        let script = new Script(data.options);
+        let { extensionId } = recipient;
+        DocumentManager.executeScript(target, extensionId, script);
+        break;
+    }
+  }
+}
+
 this.ExtensionContent = {
   globals: new Map(),
 
   init(global) {
-    let broker = new MessageBroker([global]);
-    this.globals.set(global, broker);
-
-    global.addMessageListener("Extension:Execute", this);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:TopWindowID", {windowId});
+    this.globals.set(global, new ExtensionGlobal(global));
   },
 
   uninit(global) {
+    this.globals.get(global).uninit();
     this.globals.delete(global);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId});
   },
 
   getBroker(messageManager) {
-    return this.globals.get(messageManager);
-  },
-
-  receiveMessage({target, name, data}) {
-    switch (name) {
-      case "Extension:Execute":
-        let script = new Script(data.options);
-        let {extensionId} = data;
-        DocumentManager.executeScript(target, extensionId, script);
-        break;
-    }
+    return this.globals.get(messageManager).broker;
   },
 };
 
