@@ -105,6 +105,7 @@
     _(IntrinsicIsConstructing)      \
     _(IntrinsicSubstringKernel)     \
     _(IntrinsicDefineDataProperty)  \
+    _(IntrinsicObjectHasPrototype)  \
                                     \
     _(IntrinsicIsArrayIterator)     \
     _(IntrinsicIsMapIterator)       \
