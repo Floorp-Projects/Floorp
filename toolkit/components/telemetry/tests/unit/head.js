@@ -284,11 +284,6 @@ function fakeCachedClientId(uuid) {
   module.Policy.getCachedClientID = () => uuid;
 }
 
-function fakeIsUnifiedOptin(isOptin) {
-  let module = Cu.import("resource://gre/modules/TelemetryController.jsm");
-  module.Policy.isUnifiedOptin = () => isOptin;
-}
-
 // Return a date that is |offset| ms in the future from |date|.
 function futureDate(date, offset) {
   return new Date(date.getTime() + offset);
