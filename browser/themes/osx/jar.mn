@@ -8,6 +8,9 @@ browser.jar:
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutSyncTabs.css
+* skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
+  skin/classic/browser/syncedtabs/arrow-open.svg       (syncedtabs/arrow-open.svg)
+  skin/classic/browser/syncedtabs/arrow-closed.svg     (syncedtabs/arrow-closed.svg)
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css

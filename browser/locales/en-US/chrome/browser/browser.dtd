@@ -421,6 +421,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY appMenuRemoteTabs.openprefs.label "Sync Preferences">
 <!ENTITY appMenuRemoteTabs.notsignedin.label "Sign in to view a list of tabs from your other devices.">
 <!ENTITY appMenuRemoteTabs.signin.label "Sign in to Sync">
+<!ENTITY appMenuRemoteTabs.sidebar.label "View Synced Tabs Sidebar">
 
 <!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
 <!ENTITY customizeMenu.addToToolbar.accesskey "A">
@@ -785,6 +786,24 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!-- LOCALIZATION NOTE (syncTabsMenu3.label): This appears in the history menu and history panel -->
 <!ENTITY syncTabsMenu3.label     "Synced Tabs">
+
+<!ENTITY syncedTabs.sidebar.label              "Synced Tabs">
+<!ENTITY syncedTabs.sidebar.fetching.label     "Fetching Synced Tabs…">
+<!ENTITY syncedTabs.sidebar.noclients.label    "Sign in to Firefox from your other devices to view their tabs here.">
+<!ENTITY syncedTabs.sidebar.notsignedin.label  "Sign in to view a list of tabs from your other devices.">
+<!ENTITY syncedTabs.sidebar.notabs.label       "No open tabs">
+<!ENTITY syncedTabs.sidebar.openprefs.label    "Open &syncBrand.shortName.label; Preferences">
+<!-- LOCALIZATION NOTE (syncedTabs.sidebar.tabsnotsyncing.label): This is shown
+     when Sync is configured but syncing tabs is disabled. -->
+<!ENTITY syncedTabs.sidebar.tabsnotsyncing.label       "Turn on tab syncing to view a list of tabs from your other devices.">
+
+<!ENTITY syncedTabs.context.openTab.label                   "Open This Tab">
+<!ENTITY syncedTabs.context.openTab.accesskey               "O">
+<!ENTITY syncedTabs.context.bookmarkSingleTab.label         "Bookmark This Tab…">
+<!ENTITY syncedTabs.context.bookmarkSingleTab.accesskey     "B">
+<!ENTITY syncedTabs.context.refreshList.label               "Refresh List">
+<!ENTITY syncedTabs.context.refreshList.accesskey           "R">
+
 
 <!ENTITY syncBrand.shortName.label    "Sync">
 

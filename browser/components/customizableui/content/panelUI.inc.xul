@@ -112,6 +112,10 @@
         <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
         <!-- When Sync is ready to sync -->
         <vbox id="PanelUI-remotetabs-main" observes="sync-syncnow-state">
+          <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
+                         class="subviewbutton"
+                         observes="viewTabsSidebar"
+                         label="&appMenuRemoteTabs.sidebar.label;"/>
           <toolbarbutton id="PanelUI-remotetabs-syncnow"
                          observes="sync-status"
                          class="subviewbutton"
