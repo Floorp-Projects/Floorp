@@ -74,9 +74,10 @@ void
 RubyColumn::Iterator::SkipUntilExistingFrame()
 {
   if (mIndex == -1) {
-    if (!mColumn.mBaseFrame) {
-      ++mIndex;
+    if (mColumn.mBaseFrame) {
+      return;
     }
+    ++mIndex;
   }
   int32_t numTextFrames = mColumn.mTextFrames.Length();
   for (; mIndex < numTextFrames; ++mIndex) {
