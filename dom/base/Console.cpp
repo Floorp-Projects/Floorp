@@ -1595,9 +1595,14 @@ Console::ProcessArguments(JSContext* aCx,
             return false;
           }
 
-          nsCString format;
-          MakeFormatString(format, integer, mantissa, 'f');
-          output.AppendPrintf(format.get(), v);
+          // nspr returns "nan", but we want to expose it as "NaN"
+          if (std::isnan(v)) {
+            output.AppendFloat(v);
+          } else {
+            nsCString format;
+            MakeFormatString(format, integer, mantissa, 'f');
+            output.AppendPrintf(format.get(), v);
+          }
         }
         break;
 
