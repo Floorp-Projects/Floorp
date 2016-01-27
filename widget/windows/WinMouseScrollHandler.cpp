@@ -613,7 +613,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
 
   // If it's not allowed to cache system settings, we need to reset the cache
   // before handling the mouse wheel message.
-  mSystemSettings.TrustedScrollSettingsDriver(aMessage == MOZ_WM_MOUSEVWHEEL);
+  mSystemSettings.TrustedScrollSettingsDriver();
 
   EventInfo eventInfo(aWidget, WinUtils::GetNativeMessage(aMessage),
                       aWParam, aLParam);
@@ -863,11 +863,16 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
   mAccumulatedDelta -=
     lineOrPageDelta * orienter * RoundDelta(nativeDeltaPerUnit);
 
+  aWheelEvent.mAllowToOverrideSystemScrollSpeed =
+    MouseScrollHandler::sInstance->
+      mSystemSettings.IsOverridingSystemScrollSpeedAllowed();
+
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
     ("MouseScroll::LastEventInfo::InitWheelEvent: aWidget=%p, "
      "aWheelEvent { refPoint: { x: %d, y: %d }, deltaX: %f, deltaY: %f, "
      "lineOrPageDeltaX: %d, lineOrPageDeltaY: %d, "
-     "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s }, "
+     "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s, "
+     "mAllowToOverrideSystemScrollSpeed: %s }, "
      "mAccumulatedDelta: %d",
      aWidget, aWheelEvent.refPoint.x, aWheelEvent.refPoint.y,
      aWheelEvent.deltaX, aWheelEvent.deltaY,
@@ -875,7 +880,9 @@ MouseScrollHandler::LastEventInfo::InitWheelEvent(
      GetBoolName(aWheelEvent.IsShift()),
      GetBoolName(aWheelEvent.IsControl()),
      GetBoolName(aWheelEvent.IsAlt()),
-     GetBoolName(aWheelEvent.IsMeta()), mAccumulatedDelta));
+     GetBoolName(aWheelEvent.IsMeta()),
+     GetBoolName(aWheelEvent.mAllowToOverrideSystemScrollSpeed),
+     mAccumulatedDelta));
 
   return (delta != 0);
 }
@@ -994,9 +1001,10 @@ MouseScrollHandler::SystemSettings::MarkDirty()
 }
 
 void
-MouseScrollHandler::SystemSettings::RefreshCache(bool aForVertical)
+MouseScrollHandler::SystemSettings::RefreshCache()
 {
-  bool isChanged = aForVertical ? InitScrollLines() : InitScrollChars();
+  bool isChanged = InitScrollLines();
+  isChanged = InitScrollChars() || isChanged;
   if (!isChanged) {
     return;
   }
@@ -1007,16 +1015,14 @@ MouseScrollHandler::SystemSettings::RefreshCache(bool aForVertical)
 }
 
 void
-MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
-                                      bool aIsVertical)
+MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver()
 {
   if (!mInitialized) {
     return;
   }
 
   // if the cache is initialized with prefs, we don't need to refresh it.
-  if ((aIsVertical && mIsReliableScrollLines) ||
-      (!aIsVertical && mIsReliableScrollChars)) {
+  if (mIsReliableScrollLines && mIsReliableScrollChars) {
     return;
   }
 
@@ -1025,7 +1031,7 @@ MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
 
   // If system settings cache is disabled, we should always refresh them.
   if (!userPrefs.IsSystemSettingCacheEnabled()) {
-    RefreshCache(aIsVertical);
+    RefreshCache();
     return;
   }
 
@@ -1039,11 +1045,21 @@ MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
   // ::SystemParametersInfo() and returns different value from system settings.
   if (Device::SynTP::IsDriverInstalled() ||
       Device::Apoint::IsDriverInstalled()) {
-    RefreshCache(aIsVertical);
+    RefreshCache();
     return;
   }
 
   // XXX We're not sure about other touchpad drivers...
+}
+
+bool
+MouseScrollHandler::SystemSettings::IsOverridingSystemScrollSpeedAllowed()
+{
+  // The default vertical and horizontal scrolling speed is 3, this is defined
+  // on the document of SystemParametersInfo in MSDN.
+  const uint32_t kSystemDefaultScrollingSpeed = 3;
+  return mScrollLines == kSystemDefaultScrollingSpeed &&
+         (!IsVistaOrLater() || mScrollChars == kSystemDefaultScrollingSpeed);
 }
 
 /******************************************************************************
