@@ -76,18 +76,15 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
 {
   NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                "Shouldn't have unconstrained stuff here "
-               "Thanks to the rules of reflow");
+               "thanks to the rules of reflow");
   NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
                "Shouldn't have unconstrained stuff here "
                "thanks to ComputeAutoSize");
 
+  // XXX how should border&padding effect baseline alignment?
+  // => descent = borderPadding.bottom for example
   WritingMode wm = aReflowState.GetWritingMode();
-  LogicalSize finalSize(wm,
-                        aReflowState.ComputedISize(),
-                        aReflowState.ComputedBSize());
-
-  AddBordersAndPadding(aReflowState, finalSize);
-  aMetrics.SetSize(wm, finalSize);
+  aMetrics.SetSize(wm, aReflowState.ComputedSizeWithBorderPadding());
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -104,17 +101,6 @@ nsLeafFrame::GetIntrinsicBSize()
 {
   NS_NOTREACHED("Someone didn't override Reflow or ComputeAutoSize");
   return 0;
-}
-
-// XXX how should border&padding effect baseline alignment?
-// => descent = borderPadding.bottom for example
-void
-nsLeafFrame::AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
-                                  LogicalSize& aSize)
-{
-  WritingMode wm = aReflowState.GetWritingMode();
-  aSize.ISize(wm) += aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm);
-  aSize.BSize(wm) += aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm);
 }
 
 void
