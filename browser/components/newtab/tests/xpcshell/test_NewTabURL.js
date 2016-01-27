@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* globals Services, NewTabURL, XPCOMUtils, aboutNewTabService */
+/* globals Services, NewTabURL, XPCOMUtils, aboutNewTabService, NewTabPrefsProvider */
 "use strict";
 
 const {utils: Cu} = Components;
@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-add_task(function* () {
+add_task(function*() {
   let defaultURL = aboutNewTabService.newTabURL;
   Services.prefs.setBoolPref("browser.newtabpage.remote", false);
 
@@ -36,8 +36,7 @@ add_task(function* () {
   // change newtab page to remote
   NewTabPrefsProvider.prefs.init();
   Services.prefs.setBoolPref("browser.newtabpage.remote", true);
-  let remoteURL = aboutNewTabService.generateRemoteURL();
-  Assert.equal(NewTabURL.get(), remoteURL, `Newtab URL should be ${remoteURL}`);
+  Assert.equal(NewTabURL.get(), "about:newtab", `Newtab URL should be about:newtab`);
   Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
   NewTabPrefsProvider.prefs.uninit();
 });

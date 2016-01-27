@@ -51,7 +51,7 @@ add_task(function* () {
             windowId: activeWindow,
             active: true,
             pinned: false,
-            url: "chrome://browser/content/newtab/newTab.xhtml",
+            url: "about:newtab",
           };
 
           let tests = [
@@ -65,7 +65,7 @@ add_task(function* () {
             },
             {
               create: {},
-              result: { url: "chrome://browser/content/newtab/newTab.xhtml" },
+              result: { url: "about:newtab" },
             },
             {
               create: { active: false },
