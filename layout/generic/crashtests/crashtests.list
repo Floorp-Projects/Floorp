@@ -600,8 +600,6 @@ load 1224230-1.html
 pref(layout.css.grid.enabled,true) load 1225118.html
 pref(layout.css.grid.enabled,true) load 1225376.html
 pref(layout.css.grid.enabled,true) load 1225592.html
-load 1229437-1.html
-load 1229437-2.html
 load first-letter-638937-1.html
 load first-letter-638937-2.html
 pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(0-100) load font-inflation-762332.html # bug 762332
