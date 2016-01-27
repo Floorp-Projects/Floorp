@@ -11,7 +11,7 @@ class LaunchTest(unittest.TestCase):
                                          "10066	1198	com.twitter.android"),
                                         ("info sutuserinfo", ""),
                                         ("exec am start -W -n "
-                                         "org.mozilla.fennec/.App -a "
+                                         "org.mozilla.fennec/org.mozilla.gecko.BrowserApp -a "
                                          "android.intent.action.VIEW",
                                          "OK\nreturn code [0]")])
         d = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=logging.DEBUG)
@@ -24,7 +24,7 @@ class LaunchTest(unittest.TestCase):
                                          "10066	1198	com.twitter.android"),
                                         ("info sutuserinfo", "User Serial:0"),
                                         ("exec am start --user 0 -W -n "
-                                         "org.mozilla.fennec/.App -a "
+                                         "org.mozilla.fennec/org.mozilla.gecko.BrowserApp -a "
                                          "android.intent.action.VIEW",
                                          "OK\nreturn code [0]")])
         d = mozdevice.DroidSUT("127.0.0.1", port=a.port, logLevel=logging.DEBUG)
