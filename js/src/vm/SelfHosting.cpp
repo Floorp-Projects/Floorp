@@ -586,6 +586,22 @@ intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_ObjectHasPrototype(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    RootedObject obj(cx, &args[0].toObject());
+    RootedObject proto(cx, &args[1].toObject());
+
+    RootedObject actualProto(cx);
+    if (!GetPrototype(cx, obj, &actualProto))
+        return false;
+
+    args.rval().setBoolean(actualProto == proto);
+    return true;
+}
+
+static bool
 intrinsic_UnsafeSetReservedSlot(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2175,6 +2191,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicSubstringKernel),
     JS_INLINABLE_FN("_DefineDataProperty",              intrinsic_DefineDataProperty,      4,0,
                     IntrinsicDefineDataProperty),
+    JS_INLINABLE_FN("ObjectHasPrototype",               intrinsic_ObjectHasPrototype,      2,0,
+                    IntrinsicObjectHasPrototype),
     JS_INLINABLE_FN("UnsafeSetReservedSlot",            intrinsic_UnsafeSetReservedSlot,   3,0,
                     IntrinsicUnsafeSetReservedSlot),
     JS_INLINABLE_FN("UnsafeGetReservedSlot",            intrinsic_UnsafeGetReservedSlot,   2,0,
