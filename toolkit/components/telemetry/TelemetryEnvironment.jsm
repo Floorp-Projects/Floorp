@@ -77,6 +77,10 @@ this.TelemetryEnvironment = {
     return getGlobal().unregisterChangeListener(name);
   },
 
+  shutdown: function() {
+    return getGlobal().shutdown();
+  },
+
   // Policy to use when saving preferences. Exported for using them in tests.
   RECORD_PREF_STATE: 1, // Don't record the preference value
   RECORD_PREF_VALUE: 2, // We only record user-set prefs.
@@ -797,6 +801,11 @@ EnvironmentCache.prototype = {
       return;
     }
     this._changeListeners.delete(name);
+  },
+
+  shutdown: function() {
+    this._log.trace("shutdown");
+    this._shutdown = true;
   },
 
   /**
