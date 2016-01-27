@@ -4287,6 +4287,8 @@ public:
 
   nsIFrame* TransformFrame() { return mTransformFrame; }
 
+  virtual int32_t ZIndex() const override;
+
   virtual void
   DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
     static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop())->DoUpdateBoundsPreserves3D(aBuilder);
