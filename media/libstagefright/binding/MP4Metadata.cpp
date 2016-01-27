@@ -27,15 +27,6 @@ using namespace stagefright;
 namespace mp4_demuxer
 {
 
-struct StageFrightPrivate
-{
-  StageFrightPrivate()
-    : mCanSeek(false) {}
-  sp<MediaExtractor> mMetadataExtractor;
-
-  bool mCanSeek;
-};
-
 class DataSourceAdapter : public DataSource
 {
 public:
@@ -97,9 +88,10 @@ private:
   mozilla::UniquePtr<mozilla::TrackInfo> CheckTrack(const char* aMimeType,
                                                     stagefright::MetaData* aMetaData,
                                                     int32_t aIndex) const;
-  nsAutoPtr<StageFrightPrivate> mPrivate;
   CryptoFile mCrypto;
   RefPtr<Stream> mSource;
+  sp<MediaExtractor> mMetadataExtractor;
+  bool mCanSeek;
 };
 
 #ifdef MOZ_RUST_MP4PARSE
@@ -240,14 +232,11 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
 }
 
 MP4MetadataStagefright::MP4MetadataStagefright(Stream* aSource)
-  : mPrivate(new StageFrightPrivate)
-  , mSource(aSource)
+  : mSource(aSource)
+  , mMetadataExtractor(new MPEG4Extractor(new DataSourceAdapter(mSource)))
+  , mCanSeek(mMetadataExtractor->flags() & MediaExtractor::CAN_SEEK)
 {
-  mPrivate->mMetadataExtractor =
-    new MPEG4Extractor(new DataSourceAdapter(mSource));
-  mPrivate->mCanSeek =
-    mPrivate->mMetadataExtractor->flags() & MediaExtractor::CAN_SEEK;
-  sp<MetaData> metaData = mPrivate->mMetadataExtractor->getMetaData();
+  sp<MetaData> metaData = mMetadataExtractor->getMetaData();
 
   if (metaData.get()) {
     UpdateCrypto(metaData.get());
@@ -261,10 +250,10 @@ MP4MetadataStagefright::~MP4MetadataStagefright()
 uint32_t
 MP4MetadataStagefright::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
-  size_t tracks = mPrivate->mMetadataExtractor->countTracks();
+  size_t tracks = mMetadataExtractor->countTracks();
   uint32_t total = 0;
   for (size_t i = 0; i < tracks; i++) {
-    sp<MetaData> metaData = mPrivate->mMetadataExtractor->getTrackMetaData(i);
+    sp<MetaData> metaData = mMetadataExtractor->getTrackMetaData(i);
 
     const char* mimeType;
     if (metaData == nullptr || !metaData->findCString(kKeyMIMEType, &mimeType)) {
@@ -294,7 +283,7 @@ mozilla::UniquePtr<mozilla::TrackInfo>
 MP4MetadataStagefright::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                      size_t aTrackNumber) const
 {
-  size_t tracks = mPrivate->mMetadataExtractor->countTracks();
+  size_t tracks = mMetadataExtractor->countTracks();
   if (!tracks) {
     return nullptr;
   }
@@ -304,7 +293,7 @@ MP4MetadataStagefright::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
 
   size_t i = 0;
   while (i < tracks) {
-    metaData = mPrivate->mMetadataExtractor->getTrackMetaData(i);
+    metaData = mMetadataExtractor->getTrackMetaData(i);
 
     if (metaData == nullptr || !metaData->findCString(kKeyMIMEType, &mimeType)) {
       continue;
@@ -337,7 +326,7 @@ MP4MetadataStagefright::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   UniquePtr<mozilla::TrackInfo> e = CheckTrack(mimeType, metaData.get(), index);
 
   if (e) {
-    metaData = mPrivate->mMetadataExtractor->getMetaData();
+    metaData = mMetadataExtractor->getMetaData();
     int64_t movieDuration;
     if (!e->mDuration &&
         metaData->findInt64(kKeyMovieDuration, &movieDuration)) {
@@ -354,7 +343,7 @@ MP4MetadataStagefright::CheckTrack(const char* aMimeType,
                                    stagefright::MetaData* aMetaData,
                                    int32_t aIndex) const
 {
-  sp<MediaSource> track = mPrivate->mMetadataExtractor->getTrack(aIndex);
+  sp<MediaSource> track = mMetadataExtractor->getTrack(aIndex);
   if (!track.get()) {
     return nullptr;
   }
@@ -380,7 +369,7 @@ MP4MetadataStagefright::CheckTrack(const char* aMimeType,
 bool
 MP4MetadataStagefright::CanSeek() const
 {
-  return mPrivate->mCanSeek;
+  return mCanSeek;
 }
 
 const CryptoFile&
@@ -407,17 +396,16 @@ MP4MetadataStagefright::UpdateCrypto(const MetaData* aMetaData)
 bool
 MP4MetadataStagefright::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
-  size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
+  size_t numTracks = mMetadataExtractor->countTracks();
   int32_t trackNumber = GetTrackNumber(aTrackID);
   if (trackNumber < 0) {
     return false;
   }
-  sp<MediaSource> track = mPrivate->mMetadataExtractor->getTrack(trackNumber);
+  sp<MediaSource> track = mMetadataExtractor->getTrack(trackNumber);
   if (!track.get()) {
     return false;
   }
-  sp<MetaData> metadata =
-    mPrivate->mMetadataExtractor->getTrackMetaData(trackNumber);
+  sp<MetaData> metadata = mMetadataExtractor->getTrackMetaData(trackNumber);
   int64_t mediaTime;
   if (!metadata->findInt64(kKeyMediaTime, &mediaTime)) {
     mediaTime = 0;
@@ -430,9 +418,9 @@ MP4MetadataStagefright::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, moz
 int32_t
 MP4MetadataStagefright::GetTrackNumber(mozilla::TrackID aTrackID)
 {
-  size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
+  size_t numTracks = mMetadataExtractor->countTracks();
   for (size_t i = 0; i < numTracks; i++) {
-    sp<MetaData> metaData = mPrivate->mMetadataExtractor->getTrackMetaData(i);
+    sp<MetaData> metaData = mMetadataExtractor->getTrackMetaData(i);
     if (!metaData.get()) {
       continue;
     }
