@@ -1761,6 +1761,16 @@ auto Clipboard::SetClipboardText(mozilla::jni::String::Param a0) -> void
     return mozilla::jni::Method<SetClipboardText_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char HardwareCodecCapabilityUtils::name[];
+
+constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::name[];
+constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::signature[];
+
+auto HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(mozilla::jni::String::Param a0) -> bool
+{
+    return mozilla::jni::Method<FindDecoderCodecInfoForMimeType_t>::Call(nullptr, nullptr, a0);
+}
+
 constexpr char NativeJSContainer::name[];
 
 constexpr char NativeJSContainer::New_t::name[];

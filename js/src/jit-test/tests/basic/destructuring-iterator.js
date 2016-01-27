@@ -49,6 +49,17 @@ assertIterable([5,5,4,4],
   it => { var [,,...rest] = it; return rest; },
   [3,4]);
 
+// the iterator should be exhausted before any error is thrown
+assertIterable([5,5,4,4],
+  it => {
+    assertThrowsInstanceOf(function () {
+      "use strict";
+      [...{0: "".x}] = it;
+    }, TypeError);
+    return [];
+  },
+  []);
+
 var arraycalls = 0;
 var ArrayIterator = Array.prototype[Symbol.iterator];
 Array.prototype[Symbol.iterator] = function () {
@@ -58,7 +69,11 @@ Array.prototype[Symbol.iterator] = function () {
 // [...rest] should not call Array#@@iterator for the LHS
 var [...rest] = iterable;
 assertEq(arraycalls, 0, 'calls to Array#@@iterator');
-
+// [...[...rest]] should do so, since it creates an implicit array for the
+// first rest pattern, then destructures that again using @@iterator() for the
+// second rest pattern.
+var [...[...rest]] = iterable;
+assertEq(arraycalls, 1, 'calls to Array#@@iterator');
 
 // loop `fn` a few times, to get it JIT-compiled
 function loop(fn) {
@@ -67,7 +82,7 @@ function loop(fn) {
 }
 
 loop(() => { doneafter = 4; var [a] = iterable; return a; });
-loop(() => { doneafter = 4; var [a,b,...rest] = iterable; return rest; });
+loop(() => { doneafter = 4; var [a,b,...[...rest]] = iterable; return rest; });
 
 
 // destructuring assignment should always use iterators and not optimize

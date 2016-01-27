@@ -4241,12 +4241,12 @@ ICGetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
 }
 
 void
-CheckForNeuteredTypedObject(JSContext* cx, MacroAssembler& masm, Label* failure)
+CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure)
 {
-    // All stubs which manipulate typed objects need to check the compartment
-    // wide flag indicating whether the objects are neutered, and bail out in
-    // this case.
-    int32_t* address = &cx->compartment()->neuteredTypedObjects;
+    // All stubs manipulating typed objects must check the compartment-wide
+    // flag indicating whether their underlying storage might be detached, to
+    // bail out if needed.
+    int32_t* address = &cx->compartment()->detachedTypedObjects;
     masm.branch32(Assembler::NotEqual, AbsoluteAddress(address), Imm32(0), failure);
 }
 
@@ -4273,7 +4273,7 @@ ICGetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
 
-    CheckForNeuteredTypedObject(cx, masm, &failure);
+    CheckForTypedObjectWithDetachedStorage(cx, masm, &failure);
 
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
 

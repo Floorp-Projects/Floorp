@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deriving zero bits should fail",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+      .then(x => crypto.subtle.deriveBits(alg, x, 0), error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive four bits with HKDF, no salt or info given",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+      .then(x => crypto.subtle.deriveBits(alg, x, 4))
+      // The last 4 bits should be zeroes (1000 1101 => 1000 0000).
+      .then(memcmp_complete(that, new Uint8Array([0x80])))
+      .catch(error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deriving too many bits should fail",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    function deriveBits(x) {
+      // The maximum length (in bytes) of output material for HKDF is 255 times
+      // the digest length. In this case, the digest length (in bytes) of
+      // SHA-256 is 32; 32*255 = 8160. deriveBits expects the length to be in
+      // bits, so 8160*8=65280 and add 1 to exceed the maximum length.
+      return crypto.subtle.deriveBits(alg, x, 65281);
+    }
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+      .then(deriveBits, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deriving with an unsupported PRF should fail",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "HMAC",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    function deriveBits(x) {
+      return crypto.subtle.deriveBits(alg, x, 4);
+    }
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+      .then(deriveBits, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deriving with a non-HKDF key should fail",
+  function() {
+    var that = this;
+
+    var alg = {
+      name: "HKDF",
+      hash: "HMAC",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    function deriveBits(x) {
+      return crypto.subtle.deriveBits(alg, x, 4);
+    }
+
+    var ecAlg = {name: "ECDH", namedCurve: "P-256"};
+    crypto.subtle.generateKey(ecAlg, false, ["deriveBits"])
+      .then(deriveBits, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive known values from test vectors (SHA-1 and SHA-256)",
+  function() {
+    var that = this;
+    var tests = tv.hkdf.slice();
+
+    function next() {
+      if (!tests.length) {
+        return;
+      }
+
+      var test = tests.shift();
+      var {key, data} = test;
+
+      return crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+        .then(function (key) {
+          return crypto.subtle.deriveBits({
+            name: "HKDF",
+            hash: test.prf,
+            salt: test.salt,
+            info: test.info
+          }, key, test.data.byteLength * 8);
+        })
+        .then(function (data) {
+          if (!util.memcmp(data, test.data)) {
+            throw new Error("derived bits don't match expected value");
+          }
+
+          // Next test vector.
+          return next();
+        });
+    }
+
+    next().then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive known values from test vectors (JWK, SHA-256)",
+  function() {
+    var that = this;
+    var test = tv.hkdf[0];
+    var alg = {
+      name: "HKDF",
+      hash: test.prf,
+      salt: test.salt,
+      info: test.info
+    };
+
+    crypto.subtle.importKey("jwk", test.jwk, "HKDF", false, ["deriveBits"])
+      .then(x => crypto.subtle.deriveBits(alg, x, test.data.byteLength * 8))
+      .then(memcmp_complete(that, test.data), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test wrapping/unwrapping an HKDF key",
+  function() {
+    var that = this;
+    var hkdfKey = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+    var alg = {name: "AES-GCM", length: 256, iv: new Uint8Array(16)};
+    var wrappingKey;
+
+    function wrap(x) {
+      wrappingKey = x;
+      return crypto.subtle.encrypt(alg, wrappingKey, hkdfKey);
+    }
+
+    function unwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey(
+        "raw", wrappedKey, wrappingKey, alg, "HKDF", false, ["deriveBits"])
+        .then(rawKey => {
+          return crypto.subtle.deriveBits({
+            name: "HKDF",
+            hash: "SHA-256",
+            salt: new Uint8Array(),
+            info: new Uint8Array()
+          }, rawKey, 4);
+        })
+        .then(derivedBits => {
+          if (!util.memcmp(derivedBits, new Uint8Array([0x80]))) {
+            throw new Error("deriving bits failed");
+          }
+
+          // Forward to reuse.
+          return wrappedKey;
+        });
+    }
+
+    crypto.subtle.generateKey(alg, false, ["encrypt", "unwrapKey"])
+      .then(wrap)
+      .then(unwrap)
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Unwrapping an HKDF key in PKCS8 format should fail",
+  function() {
+    var that = this;
+    var hkdfKey = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+    var alg = {name: "AES-GCM", length: 256, iv: new Uint8Array(16)};
+    var wrappingKey;
+
+    function wrap(x) {
+      wrappingKey = x;
+      return crypto.subtle.encrypt(alg, wrappingKey, hkdfKey);
+    }
+
+    function unwrap(x) {
+      return crypto.subtle.unwrapKey(
+        "pkcs8", x, wrappingKey, alg, "HKDF", false, ["deriveBits"]);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["encrypt", "unwrapKey"])
+      .then(wrap, error(that))
+      .then(unwrap, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive an AES key using with HKDF",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    function deriveKey(x) {
+      var targetAlg = {name: "AES-GCM", length: 256};
+      return crypto.subtle.deriveKey(alg, x, targetAlg, false, ["encrypt"]);
+    }
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveKey"])
+      .then(deriveKey)
+      .then(complete(that), error(that))
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deriving an HKDF key with HKDF should fail",
+  function() {
+    var that = this;
+    var key = util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    function deriveKey(x) {
+      return crypto.subtle.deriveKey(alg, x, "HKDF", false, ["deriveBits"]);
+    }
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveKey"])
+      .then(deriveKey)
+      .then(error(that), complete(that))
+  }
+);
+
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

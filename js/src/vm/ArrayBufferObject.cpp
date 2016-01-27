@@ -239,18 +239,19 @@ AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes)
     return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(p);
 }
 
-void
-ArrayBufferObject::neuterView(JSContext* cx, ArrayBufferViewObject* view,
-                              BufferContents newContents)
+static void
+NoteViewBufferWasDetached(ArrayBufferViewObject* view,
+                          ArrayBufferObject::BufferContents newContents,
+                          JSContext* cx)
 {
-    view->neuter(newContents.data());
+    view->notifyBufferDetached(newContents.data());
 
     // Notify compiled jit code that the base pointer has moved.
     MarkObjectStateChange(cx, view);
 }
 
 /* static */ bool
-ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
+ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
     if (buffer->isAsmJS()) {
@@ -258,32 +259,32 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         return false;
     }
 
-    // When neutering buffers where we don't know all views, the new data must
+    // When detaching buffers where we don't know all views, the new data must
     // match the old data. All missing views are typed objects, which do not
     // expect their data to ever change.
     MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
                   newContents.data() == buffer->dataPointer());
 
-    // When neutering a buffer with typed object views, any jitcode which
-    // accesses such views needs to be deoptimized so that neuter checks are
-    // performed. This is done by setting a compartment wide flag indicating
-    // that buffers with typed object views have been neutered.
+    // When detaching a buffer with typed object views, any jitcode accessing
+    // such views must be deoptimized so that detachment checks are performed.
+    // This is done by setting a compartment-wide flag indicating that buffers
+    // with typed object views have been detached.
     if (buffer->hasTypedObjectViews()) {
         // Make sure the global object's group has been instantiated, so the
         // flag change will be observed.
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!cx->global()->getGroup(cx))
-            oomUnsafe.crash("ArrayBufferObject::neuter");
-        MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
-        cx->compartment()->neuteredTypedObjects = 1;
+            oomUnsafe.crash("ArrayBufferObject::detach");
+        MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
+        cx->compartment()->detachedTypedObjects = 1;
     }
 
-    // Neuter all views on the buffer, clear out the list of views and the
-    // buffer's data.
+    // Update all views of the buffer to account for the buffer having been
+    // detached, and clear the buffer's data and list of views.
 
     if (InnerViewTable::ViewVector* views = cx->compartment()->innerViews.maybeViewsUnbarriered(buffer)) {
         for (size_t i = 0; i < views->length(); i++)
-            buffer->neuterView(cx, (*views)[i], newContents);
+            NoteViewBufferWasDetached((*views)[i], newContents, cx);
         cx->compartment()->innerViews.removeViews(buffer);
     }
     if (buffer->firstView()) {
@@ -292,7 +293,7 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
             // this pointer alive we don't clear out the first view.
             MOZ_ASSERT(buffer->firstView()->is<InlineTransparentTypedObject>());
         } else {
-            buffer->neuterView(cx, buffer->firstView(), newContents);
+            NoteViewBufferWasDetached(buffer->firstView(), newContents, cx);
             buffer->setFirstView(nullptr);
         }
     }
@@ -301,7 +302,7 @@ ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         buffer->setNewOwnedData(cx->runtime()->defaultFreeOp(), newContents);
 
     buffer->setByteLength(0);
-    buffer->setIsNeutered();
+    buffer->setIsDetached();
     return true;
 }
 
@@ -687,11 +688,11 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
         return BufferContents::createPlain(nullptr);
 
     if (hasStealableContents) {
-        // Return the old contents and give the neutered buffer a pointer to
+        // Return the old contents and give the detached buffer a pointer to
         // freshly allocated memory that we will never write to and should
         // never get committed.
         buffer->setOwnsData(DoesntOwnData);
-        if (!ArrayBufferObject::neuter(cx, buffer, newContents)) {
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
             js_free(newContents.data());
             return BufferContents::createPlain(nullptr);
         }
@@ -701,7 +702,7 @@ ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffe
     // Create a new chunk of memory to return since we cannot steal the
     // existing contents away from the buffer.
     memcpy(newContents.data(), oldContents.data(), buffer->byteLength());
-    if (!ArrayBufferObject::neuter(cx, buffer, oldContents)) {
+    if (!ArrayBufferObject::detach(cx, buffer, oldContents)) {
         js_free(newContents.data());
         return BufferContents::createPlain(nullptr);
     }
@@ -1026,17 +1027,17 @@ JSObject::is<js::ArrayBufferObjectMaybeShared>() const
 }
 
 void
-ArrayBufferViewObject::neuter(void* newData)
+ArrayBufferViewObject::notifyBufferDetached(void* newData)
 {
     MOZ_ASSERT(newData != nullptr);
     if (is<DataViewObject>()) {
-        as<DataViewObject>().neuter(newData);
+        as<DataViewObject>().notifyBufferDetached(newData);
     } else if (is<TypedArrayObject>()) {
         if (as<TypedArrayObject>().isSharedMemory())
             return;
-        as<TypedArrayObject>().neuter(newData);
+        as<TypedArrayObject>().notifyBufferDetached(newData);
     } else {
-        as<OutlineTypedObject>().neuter(newData);
+        as<OutlineTypedObject>().notifyBufferDetached(newData);
     }
 }
 
@@ -1127,8 +1128,8 @@ JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCa
 }
 
 JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext* cx, HandleObject obj,
-                     NeuterDataDisposition changeData)
+JS_DetachArrayBuffer(JSContext* cx, HandleObject obj,
+                     DetachDataDisposition changeData)
 {
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportError(cx, "ArrayBuffer object required");
@@ -1142,12 +1143,12 @@ JS_NeuterArrayBuffer(JSContext* cx, HandleObject obj,
             AllocateArrayBufferContents(cx, buffer->byteLength());
         if (!newContents)
             return false;
-        if (!ArrayBufferObject::neuter(cx, buffer, newContents)) {
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
             js_free(newContents.data());
             return false;
         }
     } else {
-        if (!ArrayBufferObject::neuter(cx, buffer, buffer->contents()))
+        if (!ArrayBufferObject::detach(cx, buffer, buffer->contents()))
             return false;
     }
 
@@ -1155,13 +1156,13 @@ JS_NeuterArrayBuffer(JSContext* cx, HandleObject obj,
 }
 
 JS_FRIEND_API(bool)
-JS_IsNeuteredArrayBufferObject(JSObject* obj)
+JS_IsDetachedArrayBufferObject(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return false;
 
-    return obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().isNeutered();
+    return obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().isDetached();
 }
 
 JS_FRIEND_API(JSObject*)
@@ -1223,7 +1224,7 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-    if (buffer->isNeutered()) {
+    if (buffer->isDetached()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return nullptr;
     }

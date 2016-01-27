@@ -377,7 +377,7 @@ private:
   }
 
   // Set up the clip region.
-  LayoutDeviceIntRegion::RectIterator iter(region);
+  LayoutDeviceIntRegion::OldRectIterator iter(region);
   targetContext->NewPath();
   for (;;) {
     const LayoutDeviceIntRect* r = iter.Next();

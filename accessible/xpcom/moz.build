@@ -64,3 +64,5 @@ xpc_acc_events_cpp.script = 'AccEventGen.py:gen_cpp_file'
 xpc_acc_events_cpp.inputs += ['AccEvents.conf']
 
 FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')
