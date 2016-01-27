@@ -50,6 +50,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
@@ -1075,6 +1077,8 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     Management.emit("shutdown", this);
 
     Services.ppmm.broadcastAsyncMessage("Extension:Shutdown", {id: this.id});
+
+    MessageChannel.abortResponses({ extensionId: this.id });
 
     ExtensionManagement.shutdownExtension(this.uuid);
 
