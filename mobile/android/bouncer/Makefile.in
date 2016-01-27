@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/config.mk
+
+JAVAFILES := \
+	java/org/mozilla/bouncer/BouncerService.java \
+	java/org/mozilla/gecko/BrowserApp.java \
+  $(NULL)
+
+ANDROID_EXTRA_JARS := \
+  $(NULL)
+
+PP_TARGETS += manifest
+manifest := $(srcdir)/AndroidManifest.xml.in
+manifest_TARGET := export
+# Special 'cuz they are set in mobile/android/defs.mk.
+manifest_FLAGS += \
+  -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
+  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
+  -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
+  $(NULL)
+
+libs:: $(ANDROID_APK_NAME).apk
