@@ -2965,14 +2965,13 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
 {
   MOZ_ASSERT(mInUpdate, "Ending update while not in update");
 
-  bool overwriteTexture = false;
+  bool needInit = !mTexture;
   LayoutDeviceIntRegion updateRegion = mUpdateRegion;
-  if (!mTexture || (mTextureSize != mBufferSize)) {
-    overwriteTexture = true;
+  if (mTextureSize != mBufferSize) {
     mTextureSize = mBufferSize;
   }
 
-  if (overwriteTexture || !CanUploadSubtextures()) {
+  if (needInit || !CanUploadSubtextures()) {
     updateRegion =
       LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), mTextureSize);
   }
@@ -2986,7 +2985,7 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
 
   UploadImageDataToTexture(mGLContext, data, stride, format,
                            updateRegion.ToUnknownRegion(), mTexture, nullptr,
-                           overwriteTexture, /* aPixelBuffer = */ false,
+                           needInit, /* aPixelBuffer = */ false,
                            LOCAL_GL_TEXTURE0,
                            LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
