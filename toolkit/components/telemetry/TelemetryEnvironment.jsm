@@ -1097,7 +1097,6 @@ EnvironmentCache.prototype = {
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
       telemetryEnabled: Utils.isTelemetryEnabled,
-      isInOptoutSample: TelemetryController.isInOptoutSample,
       locale: getBrowserLocale(),
       update: {
         channel: updateChannel,

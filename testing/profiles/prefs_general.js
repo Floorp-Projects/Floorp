@@ -145,8 +145,7 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // Point Firefox Health Report at a local server. We don't care if it actually
 // works. It just can't hit the default production endpoint.
 user_pref("datareporting.healthreport.documentServerURI", "http://%(server)s/healthreport/");
-user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/abouthealthreport/");
-user_pref("datareporting.healthreport.about.reportUrlUnified", "http://%(server)s/abouthealthreport/v4/");
+user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/abouthealthreport/v4/");
 
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
@@ -233,9 +232,6 @@ user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?u
 
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
-// Our current tests expect the unified Telemetry feature to be opt-out,
-// which is not true while we hold back shipping it.
-user_pref('toolkit.telemetry.unifiedIsOptIn', false);
 
 // A couple of preferences with default values to test that telemetry preference
 // watching is working.
