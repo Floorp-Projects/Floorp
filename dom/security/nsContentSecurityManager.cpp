@@ -143,17 +143,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
-    case nsIContentPolicy::TYPE_IMAGE: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
-      break;
-    }
-
-    case nsIContentPolicy::TYPE_STYLESHEET: {
-      mimeTypeGuess = NS_LITERAL_CSTRING("text/css");
-      requestingContext = aLoadInfo->LoadingNode();
-      break;
-    }
-
+    case nsIContentPolicy::TYPE_IMAGE:
+    case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_OBJECT:
     case nsIContentPolicy::TYPE_DOCUMENT: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
