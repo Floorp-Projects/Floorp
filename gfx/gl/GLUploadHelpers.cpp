@@ -432,12 +432,12 @@ UploadImageDataToTexture(GLContext* gl,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
                          size_t* aOutUploadSize,
-                         bool aOverwrite,
+                         bool aNeedInit,
                          bool aPixelBuffer,
                          GLenum aTextureUnit,
                          GLenum aTextureTarget)
 {
-    bool textureInited = aOverwrite ? false : true;
+    bool textureInited = aNeedInit ? false : true;
     gl->MakeCurrent();
     gl->fActiveTexture(aTextureUnit);
 
@@ -610,7 +610,7 @@ UploadSurfaceToTexture(GLContext* gl,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
                        size_t* aOutUploadSize,
-                       bool aOverwrite,
+                       bool aNeedInit,
                        const gfx::IntPoint& aSrcPoint,
                        bool aPixelBuffer,
                        GLenum aTextureUnit,
@@ -622,7 +622,7 @@ UploadSurfaceToTexture(GLContext* gl,
     data += DataOffset(aSrcPoint, stride, format);
     return UploadImageDataToTexture(gl, data, stride, format,
                                     aDstRegion, aTexture, aOutUploadSize,
-                                    aOverwrite, aPixelBuffer, aTextureUnit,
+                                    aNeedInit, aPixelBuffer, aTextureUnit,
                                     aTextureTarget);
 }
 
