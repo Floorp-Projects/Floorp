@@ -164,16 +164,34 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
 
         return '%s/%s' % (base_url, file_name)
 
+    def query_prefixed_build_dir_url(self, suffix):
+        """Resolve a file name prefixed with platform and build details to a potential url
+        in the build upload directory where that file can be found.
+        """
+        if self.test_packages_url:
+            reference_suffixes = ['.test_packages.json']
+            reference_url = self.test_packages_url
+        elif self.installer_url:
+            reference_suffixes = INSTALLER_SUFFIXES
+            reference_url = self.installer_url
+        else:
+            self.fatal("Can't figure out build directory urls without an installer_url "
+                       "or test_packages_url!")
+
+        url = None
+        for reference_suffix in reference_suffixes:
+            if reference_url.endswith(reference_suffix):
+                url = reference_url[:-len(reference_suffix)] + suffix
+                break
+
+        return url
+
     def query_symbols_url(self):
         if self.symbols_url:
             return self.symbols_url
 
         elif self.installer_url:
-            symbols_url = None
-            for suffix in INSTALLER_SUFFIXES:
-                if self.installer_url.endswith(suffix):
-                    symbols_url = self.installer_url[:-len(suffix)] + '.crashreporter-symbols.zip'
-                    break
+            symbols_url = self.query_prefixed_build_dir_url('.crashreporter-symbols.zip')
 
             # Check if the URL exists. If not, use none to allow mozcrash to auto-check for symbols
             try:
@@ -536,7 +554,7 @@ You can set this by:
                 # where the packages manifest is located. This is the case when the
                 # test package manifest isn't set as a buildbot property, which is true
                 # for some self-serve jobs and platforms using parse_make_upload.
-                self.test_packages_url = self.query_build_dir_url('test_packages.json')
+                self.test_packages_url = self.query_prefixed_build_dir_url('.test_packages.json')
 
             suite_categories = suite_categories or ['common']
             self._download_test_packages(suite_categories, target_unzip_dirs)
