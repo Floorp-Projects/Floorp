@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Prefetcher",
 XPCOMUtils.defineLazyModuleGetter(this, "CompatWarning",
                                   "resource://gre/modules/CompatWarning.jsm");
 
+Cu.permitCPOWsInScope(this);
+
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
 function setDefault(dict, key, default_)
@@ -851,7 +853,7 @@ function getContentDocument(addon, browser)
     return doc;
   }
 
-  return browser.contentDocumentAsCPOW;
+  return browser.contentWindowAsCPOW.document;
 }
 
 function getSessionHistory(browser) {

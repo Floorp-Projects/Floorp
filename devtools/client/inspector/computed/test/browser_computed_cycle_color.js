@@ -22,17 +22,17 @@ add_task(function*() {
 
   info("Checking the property itself");
   let container = getComputedViewPropertyView(view, "color").valueNode;
-  checkColorCycling(container, inspector);
+  checkColorCycling(container, view);
 
   info("Checking matched selectors");
   container = yield getComputedViewMatchedRules(view, "color");
-  checkColorCycling(container, inspector);
+  checkColorCycling(container, view);
 });
 
-function checkColorCycling(container, inspector) {
+function checkColorCycling(container, view) {
   let swatch = container.querySelector(".computedview-colorswatch");
   let valueNode = container.querySelector(".computedview-color");
-  let win = inspector.sidebar.getWindowForTab("computedview");
+  let win = view.styleWindow;
 
   // "Authored" (default; currently the computed value)
   is(valueNode.textContent, "rgb(255, 0, 0)",

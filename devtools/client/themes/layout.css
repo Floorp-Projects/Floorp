@@ -2,22 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
-.theme-sidebar {
-  box-sizing: border-box;
+#sidebar-panel-layoutview {
+  display: block;
 }
 
-body.theme-sidebar {
+#layout-container {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;
   margin: 0px auto;
   padding: 0;
-  /* "Contain" the absolutely positioned #main element */
+  /* "Contain" the absolutely positioned #layout-main element */
   position: relative;
 }
 
 /* Header: contains the position and size of the element */
 
-#header {
+#layout-header {
   box-sizing: border-box;
   width: 100%;
   padding: 4px 14px;
@@ -25,24 +25,24 @@ body.theme-sidebar {
   vertical-align: top;
 }
 
-#header:-moz-dir(rtl) {
+#layout-header:-moz-dir(rtl) {
   -moz-box-direction: reverse;
 }
 
-#header > span {
+#layout-header > span {
   display: -moz-box;
 }
 
-#element-size {
+#layout-element-size {
   -moz-box-flex: 1;
 }
 
-#element-size:-moz-dir(rtl) {
+#layout-element-size:-moz-dir(rtl) {
   -moz-box-pack: end;
 }
 
 @media (max-height: 228px) {
-  #header {
+  #layout-header {
     padding-top: 0;
     padding-bottom: 0;
     margin-top: 10px;
@@ -52,7 +52,7 @@ body.theme-sidebar {
 
 /* Main: contains the box-model regions */
 
-#main {
+#layout-main {
   position: absolute;
   box-sizing: border-box;
   /* The regions are semi-transparent, so the white background is partly
@@ -64,27 +64,27 @@ body.theme-sidebar {
   width: calc(100% - 2 * 14px);
 }
 
-.margin,
-.size {
+.layout-margin,
+.layout-size {
   color: var(--theme-highlight-blue);
 }
 
 /* Regions are 3 nested elements with wide borders and outlines */
 
-#content {
+#layout-content {
   height: 25px;
 }
 
-#margins,
-#borders,
-#padding {
+#layout-margins,
+#layout-borders,
+#layout-padding {
   border-color: hsla(210,100%,85%,0.2);
   border-width: 25px;
   border-style: solid;
   outline: dotted 1px hsl(210,100%,85%);
 }
 
-#margins {
+#layout-margins {
   /* This opacity applies to all of the regions, since they are nested */
   opacity: .8;
 }
@@ -92,135 +92,135 @@ body.theme-sidebar {
 /* Respond to window size change by changing the size of the regions */
 
 @media (max-height: 228px) {
-  #content {
+  #layout-content {
     height: 18px;
   }
 
-  #margins,
-  #borders,
-  #padding {
+  #layout-margins,
+  #layout-borders,
+  #layout-padding {
     border-width: 18px;
   }
 }
 
 /* Regions colors */
 
-#margins {
+#layout-margins {
   border-color: #edff64;
 }
 
-#borders {
+#layout-borders {
   border-color: #444444;
 }
 
-#padding {
+#layout-padding {
   border-color: #6a5acd;
 }
 
-#content {
+#layout-content {
   background-color: #87ceeb;
 }
 
 /* Editable region sizes are contained in absolutely positioned <p> */
 
-#main > p {
+#layout-main > p {
   position: absolute;
   pointer-events: none;
   margin: 0;
   text-align: center;
 }
 
-#main > p > span,
-#main > p > input {
+#layout-main > p > span,
+#layout-main > p > input {
   vertical-align: middle;
   pointer-events: auto;
 }
 
 /* Coordinates for the region sizes */
 
-.top,
-.bottom {
+.layout-top,
+.layout-bottom {
   width: calc(100% - 2px);
   text-align: center;
 }
 
-.padding.top {
+.layout-padding.layout-top {
   top: 55px;
 }
 
-.padding.bottom {
+.layout-padding.layout-bottom {
   bottom: 57px;
 }
 
-.border.top {
+.layout-border.layout-top {
   top: 30px;
 }
 
-.border.bottom {
+.layout-border.layout-bottom {
   bottom: 31px;
 }
 
-.margin.top {
+.layout-margin.layout-top {
   top: 5px;
 }
 
-.margin.bottom {
+.layout-margin.layout-bottom {
   bottom: 6px;
 }
 
-.size,
-.margin.left,
-.margin.right,
-.border.left,
-.border.right,
-.padding.left,
-.padding.right {
+.layout-size,
+.layout-margin.layout-left,
+.layout-margin.layout-right,
+.layout-border.layout-left,
+.layout-border.layout-right,
+.layout-padding.layout-left,
+.layout-padding.layout-right {
   top: 22px;
   line-height: 132px;
 }
 
-.size {
+.layout-size {
   width: calc(100% - 2px);
 }
 
-.margin.right,
-.margin.left,
-.border.left,
-.border.right,
-.padding.right,
-.padding.left {
+.layout-margin.layout-right,
+.layout-margin.layout-left,
+.layout-border.layout-left,
+.layout-border.layout-right,
+.layout-padding.layout-right,
+.layout-padding.layout-left {
   width: 25px;
 }
 
-.padding.left {
+.layout-padding.layout-left {
   left: 52px;
 }
 
-.padding.right {
+.layout-padding.layout-right {
   right: 51px;
 }
 
-.border.left {
+.layout-border.layout-left {
   left: 26px;
 }
 
-.border.right {
+.layout-border.layout-right {
   right: 26px;
 }
 
-.margin.right {
+.layout-margin.layout-right {
   right: 0;
 }
 
-.margin.left {
+.layout-margin.layout-left {
   left: 0;
 }
 
-.rotate.left:not(.editing) {
+.layout-rotate.layout-left:not(.layout-editing) {
   transform: rotate(-90deg);
 }
 
-.rotate.right:not(.editing) {
+.layout-rotate.layout-right:not(.layout-editing) {
   transform: rotate(90deg);
 }
 
@@ -228,92 +228,92 @@ body.theme-sidebar {
    the regions smaller then */
 
 @media (max-height: 228px) {
-  .padding.top {
+  .layout-padding.layout-top {
     top: 37px;
   }
 
-  .padding.bottom {
+  .layout-padding.layout-bottom {
     bottom: 38px;
   }
 
-  .border.top {
+  .layout-border.layout-top {
     top: 19px;
   }
 
-  .border.bottom {
+  .layout-border.layout-bottom {
     bottom: 20px;
   }
 
-  .margin.top {
+  .layout-margin.layout-top {
     top: 1px;
   }
 
-  .margin.bottom {
+  .layout-margin.layout-bottom {
     bottom: 2px;
   }
 
-  .size,
-  .margin.left,
-  .margin.right,
-  .border.left,
-  .border.right,
-  .padding.left,
-  .padding.right {
+  .layout-size,
+  .layout-margin.layout-left,
+  .layout-margin.layout-right,
+  .layout-border.layout-left,
+  .layout-border.layout-right,
+  .layout-padding.layout-left,
+  .layout-padding.layout-right {
     line-height: 80px;
   }
 
-  .margin.right,
-  .margin.left,
-  .border.left,
-  .border.right,
-  .padding.right,
-  .padding.left {
+  .layout-margin.layout-right,
+  .layout-margin.layout-left,
+  .layout-border.layout-left,
+  .layout-border.layout-right,
+  .layout-padding.layout-right,
+  .layout-padding.layout-left {
     width: 21px;
   }
 
-  .padding.left {
+  .layout-padding.layout-left {
     left: 35px;
   }
 
-  .padding.right {
+  .layout-padding.layout-right {
     right: 35px;
   }
 
-  .border.left {
+  .layout-border.layout-left {
     left: 16px;
   }
 
-  .border.right {
+  .layout-border.layout-right {
     right: 17px;
   }
 }
 
 /* Legend, displayed inside regions */
 
-.legend {
+.layout-legend {
   position: absolute;
   margin: 5px 6px;
   z-index: 1;
 }
 
-.legend[data-box="margin"] {
+.layout-legend[data-box="margin"] {
   color: var(--theme-highlight-blue);
 }
 
 @media (max-height: 228px) {
-  .legend {
+  .layout-legend {
     margin: 2px 6px;
   }
 }
 
 /* Editable fields */
 
-.editable {
+.layout-editable {
   border: 1px dashed transparent;
   -moz-user-select: text;
 }
 
-.editable:hover {
+.layout-editable:hover {
   border-bottom-color: hsl(0, 0%, 50%);
 }
 
@@ -324,14 +324,14 @@ body.theme-sidebar {
 
 /* Make sure the content size doesn't appear as editable like the other sizes */
 
-.size > span {
+.layout-size > span {
   cursor: default;
 }
 
 /* Hide all values when the view is inactive */
 
-body.inactive > #header > #element-position,
-body.inactive > #header > #element-size,
-body.inactive > #main > p {
+#layout-container.inactive > #layout-header > #layout-element-position,
+#layout-container.inactive > #layout-header > #layout-element-size,
+#layout-container.inactive > #layout-main > p {
    visibility: hidden;
 }
