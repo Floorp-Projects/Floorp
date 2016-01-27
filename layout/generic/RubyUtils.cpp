@@ -57,6 +57,35 @@ AutoRubyTextContainerArray::AutoRubyTextContainerArray(
   }
 }
 
+nsIFrame*
+RubyColumn::Iterator::operator*() const
+{
+  nsIFrame* frame;
+  if (mIndex == -1) {
+    frame = mColumn.mBaseFrame;
+  } else {
+    frame = mColumn.mTextFrames[mIndex];
+  }
+  MOZ_ASSERT(frame, "Frame here cannot be null");
+  return frame;
+}
+
+void
+RubyColumn::Iterator::SkipUntilExistingFrame()
+{
+  if (mIndex == -1) {
+    if (!mColumn.mBaseFrame) {
+      ++mIndex;
+    }
+  }
+  auto numTextFrames = mColumn.mTextFrames.Length();
+  for (; mIndex < numTextFrames; ++mIndex) {
+    if (mColumn.mTextFrames[mIndex]) {
+      break;
+    }
+  }
+}
+
 RubySegmentEnumerator::RubySegmentEnumerator(nsRubyFrame* aRubyFrame)
 {
   nsIFrame* frame = aRubyFrame->GetFirstPrincipalChild();
