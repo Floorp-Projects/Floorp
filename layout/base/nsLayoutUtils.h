@@ -2779,6 +2779,11 @@ public:
   static CSSRect GetBoundingContentRect(const nsIContent* aContent,
                                         const nsIScrollableFrame* aRootScrollFrame);
 
+  /**
+   * Returns the first ancestor who is a float containing block.
+   */
+  static nsBlockFrame* GetFloatContainingBlock(nsIFrame* aFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
