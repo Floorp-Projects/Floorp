@@ -115,8 +115,7 @@ public:
 private:
   CryptoFile mCrypto;
   RefPtr<Stream> mSource;
-
-  mutable mozilla::UniquePtr<mp4parse_state, FreeMP4ParseState> mRustState;
+  mozilla::UniquePtr<mp4parse_state, FreeMP4ParseState> mRustState;
 };
 #endif
 
@@ -124,6 +123,7 @@ MP4Metadata::MP4Metadata(Stream* aSource)
  : mStagefright(MakeUnique<MP4MetadataStagefright>(aSource))
 #ifdef MOZ_RUST_MP4PARSE
  , mRust(MakeUnique<MP4MetadataRust>(aSource))
+ , mReportedTelemetry(false)
 #endif
 {
 }
@@ -144,6 +144,19 @@ MP4Metadata::Metadata(Stream* aSource)
   return MP4MetadataStagefright::Metadata(aSource);
 }
 
+static const char *
+TrackTypeToString(mozilla::TrackInfo::TrackType aType)
+{
+  switch (aType) {
+  case mozilla::TrackInfo::kAudioTrack:
+    return "audio";
+  case mozilla::TrackInfo::kVideoTrack:
+    return "video";
+  default:
+    return "unknown";
+  }
+}
+
 uint32_t
 MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
@@ -157,27 +170,22 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   }
 
   uint32_t numTracksRust = mRust->GetNumberTracks(aType);
-
-  bool numTracksMatch = numTracks == numTracksRust;
-
-  const char* trackType = "unknown";
-  switch (aType) {
-  case mozilla::TrackInfo::kAudioTrack:
-    trackType = "audio";
-    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO,
-                          numTracksMatch);
-    break;
-  case mozilla::TrackInfo::kVideoTrack:
-    trackType = "video";
-    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO,
-                          numTracksMatch);
-    break;
-  default:
-    break;
-  }
-
   MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=%u rust=%u",
-                                 trackType, numTracks, numTracksRust));
+                                 TrackTypeToString(aType), numTracks, numTracksRust));
+
+  if (!mReportedTelemetry) {
+    bool numTracksMatch = numTracks == numTracksRust;
+
+    if (aType == mozilla::TrackInfo::kAudioTrack) {
+      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO,
+                            numTracksMatch);
+    } else if (aType == mozilla::TrackInfo::kVideoTrack) {
+      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO,
+                            numTracksMatch);
+    }
+
+    mReportedTelemetry = true;
+  }
 #endif
 
   return numTracks;
@@ -447,43 +455,40 @@ MP4MetadataStagefright::Metadata(Stream* aSource)
 }
 
 #ifdef MOZ_RUST_MP4PARSE
-MP4MetadataRust::MP4MetadataRust(Stream* aSource)
-  : mSource(aSource)
-{
-}
-
-MP4MetadataRust::~MP4MetadataRust()
-{
-}
-
-// Helper to test the rust parser on a data source.
-static int32_t try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource)
+static int32_t
+read_source(RefPtr<Stream> aSource, std::vector<uint8_t>& aBuffer)
 {
   static LazyLogModule sLog("MP4Metadata");
   int64_t length;
   if (!aSource->Length(&length) || length <= 0) {
     MOZ_LOG(sLog, LogLevel::Warning, ("Couldn't get source length"));
-    return false;
+    return MP4PARSE_ERROR_IO;
   }
   MOZ_LOG(sLog, LogLevel::Debug,
          ("Source length %d bytes\n", (long long int)length));
+  length = std::min<int64_t>(length, 1024 * 1024); // Don't read the entire file.
+  aBuffer.resize(length);
   size_t bytes_read = 0;
-  auto buffer = std::vector<uint8_t>(length);
-  bool rv = aSource->ReadAt(0, buffer.data(), length, &bytes_read);
+  bool rv = aSource->ReadAt(0, aBuffer.data(), aBuffer.size(), &bytes_read);
   if (!rv || bytes_read != size_t(length)) {
     MOZ_LOG(sLog, LogLevel::Warning, ("Error copying mp4 data"));
-    return false;
+    return MP4PARSE_ERROR_IO;
   }
-  return mp4parse_read(aRustState.get(), buffer.data(), bytes_read);
+  return MP4PARSE_OK;
 }
 
-uint32_t
-MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
+MP4MetadataRust::MP4MetadataRust(Stream* aSource)
+  : mSource(aSource)
+  , mRustState(mp4parse_new())
 {
   static LazyLogModule sLog("MP4Metadata");
 
-  mRustState.reset(mp4parse_new());
-  int32_t rv = try_rust(mRustState, mSource);
+  std::vector<uint8_t> buffer;
+  int32_t rv = read_source(mSource, buffer);
+  if (rv == MP4PARSE_OK) {
+    rv = mp4parse_read(mRustState.get(), buffer.data(), buffer.size());
+  }
+  MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
                         rv == MP4PARSE_OK);
   if (rv != MP4PARSE_OK) {
@@ -491,6 +496,16 @@ MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
     Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE,
                           rv);
   }
+}
+
+MP4MetadataRust::~MP4MetadataRust()
+{
+}
+
+uint32_t
+MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
+{
+  static LazyLogModule sLog("MP4Metadata");
 
   uint32_t tracks = mp4parse_get_track_count(mRustState.get());
   MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %u tracks", tracks));
