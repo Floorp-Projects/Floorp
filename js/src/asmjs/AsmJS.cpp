@@ -2769,14 +2769,6 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     MOZ_WARN_UNUSED_RESULT
-    bool writeDebugCheckPoint() {
-#ifdef DEBUG
-        return writeOp(Expr::DebugCheckPoint);
-#endif
-        return true;
-    }
-
-    MOZ_WARN_UNUSED_RESULT
     bool writeU8(uint8_t u8) {
         return encoder().writeU8(u8);
     }
@@ -5704,7 +5696,7 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
     MOZ_ASSERT(comma->isKind(PNK_COMMA));
     ParseNode* operands = ListHead(comma);
 
-    if (!f.writeOp(Expr::Block) || !f.writeU32(ListLength(comma)))
+    if (!f.writeOp(Expr::Block) || !f.writeVarU32(ListLength(comma)))
         return false;
 
     ParseNode* pn = operands;
@@ -5713,8 +5705,7 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
             return false;
     }
 
-    return CheckExpr(f, pn, type) &&
-           f.writeDebugCheckPoint();
+    return CheckExpr(f, pn, type);
 }
 
 static bool
@@ -6245,7 +6236,7 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt)
     if (maybeInc && !CheckAsExprStatement(f, maybeInc))
         return false;
 
-    return f.writeDebugCheckPoint();
+    return true;
 }
 
 static bool
@@ -6561,7 +6552,7 @@ CheckStatementList(FunctionValidator& f, ParseNode* stmtList)
 {
     MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
 
-    if (!f.writeOp(Expr::Block) || !f.writeU32(ListLength(stmtList)))
+    if (!f.writeOp(Expr::Block) || !f.writeVarU32(ListLength(stmtList)))
         return false;
 
     for (ParseNode* stmt = ListHead(stmtList); stmt; stmt = NextNode(stmt)) {
@@ -6569,7 +6560,7 @@ CheckStatementList(FunctionValidator& f, ParseNode* stmtList)
             return false;
     }
 
-    return f.writeDebugCheckPoint();
+    return true;
 }
 
 static bool
