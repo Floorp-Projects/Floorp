@@ -6,14 +6,14 @@
 .theme-dark {
   --table-splitter-color: rgba(255,255,255,0.15);
   --table-zebra-background: rgba(255,255,255,0.05);
-  --smw-item-top-border: rgba(0,0,0,0.2);
-  --smw-item-bottom-border: rgba(128,128,128,0.15);
+  --sidemenu-selected-arrow: url(images/itemArrow-dark-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/itemArrow-dark-rtl.svg);
 }
 .theme-light {
   --table-splitter-color: rgba(0,0,0,0.15);
   --table-zebra-background: rgba(0,0,0,0.05);
-  --smw-item-top-border: rgba(128,128,128,0.15);
-  --smw-item-bottom-border: transparent;
+  --sidemenu-selected-arrow: url(images/itemArrow-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/itemArrow-rtl.svg);
 }
 
 /* Generic pane helpers */
@@ -353,65 +353,28 @@
 
 /* SideMenuWidget container */
 
-.side-menu-widget-container:-moz-locale-dir(ltr),
-.side-menu-widget-empty-text:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 var(--theme-splitter-color);
-}
-
-.side-menu-widget-container:-moz-locale-dir(rtl),
-.side-menu-widget-empty-text:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 var(--theme-splitter-color);
-}
-
-.side-menu-widget-group {
-  /* To allow visibility of the dark margin shadow. */
-  -moz-margin-end: 1px;
-}
-
 .side-menu-widget-container[with-arrows=true] .side-menu-widget-item {
   /* To compensate for the arrow image's dark margin. */
-  -moz-margin-end: -1px;
+  margin-inline-end: -1px;
 }
 
 /* SideMenuWidget groups */
 
 .side-menu-widget-group-title {
   padding: 4px;
-  background-color: var(--theme-tab-toolbar-background);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(128,128,128,0.15);
 }
 
-.theme-dark .side-menu-widget-group-title {
-  color: var(--theme-content-color1);
-}
-
-.theme-light .side-menu-widget-group-title {
-  color: var(--theme-content-color3);
+.side-menu-widget-group-title + .side-menu-widget-group-list .side-menu-widget-item-contents {
+  padding-inline-start: 20px;
 }
 
 /* SideMenuWidget items */
 
 .side-menu-widget-item {
-  /* To compensate for the top and bottom borders */
-  margin-top: -1px;
-  margin-bottom: -1px;
+  border-bottom: 1px solid rgba(128,128,128,0.15);
   background-clip: padding-box;
-}
-
-.side-menu-widget-item {
-  border-top: 1px solid var(--smw-item-top-border);
-  border-bottom: 1px solid var(--smw-item-bottom-border);
-}
-
-.side-menu-widget-item:last-of-type {
-  box-shadow: inset 0 -1px 0 var(--smw-item-top-border);
-}
-
-.theme-dark .side-menu-widget-item {
-  color: var(--theme-selection-color);
-}
-
-.theme-light .side-menu-widget-item {
-  color: var(--theme-body-color);
 }
 
 .side-menu-widget-item.selected {
@@ -422,38 +385,18 @@
 .side-menu-widget-item-arrow {
   -moz-margin-start: -7px;
   width: 7px; /* The image's width is 7 pixels */
-  /* Cover the border of the side-menu-widget-item */
-  margin-top: -1px;
-  margin-bottom: -1px;
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow {
-  background-size: auto, 1px 100%;
+  background-image: var(--sidemenu-selected-arrow);
+  background-size: auto;
   background-repeat: no-repeat;
-}
-
-.side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-position: center right, top right;
+  background-position: center right;
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-position: center left, top left;
-}
-
-.theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(images/itemArrow-dark-ltr.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
-}
-
-.theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(images/itemArrow-dark-rtl.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
-}
-
-.theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(images/itemArrow-ltr.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
-}
-
-.theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(images/itemArrow-rtl.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
+  background-image: var(--sidemenu-selected-arrow-rtl);
+  background-position: center left;
 }
 
 /* SideMenuWidget items contents */
@@ -461,15 +404,25 @@
 .side-menu-widget-item-contents {
   padding: 4px;
   /* To avoid having content overlapping the arrow image. */
-  -moz-padding-end: 8px;
+  padding-inline-end: 8px;
 }
 
 .side-menu-widget-item-other {
   /* To avoid having content overlapping the arrow image. */
-  -moz-padding-end: 8px;
+  padding-inline-end: 8px;
   /* To compensate for the .side-menu-widget-item-contents padding. */
-  -moz-margin-start: -4px;
-  -moz-margin-end: -8px;
+  margin-inline-start: -20px;
+  margin-inline-end: -8px;
+}
+
+.side-menu-widget-item.selected .side-menu-widget-item-other:not(.selected) {
+  background-color: var(--theme-sidebar-background);
+  box-shadow: inset 2px 0 0 var(--theme-selection-background);
+  color: var(--theme-body-color);
+}
+
+.side-menu-widget-item.selected .side-menu-widget-item-other.selected {
+  background-color: var(--theme-selection-background);
 }
 
 .side-menu-widget-item-other:first-of-type {
@@ -478,29 +431,6 @@
 
 .side-menu-widget-item-other:last-of-type {
   margin-bottom: -4px;
-}
-
-.theme-dark .side-menu-widget-item-other {
-  background-color: rgba(0,0,0,.1);
-}
-
-.theme-light .side-menu-widget-item-other {
-  background-color: rgba(128,128,128,.1);
-}
-
-.theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other {
-  background-color: rgba(0,0,0,.2); /* Darken the selection by 20% */
-  color: var(--theme-selection-color);
-}
-
-.theme-light .side-menu-widget-item.selected .side-menu-widget-item-other {
-  background-color: rgba(255,255,255,.8); /* Lighten the selection by 20% */
-  color: var(--theme-body-color);
-}
-
-.side-menu-widget-item.selected .side-menu-widget-item-other.selected {
-  background-color: transparent;
-  color: var(--theme-selection-color);
 }
 
 /* SideMenuWidget checkboxes */
@@ -516,11 +446,6 @@
 }
 
 /* SideMenuWidget misc */
-
-.theme-dark .side-menu-widget-container,
-.theme-dark .side-menu-widget-empty-text {
-  background-color: var(--theme-toolbar-background);
-}
 
 .side-menu-widget-empty-text {
   padding: 4px 8px;
