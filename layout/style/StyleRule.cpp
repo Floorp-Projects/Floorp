@@ -222,7 +222,8 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr)
     mCasedAttr(nullptr),
     mNameSpace(aNameSpace),
     mFunction(NS_ATTR_FUNC_SET),
-    mCaseSensitive(1)
+    // mValueCaseSensitivity doesn't matter; we have no value.
+    mValueCaseSensitivity(ValueCaseSensitivity::CaseSensitive)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
@@ -234,14 +235,15 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr)
 }
 
 nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction, 
-                               const nsString& aValue, bool aCaseSensitive)
+                               const nsString& aValue,
+                               ValueCaseSensitivity aValueCaseSensitivity)
   : mValue(aValue),
     mNext(nullptr),
     mLowercaseAttr(nullptr),
     mCasedAttr(nullptr),
     mNameSpace(aNameSpace),
     mFunction(aFunction),
-    mCaseSensitive(aCaseSensitive)
+    mValueCaseSensitivity(aValueCaseSensitivity)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
@@ -254,14 +256,15 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_
 
 nsAttrSelector::nsAttrSelector(int32_t aNameSpace,  nsIAtom* aLowercaseAttr,
                                nsIAtom* aCasedAttr, uint8_t aFunction, 
-                               const nsString& aValue, bool aCaseSensitive)
+                               const nsString& aValue,
+                               ValueCaseSensitivity aValueCaseSensitivity)
   : mValue(aValue),
     mNext(nullptr),
     mLowercaseAttr(aLowercaseAttr),
     mCasedAttr(aCasedAttr),
     mNameSpace(aNameSpace),
     mFunction(aFunction),
-    mCaseSensitive(aCaseSensitive)
+    mValueCaseSensitivity(aValueCaseSensitivity)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 }
@@ -271,7 +274,7 @@ nsAttrSelector::Clone(bool aDeep) const
 {
   nsAttrSelector *result =
     new nsAttrSelector(mNameSpace, mLowercaseAttr, mCasedAttr, 
-                       mFunction, mValue, mCaseSensitive);
+                       mFunction, mValue, mValueCaseSensitivity);
 
   if (aDeep)
     NS_CSS_CLONE_LIST_MEMBER(nsAttrSelector, this, mNext, result, (false));
@@ -466,14 +469,15 @@ void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr)
 }
 
 void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
-                                 const nsString& aValue, bool aCaseSensitive)
+                                 const nsString& aValue,
+                                 nsAttrSelector::ValueCaseSensitivity aCaseSensitivity)
 {
   if (!aAttr.IsEmpty()) {
     nsAttrSelector** list = &mAttrList;
     while (nullptr != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAttrSelector(aNameSpace, aAttr, aFunc, aValue, aCaseSensitive);
+    *list = new nsAttrSelector(aNameSpace, aAttr, aFunc, aValue, aCaseSensitivity);
   }
 }
 
@@ -865,6 +869,11 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       
         // Append the value
         nsStyleUtil::AppendEscapedCSSString(list->mValue, aString);
+
+        if (list->mValueCaseSensitivity ==
+              nsAttrSelector::ValueCaseSensitivity::CaseInsensitive) {
+          aString.Append(NS_LITERAL_STRING(" i"));
+        }
       }
 
       aString.Append(char16_t(']'));

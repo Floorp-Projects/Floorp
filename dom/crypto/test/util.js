@@ -21,7 +21,7 @@ var util = {
 
   // Convert an ArrayBufferView to a hex string
   abv2hex: function util_abv2hex(abv) {
-    var b = new Uint8Array(abv.buffer, abv.byteOffset, abv.byteLength);
+    var b = new Uint8Array(abv);
     var hex = "";
     for (var i=0; i <b.length; ++i) {
       var zeropad = (b[i] < 0x10) ? "0" : "";

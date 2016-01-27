@@ -556,7 +556,6 @@ class IonBuilder
                                           const LinearSum& byteOffset,
                                           ReferenceTypeDescr::Type type,
                                           PropertyName* name);
-    MDefinition* neuterCheck(MDefinition* obj);
     JSObject* getStaticTypedArrayObject(MDefinition* obj, MDefinition* index);
 
     // jsop_setelem() helpers.

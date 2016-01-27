@@ -55,6 +55,8 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     static const ScriptedIndirectProxyHandler singleton;
 
 private:
+    bool derivedGet(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
+                    MutableHandleValue vp) const;
     bool derivedSet(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
                     HandleValue receiver, ObjectOpResult& result) const;
 };

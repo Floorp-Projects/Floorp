@@ -1899,7 +1899,7 @@ JS_GetSharedArrayBufferByteLength(JSObject* obj);
 
 /**
  * Return true if the arrayBuffer contains any data. This will return false for
- * ArrayBuffer.prototype and neutered ArrayBuffers.
+ * ArrayBuffer.prototype and detached ArrayBuffers.
  *
  * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
@@ -2020,39 +2020,40 @@ extern JS_FRIEND_API(void*)
 JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
- * Return the ArrayBuffer or SharedArrayBuffer underlying an
- * ArrayBufferView. If the buffer has been neutered, this will still
- * return the neutered buffer. |obj| must be an object that would
+ * Return the ArrayBuffer or SharedArrayBuffer underlying an ArrayBufferView.
+ * This may return a detached buffer.  |obj| must be an object that would
  * return true for JS_IsArrayBufferViewObject().
  */
 extern JS_FRIEND_API(JSObject*)
 JS_GetArrayBufferViewBuffer(JSContext* cx, JS::HandleObject obj, bool* isSharedMemory);
 
-typedef enum {
+enum DetachDataDisposition {
     ChangeData,
     KeepData
-} NeuterDataDisposition;
+};
 
 /**
- * Set an ArrayBuffer's length to 0 and neuter all of its views.
+ * Detach an ArrayBuffer, causing all associated views to no longer refer to
+ * the ArrayBuffer's original attached memory.
  *
  * The |changeData| argument is a hint to inform internal behavior with respect
- * to the internal pointer to the ArrayBuffer's data after being neutered.
- * There is no guarantee it will be respected.  But if it is respected, the
- * ArrayBuffer's internal data pointer will, or will not, have changed
- * accordingly.
+ * to the ArrayBuffer's internal pointer to associated data.  |ChangeData|
+ * attempts to set the internal pointer to fresh memory of the same size as the
+ * original memory; |KeepData| attempts to preserve the original pointer, even
+ * while the ArrayBuffer appears observably detached.  There is no guarantee
+ * this parameter is respected -- it's only a hint.
  */
 extern JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext* cx, JS::HandleObject obj,
-                     NeuterDataDisposition changeData);
+JS_DetachArrayBuffer(JSContext* cx, JS::HandleObject obj,
+                     DetachDataDisposition changeData);
 
 /**
- * Check whether the obj is ArrayBufferObject and neutered. Note that this
- * may return false if a security wrapper is encountered that denies the
+ * Check whether the obj is a detached ArrayBufferObject. Note that this may
+ * return false if a security wrapper is encountered that denies the
  * unwrapping.
  */
 extern JS_FRIEND_API(bool)
-JS_IsNeuteredArrayBufferObject(JSObject* obj);
+JS_IsDetachedArrayBufferObject(JSObject* obj);
 
 /**
  * Check whether obj supports JS_GetDataView* APIs.
