@@ -140,7 +140,7 @@ public class TelemetryUploadService extends BackgroundService {
                 sharedPrefs.getString(TelemetryConstants.PREF_SERVER_URL, TelemetryConstants.DEFAULT_SERVER_URL);
 
         final TelemetryPing corePing =
-                TelemetryPingGenerator.createCorePing(docId, clientId, serverURLSchemeHostPort, seq);
+                TelemetryPingGenerator.createCorePing(this, docId, clientId, serverURLSchemeHostPort, seq);
         final CorePingResultDelegate resultDelegate = new CorePingResultDelegate();
         uploadPing(corePing, resultDelegate);
     }
