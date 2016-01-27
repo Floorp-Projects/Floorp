@@ -1,2 +1,2 @@
-component {cef25b06-0ef6-4c50-a243-e69f943ef23d} aboutNewTabService.js
-contract @mozilla.org/browser/aboutnewtab-service;1 {cef25b06-0ef6-4c50-a243-e69f943ef23d}
+component {dfcd2adc-7867-4d3a-ba70-17501f208142} aboutNewTabService.js
+contract @mozilla.org/browser/aboutnewtab-service;1 {dfcd2adc-7867-4d3a-ba70-17501f208142}
