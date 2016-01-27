@@ -242,7 +242,7 @@ def run_firefox_for_android(build_obj, params):
         #
         #   adb shell am start -a android.activity.MAIN -n org.mozilla.fennec_$USER -d <url param> --es args "<params>"
         #
-        app = "%s/.App" % build_obj.substs['ANDROID_PACKAGE_NAME']
+        app = "%s/org.mozilla.gecko.BrowserApp" % build_obj.substs['ANDROID_PACKAGE_NAME']
         cmd = ['am', 'start', '-a', 'android.activity.MAIN', '-n', app]
         if params:
             for p in params:
