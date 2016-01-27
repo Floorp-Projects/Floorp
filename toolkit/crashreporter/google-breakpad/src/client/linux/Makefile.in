@@ -2,6 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ifeq (Android,$(OS_TARGET))
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/gonk-include/
+else
+TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
+endif
+endif
+
 ifdef MOZ_THUMB2 #{
 # The syscall number is passed through r7 in the linux ARM ABI, but r7
 # is also the THUMB frame pointer.  (Unfortunate, but ah well.)  gcc

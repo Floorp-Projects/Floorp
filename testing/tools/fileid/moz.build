@@ -21,7 +21,7 @@ if CONFIG['OS_ARCH'] == 'Darwin':
 if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
     USE_LIBS += [
         'breakpad_common_s',
-        'breakpad_logging',
+        'mozalloc',
     ]
     LOCAL_INCLUDES += [
         '/toolkit/crashreporter/google-breakpad/src',
