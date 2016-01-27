@@ -53,7 +53,7 @@ function* checkCopySelection(view) {
 
   let range = contentDocument.createRange();
   range.setStart(props[1], 0);
-  range.setEnd(props[3], 3);
+  range.setEnd(props[3], 2);
   contentDocument.defaultView.getSelection().addRange(range);
 
   info("Checking that cssHtmlTree.siBoundCopy() returns the correct " +

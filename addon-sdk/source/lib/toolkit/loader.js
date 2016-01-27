@@ -302,7 +302,7 @@ const load = iced(function load(loader, module) {
 
   let sandbox;
   if (loader.sharedGlobalSandbox &&
-      loader.sharedGlobalBlacklist.indexOf(module.id) == -1) {
+      loader.sharedGlobalBlocklist.indexOf(module.id) == -1) {
     // Create a new object in this sandbox, that will be used as
     // the scope object for this particular module
     sandbox = new loader.sharedGlobalSandbox.Object();
@@ -810,9 +810,12 @@ Loader.unload = unload;
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
 function Loader(options) {
+  if (options.sharedGlobalBlacklist && !options.sharedGlobalBlocklist) {
+    options.sharedGlobalBlocklist = options.sharedGlobalBlacklist;
+  }
   let {
     modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative,
-    metadata, sharedGlobal, sharedGlobalBlacklist, checkCompatibility, waiveIntereposition
+    metadata, sharedGlobal, sharedGlobalBlocklist, checkCompatibility, waiveIntereposition
   } = override({
     paths: {},
     modules: {},
@@ -832,7 +835,7 @@ function Loader(options) {
       // Make the returned resolve function have the same signature
       (id, requirer) => Loader.nodeResolve(id, requirer, { rootURI: rootURI }) :
       Loader.resolve,
-    sharedGlobalBlacklist: ["sdk/indexed-db"],
+    sharedGlobalBlocklist: ["sdk/indexed-db"],
     waiveIntereposition: false
   }, options);
 
@@ -923,7 +926,8 @@ function Loader(options) {
     modules: { enumerable: false, value: modules },
     metadata: { enumerable: false, value: metadata },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
-    sharedGlobalBlacklist: { enumerable: false, value: sharedGlobalBlacklist },
+    sharedGlobalBlocklist: { enumerable: false, value: sharedGlobalBlocklist },
+    sharedGlobalBlacklist: { enumerable: false, value: sharedGlobalBlocklist },
     // Map of module sandboxes indexed by module URIs.
     sandboxes: { enumerable: false, value: {} },
     resolve: { enumerable: false, value: resolve },

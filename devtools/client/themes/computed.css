@@ -3,21 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* From content */
-
-* {
-  box-sizing: border-box;
-}
-
-:root {
-  height: 100%;
-}
-
-body {
+#sidebar-panel-computedview {
   margin: 0;
   display : flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 }
 
 #browser-style-checkbox {
@@ -29,8 +20,8 @@ body {
 #propertyContainer {
   -moz-user-select: text;
   overflow: auto;
-  min-height: 0;
-  flex: 1;
+  height: 0px;
+  flex: auto;
 }
 
 .row-striped {
@@ -43,18 +34,26 @@ body {
 }
 
 .property-view {
-  clear: both;
   padding: 2px 0 2px 17px;
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.property-view > * {
+.property-name-container {
+  width: 202px;
+}
+
+.property-value-container {
+  width: 168px;
+}
+
+.property-name-container > *,
+.property-value-container > * {
   display: inline-block;
   vertical-align: middle;
 }
 
 .property-name {
-  /* -12px is so the expander triangle isn't pushed up above the property */
-  width: calc(100% - 12px);
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -74,7 +73,6 @@ body {
 }
 
 .property-value {
-  width: 100%;
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,16 +86,6 @@ body {
   padding-left: 8px;
 }
 
-@media (min-width: 400px) {
-  .property-name {
-    width: 200px;
-  }
-  .property-value {
-    /* -212px is accounting for the 200px property-name and the 12px triangle */
-    width: calc(100% - 212px);
-  }
-}
-
 .property-content {
   padding-left: 17px;
 }
@@ -105,7 +93,7 @@ body {
 /* From skin */
 .expander {
   visibility: hidden;
-  margin-left: -12px!important;
+  margin-left: -12px !important;
 }
 
 .expandable {

@@ -57,6 +57,11 @@ function* testEditSelector(view, name) {
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
   ok(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
     "Rule with " + name + " does not match the current element.");
+
+  // Escape the new property editor after editing the selector
+  let onBlur = once(view.styleDocument.activeElement, "blur");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
+  yield onBlur;
 }
 
 function* checkModifiedElement(view, name) {
