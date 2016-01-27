@@ -1,6 +1,6 @@
 load(libdir + "wasm.js");
 
-if (!this.wasmEval)
+if (!wasmIsSupported())
     quit();
 
 function mismatchError(actual, expect) {

@@ -1,6 +1,6 @@
 load(libdir + "wasm.js");
 
-if (!this.wasmEval)
+if (!wasmIsSupported())
     quit();
 
 var parsingError = /parsing wasm text at/;

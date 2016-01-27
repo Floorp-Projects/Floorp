@@ -1,6 +1,6 @@
 load(libdir + "wasm.js");
 
-if (!this.wasmEval)
+if (!wasmIsSupported())
     quit();
 
 // MagicNumber = 0x4d534100
