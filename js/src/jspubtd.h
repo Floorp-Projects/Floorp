@@ -131,9 +131,6 @@ void FinishGC(JSRuntime* rt);
 namespace gc {
 class AutoTraceSession;
 class StoreBuffer;
-void MarkPersistentRootedChains(JSTracer*);
-void MarkPersistentRootedChainsInLists(js::RootLists&, JSTracer*);
-void FinishPersistentRootedChains(js::RootLists&);
 } // namespace gc
 } // namespace js
 
@@ -268,13 +265,18 @@ enum StackKind
 // and JSRuntime.
 class RootLists
 {
-    // Stack GC roots for stack-allocated GC heap pointers.
+    // Stack GC roots for Rooted GC heap pointers.
     mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit, JS::Rooted<void*>*> stackRoots_;
     template <typename T> friend class JS::Rooted;
 
-    // Stack GC roots for stack-allocated AutoFooRooter classes.
+    // Stack GC roots for AutoFooRooter classes.
     JS::AutoGCRooter* autoGCRooters_;
     friend class JS::AutoGCRooter;
+
+    // Heap GC roots for PersistentRooted pointers.
+    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
+                             mozilla::LinkedList<JS::PersistentRooted<void*>>> heapRoots_;
+    template <typename T> friend class JS::PersistentRooted;
 
   public:
     RootLists() : autoGCRooters_(nullptr) {
@@ -284,65 +286,11 @@ class RootLists
     }
 
     void traceStackRoots(JSTracer* trc);
-
     void checkNoGCRooters();
 
-    /* Allow inlining of PersistentRooted constructors and destructors. */
-  private:
-    template <typename Referent> friend class JS::PersistentRooted;
-    friend void js::gc::MarkPersistentRootedChains(JSTracer*);
-    friend void js::gc::MarkPersistentRootedChainsInLists(RootLists&, JSTracer*);
-    friend void js::gc::FinishPersistentRootedChains(RootLists&);
-
-    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
-                             mozilla::LinkedList<JS::PersistentRooted<void*>>> heapRoots_;
-
-    /* Specializations of this return references to the appropriate list. */
-    template<typename Referent>
-    inline mozilla::LinkedList<JS::PersistentRooted<Referent>>& getPersistentRootedList();
+    void tracePersistentRoots(JSTracer* trc);
+    void finishPersistentRoots();
 };
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedFunction>&
-RootLists::getPersistentRootedList<JSFunction*>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSFunction*>>&>(
-        heapRoots_[JS::RootKind::Object]);
-}
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedObject>&
-RootLists::getPersistentRootedList<JSObject*>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSObject*>>&>(
-        heapRoots_[JS::RootKind::Object]);
-}
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedId>&
-RootLists::getPersistentRootedList<jsid>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<jsid>>&>(
-        heapRoots_[JS::RootKind::Id]);
-}
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedScript>&
-RootLists::getPersistentRootedList<JSScript*>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSScript*>>&>(
-        heapRoots_[JS::RootKind::Script]);
-}
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedString>&
-RootLists::getPersistentRootedList<JSString*>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSString*>>&>(
-        heapRoots_[JS::RootKind::String]);
-}
-
-template<>
-inline mozilla::LinkedList<JS::PersistentRootedValue>&
-RootLists::getPersistentRootedList<JS::Value>() {
-    return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::Value>>&>(
-        heapRoots_[JS::RootKind::Value]);
-}
 
 struct ContextFriendFields
 {
