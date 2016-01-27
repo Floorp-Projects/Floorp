@@ -21,6 +21,25 @@
 nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
+namespace mozilla {
+/**
+ * The number of implicit / explicit tracks and their sizes.
+ */
+struct ComputedGridTrackInfo
+{
+  ComputedGridTrackInfo(uint32_t aNumLeadingImplicitTracks,
+                        uint32_t aNumExplicitTracks,
+                        nsTArray<nscoord>&& aSizes)
+    : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks)
+    , mNumExplicitTracks(aNumExplicitTracks)
+    , mSizes(aSizes)
+  {}
+  uint32_t mNumLeadingImplicitTracks;
+  uint32_t mNumExplicitTracks;
+  nsTArray<nscoord> mSizes;
+};
+} // namespace mozilla
+
 class nsGridContainerFrame final : public nsContainerFrame
 {
 public:
@@ -88,31 +107,17 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
 
-  NS_DECLARE_FRAME_PROPERTY(GridColTrackSizes, DeleteValue<nsTArray<nscoord>>)
-
-  const nsTArray<nscoord>* GetComputedTemplateColumns()
+  NS_DECLARE_FRAME_PROPERTY(GridColTrackInfo, DeleteValue<ComputedGridTrackInfo>)
+  const ComputedGridTrackInfo* GetComputedTemplateColumns()
   {
-    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridColTrackSizes()));
+    return static_cast<ComputedGridTrackInfo*>(Properties().Get(GridColTrackInfo()));
   }
 
-  NS_DECLARE_FRAME_PROPERTY(GridRowTrackSizes, DeleteValue<nsTArray<nscoord>>)
-
-  const nsTArray<nscoord>* GetComputedTemplateRows()
+  NS_DECLARE_FRAME_PROPERTY(GridRowTrackInfo, DeleteValue<ComputedGridTrackInfo>)
+  const ComputedGridTrackInfo* GetComputedTemplateRows()
   {
-    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridRowTrackSizes()));
+    return static_cast<ComputedGridTrackInfo*>(Properties().Get(GridRowTrackInfo()));
   }
-
-  /**
-   * Return the number of implicit tracks that comes before the explicit grid.
-   */
-  uint32_t NumImplicitLeadingCols() const { return mExplicitGridOffsetCol; }
-  uint32_t NumImplicitLeadingRows() const { return mExplicitGridOffsetRow; }
-
-  /**
-   * Return the number of explicit tracks.
-   */
-  uint32_t NumExplicitCols() const { return mExplicitGridColEnd - 1; }
-  uint32_t NumExplicitRows() const { return mExplicitGridRowEnd - 1; }
 
 protected:
   static const uint32_t kAutoLine;
