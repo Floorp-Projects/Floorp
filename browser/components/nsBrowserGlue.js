@@ -443,6 +443,9 @@ BrowserGlue.prototype = {
       case "test-initialize-sanitizer":
         this._sanitizer.onStartup();
         break;
+      case AddonWatcher.TOPIC_SLOW_ADDON_DETECTED:
+        this._notifySlowAddon(data);
+        break;
     }
   },
 
@@ -538,6 +541,11 @@ BrowserGlue.prototype = {
     os.addObserver(this, "flash-plugin-hang", false);
     os.addObserver(this, "xpi-signature-changed", false);
     os.addObserver(this, "autocomplete-did-enter-text", false);
+
+    if (AppConstants.NIGHTLY_BUILD) {
+      AddonWatcher.init();
+      os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
+    }
 
     ExtensionManagement.registerScript("chrome://browser/content/ext-utils.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-browserAction.js");
@@ -786,10 +794,6 @@ BrowserGlue.prototype = {
     }
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
-
-    if (AppConstants.NIGHTLY_BUILD) {
-      AddonWatcher.init(this._notifySlowAddon);
-    }
   },
 
   _checkForOldBuildUpdates: function () {
