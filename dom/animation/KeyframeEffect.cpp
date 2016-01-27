@@ -865,63 +865,6 @@ struct OffsetIndexedKeyframe
 };
 
 /**
- * Parses a CSS <single-transition-timing-function> value from
- * aEasing into a ComputedTimingFunction.  If parsing fails, Nothing() will
- * be returned.
- */
-static Maybe<ComputedTimingFunction>
-ParseEasing(Element* aTarget,
-            const nsAString& aEasing)
-{
-  nsIDocument* doc = aTarget->OwnerDoc();
-
-  nsCSSValue value;
-  nsCSSParser parser;
-  parser.ParseLonghandProperty(eCSSProperty_animation_timing_function,
-                               aEasing,
-                               doc->GetDocumentURI(),
-                               doc->GetDocumentURI(),
-                               doc->NodePrincipal(),
-                               value);
-
-  switch (value.GetUnit()) {
-    case eCSSUnit_List: {
-      const nsCSSValueList* list = value.GetListValue();
-      if (list->mNext) {
-        // don't support a list of timing functions
-        break;
-      }
-      switch (list->mValue.GetUnit()) {
-        case eCSSUnit_Enumerated:
-        case eCSSUnit_Cubic_Bezier:
-        case eCSSUnit_Steps: {
-          nsTimingFunction timingFunction;
-          nsRuleNode::ComputeTimingFunction(list->mValue, timingFunction);
-          ComputedTimingFunction computedTimingFunction;
-          computedTimingFunction.Init(timingFunction);
-          return Some(computedTimingFunction);
-        }
-        default:
-          MOZ_ASSERT_UNREACHABLE("unexpected animation-timing-function list "
-                                 "item unit");
-        break;
-      }
-      break;
-    }
-    case eCSSUnit_Null:
-    case eCSSUnit_Inherit:
-    case eCSSUnit_Initial:
-    case eCSSUnit_Unset:
-    case eCSSUnit_TokenStream:
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected animation-timing-function unit");
-      break;
-  }
-  return Nothing();
-}
-
-/**
  * An additional property (for a property-values pair) found on a Keyframe
  * or PropertyIndexedKeyframes object.
  */
@@ -1210,7 +1153,7 @@ GenerateValueEntries(Element* aTarget,
   for (OffsetIndexedKeyframe& keyframe : aKeyframes) {
     float offset = float(keyframe.mKeyframeDict.mOffset.Value());
     Maybe<ComputedTimingFunction> easing =
-      ParseEasing(aTarget, keyframe.mKeyframeDict.mEasing);
+      AnimationUtils::ParseEasing(aTarget, keyframe.mKeyframeDict.mEasing);
     // We ignore keyframe.mKeyframeDict.mComposite since we don't support
     // composite modes on keyframes yet.
 
@@ -1472,7 +1415,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
   }
 
   Maybe<ComputedTimingFunction> easing =
-    ParseEasing(aTarget, keyframes.mEasing);
+    AnimationUtils::ParseEasing(aTarget, keyframes.mEasing);
 
   // We ignore easing.mComposite since we don't support composite modes on
   // keyframes yet.
