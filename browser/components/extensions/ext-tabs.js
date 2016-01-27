@@ -150,29 +150,48 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           return [nonempty, result];
         }
 
-        let listener = event => {
-          let tab = event.originalTarget;
-          let window = tab.ownerDocument.defaultView;
-          let tabId = TabManager.getId(tab);
+        let fireForBrowser = (browser, changed) => {
+          let [needed, changeInfo] = sanitize(extension, changed);
+          if (needed) {
+            let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+            let tabElem = gBrowser.getTabForBrowser(browser);
 
-          let changeInfo = {};
-          let needed = false;
+            let tab = TabManager.convert(extension, tabElem);
+            fire(tab.id, changeInfo, tab);
+          }
+        };
+
+        let listener = event => {
+          let needed = [];
           if (event.type == "TabAttrModified") {
-            if (event.detail.changed.indexOf("image") != -1) {
-              changeInfo.favIconUrl = window.gBrowser.getIcon(tab);
-              needed = true;
+            let changed = event.detail.changed;
+            if (changed.includes("image")) {
+              needed.push("favIconUrl");
+            }
+            if (changed.includes("muted")) {
+              needed.push("mutedInfo");
+            }
+            if (changed.includes("soundplaying")) {
+              needed.push("audible");
             }
           } else if (event.type == "TabPinned") {
-            changeInfo.pinned = true;
-            needed = true;
+            needed.push("pinned");
           } else if (event.type == "TabUnpinned") {
-            changeInfo.pinned = false;
-            needed = true;
+            needed.push("pinned");
           }
 
-          [needed, changeInfo] = sanitize(extension, changeInfo);
-          if (needed) {
-            fire(tabId, changeInfo, TabManager.convert(extension, tab));
+          if (needed.length && !extension.hasPermission("tabs")) {
+            needed = needed.filter(attr => attr != "url" && attr != "favIconUrl");
+          }
+
+          if (needed.length) {
+            let tab = TabManager.convert(extension, event.originalTarget);
+
+            let changeInfo = {};
+            for (let prop of needed) {
+              changeInfo[prop] = tab[prop];
+            }
+            fire(tab.id, changeInfo, tab);
           }
         };
         let progressListener = {
@@ -193,29 +212,18 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
               status = "complete";
             }
 
-            let gBrowser = browser.ownerDocument.defaultView.gBrowser;
-            let tab = gBrowser.getTabForBrowser(browser);
-            let tabId = TabManager.getId(tab);
-            let [needed, changeInfo] = sanitize(extension, {status});
-            if (needed) {
-              fire(tabId, changeInfo, TabManager.convert(extension, tab));
-            }
+            fireForBrowser(browser, {status});
           },
 
           onLocationChange(browser, webProgress, request, locationURI, flags) {
             if (!webProgress.isTopLevel) {
               return;
             }
-            let gBrowser = browser.ownerDocument.defaultView.gBrowser;
-            let tab = gBrowser.getTabForBrowser(browser);
-            let tabId = TabManager.getId(tab);
-            let [needed, changeInfo] = sanitize(extension, {
+
+            fireForBrowser(browser, {
               status: webProgress.isLoadingDocument ? "loading" : "complete",
               url: locationURI.spec,
             });
-            if (needed) {
-              fire(tabId, changeInfo, TabManager.convert(extension, tab));
-            }
           },
         };
 
@@ -333,6 +341,11 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             // Not sure what to do here? Which tab should we select?
           }
         }
+        if (updateProperties.muted !== null) {
+          if (tab.muted != updateProperties.muted) {
+            tab.toggleMuteAudio(extension.uuid);
+          }
+        }
         if (updateProperties.pinned !== null) {
           if (updateProperties.pinned) {
             tabbrowser.pinTab(tab);
@@ -340,7 +353,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             tabbrowser.unpinTab(tab);
           }
         }
-        // FIXME: highlighted/selected, muted, openerTabId
+        // FIXME: highlighted/selected, openerTabId
 
         if (callback) {
           runSafe(context, callback, TabManager.convert(extension, tab));
@@ -411,6 +424,18 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
                 return false;
               }
             } else if (queryInfo.windowId != tab.windowId) {
+              return false;
+            }
+          }
+
+          if (queryInfo.audible !== null) {
+            if (queryInfo.audible != tab.audible) {
+              return false;
+            }
+          }
+
+          if (queryInfo.muted !== null) {
+            if (queryInfo.muted != tab.mutedInfo.muted) {
               return false;
             }
           }
