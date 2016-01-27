@@ -56,7 +56,7 @@ GetDocumentFromView(nsView* aView)
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsLeafFrame(aContext)
+  : nsSubDocumentFrameSuper(aContext)
   , mIsInline(false)
   , mPostedReflowCallback(false)
   , mDidCreateDoc(false)
@@ -74,7 +74,7 @@ nsSubDocumentFrame::AccessibleType()
 
 NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
   NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsSubDocumentFrameSuper)
 
 class AsyncFrameInit : public nsRunnable
 {
@@ -107,7 +107,7 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
   nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
   mIsInline = frameElem ? false : true;
 
-  nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
+  nsSubDocumentFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
   // We are going to create an inner view.  If we need a view for the
   // OuterFrame but we wait for the normal view creation path in
@@ -596,9 +596,6 @@ nsSubDocumentFrame::GetIntrinsicISize()
 
   // We must be an HTML <iframe>.  Default to size of 300px x 150px, for IE
   // compat (and per CSS2.1 draft).
-  // This depends on the applied styles, which the comments in nsLeafFrame.h
-  // say it should not, but we know it cannot change during the lifetime of
-  // the frame because changing writing-mode leads to frame reconstruction.
   WritingMode wm = GetWritingMode();
   return nsPresContext::CSSPixelsToAppUnits(wm.IsVertical() ? 150 : 300);
 }
@@ -691,7 +688,7 @@ nsSubDocumentFrame::GetIntrinsicSize()
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicSize();
   }
-  return nsLeafFrame::GetIntrinsicSize();
+  return nsSubDocumentFrameSuper::GetIntrinsicSize();
 }
 
 /* virtual */ nsSize
@@ -701,7 +698,7 @@ nsSubDocumentFrame::GetIntrinsicRatio()
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicRatio();
   }
-  return nsLeafFrame::GetIntrinsicRatio();
+  return nsSubDocumentFrameSuper::GetIntrinsicRatio();
 }
 
 /* virtual */
@@ -721,9 +718,9 @@ nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                     aPadding, aShrinkWrap);
   }
 
-  return nsLeafFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
-                                      aAvailableISize, aMargin, aBorder,
-                                      aPadding, aShrinkWrap);  
+  const WritingMode wm = GetWritingMode();
+  LogicalSize result(wm, GetIntrinsicISize(), GetIntrinsicBSize());
+  return result.ConvertTo(aWM, wm);
 }
 
 
@@ -749,9 +746,10 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                             aBorder,
                             aPadding);
   }
-  return nsLeafFrame::ComputeSize(aRenderingContext, aWM,
-                                  aCBSize, aAvailableISize,
-                                  aMargin, aBorder, aPadding, aFlags);
+  return nsSubDocumentFrameSuper::ComputeSize(aRenderingContext, aWM,
+                                              aCBSize, aAvailableISize,
+                                              aMargin, aBorder, aPadding,
+                                              aFlags);
 }
 
 void
@@ -767,13 +765,21 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
      ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d",
       aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
+  NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
+               "Shouldn't have unconstrained stuff here "
+               "thanks to the rules of reflow");
+  NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
+               "Shouldn't have unconstrained stuff here "
+               "thanks to ComputeAutoSize");
+
   aStatus = NS_FRAME_COMPLETE;
 
   NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");
 
   // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  aDesiredSize.SetSize(aReflowState.GetWritingMode(),
+                       aReflowState.ComputedSizeWithBorderPadding());
 
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
@@ -985,7 +991,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
                        (mDidCreateDoc || mCallingShow)));
   }
 
-  nsLeafFrame::DestroyFrom(aDestructRoot);
+  nsSubDocumentFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 CSSIntSize
