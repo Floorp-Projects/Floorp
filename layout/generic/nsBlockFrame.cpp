@@ -6795,18 +6795,12 @@ void
 nsBlockFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
-  NS_ASSERTION(aListID != kPrincipalList ||
-               (GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
-                                  NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
-               "how can we have a bullet already?");
-
-  if (kAbsoluteList == aListID) {
-    nsContainerFrame::SetInitialChildList(aListID, aChildList);
-  }
-  else if (kFloatList == aListID) {
+  if (kFloatList == aListID) {
     mFloats.SetFrames(aChildList);
-  }
-  else {
+  } else if (kPrincipalList == aListID) {
+    NS_ASSERTION((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
+                                    NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
+                 "how can we have a bullet already?");
     nsPresContext* presContext = PresContext();
 
 #ifdef DEBUG
@@ -6894,6 +6888,8 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
         AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
       }
     }
+  } else {
+    nsContainerFrame::SetInitialChildList(aListID, aChildList);
   }
 }
 

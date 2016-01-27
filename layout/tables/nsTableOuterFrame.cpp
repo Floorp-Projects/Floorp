@@ -92,20 +92,18 @@ void
 nsTableOuterFrame::SetInitialChildList(ChildListID     aListID,
                                        nsFrameList&    aChildList)
 {
-  MOZ_ASSERT(kCaptionList == aListID || aListID == kPrincipalList,
-             "unexpected child list");
-  MOZ_ASSERT(GetChildList(aListID).IsEmpty(),
-             "already have child frames in SetInitialChildList");
-
   if (kCaptionList == aListID) {
     // the frame constructor already checked for table-caption display type
+    MOZ_ASSERT(mCaptionFrames.IsEmpty(),
+               "already have child frames in CaptionList");
     mCaptionFrames.SetFrames(aChildList);
   } else {
-    MOZ_ASSERT(aChildList.FirstChild() &&
-               aChildList.FirstChild() == aChildList.LastChild() &&
-               nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType(),
-               "expected a single table frame");
-    mFrames.SetFrames(aChildList);
+    MOZ_ASSERT(kPrincipalList != aListID ||
+               (aChildList.FirstChild() &&
+                aChildList.FirstChild() == aChildList.LastChild() &&
+                nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType()),
+               "expected a single table frame in principal child list");
+    nsContainerFrame::SetInitialChildList(aListID, aChildList);
   }
 }
 
