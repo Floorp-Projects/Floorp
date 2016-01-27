@@ -272,7 +272,7 @@ jit::EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp)
     return true;
 }
 
-bool
+void
 jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutKind)
 {
     if (script->hasIonScript()) {
@@ -291,12 +291,9 @@ jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutK
 
             JitSpew(JitSpew_IonInvalidate, "Invalidating due to too many bailouts");
 
-            if (!Invalidate(cx, script))
-                return false;
+            Invalidate(cx, script);
         }
     }
-
-    return true;
 }
 
 void

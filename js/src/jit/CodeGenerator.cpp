@@ -8259,8 +8259,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         MOZ_ASSERT(script->ionScript()->isRecompiling());
         // Do a normal invalidate, except don't cancel offThread compilations,
         // since that will cancel this compilation too.
-        if (!Invalidate(cx, script, /* resetUses */ false, /* cancelOffThread*/ false))
-            return false;
+        Invalidate(cx, script, /* resetUses */ false, /* cancelOffThread*/ false);
     }
 
     if (scriptCounts_ && !script->hasScriptCounts() && !script->initScriptCounts(cx))
