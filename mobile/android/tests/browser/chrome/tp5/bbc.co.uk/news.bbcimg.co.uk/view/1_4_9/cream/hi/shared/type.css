@@ -1,0 +1,300 @@
+
+/* Default type */
+body #blq-container #blq-main {
+   font-size: 67.5%;
+   font-size: 1.3em;
+   -webkit-font-smoothing: antialiased;
+}
+
+* {
+   color: #505050;
+   font-family: Arial, Helmet, Freesans, sans-serif;
+   line-height: 16px;
+}
+
+/* Knockout */
+.knockout {
+   color: #fff;
+   text-shadow: 0 0 1px rgba(0,0,0,0.2);
+}
+
+/* Highlight (orange) */
+.highlight {
+   color: #D1700E;
+}
+
+#header .section-title {
+   color: #fff;
+   text-shadow: 0 0 1px rgba(0,0,0,0.1);
+   font-family: "Gill Sans MT", "Gill Sans", Arial, Helmet, Freesans, sans-serif;
+   font-weight: normal;
+   text-transform: uppercase;
+   font-size: 30px;
+   letter-spacing: 0;
+   line-height: 40px;
+   text-rendering: optimizeLegibility;
+}
+ 
+/* 48px */
+.special-48 {
+   font-size: 3.692em; /* 13px < 48px */
+   font-weight: bold;
+   letter-spacing: -2px;
+   line-height: 48px;
+   text-rendering: optimizeLegibility;
+}
+
+/* 36px */
+.special-36,
+#splash .splash-header .story {
+   font-size: 2.769em; /* 13px < 36px */
+   font-weight: bold;
+   letter-spacing: -1px;
+   line-height: 36px;
+   text-rendering: optimizeLegibility;
+}
+
+/* 32px */
+.special-32,
+.se-promo-now-inc-header,
+#main-content h1.story-header,
+#top-story .top-story-header,.story-wide h1,
+.lead-feature-now .headline {
+   font-size: 2.461em; /* 13px < 32px */
+   font-weight: bold;
+   letter-spacing: -1px;
+   line-height: 34px;   
+   text-rendering: optimizeLegibility;
+}
+
+/* 24px */
+.special-24,
+.se-promo-best-inc-header,
+.top-index-stories .top-index-stories-header,
+.top-section-stories .top-section-stories-header,
+.useful-links-header,
+.also-in-news h2,
+.av-stories-best .av-best-header,
+.feature-generic .features-header, .container-features-and-analysis .features-header,
+.featured-site-top-stories h2,
+.digest-wrapper-header,
+.geo-digest-solo-header,
+.geo-digest-region-header,
+.geo-digest-vertical-header,
+.languages h3,
+.other-top-stories .other-top-stories-header,
+.podcasts-range-module .podcasts-range-module-header,
+#site-wide-alert h2,
+.special-reports-header,
+.top-stories-range-module .top-stories-range-module-header,
+.topic-cluster .topic-cluster-header,
+.market-data h2,
+.weather-3day h2,
+.other-site-content-header,
+.guides-stories-header,
+.container-hyper-topic-cluster .hyper-depth-header,
+#personalisation h3,
+#related-services h2,.media_asset .most-pop h2,.byline h2,.alert h2,tr.heading th h2,.share-help h2,.share-help h3,.story-related h2,.most-watched-list h2,.useful-links h2,.more-stories h2,
+#personalisation .location-panel h4,
+#personalisation .we-remembered-panel h4,
+.have-your-say-inc-header,
+.have-your-say-inc .contact-number,
+.container-archived-content-heading,
+.container-featured-other-site-heading,
+.feature-digest-header,
+.generic-tiled-digest-header,
+.weather-4items h2,.marketdata-widget h2 {
+   font-size: 1.846em; /* 13px < 24px */
+   font-weight: bold;
+   letter-spacing: -1px;
+   line-height: 24px;
+   text-rendering: optimizeLegibility;
+}
+
+/* 20px */
+.special-20,
+.container-geographic-regions-generic .around-uk-digest-header,
+#personalisation .locator-msg-disambiguate p.locator-panel-header strong {
+   font-size: 1.538em; /* 13px < 20px */
+   font-weight: bold;
+   letter-spacing: -1px;
+   line-height: 24px;
+   text-rendering: optimizeLegibility;
+}
+
+
+/* 16px */
+.special-16,
+.top-section-stories .first-child h3,
+.container-local-weather-and-travel .weather .data-feed-now h3,
+.container-local-weather-and-travel .travel .useful-links .useful-links-header,
+.feature-generic .feature-header, .container-features-and-analysis .feature-header,
+.featured-site-top-stories .with-summary .story,
+.featured-site-top-stories .medium-image .story,
+.featured-site-top-stories .large-image .story,
+.featured-site-top-stories .classic-image .story,
+.digest .digest-header,
+.geo-digest-section-header,
+.geo-digest-vertical .tab a,
+.container-geographic-regions-generic .tab a,
+.container-geographic-news-digests .tab a,
+.hyper-container-title .hyper-container-title-header,
+.hyper-related-assets .hyper-depth-stories-header,
+.hyper-foldout .hyper-foldout-header,
+.languages h4,
+.other-top-stories-stories .with-summary a.story,
+.secondary-top-story .with-summary .story,
+.secondary-top-story .medium-image .story,
+.secondary-top-story .large-image .story,
+.secondary-top-story .classic-image .story,
+.other-site-content .first-other-promo h3 a.story,
+.guide-content .guide h3 a.story,
+#site-wide-alert p,
+.special-reports-component h3 a,
+#splash .see-also .first-child-live a.story,
+.topic-cluster-stories .with-summary a.story,
+.media-asset .read-full h2, .media-asset .read-more h2, .media-asset .playlist h2, .features h2, .top-stories h2, .most-pop-story h2, h2.more-stories-head,.tabs li,.alert h3,.story-body .story-feature h2,.story-body .story-feature blockquote p,.see-also h3, #main-content .story-related h3,.features h3, .byline .byline_name,.story-body tr.subheading th, .story-body tr.subheading td h3,
+.story-body .cross-head,
+.weather-3day h3#weather_sitelabel,.more-galleries h2,.share-form ul.networks li a,.story-body .embedded-hyper h2,.hyper-promotional-content ul li.large-image h3, .hyper-promotional-content ul li.medium-image h3, .hyper-promotional-content ul li.first-child h3,
+.story-body tr.colheading th,
+.have-your-say-inc  ul li h3 a,
+.have-your-say-inc  ul li h3 .core-text,
+.byline .byline-name,
+.guide-content .stacked-overlay-guides .guide h3 a .overlay strong,
+.other-site-content .stacked-overlay-other-site-promotion .first-other-promo h3 a .overlay strong,
+.weather-4items h3#weather_sitelabel,
+.weather-4items h4,.dna-comment-count-personal a {
+   font-size: 1.231em; /* 13px < 16px */
+   font-weight: bold;
+   line-height: 16px;
+   text-rendering: optimizeLegibility;
+}
+
+/* 13px Normal */
+.container-local-weather-and-travel .data-feed-now h3#weather_sitelabel,
+.secondary-top-story .see-also .story,
+.see-also ul li a, #main-content .internet-links a, .features p, 
+#related-services,
+.weather-3day .next3daysweather .stripes li,.weather-3day .next3daysweather .stripes li strong,.weather-3day .next3daysweather .stripes h3,.story-body #heading-2,
+.story-body table p,
+.story-body div p.caption,
+.story-body .story-feature p,
+.story-body .story-feature li,
+.guide-content .stacked-overlay-guides .guide h3 a.story,
+.other-site-content .stacked-overlay-other-site-promotion .first-other-promo h3 a.story,
+.weather-4items .next3daysweather .stripes li,
+.weather-4items .next3daysweather .stripes li strong,
+.weather-4items .next3daysweather .stripes h4 {
+   font-size: 1em; /* 13px */
+   line-height: 16px;
+}
+
+/* 14px Storybody */
+.story-body p,
+.story-body li,
+.story-wide li,
+.media-asset .emp-decription p,
+.photo-gallery .hypertabs li {
+   font-size: 1.077em; /* 13px < 14px */
+   line-height: 18px;
+   text-rendering: auto;
+}
+
+/* Storybody Color */
+.story-body p, 
+.story-body p strong, 
+.story-body p em, 
+.media_asset .emp-decription p,
+.photo-gallery .hypertabs li {
+	color: #333;
+}
+
+
+/* 11px */
+.special-11,
+.special-reports-component #bbccom_module_specialreport_text,
+.market-data .mkt-last-updated,
+.market-data .mkt-footer .mkt-data-delayed,
+#pictureGallery .controls a,
+.media_asset p.published, .media_asset .warning p, #main-content .internet-links span, .top-stories li span,.see-also span.timestamp,.see-also span.section,.marketdata-widget span,
+.story-body table tfoot p,.dna-comment-count-simple a {
+	font-family: Arial;
+   font-size: 0.846em; /* 13px > 11px */
+   text-transform: uppercase;
+   line-height: 16px;
+   text-rendering: optimizeLegibility;
+}
+
+
+
+/* Bold */
+strong {
+   font-weight: bold;
+}
+
+/* Italic */
+em {
+   font-style: italic;
+}
+
+/* Default anchor */
+a {
+   color: #1F4F82;
+   text-decoration: none;
+   font-weight: bold;
+}
+
+/* This is a super strong overide - applies to all see alsos */
+body #blq-container #blq-container-inner .see-also a.story {
+	font-weight: normal;
+}
+
+a:visited {
+	color: #4A7194;
+}
+
+/* Knockout anchor */
+.knockout a,
+#nav * {
+   color: #fff;
+   text-shadow: 0 0 1px rgba(0,0,0,0.2);
+}
+
+/* Blue knockout anchor */
+.knockout a {
+   color: #a9c0d3;
+}
+
+a.from-external-source,
+a.from-external-source:visited {
+	color: #888888;
+}
+
+/* Default anchor hover/focus */
+a:hover, a:focus {
+/*    color: #123E60; */
+   text-decoration: underline;
+   outline: none;
+}
+
+/* Knockout anchor hover/focus */
+.knockout a:hover, .knockout a:focus {
+   color: #fff;
+}
+
+/* Default anchor active */
+a:active {
+   color: #D1700E;
+}
+
+/* Knockout anchor active */
+.knockout a:active {
+   color: #fff;
+}
+
+#blq-container #blq-container-inner img {
+	font-size: 13px;
+	letter-spacing: 0;
+	font-weight: normal;
+	font-style: italic;
+}
