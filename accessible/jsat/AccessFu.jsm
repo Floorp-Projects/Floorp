@@ -46,7 +46,7 @@ this.AccessFu = { // jshint ignore:line
           this._enableOrDisable();
         });
         aWindow.navigator.mozSettings.addObserver(
-          SCREENREADER_SETTING, this.handleEvent.bind(this));
+          SCREENREADER_SETTING, this.handleEvent);
       }
     }
 
@@ -68,10 +68,19 @@ this.AccessFu = { // jshint ignore:line
       Services.obs.removeObserver(this, 'Accessibility:Settings');
     } else if (Utils.win.navigator.mozSettings) {
       Utils.win.navigator.mozSettings.removeObserver(
-        SCREENREADER_SETTING, this.handleEvent.bind(this));
+        SCREENREADER_SETTING, this.handleEvent);
     }
     delete this._activatePref;
     Utils.uninit();
+  },
+
+  /**
+   * A lazy getter for event handler that binds the scope to AccessFu object.
+   */
+  get handleEvent() {
+    delete this.handleEvent;
+    this.handleEvent = this._handleEvent.bind(this);
+    return this.handleEvent;
   },
 
   /**
@@ -344,7 +353,7 @@ this.AccessFu = { // jshint ignore:line
     }
   },
 
-  handleEvent: function handleEvent(aEvent) {
+  _handleEvent: function _handleEvent(aEvent) {
     switch (aEvent.type) {
       case 'TabOpen':
       {
