@@ -581,40 +581,8 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
 // JS entry poitns
 
 static bool
-SupportsWasm(JSContext* cx)
-{
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return false;
-#endif
-
-    if (!cx->jitSupportsFloatingPoint())
-        return false;
-
-    if (cx->gcSystemPageSize() != AsmJSPageSize)
-        return false;
-
-    return true;
-}
-
-static bool
-CheckWasmSupport(JSContext* cx)
-{
-    if (!SupportsWasm(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif // JS_MORE_DETERMINISTIC
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-    return true;
-}
-
-static bool
 WasmEval(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!CheckWasmSupport(cx))
-        return false;
-
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
 
@@ -727,8 +695,26 @@ static const JSFunctionSpecWithHelp WasmTestingFunctions[] = {
     JS_FS_HELP_END
 };
 
+static bool
+SupportsWasm(JSContext* cx)
+{
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
+    return false;
+#endif
+
+    if (!cx->jitSupportsFloatingPoint())
+        return false;
+
+    if (cx->gcSystemPageSize() != AsmJSPageSize)
+        return false;
+
+    return true;
+}
+
 bool
 wasm::DefineTestingFunctions(JSContext* cx, HandleObject globalObj)
 {
-    return JS_DefineFunctionsWithHelp(cx, globalObj, WasmTestingFunctions);
+    if (SupportsWasm(cx))
+        return JS_DefineFunctionsWithHelp(cx, globalObj, WasmTestingFunctions);
+    return true;
 }
