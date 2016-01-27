@@ -475,7 +475,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     // GLintptr here, otherwise interface generator returns error.
     (WebGLBuffer or GLintptr)? getIndexedParameter(GLenum target, GLuint index);
     sequence<GLuint>? getUniformIndices(WebGLProgram? program, sequence<DOMString> uniformNames);
-    any getActiveUniforms(WebGLProgram? program, sequence<GLuint> uniformIndices, GLenum pname);
+    sequence<GLint>? getActiveUniforms(WebGLProgram? program, sequence<GLuint> uniformIndices, GLenum pname);
     GLuint getUniformBlockIndex(WebGLProgram? program, DOMString uniformBlockName);
     [Throws]
     (GLuint or Uint32Array or GLboolean)? getActiveUniformBlockParameter(WebGLProgram? program, GLuint uniformBlockIndex, GLenum pname);
