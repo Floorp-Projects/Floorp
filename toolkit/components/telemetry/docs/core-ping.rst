@@ -36,6 +36,9 @@ Structure::
                           // where manufacturer is truncated to 12 characters
                           // & model is truncated to 19 characters
       "arch": <string>, // e.g. "arm", "x86"
+
+      "experiments": [<string>, …], // Optional, array of identifiers
+                                    // for the active experiments
     }
 
 The ``device`` field is filled in with information specified by the hardware
