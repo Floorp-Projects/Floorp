@@ -2828,7 +2828,21 @@ WorkerMain(void* arg)
     js_delete(input);
 }
 
-Vector<PRThread*, 0, SystemAllocPolicy> workerThreads;
+// Workers can spawn other workers, so we need a lock to access workerThreads.
+static PRLock* workerThreadsLock = nullptr;
+static Vector<PRThread*, 0, SystemAllocPolicy> workerThreads;
+
+class MOZ_RAII AutoLockWorkerThreads
+{
+  public:
+    AutoLockWorkerThreads() {
+        MOZ_ASSERT(workerThreadsLock);
+        PR_Lock(workerThreadsLock);
+    }
+    ~AutoLockWorkerThreads() {
+        PR_Unlock(workerThreadsLock);
+    }
+};
 
 static bool
 EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
@@ -2846,6 +2860,14 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     if (!args[0].toString()->ensureLinear(cx))
         return false;
+
+    if (!workerThreadsLock) {
+        workerThreadsLock = PR_NewLock();
+        if (!workerThreadsLock) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
 
     JSLinearString* str = &args[0].toString()->asLinear();
 
@@ -2871,6 +2893,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    AutoLockWorkerThreads alwt;
     if (!workerThreads.append(thread)) {
         ReportOutOfMemory(cx);
         PR_JoinThread(thread);
@@ -3065,6 +3088,34 @@ ScheduleWatchdog(JSRuntime* rt, double t)
     sr->watchdogTimeout = timeout;
     PR_Unlock(sr->watchdogLock);
     return true;
+}
+
+static void
+KillWorkerThreads()
+{
+    MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
+
+    if (!workerThreadsLock) {
+        MOZ_ASSERT(workerThreads.empty());
+        return;
+    }
+
+    while (true) {
+        // We need to leave the AutoLockWorkerThreads scope before we call
+        // PR_JoinThread, to avoid deadlocks when AutoLockWorkerThreads is
+        // used by the worker thread.
+        PRThread* thread;
+        {
+            AutoLockWorkerThreads alwt;
+            if (workerThreads.empty())
+                break;
+            thread = workerThreads.popCopy();
+        }
+        PR_JoinThread(thread);
+    }
+
+    PR_DestroyLock(workerThreadsLock);
+    workerThreadsLock = nullptr;
 }
 
 static void
@@ -7009,9 +7060,7 @@ main(int argc, char** argv, char** envp)
 
     KillWatchdog(rt);
 
-    MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
-    for (size_t i = 0; i < workerThreads.length(); i++)
-        PR_JoinThread(workerThreads[i]);
+    KillWorkerThreads();
 
     DestructSharedArrayBufferMailbox();
 
