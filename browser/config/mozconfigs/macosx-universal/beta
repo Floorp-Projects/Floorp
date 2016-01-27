@@ -10,5 +10,6 @@ fi
 ac_add_options --enable-official-branding
 ac_add_options --enable-verify-mar
 
+. "$topsrcdir/build/macosx/mozconfig.rust"
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
