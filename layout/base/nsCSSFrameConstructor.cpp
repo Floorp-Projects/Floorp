@@ -1151,7 +1151,7 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
   if (aCanBePositioned) {
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
     if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
-      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
       return &mTopLayerItems;
     }
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
