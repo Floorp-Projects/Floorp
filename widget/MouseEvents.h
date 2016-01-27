@@ -619,6 +619,24 @@ public:
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;
     mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
   }
+
+  // System scroll speed settings may be too slow at using Gecko.  In such
+  // case, we should override the scroll speed computed with system settings.
+  // Following methods return preferred delta values which are multiplied by
+  // factors specified by prefs.  If system scroll speed shouldn't be
+  // overridden (e.g., this feature is disabled by pref), they return raw
+  // delta values.
+  double OverriddenDeltaX() const;
+  double OverriddenDeltaY() const;
+
+private:
+  static bool sInitialized;
+  static bool sIsSystemScrollSpeedOverrideEnabled;
+  static int32_t sOverrideFactorX;
+  static int32_t sOverrideFactorY;
+  static void Initialize();
+
+  static double ComputeOverriddenDelta(double aDelta, bool aIsForVertical);
 };
 
 /******************************************************************************
