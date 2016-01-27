@@ -55,7 +55,9 @@ ol,
 li,
 figure,
 .wp-caption {
-  margin: 0 0 30px 0;
+  margin: -10px -10px 20px -10px;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 p > img:only-child,
