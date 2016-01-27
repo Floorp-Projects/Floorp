@@ -196,7 +196,7 @@ config = {
         "browser-chrome": ["--browser-chrome"],
         "browser-chrome-chunked": ["--browser-chrome", "--chunk-by-runtime"],
         "browser-chrome-addons": ["--browser-chrome", "--chunk-by-runtime", "--tag=addons"],
-        "browser-chrome-coverage": ["--timeout=1200"],
+        "browser-chrome-coverage": ["--browser-chrome", "--chunk-by-runtime", "--timeout=1200"],
         "browser-chrome-screenshots": ["--browser-chrome", "--subsuite=screenshots"],
         "mochitest-gl": ["--subsuite=webgl"],
         "mochitest-devtools-chrome": ["--browser-chrome", "--subsuite=devtools"],
