@@ -67,6 +67,10 @@ extern NSString *const kDefaultServerType;
 
 - (id)initWithConfig:(NSDictionary *)config;
 
+// Reads the file |configFile| and returns the corresponding NSDictionary.
+// |configFile| will be deleted after reading.
++ (NSDictionary *)readConfigurationDataFromFile:(NSString *)configFile;
+
 - (NSMutableDictionary *)parameters;
 
 - (void)report;
@@ -77,5 +81,9 @@ extern NSString *const kDefaultServerType;
 // This method adds a key/value pair to the dictionary that
 // will be uploaded to the crash server.
 - (void)addServerParameter:(id)value forKey:(NSString *)key;
+
+// This method process the HTTP response and renames the minidump file with the
+// new ID.
+- (void)handleNetworkResponse:(NSData *)data withError:(NSError *)error;
 
 @end

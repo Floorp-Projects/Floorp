@@ -44,6 +44,11 @@
 		163201E31443029300C4DBF5 /* ConfigFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 163201D51443019E00C4DBF5 /* ConfigFile.mm */; };
 		16C7C918147D45AE00776EAD /* BreakpadDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 16C7C917147D45AE00776EAD /* BreakpadDefines.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16E02DB8147410F0008C604D /* uploader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 16E02DB4147410D4008C604D /* uploader.mm */; };
+		1EEEB6231720829E00F7E689 /* simple_string_dictionary.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1EEEB6211720829E00F7E689 /* simple_string_dictionary.cc */; };
+		1EEEB6241720829E00F7E689 /* simple_string_dictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 1EEEB6221720829E00F7E689 /* simple_string_dictionary.h */; };
+		1EEEB6271720831E00F7E689 /* BreakpadFramework_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = F91AF5CF0FD60393009D8BE2 /* BreakpadFramework_Test.mm */; };
+		1EEEB62A1720859200F7E689 /* simple_string_dictionary_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1EEEB6251720830600F7E689 /* simple_string_dictionary_unittest.cc */; };
+		1EEEB62B1720868C00F7E689 /* simple_string_dictionary.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1EEEB6211720829E00F7E689 /* simple_string_dictionary.cc */; };
 		3329D4ED0FA16D820007BBC5 /* Breakpad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3329D4EC0FA16D820007BBC5 /* Breakpad.xib */; };
 		33880C800F9E097100817F82 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 33880C7E0F9E097100817F82 /* InfoPlist.strings */; };
 		4084699D0F5D9CF900FDCA37 /* crash_report_sender.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4084699C0F5D9CF900FDCA37 /* crash_report_sender.icns */; };
@@ -141,7 +146,9 @@
 		D2F9A53F121383A1002747C1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0867D69BFE84028FC02AAC07 /* Foundation.framework */; };
 		D2F9A541121383A1002747C1 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2F9A41512131EF0002747C1 /* libgtest.a */; };
 		D2F9A553121383DC002747C1 /* crash_generation_server_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A4CE121336F7002747C1 /* crash_generation_server_test.cc */; };
-		F91AF5D00FD60393009D8BE2 /* BreakpadFramework_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = F91AF5CF0FD60393009D8BE2 /* BreakpadFramework_Test.mm */; };
+		F4DAB1DD19F1027100A5A838 /* launch_reporter.cc in Sources */ = {isa = PBXBuildFile; fileRef = F4DAB1DB19F1027100A5A838 /* launch_reporter.cc */; };
+		F4DAB1DE19F1027100A5A838 /* launch_reporter.h in Headers */ = {isa = PBXBuildFile; fileRef = F4DAB1DC19F1027100A5A838 /* launch_reporter.h */; };
+		F4F916B619F10FFC00B83BE4 /* launch_reporter.cc in Sources */ = {isa = PBXBuildFile; fileRef = F4DAB1DB19F1027100A5A838 /* launch_reporter.cc */; };
 		F91AF6210FD60784009D8BE2 /* Breakpad.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Breakpad.framework */; };
 		F9286B3A0F7EB25800A4DCC8 /* InspectorMain.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9286B390F7EB25800A4DCC8 /* InspectorMain.mm */; };
 		F92C53B80ECCE7B3009BE4BA /* Inspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53B70ECCE7B3009BE4BA /* Inspector.mm */; };
@@ -159,7 +166,6 @@
 		F92C56450ECD10CA009BE4BA /* MachIPC.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53790ECCE635009BE4BA /* MachIPC.mm */; };
 		F92C56460ECD10CA009BE4BA /* minidump_file_writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C538F0ECCE70A009BE4BA /* minidump_file_writer.cc */; };
 		F92C56470ECD10CA009BE4BA /* minidump_generator.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C536F0ECCE3FD009BE4BA /* minidump_generator.cc */; };
-		F92C56480ECD10CA009BE4BA /* SimpleStringDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53810ECCE635009BE4BA /* SimpleStringDictionary.mm */; };
 		F92C56490ECD10CA009BE4BA /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53820ECCE635009BE4BA /* string_utilities.cc */; };
 		F92C564A0ECD10CA009BE4BA /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53850ECCE6AD009BE4BA /* string_conversion.cc */; };
 		F92C564C0ECD10DD009BE4BA /* breakpadUtilities.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F92C563C0ECD10B3009BE4BA /* breakpadUtilities.dylib */; };
@@ -211,8 +217,6 @@
 		F9C44EA20EF09F93003AEBAA /* HTTPMultipartUpload.m in Sources */ = {isa = PBXBuildFile; fileRef = F92C53770ECCE635009BE4BA /* HTTPMultipartUpload.m */; };
 		F9C44EE50EF0A006003AEBAA /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9C44EE40EF0A006003AEBAA /* SystemConfiguration.framework */; };
 		F9C44EE90EF0A3C1003AEBAA /* GTMLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = F9C44EE80EF0A3C1003AEBAA /* GTMLogger.m */; };
-		F9C77DE20F7DD7E30045F7DB /* SimpleStringDictionaryTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = F9C77DE10F7DD7E30045F7DB /* SimpleStringDictionaryTest.mm */; };
-		F9C77DE40F7DD82F0045F7DB /* SimpleStringDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = F92C53810ECCE635009BE4BA /* SimpleStringDictionary.mm */; };
 		F9C77E130F7DDF810045F7DB /* GTMSenTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = F9C77E120F7DDF810045F7DB /* GTMSenTestCase.m */; };
 /* End PBXBuildFile section */
 
@@ -566,6 +570,9 @@
 		163202431443201300C4DBF5 /* uploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uploader.h; path = sender/uploader.h; sourceTree = "<group>"; };
 		16C7C917147D45AE00776EAD /* BreakpadDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BreakpadDefines.h; sourceTree = "<group>"; };
 		16E02DB4147410D4008C604D /* uploader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = uploader.mm; path = sender/uploader.mm; sourceTree = "<group>"; };
+		1EEEB6211720829E00F7E689 /* simple_string_dictionary.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = simple_string_dictionary.cc; path = ../../common/simple_string_dictionary.cc; sourceTree = "<group>"; };
+		1EEEB6221720829E00F7E689 /* simple_string_dictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = simple_string_dictionary.h; path = ../../common/simple_string_dictionary.h; sourceTree = "<group>"; };
+		1EEEB6251720830600F7E689 /* simple_string_dictionary_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = simple_string_dictionary_unittest.cc; path = ../../common/simple_string_dictionary_unittest.cc; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Breakpad_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Breakpad_Prefix.pch; path = Framework/Breakpad_Prefix.pch; sourceTree = "<group>"; };
 		3329D4EC0FA16D820007BBC5 /* Breakpad.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Breakpad.xib; path = sender/Breakpad.xib; sourceTree = "<group>"; };
 		33880C7F0F9E097100817F82 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = sender/English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -623,6 +630,8 @@
 		DE43468E11C72971004F095F /* sl */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = sl; path = sender/sl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		DE43468F11C72973004F095F /* sv */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = sv; path = sender/sv.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		DE43469011C72976004F095F /* tr */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = tr; path = sender/tr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F4DAB1DB19F1027100A5A838 /* launch_reporter.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = launch_reporter.cc; path = ../../common/mac/launch_reporter.cc; sourceTree = SOURCE_ROOT; };
+		F4DAB1DC19F1027100A5A838 /* launch_reporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = launch_reporter.h; path = ../../common/mac/launch_reporter.h; sourceTree = SOURCE_ROOT; };
 		F91AF5CF0FD60393009D8BE2 /* BreakpadFramework_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BreakpadFramework_Test.mm; path = tests/BreakpadFramework_Test.mm; sourceTree = "<group>"; };
 		F9286B380F7EB25800A4DCC8 /* Inspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Inspector.h; path = crash_generation/Inspector.h; sourceTree = "<group>"; };
 		F9286B390F7EB25800A4DCC8 /* InspectorMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InspectorMain.mm; path = crash_generation/InspectorMain.mm; sourceTree = "<group>"; };
@@ -651,8 +660,6 @@
 		F92C537D0ECCE635009BE4BA /* macho_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = macho_utilities.h; path = ../../common/mac/macho_utilities.h; sourceTree = SOURCE_ROOT; };
 		F92C537E0ECCE635009BE4BA /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		F92C537F0ECCE635009BE4BA /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
-		F92C53800ECCE635009BE4BA /* SimpleStringDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SimpleStringDictionary.h; path = ../../common/mac/SimpleStringDictionary.h; sourceTree = SOURCE_ROOT; };
-		F92C53810ECCE635009BE4BA /* SimpleStringDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SimpleStringDictionary.mm; path = ../../common/mac/SimpleStringDictionary.mm; sourceTree = SOURCE_ROOT; };
 		F92C53820ECCE635009BE4BA /* string_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = string_utilities.cc; path = ../../common/mac/string_utilities.cc; sourceTree = SOURCE_ROOT; };
 		F92C53830ECCE635009BE4BA /* string_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = string_utilities.h; path = ../../common/mac/string_utilities.h; sourceTree = SOURCE_ROOT; };
 		F92C53850ECCE6AD009BE4BA /* string_conversion.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = string_conversion.cc; path = ../../common/string_conversion.cc; sourceTree = SOURCE_ROOT; };
@@ -699,8 +706,6 @@
 		F9C44EE80EF0A3C1003AEBAA /* GTMLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GTMLogger.m; path = ../../common/mac/GTMLogger.m; sourceTree = SOURCE_ROOT; };
 		F9C77DDA0F7DD5CF0045F7DB /* UnitTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UnitTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9C77DDB0F7DD5CF0045F7DB /* UnitTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "UnitTests-Info.plist"; sourceTree = "<group>"; };
-		F9C77DE00F7DD7E30045F7DB /* SimpleStringDictionaryTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SimpleStringDictionaryTest.h; path = tests/SimpleStringDictionaryTest.h; sourceTree = "<group>"; };
-		F9C77DE10F7DD7E30045F7DB /* SimpleStringDictionaryTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SimpleStringDictionaryTest.mm; path = tests/SimpleStringDictionaryTest.mm; sourceTree = "<group>"; };
 		F9C77E110F7DDF810045F7DB /* GTMSenTestCase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GTMSenTestCase.h; path = ../../common/mac/testing/GTMSenTestCase.h; sourceTree = SOURCE_ROOT; };
 		F9C77E120F7DDF810045F7DB /* GTMSenTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GTMSenTestCase.m; path = ../../common/mac/testing/GTMSenTestCase.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -936,6 +941,8 @@
 				F92C53870ECCE6C0009BE4BA /* convert_UTF.c */,
 				F92C53880ECCE6C0009BE4BA /* convert_UTF.h */,
 				4D72CA0D13DFAD5C006CABE3 /* md5.cc */,
+				1EEEB6211720829E00F7E689 /* simple_string_dictionary.cc */,
+				1EEEB6221720829E00F7E689 /* simple_string_dictionary.h */,
 				F92C53850ECCE6AD009BE4BA /* string_conversion.cc */,
 				F92C53860ECCE6AD009BE4BA /* string_conversion.h */,
 				F92C53840ECCE68D009BE4BA /* mac */,
@@ -957,6 +964,8 @@
 				F92C53750ECCE635009BE4BA /* file_id.h */,
 				F92C53760ECCE635009BE4BA /* HTTPMultipartUpload.h */,
 				F92C53770ECCE635009BE4BA /* HTTPMultipartUpload.m */,
+				F4DAB1DB19F1027100A5A838 /* launch_reporter.cc */,
+				F4DAB1DC19F1027100A5A838 /* launch_reporter.h */,
 				F92C53780ECCE635009BE4BA /* MachIPC.h */,
 				F92C53790ECCE635009BE4BA /* MachIPC.mm */,
 				4D61A25D14F43CFC002D5862 /* bootstrap_compat.cc */,
@@ -967,8 +976,6 @@
 				F92C537D0ECCE635009BE4BA /* macho_utilities.h */,
 				F92C537E0ECCE635009BE4BA /* macho_walker.cc */,
 				F92C537F0ECCE635009BE4BA /* macho_walker.h */,
-				F92C53800ECCE635009BE4BA /* SimpleStringDictionary.h */,
-				F92C53810ECCE635009BE4BA /* SimpleStringDictionary.mm */,
 				F92C53820ECCE635009BE4BA /* string_utilities.cc */,
 				F92C53830ECCE635009BE4BA /* string_utilities.h */,
 			);
@@ -1116,12 +1123,11 @@
 		F9C77DDF0F7DD7CF0045F7DB /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				1EEEB6251720830600F7E689 /* simple_string_dictionary_unittest.cc */,
 				D23F4B9A12A8688800686C8D /* minidump_generator_test_helper.cc */,
 				D23F4B2C12A7E13200686C8D /* minidump_generator_test.cc */,
 				D2F9A4CE121336F7002747C1 /* crash_generation_server_test.cc */,
 				D2F9A3D41212F87C002747C1 /* exception_handler_test.cc */,
-				F9C77DE00F7DD7E30045F7DB /* SimpleStringDictionaryTest.h */,
-				F9C77DE10F7DD7E30045F7DB /* SimpleStringDictionaryTest.mm */,
 				F91AF5CF0FD60393009D8BE2 /* BreakpadFramework_Test.mm */,
 			);
 			name = tests;
@@ -1151,6 +1157,8 @@
 				163201D61443019E00C4DBF5 /* ConfigFile.h in Headers */,
 				16C7C918147D45AE00776EAD /* BreakpadDefines.h in Headers */,
 				162F64F3161C577500CD68D5 /* arch_utilities.h in Headers */,
+				F4DAB1DE19F1027100A5A838 /* launch_reporter.h in Headers */,
+				1EEEB6241720829E00F7E689 /* simple_string_dictionary.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1671,11 +1679,13 @@
 				F92C565F0ECD116B009BE4BA /* protected_memory_allocator.cc in Sources */,
 				F92C56630ECD1179009BE4BA /* exception_handler.cc in Sources */,
 				F92C55D10ECD0064009BE4BA /* Breakpad.mm in Sources */,
+				F4DAB1DD19F1027100A5A838 /* launch_reporter.cc in Sources */,
 				F92C56340ECD0DF1009BE4BA /* OnDemandServer.mm in Sources */,
 				D2F9A4CB121336C7002747C1 /* crash_generation_client.cc in Sources */,
 				D2F9A4CD121336C7002747C1 /* crash_generation_server.cc in Sources */,
 				163201D71443019E00C4DBF5 /* ConfigFile.mm in Sources */,
 				162F64F2161C577500CD68D5 /* arch_utilities.cc in Sources */,
+				1EEEB6231720829E00F7E689 /* simple_string_dictionary.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1757,6 +1767,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4F916B619F10FFC00B83BE4 /* launch_reporter.cc in Sources */,
 				162F64F4161C579B00CD68D5 /* arch_utilities.cc in Sources */,
 				162F64F5161C579B00CD68D5 /* arch_utilities.h in Sources */,
 				D2A5DD301188633800081F03 /* breakpad_nlist_64.cc in Sources */,
@@ -1770,7 +1781,6 @@
 				4D72CA0E13DFAD5C006CABE3 /* md5.cc in Sources */,
 				F92C56460ECD10CA009BE4BA /* minidump_file_writer.cc in Sources */,
 				F92C56470ECD10CA009BE4BA /* minidump_generator.cc in Sources */,
-				F92C56480ECD10CA009BE4BA /* SimpleStringDictionary.mm in Sources */,
 				F92C56490ECD10CA009BE4BA /* string_utilities.cc in Sources */,
 				F92C564A0ECD10CA009BE4BA /* string_conversion.cc in Sources */,
 				4D61A25F14F43CFC002D5862 /* bootstrap_compat.cc in Sources */,
@@ -1814,6 +1824,8 @@
 				D23F4B2E12A7E13200686C8D /* minidump_generator_test.cc in Sources */,
 				4D72CA2F13DFAE65006CABE3 /* md5.cc in Sources */,
 				4D61A26D14F43D43002D5862 /* bootstrap_compat.cc in Sources */,
+				1EEEB62B1720868C00F7E689 /* simple_string_dictionary.cc in Sources */,
+				1EEEB62A1720859200F7E689 /* simple_string_dictionary_unittest.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1855,6 +1867,7 @@
 				D244540B12439BA0009BBCE0 /* memory_unittest.cc in Sources */,
 				4D72CA3813DFAE91006CABE3 /* md5.cc in Sources */,
 				4D61A26E14F43D45002D5862 /* bootstrap_compat.cc in Sources */,
+				1EEEB6271720831E00F7E689 /* BreakpadFramework_Test.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1872,10 +1885,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F9C77DE40F7DD82F0045F7DB /* SimpleStringDictionary.mm in Sources */,
-				F9C77DE20F7DD7E30045F7DB /* SimpleStringDictionaryTest.mm in Sources */,
 				F9C77E130F7DDF810045F7DB /* GTMSenTestCase.m in Sources */,
-				F91AF5D00FD60393009D8BE2 /* BreakpadFramework_Test.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
