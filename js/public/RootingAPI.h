@@ -981,27 +981,15 @@ template<typename T>
 class PersistentRooted : public js::PersistentRootedBase<T>,
                          private mozilla::LinkedListElement<PersistentRooted<T>>
 {
-    typedef mozilla::LinkedListElement<PersistentRooted<T>> ListBase;
+    using ListBase = mozilla::LinkedListElement<PersistentRooted<T>>;
 
     friend class mozilla::LinkedList<PersistentRooted>;
     friend class mozilla::LinkedListElement<PersistentRooted>;
-
-    friend struct js::gc::PersistentRootedMarker<T>;
-
-    friend void js::gc::FinishPersistentRootedChains(js::RootLists&);
 
     void registerWithRootLists(js::RootLists& roots) {
         MOZ_ASSERT(!initialized());
         JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
         roots.heapRoots_[kind].insertBack(reinterpret_cast<JS::PersistentRooted<void*>*>(this));
-        // Until marking and destruction support the full set, we assert that
-        // we don't try to add any unsupported types.
-        MOZ_ASSERT(kind == JS::RootKind::Object ||
-                   kind == JS::RootKind::Script ||
-                   kind == JS::RootKind::String ||
-                   kind == JS::RootKind::Id ||
-                   kind == JS::RootKind::Value ||
-                   kind == JS::RootKind::Traceable);
     }
 
   public:
