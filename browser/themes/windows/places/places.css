@@ -40,7 +40,8 @@
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
     #bookmarksPanel,
-    #history-panel {
+    #history-panel,
+    #tabs-panel {
       background-color: #EEF3FA;
     }
   }

@@ -474,6 +474,19 @@
                 acceskey="&emeNotificationsDontAskAgain.accesskey;"
                 oncommand="gEMEHandler.onDontAskAgain(this);"/>
     </menupopup>
+
+    <menupopup id="SyncedTabsSidebarContext">
+      <menuitem label="&syncedTabs.context.openTab.label;"
+                accesskey="&syncedTabs.context.openTab.accesskey;"
+                id="syncedTabsOpenSelected"/>
+      <menuitem label="&syncedTabs.context.bookmarkSingleTab.label;"
+                accesskey="&syncedTabs.context.bookmarkSingleTab.accesskey;"
+                id="syncedTabsBookmarkSelected"/>
+      <menuseparator/>
+      <menuitem label="&syncedTabs.context.refreshList.label;"
+                accesskey="&syncedTabs.context.refreshList.accesskey;"
+                id="syncedTabsRefresh"/>
+    </menupopup>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR

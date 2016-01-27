@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/syncedtabs/sidebar.inc.css
+
+/* These styles are intended to mimic XUL trees and the XUL search box. */
+
+html {
+  border: 1px solid ThreeDShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  box-sizing: border-box;
+}
+
+.item {
+  -moz-padding-end: 0;
+}
+
+.item-title {
+  margin: 1px 0 0;
+  -moz-margin-end: 6px;
+}
+
+
+.search-box {
+  -moz-appearance: textfield;
+  cursor: text;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  padding: 2px 2px 3px;
+  -moz-padding-start: 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+.textbox-search-clear {
+  background-image: url(moz-icon://stock/gtk-clear?size=menu);
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+}
+
+.textbox-search-icon {
+  background-image: url(moz-icon://stock/gtk-find?size=menu);
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+}
+
+.textbox-search-icon[searchbutton]:not([disabled]) ,
+.textbox-search-clear:not([disabled]) {
+  cursor: pointer;
+}
