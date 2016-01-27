@@ -359,16 +359,12 @@ struct Zone : public JS::shadow::Zone,
 
     mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
 
-    static js::HashNumber UniqueIdToHash(uint64_t uid) {
-        return js::HashNumber(uid >> 32) ^ js::HashNumber(uid & 0xFFFFFFFF);
-    }
-
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
     bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
         uint64_t uid;
         if (!getUniqueId(cell, &uid))
             return false;
-        *hashp = UniqueIdToHash(uid);
+        *hashp = js::HashNumber(uid >> 32) ^ js::HashNumber(uid & 0xFFFFFFFF);
         return true;
     }
 
@@ -393,19 +389,10 @@ struct Zone : public JS::shadow::Zone,
         // If the cell was in the nursery, hopefully unlikely, then we need to
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
-        return runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell);
-    }
-
-    js::HashNumber getHashCodeInfallible(js::gc::Cell* cell) {
-        return UniqueIdToHash(getUniqueIdInfallible(cell));
-    }
-
-    uint64_t getUniqueIdInfallible(js::gc::Cell* cell) {
-        uint64_t uid;
         js::AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!getUniqueId(cell, &uid))
-            oomUnsafe.crash("failed to allocate uid");
-        return uid;
+        if (!runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell))
+            oomUnsafe.crash("failed to allocate tracking data for a nursery uid");
+        return true;
     }
 
     // Return true if this cell has a UID associated with it.
