@@ -4434,10 +4434,10 @@ var gCSSProperties = {
   },
   "-moz-window-dragging": {
     domProp: "MozWindowDragging",
-    inherited: true,
+    inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "no-drag" ],
-    other_values: [ "drag" ],
+    initial_values: [ "default" ],
+    other_values: [ "drag", "no-drag" ],
     invalid_values: [ "none" ]
   },
   "align-content": {
