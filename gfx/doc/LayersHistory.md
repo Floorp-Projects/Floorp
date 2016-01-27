@@ -39,7 +39,7 @@ Infrastructure to allow OMTC WebGL and avoid the need to glFinish() every
 frame.
 
 - Compositor API (April 2013 - Bug 825928)
-The planing for this started around November 2012.
+The planning for this started around November 2012.
 Layers refactoring created a compositor API that abstracted away the differences between the
 D3D vs OpenGL. The main piece of API is DrawQuad.
 
