@@ -1,8 +1,5 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
 // MagicNumber = 0x4d534100
 const magic0 = 0;
 const magic1 = 97;  // 'a'

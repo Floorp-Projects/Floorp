@@ -298,6 +298,16 @@ DecodeConversionOperator(FunctionDecoder& f, ExprType expected,
 }
 
 static bool
+DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType expected)
+{
+    return DecodeExpr(f, ExprType::I32) &&
+           DecodeExpr(f, expected) &&
+           (hasElse
+            ? DecodeExpr(f, expected)
+            : CheckType(f, ExprType::Void, expected));
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -319,6 +329,10 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeSetLocal(f, expected);
       case Expr::Block:
         return DecodeBlock(f, expected);
+      case Expr::If:
+        return DecodeIfElse(f, /* hasElse */ false, expected);
+      case Expr::IfElse:
+        return DecodeIfElse(f, /* hasElse */ true, expected);
       case Expr::I32Clz:
         return DecodeUnaryOperator(f, expected, ExprType::I32);
       case Expr::I32Ctz:
