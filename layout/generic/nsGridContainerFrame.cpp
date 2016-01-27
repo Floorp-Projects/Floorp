@@ -3341,14 +3341,21 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   for (const TrackSize& sz : gridReflowState.mCols.mSizes) {
     colTrackSizes.AppendElement(sz.mBase);
   }
-  Properties().Set(GridColTrackSizes(),
-                   new nsTArray<nscoord>(mozilla::Move(colTrackSizes)));
+  ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
+    gridReflowState.mColFunctions.mExplicitGridOffset,
+    gridReflowState.mColFunctions.NumExplicitTracks(),
+    Move(colTrackSizes));
+  Properties().Set(GridColTrackInfo(), colInfo);
+
   nsTArray<nscoord> rowTrackSizes(gridReflowState.mRows.mSizes.Length());
   for (const TrackSize& sz : gridReflowState.mRows.mSizes) {
     rowTrackSizes.AppendElement(sz.mBase);
   }
-  Properties().Set(GridRowTrackSizes(),
-                   new nsTArray<nscoord>(mozilla::Move(rowTrackSizes)));
+  ComputedGridTrackInfo* rowInfo = new ComputedGridTrackInfo(
+    gridReflowState.mRowFunctions.mExplicitGridOffset,
+    gridReflowState.mRowFunctions.NumExplicitTracks(),
+    Move(rowTrackSizes));
+  Properties().Set(GridRowTrackInfo(), rowInfo);
   
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {
