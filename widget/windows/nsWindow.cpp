@@ -3726,52 +3726,6 @@ nsWindow::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
   // on the document of SystemParametersInfo in MSDN.
   const uint32_t kSystemDefaultScrollingSpeed = 3;
 
-  double absOriginDeltaX = Abs(aOriginalDeltaX);
-  double absOriginDeltaY = Abs(aOriginalDeltaY);
-
-  // Compute the simple overridden speed.
-  double absComputedOverriddenDeltaX, absComputedOverriddenDeltaY;
-  nsresult rv =
-    nsBaseWidget::OverrideSystemMouseScrollSpeed(absOriginDeltaX,
-                                                 absOriginDeltaY,
-                                                 absComputedOverriddenDeltaX,
-                                                 absComputedOverriddenDeltaY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aOverriddenDeltaX = aOriginalDeltaX;
-  aOverriddenDeltaY = aOriginalDeltaY;
-
-  if (absComputedOverriddenDeltaX == absOriginDeltaX &&
-      absComputedOverriddenDeltaY == absOriginDeltaY) {
-    // We don't override now.
-    return NS_OK;
-  }
-
-  // Otherwise, we should check whether the user customized the system settings
-  // or not.  If the user did it, we should respect the will.
-  UINT systemSpeed;
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &systemSpeed, 0)) {
-    return NS_ERROR_FAILURE;
-  }
-  // The default vertical scrolling speed is 3, this is defined on the document
-  // of SystemParametersInfo in MSDN.
-  if (systemSpeed != kSystemDefaultScrollingSpeed) {
-    return NS_OK;
-  }
-
-  // Only Vista and later, Windows has the system setting of horizontal
-  // scrolling by the mouse wheel.
-  if (IsVistaOrLater()) {
-    if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
-      return NS_ERROR_FAILURE;
-    }
-    // The default horizontal scrolling speed is 3, this is defined on the
-    // document of SystemParametersInfo in MSDN.
-    if (systemSpeed != kSystemDefaultScrollingSpeed) {
-      return NS_OK;
-    }
-  }
-
   // Limit the overridden delta value from the system settings.  The mouse
   // driver might accelerate the scrolling speed already.  If so, we shouldn't
   // override the scrolling speed for preventing the unexpected high speed
