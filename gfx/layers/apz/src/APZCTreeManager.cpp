@@ -1062,7 +1062,8 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                          scrollMode,
                          ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
                          origin,
-                         aEvent.deltaX, aEvent.deltaY);
+                         aEvent.deltaX, aEvent.deltaY,
+                         aEvent.mAllowToOverrideSystemScrollSpeed);
 
   // We add the user multiplier as a separate field, rather than premultiplying
   // it, because if the input is converted back to a WidgetWheelEvent, then
