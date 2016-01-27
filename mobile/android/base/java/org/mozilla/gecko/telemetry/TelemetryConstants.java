@@ -34,6 +34,7 @@ public class TelemetryConstants {
         public static final String ARCHITECTURE = "arch";
         public static final String CLIENT_ID = "clientId";
         public static final String DEVICE = "device";
+        public static final String EXPERIMENTS = "experiments";
         public static final String LOCALE = "locale";
         public static final String OS_ATTR = "os";
         public static final String OS_VERSION = "osversion";
