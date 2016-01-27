@@ -172,11 +172,6 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr) override;
   NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
-  NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                                         double aOriginalDeltaY,
-                                                         double& aOverriddenDeltaX,
-                                                         double& aOverriddenDeltaY) override;
-
   virtual nsresult        SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                    int32_t aNativeKeyCode,
                                                    uint32_t aModifierFlags,
