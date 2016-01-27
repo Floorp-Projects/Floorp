@@ -2130,18 +2130,23 @@ nsDisplayItem::MaxActiveLayers()
   return sMaxLayers;
 }
 
-int32_t
-nsDisplayItem::ZIndex() const
+static int32_t ZIndexForFrame(nsIFrame* aFrame)
 {
-  if (!mFrame->IsAbsPosContaininingBlock() && !mFrame->IsFlexOrGridItem())
+  if (!aFrame->IsAbsPosContaininingBlock() && !aFrame->IsFlexOrGridItem())
     return 0;
 
-  const nsStylePosition* position = mFrame->StylePosition();
+  const nsStylePosition* position = aFrame->StylePosition();
   if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
     return position->mZIndex.GetIntValue();
 
   // sort the auto and 0 elements together
   return 0;
+}
+
+int32_t
+nsDisplayItem::ZIndex() const
+{
+  return ZIndexForFrame(mFrame);
 }
 
 bool
@@ -6188,6 +6193,12 @@ nsDisplayPerspective::GetLayerState(nsDisplayListBuilder* aBuilder,
                                     const ContainerLayerParameters& aParameters)
 {
   return LAYER_ACTIVE_FORCE;
+}
+
+int32_t
+nsDisplayPerspective::ZIndex() const
+{
+  return ZIndexForFrame(mTransformFrame);
 }
 
 nsDisplayItemGeometry*
