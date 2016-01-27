@@ -463,7 +463,19 @@ public:
   void operator=(const UniquePtr& aOther) = delete; // assign using Move()!
 };
 
-/** A default deletion policy using plain old operator delete. */
+/**
+ * A default deletion policy using plain old operator delete.
+ *
+ * Note that this type can be specialized, but authors should beware of the risk
+ * that the specialization may at some point cease to match (either because it
+ * gets moved to a different compilation unit or the signature changes). If the
+ * non-specialized (|delete|-based) version compiles for that type but does the
+ * wrong thing, bad things could happen.
+ *
+ * This is a non-issue for types which are always incomplete (i.e. opaque handle
+ * types), since |delete|-ing such a type will always trigger a compilation
+ * error.
+ */
 template<typename T>
 class DefaultDelete
 {

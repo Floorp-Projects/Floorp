@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -20,6 +21,16 @@ struct RefPtrTraits<RawServoStyleSheet>
   }
   static void Release(RawServoStyleSheet* aPtr) {
     Servo_ReleaseStylesheet(aPtr);
+  }
+};
+
+template<>
+class DefaultDelete<RawServoStyleSet>
+{
+public:
+  void operator()(RawServoStyleSet* aPtr) const
+  {
+    Servo_DropStyleSet(aPtr);
   }
 };
 

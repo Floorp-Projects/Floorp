@@ -170,8 +170,22 @@ Servo_ReleaseStylesheet(RawServoStyleSheet* sheet)
             "non-MOZ_STYLO build");
 }
 
+RawServoStyleSet*
+Servo_InitStyleSet()
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_InitStyleSet in a "
+            "non-MOZ_STYLO build");
+}
+
 void
-Servo_RestyleDocument(RawGeckoDocument* aDoc)
+Servo_DropStyleSet(RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_DropStyleSet in a "
+            "non-MOZ_STYLO build");
+}
+
+void
+Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleDocument in a "
             "non-MOZ_STYLO build");
