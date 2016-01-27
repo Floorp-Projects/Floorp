@@ -163,7 +163,8 @@ struct MOZ_STACK_CLASS RubyColumn
       , mIndex(aIndex)
     {
       MOZ_ASSERT(aIndex == -1 ||
-                 (aIndex >= 0 && aIndex <= aColumn.mTextFrames.Length()));
+                 (aIndex >= 0 &&
+                  aIndex <= int32_t(aColumn.mTextFrames.Length())));
       SkipUntilExistingFrame();
     }
     friend struct RubyColumn; // for the constructor
