@@ -1080,8 +1080,9 @@ JSCompartment::clearScriptCounts()
     // Clear all hasScriptCounts_ flags of JSScript, in order to release all
     // ScriptCounts entry of the current compartment.
     for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
-        ScriptCounts* value = &r.front().value();
+        ScriptCounts* value = r.front().value();
         r.front().key()->takeOverScriptCountsMapEntry(value);
+        js_delete(value);
     }
 
     js_delete(scriptCountsMap);
