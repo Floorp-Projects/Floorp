@@ -2361,8 +2361,10 @@ void
 nsComputedDOMStyle::AppendGridLineNames(nsString& aResult,
                                         const nsTArray<nsString>& aLineNames)
 {
-  MOZ_ASSERT(!aLineNames.IsEmpty(), "expected some line names");
   uint32_t numLines = aLineNames.Length();
+  if (numLines == 0) {
+    return;
+  }
   for (uint32_t i = 0;;) {
     nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], aResult);
     if (++i == numLines) {
@@ -2374,9 +2376,10 @@ nsComputedDOMStyle::AppendGridLineNames(nsString& aResult,
 
 void
 nsComputedDOMStyle::AppendGridLineNames(nsDOMCSSValueList* aValueList,
-                                        const nsTArray<nsString>& aLineNames)
+                                        const nsTArray<nsString>& aLineNames,
+                                        bool aSuppressEmptyList)
 {
-  if (aLineNames.IsEmpty()) {
+  if (aLineNames.IsEmpty() && aSuppressEmptyList) {
     return;
   }
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -2462,22 +2465,25 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
     subgridKeyword->SetIdent(eCSSKeyword_subgrid);
     valueList->AppendCSSValue(subgridKeyword.forget());
 
-    for (uint32_t i = 0; i < aTrackList.mLineNameLists.Length(); i++) {
+    for (uint32_t i = 0, len = aTrackList.mLineNameLists.Length(); ; ++i) {
       if (MOZ_UNLIKELY(aTrackList.IsRepeatAutoIndex(i))) {
         MOZ_ASSERT(aTrackList.mIsAutoFill, "subgrid can only have 'auto-fill'");
-        MOZ_ASSERT(!aTrackList.mRepeatAutoLineNameListBefore.IsEmpty(),
-                   "The syntax is <line-names>+ so this shouldn't be empty");
         MOZ_ASSERT(aTrackList.mRepeatAutoLineNameListAfter.IsEmpty(),
                    "mRepeatAutoLineNameListAfter isn't used for subgrid");
         RefPtr<nsROCSSPrimitiveValue> start = new nsROCSSPrimitiveValue;
         start->SetString(NS_LITERAL_STRING("repeat(auto-fill,"));
         valueList->AppendCSSValue(start.forget());
-        AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore);
+        AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore,
+                            /*aSuppressEmptyList*/ false);
         RefPtr<nsROCSSPrimitiveValue> end = new nsROCSSPrimitiveValue;
         end->SetString(NS_LITERAL_STRING(")"));
         valueList->AppendCSSValue(end.forget());
       }
-      AppendGridLineNames(valueList, aTrackList.mLineNameLists[i]);
+      if (i == len) {
+        break;
+      }
+      AppendGridLineNames(valueList, aTrackList.mLineNameLists[i],
+                          /*aSuppressEmptyList*/ false);
     }
     return valueList.forget();
   }

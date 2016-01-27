@@ -162,14 +162,13 @@ var grid_template_test_cases = [
             "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]" : "none",
     },
     {
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=978478#c1
-        // The number of repetitions is clamped to
-        // #define GRID_TEMPLATE_MAX_REPETITIONS 10000
+        // Test that the number of lines is clamped to kMaxLine = 10000.
         specified: "subgrid / subgrid [foo] repeat(999999999, [a])",
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
-        // Array(n + 1).join(s) is a hack for the non-standard s.repeat(n)
+        // Array(n).join(s) is a hack for the non-standard s.repeat(n - 1) .
+        // [foo] + 9999 [a] gives us 10000 lines.
         gridTemplateRows: isGridTemplateSubgridValueEnabled ?
-            "subgrid [foo]" + Array(10000 + 1).join(" [a]") : "none",
+            "subgrid [foo]" + Array(10000).join(" [a]") : "none",
     },
     {
         specified: "subgrid [] [foo]/ subgrid [bar",

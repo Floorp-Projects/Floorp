@@ -6061,10 +6061,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid [] [foo bar]",
       "subgrid repeat(1, [])",
       "subgrid Repeat(4, [a] [b c] [] [d])",
-      "repeat(auto-fill, [])",
-      "[] repeat(Auto-fill, [a] [b c] [] [d])",
-      "[x] repeat( Auto-fill, [a b c]) []",
-      "[x] repeat(auto-fill, []) [y z]"
+      "subgrid repeat(auto-fill, [])",
+      "subgrid [x] repeat( Auto-fill, [a b c]) []",
+      "subgrid [x] repeat(auto-fill, []) [y z]"
     );
     gCSSProperties["grid-template-columns"].invalid_values.push(
       "subgrid (foo) 40px",
@@ -6086,6 +6085,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid [a] repeat(auto-fit,[])",
       "subgrid repeat(auto-fill, 1px)",
       "subgrid repeat(auto-fill, 1px [])",
+      "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
       "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
     );
   }
