@@ -26,7 +26,7 @@ namespace wasm {
 
 // Add wasm testing JS functions to the given JS global object.
 bool
-DefineTestingFunctions(JSContext* cx, HandleObject globalObj);
+DefineTestingFunctions(JSContext* cx, JS::HandleObject globalObj);
 
 }  // namespace wasm
 }  // namespace js

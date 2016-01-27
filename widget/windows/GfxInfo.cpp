@@ -539,7 +539,7 @@ GfxInfo::Init()
     } else if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
       // Leave it as an asserting error for now, to see if we can find
       // a system that exhibits this kind of a problem internally.
-      gfxCriticalErrorOnce() << "Potential driver version mismatch ignored due to missing DLLs";
+      gfxCriticalErrorOnce() << "Potential driver version mismatch ignored due to missing DLLs " << NS_ConvertUTF16toUTF8(dllVersion).get() << " and " << NS_ConvertUTF16toUTF8(dllVersion2).get();
     }
   }
 

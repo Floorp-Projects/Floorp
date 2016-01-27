@@ -23,13 +23,13 @@ public:
 
   void AddLayerRectangles(dom::Sequence<dom::ProfileTimelineLayerRect>& aRectangles)
   {
-    nsIntRegionRectIterator it(mRegion);
-    while (const nsIntRect* iterRect = it.Next()) {
+    for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const nsIntRect& iterRect = iter.Get();
       dom::ProfileTimelineLayerRect rect;
-      rect.mX = iterRect->X();
-      rect.mY = iterRect->Y();
-      rect.mWidth = iterRect->Width();
-      rect.mHeight = iterRect->Height();
+      rect.mX = iterRect.X();
+      rect.mY = iterRect.Y();
+      rect.mWidth = iterRect.Width();
+      rect.mHeight = iterRect.Height();
       aRectangles.AppendElement(rect, fallible);
     }
   }

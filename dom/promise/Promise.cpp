@@ -931,10 +931,10 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   // Step 6 and step 7.
   JS::Rooted<JS::Value> getCapabilities(aCx,
                                         JS::ObjectValue(*getCapabilitiesObj));
-  JS::Rooted<JS::Value> promiseVal(aCx);
+  JS::Rooted<JSObject*> promiseObj(aCx);
   if (!JS::Construct(aCx, aConstructor,
                      JS::HandleValueArray(getCapabilities),
-                     &promiseVal)) {
+                     &promiseObj)) {
     aRv.NoteJSContextException();
     return;
   }
@@ -959,7 +959,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   aCapability.mReject = v;
 
   // Step 10.
-  aCapability.mPromise = promiseVal;
+  aCapability.mPromise.setObject(*promiseObj);
 
   // Step 11 doesn't need anything, since the PromiseCapability was passed in.
 }

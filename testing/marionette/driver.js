@@ -1218,7 +1218,8 @@ GeckoDriver.prototype.get = function(cmd, resp) {
   switch (this.context) {
     case Context.CONTENT:
       let get = this.listener.get({url: url, pageTimeout: this.pageTimeout});
-      let id = this.listener.curId;
+      // TODO(ato): Bug 1242595
+      let id = this.listener.activeMessageId;
 
       // If a remoteness update interrupts our page load, this will never return
       // We need to re-issue this request to correctly poll for readyState and

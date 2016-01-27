@@ -1050,7 +1050,12 @@ ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const C
             return false;
 
         RootedValue targetv(cx, ObjectValue(*target));
-        return Construct(cx, targetv, cargs, args.newTarget(), args.rval());
+        RootedObject obj(cx);
+        if (!Construct(cx, targetv, cargs, args.newTarget(), &obj))
+            return false;
+
+        args.rval().setObject(*obj);
+        return true;
     }
 
     // step 8-9

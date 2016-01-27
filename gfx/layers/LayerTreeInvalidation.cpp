@@ -83,10 +83,8 @@ TransformRect(const IntRect& aRect, const Matrix4x4& aTransform)
 static void
 AddTransformedRegion(nsIntRegion& aDest, const nsIntRegion& aSource, const Matrix4x4& aTransform)
 {
-  nsIntRegionRectIterator iter(aSource);
-  const IntRect *r;
-  while ((r = iter.Next())) {
-    aDest.Or(aDest, TransformRect(*r, aTransform));
+  for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
+    aDest.Or(aDest, TransformRect(iter.Get(), aTransform));
   }
   aDest.SimplifyOutward(20);
 }

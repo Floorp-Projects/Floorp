@@ -1052,13 +1052,6 @@ DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 
 DOMHwMediaStream::DOMHwMediaStream()
 {
-#ifdef MOZ_WIDGET_GONK
-  mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
-  mOverlayImage = mImageContainer->CreateOverlayImage();
-  nsAutoTArray<ImageContainer::NonOwningImage,1> images;
-  images.AppendElement(ImageContainer::NonOwningImage(mOverlayImage));
-  mImageContainer->SetCurrentImages(images);
-#endif
 }
 
 DOMHwMediaStream::~DOMHwMediaStream()
@@ -1066,7 +1059,7 @@ DOMHwMediaStream::~DOMHwMediaStream()
 }
 
 already_AddRefed<DOMHwMediaStream>
-DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow)
+DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow, OverlayImage* aImage)
 {
   RefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
 
@@ -1074,25 +1067,35 @@ DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow)
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);
   stream->InitSourceStream(aWindow, graph);
-  stream->Init(stream->GetInputStream());
+  stream->Init(stream->GetInputStream(), aImage);
 
   return stream.forget();
 }
 
 void
-DOMHwMediaStream::Init(MediaStream* stream)
+DOMHwMediaStream::Init(MediaStream* stream, OverlayImage* aImage)
 {
   SourceMediaStream* srcStream = stream->AsSourceStream();
+
+#ifdef MOZ_WIDGET_GONK
+  if (aImage) {
+    mOverlayImage = aImage;
+  } else {
+    Data imageData;
+    imageData.mOverlayId = DEFAULT_IMAGE_ID;
+    imageData.mSize.width = DEFAULT_IMAGE_WIDTH;
+    imageData.mSize.height = DEFAULT_IMAGE_HEIGHT;
+
+    mOverlayImage = new OverlayImage();
+    mOverlayImage->SetData(imageData);
+  }
+#endif
 
   if (srcStream) {
     VideoSegment segment;
 #ifdef MOZ_WIDGET_GONK
     const StreamTime delta = STREAM_TIME_MAX; // Because MediaStreamGraph will run out frames in non-autoplay mode,
                                               // we must give it bigger frame length to cover this situation.
-    mImageData.mOverlayId = DEFAULT_IMAGE_ID;
-    mImageData.mSize.width = DEFAULT_IMAGE_WIDTH;
-    mImageData.mSize.height = DEFAULT_IMAGE_HEIGHT;
-    mOverlayImage->SetData(mImageData);
 
     RefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
     mozilla::gfx::IntSize size = image->GetSize();
@@ -1120,11 +1123,17 @@ void
 DOMHwMediaStream::SetImageSize(uint32_t width, uint32_t height)
 {
 #ifdef MOZ_WIDGET_GONK
-  OverlayImage::Data imgData;
-
-  imgData.mOverlayId = mOverlayImage->GetOverlayId();
-  imgData.mSize = IntSize(width, height);
-  mOverlayImage->SetData(imgData);
+  if (mOverlayImage->GetSidebandStream().IsValid()) {
+    OverlayImage::SidebandStreamData imgData;
+    imgData.mStream = mOverlayImage->GetSidebandStream();
+    imgData.mSize = IntSize(width, height);
+    mOverlayImage->SetData(imgData);
+  } else {
+    OverlayImage::Data imgData;
+    imgData.mOverlayId = mOverlayImage->GetOverlayId();
+    imgData.mSize = IntSize(width, height);
+    mOverlayImage->SetData(imgData);
+  }
 #endif
 
   SourceMediaStream* srcStream = GetInputStream()->AsSourceStream();
@@ -1152,6 +1161,43 @@ DOMHwMediaStream::SetImageSize(uint32_t width, uint32_t height)
   srcStream->AppendToTrack(TRACK_VIDEO_PRIMARY, &segment);
 #endif
 }
+
+void
+DOMHwMediaStream::SetOverlayImage(OverlayImage* aImage)
+{
+  if (!aImage) {
+    return;
+  }
+#ifdef MOZ_WIDGET_GONK
+  mOverlayImage = aImage;
+#endif
+
+  SourceMediaStream* srcStream = GetInputStream()->AsSourceStream();
+  StreamBuffer::Track* track = srcStream->FindTrack(TRACK_VIDEO_PRIMARY);
+
+  if (!track || !track->GetSegment()) {
+    return;
+  }
+
+#ifdef MOZ_WIDGET_GONK
+  // Clear the old segment.
+  // Changing the existing content of segment is a Very BAD thing, and this way will
+  // confuse consumers of MediaStreams.
+  // It is only acceptable for DOMHwMediaStream
+  // because DOMHwMediaStream doesn't have consumers of TV streams currently.
+  track->GetSegment()->Clear();
+
+  // Change the image size.
+  const StreamTime delta = STREAM_TIME_MAX;
+  RefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
+  mozilla::gfx::IntSize size = image->GetSize();
+  VideoSegment segment;
+
+  segment.AppendFrame(image.forget(), delta, size);
+  srcStream->AppendToTrack(TRACK_VIDEO_PRIMARY, &segment);
+#endif
+}
+
 void
 DOMHwMediaStream::SetOverlayId(int32_t aOverlayId)
 {

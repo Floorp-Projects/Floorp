@@ -1287,6 +1287,8 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
             memcpy(&coercedArgs[i], simd.asInt32x4(), Simd128DataSize);
             break;
           }
+          case ValType::Limit:
+            MOZ_CRASH("Limit");
         }
     }
 
@@ -1349,6 +1351,8 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
             return false;
         args.rval().set(ObjectValue(*simdObj));
         break;
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
     }
 
     return true;
@@ -1412,6 +1416,7 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Val
           case ValType::I32x4: MOZ_CRASH("NYI");
           case ValType::F32x4: MOZ_CRASH("NYI");
           case ValType::B32x4: MOZ_CRASH("NYI");
+          case ValType::Limit: MOZ_CRASH("Limit");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             return true;

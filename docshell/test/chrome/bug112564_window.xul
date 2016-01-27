@@ -84,8 +84,9 @@
     }
 
     function testsIterator() {
-      // Load a secure page with a no-store header, followed by a simple page
-      // On pagehide, first page should report it is not being persisted
+      // Load a secure page with a no-cache header, followed by a simple page.
+      // no-cache should not interfere with the bfcache in the way no-store
+      // does.
       var test1DocURI = "https://example.com:443/tests/docshell/test/chrome/112564_nocache.html";
 
       gExpected = [{type: "pagehide", persisted: true},
@@ -97,18 +98,16 @@
       var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
                      "<body>test2</body></html>";
 
-      gExpected = [{type: "pagehide", title: "test1", persisted: false},
-                   {type: "unload", title: "test1"},
+      gExpected = [{type: "pagehide", title: "test1", persisted: true},
                    {type: "load", title: "test2"},
                    {type: "pageshow", title: "test2", persisted: false}];
       gBrowser.loadURI(test2Doc);
       yield undefined;
 
-      // Now go back in history. First page should not have been cached.
+      // Now go back in history. First page has been cached.
       // Check persisted property to confirm
       gExpected = [{type: "pagehide", title: "test2", persisted: true},
-                   {type: "load", title: "test1"},
-                   {type: "pageshow", title: "test1", persisted: false}];
+                   {type: "pageshow", title: "test1", persisted: true}];
       gBrowser.goBack();
       yield undefined;
     }

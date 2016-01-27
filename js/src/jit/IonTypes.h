@@ -152,8 +152,8 @@ enum BailoutKind
 
     // A bailout triggered by a bounds-check failure.
     Bailout_BoundsCheck,
-    // A bailout triggered by a neutered typed object.
-    Bailout_Neutered,
+    // A bailout triggered by a typed object whose backing buffer was detached.
+    Bailout_Detached,
 
     // A shape guard based on TI information failed.
     // (We saw an object whose shape does not match that / any of those observed
@@ -246,8 +246,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_ArgumentCheck";
       case Bailout_BoundsCheck:
         return "Bailout_BoundsCheck";
-      case Bailout_Neutered:
-        return "Bailout_Neutered";
+      case Bailout_Detached:
+        return "Bailout_Detached";
       case Bailout_ShapeGuard:
         return "Bailout_ShapeGuard";
       case Bailout_UninitializedLexical:

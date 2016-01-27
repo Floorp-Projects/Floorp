@@ -5658,6 +5658,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         }
       }
     }
+    break;
 #endif
 
     case WM_SYSCOMMAND:

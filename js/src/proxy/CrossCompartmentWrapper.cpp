@@ -520,7 +520,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     wcompartment->removeWrapper(p);
 
     // When we remove origv from the wrapper map, its wrapper, wobj, must
-    // immediately cease to be a cross-compartment wrapper. Neuter it.
+    // immediately cease to be a cross-compartment wrapper. Nuke it.
     NukeCrossCompartmentWrapper(cx, wobj);
 
     // First, we wrap it in the new compartment. We try to use the existing

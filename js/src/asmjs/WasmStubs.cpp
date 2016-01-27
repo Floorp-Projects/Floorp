@@ -272,6 +272,8 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
         // We don't have control on argv alignment, do an unaligned access.
         masm.storeUnalignedFloat32x4(ReturnSimd128Reg, Address(argv, 0));
         break;
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
     }
 
     // Restore clobbered non-volatile registers of the caller.
@@ -416,6 +418,8 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLa
       case ExprType::F32x4:
       case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
     }
 
     GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, offsets);
@@ -663,6 +667,8 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
       case ExprType::F32x4:
       case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from an import");
+      case ExprType::Limit:
+        MOZ_CRASH("Limit");
     }
 
     Label done;

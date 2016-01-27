@@ -20,34 +20,35 @@ gDirectorySource = "data:application/json," + JSON.stringify({
   }]
 });
 
-function runTests() {
+add_task(function* () {
   let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
   DirectoryLinksProvider.getFrecentSitesName = () => "";
 
   function getData(cellNum) {
-    let cell = getCell(cellNum);
-    if (!cell.site)
-      return null;
-    let siteNode = cell.site.node;
-    return {
-      type: siteNode.getAttribute("type"),
-      thumbnail: siteNode.querySelector(".newtab-thumbnail").style.backgroundImage,
-      enhanced: siteNode.querySelector(".enhanced-content").style.backgroundImage,
-      title: siteNode.querySelector(".newtab-title").textContent,
-      suggested: siteNode.getAttribute("suggested"),
-      url: siteNode.querySelector(".newtab-link").getAttribute("href"),
-    };
+    return performOnCell(cellNum, cell => {
+      if (!cell.site)
+        return null;
+      let siteNode = cell.site.node;
+      return {
+        type: siteNode.getAttribute("type"),
+        thumbnail: siteNode.querySelector(".newtab-thumbnail").style.backgroundImage,
+        enhanced: siteNode.querySelector(".enhanced-content").style.backgroundImage,
+        title: siteNode.querySelector(".newtab-title").textContent,
+        suggested: siteNode.getAttribute("suggested"),
+        url: siteNode.querySelector(".newtab-link").getAttribute("href"),
+      };
+    });
   }
 
   yield setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks("");
 
-  yield addNewTabPageTab();
+  yield* addNewTabPageTab();
   // load another newtab since the first may not get suggested tile
-  yield addNewTabPageTab();
-  checkGrid("http://example.com/landing/page.html,0,1,2,3,4,5,6,7,8,9");
+  yield* addNewTabPageTab();
+  yield* checkGrid("http://example.com/landing/page.html,0,1,2,3,4,5,6,7,8,9");
   // evaluate suggested tile
-  let tileData = getData(0);
+  let tileData = yield getData(0);
   is(tileData.type, "affiliate", "unpinned type");
   is(tileData.thumbnail, "url(\"data:image/png;base64,helloWORLD3\")", "unpinned thumbnail");
   is(tileData.enhanced, "url(\"data:image/png;base64,helloWORLD2\")", "unpinned enhanced");
@@ -58,27 +59,24 @@ function runTests() {
   is(NewTabUtils.pinnedLinks.isPinned({url: "http://example.com/landing/page.html"}), false, "suggested tile is not pinned");
 
   // pin suggested tile
-  whenPagesUpdated();
-  let siteNode = getCell(0).node.querySelector(".newtab-site");
-  let pinButton = siteNode.querySelector(".newtab-control-pin");
-  EventUtils.synthesizeMouseAtCenter(pinButton, {}, getContentWindow());
-  // wait for whenPagesUpdated
-  yield null;
+  let updatedPromise = whenPagesUpdated();
+  yield BrowserTestUtils.synthesizeMouseAtCenter(".newtab-site > .newtab-control-pin", {}, gBrowser.selectedBrowser);
+  yield updatedPromise;
 
   // tile should be pinned and turned into history tile
   is(NewTabUtils.pinnedLinks.isPinned({url: "http://example.com/landing/page.html"}), true, "suggested tile is pinned");
-  tileData = getData(0);
+  tileData = yield getData(0);
   is(tileData.type, "history", "pinned type");
   is(tileData.suggested, null, "no suggested attribute");
   is(tileData.url, "http://example.com/landing/page.html", "original landing page");
 
   // set pinned tile endTime into past and reload the page
   NewTabUtils.pinnedLinks._links[0].endTime = Date.now() - 1000;
-  yield addNewTabPageTab();
+  yield* addNewTabPageTab();
 
   // check that url is reset to base domain and thumbnail points to moz-page-thumb service
   is(NewTabUtils.pinnedLinks.isPinned({url: "http://example.com/"}), true, "baseDomain url is pinned");
-  tileData = getData(0);
+  tileData = yield getData(0);
   is(tileData.type, "history", "type is history");
   is(tileData.title, "example.com", "title changed to baseDomain");
   is(tileData.thumbnail.indexOf("moz-page-thumb") != -1, true, "thumbnail contains moz-page-thumb");
@@ -86,4 +84,4 @@ function runTests() {
   is(tileData.url, "http://example.com/", "url points to baseDomian");
 
   DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
-}
+});

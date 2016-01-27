@@ -904,7 +904,6 @@ gfxMacPlatformFontList::InitSystemFonts()
     nsAutoCString en("en");
     nsAutoTArray<gfxFontFamily*,10> list;
     LookupFontCascadeForLang(en, list);
-    mDefaultCascadeLangs.PutEntry(en);
     mDefaultCascadeFamilies.AppendElements(list);
 }
 
@@ -1262,16 +1261,33 @@ gfxMacPlatformFontList::AppendLinkedSystemFamilies(nsIAtom* aLanguage,
     GetSampleLangForGroup(aLanguage, lang, false);
     ToLowerCase(lang);
 
-    // the font cascade code is fussy about the hyphen/underbar before the
-    // region code, so zh_TW is recognized, zh-TW is ignored
-    if (lang.EqualsLiteral("zh-tw")) {
-        lang.AssignLiteral("zh_tw");
-    } else if (lang.EqualsLiteral("zh-cn")) {
-        lang.AssignLiteral("zh_cn");
+    // quick exit for older versions of OSX
+    if (mDefaultCascadeFamilies.IsEmpty()) {
+        return;
     }
 
-    // if no lang or lang in default lang hash? if so, append defaults
-    if (lang.IsEmpty() || mDefaultCascadeLangs.GetEntry(lang)) {
+    // assume default cascade except for CJK locales
+    bool defaultCascade = true;
+    if (lang.Length() >= 2) {
+        const nsACString& langTag = Substring(lang, 0, 2);
+        if (langTag.EqualsLiteral("zh")) {
+            defaultCascade = false;
+            // the font cascade code is fussy about the hyphen/underbar before
+            // the region code, so zh_TW is recognized, zh-TW is ignored
+            if (lang.EqualsLiteral("zh-tw")) {
+                lang.AssignLiteral("zh_tw");
+            } else if (lang.EqualsLiteral("zh-cn")) {
+                lang.AssignLiteral("zh_cn");
+            } else if (lang.EqualsLiteral("zh-hk")) {
+                lang.AssignLiteral("zh_hk");
+            }
+        } else if (langTag.EqualsLiteral("ja") ||
+                   langTag.EqualsLiteral("ko")) {
+            defaultCascade = false;
+        }
+    }
+
+    if (defaultCascade) {
         aFamilyList.AppendElements(mDefaultCascadeFamilies);
         return;
     }
@@ -1284,27 +1300,8 @@ gfxMacPlatformFontList::AppendLinkedSystemFamilies(nsIAtom* aLanguage,
     }
 
     // lookup the cascade fonts
-    nsAutoTArray<gfxFontFamily*,10> list;
+    nsAutoTArray<gfxFontFamily*,30> list;
     LookupFontCascadeForLang(lang, list);
-
-    // compare with defaults
-    bool sameAsDefault = true;
-    if (list.Length() == mDefaultCascadeFamilies.Length()) {
-        uint32_t num = list.Length();
-        for (uint32_t i = 0; i < num; i++) {
-            if (list[i] != mDefaultCascadeFamilies[i]) {
-                sameAsDefault = false;
-                break;
-            }
-        }
-    }
-
-    // if same as default, add lang to hash and return defaults
-    if (sameAsDefault) {
-        mDefaultCascadeLangs.PutEntry(lang);
-        aFamilyList.AppendElements(mDefaultCascadeFamilies);
-        return;
-    }
 
     // add cascade to cascade cache
     fontsForLang = new PrefFontList;

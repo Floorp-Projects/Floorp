@@ -4677,6 +4677,40 @@ public:
 
 };
 
+class HardwareCodecCapabilityUtils : public mozilla::jni::Class<HardwareCodecCapabilityUtils>
+{
+public:
+    typedef mozilla::jni::Ref<HardwareCodecCapabilityUtils> Ref;
+    typedef mozilla::jni::LocalRef<HardwareCodecCapabilityUtils> LocalRef;
+    typedef mozilla::jni::GlobalRef<HardwareCodecCapabilityUtils> GlobalRef;
+    typedef const mozilla::jni::Param<HardwareCodecCapabilityUtils>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/util/HardwareCodecCapabilityUtils";
+
+protected:
+    HardwareCodecCapabilityUtils(jobject instance) : Class(instance) {}
+
+public:
+    struct FindDecoderCodecInfoForMimeType_t {
+        typedef HardwareCodecCapabilityUtils Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "findDecoderCodecInfoForMimeType";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto FindDecoderCodecInfoForMimeType(mozilla::jni::String::Param) -> bool;
+
+};
+
 class NativeJSContainer : public mozilla::jni::Class<NativeJSContainer>
 {
 public:

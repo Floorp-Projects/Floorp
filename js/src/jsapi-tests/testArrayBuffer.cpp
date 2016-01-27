@@ -58,20 +58,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         void* contents = JS_StealArrayBufferContents(cx, obj);
         CHECK(contents != nullptr);
 
-        // Check that the original ArrayBuffer is neutered
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
-        CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "byteLength", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "byteOffset", &v));
-        CHECK(v.isInt32(0));
-        CHECK(JS_GetProperty(cx, view, "length", &v));
-        CHECK(v.isInt32(0));
-        CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
-        v.setUndefined();
-        JS_GetElement(cx, obj, 0, &v);
-        CHECK(v.isUndefined());
+        CHECK(JS_IsDetachedArrayBufferObject(obj));
 
         // Transfer to a new ArrayBuffer
         JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, size, contents));
@@ -101,7 +88,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
 }
 END_TEST(testArrayBuffer_bug720949_steal)
 
-// Varying number of views of a buffer, to test the neutering weak pointers
+// Varying number of views of a buffer, to test the detachment weak pointers
 BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 {
     JS::RootedObject buffer(cx);
@@ -119,8 +106,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
         GC(cx);
-        CHECK(isNeutered(view));
-        CHECK(isNeutered(buffer));
+        CHECK(hasDetachedBuffer(view));
+        CHECK(JS_IsDetachedArrayBufferObject(buffer));
         view = nullptr;
         GC(cx);
         buffer = nullptr;
@@ -139,14 +126,14 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         GC(cx);
         view2 = JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200);
 
-        // Neuter
+        // Detach
         void* contents = JS_StealArrayBufferContents(cx, buffer);
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
 
-        CHECK(isNeutered(view1));
-        CHECK(isNeutered(view2));
-        CHECK(isNeutered(buffer));
+        CHECK(hasDetachedBuffer(view1));
+        CHECK(hasDetachedBuffer(view2));
+        CHECK(JS_IsDetachedArrayBufferObject(buffer));
 
         view1 = nullptr;
         GC(cx);
@@ -165,7 +152,7 @@ static void GC(JSContext* cx)
     JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end
 }
 
-bool isNeutered(JS::HandleObject obj) {
+bool hasDetachedBuffer(JS::HandleObject obj) {
     JS::RootedValue v(cx);
     return JS_GetProperty(cx, obj, "byteLength", &v) && v.toInt32() == 0;
 }

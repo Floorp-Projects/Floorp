@@ -2235,7 +2235,7 @@ CheckDOMProxyExpandoDoesNotShadow(JSContext* cx, MacroAssembler& masm, Register 
                                   Label* checkFailed);
 
 void
-CheckForNeuteredTypedObject(JSContext* cx, MacroAssembler& masm, Label* failure);
+CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure);
 
 bool
 DoCallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,

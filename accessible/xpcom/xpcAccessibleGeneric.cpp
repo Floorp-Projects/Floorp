@@ -33,7 +33,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(xpcAccessibleGeneric)
 Accessible*
 xpcAccessibleGeneric::ToInternalAccessible() const
 {
-  return mIntl;
+  return mIntl.AsAccessible();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

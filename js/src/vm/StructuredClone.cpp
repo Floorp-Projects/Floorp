@@ -1225,8 +1225,8 @@ JSStructuredCloneWriter::writeTransferMap()
         if (!memory.put(obj, memory.count()))
             return false;
 
-        // Emit a placeholder pointer. We will steal the data and neuter the
-        // transferable later, in the case of ArrayBufferObject.
+        // Emit a placeholder pointer.  We defer stealing the data until later
+        // (and, if necessary, detaching this object if it's an ArrayBuffer).
         if (!out.writePair(SCTAG_TRANSFER_MAP_PENDING_ENTRY, JS::SCTAG_TMO_UNFILLED))
             return false;
         if (!out.writePtr(nullptr)) // Pointer to ArrayBuffer contents or to SharedArrayRawBuffer.

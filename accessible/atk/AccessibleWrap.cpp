@@ -145,7 +145,7 @@ MaiAtkObject::GetAtkHyperlink()
 void
 MaiAtkObject::Shutdown()
 {
-  accWrap = 0;
+  accWrap.SetBits(0);
   MaiHyperlink* maiHyperlink =
     (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
   if (maiHyperlink) {
@@ -559,7 +559,7 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
         ATK_OBJECT_CLASS(parent_class)->initialize(aAtkObj, aData);
 
   /* initialize object */
-  MAI_ATK_OBJECT(aAtkObj)->accWrap = reinterpret_cast<uintptr_t>(aData);
+  MAI_ATK_OBJECT(aAtkObj)->accWrap.SetBits(reinterpret_cast<uintptr_t>(aData));
 }
 
 void
@@ -567,7 +567,7 @@ finalizeCB(GObject *aObj)
 {
     if (!IS_MAI_OBJECT(aObj))
         return;
-    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == 0, "AccWrap NOT null");
+    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap.Bits() == 0, "AccWrap NOT null");
 
     // call parent finalize function
     // finalize of GObjectClass will unref the accessible parent if has
@@ -1064,13 +1064,13 @@ GetAccessibleWrap(AtkObject* aAtkObj)
   NS_ENSURE_TRUE(isMAIObject || MAI_IS_ATK_SOCKET(aAtkObj),
                  nullptr);
 
-  uintptr_t accWrapPtr = isMAIObject ?
-    MAI_ATK_OBJECT(aAtkObj)->accWrap :
-    reinterpret_cast<uintptr_t>(MAI_ATK_SOCKET(aAtkObj)->accWrap);
-  if (accWrapPtr & IS_PROXY)
-    return nullptr;
-
-  AccessibleWrap* accWrap = reinterpret_cast<AccessibleWrap*>(accWrapPtr);
+  AccessibleWrap* accWrap = nullptr;
+  if (isMAIObject) {
+    Accessible* acc = MAI_ATK_OBJECT(aAtkObj)->accWrap.AsAccessible();
+    accWrap = static_cast<AccessibleWrap*>(acc);
+  } else {
+    accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
+  }
 
   // Check if the accessible was deconstructed.
   if (!accWrap)
@@ -1089,11 +1089,10 @@ ProxyAccessible*
 GetProxy(AtkObject* aObj)
 {
   if (!aObj || !IS_MAI_OBJECT(aObj) ||
-      !(MAI_ATK_OBJECT(aObj)->accWrap & IS_PROXY))
+      !MAI_ATK_OBJECT(aObj)->accWrap.IsProxy())
     return nullptr;
 
-  return reinterpret_cast<ProxyAccessible*>(MAI_ATK_OBJECT(aObj)->accWrap
-      & ~IS_PROXY);
+  return MAI_ATK_OBJECT(aObj)->accWrap.AsProxy();
 }
 
 AtkObject*

@@ -114,7 +114,12 @@ Reflect_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 6.
-    return Construct(cx, args.get(0), constructArgs, newTarget, args.rval());
+    RootedObject obj(cx);
+    if (!Construct(cx, args.get(0), constructArgs, newTarget, &obj))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
 }
 
 /* ES6 26.1.3 Reflect.defineProperty(target, propertyKey, attributes) */
