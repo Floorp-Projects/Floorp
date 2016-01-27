@@ -58,11 +58,14 @@ function* testClean() {
   syncedTabsDeckComponent._accountStatus.restore();
   SyncedTabs._internal.getTabClients.restore();
   SyncedTabs._internal = originalSyncedTabsInternal;
-  let defer = Promise.defer();
-  window.SidebarUI.browser.contentWindow.addEventListener("unload", defer.resolve);
-  SidebarUI.hide();
-  yield defer.promise;
-  window.SidebarUI.browser.contentWindow.removeEventListener("unload", defer.resolve);
+
+  yield new Promise(resolve => {
+    window.SidebarUI.browser.contentWindow.addEventListener("unload", function listener() {
+      window.SidebarUI.browser.contentWindow.removeEventListener("unload", listener);
+      resolve();
+    });
+    SidebarUI.hide();
+  });
 }
 
 add_task(function* testSyncedTabsSidebarList() {
