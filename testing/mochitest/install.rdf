@@ -12,7 +12,8 @@
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
 #expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
-#expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
+               <!-- Set to * so toolkit/mozapps/update/chrome tests pass. -->
+               <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
     <!-- Front End MetaData -->
