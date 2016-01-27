@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-import mozfile
 import os
 import shutil
 import tarfile
 import tempfile
-import stubs
 import unittest
 import zipfile
+
+import mozfile
+
+import stubs
 
 
 class TestExtract(unittest.TestCase):
@@ -38,6 +40,25 @@ class TestExtract(unittest.TestCase):
                 shutil.rmtree(dest)
         finally:
             os.remove(_zipfile)
+
+    def test_extract_zipfile_missing_file_attributes(self):
+        """if files do not have attributes set the default permissions have to be inherited."""
+        _zipfile = os.path.join(os.path.dirname(__file__), 'files', 'missing_file_attributes.zip')
+        self.assertTrue(os.path.exists(_zipfile))
+        dest = tempfile.mkdtemp()
+        try:
+            # Get the default file permissions for the user
+            fname = os.path.join(dest, 'foo')
+            with open(fname, 'w'):
+                pass
+            default_stmode = os.stat(fname).st_mode
+
+            files = mozfile.extract_zip(_zipfile, dest)
+            for filename in files:
+                self.assertEqual(os.stat(os.path.join(dest, filename)).st_mode,
+                                 default_stmode)
+        finally:
+            shutil.rmtree(dest)
 
     def test_extract_tarball(self):
         """test extracting a tarball"""
