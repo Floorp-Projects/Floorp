@@ -202,6 +202,28 @@ DecodeSetLocal(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
+DecodeBlock(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t numExprs;
+    if (!f.d().readVarU32(&numExprs))
+        return f.fail("unable to read block's number of expressions");
+
+    if (numExprs) {
+        for (uint32_t i = 0; i < numExprs - 1; i++) {
+            if (!DecodeExpr(f, ExprType::Void))
+                return false;
+        }
+        if (!DecodeExpr(f, expected))
+            return false;
+    } else {
+        if (!CheckType(f, ExprType::Void, expected))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -217,6 +239,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeGetLocal(f, expected);
       case Expr::SetLocal:
         return DecodeSetLocal(f, expected);
+      case Expr::Block:
+        return DecodeBlock(f, expected);
       default:
         break;
     }

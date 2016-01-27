@@ -41,6 +41,8 @@ static const unsigned AST_LIFO_DEFAULT_CHUNK_SIZE = 4096;
 /*****************************************************************************/
 // wasm AST
 
+class WasmAstExpr;
+
 template <class T>
 using WasmAstVector = mozilla::Vector<T, 0, LifoAllocPolicy<Fallible>>;
 
@@ -48,6 +50,7 @@ template <class K, class V, class HP>
 using WasmAstHashMap = HashMap<K, V, HP, LifoAllocPolicy<Fallible>>;
 
 typedef WasmAstVector<ValType> WasmAstValTypeVector;
+typedef WasmAstVector<WasmAstExpr*> WasmAstExprVector;
 
 struct WasmAstBase
 {
@@ -88,6 +91,7 @@ class WasmAstSig : public WasmAstBase
 
 enum class WasmAstKind
 {
+    Block,
     Const,
     Export,
     Func,
@@ -176,6 +180,20 @@ class WasmAstSetLocal : public WasmAstExpr
     WasmAstExpr& value() const {
         return value_;
     }
+};
+
+class WasmAstBlock : public WasmAstExpr
+{
+    WasmAstExprVector exprs_;
+
+  public:
+    static const WasmAstKind Kind = WasmAstKind::Block;
+    WasmAstBlock(WasmAstExprVector&& exprs)
+      : WasmAstExpr(Kind),
+        exprs_(Move(exprs))
+    {}
+
+    const WasmAstExprVector& exprs() const { return exprs_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -285,6 +303,7 @@ class WasmToken
   public:
     enum Kind
     {
+        Block,
         CloseParen,
         Const,
         EndOfFile,
@@ -457,6 +476,11 @@ class WasmTokenStream
             } while (*cur_++ != '"');
             return WasmToken(WasmToken::Text, begin, cur_);
 
+          case 'b':
+            if (consume(end_, MOZ_UTF16("lock")))
+                return WasmToken(WasmToken::Block, begin, cur_);
+            break;
+
           case '$':
             while (cur_ != end_ && IsNameAfterDollar(*cur_))
                 cur_++;
@@ -571,7 +595,7 @@ class WasmTokenStream
     {}
     void generateError(WasmToken token, UniqueChars* error) {
         unsigned column = token.begin() - lineStart_ + 1;
-        error->reset(JS_smprintf("parsing wasm text at at %u:%u", line_, column));
+        error->reset(JS_smprintf("parsing wasm text at %u:%u", line_, column));
     }
 
     WasmToken peek() {
@@ -679,6 +703,27 @@ ParseSetLocal(WasmParseContext& c)
     return new(c.lifo) WasmAstSetLocal(localIndex.integer(), *value);
 }
 
+static WasmAstBlock*
+ParseBlock(WasmParseContext& c)
+{
+    WasmToken numExprs;
+    if (!c.ts.match(WasmToken::Integer, &numExprs, c.error))
+        return nullptr;
+
+    WasmAstExprVector exprs(c.lifo);
+    if (!exprs.reserve(numExprs.integer()))
+        return nullptr;
+
+    for (uint32_t i = 0; i < numExprs.integer(); i++) {
+        WasmAstExpr* value = ParseExpr(c);
+        if (!value)
+            return nullptr;
+        exprs.infallibleAppend(value);
+    }
+
+    return new(c.lifo) WasmAstBlock(Move(exprs));
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -687,6 +732,8 @@ ParseExprInsideParens(WasmParseContext& c)
     switch (expr.kind()) {
       case WasmToken::Nop:
         return new(c.lifo) WasmAstNop;
+      case WasmToken::Block:
+        return ParseBlock(c);
       case WasmToken::Const:
         return ParseConst(c, expr);
       case WasmToken::GetLocal:
@@ -851,6 +898,24 @@ static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr);
 
 static bool
+EncodeBlock(Encoder& e, WasmAstBlock& b)
+{
+    if (!e.writeExpr(Expr::Block))
+        return false;
+
+    size_t numExprs = b.exprs().length();
+    if (!e.writeVarU32(numExprs))
+        return false;
+
+    for (size_t i = 0; i < numExprs; i++) {
+        if (!EncodeExpr(e, *b.exprs()[i]))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeConst(Encoder& e, WasmAstConst& c)
 {
     switch (c.val().type()) {
@@ -884,6 +949,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
     switch (expr.kind()) {
       case WasmAstKind::Nop:
         return e.writeExpr(Expr::Nop);
+      case WasmAstKind::Block:
+        return EncodeBlock(e, expr.as<WasmAstBlock>());
       case WasmAstKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
       case WasmAstKind::GetLocal:
