@@ -12,7 +12,8 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
-loader.loadSubScript("chrome://marionette/content/actions.js");
+
+Cu.import("chrome://marionette/content/actions.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/elements.js");
@@ -49,7 +50,7 @@ var elementManager = new ElementManager([]);
 var capabilities = {};
 var interactions = new Interactions(utils, () => capabilities);
 
-var actions = new ActionChain(utils, checkForInterrupted);
+var actions = new actions.Chain(utils, checkForInterrupted);
 var importedScripts = null;
 
 // Contains the last file input element that was the target of
