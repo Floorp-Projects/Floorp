@@ -16,9 +16,9 @@ BEGIN_TEST(testNewTargetInvokeConstructor)
     JS::AutoValueArray<1> args(cx);
     args[0].set(func);
 
-    JS::RootedValue rval(cx);
+    JS::RootedObject obj(cx);
 
-    CHECK(JS::Construct(cx, func, args, &rval));
+    CHECK(JS::Construct(cx, func, args, &obj));
 
     return true;
 }

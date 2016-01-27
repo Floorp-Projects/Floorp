@@ -4243,11 +4243,6 @@ Parser<FullParseHandler>::checkDestructuringArray(BindData<FullParseHandler>* da
                 return false;
             }
             target = element->pn_kid;
-
-            if (handler.isUnparenthesizedDestructuringPattern(target)) {
-                report(ParseError, false, target, JSMSG_BAD_DESTRUCT_TARGET);
-                return false;
-            }
         } else if (handler.isUnparenthesizedAssignment(element)) {
             target = element->pn_left;
         } else {

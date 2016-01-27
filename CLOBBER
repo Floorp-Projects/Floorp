@@ -22,6 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1241975 - port B2G branding Makefiles to moz.build;
-Bug 1241974 - remove testing/mochitest/manifests/Makefile.in;
+to fix another bustage from bug 1069556 landing;
 

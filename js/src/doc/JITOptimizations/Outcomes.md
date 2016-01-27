@@ -142,9 +142,9 @@ Could not accurately calculate the range attributes of an inline array creation.
 
 Arrays at this element access location have seen negative indexes.
 
-### TypedObjectNeutered
+### TypedObjectHasDetachedBuffer
 
-The typed object being accessed at this location may have been neutered (a neutered typed object is one where the underlying byte buffer has been removed or transferred to a worker).
+The storage for the typed object being accessed at this location might be a detached ArrayBuffer.  (This can happen if the typed object, or its underlying buffer as accessed using `TypedObject.storage(typedObject).buffer`, is transferred using the structured clone algorithm.)
 
 ### TypedObjectArrayRange
 

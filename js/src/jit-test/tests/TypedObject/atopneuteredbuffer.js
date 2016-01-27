@@ -1,5 +1,5 @@
 // Bug 976697. Check for various quirks when instantiating a typed
-// object atop an already neutered buffer.
+// object atop a detached buffer.
 
 if (typeof TypedObject === "undefined")
   quit();
@@ -13,11 +13,11 @@ function main(variant) { // once a C programmer, always a C programmer.
   var Unit = new StructType({});   // Empty struct type
   var buffer = new ArrayBuffer(0); // Empty buffer
   var p = new Unit(buffer);        // OK
-  neuter(buffer, variant);
+  detachArrayBuffer(buffer, variant);
   assertThrowsInstanceOf(() => new Unit(buffer), TypeError,
-                         "Able to instantiate atop neutered buffer");
+                         "Able to instantiate atop detached buffer");
   assertThrowsInstanceOf(() => new Uints(buffer), TypeError,
-                         "Able to instantiate atop neutered buffer");
+                         "Able to instantiate atop detached buffer");
 }
 
 main("same-data");

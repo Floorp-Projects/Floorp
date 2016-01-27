@@ -593,7 +593,7 @@ ConstructFromStack(JSContext* cx, const CallArgs& args)
 
 bool
 js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
-              MutableHandleValue rval)
+              MutableHandleObject objp)
 {
     args.setCallee(fval);
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
@@ -601,7 +601,8 @@ js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, Handle
     if (!InternalConstruct(cx, args))
         return false;
 
-    rval.set(args.rval());
+    MOZ_ASSERT(args.rval().isObject());
+    objp.set(&args.rval().toObject());
     return true;
 }
 
@@ -4577,8 +4578,10 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
         if (!GetElements(cx, aobj, length, cargs.array()))
             return false;
 
-        if (!Construct(cx, callee, cargs, newTarget, res))
+        RootedObject obj(cx);
+        if (!Construct(cx, callee, cargs, newTarget, &obj))
             return false;
+        res.setObject(*obj);
     } else {
         InvokeArgs args(cx);
 

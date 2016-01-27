@@ -1,0 +1,195 @@
+/**
+ * namespace Holds at least 1 config JSON object
+ */
+bbc.fmtj.page.empConfig = {};
+
+/**
+ * The base configuration applied to all
+ * EMPs embedded on Journalism sites.
+ * 
+ */
+bbc.fmtj.page.empConfig.base = {
+  
+  /**
+   * Related to the EMP such as size,
+   * location etc.
+   *
+   */
+  player : {    
+    /** the height of the transport controls in the EMP */
+    toolbarPadding: 0,
+    uxHighlightColour: '0xff0000',
+    
+    /**
+     * The footer that appears when the EMP voided in a
+     * popout window.
+     */
+    popoutFooterHeight : {
+      /** height of the audio footer */
+      audio: 32,
+      /** height of the video footer */
+      video: 77
+    },
+    
+    /* Used to feed the embeddedMedia.Player required version */
+    requiredVersion: "9.0.115"
+
+  },
+  
+  /** Supported audio player sizes. The size keys must match those output by CPS */
+  audio : {
+    /** the 'small' size */
+    small : { width: 226, height: 115 },
+    /** the larger size */
+    full : { width: 512, height: 115 } 
+  },
+  
+  /**
+   * Supported video player sizes
+   * TODO: Are these used
+   */
+  video : {
+    /* should be named sizes? */
+    /* these may not be used...*/
+    standard : { width: 448, height: 252 },
+    popout  : { width: 512, height: 323 }
+  },
+  
+  /**
+   * Message text for users that do not have the
+   * correct version of Flash to embed the EMP 
+   */
+  noFlashMessage : {
+    heading   : "Cannot play media.",
+    bodyText  : "You do not have the correct version of the flash player. ",
+    linkText  : "Downloaddisabled the correct version",
+    linkUrl   : "httpdisabled://www.adobe.com/shockwave/downloaddisabled/downloaddisabled.cgi?P1_Prod_Version=ShockwaveFlash"
+  },
+  
+  /**
+   * The templates to be used with the noFlashMessage.
+   */
+  noFlashTemplate : {
+    audio: '<div class="audioImage"></div><div class="warning"><p><strong>{heading}</strong>{bodyText} <a href="{linkUrl}">{linkText}</a></p></div>',
+    video: '<img class="holding" src="{holding}" width="{width}" height="{height}"><div class="warning"><p><strong>{heading}</strong>{bodyText} <a href="{linkUrl}">{linkText}</a></p></div>'
+  },
+  
+  /**
+   * The URL of the config XML file for configuring the EMP
+   * see http://newsimg.bbc.co.uk/player/emp/1_1_3_0_0_426652_426614_1/
+   */
+  configUrl: "httpdisabled://news.bbc.co.uk/player/emp/1_1_3_0_0_426652_426614_1/config/default.xml",
+  
+  /**
+    The settings to be converted into keys such as config_settings_KEY = VALUE
+    and passed to emp.set(key, value)
+    
+    example settings: {
+      language: "default"
+    }
+    
+    =>
+    
+    emp.set( "config_settings_language", "default" );
+    
+    see http://newsimg.bbc.co.uk/player/emp/1_1_3_0_0_426652_426614_1/docs/guides/configurationSettings.html
+  */
+  settings: {
+    /** Language to use for EMP interface */
+    language: "default",
+	skin:"silver"
+  },
+  
+  /**
+   Same behaviour as settings object above but used to configure
+   any EMP plugins:
+   
+   examples plugins: {
+                fmtjLiveStats: {
+                  pageType: "eav7"
+                }
+              }
+              
+    =>
+    
+    emp.set( "config_plugins_fmtjLivestats_pageType", eav7" )
+    
+    see http://newsimg.bbc.co.uk/player/emp/1_1_3_0_0_426652_426614_1/docs/guides/plugins.html
+    
+    TODO what do we do about livestats tracking for developer usage??
+  */
+  plugins: {
+    /** Livestats plugin parameters are supplied by CPS */
+    fmtjLiveStats: {}
+  },
+  
+  // TODO: Add quova geoip logic here to stop appearing when inside the uk
+  
+  /**
+   * Options for configuring adverts
+   * when EMP is viewed internationally.
+   */
+  ads: {
+    /**
+     * Configuration for companion ad format
+     */
+    companion: {
+      /** Dimensions of the companion */
+      size: "300x60",
+      
+      /** Type of companion */
+      type: "adi",
+      
+      /**
+       * Prefix for the id of the companion banner if automatically created
+       * by this embed code (for example if embedded by a developer)
+       */
+      idPrefix: "bbccom_companion_",
+      
+      /**
+       * Template for the companion banner dom id
+       */
+      template: '<div class="bbccom_visibility_hidden" id="{id}"><div class="bbccom_companion_text">Advertisement</div>'
+    
+      /**
+       * name suppress {boolean}
+       * When true and a developer is embedding then no companion will
+       * be created. Make sure that you also stop the EMP showing a
+       * pre-roll advert by calling:
+       *   emp.set( "config_settings_suppressItemKind", "advert" ); 
+       */
+    }
+  }
+};
+
+
+
+  /*
+  * Begin panorama config   
+  */
+
+
+  /*
+  * Begin welsh config  
+  */
+
+
+  /*
+  * Begin F1 config   
+  */
+
+
+  /*
+  * Begin weather config   
+  */
+
+
+  /*
+  * Register EMP
+  */
+  bbc.fmtj.queue.register({namespace:"bbc.fmtj.av.emp",method:"loaddisabled",scripts: {foot: [ "/js/app/av/emp/1_1_3_0_0_426652_426614_1/emp.js" ]}});
+
+/*
+* DemocracyLive and Childrens do not have a site_to_serve variable
+* So there is currently no way to configure them.
+*/

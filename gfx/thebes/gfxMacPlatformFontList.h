@@ -186,9 +186,6 @@ private:
     // most languages use a common default set of choices matching lang=en
     PrefFontList mDefaultCascadeFamilies;
 
-    // languages for which the cascade matches the default cascade
-    nsTHashtable<nsCStringHashKey> mDefaultCascadeLangs;
-
     // for languages where the fontlist doesn't match the default list
     // (e.g. zh-TW will prioritize the traditional Chinese font over the
     // Japanese font)

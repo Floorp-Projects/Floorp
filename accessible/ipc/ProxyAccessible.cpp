@@ -14,6 +14,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
+#include "xpcAccessibleDocument.h"
 
 namespace mozilla {
 namespace a11y {
@@ -23,6 +24,11 @@ ProxyAccessible::Shutdown()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsDoc());
   NS_ASSERTION(!mOuterDoc, "Why do we still have a child doc?");
+  xpcAccessibleDocument* xpcDoc =
+    GetAccService()->GetCachedXPCDocument(Document());
+  if (xpcDoc) {
+    xpcDoc->NotifyOfShutdown(this);
+  }
 
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc accessibles
   // can be destroyed before the doc they own.

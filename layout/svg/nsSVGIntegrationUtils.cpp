@@ -580,7 +580,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
    */
   if (clipPathFrame && isTrivialClip) {
     aContext.Save();
-    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, cssPxToDevPxMatrix);
+    clipPathFrame->ApplyClipPath(aContext, aFrame, cssPxToDevPxMatrix);
   }
 
   /* Paint the child */
