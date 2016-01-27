@@ -5,7 +5,7 @@ import re
 import datetime
 
 PATTERN=re.compile(
-    '((?:\d+)?\.?\d+) *([a-z])'
+    '((?:\d+)?\.?\d+) *([a-z]+)'
 )
 
 def seconds(value):
@@ -17,8 +17,12 @@ def minutes(value):
 def hours(value):
     return datetime.timedelta(hours=int(value))
 
-def days (value):
+def days(value):
     return datetime.timedelta(days=int(value))
+
+def months(value):
+    # See warning in years(), below
+    return datetime.timedelta(days=int(value) * 30)
 
 def years(value):
     # Warning here "years" are vague don't use this for really sensitive date
@@ -28,9 +32,10 @@ def years(value):
 
 ALIASES = {}
 ALIASES['seconds'] = ALIASES['second'] = ALIASES['s'] = seconds
-ALIASES['minutes'] = ALIASES['minute'] = ALIASES['m'] = minutes
+ALIASES['minutes'] = ALIASES['minute'] = ALIASES['min'] = minutes
 ALIASES['hours'] = ALIASES['hour'] = ALIASES['h'] = hours
 ALIASES['days'] = ALIASES['day'] = ALIASES['d'] = days
+ALIASES['months'] = ALIASES['month'] = ALIASES['mo'] = months
 ALIASES['years'] = ALIASES['year'] = ALIASES['y'] = years
 
 class InvalidString(Exception):
