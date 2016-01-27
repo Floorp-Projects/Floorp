@@ -87,22 +87,17 @@ endif
 
 # For all variables such as DLLFLAGS, that may contain $(DIST)
 DIST := $(ABS_DIST)
-ifdef MOZ_BUILD_NSPR
-NSPR_INCLUDE_DIR = $(ABS_DIST)/include/nspr
-NSPR_LIB_DIR = $(ABS_DIST)/bin
-else
 NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
 ifneq (,$(strip $(NSPR_INCLUDE_DIR)))
 NSPR_INCLUDE_DIR := $(subst -I,,$(subst -I$(DIST),-I$(ABS_DIST),$(NSPR_INCLUDE_DIR)))
 else
-$(error Your NSPR CFLAGS are broken!)
+NSPR_INCLUDE_DIR = $(ABS_DIST)/include/nspr
 endif
 NSPR_LIB_DIR = $(firstword $(filter -L%,$(NSPR_LIBS)))
 ifneq (,$(strip $(NSPR_LIB_DIR)))
 NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
-$(error Your NSPR LDFLAGS are broken!)
-endif
+NSPR_LIB_DIR = $(ABS_DIST)/lib
 endif
 
 # To get debug symbols from NSS
