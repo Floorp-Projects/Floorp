@@ -8,7 +8,7 @@
 #include "ia32_settings.h"
 extern ia32_settings_t ia32_settings;
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#ifdef _MSC_VER
         #define snprintf        _snprintf
         #define inline          __inline
 #endif

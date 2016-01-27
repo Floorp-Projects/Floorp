@@ -196,11 +196,38 @@ void BreakpadRemoveUploadParameter(BreakpadRef ref, NSString *key);
 
 // Method to handle uploading data to the server
 
-// Returns if there is some report to send to the server.
-bool BreakpadHasCrashReportToUpload(BreakpadRef ref);
+// Returns the number of crash reports waiting to send to the server.
+int BreakpadGetCrashReportCount(BreakpadRef ref);
+
+// Returns the next upload configuration. The report file is deleted.
+NSDictionary *BreakpadGetNextReportConfiguration(BreakpadRef ref);
 
 // Upload next report to the server.
 void BreakpadUploadNextReport(BreakpadRef ref);
+
+// Upload next report to the server.
+// |server_parameters| is additional server parameters to send.
+void BreakpadUploadNextReportWithParameters(BreakpadRef ref,
+                                            NSDictionary *server_parameters);
+
+// Upload a report to the server.
+// |server_parameters| is additional server parameters to send.
+// |configuration| is the configuration of the breakpad report to send.
+void BreakpadUploadReportWithParametersAndConfiguration(
+    BreakpadRef ref,
+    NSDictionary *server_parameters,
+    NSDictionary *configuration);
+
+// Handles the network response of a breakpad upload. This function is needed if
+// the actual upload is done by the Breakpad client.
+// |configuration| is the configuration of the upload. It must contain the same
+// fields as the configuration passed to
+// BreakpadUploadReportWithParametersAndConfiguration.
+// |data| and |error| contain the network response.
+void BreakpadHandleNetworkResponse(BreakpadRef ref,
+                                   NSDictionary *configuration,
+                                   NSData *data,
+                                   NSError *error);
 
 // Upload a file to the server. |data| is the content of the file to sent.
 // |server_parameters| is additional server parameters to send.

@@ -62,6 +62,10 @@
   // The interval to wait between two uploads. Value is 0 if no upload must be
   // done.
   int uploadIntervalInSeconds_;
+
+  // The dictionary that contains additional server parameters to send when
+  // uploading crash reports.
+  NSDictionary* uploadTimeParameters_;
 }
 
 // Singleton.
@@ -70,6 +74,10 @@
 // Update the controller configuration. Merges its old configuration with the
 // new one. Merge is done by replacing the old values by the new values.
 - (void)updateConfiguration:(NSDictionary*)configuration;
+
+// Reset the controller configuration to its initial value, which is the
+// infoDictionary of the bundle of the application.
+- (void)resetConfiguration;
 
 // Configure the URL to upload the report to. This must be called at least once
 // if the URL is not in the bundle information.
@@ -80,8 +88,11 @@
 // will prevent uploads.
 - (void)setUploadInterval:(int)intervalInSeconds;
 
-// Specify a parameter that will be uploaded to the crash server. See
-// |BreakpadAddUploadParameter|.
+// Set additional server parameters to send when uploading crash reports.
+- (void)setParametersToAddAtUploadTime:(NSDictionary*)uploadTimeParameters;
+
+// Specify an upload parameter that will be added to the crash report when a
+// crash report is generated. See |BreakpadAddUploadParameter|.
 - (void)addUploadParameter:(NSString*)value forKey:(NSString*)key;
 
 // Remove a previously-added parameter from the upload parameter set. See
@@ -107,6 +118,23 @@
 
 // Check if there is currently a crash report to upload.
 - (void)hasReportToUpload:(void(^)(BOOL))callback;
+
+// Get the number of crash reports waiting to upload.
+- (void)getCrashReportCount:(void(^)(int))callback;
+
+// Get the next report to upload.
+// - If upload is disabled, callback will be called with (nil, -1).
+// - If a delay is to be waited before sending, callback will be called with
+//   (nil, n), with n (> 0) being the number of seconds to wait.
+// - if no delay is needed, callback will be called with (0, configuration),
+//   configuration being next report to upload, or nil if none is pending.
+- (void)getNextReportConfigurationOrSendDelay:
+    (void(^)(NSDictionary*, int))callback;
+
+// Sends synchronously the report specified by |configuration|. This method is
+// NOT thread safe and must be called from the breakpad thread.
+- (void)threadUnsafeSendReportWithConfiguration:(NSDictionary*)configuration
+                                withBreakpadRef:(BreakpadRef)ref;
 
 @end
 

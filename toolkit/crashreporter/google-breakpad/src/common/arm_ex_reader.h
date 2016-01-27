@@ -1,4 +1,3 @@
-
 /* libunwind - a platform-independent unwind library
    Copyright 2011 Linaro Limited
 
@@ -105,11 +104,11 @@ class ExceptionTableInfo {
   ExExtractResult
     ExtabEntryExtract(const struct arm_ex_to_module::exidx_entry* entry,
                       uint8_t* buf, size_t buf_size,
-                      /*OUT*/size_t* buf_used);
+                      size_t* buf_used);
 
   int ExtabEntryDecode(const uint8_t* buf, size_t buf_size);
 };
 
-} // namespace arm_ex_reader
+}  // namespace arm_ex_reader
 
 #endif // COMMON_ARM_EX_READER_H__

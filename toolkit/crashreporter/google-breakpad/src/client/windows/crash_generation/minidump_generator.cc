@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "client/windows/common/auto_critical_section.h"
+#include "common/scoped_ptr.h"
 #include "common/windows/guid_string.h"
 
 using std::wstring;
@@ -247,17 +248,48 @@ ULONG CALLBACK HandleTraceData::RecordHandleOperations(
 
 namespace google_breakpad {
 
-MinidumpGenerator::MinidumpGenerator(const wstring& dump_path)
+MinidumpGenerator::MinidumpGenerator(
+    const std::wstring& dump_path,
+    const HANDLE process_handle,
+    const DWORD process_id,
+    const DWORD thread_id,
+    const DWORD requesting_thread_id,
+    EXCEPTION_POINTERS* exception_pointers,
+    MDRawAssertionInfo* assert_info,
+    const MINIDUMP_TYPE dump_type,
+    const bool is_client_pointers)
     : dbghelp_module_(NULL),
-      rpcrt4_module_(NULL),
-      dump_path_(dump_path),
       write_dump_(NULL),
-      create_uuid_(NULL) {
+      rpcrt4_module_(NULL),
+      create_uuid_(NULL),
+      process_handle_(process_handle),
+      process_id_(process_id),
+      thread_id_(thread_id),
+      requesting_thread_id_(requesting_thread_id),
+      exception_pointers_(exception_pointers),
+      assert_info_(assert_info),
+      dump_type_(dump_type),
+      is_client_pointers_(is_client_pointers),
+      dump_path_(dump_path),
+      dump_file_(INVALID_HANDLE_VALUE),
+      full_dump_file_(INVALID_HANDLE_VALUE),
+      dump_file_is_internal_(false),
+      full_dump_file_is_internal_(false),
+      additional_streams_(NULL),
+      callback_info_(NULL) {
   InitializeCriticalSection(&module_load_sync_);
   InitializeCriticalSection(&get_proc_address_sync_);
 }
 
 MinidumpGenerator::~MinidumpGenerator() {
+  if (dump_file_is_internal_ && dump_file_ != INVALID_HANDLE_VALUE) {
+    CloseHandle(dump_file_);
+  }
+
+  if (full_dump_file_is_internal_ && full_dump_file_ != INVALID_HANDLE_VALUE) {
+    CloseHandle(full_dump_file_);
+  }
+
   if (dbghelp_module_) {
     FreeLibrary(dbghelp_module_);
   }
@@ -270,79 +302,16 @@ MinidumpGenerator::~MinidumpGenerator() {
   DeleteCriticalSection(&module_load_sync_);
 }
 
-bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
-                                      DWORD process_id,
-                                      DWORD thread_id,
-                                      DWORD requesting_thread_id,
-                                      EXCEPTION_POINTERS* exception_pointers,
-                                      MDRawAssertionInfo* assert_info,
-                                      MINIDUMP_TYPE dump_type,
-                                      bool is_client_pointers,
-                                      wstring* dump_path) {
-  // Just call the full WriteMinidump with NULL as the full_dump_path.
-  return this->WriteMinidump(process_handle, process_id, thread_id,
-                             requesting_thread_id, exception_pointers,
-                             assert_info, dump_type, is_client_pointers,
-                             dump_path, NULL);
-}
+bool MinidumpGenerator::WriteMinidump() {
+  bool full_memory_dump = (dump_type_ & MiniDumpWithFullMemory) != 0;
+  if (dump_file_ == INVALID_HANDLE_VALUE ||
+      (full_memory_dump && full_dump_file_ == INVALID_HANDLE_VALUE)) {
+    return false;
+  }
 
-bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
-                                      DWORD process_id,
-                                      DWORD thread_id,
-                                      DWORD requesting_thread_id,
-                                      EXCEPTION_POINTERS* exception_pointers,
-                                      MDRawAssertionInfo* assert_info,
-                                      MINIDUMP_TYPE dump_type,
-                                      bool is_client_pointers,
-                                      wstring* dump_path,
-                                      wstring* full_dump_path) {
   MiniDumpWriteDumpType write_dump = GetWriteDump();
   if (!write_dump) {
     return false;
-  }
-
-  wstring dump_file_path;
-  if (!GenerateDumpFilePath(&dump_file_path)) {
-    return false;
-  }
-
-  // If the client requests a full memory dump, we will write a normal mini
-  // dump and a full memory dump. Both dump files use the same uuid as file
-  // name prefix.
-  bool full_memory_dump = (dump_type & MiniDumpWithFullMemory) != 0;
-  wstring full_dump_file_path;
-  if (full_memory_dump) {
-    full_dump_file_path.assign(dump_file_path);
-    full_dump_file_path.resize(full_dump_file_path.size() - 4);  // strip .dmp
-    full_dump_file_path.append(TEXT("-full.dmp"));
-  }
-
-  HANDLE dump_file = CreateFile(dump_file_path.c_str(),
-                                GENERIC_WRITE,
-                                0,
-                                NULL,
-                                CREATE_NEW,
-                                FILE_ATTRIBUTE_NORMAL,
-                                NULL);
-
-  if (dump_file == INVALID_HANDLE_VALUE) {
-    return false;
-  }
-
-  HANDLE full_dump_file = INVALID_HANDLE_VALUE;
-  if (full_memory_dump) {
-    full_dump_file = CreateFile(full_dump_file_path.c_str(),
-                                GENERIC_WRITE,
-                                0,
-                                NULL,
-                                CREATE_NEW,
-                                FILE_ATTRIBUTE_NORMAL,
-                                NULL);
-
-    if (full_dump_file == INVALID_HANDLE_VALUE) {
-      CloseHandle(dump_file);
-      return false;
-    }
   }
 
   MINIDUMP_EXCEPTION_INFORMATION* dump_exception_pointers = NULL;
@@ -350,11 +319,11 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
 
   // Setup the exception information object only if it's a dump
   // due to an exception.
-  if (exception_pointers) {
+  if (exception_pointers_) {
     dump_exception_pointers = &dump_exception_info;
-    dump_exception_info.ThreadId = thread_id;
-    dump_exception_info.ExceptionPointers = exception_pointers;
-    dump_exception_info.ClientPointers = is_client_pointers;
+    dump_exception_info.ThreadId = thread_id_;
+    dump_exception_info.ExceptionPointers = exception_pointers_;
+    dump_exception_info.ClientPointers = is_client_pointers_;
   }
 
   // Add an MDRawBreakpadInfo stream to the minidump, to provide additional
@@ -364,49 +333,54 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
   // can function better with Breakpad-generated dumps when it is present.
   // The native debugger is not harmed by the presence of this information.
   MDRawBreakpadInfo breakpad_info = {0};
-  if (!is_client_pointers) {
+  if (!is_client_pointers_) {
     // Set the dump thread id and requesting thread id only in case of
     // in-process dump generation.
     breakpad_info.validity = MD_BREAKPAD_INFO_VALID_DUMP_THREAD_ID |
                              MD_BREAKPAD_INFO_VALID_REQUESTING_THREAD_ID;
-    breakpad_info.dump_thread_id = thread_id;
-    breakpad_info.requesting_thread_id = requesting_thread_id;
+    breakpad_info.dump_thread_id = thread_id_;
+    breakpad_info.requesting_thread_id = requesting_thread_id_;
   }
 
-  // Leave room in user_stream_array for possible assertion info and handle
-  // operations streams.
-  MINIDUMP_USER_STREAM user_stream_array[3];
+  int additional_streams_count = additional_streams_ ?
+      additional_streams_->UserStreamCount : 0;
+  scoped_array<MINIDUMP_USER_STREAM> user_stream_array(
+      new MINIDUMP_USER_STREAM[3 + additional_streams_count]);
   user_stream_array[0].Type = MD_BREAKPAD_INFO_STREAM;
   user_stream_array[0].BufferSize = sizeof(breakpad_info);
   user_stream_array[0].Buffer = &breakpad_info;
 
   MINIDUMP_USER_STREAM_INFORMATION user_streams;
   user_streams.UserStreamCount = 1;
-  user_streams.UserStreamArray = user_stream_array;
+  user_streams.UserStreamArray = user_stream_array.get();
 
-  MDRawAssertionInfo* actual_assert_info = assert_info;
+  MDRawAssertionInfo* actual_assert_info = assert_info_;
   MDRawAssertionInfo client_assert_info = {{0}};
 
-  if (assert_info) {
+  if (assert_info_) {
     // If the assertion info object lives in the client process,
     // read the memory of the client process.
-    if (is_client_pointers) {
+    if (is_client_pointers_) {
       SIZE_T bytes_read = 0;
-      if (!ReadProcessMemory(process_handle,
-                             assert_info,
+      if (!ReadProcessMemory(process_handle_,
+                             assert_info_,
                              &client_assert_info,
                              sizeof(client_assert_info),
                              &bytes_read)) {
-        CloseHandle(dump_file);
-        if (full_dump_file != INVALID_HANDLE_VALUE)
-          CloseHandle(full_dump_file);
+        if (dump_file_is_internal_)
+          CloseHandle(dump_file_);
+        if (full_dump_file_is_internal_ &&
+            full_dump_file_ != INVALID_HANDLE_VALUE)
+          CloseHandle(full_dump_file_);
         return false;
       }
 
       if (bytes_read != sizeof(client_assert_info)) {
-        CloseHandle(dump_file);
-        if (full_dump_file != INVALID_HANDLE_VALUE)
-          CloseHandle(full_dump_file);
+        if (dump_file_is_internal_)
+          CloseHandle(dump_file_);
+        if (full_dump_file_is_internal_ &&
+            full_dump_file_ != INVALID_HANDLE_VALUE)
+          CloseHandle(full_dump_file_);
         return false;
       }
 
@@ -419,16 +393,31 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
     ++user_streams.UserStreamCount;
   }
 
+  if (additional_streams_) {
+    for (size_t i = 0;
+         i < additional_streams_->UserStreamCount;
+         i++, user_streams.UserStreamCount++) {
+      user_stream_array[user_streams.UserStreamCount].Type =
+          additional_streams_->UserStreamArray[i].Type;
+      user_stream_array[user_streams.UserStreamCount].BufferSize =
+          additional_streams_->UserStreamArray[i].BufferSize;
+      user_stream_array[user_streams.UserStreamCount].Buffer =
+          additional_streams_->UserStreamArray[i].Buffer;
+    }
+  }
+
   // If the process is terminated by STATUS_INVALID_HANDLE exception store
-  // the trace of operatios for the offending handle value. Do nothing special
+  // the trace of operations for the offending handle value. Do nothing special
   // if the client already requested the handle trace to be stored in the dump.
   HandleTraceData handle_trace_data;
-  if (exception_pointers && (dump_type & MiniDumpWithHandleData) == 0) {
-    if (!handle_trace_data.CollectHandleData(process_handle,
-                                             exception_pointers)) {
-      CloseHandle(dump_file);
-      if (full_dump_file != INVALID_HANDLE_VALUE)
-        CloseHandle(full_dump_file);
+  if (exception_pointers_ && (dump_type_ & MiniDumpWithHandleData) == 0) {
+    if (!handle_trace_data.CollectHandleData(process_handle_,
+                                             exception_pointers_)) {
+      if (dump_file_is_internal_)
+        CloseHandle(dump_file_);
+      if (full_dump_file_is_internal_ &&
+          full_dump_file_ != INVALID_HANDLE_VALUE)
+        CloseHandle(full_dump_file_);
       return false;
     }
   }
@@ -436,12 +425,12 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
   bool result_full_memory = true;
   if (full_memory_dump) {
     result_full_memory = write_dump(
-        process_handle,
-        process_id,
-        full_dump_file,
-        static_cast<MINIDUMP_TYPE>((dump_type & (~MiniDumpNormal))
+        process_handle_,
+        process_id_,
+        full_dump_file_,
+        static_cast<MINIDUMP_TYPE>((dump_type_ & (~MiniDumpNormal))
                                     | MiniDumpWithHandleData),
-        exception_pointers ? &dump_exception_info : NULL,
+        exception_pointers_ ? &dump_exception_info : NULL,
         &user_streams,
         NULL) != FALSE;
   }
@@ -453,31 +442,79 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
   }
 
   bool result_minidump = write_dump(
-      process_handle,
-      process_id,
-      dump_file,
-      static_cast<MINIDUMP_TYPE>((dump_type & (~MiniDumpWithFullMemory))
+      process_handle_,
+      process_id_,
+      dump_file_,
+      static_cast<MINIDUMP_TYPE>((dump_type_ & (~MiniDumpWithFullMemory))
                                   | MiniDumpNormal),
-      exception_pointers ? &dump_exception_info : NULL,
+      exception_pointers_ ? &dump_exception_info : NULL,
       &user_streams,
-      NULL) != FALSE;
+      callback_info_) != FALSE;
 
-  bool result = result_minidump && result_full_memory;
+  return result_minidump && result_full_memory;
+}
 
-  CloseHandle(dump_file);
-  if (full_dump_file != INVALID_HANDLE_VALUE)
-    CloseHandle(full_dump_file);
-
-  // Store the path of the dump file in the out parameter if dump generation
-  // succeeded.
-  if (result && dump_path) {
-    *dump_path = dump_file_path;
-  }
-  if (result && full_memory_dump && full_dump_path) {
-    *full_dump_path = full_dump_file_path;
+bool MinidumpGenerator::GenerateDumpFile(wstring* dump_path) {
+  // The dump file was already set by handle or this function was previously
+  // called.
+  if (dump_file_ != INVALID_HANDLE_VALUE) {
+    return false;
   }
 
-  return result;
+  wstring dump_file_path;
+  if (!GenerateDumpFilePath(&dump_file_path)) {
+    return false;
+  }
+
+  dump_file_ = CreateFile(dump_file_path.c_str(),
+                          GENERIC_WRITE,
+                          0,
+                          NULL,
+                          CREATE_NEW,
+                          FILE_ATTRIBUTE_NORMAL,
+                          NULL);
+  if (dump_file_ == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+
+  dump_file_is_internal_ = true;
+  *dump_path = dump_file_path;
+  return true;
+}
+
+bool MinidumpGenerator::GenerateFullDumpFile(wstring* full_dump_path) {
+  // A full minidump was not requested.
+  if ((dump_type_ & MiniDumpWithFullMemory) == 0) {
+    return false;
+  }
+
+  // The dump file was already set by handle or this function was previously
+  // called.
+  if (full_dump_file_ != INVALID_HANDLE_VALUE) {
+    return false;
+  }
+
+  wstring full_dump_file_path;
+  if (!GenerateDumpFilePath(&full_dump_file_path)) {
+    return false;
+  }
+  full_dump_file_path.resize(full_dump_file_path.size() - 4);  // strip .dmp
+  full_dump_file_path.append(TEXT("-full.dmp"));
+
+  full_dump_file_ = CreateFile(full_dump_file_path.c_str(),
+                               GENERIC_WRITE,
+                               0,
+                               NULL,
+                               CREATE_NEW,
+                               FILE_ATTRIBUTE_NORMAL,
+                               NULL);
+  if (full_dump_file_ == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+
+  full_dump_file_is_internal_ = true;
+  *full_dump_path = full_dump_file_path;
+  return true;
 }
 
 HMODULE MinidumpGenerator::GetDbghelpModule() {
