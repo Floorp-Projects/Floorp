@@ -41,9 +41,10 @@ namespace layout {
       kFloatList                    = 0x800,
       kBulletList                   = 0x1000,
       kPushedFloatsList             = 0x2000,
+      kBackdropList                 = 0x4000,
       // A special alias for kPrincipalList that suppress the reflow request that
       // is normally done when manipulating child lists.
-      kNoReflowPrincipalList        = 0x4000
+      kNoReflowPrincipalList        = 0x8000
   };
 } // namespace layout
 } // namespace mozilla
