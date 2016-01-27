@@ -13,7 +13,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
-  : mBatching(0)
+  : mRawSet(Servo_InitStyleSet())
+  , mBatching(0)
 {
 }
 
@@ -30,6 +31,7 @@ ServoStyleSet::BeginShutdown()
 void
 ServoStyleSet::Shutdown()
 {
+  mRawSet = nullptr;
 }
 
 bool
