@@ -141,6 +141,14 @@ ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
         continue;
       }
       MOZ_ASSERT(frame->GetParent() == this);
+      if (nsIFrame* backdropPh =
+          frame->GetChildList(kBackdropList).FirstChild()) {
+        MOZ_ASSERT(backdropPh->GetType() == nsGkAtoms::placeholderFrame);
+        nsIFrame* backdropFrame =
+          static_cast<nsPlaceholderFrame*>(backdropPh)->GetOutOfFlowFrame();
+        MOZ_ASSERT(backdropFrame);
+        BuildDisplayListForTopLayerFrame(aBuilder, backdropFrame, aList);
+      }
       BuildDisplayListForTopLayerFrame(aBuilder, frame, aList);
     }
   }

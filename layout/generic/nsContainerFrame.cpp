@@ -27,6 +27,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsBlockFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "nsIFrameInlines.h"
 #include "nsPrintfCString.h"
@@ -77,6 +78,17 @@ nsContainerFrame::SetInitialChildList(ChildListID  aListID,
                "Top layer frames should be out-of-flow");
     MOZ_ASSERT(!Properties().Get(BackdropProperty()),
                "We shouldn't have setup backdrop frame list before");
+#ifdef DEBUG
+    {
+      nsIFrame* placeholder = aChildList.FirstChild();
+      MOZ_ASSERT(aChildList.OnlyChild(), "Should have only one backdrop");
+      MOZ_ASSERT(placeholder->GetType() == nsGkAtoms::placeholderFrame,
+                "The frame to be stored should be a placeholder");
+      MOZ_ASSERT(static_cast<nsPlaceholderFrame*>(placeholder)->
+                GetOutOfFlowFrame()->GetType() == nsGkAtoms::backdropFrame,
+                "The placeholder should points to a backdrop frame");
+    }
+#endif
     nsFrameList* list =
       new (PresContext()->PresShell()) nsFrameList(aChildList);
     Properties().Set(BackdropProperty(), list);

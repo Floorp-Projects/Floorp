@@ -88,6 +88,7 @@
 #include "nsSimplePageSequenceFrame.h"
 #include "nsTableOuterFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 
 #ifdef MOZ_XUL
@@ -1214,6 +1215,15 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     placeholderFrame->AddStateBits(mAdditionalStateBits);
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
+
+    if (placeholderType == PLACEHOLDER_FOR_TOPLAYER) {
+      nsIFrame* backdropFrame = nsCSSFrameConstructor::
+        CreateBackdropFrameFor(mPresShell, aContent, aNewFrame,
+                               outOfFlowFrameItems->containingBlock);
+      if (backdropFrame) {
+        frameItems->AddChild(backdropFrame);
+      }
+    }
   }
 #ifdef DEBUG
   else {
@@ -2930,6 +2940,38 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
   aPresShell->FrameManager()->RegisterPlaceholderFrame(placeholderFrame);
 
   return placeholderFrame;
+}
+
+/* static */ nsIFrame*
+nsCSSFrameConstructor::CreateBackdropFrameFor(nsIPresShell* aPresShell,
+                                              nsIContent* aContent,
+                                              nsIFrame* aFrame,
+                                              nsContainerFrame* aParentFrame)
+{
+  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  nsContainerFrame* frame = do_QueryFrame(aFrame);
+  if (!frame) {
+    NS_WARNING("Cannot create backdrop frame for non-container frame");
+    return nullptr;
+  }
+
+  RefPtr<nsStyleContext> style = aPresShell->StyleSet()->
+    ResolvePseudoElementStyle(aContent->AsElement(),
+                              nsCSSPseudoElements::ePseudo_backdrop,
+                              /* aParentStyleContext */ nullptr,
+                              /* aPseudoElement */ nullptr);
+  nsBackdropFrame* backdropFrame = new (aPresShell) nsBackdropFrame(style);
+  backdropFrame->Init(aContent, aParentFrame, nullptr);
+
+  nsIFrame* placeholder = CreatePlaceholderFrameFor(aPresShell, aContent,
+                                                    backdropFrame,
+                                                    frame->StyleContext(),
+                                                    frame, nullptr,
+                                                    PLACEHOLDER_FOR_TOPLAYER);
+  nsFrameList temp(placeholder, placeholder);
+  frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
+
+  return backdropFrame;
 }
 
 // Clears any lazy bits set in the range [aStartContent, aEndContent).  If
