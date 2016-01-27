@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+JAR_MANIFESTS += ['jar.mn']
+
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+
+EXTRA_JS_MODULES.syncedtabs += [
+    'EventEmitter.jsm',
+    'SyncedTabsDeckComponent.js',
+    'SyncedTabsDeckStore.js',
+    'SyncedTabsDeckView.js',
+    'SyncedTabsListStore.js',
+    'TabListComponent.js',
+    'TabListView.js',
+    'util.js',
+]
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Synced tabs')
+
