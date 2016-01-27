@@ -318,38 +318,20 @@ WebGL2Context::GetUniformIndices(WebGLProgram* program,
     program->GetUniformIndices(uniformNames, retval);
 }
 
-static bool
-ValidateUniformEnum(WebGLContext* webgl, GLenum pname, const char* info)
-{
-    switch (pname) {
-    case LOCAL_GL_UNIFORM_TYPE:
-    case LOCAL_GL_UNIFORM_SIZE:
-    case LOCAL_GL_UNIFORM_BLOCK_INDEX:
-    case LOCAL_GL_UNIFORM_OFFSET:
-    case LOCAL_GL_UNIFORM_ARRAY_STRIDE:
-    case LOCAL_GL_UNIFORM_MATRIX_STRIDE:
-    case LOCAL_GL_UNIFORM_IS_ROW_MAJOR:
-        return true;
-
-    default:
-        webgl->ErrorInvalidEnum("%s: invalid pname: %s", info, webgl->EnumName(pname));
-        return false;
-    }
-}
-
 void
-WebGL2Context::GetActiveUniforms(JSContext* cx,
-                                 WebGLProgram* program,
+WebGL2Context::GetActiveUniforms(WebGLProgram* program,
                                  const dom::Sequence<GLuint>& uniformIndices,
                                  GLenum pname,
-                                 JS::MutableHandleValue retval)
+                                 dom::Nullable< nsTArray<GLint> >& retval)
 {
-    retval.set(JS::NullValue());
+    retval.SetNull();
     if (IsContextLost())
         return;
 
-    if (!ValidateUniformEnum(this, pname, "getActiveUniforms"))
+    if (pname == LOCAL_GL_UNIFORM_NAME_LENGTH) {
+        ErrorInvalidEnumInfo("getActiveUniforms: pname", pname);
         return;
+    }
 
     if (!ValidateObject("getActiveUniforms: program", program))
         return;
@@ -359,48 +341,12 @@ WebGL2Context::GetActiveUniforms(JSContext* cx,
         return;
 
     GLuint progname = program->mGLName;
-    Vector<GLint> samples;
-    samples.resize(count);
+    nsTArray<GLint>& arr = retval.SetValue();
+    arr.SetLength(count);
 
     MakeContextCurrent();
     gl->fGetActiveUniformsiv(progname, count, uniformIndices.Elements(), pname,
-                             samples.begin());
-
-    JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, count));
-    if (!array) {
-        return;
-    }
-
-    switch (pname) {
-    case LOCAL_GL_UNIFORM_TYPE:
-    case LOCAL_GL_UNIFORM_SIZE:
-    case LOCAL_GL_UNIFORM_BLOCK_INDEX:
-    case LOCAL_GL_UNIFORM_OFFSET:
-    case LOCAL_GL_UNIFORM_ARRAY_STRIDE:
-    case LOCAL_GL_UNIFORM_MATRIX_STRIDE:
-        for (uint32_t i = 0; i < count; ++i) {
-            JS::RootedValue value(cx);
-            value = JS::Int32Value(samples[i]);
-            if (!JS_DefineElement(cx, array, i, value, JSPROP_ENUMERATE)) {
-                return;
-            }
-        }
-        break;
-    case LOCAL_GL_UNIFORM_IS_ROW_MAJOR:
-        for (uint32_t i = 0; i < count; ++i) {
-            JS::RootedValue value(cx);
-            value = JS::BooleanValue(samples[i]);
-            if (!JS_DefineElement(cx, array, i, value, JSPROP_ENUMERATE)) {
-                return;
-            }
-        }
-        break;
-
-    default:
-        return;
-    }
-
-    retval.setObjectOrNull(array);
+                             arr.Elements());
 }
 
 GLuint
