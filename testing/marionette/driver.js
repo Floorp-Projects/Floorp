@@ -2596,7 +2596,7 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
       if (this.appName == "B2G") {
         doc = win.document.body;
       } else {
-        doc = win.document.getElementsByTagName("window")[0];
+        doc = win.document.documentElement;
       }
       let docRect = doc.getBoundingClientRect();
       let width = docRect.width;
