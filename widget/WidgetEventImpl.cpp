@@ -340,6 +340,60 @@ WidgetInputEvent::AccelModifier()
 }
 
 /******************************************************************************
+ * mozilla::WidgetWheelEvent (MouseEvents.h)
+ ******************************************************************************/
+
+bool WidgetWheelEvent::sInitialized = false;
+bool WidgetWheelEvent::sIsSystemScrollSpeedOverrideEnabled = false;
+int32_t WidgetWheelEvent::sOverrideFactorX = 0;
+int32_t WidgetWheelEvent::sOverrideFactorY = 0;
+
+/* static */ void
+WidgetWheelEvent::Initialize()
+{
+  if (sInitialized) {
+    return;
+  }
+
+  Preferences::AddBoolVarCache(&sIsSystemScrollSpeedOverrideEnabled,
+    "mousewheel.system_scroll_override_on_root_content.enabled", false);
+  Preferences::AddIntVarCache(&sOverrideFactorX,
+    "mousewheel.system_scroll_override_on_root_content.horizontal.factor", 0);
+  Preferences::AddIntVarCache(&sOverrideFactorY,
+    "mousewheel.system_scroll_override_on_root_content.vertical.factor", 0);
+  sInitialized = true;
+}
+
+/* static */ double
+WidgetWheelEvent::ComputeOverriddenDelta(double aDelta, bool aIsForVertical)
+{
+  Initialize();
+  if (!sIsSystemScrollSpeedOverrideEnabled) {
+    return aDelta;
+  }
+  int32_t intFactor = aIsForVertical ? sOverrideFactorY : sOverrideFactorX;
+  // Making the scroll speed slower doesn't make sense. So, ignore odd factor
+  // which is less than 1.0.
+  if (intFactor <= 100) {
+    return aDelta;
+  }
+  double factor = static_cast<double>(intFactor) / 100;
+  return aDelta * factor;
+}
+
+double
+WidgetWheelEvent::OverriddenDeltaX() const
+{
+  return ComputeOverriddenDelta(deltaX, false);
+}
+
+double
+WidgetWheelEvent::OverriddenDeltaY() const
+{
+  return ComputeOverriddenDelta(deltaY, true);
+}
+
+/******************************************************************************
  * mozilla::WidgetKeyboardEvent (TextEvents.h)
  ******************************************************************************/
 
