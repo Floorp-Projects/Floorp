@@ -19,7 +19,6 @@ nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-
   result = GetIntrinsicISize();
   return result;
 }
