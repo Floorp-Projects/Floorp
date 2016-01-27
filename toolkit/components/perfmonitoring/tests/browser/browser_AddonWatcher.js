@@ -15,8 +15,6 @@ const ADDON_URL = "http://example.com/browser/toolkit/components/perfmonitoring/
 const ADDON_ID = "addonwatcher-test@mozilla.com";
 
 add_task(function* init() {
-  AddonWatcher.uninit();
-
   info("Installing test add-on");
   let installer = yield new Promise(resolve => AddonManager.getInstallForURL(ADDON_URL, resolve, "application/x-xpinstall"));
   if (installer.error) {
@@ -71,7 +69,10 @@ add_task(function* init() {
 
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
+  AddonWatcher.init();
+
   registerCleanupFunction(function () {
+    AddonWatcher.paused = true;
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 });
@@ -79,14 +80,16 @@ add_task(function* init() {
 // Utility function to burn some resource, trigger a reaction of the add-on watcher
 // and check both its notification and telemetry.
 let burn_rubber = Task.async(function*({histogramName, topic, expectedMinSum}) {
+  let detected = false;
+  let observer = (_, topic, id) => {
+    Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
+    detected = true;
+  };
+
   try {
     info("Preparing add-on watcher");
 
-    let detected = false;
-    AddonWatcher.init(id => {
-      Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
-      detected = true;
-    });
+    Services.obs.addObserver(observer, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
 
     let histogram = Services.telemetry.getKeyedHistogramById(histogramName);
     histogram.clear();
@@ -103,17 +106,13 @@ let burn_rubber = Task.async(function*({histogramName, topic, expectedMinSum}) {
       let snap2 = histogram.snapshot(ADDON_ID);
       histogramUpdated = snap2.sum > 0;
       info(`For the moment, histogram ${histogramName} shows ${snap2.sum} => ${histogramUpdated}`);
-      info(`For the moment, we have ${detected?"":"NOT"}detected the slow add-on`);
+      info(`For the moment, we have ${detected?"":"NOT "}detected the slow add-on`);
     } while (!histogramUpdated || !detected);
 
     let snap3 = histogram.snapshot(ADDON_ID);
     Assert.ok(snap3.sum >= expectedMinSum, `Histogram ${histogramName} recorded a gravity of ${snap3.sum}, expecting at least ${expectedMinSum}.`);
   } finally {
-    if (typeof AddonWatcher != "undefined") {
-      // If the test fails, we may end up with `AddonWatcher` being undefined
-      // here. Let's not make logs harder to parse.
-      AddonWatcher.uninit();
-    }
+    Services.obs.removeObserver(observer, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED);
   }
 });
 
