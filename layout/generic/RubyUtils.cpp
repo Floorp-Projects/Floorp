@@ -78,7 +78,7 @@ RubyColumn::Iterator::SkipUntilExistingFrame()
       ++mIndex;
     }
   }
-  auto numTextFrames = mColumn.mTextFrames.Length();
+  int32_t numTextFrames = mColumn.mTextFrames.Length();
   for (; mIndex < numTextFrames; ++mIndex) {
     if (mColumn.mTextFrames[mIndex]) {
       break;
