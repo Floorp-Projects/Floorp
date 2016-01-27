@@ -394,7 +394,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
                     # ZipFile doesn't preserve permissions: http://bugs.python.org/issue15795
                     fname = os.path.realpath(os.path.join(parent_dir, entry))
                     mode = bundle.getinfo(entry).external_attr >> 16 & 0x1FF
-                    os.chmod(fname, mode)
+                    # Only set permissions if attributes are available.
+                    if mode:
+                        os.chmod(fname, mode)
         except zipfile.BadZipfile as e:
             self.log('%s (%s)' % (e.message, zip),
                      level=FATAL, exit_code=2)
