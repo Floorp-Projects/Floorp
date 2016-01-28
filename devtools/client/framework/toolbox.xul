@@ -126,6 +126,10 @@
                        hidden="true">
           <menupopup position="bottomright topright"></menupopup>
         </toolbarbutton>
+        <toolbarbutton id="command-button-noautohide"
+                       class="command-button command-button-invertable"
+                       tooltiptext="&toolboxNoAutoHideTooltip;"
+                       hidden="true" />
       </hbox>
       <vbox id="toolbox-controls-separator" class="devtools-separator"/>
       <hbox id="toolbox-option-container"/>
