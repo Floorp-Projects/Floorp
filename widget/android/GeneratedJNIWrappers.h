@@ -3982,6 +3982,23 @@ protected:
     NativePanZoomController(jobject instance) : Class(instance) {}
 
 public:
+    struct AdjustScrollForSurfaceShift_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                float,
+                float> Args;
+        static constexpr char name[] = "adjustScrollForSurfaceShift";
+        static constexpr char signature[] =
+                "(FF)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct Destroy_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;

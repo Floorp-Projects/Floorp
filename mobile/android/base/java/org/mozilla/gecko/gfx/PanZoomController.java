@@ -51,4 +51,6 @@ public interface PanZoomController {
     public void setOverscrollHandler(final Overscroll controller);
 
     public void setIsLongpressEnabled(boolean isLongpressEnabled);
+
+    public ImmutableViewportMetrics adjustScrollForSurfaceShift(ImmutableViewportMetrics aMetrics, PointF aShift);
 }
