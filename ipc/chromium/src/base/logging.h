@@ -45,8 +45,8 @@ public:
   void printf(const char* fmt, ...);
 
 private:
-  static PRLogModuleInfo* gChromiumPRLog;
-  static PRLogModuleInfo* GetLog();
+  static mozilla::LazyLogModule gChromiumPRLog;
+//  static PRLogModuleInfo* GetLog();
 
   LogSeverity mSeverity;
   const char* mFile;
