@@ -2201,10 +2201,10 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
 }
 
 // --------------------
-// nsStyleBackground
+// nsStyleImageLayers
 //
 
-nsStyleBackground::nsStyleBackground()
+nsStyleImageLayers::nsStyleImageLayers()
   : mAttachmentCount(1)
   , mClipCount(1)
   , mOriginCount(1)
@@ -2213,15 +2213,13 @@ nsStyleBackground::nsStyleBackground()
   , mImageCount(1)
   , mSizeCount(1)
   , mBlendModeCount(1)
-  , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
 {
-  MOZ_COUNT_CTOR(nsStyleBackground);
-  Layer *onlyLayer = mLayers.AppendElement();
-  NS_ASSERTION(onlyLayer, "auto array must have room for 1 element");
-  onlyLayer->SetInitialValues();
+  MOZ_COUNT_CTOR(nsStyleImageLayers);
+  mLayers.AppendElement();
+  NS_ASSERTION(mLayers.Length() == 1, "auto array must have room for 1 element");
 }
 
-nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
+nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers &aSource)
   : mAttachmentCount(aSource.mAttachmentCount)
   , mClipCount(aSource.mClipCount)
   , mOriginCount(aSource.mOriginCount)
@@ -2231,9 +2229,8 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mSizeCount(aSource.mSizeCount)
   , mBlendModeCount(aSource.mBlendModeCount)
   , mLayers(aSource.mLayers) // deep copy
-  , mBackgroundColor(aSource.mBackgroundColor)
 {
-  MOZ_COUNT_CTOR(nsStyleBackground);
+  MOZ_COUNT_CTOR(nsStyleImageLayers);
   // If the deep copy of mLayers failed, truncate the counts.
   uint32_t count = mLayers.Length();
   if (count != aSource.mLayers.Length()) {
@@ -2245,94 +2242,12 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
     mPositionCount = std::max(mPositionCount, count);
     mImageCount = std::max(mImageCount, count);
     mSizeCount = std::max(mSizeCount, count);
-    mBlendModeCount = std::max(mSizeCount, count);
+    mBlendModeCount = std::max(mBlendModeCount, count);
   }
-}
-
-nsStyleBackground::~nsStyleBackground()
-{
-  MOZ_COUNT_DTOR(nsStyleBackground);
 }
 
 void
-nsStyleBackground::Destroy(nsPresContext* aContext)
-{
-  // Untrack all the images stored in our layers
-  for (uint32_t i = 0; i < mImageCount; ++i)
-    mLayers[i].UntrackImages(aContext);
-
-  this->~nsStyleBackground();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleBackground, this);
-}
-
-nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
-{
-  const nsStyleBackground* moreLayers =
-    mImageCount > aOther.mImageCount ? this : &aOther;
-  const nsStyleBackground* lessLayers =
-    mImageCount > aOther.mImageCount ? &aOther : this;
-
-  nsChangeHint hint = nsChangeHint(0);
-
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, moreLayers) {
-    if (i < lessLayers->mImageCount) {
-      nsChangeHint layerDifference = moreLayers->mLayers[i].CalcDifference(lessLayers->mLayers[i]);
-      hint |= layerDifference;
-      if (layerDifference &&
-          ((moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
-           (lessLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element))) {
-        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
-      }
-    } else {
-      hint |= nsChangeHint_RepaintFrame;
-      if (moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) {
-        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
-      }
-    }
-  }
-
-  if (mBackgroundColor != aOther.mBackgroundColor) {
-    hint |= nsChangeHint_RepaintFrame;
-  }
-
-  if (hint) {
-    return hint;
-  }
-
-  if (mAttachmentCount != aOther.mAttachmentCount ||
-      mClipCount != aOther.mClipCount ||
-      mOriginCount != aOther.mOriginCount ||
-      mRepeatCount != aOther.mRepeatCount ||
-      mPositionCount != aOther.mPositionCount ||
-      mSizeCount != aOther.mSizeCount) {
-    return nsChangeHint_NeutralChange;
-  }
-
-  return NS_STYLE_HINT_NONE;
-}
-
-bool nsStyleBackground::HasFixedBackground() const
-{
-  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
-    const Layer &layer = mLayers[i];
-    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-        !layer.mImage.IsEmpty()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool nsStyleBackground::IsTransparent() const
-{
-  return BottomLayer().mImage.IsEmpty() &&
-         mImageCount == 1 &&
-         NS_GET_A(mBackgroundColor) == 0;
-}
-
-void
-nsStyleBackground::Position::SetInitialPercentValues(float aPercentVal)
+nsStyleImageLayers::Position::SetInitialPercentValues(float aPercentVal)
 {
   mXPosition.mPercent = aPercentVal;
   mXPosition.mLength = 0;
@@ -2343,7 +2258,7 @@ nsStyleBackground::Position::SetInitialPercentValues(float aPercentVal)
 }
 
 void
-nsStyleBackground::Position::SetInitialZeroValues()
+nsStyleImageLayers::Position::SetInitialZeroValues()
 {
   mXPosition.mPercent = 0;
   mXPosition.mLength = 0;
@@ -2354,7 +2269,7 @@ nsStyleBackground::Position::SetInitialZeroValues()
 }
 
 bool
-nsStyleBackground::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage) const
+nsStyleImageLayers::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage) const
 {
   MOZ_ASSERT(aImage.GetType() != eStyleImageType_Null,
              "caller should have handled this");
@@ -2433,13 +2348,13 @@ nsStyleBackground::Size::DependsOnPositioningAreaSize(const nsStyleImage& aImage
 }
 
 void
-nsStyleBackground::Size::SetInitialValues()
+nsStyleImageLayers::Size::SetInitialValues()
 {
   mWidthType = mHeightType = eAuto;
 }
 
 bool
-nsStyleBackground::Size::operator==(const Size& aOther) const
+nsStyleImageLayers::Size::operator==(const Size& aOther) const
 {
   MOZ_ASSERT(mWidthType < eDimensionType_COUNT,
              "bad mWidthType for this");
@@ -2457,35 +2372,30 @@ nsStyleBackground::Size::operator==(const Size& aOther) const
 }
 
 void
-nsStyleBackground::Repeat::SetInitialValues() 
+nsStyleImageLayers::Repeat::SetInitialValues()
 {
   mXRepeat = NS_STYLE_BG_REPEAT_REPEAT;
   mYRepeat = NS_STYLE_BG_REPEAT_REPEAT;
 }
 
-nsStyleBackground::Layer::Layer()
+nsStyleImageLayers::Layer::Layer()
+: mClip(NS_STYLE_BG_CLIP_BORDER),
+  mOrigin(NS_STYLE_BG_ORIGIN_PADDING),
+  mAttachment(NS_STYLE_BG_ATTACHMENT_SCROLL),
+  mBlendMode(NS_STYLE_BLEND_NORMAL)
 {
-}
-
-nsStyleBackground::Layer::~Layer()
-{
-}
-
-void
-nsStyleBackground::Layer::SetInitialValues()
-{
-  mAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-  mClip = NS_STYLE_BG_CLIP_BORDER;
-  mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
-  mRepeat.SetInitialValues();
-  mBlendMode = NS_STYLE_BLEND_NORMAL;
   mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
-  mSize.SetInitialValues();
   mImage.SetNull();
+  mRepeat.SetInitialValues();
+  mSize.SetInitialValues();
+}
+
+nsStyleImageLayers::Layer::~Layer()
+{
 }
 
 bool
-nsStyleBackground::Layer::RenderingMightDependOnPositioningAreaSizeChange() const
+nsStyleImageLayers::Layer::RenderingMightDependOnPositioningAreaSizeChange() const
 {
   // Do we even have an image?
   if (mImage.IsEmpty()) {
@@ -2497,7 +2407,7 @@ nsStyleBackground::Layer::RenderingMightDependOnPositioningAreaSizeChange() cons
 }
 
 bool
-nsStyleBackground::Layer::operator==(const Layer& aOther) const
+nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
 {
   return mAttachment == aOther.mAttachment &&
          mClip == aOther.mClip &&
@@ -2510,7 +2420,7 @@ nsStyleBackground::Layer::operator==(const Layer& aOther) const
 }
 
 nsChangeHint
-nsStyleBackground::Layer::CalcDifference(const Layer& aOther) const
+nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
   if (mAttachment != aOther.mAttachment ||
@@ -2526,6 +2436,109 @@ nsStyleBackground::Layer::CalcDifference(const Layer& aOther) const
     hint |= nsChangeHint_SchedulePaint;
   }
   return hint;
+}
+
+// --------------------
+// nsStyleBackground
+//
+
+nsStyleBackground::nsStyleBackground()
+  : mBackgroundColor(NS_RGBA(0, 0, 0, 0))
+{
+  MOZ_COUNT_CTOR(nsStyleBackground);
+}
+
+nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
+  : mLayers(aSource.mLayers)
+  , mBackgroundColor(aSource.mBackgroundColor)
+{
+  MOZ_COUNT_CTOR(nsStyleBackground);
+
+}
+
+nsStyleBackground::~nsStyleBackground()
+{
+  MOZ_COUNT_DTOR(nsStyleBackground);
+}
+
+void
+nsStyleBackground::Destroy(nsPresContext* aContext)
+{
+  // Untrack all the images stored in our layers
+  mLayers.UntrackImages(aContext);
+
+  this->~nsStyleBackground();
+  aContext->PresShell()->
+    FreeByObjectID(eArenaObjectID_nsStyleBackground, this);
+}
+
+nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
+{
+  const nsStyleImageLayers& moreLayers =
+    mLayers.mImageCount > aOther.mLayers.mImageCount ?
+      this->mLayers : aOther.mLayers;
+  const nsStyleImageLayers& lessLayers =
+    mLayers.mImageCount > aOther.mLayers.mImageCount ?
+      aOther.mLayers : this->mLayers;
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, moreLayers) {
+    if (i < lessLayers.mImageCount) {
+      nsChangeHint layerDifference = moreLayers.mLayers[i].
+                                       CalcDifference(lessLayers.mLayers[i]);
+      hint |= layerDifference;
+      if (layerDifference &&
+          ((moreLayers.mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
+           (lessLayers.mLayers[i].mImage.GetType() == eStyleImageType_Element))) {
+        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
+      }
+    } else {
+      hint |= nsChangeHint_RepaintFrame;
+      if (moreLayers.mLayers[i].mImage.GetType() == eStyleImageType_Element) {
+        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
+      }
+    }
+  }
+
+  if (mBackgroundColor != aOther.mBackgroundColor) {
+    hint |= nsChangeHint_RepaintFrame;
+  }
+
+  if (hint) {
+    return hint;
+  }
+
+  if (mLayers.mAttachmentCount != aOther.mLayers.mAttachmentCount ||
+      mLayers.mClipCount != aOther.mLayers.mClipCount ||
+      mLayers.mOriginCount != aOther.mLayers.mOriginCount ||
+      mLayers.mRepeatCount != aOther.mLayers.mRepeatCount ||
+      mLayers.mPositionCount != aOther.mLayers.mPositionCount ||
+      mLayers.mSizeCount != aOther.mLayers.mSizeCount) {
+    return nsChangeHint_NeutralChange;
+  }
+
+
+  return NS_STYLE_HINT_NONE;
+}
+
+bool nsStyleBackground::HasFixedBackground() const
+{
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mLayers) {
+    const nsStyleImageLayers::Layer &layer = mLayers.mLayers[i];
+    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+        !layer.mImage.IsEmpty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool nsStyleBackground::IsTransparent() const
+{
+  return BottomLayer().mImage.IsEmpty() &&
+         mLayers.mImageCount == 1 &&
+         NS_GET_A(mBackgroundColor) == 0;
 }
 
 // --------------------
