@@ -807,14 +807,14 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 
   const nsStyleImageLayers *oldLayers = aOldStyleContext ?
-                              &aOldStyleContext->StyleBackground()->mLayers :
+                              &aOldStyleContext->StyleBackground()->mImage :
                               nullptr;
-  const nsStyleImageLayers *newLayers = &StyleBackground()->mLayers;
+  const nsStyleImageLayers *newLayers = &StyleBackground()->mImage;
   AddAndRemoveImageAssociations(this, oldLayers, newLayers);
 
-  oldLayers = aOldStyleContext ? &aOldStyleContext->StyleSVGReset()->mLayers :
+  oldLayers = aOldStyleContext ? &aOldStyleContext->StyleSVGReset()->mMask :
                                   nullptr;
-  newLayers = &StyleSVGReset()->mLayers;
+  newLayers = &StyleSVGReset()->mMask;
   AddAndRemoveImageAssociations(this, oldLayers, newLayers);
 
   if (aOldStyleContext) {
