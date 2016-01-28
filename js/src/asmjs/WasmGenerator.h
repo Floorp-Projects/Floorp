@@ -28,7 +28,6 @@ namespace js {
 namespace wasm {
 
 class FunctionGenerator;
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 // A slow function describes a function that took longer than msThreshold to
 // validate and compile.
@@ -245,7 +244,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     // Data created during function generation, then handed over to the
     // FuncBytecode in ModuleGenerator::finishFunc().
     UniqueBytecode     bytecode_;
-    SourceCoordsVector callSourceCoords_;
+    Uint32Vector       callSiteLineNums_;
     ValTypeVector      locals_;
 
     uint32_t lineOrBytecode_;
@@ -258,9 +257,8 @@ class MOZ_STACK_CLASS FunctionGenerator
     Bytecode& bytecode() const {
         return *bytecode_;
     }
-    bool addSourceCoords(size_t byteOffset, uint32_t line, uint32_t column) {
-        SourceCoords sc = { byteOffset, line, column };
-        return callSourceCoords_.append(sc);
+    bool addCallSiteLineNum(uint32_t lineno) {
+        return callSiteLineNums_.append(lineno);
     }
     bool addLocal(ValType v) {
         return locals_.append(v);

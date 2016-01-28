@@ -2747,10 +2747,13 @@ class MOZ_STACK_CLASS FunctionValidator
 
     Encoder& encoder() { return *encoder_; }
 
-    bool noteLineCol(ParseNode* pn) {
-        uint32_t line, column;
-        m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
-        return fg_.addSourceCoords(encoder().bytecodeOffset(), line, column);
+    bool writeCall(ParseNode* pn, Expr op) {
+        return writeOp(op) &&
+               fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+    }
+    bool tempCall(ParseNode* pn, size_t* offset) {
+        return tempOp(offset) &&
+               fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -4405,15 +4408,12 @@ static bool
 CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calleeName,
                   ExprType ret, Type* type)
 {
-    if (!f.writeOp(Expr::Call))
+    if (!f.writeCall(callNode, Expr::Call))
         return false;
 
     // Function's index, to find out the function's entry
     size_t funcIndexAt;
     if (!f.temp32(&funcIndexAt))
-        return false;
-
-    if (!f.noteLineCol(callNode))
         return false;
 
     ValTypeVector args;
@@ -4484,7 +4484,7 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
         return f.fail(maskNode, "function-pointer table index mask value must be a power of two minus 1");
 
     // Opcode
-    if (!f.writeOp(Expr::CallIndirect))
+    if (!f.writeCall(callNode, Expr::CallIndirect))
         return false;
 
     // Table's mask
@@ -4499,9 +4499,6 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
     // Call signature
     size_t sigIndexAt;
     if (!f.temp32(&sigIndexAt))
-        return false;
-
-    if (!f.noteLineCol(callNode))
         return false;
 
     Type indexType;
@@ -4548,15 +4545,12 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprT
         return f.fail(callNode, "FFI calls can't return SIMD values");
 
     // Opcode
-    if (!f.writeOp(Expr::CallImport))
+    if (!f.writeCall(callNode, Expr::CallImport))
         return false;
 
     // Import index
     size_t importIndexAt;
     if (!f.temp32(&importIndexAt))
-        return false;
-
-    if (!f.noteLineCol(callNode))
         return false;
 
     ValTypeVector args;
@@ -4691,10 +4685,7 @@ CheckMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMathBuiltin
         return f.failf(callNode, "call passed %u arguments, expected %u", actualArity, arity);
 
     size_t opcodeAt;
-    if (!f.tempOp(&opcodeAt))
-        return false;
-
-    if (!f.noteLineCol(callNode))
+    if (!f.tempCall(callNode, &opcodeAt))
         return false;
 
     Type firstType;
@@ -6167,10 +6158,7 @@ MaybeAddInterruptCheck(FunctionValidator& f, InterruptCheckPosition pos, ParseNo
         break;
     }
 
-    unsigned lineno = 0, column = 0;
-    f.m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &lineno, &column);
-    return f.writeU32(lineno) &&
-           f.writeU32(column);
+    return true;
 }
 
 static bool

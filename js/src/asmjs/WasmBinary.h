@@ -518,6 +518,9 @@ class Decoder
     size_t currentOffset() const {
         return cur_ - beg_;
     }
+    size_t offsetOfLastExpr() const {
+        return currentOffset() - sizeof(uint16_t);
+    }
     void assertCurrentIs(const DebugOnly<size_t> offset) const {
         MOZ_ASSERT(currentOffset() == offset);
     }
@@ -675,16 +678,7 @@ class Decoder
     }
 };
 
-// Source coordinates for a call site. As they're read sequentially, we
-// don't need to store the call's bytecode offset, unless we want to
-// check its correctness in debug mode.
-struct SourceCoords {
-    DebugOnly<size_t> offset; // after call opcode
-    uint32_t line;
-    uint32_t column;
-};
-
-typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
+typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 // The FuncBytecode class contains the intermediate representation of a
 // parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
@@ -695,7 +689,7 @@ class FuncBytecode
     const DeclaredSig& sig_;
     ValTypeVector locals_;
     uint32_t lineOrBytecode_;
-    SourceCoordsVector callSourceCoords_;
+    Uint32Vector callSiteLineNums_;
 
     // Compilation bookkeeping
     uint32_t index_;
@@ -709,12 +703,12 @@ class FuncBytecode
                  UniqueBytecode bytecode,
                  ValTypeVector&& locals,
                  uint32_t lineOrBytecode,
-                 SourceCoordsVector&& sourceCoords,
+                 Uint32Vector&& callSiteLineNums,
                  unsigned generateTime)
       : sig_(sig),
         locals_(Move(locals)),
         lineOrBytecode_(lineOrBytecode),
-        callSourceCoords_(Move(sourceCoords)),
+        callSiteLineNums_(Move(callSiteLineNums)),
         index_(index),
         generateTime_(generateTime),
         bytecode_(Move(bytecode))
@@ -723,8 +717,7 @@ class FuncBytecode
     UniqueBytecode recycleBytecode() { return Move(bytecode_); }
 
     uint32_t lineOrBytecode() const { return lineOrBytecode_; }
-    const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
-
+    const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
     uint32_t index() const { return index_; }
     const DeclaredSig& sig() const { return sig_; }
     const Bytecode& bytecode() const { return *bytecode_; }
