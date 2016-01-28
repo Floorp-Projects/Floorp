@@ -787,6 +787,7 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
     WriteParam(aMsg, aParam.mAddedEndOffset);
     WriteParam(aMsg, aParam.mCausedOnlyByComposition);
     WriteParam(aMsg, aParam.mIncludingChangesDuringComposition);
+    WriteParam(aMsg, aParam.mIncludingChangesWithoutComposition);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -795,7 +796,10 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
            ReadParam(aMsg, aIter, &aResult->mRemovedEndOffset) &&
            ReadParam(aMsg, aIter, &aResult->mAddedEndOffset) &&
            ReadParam(aMsg, aIter, &aResult->mCausedOnlyByComposition) &&
-           ReadParam(aMsg, aIter, &aResult->mIncludingChangesDuringComposition);
+           ReadParam(aMsg, aIter,
+                     &aResult->mIncludingChangesDuringComposition) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mIncludingChangesWithoutComposition);
   }
 };
 
