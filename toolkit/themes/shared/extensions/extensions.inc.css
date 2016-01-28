@@ -134,6 +134,11 @@
   padding-right: 20px;
 }
 
+button.warning {
+  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-warning.svg");
+  list-stye-position: inside;
+}
+
 
 /*** category selector ***/
 
