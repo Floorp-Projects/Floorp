@@ -853,18 +853,19 @@ public:
       mozilla::FramePropertyDescriptor<>::NewWithDestructor<dtor>();                \
     return &descriptor;                                                             \
   }
-// Don't use this unless you really know what you're doing!
-#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)                    \
-  static const mozilla::FramePropertyDescriptor<>* prop() {                         \
-    static const auto descriptor =                                                  \
-      mozilla::FramePropertyDescriptor<>::NewWithDestructorWithFrame<dtor>();       \
-    return &descriptor;                                                             \
-  }
 
 #define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, dtor)             \
   static const mozilla::FramePropertyDescriptor<type>* prop() {           \
     static MOZ_CONSTEXPR auto descriptor =                                \
       mozilla::FramePropertyDescriptor<type>::NewWithDestructor<dtor>();  \
+    return &descriptor;                                                   \
+  }
+
+// Don't use this unless you really know what you're doing!
+#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, type, dtor)    \
+  static const mozilla::FramePropertyDescriptor<type>* prop() {           \
+    static MOZ_CONSTEXPR auto descriptor = mozilla::                      \
+      FramePropertyDescriptor<type>::NewWithDestructorWithFrame<dtor>();  \
     return &descriptor;                                                   \
   }
 
