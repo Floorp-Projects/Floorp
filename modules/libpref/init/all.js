@@ -469,7 +469,7 @@ pref("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
 #elif defined(XP_LINUX)
 pref("media.peerconnection.capture_delay", 70);
 pref("media.getusermedia.playout_delay", 50);
-pref("media.navigator.audio.full_duplex", true);
+pref("media.navigator.audio.full_duplex", false);
 #else
 // *BSD, others - merely a guess for now
 pref("media.peerconnection.capture_delay", 50);
