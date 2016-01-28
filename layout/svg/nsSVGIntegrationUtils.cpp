@@ -155,9 +155,8 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   bool hasValidLayers = style->mLayers.HasLayerWithImage();
 
-  return (style->HasFilters() || style->mMask ||
-          (style->mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE) ||
-          hasValidLayers);
+  return (style->HasFilters() || hasValidLayers ||
+          (style->mClipPath.GetType() != NS_STYLE_CLIP_PATH_NONE));
 }
 
 // For non-SVG frames, this gives the offset to the frame's "user space".
