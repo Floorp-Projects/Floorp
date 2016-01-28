@@ -9,17 +9,6 @@ const HTTP_ROOT = CHROME_ROOT.replace("chrome://mochitests/content/",
 const SERVICE_WORKER = HTTP_ROOT + "service-workers/empty-sw.js";
 const TAB_URL = HTTP_ROOT + "service-workers/empty-sw.html";
 
-function waitForWorkersUpdate(document) {
-  return new Promise(done => {
-    var observer = new MutationObserver(function(mutations) {
-      observer.disconnect();
-      done();
-    });
-    var target = document.getElementById("service-workers");
-    observer.observe(target, { childList: true });
-  });
-}
-
 add_task(function *() {
   yield new Promise(done => {
     let options = {"set": [
@@ -32,7 +21,8 @@ add_task(function *() {
 
   let swTab = yield addTab(TAB_URL);
 
-  yield waitForWorkersUpdate(document);
+  let serviceWorkersElement = document.getElementById("service-workers");
+  yield waitForMutation(serviceWorkersElement, { childList: true });
 
   // Check that the service worker appears in the UI
   let names = [...document.querySelectorAll("#service-workers .target-name")];
@@ -40,7 +30,8 @@ add_task(function *() {
   ok(names.includes(SERVICE_WORKER), "The service worker url appears in the list: " + names);
 
   // Finally, unregister the service worker itself
-  let aboutDebuggingUpdate = waitForWorkersUpdate(document);
+  let aboutDebuggingUpdate = waitForMutation(serviceWorkersElement,
+    { childList: true });
 
   // Use message manager to work with e10s
   let frameScript = function () {
