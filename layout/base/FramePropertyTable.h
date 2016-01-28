@@ -63,7 +63,7 @@ protected:
  * static member) FramePropertyDescriptor and pass its address as
  * aProperty in the FramePropertyTable methods.
  */
-template<typename T=void>
+template<typename T>
 struct FramePropertyDescriptor : public FramePropertyDescriptorUntyped
 {
   typedef void Destructor(T* aPropertyValue);

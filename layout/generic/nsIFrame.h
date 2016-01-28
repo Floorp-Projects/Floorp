@@ -847,13 +847,6 @@ public:
   typedef nsAutoTArray<nsIContent*, 2> ContentArray;
   static void DestroyContentArray(ContentArray* aArray);
 
-#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                       \
-  static const mozilla::FramePropertyDescriptor<>* prop() {                         \
-    static const auto descriptor =                                                  \
-      mozilla::FramePropertyDescriptor<>::NewWithDestructor<dtor>();                \
-    return &descriptor;                                                             \
-  }
-
 #define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, dtor)             \
   static const mozilla::FramePropertyDescriptor<type>* prop() {           \
     static MOZ_CONSTEXPR auto descriptor =                                \
@@ -893,8 +886,8 @@ public:
 #define NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(prop, type) \
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(prop, mozilla::SmallValueHolder<type>)
 
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(IBSplitPrevSibling, nullptr)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsIFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsIFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(NormalPositionProperty, nsPoint)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ComputedOffsetProperty, nsMargin)
@@ -3111,8 +3104,7 @@ private:
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect);
 
-  static void DestroyPaintedPresShellList(void* propertyValue) {
-    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(propertyValue);
+  static void DestroyPaintedPresShellList(nsTArray<nsWeakPtr>* list) {
     list->Clear();
     delete list;
   }
@@ -3120,7 +3112,9 @@ private:
   // Stores weak references to all the PresShells that were painted during
   // the last paint event so that we can increment their paint count during
   // empty transactions
-  NS_DECLARE_FRAME_PROPERTY(PaintedPresShellsProperty, DestroyPaintedPresShellList)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(PaintedPresShellsProperty,
+                                      nsTArray<nsWeakPtr>,
+                                      DestroyPaintedPresShellList)
   
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
     nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(
