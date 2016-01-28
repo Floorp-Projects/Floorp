@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -238,56 +239,33 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
     return NS_OK;
 }
 
-static PLDHashOperator
-FlushSkinXBL(nsIURI* aKey, RefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure)
-{
-  nsAutoCString str;
-  aKey->GetPath(str);
-
-  PLDHashOperator ret = PL_DHASH_NEXT;
-
-  if (!strncmp(str.get(), "/skin", 5)) {
-    ret = PL_DHASH_REMOVE;
-  }
-
-  return ret;
-}
-
-static PLDHashOperator
-FlushSkinSheets(nsIURI* aKey, RefPtr<CSSStyleSheet>& aSheet, void* aClosure)
-{
-  nsAutoCString str;
-  aSheet->GetSheetURI()->GetPath(str);
-
-  PLDHashOperator ret = PL_DHASH_NEXT;
-
-  if (!strncmp(str.get(), "/skin", 5)) {
-    // This is a skin binding. Add the key to the list.
-    ret = PL_DHASH_REMOVE;
-  }
-  return ret;
-}
-
-static PLDHashOperator
-FlushScopedSkinStylesheets(nsIURI* aKey, RefPtr<nsXBLDocumentInfo> &aDocInfo, void* aClosure)
-{
-  aDocInfo->FlushSkinStylesheets();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsXULPrototypeCache::FlushSkinFiles()
 {
   // Flush out skin XBL files from the cache.
-  mXBLDocTable.Enumerate(FlushSkinXBL, nullptr);
+  for (auto iter = mXBLDocTable.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString str;
+    iter.Key()->GetPath(str);
+    if (strncmp(str.get(), "/skin", 5) == 0) {
+      iter.Remove();
+    }
+  }
 
   // Now flush out our skin stylesheets from the cache.
-  mStyleSheetTable.Enumerate(FlushSkinSheets, nullptr);
+  for (auto iter = mStyleSheetTable.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString str;
+    iter.Data()->GetSheetURI()->GetPath(str);
+    if (strncmp(str.get(), "/skin", 5) == 0) {
+      iter.Remove();
+    }
+  }
 
   // Iterate over all the remaining XBL and make sure cached
   // scoped skin stylesheets are flushed and refetched by the
   // prototype bindings.
-  mXBLDocTable.Enumerate(FlushScopedSkinStylesheets, nullptr);
+  for (auto iter = mXBLDocTable.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->FlushSkinStylesheets();
+  }
 }
 
 void
