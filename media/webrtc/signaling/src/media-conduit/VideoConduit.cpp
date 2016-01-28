@@ -1034,15 +1034,16 @@ WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
   if (mMinBitrate && mMinBitrate > vie_codec.minBitrate) {
     vie_codec.minBitrate = mMinBitrate;
   }
-  // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  vie_codec.minBitrate = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
-                                  vie_codec.minBitrate);
   if (mStartBitrate && mStartBitrate > vie_codec.startBitrate) {
     vie_codec.startBitrate = mStartBitrate;
   }
   if (mMaxBitrate && mMaxBitrate > vie_codec.maxBitrate) {
     vie_codec.maxBitrate = mMaxBitrate;
   }
+
+  // If we try to set a minimum bitrate that is too low, ViE will reject it.
+  vie_codec.minBitrate = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
+                                  vie_codec.minBitrate);
 }
 
 static void ConstrainPreservingAspectRatioExact(uint32_t max_fs,
