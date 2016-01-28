@@ -139,17 +139,6 @@ public:
   virtual MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
-   * Function to set the encoding bitrate limits based on incoming frame size and rate
-   * @param vie_codec: codec config structure to modify
-   * @param width, height: dimensions of the frame
-   * @param aLastFramerateTenths: holds the current input framerate
-   */
-  void SelectBandwidth(webrtc::VideoCodec& vie_codec,
-                       unsigned short width,
-                       unsigned short height,
-                       mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths);
-
-  /**
    * Function to select and change the encoding resolution based on incoming frame size
    * and current available bandwidth.
    * @param width, height: dimensions of the frame
