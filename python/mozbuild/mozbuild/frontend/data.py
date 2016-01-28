@@ -34,6 +34,7 @@ from ..testing import (
 
 class TreeMetadata(object):
     """Base class for all data being captured."""
+    __slots__ = ()
 
 
 class ContextDerived(TreeMetadata):
@@ -44,13 +45,15 @@ class ContextDerived(TreeMetadata):
     """
 
     __slots__ = (
-        'objdir',
-        'relativedir',
+        'context_main_path',
         'context_all_paths',
-        'context_path',
-        'srcdir',
-        'topobjdir',
         'topsrcdir',
+        'topobjdir',
+        'relativedir',
+        'srcdir',
+        'objdir',
+        'config',
+        '_context',
     )
 
     def __init__(self, context):
@@ -155,9 +158,10 @@ class XPIDLFile(ContextDerived):
     """Describes an XPIDL file to be compiled."""
 
     __slots__ = (
-        'add_to_manifest',
-        'basename',
         'source_path',
+        'basename',
+        'module',
+        'add_to_manifest',
     )
 
     def __init__(self, context, source, module, add_to_manifest):
@@ -787,7 +791,7 @@ class FinalTargetFiles(ContextDerived):
     this object fills that role. It just has a reference to the underlying
     HierarchicalStringList, which is created when parsing FINAL_TARGET_FILES.
     """
-    __slots__ = ('files', 'target')
+    __slots__ = ('files')
 
     def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
@@ -803,7 +807,7 @@ class FinalTargetPreprocessedFiles(ContextDerived):
     HierarchicalStringList, which is created when parsing
     FINAL_TARGET_PP_FILES.
     """
-    __slots__ = ('files', 'target')
+    __slots__ = ('files')
 
     def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
@@ -978,6 +982,7 @@ class ChromeManifestEntry(ContextDerived):
     """Represents a chrome.manifest entry."""
 
     __slots__ = (
+        'path',
         'entry',
     )
 
