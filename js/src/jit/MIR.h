@@ -8017,6 +8017,35 @@ class MRegExpPrototypeOptimizable
     }
 };
 
+class MRegExpInstanceOptimizable
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
+{
+    explicit MRegExpInstanceOptimizable(MDefinition* object, MDefinition* proto)
+      : MBinaryInstruction(object, proto)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpInstanceOptimizable)
+
+    static MRegExpInstanceOptimizable* New(TempAllocator& alloc, MDefinition* obj,
+                                           MDefinition* proto) {
+        return new(alloc) MRegExpInstanceOptimizable(obj, proto);
+    }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* proto() const {
+        return getOperand(1);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 template <class Policy1>
 class MStrReplace
   : public MTernaryInstruction,

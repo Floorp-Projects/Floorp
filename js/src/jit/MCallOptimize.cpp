@@ -182,6 +182,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineIsRegExpObject(callInfo);
       case InlinableNative::RegExpPrototypeOptimizable:
         return inlineRegExpPrototypeOptimizable(callInfo);
+      case InlinableNative::RegExpInstanceOptimizable:
+        return inlineRegExpInstanceOptimizable(callInfo);
 
       // String natives.
       case InlinableNative::String:
@@ -1901,6 +1903,35 @@ IonBuilder::inlineRegExpPrototypeOptimizable(CallInfo& callInfo)
     callInfo.setImplicitlyUsedUnchecked();
 
     MInstruction* opt = MRegExpPrototypeOptimizable::New(alloc(), protoArg);
+    current->add(opt);
+    current->push(opt);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* rxArg = callInfo.getArg(0);
+    MDefinition* protoArg = callInfo.getArg(1);
+
+    if (rxArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    if (protoArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* opt = MRegExpInstanceOptimizable::New(alloc(), rxArg, protoArg);
     current->add(opt);
     current->push(opt);
 
