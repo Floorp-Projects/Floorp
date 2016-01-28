@@ -12,7 +12,7 @@ function run_test() {
   let DebuggerServer = _setupDebuggerServer([testFile.path], () => testResumed = true);
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
-  client.connect(() => {
+  client.connect().then(() => {
     // Even though we have no tabs, listTabs gives us the chromeDebugger.
     client.getProcess().then(response => {
       let actor = response.form.actor;

@@ -33,7 +33,7 @@ var connect = Task.async(function*() {
     port: Prefs.chromeDebuggingPort
   });
   gClient = new DebuggerClient(transport);
-  gClient.connect(() => {
+  gClient.connect().then(() => {
     let addonID = getParameterByName("addonID");
 
     if (addonID) {

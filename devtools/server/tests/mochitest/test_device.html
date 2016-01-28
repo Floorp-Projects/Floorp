@@ -34,7 +34,7 @@ window.onload = function() {
   }
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(function onConnect() {
+  client.connect().then(function onConnect() {
     client.listTabs(function onListTabs(aResponse) {
       var d = getDeviceFront(client, aResponse);
 

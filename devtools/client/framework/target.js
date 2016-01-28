@@ -414,12 +414,12 @@ TabTarget.prototype = {
     };
 
     if (this.isLocalTab) {
-      this._client.connect(() => {
-        this._client.getTab({ tab: this.tab }).then(response => {
+      this._client.connect()
+        .then(() => this._client.getTab({ tab: this.tab }))
+        .then(response => {
           this._form = response.tab;
           attachTab();
         });
-      });
     } else if (this.isTabActor) {
       // In the remote debugging case, the protocol connection will have been
       // already initialized in the connection screen code.
