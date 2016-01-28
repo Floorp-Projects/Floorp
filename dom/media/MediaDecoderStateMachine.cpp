@@ -647,7 +647,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
       if (!mDropAudioUntilNextDiscontinuity) {
         // We must be after the discontinuity; we're receiving samples
         // at or after the seek target.
-        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint &&
+        if (mCurrentSeek.mTarget.IsFast() &&
             mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
             audio->mTime < mCurrentTimeBeforeSeek) {
           // We are doing a fastSeek, but we ended up *before* the previous
@@ -656,9 +656,9 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
           // spec, fastSeek should always be fast, but until we get the time to
           // change all Readers to seek to the keyframe after the currentTime
           // in this case, we'll just decode forward. Bug 1026330.
-          mCurrentSeek.mTarget.mType = SeekTarget::Accurate;
+          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
         }
-        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint) {
+        if (mCurrentSeek.mTarget.IsFast()) {
           // Non-precise seek; we can stop the seek at the first sample.
           Push(audio, MediaData::AUDIO_DATA);
         } else {
@@ -967,7 +967,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
       if (!mDropVideoUntilNextDiscontinuity) {
         // We must be after the discontinuity; we're receiving samples
         // at or after the seek target.
-        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint &&
+        if (mCurrentSeek.mTarget.IsFast() &&
             mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
             video->mTime < mCurrentTimeBeforeSeek) {
           // We are doing a fastSeek, but we ended up *before* the previous
@@ -976,9 +976,9 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
           // spec, fastSeek should always be fast, but until we get the time to
           // change all Readers to seek to the keyframe after the currentTime
           // in this case, we'll just decode forward. Bug 1026330.
-          mCurrentSeek.mTarget.mType = SeekTarget::Accurate;
+          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
         }
-        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint ||
+        if (mCurrentSeek.mTarget.IsFast() ||
             mPendingSeek.Exists()) {
           // Non-precise seek; or a pending seek exists ; we can stop the seek
           // at the first sample.
@@ -2548,7 +2548,7 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
   RefPtr<AudioData> audio(aSample->As<AudioData>());
   MOZ_ASSERT(audio &&
              mCurrentSeek.Exists() &&
-             mCurrentSeek.mTarget.mType == SeekTarget::Accurate);
+             mCurrentSeek.mTarget.IsAccurate());
 
   CheckedInt64 sampleDuration =
     FramesToUsecs(audio->mFrames, mInfo.mAudio.mRate);
