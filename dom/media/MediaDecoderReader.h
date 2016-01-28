@@ -79,7 +79,7 @@ public:
     MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
   using VideoDataPromise =
     MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
-  using SeekPromise = MozPromise<int64_t, nsresult, IsExclusive>;
+  using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
