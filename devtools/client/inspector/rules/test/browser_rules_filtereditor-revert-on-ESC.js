@@ -19,23 +19,15 @@ function* testPressingEscapeRevertsChanges(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
   let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
-  let filterTooltip = view.tooltips.filterEditor;
 
-  let onShow = filterTooltip.tooltip.once("shown");
-  swatch.click();
-  yield onShow;
-
-  let widget = yield filterTooltip.widget;
-  widget.setCssValue("blur(2px)");
-  yield ruleEditor.rule._applyingModifications;
+  yield clickOnFilterSwatch(swatch, view);
+  yield setValueInFilterWidget("blur(2px)", view);
 
   yield waitForComputedStyleProperty("body", null, "filter", "blur(2px)");
   is(propEditor.valueSpan.textContent, "blur(2px)",
     "Got expected property value.");
 
-  info("Pressing ESCAPE to close the tooltip");
-  EventUtils.sendKey("ESCAPE", widget.styleWindow);
-  yield ruleEditor.rule._applyingModifications;
+  yield pressEscapeToCloseTooltip(view);
 
   yield waitForComputedStyleProperty("body", null, "filter",
     "blur(2px) contrast(2)");
@@ -47,11 +39,11 @@ function* testPressingEscapeRevertsChangesAndDisables(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
   let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
-  let filterTooltip = view.tooltips.filterEditor;
 
   info("Disabling filter property");
+  let onRuleViewChanged = view.once("ruleview-changed");
   propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield onRuleViewChanged;
 
   ok(propEditor.element.classList.contains("ruleview-overridden"),
     "property is overridden.");
@@ -64,22 +56,15 @@ function* testPressingEscapeRevertsChangesAndDisables(view) {
   let newValue = yield getRulePropertyValue("filter");
   is(newValue, "", "filter should have been unset.");
 
-  let onShow = filterTooltip.tooltip.once("shown");
-  swatch.click();
-  yield onShow;
+  yield clickOnFilterSwatch(swatch, view);
 
   ok(!propEditor.element.classList.contains("ruleview-overridden"),
     "property overridden is not displayed.");
   is(propEditor.enable.style.visibility, "hidden",
     "property enable checkbox is hidden.");
 
-  let widget = yield filterTooltip.widget;
-  widget.setCssValue("blur(2px)");
-  yield ruleEditor.rule._applyingModifications;
-
-  info("Pressing ESCAPE to close the tooltip");
-  EventUtils.sendKey("ESCAPE", widget.styleWindow);
-  yield ruleEditor.rule._applyingModifications;
+  yield setValueInFilterWidget("blur(2px)", view);
+  yield pressEscapeToCloseTooltip(view);
 
   ok(propEditor.element.classList.contains("ruleview-overridden"),
     "property is overridden.");
@@ -101,4 +86,35 @@ function* getRulePropertyValue(name) {
     name: name
   });
   return propValue;
+}
+
+function* clickOnFilterSwatch(swatch, view) {
+  info("Clicking on a css filter swatch to open the tooltip");
+
+  // Clicking on a cssfilter swatch sets the current filter value in the tooltip
+  // which, in turn, makes the FilterWidget emit an "updated" event that causes
+  // the rule-view to refresh. So we must wait for the ruleview-changed event.
+  let onRuleViewChanged = view.once("ruleview-changed");
+  swatch.click();
+  yield onRuleViewChanged;
+}
+
+function* setValueInFilterWidget(value, view) {
+  info("Setting the CSS filter value in the tooltip");
+
+  let filterTooltip = view.tooltips.filterEditor;
+  let widget = yield filterTooltip.widget;
+  let onRuleViewChanged = view.once("ruleview-changed");
+  widget.setCssValue(value);
+  yield onRuleViewChanged;
+}
+
+function* pressEscapeToCloseTooltip(view) {
+  info("Pressing ESCAPE to close the tooltip");
+
+  let filterTooltip = view.tooltips.filterEditor;
+  let widget = yield filterTooltip.widget;
+  let onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.sendKey("ESCAPE", widget.styleWindow);
+  yield onRuleViewChanged;
 }
