@@ -490,6 +490,23 @@ public:
         }
     }
 
+    void AdjustScrollForSurfaceShift(float aX, float aY)
+    {
+        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+
+        MutexAutoLock lock(mWindowLock);
+        if (!mWindow) {
+            // We already shut down.
+            return;
+        }
+
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        if (controller) {
+            controller->AdjustScrollForSurfaceShift(
+                ScreenPoint(aX, aY));
+        }
+    }
+
     void SetIsLongpressEnabled(bool aIsLongpressEnabled)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
