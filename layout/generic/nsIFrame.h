@@ -844,7 +844,8 @@ public:
   
   nsPoint GetPositionIgnoringScrolling();
 
-  static void DestroyContentArray(void* aPropertyValue);
+  typedef nsAutoTArray<nsIContent*, 2> ContentArray;
+  static void DestroyContentArray(ContentArray* aArray);
 
 #define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                       \
   static const mozilla::FramePropertyDescriptor<>* prop() {                         \
@@ -919,11 +920,11 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(RefusedAsyncAnimationProperty, bool)
 
-  NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
+                                      DestroyContentArray)
 
   nsTArray<nsIContent*>* GetGenConPseudos() {
-    return static_cast<nsTArray<nsIContent*>*>(
-      Properties().Get(GenConProperty()));
+    return Properties().Get(GenConProperty());
   }
 
   /**
