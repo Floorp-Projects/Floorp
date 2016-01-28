@@ -543,7 +543,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "autocomplete-did-enter-text", false);
 
     if (AppConstants.NIGHTLY_BUILD) {
-      AddonWatcher.init();
       os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
     }
 
