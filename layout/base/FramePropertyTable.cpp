@@ -10,7 +10,8 @@
 namespace mozilla {
 
 void
-FramePropertyTable::Set(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
+FramePropertyTable::Set(const nsIFrame* aFrame,
+                        const FramePropertyDescriptor* aProperty,
                         void* aValue)
 {
   NS_ASSERTION(aFrame, "Null frame?");
@@ -71,7 +72,7 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
   }
 
   if (mLastFrame != aFrame) {
-    mLastFrame = const_cast<nsIFrame*>(aFrame);
+    mLastFrame = aFrame;
     mLastEntry = mEntries.GetEntry(mLastFrame);
   }
   Entry* entry = mLastEntry;
@@ -103,7 +104,8 @@ FramePropertyTable::Get(const nsIFrame* aFrame,
 }
 
 void*
-FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
+FramePropertyTable::Remove(const nsIFrame* aFrame,
+                           const FramePropertyDescriptor* aProperty,
                            bool* aFoundResult)
 {
   NS_ASSERTION(aFrame, "Null frame?");
@@ -164,7 +166,8 @@ FramePropertyTable::Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aPro
 }
 
 void
-FramePropertyTable::Delete(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty)
+FramePropertyTable::Delete(const nsIFrame* aFrame,
+                           const FramePropertyDescriptor* aProperty)
 {
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
@@ -193,7 +196,7 @@ FramePropertyTable::DeleteAllForEntry(Entry* aEntry)
 }
 
 void
-FramePropertyTable::DeleteAllFor(nsIFrame* aFrame)
+FramePropertyTable::DeleteAllFor(const nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "Null frame?");
 
