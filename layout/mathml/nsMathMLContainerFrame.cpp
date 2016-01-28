@@ -127,8 +127,8 @@ IsForeignChild(const nsIFrame* aFrame)
     aFrame->GetType() == nsGkAtoms::blockFrame;
 }
 
-NS_DECLARE_FRAME_PROPERTY(HTMLReflowMetricsProperty,
-                          DeleteValue<nsHTMLReflowMetrics>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(HTMLReflowMetricsProperty,
+                                    nsHTMLReflowMetrics)
 
 /* static */ void
 nsMathMLContainerFrame::SaveReflowAndBoundingMetricsFor(nsIFrame*                  aFrame,
@@ -149,8 +149,8 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
 {
   NS_PRECONDITION(aFrame, "null arg");
 
-  nsHTMLReflowMetrics *metrics = static_cast<nsHTMLReflowMetrics*>
-    (aFrame->Properties().Get(HTMLReflowMetricsProperty()));
+  nsHTMLReflowMetrics *metrics =
+    aFrame->Properties().Get(HTMLReflowMetricsProperty());
 
   // IMPORTANT: This function is only meant to be called in Place() methods
   // where it is assumed that SaveReflowAndBoundingMetricsFor has recorded the

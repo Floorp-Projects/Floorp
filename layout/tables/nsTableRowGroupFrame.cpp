@@ -1858,8 +1858,8 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
 
 //end nsLineIterator methods
 
-NS_DECLARE_FRAME_PROPERTY(RowCursorProperty,
-                          DeleteValue<nsTableRowGroupFrame::FrameCursorData>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(RowCursorProperty,
+                                    nsTableRowGroupFrame::FrameCursorData)
 
 void
 nsTableRowGroupFrame::ClearRowCursor()
@@ -1905,8 +1905,7 @@ nsTableRowGroupFrame::GetFirstRowContaining(nscoord aY, nscoord* aOverflowAbove)
     return nullptr;
   }
 
-  FrameCursorData* property = static_cast<FrameCursorData*>
-    (Properties().Get(RowCursorProperty()));
+  FrameCursorData* property = Properties().Get(RowCursorProperty());
   uint32_t cursorIndex = property->mCursorIndex;
   uint32_t frameCount = property->mFrames.Length();
   if (cursorIndex >= frameCount)

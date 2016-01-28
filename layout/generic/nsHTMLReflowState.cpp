@@ -2382,12 +2382,12 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
 
 static void
 UpdateProp(FrameProperties& aProps,
-           const FramePropertyDescriptor<>* aProperty,
+           const FramePropertyDescriptor<nsMargin>* aProperty,
            bool aNeeded,
            nsMargin& aNewValue)
 {
   if (aNeeded) {
-    nsMargin* propValue = static_cast<nsMargin*>(aProps.Get(aProperty));
+    nsMargin* propValue = aProps.Get(aProperty);
     if (propValue) {
       *propValue = aNewValue;
     } else {
