@@ -71,7 +71,7 @@ static const char kJSCachePrefix[] = "jsloader";
 #define XPC_DESERIALIZATION_BUFFER_SIZE (12 * 8192)
 
 // NSPR_LOG_MODULES=JSComponentLoader:5
-static PRLogModuleInfo* gJSCLLog;
+static LazyLogModule gJSCLLog("JSComponentLoader");
 
 #define LOG(args) MOZ_LOG(gJSCLLog, mozilla::LogLevel::Debug, args)
 
@@ -197,10 +197,6 @@ mozJSComponentLoader::mozJSComponentLoader()
       mReuseLoaderGlobal(false)
 {
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
-
-    if (!gJSCLLog) {
-        gJSCLLog = PR_NewLogModule("JSComponentLoader");
-    }
 
     sSelf = this;
 }

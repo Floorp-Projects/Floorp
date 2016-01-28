@@ -45,7 +45,7 @@
 #include "mozilla/Logging.h"
 #include "prprf.h"
 #include <stdio.h>
-PRLogModuleInfo* nsRDFLog = nullptr;
+mozilla::LazyLogModule nsRDFLog("RDF");
 
 //----------------------------------------------------------------------
 //
@@ -490,8 +490,6 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	  mCoalesceDuplicateArcs(true),
       mUpdateBatchNest(0)
 {
-    if (nsRDFLog == nullptr) 
-        nsRDFLog = PR_NewLogModule("RDF");
 }
 
 //----------------------------------------------------------------------
