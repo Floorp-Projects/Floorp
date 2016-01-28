@@ -157,6 +157,7 @@ class FunctionCompiler
         MOZ_ASSERT(labeledContinues_.empty());
         MOZ_ASSERT(inDeadCode());
         MOZ_ASSERT(decoder_.done(), "all bytecode must be consumed");
+        MOZ_ASSERT(func_.callSiteLineNums().length() == lastReadCallSite_);
     }
 
     /************************* Read-only interface (after local scope setup) */
@@ -583,12 +584,12 @@ class FunctionCompiler
         curBlock_->add(MAsmJSStoreGlobalVar::New(alloc(), globalDataOffset, v));
     }
 
-    void addInterruptCheck(unsigned lineno, unsigned column)
+    void addInterruptCheck()
     {
         if (inDeadCode())
             return;
 
-        CallSiteDesc callDesc(lineno, column, CallSiteDesc::Relative);
+        CallSiteDesc callDesc(0, CallSiteDesc::Relative);
         curBlock_->add(MAsmJSInterruptCheck::New(alloc(), masm().asmSyncInterruptLabel(), callDesc));
     }
 
@@ -638,8 +639,7 @@ class FunctionCompiler
 
     class Call
     {
-        uint32_t lineno_;
-        uint32_t column_;
+        uint32_t lineOrBytecode_;
         ABIArgGenerator abi_;
         uint32_t prevMaxStackBytes_;
         uint32_t maxChildStackBytes_;
@@ -651,9 +651,8 @@ class FunctionCompiler
         friend class FunctionCompiler;
 
       public:
-        Call(FunctionCompiler& f, uint32_t lineno, uint32_t column)
-          : lineno_(lineno),
-            column_(column),
+        Call(FunctionCompiler& f, uint32_t lineOrBytecode)
+          : lineOrBytecode_(lineOrBytecode),
             prevMaxStackBytes_(0),
             maxChildStackBytes_(0),
             spIncrement_(0),
@@ -727,7 +726,7 @@ class FunctionCompiler
           case MAsmJSCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
 
-        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(call.lineno_, call.column_, kind),
+        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(call.lineOrBytecode_, kind),
                                           callee, call.regArgs_, ToMIRType(ret), call.spIncrement_);
         if (!ins)
             return false;
@@ -1188,11 +1187,10 @@ class FunctionCompiler
     Expr           readOpcode()   { return decoder_.uncheckedReadExpr(); }
     Expr           peekOpcode()   { return decoder_.uncheckedPeekExpr(); }
 
-    void readCallLineCol(uint32_t* line, uint32_t* column) {
-        const SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
-        decoder_.assertCurrentIs(sc.offset);
-        *line = sc.line;
-        *column = sc.column;
+    uint32_t readCallSiteLineOrBytecode() {
+        if (!func_.callSiteLineNums().empty())
+            return func_.callSiteLineNums()[lastReadCallSite_++];
+        return decoder_.offsetOfLastExpr();
     }
 
     bool done() const { return decoder_.done(); }
@@ -1574,15 +1572,13 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 static bool
 EmitCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
     uint32_t funcIndex = f.readU32();
 
     const Sig& sig = f.mg().funcSig(funcIndex);
     MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
-    uint32_t lineno, column;
-    f.readCallLineCol(&lineno, &column);
-
-    FunctionCompiler::Call call(f, lineno, column);
+    FunctionCompiler::Call call(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -1592,6 +1588,7 @@ EmitCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 static bool
 EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
     uint32_t mask = f.readU32();
     uint32_t globalDataOffset = f.readU32();
     uint32_t sigIndex = f.readU32();
@@ -1599,14 +1596,11 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     const Sig& sig = f.mg().sig(sigIndex);
     MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
-    uint32_t lineno, column;
-    f.readCallLineCol(&lineno, &column);
-
     MDefinition *index;
     if (!EmitExpr(f, ExprType::I32, &index))
         return false;
 
-    FunctionCompiler::Call call(f, lineno, column);
+    FunctionCompiler::Call call(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -1616,16 +1610,14 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 static bool
 EmitCallImport(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
     uint32_t importIndex = f.readU32();
-
-    uint32_t lineno, column;
-    f.readCallLineCol(&lineno, &column);
 
     const ModuleImportGeneratorData& import = f.mg().import(importIndex);
     const Sig& sig = *import.sig;
     MOZ_ASSERT_IF(!IsVoid(sig.ret()) && ret != ExprType::Limit, sig.ret() == ret);
 
-    FunctionCompiler::Call call(f, lineno, column);
+    FunctionCompiler::Call call(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -1637,10 +1629,9 @@ EmitF32MathBuiltinCall(FunctionCompiler& f, Expr f32, MDefinition** def)
 {
     MOZ_ASSERT(f32 == Expr::F32Ceil || f32 == Expr::F32Floor);
 
-    uint32_t lineno, column;
-    f.readCallLineCol(&lineno, &column);
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-    FunctionCompiler::Call call(f, lineno, column);
+    FunctionCompiler::Call call(f, lineOrBytecode);
     f.startCallArgs(&call);
 
     MDefinition* firstArg;
@@ -1656,10 +1647,9 @@ EmitF32MathBuiltinCall(FunctionCompiler& f, Expr f32, MDefinition** def)
 static bool
 EmitF64MathBuiltinCall(FunctionCompiler& f, Expr f64, MDefinition** def)
 {
-    uint32_t lineno, column;
-    f.readCallLineCol(&lineno, &column);
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-    FunctionCompiler::Call call(f, lineno, column);
+    FunctionCompiler::Call call(f, lineOrBytecode);
     f.startCallArgs(&call);
 
     MDefinition* firstArg;
@@ -2378,9 +2368,7 @@ EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, MDefinition** d
 static bool
 EmitInterruptCheck(FunctionCompiler& f)
 {
-    unsigned lineno = f.readU32();
-    unsigned column = f.readU32();
-    f.addInterruptCheck(lineno, column);
+    f.addInterruptCheck();
     return true;
 }
 
