@@ -11,6 +11,7 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/Maybe.h"
@@ -60,7 +61,7 @@ struct null_t {
   bool operator==(const null_t&) const { return true; }
 };
 
-struct SerializedStructuredCloneBuffer
+struct MOZ_STACK_CLASS SerializedStructuredCloneBuffer
 {
   SerializedStructuredCloneBuffer()
   : data(nullptr), dataLength(0)
