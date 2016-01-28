@@ -97,6 +97,23 @@ function handleMessage(event) {
     }));
     return;
   }
+  if (event.data.type == "denySubscribe") {
+    reply(event, self.registration.pushManager.getSubscription().then(
+      subscription => {
+        assert(!subscription,
+          "Should not return worker subscription with revoked permission");
+        return self.registration.pushManager.subscribe().then(_ => {
+          assert(false, "Expected error subscribing with revoked permission");
+        }, error => {
+          return {
+            isDOMException: error instanceof DOMException,
+            name: error.name,
+          };
+        });
+      }
+    ));
+    return;
+  }
   reply(event, Promise.reject(
     "Invalid message type: " + event.data.type));
 }
