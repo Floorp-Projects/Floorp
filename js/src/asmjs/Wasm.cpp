@@ -708,7 +708,8 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     UniqueChars error;
     wasm::UniqueBytecode bytes = wasm::TextToBinary(twoByteChars.twoByteChars(), &error);
     if (!bytes) {
-        JS_ReportError(cx, error.get() ? error.get() : "out of memory");
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                             error.get() ? error.get() : "out of memory");
         return false;
     }
 
