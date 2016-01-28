@@ -65,6 +65,7 @@
     _(MathCbrt)                     \
                                     \
     _(RegExpMatcher)                \
+    _(RegExpSearcher)               \
     _(RegExpTester)                 \
     _(IsRegExpObject)               \
     _(RegExpPrototypeOptimizable)   \
