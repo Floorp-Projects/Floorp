@@ -593,6 +593,7 @@ TabTarget.prototype = {
     this._tab = null;
     this._form = null;
     this._remote = null;
+    this._root = null;
   },
 
   toString: function() {

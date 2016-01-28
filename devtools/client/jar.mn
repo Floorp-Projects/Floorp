@@ -188,6 +188,7 @@ devtools.jar:
     skin/images/command-console@2x.png (themes/images/command-console@2x.png)
     skin/images/command-eyedropper.png (themes/images/command-eyedropper.png)
     skin/images/command-eyedropper@2x.png (themes/images/command-eyedropper@2x.png)
+    skin/images/command-noautohide.svg (themes/images/command-noautohide.svg)
     skin/images/command-rulers.png (themes/images/command-rulers.png)
     skin/images/command-rulers@2x.png (themes/images/command-rulers@2x.png)
     skin/images/command-measure.png (themes/images/command-measure.png)
