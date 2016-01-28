@@ -11,6 +11,7 @@ http://creativecommons.org/licenses/publicdomain/
   <title>Test for Bug 1185544</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <script type="text/javascript" src="/tests/dom/push/test/webpush.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -25,25 +26,10 @@ http://creativecommons.org/licenses/publicdomain/
 
 <script class="testbody" type="text/javascript">
 
-  SimpleTest.registerCleanupFunction(() =>
-    new Promise(resolve => SpecialPowers.popPermissions(resolve))
-  );
-
   var registration;
   add_task(function* start() {
-    yield new Promise(resolve => {
-      SpecialPowers.pushPermissions([
-        { type: "desktop-notification", allow: true, context: document },
-        ], resolve);
-    });
-    yield new Promise(resolve => {
-      SpecialPowers.pushPrefEnv({"set": [
-        ["dom.push.enabled", true],
-        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-        ["dom.serviceWorkers.enabled", true],
-        ["dom.serviceWorkers.testing.enabled", true]
-        ]}, resolve);
-    });
+    yield setupPrefs();
+    yield setPushPermission(true);
 
     var url = "worker.js" + "?" + (Math.random());
     registration = yield navigator.serviceWorker.register(url, {scope: "."});
@@ -51,31 +37,13 @@ http://creativecommons.org/licenses/publicdomain/
 
   var controlledFrame;
   add_task(function* createControlledIFrame() {
-    yield new Promise(function(res, rej) {
-      var iframe = document.createElement('iframe');
-      iframe.id = "controlledFrame";
-      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
-
-      iframe.onload = () => res();
-      controlledFrame = iframe;
-      document.body.appendChild(iframe);
-    });
+    controlledFrame = yield injectControlledFrame();
   });
 
   var pushSubscription;
   add_task(function* subscribe() {
     pushSubscription = yield registration.pushManager.subscribe();
   });
-
-  function sendRequestToWorker(request) {
-    return new Promise((resolve, reject) => {
-      var channel = new MessageChannel();
-      channel.port1.onmessage = e => {
-        (e.data.error ? reject : resolve)(e.data);
-      };
-      registration.active.postMessage(request, [channel.port2]);
-    });
-  }
 
   function base64UrlDecode(s) {
     s = s.replace(/-/g, '+').replace(/_/g, '/');
@@ -138,7 +106,7 @@ http://creativecommons.org/licenses/publicdomain/
 
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
-      controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+      controlledFrame.waitOnPushMessage(),
       webpush(pushSubscription, message),
     ]).then(([message]) => message);
   }
@@ -190,11 +158,10 @@ http://creativecommons.org/licenses/publicdomain/
       reader.readAsText(message.data.blob);
     });
     is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
-    is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
 
     // Send a blank message.
     var [message] = yield Promise.all([
-      controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+      controlledFrame.waitOnPushMessage(),
       fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
         method: "PUT",
         headers: {
@@ -207,8 +174,7 @@ http://creativecommons.org/licenses/publicdomain/
   });
 
   add_task(function* unsubscribe() {
-    controlledFrame.parentNode.removeChild(controlledFrame);
-    controlledFrame = null;
+    controlledFrame.remove();
     yield pushSubscription.unsubscribe();
   });
 
