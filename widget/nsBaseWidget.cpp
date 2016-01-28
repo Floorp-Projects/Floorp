@@ -2164,10 +2164,10 @@ IMENotification::TextChangeDataBase::MergeWith(
   const TextChangeDataBase& newData = aOther;
   const TextChangeDataBase oldData = *this;
 
-  // mCausedByComposition should be true only when all changes are caused by
-  // composition.
-  mCausedByComposition =
-    newData.mCausedByComposition && oldData.mCausedByComposition;
+  // mCausedOnlyByComposition should be true only when all changes are caused
+  // by composition.
+  mCausedOnlyByComposition =
+    newData.mCausedOnlyByComposition && oldData.mCausedOnlyByComposition;
   // mOccurredDuringComposition should be true only when all changes occurred
   // during composition.
   mOccurredDuringComposition =
