@@ -674,11 +674,8 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
     if (module.imports().length() > 0)
         return Fail(cx, "Imports not implemented yet");
 
-    if (!module.dynamicallyLink(cx, heap, imports))
-        return false;
-
     RootedObject exportObj(cx);
-    if (!module.createExportObject(cx, moduleObj, exportMap, &exportObj))
+    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, exportMap, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);
