@@ -177,11 +177,9 @@ class Import
         return pod.exitGlobalDataOffset_;
     }
     uint32_t interpExitCodeOffset() const {
-        MOZ_ASSERT(pod.interpExitCodeOffset_);
         return pod.interpExitCodeOffset_;
     }
     uint32_t jitExitCodeOffset() const {
-        MOZ_ASSERT(pod.jitExitCodeOffset_);
         return pod.jitExitCodeOffset_;
     }
 
