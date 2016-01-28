@@ -785,7 +785,7 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
     WriteParam(aMsg, aParam.mStartOffset);
     WriteParam(aMsg, aParam.mRemovedEndOffset);
     WriteParam(aMsg, aParam.mAddedEndOffset);
-    WriteParam(aMsg, aParam.mCausedByComposition);
+    WriteParam(aMsg, aParam.mCausedOnlyByComposition);
     WriteParam(aMsg, aParam.mOccurredDuringComposition);
   }
 
@@ -794,7 +794,7 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
     return ReadParam(aMsg, aIter, &aResult->mStartOffset) &&
            ReadParam(aMsg, aIter, &aResult->mRemovedEndOffset) &&
            ReadParam(aMsg, aIter, &aResult->mAddedEndOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mCausedByComposition) &&
+           ReadParam(aMsg, aIter, &aResult->mCausedOnlyByComposition) &&
            ReadParam(aMsg, aIter, &aResult->mOccurredDuringComposition);
   }
 };
