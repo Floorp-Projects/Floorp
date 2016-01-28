@@ -54,6 +54,7 @@ public:
 
     OMX_AUDIO_PARAM_AACPROFILETYPE aacProfile;
     InitOmxParameter(&aacProfile);
+    aacProfile.nPortIndex = aOmx.InputPortIndex();
     err = aOmx.GetParameter(OMX_IndexParamAudioAac, &aacProfile, sizeof(aacProfile));
     RETURN_IF_ERR(err);
 
@@ -102,7 +103,7 @@ public:
 
     // Set up in/out port definition.
     nsTArray<uint32_t> ports;
-    GetOmxPortIndex(ports);
+    aOmx.GetPortIndices(ports);
     for (auto idx : ports) {
       InitOmxParameter(&def);
       def.nPortIndex = idx;
@@ -158,11 +159,16 @@ OmxPlatformLayer::Config()
 {
   MOZ_ASSERT(mInfo);
 
+  OMX_PORT_PARAM_TYPE portParam;
+  InitOmxParameter(&portParam);
   if (mInfo->IsAudio()) {
+    GetParameter(OMX_IndexParamAudioInit, &portParam, sizeof(portParam));
+    mStartPortNumber = portParam.nStartPortNumber;
     UniquePtr<OmxAudioConfig> conf(ConfigForMime<OmxAudioConfig>(mInfo->mMimeType));
     MOZ_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsAudioInfo()));
   } else if (mInfo->IsVideo()) {
+    GetParameter(OMX_IndexParamVideoInit, &portParam, sizeof(portParam));
     UniquePtr<OmxVideoConfig> conf(ConfigForMime<OmxVideoConfig>(mInfo->mMimeType));
     MOZ_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsVideoInfo()));
