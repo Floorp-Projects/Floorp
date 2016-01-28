@@ -114,25 +114,6 @@ SpdySession31::Shutdown()
   }
 }
 
-PLDHashOperator
-SpdySession31::GoAwayEnumerator(nsAHttpTransaction *key,
-                                nsAutoPtr<SpdyStream31> &stream,
-                                void *closure)
-{
-  SpdySession31 *self = static_cast<SpdySession31 *>(closure);
-
-  // these streams were not processed by the server and can be restarted.
-  // Do that after the enumerator completes to avoid the risk of
-  // a restart event re-entrantly modifying this hash. Be sure not to restart
-  // a pushed (even numbered) stream
-  if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
-      !stream->HasRegisteredID()) {
-    self->mGoAwayStreamsToRestart.Push(stream);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 SpdySession31::~SpdySession31()
 {
   LOG3(("SpdySession31::~SpdySession31 %p mDownstreamState=%X",
@@ -1379,16 +1360,6 @@ SpdySession31::HandleRstStream(SpdySession31 *self)
   return NS_OK;
 }
 
-PLDHashOperator
-SpdySession31::UpdateServerRwinEnumerator(nsAHttpTransaction *key,
-                                            nsAutoPtr<SpdyStream31> &stream,
-                                            void *closure)
-{
-  int32_t delta = *(static_cast<int32_t *>(closure));
-  stream->UpdateRemoteWindow(delta);
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 SpdySession31::HandleSettings(SpdySession31 *self)
 {
@@ -1440,8 +1411,11 @@ SpdySession31::HandleSettings(SpdySession31 *self)
         // do not use SETTINGS to adjust the session window.
 
         // we need to add the delta to all open streams (delta can be negative)
-        self->mStreamTransactionHash.Enumerate(UpdateServerRwinEnumerator,
-                                               &delta);
+        for (auto iter = self->mStreamTransactionHash.Iter();
+             !iter.Done();
+             iter.Next()) {
+          iter.Data()->UpdateRemoteWindow(delta);
+        }
       }
       break;
 
@@ -1515,9 +1489,22 @@ SpdySession31::HandleGoAway(SpdySession31 *self)
   self->mCleanShutdown = true;
 
   // Find streams greater than the last-good ID and mark them for deletion
-  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. The
-  // underlying transaction can be restarted.
-  self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
+  // in the mGoAwayStreamsToRestart queue. The underlying transaction can be
+  // restarted.
+  for (auto iter = self->mStreamTransactionHash.Iter();
+       !iter.Done();
+       iter.Next()) {
+
+    // These streams were not processed by the server and can be restarted. Do
+    // that after the enumerator completes to avoid the risk of a restart event
+    // re-entrantly modifying this hash. Be sure not to restart a pushed (even
+    // numbered) stream.
+    nsAutoPtr<SpdyStream31>& stream = iter.Data();
+    if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
+        !stream->HasRegisteredID()) {
+      self->mGoAwayStreamsToRestart.Push(stream);
+    }
+  }
 
   // Process the streams marked for deletion and restart.
   size_t size = self->mGoAwayStreamsToRestart.GetSize();
