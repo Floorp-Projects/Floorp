@@ -32,7 +32,7 @@ class nsTextControlFrame final : public nsContainerFrame,
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECLARE_FRAME_PROPERTY(ContentScrollPos, DeleteValue<nsPoint>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 
   explicit nsTextControlFrame(nsStyleContext* aContext);
   virtual ~nsTextControlFrame();
