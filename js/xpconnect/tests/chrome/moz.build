@@ -5,5 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-MOCHITEST_MANIFESTS += ['mochitest.ini']
 
+TEST_HARNESS_FILES.testing.mochitest.tests.js.xpconnect.tests.chrome += [
+    'file_discardSystemSource.html',
+    'worker_discardSystemSource.js',
+]

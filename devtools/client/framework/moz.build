@@ -5,7 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+TEST_HARNESS_FILES.xpcshell.devtools.client.framework.test += [
+    'test/shared-redux-head.js',
+]
 
 DevToolsModules(
     'attach-thread.js',
