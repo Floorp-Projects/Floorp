@@ -91,6 +91,7 @@ class WasmAstSig : public WasmAstBase
 enum class WasmAstKind
 {
     Block,
+    Call,
     Const,
     Export,
     Func,
@@ -194,6 +195,23 @@ class WasmAstBlock : public WasmAstExpr
     {}
 
     const WasmAstExprVector& exprs() const { return exprs_; }
+};
+
+class WasmAstCall : public WasmAstExpr
+{
+    Expr expr_;
+    uint32_t index_;
+    WasmAstExprVector args_;
+
+  public:
+    static const WasmAstKind Kind = WasmAstKind::Call;
+    WasmAstCall(Expr expr, uint32_t index, WasmAstExprVector&& args)
+      : WasmAstExpr(Kind), expr_(expr), index_(index), args_(Move(args))
+    {}
+
+    Expr expr() const { return expr_; }
+    uint32_t index() const { return index_; }
+    const WasmAstExprVector& args() const { return args_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -312,6 +330,8 @@ class WasmToken
     enum Kind
     {
         Block,
+        Call,
+        CallImport,
         CloseParen,
         Const,
         EndOfFile,
@@ -511,6 +531,14 @@ class WasmTokenStream
                 return WasmToken(WasmToken::Block, begin, cur_);
             break;
 
+          case 'c':
+            if (consume(end_, MOZ_UTF16("all"))) {
+                if (consume(end_, MOZ_UTF16("_import")))
+                    return WasmToken(WasmToken::CallImport, begin, cur_);
+                return WasmToken(WasmToken::Call, begin, cur_);
+            }
+            break;
+
           case 'e':
             if (consume(end_, MOZ_UTF16("xport")))
                 return WasmToken(WasmToken::Export, begin, cur_);
@@ -699,6 +727,25 @@ ParseBlock(WasmParseContext& c)
     return new(c.lifo) WasmAstBlock(Move(exprs));
 }
 
+static WasmAstCall*
+ParseCall(WasmParseContext& c, Expr expr)
+{
+    WasmToken index;
+    if (!c.ts.match(WasmToken::Integer, &index, c.error))
+        return nullptr;
+
+    WasmAstExprVector args(c.lifo);
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmAstExpr* arg = ParseExprInsideParens(c);
+        if (!arg || !args.append(arg))
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstCall(expr, index.integer(), Move(args));
+}
+
 static WasmAstConst*
 ParseConst(WasmParseContext& c, WasmToken constToken)
 {
@@ -749,6 +796,10 @@ ParseExprInsideParens(WasmParseContext& c)
         return new(c.lifo) WasmAstNop;
       case WasmToken::Block:
         return ParseBlock(c);
+      case WasmToken::Call:
+        return ParseCall(c, Expr::Call);
+      case WasmToken::CallImport:
+        return ParseCall(c, Expr::CallImport);
       case WasmToken::Const:
         return ParseConst(c, expr);
       case WasmToken::GetLocal:
@@ -958,6 +1009,23 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
 }
 
 static bool
+EncodeCall(Encoder& e, WasmAstCall& c)
+{
+    if (!e.writeExpr(c.expr()))
+        return false;
+
+    if (!e.writeU32(c.index()))
+        return false;
+
+    for (WasmAstExpr* arg : c.args()) {
+        if (!EncodeExpr(e, *arg))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeConst(Encoder& e, WasmAstConst& c)
 {
     switch (c.val().type()) {
@@ -993,6 +1061,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return e.writeExpr(Expr::Nop);
       case WasmAstKind::Block:
         return EncodeBlock(e, expr.as<WasmAstBlock>());
+      case WasmAstKind::Call:
+        return EncodeCall(e, expr.as<WasmAstCall>());
       case WasmAstKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
       case WasmAstKind::GetLocal:

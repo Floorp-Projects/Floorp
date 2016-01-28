@@ -162,6 +162,46 @@ DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
 }
 
 static bool
+DecodeCall(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t funcIndex;
+    if (!f.d().readU32(&funcIndex))
+        return f.fail("unable to read import index");
+
+    if (funcIndex >= f.mg().numFuncSigs())
+        return f.fail("callee index out of range");
+
+    const DeclaredSig& sig = f.mg().funcSig(funcIndex);
+
+    for (ValType argType : sig.args()) {
+        if (!DecodeExpr(f, ToExprType(argType)))
+            return false;
+    }
+
+    return CheckType(f, sig.ret(), expected);
+}
+
+static bool
+DecodeCallImport(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t importIndex;
+    if (!f.d().readU32(&importIndex))
+        return f.fail("unable to read import index");
+
+    if (importIndex >= f.mg().numImports())
+        return f.fail("import index out of range");
+
+    const DeclaredSig& sig = *f.mg().import(importIndex).sig;
+
+    for (ValType argType : sig.args()) {
+        if (!DecodeExpr(f, ToExprType(argType)))
+            return false;
+    }
+
+    return CheckType(f, sig.ret(), expected);
+}
+
+static bool
 DecodeConst(FunctionDecoder& f, ExprType expected)
 {
     if (!f.d().readVarU32())
@@ -233,6 +273,10 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
     switch (expr) {
       case Expr::Nop:
         return CheckType(f, ExprType::Void, expected);
+      case Expr::Call:
+        return DecodeCall(f, expected);
+      case Expr::CallImport:
+        return DecodeCallImport(f, expected);
       case Expr::I32Const:
         return DecodeConst(f, expected);
       case Expr::GetLocal:

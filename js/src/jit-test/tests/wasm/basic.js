@@ -175,3 +175,44 @@ assertErrorMessage(() => wasmEvalText('(module (func (result f32) (block (i32.co
 assertEq(wasmEvalText('(module (func (result i32) (block (i32.const 13) (block (i32.const 42)))) (export "" 0))')(), 42);
 assertErrorMessage(() => wasmEvalText('(module (func (result f32) (param f32) (block (get_local 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
 
+// ----------------------------------------------------------------------------
+// calls
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (nop)) (func (call 0 (i32.const 0))))'), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (param i32) (nop)) (func (call 0)))'), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))'), TypeError);
+assertErrorMessage(() => wasmEvalText('(module (func (nop)) (func (call 3)))'), TypeError, /callee index out of range/);
+wasmEvalText('(module (func (nop)) (func (call 0)))');
+wasmEvalText('(module (func (param i32) (nop)) (func (call 0 (i32.const 0))))');
+assertEq(wasmEvalText('(module (func (result i32) (i32.const 42)) (func (result i32) (call 0)) (export "" 1))')(), 42);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 0)) (export "" 0))')(), InternalError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0)) (export "" 0))')(), InternalError);
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "") (func (call_import 0 (i32.const 0))))', {a:()=>{}}), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0)))', {a:()=>{}}), TypeError);
+assertThrowsInstanceOf(() => wasmEvalText('(module (import "a" "" (param f32)) (func (call_import 0 (i32.const 0))))', {a:()=>{}}), TypeError);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import 1)))'), TypeError, /import index out of range/);
+wasmEvalText('(module (import "a" "") (func (call_import 0)))', {a:()=>{}});
+wasmEvalText('(module (import "a" "" (param i32)) (func (call_import 0 (i32.const 0))))', {a:()=>{}});
+
+var f = wasmEvalText('(module (import "inc" "") (func (call_import 0)) (export "" 0))', {inc:()=>counter++});
+var g = wasmEvalText('(module (import "f" "") (func (block (call_import 0) (call_import 0))) (export "" 0))', {f});
+var counter = 0;
+f();
+assertEq(counter, 1);
+g();
+assertEq(counter, 3);
+
+var f = wasmEvalText('(module (import "callf" "") (func (call_import 0)) (export "" 0))', {callf:()=>f()});
+assertThrowsInstanceOf(() => f(), InternalError);
+
+var f = wasmEvalText('(module (import "callg" "") (func (call_import 0)) (export "" 0))', {callg:()=>g()});
+var g = wasmEvalText('(module (import "callf" "") (func (call_import 0)) (export "" 0))', {callf:()=>f()});
+assertThrowsInstanceOf(() => f(), InternalError);
+
+var code = '(module (import "one" "" (result i32)) (import "two" "" (result i32)) (func (result i32) (i32.const 3)) (func (result i32) (i32.const 4)) (func (result i32) BODY) (export "" 2))';
+var imports = {one:()=>1, two:()=>2};
+assertEq(wasmEvalText(code.replace('BODY', '(call_import 0)'), imports)(), 1);
+assertEq(wasmEvalText(code.replace('BODY', '(call_import 1)'), imports)(), 2);
+assertEq(wasmEvalText(code.replace('BODY', '(call 0)'), imports)(), 3);
+assertEq(wasmEvalText(code.replace('BODY', '(call 1)'), imports)(), 4);
