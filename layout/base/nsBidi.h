@@ -8,6 +8,7 @@
 #define nsBidi_h__
 
 #include "nsBidiUtils.h"
+#include "nsIFrame.h" // for frame property declaration
 
 // Bidi reordering engine from ICU
 /*
@@ -427,6 +428,8 @@ struct LevState {
 class nsBidi
 {
 public:
+  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
+
   /** @brief Default constructor.
    *
    * The nsBidi object is initially empty. It is assigned
@@ -656,6 +659,19 @@ public:
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
   nsresult WriteReverse(const char16_t *aSrc, int32_t aSrcLength, char16_t *aDest, uint16_t aOptions, int32_t *aDestSize);
+
+  NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nullptr)
+
+#define NS_GET_BASE_LEVEL(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsBidi::BaseLevelProperty()))
+
+#define NS_GET_EMBEDDING_LEVEL(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsBidi::EmbeddingLevelProperty()))
+
+#define NS_GET_PARAGRAPH_DEPTH(frame) \
+NS_PTR_TO_INT32(frame->Properties().Get(nsBidi::ParagraphDepthProperty()))
 
 protected:
   friend class nsBidiPresUtils;
