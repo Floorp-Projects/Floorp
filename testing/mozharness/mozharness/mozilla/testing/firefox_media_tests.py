@@ -57,20 +57,6 @@ media_test_config_options = [
       "default": False,
       "help": "Enable e10s when running marionette tests."
       }],
-    [['--firefox-media-repo'], {
-        'dest': 'firefox_media_repo',
-        'default': 'https://github.com/mjzffr/firefox-media-tests.git',
-        'help': 'which firefox_media_tests repo to use',
-    }],
-    [['--firefox-media-branch'], {
-        'dest': 'firefox_media_branch',
-        'default': 'master',
-        'help': 'which branch to use for firefox_media_tests',
-    }],
-    [['--firefox-media-rev'], {
-        'dest': 'firefox_media_rev',
-        'help': 'which firefox_media_tests revision to use',
-    }],
     [["--suite"],
      {"action": "store",
       "dest": "test_suite",
@@ -127,7 +113,6 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         self.config_options = media_test_config_options + (config_options or [])
         actions = [
             'clobber',
-            'checkout',
             'download-and-extract',
             'create-virtualenv',
             'install',
@@ -155,60 +140,45 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
-        marionette_requirements = os.path.join(dirs['abs_test_install_dir'],
-                                    'config',
-                                    'marionette_requirements.txt')
-        if os.access(marionette_requirements, os.F_OK):
-            self.register_virtualenv_module(requirements=[marionette_requirements],
-                                            two_pass=True)
 
-        media_tests_requirements = os.path.join(dirs['firefox_media_dir'],
-                                         'requirements.txt')
+        media_tests_requirements = os.path.join(dirs['abs_test_install_dir'],
+                                                'config',
+                                                'external-media-tests-requirements.txt')
 
         if os.access(media_tests_requirements, os.F_OK):
             self.register_virtualenv_module(requirements=[media_tests_requirements],
                                             two_pass=True)
 
     def download_and_extract(self):
-        """Overriding method from TestingMixin until firefox-media-tests are in tree.
+        """Overriding method from TestingMixin for more specific behavior.
 
-        Right now we only care about the installer and symbolds.
+        We use the test_packages_url command line argument to check where to get the
+        harness, puppeteer, and tests from and how to set them up.
 
         """
-        self._download_installer()
-
-        if self.config.get('download_symbols'):
-            self._download_and_extract_symbols()
+        target_unzip_dirs = ['config/*',
+                             'external-media-tests/*',
+                             'marionette/*',
+                             'mozbase/*',
+                             'puppeteer/*',
+                             'tools/wptserve/*',
+                             ]
+        super(FirefoxMediaTestsBase, self).download_and_extract(
+                target_unzip_dirs=target_unzip_dirs)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
         abs_dirs = super(FirefoxMediaTestsBase, self).query_abs_dirs()
         dirs = {
-            'firefox_media_dir': os.path.join(abs_dirs['abs_work_dir'],
-                                              'firefox-media-tests')
-        }
-        dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+            'abs_test_install_dir' : os.path.join(abs_dirs['abs_work_dir'],
                                                     'tests')
+        }
+        dirs['external-media-tests'] = os.path.join(dirs['abs_test_install_dir'],
+                                                    'external-media-tests')
         abs_dirs.update(dirs)
         self.abs_dirs = abs_dirs
         return self.abs_dirs
-
-    @PreScriptAction('checkout')
-    def _pre_checkout(self, action):
-        super(FirefoxMediaTestsBase, self)._pre_checkout(action)
-        c = self.config
-        dirs = self.query_abs_dirs()
-        self.firefox_media_vc = {
-            'branch': c['firefox_media_branch'],
-            'repo': c['firefox_media_repo'],
-            'dest': dirs['firefox_media_dir'],
-        }
-        if 'firefox-media-rev' in c:
-            self.firefox_media_vc['revision'] = c['firefox_media_rev']
-
-    def checkout(self):
-        self.vcs_checkout(vcs='gittool', **self.firefox_media_vc)
 
     def _query_cmd(self):
         """ Determine how to call firefox-media-tests """
@@ -216,11 +186,14 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             self.fatal("Binary path could not be determined. "
                        "Should be set by default during 'install' action.")
         dirs = self.query_abs_dirs()
-        venv_python_path = self.query_python_path()
-        runner_script = os.path.join(dirs['firefox_media_dir'],
-                                     'media_test_harness',
-                                     'runtests.py')
-        cmd = [venv_python_path, runner_script]
+
+        import external_media_harness.runtests
+
+        cmd = [
+            self.query_python_path(),
+            external_media_harness.runtests.__file__
+        ]
+
         cmd += ['--binary', self.binary_path]
         if self.symbols_path:
             cmd += ['--symbols-path', self.symbols_path]
@@ -238,8 +211,8 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             self.fatal("%s is not defined in the config!" % test_suite)
 
         test_manifest = None if test_suite != 'media-youtube-tests' else \
-            os.path.join(dirs['firefox_media_dir'],
-                         'firefox_media_tests',
+            os.path.join(dirs['external-media-tests'],
+                         'external-media-tests',
                          'playback', 'youtube', 'manifest.ini')
         config_fmt_args = {
             'test_manifest': test_manifest,
