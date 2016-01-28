@@ -544,7 +544,8 @@ struct nsCSSRendering {
                     uint32_t aFlags,
                     const nsRect& aBorderArea,
                     const nsRect& aBGClipRect,
-                    const nsStyleImageLayers::Layer& aLayer);
+                    const nsStyleImageLayers::Layer& aLayer,
+                    bool aMask = false);
 
   struct ImageLayerClipState {
     nsRect mBGClipArea;  // Affected by mClippedRadii
@@ -571,7 +572,7 @@ struct nsCSSRendering {
 
   /**
    * Render the background for an element using css rendering rules
-   * for backgrounds.
+   * for backgrounds or mask.
    */
   enum {
     /**
@@ -587,7 +588,12 @@ struct nsCSSRendering {
      * When this flag is passed, painting will go to the screen so we can
      * take advantage of the fact that it will be clipped to the viewport.
      */
-    PAINTBG_TO_WINDOW = 0x04
+    PAINTBG_TO_WINDOW = 0x04,
+    /**
+     * When this flag is passed, painting will read properties of mask-image
+     * style, instead of background-image.
+     */
+    PAINTBG_MASK_IMAGE = 0x08
   };
   static DrawResult PaintBackground(nsPresContext* aPresContext,
                                     nsRenderingContext& aRenderingContext,
@@ -597,6 +603,7 @@ struct nsCSSRendering {
                                     uint32_t aFlags,
                                     nsRect* aBGClipRect = nullptr,
                                     int32_t aLayer = -1);
+
 
   /**
    * Same as |PaintBackground|, except using the provided style structs.
@@ -795,6 +802,16 @@ struct nsCSSRendering {
     }
   }
 
+  static CompositionOp GetGFXCompositeMode(uint8_t aCompositeMode) {
+    switch (aCompositeMode) {
+      case NS_STYLE_MASK_COMPOSITE_ADD:        return CompositionOp::OP_OVER;
+      case NS_STYLE_MASK_COMPOSITE_SUBSTRACT:  return CompositionOp::OP_OUT;
+      case NS_STYLE_MASK_COMPOSITE_INTERSECT:  return CompositionOp::OP_IN;
+      case NS_STYLE_MASK_COMPOSITE_EXCLUDE:    return CompositionOp::OP_XOR;
+      default:              MOZ_ASSERT(false); return CompositionOp::OP_OVER;
+    }
+
+  }
 protected:
   static gfxRect GetTextDecorationRectInternal(const Point& aPt,
                                                const Size& aLineSize,
