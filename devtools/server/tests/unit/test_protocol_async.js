@@ -97,7 +97,7 @@ function run_test()
   let client = new DebuggerClient(trace);
   let rootClient;
 
-  client.connect().then([applicationType, traits]) => {
+  client.connect().then(([applicationType, traits]) => {
     rootClient = RootFront(client);
 
     let calls = [];
