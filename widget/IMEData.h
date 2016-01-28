@@ -731,7 +731,11 @@ struct IMENotification final
     // mCausedOnlyByComposition is true only when *all* merged changes are
     // caused by composition.
     bool mCausedOnlyByComposition;
-    bool mOccurredDuringComposition;
+    // mIncludingChangesDuringComposition is true if at least one change which
+    // is not caused by composition occurred during the last composition.
+    // Note that if after the last composition is finished and there are some
+    // changes not caused by composition, this is set to false.
+    bool mIncludingChangesDuringComposition;
 
     uint32_t OldLength() const
     {
@@ -803,7 +807,8 @@ struct IMENotification final
       mRemovedEndOffset = aRemovedEndOffset;
       mAddedEndOffset = aAddedEndOffset;
       mCausedOnlyByComposition = aCausedByComposition;
-      mOccurredDuringComposition = aOccurredDuringComposition;
+      mIncludingChangesDuringComposition =
+        !aCausedByComposition && aOccurredDuringComposition;
     }
   };
 
