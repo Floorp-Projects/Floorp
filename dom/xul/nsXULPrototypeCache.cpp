@@ -579,41 +579,22 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     return NS_OK;
 }
 
-static PLDHashOperator
-MarkXBLInCCGeneration(nsIURI* aKey, RefPtr<nsXBLDocumentInfo> &aDocInfo,
-                      void* aClosure)
-{
-    uint32_t* gen = static_cast<uint32_t*>(aClosure);
-    aDocInfo->MarkInCCGeneration(*gen);
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-MarkXULInCCGeneration(nsIURI* aKey, RefPtr<nsXULPrototypeDocument> &aDoc,
-                      void* aClosure)
-{
-    uint32_t* gen = static_cast<uint32_t*>(aClosure);
-    aDoc->MarkInCCGeneration(*gen);
-    return PL_DHASH_NEXT;
-}
-
 void
 nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration)
 {
-    mXBLDocTable.Enumerate(MarkXBLInCCGeneration, &aGeneration);
-    mPrototypeTable.Enumerate(MarkXULInCCGeneration, &aGeneration);
-}
-
-static PLDHashOperator
-MarkScriptsInGC(nsIURI* aKey, JS::Heap<JSScript*>& aScript, void* aClosure)
-{
-    JSTracer* trc = static_cast<JSTracer*>(aClosure);
-    JS::TraceEdge(trc, &aScript, "nsXULPrototypeCache script");
-    return PL_DHASH_NEXT;
+    for (auto iter = mXBLDocTable.Iter(); !iter.Done(); iter.Next()) {
+        iter.Data()->MarkInCCGeneration(aGeneration);
+    }
+    for (auto iter = mPrototypeTable.Iter(); !iter.Done(); iter.Next()) {
+        iter.Data()->MarkInCCGeneration(aGeneration);
+    }
 }
 
 void
 nsXULPrototypeCache::MarkInGC(JSTracer* aTrc)
 {
-    mScriptTable.Enumerate(MarkScriptsInGC, aTrc);
+    for (auto iter = mScriptTable.Iter(); !iter.Done(); iter.Next()) {
+        JS::Heap<JSScript*>& script = iter.Data();
+        JS::TraceEdge(aTrc, &script, "nsXULPrototypeCache script");
+    }
 }
