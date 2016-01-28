@@ -534,16 +534,14 @@ class Module
     // This function transitions the module from a statically-linked state to a
     // dynamically-linked state. If this module usesHeap(), a non-null heap
     // buffer must be given. The given import vector must match the module's
-    // ImportVector.
+    // ImportVector. The function returns a new export object for this module.
 
-    bool dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
-                         Handle<FunctionVector> imports);
-
-    // This function creates and returns a new export object for this module.
-    // The lengths of exports() and map.exportNames must be the same.
-
-    bool createExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj,
-                            const ExportMap& map, MutableHandleObject exportObj);
+    bool dynamicallyLink(JSContext* cx,
+                         Handle<WasmModuleObject*> moduleObj,
+                         Handle<ArrayBufferObjectMaybeShared*> heap,
+                         Handle<FunctionVector> imports,
+                         const ExportMap& exportMap,
+                         MutableHandleObject exportObj);
 
     // The wasm heap, established by dynamicallyLink.
 
