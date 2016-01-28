@@ -180,6 +180,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // RegExp natives.
       case InlinableNative::RegExpMatcher:
         return inlineRegExpMatcher(callInfo);
+      case InlinableNative::RegExpSearcher:
+        return inlineRegExpSearcher(callInfo);
       case InlinableNative::RegExpTester:
         return inlineRegExpTester(callInfo);
       case InlinableNative::IsRegExpObject:
@@ -1820,25 +1822,26 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
-    // regexp
-    if (callInfo.getArg(0)->type() != MIRType_Object)
+    MDefinition* rxArg = callInfo.getArg(0);
+    MDefinition* strArg = callInfo.getArg(1);
+    MDefinition* lastIndexArg = callInfo.getArg(2);
+    MDefinition* stickyArg = callInfo.getArg(3);
+
+    if (rxArg->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* arg0Types = callInfo.getArg(0)->resultTypeSet();
-    const Class* clasp = arg0Types ? arg0Types->getKnownClass(constraints()) : nullptr;
+    TemporaryTypeSet* rxTypes = rxArg->resultTypeSet();
+    const Class* clasp = rxTypes ? rxTypes->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    // string
-    if (callInfo.getArg(1)->mightBeType(MIRType_Object))
+    if (strArg->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    // lastIndex: Only inline if it's Int32.
-    if (callInfo.getArg(2)->type() != MIRType_Int32)
+    if (lastIndexArg->type() != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    // sticky
-    if (callInfo.getArg(3)->type() != MIRType_Boolean)
+    if (stickyArg->type() != MIRType_Boolean)
         return InliningStatus_NotInlined;
 
     JSContext* cx = GetJitContext()->cx;
@@ -1849,8 +1852,7 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* matcher = MRegExpMatcher::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
-                                                callInfo.getArg(2), callInfo.getArg(3));
+    MInstruction* matcher = MRegExpMatcher::New(alloc(), rxArg, strArg, lastIndexArg, stickyArg);
     current->add(matcher);
     current->push(matcher);
 
@@ -1858,6 +1860,60 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
         return InliningStatus_Error;
 
     if (!pushTypeBarrier(matcher, getInlineReturnTypeSet(), BarrierKind::TypeSet))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
+{
+    // This is called from Self-hosted JS, after testing each argument,
+    // most of following tests should be passed.
+
+    if (callInfo.argc() != 4 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* rxArg = callInfo.getArg(0);
+    MDefinition* strArg = callInfo.getArg(1);
+    MDefinition* lastIndexArg = callInfo.getArg(2);
+    MDefinition* stickyArg = callInfo.getArg(3);
+
+    if (rxArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* regexpTypes = rxArg->resultTypeSet();
+    const Class* clasp = regexpTypes ? regexpTypes->getKnownClass(constraints()) : nullptr;
+    if (clasp != &RegExpObject::class_)
+        return InliningStatus_NotInlined;
+
+    if (strArg->mightBeType(MIRType_Object))
+        return InliningStatus_NotInlined;
+
+    if (lastIndexArg->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    if (stickyArg->type() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    JSContext* cx = GetJitContext()->cx;
+    if (!cx->compartment()->jitCompartment()->ensureRegExpSearcherStubExists(cx)) {
+        cx->clearPendingException(); // OOM or overrecursion.
+        return InliningStatus_Error;
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* searcher = MRegExpSearcher::New(alloc(), rxArg, strArg, lastIndexArg, stickyArg);
+    current->add(searcher);
+    current->push(searcher);
+
+    if (!resumeAfter(searcher))
+        return InliningStatus_Error;
+
+    if (!pushTypeBarrier(searcher, getInlineReturnTypeSet(), BarrierKind::TypeSet))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
@@ -1874,25 +1930,26 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
-    // regexp
-    if (callInfo.getArg(0)->type() != MIRType_Object)
+    MDefinition* rxArg = callInfo.getArg(0);
+    MDefinition* strArg = callInfo.getArg(1);
+    MDefinition* lastIndexArg = callInfo.getArg(2);
+    MDefinition* stickyArg = callInfo.getArg(3);
+
+    if (rxArg->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* arg0Types = callInfo.getArg(0)->resultTypeSet();
-    const Class* clasp = arg0Types ? arg0Types->getKnownClass(constraints()) : nullptr;
+    TemporaryTypeSet* rxTypes = rxArg->resultTypeSet();
+    const Class* clasp = rxTypes ? rxTypes->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    // string
-    if (callInfo.getArg(1)->mightBeType(MIRType_Object))
+    if (strArg->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    // lastIndex: Only inline if it's Int32.
-    if (callInfo.getArg(2)->type() != MIRType_Int32)
+    if (lastIndexArg->type() != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    // sticky
-    if (callInfo.getArg(3)->type() != MIRType_Boolean)
+    if (stickyArg->type() != MIRType_Boolean)
         return InliningStatus_NotInlined;
 
     JSContext* cx = GetJitContext()->cx;
@@ -1903,8 +1960,7 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* tester = MRegExpTester::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
-                                              callInfo.getArg(2), callInfo.getArg(3));
+    MInstruction* tester = MRegExpTester::New(alloc(), rxArg, strArg, lastIndexArg, stickyArg);
     current->add(tester);
     current->push(tester);
 

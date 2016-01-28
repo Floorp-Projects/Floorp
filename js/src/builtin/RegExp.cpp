@@ -101,6 +101,17 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
     return true;
 }
 
+static int32_t
+CreateRegExpSearchResult(JSContext* cx, const MatchPairs& matches)
+{
+    /* Fit the start and limit of match into a int32_t. */
+    uint32_t position = matches[0].start;
+    uint32_t lastIndex = matches[0].limit;
+    MOZ_ASSERT(position < 0x8000);
+    MOZ_ASSERT(lastIndex < 0x8000);
+    return position | (lastIndex << 15);
+}
+
 /* ES6 21.2.5.2.2 steps 3, 14-17, except 15.a.i-ii, 15.c.i.1-2. */
 static RegExpRunStatus
 ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res, RegExpShared& re, HandleLinearString input,
@@ -918,8 +929,10 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
                              UpdateRegExpStatics, args.rval());
 }
 
-/* Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code. */
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                      uint32_t lastIndex, bool sticky,
@@ -933,6 +946,86 @@ js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
         return CreateRegExpMatchResult(cx, input, *maybeMatches, output);
     return RegExpMatcherImpl(cx, regexp, input, lastIndex, sticky,
                              UpdateRegExpStatics, output);
+}
+
+/*
+ * ES6 21.2.5.2.2 steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18.
+ * This code is inlined in CodeGenerator.cpp generateRegExpSearcherStub,
+ * changes to this code need to get reflected in there too.
+ */
+static bool
+RegExpSearcherImpl(JSContext* cx, HandleObject regexp, HandleString string,
+                  int32_t lastIndex, bool sticky,
+                  RegExpStaticsUpdate staticsUpdate, int32_t* result)
+{
+    /* Execute regular expression and gather matches. */
+    ScopedMatchPairs matches(&cx->tempLifoAlloc());
+
+    /* Steps 3, 11-17, except 15.a.i-ii, 15.c.i.1-2. */
+    RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, lastIndex, sticky,
+                                           &matches, nullptr, staticsUpdate);
+    if (status == RegExpRunStatus_Error)
+        return false;
+
+    /* Steps 15.a, 15.c. */
+    if (status == RegExpRunStatus_Success_NotFound) {
+        *result = -1;
+        return true;
+    }
+
+    /* Steps 19-29 */
+    *result = CreateRegExpSearchResult(cx, matches);
+    return true;
+}
+
+/* ES6 21.2.5.2.2 steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18. */
+bool
+js::RegExpSearcher(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+    MOZ_ASSERT(IsRegExpObject(args[0]));
+    MOZ_ASSERT(args[1].isString());
+    MOZ_ASSERT(args[2].isNumber());
+    MOZ_ASSERT(args[3].isBoolean());
+
+    RootedObject regexp(cx, &args[0].toObject());
+    RootedString string(cx, args[1].toString());
+    RootedValue lastIndexVal(cx, args[2]);
+    bool sticky = ToBoolean(args[3]);
+
+    int32_t lastIndex = 0;
+    if (!ToInt32(cx, lastIndexVal, &lastIndex))
+        return false;
+
+    /* Steps 3, 11-29, except 15.a.i-ii, 15.c.i.1-2, 18. */
+    int32_t result = 0;
+    if (!RegExpSearcherImpl(cx, regexp, string, lastIndex, sticky, UpdateRegExpStatics, &result))
+        return false;
+
+    args.rval().setInt32(result);
+    return true;
+}
+
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
+bool
+js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
+                      int32_t lastIndex, bool sticky,
+                      MatchPairs* maybeMatches, int32_t* result)
+{
+    MOZ_ASSERT(lastIndex <= INT32_MAX);
+
+    // The MatchPairs will always be passed in, but RegExp execution was
+    // successful only if the pairs have actually been filled in.
+    if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0) {
+        *result = CreateRegExpSearchResult(cx, *maybeMatches);
+        return true;
+    }
+    return RegExpSearcherImpl(cx, regexp, input, lastIndex, sticky,
+                              UpdateRegExpStatics, result);
 }
 
 bool
@@ -988,8 +1081,10 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code. */
+/*
+ * Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code.
+ */
 bool
 js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                     uint32_t lastIndex, bool sticky, int32_t* endIndex)

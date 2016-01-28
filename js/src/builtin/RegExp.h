@@ -49,6 +49,14 @@ RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                  MatchPairs* maybeMatches, MutableHandleValue output);
 
 extern bool
+RegExpSearcher(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+RegExpSearcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
+                  int32_t lastIndex, bool sticky,
+                  MatchPairs* maybeMatches, int32_t* result);
+
+extern bool
 RegExpTester(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
