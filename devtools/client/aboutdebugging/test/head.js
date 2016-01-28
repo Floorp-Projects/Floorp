@@ -6,6 +6,7 @@
 var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
@@ -27,7 +28,6 @@ function openAboutDebugging(page) {
     return {
       tab,
       document: browser.contentDocument,
-      window: browser.contentWindow
     };
   });
 }
@@ -79,4 +79,62 @@ function get_supports_file(path) {
   getService(Ci.nsIChromeRegistry);
   let fileurl = cr.convertChromeURL(Services.io.newURI(CHROME_ROOT + path, null, null));
   return fileurl.QueryInterface(Ci.nsIFileURL);
+}
+
+function installAddon(document, path, evt) {
+  // Mock the file picker to select a test addon
+  let MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(null);
+  let file = get_supports_file(path);
+  MockFilePicker.returnFiles = [file.file];
+
+  // Wait for a message sent by the addon's bootstrap.js file
+  let onAddonInstalled = new Promise(done => {
+    Services.obs.addObserver(function listener() {
+      Services.obs.removeObserver(listener, evt, false);
+      ok(true, "Addon installed and running its bootstrap.js file");
+      done();
+    }, evt, false);
+  });
+  // Trigger the file picker by clicking on the button
+  document.getElementById("load-addon-from-file").click();
+
+  // Wait for the addon execution
+  return onAddonInstalled;
+}
+
+function uninstallAddon(addonId) {
+  // Now uninstall this addon
+  return new Promise(done => {
+    AddonManager.getAddonByID(addonId, addon => {
+      let listener = {
+        onUninstalled: function(uninstalledAddon) {
+          if (uninstalledAddon != addon) {
+            return;
+          }
+          AddonManager.removeAddonListener(listener);
+          done();
+        }
+      };
+      AddonManager.addAddonListener(listener);
+      addon.uninstall();
+    });
+  });
+}
+
+/**
+ * Returns a promise that will resolve after receiving a mutation matching the
+ * provided mutation options on the provided target.
+ * @param {Node} target
+ * @param {Object} mutationOptions
+ * @return {Promise}
+ */
+function waitForMutation(target, mutationOptions) {
+  return new Promise(resolve => {
+    let observer = new MutationObserver(() => {
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(target, mutationOptions);
+  });
 }

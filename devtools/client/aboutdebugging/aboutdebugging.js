@@ -33,6 +33,9 @@ const Strings = Services.strings.createBundle(
 var AboutDebugging = {
   _prefListeners: [],
 
+  // Pointer to the current React component.
+  _component: null,
+
   _categories: null,
   get categories() {
     // If needed, initialize the list of available categories.
@@ -66,11 +69,11 @@ var AboutDebugging = {
     location.hash = "#" + category;
 
     if (category == "addons") {
-      React.render(React.createElement(AddonsComponent, { client: this.client }),
-        document.querySelector("#addons"));
+      this._component = React.render(React.createElement(AddonsComponent,
+        {client: this.client}), document.querySelector("#addons"));
     } else if (category == "workers") {
-      React.render(React.createElement(WorkersComponent, { client: this.client }),
-        document.querySelector("#workers"));
+      this._component = React.render(React.createElement(WorkersComponent,
+        {client: this.client}), document.querySelector("#workers"));
     }
   },
 
@@ -82,16 +85,22 @@ var AboutDebugging = {
     let elements = document.querySelectorAll("input[type=checkbox][data-pref]");
     Array.map(elements, element => {
       let pref = element.dataset.pref;
+
       let updatePref = () => {
         Services.prefs.setBoolPref(pref, element.checked);
       };
       element.addEventListener("change", updatePref, false);
-      let updateCheckbox = () => {
+
+      let onPreferenceChanged = () => {
         element.checked = Services.prefs.getBoolPref(pref);
+        this.update();
       };
-      Services.prefs.addObserver(pref, updateCheckbox, false);
-      this._prefListeners.push([pref, updateCheckbox]);
-      updateCheckbox();
+
+      Services.prefs.addObserver(pref, onPreferenceChanged, false);
+      this._prefListeners.push([pref, onPreferenceChanged]);
+
+      // Initialize the current checkbox element.
+      element.checked = Services.prefs.getBoolPref(pref);
     });
 
     // Link buttons to their associated actions.
@@ -110,6 +119,12 @@ var AboutDebugging = {
       this.showTab();
       window.addEventListener("hashchange", () => this.showTab());
     });
+  },
+
+  update() {
+    if (this._component) {
+      this._component.setState({});
+    }
   },
 
   loadAddonFromFile() {

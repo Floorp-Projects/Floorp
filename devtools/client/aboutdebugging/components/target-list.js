@@ -23,8 +23,10 @@ exports.TargetListComponent = React.createClass({
 
   render() {
     let client = this.props.client;
+    let debugDisabled = this.props.debugDisabled;
     let targets = this.props.targets.sort(LocaleCompare).map(target => {
-      return React.createElement(TargetComponent, { client, target });
+      return React.createElement(TargetComponent,
+        { client, target, debugDisabled });
     });
     return (
       React.createElement("div", { id: this.props.id, className: "targets" },
