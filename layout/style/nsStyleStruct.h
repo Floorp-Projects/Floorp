@@ -96,6 +96,8 @@ static_assert(int(mozilla::SheetType::Count) - 1 <=
                 (NS_RULE_NODE_LEVEL_MASK >> NS_RULE_NODE_LEVEL_SHIFT),
               "NS_RULE_NODE_LEVEL_MASK cannot fit SheetType");
 
+static_assert(NS_RULE_NODE_IS_ANIMATION_RULE == (1 << nsStyleStructID_Length),
+  "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
 // The lifetime of these objects is managed by the presshell's arena.
 
 struct nsStyleFont
