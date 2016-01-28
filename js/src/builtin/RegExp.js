@@ -187,8 +187,11 @@ function RegExpReplace(string, replaceValue) {
 
     // Optimized paths for simple cases.
     if (!functionalReplace && firstDollarIndex === -1 && IsRegExpReplaceOptimizable(rx)) {
-        if (global)
+        if (global) {
+            if (lengthS < 0x7fff)
+                return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue);
             return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue);
+        }
         return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
     }
 
@@ -347,6 +350,61 @@ function RegExpReplace(string, replaceValue) {
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
 }
 
+// ES 2016 draft Mar 25, 2016 21.2.5.8 steps 8.a-16.
+// Optimized path for @@replace with global flag, short string.
+function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue)
+{
+   // Step 8.a.
+    var fullUnicode = !!rx.unicode;
+
+    // Step 8.b.
+    var lastIndex = 0;
+    rx.lastIndex = 0;
+
+    // Step 12 (reordered).
+    var accumulatedResult = "";
+
+    // Step 13 (reordered).
+    var nextSourcePosition = 0;
+
+    var sticky = !!rx.sticky;
+
+    // Step 11.
+    while (true) {
+        // Step 11.a.
+        var result = RegExpSearcher(rx, S, lastIndex, sticky);
+
+        // Step 11.b.
+        if (result === -1)
+            break;
+
+        var position = result & 0x7fff;
+        lastIndex = (result >> 15) & 0x7fff;
+
+        // Step 14.l.ii.
+        accumulatedResult += Substring(S, nextSourcePosition,
+                                       position - nextSourcePosition) + replaceValue;
+
+        // Step 14.l.iii.
+        nextSourcePosition = lastIndex;
+
+        // Step 11.c.iii.2.
+        if (lastIndex === position) {
+            lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+            if (lastIndex > lengthS)
+                break;
+        }
+    }
+
+    // Step 15.
+    if (nextSourcePosition >= lengthS)
+        return accumulatedResult;
+
+    // Step 16.
+    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+}
+
+// ES 2016 draft Mar 25, 2016 21.2.5.8 steps 8.a-16.
 // Optimized path for @@replace with global flag.
 function RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue)
 {
@@ -410,6 +468,7 @@ function RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue)
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
 }
 
+// ES 2016 draft Mar 25, 2016 21.2.5.8 steps 11.a-16.
 // Optimized path for @@replace without global flag.
 function RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue)
 {
