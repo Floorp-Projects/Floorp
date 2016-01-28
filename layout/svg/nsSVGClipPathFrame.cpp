@@ -39,8 +39,8 @@ nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
 
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
 
-  // No need for AutoClipPathReferencer since simple clip paths can't create a
-  // reference loop.
+  // No need for AutoReferenceLoopDetector since simple clip paths can't create
+  // a reference loop (they don't reference other clip paths).
 
   // Restore current transform after applying clip path:
   gfxContextMatrixAutoSaveRestore autoRestore(&aContext);
@@ -90,14 +90,11 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
 
   DrawTarget& aReferenceDT = *aReferenceContext.GetDrawTarget();
 
-  // If the flag is set when we get here, it means this clipPath frame
-  // has already been used painting the current clip, and the document
-  // has a clip reference loop.
-  if (mInUse) {
-    NS_WARNING("Clip loop detected!");
+  AutoReferenceLoopDetector loopDetector;
+  if (!loopDetector.MarkAsInUse(this)) {
+    // Reference loop! This reference should be ignored, so return nullptr.
     return nullptr;
   }
-  AutoClipPathReferencer clipRef(this);
 
   IntRect devSpaceClipExtents;
   {
@@ -242,14 +239,12 @@ bool
 nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
                                           const gfxPoint &aPoint)
 {
-  // If the flag is set when we get here, it means this clipPath frame
-  // has already been used in hit testing against the current clip,
-  // and the document has a clip reference loop.
-  if (mInUse) {
-    NS_WARNING("Clip loop detected!");
-    return false;
+  AutoReferenceLoopDetector loopDetector;
+  if (!loopDetector.MarkAsInUse(this)) {
+    // Reference loop! This reference is ignored, so return true (point not
+    // clipped out).
+    return true;
   }
-  AutoClipPathReferencer clipRef(this);
 
   gfxMatrix matrix = GetClipPathTransform(aClippedFrame);
   if (!matrix.Invert()) {
@@ -328,11 +323,10 @@ nsSVGClipPathFrame::IsTrivial(nsISVGChildFrame **aSingleChild)
 bool
 nsSVGClipPathFrame::IsValid()
 {
-  if (mInUse) {
-    NS_WARNING("Clip loop detected!");
-    return false;
+  AutoReferenceLoopDetector loopDetector;
+  if (!loopDetector.MarkAsInUse(this)) {
+    return false; // Reference loop!
   }
-  AutoClipPathReferencer clipRef(this);
 
   bool isOK = true;
   nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(&isOK);
