@@ -105,7 +105,7 @@ public:
     if (NS_SUCCEEDED(aStatus)) {
       mPromise->MaybeResolve(aSuccess);
     } else {
-      mPromise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+      mPromise->MaybeReject(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE);
     }
 
     return NS_OK;
@@ -403,7 +403,7 @@ public:
     if (NS_SUCCEEDED(mStatus)) {
       promise->MaybeResolve(mSuccess);
     } else {
-      promise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+      promise->MaybeReject(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE);
     }
 
     mProxy->CleanUp(aCx);
@@ -528,7 +528,7 @@ WorkerPushSubscription::Unsubscribe(ErrorResult &aRv)
 
   RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
   if (!proxy) {
-    p->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+    p->MaybeReject(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE);
     return p.forget();
   }
 
@@ -598,6 +598,8 @@ public:
                                        mRawP256dhKey, mAuthSecret);
         promise->MaybeResolve(sub);
       }
+    } else if (NS_ERROR_GET_MODULE(mStatus) == NS_ERROR_MODULE_DOM_PUSH ) {
+      promise->MaybeReject(mStatus);
     } else {
       promise->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
     }
@@ -776,7 +778,7 @@ public:
         callback->OnPushSubscriptionError(NS_OK);
         return NS_OK;
       }
-      callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
+      callback->OnPushSubscriptionError(NS_ERROR_DOM_PUSH_DENIED_ERR);
       return NS_OK;
     }
 
