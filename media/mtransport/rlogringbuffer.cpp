@@ -87,7 +87,7 @@ void RLogRingBuffer::DestroyInstance() {
   delete instance;
   instance = nullptr;
 }
- 
+
 void RLogRingBuffer::Clear() {
   OffTheBooksMutexAutoLock lock(mutex_);
   log_messages_.clear();
@@ -130,4 +130,3 @@ void RLogRingBuffer::FilterAny(const std::vector<std::string>& substrings,
 }
 
 } // namespace mozilla
-
