@@ -9694,9 +9694,14 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
   }
 
   // mask: url, none, inherit
-  const nsCSSValue* maskValue = aRuleData->ValueForMask();
-  if (eCSSUnit_URL == maskValue->GetUnit()) {
-    svgReset->mMask = maskValue->GetURLValue();
+  const nsCSSValue* maskValue = aRuleData->ValueForMaskImage();
+  if (eCSSUnit_List == maskValue->GetUnit() ||
+      eCSSUnit_ListDep == maskValue->GetUnit()) {
+    const nsCSSValue& item = maskValue->GetListValue()->mValue;
+    if (eCSSUnit_URL == item.GetUnit() ||
+        eCSSUnit_Image == item.GetUnit()) {
+      svgReset->mMask = item.GetURLValue();
+    }
   } else if (eCSSUnit_None == maskValue->GetUnit() ||
              eCSSUnit_Initial == maskValue->GetUnit() ||
              eCSSUnit_Unset == maskValue->GetUnit()) {
