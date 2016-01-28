@@ -90,9 +90,9 @@ WebrtcVideoConduit::WebrtcVideoConduit():
   mNumReceivingStreams(1),
   mVideoLatencyTestEnable(false),
   mVideoLatencyAvg(0),
-  mMinBitrate(200),
-  mStartBitrate(300),
-  mMaxBitrate(2000),
+  mMinBitrate(0),
+  mStartBitrate(0),
+  mMaxBitrate(0),
   mCodecMode(webrtc::kRealtimeVideo)
 {}
 
@@ -285,6 +285,15 @@ WebrtcVideoConduit::InitMain()
       (void) NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.max_bitrate", &temp)));
       if (temp >= 0) {
         mMaxBitrate = temp;
+      }
+      if (mMinBitrate != 0 && mMinBitrate < webrtc::kViEMinCodecBitrate) {
+        mMinBitrate = webrtc::kViEMinCodecBitrate;
+      }
+      if (mStartBitrate < mMinBitrate) {
+        mStartBitrate = mMinBitrate;
+      }
+      if (mStartBitrate > mMaxBitrate) {
+        mStartBitrate = mMaxBitrate;
       }
       bool use_loadmanager = false;
       (void) NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.navigator.load_adapt", &use_loadmanager)));
@@ -961,6 +970,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 struct ResolutionAndBitrateLimits {
   uint32_t resolution_in_mb;
   uint16_t min_bitrate;
+  uint16_t start_bitrate;
   uint16_t max_bitrate;
 };
 
@@ -974,19 +984,19 @@ struct ResolutionAndBitrateLimits {
 // XXX Populate this based on a pref (which we should consider sorting because
 // people won't assume they need to).
 static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
-  {MB_OF(1920, 1200), 1500, 10000}, // >HD (3K, 4K, etc)
-  {MB_OF(1280, 720), 1200, 5000}, // HD ~1080-1200
-  {MB_OF(800, 480), 600, 2500}, // HD ~720
-  {std::max(MB_OF(400, 240), MB_OF(352, 288)), 200, 1300}, // VGA, WVGA
-  {MB_OF(176, 144), 100, 500}, // WQVGA, CIF
-  {0 , 40, 250} // QCIF and below
+  {MB_OF(1920, 1200), 1500, 2000, 10000}, // >HD (3K, 4K, etc)
+  {MB_OF(1280, 720), 1200, 1500, 5000}, // HD ~1080-1200
+  {MB_OF(800, 480), 600, 800, 2500}, // HD ~720
+  {std::max(MB_OF(400, 240), MB_OF(352, 288)), 200, 300, 1300}, // VGA, WVGA
+  {MB_OF(176, 144), 100, 150, 500}, // WQVGA, CIF
+  {0 , 40, 80, 250} // QCIF and below
 };
 
-static void
-SelectBandwidth(webrtc::VideoCodec& vie_codec,
-                unsigned short width,
-                unsigned short height,
-                mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths)
+void
+WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
+                                    unsigned short width,
+                                    unsigned short height,
+                                    mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths)
 {
   // max bandwidth should be proportional (not linearly!) to resolution, and
   // proportional (perhaps linearly, or close) to current frame rate.
@@ -999,6 +1009,7 @@ SelectBandwidth(webrtc::VideoCodec& vie_codec,
   for (ResolutionAndBitrateLimits resAndLimits : kResolutionAndBitrateLimits) {
     if (fs > resAndLimits.resolution_in_mb) {
       vie_codec.minBitrate = resAndLimits.min_bitrate;
+      vie_codec.startBitrate = resAndLimits.start_bitrate;
       vie_codec.maxBitrate = resAndLimits.max_bitrate;
       break;
     }
@@ -1010,17 +1021,28 @@ SelectBandwidth(webrtc::VideoCodec& vie_codec,
   // Now linear reduction/increase based on fps (max 60fps i.e. doubling)
   if (framerate >= 10) {
     vie_codec.minBitrate = vie_codec.minBitrate * (framerate/30);
+    vie_codec.startBitrate = vie_codec.startBitrate * (framerate/30);
     vie_codec.maxBitrate = vie_codec.maxBitrate * (framerate/30);
   } else {
     // At low framerates, don't reduce bandwidth as much - cut slope to 1/2.
     // Mostly this would be ultra-low-light situations/mobile or screensharing.
     vie_codec.minBitrate = vie_codec.minBitrate * ((10-(framerate/2))/30);
+    vie_codec.startBitrate = vie_codec.startBitrate * ((10-(framerate/2))/30);
     vie_codec.maxBitrate = vie_codec.maxBitrate * ((10-(framerate/2))/30);
   }
 
+  if (mMinBitrate && mMinBitrate > vie_codec.minBitrate) {
+    vie_codec.minBitrate = mMinBitrate;
+  }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
   vie_codec.minBitrate = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
                                   vie_codec.minBitrate);
+  if (mStartBitrate && mStartBitrate > vie_codec.startBitrate) {
+    vie_codec.startBitrate = mStartBitrate;
+  }
+  if (mMaxBitrate && mMaxBitrate > vie_codec.maxBitrate) {
+    vie_codec.maxBitrate = mMaxBitrate;
+  }
 }
 
 static void ConstrainPreservingAspectRatioExact(uint32_t max_fs,
@@ -1781,9 +1803,12 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
     cinst.maxFramerate = DEFAULT_VIDEO_MAX_FRAMERATE;
   }
 
-  cinst.minBitrate = mMinBitrate;
-  cinst.startBitrate = mStartBitrate;
-  cinst.maxBitrate = mMaxBitrate;
+  // Defaults if rates aren't forced by pref.  Typically defaults are
+  // overridden on the first video frame.
+  cinst.minBitrate = mMinBitrate ? mMinBitrate : 200;
+  cinst.startBitrate = mStartBitrate ? mStartBitrate : 300;
+  cinst.targetBitrate = cinst.startBitrate;
+  cinst.maxBitrate = mMaxBitrate ? mMaxBitrate : 2000;
 
   if (cinst.codecType == webrtc::kVideoCodecH264)
   {
