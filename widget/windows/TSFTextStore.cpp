@@ -4622,6 +4622,17 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
     return NS_OK;
   }
 
+  if (mComposition.IsComposing() &&
+      !textChangeData.mIncludingChangesDuringComposition) {
+    // Ignore text changes when they don't include changes caused not by
+    // composition at the latest composition because changes before current
+    // composition start shouldn't cause forcibly committing composition.
+    // In the future, we should notify TSF of such delayed text changes
+    // after current composition is active (In such case,
+    // mIncludingChangesWithoutComposition is true).
+    return NS_OK;
+  }
+
   mDeferNotifyingTSF = false;
 
   if (IsReadLocked()) {
