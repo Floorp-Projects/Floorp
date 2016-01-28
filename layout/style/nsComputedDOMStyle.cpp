@@ -1819,7 +1819,7 @@ nsComputedDOMStyle::DoGetBackgroundAttachment()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mAttachment,
                            &nsStyleImageLayers::mAttachmentCount,
                            StyleBackground()->mLayers,
-                           nsCSSProps::kBackgroundAttachmentKTable);
+                           nsCSSProps::kImageLayerAttachmentKTable);
 }
 
 already_AddRefed<CSSValue>
@@ -1828,7 +1828,7 @@ nsComputedDOMStyle::DoGetBackgroundClip()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mClip,
                            &nsStyleImageLayers::mClipCount,
                            StyleBackground()->mLayers,
-                           nsCSSProps::kBackgroundOriginKTable);
+                           nsCSSProps::kImageLayerOriginKTable);
 }
 
 already_AddRefed<CSSValue>
@@ -2156,7 +2156,7 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mOrigin,
                            &nsStyleImageLayers::mOriginCount,
                            StyleBackground()->mLayers,
-                           nsCSSProps::kBackgroundOriginKTable);
+                           nsCSSProps::kImageLayerOriginKTable);
 }
 
 void
@@ -2223,12 +2223,12 @@ nsComputedDOMStyle::DoGetBackgroundRepeat()
     unsigned contraction;
     if (xRepeat == yRepeat) {
       contraction = xRepeat;
-    } else if (xRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
-               yRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT) {
-      contraction = NS_STYLE_BG_REPEAT_REPEAT_X;
-    } else if (xRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT &&
-               yRepeat == NS_STYLE_BG_REPEAT_REPEAT) {
-      contraction = NS_STYLE_BG_REPEAT_REPEAT_Y;
+    } else if (xRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
+               yRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT) {
+      contraction = NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X;
+    } else if (xRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT &&
+               yRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT) {
+      contraction = NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y;
     } else {
       hasContraction = false;
     }
@@ -2236,14 +2236,14 @@ nsComputedDOMStyle::DoGetBackgroundRepeat()
     RefPtr<nsROCSSPrimitiveValue> valY;
     if (hasContraction) {
       valX->SetIdent(nsCSSProps::ValueToKeywordEnum(contraction,
-                                         nsCSSProps::kBackgroundRepeatKTable));
+                                         nsCSSProps::kImageLayerRepeatKTable));
     } else {
       valY = new nsROCSSPrimitiveValue;
       
       valX->SetIdent(nsCSSProps::ValueToKeywordEnum(xRepeat,
-                                          nsCSSProps::kBackgroundRepeatKTable));
+                                          nsCSSProps::kImageLayerRepeatKTable));
       valY->SetIdent(nsCSSProps::ValueToKeywordEnum(yRepeat,
-                                          nsCSSProps::kBackgroundRepeatKTable));
+                                          nsCSSProps::kImageLayerRepeatKTable));
     }
     itemList->AppendCSSValue(valX.forget());
     if (valY) {
