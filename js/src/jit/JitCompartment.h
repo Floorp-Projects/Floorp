@@ -446,12 +446,14 @@ class JitCompartment
     // CodeGenerator::link.
     JitCode* stringConcatStub_;
     JitCode* regExpMatcherStub_;
+    JitCode* regExpSearcherStub_;
     JitCode* regExpTesterStub_;
 
     mozilla::EnumeratedArray<SimdType, SimdType::Count, ReadBarrieredObject> simdTemplateObjects_;
 
     JitCode* generateStringConcatStub(JSContext* cx);
     JitCode* generateRegExpMatcherStub(JSContext* cx);
+    JitCode* generateRegExpSearcherStub(JSContext* cx);
     JitCode* generateRegExpTesterStub(JSContext* cx);
 
   public:
@@ -561,6 +563,17 @@ class JitCompartment
             return true;
         regExpMatcherStub_ = generateRegExpMatcherStub(cx);
         return regExpMatcherStub_ != nullptr;
+    }
+
+    JitCode* regExpSearcherStubNoBarrier() const {
+        return regExpSearcherStub_;
+    }
+
+    bool ensureRegExpSearcherStubExists(JSContext* cx) {
+        if (regExpSearcherStub_)
+            return true;
+        regExpSearcherStub_ = generateRegExpSearcherStub(cx);
+        return regExpSearcherStub_ != nullptr;
     }
 
     JitCode* regExpTesterStubNoBarrier() const {

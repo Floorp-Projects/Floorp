@@ -4342,6 +4342,38 @@ class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 4, 0>
     }
 };
 
+class LRegExpSearcher : public LCallInstructionHelper<1, 4, 0>
+{
+  public:
+    LIR_HEADER(RegExpSearcher)
+
+    LRegExpSearcher(const LAllocation& regexp, const LAllocation& string,
+                    const LAllocation& lastIndex, const LAllocation& sticky)
+    {
+        setOperand(0, regexp);
+        setOperand(1, string);
+        setOperand(2, lastIndex);
+        setOperand(3, sticky);
+    }
+
+    const LAllocation* regexp() {
+        return getOperand(0);
+    }
+    const LAllocation* string() {
+        return getOperand(1);
+    }
+    const LAllocation* lastIndex() {
+        return getOperand(2);
+    }
+    const LAllocation* sticky() {
+        return getOperand(3);
+    }
+
+    const MRegExpSearcher* mir() const {
+        return mir_->toRegExpSearcher();
+    }
+};
+
 class LRegExpTester : public LCallInstructionHelper<1, 4, 0>
 {
   public:

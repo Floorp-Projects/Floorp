@@ -2531,6 +2531,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2,0),
     JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 4,0,
                     RegExpMatcher),
+    JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 4,0,
+                    RegExpSearcher),
     JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2,0),
