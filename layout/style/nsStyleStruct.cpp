@@ -1259,7 +1259,7 @@ nsStyleSVGReset::~nsStyleSVGReset()
 }
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
-  : mLayers(aSource.mLayers)
+  : mMask(aSource.mMask)
 {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
   mStopColor = aSource.mStopColor;
@@ -1275,7 +1275,7 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 }
 
 void nsStyleSVGReset::Destroy(nsPresContext* aContext) {
-  mLayers.UntrackImages(aContext);
+  mMask.UntrackImages(aContext);
 
   this->~nsStyleSVGReset();
   aContext->PresShell()->
@@ -1318,7 +1318,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
-  hint |= mLayers.CalcDifference(aOther.mLayers);
+  hint |= mMask.CalcDifference(aOther.mMask);
 
   return hint;
 }
@@ -2577,7 +2577,7 @@ nsStyleBackground::nsStyleBackground()
 }
 
 nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
-  : mLayers(aSource.mLayers)
+  : mImage(aSource.mImage)
   , mBackgroundColor(aSource.mBackgroundColor)
 {
   MOZ_COUNT_CTOR(nsStyleBackground);
@@ -2593,7 +2593,7 @@ void
 nsStyleBackground::Destroy(nsPresContext* aContext)
 {
   // Untrack all the images stored in our layers
-  mLayers.UntrackImages(aContext);
+  mImage.UntrackImages(aContext);
 
   this->~nsStyleBackground();
   aContext->PresShell()->
@@ -2607,15 +2607,15 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
     hint |= nsChangeHint_RepaintFrame;
   }
 
-  hint |= mLayers.CalcDifference(aOther.mLayers);
+  hint |= mImage.CalcDifference(aOther.mImage);
 
   return hint;
 }
 
 bool nsStyleBackground::HasFixedBackground() const
 {
-  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mLayers) {
-    const nsStyleImageLayers::Layer &layer = mLayers.mLayers[i];
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
+    const nsStyleImageLayers::Layer &layer = mImage.mLayers[i];
     if (layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
         !layer.mImage.IsEmpty()) {
       return true;
@@ -2627,7 +2627,7 @@ bool nsStyleBackground::HasFixedBackground() const
 bool nsStyleBackground::IsTransparent() const
 {
   return BottomLayer().mImage.IsEmpty() &&
-         mLayers.mImageCount == 1 &&
+         mImage.mImageCount == 1 &&
          NS_GET_A(mBackgroundColor) == 0;
 }
 

@@ -3381,28 +3381,28 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_background_position: {
           const nsStyleImageLayers& layers =
-            static_cast<const nsStyleBackground*>(styleStruct)->mLayers;
+            static_cast<const nsStyleBackground*>(styleStruct)->mImage;
           ExtractImageLayerPositionList(layers, aComputedValue);
           break;
         }
 
         case eCSSProperty_mask_position: {
           const nsStyleImageLayers& layers =
-            static_cast<const nsStyleSVGReset*>(styleStruct)->mLayers;
+            static_cast<const nsStyleSVGReset*>(styleStruct)->mMask;
           ExtractImageLayerPositionList(layers, aComputedValue);
           break;
         }
 
         case eCSSProperty_background_size: {
           const nsStyleImageLayers& layers =
-            static_cast<const nsStyleBackground*>(styleStruct)->mLayers;
+            static_cast<const nsStyleBackground*>(styleStruct)->mImage;
           ExtractImageLayerSizePairList(layers, aComputedValue);
           break;
         }
 
         case eCSSProperty_mask_size: {
           const nsStyleImageLayers& layers =
-            static_cast<const nsStyleSVGReset*>(styleStruct)->mLayers;
+            static_cast<const nsStyleSVGReset*>(styleStruct)->mMask;
           ExtractImageLayerSizePairList(layers, aComputedValue);
           break;
         }
