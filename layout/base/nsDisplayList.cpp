@@ -540,8 +540,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     // EffectCompositor needs to know that we refused to run this animation
     // asynchronously so that it will not throttle the main thread
     // animation.
-    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(),
-                            reinterpret_cast<void*>(intptr_t(true)));
+    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(), true);
 
     // We need to schedule another refresh driver run so that EffectCompositor
     // gets a chance to unthrottle the animation.

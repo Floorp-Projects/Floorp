@@ -642,7 +642,7 @@ RestyleManager::AddSubtreeToOverflowTracker(nsIFrame* aFrame)
   }
 }
 
-NS_DECLARE_FRAME_PROPERTY(ChangeListProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ChangeListProperty, bool)
 
 /**
  * Return true if aFrame's subtree has placeholders for out-of-flow content
@@ -735,8 +735,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      propTable->Set(changeData->mFrame, ChangeListProperty(),
-                     NS_INT32_TO_PTR(1));
+      propTable->Set(changeData->mFrame, ChangeListProperty(), true);
     }
   }
 

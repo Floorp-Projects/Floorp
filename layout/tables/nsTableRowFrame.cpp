@@ -1418,7 +1418,7 @@ nsTableRowFrame::GetNextRow() const
   return nullptr;
 }
 
-NS_DECLARE_FRAME_PROPERTY(RowUnpaginatedHeightProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(RowUnpaginatedHeightProperty, nscoord)
 
 void
 nsTableRowFrame::SetUnpaginatedBSize(nsPresContext* aPresContext,
@@ -1427,14 +1427,14 @@ nsTableRowFrame::SetUnpaginatedBSize(nsPresContext* aPresContext,
   NS_ASSERTION(!GetPrevInFlow(), "program error");
   // Get the property
   aPresContext->PropertyTable()->
-    Set(this, RowUnpaginatedHeightProperty(), NS_INT32_TO_PTR(aValue));
+    Set(this, RowUnpaginatedHeightProperty(), aValue);
 }
 
 nscoord
 nsTableRowFrame::GetUnpaginatedBSize()
 {
   FrameProperties props = FirstInFlow()->Properties();
-  return NS_PTR_TO_INT32(props.Get(RowUnpaginatedHeightProperty()));
+  return props.Get(RowUnpaginatedHeightProperty());
 }
 
 void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
