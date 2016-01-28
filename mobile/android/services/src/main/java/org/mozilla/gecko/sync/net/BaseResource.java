@@ -497,6 +497,16 @@ public class BaseResource implements Resource {
     post(jsonEntity(o));
   }
 
+  /**
+   * Perform an HTTP POST as with {@link BaseResource#post(ExtendedJSONObject)}, returning only
+   * after callbacks have been invoked.
+   */
+  public void postBlocking(final ExtendedJSONObject o) {
+    // Until we use the asynchronous Apache HttpClient, we can simply call
+    // through.
+    post(jsonEntity(o));
+  }
+
   public void post(JSONObject jsonObject) throws UnsupportedEncodingException {
     post(jsonEntity(jsonObject));
   }
