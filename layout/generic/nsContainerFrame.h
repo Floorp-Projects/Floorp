@@ -431,15 +431,6 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  /**
-   * Destructor function for the proptable-stored framelists --
-   * it should never be called.
-   */
-  static void DestroyFrameList(void* aPropertyValue)
-  {
-    MOZ_ASSERT(false, "The owning frame should destroy its nsFrameList props");
-  }
-
   static void PlaceFrameView(nsIFrame* aFrame)
   {
     if (aFrame->HasView())
@@ -448,8 +439,10 @@ public:
       nsContainerFrame::PositionChildViews(aFrame);
   }
 
-#define NS_DECLARE_FRAME_PROPERTY_FRAMELIST(prop)                     \
-  NS_DECLARE_FRAME_PROPERTY(prop, nsContainerFrame::DestroyFrameList)
+#define NS_DECLARE_FRAME_PROPERTY_FRAMELIST(prop) \
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(prop, nsFrameList)
+
+  typedef PropertyDescriptor<nsFrameList> FrameListPropertyDescriptor;
 
   NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowProperty)
   NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowContainersProperty)
@@ -601,20 +594,20 @@ protected:
    * Get the PresContext-stored nsFrameList named aPropID for this frame.
    * May return null.
    */
-  nsFrameList* GetPropTableFrames(PropertyDescriptor<> aProperty) const;
+  nsFrameList* GetPropTableFrames(FrameListPropertyDescriptor aProperty) const;
 
   /**
    * Remove and return the PresContext-stored nsFrameList named aPropID for
    * this frame. May return null.
    */
-  nsFrameList* RemovePropTableFrames(PropertyDescriptor<> aProperty);
+  nsFrameList* RemovePropTableFrames(FrameListPropertyDescriptor aProperty);
 
   /**
    * Set the PresContext-stored nsFrameList named aPropID for this frame
    * to the given aFrameList, which must not be null.
    */
-  void SetPropTableFrames(nsFrameList*                   aFrameList,
-                          PropertyDescriptor<> aProperty);
+  void SetPropTableFrames(nsFrameList* aFrameList,
+                          FrameListPropertyDescriptor aProperty);
 
   /**
    * Safely destroy the frames on the nsFrameList stored on aProp for this
@@ -624,7 +617,7 @@ protected:
   void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
                                   nsIPresShell* aPresShell,
                                   mozilla::FramePropertyTable* aPropTable,
-                                  PropertyDescriptor<> aProp);
+                                  FrameListPropertyDescriptor aProp);
 
   // ==========================================================================
 
@@ -805,8 +798,7 @@ inline
 nsFrameList*
 nsContainerFrame::GetOverflowFrames() const
 {
-  nsFrameList* list =
-    static_cast<nsFrameList*>(Properties().Get(OverflowProperty()));
+  nsFrameList* list = Properties().Get(OverflowProperty());
   NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
   return list;
 }
@@ -815,8 +807,7 @@ inline
 nsFrameList*
 nsContainerFrame::StealOverflowFrames()
 {
-  nsFrameList* list =
-    static_cast<nsFrameList*>(Properties().Remove(OverflowProperty()));
+  nsFrameList* list = Properties().Remove(OverflowProperty());
   NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
   return list;
 }
