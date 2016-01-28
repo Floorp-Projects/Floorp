@@ -48,7 +48,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 //
 // set NSPR_LOG_MODULES=nsJarProtocol:5
 //
-static PRLogModuleInfo *gJarProtocolLog = nullptr;
+static LazyLogModule gJarProtocolLog("nsJarProtocol");
 
 #define LOG(args)     MOZ_LOG(gJarProtocolLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gJarProtocolLog, mozilla::LogLevel::Debug)
@@ -203,9 +203,6 @@ nsJARChannel::nsJARChannel()
     , mOpeningRemote(false)
     , mBlockRemoteFiles(false)
 {
-    if (!gJarProtocolLog)
-        gJarProtocolLog = PR_NewLogModule("nsJarProtocol");
-
     mBlockRemoteFiles = Preferences::GetBool("network.jar.block-remote-files", false);
 
     // hold an owning reference to the jar handler
