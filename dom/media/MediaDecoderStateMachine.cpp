@@ -648,7 +648,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
         // We must be after the discontinuity; we're receiving samples
         // at or after the seek target.
         if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint &&
-            mCurrentSeek.mTarget.mTime > mCurrentTimeBeforeSeek &&
+            mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
             audio->mTime < mCurrentTimeBeforeSeek) {
           // We are doing a fastSeek, but we ended up *before* the previous
           // playback position. This is surprising UX, so switch to an accurate
@@ -968,7 +968,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
         // We must be after the discontinuity; we're receiving samples
         // at or after the seek target.
         if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint &&
-            mCurrentSeek.mTarget.mTime > mCurrentTimeBeforeSeek &&
+            mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
             video->mTime < mCurrentTimeBeforeSeek) {
           // We are doing a fastSeek, but we ended up *before* the previous
           // playback position. This is surprising UX, so switch to an accurate
@@ -1524,7 +1524,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   mPendingSeek.RejectIfExists(__func__);
   mPendingSeek.mTarget = aTarget;
 
-  DECODER_LOG("Changed state to SEEKING (to %lld)", mPendingSeek.mTarget.mTime);
+  DECODER_LOG("Changed state to SEEKING (to %lld)", mPendingSeek.mTarget.GetTime().ToMicroseconds());
   SetState(DECODER_STATE_SEEKING);
   ScheduleStateMachine();
 
@@ -1618,12 +1618,12 @@ MediaDecoderStateMachine::InitiateSeek()
   // Bound the seek time to be inside the media range.
   int64_t end = Duration().ToMicroseconds();
   NS_ASSERTION(end != -1, "Should know end time by now");
-  int64_t seekTime = mCurrentSeek.mTarget.mTime;
+  int64_t seekTime = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
   seekTime = std::min(seekTime, end);
   seekTime = std::max(int64_t(0), seekTime);
   NS_ASSERTION(seekTime >= 0 && seekTime <= end,
                "Can only seek in range [0,duration]");
-  mCurrentSeek.mTarget.mTime = seekTime;
+  mCurrentSeek.mTarget.SetTime(media::TimeUnit::FromMicroseconds(seekTime));
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
@@ -1633,7 +1633,7 @@ MediaDecoderStateMachine::InitiateSeek()
   // dispatching SeekingStarted, playback doesn't advance and mess with
   // mCurrentPosition that we've setting to seekTime here.
   StopPlayback();
-  UpdatePlaybackPositionInternal(mCurrentSeek.mTarget.mTime);
+  UpdatePlaybackPositionInternal(mCurrentSeek.mTarget.GetTime().ToMicroseconds());
 
   mOnSeekingStart.Notify(mCurrentSeek.mTarget.mEventVisibility);
 
@@ -1643,7 +1643,7 @@ MediaDecoderStateMachine::InitiateSeek()
   // Do the seek.
   RefPtr<MediaDecoderStateMachine> self = this;
   SeekTarget seekTarget = mCurrentSeek.mTarget;
-  seekTarget.mTime += StartTime();
+  seekTarget.SetTime(seekTarget.GetTime() + media::TimeUnit::FromMicroseconds(StartTime()));
   mSeekRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
                                  &MediaDecoderReader::Seek, seekTarget,
                                  Duration().ToMicroseconds())
@@ -2082,7 +2082,7 @@ MediaDecoderStateMachine::SeekCompleted()
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
 
-  int64_t seekTime = mCurrentSeek.mTarget.mTime;
+  int64_t seekTime = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
   int64_t newCurrentTime = seekTime;
 
   // Setup timestamp state.
@@ -2514,7 +2514,7 @@ MediaDecoderStateMachine::DropVideoUpToSeekTarget(MediaData* aSample)
   DECODER_LOG("DropVideoUpToSeekTarget() frame [%lld, %lld]",
               video->mTime, video->GetEndTime());
   MOZ_ASSERT(mCurrentSeek.Exists());
-  const int64_t target = mCurrentSeek.mTarget.mTime;
+  const int64_t target = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
 
   // If the frame end time is less than the seek target, we won't want
   // to display this frame after the seek, so discard it.
@@ -2556,13 +2556,13 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
     return NS_ERROR_FAILURE;
   }
 
-  if (audio->mTime + sampleDuration.value() <= mCurrentSeek.mTarget.mTime) {
+  if (audio->mTime + sampleDuration.value() <= mCurrentSeek.mTarget.GetTime().ToMicroseconds()) {
     // Our seek target lies after the frames in this AudioData. Don't
     // push it onto the audio queue, and keep decoding forwards.
     return NS_OK;
   }
 
-  if (audio->mTime > mCurrentSeek.mTarget.mTime) {
+  if (audio->mTime > mCurrentSeek.mTarget.GetTime().ToMicroseconds()) {
     // The seek target doesn't lie in the audio block just after the last
     // audio frames we've seen which were before the seek target. This
     // could have been the first audio data we've seen after seek, i.e. the
@@ -2578,13 +2578,13 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
   // The seek target lies somewhere in this AudioData's frames, strip off
   // any frames which lie before the seek target, so we'll begin playback
   // exactly at the seek target.
-  NS_ASSERTION(mCurrentSeek.mTarget.mTime >= audio->mTime,
+  NS_ASSERTION(mCurrentSeek.mTarget.GetTime().ToMicroseconds() >= audio->mTime,
                "Target must at or be after data start.");
-  NS_ASSERTION(mCurrentSeek.mTarget.mTime < audio->mTime + sampleDuration.value(),
+  NS_ASSERTION(mCurrentSeek.mTarget.GetTime().ToMicroseconds() < audio->mTime + sampleDuration.value(),
                "Data must end after target.");
 
   CheckedInt64 framesToPrune =
-    UsecsToFrames(mCurrentSeek.mTarget.mTime - audio->mTime, mInfo.mAudio.mRate);
+    UsecsToFrames(mCurrentSeek.mTarget.GetTime().ToMicroseconds() - audio->mTime, mInfo.mAudio.mRate);
   if (!framesToPrune.isValid()) {
     return NS_ERROR_FAILURE;
   }
@@ -2605,7 +2605,7 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
     return NS_ERROR_FAILURE;
   }
   RefPtr<AudioData> data(new AudioData(audio->mOffset,
-                                       mCurrentSeek.mTarget.mTime,
+                                       mCurrentSeek.mTarget.GetTime().ToMicroseconds(),
                                        duration.value(),
                                        frames,
                                        Move(audioData),

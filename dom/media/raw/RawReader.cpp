@@ -211,9 +211,9 @@ RawReader::Seek(SeekTarget aTarget, int64_t aEndTime)
   MOZ_ASSERT(OnTaskQueue());
 
   uint32_t frame = mCurrentFrame;
-  if (aTarget.mTime >= UINT_MAX)
+  if (aTarget.GetTime().ToMicroseconds() >= UINT_MAX)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  mCurrentFrame = aTarget.mTime * mFrameRate / USECS_PER_S;
+  mCurrentFrame = aTarget.GetTime().ToMicroseconds() * mFrameRate / USECS_PER_S;
 
   CheckedUint32 offset = CheckedUint32(mCurrentFrame) * mFrameSize;
   offset += sizeof(RawVideoHeader);
@@ -233,12 +233,12 @@ RawReader::Seek(SeekTarget aTarget, int64_t aEndTime)
   }, [self, aTarget] () {
     MOZ_ASSERT(self->OnTaskQueue());
     return self->mVideoQueue.Peek() &&
-           self->mVideoQueue.Peek()->GetEndTime() >= aTarget.mTime;
+           self->mVideoQueue.Peek()->GetEndTime() >= aTarget.GetTime().ToMicroseconds();
   })->Then(OwnerThread(), __func__, [self, p, aTarget] () {
     while (self->mVideoQueue.GetSize() >= 2) {
       RefPtr<VideoData> releaseMe = self->mVideoQueue.PopFront();
     }
-    p->Resolve(aTarget.mTime, __func__);
+    p->Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
   }, [self, p, frame] {
     self->mCurrentFrame = frame;
     self->mVideoQueue.Reset();

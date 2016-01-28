@@ -547,12 +547,12 @@ MediaOmxReader::Seek(SeekTarget aTarget, int64_t aEndTime)
       self->mSeekPromise.Resolve(self->mAudioSeekTimeUs, __func__);
     }, [self, aTarget] () {
       self->mSeekRequest.Complete();
-      self->mAudioSeekTimeUs = aTarget.mTime;
-      self->mSeekPromise.Resolve(aTarget.mTime, __func__);
+      self->mAudioSeekTimeUs = aTarget.GetTime().ToMicroseconds();
+      self->mSeekPromise.Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
     }));
   } else {
     mAudioSeekTimeUs = mVideoSeekTimeUs = GetTime().ToMicroseconds();
-    mSeekPromise.Resolve(aTarget.mTime, __func__);
+    mSeekPromise.Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
   }
 
   return p;

@@ -275,15 +275,15 @@ RefPtr<MediaDecoderReader::SeekPromise>
 WaveReader::Seek(SeekTarget aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOG(LogLevel::Debug, ("%p About to seek to %lld", mDecoder, aTarget.mTime));
+  LOG(LogLevel::Debug, ("%p About to seek to %lld", mDecoder, aTarget.GetTime().ToMicroseconds()));
 
   if (NS_FAILED(ResetDecode())) {
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
   double d = BytesToTime(GetDataLength());
   NS_ASSERTION(d < INT64_MAX / USECS_PER_S, "Duration overflow");
-  int64_t duration = static_cast<int64_t>(d * USECS_PER_S);
-  double seekTime = std::min(aTarget.mTime, duration) / static_cast<double>(USECS_PER_S);
+  media::TimeUnit duration = media::TimeUnit::FromSeconds(d);
+  double seekTime = std::min(aTarget.GetTime(), duration).ToSeconds();
   int64_t position = RoundDownToFrame(static_cast<int64_t>(TimeToBytes(seekTime)));
   NS_ASSERTION(INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
@@ -291,7 +291,7 @@ WaveReader::Seek(SeekTarget aTarget, int64_t aEndTime)
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(aTarget.mTime, __func__);
+    return SeekPromise::CreateAndResolve(aTarget.GetTime().ToMicroseconds(), __func__);
   }
 }
 
