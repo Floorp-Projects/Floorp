@@ -87,6 +87,11 @@ void RLogRingBuffer::DestroyInstance() {
   delete instance;
   instance = nullptr;
 }
+ 
+void RLogRingBuffer::Clear() {
+  OffTheBooksMutexAutoLock lock(mutex_);
+  log_messages_.clear();
+}
 
 void RLogRingBuffer::Filter(const std::string& substring,
                             uint32_t limit,
