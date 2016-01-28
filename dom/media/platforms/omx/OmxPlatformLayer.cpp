@@ -45,6 +45,42 @@ typedef OmxConfig<VideoInfo> OmxVideoConfig;
 template<typename ConfigType>
 UniquePtr<ConfigType> ConfigForMime(const nsACString&);
 
+static OMX_ERRORTYPE
+ConfigAudioOutputPort(OmxPlatformLayer& aOmx, const AudioInfo& aInfo)
+{
+  OMX_ERRORTYPE err;
+
+  OMX_PARAM_PORTDEFINITIONTYPE def;
+  InitOmxParameter(&def);
+  def.nPortIndex = aOmx.OutputPortIndex();
+  err = aOmx.GetParameter(OMX_IndexParamPortDefinition, &def, sizeof(def));
+  RETURN_IF_ERR(err);
+
+  def.format.audio.eEncoding = OMX_AUDIO_CodingPCM;
+  err = aOmx.SetParameter(OMX_IndexParamPortDefinition, &def, sizeof(def));
+  RETURN_IF_ERR(err);
+
+  OMX_AUDIO_PARAM_PCMMODETYPE pcmParams;
+  InitOmxParameter(&pcmParams);
+  pcmParams.nPortIndex = def.nPortIndex;
+  err = aOmx.GetParameter(OMX_IndexParamAudioPcm, &pcmParams, sizeof(pcmParams));
+  RETURN_IF_ERR(err);
+
+  pcmParams.nChannels = aInfo.mChannels;
+  pcmParams.eNumData = OMX_NumericalDataSigned;
+  pcmParams.bInterleaved = OMX_TRUE;
+  pcmParams.nBitPerSample = 16;
+  pcmParams.nSamplingRate = aInfo.mRate;
+  pcmParams.ePCMMode = OMX_AUDIO_PCMModeLinear;
+  err = aOmx.SetParameter(OMX_IndexParamAudioPcm, &pcmParams, sizeof(pcmParams));
+  RETURN_IF_ERR(err);
+
+  LOG("Config OMX_IndexParamAudioPcm, channel %d, sample rate %d",
+      pcmParams.nChannels, pcmParams.nSamplingRate);
+
+  return OMX_ErrorNone;
+}
+
 class OmxAacConfig : public OmxAudioConfig
 {
 public:
@@ -67,7 +103,7 @@ public:
     LOG("Config OMX_IndexParamAudioAac, channel %d, sample rate %d, profile %d",
         aacProfile.nChannels, aacProfile.nSampleRate, aacProfile.eAACProfile);
 
-    return OMX_ErrorNone;
+    return ConfigAudioOutputPort(aOmx, aInfo);
   }
 };
 
