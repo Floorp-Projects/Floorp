@@ -922,7 +922,9 @@ FrameIter::computeLine(uint32_t* column) const
       case JIT:
         return PCToLineNumber(script(), pc(), column);
       case WASM:
-        return data_.wasmFrames_.computeLine(column);
+        if (column)
+            *column = 0;
+        return data_.wasmFrames_.lineOrBytecode();
     }
 
     MOZ_CRASH("Unexpected state");
