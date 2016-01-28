@@ -822,7 +822,7 @@ xpc::SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
 {
     // This uses getPropertyDescriptor for backward compatibility with
     // the old BaseProxyHandler::get implementation.
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
     desc.assertCompleteIfFound();

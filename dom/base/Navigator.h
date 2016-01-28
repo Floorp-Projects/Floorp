@@ -305,7 +305,7 @@ public:
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                  JS::Handle<jsid> aId,
-                 JS::MutableHandle<JSPropertyDescriptor> aDesc);
+                 JS::MutableHandle<JS::PropertyDescriptor> aDesc);
   // The return value is whether DoResolve might end up resolving the given id.
   // If in doubt, return true.
   static bool MayResolve(jsid aId);
