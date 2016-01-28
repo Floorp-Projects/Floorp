@@ -10,6 +10,8 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1038811</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -27,112 +29,53 @@ http://creativecommons.org/licenses/publicdomain/
   //  console.log(str + "\n");
   }
 
-  var controlledFrame;
-  function createControlledIFrame(swr) {
-    var p = new Promise(function(res, rej) {
-      var iframe = document.createElement('iframe');
-      iframe.id = "controlledFrame";
-      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
-
-      iframe.onload = function() {
-        res(swr)
-      }
-      controlledFrame = iframe;
-      document.body.appendChild(iframe);
-    });
-    return p;
-  }
-
-  function checkPermissionState(swr) {
-    return swr.pushManager.permissionState().then(function(state) {
-      ok(state === "granted", "permissionState() should resolve to granted.");
-      return swr;
-    }).catch(function(e) {
-      ok(false, "permissionState() should resolve to granted.");
-      return swr;
-    });
-  }
-
-  function sendPushToPushServer(pushEndpoint) {
-    // Work around CORS for now.
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "http://mochi.test:8888/tests/dom/push/test/push-server.sjs", true);
-    xhr.setRequestHeader("X-Push-Method", "PUT");
-    xhr.setRequestHeader("X-Push-Server", pushEndpoint);
-    xhr.onload = function(e) {
-      debug("xhr : " + this.status);
-    }
-    xhr.onerror = function(e) {
-      debug("xhr error: " + e);
-    }
-    xhr.send("version=24601");
-  }
-
   var registration;
+  add_task(function* start() {
+    yield setupPrefs();
+    yield setPushPermission(true);
 
-  function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
-    .then((swr) => registration = swr);
-  }
+    var url = "worker.js" + "?" + (Math.random());
+    registration = yield navigator.serviceWorker.register(url, {scope: "."});
+  });
 
-  function unregister() {
-    return registration.unregister().then(function(result) {
-      ok(result, "Unregister should return true.");
-    }, function(e) {
-      dump("Unregistering the SW failed with " + e + "\n");
-    });
-  }
+  var controlledFrame;
+  add_task(function* createControlledIFrame() {
+    controlledFrame = yield injectControlledFrame();
+  });
 
-  function setupPushNotification(swr) {
-    var p = new Promise(function(res, rej) {
-      swr.pushManager.subscribe().then(
-        function(pushSubscription) {
-          ok(true, "successful registered for push notification");
-          res(pushSubscription);
-        }, function(error) {
-          ok(false, "could not register for push notification");
-          res(null);
-        }
-        );
-    });
-    return p;
-  }
+  add_task(function* checkPermissionState() {
+    var state = yield registration.pushManager.permissionState();
+    is(state, "granted", "permissionState() should resolve to granted.");
+  });
 
-  function unregisterPushNotification(pushSubscription) {
-    controlledFrame.parentNode.removeChild(controlledFrame);
-    controlledFrame = null;
-    return pushSubscription.unsubscribe();
-  }
+  var pushSubscription;
+  add_task(function* setupPushNotification() {
+    pushSubscription = yield registration.pushManager.subscribe();
+  });
 
-  function waitForPushNotification(pushSubscription) {
-    var p = controlledFrame.contentWindow.waitOnPushMessage();
-    sendPushToPushServer(pushSubscription.endpoint);
-    return p.then(function() {
-      return pushSubscription;
-    });
-  }
+  add_task(function* waitForPushNotification() {
+    yield Promise.all([
+      controlledFrame.waitOnPushMessage(),
+      fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
+        method: "PUT",
+        headers: {
+          "X-Push-Method": "POST",
+          "X-Push-Server": pushSubscription.endpoint,
+        },
+      }),
+    ]);
+  });
 
-  function runTest() {
-    start()
-    .then(createControlledIFrame)
-    .then(checkPermissionState)
-    .then(setupPushNotification)
-    .then(waitForPushNotification)
-    .then(unregisterPushNotification)
-    .then(unregister)
-    .catch(function(e) {
-      ok(false, "Some test failed with error " + e);
-    }).then(SimpleTest.finish);
-  }
+  add_task(function* unsubscribe() {
+    controlledFrame.remove();
+    yield pushSubscription.unsubscribe();
+  });
 
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true]
-    ]}, runTest);
-  SpecialPowers.addPermission("desktop-notification", true, document);
-  SimpleTest.waitForExplicitFinish();
+  add_task(function* unregister() {
+    var result = yield registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+
 </script>
 </body>
 </html>
