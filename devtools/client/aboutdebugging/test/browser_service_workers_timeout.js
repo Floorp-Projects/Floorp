@@ -11,17 +11,6 @@ const TAB_URL = HTTP_ROOT + "service-workers/empty-sw.html";
 
 const SW_TIMEOUT = 1000;
 
-function waitForWorkersUpdate(document) {
-  return new Promise(done => {
-    var observer = new MutationObserver(function(mutations) {
-      observer.disconnect();
-      done();
-    });
-    var target = document.getElementById("service-workers");
-    observer.observe(target, { childList: true });
-  });
-}
-
 function assertHasWorker(expected, document, type, name) {
   let names = [...document.querySelectorAll("#" + type + " .target-name")];
   names = names.map(element => element.textContent);
@@ -45,7 +34,8 @@ add_task(function *() {
 
   let swTab = yield addTab(TAB_URL);
 
-  yield waitForWorkersUpdate(document);
+  let serviceWorkersElement = document.getElementById("service-workers");
+  yield waitForMutation(serviceWorkersElement, { childList: true });
 
   assertHasWorker(true, document, "service-workers", SERVICE_WORKER);
 
@@ -100,7 +90,7 @@ add_task(function *() {
   // Now ensure that the worker is correctly destroyed
   // after we destroy the toolbox.
   // The list should update once it get destroyed.
-  yield waitForWorkersUpdate(document);
+  yield waitForMutation(serviceWorkersElement, { childList: true });
 
   assertHasWorker(false, document, "service-workers", SERVICE_WORKER);
 
