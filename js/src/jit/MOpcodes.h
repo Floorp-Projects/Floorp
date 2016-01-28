@@ -148,6 +148,7 @@ namespace jit {
     _(RegExpMatcher)                                                        \
     _(RegExpTester)                                                         \
     _(RegExpPrototypeOptimizable)                                           \
+    _(RegExpInstanceOptimizable)                                            \
     _(RegExpReplace)                                                        \
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
