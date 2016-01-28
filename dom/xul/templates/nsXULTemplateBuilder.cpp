@@ -104,17 +104,20 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
     MOZ_COUNT_CTOR(nsXULTemplateBuilder);
 }
 
-static PLDHashOperator
-DestroyMatchList(nsISupports* aKey, nsTemplateMatch*& aMatch, void* aContext)
+void
+nsXULTemplateBuilder::DestroyMatchMap()
 {
-    // delete all the matches in the list
-    while (aMatch) {
-        nsTemplateMatch* next = aMatch->mNext;
-        nsTemplateMatch::Destroy(aMatch, true);
-        aMatch = next;
-    }
+    for (auto iter = mMatchMap.Iter(); !iter.Done(); iter.Next()) {
+        nsTemplateMatch*& match = iter.Data();
+        // delete all the matches in the list
+        while (match) {
+            nsTemplateMatch* next = match->mNext;
+            nsTemplateMatch::Destroy(match, true);
+            match = next;
+        }
 
-    return PL_DHASH_REMOVE;
+        iter.Remove();
+    }
 }
 
 nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
@@ -195,7 +198,7 @@ nsXULTemplateBuilder::CleanUp(bool aIsFinal)
 
     mQuerySets.Clear();
 
-    mMatchMap.Enumerate(DestroyMatchList, nullptr);
+    DestroyMatchMap();
 
     // Setting mQueryProcessor to null will close connections. This would be
     // handled by the cycle collector, but we want to close them earlier.
@@ -232,7 +235,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootResult)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueryProcessor)
-    tmp->mMatchMap.Enumerate(DestroyMatchList, nullptr);
+    tmp->DestroyMatchMap();
     for (uint32_t i = 0; i < tmp->mQuerySets.Length(); ++i) {
         nsTemplateQuerySet* qs = tmp->mQuerySets[i];
         delete qs;
