@@ -778,6 +778,9 @@ protected:
   // the popup that is currently being opened, stored only during the
   // popupshowing event
   nsCOMPtr<nsIContent> mOpeningPopup;
+
+  // If true, all popups won't hide automatically on blur
+  static bool sDevtoolsDisableAutoHide;
 };
 
 #endif

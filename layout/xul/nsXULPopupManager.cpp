@@ -109,6 +109,11 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
+bool nsXULPopupManager::sDevtoolsDisableAutoHide = false;
+
+const char* kPrefDevtoolsDisableAutoHide =
+  "ui.popup.disable_autohide";
+
 NS_IMPL_ISUPPORTS(nsXULPopupManager,
                   nsIDOMEventListener,
                   nsITimerCallback,
@@ -127,6 +132,8 @@ nsXULPopupManager::nsXULPopupManager() :
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
+  Preferences::AddBoolVarCache(&sDevtoolsDisableAutoHide,
+                               kPrefDevtoolsDisableAutoHide, false);
 }
 
 nsXULPopupManager::~nsXULPopupManager() 
@@ -183,6 +190,15 @@ bool
 nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
                           const nsIntPoint* pos, nsIContent** aLastRolledUp)
 {
+  // We can disable the autohide behavior via a pref to ease debugging.
+  if (nsXULPopupManager::sDevtoolsDisableAutoHide) {
+    // Required on linux to allow events to work on other targets.
+    if (mWidget) {
+      mWidget->CaptureRollupEvents(nullptr, false);
+    }
+    return false;
+  }
+
   bool consume = false;
 
   nsMenuChainItem* item = GetTopVisibleMenu();
