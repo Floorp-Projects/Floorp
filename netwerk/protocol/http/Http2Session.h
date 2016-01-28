@@ -297,14 +297,6 @@ private:
 
   void Shutdown();
 
-  static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
-                                          nsAutoPtr<Http2Stream> &,
-                                          void *);
-
-  static PLDHashOperator UpdateServerRwinEnumerator(nsAHttpTransaction *,
-                                                    nsAutoPtr<Http2Stream> &,
-                                                    void *);
-
   static PLDHashOperator RestartBlockedOnRwinEnumerator(nsAHttpTransaction *,
                                                         nsAutoPtr<Http2Stream> &,
                                                         void *);

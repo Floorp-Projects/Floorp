@@ -245,14 +245,6 @@ private:
 
   void Shutdown();
 
-  static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
-                                          nsAutoPtr<SpdyStream31> &,
-                                          void *);
-
-  static PLDHashOperator UpdateServerRwinEnumerator(nsAHttpTransaction *,
-                                                    nsAutoPtr<SpdyStream31> &,
-                                                    void *);
-
   static PLDHashOperator RestartBlockedOnRwinEnumerator(nsAHttpTransaction *,
                                                         nsAutoPtr<SpdyStream31> &,
                                                         void *);
