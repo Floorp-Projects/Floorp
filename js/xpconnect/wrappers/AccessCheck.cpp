@@ -328,7 +328,7 @@ ExposedPropertiesOnly::check(JSContext* cx, HandleObject wrapper, HandleId id, W
     if (id == JSID_VOID)
         return true;
 
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!JS_GetPropertyDescriptorById(cx, wrappedObject, exposedPropsId, &desc))
         return false;
 
