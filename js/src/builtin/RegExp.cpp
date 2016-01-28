@@ -1104,3 +1104,55 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
     *result = true;
     return true;
 }
+
+bool
+js::RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp)
+{
+    // This can only be called from self-hosted code.
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    uint8_t result = false;
+    if (!RegExpInstanceOptimizableRaw(cx, &args[0].toObject(), &args[1].toObject(), &result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
+js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (!rx->isNative()) {
+        *result = false;
+        return true;
+    }
+
+    NativeObject* nobj = static_cast<NativeObject*>(rx);
+
+    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpInstanceShape();
+    if (shape == nobj->lastProperty()) {
+        *result = true;
+        return true;
+    }
+
+    if (rx->hasLazyPrototype()) {
+        *result = false;
+        return true;
+    }
+
+    if (rx->getTaggedProto().toObjectOrNull() != proto) {
+        *result = false;
+        return true;
+    }
+
+    if (!RegExpObject::isInitialShape(nobj)) {
+        *result = false;
+        return true;
+    }
+
+    cx->compartment()->regExps.setOptimizableRegExpInstanceShape(nobj->lastProperty());
+    *result = true;
+    return true;
+}
