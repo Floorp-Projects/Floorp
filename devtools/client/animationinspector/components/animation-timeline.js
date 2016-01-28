@@ -357,16 +357,19 @@ AnimationsTimeline.prototype = {
   },
 
   startAnimatingScrubber: function(time) {
-    let x = TimeScale.startTimeToDistance(time);
-    this.scrubberEl.style.left = x + "%";
-
-    // Only stop the scrubber if it's out of bounds or all animations have been
-    // paused, but not if at least an animation is infinite.
     let isOutOfBounds = time < TimeScale.minStartTime ||
                         time > TimeScale.maxEndTime;
     let isAllPaused = !this.isAtLeastOneAnimationPlaying();
     let hasInfinite = this.hasInfiniteAnimations();
 
+    let x = TimeScale.startTimeToDistance(time);
+    if (x > 100 && !hasInfinite) {
+      x = 100;
+    }
+    this.scrubberEl.style.left = x + "%";
+
+    // Only stop the scrubber if it's out of bounds or all animations have been
+    // paused, but not if at least an animation is infinite.
     if (isAllPaused || (isOutOfBounds && !hasInfinite)) {
       this.stopAnimatingScrubber();
       this.emit("timeline-data-changed", {
