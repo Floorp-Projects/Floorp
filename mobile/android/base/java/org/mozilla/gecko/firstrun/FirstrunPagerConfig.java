@@ -13,6 +13,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.util.Experiments;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,29 +25,25 @@ public class FirstrunPagerConfig {
     public static final String KEY_TEXT = "textRes";
     public static final String KEY_SUBTEXT = "subtextRes";
 
-    public static final String ONBOARDING_A = "onboarding-a";
-    public static final String ONBOARDING_B = "onboarding-b";
-    public static final String ONBOARDING_C = "onboarding-c";
-
-    public static List<FirstrunPanelConfig> getDefault(Context context) {
+   public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
 
-        if (isInExperimentLocal(context, ONBOARDING_A)) {
+        if (isInExperimentLocal(context, Experiments.ONBOARDING2_A)) {
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_A);
-        } else if (isInExperimentLocal(context, ONBOARDING_B)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_A);
+        } else if (isInExperimentLocal(context, Experiments.ONBOARDING2_B)) {
             panels.add(SimplePanelConfigs.urlbarPanelConfig);
             panels.add(SimplePanelConfigs.bookmarksPanelConfig);
             panels.add(SimplePanelConfigs.syncPanelConfig);
             panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_B);
-        } else if (isInExperimentLocal(context, ONBOARDING_C)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_B);
+        } else if (isInExperimentLocal(context, Experiments.ONBOARDING2_C)) {
             panels.add(SimplePanelConfigs.urlbarPanelConfig);
             panels.add(SimplePanelConfigs.bookmarksPanelConfig);
             panels.add(SimplePanelConfigs.dataPanelConfig);
             panels.add(SimplePanelConfigs.syncPanelConfig);
             panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_C);
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_C);
         } else {
             Log.d(LOGTAG, "Not in an experiment!");
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
@@ -62,11 +59,11 @@ public class FirstrunPagerConfig {
     private static boolean isInExperimentLocal(Context context, String name) {
         if (AppConstants.MOZ_SWITCHBOARD) {
             if (SwitchBoard.isInBucket(context, 0, 33)) {
-                return ONBOARDING_A.equals(name);
+                return Experiments.ONBOARDING2_A.equals(name);
             } else if (SwitchBoard.isInBucket(context, 33, 66)) {
-                return ONBOARDING_B.equals(name);
+                return Experiments.ONBOARDING2_B.equals(name);
             } else if (SwitchBoard.isInBucket(context, 66, 100)) {
-                return ONBOARDING_C.equals(name);
+                return Experiments.ONBOARDING2_C.equals(name);
             }
         }
         return false;
