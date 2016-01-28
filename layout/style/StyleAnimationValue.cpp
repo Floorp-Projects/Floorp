@@ -2923,7 +2923,7 @@ StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
 }
 
 static void
-SetPositionValue(const nsStyleBackground::Position& aPos, nsCSSValue& aCSSValue)
+SetPositionValue(const nsStyleImageLayers::Position& aPos, nsCSSValue& aCSSValue)
 {
   RefPtr<nsCSSValue::Array> posArray = nsCSSValue::Array::Create(4);
   aCSSValue.SetArrayValue(posArray.get(), eCSSUnit_Array);
@@ -3292,12 +3292,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             static_cast<const nsStyleBackground*>(styleStruct);
           nsAutoPtr<nsCSSValueList> result;
           nsCSSValueList **resultTail = getter_Transfers(result);
-          MOZ_ASSERT(bg->mPositionCount > 0, "unexpected count");
-          for (uint32_t i = 0, i_end = bg->mPositionCount; i != i_end; ++i) {
+          MOZ_ASSERT(bg->mLayers.mPositionCount > 0, "unexpected count");
+          for (uint32_t i = 0, i_end = bg->mLayers.mPositionCount; i != i_end; ++i) {
             nsCSSValueList *item = new nsCSSValueList;
             *resultTail = item;
             resultTail = &item->mNext;
-            SetPositionValue(bg->mLayers[i].mPosition, item->mValue);
+            SetPositionValue(bg->mLayers.mLayers[i].mPosition, item->mValue);
           }
 
           aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
@@ -3310,23 +3310,23 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             static_cast<const nsStyleBackground*>(styleStruct);
           nsAutoPtr<nsCSSValuePairList> result;
           nsCSSValuePairList **resultTail = getter_Transfers(result);
-          MOZ_ASSERT(bg->mSizeCount > 0, "unexpected count");
-          for (uint32_t i = 0, i_end = bg->mSizeCount; i != i_end; ++i) {
+          MOZ_ASSERT(bg->mLayers.mSizeCount > 0, "unexpected count");
+          for (uint32_t i = 0, i_end = bg->mLayers.mSizeCount; i != i_end; ++i) {
             nsCSSValuePairList *item = new nsCSSValuePairList;
             *resultTail = item;
             resultTail = &item->mNext;
 
-            const nsStyleBackground::Size &size = bg->mLayers[i].mSize;
+            const nsStyleImageLayers::Size &size = bg->mLayers.mLayers[i].mSize;
             switch (size.mWidthType) {
-              case nsStyleBackground::Size::eContain:
-              case nsStyleBackground::Size::eCover:
+              case nsStyleImageLayers::Size::eContain:
+              case nsStyleImageLayers::Size::eCover:
                 item->mXValue.SetIntValue(size.mWidthType,
                                           eCSSUnit_Enumerated);
                 break;
-              case nsStyleBackground::Size::eAuto:
+              case nsStyleImageLayers::Size::eAuto:
                 item->mXValue.SetAutoValue();
                 break;
-              case nsStyleBackground::Size::eLengthPercentage:
+              case nsStyleImageLayers::Size::eLengthPercentage:
                 // XXXbz is there a good reason we can't just
                 // SetCalcValue(&size.mWidth, item->mXValue) here?
                 if (!size.mWidth.mHasPercent &&
@@ -3346,14 +3346,14 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             }
 
             switch (size.mHeightType) {
-              case nsStyleBackground::Size::eContain:
-              case nsStyleBackground::Size::eCover:
+              case nsStyleImageLayers::Size::eContain:
+              case nsStyleImageLayers::Size::eCover:
                 // leave it null
                 break;
-              case nsStyleBackground::Size::eAuto:
+              case nsStyleImageLayers::Size::eAuto:
                 item->mYValue.SetAutoValue();
                 break;
-              case nsStyleBackground::Size::eLengthPercentage:
+              case nsStyleImageLayers::Size::eLengthPercentage:
                 // XXXbz is there a good reason we can't just
                 // SetCalcValue(&size.mHeight, item->mYValue) here?
                 if (!size.mHeight.mHasPercent &&
