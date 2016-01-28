@@ -2695,10 +2695,18 @@ this.XPIProvider = {
             let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
             let addon = createAddonDetails(id, XPIProvider.bootstrappedAddons[id]);
-            XPIProvider.callBootstrapMethod(addon, file, "shutdown",
-                                            BOOTSTRAP_REASONS.APP_SHUTDOWN);
-            if (XPIProvider.bootstrappedAddons[id].disable)
-              delete XPIProvider.bootstrappedAddons[aId];
+
+            // If the add-on was pending disable then shut it down and remove it
+            // from the persisted data.
+            if (XPIProvider.bootstrappedAddons[id].disable) {
+              XPIProvider.callBootstrapMethod(addon, file, "shutdown",
+                                              BOOTSTRAP_REASONS.ADDON_DISABLE);
+              delete XPIProvider.bootstrappedAddons[id];
+            }
+            else {
+              XPIProvider.callBootstrapMethod(addon, file, "shutdown",
+                                              BOOTSTRAP_REASONS.APP_SHUTDOWN);
+            }
           }
           Services.obs.removeObserver(this, "quit-application-granted");
         }
