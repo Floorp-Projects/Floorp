@@ -95,8 +95,8 @@ class RLogRingBuffer {
     }
 
     void SetLogLimit(uint32_t new_limit);
-
-    void Log(std::string&& log);
+    void Log(std::string&& log)
+    void Clear();
 
   private:
     RLogRingBuffer();
