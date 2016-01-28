@@ -725,7 +725,12 @@ struct IMENotification final
     // mStartOffset if just removed.  The vlaue is offset in the new content.
     uint32_t mAddedEndOffset;
 
-    bool mCausedByComposition;
+    // Note that TextChangeDataBase may be the result of merging two or more
+    // changes especially in e10s mode.
+
+    // mCausedOnlyByComposition is true only when *all* merged changes are
+    // caused by composition.
+    bool mCausedOnlyByComposition;
     bool mOccurredDuringComposition;
 
     uint32_t OldLength() const
@@ -797,7 +802,7 @@ struct IMENotification final
       mStartOffset = aStartOffset;
       mRemovedEndOffset = aRemovedEndOffset;
       mAddedEndOffset = aAddedEndOffset;
-      mCausedByComposition = aCausedByComposition;
+      mCausedOnlyByComposition = aCausedByComposition;
       mOccurredDuringComposition = aOccurredDuringComposition;
     }
   };

@@ -134,9 +134,9 @@ public:
       return;
     }
     AppendPrintf("{ mStartOffset=%u, mRemovedEndOffset=%u, mAddedEndOffset=%u, "
-                 "mCausedByComposition=%s }", aData.mStartOffset,
+                 "mCausedOnlyByComposition=%s }", aData.mStartOffset,
                  aData.mRemovedEndOffset, aData.mAddedEndOffset,
-                 ToChar(aData.mCausedByComposition));
+                 ToChar(aData.mCausedOnlyByComposition));
   }
   virtual ~TextChangeDataToString() {}
 };
