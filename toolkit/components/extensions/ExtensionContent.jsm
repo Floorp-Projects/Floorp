@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -107,11 +111,13 @@ var api = context => {
 };
 
 // Represents a content script.
-function Script(options) {
+function Script(options, deferred = PromiseUtils.defer()) {
   this.options = options;
   this.run_at = this.options.run_at;
   this.js = this.options.js || [];
   this.css = this.options.css || [];
+
+  this.deferred = deferred;
 
   this.matches_ = new MatchPattern(this.options.matches);
   this.exclude_matches_ = new MatchPattern(this.options.exclude_matches || null);
@@ -137,16 +143,6 @@ Script.prototype = {
       return false;
     }
 
-    if ("innerWindowID" in this.options) {
-      let innerWindowID = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils)
-                                .currentInnerWindowID;
-
-      if (innerWindowID !== this.options.innerWindowID) {
-        return false;
-      }
-    }
-
     // TODO: match_about_blank.
 
     return true;
@@ -154,6 +150,7 @@ Script.prototype = {
 
   tryInject(extension, window, sandbox, shouldRun) {
     if (!this.matches(window)) {
+      this.deferred.reject();
       return;
     }
 
@@ -172,6 +169,7 @@ Script.prototype = {
       }
     }
 
+    let result;
     let scheduled = this.run_at || "document_idle";
     if (shouldRun(scheduled)) {
       for (let url of this.js) {
@@ -189,13 +187,26 @@ Script.prototype = {
           charset: "UTF-8",
           async: AppConstants.platform == "gonk",
         };
-        runSafeSyncWithoutClone(Services.scriptloader.loadSubScriptWithOptions, url, options);
+        try {
+          result = Services.scriptloader.loadSubScriptWithOptions(url, options);
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
 
       if (this.options.jsCode) {
-        Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        try {
+          result = Cu.evalInSandbox(this.options.jsCode, sandbox, "latest");
+        } catch (e) {
+          Cu.reportError(e);
+          this.deferred.reject(e.message);
+        }
       }
     }
+
+    // TODO: Handle this correctly when we support runAt and allFrames.
+    this.deferred.resolve(result);
   },
 };
 
@@ -404,6 +415,8 @@ var DocumentManager = {
     } else if (topic == "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
+      MessageChannel.abortResponses({ innerWindowID: windowId });
+
       // Close any existent content-script context for the destroyed window.
       if (this.contentScriptWindows.has(windowId)) {
         let extensions = this.contentScriptWindows.get(windowId);
@@ -446,7 +459,7 @@ var DocumentManager = {
     let window = global.content;
     let context = this.getContentScriptContext(extensionId, window);
     if (!context) {
-      return;
+      throw new Error("Unexpected add-on ID");
     }
 
     // TODO: Somehow make sure we have the right permissions for this origin!
@@ -534,6 +547,8 @@ var DocumentManager = {
         this.extensionPageWindows.delete(winId);
       }
     }
+
+    MessageChannel.abortResponses({ extensionId });
 
     this.extensionCount--;
     if (this.extensionCount == 0) {
@@ -645,44 +660,63 @@ ExtensionManager = {
   },
 };
 
+class ExtensionGlobal {
+  constructor(global) {
+    this.global = global;
+
+    MessageChannel.addListener(global, "Extension:Execute", this);
+
+    this.broker = new MessageBroker([global]);
+
+    this.windowId = global.content
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils)
+                          .outerWindowID;
+
+    global.sendAsyncMessage("Extension:TopWindowID", { windowId: this.windowId });
+  }
+
+  uninit() {
+    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", { windowId: this.windowId });
+  }
+
+  get messageFilter() {
+    return {
+      innerWindowID: this.global.content
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils)
+                         .currentInnerWindowID,
+    };
+  }
+
+  receiveMessage({ target, messageName, recipient, data }) {
+    switch (messageName) {
+      case "Extension:Execute":
+        let deferred = PromiseUtils.defer();
+
+        let script = new Script(data.options, deferred);
+        let { extensionId } = recipient;
+        DocumentManager.executeScript(target, extensionId, script);
+
+        return deferred.promise;
+    }
+  }
+}
+
 this.ExtensionContent = {
   globals: new Map(),
 
   init(global) {
-    let broker = new MessageBroker([global]);
-    this.globals.set(global, broker);
-
-    global.addMessageListener("Extension:Execute", this);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:TopWindowID", {windowId});
+    this.globals.set(global, new ExtensionGlobal(global));
   },
 
   uninit(global) {
+    this.globals.get(global).uninit();
     this.globals.delete(global);
-
-    let windowId = global.content
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .outerWindowID;
-    global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId});
   },
 
   getBroker(messageManager) {
-    return this.globals.get(messageManager);
-  },
-
-  receiveMessage({target, name, data}) {
-    switch (name) {
-      case "Extension:Execute":
-        let script = new Script(data.options);
-        let {extensionId} = data;
-        DocumentManager.executeScript(target, extensionId, script);
-        break;
-    }
+    return this.globals.get(messageManager).broker;
   },
 };
 

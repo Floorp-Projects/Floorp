@@ -102,6 +102,11 @@ html, body, #app, #memory-tool {
 #take-snapshot::before {
   background-image: url(images/command-screenshot.png);
 }
+
+#clear-snapshots::before {
+  background-image: url(chrome://devtools/skin/images/clear.svg);
+}
+
 @media (min-resolution: 1.1dppx) {
   #take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
@@ -233,6 +238,7 @@ html, body, #app, #memory-tool {
    * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
    */
   min-width: 0;
+  font-size: 90%;
 }
 
 #heap-view > .heap-view-panel {
@@ -294,7 +300,6 @@ html, body, #app, #memory-tool {
   text-overflow: ellipsis;
   line-height: var(--heap-tree-header-height);
   justify-content: center;
-  font-size: 90%;
   white-space: nowrap;
 }
 
@@ -317,6 +322,7 @@ html, body, #app, #memory-tool {
 
 .tree-node {
   height: var(--heap-tree-row-height);
+  line-height: var(--heap-tree-row-height);
 }
 
 /**
@@ -363,6 +369,12 @@ html, body, #app, #memory-tool {
 .heap-tree-item-bytes,
 .heap-tree-item-total-bytes {
   width: 10%;
+  /*
+   * Provision for up to :
+   * - 12 characters for the number part (10s of GB and spaces every 3 digits)
+   * - 4 chars for the percent part (the maximum length string is "100%")
+   */
+  min-width: 16ch;
 }
 
 .heap-tree-item-name {
@@ -410,7 +422,7 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-percent {
-  width: 2.5em;
+  width: 4ch;
 }
 
 .heap-tree-item.focused .heap-tree-number,
@@ -487,9 +499,9 @@ html, body, #app, #memory-tool {
 }
 
 .no-allocation-stacks {
-    border-color: var(--theme-splitter-color);
-    border-style: solid;
-    border-width: 0px 0px 1px 0px;
-    text-align: center;
-    padding: 5px;
+  border-color: var(--theme-splitter-color);
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+  text-align: center;
+  padding: 5px;
 }

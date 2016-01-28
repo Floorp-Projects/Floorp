@@ -448,14 +448,9 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         let options = {
           js: [],
           css: [],
+        };
 
-          // We need to send the inner window ID to make sure we only
-          // execute the script if the window is currently navigated to
-          // the document that we expect.
-          //
-          // TODO: When we add support for callbacks, non-matching
-          // window IDs and insufficient permissions need to result in a
-          // callback with |lastError| set.
+        let recipient = {
           innerWindowID: tab.linkedBrowser.innerWindowID,
         };
 
@@ -487,17 +482,21 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         if (details.runAt !== null) {
           options.run_at = details.runAt;
         }
-        mm.sendAsyncMessage("Extension:Execute",
-                            {extensionId: extension.id, options});
 
-        // TODO: Call the callback with the result (which is what???).
+        // TODO: Set lastError.
+        context.sendMessage(mm, "Extension:Execute", { options }, recipient)
+          .then(result => {
+            if (callback) {
+              runSafe(context, callback, result);
+            }
+          });
       },
 
       executeScript: function(tabId, details, callback) {
         self.tabs._execute(tabId, details, "js", callback);
       },
 
-      insertCss: function(tabId, details, callback) {
+      insertCSS: function(tabId, details, callback) {
         self.tabs._execute(tabId, details, "css", callback);
       },
 
