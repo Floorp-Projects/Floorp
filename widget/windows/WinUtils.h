@@ -128,6 +128,15 @@ public:
 class WinUtils
 {
 public:
+  /**
+   * Get the system's default logical-to-physical DPI scaling factor,
+   * which is based on the primary display. Note however that unlike
+   * LogToPhysFactor(GetPrimaryMonitor()), this will not change during
+   * a session even if the displays are reconfigured. This scale factor
+   * is used by Windows theme metrics etc, which do not fully support
+   * dynamic resolution changes but are only updated on logout.
+   */
+  static double SystemScaleFactor();
 
   static bool IsPerMonitorDPIAware();
   /**
