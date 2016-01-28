@@ -32,9 +32,8 @@ using namespace mozilla::widget;
 static void
 InvalidateRegion(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion)
 {
-  LayoutDeviceIntRegion::OldRectIterator it(aRegion);
-  while(const LayoutDeviceIntRect* r = it.Next()) {
-    aWidget->Invalidate(*r);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    aWidget->Invalidate(iter.Get());
   }
 }
 
@@ -855,7 +854,7 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
   if (mIMEPreferenceOfParent.WantTextChange() &&
       (mIMEPreferenceOfParent.WantChangesCausedByComposition() ||
-       !aIMENotification.mTextChangeData.mCausedByComposition)) {
+       !aIMENotification.mTextChangeData.mCausedOnlyByComposition)) {
     mTabChild->SendNotifyIMETextChange(mContentCache, aIMENotification);
   } else {
     mTabChild->SendUpdateContentCache(mContentCache);

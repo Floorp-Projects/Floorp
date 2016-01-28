@@ -202,6 +202,28 @@ DecodeSetLocal(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
+DecodeBlock(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t numExprs;
+    if (!f.d().readVarU32(&numExprs))
+        return f.fail("unable to read block's number of expressions");
+
+    if (numExprs) {
+        for (uint32_t i = 0; i < numExprs - 1; i++) {
+            if (!DecodeExpr(f, ExprType::Void))
+                return false;
+        }
+        if (!DecodeExpr(f, expected))
+            return false;
+    } else {
+        if (!CheckType(f, ExprType::Void, expected))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -217,6 +239,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeGetLocal(f, expected);
       case Expr::SetLocal:
         return DecodeSetLocal(f, expected);
+      case Expr::Block:
+        return DecodeBlock(f, expected);
       default:
         break;
     }
@@ -312,7 +336,7 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         if (!d.readVarU32(&sigIndex))
             return Fail(cx, d, "expected declaration signature index");
 
-        if (sigIndex > init->sigs.length())
+        if (sigIndex >= init->sigs.length())
             return Fail(cx, d, "declaration signature index out of range");
 
         init->funcSigs[i] = &init->sigs[sigIndex];
@@ -469,6 +493,9 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
         if (!d.finishSection(sectionStart))
             return Fail(cx, d, "code section byte size mismatch");
     }
+
+    if (funcIndex != mg.numFuncSigs())
+        return Fail(cx, d, "fewer function definitions than declarations");
 
     if (!mg.finishFuncDefs())
         return false;

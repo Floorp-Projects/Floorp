@@ -150,6 +150,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    '!UseCounterList.h',
     'AnonymousContent.h',
     'Attr.h',
     'BarProps.h',

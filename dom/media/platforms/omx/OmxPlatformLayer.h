@@ -9,19 +9,20 @@
 
 #include "OMX_Core.h"
 #include "OMX_Types.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/TaskQueue.h"
+
 #include "OmxPromiseLayer.h"
+
+class nsACString;
 
 namespace mozilla {
 
+class TaskQueue;
 class TrackInfo;
-class VideoData;
 
 /*
  * This class the the abstract layer of the platform OpenMax IL implementation.
  *
- * For some platform like andoird, it exposures its OpenMax IL via IOMX which 
+ * For some platform like andoird, it exposures its OpenMax IL via IOMX which
  * is definitions are different comparing to standard.
  * For other platforms like Raspberry Pi, it will be easy to implement this layer
  * with the standard OpenMax IL api.
@@ -32,6 +33,8 @@ public:
   typedef OmxPromiseLayer::BufferData BufferData;
 
   virtual OMX_ERRORTYPE InitOmxToStateLoaded(const TrackInfo* aInfo) = 0;
+
+  OMX_ERRORTYPE Config();
 
   virtual OMX_ERRORTYPE EmptyThisBuffer(BufferData* aData) = 0;
 
@@ -61,6 +64,21 @@ public:
   virtual nsresult Shutdown() = 0;
 
   virtual ~OmxPlatformLayer() {}
+
+  // Check if the platform implementation supports given MIME type.
+  static bool SupportsMimeType(const nsACString& aMimeType);
+
+  // Hide the details of creating implementation objects for different platforms.
+  static OmxPlatformLayer* Create(OmxDataDecoder* aDataDecoder,
+                                  OmxPromiseLayer* aPromiseLayer,
+                                  TaskQueue* aTaskQueue,
+                                  layers::ImageContainer* aImageContainer);
+
+protected:
+  OmxPlatformLayer() : mInfo(nullptr) {}
+
+  // The pointee is held by |OmxDataDecoder::mTrackInfo| and will outlive this pointer.
+  const TrackInfo* mInfo;
 };
 
 }

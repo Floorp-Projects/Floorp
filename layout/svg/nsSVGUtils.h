@@ -178,7 +178,6 @@ class nsSVGUtils
 {
 public:
   typedef mozilla::dom::Element Element;
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::gfx::AntialiasMode AntialiasMode;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
@@ -186,12 +185,7 @@ public:
 
   static void Init();
 
-  static void DestroyObjectBoundingBoxProperty(void* aPropertyValue) {
-    delete static_cast<gfxRect*>(aPropertyValue);
-  }
-
-  NS_DECLARE_FRAME_PROPERTY(ObjectBoundingBoxProperty,
-                            DestroyObjectBoundingBoxProperty);
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ObjectBoundingBoxProperty, gfxRect)
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame

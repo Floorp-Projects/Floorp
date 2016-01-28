@@ -280,6 +280,9 @@ partial interface Document {
     Element? elementFromPoint (float x, float y);
 
     CaretPosition? caretPositionFromPoint (float x, float y);
+
+    [Pref="dom.document.scrollingElement.enabled"]
+    readonly attribute Element? scrollingElement;
 };
 
 // http://dvcs.w3.org/hg/undomanager/raw-file/tip/undomanager.html

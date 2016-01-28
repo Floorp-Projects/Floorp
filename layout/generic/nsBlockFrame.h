@@ -372,10 +372,10 @@ protected:
   }
 #endif
 
-  NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
   nsLineBox* GetLineCursor() {
     return (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR) ?
-      static_cast<nsLineBox*>(Properties().Get(LineCursorProperty())) : nullptr;
+      Properties().Get(LineCursorProperty()) : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {

@@ -17,7 +17,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    'test/chrome/mochitest.ini',
     'test/iframesandbox/mochitest.ini',
     'test/mochitest.ini',
     'test/navigation/mochitest.ini',
@@ -30,4 +29,22 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
     'test/navigation/browser.ini',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.docshell.test.chrome += [
+    'test/chrome/112564_nocache.html',
+    'test/chrome/112564_nocache.html^headers^',
+    'test/chrome/215405_nocache.html',
+    'test/chrome/215405_nocache.html^headers^',
+    'test/chrome/215405_nostore.html',
+    'test/chrome/215405_nostore.html^headers^',
+    'test/chrome/582176_dummy.html',
+    'test/chrome/582176_xml.xml',
+    'test/chrome/582176_xslt.xsl',
+    'test/chrome/92598_nostore.html',
+    'test/chrome/92598_nostore.html^headers^',
+    'test/chrome/allowContentRetargeting.sjs',
+    'test/chrome/blue.png',
+    'test/chrome/bug89419.sjs',
+    'test/chrome/red.png',
 ]

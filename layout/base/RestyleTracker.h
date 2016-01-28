@@ -128,13 +128,9 @@ public:
         // Take a faster path that doesn't require unioning the overflow areas
         // of our children.
 
-#ifdef DEBUG
-        bool hasInitialOverflowPropertyApplied = false;
-        frame->Properties().Get(nsIFrame::DebugInitialOverflowPropertyApplied(),
-                                 &hasInitialOverflowPropertyApplied);
-        NS_ASSERTION(hasInitialOverflowPropertyApplied,
+        NS_ASSERTION(frame->Properties().Get(
+                       nsIFrame::DebugInitialOverflowPropertyApplied()),
                      "InitialOverflowProperty must be set first.");
-#endif
 
         nsOverflowAreas* overflow = 
           static_cast<nsOverflowAreas*>(frame->Properties().Get(nsIFrame::InitialOverflowProperty()));

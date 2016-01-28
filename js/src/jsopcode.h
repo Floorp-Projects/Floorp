@@ -846,7 +846,8 @@ DumpPCCounts(JSContext* cx, JS::Handle<JSScript*> script, Sprinter* sp);
 
 namespace jit { struct IonScriptCounts; }
 void
-DumpIonScriptCounts(js::Sprinter* sp, jit::IonScriptCounts* ionCounts);
+DumpIonScriptCounts(js::Sprinter* sp, HandleScript script,
+                    jit::IonScriptCounts* ionCounts);
 
 void
 DumpCompartmentPCCounts(JSContext* cx);

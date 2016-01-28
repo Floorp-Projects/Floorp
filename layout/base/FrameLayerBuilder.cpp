@@ -234,7 +234,7 @@ FrameLayerBuilder::DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState
   }
 }
 
-static nsIFrame* sDestroyedFrame = nullptr;
+static const nsIFrame* sDestroyedFrame = nullptr;
 FrameLayerBuilder::DisplayItemData::~DisplayItemData()
 {
   MOZ_COUNT_DTOR(FrameLayerBuilder::DisplayItemData);
@@ -1627,10 +1627,9 @@ AppendToString(nsACString& s, const nsIntRegion& r,
 {
   s += pfx;
 
-  nsIntRegionRectIterator it(r);
   s += "< ";
-  while (const nsIntRect* sr = it.Next()) {
-    AppendToString(s, *sr) += "; ";
+  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
+    AppendToString(s, iter.Get()) += "; ";
   }
   s += ">";
 
@@ -1710,24 +1709,22 @@ GetTranslationForPaintedLayer(PaintedLayer* aLayer)
  */
 
 /* static */ void
-FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
-                                               void* aPropertyValue)
+FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
+                                               nsTArray<DisplayItemData*>* aArray)
 {
   MOZ_RELEASE_ASSERT(!sDestroyedFrame);
   sDestroyedFrame = aFrame;
-  nsTArray<DisplayItemData*> *array =
-    reinterpret_cast<nsTArray<DisplayItemData*>*>(aPropertyValue);
 
   // Hold a reference to all the items so that they don't get
   // deleted from under us.
   nsTArray<RefPtr<DisplayItemData> > arrayCopy;
-  for (uint32_t i = 0; i < array->Length(); ++i) {
-    arrayCopy.AppendElement(array->ElementAt(i));
+  for (DisplayItemData* data : *aArray) {
+    arrayCopy.AppendElement(data);
   }
 
 #ifdef DEBUG_DISPLAY_ITEM_DATA
-  if (array->Length()) {
-    LayerManagerData *rootData = array->ElementAt(0)->mParent;
+  if (aArray->Length()) {
+    LayerManagerData *rootData = aArray->ElementAt(0)->mParent;
     while (rootData->mParent) {
       rootData = rootData->mParent;
     }
@@ -1736,9 +1733,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
   }
 #endif
 
-  for (uint32_t i = 0; i < array->Length(); ++i) {
-    DisplayItemData* data = array->ElementAt(i);
-
+  for (DisplayItemData* data : *aArray) {
     PaintedLayer* t = data->mLayer->AsPaintedLayer();
     if (t) {
       PaintedDisplayItemLayerUserData* paintedData =
@@ -1756,7 +1751,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
   }
 
   arrayCopy.Clear();
-  delete array;
+  delete aArray;
   sDestroyedFrame = nullptr;
 }
 
@@ -3449,15 +3444,14 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   }
 
   if (!aClippedOpaqueRegion.IsEmpty()) {
-    nsIntRegionRectIterator iter(aClippedOpaqueRegion);
-    for (const nsIntRect* r = iter.Next(); r; r = iter.Next()) {
+    for (auto iter = aClippedOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
       // a canvas background), so we need to make sure that the first rect
       // we see doesn't get discarded.
       nsIntRegion tmp;
-      tmp.Or(mOpaqueRegion, *r);
+      tmp.Or(mOpaqueRegion, iter.Get());
        // Opaque display items in chrome documents whose window is partially
        // transparent are always added to the opaque region. This helps ensure
        // that we get as much subpixel-AA as possible in the chrome.
@@ -3653,9 +3647,9 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
   nsIntRegion opaquePixels;
   if (!opaque.IsEmpty()) {
     nsRegion opaqueClipped;
-    nsRegionRectIterator iter(opaque);
-    for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      opaqueClipped.Or(opaqueClipped, aClip.ApproximateIntersectInward(*r));
+    for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
+      opaqueClipped.Or(opaqueClipped,
+                       aClip.ApproximateIntersectInward(iter.Get()));
     }
     if (aAnimatedGeometryRoot == mContainerAnimatedGeometryRoot &&
         opaqueClipped.Contains(mContainerBounds)) {
@@ -5802,11 +5796,11 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
   nsRenderingContext rc(aContext);
 
   if (shouldDrawRectsSeparately) {
-    nsIntRegionRectIterator it(aRegionToDraw);
-    while (const nsIntRect* iterRect = it.Next()) {
+    for (auto iter = aRegionToDraw.RectIter(); !iter.Done(); iter.Next()) {
+      const nsIntRect& iterRect = iter.Get();
       gfxContextAutoSaveRestore save(aContext);
       aContext->NewPath();
-      aContext->Rectangle(ThebesRect(*iterRect));
+      aContext->Rectangle(ThebesRect(iterRect));
       aContext->Clip();
 
       DrawForcedBackgroundColor(aDrawTarget, aLayer,
@@ -5819,7 +5813,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
         aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                   Scale(userData->mXScale, userData->mYScale));
 
-      layerBuilder->PaintItems(entry->mItems, *iterRect, aContext, &rc,
+      layerBuilder->PaintItems(entry->mItems, iterRect, aContext, &rc,
                                builder, presContext,
                                offset, userData->mXScale, userData->mYScale,
                                entry->mCommonClipCount);

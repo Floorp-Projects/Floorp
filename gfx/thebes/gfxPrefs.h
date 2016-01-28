@@ -397,10 +397,6 @@ private:
   // This affects whether events will be routed through APZ or not.
   DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.enabled",
                                                                MouseWheelHasRootScrollDeltaOverride, bool, false);
-  DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
-                                                               MouseWheelRootHScrollDeltaFactor, int32_t, 100);
-  DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.vertical.factor",
-                                                               MouseWheelRootVScrollDeltaFactor, int32_t, 100);
   DECL_GFX_PREF(Live, "mousewheel.transaction.ignoremovedelay",MouseWheelIgnoreMoveDelayMs, int32_t, (int32_t)100);
   DECL_GFX_PREF(Live, "mousewheel.transaction.timeout",        MouseWheelTransactionTimeoutMs, int32_t, (int32_t)1500);
 
@@ -444,6 +440,9 @@ private:
   DECL_GFX_PREF(Live, "webgl.allow-immediate-queries",         WebGLImmediateQueries, bool, false);
 
   DECL_GFX_PREF(Live, "webgl.webgl2-compat-mode",              WebGL2CompatMode, bool, false);
+
+  DECL_GFX_PREF(Once, "media.hardware-video-decoding.force-enabled",
+                                                               HardwareVideoDecodingForceEnabled, bool, false);
 
   // WARNING:
   // Please make sure that you've added your new preference to the list above in alphabetical order.

@@ -9,11 +9,16 @@
 
 #pragma GCC visibility push(default)
 
-#include "OmxPlatformLayer.h"
-#include "OMX_Component.h"
+#include <bitset>
+
 #include <utils/RefBase.h>
 #include <media/stagefright/OMXClient.h>
-#include "mozilla/layers/TextureClientRecycleAllocator.h"
+
+#include "OMX_Component.h"
+
+#include "OmxPlatformLayer.h"
+
+class nsACString;
 
 namespace android {
 class IMemory;
@@ -105,6 +110,18 @@ public:
 
 class GonkOmxPlatformLayer : public OmxPlatformLayer {
 public:
+  enum {
+    kRequiresAllocateBufferOnInputPorts = 0,
+    kRequiresAllocateBufferOnOutputPorts,
+    QUIRKS,
+  };
+  typedef std::bitset<QUIRKS> Quirks;
+
+  struct ComponentInfo {
+    const char* mName;
+    Quirks mQuirks;
+  };
+
   GonkOmxPlatformLayer(OmxDataDecoder* aDataDecoder,
                        OmxPromiseLayer* aPromiseLayer,
                        TaskQueue* aTaskQueue,
@@ -136,10 +153,8 @@ public:
 
   nsresult Shutdown() override;
 
-  // TODO:
-  // There is another InitOmxParameter in OmxDataDecoder. They need to combine
-  // to one function.
-  template<class T> void InitOmxParameter(T* aParam);
+  static bool FindComponents(const nsACString& aMimeType,
+                             nsTArray<ComponentInfo>* aComponents = nullptr);
 
 protected:
   friend GonkBufferData;
@@ -155,7 +170,7 @@ protected:
 
   nsresult EnableOmxGraphicBufferPort(OMX_PARAM_PORTDEFINITIONTYPE& aDef);
 
-  bool LoadComponent(const char* aName);
+  bool LoadComponent(const ComponentInfo& aComponent);
 
   friend class GonkOmxObserver;
 
@@ -174,11 +189,7 @@ protected:
 
   android::OMXClient mOmxClient;
 
-  uint32_t mQuirks;
-
-  bool mUsingHardwareCodec;
-
-  const TrackInfo* mInfo;
+  Quirks mQuirks;
 };
 
 }

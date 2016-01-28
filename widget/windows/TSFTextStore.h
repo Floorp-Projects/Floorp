@@ -852,6 +852,12 @@ protected:
   // For preventing it to be called, we should put off notifying TSF of
   // anything until layout information becomes available.
   bool                         mDeferNotifyingTSF;
+  // While the document is locked, committing composition always fails since
+  // TSF needs another document lock for modifying the composition, selection
+  // and etc.  So, committing composition should be performed after the
+  // document is unlocked.
+  bool                         mDeferCommittingComposition;
+  bool                         mDeferCancellingComposition;
   // Immediately after a call of Destroy(), mDestroyed becomes true.  If this
   // is true, the instance shouldn't grant any requests from the TIP anymore.
   bool                         mDestroyed;

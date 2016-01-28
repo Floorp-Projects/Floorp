@@ -166,6 +166,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool init(UniqueModuleGeneratorData shared, ModuleKind = ModuleKind::Wasm);
 
+    bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
     const Uint32Vector& funcEntryOffsets() const { return funcEntryOffsets_; }

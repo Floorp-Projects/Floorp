@@ -317,7 +317,7 @@ struct MOZ_STACK_CLASS Promise::PromiseCapability
   // purposes it's simpler to store them as JS::Value.
 
   // [[Promise]].
-  JS::Rooted<JS::Value> mPromise;
+  JS::Rooted<JSObject*> mPromise;
   // [[Resolve]].  Value in the context compartment.
   JS::Rooted<JS::Value> mResolve;
   // [[Reject]].  Value in the context compartment.
@@ -340,7 +340,7 @@ Promise::PromiseCapability::RejectWithException(JSContext* aCx,
   // or at least the parts of it that happen if we have an abrupt completion.
 
   MOZ_ASSERT(!aRv.Failed());
-  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+  MOZ_ASSERT(mNativePromise || mPromise,
              "NewPromiseCapability didn't succeed");
 
   JS::Rooted<JS::Value> exn(aCx);
@@ -370,14 +370,14 @@ Promise::PromiseCapability::RejectWithException(JSContext* aCx,
 JS::Value
 Promise::PromiseCapability::PromiseValue() const
 {
-  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+  MOZ_ASSERT(mNativePromise || mPromise,
              "NewPromiseCapability didn't succeed");
 
   if (mNativePromise) {
     return JS::ObjectValue(*mNativePromise->GetWrapper());
   }
 
-  return mPromise;
+  return JS::ObjectValue(*mPromise);
 }
 
 // Promise
@@ -540,6 +540,12 @@ Promise::MaybeReject(JSContext* aCx,
 void
 Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
+}
+
+void
+Promise::MaybeRejectWithNull()
+{
+  MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
 }
 
 bool
@@ -959,7 +965,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   aCapability.mReject = v;
 
   // Step 10.
-  aCapability.mPromise.setObject(*promiseObj);
+  aCapability.mPromise = promiseObj;
 
   // Step 11 doesn't need anything, since the PromiseCapability was passed in.
 }
@@ -1274,11 +1280,11 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
     RefPtr<AnyCallback> rejectFunc =
       new AnyCallback(aCx, rejectObj, GetIncumbentGlobal());
 
-    if (!capability.mPromise.isObject()) {
+    if (!capability.mPromise) {
       aRv.ThrowTypeError<MSG_ILLEGAL_PROMISE_CONSTRUCTOR>();
       return;
     }
-    JS::Rooted<JSObject*> newPromiseObj(aCx, &capability.mPromise.toObject());
+    JS::Rooted<JSObject*> newPromiseObj(aCx, capability.mPromise);
     // We want to store the reflector itself.
     newPromiseObj = js::CheckedUnwrap(newPromiseObj);
     if (!newPromiseObj) {

@@ -414,8 +414,8 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     if (len === 0)
         return -1;
 
-    // Steps 7-8.
-    var n = ToInteger(fromIndex);
+    // Steps 7-8.  Add zero to convert -0 to +0, per ES6 5.2.
+    var n = ToInteger(fromIndex) + 0;
 
     // Step 9.
     if (n >= len)
@@ -531,8 +531,8 @@ function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     if (len === 0)
         return -1;
 
-    // Steps 7-8.
-    var n = fromIndex === undefined ? len - 1 : ToInteger(fromIndex);
+    // Steps 7-8.  Add zero to convert -0 to +0, per ES6 5.2.
+    var n = fromIndex === undefined ? len - 1 : ToInteger(fromIndex) + 0;
 
     // Steps 9-10.
     var k = n >= 0 ? std_Math_min(n, len - 1) : len + n;

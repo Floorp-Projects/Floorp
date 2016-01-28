@@ -206,8 +206,6 @@ enum class Expr : uint16_t
     InterruptCheckHead,
     InterruptCheckLoop,
 
-    DebugCheckPoint,
-
     I32Min,
     I32Max,
 

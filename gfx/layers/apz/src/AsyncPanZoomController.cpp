@@ -31,6 +31,7 @@
 #include "mozilla/BasicEvents.h"        // for Modifiers, MODIFIER_*
 #include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
 #include "mozilla/EventForwards.h"      // for nsEventStatus_*
+#include "mozilla/MouseEvents.h"        // for WidgetWheelEvent
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
@@ -1639,17 +1640,10 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
   if (isRootContent &&
       gfxPrefs::MouseWheelHasRootScrollDeltaOverride() &&
       !aEvent.IsCustomizedByUserPrefs() &&
-      aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE)
-  {
-    // Only apply delta multipliers if we're increasing the delta.
-    double hfactor = double(gfxPrefs::MouseWheelRootHScrollDeltaFactor()) / 100;
-    double vfactor = double(gfxPrefs::MouseWheelRootVScrollDeltaFactor()) / 100;
-    if (vfactor > 1.0) {
-      delta.x *= hfactor;
-    }
-    if (hfactor > 1.0) {
-      delta.y *= vfactor;
-    }
+      aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
+      aEvent.mAllowToOverrideSystemScrollSpeed) {
+    delta.x = WidgetWheelEvent::ComputeOverriddenDelta(delta.x, false);
+    delta.y = WidgetWheelEvent::ComputeOverriddenDelta(delta.y, true);
   }
 
   // If this is a line scroll, and this event was part of a scroll series, then
@@ -2385,15 +2379,22 @@ void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   // scroll to begin with.
   bool xCanScroll = mX.CanScroll();
   bool yCanScroll = mY.CanScroll();
-
   bool xConsumed = FuzzyEqualsAdditive(aOverscroll.x, 0.0f, COORDINATE_EPSILON);
+  bool yConsumed = FuzzyEqualsAdditive(aOverscroll.y, 0.0f, COORDINATE_EPSILON);
+
+#if defined(MOZ_ANDROID_APZ)
+  RefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller && ((xCanScroll && !xConsumed) || (yCanScroll && !yConsumed))) {
+    controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y);
+    aOverscroll.x = aOverscroll.y = 0.0f;
+  }
+#else
   if (xCanScroll && !xConsumed) {
     mX.OverscrollBy(aOverscroll.x);
     aOverscroll.x = 0;
     xConsumed = true;
   }
 
-  bool yConsumed = FuzzyEqualsAdditive(aOverscroll.y, 0.0f, COORDINATE_EPSILON);
   if (yCanScroll && !yConsumed) {
     mY.OverscrollBy(aOverscroll.y);
     aOverscroll.y = 0;
@@ -2403,6 +2404,7 @@ void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   if ((xCanScroll && xConsumed) || (yCanScroll && yConsumed)) {
     ScheduleComposite();
   }
+#endif
 }
 
 RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHandoffChain() {
@@ -2501,7 +2503,14 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelo
                                    aScrolledApzc};
     treeManagerLocal->DispatchFling(this, handoffState);
     if (!IsZero(handoffState.mVelocity) && IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
+#if defined(MOZ_ANDROID_APZ)
+      RefPtr<GeckoContentController> controller = GetGeckoContentController();
+      if (controller) {
+        controller->UpdateOverscrollVelocity(handoffState.mVelocity.x, handoffState.mVelocity.y);
+      }
+#else
       StartOverscrollAnimation(handoffState.mVelocity);
+#endif
     }
   }
 }

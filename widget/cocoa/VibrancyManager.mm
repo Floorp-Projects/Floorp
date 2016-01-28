@@ -28,12 +28,13 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
   vr.effectViews.SwapElements(viewsToRecycle);
   // vr.effectViews is now empty.
 
-  LayoutDeviceIntRegion::OldRectIterator iter(aRegion);
-  const LayoutDeviceIntRect* iterRect = nullptr;
-  for (size_t i = 0; (iterRect = iter.Next()) || i < viewsToRecycle.Length(); ++i) {
-    if (iterRect) {
+  size_t i = 0;
+  for (auto iter = aRegion.RectIter();
+       !iter.Done() || i < viewsToRecycle.Length();
+       i++) {
+    if (!iter.Done()) {
       NSView* view = nil;
-      NSRect rect = mCoordinateConverter.DevPixelsToCocoaPoints(*iterRect);
+      NSRect rect = mCoordinateConverter.DevPixelsToCocoaPoints(iter.Get());
       if (i < viewsToRecycle.Length()) {
         view = viewsToRecycle[i];
         [view setFrame:rect];
@@ -47,6 +48,7 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
         [view release];
       }
       vr.effectViews.AppendElement(view);
+      iter.Next();
     } else {
       // Our new region is made of less rects than the old region, so we can
       // remove this view. We only have a weak reference to it, so removing it
@@ -71,9 +73,8 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
 {
   [[NSColor clearColor] set];
 
-  LayoutDeviceIntRegion::OldRectIterator iter(aVibrantRegion.region);
-  while (const LayoutDeviceIntRect* rect = iter.Next()) {
-    NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(*rect));
+  for (auto iter = aVibrantRegion.region.RectIter(); !iter.Done(); iter.Next()) {
+    NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(iter.Get()));
   }
 }
 

@@ -16,6 +16,7 @@
 #include "mozilla/Services.h"
 #include "prprf.h"
 
+#include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "gfxEnv.h"
@@ -518,6 +519,44 @@ gfxPlatform::Init()
 
     auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
     fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
+
+    // Drop a note in the crash report if we end up forcing an option that could
+    // destabilize things.  New items should be appended at the end (of an existing
+    // or in a new section), so that we don't have to know the version to interpret
+    // these cryptic strings.
+    {
+      nsAutoCString forcedPrefs;
+      // D2D prefs
+      forcedPrefs.AppendPrintf("FP(D%d%d%d",
+                               gfxPrefs::Direct2DDisabled(),
+                               gfxPrefs::Direct2DForceEnabled(),
+                               gfxPrefs::DirectWriteFontRenderingForceEnabled());
+      // Layers prefs
+      forcedPrefs.AppendPrintf("-L%d%d%d%d%d%d",
+                               gfxPrefs::LayersAMDSwitchableGfxEnabled(),
+                               gfxPrefs::LayersAccelerationDisabled(),
+                               gfxPrefs::LayersAccelerationForceEnabled(),
+                               gfxPrefs::LayersD3D11DisableWARP(),
+                               gfxPrefs::LayersD3D11ForceWARP(),
+                               gfxPrefs::LayersOffMainThreadCompositionForceEnabled());
+      // WebGL prefs
+      forcedPrefs.AppendPrintf("-W%d%d%d%d%d%d%d%d",
+                               gfxPrefs::WebGLANGLEForceD3D11(),
+                               gfxPrefs::WebGLANGLEForceWARP(),
+                               gfxPrefs::WebGLDisabled(),
+                               gfxPrefs::WebGLDisableANGLE(),
+                               gfxPrefs::WebGLDXGLEnabled(),
+                               gfxPrefs::WebGLForceEnabled(),
+                               gfxPrefs::WebGLForceLayersReadback(),
+                               gfxPrefs::WebGLForceMSAA());
+      // Prefs that don't fit into any of the other sections
+      forcedPrefs.AppendPrintf("-T%d%d%d%d) ",
+                               gfxPrefs::AndroidRGB16Force(),
+                               gfxPrefs::CanvasAzureAccelerated(),
+                               gfxPrefs::DisableGralloc(),
+                               gfxPrefs::ForceShmemTiles());
+      ScopedGfxFeatureReporter::AppNote(forcedPrefs);
+    }
 
     mozilla::gfx::Config cfg;
     cfg.mLogForwarder = fwd;
@@ -1965,8 +2004,8 @@ InitLayersAccelerationPrefs()
 #endif
         NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                                &status))) {
-      if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
-        sLayersSupportsHardwareVideoDecoding = true;
+        if (status == nsIGfxInfo::FEATURE_STATUS_OK || gfxPrefs::HardwareVideoDecodingForceEnabled()) {
+           sLayersSupportsHardwareVideoDecoding = true;
       }
     }
 

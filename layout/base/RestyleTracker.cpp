@@ -56,112 +56,12 @@ RestyleTracker::Document() const {
 
 #define RESTYLE_ARRAY_STACKSIZE 128
 
-struct LaterSiblingCollector {
-  RestyleTracker* tracker;
-  nsTArray< RefPtr<dom::Element> >* elements;
-};
-
-static PLDHashOperator
-CollectLaterSiblings(nsISupports* aElement,
-                     nsAutoPtr<RestyleTracker::RestyleData>& aData,
-                     void* aSiblingCollector)
-{
-  dom::Element* element =
-    static_cast<dom::Element*>(aElement);
-  LaterSiblingCollector* collector =
-    static_cast<LaterSiblingCollector*>(aSiblingCollector);
-  // Only collect the entries that actually need restyling by us (and
-  // haven't, for example, already been restyled).
-  // It's important to not mess with the flags on entries not in our
-  // document.
-  if (element->GetCrossShadowCurrentDoc() == collector->tracker->Document() &&
-      element->HasFlag(collector->tracker->RestyleBit()) &&
-      (aData->mRestyleHint & eRestyle_LaterSiblings)) {
-    collector->elements->AppendElement(element);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
   UniquePtr<ProfilerBacktrace> mBacktrace;
 #endif
 };
-
-struct RestyleCollector {
-  RestyleTracker* tracker;
-  RestyleEnumerateData** restyleArrayPtr;
-#ifdef RESTYLE_LOGGING
-  uint32_t count;
-#endif
-};
-
-static PLDHashOperator
-CollectRestyles(nsISupports* aElement,
-                nsAutoPtr<RestyleTracker::RestyleData>& aData,
-                void* aRestyleCollector)
-{
-  dom::Element* element =
-    static_cast<dom::Element*>(aElement);
-  RestyleCollector* collector =
-    static_cast<RestyleCollector*>(aRestyleCollector);
-  // Only collect the entries that actually need restyling by us (and
-  // haven't, for example, already been restyled).
-  // It's important to not mess with the flags on entries not in our
-  // document.
-  if (element->GetCrossShadowCurrentDoc() != collector->tracker->Document() ||
-      !element->HasFlag(collector->tracker->RestyleBit())) {
-    LOG_RESTYLE_IF(collector->tracker, true,
-                   "skipping pending restyle %s, already restyled or no longer "
-                   "in the document", FrameTagToString(element).get());
-    return PL_DHASH_NEXT;
-  }
-
-  NS_ASSERTION(!element->HasFlag(collector->tracker->RootBit()) ||
-               // Maybe we're just not reachable via the frame tree?
-               (element->GetFlattenedTreeParent() &&
-                (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
-                 element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
-                 element->GetCrossShadowCurrentDoc()->GetShell()->FrameManager()
-                   ->GetDisplayContentsStyleFor(element))) ||
-               // Or not reachable due to an async reinsert we have
-               // pending?  If so, we'll have a reframe hint around.
-               // That incidentally makes it safe that we still have
-               // the bit, since any descendants that didn't get added
-               // to the roots list because we had the bits will be
-               // completely restyled in a moment.
-               (aData->mChangeHint & nsChangeHint_ReconstructFrame),
-               "Why did this not get handled while processing mRestyleRoots?");
-
-  // Unset the restyle bits now, so if they get readded later as we
-  // process we won't clobber that adding of the bit.
-  element->UnsetFlags(collector->tracker->RestyleBit() |
-                      collector->tracker->RootBit() |
-                      collector->tracker->ConditionalDescendantsBit());
-
-  RestyleEnumerateData** restyleArrayPtr = collector->restyleArrayPtr;
-  RestyleEnumerateData* currentRestyle = *restyleArrayPtr;
-  currentRestyle->mElement = element;
-  currentRestyle->mRestyleHint = aData->mRestyleHint;
-  currentRestyle->mChangeHint = aData->mChangeHint;
-  // We can move aData since we'll be clearing mPendingRestyles after
-  // we finish enumerating it.
-  currentRestyle->mRestyleHintData = Move(aData->mRestyleHintData);
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
-  currentRestyle->mBacktrace = Move(aData->mBacktrace);
-#endif
-
-#ifdef RESTYLE_LOGGING
-  collector->count++;
-#endif
-
-  // Increment to the next slot in the array
-  *restyleArrayPtr = currentRestyle + 1;
-
-  return PL_DHASH_NEXT;
-}
 
 inline void
 RestyleTracker::ProcessOneRestyle(Element* aElement,
@@ -266,8 +166,18 @@ RestyleTracker::DoProcessRestyles()
       if (mHaveLaterSiblingRestyles) {
         // Convert them to individual restyles on all the later siblings
         nsAutoTArray<RefPtr<Element>, RESTYLE_ARRAY_STACKSIZE> laterSiblingArr;
-        LaterSiblingCollector siblingCollector = { this, &laterSiblingArr };
-        mPendingRestyles.Enumerate(CollectLaterSiblings, &siblingCollector);
+        for (auto iter = mPendingRestyles.Iter(); !iter.Done(); iter.Next()) {
+          auto element = static_cast<dom::Element*>(iter.Key());
+          // Only collect the entries that actually need restyling by us (and
+          // haven't, for example, already been restyled).
+          // It's important to not mess with the flags on entries not in our
+          // document.
+          if (element->GetCrossShadowCurrentDoc() == Document() &&
+              element->HasFlag(RestyleBit()) &&
+              (iter.Data()->mRestyleHint & eRestyle_LaterSiblings)) {
+            laterSiblingArr.AppendElement(element);
+          }
+        }
         for (uint32_t i = 0; i < laterSiblingArr.Length(); ++i) {
           Element* element = laterSiblingArr[i];
           for (nsIContent* sibling = element->GetNextSibling();
@@ -374,9 +284,68 @@ RestyleTracker::DoProcessRestyles()
       RestyleEnumerateData* restylesToProcess =
         restyleArr.AppendElements(mPendingRestyles.Count());
       if (restylesToProcess) {
-        RestyleEnumerateData* lastRestyle = restylesToProcess;
-        RestyleCollector collector = { this, &lastRestyle };
-        mPendingRestyles.Enumerate(CollectRestyles, &collector);
+        RestyleEnumerateData* restyle = restylesToProcess;
+#ifdef RESTYLE_LOGGING
+        uint32_t count = 0;
+#endif
+        for (auto iter = mPendingRestyles.Iter(); !iter.Done(); iter.Next()) {
+          auto element = static_cast<dom::Element*>(iter.Key());
+          RestyleTracker::RestyleData* data = iter.Data();
+
+          // Only collect the entries that actually need restyling by us (and
+          // haven't, for example, already been restyled).
+          // It's important to not mess with the flags on entries not in our
+          // document.
+          if (element->GetCrossShadowCurrentDoc() != Document() ||
+              !element->HasFlag(RestyleBit())) {
+            LOG_RESTYLE("skipping pending restyle %s, already restyled or no "
+                        "longer in the document",
+                        FrameTagToString(element).get());
+            continue;
+          }
+
+          NS_ASSERTION(
+            !element->HasFlag(RootBit()) ||
+            // Maybe we're just not reachable via the frame tree?
+            (element->GetFlattenedTreeParent() &&
+             (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
+              element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
+              element->GetCrossShadowCurrentDoc()->GetShell()->FrameManager()
+                ->GetDisplayContentsStyleFor(element))) ||
+            // Or not reachable due to an async reinsert we have
+            // pending?  If so, we'll have a reframe hint around.
+            // That incidentally makes it safe that we still have
+            // the bit, since any descendants that didn't get added
+            // to the roots list because we had the bits will be
+            // completely restyled in a moment.
+            (data->mChangeHint & nsChangeHint_ReconstructFrame),
+            "Why did this not get handled while processing mRestyleRoots?");
+
+          // Unset the restyle bits now, so if they get readded later as we
+          // process we won't clobber that adding of the bit.
+          element->UnsetFlags(RestyleBit() |
+                              RootBit() |
+                              ConditionalDescendantsBit());
+
+          restyle->mElement = element;
+          restyle->mRestyleHint = data->mRestyleHint;
+          restyle->mChangeHint = data->mChangeHint;
+          // We can move data since we'll be clearing mPendingRestyles after
+          // we finish enumerating it.
+          restyle->mRestyleHintData = Move(data->mRestyleHintData);
+#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
+          restyle->mBacktrace = Move(data->mBacktrace);
+#endif
+
+#ifdef RESTYLE_LOGGING
+          count++;
+#endif
+
+          // Increment to the next slot in the array
+          restyle++;
+        }
+
+        RestyleEnumerateData* lastRestyle = restyle;
 
         // Clear the hashtable now that we don't need it anymore
         mPendingRestyles.Clear();
@@ -389,7 +358,7 @@ RestyleTracker::DoProcessRestyles()
              ++currentRestyle) {
           LOG_RESTYLE("processing pending restyle %s at index %d/%d",
                       FrameTagToString(currentRestyle->mElement).get(),
-                      index++, collector.count);
+                      index++, count);
           LOG_RESTYLE_INDENT();
 
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)

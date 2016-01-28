@@ -278,7 +278,8 @@ struct JSStructuredCloneWriter {
         : out(cx), objs(out.context()),
           counts(out.context()), entries(out.context()),
           memory(out.context(), CloneMemory(out.context())), callbacks(cb),
-          closure(cbClosure), transferable(out.context(), tVal), transferableObjects(out.context())
+          closure(cbClosure), transferable(out.context(), tVal),
+          transferableObjects(out.context(), GCHashSet<JSObject*>(cx))
     {}
 
     ~JSStructuredCloneWriter();
@@ -349,9 +350,9 @@ struct JSStructuredCloneWriter {
     // Any value passed to JS_WriteStructuredClone.
     void* closure;
 
-    // List of transferable objects
+    // Set of transferable objects
     RootedValue transferable;
-    AutoObjectVector transferableObjects;
+    Rooted<GCHashSet<JSObject*>> transferableObjects;
 
     friend bool JS_WriteString(JSStructuredCloneWriter* w, HandleString str);
     friend bool JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v);
@@ -407,10 +408,11 @@ DiscardTransferables(uint64_t* buffer, size_t nbytes,
                      const JSStructuredCloneCallbacks* cb, void* cbClosure)
 {
     MOZ_ASSERT(nbytes % sizeof(uint64_t) == 0);
-    if (nbytes < sizeof(uint64_t))
+    uint64_t* end = buffer + nbytes / sizeof(uint64_t);
+    uint64_t* point = buffer;
+    if (point == end)
         return; // Empty buffer
 
-    uint64_t* point = buffer;
     uint32_t tag, data;
     SCInput::getPair(point++, &tag, &data);
     if (tag != SCTAG_TRANSFER_MAP_HEADER)
@@ -422,14 +424,24 @@ DiscardTransferables(uint64_t* buffer, size_t nbytes,
     // freeTransfer should not GC
     JS::AutoSuppressGCAnalysis nogc;
 
+    if (point == end)
+        return;
+
     uint64_t numTransferables = LittleEndian::readUint64(point++);
     while (numTransferables--) {
+        if (point == end)
+            return;
+
         uint32_t ownership;
         SCInput::getPair(point++, &tag, &ownership);
         MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+        if (point == end)
+            return;
 
         void* content;
         SCInput::getPtr(point++, &content);
+        if (point == end)
+            return;
 
         uint64_t extraData = LittleEndian::readUint64(point++);
 
@@ -754,10 +766,14 @@ JSStructuredCloneWriter::~JSStructuredCloneWriter()
 bool
 JSStructuredCloneWriter::parseTransferable()
 {
-    MOZ_ASSERT(transferableObjects.empty(), "parseTransferable called with stale data");
+    // NOTE: The transferables set is tested for non-emptiness at various
+    //       junctures in structured cloning, so this set must be initialized
+    //       by this method in all non-error cases.
+    MOZ_ASSERT(!transferableObjects.initialized(),
+               "parseTransferable called with stale data");
 
     if (transferable.isNull() || transferable.isUndefined())
-        return true;
+        return transferableObjects.init(0);
 
     if (!transferable.isObject())
         return reportErrorTransferable(JS_SCERR_TRANSFERABLE);
@@ -771,26 +787,36 @@ JSStructuredCloneWriter::parseTransferable()
         return reportErrorTransferable(JS_SCERR_TRANSFERABLE);
 
     uint32_t length;
-    if (!JS_GetArrayLength(cx, array, &length)) {
+    if (!JS_GetArrayLength(cx, array, &length))
         return false;
-    }
+
+    // Initialize the set for the provided array's length.
+    if (!transferableObjects.init(length))
+        return false;
+
+    if (length == 0)
+        return true;
 
     RootedValue v(context());
+    RootedObject tObj(context());
 
     for (uint32_t i = 0; i < length; ++i) {
+        if (!CheckForInterrupt(cx))
+            return false;
+
         if (!JS_GetElement(cx, array, i, &v))
             return false;
 
         if (!v.isObject())
             return reportErrorTransferable(JS_SCERR_TRANSFERABLE);
-        RootedObject tObj(context(), &v.toObject());
+        tObj = &v.toObject();
 
         // No duplicates allowed
-        if (std::find(transferableObjects.begin(), transferableObjects.end(), tObj) != transferableObjects.end()) {
+        auto p = transferableObjects.lookupForAdd(tObj);
+        if (p)
             return reportErrorTransferable(JS_SCERR_DUP_TRANSFERABLE);
-        }
 
-        if (!transferableObjects.append(tObj))
+        if (!transferableObjects.add(p, tObj))
             return false;
     }
 
@@ -1216,11 +1242,12 @@ JSStructuredCloneWriter::writeTransferMap()
     if (!out.writePair(SCTAG_TRANSFER_MAP_HEADER, (uint32_t)SCTAG_TM_UNREAD))
         return false;
 
-    if (!out.write(transferableObjects.length()))
+    if (!out.write(transferableObjects.count()))
         return false;
 
-    for (JS::AutoObjectVector::Range tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
-        JSObject* obj = tr.front();
+    RootedObject obj(context());
+    for (auto tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
+        obj = tr.front();
 
         if (!memory.put(obj, memory.count()))
             return false;
@@ -1250,11 +1277,12 @@ JSStructuredCloneWriter::transferOwnership()
     uint64_t* point = out.rawBuffer();
     MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_HEADER);
     point++;
-    MOZ_ASSERT(LittleEndian::readUint64(point) == transferableObjects.length());
+    MOZ_ASSERT(LittleEndian::readUint64(point) == transferableObjects.count());
     point++;
 
-    for (JS::AutoObjectVector::Range tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
-        RootedObject obj(context(), tr.front());
+    RootedObject obj(context());
+    for (auto tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
+        obj = tr.front();
 
         uint32_t tag;
         JS::TransferableOwnership ownership;

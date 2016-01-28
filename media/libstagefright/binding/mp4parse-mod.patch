@@ -1,7 +1,7 @@
-diff --git a/media/libstagefright/binding/MP4Metadata.rs b/media/libstagefright/binding/MP4Metadata.rs
-index 2f1b873..d2ad827 100644
---- a/media/libstagefright/binding/MP4Metadata.rs
-+++ b/media/libstagefright/binding/MP4Metadata.rs
+diff --git a/media/libstagefright/binding/mp4parse/lib.rs b/media/libstagefright/binding/mp4parse/lib.rs
+index af62402..7c8e382 100644
+--- a/media/libstagefright/binding/mp4parse/lib.rs
++++ b/media/libstagefright/binding/mp4parse/lib.rs
 @@ -4,7 +4,7 @@
  // License, v. 2.0. If a copy of the MPL was not distributed with this
  // file, You can obtain one at https://mozilla.org/MPL/2.0/.

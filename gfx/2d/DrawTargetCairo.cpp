@@ -1321,7 +1321,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
 
   cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
 
-  if (mContext && cairo_surface_status(cairo_get_group_target(mContext))) {
+  if (cairo_surface_status(cairo_get_group_target(mContext))) {
     gfxDebug() << "Ending FillGlyphs with a bad surface " << cairo_surface_status(cairo_get_group_target(mContext));
   }
 }

@@ -460,7 +460,6 @@ nsWindow::nsWindow()
 
   mIdleService = nullptr;
 
-  ::InitializeCriticalSection(&mPresentLock);
   mSizeConstraintsScale = GetDefaultScale().scale;
 
   sInstanceCount++;
@@ -497,7 +496,6 @@ nsWindow::~nsWindow()
       sIsOleInitialized = FALSE;
     }
   }
-  ::DeleteCriticalSection(&mPresentLock);
 
   NS_IF_RELEASE(mNativeDragTarget);
 }
@@ -3715,92 +3713,6 @@ nsWindow::OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                         double aOriginalDeltaY,
-                                         double& aOverriddenDeltaX,
-                                         double& aOverriddenDeltaY)
-{
-  // The default vertical and horizontal scrolling speed is 3, this is defined
-  // on the document of SystemParametersInfo in MSDN.
-  const uint32_t kSystemDefaultScrollingSpeed = 3;
-
-  double absOriginDeltaX = Abs(aOriginalDeltaX);
-  double absOriginDeltaY = Abs(aOriginalDeltaY);
-
-  // Compute the simple overridden speed.
-  double absComputedOverriddenDeltaX, absComputedOverriddenDeltaY;
-  nsresult rv =
-    nsBaseWidget::OverrideSystemMouseScrollSpeed(absOriginDeltaX,
-                                                 absOriginDeltaY,
-                                                 absComputedOverriddenDeltaX,
-                                                 absComputedOverriddenDeltaY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aOverriddenDeltaX = aOriginalDeltaX;
-  aOverriddenDeltaY = aOriginalDeltaY;
-
-  if (absComputedOverriddenDeltaX == absOriginDeltaX &&
-      absComputedOverriddenDeltaY == absOriginDeltaY) {
-    // We don't override now.
-    return NS_OK;
-  }
-
-  // Otherwise, we should check whether the user customized the system settings
-  // or not.  If the user did it, we should respect the will.
-  UINT systemSpeed;
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &systemSpeed, 0)) {
-    return NS_ERROR_FAILURE;
-  }
-  // The default vertical scrolling speed is 3, this is defined on the document
-  // of SystemParametersInfo in MSDN.
-  if (systemSpeed != kSystemDefaultScrollingSpeed) {
-    return NS_OK;
-  }
-
-  // Only Vista and later, Windows has the system setting of horizontal
-  // scrolling by the mouse wheel.
-  if (IsVistaOrLater()) {
-    if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
-      return NS_ERROR_FAILURE;
-    }
-    // The default horizontal scrolling speed is 3, this is defined on the
-    // document of SystemParametersInfo in MSDN.
-    if (systemSpeed != kSystemDefaultScrollingSpeed) {
-      return NS_OK;
-    }
-  }
-
-  // Limit the overridden delta value from the system settings.  The mouse
-  // driver might accelerate the scrolling speed already.  If so, we shouldn't
-  // override the scrolling speed for preventing the unexpected high speed
-  // scrolling.
-  double absDeltaLimitX, absDeltaLimitY;
-  rv =
-    nsBaseWidget::OverrideSystemMouseScrollSpeed(kSystemDefaultScrollingSpeed,
-                                                 kSystemDefaultScrollingSpeed,
-                                                 absDeltaLimitX,
-                                                 absDeltaLimitY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If the given delta is larger than our computed limitation value, the delta
-  // was accelerated by the mouse driver.  So, we should do nothing here.
-  if (absDeltaLimitX <= absOriginDeltaX || absDeltaLimitY <= absOriginDeltaY) {
-    return NS_OK;
-  }
-
-  aOverriddenDeltaX = std::min(absComputedOverriddenDeltaX, absDeltaLimitX);
-  aOverriddenDeltaY = std::min(absComputedOverriddenDeltaY, absDeltaLimitY);
-
-  if (aOriginalDeltaX < 0) {
-    aOverriddenDeltaX *= -1;
-  }
-  if (aOriginalDeltaY < 0) {
-    aOverriddenDeltaY *= -1;
-  }
-  return NS_OK;
-}
-
 already_AddRefed<mozilla::gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
@@ -5053,13 +4965,13 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         //
         // To do this we take mPresentLock in nsWindow::PreRender and
         // if that lock is taken we wait before doing WM_SETTEXT
-        EnterCriticalSection(&mPresentLock);
+        mPresentLock.Enter();
         DWORD style = GetWindowLong(mWnd, GWL_STYLE);
         SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
         *aRetValue = CallWindowProcW(GetPrevWindowProc(), mWnd,
                                      msg, wParam, lParam);
         SetWindowLong(mWnd, GWL_STYLE, style);
-        LeaveCriticalSection(&mPresentLock);
+        mPresentLock.Leave();
 
         return true;
       }
@@ -7923,13 +7835,13 @@ bool nsWindow::PreRender(LayerManagerComposite*)
   // Using PreRender is unnecessarily pessimistic because
   // we technically only need to block during the present call
   // not all of compositor rendering
-  EnterCriticalSection(&mPresentLock);
+  mPresentLock.Enter();
   return true;
 }
 
 void nsWindow::PostRender(LayerManagerComposite*)
 {
-  LeaveCriticalSection(&mPresentLock);
+  mPresentLock.Leave();
 }
 
 bool

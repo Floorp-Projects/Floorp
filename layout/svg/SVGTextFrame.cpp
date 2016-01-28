@@ -1348,8 +1348,8 @@ struct TextNodeCorrespondence
   uint32_t mUndisplayedCharacters;
 };
 
-NS_DECLARE_FRAME_PROPERTY(TextNodeCorrespondenceProperty,
-                          DeleteValue<TextNodeCorrespondence>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TextNodeCorrespondenceProperty,
+                                    TextNodeCorrespondence)
 
 /**
  * Returns the number of undisplayed characters before the specified
@@ -5762,7 +5762,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       gfxTextContextPaint* aOuterContextPaint,
                       SVGTextContextPaint::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                      const FramePropertyDescriptor* aProperty)
+                      nsSVGEffects::ObserverPropertyDescriptor aProperty)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =

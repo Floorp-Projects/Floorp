@@ -2361,8 +2361,10 @@ void
 nsComputedDOMStyle::AppendGridLineNames(nsString& aResult,
                                         const nsTArray<nsString>& aLineNames)
 {
-  MOZ_ASSERT(!aLineNames.IsEmpty(), "expected some line names");
   uint32_t numLines = aLineNames.Length();
+  if (numLines == 0) {
+    return;
+  }
   for (uint32_t i = 0;;) {
     nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], aResult);
     if (++i == numLines) {
@@ -2374,9 +2376,10 @@ nsComputedDOMStyle::AppendGridLineNames(nsString& aResult,
 
 void
 nsComputedDOMStyle::AppendGridLineNames(nsDOMCSSValueList* aValueList,
-                                        const nsTArray<nsString>& aLineNames)
+                                        const nsTArray<nsString>& aLineNames,
+                                        bool aSuppressEmptyList)
 {
-  if (aLineNames.IsEmpty()) {
+  if (aLineNames.IsEmpty() && aSuppressEmptyList) {
     return;
   }
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -2446,10 +2449,9 @@ nsComputedDOMStyle::GetGridTrackSize(const nsStyleCoord& aMinValue,
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList,
-                                               const uint32_t aNumLeadingImplicitTracks,
-                                               const uint32_t aNumExplicitTracks,
-                                               const nsTArray<nscoord>* aTrackSizes)
+nsComputedDOMStyle::GetGridTemplateColumnsRows(
+  const nsStyleGridTemplate&   aTrackList,
+  const ComputedGridTrackInfo* aTrackInfo)
 {
   if (aTrackList.mIsSubgrid) {
     // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
@@ -2462,22 +2464,25 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
     subgridKeyword->SetIdent(eCSSKeyword_subgrid);
     valueList->AppendCSSValue(subgridKeyword.forget());
 
-    for (uint32_t i = 0; i < aTrackList.mLineNameLists.Length(); i++) {
+    for (uint32_t i = 0, len = aTrackList.mLineNameLists.Length(); ; ++i) {
       if (MOZ_UNLIKELY(aTrackList.IsRepeatAutoIndex(i))) {
         MOZ_ASSERT(aTrackList.mIsAutoFill, "subgrid can only have 'auto-fill'");
-        MOZ_ASSERT(!aTrackList.mRepeatAutoLineNameListBefore.IsEmpty(),
-                   "The syntax is <line-names>+ so this shouldn't be empty");
         MOZ_ASSERT(aTrackList.mRepeatAutoLineNameListAfter.IsEmpty(),
                    "mRepeatAutoLineNameListAfter isn't used for subgrid");
         RefPtr<nsROCSSPrimitiveValue> start = new nsROCSSPrimitiveValue;
         start->SetString(NS_LITERAL_STRING("repeat(auto-fill,"));
         valueList->AppendCSSValue(start.forget());
-        AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore);
+        AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore,
+                            /*aSuppressEmptyList*/ false);
         RefPtr<nsROCSSPrimitiveValue> end = new nsROCSSPrimitiveValue;
         end->SetString(NS_LITERAL_STRING(")"));
         valueList->AppendCSSValue(end.forget());
       }
-      AppendGridLineNames(valueList, aTrackList.mLineNameLists[i]);
+      if (i == len) {
+        break;
+      }
+      AppendGridLineNames(valueList, aTrackList.mLineNameLists[i],
+                          /*aSuppressEmptyList*/ false);
     }
     return valueList.forget();
   }
@@ -2485,17 +2490,18 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
   uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
   MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
              "Different number of min and max track sizing functions");
-  if (aTrackSizes) {
+  if (aTrackInfo) {
     DebugOnly<bool> isAutoFill =
       aTrackList.HasRepeatAuto() && aTrackList.mIsAutoFill;
     DebugOnly<bool> isAutoFit =
       aTrackList.HasRepeatAuto() && !aTrackList.mIsAutoFill;
-    MOZ_ASSERT(aNumExplicitTracks == numSizes ||
-               (isAutoFill && aNumExplicitTracks >= numSizes) ||
-               (isAutoFit && aNumExplicitTracks + 1 >= numSizes),
+    DebugOnly<uint32_t> numExplicitTracks = aTrackInfo->mNumExplicitTracks;
+    MOZ_ASSERT(numExplicitTracks == numSizes ||
+               (isAutoFill && numExplicitTracks >= numSizes) ||
+               (isAutoFit && numExplicitTracks + 1 >= numSizes),
                "expected all explicit tracks (or possibly one less, if there's "
                "an 'auto-fit' track, since that can collapse away)");
-    numSizes = aTrackSizes->Length();
+    numSizes = aTrackInfo->mSizes.Length();
   }
 
   // An empty <track-list> is represented as "none" in syntax.
@@ -2506,29 +2512,32 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
   }
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  if (aTrackSizes) {
+  if (aTrackInfo) {
     // We've done layout on the grid and have resolved the sizes of its tracks,
     // so we'll return those sizes here.  The grid spec says we MAY use
     // repeat(<positive-integer>, Npx) here for consecutive tracks with the same
     // size, but that doesn't seem worth doing since even for repeat(auto-*)
     // the resolved size might differ for the repeated tracks.
+    const nsTArray<nscoord>& trackSizes = aTrackInfo->mSizes;
+    const uint32_t numExplicitTracks = aTrackInfo->mNumExplicitTracks;
+    const uint32_t numLeadingImplicitTracks = aTrackInfo->mNumLeadingImplicitTracks;
     MOZ_ASSERT(numSizes > 0 &&
-               numSizes >= aNumLeadingImplicitTracks + aNumExplicitTracks);
+               numSizes >= numLeadingImplicitTracks + numExplicitTracks);
 
     // Add any leading implicit tracks.
-    for (uint32_t i = 0; i < aNumLeadingImplicitTracks; ++i) {
+    for (uint32_t i = 0; i < numLeadingImplicitTracks; ++i) {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits((*aTrackSizes)[i]);
+      val->SetAppUnits(trackSizes[i]);
       valueList->AppendCSSValue(val.forget());
     }
 
     // Then add any explicit tracks.
-    if (aNumExplicitTracks) {
+    if (numExplicitTracks) {
       int32_t endOfRepeat = 0;  // first index after any repeat() tracks
       int32_t offsetToLastRepeat = 0;
       if (aTrackList.HasRepeatAuto()) {
         // offsetToLastRepeat is -1 if all repeat(auto-fit) tracks are empty
-        offsetToLastRepeat = aNumExplicitTracks + 1 - aTrackList.mLineNameLists.Length();
+        offsetToLastRepeat = numExplicitTracks + 1 - aTrackList.mLineNameLists.Length();
         endOfRepeat = aTrackList.mRepeatAutoIndex + offsetToLastRepeat + 1;
       }
       for (int32_t i = 0;; i++) {
@@ -2563,20 +2572,20 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
           const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
           AppendGridLineNames(valueList, lineNames);
         }
-        if (uint32_t(i) == aNumExplicitTracks) {
+        if (uint32_t(i) == numExplicitTracks) {
           break;
         }
         RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-        val->SetAppUnits((*aTrackSizes)[i + aNumLeadingImplicitTracks]);
+        val->SetAppUnits(trackSizes[i + numLeadingImplicitTracks]);
         valueList->AppendCSSValue(val.forget());
       }
     }
 
     // Add any trailing implicit tracks.
-    for (uint32_t i = aNumLeadingImplicitTracks + aNumExplicitTracks;
+    for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks;
          i < numSizes; ++i) {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits((*aTrackSizes)[i]);
+      val->SetAppUnits(trackSizes[i]);
       valueList->AppendCSSValue(val.forget());
     }
   } else {
@@ -2650,45 +2659,31 @@ nsComputedDOMStyle::DoGetGridAutoRows()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridTemplateColumns()
 {
-  const nsTArray<nscoord>* trackSizes = nullptr;
-  uint32_t numLeadingImplicitTracks = 0;
-  uint32_t numExplicitTracks = 0;
+  const ComputedGridTrackInfo* info = nullptr;
   if (mInnerFrame) {
     nsIFrame* gridContainerCandidate = mInnerFrame->GetContentInsertionFrame();
     if (gridContainerCandidate &&
         gridContainerCandidate->GetType() == nsGkAtoms::gridContainerFrame) {
-      auto gridContainer = static_cast<nsGridContainerFrame*>(gridContainerCandidate);
-      trackSizes = gridContainer->GetComputedTemplateColumns();
-      numLeadingImplicitTracks = gridContainer->NumImplicitLeadingCols();
-      numExplicitTracks = gridContainer->NumExplicitCols();
+      info = static_cast<nsGridContainerFrame*>(gridContainerCandidate)->
+        GetComputedTemplateColumns();
     }
   }
-  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateColumns,
-                                    numLeadingImplicitTracks,
-                                    numExplicitTracks,
-                                    trackSizes);
+  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateColumns, info);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridTemplateRows()
 {
-  const nsTArray<nscoord>* trackSizes = nullptr;
-  uint32_t numLeadingImplicitTracks = 0;
-  uint32_t numExplicitTracks = 0;
+  const ComputedGridTrackInfo* info = nullptr;
   if (mInnerFrame) {
     nsIFrame* gridContainerCandidate = mInnerFrame->GetContentInsertionFrame();
     if (gridContainerCandidate &&
         gridContainerCandidate->GetType() == nsGkAtoms::gridContainerFrame) {
-      auto gridContainer = static_cast<nsGridContainerFrame*>(gridContainerCandidate);
-      trackSizes = gridContainer->GetComputedTemplateRows();
-      numLeadingImplicitTracks = gridContainer->NumImplicitLeadingRows();
-      numExplicitTracks = gridContainer->NumExplicitRows();
+      info = static_cast<nsGridContainerFrame*>(gridContainerCandidate)->
+        GetComputedTemplateRows();
      }
   }
-  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateRows,
-                                    numLeadingImplicitTracks,
-                                    numExplicitTracks,
-                                    trackSizes);
+  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateRows, info);
 }
 
 already_AddRefed<CSSValue>

@@ -530,6 +530,13 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
     // will now be owned by the RequestSendLocationEvent
     Update(lastPosition.position);
   } else {
+    // if it is not a watch request and timeout is 0,
+    // invoke the errorCallback (if present) with TIMEOUT code
+    if (mOptions && mOptions->mTimeout == 0 && !mIsWatchPositionRequest) {
+      NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+      return NS_OK;
+    }
+
     // Kick off the geo device, if it isn't already running
     nsresult rv = gs->StartDevice(GetPrincipal());
 
@@ -1358,6 +1365,11 @@ Geolocation::HandleEvent(nsIDOMEvent* aEvent)
     }
   } else {
     mService->SetDisconnectTimer();
+
+    // We will unconditionally allow all the requests in the callbacks
+    // because if a request is put into either of these two callbacks,
+    // it means that it has been allowed before.
+    // That's why when we resume them, we unconditionally allow them again.
     for (uint32_t i = 0, length = mWatchingCallbacks.Length(); i < length; ++i) {
       mWatchingCallbacks[i]->Allow(JS::UndefinedHandleValue);
     }

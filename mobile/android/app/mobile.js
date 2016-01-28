@@ -585,6 +585,7 @@ pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.1");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.fling_accel_interval_ms", 750);
+pref("apz.overscroll.enabled", true);
 #endif
 
 pref("layers.progressive-paint", true);

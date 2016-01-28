@@ -388,9 +388,7 @@ HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
       if (res) {
         int32_t val = aResult.GetIntegerValue();
         // reset large colspan values as IE and opera do
-        // quirks mode does not honor the special html 4 value of 0
-        if (val > MAX_COLSPAN || val < 0 ||
-            (0 == val && InNavQuirksMode(OwnerDoc()))) {
+        if (val > MAX_COLSPAN || val <= 0) {
           aResult.SetTo(1, &aValue);
         }
       }

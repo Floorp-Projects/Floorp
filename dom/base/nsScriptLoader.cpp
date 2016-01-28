@@ -294,7 +294,9 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     aRequest->mCORSMode == CORS_NONE
     ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
     : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-  if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
+  if (aRequest->mCORSMode == CORS_ANONYMOUS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  } else if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
     securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
   }
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
@@ -643,21 +645,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // sheets. If the script comes from the network stream, cheat for
       // performance reasons and avoid a trip through the event loop.
       if (aElement->GetParserCreated() == FROM_PARSER_NETWORK) {
-        // Attempt to compile script off-thread first -- it reduces locking of
-        // the main thread for long time.
-        if (NumberOfProcessors() > 1 &&
-            AttemptAsyncScriptCompile(request) == NS_OK) {
-          NS_ASSERTION(request->mProgress == nsScriptLoadRequest::Progress_Compiling,
-              "Request should be off-thread compiling now.");
-          NS_ASSERTION(!mParserBlockingRequest,
-              "There can be only one parser-blocking script at a time");
-          NS_ASSERTION(mXSLTRequests.isEmpty(),
-              "Parser-blocking scripts and XSLT scripts in the same doc!");
-          mParserBlockingRequest = request;
-          return true;
-        }
-        // And process a request if off-thread compilation heuristics think that
-        // non-async way will be faster.
         return ProcessRequest(request) == NS_ERROR_HTMLPARSER_BLOCK;
       }
       // Otherwise, we've got a document.written script, make a trip through

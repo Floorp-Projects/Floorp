@@ -64,7 +64,6 @@ function getPEMString(cert)
  
 function alertPromptService(title, message)
 {
-  var ps = null;
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Components.interfaces.nsIPromptService);
   ps.alert(window, title, message);

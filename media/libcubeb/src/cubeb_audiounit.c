@@ -1317,5 +1317,6 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_set_panning = audiounit_stream_set_panning,
   .stream_get_current_device = audiounit_stream_get_current_device,
   .stream_device_destroy = audiounit_stream_device_destroy,
-  .stream_register_device_changed_callback = audiounit_stream_register_device_changed_callback
+  .stream_register_device_changed_callback = audiounit_stream_register_device_changed_callback,
+  .register_device_collection_changed = NULL
 };

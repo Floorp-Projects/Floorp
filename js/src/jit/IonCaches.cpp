@@ -2253,10 +2253,10 @@ GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         outerScript->setInvalidatedIdempotentCache();
 
         // Do not re-invalidate if the lookup already caused invalidation.
-        if (!outerScript->hasIonScript())
-            return true;
+        if (outerScript->hasIonScript())
+            Invalidate(cx, outerScript);
 
-        return Invalidate(cx, outerScript);
+        return true;
     }
 
     jsbytecode* pc = cache.idempotent() ? nullptr : cache.pc();
