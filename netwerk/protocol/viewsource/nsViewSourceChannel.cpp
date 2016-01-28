@@ -32,6 +32,7 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICacheInfoChannel, mCacheInfoChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIApplicationCacheChannel, mApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFormPOSTActionChannel, mPostChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
@@ -88,6 +89,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mCacheInfoChannel = do_QueryInterface(mChannel);
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
+    mPostChannel = do_QueryInterface(mChannel);
     
     return NS_OK;
 }
