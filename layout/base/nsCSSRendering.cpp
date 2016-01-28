@@ -2903,8 +2903,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   bool paintMask = (aFlags & PAINTBG_MASK_IMAGE);
   const nsStyleImageLayers& layers = paintMask ?
-    aBackgroundSC->StyleSVGReset()->mLayers :
-    aBackgroundSC->StyleBackground()->mLayers;
+    aBackgroundSC->StyleSVGReset()->mMask :
+    aBackgroundSC->StyleBackground()->mImage;
   // If we're drawing a specific layer, we don't want to draw the
   // background color.
   if ((drawBackgroundColor && aLayer >= 0) || paintMask) {

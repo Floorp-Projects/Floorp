@@ -1818,7 +1818,7 @@ nsComputedDOMStyle::DoGetBackgroundAttachment()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mAttachment,
                            &nsStyleImageLayers::mAttachmentCount,
-                           StyleBackground()->mLayers,
+                           StyleBackground()->mImage,
                            nsCSSProps::kImageLayerAttachmentKTable);
 }
 
@@ -1827,7 +1827,7 @@ nsComputedDOMStyle::DoGetBackgroundClip()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mClip,
                            &nsStyleImageLayers::mClipCount,
-                           StyleBackground()->mLayers,
+                           StyleBackground()->mImage,
                            nsCSSProps::kImageLayerOriginKTable);
 }
 
@@ -2284,7 +2284,7 @@ nsComputedDOMStyle::DoGetImageLayerSize(const nsStyleImageLayers& aLayers)
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBackgroundImage()
 {
-  const nsStyleImageLayers& layers = StyleBackground()->mLayers;
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
   return DoGetImageLayerImage(layers);
 }
 
@@ -2293,7 +2293,7 @@ nsComputedDOMStyle::DoGetBackgroundBlendMode()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mBlendMode,
                            &nsStyleImageLayers::mBlendModeCount,
-                           StyleBackground()->mLayers,
+                           StyleBackground()->mImage,
                            nsCSSProps::kBlendModeKTable);
 }
 
@@ -2302,7 +2302,7 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mOrigin,
                            &nsStyleImageLayers::mOriginCount,
-                           StyleBackground()->mLayers,
+                           StyleBackground()->mImage,
                            nsCSSProps::kImageLayerOriginKTable);
 }
 
@@ -2339,21 +2339,21 @@ nsComputedDOMStyle::SetValueToPosition(
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBackgroundPosition()
 {
-  const nsStyleImageLayers& layers = StyleBackground()->mLayers;
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
   return DoGetImageLayerPosition(layers);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBackgroundRepeat()
 {
-  const nsStyleImageLayers& layers = StyleBackground()->mLayers;
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
   return DoGetImageLayerRepeat(layers);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBackgroundSize()
 {
-  const nsStyleImageLayers& layers = StyleBackground()->mLayers;
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
   return DoGetImageLayerSize(layers);
 }
 
@@ -6024,12 +6024,12 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMask()
 {
   const nsStyleSVGReset* svg = StyleSVGReset();
-  const nsStyleImageLayers::Layer& firstLayer = svg->mLayers.mLayers[0];
+  const nsStyleImageLayers::Layer& firstLayer = svg->mMask.mLayers[0];
 
   // Mask is now a shorthand, but it used to be a longhand, so that we
   // need to support computed style for the cases where it used  to be
   // a longhand.
-  if (svg->mLayers.mImageCount > 1 ||
+  if (svg->mMask.mImageCount > 1 ||
       firstLayer.mClip != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
       firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
@@ -6058,7 +6058,7 @@ nsComputedDOMStyle::DoGetMaskClip()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mClip,
                            &nsStyleImageLayers::mClipCount,
-                           StyleSVGReset()->mLayers,
+                           StyleSVGReset()->mMask,
                            nsCSSProps::kImageLayerOriginKTable);
 }
 
@@ -6067,14 +6067,14 @@ nsComputedDOMStyle::DoGetMaskComposite()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mComposite,
                            &nsStyleImageLayers::mCompositeCount,
-                           StyleSVGReset()->mLayers,
+                           StyleSVGReset()->mMask,
                            nsCSSProps::kImageLayerCompositeKTable);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskImage()
 {
-  const nsStyleImageLayers& layers = StyleSVGReset()->mLayers;
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerImage(layers);
 }
 
@@ -6083,7 +6083,7 @@ nsComputedDOMStyle::DoGetMaskMode()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mMaskMode,
                            &nsStyleImageLayers::mMaskModeCount,
-                           StyleSVGReset()->mLayers,
+                           StyleSVGReset()->mMask,
                            nsCSSProps::kImageLayerModeKTable);
 }
 
@@ -6092,28 +6092,28 @@ nsComputedDOMStyle::DoGetMaskOrigin()
 {
   return GetBackgroundList(&nsStyleImageLayers::Layer::mOrigin,
                            &nsStyleImageLayers::mOriginCount,
-                           StyleSVGReset()->mLayers,
+                           StyleSVGReset()->mMask,
                            nsCSSProps::kImageLayerOriginKTable);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskPosition()
 {
-  const nsStyleImageLayers& layers = StyleSVGReset()->mLayers;
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerPosition(layers);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskRepeat()
 {
-  const nsStyleImageLayers& layers = StyleSVGReset()->mLayers;
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerRepeat(layers);
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskSize()
 {
-  const nsStyleImageLayers& layers = StyleSVGReset()->mLayers;
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerSize(layers);
 }
 

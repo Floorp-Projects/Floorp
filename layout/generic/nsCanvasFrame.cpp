@@ -410,7 +410,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool needBlendContainer = false;
 
     // Create separate items for each background layer.
-    const nsStyleImageLayers& layers = bg->mLayers;
+    const nsStyleImageLayers& layers = bg->mImage;
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
       if (layers.mLayers[i].mImage.IsEmpty()) {
         continue;
