@@ -95,7 +95,15 @@ Probe.prototype = {
   release: function() {
     this._counter--;
     if (this._counter == 0) {
-      this._impl.isActive = false;
+      try {
+        this._impl.isActive = false;
+      } catch (ex) {
+        if (ex && typeof ex == "object" && ex.result == Components.results.NS_ERROR_NOT_AVAILABLE) {
+          // The service has already been shutdown. Ignore further shutdown requests.
+          return;
+        }
+        throw ex;
+      }
       Process.broadcast("release", [this._name]);
     }
   },
