@@ -448,7 +448,7 @@ CreatePaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
 
 static nsSVGRenderingObserver *
 GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
-                  const FramePropertyDescriptor *aProperty,
+                  const FramePropertyDescriptor<>* aProperty,
                   nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
 {
   if (!aURI)
@@ -489,7 +489,7 @@ GetOrCreateFilterProperty(nsIFrame *aFrame)
 
 nsSVGMarkerProperty *
 nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
-                                const FramePropertyDescriptor *aProp)
+                                const FramePropertyDescriptor<>* aProp)
 {
   MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
                static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable(),
@@ -500,7 +500,7 @@ nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
 
 nsSVGTextPathProperty *
 nsSVGEffects::GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
-                                  const FramePropertyDescriptor *aProp)
+                                  const FramePropertyDescriptor<>* aProp)
 {
   return static_cast<nsSVGTextPathProperty*>(
           GetEffectProperty(aURI, aFrame, aProp, CreateTextPathProperty));
@@ -508,7 +508,7 @@ nsSVGEffects::GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
 
 nsSVGPaintingProperty *
 nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
-                                  const FramePropertyDescriptor *aProp)
+                                  const FramePropertyDescriptor<>* aProp)
 {
   return static_cast<nsSVGPaintingProperty*>(
           GetEffectProperty(aURI, aFrame, aProp, CreatePaintingProperty));
@@ -516,7 +516,7 @@ nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
 
 static nsSVGRenderingObserver *
 GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
-                        const FramePropertyDescriptor *aProperty,
+                        const FramePropertyDescriptor<>* aProperty,
                         nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
 {
   if (!aURI)
@@ -541,7 +541,7 @@ GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
 
 nsSVGPaintingProperty *
 nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
-                                        const FramePropertyDescriptor *aProp)
+                                        const FramePropertyDescriptor<>* aProp)
 {
   return static_cast<nsSVGPaintingProperty*>(
           GetEffectPropertyForURI(aURI, aFrame, aProp, CreatePaintingProperty));
@@ -568,7 +568,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 
 nsSVGPaintServerFrame *
 nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPaint,
-                             const FramePropertyDescriptor *aType)
+                             const FramePropertyDescriptor<>* aType)
 {
   if (aPaint->mType != eStyleSVGPaintType_Server)
     return nullptr;
