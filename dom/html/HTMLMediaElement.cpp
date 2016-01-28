@@ -2714,21 +2714,18 @@ HTMLMediaElement::ReportMSETelemetry()
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
                                       bool aNullParent)
 {
-  RefPtr<HTMLMediaElement> self(this);
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() {
-    if (self->IsInDoc() || self->mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-      return;
-    }
-    self->Pause();
-    if (self->mDecoder) {
-      self->mDecoder->NotifyOwnerActivityChanged();
-    }
-  });
-  RunInStableState(task);
+  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+    Pause();
+  }
 
   mElementInTreeState = ELEMENT_NOT_INTREE_HAD_INTREE;
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (mDecoder) {
+    MOZ_ASSERT(IsHidden());
+    mDecoder->NotifyOwnerActivityChanged();
+  }
 }
 
 /* static */
