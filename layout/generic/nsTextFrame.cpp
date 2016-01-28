@@ -184,7 +184,7 @@ TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
   }
 }
 
-NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DeleteValue<TabWidthStore>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TabWidthProperty, TabWidthStore)
 
 NS_DECLARE_FRAME_PROPERTY(OffsetToFrameProperty, nullptr)
 
@@ -208,8 +208,8 @@ private:
  * The only reason this list is in a property is to automatically destroy the
  * list when the frame is deleted, unregistering the observers.
  */
-NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers,
-                          DeleteValue<nsTArray<nsAutoPtr<GlyphObserver>>>);
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TextFrameGlyphObservers,
+                                    nsTArray<nsAutoPtr<GlyphObserver>>)
 
 static const nsFrameState TEXT_REFLOW_FLAGS =
    TEXT_FIRST_LETTER |
@@ -5138,7 +5138,7 @@ struct EmphasisMarkInfo
   gfxFloat baselineOffset;
 };
 
-NS_DECLARE_FRAME_PROPERTY(EmphasisMarkProperty, DeleteValue<EmphasisMarkInfo>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
 static gfxTextRun*
 GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
@@ -6224,8 +6224,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const nscolor* aDecorationOverrideColor,
                                PropertyProvider& aProvider)
 {
-  auto info = static_cast<const EmphasisMarkInfo*>(
-    Properties().Get(EmphasisMarkProperty()));
+  const auto info = Properties().Get(EmphasisMarkProperty());
   if (!info) {
     return;
   }

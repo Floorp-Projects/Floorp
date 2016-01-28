@@ -105,18 +105,18 @@ public:
     StateBits mState;
   };
 
-  NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemContainingBlockRect, nsRect)
 
-  NS_DECLARE_FRAME_PROPERTY(GridColTrackInfo, DeleteValue<ComputedGridTrackInfo>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridColTrackInfo, ComputedGridTrackInfo)
   const ComputedGridTrackInfo* GetComputedTemplateColumns()
   {
-    return static_cast<ComputedGridTrackInfo*>(Properties().Get(GridColTrackInfo()));
+    return Properties().Get(GridColTrackInfo());
   }
 
-  NS_DECLARE_FRAME_PROPERTY(GridRowTrackInfo, DeleteValue<ComputedGridTrackInfo>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridRowTrackInfo, ComputedGridTrackInfo)
   const ComputedGridTrackInfo* GetComputedTemplateRows()
   {
-    return static_cast<ComputedGridTrackInfo*>(Properties().Get(GridRowTrackInfo()));
+    return Properties().Get(GridRowTrackInfo());
   }
 
 protected:
@@ -597,13 +597,13 @@ protected:
    * grid-template-columns / grid-template-rows are stored in this frame
    * property when needed, as a ImplicitNamedAreas* value.
    */
-  NS_DECLARE_FRAME_PROPERTY(ImplicitNamedAreasProperty,
-                            DeleteValue<ImplicitNamedAreas>)
+  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ImplicitNamedAreasProperty,
+                                      ImplicitNamedAreas)
   void InitImplicitNamedAreas(const nsStylePosition* aStyle);
   void AddImplicitNamedAreas(const nsTArray<nsTArray<nsString>>& aLineNameLists);
-  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
-    return static_cast<ImplicitNamedAreas*>(Properties().Get(ImplicitNamedAreasProperty()));
+    return Properties().Get(ImplicitNamedAreasProperty());
   }
   bool HasImplicitNamedArea(const nsString& aName) const {
     ImplicitNamedAreas* areas = GetImplicitNamedAreas();

@@ -134,8 +134,8 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECLARE_FRAME_PROPERTY(PositionedTablePartArray,
-                            DeleteValue<nsTArray<nsIFrame*>>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PositionedTablePartArray,
+                                      nsTArray<nsIFrame*>)
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;

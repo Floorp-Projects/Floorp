@@ -146,7 +146,7 @@ LayerActivity::~LayerActivity()
 }
 
 // Frames with this property have NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY set
-NS_DECLARE_FRAME_PROPERTY(LayerActivityProperty, DeleteValue<LayerActivity>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(LayerActivityProperty, LayerActivity)
 
 void
 LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
@@ -188,15 +188,14 @@ GetLayerActivity(nsIFrame* aFrame)
     return nullptr;
   }
   FrameProperties properties = aFrame->Properties();
-  return static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
+  return properties.Get(LayerActivityProperty());
 }
 
 static LayerActivity*
 GetLayerActivityForUpdate(nsIFrame* aFrame)
 {
   FrameProperties properties = aFrame->Properties();
-  LayerActivity* layerActivity =
-    static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
+  LayerActivity* layerActivity = properties.Get(LayerActivityProperty());
   if (layerActivity) {
     gLayerActivityTracker->MarkUsed(layerActivity);
   } else {
@@ -224,8 +223,7 @@ ActiveLayerTracker::TransferActivityToContent(nsIFrame* aFrame, nsIContent* aCon
     return;
   }
   FrameProperties properties = aFrame->Properties();
-  LayerActivity* layerActivity =
-    static_cast<LayerActivity*>(properties.Remove(LayerActivityProperty()));
+  LayerActivity* layerActivity = properties.Remove(LayerActivityProperty());
   aFrame->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
   if (!layerActivity) {
     return;
