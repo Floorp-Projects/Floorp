@@ -18,7 +18,7 @@ namespace mozilla {
 struct FramePropertyDescriptor;
 
 typedef void (*FramePropertyDestructor)(void* aPropertyValue);
-typedef void (*FramePropertyDestructorWithFrame)(nsIFrame* aFrame,
+typedef void (*FramePropertyDestructorWithFrame)(const nsIFrame* aFrame,
                                                  void* aPropertyValue);
 
 /**
@@ -79,7 +79,7 @@ public:
    * the properties of that frame. Any existing value for the property
    * is destroyed.
    */
-  void Set(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
+  void Set(const nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
            void* aValue);
   /**
    * Get a property value for a frame. This requires one hashtable
@@ -104,7 +104,7 @@ public:
    * disambiguate a null result, which can mean 'no such property' or
    * 'property value is null'.
    */
-  void* Remove(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
+  void* Remove(const nsIFrame* aFrame, const FramePropertyDescriptor* aProperty,
                bool* aFoundResult = nullptr);
   /**
    * Remove and destroy a property value for a frame. This requires one
@@ -112,12 +112,12 @@ public:
    * through the properties of that frame. If the frame has no such
    * property, nothing happens.
    */
-  void Delete(nsIFrame* aFrame, const FramePropertyDescriptor* aProperty);
+  void Delete(const nsIFrame* aFrame, const FramePropertyDescriptor* aProperty);
   /**
    * Remove and destroy all property values for a frame. This requires one
    * hashtable lookup (using the frame as the key).
    */
-  void DeleteAllFor(nsIFrame* aFrame);
+  void DeleteAllFor(const nsIFrame* aFrame);
   /**
    * Remove and destroy all property values for all frames.
    */
@@ -142,7 +142,7 @@ protected:
       return reinterpret_cast<nsTArray<PropertyValue>*>(&mValue);
     }
 
-    void DestroyValueFor(nsIFrame* aFrame) {
+    void DestroyValueFor(const nsIFrame* aFrame) {
       if (mProperty->mDestructor) {
         mProperty->mDestructor(mValue);
       } else if (mProperty->mDestructorWithFrame) {
@@ -189,12 +189,12 @@ protected:
    * Our hashtable entry. The key is an nsIFrame*, the value is a
    * PropertyValue representing one or more property/value pairs.
    */
-  class Entry : public nsPtrHashKey<nsIFrame>
+  class Entry : public nsPtrHashKey<const nsIFrame>
   {
   public:
-    explicit Entry(KeyTypePointer aKey) : nsPtrHashKey<nsIFrame>(aKey) {}
+    explicit Entry(KeyTypePointer aKey) : nsPtrHashKey<const nsIFrame>(aKey) {}
     Entry(const Entry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy), mProp(toCopy.mProp) {}
+      nsPtrHashKey<const nsIFrame>(toCopy), mProp(toCopy.mProp) {}
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
       return mProp.SizeOfExcludingThis(aMallocSizeOf);
@@ -206,7 +206,7 @@ protected:
   static void DeleteAllForEntry(Entry* aEntry);
 
   nsTHashtable<Entry> mEntries;
-  nsIFrame* mLastFrame;
+  const nsIFrame* mLastFrame;
   Entry* mLastEntry;
 };
 
@@ -215,10 +215,8 @@ protected:
  */
 class FrameProperties {
 public:
-  FrameProperties(FramePropertyTable* aTable, nsIFrame* aFrame)
-    : mTable(aTable), mFrame(aFrame) {}
   FrameProperties(FramePropertyTable* aTable, const nsIFrame* aFrame)
-    : mTable(aTable), mFrame(const_cast<nsIFrame*>(aFrame)) {}
+    : mTable(aTable), mFrame(aFrame) {}
 
   void Set(const FramePropertyDescriptor* aProperty, void* aValue) const
   {
@@ -241,7 +239,7 @@ public:
 
 private:
   FramePropertyTable* mTable;
-  nsIFrame* mFrame;
+  const nsIFrame* mFrame;
 };
 
 } // namespace mozilla

@@ -514,7 +514,7 @@ protected:
 
   friend class LayerManagerData;
 
-  static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);
+  static void RemoveFrameFromLayerManager(const nsIFrame* aFrame, void* aPropertyValue);
 
   /**
    * Given a frame and a display item key that uniquely identifies a
