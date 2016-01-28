@@ -7938,6 +7938,61 @@ class MRegExpMatcher
     }
 };
 
+class MRegExpSearcher
+  : public MAryInstruction<4>,
+    public Mix4Policy<ObjectPolicy<0>,
+                      StringPolicy<1>,
+                      IntPolicy<2>,
+                      BooleanPolicy<3> >::Data
+{
+  private:
+
+    MRegExpSearcher(MDefinition* regexp, MDefinition* string, MDefinition* lastIndex,
+                    MDefinition* sticky)
+      : MAryInstruction<4>()
+    {
+        initOperand(0, regexp);
+        initOperand(1, string);
+        initOperand(2, lastIndex);
+        initOperand(3, sticky);
+
+        setMovable();
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpSearcher)
+
+    static MRegExpSearcher* New(TempAllocator& alloc, MDefinition* regexp, MDefinition* string,
+                                MDefinition* lastIndex, MDefinition* sticky)
+    {
+        return new(alloc) MRegExpSearcher(regexp, string, lastIndex, sticky);
+    }
+
+    MDefinition* regexp() const {
+        return getOperand(0);
+    }
+    MDefinition* string() const {
+        return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
+    MDefinition* sticky() const {
+        return getOperand(3);
+    }
+
+    bool writeRecoverData(CompactBufferWriter& writer) const override;
+
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 class MRegExpTester
   : public MAryInstruction<4>,
     public Mix4Policy<ObjectPolicy<0>,
