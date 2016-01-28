@@ -220,17 +220,6 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
-	Mozilla.UITour.startUrlbarCapture = function(text, url) {
-		_sendEvent('startUrlbarCapture', {
-			text: text,
-			url: url
-		});
-	};
-
-	Mozilla.UITour.endUrlbarCapture = function() {
-		_sendEvent('endUrlbarCapture');
-	};
-
 	Mozilla.UITour.getConfiguration = function(configName, callback) {
 		_sendEvent('getConfiguration', {
 			callbackID: _waitForCallback(callback),

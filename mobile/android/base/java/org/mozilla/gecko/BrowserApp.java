@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.Manifest;
 import android.os.AsyncTask;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -46,6 +47,7 @@ import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -60,11 +62,14 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.TelemetryConstants;
+import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
@@ -156,6 +161,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.Vector;
 
 public class BrowserApp extends GeckoApp
@@ -754,6 +760,39 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
+
+        // The update service is enabled for RELEASE_BUILD, which includes the release and beta channels.
+        // However, no updates are served.  Therefore, we don't trust the update service directly, and
+        // try to avoid prompting unnecessarily. See Bug 1232798.
+        if (!AppConstants.RELEASE_BUILD && UpdateServiceHelper.isUpdaterEnabled()) {
+            Permissions.from(this)
+                       .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                       .doNotPrompt()
+                       .andFallback(new Runnable() {
+                           @Override
+                           public void run() {
+                               showUpdaterPermissionSnackbar();
+                           }
+                       })
+                      .run();
+        }
+    }
+
+    private void showUpdaterPermissionSnackbar() {
+        SnackbarHelper.SnackbarCallback allowCallback = new SnackbarHelper.SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                Permissions.from(BrowserApp.this)
+                        .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        .run();
+            }
+        };
+
+        SnackbarHelper.showSnackbarWithAction(this,
+                getString(R.string.updater_permission_text),
+                Snackbar.LENGTH_INDEFINITE,
+                getString(R.string.updater_permission_allow),
+                allowCallback);
     }
 
     private void conditionallyNotifyHCEOL() {
@@ -958,7 +997,8 @@ public class BrowserApp extends GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (getProfile().inGuestMode()) {
+                final GeckoProfile profile = getProfile();
+                if (profile.inGuestMode()) {
                     GuestSession.showNotification(BrowserApp.this);
                 } else {
                     // If we're restarting, we won't destroy the activity.
@@ -966,6 +1006,15 @@ public class BrowserApp extends GeckoApp
                     // have been shown.
                     GuestSession.hideNotification(BrowserApp.this);
                 }
+
+                // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
+                // and it's possible the system will never free the Activity from memory.
+                //
+                // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
+                // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
+                //
+                // So we're left with onStart/onStop.
+                uploadTelemetry(profile);
             }
         });
     }
@@ -3881,6 +3930,26 @@ public class BrowserApp extends GeckoApp
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
+    }
+
+    private void uploadTelemetry(final GeckoProfile profile) {
+        if (!TelemetryConstants.UPLOAD_ENABLED || profile.inGuestMode()) {
+            return;
+        }
+
+        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(this, profile.getName());
+        final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
+
+        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
+        i.setClass(this, TelemetryUploadService.class);
+        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().toString());
+        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
+        startService(i);
+
+        // Intent redelivery will ensure this value gets used - see TelemetryUploadService class comments for details.
+        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
     }
 
     public static interface Refreshable {
