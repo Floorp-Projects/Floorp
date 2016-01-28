@@ -547,6 +547,13 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
+    nsCOMPtr<nsIURI> mSourceURI;  // [reset]
+                                  // mask-only property
+                                  // This property is used for mask layer only.
+                                  // For a background layer, it should always
+                                  // be the initial value, which is nullptr.
+                                  // Store mask-image URI so that we can resolve
+                                  // SVG mask path later.
     Position      mPosition;      // [reset] See nsStyleConsts.h
     Size          mSize;          // [reset]
     uint8_t       mClip;          // [reset] See nsStyleConsts.h
@@ -3479,7 +3486,6 @@ struct nsStyleSVGReset
   nsStyleImageLayers    mLayers;
   nsStyleClipPath mClipPath;          // [reset]
   nsTArray<nsStyleFilter> mFilters;   // [reset]
-  nsCOMPtr<nsIURI> mMask;             // [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]
   nscolor          mLightingColor;    // [reset]
