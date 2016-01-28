@@ -1,7 +1,7 @@
-diff --git a/media/libstagefright/binding/byteorder/mod.rs b/media/libstagefright/binding/byteorder/mod.rs
+diff --git a/media/libstagefright/binding/mp4parse/byteorder/mod.rs b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
 index 7eea1e3..8a108cf 100644
---- a/media/libstagefright/binding/byteorder/mod.rs
-+++ b/media/libstagefright/binding/byteorder/mod.rs
+--- a/media/libstagefright/binding/mp4parse/byteorder/mod.rs
++++ b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
 @@ -36,7 +36,6 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
  ```
  */
@@ -24,10 +24,10 @@ index 7eea1e3..8a108cf 100644
  
  #[inline]
  fn extend_sign(val: u64, nbytes: usize) -> i64 {
-diff --git a/media/libstagefright/binding/byteorder/new.rs b/media/libstagefright/binding/byteorder/new.rs
+diff --git a/media/libstagefright/binding/mp4parse/byteorder/new.rs b/media/libstagefright/binding/mp4parse/byteorder/new.rs
 index 54ee6a7..4efcbc3 100644
---- a/media/libstagefright/binding/byteorder/new.rs
-+++ b/media/libstagefright/binding/byteorder/new.rs
+--- a/media/libstagefright/binding/mp4parse/byteorder/new.rs
++++ b/media/libstagefright/binding/mp4parse/byteorder/new.rs
 @@ -3,7 +3,7 @@ use std::fmt;
  use std::io;
  use std::result;

@@ -14,5 +14,13 @@ TEST_DIRS += [
 
 XPCSHELL_TESTS_MANIFESTS += [
     'unit/xpcshell.ini',
-    'xpcshell.ini',
+]
+
+TEST_HARNESS_FILES.xpcshell.js.xpconnect.tests.components.js += [
+    'components/js/xpctest.manifest',
+    'components/js/xpctest_attributes.js',
+    'components/js/xpctest_bug809674.js',
+    'components/js/xpctest_interfaces.js',
+    'components/js/xpctest_params.js',
+    'components/js/xpctest_returncode_child.js',
 ]

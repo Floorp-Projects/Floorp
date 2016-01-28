@@ -39,7 +39,6 @@ parser/**
 probes/**
 python/**
 rdf/**
-security/**
 services/**
 startupcache/**
 testing/**

@@ -459,6 +459,11 @@ AccessibleCaretManager::TapCaret(const nsPoint& aPoint)
 nsresult
 AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
 {
+  auto UpdateCaretsWithHapticFeedback = [this] {
+    UpdateCarets();
+    ProvideHapticFeedback();
+  };
+
   if (!mPresShell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -491,8 +496,7 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     ChangeFocusToOrClearOldFocus(focusableFrame);
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
-    UpdateCarets();
-    ProvideHapticFeedback();
+    UpdateCaretsWithHapticFeedback();
     DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
@@ -517,13 +521,22 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   // ptFrame is selectable. Now change the focus.
   ChangeFocusToOrClearOldFocus(focusableFrame);
 
+  if (GetCaretMode() == CaretMode::Selection &&
+      !mFirstCaret->IsLogicallyVisible() && !mSecondCaret->IsLogicallyVisible()) {
+    // We have a selection while both carets have Appearance::None because of
+    // previous operations like blur event. Just update carets on the selection
+    // without selecting a new word.
+    AC_LOG("%s: UpdateCarets() for current selection", __FUNCTION__);
+    UpdateCaretsWithHapticFeedback();
+    return NS_OK;
+  }
+
   // Then try select a word under point.
   nsPoint ptInFrame = aPoint;
   nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
 
   nsresult rv = SelectWord(ptFrame, ptInFrame);
-  UpdateCarets();
-  ProvideHapticFeedback();
+  UpdateCaretsWithHapticFeedback();
 
   return rv;
 }

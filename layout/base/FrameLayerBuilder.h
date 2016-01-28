@@ -410,6 +410,7 @@ public:
   void StoreOptimizedLayerForFrame(nsDisplayItem* aItem, Layer* aLayer);
   
   NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
+                                               nsTArray<DisplayItemData*>,
                                                RemoveFrameFromLayerManager)
 
   /**
@@ -514,7 +515,8 @@ protected:
 
   friend class LayerManagerData;
 
-  static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);
+  static void RemoveFrameFromLayerManager(const nsIFrame* aFrame,
+                                          nsTArray<DisplayItemData*>* aArray);
 
   /**
    * Given a frame and a display item key that uniquely identifies a

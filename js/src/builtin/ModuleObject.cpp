@@ -9,6 +9,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
+#include "gc/Policy.h"
 #include "gc/Tracer.h"
 
 #include "jsobjinlines.h"

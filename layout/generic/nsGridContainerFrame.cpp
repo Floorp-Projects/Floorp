@@ -2320,8 +2320,8 @@ ContentContribution(nsIFrame*                         aChild,
     }
 #ifdef DEBUG
     // This will suppress various CRAZY_SIZE warnings for this reflow.
-    parent->Properties().Set(nsContainerFrame::DebugReflowingWithInfiniteISize(),
-                             parent /* anything non-null will do */);
+    parent->Properties().Set(
+      nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
@@ -2936,15 +2936,17 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
 
   const bool isAlign = mAxis == eLogicalAxisBlock;
   auto stylePos = aReflowState.mStylePosition;
-  const auto valueAndFallback = isAlign ?
-    stylePos->ComputedAlignContent() :
-    stylePos->ComputedJustifyContent();
+  auto valueAndFallback = isAlign ? stylePos->ComputedAlignContent() :
+                                    stylePos->ComputedJustifyContent();
   WritingMode wm = aReflowState.GetWritingMode();
   bool overflowSafe;
   auto alignment = ::GetAlignJustifyValue(valueAndFallback, wm, isAlign,
                                           &overflowSafe);
   if (alignment == NS_STYLE_ALIGN_NORMAL) {
-    alignment = NS_STYLE_ALIGN_START;
+    MOZ_ASSERT(valueAndFallback == NS_STYLE_ALIGN_NORMAL,
+               "*-content:normal cannot be specified with explicit fallback");
+    alignment = NS_STYLE_ALIGN_STRETCH;
+    valueAndFallback = alignment; // we may need a fallback for 'stretch' below
   }
 
   // Compute the free space and count auto-sized tracks.
@@ -3339,14 +3341,21 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   for (const TrackSize& sz : gridReflowState.mCols.mSizes) {
     colTrackSizes.AppendElement(sz.mBase);
   }
-  Properties().Set(GridColTrackSizes(),
-                   new nsTArray<nscoord>(mozilla::Move(colTrackSizes)));
+  ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
+    gridReflowState.mColFunctions.mExplicitGridOffset,
+    gridReflowState.mColFunctions.NumExplicitTracks(),
+    Move(colTrackSizes));
+  Properties().Set(GridColTrackInfo(), colInfo);
+
   nsTArray<nscoord> rowTrackSizes(gridReflowState.mRows.mSizes.Length());
   for (const TrackSize& sz : gridReflowState.mRows.mSizes) {
     rowTrackSizes.AppendElement(sz.mBase);
   }
-  Properties().Set(GridRowTrackSizes(),
-                   new nsTArray<nscoord>(mozilla::Move(rowTrackSizes)));
+  ComputedGridTrackInfo* rowInfo = new ComputedGridTrackInfo(
+    gridReflowState.mRowFunctions.mExplicitGridOffset,
+    gridReflowState.mRowFunctions.NumExplicitTracks(),
+    Move(rowTrackSizes));
+  Properties().Set(GridRowTrackInfo(), rowInfo);
   
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {

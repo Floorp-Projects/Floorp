@@ -5,29 +5,18 @@
 #ifndef MP4METADATA_H_
 #define MP4METADATA_H_
 
-#include "mozilla/Monitor.h"
 #include "mozilla/UniquePtr.h"
-#include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/DecoderData.h"
-#include "nsAutoPtr.h"
-#include "nsTArray.h"
+#include "mp4_demuxer/Index.h"
+#include "MediaData.h"
 #include "MediaInfo.h"
-#include "MediaResource.h"
-
-#ifdef MOZ_RUST_MP4PARSE
-#include "mp4parse.h"
-#endif
-
-namespace stagefright { class MetaData; }
+#include "Stream.h"
 
 namespace mp4_demuxer
 {
 
-struct StageFrightPrivate;
-
-#ifdef MOZ_RUST_MP4PARSE
-struct FreeMP4ParseState { void operator()(mp4parse_state* aPtr) { mp4parse_free(aPtr); } };
-#endif
+class MP4MetadataStagefright;
+class MP4MetadataRust;
 
 class MP4Metadata
 {
@@ -42,25 +31,15 @@ public:
                                                       size_t aTrackNumber) const;
   bool CanSeek() const;
 
-  const CryptoFile& Crypto() const
-  {
-    return mCrypto;
-  }
+  const CryptoFile& Crypto() const;
 
   bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
 
 private:
-  int32_t GetTrackNumber(mozilla::TrackID aTrackID);
-  void UpdateCrypto(const stagefright::MetaData* aMetaData);
-  mozilla::UniquePtr<mozilla::TrackInfo> CheckTrack(const char* aMimeType,
-                                                    stagefright::MetaData* aMetaData,
-                                                    int32_t aIndex) const;
-  nsAutoPtr<StageFrightPrivate> mPrivate;
-  CryptoFile mCrypto;
-  RefPtr<Stream> mSource;
-
+  UniquePtr<MP4MetadataStagefright> mStagefright;
 #ifdef MOZ_RUST_MP4PARSE
-  mutable mozilla::UniquePtr<mp4parse_state, FreeMP4ParseState> mRustState;
+  UniquePtr<MP4MetadataRust> mRust;
+  mutable bool mReportedTelemetry;
 #endif
 };
 

@@ -714,10 +714,9 @@ gfxUtils::ImageFormatToDepth(gfxImageFormat aFormat)
 gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 {
   aContext->NewPath();
-  nsIntRegionRectIterator iter(aRegion);
-  const IntRect* r;
-  while ((r = iter.Next()) != nullptr) {
-    aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& r = iter.Get();
+    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
   }
   aContext->Clip();
 }
@@ -732,14 +731,13 @@ gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
   }
 
   RefPtr<PathBuilder> pb = aTarget->CreatePathBuilder();
-  nsIntRegionRectIterator iter(aRegion);
 
-  const IntRect* r;
-  while ((r = iter.Next()) != nullptr) {
-    pb->MoveTo(Point(r->x, r->y));
-    pb->LineTo(Point(r->XMost(), r->y));
-    pb->LineTo(Point(r->XMost(), r->YMost()));
-    pb->LineTo(Point(r->x, r->YMost()));
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& r = iter.Get();
+    pb->MoveTo(Point(r.x, r.y));
+    pb->LineTo(Point(r.XMost(), r.y));
+    pb->LineTo(Point(r.XMost(), r.YMost()));
+    pb->LineTo(Point(r.x, r.YMost()));
     pb->Close();
   }
   RefPtr<Path> path = pb->Finish();

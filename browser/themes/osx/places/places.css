@@ -8,7 +8,8 @@
 
 #bookmarksPanel, 
 #history-panel,
-#sidebar-search-container {
+#sidebar-search-container,
+#tabs-panel {
   -moz-appearance: none !important;
   background-color: transparent !important;
   border-top: none !important;
@@ -53,7 +54,7 @@
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
 
-.sidebar-placesTreechildren::-moz-tree-cell-text(selected) {  
+.sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
   font-weight: bold !important;
   color: #ffffff !important;
 }

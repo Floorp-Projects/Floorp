@@ -17,11 +17,11 @@ var isGridTemplateSubgridValueEnabled =
 
 var initial_values = {
     gridTemplateAreas: "none",
-    gridTemplateColumns: "none",
     gridTemplateRows: "none",
+    gridTemplateColumns: "none",
     gridAutoFlow: "row",
-    gridAutoColumns: "auto",
     gridAutoRows: "auto",
+    gridAutoColumns: "auto",
     gridRowGap: "0px",
     gridColumnGap: "0px",
 };
@@ -30,21 +30,21 @@ var initial_values = {
 // test the serialization of the shorthand.
 var grid_template_test_cases = [
     {
-        gridTemplateRows: "100px",
+        gridTemplateColumns: "100px",
         shorthand: "none / 100px",
     },
     {
-        gridTemplateColumns: "40px",
+        gridTemplateRows: "40px",
         shorthand: "40px / none",
     },
     {
-        gridTemplateColumns: "40px",
-        gridTemplateRows: "subgrid",
+        gridTemplateRows: "40px",
+        gridTemplateColumns: "subgrid",
         shorthand: isGridTemplateSubgridValueEnabled ? "40px / subgrid" : "",
     },
     {
-        gridTemplateColumns: "[foo] 40px [bar]",
-        gridTemplateRows: "[baz] 100px [fizz]",
+        gridTemplateRows: "[foo] 40px [bar]",
+        gridTemplateColumns: "[baz] 100px [fizz]",
         shorthand: "[foo] 40px [bar] / [baz] 100px [fizz]",
     },
     {
@@ -92,23 +92,23 @@ grid_test_cases = grid_template_test_cases.concat([
         shorthand: "row auto / auto",
     },
     {
-        gridAutoColumns: "40px",
+        gridAutoRows: "40px",
         shorthand: "row 40px / auto",
     },
     {
         gridAutoFlow: "column dense",
-        gridAutoColumns: "minmax(min-content, max-content)",
+        gridAutoRows: "minmax(min-content, max-content)",
         shorthand: "column dense minmax(min-content, max-content) / auto",
     },
     {
         gridAutoFlow: "row dense",
-        gridAutoRows: "minmax(min-content, 2fr)",
+        gridAutoColumns: "minmax(min-content, 2fr)",
         shorthand: "row dense auto / minmax(min-content, 2fr)",
     },
     {
         gridAutoFlow: "row",
-        gridAutoColumns: "40px",
-        gridAutoRows: "100px",
+        gridAutoRows: "40px",
+        gridAutoColumns: "100px",
         shorthand: "row 40px / 100px",
     },
     {

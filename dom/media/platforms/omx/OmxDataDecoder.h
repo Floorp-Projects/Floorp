@@ -8,12 +8,15 @@
 #define OmxDataDecoder_h_
 
 #include "mozilla/Monitor.h"
-#include "PlatformDecoderModule.h"
-#include "OmxPromiseLayer.h"
-#include "MediaInfo.h"
+
 #include "AudioCompactor.h"
-#include "OMX_Component.h"
 #include "ImageContainer.h"
+#include "MediaInfo.h"
+#include "PlatformDecoderModule.h"
+
+#include "OMX_Component.h"
+
+#include "OmxPromiseLayer.h"
 
 namespace mozilla {
 
@@ -100,11 +103,10 @@ protected:
 
   void NotifyError(OMX_ERRORTYPE aError, const char* aLine);
 
-  // Configure audio codec.
+  // Configure audio/video codec.
   // Some codec may just ignore this and rely on codec specific data in
   // FillCodecConfigDataToOmx().
-  void ConfigAudioCodec();
-  void ConfigVideoCodec();
+  void ConfigCodec();
 
   // Sending codec specific data to OMX component. OMX component could send a
   // OMX_EventPortSettingsChanged back to client. And then client needs to
@@ -196,6 +198,20 @@ protected:
 
   MediaDataDecoderCallback* mCallback;
 };
+
+template<class T>
+void InitOmxParameter(T* aParam)
+{
+  PodZero(aParam);
+  aParam->nSize = sizeof(T);
+  aParam->nVersion.s.nVersionMajor = 1;
+}
+
+// There should be 2 ports and port number start from 0.
+void GetOmxPortIndex(nsTArray<uint32_t>& aPortIndex) {
+  aPortIndex.AppendElement(0);
+  aPortIndex.AppendElement(1);
+}
 
 }
 

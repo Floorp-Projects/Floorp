@@ -8,7 +8,7 @@
 #ifndef nsImageFrame_h___
 #define nsImageFrame_h___
 
-#include "nsSplittableFrame.h"
+#include "nsAtomicContainerFrame.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
@@ -58,7 +58,7 @@ private:
   nsImageFrame *mFrame;
 };
 
-typedef nsSplittableFrame ImageFrameSuper;
+typedef nsAtomicContainerFrame ImageFrameSuper;
 
 class nsImageFrame : public ImageFrameSuper,
                      public nsIReflowCallback {
@@ -120,6 +120,11 @@ public:
   void List(FILE* out = stderr, const char* aPrefix = "", 
             uint32_t aFlags = 0) const override;
 #endif
+
+  nsSplittableType GetSplittableType() const override
+  {
+    return NS_FRAME_SPLITTABLE;
+  }
 
   virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 

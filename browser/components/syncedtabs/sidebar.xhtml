@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xml:lang="en" lang="en">
+  <head>
+    <script src="chrome://browser/content/syncedtabs/sidebar.js" type="application/javascript;version=1.8"></script>
+    <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
+    <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/skin/syncedtabs/sidebar.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/"/>
+    <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/textbox.css"/>
+    <title>&syncedTabs.sidebar.label;</title>
+  </head>
+
+  <body role="application">
+    <template id="client-template">
+      <div class="item client" role="option" tabindex="-1">
+        <div class="item-title-container">
+          <div class="item-twisty-container"></div>
+          <div class="item-icon-container"></div>
+          <p class="item-title"></p>
+        </div>
+        <div class="item-tabs-list"></div>
+      </div>
+    </template>
+    <template id="empty-client-template">
+      <div class="item empty client" role="option" tabindex="-1">
+        <div class="item-title-container">
+          <div class="item-twisty-container"></div>
+          <div class="item-icon-container"></div>
+          <p class="item-title"></p>
+        </div>
+        <div class="item-tabs-list">
+          <div class="item empty" role="option" tabindex="-1">
+            <div class="item-title-container">
+              <div class="item-icon-container"></div>
+              <p class="item-title">&syncedTabs.sidebar.notabs.label;</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template id="tab-template">
+      <div class="item tab" role="option" tabindex="-1">
+        <div class="item-title-container">
+          <div class="item-icon-container"></div>
+          <p class="item-title"></p>
+        </div>
+      </div>
+    </template>
+
+    <template id="tabs-container-template">
+      <div class="tabs-container">
+        <div class="sidebar-search-container">
+          <div class="search-box compact">
+            <div class="textbox-input-box">
+              <input type="text" class="tabsFilter textbox-input"/>
+              <div class="textbox-search-icons">
+                <a class="textbox-search-clear"></a>
+                <a class="textbox-search-icon"></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list" role="listbox" tabindex="1"></div>
+      </div>
+    </template>
+
+    <template id="deck-template">
+      <div class="deck">
+        <div class="tabs-fetching sync-state">
+          <p>&syncedTabs.sidebar.fetching.label;</p>
+        </div>
+        <div class="notAuthedInfo sync-state">
+          <p>&syncedTabs.sidebar.notsignedin.label;</p>
+          <p><a href="#" class="sync-prefs text-link">&fxaSignIn.label;</a></p>
+        </div>
+        <div class="singleDeviceInfo sync-state">
+          <p>&syncedTabs.sidebar.noclients.label;</p>
+          <p class="device-promo"></p>
+        </div>
+        <div class="tabs-disabled sync-state">
+          <p>&syncedTabs.sidebar.tabsnotsyncing.label;</p>
+          <p><a href="#" class="sync-prefs text-link">&syncedTabs.sidebar.openprefs.label;</a></p>
+        </div>
+      </div>
+    </template>
+
+  </body>
+</html>

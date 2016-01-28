@@ -4,20 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "OmxDataDecoder.h"
-#include "OmxPromiseLayer.h"
 #include "GonkOmxPlatformLayer.h"
-#include "MediaInfo.h"
-#include "ImageContainer.h"
+
+#include <binder/MemoryDealer.h>
+#include <cutils/properties.h>
+#include <media/IOMX.h>
+#include <media/stagefright/MediaCodecList.h>
+#include <utils/List.h>
+
 #include "mozilla/Monitor.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include <binder/MemoryDealer.h>
-#include <media/IOMX.h>
-#include <utils/List.h>
-#include <media/stagefright/OMXCodec.h>
-#include <cutils/properties.h>
+
+#include "ImageContainer.h"
+#include "MediaInfo.h"
+#include "OmxDataDecoder.h"
 
 extern mozilla::LogModule* GetPDMLog();
 
@@ -37,9 +39,10 @@ using namespace android;
 
 namespace mozilla {
 
-extern void GetPortIndex(nsTArray<uint32_t>& aPortIndex);
-
-bool IsSoftwareCodec(const char* aComponentName) {
+// In Gonk, the software component name has prefix "OMX.google". It needs to
+// have a way to use hardware codec first.
+bool IsSoftwareCodec(const char* aComponentName)
+{
   nsAutoCString str(aComponentName);
   return (str.Find(NS_LITERAL_CSTRING("OMX.google.")) == -1 ? false : true);
 }
@@ -134,7 +137,7 @@ protected:
   RefPtr<TaskQueue> mTaskQueue;
   // TODO:
   //   we should combine both event handlers into one. And we should provide
-  //   an unified way for event handling in OmxPlatforLayer class.
+  //   an unified way for event handling in OmxPlatformLayer class.
   RefPtr<OmxPromiseLayer> mPromiseLayer;
   RefPtr<OmxDataDecoder> mClient;
 };
@@ -344,8 +347,6 @@ GonkOmxPlatformLayer::GonkOmxPlatformLayer(OmxDataDecoder* aDataDecoder,
   : mTaskQueue(aTaskQueue)
   , mImageContainer(aImageContainer)
   , mNode(0)
-  , mQuirks(0)
-  , mUsingHardwareCodec(false)
 {
   mOmxObserver = new GonkOmxObserver(mTaskQueue, aPromiseLayer, aDataDecoder);
 }
@@ -359,7 +360,7 @@ GonkOmxPlatformLayer::AllocateOmxBuffer(OMX_DIRTYPE aType,
   // Get port definition.
   OMX_PARAM_PORTDEFINITIONTYPE def;
   nsTArray<uint32_t> portindex;
-  GetPortIndex(portindex);
+  GetOmxPortIndex(portindex);
   for (auto idx : portindex) {
     InitOmxParameter(&def);
     def.nPortIndex = idx;
@@ -379,8 +380,7 @@ GonkOmxPlatformLayer::AllocateOmxBuffer(OMX_DIRTYPE aType,
 
   // Configure video output GraphicBuffer for video decoding acceleration.
   bool useGralloc = false;
-  if ((aType == OMX_DirOutput) &&
-      (mQuirks & OMXCodec::kRequiresAllocateBufferOnOutputPorts) &&
+  if (aType == OMX_DirOutput && mQuirks.test(kRequiresAllocateBufferOnOutputPorts) &&
       (def.eDomain == OMX_PortDomainVideo)) {
     if (NS_FAILED(EnableOmxGraphicBufferPort(def))) {
       return NS_ERROR_FAILURE;
@@ -422,8 +422,8 @@ GonkOmxPlatformLayer::AllocateOmxBuffer(OMX_DIRTYPE aType,
       sp<IMemory> mem = mMemoryDealer[aType]->allocate(def.nBufferSize);
       MOZ_ASSERT(mem.get());
 
-      if ((mQuirks & OMXCodec::kRequiresAllocateBufferOnInputPorts && aType == OMX_DirInput) ||
-          (mQuirks & OMXCodec::kRequiresAllocateBufferOnOutputPorts && aType == OMX_DirOutput)) {
+      if ((mQuirks.test(kRequiresAllocateBufferOnInputPorts) && aType == OMX_DirInput) ||
+          (mQuirks.test(kRequiresAllocateBufferOnOutputPorts) && aType == OMX_DirOutput)) {
         // Buffer is lived remotely. We allocate a local OMX_BUFFERHEADERTYPE
         // as the mirror of the remote OMX_BUFFERHEADERTYPE.
         st = mOmx->allocateBufferWithBackup(mNode, aType, mem, &bufferID);
@@ -533,38 +533,14 @@ GonkOmxPlatformLayer::InitOmxToStateLoaded(const TrackInfo* aInfo)
     return OMX_ErrorUndefined;
   }
 
-  bool useHardwareCodecOnly = false;
-
-  // H264 and H263 has different profiles, software codec doesn't support high profile.
-  // So we use hardware codec only.
-  if (!IsInEmulator() &&
-      (mInfo->mMimeType.EqualsLiteral("video/avc") ||
-       mInfo->mMimeType.EqualsLiteral("video/mp4") ||
-       mInfo->mMimeType.EqualsLiteral("video/mp4v-es") ||
-       mInfo->mMimeType.EqualsLiteral("video/3gp"))) {
-    useHardwareCodecOnly = true;
-  }
-
   LOG("find componenet for mime type %s", mInfo->mMimeType.Data());
-  // In Gonk, the software component name has prefix "OMX.google". It needs to
-  // have a way to use hardware codec first.
-  android::Vector<OMXCodec::CodecNameAndQuirks> matchingCodecs;
-  nsTArray<const char*> components;
-  OMXCodec::findMatchingCodecs(mInfo->mMimeType.Data(),
-                               0,
-                               nullptr,
-                               0,
-                               &matchingCodecs);
-  for (uint32_t i = 0; i < matchingCodecs.size(); i++) {
-    components.AppendElement(matchingCodecs.itemAt(i).mName.string());
-  }
 
-  for (auto name : components) {
-    if (IsSoftwareCodec(name) && useHardwareCodecOnly) {
-      continue;
-    }
-    if (LoadComponent(name)) {
-      return OMX_ErrorNone;
+  nsTArray<ComponentInfo> components;
+  if (FindComponents(mInfo->mMimeType, &components)) {
+    for (auto comp : components) {
+      if (LoadComponent(comp)) {
+        return OMX_ErrorNone;
+      }
     }
   }
 
@@ -597,22 +573,16 @@ GonkOmxPlatformLayer::SendCommand(OMX_COMMANDTYPE aCmd,
   return  (OMX_ERRORTYPE)mOmx->sendCommand(mNode, aCmd, aParam1);
 }
 
-template<class T> void
-GonkOmxPlatformLayer::InitOmxParameter(T* aParam)
-{
-  PodZero(aParam);
-  aParam->nSize = sizeof(T);
-  aParam->nVersion.s.nVersionMajor = 1;
-}
-
 bool
-GonkOmxPlatformLayer::LoadComponent(const char* aName)
+GonkOmxPlatformLayer::LoadComponent(const ComponentInfo& aComponent)
 {
-  status_t err = mOmx->allocateNode(aName, mOmxObserver, &mNode);
+  status_t err = mOmx->allocateNode(aComponent.mName, mOmxObserver, &mNode);
   if (err == OK) {
-    OMXCodec::findCodecQuirks(aName, &mQuirks);
-    LOG("Load OpenMax component %s, quirks %x, live locally %d",
-        aName, mQuirks, mOmx->livesLocally(mNode, getpid()));
+    mQuirks = aComponent.mQuirks;
+    LOG("Load OpenMax component %s, alloc input %d, alloc output %d, live locally %d",
+        aComponent.mName, mQuirks.test(kRequiresAllocateBufferOnInputPorts),
+        mQuirks.test(kRequiresAllocateBufferOnOutputPorts),
+        mOmx->livesLocally(mNode, getpid()));
     return true;
   }
   return false;
@@ -628,6 +598,58 @@ const TrackInfo*
 GonkOmxPlatformLayer::GetTrackInfo()
 {
   return mInfo;
+}
+
+bool
+GonkOmxPlatformLayer::FindComponents(const nsACString& aMimeType,
+                                     nsTArray<ComponentInfo>* aComponents)
+{
+  static const MediaCodecList* codecs = MediaCodecList::getInstance();
+
+  bool useHardwareCodecOnly = false;
+
+  // H264 and H263 has different profiles, software codec doesn't support high profile.
+  // So we use hardware codec only.
+  if (!IsInEmulator() &&
+      (aMimeType.EqualsLiteral("video/avc") ||
+       aMimeType.EqualsLiteral("video/mp4") ||
+       aMimeType.EqualsLiteral("video/mp4v-es") ||
+       aMimeType.EqualsLiteral("video/3gp"))) {
+    useHardwareCodecOnly = true;
+  }
+
+  size_t start = 0;
+  bool found = false;
+  while (true) {
+    ssize_t index = codecs->findCodecByType(aMimeType.Data(),
+                                            false /* encoder */,
+                                            start);
+    if (index < 0) {
+      break;
+    }
+    start = index + 1;
+
+    const char* name = codecs->getCodecName(index);
+    if (IsSoftwareCodec(name) && useHardwareCodecOnly) {
+      continue;
+    }
+
+    found = true;
+
+    if (!aComponents) {
+      continue;
+    }
+    ComponentInfo* comp = aComponents->AppendElement();
+    comp->mName = name;
+    if (codecs->codecHasQuirk(index, "requires-allocate-on-input-ports")) {
+      comp->mQuirks.set(kRequiresAllocateBufferOnInputPorts);
+    }
+    if (codecs->codecHasQuirk(index, "requires-allocate-on-output-ports")) {
+      comp->mQuirks.set(kRequiresAllocateBufferOnOutputPorts);
+    }
+  }
+
+  return found;
 }
 
 } // mozilla

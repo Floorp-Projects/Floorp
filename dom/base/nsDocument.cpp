@@ -9,7 +9,7 @@
  */
 
 #include "nsDocument.h"
-
+#include "nsIDocumentInlines.h"
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
@@ -10729,6 +10729,54 @@ nsDocument::CaretPositionFromPoint(float aX, float aY, nsISupports** aCaretPos)
   NS_ENSURE_ARG_POINTER(aCaretPos);
   *aCaretPos = nsIDocument::CaretPositionFromPoint(aX, aY).take();
   return NS_OK;
+}
+
+static bool
+IsPotentiallyScrollable(HTMLBodyElement* aBody)
+{
+  // An element is potentially scrollable if all of the following conditions are
+  // true:
+
+  // The element has an associated CSS layout box.
+  nsIFrame* bodyFrame = aBody->GetPrimaryFrame();
+  if (!bodyFrame) {
+    return false;
+  }
+
+  // The element is not the HTML body element, or it is and the root element's
+  // used value of the overflow-x or overflow-y properties is not visible.
+  MOZ_ASSERT(aBody->GetParent() == aBody->OwnerDoc()->GetRootElement());
+  nsIFrame* parentFrame = aBody->GetParent()->GetPrimaryFrame();
+  if (parentFrame &&
+      parentFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
+      parentFrame->StyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE) {
+    return false;
+  }
+
+  // The element's used value of the overflow-x or overflow-y properties is not
+  // visible.
+  if (bodyFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
+      bodyFrame->StyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE) {
+    return false;
+  }
+
+  return true;
+}
+
+Element*
+nsIDocument::GetScrollingElement()
+{
+  if (GetCompatibilityMode() == eCompatibility_NavQuirks) {
+    FlushPendingNotifications(Flush_Layout);
+    HTMLBodyElement* body = GetBodyElement();
+    if (body && !IsPotentiallyScrollable(body)) {
+      return body;
+    }
+
+    return nullptr;
+  }
+
+  return GetRootElement();
 }
 
 void

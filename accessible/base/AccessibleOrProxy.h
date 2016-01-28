@@ -9,6 +9,7 @@
 
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/a11y/Role.h"
 
 #include <stdint.h>
 
@@ -46,6 +47,63 @@ public:
     }
 
     return nullptr;
+  }
+
+  bool IsNull() const { return mBits == 0; }
+
+  uint32_t ChildCount() const
+  {
+    if (IsProxy()) {
+      return AsProxy()->ChildrenCount();
+    }
+
+    return AsAccessible()->ChildCount();
+  }
+
+  /**
+   * Return the child object either an accessible or a proxied accessible at
+   * the given index.
+   */
+  AccessibleOrProxy ChildAt(uint32_t aIdx)
+  {
+    if (IsProxy()) {
+      return AsProxy()->ChildAt(aIdx);
+    }
+
+    return AsAccessible()->GetChildAt(aIdx);
+  }
+
+  /**
+   * Return the first child object.
+   */
+  AccessibleOrProxy FirstChild()
+  {
+    if (IsProxy()) {
+      return AsProxy()->FirstChild();
+    }
+
+    return AsAccessible()->FirstChild();
+  }
+
+  /**
+   * Return the first child object.
+   */
+  AccessibleOrProxy LastChild()
+  {
+    if (IsProxy()) {
+      return AsProxy()->LastChild();
+    }
+
+    return AsAccessible()->LastChild();
+  }
+
+  role Role() const
+  {
+    if (IsProxy()) {
+      return AsProxy()->Role();
+    }
+
+    return AsAccessible()->Role();
   }
 
   // XXX these are implementation details that ideally would not be exposed.

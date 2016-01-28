@@ -67,6 +67,7 @@ typedef struct _MaiAtkSocketClass
 
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
+mozilla::a11y::AccessibleOrProxy GetInternalObj(AtkObject* aObj);
 AtkObject* GetWrapperFor(mozilla::a11y::ProxyAccessible* aProxy);
 
 extern int atkMajorVersion, atkMinorVersion;

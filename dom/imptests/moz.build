@@ -7,7 +7,6 @@
 MOCHITEST_MANIFESTS += [
     'editing/mochitest.ini',
     'html/mochitest.ini',
-    'mochitest.ini',
     'webapps/mochitest.ini',
 ]
 
@@ -32,4 +31,12 @@ MOCHITEST_MANIFESTS += [
     'failures/html/microdata/microdata-dom-api/mochitest.ini',
     'failures/html/typedarrays/mochitest.ini',
     'failures/webapps/WebStorage/tests/submissions/Infraware/mochitest.ini',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.resources += [
+    'idlharness.js',
+    'testharness.css',
+    'testharness.js',
+    'testharnessreport.js',
+    'WebIDLParser.js',
 ]

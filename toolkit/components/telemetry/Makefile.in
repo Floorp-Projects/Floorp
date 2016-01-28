@@ -6,11 +6,6 @@
 USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/rcs.mk
 
-INSTALL_TARGETS += histoenums
-histoenums_FILES := TelemetryHistogramEnums.h
-histoenums_DEST = $(DIST)/include/mozilla
-histoenums_TARGET := export
-
 include $(topsrcdir)/config/rules.mk
 
 # This is so hacky. Waiting on bug 988938.

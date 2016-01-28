@@ -131,12 +131,12 @@ static nsresult ReportParseError(nsIFrame* aFrame, const char16_t* aAttribute,
 // stored in the property table. Row/Cell frames query the property table
 // to see what values apply to them.
 
-NS_DECLARE_FRAME_PROPERTY(RowAlignProperty, DeleteValue<nsTArray<int8_t>>)
-NS_DECLARE_FRAME_PROPERTY(RowLinesProperty, DeleteValue<nsTArray<int8_t>>)
-NS_DECLARE_FRAME_PROPERTY(ColumnAlignProperty, DeleteValue<nsTArray<int8_t>>)
-NS_DECLARE_FRAME_PROPERTY(ColumnLinesProperty, DeleteValue<nsTArray<int8_t>>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(RowAlignProperty, nsTArray<int8_t>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(RowLinesProperty, nsTArray<int8_t>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(ColumnAlignProperty, nsTArray<int8_t>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(ColumnLinesProperty, nsTArray<int8_t>)
 
-static const FramePropertyDescriptor*
+static const FramePropertyDescriptor<nsTArray<int8_t>>*
 AttributeToProperty(nsIAtom* aAttribute)
 {
   if (aAttribute == nsGkAtoms::rowalign_)
@@ -157,14 +157,14 @@ AttributeToProperty(nsIAtom* aAttribute)
  */
 static nsTArray<int8_t>*
 FindCellProperty(const nsIFrame* aCellFrame,
-                 const FramePropertyDescriptor* aFrameProperty)
+                 const FramePropertyDescriptor<nsTArray<int8_t>>* aFrameProperty)
 {
   const nsIFrame* currentFrame = aCellFrame;
   nsTArray<int8_t>* propertyData = nullptr;
 
   while (currentFrame) {
     FrameProperties props = currentFrame->Properties();
-    propertyData = static_cast<nsTArray<int8_t>*>(props.Get(aFrameProperty));
+    propertyData = props.Get(aFrameProperty);
     bool frameIsTable = (currentFrame->GetType() == nsGkAtoms::tableFrame);
 
     if (propertyData || frameIsTable)
@@ -1193,7 +1193,7 @@ nsMathMLmtdFrame::GetColSpan()
     if (!value.IsEmpty()) {
       nsresult error;
       colspan = value.ToInteger(&error);
-      if (NS_FAILED(error) || colspan < 0 || colspan > MAX_COLSPAN)
+      if (NS_FAILED(error) || colspan <= 0 || colspan > MAX_COLSPAN)
         colspan = 1;
     }
   }
