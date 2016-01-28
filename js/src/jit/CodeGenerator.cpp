@@ -1467,7 +1467,8 @@ CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind, size_t nDynamic
 
 static void
 CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
-                          Register object, Register temp2, Register temp5, ArrayObject* templateObj, Label* fail)
+                          Register object, Register temp2, Register temp5,
+                          ArrayObject* templateObj, Label* fail)
 {
     MOZ_ASSERT(templateObj->group()->clasp() == &ArrayObject::class_);
 
@@ -1822,6 +1823,160 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     JitCode* regExpMatcherStub = gen->compartment->jitCompartment()->regExpMatcherStubNoBarrier();
     masm.call(regExpMatcherStub);
     masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
+    masm.bind(ool->rejoin());
+
+    masm.freeStack(RegExpReservedStack);
+}
+
+static const int32_t RegExpSearcherResultNotFound = -1;
+static const int32_t RegExpSearcherResultFailed = -2;
+
+JitCode*
+JitCompartment::generateRegExpSearcherStub(JSContext* cx)
+{
+    Register regexp = RegExpTesterRegExpReg;
+    Register input = RegExpTesterStringReg;
+    Register lastIndex = RegExpTesterLastIndexReg;
+    Register sticky = RegExpTesterStickyReg;
+    Register result = ReturnReg;
+
+    // We are free to clobber all registers, as LRegExpSearcher is a call instruction.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(input);
+    regs.take(regexp);
+    regs.take(lastIndex);
+    regs.take(sticky);
+
+    Register temp1 = regs.takeAny();
+    Register temp2 = regs.takeAny();
+    Register temp3 = regs.takeAny();
+
+    MacroAssembler masm(cx);
+
+    // The InputOutputData is placed above the return address on the stack.
+    size_t inputOutputDataStartOffset = sizeof(void*);
+
+    Label notFound, oolEntry;
+    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, sticky,
+                                 temp1, temp2, temp3, inputOutputDataStartOffset,
+                                 RegExpShared::Normal, &notFound, &oolEntry))
+    {
+        return nullptr;
+    }
+
+    size_t pairsVectorStartOffset = RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
+    Address stringIndexAddress(masm.getStackPointer(),
+                               pairsVectorStartOffset + offsetof(MatchPair, start));
+    Address stringLimitAddress(masm.getStackPointer(),
+                               pairsVectorStartOffset + offsetof(MatchPair, limit));
+
+    masm.load32(stringIndexAddress, result);
+    masm.load32(stringLimitAddress, input);
+    masm.lshiftPtr(Imm32(15), input);
+    masm.or32(input, result);
+    masm.ret();
+
+    masm.bind(&notFound);
+    masm.move32(Imm32(RegExpSearcherResultNotFound), result);
+    masm.ret();
+
+    masm.bind(&oolEntry);
+    masm.move32(Imm32(RegExpSearcherResultFailed), result);
+    masm.ret();
+
+    Linker linker(masm);
+    AutoFlushICache afc("RegExpSearcherStub");
+    JitCode* code = linker.newCode<CanGC>(cx, OTHER_CODE);
+    if (!code)
+        return nullptr;
+
+#ifdef JS_ION_PERF
+    writePerfSpewerJitCodeProfile(code, "RegExpSearcherStub");
+#endif
+
+    if (cx->zone()->needsIncrementalBarrier())
+        code->togglePreBarriers(true, DontReprotect);
+
+    return code;
+}
+
+class OutOfLineRegExpSearcher : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpSearcher* lir_;
+
+  public:
+    explicit OutOfLineRegExpSearcher(LRegExpSearcher* lir)
+      : lir_(lir)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpSearcher(this);
+    }
+
+    LRegExpSearcher* lir() const {
+        return lir_;
+    }
+};
+
+typedef bool (*RegExpSearcherRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
+                                    int32_t lastIndex, bool sticky,
+                                    MatchPairs* pairs, int32_t* result);
+static const VMFunction RegExpSearcherRawInfo = FunctionInfo<RegExpSearcherRawFn>(RegExpSearcherRaw);
+
+void
+CodeGenerator::visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool)
+{
+    LRegExpSearcher* lir = ool->lir();
+    Register sticky = ToRegister(lir->sticky());
+    Register lastIndex = ToRegister(lir->lastIndex());
+    Register input = ToRegister(lir->string());
+    Register regexp = ToRegister(lir->regexp());
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(sticky);
+    regs.take(lastIndex);
+    regs.take(input);
+    regs.take(regexp);
+    Register temp = regs.takeAny();
+
+    masm.computeEffectiveAddress(Address(masm.getStackPointer(),
+        sizeof(irregexp::InputOutputData)), temp);
+
+    pushArg(temp);
+    pushArg(sticky);
+    pushArg(lastIndex);
+    pushArg(input);
+    pushArg(regexp);
+
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
+    callVM(RegExpSearcherRawInfo, lir);
+
+    masm.jump(ool->rejoin());
+}
+
+void
+CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir)
+{
+    MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
+    MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
+    MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
+    MOZ_ASSERT(ToRegister(lir->sticky()) == RegExpTesterStickyReg);
+    MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
+
+    MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
+    MOZ_ASSERT(RegExpTesterStickyReg != ReturnReg);
+
+    masm.reserveStack(RegExpReservedStack);
+
+    OutOfLineRegExpSearcher* ool = new(alloc()) OutOfLineRegExpSearcher(lir);
+    addOutOfLineCode(ool, lir->mir());
+
+    JitCode* regExpSearcherStub = gen->compartment->jitCompartment()->regExpSearcherStubNoBarrier();
+    masm.call(regExpSearcherStub);
+    masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpSearcherResultFailed), ool->entry());
     masm.bind(ool->rejoin());
 
     masm.freeStack(RegExpReservedStack);

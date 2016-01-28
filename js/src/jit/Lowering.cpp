@@ -2213,6 +2213,13 @@ MustCloneRegExp(MRegExp* regexp)
                 MOZ_ASSERT(test->regexp() == regexp);
                 continue;
             }
+        } else if (def->isRegExpSearcher()) {
+            MRegExpSearcher* test = def->toRegExpSearcher();
+            if (test->indexOf(*iter) == 1) {
+                // Optimized RegExp.prototype.exec.
+                MOZ_ASSERT(test->regexp() == regexp);
+                continue;
+            }
         } else if (def->isRegExpTester()) {
             MRegExpTester* test = def->toRegExpTester();
             if (test->indexOf(*iter) == 1) {
@@ -2256,6 +2263,22 @@ LIRGenerator::visitRegExpMatcher(MRegExpMatcher* ins)
                                                       useFixedAtStart(ins->string(), RegExpMatcherStringReg),
                                                       useFixedAtStart(ins->lastIndex(), RegExpMatcherLastIndexReg),
                                                       useFixedAtStart(ins->sticky(), RegExpMatcherStickyReg));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
+LIRGenerator::visitRegExpSearcher(MRegExpSearcher* ins)
+{
+    MOZ_ASSERT(ins->regexp()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->string()->type() == MIRType_String);
+    MOZ_ASSERT(ins->lastIndex()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->sticky()->type() == MIRType_Boolean);
+
+    LRegExpSearcher* lir = new(alloc()) LRegExpSearcher(useFixedAtStart(ins->regexp(), RegExpTesterRegExpReg),
+                                                        useFixedAtStart(ins->string(), RegExpTesterStringReg),
+                                                        useFixedAtStart(ins->lastIndex(), RegExpTesterLastIndexReg),
+                                                        useFixedAtStart(ins->sticky(), RegExpTesterStickyReg));
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
 }
