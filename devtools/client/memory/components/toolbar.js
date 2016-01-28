@@ -196,11 +196,10 @@ const Toolbar = module.exports = createClass({
 
           dom.button({
             id: "clear-snapshots",
-            className: "devtools-toolbarbutton clear-snapshots devtools-button",
+            className: "clear-snapshots devtools-button",
             onClick: onClearSnapshotsClick,
-            title: L10N.getStr("clear-snapshots"),
-            "data-text-only": true,
-          }, L10N.getStr("clear-snapshots"))
+            title: L10N.getStr("clear-snapshots.tooltip")
+          })
         ),
 
         dom.label(

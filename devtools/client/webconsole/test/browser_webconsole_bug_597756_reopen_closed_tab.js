@@ -54,7 +54,7 @@ add_task(function* () {
 
 function reload(browser) {
   let loaded = loadBrowser(browser);
-  content.location.reload();
+  browser.reload();
   return loaded;
 }
 

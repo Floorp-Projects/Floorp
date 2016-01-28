@@ -152,6 +152,13 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                            WPARAM& aWParam, LPARAM& aLParam,
                            MSGResult& aResult)
 {
+  if (aMessage == MOZ_WM_DISMISS_ONSCREEN_KEYBOARD) {
+    if (!sFocusedWindow) {
+      DismissOnScreenKeyboard();
+    }
+    return true;
+  }
+
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     TSFTextStore::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
@@ -253,7 +260,7 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
       }
       case NOTIFY_IME_OF_BLUR:
         sFocusedWindow = nullptr;
-        IMEHandler::MaybeDismissOnScreenKeyboard();
+        IMEHandler::MaybeDismissOnScreenKeyboard(aWindow);
         IMMHandler::OnFocusChange(false, aWindow);
         return TSFTextStore::OnFocusChange(false, aWindow,
                                            aWindow->GetInputContext());
@@ -302,11 +309,13 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return IMMHandler::OnMouseButtonEvent(aWindow, aIMENotification);
     case NOTIFY_IME_OF_FOCUS:
+      sFocusedWindow = aWindow;
       IMMHandler::OnFocusChange(true, aWindow);
       IMEHandler::MaybeShowOnScreenKeyboard();
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
-      IMEHandler::MaybeDismissOnScreenKeyboard();
+      sFocusedWindow = nullptr;
+      IMEHandler::MaybeDismissOnScreenKeyboard(aWindow);
       IMMHandler::OnFocusChange(false, aWindow);
 #ifdef NS_ENABLE_TSF
       // If a plugin gets focus while TSF has focus, we need to notify TSF of
@@ -597,14 +606,15 @@ IMEHandler::MaybeShowOnScreenKeyboard()
 
 // static
 void
-IMEHandler::MaybeDismissOnScreenKeyboard()
+IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow)
 {
   if (sPluginHasFocus ||
       !IsWin8OrLater()) {
     return;
   }
 
-  IMEHandler::DismissOnScreenKeyboard();
+  ::PostMessage(aWindow->GetWindowHandle(), MOZ_WM_DISMISS_ONSCREEN_KEYBOARD,
+                0, 0);
 }
 
 // static
