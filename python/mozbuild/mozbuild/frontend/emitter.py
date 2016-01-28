@@ -1063,7 +1063,7 @@ class TreeMetadataEmitter(LoggingMixin):
             m = manifestparser.TestManifest(manifests=[path], strict=True,
                                             rootdir=context.config.topsrcdir)
             defaults = m.manifest_defaults[os.path.normpath(path)]
-            if not m.tests and not 'support-files' in defaults:
+            if not m.tests:
                 raise SandboxValidationError('Empty test manifest: %s'
                     % path, context)
 
@@ -1161,10 +1161,6 @@ class TreeMetadataEmitter(LoggingMixin):
                         ((mozpath.join(out_dir, manifest_relpath)), True)
 
                 process_support_files(test)
-
-            if not filtered:
-                # If there are no tests, look for support-files under DEFAULT.
-                process_support_files(defaults)
 
             # We also copy manifests into the output directory,
             # including manifests from [include:foo] directives.
