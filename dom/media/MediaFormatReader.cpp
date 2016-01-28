@@ -1530,7 +1530,7 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
     DoAudioSeek();
   } else {
     mPendingSeekTime.reset();
-    mSeekPromise.Resolve(aTime.ToMicroseconds(), __func__);
+    mSeekPromise.Resolve(aTime, __func__);
   }
 }
 
@@ -1553,7 +1553,7 @@ MediaFormatReader::OnAudioSeekCompleted(media::TimeUnit aTime)
   LOGV("Audio seeked to %lld", aTime.ToMicroseconds());
   mAudio.mSeekRequest.Complete();
   mPendingSeekTime.reset();
-  mSeekPromise.Resolve(aTime.ToMicroseconds(), __func__);
+  mSeekPromise.Resolve(aTime, __func__);
 }
 
 media::TimeIntervals
