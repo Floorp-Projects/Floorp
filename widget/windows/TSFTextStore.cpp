@@ -4602,7 +4602,8 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
           "mMessage=0x%08X, mTextChangeData={ mStartOffset=%lu, "
           "mRemovedEndOffset=%lu, mAddedEndOffset=%lu, "
           "mCausedOnlyByComposition=%s, "
-          "mIncludingChangesDuringComposition=%s }), "
+          "mIncludingChangesDuringComposition=%s, "
+          "mIncludingChangesWithoutComposition=%s }), "
           "mSink=0x%p, mSinkMask=%s, mComposition.IsComposing()=%s",
           this, aIMENotification.mMessage,
           textChangeData.mStartOffset,
@@ -4610,6 +4611,7 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
           textChangeData.mAddedEndOffset,
           GetBoolName(textChangeData.mCausedOnlyByComposition),
           GetBoolName(textChangeData.mIncludingChangesDuringComposition),
+          GetBoolName(textChangeData.mIncludingChangesWithoutComposition),
           mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mComposition.IsComposing())));
