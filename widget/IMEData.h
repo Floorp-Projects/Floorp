@@ -842,30 +842,6 @@ struct IMENotification final
     MOZ_RELEASE_ASSERT(mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
     mTextChangeData = aTextChangeData;
   }
-
-  bool IsCausedByComposition() const
-  {
-    switch (mMessage) {
-      case NOTIFY_IME_OF_SELECTION_CHANGE:
-        return mSelectionChangeData.mCausedByComposition;
-      case NOTIFY_IME_OF_TEXT_CHANGE:
-        return mTextChangeData.mCausedByComposition;
-      default:
-        return false;
-    }
-  }
-
-  bool OccurredDuringComposition() const
-  {
-    switch (mMessage) {
-      case NOTIFY_IME_OF_SELECTION_CHANGE:
-        return mSelectionChangeData.mOccurredDuringComposition;
-      case NOTIFY_IME_OF_TEXT_CHANGE:
-        return mTextChangeData.mOccurredDuringComposition;
-      default:
-        return false;
-    }
-  }
 };
 
 } // namespace widget
