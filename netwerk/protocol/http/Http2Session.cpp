@@ -1863,22 +1863,6 @@ Http2Session::RecvGoAway(Http2Session *self)
   return NS_OK;
 }
 
-PLDHashOperator
-Http2Session::RestartBlockedOnRwinEnumerator(nsAHttpTransaction *key,
-                                             nsAutoPtr<Http2Stream> &stream,
-                                             void *closure)
-{
-  Http2Session *self = static_cast<Http2Session *>(closure);
-  MOZ_ASSERT(self->mServerSessionWindow > 0);
-
-  if (!stream->BlockedOnRwin() || stream->ServerReceiveWindow() <= 0)
-    return PL_DHASH_NEXT;
-
-  self->mReadyForWrite.Push(stream);
-  self->SetWriteCallbacks();
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 Http2Session::RecvWindowUpdate(Http2Session *self)
 {
@@ -1959,7 +1943,19 @@ Http2Session::RecvWindowUpdate(Http2Session *self)
     if ((oldRemoteWindow <= 0) && (self->mServerSessionWindow > 0)) {
       LOG3(("Http2Session::RecvWindowUpdate %p restart session window\n",
             self));
-      self->mStreamTransactionHash.Enumerate(RestartBlockedOnRwinEnumerator, self);
+      for (auto iter = self->mStreamTransactionHash.Iter();
+           !iter.Done();
+           iter.Next()) {
+        MOZ_ASSERT(self->mServerSessionWindow > 0);
+
+        nsAutoPtr<Http2Stream>& stream = iter.Data();
+        if (!stream->BlockedOnRwin() || stream->ServerReceiveWindow() <= 0) {
+          continue;
+        }
+
+        self->mReadyForWrite.Push(stream);
+        self->SetWriteCallbacks();
+      }
     }
     LOG3(("Http2Session::RecvWindowUpdate %p session window "
           "%d increased by %d now %d.\n", self,
@@ -3685,22 +3681,6 @@ Http2Session::Http1xTransactionCount()
   return 0;
 }
 
-// used as an enumerator by TakeSubTransactions()
-static PLDHashOperator
-  TakeStream(nsAHttpTransaction *key,
-             nsAutoPtr<Http2Stream> &stream,
-             void *closure)
-{
-  nsTArray<RefPtr<nsAHttpTransaction> > *list =
-    static_cast<nsTArray<RefPtr<nsAHttpTransaction> > *>(closure);
-
-  list->AppendElement(key);
-
-  // removing the stream from the hash will delete the stream
-  // and drop the transaction reference the hash held
-  return PL_DHASH_REMOVE;
-}
-
 nsresult
 Http2Session::TakeSubTransactions(
   nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
@@ -3715,7 +3695,13 @@ Http2Session::TakeSubTransactions(
 
   LOG3(("   taking %d\n", mStreamTransactionHash.Count()));
 
-  mStreamTransactionHash.Enumerate(TakeStream, &outTransactions);
+  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
+    outTransactions.AppendElement(iter.Key());
+
+    // Removing the stream from the hash will delete the stream and drop the
+    // transaction reference the hash held.
+    iter.Remove();
+  }
   return NS_OK;
 }
 
