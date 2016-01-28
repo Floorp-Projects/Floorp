@@ -2274,7 +2274,7 @@ public class BrowserApp extends GeckoApp
         mBrowserToolbar.startEditing(url, animator);
 
         final boolean isUserSearchTerm = !TextUtils.isEmpty(selectedTab.getUserRequested());
-        if (isUserSearchTerm && AppConstants.NIGHTLY_BUILD) {
+        if (isUserSearchTerm && SwitchBoard.isInExperiment(getContext(), Experiments.SEARCH_TERM)) {
             showBrowserSearchAfterAnimation(animator);
         } else {
             showHomePagerWithAnimator(panelId, animator);
