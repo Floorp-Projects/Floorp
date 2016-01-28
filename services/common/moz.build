@@ -31,6 +31,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['MOZ_B2GDROID']:
         'modules-testing/storageserver.js',
     ]
 
+    if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
+        EXTRA_PP_JS_MODULES['services-common'] += [
+            'bagheeraclient.js',
+        ]
+        TESTING_JS_MODULES.services.common += [
+            'modules-testing/bagheeraserver.js',
+        ]
+
 EXTRA_PP_JS_MODULES['services-common'] += [
     'async.js',
     'observers.js',
