@@ -2140,7 +2140,7 @@ XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
 
     // This uses getPropertyDescriptor for backward compatibility with
     // the old BaseProxyHandler::get implementation.
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!getPropertyDescriptor(cx, wrapper, id, &desc))
         return false;
     desc.assertCompleteIfFound();
