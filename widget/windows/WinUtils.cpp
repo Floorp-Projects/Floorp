@@ -524,6 +524,22 @@ WinUtils::Log(const char *fmt, ...)
   delete[] buffer;
 }
 
+// static
+double
+WinUtils::SystemScaleFactor()
+{
+  // The result of GetDeviceCaps won't change dynamically, as it predates
+  // per-monitor DPI and support for on-the-fly resolution changes.
+  // Therefore, we only need to look it up once.
+  static int logPixelsY = 0;
+  if (!logPixelsY) {
+    HDC screenDC = GetDC(nullptr);
+    logPixelsY = GetDeviceCaps(screenDC, LOGPIXELSY);
+    ReleaseDC(nullptr, screenDC);
+  }
+  return logPixelsY / 96.0;
+}
+
 #ifndef WM_DPICHANGED
 typedef enum {
   MDT_EFFECTIVE_DPI = 0,
