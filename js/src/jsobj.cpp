@@ -1062,7 +1062,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
 {
     // |obj| and |cx| are generally not same-compartment with |target| here.
     assertSameCompartment(cx, obj, id);
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
 
     if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
         return false;

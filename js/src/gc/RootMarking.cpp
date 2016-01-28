@@ -189,7 +189,7 @@ StackShape::trace(JSTracer* trc)
 }
 
 void
-JSPropertyDescriptor::trace(JSTracer* trc)
+PropertyDescriptor::trace(JSTracer* trc)
 {
     if (obj)
         TraceRoot(trc, &obj, "Descriptor::obj");

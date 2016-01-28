@@ -282,7 +282,7 @@ JS_CopyPropertyFrom(JSContext* cx, JS::HandleId id, JS::HandleObject target,
                     PropertyCopyBehavior copyBehavior = CopyNonConfigurableAsIs);
 
 extern JS_FRIEND_API(bool)
-JS_WrapPropertyDescriptor(JSContext* cx, JS::MutableHandle<JSPropertyDescriptor> desc);
+JS_WrapPropertyDescriptor(JSContext* cx, JS::MutableHandle<JS::PropertyDescriptor> desc);
 
 struct JSFunctionSpecWithHelp {
     const char*     name;
@@ -374,7 +374,7 @@ proxy_LookupProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::M
                     JS::MutableHandle<Shape*> propp);
 extern JS_FRIEND_API(bool)
 proxy_DefineProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::Handle<JSPropertyDescriptor> desc,
+                     JS::Handle<JS::PropertyDescriptor> desc,
                      JS::ObjectOpResult& result);
 extern JS_FRIEND_API(bool)
 proxy_HasProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
@@ -386,7 +386,7 @@ proxy_SetProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::Hand
                   JS::HandleValue receiver, JS::ObjectOpResult& result);
 extern JS_FRIEND_API(bool)
 proxy_GetOwnPropertyDescriptor(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                               JS::MutableHandle<JSPropertyDescriptor> desc);
+                               JS::MutableHandle<JS::PropertyDescriptor> desc);
 extern JS_FRIEND_API(bool)
 proxy_DeleteProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                      JS::ObjectOpResult& result);
@@ -2719,7 +2719,7 @@ ForwardToNative(JSContext* cx, JSNative native, const JS::CallArgs& args);
 JS_FRIEND_API(bool)
 SetPropertyIgnoringNamedGetter(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                                JS::HandleValue v, JS::HandleValue receiver,
-                               JS::Handle<JSPropertyDescriptor> ownDesc,
+                               JS::Handle<JS::PropertyDescriptor> ownDesc,
                                JS::ObjectOpResult& result);
 
 JS_FRIEND_API(void)

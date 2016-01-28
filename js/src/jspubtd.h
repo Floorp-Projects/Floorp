@@ -97,7 +97,6 @@ struct JSFunctionSpec;
 struct JSLocaleCallbacks;
 struct JSObjectMap;
 struct JSPrincipals;
-struct JSPropertyDescriptor;
 struct JSPropertyName;
 struct JSPropertySpec;
 struct JSRuntime;
@@ -137,6 +136,8 @@ void FinishPersistentRootedChains(js::RootLists&);
 } // namespace js
 
 namespace JS {
+
+struct PropertyDescriptor;
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
 
