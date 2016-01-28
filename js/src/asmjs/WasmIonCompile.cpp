@@ -1560,19 +1560,11 @@ static bool
 EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 {
     f.startCallArgs(call);
-    for (unsigned i = 0; i < sig.args().length(); i++) {
-        MDefinition *arg = nullptr;
-        switch (sig.arg(i)) {
-          case ValType::I32:    if (!EmitExpr(f, ExprType::I32, &arg))   return false; break;
-          case ValType::I64:    MOZ_CRASH("int64");
-          case ValType::F32:    if (!EmitExpr(f, ExprType::F32, &arg))   return false; break;
-          case ValType::F64:    if (!EmitExpr(f, ExprType::F64, &arg))   return false; break;
-          case ValType::I32x4:  if (!EmitExpr(f, ExprType::I32x4, &arg)) return false; break;
-          case ValType::F32x4:  if (!EmitExpr(f, ExprType::F32x4, &arg)) return false; break;
-          case ValType::B32x4:  if (!EmitExpr(f, ExprType::B32x4, &arg)) return false; break;
-          case ValType::Limit:  MOZ_CRASH("Limit");
-        }
-        if (!f.passArg(arg, sig.arg(i), call))
+    for (ValType argType : sig.args()) {
+        MDefinition* arg;
+        if (!EmitExpr(f, ToExprType(argType), &arg))
+            return false;
+        if (!f.passArg(arg, argType, call))
             return false;
     }
     f.finishCallArgs(call);
@@ -1580,7 +1572,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* call)
 }
 
 static bool
-EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t funcIndex = f.readU32();
 
@@ -1622,7 +1614,7 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 }
 
 static bool
-EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
+EmitCallImport(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
     uint32_t importIndex = f.readU32();
 
@@ -2701,12 +2693,12 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitBreak(f, HasLabel(true));
       case Expr::Return:
         return EmitRet(f);
-      case Expr::CallInternal:
-        return EmitInternalCall(f, type, def);
+      case Expr::Call:
+        return EmitCall(f, type, def);
       case Expr::CallIndirect:
         return EmitFuncPtrCall(f, type, def);
       case Expr::CallImport:
-        return EmitFFICall(f, type, def);
+        return EmitCallImport(f, type, def);
       case Expr::AtomicsFence:
         f.memoryBarrier(MembarFull);
         return true;
