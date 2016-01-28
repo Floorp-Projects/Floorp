@@ -134,7 +134,7 @@ JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst)
 
 template <typename CharT>
 UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<const CharT> chars)
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<CharT> chars)
 {
     /* Get required buffer size. */
     const CharT* str = chars.start().get();
@@ -155,6 +155,14 @@ JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<con
 
     return UTF8CharsZ(utf8, len);
 }
+
+template UTF8CharsZ
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx,
+                         const mozilla::Range<Latin1Char> chars);
+
+template UTF8CharsZ
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx,
+                         const mozilla::Range<char16_t> chars);
 
 template UTF8CharsZ
 JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx,
