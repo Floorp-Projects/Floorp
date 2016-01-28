@@ -14,8 +14,11 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES['services-common'] += [
+    'async.js',
     'logmanager.js',
     'moz-kinto-client.js',
+    'observers.js',
+    'rest.js',
     'stringbundle.js',
     'utils.js',
 ]
@@ -30,12 +33,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['MOZ_B2GDROID']:
     TESTING_JS_MODULES.services.common += [
         'modules-testing/storageserver.js',
     ]
-
-EXTRA_PP_JS_MODULES['services-common'] += [
-    'async.js',
-    'observers.js',
-    'rest.js',
-]
 
 TESTING_JS_MODULES.services.common += [
     'modules-testing/logging.js',
