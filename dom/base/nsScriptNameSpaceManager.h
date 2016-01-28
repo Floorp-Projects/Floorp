@@ -180,11 +180,6 @@ public:
                                            aConstructorEnabled);
   }
 
-  typedef PLDHashOperator
-  (* NameEnumerator)(const nsAString& aGlobalName,
-                     const nsGlobalNameStruct& aGlobalNameStruct,
-                     void* aClosure);
-
   class NameIterator : public PLDHashTable::Iterator
   {
   public:
