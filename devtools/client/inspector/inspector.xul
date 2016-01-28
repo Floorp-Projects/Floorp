@@ -193,7 +193,7 @@
              crop="end"/>
       </tabs>
       <tabpanels flex="1">
-        <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar">
+        <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
           <html:div id="ruleview-toolbar" class="devtools-toolbar devtools-sidebar-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="ruleview-searchbox"
@@ -215,7 +215,7 @@
           </html:div>
         </tabpanel>
 
-        <tabpanel id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar">
+        <tabpanel id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
           <html:div class="devtools-toolbar devtools-sidebar-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="computedview-searchbox"
@@ -238,7 +238,7 @@
           </html:div>
         </tabpanel>
 
-        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar">
+        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
           <html:div class="devtools-toolbar devtools-sidebar-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="font-preview-text-input"
@@ -273,7 +273,7 @@
           </html:div>
         </tabpanel>
 
-        <tabpanel id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar">
+        <tabpanel id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar inspector-tabpanel">
           <html:div id="layout-container">
             <html:p id="layout-header">
               <html:span id="layout-element-size"></html:span><html:span id="layout-element-position"></html:span>
