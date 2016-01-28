@@ -6246,7 +6246,7 @@ nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
       // property.
       bool hasEmbeddingLevel;
       nsBidiLevel embeddingLevel =
-        NS_PTR_TO_INT32(Properties().Get(nsIFrame::EmbeddingLevelProperty(),
+        NS_PTR_TO_INT32(Properties().Get(nsBidi::EmbeddingLevelProperty(),
                                          &hasEmbeddingLevel));
       bool isRTL = hasEmbeddingLevel
         ? IS_LEVEL_RTL(embeddingLevel)
