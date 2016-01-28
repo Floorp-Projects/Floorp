@@ -721,7 +721,8 @@ RegExpShared::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 RegExpCompartment::RegExpCompartment(JSRuntime* rt)
   : set_(rt),
     matchResultTemplateObject_(nullptr),
-    optimizableRegExpPrototypeShape_(nullptr)
+    optimizableRegExpPrototypeShape_(nullptr),
+    optimizableRegExpInstanceShape_(nullptr)
 {}
 
 RegExpCompartment::~RegExpCompartment()
@@ -851,6 +852,12 @@ RegExpCompartment::sweep(JSRuntime* rt)
         IsAboutToBeFinalized(&optimizableRegExpPrototypeShape_))
     {
         optimizableRegExpPrototypeShape_.set(nullptr);
+    }
+
+    if (optimizableRegExpInstanceShape_ &&
+        IsAboutToBeFinalized(&optimizableRegExpInstanceShape_))
+    {
+        optimizableRegExpInstanceShape_.set(nullptr);
     }
 }
 

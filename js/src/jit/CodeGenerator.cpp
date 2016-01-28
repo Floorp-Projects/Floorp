@@ -2035,6 +2035,77 @@ CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototype
     masm.jump(ool->rejoin());
 }
 
+class OutOfLineRegExpInstanceOptimizable : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpInstanceOptimizable* ins_;
+
+  public:
+    explicit OutOfLineRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
+      : ins_(ins)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpInstanceOptimizable(this);
+    }
+    LRegExpInstanceOptimizable* ins() const {
+        return ins_;
+    }
+};
+
+void
+CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    OutOfLineRegExpInstanceOptimizable* ool = new(alloc()) OutOfLineRegExpInstanceOptimizable(ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    masm.loadJSContext(temp);
+    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
+    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
+    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpInstanceShape()),
+                 temp);
+
+    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.move32(Imm32(0x1), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOptimizable* ool)
+{
+    LRegExpInstanceOptimizable* ins = ool->ins();
+    Register object = ToRegister(ins->object());
+    Register proto = ToRegister(ins->proto());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    saveVolatile(output);
+
+    masm.reserveStack(sizeof(void*));
+    masm.moveStackPtrTo(temp);
+
+    masm.setupUnalignedABICall(output);
+    masm.loadJSContext(output);
+    masm.passABIArg(output);
+    masm.passABIArg(object);
+    masm.passABIArg(proto);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpInstanceOptimizableRaw));
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
+    masm.freeStack(sizeof(void*));
+
+    restoreVolatile(output);
+
+    masm.jump(ool->rejoin());
+}
+
 typedef JSString* (*RegExpReplaceFn)(JSContext*, HandleString, HandleObject, HandleString);
 static const VMFunction RegExpReplaceInfo = FunctionInfo<RegExpReplaceFn>(RegExpReplace);
 
