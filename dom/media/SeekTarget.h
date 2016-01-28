@@ -25,33 +25,33 @@ struct SeekTarget {
     Accurate
   };
   SeekTarget()
-    : mType(SeekTarget::Invalid)
-    , mEventVisibility(MediaDecoderEventVisibility::Observable)
+    : mEventVisibility(MediaDecoderEventVisibility::Observable)
     , mTime(media::TimeUnit::Invalid())
+    , mType(SeekTarget::Invalid)
   {
   }
   SeekTarget(int64_t aTimeUsecs,
              Type aType,
              MediaDecoderEventVisibility aEventVisibility =
                MediaDecoderEventVisibility::Observable)
-    : mType(aType)
-    , mEventVisibility(aEventVisibility)
+    : mEventVisibility(aEventVisibility)
     , mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs))
+    , mType(aType)
   {
   }
   SeekTarget(const media::TimeUnit& aTime,
              Type aType,
              MediaDecoderEventVisibility aEventVisibility =
                MediaDecoderEventVisibility::Observable)
-    : mType(aType)
-    , mEventVisibility(aEventVisibility)
+    : mEventVisibility(aEventVisibility)
     , mTime(aTime)
+    , mType(aType)
   {
   }
   SeekTarget(const SeekTarget& aOther)
-    : mType(aOther.mType)
-    , mEventVisibility(aOther.mEventVisibility)
+    : mEventVisibility(aOther.mEventVisibility)
     , mTime(aOther.mTime)
+    , mType(aOther.mType)
   {
   }
   bool IsValid() const {
@@ -69,16 +69,25 @@ struct SeekTarget {
     NS_ASSERTION(aTime.IsValid(), "Invalid SeekTarget destination");
     mTime = aTime;
   }
+  void SetType(Type aType) {
+    mType = aType;
+  }
+  bool IsFast() const {
+    return mType == SeekTarget::Type::PrevSyncPoint;
+  }
+  bool IsAccurate() const {
+    return mType == SeekTarget::Type::Accurate;
+  }
 
-  // Whether we should seek "Fast", or "Accurate".
-  // "Fast" seeks to the seek point preceeding mTime, whereas
-  // "Accurate" seeks as close as possible to mTime.
-  Type mType;
   MediaDecoderEventVisibility mEventVisibility;
 
 private:
   // Seek target time.
   media::TimeUnit mTime;
+  // Whether we should seek "Fast", or "Accurate".
+  // "Fast" seeks to the seek point preceeding mTime, whereas
+  // "Accurate" seeks as close as possible to mTime.
+  Type mType;
 };
 
 } // namespace mozilla
