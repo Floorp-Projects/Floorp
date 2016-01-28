@@ -52,7 +52,7 @@ function runTests() {
     // Fake a first connection to the content process
     let transport = DebuggerServer.connectPipe();
     client = new DebuggerClient(transport);
-    client.connect(listProcess);
+    client.connect().then(listProcess);
   }
 
   function listProcess() {
