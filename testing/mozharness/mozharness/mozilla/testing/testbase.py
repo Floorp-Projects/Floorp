@@ -167,14 +167,27 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
     def query_symbols_url(self):
         if self.symbols_url:
             return self.symbols_url
-        if not self.installer_url:
-            self.fatal("Can't figure out symbols_url without an installer_url!")
-        for suffix in INSTALLER_SUFFIXES:
-            if self.installer_url.endswith(suffix):
-                self.symbols_url = self.installer_url[:-len(suffix)] + '.crashreporter-symbols.zip'
-                return self.symbols_url
+
+        elif self.installer_url:
+            symbols_url = None
+            for suffix in INSTALLER_SUFFIXES:
+                if self.installer_url.endswith(suffix):
+                    symbols_url = self.installer_url[:-len(suffix)] + '.crashreporter-symbols.zip'
+                    break
+
+            # Check if the URL exists. If not, use none to allow mozcrash to auto-check for symbols
+            try:
+                if symbols_url:
+                    self._urlopen(symbols_url)
+                    self.symbols_url = symbols_url
+            except urllib2.URLError:
+                self.warning("Can't figure out symbols_url from installer_url: %s!" %
+                             self.installer_url)
+
         else:
-            self.fatal("Can't figure out symbols_url from installer_url %s!" % self.installer_url)
+            self.fatal("Can't figure out symbols_url without an installer_url!")
+
+        return self.symbols_url
 
     def _pre_config_lock(self, rw_config):
         for i, (target_file, target_dict) in enumerate(rw_config.all_cfg_files_and_dicts):
