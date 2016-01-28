@@ -736,6 +736,9 @@ struct IMENotification final
     // Note that if after the last composition is finished and there are some
     // changes not caused by composition, this is set to false.
     bool mIncludingChangesDuringComposition;
+    // mIncludingChangesWithoutComposition is true if there is at least one
+    // change which did occur when there wasn't a composition ongoing.
+    bool mIncludingChangesWithoutComposition;
 
     uint32_t OldLength() const
     {
@@ -809,6 +812,8 @@ struct IMENotification final
       mCausedOnlyByComposition = aCausedByComposition;
       mIncludingChangesDuringComposition =
         !aCausedByComposition && aOccurredDuringComposition;
+      mIncludingChangesWithoutComposition =
+        !aCausedByComposition && !aOccurredDuringComposition;
     }
   };
 
