@@ -2901,10 +2901,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                              drawBackgroundImage,
                                              drawBackgroundColor);
 
-  const nsStyleImageLayers& layers = aBackgroundSC->StyleBackground()->mLayers;
+  bool paintMask = (aFlags & PAINTBG_MASK_IMAGE);
+  const nsStyleImageLayers& layers = paintMask ?
+    aBackgroundSC->StyleSVGReset()->mLayers :
+    aBackgroundSC->StyleBackground()->mLayers;
   // If we're drawing a specific layer, we don't want to draw the
   // background color.
-  if (drawBackgroundColor && aLayer >= 0) {
+  if ((drawBackgroundColor && aLayer >= 0) || paintMask) {
     drawBackgroundColor = false;
   }
 
@@ -3027,11 +3030,17 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       }
       if ((aLayer < 0 || i == (uint32_t)startLayer) &&
           !clipState.mDirtyRectGfx.IsEmpty()) {
-        nsBackgroundLayerState state = PrepareImageLayer(aPresContext, aForFrame,
-            aFlags, paintBorderArea, clipState.mBGClipArea, layer);
+        nsBackgroundLayerState state =
+          PrepareImageLayer(aPresContext, aForFrame,
+                            aFlags, paintBorderArea, clipState.mBGClipArea,
+                            layer, paintMask);
         result &= state.mImageRenderer.PrepareResult();
         if (!state.mFillArea.IsEmpty()) {
-          if (state.mCompositionOp != CompositionOp::OP_OVER) {
+          // Always using OP_OVER mode while drawing the bottom mask layer.
+          bool isBottomMaskLayer = paintMask ?
+                                   (i == (layers.mImageCount - 1)) : false;
+          if (state.mCompositionOp != CompositionOp::OP_OVER &&
+              !isBottomMaskLayer) {
             NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
                          "It is assumed the initial op is OP_OVER, when it is restored later");
             ctx->SetOp(state.mCompositionOp);
@@ -3210,7 +3219,8 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
                                   uint32_t aFlags,
                                   const nsRect& aBorderArea,
                                   const nsRect& aBGClipRect,
-                                  const nsStyleImageLayers::Layer& aLayer)
+                                  const nsStyleImageLayers::Layer& aLayer,
+                                  bool aMask)
 {
   /*
    * The properties we need to keep in mind when drawing style image
@@ -3372,7 +3382,8 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
 
   state.mFillArea.IntersectRect(state.mFillArea, bgClipRect);
 
-  state.mCompositionOp = GetGFXBlendMode(aLayer.mBlendMode);
+  state.mCompositionOp = aMask ? GetGFXCompositeMode(aLayer.mComposite) :
+                                 GetGFXBlendMode(aLayer.mBlendMode);
 
   return state;
 }

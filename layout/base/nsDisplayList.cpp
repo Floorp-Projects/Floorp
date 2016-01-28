@@ -6440,8 +6440,10 @@ nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                   nsRenderingContext* aCtx,
                                   LayerManager* aManager)
 {
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesWithEffects(*aCtx->ThebesContext(), mFrame,
                                                 mVisibleRect,
+                                                borderArea,
                                                 aBuilder, aManager);
 }
 
@@ -6482,7 +6484,6 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
   effectProperties.GetClipPathFrame(&isOK);
-  effectProperties.GetMaskFrame(&isOK);
 
   if (!isOK) {
     return nullptr;
