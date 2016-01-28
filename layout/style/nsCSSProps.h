@@ -667,12 +667,12 @@ public:
   static const KTableEntry kAzimuthKTable[];
   static const KTableEntry kBackfaceVisibilityKTable[];
   static const KTableEntry kTransformStyleKTable[];
-  static const KTableEntry kBackgroundAttachmentKTable[];
-  static const KTableEntry kBackgroundOriginKTable[];
-  static const KTableEntry kBackgroundPositionKTable[];
-  static const KTableEntry kBackgroundRepeatKTable[];
-  static const KTableEntry kBackgroundRepeatPartKTable[];
-  static const KTableEntry kBackgroundSizeKTable[];
+  static const KTableEntry kImageLayerAttachmentKTable[];
+  static const KTableEntry kImageLayerOriginKTable[];
+  static const KTableEntry kImageLayerPositionKTable[];
+  static const KTableEntry kImageLayerRepeatKTable[];
+  static const KTableEntry kImageLayerRepeatPartKTable[];
+  static const KTableEntry kImageLayerSizeKTable[];
   static const KTableEntry kBlendModeKTable[];
   static const KTableEntry kBorderCollapseKTable[];
   static const KTableEntry kBorderColorKTable[];

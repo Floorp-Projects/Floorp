@@ -1516,12 +1516,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                    gradient->mBgPos.mYValue.GetUnit() == eCSSUnit_Enumerated,
                    "unexpected unit");
         aResult.AppendLiteral("to");
-        if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+        if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
           aResult.Append(' ');
           gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
                                                   aResult, aSerialization);
         }
-        if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_BG_POSITION_CENTER)) {
+        if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
           aResult.Append(' ');
           gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
                                                   aResult, aSerialization);

@@ -539,20 +539,20 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                    origin->mValue.GetUnit() == eCSSUnit_Enumerated,
                    "should not have inherit/initial within list");
 
-        if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
-            origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
+        if (clip->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
+            origin->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
           MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                        eCSSProperty_background_origin] ==
-                     nsCSSProps::kBackgroundOriginKTable);
+                     nsCSSProps::kImageLayerOriginKTable);
           MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                        eCSSProperty_background_clip] ==
-                     nsCSSProps::kBackgroundOriginKTable);
-          static_assert(NS_STYLE_BG_CLIP_BORDER ==
-                        NS_STYLE_BG_ORIGIN_BORDER &&
-                        NS_STYLE_BG_CLIP_PADDING ==
-                        NS_STYLE_BG_ORIGIN_PADDING &&
-                        NS_STYLE_BG_CLIP_CONTENT ==
-                        NS_STYLE_BG_ORIGIN_CONTENT,
+                     nsCSSProps::kImageLayerOriginKTable);
+          static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
+                        NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
+                        NS_STYLE_IMAGELAYER_CLIP_PADDING ==
+                        NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
+                        NS_STYLE_IMAGELAYER_CLIP_CONTENT ==
+                        NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
                         "bg-clip and bg-origin style constants must agree");
           aValue.Append(char16_t(' '));
           origin->mValue.AppendToString(eCSSProperty_background_origin, aValue,
