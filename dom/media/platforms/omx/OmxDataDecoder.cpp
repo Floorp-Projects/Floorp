@@ -916,17 +916,9 @@ MediaDataHelper::MediaDataHelper(const TrackInfo* aTrackInfo,
   , mAudioCompactor(mAudioQueue)
   , mImageContainer(aImageContainer)
 {
-  // Get latest port definition.
-  nsTArray<uint32_t> ports;
-  GetOmxPortIndex(ports);
-  for (auto idx : ports) {
-    InitOmxParameter(&mOutputPortDef);
-    mOutputPortDef.nPortIndex = idx;
-    aOmxLayer->GetParameter(OMX_IndexParamPortDefinition, &mOutputPortDef, sizeof(mOutputPortDef));
-    if (mOutputPortDef.eDir == OMX_DirOutput) {
-      break;
-    }
-  }
+  InitOmxParameter(&mOutputPortDef);
+  mOutputPortDef.nPortIndex = aOmxLayer->OutputPortIndex();
+  aOmxLayer->GetParameter(OMX_IndexParamPortDefinition, &mOutputPortDef, sizeof(mOutputPortDef));
 }
 
 already_AddRefed<MediaData>
