@@ -1,0 +1,4 @@
+== mask-composite-1a.html mask-composite-1-ref.html
+== mask-composite-1b.html mask-composite-1-ref.html
+fails-if(cocoaWidget) == mask-composite-2a.html mask-composite-2-ref.html # bug 1231643
+fails-if(cocoaWidget) == mask-composite-2b.html mask-composite-2-ref.html # bug 1231643
