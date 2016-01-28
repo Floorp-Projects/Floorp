@@ -49,8 +49,18 @@ http://creativecommons.org/licenses/publicdomain/
   });
 
   var pushSubscription;
-  add_task(function* setupPushNotification() {
+  add_task(function* subscribe() {
     pushSubscription = yield registration.pushManager.subscribe();
+  });
+
+  add_task(function* resubscribe() {
+    var data = yield sendRequestToWorker({
+      type: "resubscribe",
+      endpoint: pushSubscription.endpoint,
+    });
+    pushSubscription = yield registration.pushManager.getSubscription();
+    is(data.endpoint, pushSubscription.endpoint,
+       "Subscription endpoints should match after resubscribing in worker");
   });
 
   add_task(function* waitForPushNotification() {
