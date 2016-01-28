@@ -350,4 +350,41 @@ CSS_PROP_ALIAS(-webkit-user-select,
                WebkitUserSelect,
                WEBKIT_PREFIX_PREF)
 
+CSS_PROP_ALIAS(-webkit-mask,
+               mask,
+               WebkitMask,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-clip,
+               mask_clip,
+               WebkitMaskClip,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-composite,
+               mask_composite,
+               WebkitMaskComposite,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-image,
+               mask_image,
+               WebkitMaskImage,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-mode,
+               mask_mode,
+               WebkitMaskMode,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-origin,
+               mask_origin,
+               WebkitMaskOrigin,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-position,
+               mask_position,
+               WebkitMaskPosition,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-repeat,
+               mask_repeat,
+               WebkitMaskRepeat,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-size,
+               mask_size,
+               WebkitMaskSize,
+               WEBKIT_PREFIX_PREF)
+
 #undef WEBKIT_PREFIX_PREF
