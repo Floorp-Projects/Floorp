@@ -160,32 +160,26 @@ DeleteDatabase(const nsAString& aName,
   db->Delete();
 }
 
-PLDHashOperator
-DeleteDataStoresAppEnumerator(
-                             const uint32_t& aAppId,
-                             nsAutoPtr<DataStoreInfo>& aInfo,
-                             void* aUserData)
+static void
+DeleteDataStoresHelper(nsClassHashtable<nsStringHashKey, HashApp>& aStores,
+                       uint32_t aAppId)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  auto* appId = static_cast<uint32_t*>(aUserData);
-  if (*appId != aAppId) {
-    return PL_DHASH_NEXT;
+  for (auto iter1 = aStores.Iter(); !iter1.Done(); iter1.Next()) {
+    nsAutoPtr<HashApp>& apps = iter1.Data();
+    for (auto iter2 = apps->Iter(); !iter2.Done(); iter2.Next()) {
+      if (aAppId == iter2.Key()) {
+        nsAutoPtr<DataStoreInfo>& info = iter2.Data();
+        DeleteDatabase(info->mName, info->mManifestURL);
+        iter2.Remove();
+      }
+    }
+
+    if (apps->Count() == 0) {
+      iter1.Remove();
+    }
   }
-
-  DeleteDatabase(aInfo->mName, aInfo->mManifestURL);
-  return PL_DHASH_REMOVE;
-}
-
-PLDHashOperator
-DeleteDataStoresEnumerator(const nsAString& aName,
-                           nsAutoPtr<HashApp>& aApps,
-                           void* aUserData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  aApps->Enumerate(DeleteDataStoresAppEnumerator, aUserData);
-  return aApps->Count() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
 }
 
 void
@@ -1164,8 +1158,8 @@ DataStoreService::DeleteDataStores(uint32_t aAppId)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  mStores.Enumerate(DeleteDataStoresEnumerator, &aAppId);
-  mAccessStores.Enumerate(DeleteDataStoresEnumerator, &aAppId);
+  DeleteDataStoresHelper(mStores, aAppId);
+  DeleteDataStoresHelper(mAccessStores, aAppId);
 }
 
 NS_IMETHODIMP
