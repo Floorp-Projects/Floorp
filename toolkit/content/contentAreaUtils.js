@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
+
 var ContentAreaUtils = {
 
   // this is for backwards compatibility.
@@ -98,14 +101,68 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 const imgICache = Components.interfaces.imgICache;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 
+/**
+ * Offers to save an image URL to the file system.
+ *
+ * @param aURL (string)
+ *        The URL of the image to be saved.
+ * @param aFileName (string)
+ *        The suggested filename for the saved file.
+ * @param aFilePickerTitleKey (string, optional)
+ *        Localized string key for an alternate title for the file
+ *        picker. If set to null
+ * @param aShouldBypassCache (bool)
+ *        If true, the image will always be retrieved from the server instead
+ *        of the network or image caches.
+ * @param aSkipPrompt (bool)
+ *        If true, we will attempt to save the file with the suggested
+ *        filename to the default downloads folder without showing the
+ *        file picker.
+ * @param aReferrer (nsIURI, optional)
+ *        The referrer URI object (not a URL string) to use, or null
+ *        if no referrer should be sent.
+ * @param aDoc (nsIDocument, deprecated, optional)
+ *        The content document that the save is being initiated from. If this
+ *        is omitted, then aIsContentWindowPrivate must be provided.
+ * @param aContentType (string, optional)
+ *        The content type of the image.
+ * @param aContentDisp (string, optional)
+ *        The content disposition of the image.
+ * @param aIsContentWindowPrivate (bool)
+ *        Whether or not the containing window is in private browsing mode.
+ *        Does not need to be provided is aDoc is passed.
+ */
 function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
-                      aSkipPrompt, aReferrer, aDoc, aContentType, aContentDisp)
+                      aSkipPrompt, aReferrer, aDoc, aContentType, aContentDisp,
+                      aIsContentWindowPrivate)
 {
   forbidCPOW(aURL, "saveImageURL", "aURL");
   forbidCPOW(aReferrer, "saveImageURL", "aReferrer");
-  // Allow aSourceDocument to be a CPOW.
+  // Allow aSourceDocument to be a CPOW, but warn about it. Add-ons that are not
+  // marked multi-process compatible can pass a document CPOW, but in-browser
+  // consumers and multi-process compatible add-ons cannot when e10s is enabled.
+  if (aDoc && Components.utils.isCrossProcessWrapper(aDoc)) {
+    Deprecated.warning("saveImageURL should not be passed document CPOWs. " +
+                       "The caller should pass in the content type and " +
+                       "disposition themselves",
+                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1243643");
+    if (aIsContentWindowPrivate == undefined) {
+      // This will definitely not work for in-browser code or multi-process compatible
+      // add-ons due to bug 1233497, which makes unsafe CPOW usage throw by default.
+      Deprecated.warning("saveImageURL should be passed the private state of " +
+                         "the containing window.",
+                         "https://bugzilla.mozilla.org/show_bug.cgi?id=1243643");
+      aIsContentWindowPrivate =
+        PrivateBrowsingUtils.isContentWindowPrivate(aDoc.defaultView);
+    }
+  }
 
-  if (!aShouldBypassCache &&
+  // We'd better have the private state by now.
+  if (aIsContentWindowPrivate == undefined) {
+    throw new Error("saveImageURL couldn't compute private state of content window");
+  }
+
+  if (!aShouldBypassCache && (aDoc && !Components.utils.isCrossProcessWrapper(aDoc)) &&
       (!aContentType && !aContentDisp)) {
     try {
       var imageCache = Components.classes["@mozilla.org/image/tools;1"]
@@ -121,9 +178,10 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
       // Failure to get type and content-disposition off the image is non-fatal
     }
   }
+
   internalSave(aURL, null, aFileName, aContentDisp, aContentType,
                aShouldBypassCache, aFilePickerTitleKey, null, aReferrer,
-               aDoc, aSkipPrompt, null);
+               null, aSkipPrompt, null, aIsContentWindowPrivate);
 }
 
 // This is like saveDocument, but takes any browser/frame-like element
