@@ -2320,8 +2320,8 @@ ContentContribution(nsIFrame*                         aChild,
     }
 #ifdef DEBUG
     // This will suppress various CRAZY_SIZE warnings for this reflow.
-    parent->Properties().Set(nsContainerFrame::DebugReflowingWithInfiniteISize(),
-                             parent /* anything non-null will do */);
+    parent->Properties().Set(
+      nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
