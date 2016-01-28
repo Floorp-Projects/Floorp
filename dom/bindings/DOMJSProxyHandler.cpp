@@ -162,7 +162,7 @@ bool
 BaseDOMProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
                                               JS::Handle<JSObject*> proxy,
                                               JS::Handle<jsid> id,
-                                              MutableHandle<JSPropertyDescriptor> desc) const
+                                              MutableHandle<PropertyDescriptor> desc) const
 {
   return getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ false,
                               desc);
@@ -170,7 +170,7 @@ BaseDOMProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
 
 bool
 DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                Handle<JSPropertyDescriptor> desc,
+                                Handle<PropertyDescriptor> desc,
                                 JS::ObjectOpResult &result, bool *defined) const
 {
   if (desc.hasGetterObject() && desc.setter() == JS_StrictPropertyStub) {
@@ -210,7 +210,7 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<jsid> id,
 
   // Make sure to ignore our named properties when checking for own
   // property descriptors for a set.
-  JS::Rooted<JSPropertyDescriptor> ownDesc(cx);
+  JS::Rooted<PropertyDescriptor> ownDesc(cx);
   if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ true,
                             &ownDesc)) {
     return false;
