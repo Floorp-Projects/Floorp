@@ -185,12 +185,7 @@ public:
 
   static void Init();
 
-  static void DestroyObjectBoundingBoxProperty(void* aPropertyValue) {
-    delete static_cast<gfxRect*>(aPropertyValue);
-  }
-
-  NS_DECLARE_FRAME_PROPERTY(ObjectBoundingBoxProperty,
-                            DestroyObjectBoundingBoxProperty);
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ObjectBoundingBoxProperty, gfxRect)
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame

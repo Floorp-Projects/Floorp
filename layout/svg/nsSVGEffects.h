@@ -395,19 +395,18 @@ public:
   using URIObserverHashtablePropertyDescriptor =
     const mozilla::FramePropertyDescriptor<URIObserverHashtable>*;
 
-  static void DestroyFilterProperty(void* aPropertyValue)
+  static void DestroyFilterProperty(nsSVGFilterProperty* aProp)
   {
-    auto* prop = static_cast<nsSVGFilterProperty*>(aPropertyValue);
-
     // nsSVGFilterProperty is cycle-collected, so dropping the last reference
     // doesn't necessarily destroy it. We need to tell it that the frame
     // has now become invalid.
-    prop->DetachFromFrame();
+    aProp->DetachFromFrame();
 
-    prop->Release();
+    aProp->Release();
   }
 
-  NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroyFilterProperty)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
+                                      DestroyFilterProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsISupports)
