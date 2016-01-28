@@ -2084,10 +2084,7 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t sigIndex;
         if (!declareSig(Move(sig), &sigIndex))
             return false;
-        uint32_t globalDataOffset;
-        if (!mg_.allocateGlobalBytes(Module::SizeOfImportExit, sizeof(void*), &globalDataOffset))
-            return false;
-        if (!mg_.initImport(*importIndex, sigIndex, globalDataOffset))
+        if (!mg_.initImport(*importIndex, sigIndex))
             return false;
         return importMap_.add(p, NamedSig(name, mg_.sig(sigIndex)), *importIndex);
     }
@@ -7148,7 +7145,7 @@ ValidateFFI(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal,
     if (!GetDataProperty(cx, importVal, field, &v))
         return false;
 
-    if (!v.isObject() || !v.toObject().is<JSFunction>())
+    if (!IsFunctionObject(v))
         return LinkFail(cx, "FFI imports must be functions");
 
     ffis[global.ffiIndex()].set(&v.toObject().as<JSFunction>());

@@ -35,6 +35,7 @@ static const uint32_t EncodingVersion = -1;     // experimental
 // Module section names:
 static const char SigSection[] =     "sig";
 static const char DeclSection[] =    "decl";
+static const char ImportSection[] =  "import";
 static const char ExportSection[] =  "export";
 static const char CodeSection[] =    "code";
 static const char EndSection[] =     "";
