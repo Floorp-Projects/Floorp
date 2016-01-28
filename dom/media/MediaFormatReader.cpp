@@ -1407,7 +1407,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  LOG("aTarget=(%lld)", aTarget.mTime);
+  LOG("aTarget=(%lld)", aTarget.GetTime().ToMicroseconds());
 
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
@@ -1425,7 +1425,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  mOriginalSeekTime = Some(media::TimeUnit::FromMicroseconds(aTarget.mTime));
+  mOriginalSeekTime = Some(aTarget.GetTime());
   mPendingSeekTime = mOriginalSeekTime;
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
