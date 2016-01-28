@@ -476,11 +476,6 @@ class WasmTokenStream
             } while (*cur_++ != '"');
             return WasmToken(WasmToken::Text, begin, cur_);
 
-          case 'b':
-            if (consume(end_, MOZ_UTF16("lock")))
-                return WasmToken(WasmToken::Block, begin, cur_);
-            break;
-
           case '$':
             while (cur_ != end_ && IsNameAfterDollar(*cur_))
                 cur_++;
@@ -504,6 +499,11 @@ class WasmTokenStream
             }
             return WasmToken(u32.value(), begin, cur_);
           }
+
+          case 'b':
+            if (consume(end_, MOZ_UTF16("lock")))
+                return WasmToken(WasmToken::Block, begin, cur_);
+            break;
 
           case 'e':
             if (consume(end_, MOZ_UTF16("xport")))
@@ -661,7 +661,39 @@ struct WasmParseContext
 };
 
 static WasmAstExpr*
-ParseExpr(WasmParseContext& c);
+ParseExprInsideParens(WasmParseContext& c);
+
+static WasmAstExpr*
+ParseExpr(WasmParseContext& c)
+{
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+
+    WasmAstExpr* expr = ParseExprInsideParens(c);
+    if (!expr)
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    return expr;
+}
+
+static WasmAstBlock*
+ParseBlock(WasmParseContext& c)
+{
+    WasmAstExprVector exprs(c.lifo);
+
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmAstExpr* expr = ParseExprInsideParens(c);
+        if (!expr || !exprs.append(expr))
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstBlock(Move(exprs));
+}
 
 static WasmAstConst*
 ParseConst(WasmParseContext& c, WasmToken constToken)
@@ -703,27 +735,6 @@ ParseSetLocal(WasmParseContext& c)
     return new(c.lifo) WasmAstSetLocal(localIndex.integer(), *value);
 }
 
-static WasmAstBlock*
-ParseBlock(WasmParseContext& c)
-{
-    WasmToken numExprs;
-    if (!c.ts.match(WasmToken::Integer, &numExprs, c.error))
-        return nullptr;
-
-    WasmAstExprVector exprs(c.lifo);
-    if (!exprs.reserve(numExprs.integer()))
-        return nullptr;
-
-    for (uint32_t i = 0; i < numExprs.integer(); i++) {
-        WasmAstExpr* value = ParseExpr(c);
-        if (!value)
-            return nullptr;
-        exprs.infallibleAppend(value);
-    }
-
-    return new(c.lifo) WasmAstBlock(Move(exprs));
-}
-
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -744,22 +755,6 @@ ParseExprInsideParens(WasmParseContext& c)
         c.ts.generateError(expr, c.error);
         return nullptr;
     }
-}
-
-static WasmAstExpr*
-ParseExpr(WasmParseContext& c)
-{
-    if (!c.ts.match(WasmToken::OpenParen, c.error))
-        return nullptr;
-
-    WasmAstExpr* expr = ParseExprInsideParens(c);
-    if (!expr)
-        return nullptr;
-
-    if (!c.ts.match(WasmToken::CloseParen, c.error))
-        return nullptr;
-
-    return expr;
 }
 
 static WasmAstFunc*
