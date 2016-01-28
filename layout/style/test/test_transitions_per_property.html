@@ -170,6 +170,16 @@ var supported_properties = {
                     test_length_unclamped, test_percent_unclamped ],
     "marker-offset": [ test_length_transition,
                        test_length_unclamped ],
+    "mask-position": [ test_background_position_transition,
+                       // FIXME: We don't currently test clamping,
+                       // since mask-position uses calc() as
+                       // an intermediate form.
+                       /* test_length_percent_pair_unclamped */ ],
+    "mask-size": [ test_background_size_transition,
+                   // FIXME: We don't currently test clamping,
+                   // since mask-size uses calc() as an
+                   // intermediate form.
+                   /* test_length_percent_pair_clamped */ ],
     "max-height": [ test_length_transition, test_percent_transition,
                     test_length_percent_calc_transition,
                     test_length_clamped, test_percent_clamped ],
@@ -758,7 +768,8 @@ for (prop in gCSSProperties) {
       !("alias_for" in info) &&
       !prop.match(/^transition-/) &&
       // FIXME (Bug 119078): THIS SHOULD REALLY NOT BE NEEDED!
-      prop != "-moz-binding") {
+      prop != "-moz-binding" &&
+      prop != "mask") {
 
     if ("prerequisites" in info) {
       var prereqs = info.prerequisites;
