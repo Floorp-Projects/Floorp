@@ -1710,23 +1710,21 @@ GetTranslationForPaintedLayer(PaintedLayer* aLayer)
 
 /* static */ void
 FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
-                                               void* aPropertyValue)
+                                               nsTArray<DisplayItemData*>* aArray)
 {
   MOZ_RELEASE_ASSERT(!sDestroyedFrame);
   sDestroyedFrame = aFrame;
-  nsTArray<DisplayItemData*> *array =
-    reinterpret_cast<nsTArray<DisplayItemData*>*>(aPropertyValue);
 
   // Hold a reference to all the items so that they don't get
   // deleted from under us.
   nsTArray<RefPtr<DisplayItemData> > arrayCopy;
-  for (uint32_t i = 0; i < array->Length(); ++i) {
-    arrayCopy.AppendElement(array->ElementAt(i));
+  for (DisplayItemData* data : *aArray) {
+    arrayCopy.AppendElement(data);
   }
 
 #ifdef DEBUG_DISPLAY_ITEM_DATA
-  if (array->Length()) {
-    LayerManagerData *rootData = array->ElementAt(0)->mParent;
+  if (aArray->Length()) {
+    LayerManagerData *rootData = aArray->ElementAt(0)->mParent;
     while (rootData->mParent) {
       rootData = rootData->mParent;
     }
@@ -1735,9 +1733,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
   }
 #endif
 
-  for (uint32_t i = 0; i < array->Length(); ++i) {
-    DisplayItemData* data = array->ElementAt(i);
-
+  for (DisplayItemData* data : *aArray) {
     PaintedLayer* t = data->mLayer->AsPaintedLayer();
     if (t) {
       PaintedDisplayItemLayerUserData* paintedData =
@@ -1755,7 +1751,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(const nsIFrame* aFrame,
   }
 
   arrayCopy.Clear();
-  delete array;
+  delete aArray;
   sDestroyedFrame = nullptr;
 }
 
