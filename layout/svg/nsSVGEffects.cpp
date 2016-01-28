@@ -475,15 +475,14 @@ GetOrCreateFilterProperty(nsIFrame *aFrame)
     return nullptr;
 
   FrameProperties props = aFrame->Properties();
-  nsSVGFilterProperty *prop =
-    static_cast<nsSVGFilterProperty*>(props.Get(nsSVGEffects::FilterProperty()));
+  nsSVGFilterProperty *prop = props.Get(nsSVGEffects::FilterProperty());
   if (prop)
     return prop;
   prop = new nsSVGFilterProperty(style->mFilters, aFrame);
   if (!prop)
     return nullptr;
   NS_ADDREF(prop);
-  props.Set(nsSVGEffects::FilterProperty(), static_cast<nsISupports*>(prop));
+  props.Set(nsSVGEffects::FilterProperty(), prop);
   return prop;
 }
 

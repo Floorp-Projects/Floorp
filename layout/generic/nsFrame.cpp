@@ -4800,7 +4800,7 @@ nsIFrame* nsIFrame::GetTailContinuation()
   return frame;
 }
 
-NS_DECLARE_FRAME_PROPERTY(ViewProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(ViewProperty, nsView)
 
 // Associated view object
 nsView*
@@ -4811,9 +4811,9 @@ nsIFrame::GetView() const
     return nullptr;
 
   // Check for a property on the frame
-  void* value = Properties().Get(ViewProperty());
+  nsView* value = Properties().Get(ViewProperty());
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
-  return static_cast<nsView*>(value);
+  return value;
 }
 
 /* virtual */ nsView*
