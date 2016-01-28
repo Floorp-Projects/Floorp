@@ -16,7 +16,6 @@ GeckoCppUnitTests([
 ])
 
 MOCHITEST_MANIFESTS += [
-    'chrome/mochitest.ini',
     'mochitest.ini',
     'websocket_hybi/mochitest.ini',
 ]
@@ -39,4 +38,11 @@ BROWSER_CHROME_MANIFESTS += [
 
 TEST_DIRS += [
     'gtest',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.base.test.chrome += [
+    'chrome/bug421622-referer.sjs',
+    'chrome/nochrome_bug765993.html',
+    'chrome/nochrome_bug765993.js',
+    'chrome/nochrome_bug765993.js^headers^',
 ]
