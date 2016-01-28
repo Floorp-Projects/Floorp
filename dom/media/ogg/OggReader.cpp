@@ -1414,7 +1414,7 @@ OggReader::Seek(SeekTarget aTarget, int64_t aEndTime)
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(aTarget.GetTime().ToMicroseconds(), __func__);
+    return SeekPromise::CreateAndResolve(aTarget.GetTime(), __func__);
   }
 }
 

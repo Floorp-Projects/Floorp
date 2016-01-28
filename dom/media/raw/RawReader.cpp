@@ -238,7 +238,7 @@ RawReader::Seek(SeekTarget aTarget, int64_t aEndTime)
     while (self->mVideoQueue.GetSize() >= 2) {
       RefPtr<VideoData> releaseMe = self->mVideoQueue.PopFront();
     }
-    p->Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
+    p->Resolve(aTarget.GetTime(), __func__);
   }, [self, p, frame] {
     self->mCurrentFrame = frame;
     self->mVideoQueue.Reset();

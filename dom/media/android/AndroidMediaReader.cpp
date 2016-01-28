@@ -334,15 +334,15 @@ AndroidMediaReader::Seek(SeekTarget aTarget, int64_t aEndTime)
     mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = v->mTime;
-      self->mSeekPromise.Resolve(self->mAudioSeekTimeUs, __func__);
+      self->mSeekPromise.Resolve(media::TimeUnit::FromMicroseconds(self->mAudioSeekTimeUs), __func__);
     }, [self, aTarget] () {
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = aTarget.GetTime().ToMicroseconds();
-      self->mSeekPromise.Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
+      self->mSeekPromise.Resolve(aTarget.GetTime(), __func__);
     }));
   } else {
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget.GetTime().ToMicroseconds();
-    mSeekPromise.Resolve(aTarget.GetTime().ToMicroseconds(), __func__);
+    mSeekPromise.Resolve(aTarget.GetTime(), __func__);
   }
 
   return p;
