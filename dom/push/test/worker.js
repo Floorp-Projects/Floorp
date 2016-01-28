@@ -1,6 +1,13 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
+// This worker is used for two types of tests. `handlePush` sends messages to
+// `frame.html`, which verifies that the worker can receive push messages.
+
+// `handleMessage` receives messages from `test_push_manager_worker.html`
+// and `test_data.html`, and verifies that `PushManager` can be used from
+// the worker.
+
 this.onpush = handlePush;
 this.onmessage = handleMessage;
 
@@ -15,6 +22,22 @@ function getJSON(data) {
     // Ignore syntax errors for invalid JSON.
   }
   return result;
+}
+
+function assert(value, message) {
+  if (!value) {
+    throw new Error(message);
+  }
+}
+
+function reply(event, promise) {
+  event.waitUntil(promise.then(result => {
+    event.ports[0].postMessage(result);
+  }).catch(error => {
+    event.ports[0].postMessage({
+      error: String(error),
+    });
+  }));
 }
 
 function handlePush(event) {
@@ -46,19 +69,34 @@ function handlePush(event) {
 
 function handleMessage(event) {
   if (event.data.type == "publicKey") {
-    event.waitUntil(self.registration.pushManager.getSubscription().then(subscription => {
-      event.ports[0].postMessage({
+    reply(event, self.registration.pushManager.getSubscription().then(
+      subscription => ({
         p256dh: subscription.getKey("p256dh"),
         auth: subscription.getKey("auth"),
-      });
-    }).catch(error => {
-      event.ports[0].postMessage({
-        error: String(error),
-      });
+      })
+    ));
+    return;
+  }
+  if (event.data.type == "resubscribe") {
+    reply(event, self.registration.pushManager.getSubscription().then(
+      subscription => {
+        assert(subscription.endpoint == event.data.endpoint,
+          "Wrong push endpoint in worker");
+        return subscription.unsubscribe();
+      }
+    ).then(result => {
+      assert(result, "Error unsubscribing in worker");
+      return self.registration.pushManager.getSubscription();
+    }).then(subscription => {
+      assert(!subscription, "Subscription not removed in worker");
+      return self.registration.pushManager.subscribe();
+    }).then(subscription => {
+      return {
+        endpoint: subscription.endpoint,
+      };
     }));
     return;
   }
-  event.ports[0].postMessage({
-    error: "Invalid message type: " + event.data.type,
-  });
+  reply(event, Promise.reject(
+    "Invalid message type: " + event.data.type));
 }
