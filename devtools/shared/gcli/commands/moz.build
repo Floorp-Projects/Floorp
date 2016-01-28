@@ -17,6 +17,7 @@ DevToolsModules(
     'inject.js',
     'jsb.js',
     'listen.js',
+    'mdn.js',
     'measure.js',
     'media.js',
     'pagemod.js',
