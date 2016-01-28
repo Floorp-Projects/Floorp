@@ -56,8 +56,8 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   yield selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
-  let brace = view.styleDocument.querySelector(".ruleview-ruleclose");
-  let editor = yield focusEditableField(view, brace);
+  let ruleEditor = getRuleViewRuleEditor(view, 0);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
