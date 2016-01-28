@@ -601,20 +601,20 @@ protected:
    * Get the PresContext-stored nsFrameList named aPropID for this frame.
    * May return null.
    */
-  nsFrameList* GetPropTableFrames(const FramePropertyDescriptor* aProperty) const;
+  nsFrameList* GetPropTableFrames(PropertyDescriptor<> aProperty) const;
 
   /**
    * Remove and return the PresContext-stored nsFrameList named aPropID for
    * this frame. May return null.
    */
-  nsFrameList* RemovePropTableFrames(const FramePropertyDescriptor* aProperty);
+  nsFrameList* RemovePropTableFrames(PropertyDescriptor<> aProperty);
 
   /**
    * Set the PresContext-stored nsFrameList named aPropID for this frame
    * to the given aFrameList, which must not be null.
    */
   void SetPropTableFrames(nsFrameList*                   aFrameList,
-                          const FramePropertyDescriptor* aProperty);
+                          PropertyDescriptor<> aProperty);
 
   /**
    * Safely destroy the frames on the nsFrameList stored on aProp for this
@@ -624,7 +624,7 @@ protected:
   void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
                                   nsIPresShell* aPresShell,
                                   mozilla::FramePropertyTable* aPropTable,
-                                  const FramePropertyDescriptor* aProp);
+                                  PropertyDescriptor<> aProp);
 
   // ==========================================================================
 

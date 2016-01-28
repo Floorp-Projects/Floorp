@@ -5823,7 +5823,7 @@ AddGenConPseudoToFrame(nsIFrame* aOwnerFrame, nsIContent* aContent)
                "property should only be set on first continuation/ib-sibling");
 
   typedef nsAutoTArray<nsIContent*, 2> T;
-  const FramePropertyDescriptor* prop = nsIFrame::GenConProperty();
+  const FramePropertyDescriptor<>* prop = nsIFrame::GenConProperty();
   FrameProperties props = aOwnerFrame->Properties();
   T* value = static_cast<T*>(props.Get(prop));
   if (!value) {

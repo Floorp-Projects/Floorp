@@ -203,7 +203,6 @@ class nsDisplayListBuilder {
   };
 
 public:
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayListClipState DisplayListClipState;

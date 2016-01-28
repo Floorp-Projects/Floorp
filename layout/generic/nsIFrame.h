@@ -415,7 +415,9 @@ static void ReleaseValue(void* aPropertyValue)
 class nsIFrame : public nsQueryFrame
 {
 public:
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
+  template<typename T=void>
+  using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
+
   typedef mozilla::FrameProperties FrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layout::FrameChildList ChildList;
@@ -844,16 +846,18 @@ public:
 
   static void DestroyContentArray(void* aPropertyValue);
 
-#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                            \
-  static const FramePropertyDescriptor* prop() {                         \
-    static const FramePropertyDescriptor descriptor = { dtor, nullptr }; \
-    return &descriptor;                                                  \
+#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                       \
+  static const mozilla::FramePropertyDescriptor<>* prop() {                         \
+    static const auto descriptor =                                                  \
+      mozilla::FramePropertyDescriptor<>::NewWithDestructor<dtor>();                \
+    return &descriptor;                                                             \
   }
 // Don't use this unless you really know what you're doing!
-#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)         \
-  static const FramePropertyDescriptor* prop() {                         \
-    static const FramePropertyDescriptor descriptor = { nullptr, dtor }; \
-    return &descriptor;                                                  \
+#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)                    \
+  static const mozilla::FramePropertyDescriptor<>* prop() {                         \
+    static const auto descriptor =                                                  \
+      mozilla::FramePropertyDescriptor<>::NewWithDestructorWithFrame<dtor>();       \
+    return &descriptor;                                                             \
   }
 
   NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
@@ -896,8 +900,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
 
   nsTArray<nsIContent*>* GetGenConPseudos() {
-    const FramePropertyDescriptor* prop = GenConProperty();
-    return static_cast<nsTArray<nsIContent*>*>(Properties().Get(prop));
+    return static_cast<nsTArray<nsIContent*>*>(
+      Properties().Get(GenConProperty()));
   }
 
   /**

@@ -428,8 +428,6 @@ struct LevState {
 class nsBidi
 {
 public:
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
-
   /** @brief Default constructor.
    *
    * The nsBidi object is initially empty. It is assigned
