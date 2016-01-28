@@ -40,6 +40,14 @@ PerformanceMonitoring::reset()
     // be overwritten progressively during the execution.
     ++iteration_;
     recentGroups_.clear();
+
+    // Every so often, we will be rescheduled to another CPU. If this
+    // happens, we may end up with an entirely unsynchronized
+    // timestamp counter. If we do not reset
+    // `highestTimestampCounter_`, we could end up ignoring entirely
+    // valid sets of measures just because we are on a CPU that has a
+    // lower RDTSC.
+    highestTimestampCounter_ = 0;
 }
 
 void
@@ -158,6 +166,19 @@ PerformanceMonitoring::commit()
     return success;
 }
 
+uint64_t
+PerformanceMonitoring::monotonicReadTimestampCounter()
+{
+#if defined(MOZ_HAVE_RDTSC)
+    const uint64_t hardware = ReadTimestampCounter();
+    if (highestTimestampCounter_ < hardware)
+        highestTimestampCounter_ = hardware;
+    return highestTimestampCounter_;
+#else
+    return 0;
+#endif // defined(MOZ_HAVE_RDTSC)
+}
+
 void
 PerformanceMonitoring::dispose(JSRuntime* rt)
 {
@@ -272,7 +293,7 @@ AutoStopwatch::enter()
     }
 
     if (runtime->performanceMonitoring.isMonitoringJank()) {
-        cyclesStart_ = this->getCycles();
+        cyclesStart_ = this->getCycles(runtime);
         cpuStart_ = this->getCPU();
         isMonitoringJank_ = true;
     }
@@ -295,8 +316,8 @@ AutoStopwatch::exit()
         // limited.
         const cpuid_t cpuEnd = this->getCPU();
         if (isSameCPU(cpuStart_, cpuEnd)) {
-            const uint64_t cyclesEnd = getCycles();
-            cyclesDelta = getDelta(cyclesEnd, cyclesStart_);
+            const uint64_t cyclesEnd = getCycles(runtime);
+            cyclesDelta = cyclesEnd - cyclesStart_; // Always >= 0 by definition of `getCycles`.
         }
 #if WINVER >= 0x600
         updateTelemetry(cpuStart_, cpuEnd);
@@ -382,13 +403,9 @@ AutoStopwatch::getDelta(const uint64_t end, const uint64_t start) const
 }
 
 uint64_t
-AutoStopwatch::getCycles() const
+AutoStopwatch::getCycles(JSRuntime* runtime) const
 {
-#if defined(MOZ_HAVE_RDTSC)
-    return ReadTimestampCounter();
-#else
-    return 0;
-#endif // defined(MOZ_HAVE_RDTSC)
+    return runtime->performanceMonitoring.monotonicReadTimestampCounter();
 }
 
 cpuid_t inline
