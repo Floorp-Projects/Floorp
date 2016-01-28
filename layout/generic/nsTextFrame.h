@@ -823,16 +823,6 @@ protected:
   virtual bool HasAnyNoncollapsedCharacters() override;
 
   void ClearMetrics(nsHTMLReflowMetrics& aMetrics);
-
-  NS_DECLARE_FRAME_PROPERTY(JustificationAssignment, nullptr)
-
-  struct EmphasisMarkInfo
-  {
-    nsAutoPtr<gfxTextRun> textRun;
-    gfxFloat advance;
-    gfxFloat baselineOffset;
-  };
-  NS_DECLARE_FRAME_PROPERTY(EmphasisMarkProperty, DeleteValue<EmphasisMarkInfo>)
 };
 
 #endif

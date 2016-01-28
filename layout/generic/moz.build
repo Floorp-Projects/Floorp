@@ -115,6 +115,7 @@ UNIFIED_SOURCES += [
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',
     'nsAbsoluteContainingBlock.cpp',
+    'nsBackdropFrame.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
     'nsBlockReflowState.cpp',

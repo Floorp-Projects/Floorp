@@ -998,7 +998,6 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   nsCString mMethod;
   nsString mClientId;
   bool mIsReload;
-  DebugOnly<bool> mIsHttpChannel;
   RequestMode mRequestMode;
   RequestRedirect mRequestRedirect;
   RequestCredentials mRequestCredentials;
@@ -1021,7 +1020,6 @@ public:
     , mScriptSpec(aScriptSpec)
     , mClientId(aDocumentId)
     , mIsReload(aIsReload)
-    , mIsHttpChannel(false)
     , mRequestMode(RequestMode::No_cors)
     , mRequestRedirect(RequestRedirect::Follow)
     // By default we set it to same-origin since normal HTTP fetches always
@@ -1070,69 +1068,46 @@ public:
 
     nsCOMPtr<nsIURI> referrerURI;
     rv = NS_GetReferrerFromChannel(channel, getter_AddRefs(referrerURI));
-    // We can't bail on failure since certain non-http channels like JAR
-    // channels are intercepted but don't have referrers.
-    if (NS_SUCCEEDED(rv) && referrerURI) {
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (referrerURI) {
       rv = referrerURI->GetSpec(mReferrer);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    if (httpChannel) {
-      mIsHttpChannel = true;
+    MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-      rv = httpChannel->GetRequestMethod(mMethod);
+    rv = httpChannel->GetRequestMethod(mMethod);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
+    NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
+
+    mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
+
+    // This is safe due to static_asserts at top of file.
+    uint32_t redirectMode;
+    internalChannel->GetRedirectMode(&redirectMode);
+    mRequestRedirect = static_cast<RequestRedirect>(redirectMode);
+
+    mRequestCredentials = InternalRequest::MapChannelToRequestCredentials(channel);
+
+    rv = httpChannel->VisitNonDefaultRequestHeaders(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
+    if (uploadChannel) {
+      MOZ_ASSERT(!mUploadStream);
+      bool bodyHasHeaders = false;
+      rv = uploadChannel->GetUploadStreamHasHeaders(&bodyHasHeaders);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
-      NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
-
-      mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
-
-      // This is safe due to static_asserts at top of file.
-      uint32_t redirectMode;
-      internalChannel->GetRedirectMode(&redirectMode);
-      mRequestRedirect = static_cast<RequestRedirect>(redirectMode);
-
-      if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        mRequestCredentials = RequestCredentials::Omit;
+      nsCOMPtr<nsIInputStream> uploadStream;
+      rv = uploadChannel->CloneUploadStream(getter_AddRefs(uploadStream));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (bodyHasHeaders) {
+        HandleBodyWithHeaders(uploadStream);
       } else {
-        bool includeCrossOrigin;
-        internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
-        if (includeCrossOrigin) {
-          mRequestCredentials = RequestCredentials::Include;
-        }
-      }
-
-      rv = httpChannel->VisitNonDefaultRequestHeaders(this);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
-      if (uploadChannel) {
-        MOZ_ASSERT(!mUploadStream);
-        bool bodyHasHeaders = false;
-        rv = uploadChannel->GetUploadStreamHasHeaders(&bodyHasHeaders);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIInputStream> uploadStream;
-        rv = uploadChannel->CloneUploadStream(getter_AddRefs(uploadStream));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (bodyHasHeaders) {
-          HandleBodyWithHeaders(uploadStream);
-        } else {
-          mUploadStream = uploadStream;
-        }
-      }
-    } else {
-      nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
-      // If it is not an HTTP channel it must be a JAR one.
-      NS_ENSURE_TRUE(jarChannel, NS_ERROR_NOT_AVAILABLE);
-
-      mMethod = "GET";
-
-      mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
-
-      if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        mRequestCredentials = RequestCredentials::Omit;
+        mUploadStream = uploadStream;
       }
     }
 
@@ -1221,9 +1196,7 @@ private:
     }
     RefPtr<Request> request = new Request(global, internalReq);
 
-    // TODO: remove conditional on http here once app protocol support is
-    //       removed from service worker interception
-    MOZ_ASSERT_IF(mIsHttpChannel && internalReq->IsNavigationRequest(),
+    MOZ_ASSERT_IF(internalReq->IsNavigationRequest(),
                   request->Redirect() == RequestRedirect::Manual);
 
     RootedDictionary<FetchEventInit> init(aCx);

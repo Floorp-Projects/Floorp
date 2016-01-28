@@ -1,3 +1,5 @@
+importScripts("imagebitmap_bug1239300.js");
+
 function ok(expect, msg) {
   postMessage({type: "status", status: !!expect, msg: msg});
 }
@@ -77,5 +79,8 @@ onmessage = function(event) {
       promiseThrows(createImageBitmap(source), event.data.msg);
     }
     doneTask();
+  } else if (event.data.type == "testBug1239300") {
+    var promise = testBug1239300();
+    promise.then(doneTask, doneTask);
   }
 };

@@ -33,6 +33,7 @@
 
 #include "mozilla/Logging.h"
 
+using mozilla::fallible;
 using mozilla::LogLevel;
 
 #define kExpatSeparatorChar 0xFFFF
@@ -415,7 +416,9 @@ nsExpatDriver::HandleCharacterData(const char16_t *aValue,
   NS_ASSERTION(mSink, "content sink not found!");
 
   if (mInCData) {
-    mCDataText.Append(aValue, aLength);
+    if (!mCDataText.Append(aValue, aLength, fallible)) {
+      MaybeStopParser(NS_ERROR_OUT_OF_MEMORY);
+    }
   }
   else if (mSink) {
     nsresult rv = mSink->HandleCharacterData(aValue, aLength);

@@ -1052,10 +1052,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         AppendValueToString(eCSSProperty_grid_auto_flow,
                             aValue, aSerialization);
         aValue.Append(char16_t(' '));
-        AppendValueToString(eCSSProperty_grid_auto_columns,
+        AppendValueToString(eCSSProperty_grid_auto_rows,
                             aValue, aSerialization);
         aValue.AppendLiteral(" / ");
-        AppendValueToString(eCSSProperty_grid_auto_rows,
+        AppendValueToString(eCSSProperty_grid_auto_columns,
                             aValue, aSerialization);
         break;
       } else if (!(autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
@@ -1076,10 +1076,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue& rowsValue =
         *data->ValueFor(eCSSProperty_grid_template_rows);
       if (areasValue.GetUnit() == eCSSUnit_None) {
-        AppendValueToString(eCSSProperty_grid_template_columns,
+        AppendValueToString(eCSSProperty_grid_template_rows,
                             aValue, aSerialization);
         aValue.AppendLiteral(" / ");
-        AppendValueToString(eCSSProperty_grid_template_rows,
+        AppendValueToString(eCSSProperty_grid_template_columns,
                             aValue, aSerialization);
         break;
       }
@@ -1116,11 +1116,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       if ((nRowItems - 1) / 2 != areas->NRows()) {
         // Not serializable, bail.
         return;
-      }
-      if (columnsValue.GetUnit() != eCSSUnit_None) {
-        AppendValueToString(eCSSProperty_grid_template_columns,
-                            aValue, aSerialization);
-        aValue.AppendLiteral(" / ");
       }
       rowsItem = rowsValue.GetListValue();
       uint32_t row = 0;
@@ -1162,6 +1157,11 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         if (addSpaceSeparator) {
           aValue.Append(char16_t(' '));
         }
+      }
+      if (columnsValue.GetUnit() != eCSSUnit_None) {
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
       }
       break;
     }

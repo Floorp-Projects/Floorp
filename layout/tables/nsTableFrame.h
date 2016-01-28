@@ -134,8 +134,8 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECLARE_FRAME_PROPERTY(PositionedTablePartArray,
-                            DeleteValue<nsTArray<nsIFrame*>>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PositionedTablePartArray,
+                                      nsTArray<nsIFrame*>)
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
@@ -762,12 +762,6 @@ public:
   bool NeedToCollapse() const;
   void SetNeedToCollapse(bool aValue);
 
-  bool HasZeroColSpans() const;
-  void SetHasZeroColSpans(bool aValue);
-
-  bool NeedColSpanExpansion() const;
-  void SetNeedColSpanExpansion(bool aValue);
-
   /** The GeometryDirty bit is similar to the NS_FRAME_IS_DIRTY frame
     * state bit, which implies that all descendants are dirty.  The
     * GeometryDirty still implies that all the parts of the table are
@@ -874,9 +868,7 @@ protected:
     uint32_t mNeedToCalcBCBorders:1;
     uint32_t mGeometryDirty:1;
     uint32_t mIStartContBCBorder:8;
-    uint32_t mNeedToCollapse:1;    // rows, cols that have visibility:collapse need to be collapsed
-    uint32_t mHasZeroColSpans:1;
-    uint32_t mNeedColSpanExpansion:1;
+    uint32_t mNeedToCollapse:1;        // rows, cols that have visibility:collapse need to be collapsed
     uint32_t mResizedColumns:1;        // have we resized columns since last reflow?
   } mBits;
 
@@ -942,27 +934,6 @@ inline bool nsTableFrame::NeedToCollapse() const
 {
   return (bool) static_cast<nsTableFrame*>(FirstInFlow())->mBits.mNeedToCollapse;
 }
-
-inline void nsTableFrame::SetHasZeroColSpans(bool aValue)
-{
-  mBits.mHasZeroColSpans = (unsigned)aValue;
-}
-
-inline bool nsTableFrame::HasZeroColSpans() const
-{
-  return (bool)mBits.mHasZeroColSpans;
-}
-
-inline void nsTableFrame::SetNeedColSpanExpansion(bool aValue)
-{
-  mBits.mNeedColSpanExpansion = (unsigned)aValue;
-}
-
-inline bool nsTableFrame::NeedColSpanExpansion() const
-{
-  return (bool)mBits.mNeedColSpanExpansion;
-}
-
 
 inline nsFrameList& nsTableFrame::GetColGroups()
 {

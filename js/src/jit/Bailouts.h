@@ -211,7 +211,7 @@ uint32_t ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo);
 
-bool CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutKind);
+void CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutKind);
 
 } // namespace jit
 } // namespace js

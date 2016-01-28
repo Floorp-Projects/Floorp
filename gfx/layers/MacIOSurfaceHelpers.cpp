@@ -13,32 +13,34 @@ using namespace gfx;
 
 namespace layers {
 
-already_AddRefed<SourceSurface>
-CreateSourceSurfaceFromMacIOSurface(MacIOSurface* aSurface)
+static already_AddRefed<SourceSurface>
+CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
 {
-  RefPtr<DataSourceSurface> dataSurface;
-  aSurface->Lock();
   size_t bytesPerRow = aSurface->GetBytesPerRow();
   size_t ioWidth = aSurface->GetDevicePixelWidth();
   size_t ioHeight = aSurface->GetDevicePixelHeight();
+  SurfaceFormat ioFormat = aSurface->GetFormat();
 
-  SurfaceFormat format = aSurface->GetFormat() == SurfaceFormat::NV12 ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
+  if (ioFormat == SurfaceFormat::NV12 &&
+      (ioWidth > PlanarYCbCrImage::MAX_DIMENSION ||
+       ioHeight > PlanarYCbCrImage::MAX_DIMENSION)) {
+    return nullptr;
+  }
 
-  dataSurface = Factory::CreateDataSourceSurface(IntSize(ioWidth, ioHeight), format);
+  SurfaceFormat format = ioFormat == SurfaceFormat::NV12 ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
+
+  RefPtr<DataSourceSurface> dataSurface =
+    Factory::CreateDataSourceSurface(IntSize(ioWidth, ioHeight), format);
   if (NS_WARN_IF(!dataSurface)) {
     return nullptr;
   }
 
   DataSourceSurface::MappedSurface mappedSurface;
-  if (!dataSurface->Map(DataSourceSurface::WRITE, &mappedSurface))
+  if (!dataSurface->Map(DataSourceSurface::WRITE, &mappedSurface)) {
     return nullptr;
+  }
 
-  if (aSurface->GetFormat() == SurfaceFormat::NV12) {
-    if (aSurface->GetDevicePixelWidth() > PlanarYCbCrImage::MAX_DIMENSION ||
-        aSurface->GetDevicePixelHeight() > PlanarYCbCrImage::MAX_DIMENSION) {
-      return nullptr;
-    }
-
+  if (ioFormat == SurfaceFormat::NV12) {
     /* Extract and separate the CbCr planes */
     size_t cbCrStride = aSurface->GetBytesPerRow(1);
     size_t cbCrWidth = aSurface->GetDevicePixelWidth(1);
@@ -86,9 +88,17 @@ CreateSourceSurfaceFromMacIOSurface(MacIOSurface* aSurface)
   }
 
   dataSurface->Unmap();
-  aSurface->Unlock();
 
   return dataSurface.forget();
+}
+
+already_AddRefed<SourceSurface>
+CreateSourceSurfaceFromMacIOSurface(MacIOSurface* aSurface)
+{
+  aSurface->Lock();
+  RefPtr<SourceSurface> result = CreateSourceSurfaceFromLockedMacIOSurface(aSurface);
+  aSurface->Unlock();
+  return result.forget();
 }
 
 } // namespace gfx
