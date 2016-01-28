@@ -126,3 +126,24 @@ assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (get_local 0))) (export "" 0))')(), 0);
 
 assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), Error, /NYI/);
+
+// ----------------------------------------------------------------------------
+// blocks
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (block))'), Error);
+assertThrowsInstanceOf(() => wasmEvalText('(module (block -1 (i32.const 42)))'), Error);
+assertEq(wasmEvalText('(module (func (block 0)) (export "" 0))')(), undefined);
+
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block 0)))'), Error, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block 1 (block 0))))'), Error, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (local i32) (set_local 0 (block 0))))'), Error, mismatchError("void", "i32"));
+
+assertThrowsInstanceOf(() => wasmEvalText('(module (block 1))'), Error);
+assertEq(wasmEvalText('(module (func (block 1 (block 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (result i32) (block 1 (i32.const 42))) (export "" 0))')(), 42);
+assertEq(wasmEvalText('(module (func (result i32) (block 1 (block 1 (i32.const 42)))) (export "" 0))')(), 42);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (block 1 (i32.const 0))))'), Error, mismatchError("i32", "f32"));
+
+assertEq(wasmEvalText('(module (func (result i32) (block 2 (i32.const 13) (block 1 (i32.const 42)))) (export "" 0))')(), 42);
+assertErrorMessage(() => wasmEvalText('(module (func (result f32) (param f32) (block 2 (get_local 0) (i32.const 0))))'), Error, mismatchError("i32", "f32"));
+

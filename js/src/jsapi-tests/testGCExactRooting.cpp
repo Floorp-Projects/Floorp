@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ds/TraceableFifo.h"
+#include "gc/Policy.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"

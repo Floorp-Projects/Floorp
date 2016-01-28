@@ -1138,14 +1138,13 @@ CompositorD3D11::EndFrame()
       params.DirtyRectsCount = mInvalidRegion.GetNumRects();
       StackArray<RECT, 4> rects(params.DirtyRectsCount);
 
-      nsIntRegionRectIterator iter(mInvalidRegion);
-      const IntRect* r;
       uint32_t i = 0;
-      while ((r = iter.Next()) != nullptr) {
-        rects[i].left = r->x;
-        rects[i].top = r->y;
-        rects[i].bottom = r->YMost();
-        rects[i].right = r->XMost();
+      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& r = iter.Get();
+        rects[i].left = r.x;
+        rects[i].top = r.y;
+        rects[i].bottom = r.YMost();
+        rects[i].right = r.XMost();
         i++;
       }
 

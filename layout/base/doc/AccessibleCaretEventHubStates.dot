@@ -24,7 +24,7 @@ digraph event_hub_states {
   PressNoCaret -> Scroll [label="Scroll start", constraint=false];
 
   LongTap [color="#E8C516"]
-  LongTap -> NoAction;
+  LongTap -> NoAction [label="Release"];
 
   Scroll [color="#FF9022"]
   Scroll -> PostScroll [label="Scroll end"];

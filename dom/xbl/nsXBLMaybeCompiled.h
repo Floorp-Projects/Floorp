@@ -79,18 +79,22 @@ private:
     JSObject* mCompiled;
   };
 
-  friend struct js::GCMethods<nsXBLMaybeCompiled<UncompiledT>>;
+  friend struct js::BarrierMethods<nsXBLMaybeCompiled<UncompiledT>>;
 };
 
 /* Add support for JS::Heap<nsXBLMaybeCompiled>. */
 namespace js {
 
 template <class UncompiledT>
-struct GCMethods<nsXBLMaybeCompiled<UncompiledT> >
+struct GCPolicy<nsXBLMaybeCompiled<UncompiledT>>
 {
-  typedef struct GCMethods<JSObject *> Base;
-
   static nsXBLMaybeCompiled<UncompiledT> initial() { return nsXBLMaybeCompiled<UncompiledT>(); }
+};
+
+template <class UncompiledT>
+struct BarrierMethods<nsXBLMaybeCompiled<UncompiledT>>
+{
+  typedef struct BarrierMethods<JSObject *> Base;
 
   static void postBarrier(nsXBLMaybeCompiled<UncompiledT>* functionp,
                           nsXBLMaybeCompiled<UncompiledT> prev,
@@ -109,14 +113,14 @@ struct GCMethods<nsXBLMaybeCompiled<UncompiledT> >
 };
 
 template <class UncompiledT>
-class HeapBase<nsXBLMaybeCompiled<UncompiledT> >
+class HeapBase<nsXBLMaybeCompiled<UncompiledT>>
 {
-  const JS::Heap<nsXBLMaybeCompiled<UncompiledT> >& wrapper() const {
-    return *static_cast<const JS::Heap<nsXBLMaybeCompiled<UncompiledT> >*>(this);
+  const JS::Heap<nsXBLMaybeCompiled<UncompiledT>>& wrapper() const {
+    return *static_cast<const JS::Heap<nsXBLMaybeCompiled<UncompiledT>>*>(this);
   }
 
-  JS::Heap<nsXBLMaybeCompiled<UncompiledT> >& wrapper() {
-    return *static_cast<JS::Heap<nsXBLMaybeCompiled<UncompiledT> >*>(this);
+  JS::Heap<nsXBLMaybeCompiled<UncompiledT>>& wrapper() {
+    return *static_cast<JS::Heap<nsXBLMaybeCompiled<UncompiledT>>*>(this);
   }
 
   const nsXBLMaybeCompiled<UncompiledT>* extract() const {

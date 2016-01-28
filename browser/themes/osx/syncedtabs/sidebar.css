@@ -1,0 +1,96 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/syncedtabs/sidebar.inc.css
+
+/* These styles are intended to mimic XUL trees and the XUL search box. */
+
+html {
+}
+
+.item {
+  color: -moz-DialogText;
+}
+
+.item.selected > .item-title-container {
+  color: HighlightText;
+  font-weight: bold;
+}
+
+.item.selected > .item-title-container {
+  background: linear-gradient(to bottom, rgba(156,172,204,1) 0%, rgba(116,135,172,1) 100%);
+}
+
+.item.selected:focus > .item-title-container {
+  background: linear-gradient(to bottom, rgba(95,144,209,1) 0%, rgba(39,90,173,1) 100%);
+}
+
+.item.client .item-twisty-container {
+  background-image: url(arrow-open.svg);
+  background-size: 9px 8px;
+}
+
+.item.client.closed .item-twisty-container {
+  background-image: url(arrow-closed.svg);
+  background-size: 7px 9px;
+}
+
+.sidebar-search-container {
+  border-bottom: 1px solid #bdbdbd;
+}
+
+.search-box {
+  -moz-appearance: searchfield;
+  padding: 1px;
+  font-size: 12px;
+  cursor: text;
+  margin: 4px 8px 10px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: -moz-use-text-color;
+  border-image: none;
+  -moz-border-top-colors: transparent #888 #000;
+  -moz-border-right-colors: transparent #FFF #000;
+  -moz-border-bottom-colors: transparent #FFF #000;
+  -moz-border-left-colors: transparent #888 #000;
+  border-top-right-radius: 2px;
+  border-bottom-left-radius: 2px;
+  background-color: #FFF;
+  color: #000;
+  -moz-user-select: text;
+  text-shadow: none;
+}
+
+.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  width: 11px;
+  height: 11px;
+  background-image: url(chrome://global/skin/icons/searchfield-small-cancel.png);
+  background-repeat: no-repeat;
+}
+
+.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:active:hover {
+  background-position: 11px 0;
+}
+
+.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+  display: none;
+}
+
+.search-box[focused="true"] {
+  -moz-border-top-colors: -moz-mac-focusring -moz-mac-focusring #000000;
+  -moz-border-right-colors: -moz-mac-focusring -moz-mac-focusring #000000;
+  -moz-border-bottom-colors: -moz-mac-focusring -moz-mac-focusring #000000;
+  -moz-border-left-colors: -moz-mac-focusring -moz-mac-focusring #000000;
+}
+
+.search-box.compact {
+    padding: 0px;
+    /* font size is in px because the XUL it was copied from uses px */
+    font-size: 11px;
+}
+
+.textbox-search-clear,
+.textbox-search-icon {
+  margin-top: 1px;
+}

@@ -142,7 +142,7 @@ pref("dom.select_events.enabled", false);
 // Whether or not Web Workers are enabled.
 pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.
-pref("dom.workers.maxPerDomain", 20);
+pref("dom.workers.maxPerDomain", 50);
 
 pref("dom.serviceWorkers.enabled", false);
 
@@ -205,6 +205,12 @@ pref("dom.url.getters_decode_hash", false);
 // causes a separate compartment for each (addon, global) combination, which may
 // significantly increase the number of compartments in the system.
 pref("dom.compartment_per_addon", true);
+
+#ifdef NIGHTLY_BUILD
+pref("dom.document.scrollingElement.enabled", true);
+#else
+pref("dom.document.scrollingElement.enabled", false);
+#endif
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
@@ -303,6 +309,7 @@ pref("media.play-stand-alone", true);
 pref("media.block-play-until-visible", false);
 
 pref("media.hardware-video-decoding.enabled", true);
+pref("media.hardware-video-decoding.force-enabled", false);
 
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
@@ -1324,7 +1331,7 @@ pref("network.http.max-persistent-connections-per-proxy", 32);
 pref("network.http.request.max-start-delay", 10);
 
 // If a connection is reset, we will retry it max-attempts times.
-pref("network.http.request.max-attempts", 3);
+pref("network.http.request.max-attempts", 6);
 
 // Headers
 pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");

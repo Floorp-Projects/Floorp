@@ -63,7 +63,7 @@ function test() {
       // call whenNewWindowLoaded() instead of testOnWindow() on your test.
       executeSoon(function() { aCallback(aWin); });
     });
-  };
+  }
 
    // this function is called after calling finish() on the test.
   registerCleanupFunction(function() {

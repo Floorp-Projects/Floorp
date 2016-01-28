@@ -91,6 +91,12 @@ xpcAccessible::Intl()
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
 }
 
+inline AccessibleOrProxy
+xpcAccessible::IntlGeneric()
+{
+  return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
+}
+
 inline Accessible*
 xpcAccessibleHyperLink::Intl()
 {

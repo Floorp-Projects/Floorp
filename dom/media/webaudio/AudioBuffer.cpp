@@ -151,7 +151,7 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
   const float* sourceData = nullptr;
   if (channelArray) {
     if (JS_GetTypedArrayLength(channelArray) != mLength) {
-      // The array was probably neutered
+      // The array's buffer was detached.
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
@@ -196,7 +196,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
   JS::AutoCheckCannotGC nogc;
   JSObject* channelArray = mJSChannels[aChannelNumber];
   if (JS_GetTypedArrayLength(channelArray) != mLength) {
-    // The array was probably neutered
+    // The array's buffer was detached.
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -233,18 +233,18 @@ AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
 already_AddRefed<ThreadSharedFloatArrayBufferList>
 AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
 {
-  // "1. If any of the AudioBuffer's ArrayBuffer have been neutered, abort
+  // "1. If any of the AudioBuffer's ArrayBuffer have been detached, abort
   // these steps, and return a zero-length channel data buffers to the
   // invoker."
   for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
     JSObject* channelArray = mJSChannels[i];
     if (!channelArray || mLength != JS_GetTypedArrayLength(channelArray)) {
-      // Either empty buffer or one of the arrays was probably neutered
+      // Either empty buffer or one of the arrays' buffers was detached.
       return nullptr;
     }
   }
 
-  // "2. Neuter all ArrayBuffers for arrays previously returned by
+  // "2. Detach all ArrayBuffers for arrays previously returned by
   // getChannelData on this AudioBuffer."
   // "3. Retain the underlying data buffers from those ArrayBuffers and return
   // references to them to the invoker."

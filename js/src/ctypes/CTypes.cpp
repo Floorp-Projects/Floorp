@@ -40,6 +40,7 @@
 
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
+#include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "js/Vector.h"
 

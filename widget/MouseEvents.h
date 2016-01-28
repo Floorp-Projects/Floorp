@@ -462,6 +462,7 @@ private:
     , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
+    , mAllowToOverrideSystemScrollSpeed(false)
   {
   }
 
@@ -485,6 +486,7 @@ public:
     , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
     , mCanTriggerSwipe(false)
+    , mAllowToOverrideSystemScrollSpeed(true)
   {
   }
 
@@ -599,6 +601,11 @@ public:
   // viewport.
   bool mCanTriggerSwipe;
 
+  // If mAllowToOverrideSystemScrollSpeed is true, the scroll speed may be
+  // overridden.  Otherwise, the scroll speed won't be overridden even if
+  // it's enabled by the pref.
+  bool mAllowToOverrideSystemScrollSpeed;
+
   void AssignWheelEventData(const WidgetWheelEvent& aEvent, bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
@@ -618,7 +625,30 @@ public:
     overflowDeltaY = aEvent.overflowDeltaY;
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;
     mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
+    mAllowToOverrideSystemScrollSpeed =
+      aEvent.mAllowToOverrideSystemScrollSpeed;
   }
+
+  // System scroll speed settings may be too slow at using Gecko.  In such
+  // case, we should override the scroll speed computed with system settings.
+  // Following methods return preferred delta values which are multiplied by
+  // factors specified by prefs.  If system scroll speed shouldn't be
+  // overridden (e.g., this feature is disabled by pref), they return raw
+  // delta values.
+  double OverriddenDeltaX() const;
+  double OverriddenDeltaY() const;
+
+  // Compute the overridden delta value.  This may be useful for suppressing
+  // too fast scroll by system scroll speed overriding when widget sets
+  // mAllowToOverrideSystemScrollSpeed.
+  static double ComputeOverriddenDelta(double aDelta, bool aIsForVertical);
+
+private:
+  static bool sInitialized;
+  static bool sIsSystemScrollSpeedOverrideEnabled;
+  static int32_t sOverrideFactorX;
+  static int32_t sOverrideFactorY;
+  static void Initialize();
 };
 
 /******************************************************************************

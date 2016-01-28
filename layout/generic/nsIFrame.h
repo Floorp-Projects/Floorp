@@ -377,16 +377,16 @@ struct IntrinsicSize {
 
 /// Generic destructor for frame properties. Calls delete.
 template<typename T>
-static void DeleteValue(void* aPropertyValue)
+static void DeleteValue(T* aPropertyValue)
 {
-  delete static_cast<T*>(aPropertyValue);
+  delete aPropertyValue;
 }
 
 /// Generic destructor for frame properties. Calls Release().
 template<typename T>
-static void ReleaseValue(void* aPropertyValue)
+static void ReleaseValue(T* aPropertyValue)
 {
-  static_cast<T*>(aPropertyValue)->Release();
+  aPropertyValue->Release();
 }
 
 //----------------------------------------------------------------------
@@ -415,7 +415,9 @@ static void ReleaseValue(void* aPropertyValue)
 class nsIFrame : public nsQueryFrame
 {
 public:
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
+  template<typename T=void>
+  using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
+
   typedef mozilla::FrameProperties FrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layout::FrameChildList ChildList;
@@ -842,70 +844,89 @@ public:
   
   nsPoint GetPositionIgnoringScrolling();
 
-  static void DestroyContentArray(void* aPropertyValue);
+  typedef nsAutoTArray<nsIContent*, 2> ContentArray;
+  static void DestroyContentArray(ContentArray* aArray);
 
-#ifdef _MSC_VER
-// XXX Workaround MSVC issue by making the static FramePropertyDescriptor
-// non-const.  See bug 555727.
-#define NS_PROPERTY_DESCRIPTOR_CONST
-#else
-#define NS_PROPERTY_DESCRIPTOR_CONST const
-#endif
-
-#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                                  \
-  static const FramePropertyDescriptor* prop() {                                               \
-    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { dtor, nullptr }; \
-    return &descriptor;                                                                        \
+#define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, dtor)             \
+  static const mozilla::FramePropertyDescriptor<type>* prop() {           \
+    static MOZ_CONSTEXPR auto descriptor =                                \
+      mozilla::FramePropertyDescriptor<type>::NewWithDestructor<dtor>();  \
+    return &descriptor;                                                   \
   }
+
 // Don't use this unless you really know what you're doing!
-#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)                               \
-  static const FramePropertyDescriptor* prop() {                                               \
-    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { nullptr, dtor }; \
-    return &descriptor;                                                                        \
+#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, type, dtor)    \
+  static const mozilla::FramePropertyDescriptor<type>* prop() {           \
+    static MOZ_CONSTEXPR auto descriptor = mozilla::                      \
+      FramePropertyDescriptor<type>::NewWithDestructorWithFrame<dtor>();  \
+    return &descriptor;                                                   \
   }
 
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(IBSplitPrevSibling, nullptr)
+#define NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(prop, type)                \
+  static const mozilla::FramePropertyDescriptor<type>* prop() {           \
+    static MOZ_CONSTEXPR auto descriptor =                                \
+      mozilla::FramePropertyDescriptor<type>::NewWithoutDestructor();     \
+    return &descriptor;                                                   \
+  }
 
-  NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DeleteValue<nsPoint>)
-  NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DeleteValue<nsMargin>)
+#define NS_DECLARE_FRAME_PROPERTY_DELETABLE(prop, type) \
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, DeleteValue)
 
-  NS_DECLARE_FRAME_PROPERTY(OutlineInnerRectProperty, DeleteValue<nsRect>)
-  NS_DECLARE_FRAME_PROPERTY(PreEffectsBBoxProperty, DeleteValue<nsRect>)
-  NS_DECLARE_FRAME_PROPERTY(PreTransformOverflowAreasProperty,
-                            DeleteValue<nsOverflowAreas>)
+#define NS_DECLARE_FRAME_PROPERTY_RELEASABLE(prop, type) \
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, ReleaseValue)
+
+#define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(prop, type)  \
+  static void AssertOnDestroyingProperty##prop(type*) {               \
+    MOZ_ASSERT_UNREACHABLE("Frame property " #prop " should never "   \
+                           "be destroyed by the FramePropertyTable"); \
+  }                                                                   \
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type,                     \
+                                      AssertOnDestroyingProperty##prop)
+
+#define NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(prop, type) \
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(prop, mozilla::SmallValueHolder<type>)
+
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsIFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsIFrame)
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(NormalPositionProperty, nsPoint)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ComputedOffsetProperty, nsMargin)
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(OutlineInnerRectProperty, nsRect)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PreEffectsBBoxProperty, nsRect)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PreTransformOverflowAreasProperty,
+                                      nsOverflowAreas)
 
   // The initial overflow area passed to FinishAndStoreOverflow. This is only set
   // on frames that Preserve3D() or HasPerspective() or IsTransformed(), and
   // when at least one of the overflow areas differs from the frame bound rect.
-  NS_DECLARE_FRAME_PROPERTY(InitialOverflowProperty,
-                            DeleteValue<nsOverflowAreas>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(InitialOverflowProperty, nsOverflowAreas)
 
 #ifdef DEBUG
   // InitialOverflowPropertyDebug is added to the frame to indicate that either
   // the InitialOverflowProperty has been stored or the InitialOverflowProperty
   // has been suppressed due to being set to the default value (frame bounds)
-  NS_DECLARE_FRAME_PROPERTY(DebugInitialOverflowPropertyApplied, nullptr)
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(DebugInitialOverflowPropertyApplied, bool)
 #endif
 
-  NS_DECLARE_FRAME_PROPERTY(UsedMarginProperty, DeleteValue<nsMargin>)
-  NS_DECLARE_FRAME_PROPERTY(UsedPaddingProperty, DeleteValue<nsMargin>)
-  NS_DECLARE_FRAME_PROPERTY(UsedBorderProperty, DeleteValue<nsMargin>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedMarginProperty, nsMargin)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedBorderProperty, nsMargin)
 
-  NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LineBaselineOffset, nscoord)
 
-  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, ReleaseValue<gfxASurface>)
-  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT, ReleaseValue<DrawTarget>)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(CachedBackgroundImage, gfxASurface)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(CachedBackgroundImageDT, DrawTarget)
 
-  NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(InvalidationRect, nsRect)
 
-  NS_DECLARE_FRAME_PROPERTY(RefusedAsyncAnimationProperty, nullptr)
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(RefusedAsyncAnimationProperty, bool)
 
-  NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
+                                      DestroyContentArray)
 
   nsTArray<nsIContent*>* GetGenConPseudos() {
-    const FramePropertyDescriptor* prop = GenConProperty();
-    return static_cast<nsTArray<nsIContent*>*>(Properties().Get(prop));
+    return Properties().Get(GenConProperty());
   }
 
   /**
@@ -1086,6 +1107,7 @@ public:
   static const ChildListID kPopupList = mozilla::layout::kPopupList;
   static const ChildListID kPushedFloatsList = mozilla::layout::kPushedFloatsList;
   static const ChildListID kSelectPopupList = mozilla::layout::kSelectPopupList;
+  static const ChildListID kBackdropList = mozilla::layout::kBackdropList;
   // A special alias for kPrincipalList that do not request reflow.
   static const ChildListID kNoReflowPrincipalList = mozilla::layout::kNoReflowPrincipalList;
 
@@ -1198,8 +1220,7 @@ public:
 
   bool RefusedAsyncAnimation() const
   {
-    void* prop = Properties().Get(nsIFrame::RefusedAsyncAnimationProperty());
-    return bool(reinterpret_cast<intptr_t>(prop));
+    return Properties().Get(RefusedAsyncAnimationProperty());
   }
 
   /**
@@ -2675,19 +2696,6 @@ public:
     return FrameProperties(PresContext()->PropertyTable(), this);
   }
 
-  NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(ParagraphDepthProperty, nullptr)
-
-#define NS_GET_BASE_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))
-
-#define NS_GET_EMBEDDING_LEVEL(frame) \
-NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
-
-#define NS_GET_PARAGRAPH_DEPTH(frame) \
-NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
-
   /**
    * Return true if and only if this frame obeys visibility:hidden.
    * if it does not, then nsContainerFrame will hide its view even though
@@ -3096,8 +3104,7 @@ private:
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect);
 
-  static void DestroyPaintedPresShellList(void* propertyValue) {
-    nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(propertyValue);
+  static void DestroyPaintedPresShellList(nsTArray<nsWeakPtr>* list) {
     list->Clear();
     delete list;
   }
@@ -3105,7 +3112,9 @@ private:
   // Stores weak references to all the PresShells that were painted during
   // the last paint event so that we can increment their paint count during
   // empty transactions
-  NS_DECLARE_FRAME_PROPERTY(PaintedPresShellsProperty, DestroyPaintedPresShellList)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(PaintedPresShellsProperty,
+                                      nsTArray<nsWeakPtr>,
+                                      DestroyPaintedPresShellList)
   
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
     nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(

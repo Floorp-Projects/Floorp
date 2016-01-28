@@ -59,17 +59,20 @@ public:
 
   bool SupportsMimeType(const nsACString& aMimeType) const override
   {
+    AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
 #ifdef USING_MOZFFVPX
-    AVCodecID audioCodec = AV_CODEC_ID_NONE;
+    if (videoCodec == AV_CODEC_ID_NONE) {
+        return false;
+    }
+    return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, videoCodec);
 #else
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
-#endif
-    AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       return false;
     }
     AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
     return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
+#endif
   }
 
   ConversionRequired

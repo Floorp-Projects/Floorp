@@ -291,9 +291,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         RelocatablePtrObject frame;
         size_t size;
 
-        static void trace(TenurePromotionsLogEntry* e, JSTracer* trc) {
-            if (e->frame)
-                TraceEdge(trc, &e->frame, "Debugger::TenurePromotionsLogEntry::frame");
+        static void trace(TenurePromotionsLogEntry* e, JSTracer* trc) { e->trace(trc); }
+        void trace(JSTracer* trc) {
+            if (frame)
+                TraceEdge(trc, &frame, "Debugger::TenurePromotionsLogEntry::frame");
         }
     };
 
@@ -318,11 +319,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         size_t size;
         bool inNursery;
 
-        static void trace(AllocationsLogEntry* e, JSTracer* trc) {
-            if (e->frame)
-                TraceEdge(trc, &e->frame, "Debugger::AllocationsLogEntry::frame");
-            if (e->ctorName)
-                TraceEdge(trc, &e->ctorName, "Debugger::AllocationsLogEntry::ctorName");
+        static void trace(AllocationsLogEntry* e, JSTracer* trc) { e->trace(trc); }
+        void trace(JSTracer* trc) {
+            if (frame)
+                TraceEdge(trc, &frame, "Debugger::AllocationsLogEntry::frame");
+            if (ctorName)
+                TraceEdge(trc, &ctorName, "Debugger::AllocationsLogEntry::ctorName");
         }
     };
 
@@ -939,20 +941,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
   private:
     Debugger(const Debugger&) = delete;
     Debugger & operator=(const Debugger&) = delete;
-};
-
-template<>
-struct DefaultGCPolicy<Debugger::TenurePromotionsLogEntry> {
-    static void trace(JSTracer* trc, Debugger::TenurePromotionsLogEntry* e, const char*) {
-        Debugger::TenurePromotionsLogEntry::trace(e, trc);
-    }
-};
-
-template<>
-struct DefaultGCPolicy<Debugger::AllocationsLogEntry> {
-    static void trace(JSTracer* trc, Debugger::AllocationsLogEntry* e, const char*) {
-        Debugger::AllocationsLogEntry::trace(e, trc);
-    }
 };
 
 class BreakpointSite {

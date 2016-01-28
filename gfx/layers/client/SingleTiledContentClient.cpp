@@ -172,16 +172,15 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
-    nsIntRegionRectIterator iter(tileDirtyRegion);
-    const gfx::IntRect *iterRect;
-    while ((iterRect = iter.Next())) {
+    for (auto iter = tileDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::IntRect& rect = iter.Get();
       if (dtOnWhite) {
-        dt->FillRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+        dt->FillRect(gfx::Rect(rect.x, rect.y, rect.width, rect.height),
                      gfx::ColorPattern(gfx::Color(0.0, 0.0, 0.0, 1.0)));
-        dtOnWhite->FillRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+        dtOnWhite->FillRect(gfx::Rect(rect.x, rect.y, rect.width, rect.height),
                             gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)));
       } else {
-        dt->ClearRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
+        dt->ClearRect(gfx::Rect(rect.x, rect.y, rect.width, rect.height));
       }
     }
   }

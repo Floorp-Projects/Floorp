@@ -1195,10 +1195,6 @@ class FunctionCompiler
         *column = sc.column;
     }
 
-    void assertDebugCheckPoint() {
-        MOZ_ASSERT(readOpcode() == Expr::DebugCheckPoint);
-    }
-
     bool done() const { return decoder_.done(); }
 
     /*************************************************************************/
@@ -2470,8 +2466,6 @@ EmitFor(FunctionCompiler& f, Expr expr, const LabelVector* maybeLabels)
             return false;
     }
 
-    f.assertDebugCheckPoint();
-
     return f.closeLoop(loopEntry, afterLoop);
 }
 
@@ -2635,15 +2629,16 @@ EmitRet(FunctionCompiler& f)
 static bool
 EmitBlock(FunctionCompiler& f, ExprType type, MDefinition** def)
 {
-    size_t numStmt = f.readU32();
-    for (size_t i = 1; i < numStmt; i++) {
-        // Fine to clobber def, we only want the last use.
-        if (!EmitExprStmt(f, def))
+    uint32_t numStmts = f.readVarU32();
+    if (numStmts) {
+        for (uint32_t i = 0; i < numStmts - 1; i++) {
+            // Fine to clobber def, we only want the last use.
+            if (!EmitExprStmt(f, def))
+                return false;
+        }
+        if (!EmitExpr(f, type, def))
             return false;
     }
-    if (numStmt && !EmitExpr(f, type, def))
-        return false;
-    f.assertDebugCheckPoint();
     return true;
 }
 
@@ -2967,7 +2962,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64StoreMem32:
       case Expr::I64StoreMem:
         MOZ_CRASH("NYI");
-      case Expr::DebugCheckPoint:
       case Expr::Unreachable:
         break;
       case Expr::Limit:
@@ -3012,7 +3006,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
                 return false;
         }
 
-        if (IsVoid(f.sig().ret()))
+        if (IsVoid(f.sig().ret()) || !last)
             f.returnVoid();
         else
             f.returnExpr(last);

@@ -119,7 +119,6 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
 
   nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
   if (scheme.LowerCaseEqualsLiteral("https") ||
-      scheme.LowerCaseEqualsLiteral("app") ||
       scheme.LowerCaseEqualsLiteral("file")) {
     return true;
   }

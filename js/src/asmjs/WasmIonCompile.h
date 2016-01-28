@@ -77,7 +77,8 @@ class IonCompileTask
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* rt, CompileArgs args, ModuleGeneratorThreadView& mg, size_t defaultChunkSize)
+    IonCompileTask(JSRuntime* rt, CompileArgs args, ModuleGeneratorThreadView& mg,
+                   size_t defaultChunkSize)
       : runtime_(rt),
         args_(args),
         mg_(mg),

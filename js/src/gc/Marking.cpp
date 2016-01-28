@@ -17,6 +17,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"
+#include "gc/Policy.h"
 #include "jit/IonCode.h"
 #include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
@@ -403,7 +404,7 @@ JS_PUBLIC_API(void)
 JS::TraceEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
 {
     MOZ_ASSERT(thingp);
-    if (InternalGCMethods<T>::isMarkable(thingp->get()))
+    if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
         DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
 }
 
@@ -463,7 +464,7 @@ void
 js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
 {
     AssertRootMarkingPhase(trc);
-    if (InternalGCMethods<T>::isMarkableTaggedPointer(*thingp))
+    if (InternalBarrierMethods<T>::isMarkableTaggedPointer(*thingp))
         DispatchToTracer(trc, ConvertToBase(thingp), name);
 }
 
@@ -488,7 +489,7 @@ js::TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char
 {
     JS::AutoTracingIndex index(trc);
     for (auto i : MakeRange(len)) {
-        if (InternalGCMethods<T>::isMarkable(vec[i].get()))
+        if (InternalBarrierMethods<T>::isMarkable(vec[i].get()))
             DispatchToTracer(trc, ConvertToBase(vec[i].unsafeUnbarrieredForTracing()), name);
         ++index;
     }
@@ -501,7 +502,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
     AssertRootMarkingPhase(trc);
     JS::AutoTracingIndex index(trc);
     for (auto i : MakeRange(len)) {
-        if (InternalGCMethods<T>::isMarkable(vec[i]))
+        if (InternalBarrierMethods<T>::isMarkable(vec[i]))
             DispatchToTracer(trc, ConvertToBase(&vec[i]), name);
         ++index;
     }
@@ -527,6 +528,7 @@ FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
     template JS_PUBLIC_API(void) js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
                                                                             const char*);
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
+FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 #undef INSTANTIATE_PUBLIC_TRACE_FUNCTIONS
 
 template <typename T>

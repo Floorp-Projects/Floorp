@@ -12,12 +12,12 @@ extern "C" {
 struct mp4parse_state;
 
 #define MP4PARSE_OK 0
-#define MP4PARSE_ERROR_BADARG -1      // Argument validation failure
-#define MP4PARSE_ERROR_INVALID -2     // Error::InvalidData
-#define MP4PARSE_ERROR_UNSUPPORTED -3 // Error::Unsupported
-#define MP4PARSE_ERROR_EOF -4         // Error::UnexpectedEOF
-#define MP4PARSE_ASSERT -5            // Error::AssertCaught
-#define MP4PARSE_ERROR_IO -6          // Error::Io(_)
+#define MP4PARSE_ERROR_BADARG 1      // Argument validation failure
+#define MP4PARSE_ERROR_INVALID 2     // Error::InvalidData
+#define MP4PARSE_ERROR_UNSUPPORTED 3 // Error::Unsupported
+#define MP4PARSE_ERROR_EOF 4         // Error::UnexpectedEOF
+#define MP4PARSE_ASSERT 5            // Error::AssertCaught
+#define MP4PARSE_ERROR_IO 6          // Error::Io(_)
 
 #define MP4PARSE_TRACK_TYPE_H264 0 // "video/avc"
 #define MP4PARSE_TRACK_TYPE_AAC  1 // "audio/mp4a-latm"

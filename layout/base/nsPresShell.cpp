@@ -4873,10 +4873,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
     nsIntRegion region =
       aRegion->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel())
         .ToOutsidePixels(pc->AppUnitsPerDevPixel());
-    nsIntRegionRectIterator iter(region);
-    const nsIntRect* rect;
-    while ((rect = iter.Next())) {
-      ctx->Clip(gfxRect(rect->x, rect->y, rect->width, rect->height));
+    for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
+      const nsIntRect& rect = iter.Get();
+      ctx->Clip(gfxRect(rect.x, rect.y, rect.width, rect.height));
     }
   }
 

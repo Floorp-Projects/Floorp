@@ -175,6 +175,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.overflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
     WriteParam(aMsg, aParam.mCanTriggerSwipe);
+    WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -197,7 +198,8 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->overflowDeltaY) &&
       ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
-      ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe);
+      ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe) &&
+      ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
     aResult->scrollType =
       static_cast<mozilla::WidgetWheelEvent::ScrollType>(scrollType);
     return rv;
@@ -783,8 +785,9 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
     WriteParam(aMsg, aParam.mStartOffset);
     WriteParam(aMsg, aParam.mRemovedEndOffset);
     WriteParam(aMsg, aParam.mAddedEndOffset);
-    WriteParam(aMsg, aParam.mCausedByComposition);
-    WriteParam(aMsg, aParam.mOccurredDuringComposition);
+    WriteParam(aMsg, aParam.mCausedOnlyByComposition);
+    WriteParam(aMsg, aParam.mIncludingChangesDuringComposition);
+    WriteParam(aMsg, aParam.mIncludingChangesWithoutComposition);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -792,8 +795,11 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase>
     return ReadParam(aMsg, aIter, &aResult->mStartOffset) &&
            ReadParam(aMsg, aIter, &aResult->mRemovedEndOffset) &&
            ReadParam(aMsg, aIter, &aResult->mAddedEndOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mCausedByComposition) &&
-           ReadParam(aMsg, aIter, &aResult->mOccurredDuringComposition);
+           ReadParam(aMsg, aIter, &aResult->mCausedOnlyByComposition) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mIncludingChangesDuringComposition) &&
+           ReadParam(aMsg, aIter,
+                     &aResult->mIncludingChangesWithoutComposition);
   }
 };
 

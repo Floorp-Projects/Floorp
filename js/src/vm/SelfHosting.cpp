@@ -31,6 +31,7 @@
 #include "builtin/TypedObject.h"
 #include "builtin/WeakSetObject.h"
 #include "gc/Marking.h"
+#include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/Date.h"

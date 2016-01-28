@@ -31,6 +31,6 @@ function onClose()
 {
   setCursor("default");
 
-  var alreadyClosed = new Object();
+  var alreadyClosed = {};
   keygenThread.userCanceled(alreadyClosed);
 }

@@ -303,4 +303,9 @@ test(function() {
   assert_true(RoughCompareMatrix(m1r, m2r), "skewY should return the same result as DOMMatrixReadOnly.");
   assert_true(CompareMatrix(m1, m3), "skewY should not mutate original matrix.");
 }, "Test skewY.");
+
+test(function() {
+  var m = new WebKitCSSMatrix("matrix(1,0,0,0,0,0)");
+  assert_throws("NotSupportedError", function() { m.inverse(); }, "Inverting an invertible matrix should throw.")
+}, "Test that inverting an invertible matrix throws.");
 </script>

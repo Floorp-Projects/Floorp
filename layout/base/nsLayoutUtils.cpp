@@ -1914,19 +1914,18 @@ nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame)
   return ViewportHasDisplayPort(aFrame->PresContext());
 }
 
-NS_DECLARE_FRAME_PROPERTY(ScrollbarThumbLayerized, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ScrollbarThumbLayerized, bool)
 
 /* static */ void
 nsLayoutUtils::SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize)
 {
-  aThumbFrame->Properties().Set(ScrollbarThumbLayerized(),
-    reinterpret_cast<void*>(intptr_t(aLayerize)));
+  aThumbFrame->Properties().Set(ScrollbarThumbLayerized(), aLayerize);
 }
 
 bool
 nsLayoutUtils::IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
 {
-  return reinterpret_cast<intptr_t>(aThumbFrame->Properties().Get(ScrollbarThumbLayerized()));
+  return aThumbFrame->Properties().Get(ScrollbarThumbLayerized());
 }
 
 // static
@@ -8904,6 +8903,18 @@ nsLayoutUtils::IsScrollFrameWithSnapping(nsIFrame* aFrame)
   ScrollbarStyles styles = sf->GetScrollbarStyles();
   return styles.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
          styles.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+}
+
+/* static */ nsBlockFrame*
+nsLayoutUtils::GetFloatContainingBlock(nsIFrame* aFrame)
+{
+  nsIFrame* ancestor = aFrame->GetParent();
+  while (ancestor && !ancestor->IsFloatContainingBlock()) {
+    ancestor = ancestor->GetParent();
+  }
+  MOZ_ASSERT(!ancestor || GetAsBlock(ancestor),
+             "Float containing block can only be block frame");
+  return static_cast<nsBlockFrame*>(ancestor);
 }
 
 // The implementation of this calculation is adapted from

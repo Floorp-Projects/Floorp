@@ -133,7 +133,55 @@ struct MOZ_STACK_CLASS RubyColumn
   nsRubyBaseFrame* mBaseFrame;
   nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
   bool mIsIntraLevelWhitespace;
+
   RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
+
+  // Helper class to support iteration across the frames within a single
+  // RubyColumn (the column's ruby base and its annotations).
+  class MOZ_STACK_CLASS Iterator
+  {
+  public:
+    nsIFrame* operator*() const;
+
+    Iterator& operator++() { ++mIndex; SkipUntilExistingFrame(); return *this; }
+    Iterator operator++(int) { auto ret = *this; ++*this; return ret; }
+
+    friend bool operator==(const Iterator& aIter1, const Iterator& aIter2)
+    {
+      MOZ_ASSERT(&aIter1.mColumn == &aIter2.mColumn,
+                 "Should only compare iterators of the same ruby column");
+      return aIter1.mIndex == aIter2.mIndex;
+    }
+    friend bool operator!=(const Iterator& aIter1, const Iterator& aIter2)
+    {
+      return !(aIter1 == aIter2);
+    }
+
+  private:
+    Iterator(const RubyColumn& aColumn, int32_t aIndex)
+      : mColumn(aColumn)
+      , mIndex(aIndex)
+    {
+      MOZ_ASSERT(aIndex == -1 ||
+                 (aIndex >= 0 &&
+                  aIndex <= int32_t(aColumn.mTextFrames.Length())));
+      SkipUntilExistingFrame();
+    }
+    friend struct RubyColumn; // for the constructor
+
+    void SkipUntilExistingFrame();
+
+    const RubyColumn& mColumn;
+    // -1 means the ruby base frame,
+    // non-negative means the index of ruby text frame
+    // a value of mTextFrames.Length() means we're done iterating
+    int32_t mIndex = -1;
+  };
+
+  Iterator begin() const { return Iterator(*this, -1); }
+  Iterator end() const { return Iterator(*this, mTextFrames.Length()); }
+  Iterator cbegin() const { return begin(); }
+  Iterator cend() const { return end(); }
 };
 
 /**

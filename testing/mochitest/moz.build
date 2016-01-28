@@ -20,10 +20,6 @@ USE_EXTENSION_MANIFEST = True
 FINAL_TARGET_PP_FILES += ['install.rdf']
 
 MOCHITEST_MANIFESTS += [
-    'dynamic/mochitest.ini',
-    'MochiKit/mochitest.ini',
-    'static/mochitest.ini',
-    'tests/MochiKit-1.4.2/MochiKit/mochitest.ini',
     'tests/MochiKit-1.4.2/tests/mochitest.ini',
 ]
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
@@ -98,4 +94,57 @@ TEST_HARNESS_FILES.testing.mochitest.pywebsocket.mod_pywebsocket.handshake += [
     'pywebsocket/mod_pywebsocket/handshake/_base.py',
     'pywebsocket/mod_pywebsocket/handshake/hybi.py',
     'pywebsocket/mod_pywebsocket/handshake/hybi00.py',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.dynamic += [
+    'dynamic/getMyDirectory.sjs',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.static += [
+    'static/harness.css',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.MochiKit += [
+    'MochiKit/__package__.js',
+    'MochiKit/Async.js',
+    'MochiKit/Base.js',
+    'MochiKit/Color.js',
+    'MochiKit/Controls.js',
+    'MochiKit/DateTime.js',
+    'MochiKit/DOM.js',
+    'MochiKit/DragAndDrop.js',
+    'MochiKit/Format.js',
+    'MochiKit/Iter.js',
+    'MochiKit/Logging.js',
+    'MochiKit/LoggingPane.js',
+    'MochiKit/MochiKit.js',
+    'MochiKit/MockDOM.js',
+    'MochiKit/New.js',
+    'MochiKit/Signal.js',
+    'MochiKit/Sortable.js',
+    'MochiKit/Style.js',
+    'MochiKit/Test.js',
+    'MochiKit/Visual.js',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.testing.mochitest.tests['MochiKit-1.4.2'].MochiKit += [
+    'tests/MochiKit-1.4.2/MochiKit/Async.js',
+    'tests/MochiKit-1.4.2/MochiKit/Base.js',
+    'tests/MochiKit-1.4.2/MochiKit/Color.js',
+    'tests/MochiKit-1.4.2/MochiKit/DateTime.js',
+    'tests/MochiKit-1.4.2/MochiKit/DOM.js',
+    'tests/MochiKit-1.4.2/MochiKit/DragAndDrop.js',
+    'tests/MochiKit-1.4.2/MochiKit/Format.js',
+    'tests/MochiKit-1.4.2/MochiKit/Iter.js',
+    'tests/MochiKit-1.4.2/MochiKit/Logging.js',
+    'tests/MochiKit-1.4.2/MochiKit/LoggingPane.js',
+    'tests/MochiKit-1.4.2/MochiKit/MochiKit.js',
+    'tests/MochiKit-1.4.2/MochiKit/MockDOM.js',
+    'tests/MochiKit-1.4.2/MochiKit/Position.js',
+    'tests/MochiKit-1.4.2/MochiKit/Selector.js',
+    'tests/MochiKit-1.4.2/MochiKit/Signal.js',
+    'tests/MochiKit-1.4.2/MochiKit/Sortable.js',
+    'tests/MochiKit-1.4.2/MochiKit/Style.js',
+    'tests/MochiKit-1.4.2/MochiKit/Test.js',
+    'tests/MochiKit-1.4.2/MochiKit/Visual.js',
 ]

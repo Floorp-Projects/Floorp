@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
 
 #include <algorithm>
@@ -1443,14 +1444,25 @@ JSScript::initScriptCounts(JSContext* cx)
         compartment()->scriptCountsMap = map;
     }
 
-    // Register the current ScriptCount in the compartment's map.
-    if (!map->putNew(this, Move(base))) {
+    // Allocate the ScriptCounts.
+    ScriptCounts* sc = cx->new_<ScriptCounts>(Move(base));
+    if (!sc) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    auto guardScriptCounts = mozilla::MakeScopeExit([&] () {
+        js_delete(sc);
+    });
+
+    // Register the current ScriptCounts in the compartment's map.
+    if (!map->putNew(this, sc)) {
         ReportOutOfMemory(cx);
         return false;
     }
 
     // safe to set this;  we can't fail after this point.
     hasScriptCounts_ = true;
+    guardScriptCounts.release();
 
     // Enable interrupts in any interpreter frames running on this script. This
     // is used to let the interpreter increment the PCCounts, if present.
@@ -1475,7 +1487,7 @@ ScriptCounts&
 JSScript::getScriptCounts()
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value();
+    return *p->value();
 }
 
 js::PCCounts*
@@ -1635,7 +1647,7 @@ JSScript::takeOverScriptCountsMapEntry(ScriptCounts* entryValue)
 {
 #ifdef DEBUG
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    MOZ_ASSERT(entryValue == &p->value());
+    MOZ_ASSERT(entryValue == p->value());
 #endif
     hasScriptCounts_ = false;
 }
@@ -1644,7 +1656,8 @@ void
 JSScript::releaseScriptCounts(ScriptCounts* counts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    *counts = Move(p->value());
+    *counts = Move(*p->value());
+    js_delete(p->value());
     compartment()->scriptCountsMap->remove(p);
     hasScriptCounts_ = false;
 }

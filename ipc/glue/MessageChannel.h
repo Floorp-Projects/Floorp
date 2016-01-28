@@ -44,6 +44,19 @@ class RefCountedMonitor : public Monitor
     ~RefCountedMonitor() {}
 };
 
+enum class SyncSendError {
+    SendSuccess,
+    PreviousTimeout,
+    SendingCPOWWhileDispatchingSync,
+    SendingCPOWWhileDispatchingUrgent,
+    NotConnectedBeforeSend,
+    DisconnectedDuringSend,
+    CancelledBeforeSend,
+    CancelledAfterSend,
+    TimedOut,
+    ReplyError,
+};
+
 class MessageChannel : HasResultCodes
 {
     friend class ProcessLink;
@@ -131,6 +144,13 @@ class MessageChannel : HasResultCodes
     bool WaitForIncomingMessage();
 
     bool CanSend() const;
+
+    // If sending a sync message returns an error, this function gives a more
+    // descriptive error message.
+    SyncSendError LastSendError() const {
+        AssertWorkerThread();
+        return mLastSendError;
+    }
 
     // Currently only for debugging purposes, doesn't aquire mMonitor.
     ChannelState GetChannelState__TotallyRacy() const {
@@ -250,7 +270,7 @@ class MessageChannel : HasResultCodes
     bool InterruptEventOccurred();
     bool HasPendingEvents();
 
-    void ProcessPendingRequests(int transaction, int prio);
+    void ProcessPendingRequests(int seqno, int transaction);
     bool ProcessPendingRequest(const Message &aUrgent);
 
     void MaybeUndeferIncall();
@@ -288,7 +308,8 @@ class MessageChannel : HasResultCodes
 
     bool ShouldContinueFromTimeout();
 
-    void CancelCurrentTransactionInternal();
+    void EndTimeout();
+    void CancelTransaction(int transaction);
 
     // The "remote view of stack depth" can be different than the
     // actual stack depth when there are out-of-turn replies.  When we
@@ -426,7 +447,7 @@ class MessageChannel : HasResultCodes
     // Tell the IO thread to close the channel and wait for it to ACK.
     void SynchronouslyClose();
 
-    bool WasTransactionCanceled(int transaction, int prio);
+    bool WasTransactionCanceled(int transaction);
     bool ShouldDeferMessage(const Message& aMsg);
     void OnMessageReceivedFromLink(const Message& aMsg);
     void OnChannelErrorFromLink();
@@ -521,6 +542,9 @@ class MessageChannel : HasResultCodes
 
     static bool sIsPumpingMessages;
 
+    // If ::Send returns false, this gives a more descriptive error.
+    SyncSendError mLastSendError;
+
     template<class T>
     class AutoSetValue {
       public:
@@ -575,6 +599,13 @@ class MessageChannel : HasResultCodes
 
     // The current transaction ID.
     int32_t mCurrentTransaction;
+
+    // This field describes the priorities of the sync Send calls that are
+    // currently on stack. If a Send call for a message with priority P is on
+    // the C stack, then mPendingSendPriorities & (1 << P) will be
+    // non-zero. Note that cancelled Send calls are not removed from this
+    // bitfield (until they return).
+    int mPendingSendPriorities;
 
     class AutoEnterTransaction
     {

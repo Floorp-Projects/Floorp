@@ -203,7 +203,6 @@ class nsDisplayListBuilder {
   };
 
 public:
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayListClipState DisplayListClipState;
@@ -959,8 +958,8 @@ public:
     nsRect mDirtyRect;
   };
 
-  NS_DECLARE_FRAME_PROPERTY(OutOfFlowDisplayDataProperty,
-                            DeleteValue<OutOfFlowDisplayData>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(OutOfFlowDisplayDataProperty,
+                                      OutOfFlowDisplayData)
 
   static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
   {
@@ -968,7 +967,7 @@ public:
       aFrame->Properties().Get(OutOfFlowDisplayDataProperty()));
   }
 
-  NS_DECLARE_FRAME_PROPERTY(Preserve3DDirtyRectProperty, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Preserve3DDirtyRectProperty, nsRect)
 
   nsPresContext* CurrentPresContext() {
     return CurrentPresShellState()->mPresShell->GetPresContext();
@@ -3956,6 +3955,10 @@ public:
     return nsDisplayItem::ReferenceFrameForChildren(); 
   }
 
+  AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
+    return mAnimatedGeometryRootForScrollMetadata;
+  }
+
   virtual const nsRect& GetVisibleRectForChildren() const override
   {
     return mChildrenVisibleRect;
@@ -4103,6 +4106,8 @@ public:
                                                 bool aLogAnimations = false);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
+  bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
+
   /**
    * This will return if it's possible for this element to be prerendered.
    * This should never return false if we're going to prerender.
@@ -4192,6 +4197,7 @@ private:
   Matrix4x4 mTransformPreserves3D;
   ComputeTransformFunction mTransformGetter;
   AnimatedGeometryRoot* mAnimatedGeometryRootForChildren;
+  AnimatedGeometryRoot* mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenVisibleRect;
   uint32_t mIndex;
   nsRect mBounds;
@@ -4286,6 +4292,8 @@ public:
   }
 
   nsIFrame* TransformFrame() { return mTransformFrame; }
+
+  virtual int32_t ZIndex() const override;
 
   virtual void
   DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {

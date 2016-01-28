@@ -111,6 +111,7 @@ EXPORTS.js += [
     '../public/Debug.h',
     '../public/GCAPI.h',
     '../public/GCHashTable.h',
+    '../public/GCPolicyAPI.h',
     '../public/GCVector.h',
     '../public/HashTable.h',
     '../public/HeapAPI.h',

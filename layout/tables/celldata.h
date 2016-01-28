@@ -80,19 +80,6 @@ public:
     */
   bool IsColSpan() const;
 
-  /** is the entry spanned by a zero colspan
-    * zero colspans span all cells starting from the originating cell towards
-    * the end of the colgroup or a cell originating in the same row
-    * or a rowspanned entry
-    * @return    is true if the entry is spanned by a zero colspan
-    */
-  bool IsZeroColSpan() const;
-
-  /** mark the current entry as spanned by a zero colspan
-    * @param aIsZero    if true mark the entry as covered by a zero colspan
-    */
-  void SetZeroColSpan(bool aIsZero);
-
   /** get the distance from the current entry to the corresponding origin of the colspan
     * @return    containing the distance in the row to the originating cell
     */
@@ -250,7 +237,9 @@ public:
 
 // The layout of a celldata is as follows.  The top 10 bits are the colspan
 // offset (which is enough to represent our allowed values 1-1000 for colspan).
-// Then there are three bits of flags.  Then 16 bits of rowspan offset (which
+// Then there are two bits of flags.
+// XXXmats Then one unused bit that we should decide how to use in bug 862624.
+// Then 16 bits of rowspan offset (which
 // lets us represent numbers up to 65535.  Then another 3 bits of flags.
 
 // num bits to shift right to get right aligned col span
@@ -267,8 +256,7 @@ public:
 #define SPAN             0x00000001 // there a row or col span
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
-#define COL_SPAN         (1 << (COL_SPAN_SHIFT - 3)) // there is a col span
-#define COL_SPAN_0       (1 << (COL_SPAN_SHIFT - 2)) // the col span is 0
+#define COL_SPAN         (1 << (COL_SPAN_SHIFT - 2)) // there is a col span
 #define OVERLAP          (1 << (COL_SPAN_SHIFT - 1)) // there is a row span and
                                                      // col span but not by
                                                      // same cell
@@ -346,25 +334,6 @@ inline bool CellData::IsColSpan() const
 {
   return (SPAN     == (SPAN & mBits)) &&
          (COL_SPAN == (COL_SPAN & mBits));
-}
-
-inline bool CellData::IsZeroColSpan() const
-{
-  return (SPAN       == (SPAN & mBits))     &&
-         (COL_SPAN   == (COL_SPAN & mBits)) &&
-         (COL_SPAN_0 == (COL_SPAN_0 & mBits));
-}
-
-inline void CellData::SetZeroColSpan(bool aIsZeroSpan)
-{
-  if (SPAN == (SPAN & mBits)) {
-    if (aIsZeroSpan) {
-      mBits |= COL_SPAN_0;
-    }
-    else {
-      mBits &= ~COL_SPAN_0;
-    }
-  }
 }
 
 inline uint32_t CellData::GetColSpanOffset() const

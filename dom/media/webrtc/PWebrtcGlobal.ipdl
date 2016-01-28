@@ -17,7 +17,9 @@ async protocol PWebrtcGlobal {
 
 child: // parent -> child messages
   GetStatsRequest(int aRequestId, nsString aPcIdFilter);
+  ClearStatsRequest();
   GetLogRequest(int aRequestId, nsCString aPattern);
+  ClearLogRequest();
   SetAecLogging(bool aEnable);
   SetDebugMode(int aLevel);
 

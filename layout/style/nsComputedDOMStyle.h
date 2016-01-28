@@ -27,6 +27,7 @@ namespace mozilla {
 namespace dom {
 class Element;
 } // namespace dom
+struct ComputedGridTrackInfo;
 } // namespace mozilla
 
 struct nsComputedStyleMap;
@@ -176,12 +177,14 @@ private:
 
   already_AddRefed<CSSValue> GetSVGPaintFor(bool aFill);
 
-  // Appends all aLineNames (must be non-empty) space-separated to aResult.
+  // Appends all aLineNames (may be empty) space-separated to aResult.
   void AppendGridLineNames(nsString& aResult,
                            const nsTArray<nsString>& aLineNames);
-  // Appends aLineNames (if non-empty) as a CSSValue* to aValueList.
+  // Appends aLineNames as a CSSValue* to aValueList.  If aLineNames is empty
+  // a value ("[]") is only appended if aSuppressEmptyList is false.
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
-                           const nsTArray<nsString>& aLineNames);
+                           const nsTArray<nsString>& aLineNames,
+                           bool aSuppressEmptyList = true);
   // Appends aLineNames1/2 (if non-empty) as a CSSValue* to aValueList.
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
                            const nsTArray<nsString>& aLineNames1,
@@ -190,9 +193,7 @@ private:
                                               const nsStyleCoord& aMaxSize);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
     const nsStyleGridTemplate& aTrackList,
-    const uint32_t aNumLeadingImplicitTracks,
-    const uint32_t aNumExplicitTracks,
-    const nsTArray<nscoord>* aTrackSizes);
+    const mozilla::ComputedGridTrackInfo* aTrackInfo);
   already_AddRefed<CSSValue> GetGridLine(const nsStyleGridLine& aGridLine);
 
   bool GetLineHeightCoord(nscoord& aCoord);

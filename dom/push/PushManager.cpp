@@ -477,10 +477,16 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    MutexAutoLock lock(mProxy->Lock());
-    if (mProxy->CleanedUp()) {
-      return NS_OK;
+
+    nsCOMPtr<nsIPrincipal> principal;
+    {
+      MutexAutoLock lock(mProxy->Lock());
+      if (mProxy->CleanedUp()) {
+        return NS_OK;
+      }
+      principal = mProxy->GetWorkerPrivate()->GetPrincipal();
     }
+    MOZ_ASSERT(principal);
 
     RefPtr<WorkerUnsubscribeResultCallback> callback =
       new WorkerUnsubscribeResultCallback(mProxy);
@@ -492,7 +498,6 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
     if (NS_WARN_IF(NS_FAILED(service->Unsubscribe(mScope, principal, callback)))) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
       return NS_OK;
@@ -742,14 +747,22 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    MutexAutoLock lock(mProxy->Lock());
-    if (mProxy->CleanedUp()) {
-      return NS_OK;
+
+    nsCOMPtr<nsIPrincipal> principal;
+    {
+      // Bug 1228723: If permission is revoked or an error occurs, the
+      // subscription callback will be called synchronously. This causes
+      // `GetSubscriptionCallback::OnPushSubscription` to deadlock when
+      // it tries to acquire the lock.
+      MutexAutoLock lock(mProxy->Lock());
+      if (mProxy->CleanedUp()) {
+        return NS_OK;
+      }
+      principal = mProxy->GetWorkerPrivate()->GetPrincipal();
     }
+    MOZ_ASSERT(principal);
 
     RefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
-
-    nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
 
     PushPermissionState state;
     nsresult rv = GetPermissionState(principal, state);
