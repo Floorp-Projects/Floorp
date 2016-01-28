@@ -87,6 +87,7 @@ public:
     , mModules(kInitialModuleCount)
     , mOutFile(nullptr)
     , mAddTimestamp(false)
+    , mIsSync(false)
   {
   }
 
@@ -103,20 +104,24 @@ public:
   {
     bool shouldAppend = false;
     bool addTimestamp = false;
+    bool isSync = false;
     const char* modules = PR_GetEnv("NSPR_LOG_MODULES");
     NSPRLogModulesParser(modules,
-        [&shouldAppend, &addTimestamp]
+        [&shouldAppend, &addTimestamp, &isSync]
             (const char* aName, LogLevel aLevel) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
           } else if (strcmp(aName, "timestamp") == 0) {
             addTimestamp = true;
+          } else if (strcmp(aName, "sync") == 0) {
+            isSync = true;
           } else {
             LogModule::Get(aName)->SetLevel(aLevel);
           }
     });
 
     mAddTimestamp = addTimestamp;
+    mIsSync = isSync;
 
     const char* logFile = PR_GetEnv("NSPR_LOG_FILE");
     if (logFile && logFile[0]) {
@@ -188,6 +193,10 @@ public:
           aName, buffToWrite, newline);
     }
 
+    if (mIsSync) {
+      fflush(out);
+    }
+
     if (buffToWrite != buff) {
       PR_smprintf_free(buffToWrite);
     }
@@ -198,6 +207,7 @@ private:
   nsClassHashtable<nsCharPtrHashKey, LogModule> mModules;
   ScopedCloseFile mOutFile;
   bool mAddTimestamp;
+  bool mIsSync;
 };
 
 StaticAutoPtr<LogModuleManager> sLogModuleManager;

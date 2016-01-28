@@ -316,20 +316,13 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
     return;
   }
 
-  nsIFrame* ancestor = aFrame;
-  do {
-    ancestor = ancestor->GetParent();
-    if (!ancestor)
-      return;
-  } while (!ancestor->IsFloatContainingBlock());
-
-  if (ancestor == aOurLineContainer)
+  nsBlockFrame* frameBlock = nsLayoutUtils::GetFloatContainingBlock(aFrame);
+  if (!frameBlock || frameBlock == aOurLineContainer) {
     return;
+  }
 
   nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
   NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
-  nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
-  NS_ASSERTION(frameBlock, "ancestor not a block");
 
   while (true) {
     ourBlock->ReparentFloats(aFrame, frameBlock, false);

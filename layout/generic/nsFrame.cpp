@@ -159,7 +159,7 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 #include "prenv.h"
 
-NS_DECLARE_FRAME_PROPERTY(BoxMetricsProperty, DeleteValue<nsBoxLayoutMetrics>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(BoxMetricsProperty, nsBoxLayoutMetrics)
 
 static void
 InitBoxMetrics(nsIFrame* aFrame, bool aClear)
@@ -239,8 +239,8 @@ nsFrame::SetVerifyStyleTreeEnable(bool aEnabled)
 
 #endif
 
-NS_DECLARE_FRAME_PROPERTY(AbsoluteContainingBlockProperty,
-                          DeleteValue<nsAbsoluteContainingBlock>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(AbsoluteContainingBlockProperty,
+                                    nsAbsoluteContainingBlock)
 
 bool
 nsIFrame::HasAbsolutelyPositionedChildren() const {
@@ -250,8 +250,7 @@ nsIFrame::HasAbsolutelyPositionedChildren() const {
 nsAbsoluteContainingBlock*
 nsIFrame::GetAbsoluteContainingBlock() const {
   NS_ASSERTION(IsAbsoluteContainer(), "The frame is not marked as an abspos container correctly");
-  nsAbsoluteContainingBlock* absCB = static_cast<nsAbsoluteContainingBlock*>
-    (Properties().Get(AbsoluteContainingBlockProperty()));
+  nsAbsoluteContainingBlock* absCB = Properties().Get(AbsoluteContainingBlockProperty());
   NS_ASSERTION(absCB, "The frame is marked as an abspos container but doesn't have the property");
   return absCB;
 }
@@ -2379,12 +2378,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // dirty rect in child-relative coordinates
   nsRect dirty = aDirtyRect - child->GetOffsetTo(this);
 
-  const nsStyleDisplay* disp;
   nsIAtom* childType = child->GetType();
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  if (childType != nsGkAtoms::placeholderFrame) {
-    disp = child->StyleDisplay();
-  } else {
+  if (childType == nsGkAtoms::placeholderFrame) {
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(child, "No out of flow frame?");
@@ -2395,13 +2391,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT))
       return;
     MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
-    disp = child->StyleDisplay();
     // If the out-of-flow frame is in the top layer, the viewport frame
     // will paint it. Skip it here. Note that, only out-of-flow frames
     // with this property should be skipped, because non-HTML elements
     // may stop their children from being out-of-flow. Those frames
     // should still be handled in the normal in-flow path.
-    if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+    if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
       return;
     }
     // Make sure that any attempt to use childType below is disappointed. We
@@ -2481,6 +2476,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
+  const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->HasOpacity()
     || child->IsTransformed()
@@ -4804,7 +4800,7 @@ nsIFrame* nsIFrame::GetTailContinuation()
   return frame;
 }
 
-NS_DECLARE_FRAME_PROPERTY(ViewProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(ViewProperty, nsView)
 
 // Associated view object
 nsView*
@@ -4815,9 +4811,9 @@ nsIFrame::GetView() const
     return nullptr;
 
   // Check for a property on the frame
-  void* value = Properties().Get(ViewProperty());
+  nsView* value = Properties().Get(ViewProperty());
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
-  return static_cast<nsView*>(value);
+  return value;
 }
 
 /* virtual */ nsView*
@@ -6248,9 +6244,8 @@ nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
       // If the embedding level isn't set, just use the CSS direction
       // property.
       bool hasEmbeddingLevel;
-      nsBidiLevel embeddingLevel =
-        NS_PTR_TO_INT32(Properties().Get(nsIFrame::EmbeddingLevelProperty(),
-                                         &hasEmbeddingLevel));
+      nsBidiLevel embeddingLevel = Properties().Get(
+        nsBidi::EmbeddingLevelProperty(), &hasEmbeddingLevel);
       bool isRTL = hasEmbeddingLevel
         ? IS_LEVEL_RTL(embeddingLevel)
         : StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
@@ -7380,7 +7375,7 @@ nsFrame::AccessibleType()
 }
 #endif
 
-NS_DECLARE_FRAME_PROPERTY(OverflowAreasProperty, DeleteValue<nsOverflowAreas>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(OverflowAreasProperty, nsOverflowAreas)
 
 bool
 nsIFrame::ClearOverflowRects()
@@ -7704,7 +7699,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       Properties().Delete(nsIFrame::InitialOverflowProperty());
     }
 #ifdef DEBUG
-    Properties().Set(nsIFrame::DebugInitialOverflowPropertyApplied(), nullptr);
+    Properties().Set(nsIFrame::DebugInitialOverflowPropertyApplied(), true);
 #endif
   } else {
 #ifdef DEBUG
@@ -9058,16 +9053,13 @@ nsIFrame::IsSelected() const
 }
 
 /*static*/ void
-nsIFrame::DestroyContentArray(void* aPropertyValue)
+nsIFrame::DestroyContentArray(ContentArray* aArray)
 {
-  typedef nsTArray<nsIContent*> T;
-  T* arr = static_cast<T*>(aPropertyValue);
-  for (T::size_type i = 0; i < arr->Length(); ++i) {
-    nsIContent* content = (*arr)[i];
+  for (nsIContent* content : *aArray) {
     content->UnbindFromTree();
     NS_RELEASE(content);
   }
-  delete arr;
+  delete aArray;
 }
 
 bool

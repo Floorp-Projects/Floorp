@@ -88,7 +88,7 @@ function RefreshDeviceList()
       } catch (e) { slots_done = true; }
       while (!slots_done) {
         var slot = null;
- 	try {
+        try {
           slot = slots.currentItem().QueryInterface(nsIPKCS11Slot);
         } catch (e) { slot = null; }
         // in the ongoing discussion of whether slot names or token names

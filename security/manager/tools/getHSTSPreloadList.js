@@ -165,7 +165,7 @@ function processStsHeader(host, header, status, securityInfo) {
 }
 
 // RedirectAndAuthStopper prevents redirects and HTTP authentication
-function RedirectAndAuthStopper() {};
+function RedirectAndAuthStopper() {}
 
 RedirectAndAuthStopper.prototype = {
   // nsIChannelEventSink

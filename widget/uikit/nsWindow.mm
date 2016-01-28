@@ -377,13 +377,10 @@ private:
   }
 
   // Set up the clip region.
-  LayoutDeviceIntRegion::OldRectIterator iter(region);
   targetContext->NewPath();
-  for (;;) {
-    const LayoutDeviceIntRect* r = iter.Next();
-    if (!r)
-      break;
-    targetContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
+  for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
+    const LayoutDeviceIntRect& r = iter.Get();
+    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
   }
   targetContext->Clip();
 

@@ -10,6 +10,7 @@
 #include "jsobj.h"
 
 #include "gc/Marking.h"
+#include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
 #include "vm/ArrayObject.h"
@@ -1772,10 +1773,10 @@ ObjectGroupCompartment::clearTables()
 }
 
 /* static */ bool
-ObjectGroupCompartment::PlainObjectGCPolicy::needsSweep(PlainObjectKey* key,
-                                                        PlainObjectEntry* entry)
+ObjectGroupCompartment::PlainObjectTableSweepPolicy::needsSweep(PlainObjectKey* key,
+                                                                PlainObjectEntry* entry)
 {
-    if (!(KeyPolicy::needsSweep(key) || entry->needsSweep(key->nproperties)))
+    if (!(GCPolicy<PlainObjectKey>::needsSweep(key) || entry->needsSweep(key->nproperties)))
         return false;
     js_free(key->properties);
     js_free(entry->types);

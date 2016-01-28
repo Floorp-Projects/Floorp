@@ -642,7 +642,7 @@ RestyleManager::AddSubtreeToOverflowTracker(nsIFrame* aFrame)
   }
 }
 
-NS_DECLARE_FRAME_PROPERTY(ChangeListProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ChangeListProperty, bool)
 
 /**
  * Return true if aFrame's subtree has placeholders for out-of-flow content
@@ -735,8 +735,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      propTable->Set(changeData->mFrame, ChangeListProperty(),
-                     NS_INT32_TO_PTR(1));
+      propTable->Set(changeData->mFrame, ChangeListProperty(), true);
     }
   }
 
@@ -2333,7 +2332,8 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
 nsresult
 RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
+  nsIAtom* frameType = aFrame->GetType();
+  if (frameType == nsGkAtoms::placeholderFrame) {
     // Also reparent the out-of-flow and all its continuations.
     nsIFrame* outOfFlow =
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
@@ -2341,6 +2341,10 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     do {
       ReparentStyleContext(outOfFlow);
     } while ((outOfFlow = outOfFlow->GetNextContinuation()));
+  } else if (frameType == nsGkAtoms::backdropFrame) {
+    // Style context of backdrop frame has no parent style context, and
+    // thus we do not need to reparent it.
+    return NS_OK;
   }
 
   // DO NOT verify the style tree before reparenting.  The frame

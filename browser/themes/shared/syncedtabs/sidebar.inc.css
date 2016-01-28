@@ -1,0 +1,199 @@
+% This Source Code Form is subject to the terms of the Mozilla Public
+% License, v. 2.0. If a copy of the MPL was not distributed with this
+% file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/* These styles are intended to mimic XUL trees and the XUL search box. */
+
+:root, body {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font: message-box;
+  color: #333333;
+  -moz-user-select: none;
+  overflow: hidden;
+}
+
+.emptyListInfo {
+  cursor: default;
+  padding: 3em 1em;
+  text-align: center;
+}
+
+.list,
+.item-tabs-list {
+  display: flex;
+  flex-flow: column;
+  flex-grow: 1;
+}
+
+.item.client {
+  opacity: 1;
+  max-height: unset;
+  display: unset;
+}
+
+.item.client.closed .item-tabs-list {
+  display: none;
+}
+
+.item {
+  display: inline-block;
+  opacity: 1;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  outline: none;
+  color: -moz-FieldText;
+}
+
+.item.selected > .item-title-container {
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
+  font-weight: bold;
+}
+
+.item.selected:focus > .item-title-container {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.client .item.tab > .item-title-container {
+  padding-inline-start: 35px;
+}
+.item.tab > .item-title-container {
+  padding-inline-start: 20px;
+}
+
+.item-icon-container {
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  margin-right: 5px;
+  background-size: 16px 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.item-twisty-container {
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  margin-right: 5px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.item-icon-container {
+  margin-left: 5px;
+}
+
+.item-title-container {
+  display: flex;
+  flex-flow: row;
+  overflow: hidden;
+  flex-grow: 1;
+  padding: 1px 0px 1px 0px;
+}
+
+.item-title {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0px;
+  line-height: 1.3;
+}
+
+.item[hidden] {
+  opacity: 0;
+  max-height: 0;
+  transition: opacity 150ms ease-in-out, max-height 150ms ease-in-out 150ms;
+}
+
+.item.empty .item-title-container {
+  color: #aeaeae;
+}
+
+.client .item.empty > .item-title-container {
+  padding-inline-start: 35px;
+}
+
+.text-input-box {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.textbox-input-box {
+  display: flex;
+  flex-direction: row;
+}
+
+.tabsFilter {
+  flex: 1;
+}
+
+.sync-state > p {
+  padding-inline-end: 10px;
+  padding-inline-start: 10px;
+  color: #888;
+}
+
+.text-link {
+  color: rgb(0, 149, 221);
+  cursor: pointer;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.text-link,
+.text-link:focus {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+.deck .sync-state {
+  display: none;
+  opacity: 0;
+  transition: opacity 1.5s;
+  border-top: 1px solid #bdbdbd;
+}
+
+.deck .sync-state.tabs-container {
+  border-top: 0px;
+}
+
+.deck .sync-state.selected {
+  display: unset;
+  opacity: 100;
+}
+
+.item.client .item-twisty-container {
+  background-image: url(twisty-open.svg);
+}
+
+.item.client.closed .item-twisty-container {
+  background-image: url(twisty-closed.svg);
+}
+
+.textbox-search-clear:not([disabled]) {
+  cursor: default;
+}
+
+.textbox-search-icons .textbox-search-clear,
+.filtered .textbox-search-icons .textbox-search-icon {
+  display: none;
+}
+
+.filtered .textbox-search-icons .textbox-search-clear {
+  display: block;
+}

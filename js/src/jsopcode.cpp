@@ -147,12 +147,16 @@ js::StackDefs(JSScript* script, jsbytecode* pc)
 const char * PCCounts::numExecName = "interp";
 
 void
-js::DumpIonScriptCounts(Sprinter* sp, jit::IonScriptCounts* ionCounts)
+js::DumpIonScriptCounts(Sprinter* sp, HandleScript script,
+        jit::IonScriptCounts* ionCounts)
 {
     Sprint(sp, "IonScript [%lu blocks]:\n", ionCounts->numBlocks());
     for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
         const jit::IonBlockCounts& block = ionCounts->block(i);
-        Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
+        unsigned lineNumber = 0, columnNumber = 0;
+        lineNumber = PCToLineNumber(script, script->offsetToPC(block.offset()), &columnNumber);
+        Sprint(sp, "BB #%lu [%05u,%u,%u]", block.id(), block.offset(),
+               lineNumber, columnNumber);
         if (block.description())
             Sprint(sp, " [inlined %s]", block.description());
         for (size_t j = 0; j < block.numSuccessors(); j++)
@@ -189,7 +193,7 @@ js::DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
     jit::IonScriptCounts* ionCounts = script->getIonCounts();
 
     while (ionCounts) {
-        DumpIonScriptCounts(sp, ionCounts);
+        DumpIonScriptCounts(sp, script, ionCounts);
         ionCounts = ionCounts->previous();
     }
 }

@@ -89,23 +89,6 @@ function ok(cond, msg) {
   opener.ok(cond, "[top-layer] " + msg);
 }
 
-function generatePureColorCanvas(width, height, color) {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  context.fillStyle = color;
-  context.fillRect(0, 0, width, height);
-  return canvas;
-}
-
-function checkWindowPureColor(color) {
-  const snapshot = SpecialPowers.snapshotRect(window);
-  const pureColor =
-    generatePureColorCanvas(snapshot.width, snapshot.height, color);
-  assertSnapshots(snapshot, pureColor, true, null, "snapshot", color);
-}
-
 function synthesizeMouseAtWindowCenter() {
   synthesizeMouseAtPoint(innerWidth / 2, innerHeight / 2, {});
 }
@@ -130,7 +113,7 @@ function nextTest() {
 
   ok(!document.mozFullScreen, "Shouldn't be in fullscreen");
   // check window snapshot
-  checkWindowPureColor("red");
+  assertWindowPureColor(window, "red");
   // simulate click
   window.addEventListener("click", firstClick);
   synthesizeMouseAtWindowCenter();
@@ -146,7 +129,7 @@ function firstClick(evt) {
 function enterFullscreen() {
   ok(document.mozFullScreen, "Should now be in fullscreen");
   // check window snapshot
-  checkWindowPureColor("green");
+  assertWindowPureColor(window, "green");
   // check computed style of #parent
   const style = getComputedStyle(gParent);
   for (var prop of gParentProperties) {

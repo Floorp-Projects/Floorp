@@ -1027,10 +1027,9 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
       visibleRegion.MoveBy(-ToReferenceFrame());
 
       f->mNextConfigurationClipRegion.Clear();
-      nsRegionRectIterator iter(visibleRegion);
-      for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
+      for (auto iter = visibleRegion.RectIter(); !iter.Done(); iter.Next()) {
         nsRect rAncestor =
-          nsLayoutUtils::TransformFrameRectToAncestor(f, *r, ReferenceFrame());
+          nsLayoutUtils::TransformFrameRectToAncestor(f, iter.Get(), ReferenceFrame());
         LayoutDeviceIntRect rPixels =
           LayoutDeviceIntRect::FromUnknownRect(rAncestor.ToNearestPixels(appUnitsPerDevPixel)) -
           f->mNextConfigurationBounds.TopLeft();

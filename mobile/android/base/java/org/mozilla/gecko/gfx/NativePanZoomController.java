@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONObject;
 
@@ -21,6 +22,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private final PanZoomTarget mTarget;
     private final LayerView mView;
     private boolean mDestroyed;
+    private Overscroll mOverscroll;
 
     @WrapForJNI
     private native boolean handleMotionEvent(
@@ -168,7 +170,8 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     }
 
     @Override
-    public void setOverscrollHandler(final Overscroll listener) {
+    public void setOverscrollHandler(final Overscroll handler) {
+        mOverscroll = handler;
     }
 
     @WrapForJNI(stubName = "SetIsLongpressEnabled")
@@ -178,6 +181,43 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     public void setIsLongpressEnabled(boolean isLongpressEnabled) {
         if (!mDestroyed) {
             nativeSetIsLongpressEnabled(isLongpressEnabled);
+        }
+    }
+
+    @WrapForJNI(allowMultithread = true)
+    private void updateOverscrollVelocity(final float x, final float y) {
+        if (mOverscroll != null) {
+            if (ThreadUtils.isOnUiThread() == true) {
+                mOverscroll.setVelocity(x * 1000.0f, Overscroll.Axis.X);
+                mOverscroll.setVelocity(y * 1000.0f, Overscroll.Axis.Y);
+            } else {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Multiply the velocity by 1000 to match what was done in JPZ.
+                        mOverscroll.setVelocity(x * 1000.0f, Overscroll.Axis.X);
+                        mOverscroll.setVelocity(y * 1000.0f, Overscroll.Axis.Y);
+                    }
+                });
+            }
+        }
+    }
+
+    @WrapForJNI(allowMultithread = true)
+    private void updateOverscrollOffset(final float x, final float y) {
+        if (mOverscroll != null) {
+            if (ThreadUtils.isOnUiThread() == true) {
+                mOverscroll.setDistance(x, Overscroll.Axis.X);
+                mOverscroll.setDistance(y, Overscroll.Axis.Y);
+            } else {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mOverscroll.setDistance(x, Overscroll.Axis.X);
+                        mOverscroll.setDistance(y, Overscroll.Axis.Y);
+                    }
+                });
+            }
         }
     }
 }

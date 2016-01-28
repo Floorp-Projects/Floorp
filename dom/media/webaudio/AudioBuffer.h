@@ -27,8 +27,8 @@ class AudioContext;
 
 /**
  * An AudioBuffer keeps its data either in the mJSChannels objects, which
- * are Float32Arrays, or in mSharedChannels if the mJSChannels objects have
- * been neutered.
+ * are Float32Arrays, or in mSharedChannels if the mJSChannels objects' buffers
+ * are detached.
  */
 class AudioBuffer final : public nsWrapperCache
 {
@@ -122,7 +122,7 @@ protected:
   nsAutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
-  // if and only if the mJSChannels are neutered.
+  // if and only if the mJSChannels' buffers are detached.
   RefPtr<ThreadSharedFloatArrayBufferList> mSharedChannels;
 
   uint32_t mLength;

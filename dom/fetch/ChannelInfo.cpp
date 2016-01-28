@@ -13,8 +13,6 @@
 #include "nsSerializationHelper.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/ipc/ChannelInfo.h"
-#include "nsIJARChannel.h"
-#include "nsJARChannel.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla;
@@ -90,32 +88,20 @@ ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInited);
 
-  // These pointers may be null at this point.  They must be checked before
-  // being dereferenced.
-  nsCOMPtr<nsIHttpChannel> httpChannel =
-    do_QueryInterface(aChannel);
-  nsCOMPtr<nsIJARChannel> jarChannel =
-    do_QueryInterface(aChannel);
-
   if (!mSecurityInfo.IsEmpty()) {
     nsCOMPtr<nsISupports> infoObj;
     nsresult rv = NS_DeserializeObject(mSecurityInfo, getter_AddRefs(infoObj));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    if (httpChannel) {
-      net::HttpBaseChannel* httpBaseChannel =
-        static_cast<net::HttpBaseChannel*>(httpChannel.get());
-      rv = httpBaseChannel->OverrideSecurityInfo(infoObj);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      if (NS_WARN_IF(!jarChannel)) {
-        return NS_ERROR_FAILURE;
-      }
-      static_cast<nsJARChannel*>(jarChannel.get())->
-        OverrideSecurityInfo(infoObj);
+    nsCOMPtr<nsIHttpChannel> httpChannel =
+      do_QueryInterface(aChannel);
+    MOZ_ASSERT(httpChannel);
+    net::HttpBaseChannel* httpBaseChannel =
+      static_cast<net::HttpBaseChannel*>(httpChannel.get());
+    rv = httpBaseChannel->OverrideSecurityInfo(infoObj);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 

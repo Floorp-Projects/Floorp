@@ -80,6 +80,8 @@ void
 nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
                                         nsFrameList& aChildList)
 {
+  MOZ_ASSERT(aListID == kPrincipalList, "Principal child list is the only "
+             "list that nsFirstLetterFrame should set via this function");
   RestyleManager* restyleManager = PresContext()->RestyleManager();
 
   for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {

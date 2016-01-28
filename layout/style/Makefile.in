@@ -2,11 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-INSTALL_TARGETS += structlist
-structlist_FILES := nsStyleStructList.h
-structlist_DEST = $(DIST)/include
-structlist_TARGET := export
-
 # TODO This list should be emitted to a .pp file via
 # GenerateCSSPropsGenerated.py.
 csspropsidlnames_dependencies = \

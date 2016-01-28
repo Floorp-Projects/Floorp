@@ -5160,6 +5160,14 @@
     "description": "Killed, likely due to an OOM condition",
     "cpp_guard": "ANDROID"
   },
+  "FIPS_ENABLED": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "54",
+    "kind": "flag",
+    "bug_numbers": [1241317],
+    "releaseChannelCollection": "opt-out",
+    "description": "Has FIPS mode been enabled?"
+  },
   "SECURITY_UI": {
     "expires_in_version": "never",
     "kind": "enumerated",

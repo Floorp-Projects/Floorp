@@ -540,8 +540,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     // EffectCompositor needs to know that we refused to run this animation
     // asynchronously so that it will not throttle the main thread
     // animation.
-    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(),
-                            reinterpret_cast<void*>(intptr_t(true)));
+    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(), true);
 
     // We need to schedule another refresh driver run so that EffectCompositor
     // gets a chance to unthrottle the animation.
@@ -1451,9 +1450,9 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     return opaque;
   }
   nsRegion opaqueClipped;
-  nsRegionRectIterator iter(opaque);
-  for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-    opaqueClipped.Or(opaqueClipped, aItem->GetClip().ApproximateIntersectInward(*r));
+  for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
+    opaqueClipped.Or(opaqueClipped,
+                     aItem->GetClip().ApproximateIntersectInward(iter.Get()));
   }
   return opaqueClipped;
 }
@@ -2130,18 +2129,23 @@ nsDisplayItem::MaxActiveLayers()
   return sMaxLayers;
 }
 
-int32_t
-nsDisplayItem::ZIndex() const
+static int32_t ZIndexForFrame(nsIFrame* aFrame)
 {
-  if (!mFrame->IsAbsPosContaininingBlock() && !mFrame->IsFlexOrGridItem())
+  if (!aFrame->IsAbsPosContaininingBlock() && !aFrame->IsFlexOrGridItem())
     return 0;
 
-  const nsStylePosition* position = mFrame->StylePosition();
+  const nsStylePosition* position = aFrame->StylePosition();
   if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
     return position->mZIndex.GetIntValue();
 
   // sort the auto and 0 elements together
   return 0;
+}
+
+int32_t
+nsDisplayItem::ZIndex() const
+{
+  return ZIndexForFrame(mFrame);
 }
 
 bool
@@ -3631,24 +3635,25 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
                           nsTArray<nsRect>* aRects) {
   nscoord accumulationMargin = nsPresContext::CSSPixelsToAppUnits(25);
   nsRect accumulated;
-  nsRegionRectIterator iter(aRegion);
-  while (true) {
-    const nsRect* r = iter.Next();
-    if (r && !accumulated.IsEmpty() &&
-        accumulated.YMost() >= r->y - accumulationMargin) {
-      accumulated.UnionRect(accumulated, *r);
+
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& r = iter.Get();
+    if (accumulated.IsEmpty()) {
+      accumulated = r;
       continue;
     }
 
-    if (!accumulated.IsEmpty()) {
+    if (accumulated.YMost() >= r.y - accumulationMargin) {
+      accumulated.UnionRect(accumulated, r);
+    } else {
       aRects->AppendElement(accumulated);
-      accumulated.SetEmpty();
+      accumulated = r;
     }
+  }
 
-    if (!r)
-      break;
-
-    accumulated = *r;
+  // Finish the in-flight rectangle, if there is one.
+  if (!accumulated.IsEmpty()) {
+    aRects->AppendElement(accumulated);
   }
 }
 
@@ -5045,6 +5050,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aList)
   , mTransformGetter(aTransformGetter)
+  , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
+  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
   , mChildrenVisibleRect(aChildrenVisibleRect)
   , mIndex(aIndex)
   , mNoExtendContext(false)
@@ -5059,7 +5066,6 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
 {
-  mAnimatedGeometryRootForChildren = mAnimatedGeometryRoot;
   if (mFrame == aBuilder->RootReferenceFrame()) {
     return;
   }
@@ -5081,7 +5087,15 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
     // frame, which is our AGR, not the parent AGR.
     mAnimatedGeometryRoot = mAnimatedGeometryRootForChildren;
   } else if (mAnimatedGeometryRoot->mParentAGR) {
-    mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
+    mAnimatedGeometryRootForScrollMetadata = mAnimatedGeometryRoot->mParentAGR;
+    if (!MayBeAnimated(aBuilder)) {
+      // If we're an animated transform then we want the same AGR as our children
+      // so that FrameLayerBuilder knows that this layer moves with the transform
+      // and won't compute occlusions. If we're not animated then use our parent
+      // AGR so that inactive transform layers can go in the same PaintedLayer as
+      // surrounding content.
+      mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
+    }
   }
   mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
@@ -5113,6 +5127,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aList)
   , mTransformGetter(nullptr)
+  , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
+  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
   , mChildrenVisibleRect(aChildrenVisibleRect)
   , mIndex(aIndex)
   , mNoExtendContext(false)
@@ -5133,6 +5149,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aItem)
   , mTransformGetter(nullptr)
+  , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
+  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
   , mChildrenVisibleRect(aChildrenVisibleRect)
   , mIndex(aIndex)
   , mNoExtendContext(false)
@@ -5154,6 +5172,8 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mStoredList(aBuilder, aFrame, aList)
   , mTransform(aTransform)
   , mTransformGetter(nullptr)
+  , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
+  , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
   , mChildrenVisibleRect(aChildrenVisibleRect)
   , mIndex(aIndex)
   , mNoExtendContext(false)
@@ -5772,14 +5792,34 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
                                                            this, mFrame,
                                                            eCSSProperty_transform);
   if (ShouldPrerender(aBuilder)) {
-    container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
-                           /*the value is irrelevant*/nullptr);
+    if (MayBeAnimated(aBuilder)) {
+      // Only allow async updates to the transform if we're an animated layer, since that's what
+      // triggers us to set the correct AGR in the constructor and makes sure FrameLayerBuilder
+      // won't compute occlusions for this layer.
+      container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
+                             /*the value is irrelevant*/nullptr);
+    }
     container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_MAY_CHANGE_TRANSFORM);
   } else {
     container->RemoveUserData(nsIFrame::LayerIsPrerenderedDataKey());
     container->SetContentFlags(container->GetContentFlags() & ~Layer::CONTENT_MAY_CHANGE_TRANSFORM);
   }
   return container.forget();
+}
+
+bool
+nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder)
+{
+  // Here we check if the *post-transform* bounds of this item are big enough
+  // to justify an active layer.
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_transform) &&
+      !IsItemTooSmallForActiveLayer(this))
+    return true;
+  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
+                                                   eCSSProperty_transform)) {
+    return true;
+  }
+  return false;
 }
 
 nsDisplayItem::LayerState
@@ -5793,13 +5833,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
       mIsTransformSeparator) {
     return LAYER_ACTIVE_FORCE;
   }
-  // Here we check if the *post-transform* bounds of this item are big enough
-  // to justify an active layer.
-  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_transform) &&
-      !IsItemTooSmallForActiveLayer(this))
-    return LAYER_ACTIVE;
-  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
-                                                   eCSSProperty_transform)) {
+  if (MayBeAnimated(aBuilder)) {
     return LAYER_ACTIVE;
   }
 
@@ -6311,6 +6345,12 @@ nsDisplayPerspective::GetLayerState(nsDisplayListBuilder* aBuilder,
                                     const ContainerLayerParameters& aParameters)
 {
   return LAYER_ACTIVE_FORCE;
+}
+
+int32_t
+nsDisplayPerspective::ZIndex() const
+{
+  return ZIndexForFrame(mTransformFrame);
 }
 
 nsDisplayItemGeometry*

@@ -15,6 +15,7 @@
 #include "nsXULAppAPI.h"
 #include "nsPrincipal.h"
 #include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"

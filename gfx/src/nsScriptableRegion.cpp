@@ -144,14 +144,12 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::MutableHandle<JS:
   aRects.setObject(*destArray);
 
   uint32_t n = 0;
-  nsIntRegionRectIterator iter(mRegion);
-  const mozilla::gfx::IntRect *rect;
-
-  while ((rect = iter.Next())) {
-    if (!JS_DefineElement(aCx, destArray, n, rect->x, JSPROP_ENUMERATE) ||
-        !JS_DefineElement(aCx, destArray, n + 1, rect->y, JSPROP_ENUMERATE) ||
-        !JS_DefineElement(aCx, destArray, n + 2, rect->width, JSPROP_ENUMERATE) ||
-        !JS_DefineElement(aCx, destArray, n + 3, rect->height, JSPROP_ENUMERATE)) {
+  for (auto iter = mRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const mozilla::gfx::IntRect& rect = iter.Get();
+    if (!JS_DefineElement(aCx, destArray, n, rect.x, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 1, rect.y, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 2, rect.width, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 3, rect.height, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
     n += 4;

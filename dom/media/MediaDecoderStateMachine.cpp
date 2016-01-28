@@ -213,8 +213,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mFragmentEndTime(-1),
   mReader(aReader),
-  mDecodedAudioEndTime(-1),
-  mDecodedVideoEndTime(-1),
+  mDecodedAudioEndTime(0),
+  mDecodedVideoEndTime(0),
   mPlaybackRate(1.0),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
@@ -424,9 +424,10 @@ MediaDecoderStateMachine::GetDecodedAudioDuration()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    // |mDecodedAudioEndTime == -1| means no decoded audio at all so the
-    // returned duration is 0.
-    return mDecodedAudioEndTime != -1 ? mDecodedAudioEndTime - GetClock() : 0;
+    // mDecodedAudioEndTime might be smaller than GetClock() when there is
+    // overlap between 2 adjacent audio samples or when we are playing
+    // a chained ogg file.
+    return std::max<int64_t>(mDecodedAudioEndTime - GetClock(), 0);
   }
   // MediaSink not started. All audio samples are in the queue.
   return AudioQueue().Duration();
@@ -606,7 +607,9 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
   MOZ_ASSERT(audio);
   mAudioDataRequest.Complete();
   aAudioSample->AdjustForStartTime(StartTime());
-  mDecodedAudioEndTime = audio->GetEndTime();
+
+  // audio->GetEndTime() is not always mono-increasing in chained ogg.
+  mDecodedAudioEndTime = std::max(audio->GetEndTime(), mDecodedAudioEndTime);
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
              (audio ? audio->mTime : -1),
@@ -898,7 +901,9 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
   MOZ_ASSERT(video);
   mVideoDataRequest.Complete();
   aVideoSample->AdjustForStartTime(StartTime());
-  mDecodedVideoEndTime = video ? video->GetEndTime() : mDecodedVideoEndTime;
+
+  // Handle abnormal or negative timestamps.
+  mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, video->GetEndTime());
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
              (video ? video->mTime : -1),
@@ -1872,17 +1877,17 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
     return false;
   }
 
-  int64_t endOfDecodedVideoData = INT64_MAX;
-  if (HasVideo() && !VideoQueue().AtEndOfStream()) {
-    endOfDecodedVideoData = VideoQueue().Peek() ? VideoQueue().Peek()->GetEndTime() : VideoEndTime();
-  }
-  int64_t endOfDecodedAudioData = INT64_MAX;
-  if (HasAudio() && !AudioQueue().AtEndOfStream()) {
-    // mDecodedAudioEndTime could be -1 when no audio samples are decoded.
-    // But that is fine since we consider ourself as low in decoded data when
-    // we don't have any decoded audio samples at all.
-    endOfDecodedAudioData = mDecodedAudioEndTime;
-  }
+  // We are never low in decoded data when we don't have audio/video or have
+  // decoded all audio/video samples.
+  int64_t endOfDecodedVideoData =
+    (HasVideo() && !VideoQueue().IsFinished())
+      ? mDecodedVideoEndTime
+      : INT64_MAX;
+  int64_t endOfDecodedAudioData =
+    (HasAudio() && !AudioQueue().IsFinished())
+      ? mDecodedAudioEndTime
+      : INT64_MAX;
+
   int64_t endOfDecodedData = std::min(endOfDecodedVideoData, endOfDecodedAudioData);
   if (Duration().ToMicroseconds() < endOfDecodedData) {
     // Our duration is not up to date. No point buffering.
@@ -2389,8 +2394,8 @@ MediaDecoderStateMachine::Reset()
   // crash for no samples to be popped.
   StopMediaSink();
 
-  mDecodedVideoEndTime = -1;
-  mDecodedAudioEndTime = -1;
+  mDecodedVideoEndTime = 0;
+  mDecodedAudioEndTime = 0;
   mAudioCompleted = false;
   mVideoCompleted = false;
   AudioQueue().Reset();

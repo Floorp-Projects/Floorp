@@ -88,6 +88,7 @@
 #include "nsSimplePageSequenceFrame.h"
 #include "nsTableOuterFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
 
 #ifdef MOZ_XUL
@@ -1151,7 +1152,7 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
   if (aCanBePositioned) {
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
     if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
-      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      *aPlaceholderType = PLACEHOLDER_FOR_TOPLAYER;
       return &mTopLayerItems;
     }
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
@@ -1201,11 +1202,12 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   if (placeholderType) {
     NS_ASSERTION(frameItems != &aFrameItems,
                  "Putting frame in-flow _and_ want a placeholder?");
+    nsStyleContext* parentContext = aStyleContext->GetParent();
     nsIFrame* placeholderFrame =
       nsCSSFrameConstructor::CreatePlaceholderFrameFor(mPresShell,
                                                        aContent,
                                                        aNewFrame,
-                                                       aStyleContext,
+                                                       parentContext,
                                                        aParentFrame,
                                                        nullptr,
                                                        placeholderType);
@@ -1213,6 +1215,15 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     placeholderFrame->AddStateBits(mAdditionalStateBits);
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
+
+    if (placeholderType == PLACEHOLDER_FOR_TOPLAYER) {
+      nsIFrame* backdropFrame = nsCSSFrameConstructor::
+        CreateBackdropFrameFor(mPresShell, aContent, aNewFrame,
+                               outOfFlowFrameItems->containingBlock);
+      if (backdropFrame) {
+        frameItems->AddChild(backdropFrame);
+      }
+    }
   }
 #ifdef DEBUG
   else {
@@ -2905,13 +2916,13 @@ nsIFrame*
 nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
                                                  nsIContent*       aContent,
                                                  nsIFrame*         aFrame,
-                                                 nsStyleContext*   aStyleContext,
+                                                 nsStyleContext*   aParentStyle,
                                                  nsContainerFrame* aParentFrame,
                                                  nsIFrame*         aPrevInFlow,
                                                  nsFrameState      aTypeBit)
 {
   RefPtr<nsStyleContext> placeholderStyle = aPresShell->StyleSet()->
-    ResolveStyleForNonElement(aStyleContext->GetParent());
+    ResolveStyleForNonElement(aParentStyle);
 
   // The placeholder frame gets a pseudo style context
   nsPlaceholderFrame* placeholderFrame =
@@ -2929,6 +2940,38 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
   aPresShell->FrameManager()->RegisterPlaceholderFrame(placeholderFrame);
 
   return placeholderFrame;
+}
+
+/* static */ nsIFrame*
+nsCSSFrameConstructor::CreateBackdropFrameFor(nsIPresShell* aPresShell,
+                                              nsIContent* aContent,
+                                              nsIFrame* aFrame,
+                                              nsContainerFrame* aParentFrame)
+{
+  MOZ_ASSERT(aFrame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
+  nsContainerFrame* frame = do_QueryFrame(aFrame);
+  if (!frame) {
+    NS_WARNING("Cannot create backdrop frame for non-container frame");
+    return nullptr;
+  }
+
+  RefPtr<nsStyleContext> style = aPresShell->StyleSet()->
+    ResolvePseudoElementStyle(aContent->AsElement(),
+                              nsCSSPseudoElements::ePseudo_backdrop,
+                              /* aParentStyleContext */ nullptr,
+                              /* aPseudoElement */ nullptr);
+  nsBackdropFrame* backdropFrame = new (aPresShell) nsBackdropFrame(style);
+  backdropFrame->Init(aContent, aParentFrame, nullptr);
+
+  nsIFrame* placeholder = CreatePlaceholderFrameFor(aPresShell, aContent,
+                                                    backdropFrame,
+                                                    frame->StyleContext(),
+                                                    frame, nullptr,
+                                                    PLACEHOLDER_FOR_TOPLAYER);
+  nsFrameList temp(placeholder, placeholder);
+  frame->SetInitialChildList(nsIFrame::kBackdropList, temp);
+
+  return backdropFrame;
 }
 
 // Clears any lazy bits set in the range [aStartContent, aEndContent).  If
@@ -5779,13 +5822,11 @@ AddGenConPseudoToFrame(nsIFrame* aOwnerFrame, nsIContent* aContent)
   NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aOwnerFrame),
                "property should only be set on first continuation/ib-sibling");
 
-  typedef nsAutoTArray<nsIContent*, 2> T;
-  const FramePropertyDescriptor* prop = nsIFrame::GenConProperty();
   FrameProperties props = aOwnerFrame->Properties();
-  T* value = static_cast<T*>(props.Get(prop));
+  nsIFrame::ContentArray* value = props.Get(nsIFrame::GenConProperty());
   if (!value) {
-    value = new T;
-    props.Set(prop, value);
+    value = new nsIFrame::ContentArray;
+    props.Set(nsIFrame::GenConProperty(), value);
   }
   value->AppendElement(aContent);
 }
@@ -8702,7 +8743,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     nsIFrame* oofContFrame =
       CreateContinuingFrame(aPresContext, oofFrame, aParentFrame);
     newFrame =
-      CreatePlaceholderFrameFor(shell, content, oofContFrame, styleContext,
+      CreatePlaceholderFrameFor(shell, content, oofContFrame,
+                                styleContext->GetParent(),
                                 aParentFrame, aFrame,
                                 aFrame->GetStateBits() & PLACEHOLDER_TYPE_MASK);
   } else if (nsGkAtoms::fieldSetFrame == frameType) {

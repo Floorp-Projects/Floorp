@@ -575,7 +575,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
     return nullptr;
   }
 
-  // Neuter the array buffer
+  // Detach the array buffer
   size_t length = aBuffer.Length();
   JS::RootedObject obj(cx, aBuffer.Obj());
 
