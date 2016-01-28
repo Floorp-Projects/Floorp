@@ -96,6 +96,37 @@ assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError,
 assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
 
 // ----------------------------------------------------------------------------
+// imports
+
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /Second argument, if present, must be an Object/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /Second argument, if present, must be an Object/);
+
+const noImportObj = /no import object given/;
+const notObject = /import object field is not an Object/;
+const notFunction = /import object field is not a Function/;
+
+var code = '(module (import "a" "b"))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
+assertErrorMessage(() => wasmEvalText(code, {}), TypeError, notObject);
+assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notObject);
+assertErrorMessage(() => wasmEvalText(code, {a:{}}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:{b:1}}), TypeError, notFunction);
+wasmEvalText(code, {a:{b:()=>{}}});
+
+var code = '(module (import "" "b"))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, /module name cannot be empty/);
+
+var code = '(module (import "a" ""))';
+assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
+assertErrorMessage(() => wasmEvalText(code, {}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notFunction);
+wasmEvalText(code, {a:()=>{}});
+
+var code = '(module (import "a" "") (import "b" "c") (import "c" ""))';
+assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), TypeError, notFunction);
+wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:()=>{}});
+
+// ----------------------------------------------------------------------------
 // locals
 
 assertEq(wasmEvalText('(module (func (param i32) (result i32) (get_local 0)) (export "" 0))')(), 0);

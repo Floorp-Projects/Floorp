@@ -315,6 +315,21 @@ DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
+DecodeSignatureIndex(JSContext* cx, Decoder& d, const ModuleGeneratorData& init,
+                     const DeclaredSig** sig)
+{
+    uint32_t sigIndex;
+    if (!d.readVarU32(&sigIndex))
+        return Fail(cx, d, "expected signature index");
+
+    if (sigIndex >= init.sigs.length())
+        return Fail(cx, d, "signature index out of range");
+
+    *sig = &init.sigs[sigIndex];
+    return true;
+}
+
+static bool
 DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     if (!d.readCStringIf(DeclSection))
@@ -332,18 +347,87 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         return false;
 
     for (uint32_t i = 0; i < numDecls; i++) {
-        uint32_t sigIndex;
-        if (!d.readVarU32(&sigIndex))
-            return Fail(cx, d, "expected declaration signature index");
-
-        if (sigIndex >= init->sigs.length())
-            return Fail(cx, d, "declaration signature index out of range");
-
-        init->funcSigs[i] = &init->sigs[sigIndex];
+        if (!DecodeSignatureIndex(cx, d, *init, &init->funcSigs[i]))
+            return false;
     }
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "decls section byte size mismatch");
+
+    return true;
+}
+
+struct ImportName
+{
+    UniqueChars module;
+    UniqueChars func;
+
+    ImportName(UniqueChars module, UniqueChars func)
+      : module(Move(module)), func(Move(func))
+    {}
+    ImportName(ImportName&& rhs)
+      : module(Move(rhs.module)), func(Move(rhs.func))
+    {}
+};
+
+typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
+
+static bool
+DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+{
+    if (!d.readCStringIf(FuncSubsection))
+        return Fail(cx, d, "expected 'func' tag");
+
+    const DeclaredSig* sig;
+    if (!DecodeSignatureIndex(cx, d, *init, &sig))
+        return false;
+
+    if (!init->imports.emplaceBack(sig))
+        return false;
+
+    const char* moduleStr;
+    if (!d.readCString(&moduleStr))
+        return Fail(cx, d, "expected import module name");
+
+    if (!*moduleStr)
+        return Fail(cx, d, "module name cannot be empty");
+
+    UniqueChars moduleName = DuplicateString(moduleStr);
+    if (!moduleName)
+        return false;
+
+    const char* funcStr;
+    if (!d.readCString(&funcStr))
+        return Fail(cx, d, "expected import func name");
+
+    UniqueChars funcName = DuplicateString(funcStr);
+    if (!funcName)
+        return false;
+
+    return importNames->emplaceBack(Move(moduleName), Move(funcName));
+}
+
+static bool
+DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* imports)
+{
+    if (!d.readCStringIf(ImportSection))
+        return true;
+
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected import section byte size");
+
+    uint32_t numImports;
+    if (!d.readVarU32(&numImports))
+        return Fail(cx, d, "expected number of imports");
+
+    for (uint32_t i = 0; i < numImports; i++) {
+        if (!DecodeImport(cx, d, init, imports))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "import section byte size mismatch");
 
     return true;
 }
@@ -518,7 +602,8 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
 
 static bool
 DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t length,
-             MutableHandle<WasmModuleObject*> moduleObj, ExportMap* exportMap)
+             ImportNameVector* importNames, ExportMap* exportMap,
+             MutableHandle<WasmModuleObject*> moduleObj)
 {
     Decoder d(bytes, bytes + length);
 
@@ -537,6 +622,9 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
         return false;
 
     if (!DecodeDeclarationSection(cx, d, init.get()))
+        return false;
+
+    if (!DecodeImportSection(cx, d, init.get(), importNames))
         return false;
 
     ModuleGenerator mg(cx);
@@ -578,7 +666,49 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
 }
 
 /*****************************************************************************/
-// JS entry poitns
+// JS entry points
+
+static bool
+GetProperty(JSContext* cx, HandleObject obj, const char* utf8Chars, MutableHandleValue v)
+{
+    JSAtom* atom = AtomizeUTF8Chars(cx, utf8Chars, strlen(utf8Chars));
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    return GetProperty(cx, obj, obj, id, v);
+}
+
+static bool
+ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& importNames,
+                MutableHandle<FunctionVector> imports)
+{
+    if (!importNames.empty() && !importObj)
+        return Fail(cx, "no import object given");
+
+    for (const ImportName& name : importNames) {
+        RootedValue v(cx);
+        if (!GetProperty(cx, importObj, name.module.get(), &v))
+            return false;
+
+        if (*name.func.get()) {
+            if (!v.isObject())
+                return Fail(cx, "import object field is not an Object");
+
+            RootedObject obj(cx, &v.toObject());
+            if (!GetProperty(cx, obj, name.func.get(), &v))
+                return false;
+        }
+
+        if (!IsFunctionObject(v))
+            return Fail(cx, "import object field is not a Function");
+
+        if (!imports.append(&v.toObject().as<JSFunction>()))
+            return false;
+    }
+
+    return true;
+}
 
 static bool
 SupportsWasm(JSContext* cx)
@@ -636,15 +766,6 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!args.get(1).isUndefined() && !args.get(1).isObject()) {
-        ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
-        return false;
-    }
-
-    UniqueChars filename;
-    if (!DescribeScriptedCaller(cx, &filename))
-        return false;
-
     Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
     const uint8_t* bytes = code->dataPointer();
     uint32_t length = code->byteLength();
@@ -656,9 +777,23 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         bytes = copy.begin();
     }
 
-    Rooted<WasmModuleObject*> moduleObj(cx);
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be an Object");
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    UniqueChars filename;
+    if (!DescribeScriptedCaller(cx, &filename))
+        return false;
+
+    ImportNameVector importNames;
     ExportMap exportMap;
-    if (!DecodeModule(cx, Move(filename), bytes, length, &moduleObj, &exportMap)) {
+    Rooted<WasmModuleObject*> moduleObj(cx);
+    if (!DecodeModule(cx, Move(filename), bytes, length, &importNames, &exportMap, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
@@ -671,8 +806,8 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         return Fail(cx, "Heap not implemented yet");
 
     Rooted<FunctionVector> imports(cx, FunctionVector(cx));
-    if (module.imports().length() > 0)
-        return Fail(cx, "Imports not implemented yet");
+    if (!ImportFunctions(cx, importObj, importNames, &imports))
+        return false;
 
     RootedObject exportObj(cx);
     if (!module.dynamicallyLink(cx, moduleObj, heap, imports, exportMap, &exportObj))
