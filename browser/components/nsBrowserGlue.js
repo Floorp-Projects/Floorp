@@ -1267,8 +1267,9 @@ BrowserGlue.prototype = {
 #else
       let shouldCheck = ShellService.shouldCheckDefaultBrowser;
 #endif
+      let promptCount = 0;
 #ifndef RELEASE_BUILD
-      let promptCount =
+      promptCount =
         Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount");
       let skipDefaultBrowserCheck =
         Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheck");
