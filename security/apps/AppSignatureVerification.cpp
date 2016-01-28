@@ -40,7 +40,7 @@ using namespace mozilla::pkix;
 using namespace mozilla;
 using namespace mozilla::psm;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 namespace {
 
