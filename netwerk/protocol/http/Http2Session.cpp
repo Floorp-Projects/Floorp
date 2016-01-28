@@ -159,25 +159,6 @@ Http2Session::Shutdown()
   }
 }
 
-PLDHashOperator
-Http2Session::GoAwayEnumerator(nsAHttpTransaction *key,
-                               nsAutoPtr<Http2Stream> &stream,
-                               void *closure)
-{
-  Http2Session *self = static_cast<Http2Session *>(closure);
-
-  // these streams were not processed by the server and can be restarted.
-  // Do that after the enumerator completes to avoid the risk of
-  // a restart event re-entrantly modifying this hash. Be sure not to restart
-  // a pushed (even numbered) stream
-  if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
-      !stream->HasRegisteredID()) {
-    self->mGoAwayStreamsToRestart.Push(stream);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 Http2Session::~Http2Session()
 {
   LOG3(("Http2Session::~Http2Session %p mDownstreamState=%X",
@@ -1424,16 +1405,6 @@ Http2Session::RecvRstStream(Http2Session *self)
   return NS_OK;
 }
 
-PLDHashOperator
-Http2Session::UpdateServerRwinEnumerator(nsAHttpTransaction *key,
-                                         nsAutoPtr<Http2Stream> &stream,
-                                         void *closure)
-{
-  int32_t delta = *(static_cast<int32_t *>(closure));
-  stream->UpdateServerReceiveWindow(delta);
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 Http2Session::RecvSettings(Http2Session *self)
 {
@@ -1495,10 +1466,13 @@ Http2Session::RecvSettings(Http2Session *self)
         int32_t delta = value - self->mServerInitialStreamWindow;
         self->mServerInitialStreamWindow = value;
 
-        // SETTINGS only adjusts stream windows. Leave the sesison window alone.
-        // we need to add the delta to all open streams (delta can be negative)
-        self->mStreamTransactionHash.Enumerate(UpdateServerRwinEnumerator,
-                                               &delta);
+        // SETTINGS only adjusts stream windows. Leave the session window alone.
+        // We need to add the delta to all open streams (delta can be negative)
+        for (auto iter = self->mStreamTransactionHash.Iter();
+             !iter.Done();
+             iter.Next()) {
+          iter.Data()->UpdateServerReceiveWindow(delta);
+        }
       }
       break;
 
@@ -1834,9 +1808,21 @@ Http2Session::RecvGoAway(Http2Session *self)
       self->mInputFrameBuffer.get() + kFrameHeaderBytes + 4);
 
   // Find streams greater than the last-good ID and mark them for deletion
-  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. The
-  // underlying transaction can be restarted.
-  self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
+  // in the mGoAwayStreamsToRestart queue. The underlying transaction can be
+  // restarted.
+  for (auto iter = self->mStreamTransactionHash.Iter();
+       !iter.Done();
+       iter.Next()) {
+    // these streams were not processed by the server and can be restarted.
+    // Do that after the enumerator completes to avoid the risk of
+    // a restart event re-entrantly modifying this hash. Be sure not to restart
+    // a pushed (even numbered) stream
+    nsAutoPtr<Http2Stream>& stream = iter.Data();
+    if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
+        !stream->HasRegisteredID()) {
+      self->mGoAwayStreamsToRestart.Push(stream);
+    }
+  }
 
   // Process the streams marked for deletion and restart.
   size_t size = self->mGoAwayStreamsToRestart.GetSize();
