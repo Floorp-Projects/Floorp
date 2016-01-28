@@ -136,7 +136,7 @@ NS_DECLARE_FRAME_PROPERTY(RowLinesProperty, DeleteValue<nsTArray<int8_t>>)
 NS_DECLARE_FRAME_PROPERTY(ColumnAlignProperty, DeleteValue<nsTArray<int8_t>>)
 NS_DECLARE_FRAME_PROPERTY(ColumnLinesProperty, DeleteValue<nsTArray<int8_t>>)
 
-static const FramePropertyDescriptor*
+static const FramePropertyDescriptor<>*
 AttributeToProperty(nsIAtom* aAttribute)
 {
   if (aAttribute == nsGkAtoms::rowalign_)
@@ -157,7 +157,7 @@ AttributeToProperty(nsIAtom* aAttribute)
  */
 static nsTArray<int8_t>*
 FindCellProperty(const nsIFrame* aCellFrame,
-                 const FramePropertyDescriptor* aFrameProperty)
+                 const FramePropertyDescriptor<>* aFrameProperty)
 {
   const nsIFrame* currentFrame = aCellFrame;
   nsTArray<int8_t>* propertyData = nullptr;

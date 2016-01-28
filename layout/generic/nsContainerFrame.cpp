@@ -188,7 +188,7 @@ void
 nsContainerFrame::SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
                                              nsIPresShell* aPresShell,
                                              FramePropertyTable* aPropTable,
-                                             const FramePropertyDescriptor* aProp)
+                                             PropertyDescriptor<> aProp)
 {
   // Note that the last frame can be removed through another route and thus
   // delete the property -- that's why we fetch the property again before
@@ -277,7 +277,7 @@ nsContainerFrame::GetChildList(ChildListID aListID) const
 
 static void AppendIfNonempty(const nsIFrame* aFrame,
                             FramePropertyTable* aPropTable,
-                            const FramePropertyDescriptor* aProperty,
+                            const FramePropertyDescriptor<>* aProperty,
                             nsTArray<nsIFrame::ChildList>* aLists,
                             nsIFrame::ChildListID aListID)
 {
@@ -1376,7 +1376,7 @@ nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
 
 static bool
 TryRemoveFrame(nsIFrame* aFrame, FramePropertyTable* aPropTable,
-               const FramePropertyDescriptor* aProp, nsIFrame* aChildToRemove)
+               const FramePropertyDescriptor<>* aProp, nsIFrame* aChildToRemove)
 {
   nsFrameList* list = static_cast<nsFrameList*>(aPropTable->Get(aFrame, aProp));
   if (list && list->StartRemoveFrame(aChildToRemove)) {
@@ -1572,14 +1572,14 @@ nsContainerFrame::SetOverflowFrames(const nsFrameList& aOverflowFrames)
 }
 
 nsFrameList*
-nsContainerFrame::GetPropTableFrames(const FramePropertyDescriptor* aProperty) const
+nsContainerFrame::GetPropTableFrames(PropertyDescriptor<> aProperty) const
 {
   FramePropertyTable* propTable = PresContext()->PropertyTable();
   return static_cast<nsFrameList*>(propTable->Get(this, aProperty));
 }
 
 nsFrameList*
-nsContainerFrame::RemovePropTableFrames(const FramePropertyDescriptor* aProperty)
+nsContainerFrame::RemovePropTableFrames(PropertyDescriptor<> aProperty)
 {
   FramePropertyTable* propTable = PresContext()->PropertyTable();
   return static_cast<nsFrameList*>(propTable->Remove(this, aProperty));
@@ -1587,7 +1587,7 @@ nsContainerFrame::RemovePropTableFrames(const FramePropertyDescriptor* aProperty
 
 void
 nsContainerFrame::SetPropTableFrames(nsFrameList*                   aFrameList,
-                                     const FramePropertyDescriptor* aProperty)
+                                     PropertyDescriptor<> aProperty)
 {
   NS_PRECONDITION(aProperty && aFrameList, "null ptr");
   NS_PRECONDITION(
