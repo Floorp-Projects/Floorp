@@ -81,7 +81,7 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
             self.config["excludes"] = [
                 r"^.*tests.*$",
                 r"^.*crashreporter.*$",
-                r"^.*\.zip(\.asc)?$",
+                r"^.*[^k]\.zip(\.asc)?$",
                 r"^.*\.log$",
                 r"^.*\.txt$",
                 r"^.*/partner-repacks.*$",
