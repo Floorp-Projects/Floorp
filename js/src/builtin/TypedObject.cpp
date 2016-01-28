@@ -1743,7 +1743,7 @@ ReportPropertyError(JSContext* cx,
 
 bool
 TypedObject::obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                Handle<PropertyDescriptor> desc,
                                 ObjectOpResult& result)
 {
     Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
@@ -1963,7 +1963,7 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
 
 bool
 TypedObject::obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                                          MutableHandle<JSPropertyDescriptor> desc)
+                                          MutableHandle<PropertyDescriptor> desc)
 {
     Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
     if (!typedObj->isAttached()) {
