@@ -28,6 +28,13 @@ class PropertyName;
 
 namespace wasm {
 
+// Module generator limits
+static const unsigned MaxSigs        =   4 * 1024;
+static const unsigned MaxFuncs       = 512 * 1024;
+static const unsigned MaxImports     =   4 * 1024;
+static const unsigned MaxExports     =   4 * 1024;
+static const unsigned MaxArgsPerFunc =   4 * 1024;
+
 // Module header constants
 static const uint32_t MagicNumber = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion = -1;     // experimental
