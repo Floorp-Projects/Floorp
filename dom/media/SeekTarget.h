@@ -25,40 +25,60 @@ struct SeekTarget {
     Accurate
   };
   SeekTarget()
-    : mTime(-1.0)
-    , mType(SeekTarget::Invalid)
+    : mType(SeekTarget::Invalid)
     , mEventVisibility(MediaDecoderEventVisibility::Observable)
+    , mTime(media::TimeUnit::Invalid())
   {
   }
   SeekTarget(int64_t aTimeUsecs,
              Type aType,
              MediaDecoderEventVisibility aEventVisibility =
                MediaDecoderEventVisibility::Observable)
-    : mTime(aTimeUsecs)
-    , mType(aType)
+    : mType(aType)
     , mEventVisibility(aEventVisibility)
+    , mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs))
+  {
+  }
+  SeekTarget(const media::TimeUnit& aTime,
+             Type aType,
+             MediaDecoderEventVisibility aEventVisibility =
+               MediaDecoderEventVisibility::Observable)
+    : mType(aType)
+    , mEventVisibility(aEventVisibility)
+    , mTime(aTime)
   {
   }
   SeekTarget(const SeekTarget& aOther)
-    : mTime(aOther.mTime)
-    , mType(aOther.mType)
+    : mType(aOther.mType)
     , mEventVisibility(aOther.mEventVisibility)
+    , mTime(aOther.mTime)
   {
   }
   bool IsValid() const {
     return mType != SeekTarget::Invalid;
   }
   void Reset() {
-    mTime = -1;
+    mTime = media::TimeUnit::Invalid();
     mType = SeekTarget::Invalid;
   }
-  // Seek target time in microseconds.
-  int64_t mTime;
+  media::TimeUnit GetTime() const {
+    NS_ASSERTION(mTime.IsValid(), "Invalid SeekTarget");
+    return mTime;
+  }
+  void SetTime(const media::TimeUnit& aTime) {
+    NS_ASSERTION(aTime.IsValid(), "Invalid SeekTarget destination");
+    mTime = aTime;
+  }
+
   // Whether we should seek "Fast", or "Accurate".
   // "Fast" seeks to the seek point preceeding mTime, whereas
   // "Accurate" seeks as close as possible to mTime.
   Type mType;
   MediaDecoderEventVisibility mEventVisibility;
+
+private:
+  // Seek target time.
+  media::TimeUnit mTime;
 };
 
 } // namespace mozilla
