@@ -51,20 +51,20 @@ function moduleHeaderThen(...rest) {
     return [magic0, magic1, magic2, magic3, ver0, ver1, ver2, ver3, ...rest];
 }
 
-assertErrorMessage(() => wasmEval(toBuf([])), Error, magicError);
-assertErrorMessage(() => wasmEval(toBuf([42])), Error, magicError);
-assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2])), Error, magicError);
-assertErrorMessage(() => wasmEval(toBuf([1,2,3,4])), Error, magicError);
-assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3])), Error, versionError);
-assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, 1])), Error, versionError);
-assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0])), Error, versionError);
-assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0, ver1, ver2])), Error, versionError);
+assertErrorMessage(() => wasmEval(toBuf([])), TypeError, magicError);
+assertErrorMessage(() => wasmEval(toBuf([42])), TypeError, magicError);
+assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2])), TypeError, magicError);
+assertErrorMessage(() => wasmEval(toBuf([1,2,3,4])), TypeError, magicError);
+assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3])), TypeError, versionError);
+assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, 1])), TypeError, versionError);
+assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0])), TypeError, versionError);
+assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0, ver1, ver2])), TypeError, versionError);
 
 var o = wasmEval(toBuf(moduleHeaderThen(0)));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
-assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(1))), Error, sectionError);
-assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), Error, extraError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(1))), TypeError, sectionError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, extraError);
 
 function sectionName(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
@@ -99,15 +99,15 @@ function sigSection(sigs) {
     return { name: sigSectionStr, body };
 }
 
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1]}]))), Error);
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1, 1, 0]}]))), Error);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1]}]))), TypeError);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([{name: sigSectionStr, body: [1, 1, 0]}]))), TypeError);
 
 wasmEval(toBuf(moduleWithSections([sigSection([])])));
 wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}])])));
 wasmEval(toBuf(moduleWithSections([sigSection([{args:[I32Code], ret:VoidCode}])])));
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:100}])]))), Error, /bad expression type/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), Error, /bad value type/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:100}])]))), TypeError, /bad expression type/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])]))), TypeError, /bad value type/);
 
 function declSection(decls) {
     var body = [];
@@ -117,7 +117,7 @@ function declSection(decls) {
     return { name: declSectionStr, body };
 }
 
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), Error, /signature index out of range/);
-assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([1])]))), Error, /signature index out of range/);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), TypeError, /signature index out of range/);
+assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([1])]))), TypeError, /signature index out of range/);
 
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([0])]))), Error, /fewer function definitions than declarations/);
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[], ret:VoidCode}]), declSection([0])]))), TypeError, /fewer function definitions than declarations/);
