@@ -267,7 +267,7 @@ ModuleGenerator::allocateGlobalVar(ValType type, bool isConst, uint32_t* index)
 void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
-    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
+    MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(sigIndex == numSigs_);
     numSigs_++;
 
@@ -285,7 +285,7 @@ ModuleGenerator::sig(uint32_t index) const
 bool
 ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 {
-    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
+    MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(funcIndex == module_->numFuncs);
     MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
 
@@ -304,7 +304,7 @@ ModuleGenerator::funcSig(uint32_t funcIndex) const
 bool
 ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset)
 {
-    MOZ_ASSERT(module_->kind == ModuleKind::AsmJS);
+    MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(importIndex == module_->imports.length());
     if (!addImport(sig(sigIndex), globalDataOffset))
         return false;

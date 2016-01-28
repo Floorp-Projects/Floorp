@@ -198,8 +198,6 @@ protected:
                               TableArea&                  aDamageArea);
 
 public:
-  void ExpandZeroColSpans();
-
   void ResetBStartStart(mozilla::LogicalSide aSide,
                         nsCellMap& aCellMap,
                         uint32_t   aYPos,
@@ -355,22 +353,6 @@ public:
                        TableArea&        aDamageArea,
                        int32_t*          aBeginSearchAtCol = nullptr);
 
-  /** Function to be called when a cell is added at a location which is spanned
-    * to by a zero colspan.  We handle this situation by collapsing the zero
-    * colspan, since there is really no good way to deal with it (trying to
-    * increase the number of columns to hold the new cell would just mean the
-    * zero colspan needs to expand).
-
-    * @param aMap      - reference to the table cell map
-    * @param aOrigData - zero colspanned cell that will be collapsed
-    * @param aRowIndex - row where the first collision appears
-    * @param aColIndex - column where the first collision appears
-    **/
-  void CollapseZeroColSpan(nsTableCellMap& aMap,
-                           CellData*       aOrigData,
-                           int32_t         aRowIndex,
-                           int32_t         aColIndex);
-
   void InsertCells(nsTableCellMap&              aMap,
                    nsTArray<nsTableCellFrame*>& aCellFrames,
                    int32_t                      aRowIndex,
@@ -416,8 +398,6 @@ public:
   bool RowHasSpanningCells(int32_t aRowIndex,
                              int32_t aNumEffCols) const;
 
-  void ExpandZeroColSpans(nsTableCellMap& aMap);
-
   /** indicate whether the row has more than one cell that either originates
    * or is spanned from the rows above
    */
@@ -435,8 +415,7 @@ public:
 
   int32_t GetEffectiveColSpan(const nsTableCellMap& aMap,
                               int32_t     aRowIndex,
-                              int32_t     aColIndex,
-                              bool&     aIsZeroColSpan) const;
+                              int32_t     aColIndex) const;
 
   typedef nsTArray<CellData*> CellDataArray;
 
@@ -540,18 +519,12 @@ protected:
                           int32_t aStartColIndex,
                           int32_t aEndColIndex) const;
 
-  void ExpandForZeroSpan(nsTableCellFrame* aCellFrame,
-                         int32_t           aNumColsInTable);
-
   bool CreateEmptyRow(int32_t aRowIndex,
                         int32_t aNumCols);
 
   int32_t GetRowSpanForNewCell(nsTableCellFrame* aCellFrameToAdd,
                                int32_t           aRowIndex,
                                bool&           aIsZeroRowSpan) const;
-
-  int32_t GetColSpanForNewCell(nsTableCellFrame& aCellFrameToAdd,
-                               bool&           aIsZeroColSpan) const;
 
   // Destroy a CellData struct.  This will handle the case of aData
   // actually being a BCCellData properly.

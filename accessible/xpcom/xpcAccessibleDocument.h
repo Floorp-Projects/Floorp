@@ -118,6 +118,8 @@ ToXPC(Accessible* aAccessible)
   return xpcDoc ? xpcDoc->GetAccessible(aAccessible) : nullptr;
 }
 
+xpcAccessibleGeneric* ToXPC(AccessibleOrProxy aAcc);
+
 inline xpcAccessibleHyperText*
 ToXPCText(HyperTextAccessible* aAccessible)
 {
@@ -131,6 +133,12 @@ ToXPCText(HyperTextAccessible* aAccessible)
 
 inline xpcAccessibleDocument*
 ToXPCDocument(DocAccessible* aAccessible)
+{
+  return GetAccService()->GetXPCDocument(aAccessible);
+}
+
+inline xpcAccessibleDocument*
+ToXPCDocument(DocAccessibleParent* aAccessible)
 {
   return GetAccService()->GetXPCDocument(aAccessible);
 }

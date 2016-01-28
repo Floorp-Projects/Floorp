@@ -279,7 +279,13 @@ private:
     // changed without WM_SETTINGCHANGE message.  For avoiding this trouble,
     // we need to modify cache of system settings at every wheel message
     // handling if we meet known device whose utility may hook the API.
-    void TrustedScrollSettingsDriver(bool aIsVertical);
+    void TrustedScrollSettingsDriver();
+
+    // Returns true if the system scroll may be overridden for faster scroll.
+    // Otherwise, false.  For example, if the user maybe uses an expensive
+    // mouse which supports acceleration of scroll speed, faster scroll makes
+    // the user inconvenient.
+    bool IsOverridingSystemScrollSpeedAllowed();
 
     int32_t GetScrollAmount(bool aForVertical) const
     {
@@ -293,6 +299,11 @@ private:
       return aForVertical ? (uint32_t(mScrollLines) == WHEEL_PAGESCROLL) :
                             (uint32_t(mScrollChars) == WHEEL_PAGESCROLL);
     }
+
+    // The default vertical and horizontal scrolling speed is 3, this is defined
+    // on the document of SystemParametersInfo in MSDN.
+    static int32_t DefaultScrollLines() { return 3; }
+    static int32_t DefaultScrollChars() { return 3; }
 
   private:
     bool mInitialized;
@@ -310,7 +321,7 @@ private:
     bool InitScrollLines();
     bool InitScrollChars();
 
-    void RefreshCache(bool aForVertical);
+    void RefreshCache();
   };
 
   SystemSettings mSystemSettings;

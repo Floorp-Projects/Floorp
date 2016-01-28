@@ -46,13 +46,8 @@ enum class VisitSide {
 	RIGHT
 };
 
-class nsRegionRectIterator;
-
 class nsRegion
 {
-
-  friend class nsRegionRectIterator;
-
 public:
   nsRegion () { pixman_region32_init(&mImpl); }
   MOZ_IMPLICIT nsRegion (const nsRect& aRect) { pixman_region32_init_rect(&mImpl,
@@ -451,55 +446,6 @@ private:
   {
     return const_cast<pixman_region32_t*>(&mImpl);
   }
-
-};
-
-
-class nsRegionRectIterator
-{
-  const nsRegion*  mRegion;
-  int i;
-  int n;
-  nsRect rect;
-  pixman_box32_t *boxes;
-
-public:
-  explicit nsRegionRectIterator (const nsRegion& aRegion)
-  {
-    mRegion = &aRegion;
-    i = 0;
-    boxes = pixman_region32_rectangles(aRegion.Impl(), &n);
-    // Work around pixman bug. Sometimes pixman creates regions with 1 rect
-    // that's empty.
-    if (n == 1 && nsRegion::BoxToRect(boxes[0]).IsEmpty()) {
-      n = 0;
-    }
-  }
-
-  const nsRect* Next ()
-  {
-    if (i == n)
-      return nullptr;
-    rect = nsRegion::BoxToRect(boxes[i]);
-    NS_ASSERTION(!rect.IsEmpty(), "Shouldn't return empty rect");
-    i++;
-    return &rect;
-  }
-
-  const nsRect* Prev ()
-  {
-    if (i == -1)
-      return nullptr;
-    rect = nsRegion::BoxToRect(boxes[i]);
-    NS_ASSERTION(!rect.IsEmpty(), "Shouldn't return empty rect");
-    i--;
-    return &rect;
-  }
-
-  void Reset ()
-  {
-    i = 0;
-  }
 };
 
 namespace mozilla {
@@ -740,10 +686,8 @@ public:
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const
   {
     nsRegion result;
-    OldRectIterator rgnIter(*this);
-    const Rect* currentRect;
-    while ((currentRect = rgnIter.Next())) {
-      nsRect appRect = ::ToAppUnits(*currentRect, aAppUnitsPerPixel);
+    for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+      nsRect appRect = ::ToAppUnits(iter.Get(), aAppUnitsPerPixel);
       result.Or(result, appRect);
     }
     return result;
@@ -806,39 +750,6 @@ public:
   }
 
   nsCString ToString() const { return mImpl.ToString(); }
-
-  // XXX: this is going away soon in favour of RectIterator
-  class OldRectIterator
-  {
-    nsRegionRectIterator mImpl;
-    Rect mTmp;
-
-  public:
-    explicit OldRectIterator (const BaseIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
-
-    const Rect* Next ()
-    {
-      const nsRect* r = mImpl.Next();
-      if (!r)
-        return nullptr;
-      mTmp = FromRect (*r);
-      return &mTmp;
-    }
-
-    const Rect* Prev ()
-    {
-      const nsRect* r = mImpl.Prev();
-      if (!r)
-        return nullptr;
-      mTmp = FromRect (*r);
-      return &mTmp;
-    }
-
-    void Reset ()
-    {
-      mImpl.Reset ();
-    }
-  };
 
   class RectIterator
   {
@@ -938,6 +849,5 @@ private:
 } // namespace mozilla
 
 typedef mozilla::gfx::IntRegion nsIntRegion;
-typedef nsIntRegion::OldRectIterator nsIntRegionRectIterator;
 
 #endif

@@ -5,9 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OmxDataDecoder.h"
-#include "OMX_Types.h"
-#include "OMX_Component.h"
+
 #include "OMX_Audio.h"
+#include "OMX_Component.h"
+#include "OMX_Types.h"
+
+#include "OmxPlatformLayer.h"
 
 extern mozilla::LogModule* GetPDMLog();
 
@@ -30,9 +33,6 @@ extern mozilla::LogModule* GetPDMLog();
     NotifyError(err, __func__);\
     return;                    \
   }                            \
-
-// There should be a better way to calculate it.
-#define MIN_VIDEO_INPUT_BUFFER_SIZE 64 * 1024
 
 namespace mozilla {
 
@@ -62,20 +62,6 @@ StateTypeToStr(OMX_STATETYPE aType)
     default:
       return "Unknown";
   }
-}
-
-// There should be 2 ports and port number start from 0.
-void GetPortIndex(nsTArray<uint32_t>& aPortIndex) {
-  aPortIndex.AppendElement(0);
-  aPortIndex.AppendElement(1);
-}
-
-template<class T> void
-InitOmxParameter(T* aParam)
-{
-  PodZero(aParam);
-  aParam->nSize = sizeof(T);
-  aParam->nVersion.s.nVersionMajor = 1;
 }
 
 // A helper class to retrieve AudioData or VideoData.
@@ -178,7 +164,7 @@ OmxDataDecoder::Init()
   // TODO: it needs to get permission from resource manager before allocating
   //       Omx component.
   InvokeAsync(mOmxTaskQueue, mOmxLayer.get(), __func__, &OmxPromiseLayer::Init,
-              mOmxTaskQueue, mTrackInfo.get())
+              mTrackInfo.get())
     ->Then(mOmxTaskQueue, __func__,
       [self] () {
         // Omx state should be OMX_StateIdle.
@@ -602,12 +588,7 @@ OmxDataDecoder::OmxStateRunner()
   // TODO: maybe it'd be better to use promise CompletionPromise() to replace
   //       this state machine.
   if (mOmxState == OMX_StateLoaded) {
-    // Config codec parameters by minetype.
-    if (mTrackInfo->IsAudio()) {
-      ConfigAudioCodec();
-    } else if (mTrackInfo->IsVideo()) {
-      ConfigVideoCodec();
-    }
+    ConfigCodec();
 
     // Send OpenMax state command to OMX_StateIdle.
     RefPtr<OmxDataDecoder> self = this;
@@ -653,77 +634,10 @@ OmxDataDecoder::OmxStateRunner()
 }
 
 void
-OmxDataDecoder::ConfigAudioCodec()
+OmxDataDecoder::ConfigCodec()
 {
-  const AudioInfo* audioInfo = mTrackInfo->GetAsAudioInfo();
-  OMX_ERRORTYPE err;
-
-  // TODO: it needs to handle other formats like mp3, amr-nb...etc.
-  if (audioInfo->mMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    OMX_AUDIO_PARAM_AACPROFILETYPE aac_profile;
-    InitOmxParameter(&aac_profile);
-    err = mOmxLayer->GetParameter(OMX_IndexParamAudioAac, &aac_profile, sizeof(aac_profile));
-    CHECK_OMX_ERR(err);
-    aac_profile.nSampleRate = audioInfo->mRate;
-    aac_profile.nChannels = audioInfo->mChannels;
-    aac_profile.eAACProfile = (OMX_AUDIO_AACPROFILETYPE)audioInfo->mProfile;
-    err = mOmxLayer->SetParameter(OMX_IndexParamAudioAac, &aac_profile, sizeof(aac_profile));
-    CHECK_OMX_ERR(err);
-    LOG("Config OMX_IndexParamAudioAac, channel %d, sample rate %d, profile %d",
-        audioInfo->mChannels, audioInfo->mRate, audioInfo->mProfile);
-  }
-}
-
-void
-OmxDataDecoder::ConfigVideoCodec()
-{
-  OMX_ERRORTYPE err;
-  const VideoInfo* videoInfo = mTrackInfo->GetAsVideoInfo();
-
-  OMX_PARAM_PORTDEFINITIONTYPE def;
-
-  // Set up in/out port definition.
-  nsTArray<uint32_t> ports;
-  GetPortIndex(ports);
-  for (auto idx : ports) {
-    InitOmxParameter(&def);
-    def.nPortIndex = idx;
-    err = mOmxLayer->GetParameter(OMX_IndexParamPortDefinition,
-                                  &def,
-                                  sizeof(def));
-    if (err != OMX_ErrorNone) {
-      return;
-    }
-
-    def.format.video.nFrameWidth =  videoInfo->mDisplay.width;
-    def.format.video.nFrameHeight = videoInfo->mDisplay.height;
-    def.format.video.nStride = videoInfo->mImage.width;
-    def.format.video.nSliceHeight = videoInfo->mImage.height;
-
-    // TODO: it needs to add other formats like webm, mp4, h263... etc.
-    OMX_VIDEO_CODINGTYPE codetype;
-    if (videoInfo->mMimeType.EqualsLiteral("video/avc")) {
-      codetype = OMX_VIDEO_CodingAVC;
-    }
-
-    if (def.eDir == OMX_DirInput) {
-      def.format.video.eCompressionFormat = codetype;
-      def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
-      if (def.nBufferSize < MIN_VIDEO_INPUT_BUFFER_SIZE) {
-        def.nBufferSize = videoInfo->mImage.width * videoInfo->mImage.height;
-        LOG("Change input buffer size to %d", def.nBufferSize);
-      }
-    } else {
-      def.format.video.eCompressionFormat = OMX_VIDEO_CodingUnused;
-    }
-
-    err = mOmxLayer->SetParameter(OMX_IndexParamPortDefinition,
-                                  &def,
-                                  sizeof(def));
-    if (err != OMX_ErrorNone) {
-      return;
-    }
-  }
+  OMX_ERRORTYPE err = mOmxLayer->Config();
+  CHECK_OMX_ERR(err);
 }
 
 void
@@ -1004,7 +918,7 @@ MediaDataHelper::MediaDataHelper(const TrackInfo* aTrackInfo,
 {
   // Get latest port definition.
   nsTArray<uint32_t> ports;
-  GetPortIndex(ports);
+  GetOmxPortIndex(ports);
   for (auto idx : ports) {
     InitOmxParameter(&mOutputPortDef);
     mOutputPortDef.nPortIndex = idx;

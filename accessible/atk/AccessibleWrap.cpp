@@ -567,7 +567,7 @@ finalizeCB(GObject *aObj)
 {
     if (!IS_MAI_OBJECT(aObj))
         return;
-    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap.Bits() == 0, "AccWrap NOT null");
+    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap.IsNull(), "AccWrap NOT null");
 
     // call parent finalize function
     // finalize of GObjectClass will unref the accessible parent if has
@@ -650,22 +650,17 @@ getRoleCB(AtkObject *aAtkObj)
   if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  a11y::role role;
-  if (!accWrap) {
-    ProxyAccessible* proxy = GetProxy(aAtkObj);
-    if (!proxy)
-      return ATK_ROLE_INVALID;
+  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
+  if (acc.IsNull()) {
+    return ATK_ROLE_INVALID;
+  }
 
-    role = proxy->Role();
-  } else {
 #ifdef DEBUG
+  if (AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj)) {
     NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
                  "Does not support Text interface when it should");
-#endif
-
-    role = accWrap->Role();
   }
+#endif
 
 #define ROLE(geckoRole, stringRole, atkRole, macRole, \
              msaaRole, ia2Role, nameRule) \
@@ -673,7 +668,7 @@ getRoleCB(AtkObject *aAtkObj)
     aAtkObj->role = atkRole; \
     break;
 
-  switch (role) {
+  switch (acc.Role()) {
 #include "RoleMap.h"
     default:
       MOZ_CRASH("Unknown role.");
@@ -1088,11 +1083,16 @@ GetAccessibleWrap(AtkObject* aAtkObj)
 ProxyAccessible*
 GetProxy(AtkObject* aObj)
 {
-  if (!aObj || !IS_MAI_OBJECT(aObj) ||
-      !MAI_ATK_OBJECT(aObj)->accWrap.IsProxy())
+  return GetInternalObj(aObj).AsProxy();
+}
+
+AccessibleOrProxy
+GetInternalObj(AtkObject* aObj)
+{
+  if (!aObj || !IS_MAI_OBJECT(aObj))
     return nullptr;
 
-  return MAI_ATK_OBJECT(aObj)->accWrap.AsProxy();
+  return MAI_ATK_OBJECT(aObj)->accWrap;
 }
 
 AtkObject*

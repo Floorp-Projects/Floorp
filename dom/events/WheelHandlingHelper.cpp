@@ -419,18 +419,8 @@ WheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
     return DeltaValues(aEvent);
   }
 
-  // Compute the overridden speed to nsIWidget.  The widget can check the
-  // conditions (e.g., checking the prefs, and also whether the user customized
-  // the system settings of the mouse wheel scrolling or not), and can limit
-  // the speed for preventing the unexpected high speed scrolling.
-  nsCOMPtr<nsIWidget> widget(sTargetFrame->GetNearestWidget());
-  NS_ENSURE_TRUE(widget, DeltaValues(aEvent));
-  DeltaValues overriddenDeltaValues(0.0, 0.0);
-  nsresult rv =
-    widget->OverrideSystemMouseScrollSpeed(aEvent->deltaX, aEvent->deltaY,
-                                           overriddenDeltaValues.deltaX,
-                                           overriddenDeltaValues.deltaY);
-  return NS_FAILED(rv) ? DeltaValues(aEvent) : overriddenDeltaValues;
+  return DeltaValues(aEvent->OverriddenDeltaX(),
+                     aEvent->OverriddenDeltaY());
 }
 
 /******************************************************************/

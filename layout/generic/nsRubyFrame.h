@@ -62,7 +62,8 @@ protected:
                      nsRubyBaseContainerFrame* aBaseContainer,
                      nsReflowStatus& aStatus);
 
-  nsRubyBaseContainerFrame* PullOneSegment(ContinuationTraversingState& aState);
+  nsRubyBaseContainerFrame* PullOneSegment(const nsLineLayout* aLineLayout,
+                                           ContinuationTraversingState& aState);
 
   // The leading required to put the annotations.
   // They are not initialized until the first reflow.

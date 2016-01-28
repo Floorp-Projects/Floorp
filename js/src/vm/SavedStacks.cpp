@@ -23,6 +23,7 @@
 #include "jsscript.h"
 
 #include "gc/Marking.h"
+#include "gc/Policy.h"
 #include "gc/Rooting.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"

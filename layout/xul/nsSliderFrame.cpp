@@ -890,7 +890,9 @@ nsSliderFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
   nsBoxFrame::SetInitialChildList(aListID, aChildList);
-  AddListener();
+  if (aListID == kPrincipalList) {
+    AddListener();
+  }
 }
 
 nsresult

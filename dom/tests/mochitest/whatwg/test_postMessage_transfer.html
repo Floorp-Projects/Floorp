@@ -37,8 +37,8 @@ function testFunc(target, origin) {
   var cd = new ArrayBuffer(1);
 
   target.postMessage([ab, cd], origin, [ab]);
-  is(ab.byteLength, 0, "ab should be neutered");
-  is(cd.byteLength, 1, "cd should not be neutered");
+  is(ab.byteLength, 0, "ab should be detached");
+  is(cd.byteLength, 1, "cd should not be detached");
 
   onmessage = function(e) {
     is(e.data[0].byteLength, 1, "ab should be transfered");

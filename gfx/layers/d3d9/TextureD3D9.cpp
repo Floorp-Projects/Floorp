@@ -754,18 +754,17 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
   }
 
   if (aRegion) {
-    nsIntRegionRectIterator iter(*aRegion);
-    const IntRect *iterRect;
-    while ((iterRect = iter.Next())) {
+    for (auto iter = aRegion->RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& iterRect = iter.Get();
       RECT rect;
-      rect.left = iterRect->x;
-      rect.top = iterRect->y;
-      rect.right = iterRect->XMost();
-      rect.bottom = iterRect->YMost();
+      rect.left = iterRect.x;
+      rect.top = iterRect.y;
+      rect.right = iterRect.XMost();
+      rect.bottom = iterRect.YMost();
 
       POINT point;
-      point.x = iterRect->x;
-      point.y = iterRect->y;
+      point.x = iterRect.x;
+      point.y = iterRect.y;
       hr = dm->device()->UpdateSurface(srcSurface, &rect, dstSurface, &point);
       if (FAILED(hr)) {
         NS_WARNING("Failed Update the surface");

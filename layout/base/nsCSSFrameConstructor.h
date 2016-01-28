@@ -1270,10 +1270,15 @@ protected:
   static nsIFrame* CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
                                              nsIContent*       aContent,
                                              nsIFrame*         aFrame,
-                                             nsStyleContext*   aStyleContext,
+                                             nsStyleContext*   aParentStyle,
                                              nsContainerFrame* aParentFrame,
                                              nsIFrame*         aPrevInFlow,
                                              nsFrameState      aTypeBit);
+
+  static nsIFrame* CreateBackdropFrameFor(nsIPresShell* aPresShell,
+                                          nsIContent* aContent,
+                                          nsIFrame* aFrame,
+                                          nsContainerFrame* aParentFrame);
 
 private:
   // ConstructSelectFrame puts the new frame in aFrameItems and

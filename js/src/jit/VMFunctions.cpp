@@ -1295,7 +1295,7 @@ bool
 ThrowObjectCoercible(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(v.isUndefined() || v.isNull());
-    MOZ_ALWAYS_FALSE(ToObjectSlow(cx, v, false));
+    MOZ_ALWAYS_FALSE(ToObjectSlow(cx, v, true));
     return false;
 }
 

@@ -95,8 +95,8 @@ class RLogRingBuffer {
     }
 
     void SetLogLimit(uint32_t new_limit);
-
     void Log(std::string&& log);
+    void Clear();
 
   private:
     RLogRingBuffer();
@@ -120,5 +120,3 @@ class RLogRingBuffer {
 } // namespace mozilla
 
 #endif // rlogringbuffer_h__
-
-

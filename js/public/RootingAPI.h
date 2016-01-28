@@ -17,6 +17,7 @@
 #include "jspubtd.h"
 
 #include "js/GCAPI.h"
+#include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -105,8 +106,7 @@
 namespace js {
 
 template <typename T>
-struct GCMethods {
-    static T initial() { return T(); }
+struct BarrierMethods {
 };
 
 template <typename T>
@@ -221,7 +221,7 @@ class Heap : public js::HeapBase<T>
     Heap() {
         static_assert(sizeof(T) == sizeof(Heap<T>),
                       "Heap<T> must be binary compatible with T.");
-        init(js::GCMethods<T>::initial());
+        init(js::GCPolicy<T>::initial());
     }
     explicit Heap(T p) { init(p); }
 
@@ -234,7 +234,7 @@ class Heap : public js::HeapBase<T>
     explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
     ~Heap() {
-        post(ptr, js::GCMethods<T>::initial());
+        post(ptr, js::GCPolicy<T>::initial());
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -258,7 +258,7 @@ class Heap : public js::HeapBase<T>
   private:
     void init(T newPtr) {
         ptr = newPtr;
-        post(js::GCMethods<T>::initial(), ptr);
+        post(js::GCPolicy<T>::initial(), ptr);
     }
 
     void set(T newPtr) {
@@ -268,7 +268,7 @@ class Heap : public js::HeapBase<T>
     }
 
     void post(const T& prev, const T& next) {
-        js::GCMethods<T>::postBarrier(&ptr, prev, next);
+        js::BarrierMethods<T>::postBarrier(&ptr, prev, next);
     }
 
     enum {
@@ -527,7 +527,7 @@ struct RootKind<T*>
 };
 
 template <typename T>
-struct GCMethods<T*>
+struct BarrierMethods<T*>
 {
     static T* initial() { return nullptr; }
     static void postBarrier(T** vp, T* prev, T* next) {
@@ -538,7 +538,7 @@ struct GCMethods<T*>
 };
 
 template <>
-struct GCMethods<JSObject*>
+struct BarrierMethods<JSObject*>
 {
     static JSObject* initial() { return nullptr; }
     static gc::Cell* asGCThingOrNull(JSObject* v) {
@@ -553,7 +553,7 @@ struct GCMethods<JSObject*>
 };
 
 template <>
-struct GCMethods<JSFunction*>
+struct BarrierMethods<JSFunction*>
 {
     static JSFunction* initial() { return nullptr; }
     static void postBarrier(JSFunction** vp, JSFunction* prev, JSFunction* next) {
@@ -703,7 +703,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
   public:
     template <typename RootingContext>
     explicit Rooted(const RootingContext& cx)
-      : ptr(js::GCMethods<T>::initial())
+      : ptr(js::GCPolicy<T>::initial())
     {
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
@@ -808,7 +808,7 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
 {
   public:
     template <typename CX>
-    explicit FakeRooted(CX* cx) : ptr(GCMethods<T>::initial()) {}
+    explicit FakeRooted(CX* cx) : ptr(GCPolicy<T>::initial()) {}
 
     template <typename CX>
     FakeRooted(CX* cx, T initial) : ptr(initial) {}
@@ -1025,11 +1025,11 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
     }
 
   public:
-    PersistentRooted() : ptr(js::GCMethods<T>::initial()) {}
+    PersistentRooted() : ptr(js::GCPolicy<T>::initial()) {}
 
     template <typename RootingContext>
     explicit PersistentRooted(const RootingContext& cx)
-      : ptr(js::GCMethods<T>::initial())
+      : ptr(js::GCPolicy<T>::initial())
     {
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
@@ -1062,7 +1062,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     template <typename RootingContext>
     void init(const RootingContext& cx) {
-        init(cx, js::GCMethods<T>::initial());
+        init(cx, js::GCPolicy<T>::initial());
     }
 
     template <typename RootingContext, typename U>
@@ -1073,7 +1073,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void reset() {
         if (initialized()) {
-            set(js::GCMethods<T>::initial());
+            set(js::GCPolicy<T>::initial());
             ListBase::remove();
         }
     }
@@ -1162,7 +1162,7 @@ CallTraceCallbackOnNonHeap(T* v, const TraceCallbacks& aCallbacks, const char* a
 {
     static_assert(sizeof(T) == sizeof(JS::Heap<T>), "T and Heap<T> must be compatible.");
     MOZ_ASSERT(v);
-    mozilla::DebugOnly<Cell*> cell = GCMethods<T>::asGCThingOrNull(*v);
+    mozilla::DebugOnly<Cell*> cell = BarrierMethods<T>::asGCThingOrNull(*v);
     MOZ_ASSERT(cell);
     MOZ_ASSERT(!IsInsideNursery(cell));
     JS::Heap<T>* asHeapT = reinterpret_cast<JS::Heap<T>*>(v);

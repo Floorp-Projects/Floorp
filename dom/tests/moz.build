@@ -6,9 +6,7 @@
 
 MOCHITEST_MANIFESTS += [
     'mochitest/ajax/jquery/mochitest.ini',
-    'mochitest/ajax/lib/mochitest.ini',
     'mochitest/ajax/mochikit/mochitest.ini',
-    'mochitest/ajax/mochikit/tests/mochitest.ini',
     'mochitest/ajax/offline/mochitest.ini',
     'mochitest/ajax/prototype/mochitest.ini',
     'mochitest/ajax/scriptaculous/mochitest.ini',
@@ -50,3 +48,46 @@ if CONFIG['MOZ_GAMEPAD']:
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.lib += [
+    'mochitest/ajax/lib/AJAX_setup.js',
+    'mochitest/ajax/lib/test.css',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.mochikit.tests += [
+    'mochitest/ajax/mochikit/tests/cli.js',
+    'mochitest/ajax/mochikit/tests/FakeJSAN.js',
+    'mochitest/ajax/mochikit/tests/index.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Async.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Base.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Color.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-DateTime.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-DOM.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-DragAndDrop.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Format.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Iter.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-JSAN.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Logging.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-MochiKit.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Selector.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Signal.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Style.html',
+    'mochitest/ajax/mochikit/tests/MochiKit-Visual.html',
+    'mochitest/ajax/mochikit/tests/standalone.js',
+    'mochitest/ajax/mochikit/tests/test_Base.js',
+    'mochitest/ajax/mochikit/tests/test_Color.js',
+    'mochitest/ajax/mochikit/tests/test_DateTime.js',
+    'mochitest/ajax/mochikit/tests/test_DragAndDrop.js',
+    'mochitest/ajax/mochikit/tests/test_Format.js',
+    'mochitest/ajax/mochikit/tests/test_Iter.js',
+    'mochitest/ajax/mochikit/tests/test_Logging.js',
+    'mochitest/ajax/mochikit/tests/test_MochiKit-Async.json',
+    'mochitest/ajax/mochikit/tests/test_Signal.js',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.mochikit.tests.SimpleTest += [
+    'mochitest/ajax/mochikit/tests/SimpleTest/SimpleTest.js',
+    'mochitest/ajax/mochikit/tests/SimpleTest/test.css',
+    'mochitest/ajax/mochikit/tests/SimpleTest/TestRunner.js',
+]
+

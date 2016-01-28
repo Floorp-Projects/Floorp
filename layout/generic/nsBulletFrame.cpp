@@ -41,7 +41,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 
@@ -849,22 +849,13 @@ nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGro
   *aLoadGroup = doc->GetDocumentLoadGroup().take();
 }
 
-union VoidPtrOrFloat {
-  VoidPtrOrFloat() : p(nullptr) {}
-
-  void *p;
-  float f;
-};
-
 float
 nsBulletFrame::GetFontSizeInflation() const
 {
   if (!HasFontSizeInflation()) {
     return 1.0f;
   }
-  VoidPtrOrFloat u;
-  u.p = Properties().Get(FontSizeInflationProperty());
-  return u.f;
+  return Properties().Get(FontSizeInflationProperty());
 }
 
 void
@@ -879,9 +870,7 @@ nsBulletFrame::SetFontSizeInflation(float aInflation)
   }
 
   AddStateBits(BULLET_FRAME_HAS_FONT_INFLATION);
-  VoidPtrOrFloat u;
-  u.f = aInflation;
-  Properties().Set(FontSizeInflationProperty(), u.p);
+  Properties().Set(FontSizeInflationProperty(), aInflation);
 }
 
 already_AddRefed<imgIContainer>
