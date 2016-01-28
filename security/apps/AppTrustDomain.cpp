@@ -37,7 +37,7 @@
 
 using namespace mozilla::pkix;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 static const unsigned int DEFAULT_MIN_RSA_BITS = 2048;
 static char kDevImportedDER[] =
