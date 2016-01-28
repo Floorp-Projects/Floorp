@@ -673,6 +673,8 @@ public:
   static const KTableEntry kImageLayerRepeatKTable[];
   static const KTableEntry kImageLayerRepeatPartKTable[];
   static const KTableEntry kImageLayerSizeKTable[];
+  static const KTableEntry kImageLayerCompositeKTable[];
+  static const KTableEntry kImageLayerModeKTable[];
   static const KTableEntry kBlendModeKTable[];
   static const KTableEntry kBorderCollapseKTable[];
   static const KTableEntry kBorderColorKTable[];
