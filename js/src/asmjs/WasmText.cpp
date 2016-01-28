@@ -34,7 +34,6 @@ using namespace js;
 using namespace js::wasm;
 using mozilla::CheckedInt;
 using mozilla::Maybe;
-using mozilla::Range;
 
 static const unsigned AST_LIFO_DEFAULT_CHUNK_SIZE = 4096;
 
@@ -216,31 +215,15 @@ class WasmAstFunc : public WasmAstNode
 
 class WasmAstExport : public WasmAstNode
 {
-    const char16_t* const externalName_;
-    const size_t externalNameLength_;
-    uint32_t internalIndex_;
+    TwoByteChars name_;
+    uint32_t funcIndex_;
 
   public:
-    WasmAstExport(const char16_t* externalNameBegin,
-                  const char16_t* externalNameEnd)
-      : WasmAstNode(WasmAstKind::Export),
-        externalName_(externalNameBegin),
-        externalNameLength_(externalNameEnd - externalNameBegin),
-        internalIndex_(UINT32_MAX)
-    {
-        MOZ_ASSERT(externalNameBegin <= externalNameEnd);
-    }
-    const char16_t* externalName() const { return externalName_; }
-    size_t externalNameLength() const { return externalNameLength_; }
-
-    void initInternalIndex(uint32_t internalIndex) {
-        MOZ_ASSERT(internalIndex_ == UINT32_MAX);
-        internalIndex_ = internalIndex;
-    }
-    size_t internalIndex() const {
-        MOZ_ASSERT(internalIndex_ != UINT32_MAX);
-        return internalIndex_;
-    }
+    WasmAstExport(TwoByteChars name, uint32_t funcIndex)
+      : WasmAstNode(WasmAstKind::Export), name_(name), funcIndex_(funcIndex)
+    {}
+    TwoByteChars name() const { return name_; }
+    size_t funcIndex() const { return funcIndex_; }
 };
 
 class WasmAstModule : public WasmAstNode
@@ -372,15 +355,12 @@ class WasmToken
     const char16_t* end() const {
         return end_;
     }
-    const char16_t* textBegin() const {
+    TwoByteChars text() const {
         MOZ_ASSERT(kind_ == Text);
         MOZ_ASSERT(begin_[0] == '"');
-        return begin_ + 1;
-    }
-    const char16_t* textEnd() const {
-        MOZ_ASSERT(kind_ == Text);
         MOZ_ASSERT(end_[-1] == '"');
-        return end_ - 1;
+        MOZ_ASSERT(end_ - begin_ >= 2);
+        return TwoByteChars(begin_ + 1, end_ - begin_ - 2);
     }
     uint32_t integer() const {
         MOZ_ASSERT(kind_ == Integer);
@@ -818,25 +798,15 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
 static WasmAstExport*
 ParseExport(WasmParseContext& c)
 {
-    WasmToken externalName;
-    if (!c.ts.match(WasmToken::Text, &externalName, c.error))
+    WasmToken name;
+    if (!c.ts.match(WasmToken::Text, &name, c.error))
         return nullptr;
 
-    auto exp = new(c.lifo) WasmAstExport(externalName.textBegin(), externalName.textEnd());
-    if (!exp)
+    WasmToken funcIndex;
+    if (!c.ts.match(WasmToken::Integer, &funcIndex, c.error))
         return nullptr;
 
-    WasmToken internalName = c.ts.get();
-    switch (internalName.kind()) {
-      case WasmToken::Integer:
-        exp->initInternalIndex(internalName.integer());
-        break;
-      default:
-        c.ts.generateError(internalName, c.error);
-        return nullptr;
-    }
-
-    return exp;
+    return new(c.lifo) WasmAstExport(name.text(), funcIndex.integer());
 }
 
 static WasmAstModule*
@@ -1024,15 +994,14 @@ EncodeExport(Encoder& e, WasmAstExport& exp)
     if (!e.writeCString(FuncSubsection))
         return false;
 
-    if (!e.writeVarU32(exp.internalIndex()))
+    if (!e.writeVarU32(exp.funcIndex()))
         return false;
 
-    Range<const char16_t> twoByte(exp.externalName(), exp.externalNameLength());
-    UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, twoByte).c_str());
-    if (!utf8)
+    UniqueChars utf8Name(JS::CharsToNewUTF8CharsZ(nullptr, exp.name()).c_str());
+    if (!utf8Name)
         return false;
 
-    if (!e.writeCString(utf8.get()))
+    if (!e.writeCString(utf8Name.get()))
         return false;
 
     return true;

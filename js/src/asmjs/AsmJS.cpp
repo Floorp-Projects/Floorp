@@ -7411,8 +7411,11 @@ CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
 }
 
 static bool
-DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
+DynamicallyLinkModule(JSContext* cx, const CallArgs& args, Handle<WasmModuleObject*> moduleObj,
+                      MutableHandleObject exportObj)
 {
+    AsmJSModule& module = moduleObj->module().asAsmJS();
+
     HandleValue globalVal = args.get(0);
     HandleValue importVal = args.get(1);
     HandleValue bufferVal = args.get(2);
@@ -7469,7 +7472,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
             return false;
     }
 
-    return module.dynamicallyLink(cx, buffer, imports);
+    return module.dynamicallyLink(cx, moduleObj, buffer, imports, module.exportMap(), exportObj);
 }
 
 static bool
@@ -7579,18 +7582,13 @@ LinkAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     // asm.js spec and then patching the generated module to associate it with
     // the given heap (ArrayBuffer) and a new global data segment (the closure
     // state shared by the inner asm.js functions).
-    if (!DynamicallyLinkModule(cx, args, *module)) {
+    RootedObject exportObj(cx);
+    if (!DynamicallyLinkModule(cx, args, moduleObj, &exportObj)) {
         // Linking failed, so reparse the entire asm.js module from scratch to
         // get normal interpreted bytecode which we can simply Invoke. Very slow.
         RootedPropertyName name(cx, fun->name());
         return HandleDynamicLinkFailure(cx, args, *module, name);
     }
-
-    // Link-time validation succeed!
-
-    RootedObject exportObj(cx);
-    if (!module->createExportObject(cx, moduleObj, module->exportMap(), &exportObj))
-        return false;
 
     args.rval().set(ObjectValue(*exportObj));
     return true;
