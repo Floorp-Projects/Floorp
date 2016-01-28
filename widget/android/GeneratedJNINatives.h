@@ -274,6 +274,10 @@ class NativePanZoomController::Natives : public mozilla::jni::NativeImpl<NativeP
 public:
     static constexpr JNINativeMethod methods[] = {
 
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::AdjustScrollForSurfaceShift_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::AdjustScrollForSurfaceShift_t, Impl>
+                ::template Wrap<&Impl::AdjustScrollForSurfaceShift>),
+
         mozilla::jni::MakeNativeMethod<NativePanZoomController::DisposeNative_t>(
                 mozilla::jni::NativeStub<NativePanZoomController::DisposeNative_t, Impl>
                 ::template Wrap<&Impl::DisposeNative>),

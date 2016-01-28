@@ -184,6 +184,15 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         }
     }
 
+    @WrapForJNI(stubName = "AdjustScrollForSurfaceShift")
+    private native void adjustScrollForSurfaceShift(float aX, float aY);
+
+    @Override // PanZoomController
+    public ImmutableViewportMetrics adjustScrollForSurfaceShift(ImmutableViewportMetrics aMetrics, PointF aShift) {
+        adjustScrollForSurfaceShift(aShift.x, aShift.y);
+        return aMetrics;
+    }
+
     @WrapForJNI(allowMultithread = true)
     private void updateOverscrollVelocity(final float x, final float y) {
         if (mOverscroll != null) {

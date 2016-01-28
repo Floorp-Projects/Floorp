@@ -1442,6 +1442,9 @@ auto LayerView::updateZoomedView(mozilla::jni::Object::Param a0) -> void
 
 constexpr char NativePanZoomController::name[];
 
+constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::name[];
+constexpr char NativePanZoomController::AdjustScrollForSurfaceShift_t::signature[];
+
 constexpr char NativePanZoomController::Destroy_t::name[];
 constexpr char NativePanZoomController::Destroy_t::signature[];
 
