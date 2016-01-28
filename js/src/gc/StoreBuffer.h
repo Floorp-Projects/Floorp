@@ -11,6 +11,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ReentrancyGuard.h"
 
+#include <algorithm>
+
 #include "jsalloc.h"
 
 #include "ds/LifoAlloc.h"
@@ -288,6 +290,35 @@ class StoreBuffer
             return !(*this == other);
         }
 
+        // True if this SlotsEdge range overlaps with the other SlotsEdge range,
+        // false if they do not overlap.
+        bool overlaps(const SlotsEdge& other) const {
+            if (objectAndKind_ != other.objectAndKind_)
+                return false;
+
+            // Widen our range by one on each side so that we consider
+            // adjacent-but-not-actually-overlapping ranges as overlapping. This
+            // is particularly useful for coalescing a series of increasing or
+            // decreasing single index writes 0, 1, 2, ..., N into a SlotsEdge
+            // range of elements [0, N].
+            auto end = start_ + count_ + 1;
+            auto start = start_ - 1;
+
+            auto otherEnd = other.start_ + other.count_;
+            return (start <= other.start_ && other.start_ <= end) ||
+                   (start <= otherEnd && otherEnd <= end);
+        }
+
+        // Destructively make this SlotsEdge range the union of the other
+        // SlotsEdge range and this one. A precondition is that the ranges must
+        // overlap.
+        void merge(const SlotsEdge& other) {
+            MOZ_ASSERT(overlaps(other));
+            auto end = std::max(start_ + count_, other.start_ + other.count_);
+            start_ = std::min(start_, other.start_);
+            count_ = end - start_;
+        }
+
         bool maybeInRememberedSet(const Nursery& n) const {
             return !IsInsideNursery(reinterpret_cast<Cell*>(object()));
         }
@@ -404,7 +435,11 @@ class StoreBuffer
     void putCell(Cell** cellp) { put(bufferCell, CellPtrEdge(cellp)); }
     void unputCell(Cell** cellp) { unput(bufferCell, CellPtrEdge(cellp)); }
     void putSlot(NativeObject* obj, int kind, int32_t start, int32_t count) {
-        put(bufferSlot, SlotsEdge(obj, kind, start, count));
+        SlotsEdge edge(obj, kind, start, count);
+        if (bufferSlot.last_.overlaps(edge))
+            bufferSlot.last_.merge(edge);
+        else
+            put(bufferSlot, edge);
     }
     void putWholeCell(Cell* cell) {
         MOZ_ASSERT(cell->isTenured());
