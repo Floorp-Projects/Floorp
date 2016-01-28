@@ -20,7 +20,7 @@ enum pType {
 //      set NSPR_LOG_MODULES=negotiateauth:4
 //      set NSPR_LOG_FILE=negotiateauth.log
 //
-extern PRLogModuleInfo* gNegotiateLog;
+extern mozilla::LazyLogModule gNegotiateLog;
 
 #define LOG(args) MOZ_LOG(gNegotiateLog, mozilla::LogLevel::Debug, args)
 
