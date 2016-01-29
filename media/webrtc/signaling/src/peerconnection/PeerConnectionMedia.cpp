@@ -812,6 +812,8 @@ PeerConnectionMedia::SelfDestruct_m()
   mLocalSourceStreams.Clear();
   mRemoteSourceStreams.Clear();
 
+  mMainThread = nullptr;
+
   // Final self-destruct.
   this->Release();
 }
