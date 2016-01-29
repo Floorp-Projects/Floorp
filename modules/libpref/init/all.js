@@ -415,6 +415,7 @@ pref("media.getusermedia.browser.enabled", true);
 pref("media.peerconnection.video.min_bitrate", 0);
 pref("media.peerconnection.video.start_bitrate", 0);
 pref("media.peerconnection.video.max_bitrate", 0);
+pref("media.peerconnection.video.min_bitrate_estimate", 0);
 pref("media.navigator.audio.fake_frequency", 1000);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.simulcast", true);
