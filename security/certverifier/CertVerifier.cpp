@@ -22,7 +22,7 @@
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
-mozilla::LazyLogModule gCertVerifierLog("certverifier");
+PRLogModuleInfo* gCertVerifierLog = nullptr;
 
 namespace mozilla { namespace psm {
 
@@ -52,6 +52,9 @@ CertVerifier::~CertVerifier()
 void
 InitCertVerifierLog()
 {
+  if (!gCertVerifierLog) {
+    gCertVerifierLog = PR_NewLogModule("certverifier");
+  }
 }
 
 Result
