@@ -21,8 +21,8 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="4023297b16fdc46de3ddb04be4f3c575313d1cde"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="35dccb3127db8f39f20b985ad312d2cd44780669"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="dc72acb44096f012b6df6ee12efa192c5adc1e9a"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4eb8f37d2239ea7746462aa603f585116a9eaa92"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
@@ -35,7 +35,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="bef0632ed8ae0e14aa535549ee472748320198ed"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="2d5b6b107d77a31935aa4fe53ba67a8574372672"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="ffc05a232799fe8fcb3e47b7440b52b1fb4244c0"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="337e0ef5e40f02a1ae59b90db0548976c70a7226"/>
