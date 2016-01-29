@@ -1,0 +1,76 @@
+<html><head><title>Mocha</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../static/css/mocha.css" />
+<script src="../static/javascript/chai.js"></script>
+<script src="../static/javascript/mocha.js"></script>
+<link rel="stylesheet" href="../static/css/mocha-custom.css" />
+
+<script src="../static/javascript/DOMParser.js"></script>
+
+<script data-cover src="../lib/utilities.js"></script>
+<script data-cover src="../lib/domutils.js"></script>
+<script data-cover src="../lib/url.js"></script>
+<script data-cover src="../lib/html.js"></script>
+<script data-cover src="../lib/text.js"></script>
+<script data-cover src="../lib/dates.js"></script>
+<script data-cover src="../lib/isodate.js"></script>
+
+<script>
+var uncaughtError;
+
+window.addEventListener("error", function(error) {
+uncaughtError = error;
+});
+
+var consoleWarn = console.warn;
+var caughtWarnings = [];
+
+console.warn = function() {
+var args = Array.slice(arguments);
+caughtWarnings.push(args);
+consoleWarn.apply(console, args);
+};
+</script>
+
+<script>
+chai.config.includeStack = true;
+mocha.setup({ui: 'bdd', timeout: 10000});
+</script>
+
+
+<script src="../module-tests/dates-test.js"></script>
+<script src="../module-tests/domUtils-test.js"></script>
+<script src="../module-tests/html-test.js"></script>
+<script src="../module-tests/isodate-test.js"></script>
+<script src="../module-tests/text-test.js"></script>
+
+<script src="../module-tests/url-test.js"></script>
+
+<script src="../module-tests/utilities-test.js"></script>
+
+</head><body>
+<h3 class="capitalize">Microformats-shiv: module tests</h3>
+<div id="mocha"></div>
+</body>
+<script>
+describe("Uncaught Error Check", function() {
+it("should load the tests without errors", function() {
+chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
+});
+});
+
+describe("Unexpected Warnings Check", function() {
+it("should long only the warnings we expect", function() {
+chai.expect(caughtWarnings.length).to.eql(0);
+});
+});
+
+mocha.run(function () {
+var completeNode = document.createElement("p");
+completeNode.setAttribute("id", "complete");
+completeNode.appendChild(document.createTextNode("Complete"));
+document.getElementById("mocha").appendChild(completeNode);
+});
+
+</script>
+</body></html>
