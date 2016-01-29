@@ -33,7 +33,7 @@ var connect = Task.async(function*() {
     port: Prefs.chromeDebuggingPort
   });
   gClient = new DebuggerClient(transport);
-  gClient.connect(() => {
+  gClient.connect().then(() => {
     let addonID = getParameterByName("addonID");
 
     if (addonID) {
@@ -55,6 +55,7 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.performance.ui.show-platform-data", true);
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
   Services.prefs.setBoolPref("browser.dom.window.dump.enabled", true);
+  Services.prefs.setBoolPref("devtools.command-button-noautohide.enabled", true);
 }
 
 window.addEventListener("load", function() {

@@ -1,5 +1,0 @@
-{
-  "extends": [
-    "../../../testing/mochitest/browser.eslintrc"
-  ]
-}

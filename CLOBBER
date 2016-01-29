@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-to fix another bustage from bug 1069556 landing;
+Bug 1237983 - Investigate and remove the Bagheera Client implementation.
 
