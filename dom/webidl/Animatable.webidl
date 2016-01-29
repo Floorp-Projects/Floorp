@@ -10,8 +10,16 @@
  * liability, trademark and document use rules apply.
  */
 
+dictionary KeyframeAnimationOptions : KeyframeEffectOptions {
+  DOMString id = "";
+};
+
 [NoInterfaceObject]
 interface Animatable {
+  [Func="nsDocument::IsWebAnimationsEnabled", Throws]
+  Animation animate(object? frames,
+                    optional (unrestricted double or KeyframeAnimationOptions)
+                      options);
   [Func="nsDocument::IsWebAnimationsEnabled"]
   sequence<Animation> getAnimations();
 };
