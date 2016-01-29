@@ -3803,8 +3803,8 @@ ArrayBufferBuilder::getArrayBuffer(JSContext* aCx)
     }
     mMapPtr = nullptr;
 
-    // The memory-mapped contents will be released when obj been finalized(GCed
-    // or neutered).
+    // The memory-mapped contents will be released when the ArrayBuffer becomes
+    // detached or is GC'd.
     return obj;
   }
 
