@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 
+#include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnlyBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 
@@ -34,6 +35,18 @@ TimingParams::FromOptionsUnion(
   } else {
     MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
     return TimingParams(aOptions.GetAsKeyframeEffectOptions());
+  }
+}
+
+/* static */ TimingParams
+TimingParams::FromOptionsUnion(
+  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+{
+  if (aOptions.IsUnrestrictedDouble()) {
+    return TimingParams(aOptions.GetAsUnrestrictedDouble());
+  } else {
+    MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
+    return TimingParams(aOptions.GetAsKeyframeAnimationOptions());
   }
 }
 
