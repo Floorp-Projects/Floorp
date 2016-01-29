@@ -175,6 +175,9 @@ OptionsPanel.prototype = {
       if (this.toolbox.target.isMultiProcess && tool.id === "command-button-tilt") {
         continue;
       }
+      if (!tool.isTargetSupported(this.toolbox.target)) {
+        continue;
+      }
 
       enabledToolbarButtonsBox.appendChild(createCommandCheckbox(tool));
     }

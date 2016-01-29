@@ -17,7 +17,7 @@ function test() {
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(Task.async(function*(aType, aTraits) {
+  gClient.connect().then(Task.async(function*([aType, aTraits]) {
     is(aType, "browser",
       "Root actor should identify itself as a browser.");
     let tab = yield addTab(TAB1_URL);

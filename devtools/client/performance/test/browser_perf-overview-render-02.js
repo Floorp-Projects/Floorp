@@ -5,6 +5,7 @@
  * Tests that the overview graphs cannot be selected during recording
  * and that they're cleared upon rerecording.
  */
+const TIMES_TO_UPDATE = 2;
 function* spawnTest() {
   // This test seems to take a long time to cleanup on Ubuntu VMs.
   requestLongerTimeout(2);
@@ -51,7 +52,7 @@ function* spawnTest() {
   let updated = 0;
   OverviewView.on(EVENTS.OVERVIEW_RENDERED, () => updated++);
 
-  ok((yield waitUntil(() => updated > 10)),
+  ok((yield waitUntil(() => updated > TIMES_TO_UPDATE)),
     "The overviews were updated several times.");
 
   ok("selectionEnabled" in framerate,

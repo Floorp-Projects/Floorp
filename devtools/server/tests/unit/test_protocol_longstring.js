@@ -96,7 +96,7 @@ function run_test()
   }
 
 
-  client.connect((applicationType, traits) => {
+  client.connect().then(([applicationType, traits]) => {
     rootClient = RootFront(client);
 
     // Root actor has no children yet.

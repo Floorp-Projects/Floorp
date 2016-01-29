@@ -13,7 +13,7 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(function(aType, aTraits) {
+  gClient.connect().then(function([aType, aTraits]) {
     attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
       gTabClient = aTabClient;
       test_threadAttach(aReply.threadActor);
