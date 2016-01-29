@@ -58,6 +58,8 @@ const PREF_UNIFIED = PREF_BRANCH + "unified";
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
+const MESSAGE_TELEMETRY_THREAD_HANGS = "Telemetry:ChildThreadHangs";
+const MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS = "Telemetry:GetChildThreadHangs";
 const MESSAGE_TELEMETRY_USS = "Telemetry:USS";
 const MESSAGE_TELEMETRY_GET_CHILD_USS = "Telemetry:GetChildUSS";
 
@@ -542,6 +544,17 @@ this.TelemetrySession = Object.freeze({
     return Impl.requestChildPayloads();
   },
   /**
+   * Returns a promise that resolves to an array of thread hang stats from content processes, one entry per process.
+   * The structure of each entry is identical to that of "threadHangStats" in nsITelemetry.
+   * While thread hang stats are also part of the child payloads, this function is useful for cheaply getting this information,
+   * which is useful for realtime hang monitoring.
+   * Child processes that do not respond, or spawn/die during execution of this function are excluded from the result.
+   * @returns Promise
+   */
+  getChildThreadHangs: function() {
+    return Impl.getChildThreadHangs();
+  },
+  /**
    * Save the session state to a pending file.
    * Used only for testing purposes.
    */
@@ -646,6 +659,15 @@ var Impl = {
   // where source is a weak reference to the child process,
   // and payload is the telemetry payload from that child process.
   _childTelemetry: [],
+  // Thread hangs from child processes.
+  // Each element is in the format {source: <weak-ref>, payload: <object>},
+  // where source is a weak reference to the child process,
+  // and payload contains the thread hang stats from that child process.
+  _childThreadHangs: [],
+  // Array of the resolve functions of all the promises that are waiting for the child thread hang stats to arrive, used to resolve all those promises at once
+  _childThreadHangsResolveFunctions: [],
+  // Timeout function for child thread hang stats retrieval
+  _childThreadHangsTimeout: null,
   // Unique id that identifies this session so the server can cope with duplicate
   // submissions, orphaning and other oddities. The id is shared across subsessions.
   _sessionId: null,
@@ -1372,6 +1394,7 @@ var Impl = {
     this._hasXulWindowVisibleObserver = true;
 
     ppml.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
+    ppml.addMessageListener(MESSAGE_TELEMETRY_THREAD_HANGS, this);
     ppml.addMessageListener(MESSAGE_TELEMETRY_USS, this);
 
     // Delay full telemetry initialization to give the browser time to
@@ -1438,6 +1461,7 @@ var Impl = {
 
     Services.obs.addObserver(this, "content-child-shutdown", false);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD, this);
+    cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
     this.gatherStartupHistograms();
@@ -1470,6 +1494,7 @@ var Impl = {
     switch (message.name) {
     case MESSAGE_TELEMETRY_PAYLOAD:
     {
+      // In parent process, receive Telemetry payload from child
       let source = message.data.childUUID;
       delete message.data.childUUID;
 
@@ -1495,11 +1520,42 @@ var Impl = {
     }
     case MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD:
     {
+      // In child process, send the requested Telemetry payload
       this.sendContentProcessPing("saved-session");
+      break;
+    }
+    case MESSAGE_TELEMETRY_THREAD_HANGS:
+    {
+      // Accumulate child thread hang stats from this child
+      this._childThreadHangs.push(message.data);
+
+      // Check if we've got data from all the children, accounting for child processes dying
+      // if it happens before the last response is received and no new child processes are spawned at the exact same time
+      // If that happens, we can resolve the promise earlier rather than having to wait for the timeout to expire
+      // Basically, the number of replies is at most the number of messages sent out, this._childCount,
+      // and also at most the number of child processes that currently exist
+      if (this._childThreadHangs.length === Math.min(this._childCount, ppmm.childCount)) {
+        clearTimeout(this._childThreadHangsTimeout);
+
+        // Resolve all the promises that are waiting on these thread hang stats
+        // We resolve here instead of rejecting because
+        for (let resolve of this._childThreadHangsResolveFunctions) {
+          resolve(this._childThreadHangs);
+        }
+        this._childThreadHangsResolveFunctions = [];
+      }
+
+      break;
+    }
+    case MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS:
+    {
+      // In child process, send the requested child thread hangs
+      this.sendContentProcessThreadHangs();
       break;
     }
     case MESSAGE_TELEMETRY_USS:
     {
+      // In parent process, receive the USS report from the child
       if (this._totalMemoryTimeout && this._childrenToHearFrom.delete(message.data.id)) {
         this._totalMemory += message.data.bytes;
         if (this._childrenToHearFrom.size == 0) {
@@ -1517,6 +1573,7 @@ var Impl = {
     }
     case MESSAGE_TELEMETRY_GET_CHILD_USS:
     {
+      // In child process, send the requested USS report
       this.sendContentProcessUSS(message.data.id);
       break
     }
@@ -1551,6 +1608,15 @@ var Impl = {
     let payload = this.getSessionPayload(reason, isSubsession);
     payload.childUUID = this._processUUID;
     cpmm.sendAsyncMessage(MESSAGE_TELEMETRY_PAYLOAD, payload);
+  },
+
+  sendContentProcessThreadHangs: function sendContentProcessThreadHangs() {
+    this._log.trace("sendContentProcessThreadHangs");
+    let payload = {
+      childUUID: this._processUUID,
+      hangs: Telemetry.threadHangStats,
+    };
+    cpmm.sendAsyncMessage(MESSAGE_TELEMETRY_THREAD_HANGS, payload);
   },
 
    /**
@@ -1640,6 +1706,50 @@ var Impl = {
   requestChildPayloads: function() {
     this._log.trace("requestChildPayloads");
     ppmm.broadcastAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD, {});
+  },
+
+  getChildThreadHangs: function getChildThreadHangs() {
+    return new Promise((resolve) => {
+      // Return immediately if there are no child processes to get stats from
+      if (ppmm.childCount === 0) {
+        resolve([]);
+        return;
+      }
+
+      // Register our promise so it will be resolved when we receive the child thread hang stats on the parent process
+      // The resolve functions will all be called from "receiveMessage" when a MESSAGE_TELEMETRY_THREAD_HANGS message comes in
+      this._childThreadHangsResolveFunctions.push((threadHangStats) => {
+        let hangs = threadHangStats.map(child => child.hangs);
+        return resolve(hangs);
+      });
+
+      // If we (the parent) are not currently in the process of requesting child thread hangs, request them
+      // If we are, then the resolve function we registered above will receive the results without needing to request them again
+      if (this._childThreadHangsResolveFunctions.length === 1) {
+        // We have to cache the number of children we send messages to, in case the child count changes while waiting for messages to arrive
+        // This handles the case where the child count increases later on, in which case the new processes won't respond since we never sent messages to them
+        this._childCount = ppmm.childCount;
+
+        this._childThreadHangs = []; // Clear the child hangs
+        for (let i = 0; i < this._childCount; i++) {
+          // If a child dies at exactly while we're running this loop, the message sending will fail but we won't get an exception
+          // In this case, since we won't know this has happened, we will simply rely on the timeout to handle it
+          ppmm.getChildAt(i).sendAsyncMessage(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS);
+        }
+
+        // Set up a timeout in case one or more of the content processes never responds
+        this._childThreadHangsTimeout = setTimeout(() => {
+          // Resolve all the promises that are waiting on these thread hang stats
+          // We resolve here instead of rejecting because the purpose of this function is
+          // to retrieve the BHR stats from all processes that will give us stats
+          // As a result, one process failing simply means it doesn't get included in the result.
+          for (let resolve of this._childThreadHangsResolveFunctions) {
+            resolve(this._childThreadHangs);
+          }
+          this._childThreadHangsResolveFunctions = [];
+        }, 200);
+      }
+    });
   },
 
   gatherStartup: function gatherStartup() {

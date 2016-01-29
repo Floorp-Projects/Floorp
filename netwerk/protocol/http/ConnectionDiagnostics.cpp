@@ -42,65 +42,59 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
   mLogData.AppendPrintf("mNumActiveConns = %d\n", mNumActiveConns);
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
-  mCT.Enumerate(PrintDiagnosticsCB, this);
+  for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+
+    mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
+                          ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get());
+    mLogData.AppendPrintf("   AtActiveConnectionLimit = %d\n",
+                          AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
+    mLogData.AppendPrintf("   RestrictConnections = %d\n",
+                          RestrictConnections(ent));
+    mLogData.AppendPrintf("   Pending Q Length = %u\n",
+                          ent->mPendingQ.Length());
+    mLogData.AppendPrintf("   Active Conns Length = %u\n",
+                          ent->mActiveConns.Length());
+    mLogData.AppendPrintf("   Idle Conns Length = %u\n",
+                          ent->mIdleConns.Length());
+    mLogData.AppendPrintf("   Half Opens Length = %u\n",
+                          ent->mHalfOpens.Length());
+    mLogData.AppendPrintf("   Coalescing Keys Length = %u\n",
+                          ent->mCoalescingKeys.Length());
+    mLogData.AppendPrintf("   Spdy using = %d, tested = %d, preferred = %d\n",
+                          ent->mUsingSpdy, ent->mTestedSpdy, ent->mInPreferredHash);
+    mLogData.AppendPrintf("   pipelinestate = %d penalty = %d\n",
+                          ent->mPipelineState, ent->mPipeliningPenalty);
+
+    uint32_t i;
+    for (i = 0; i < nsAHttpTransaction::CLASS_MAX; ++i) {
+      mLogData.AppendPrintf("   pipeline per class penalty 0x%x %d\n",
+                            i, ent->mPipeliningClassPenalty[i]);
+    }
+    for (i = 0; i < ent->mActiveConns.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Active Connection #%u\n", i);
+      ent->mActiveConns[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mIdleConns.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Idle Connection #%u\n", i);
+      ent->mIdleConns[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mHalfOpens.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Half Open #%u\n", i);
+      ent->mHalfOpens[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mPendingQ.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Pending Transaction #%u\n", i);
+      ent->mPendingQ[i]->PrintDiagnostics(mLogData);
+    }
+    for (i = 0; i < ent->mCoalescingKeys.Length(); ++i) {
+      mLogData.AppendPrintf("   :: Coalescing Key #%u %s\n",
+                            i, ent->mCoalescingKeys[i].get());
+    }
+  }
 
   consoleService->LogStringMessage(NS_ConvertUTF8toUTF16(mLogData).Data());
   mLogData.Truncate();
-}
-
-PLDHashOperator
-nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
-                                        nsAutoPtr<nsConnectionEntry> &ent,
-                                        void *closure)
-{
-  nsHttpConnectionMgr *self = static_cast<nsHttpConnectionMgr *>(closure);
-  uint32_t i;
-
-  self->mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
-                              ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get());
-  self->mLogData.AppendPrintf("   AtActiveConnectionLimit = %d\n",
-                              self->AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
-  self->mLogData.AppendPrintf("   RestrictConnections = %d\n",
-                              self->RestrictConnections(ent));
-  self->mLogData.AppendPrintf("   Pending Q Length = %u\n",
-                              ent->mPendingQ.Length());
-  self->mLogData.AppendPrintf("   Active Conns Length = %u\n",
-                              ent->mActiveConns.Length());
-  self->mLogData.AppendPrintf("   Idle Conns Length = %u\n",
-                              ent->mIdleConns.Length());
-  self->mLogData.AppendPrintf("   Half Opens Length = %u\n",
-                              ent->mHalfOpens.Length());
-  self->mLogData.AppendPrintf("   Coalescing Keys Length = %u\n",
-                              ent->mCoalescingKeys.Length());
-  self->mLogData.AppendPrintf("   Spdy using = %d, tested = %d, preferred = %d\n",
-                              ent->mUsingSpdy, ent->mTestedSpdy, ent->mInPreferredHash);
-  self->mLogData.AppendPrintf("   pipelinestate = %d penalty = %d\n",
-                              ent->mPipelineState, ent->mPipeliningPenalty);
-  for (i = 0; i < nsAHttpTransaction::CLASS_MAX; ++i) {
-    self->mLogData.AppendPrintf("   pipeline per class penalty 0x%x %d\n",
-                                i, ent->mPipeliningClassPenalty[i]);
-  }
-  for (i = 0; i < ent->mActiveConns.Length(); ++i) {
-    self->mLogData.AppendPrintf("   :: Active Connection #%u\n", i);
-    ent->mActiveConns[i]->PrintDiagnostics(self->mLogData);
-  }
-  for (i = 0; i < ent->mIdleConns.Length(); ++i) {
-    self->mLogData.AppendPrintf("   :: Idle Connection #%u\n", i);
-    ent->mIdleConns[i]->PrintDiagnostics(self->mLogData);
-  }
-  for (i = 0; i < ent->mHalfOpens.Length(); ++i) {
-    self->mLogData.AppendPrintf("   :: Half Open #%u\n", i);
-    ent->mHalfOpens[i]->PrintDiagnostics(self->mLogData);
-  }
-  for (i = 0; i < ent->mPendingQ.Length(); ++i) {
-    self->mLogData.AppendPrintf("   :: Pending Transaction #%u\n", i);
-    ent->mPendingQ[i]->PrintDiagnostics(self->mLogData);
-  }
-  for (i = 0; i < ent->mCoalescingKeys.Length(); ++i) {
-    self->mLogData.AppendPrintf("   :: Coalescing Key #%u %s\n",
-                                i, ent->mCoalescingKeys[i].get());
-  }
-  return PL_DHASH_NEXT;
 }
 
 void

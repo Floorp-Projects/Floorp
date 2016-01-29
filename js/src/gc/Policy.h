@@ -15,7 +15,7 @@
 // Forward declare the types we're defining policies for. This file is
 // included in all places that define GC things, so the real definitions
 // will be available when we do template expansion, allowing for use of
-// static members in the underlying types. We cannot, however, user
+// static members in the underlying types. We cannot, however, use
 // static_assert to verify relations between types.
 namespace js {
 class AccessorShape;

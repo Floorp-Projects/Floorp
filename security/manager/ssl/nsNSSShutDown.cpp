@@ -7,7 +7,7 @@
 
 using namespace mozilla;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern LazyLogModule gPIPNSSLog;
 
 struct ObjectHashEntry : PLDHashEntryHdr {
   nsNSSShutDownObject *obj;

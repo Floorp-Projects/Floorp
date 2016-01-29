@@ -18,7 +18,7 @@ async protocol PDataChannel
 parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
-  __delete__();
+  async __delete__();
 };
 
 } // namespace net

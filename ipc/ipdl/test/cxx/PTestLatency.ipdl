@@ -6,19 +6,19 @@ namespace _ipdltest {
 intr protocol PTestLatency {
 
 child:
-    __delete__();
-    Ping();
-    Ping5();
+    async __delete__();
+    async Ping();
+    async Ping5();
     intr Rpc();
-    Spam();
+    async Spam();
     intr Synchro();
-    CompressedSpam(uint32_t seqno) compress;
+    async CompressedSpam(uint32_t seqno) compress;
     intr Synchro2() returns (uint32_t lastSeqno,
                             uint32_t numMessagesDispatched);
 
 parent:
-    Pong();
-    Pong5();
+    async Pong();
+    async Pong5();
 
 state START:
     // if the timing resolution is too low, abort the test

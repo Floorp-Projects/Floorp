@@ -215,7 +215,9 @@ private:
   void TraceNativeGrayRoots(JSTracer* aTracer);
 
   void AfterProcessMicrotask(uint32_t aRecursionDepth);
+public:
   void ProcessStableStateQueue();
+private:
   void ProcessMetastableStateQueue(uint32_t aRecursionDepth);
 
 public:

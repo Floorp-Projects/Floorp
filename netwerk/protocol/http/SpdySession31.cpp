@@ -93,45 +93,25 @@ SpdySession31::SpdySession31(nsISocketTransport *aSocketTransport)
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
 }
 
-PLDHashOperator
-SpdySession31::ShutdownEnumerator(nsAHttpTransaction *key,
-                                  nsAutoPtr<SpdyStream31> &stream,
-                                  void *closure)
+void
+SpdySession31::Shutdown()
 {
-  SpdySession31 *self = static_cast<SpdySession31 *>(closure);
+  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<SpdyStream31>& stream = iter.Data();
 
-  // On a clean server hangup the server sets the GoAwayID to be the ID of
-  // the last transaction it processed. If the ID of stream in the
-  // local stream is greater than that it can safely be restarted because the
-  // server guarantees it was not partially processed. Streams that have not
-  // registered an ID haven't actually been sent yet so they can always be
-  // restarted.
-  if (self->mCleanShutdown &&
-      (stream->StreamID() > self->mGoAwayID || !stream->HasRegisteredID()))
-    self->CloseStream(stream, NS_ERROR_NET_RESET); // can be restarted
-  else
-    self->CloseStream(stream, NS_ERROR_ABORT);
-
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-SpdySession31::GoAwayEnumerator(nsAHttpTransaction *key,
-                                nsAutoPtr<SpdyStream31> &stream,
-                                void *closure)
-{
-  SpdySession31 *self = static_cast<SpdySession31 *>(closure);
-
-  // these streams were not processed by the server and can be restarted.
-  // Do that after the enumerator completes to avoid the risk of
-  // a restart event re-entrantly modifying this hash. Be sure not to restart
-  // a pushed (even numbered) stream
-  if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
-      !stream->HasRegisteredID()) {
-    self->mGoAwayStreamsToRestart.Push(stream);
+    // On a clean server hangup the server sets the GoAwayID to be the ID of
+    // the last transaction it processed. If the ID of stream in the
+    // local stream is greater than that it can safely be restarted because the
+    // server guarantees it was not partially processed. Streams that have not
+    // registered an ID haven't actually been sent yet so they can always be
+    // restarted.
+    if (mCleanShutdown &&
+        (stream->StreamID() > mGoAwayID || !stream->HasRegisteredID())) {
+      CloseStream(stream, NS_ERROR_NET_RESET); // can be restarted
+    } else {
+      CloseStream(stream, NS_ERROR_ABORT);
+    }
   }
-
-  return PL_DHASH_NEXT;
 }
 
 SpdySession31::~SpdySession31()
@@ -142,7 +122,8 @@ SpdySession31::~SpdySession31()
   inflateEnd(&mDownstreamZlib);
   deflateEnd(&mUpstreamZlib);
 
-  mStreamTransactionHash.Enumerate(ShutdownEnumerator, this);
+  Shutdown();
+
   Telemetry::Accumulate(Telemetry::SPDY_PARALLEL_STREAMS, mConcurrentHighWater);
   Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN, (mNextStreamID - 1) / 2);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
@@ -1379,16 +1360,6 @@ SpdySession31::HandleRstStream(SpdySession31 *self)
   return NS_OK;
 }
 
-PLDHashOperator
-SpdySession31::UpdateServerRwinEnumerator(nsAHttpTransaction *key,
-                                            nsAutoPtr<SpdyStream31> &stream,
-                                            void *closure)
-{
-  int32_t delta = *(static_cast<int32_t *>(closure));
-  stream->UpdateRemoteWindow(delta);
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 SpdySession31::HandleSettings(SpdySession31 *self)
 {
@@ -1440,8 +1411,11 @@ SpdySession31::HandleSettings(SpdySession31 *self)
         // do not use SETTINGS to adjust the session window.
 
         // we need to add the delta to all open streams (delta can be negative)
-        self->mStreamTransactionHash.Enumerate(UpdateServerRwinEnumerator,
-                                               &delta);
+        for (auto iter = self->mStreamTransactionHash.Iter();
+             !iter.Done();
+             iter.Next()) {
+          iter.Data()->UpdateRemoteWindow(delta);
+        }
       }
       break;
 
@@ -1515,9 +1489,22 @@ SpdySession31::HandleGoAway(SpdySession31 *self)
   self->mCleanShutdown = true;
 
   // Find streams greater than the last-good ID and mark them for deletion
-  // in the mGoAwayStreamsToRestart queue with the GoAwayEnumerator. The
-  // underlying transaction can be restarted.
-  self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
+  // in the mGoAwayStreamsToRestart queue. The underlying transaction can be
+  // restarted.
+  for (auto iter = self->mStreamTransactionHash.Iter();
+       !iter.Done();
+       iter.Next()) {
+
+    // These streams were not processed by the server and can be restarted. Do
+    // that after the enumerator completes to avoid the risk of a restart event
+    // re-entrantly modifying this hash. Be sure not to restart a pushed (even
+    // numbered) stream.
+    nsAutoPtr<SpdyStream31>& stream = iter.Data();
+    if ((stream->StreamID() > self->mGoAwayID && (stream->StreamID() & 1)) ||
+        !stream->HasRegisteredID()) {
+      self->mGoAwayStreamsToRestart.Push(stream);
+    }
+  }
 
   // Process the streams marked for deletion and restart.
   size_t size = self->mGoAwayStreamsToRestart.GetSize();
@@ -1631,22 +1618,6 @@ SpdySession31::HandleHeaders(SpdySession31 *self)
   return rv;
 }
 
-PLDHashOperator
-SpdySession31::RestartBlockedOnRwinEnumerator(nsAHttpTransaction *key,
-                                              nsAutoPtr<SpdyStream31> &stream,
-                                              void *closure)
-{
-  SpdySession31 *self = static_cast<SpdySession31 *>(closure);
-  MOZ_ASSERT(self->mRemoteSessionWindow > 0);
-
-  if (!stream->BlockedOnRwin() || stream->RemoteWindow() <= 0)
-    return PL_DHASH_NEXT;
-
-  self->mReadyForWrite.Push(stream);
-  self->SetWriteCallbacks();
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 SpdySession31::HandleWindowUpdate(SpdySession31 *self)
 {
@@ -1690,7 +1661,19 @@ SpdySession31::HandleWindowUpdate(SpdySession31 *self)
     if ((oldRemoteWindow <= 0) && (self->mRemoteSessionWindow > 0)) {
       LOG3(("SpdySession31::HandleWindowUpdate %p restart session window\n",
             self));
-      self->mStreamTransactionHash.Enumerate(RestartBlockedOnRwinEnumerator, self);
+      for (auto iter = self->mStreamTransactionHash.Iter();
+           !iter.Done();
+           iter.Next()) {
+        MOZ_ASSERT(self->mRemoteSessionWindow > 0);
+
+        nsAutoPtr<SpdyStream31>& stream = iter.Data();
+        if (!stream->BlockedOnRwin() || stream->RemoteWindow() <= 0) {
+          continue;
+        }
+
+        self->mReadyForWrite.Push(stream);
+        self->SetWriteCallbacks();
+      }
     }
   }
 
@@ -2377,7 +2360,8 @@ SpdySession31::Close(nsresult aReason)
 
   mClosed = true;
 
-  mStreamTransactionHash.Enumerate(ShutdownEnumerator, this);
+  Shutdown();
+
   mStreamIDHash.Clear();
   mStreamTransactionHash.Clear();
 
@@ -2914,22 +2898,6 @@ SpdySession31::Http1xTransactionCount()
   return 0;
 }
 
-// used as an enumerator by TakeSubTransactions()
-static PLDHashOperator
-  TakeStream(nsAHttpTransaction *key,
-             nsAutoPtr<SpdyStream31> &stream,
-             void *closure)
-{
-  nsTArray<RefPtr<nsAHttpTransaction> > *list =
-    static_cast<nsTArray<RefPtr<nsAHttpTransaction> > *>(closure);
-
-  list->AppendElement(key);
-
-  // removing the stream from the hash will delete the stream
-  // and drop the transaction reference the hash held
-  return PL_DHASH_REMOVE;
-}
-
 nsresult
 SpdySession31::TakeSubTransactions(
   nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
@@ -2944,7 +2912,13 @@ SpdySession31::TakeSubTransactions(
 
   LOG3(("   taking %d\n", mStreamTransactionHash.Count()));
 
-  mStreamTransactionHash.Enumerate(TakeStream, &outTransactions);
+  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
+    outTransactions.AppendElement(iter.Key());
+
+    // Removing the stream from the hash will delete the stream and drop the
+    // transaction reference the hash held.
+    iter.Remove();
+  }
   return NS_OK;
 }
 

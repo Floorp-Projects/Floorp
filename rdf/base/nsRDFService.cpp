@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kIRDFIntIID,         NS_IRDFINT_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-static PRLogModuleInfo* gLog = nullptr;
+static LazyLogModule gLog("nsRDFService");
 
 class BlobImpl;
 
@@ -747,9 +747,6 @@ RDFServiceImpl::Init()
     mDefaultResourceFactory = do_GetClassObject(kRDFDefaultResourceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
-
-    if (! gLog)
-        gLog = PR_NewLogModule("nsRDFService");
 
     return NS_OK;
 }

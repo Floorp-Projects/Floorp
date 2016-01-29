@@ -78,14 +78,14 @@ protocol PBackgroundIDBCursor
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  Continue(CursorRequestParams params, Key key);
+  async Continue(CursorRequestParams params, Key key);
 
 child:
-  __delete__();
+  async __delete__();
 
-  Response(CursorResponse response);
+  async Response(CursorResponse response);
 };
 
 } // namespace indexedDB

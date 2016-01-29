@@ -51,8 +51,8 @@ both:
 
     async PBlob(BlobConstructorParams params);
 
-    AsyncMessage(nsString aMessage, ClonedMessageData aData,
-                 CpowEntry[] aCpows, Principal aPrincipal);
+    async AsyncMessage(nsString aMessage, ClonedMessageData aData,
+                       CpowEntry[] aCpows, Principal aPrincipal);
 };
 
 }

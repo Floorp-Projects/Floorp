@@ -1207,32 +1207,6 @@ bool OriginPatternMatches(const nsACString& aOriginSuffix, const OriginAttribute
   return aPattern.Matches(oa);
 }
 
-PLDHashOperator
-ForgetUpdatesForOrigin(const nsACString& aMapping,
-                      nsAutoPtr<DOMStorageDBThread::DBOperation>& aPendingTask,
-                      void* aArg)
-{
-  DOMStorageDBThread::DBOperation* newOp = static_cast<DOMStorageDBThread::DBOperation*>(aArg);
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClear &&
-      (aPendingTask->OriginNoSuffix() != newOp->OriginNoSuffix() ||
-       aPendingTask->OriginSuffix() != newOp->OriginSuffix())) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClearMatchingOrigin &&
-      !StringBeginsWith(aPendingTask->OriginNoSuffix(), newOp->Origin())) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (newOp->Type() == DOMStorageDBThread::DBOperation::opClearMatchingOriginAttributes &&
-      !OriginPatternMatches(aPendingTask->OriginSuffix(), newOp->OriginPattern())) {
-    return PL_DHASH_NEXT;
-  }
-
-  return PL_DHASH_REMOVE;
-}
-
 } // namespace
 
 bool
@@ -1304,7 +1278,28 @@ DOMStorageDBThread::PendingOperations::Add(DOMStorageDBThread::DBOperation* aOpe
     // We do this as an optimization as well as a must based on the logic,
     // if we would not delete the update tasks, changes would have been stored
     // to the database after clear operations have been executed.
-    mUpdates.Enumerate(ForgetUpdatesForOrigin, aOperation);
+    for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
+      nsAutoPtr<DBOperation>& pendingTask = iter.Data();
+
+      if (aOperation->Type() == DBOperation::opClear &&
+          (pendingTask->OriginNoSuffix() != aOperation->OriginNoSuffix() ||
+           pendingTask->OriginSuffix() != aOperation->OriginSuffix())) {
+        continue;
+      }
+
+      if (aOperation->Type() == DBOperation::opClearMatchingOrigin &&
+          !StringBeginsWith(pendingTask->OriginNoSuffix(), aOperation->Origin())) {
+        continue;
+      }
+
+      if (aOperation->Type() == DBOperation::opClearMatchingOriginAttributes &&
+          !OriginPatternMatches(pendingTask->OriginSuffix(), aOperation->OriginPattern())) {
+        continue;
+      }
+
+      iter.Remove();
+    }
+
     mClears.Put(aOperation->Target(), aOperation);
     break;
 
@@ -1321,20 +1316,6 @@ DOMStorageDBThread::PendingOperations::Add(DOMStorageDBThread::DBOperation* aOpe
   }
 }
 
-namespace {
-
-PLDHashOperator
-CollectTasks(const nsACString& aMapping, nsAutoPtr<DOMStorageDBThread::DBOperation>& aOperation, void* aArg)
-{
-  nsTArray<nsAutoPtr<DOMStorageDBThread::DBOperation> >* tasks =
-    static_cast<nsTArray<nsAutoPtr<DOMStorageDBThread::DBOperation> >*>(aArg);
-
-  tasks->AppendElement(aOperation.forget());
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 bool
 DOMStorageDBThread::PendingOperations::Prepare()
 {
@@ -1345,10 +1326,14 @@ DOMStorageDBThread::PendingOperations::Prepare()
   // scheduled, we drop all updates matching that scope. So,
   // all scope-related update operations we have here now were
   // scheduled after the clear operations.
-  mClears.Enumerate(CollectTasks, &mExecList);
+  for (auto iter = mClears.Iter(); !iter.Done(); iter.Next()) {
+    mExecList.AppendElement(iter.Data().forget());
+  }
   mClears.Clear();
 
-  mUpdates.Enumerate(CollectTasks, &mExecList);
+  for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
+    mExecList.AppendElement(iter.Data().forget());
+  }
   mUpdates.Clear();
 
   return !!mExecList.Length();

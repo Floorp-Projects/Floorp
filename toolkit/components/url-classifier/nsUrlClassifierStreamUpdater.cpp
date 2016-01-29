@@ -27,7 +27,7 @@ static const char* gQuitApplicationMessage = "quit-application";
 #undef LOG
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
-static const PRLogModuleInfo *gUrlClassifierStreamUpdaterLog = nullptr;
+static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog("UrlClassifierStreamUpdater");
 #define LOG(args) MOZ_LOG(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug, args)
 
 // This class does absolutely nothing, except pass requests onto the DBService.
@@ -40,8 +40,6 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
   : mIsUpdating(false), mInitialized(false), mDownloadError(false),
     mBeganStream(false), mChannel(nullptr)
 {
-  if (!gUrlClassifierStreamUpdaterLog)
-    gUrlClassifierStreamUpdaterLog = PR_NewLogModule("UrlClassifierStreamUpdater");
   LOG(("nsUrlClassifierStreamUpdater init [this=%p]", this));
 }
 

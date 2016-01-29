@@ -226,7 +226,7 @@ protected:
     nsCOMPtr<nsIURI> mDocumentURL;
 
 private:
-    static PRLogModuleInfo* gLog;
+    static mozilla::LazyLogModule gLog;
 };
 
 int32_t         RDFContentSinkImpl::gRefCnt = 0;
@@ -239,7 +239,7 @@ nsIRDFResource* RDFContentSinkImpl::kRDF_Bag;
 nsIRDFResource* RDFContentSinkImpl::kRDF_Seq;
 nsIRDFResource* RDFContentSinkImpl::kRDF_nextVal;
 
-PRLogModuleInfo* RDFContentSinkImpl::gLog;
+mozilla::LazyLogModule RDFContentSinkImpl::gLog("nsRDFContentSink");
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -290,9 +290,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         NS_RegisterStaticAtoms(rdf_atoms);
     }
-
-    if (! gLog)
-        gLog = PR_NewLogModule("nsRDFContentSink");
 }
 
 

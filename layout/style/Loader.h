@@ -441,11 +441,6 @@ public:
 private:
   friend class SheetLoadData;
 
-  static PLDHashOperator
-  RemoveEntriesWithURI(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey,
-                       RefPtr<CSSStyleSheet>& aSheet,
-                       void* aUserData);
-
   // Note: null aSourcePrincipal indicates that the content policy and
   // CheckLoadURI checks should be skipped.
   // aIsPreload indicates whether the html parser preloads that

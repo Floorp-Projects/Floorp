@@ -1,11 +1,12 @@
 protocol race_ViolateSameDirection {
 child:
-    Msg1();
-    Msg1_();
-    __delete__(); suppressUndeleteableError();
+    async Msg1();
+    async Msg1_();
+    async __delete__();
+    async suppressUndeleteableError();
 parent:
-    Msg2();
-    Msg2_();
+    async Msg2();
+    async Msg2_();
 
     // *** ERROR: state S7 doesn't have all-same-direction
 start state _:

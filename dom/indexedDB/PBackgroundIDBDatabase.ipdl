@@ -53,31 +53,31 @@ sync protocol PBackgroundIDBDatabase
   manages PBackgroundMutableFile;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  Blocked();
+  async Blocked();
 
-  Close();
+  async Close();
 
-  PBackgroundIDBDatabaseFile(PBlob blob);
+  async PBackgroundIDBDatabaseFile(PBlob blob);
 
-  PBackgroundIDBDatabaseRequest(DatabaseRequestParams params);
+  async PBackgroundIDBDatabaseRequest(DatabaseRequestParams params);
 
-  PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);
+  async PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);
 
 child:
-  __delete__();
+  async __delete__();
 
-  VersionChange(uint64_t oldVersion, NullableVersion newVersion);
+  async VersionChange(uint64_t oldVersion, NullableVersion newVersion);
 
-  Invalidate();
+  async Invalidate();
 
-  PBackgroundIDBVersionChangeTransaction(uint64_t currentVersion,
-                                         uint64_t requestedVersion,
-                                         int64_t nextObjectStoreId,
-                                         int64_t nextIndexId);
+  async PBackgroundIDBVersionChangeTransaction(uint64_t currentVersion,
+                                               uint64_t requestedVersion,
+                                               int64_t nextObjectStoreId,
+                                               int64_t nextIndexId);
 
-  PBackgroundMutableFile(nsString name, nsString type);
+  async PBackgroundMutableFile(nsString name, nsString type);
 };
 
 } // namespace indexedDB

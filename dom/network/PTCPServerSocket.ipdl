@@ -19,12 +19,12 @@ protocol PTCPServerSocket
   manager PNecko;
 
 parent:
-  Close();
-  RequestDelete();
+  async Close();
+  async RequestDelete();
 
 child:
-  CallbackAccept(PTCPSocket socket);
-  __delete__();
+  async CallbackAccept(PTCPSocket socket);
+  async __delete__();
 };
 
 } // namespace net

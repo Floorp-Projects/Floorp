@@ -7,12 +7,12 @@ namespace _ipdltest {
 
 protocol PTestEndpointOpens {
 child:
-  Start();
+  async Start();
 
 parent:
-  StartSubprotocol(Endpoint<PTestEndpointOpensOpenedParent> endpoint);
+  async StartSubprotocol(Endpoint<PTestEndpointOpensOpenedParent> endpoint);
 
-  __delete__();
+  async __delete__();
 };
 
 } // namespace mozilla

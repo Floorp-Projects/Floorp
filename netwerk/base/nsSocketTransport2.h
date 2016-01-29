@@ -187,6 +187,7 @@ private:
 
     enum {
         STATE_CLOSED,
+        STATE_IDLE,
         STATE_RESOLVING,
         STATE_CONNECTING,
         STATE_TRANSFERRING
