@@ -18,7 +18,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNotifyAddrListener_Linux.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Logging.h"
 
 #include "mozilla/Services.h"
@@ -158,9 +157,6 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
     int attr_len;
     const struct ifaddrmsg* newifam;
 
-    // inspired by check_pf.c.
-    nsAutoPtr<char> addr;
-    nsAutoPtr<char> localaddr;
 
     ssize_t rc = EINTR_RETRY(recv(aNetlinkSocket, buffer, sizeof(buffer), 0));
     if (rc < 0) {
@@ -174,6 +170,10 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
 
     for (; NLMSG_OK(nlh, netlink_bytes);
          nlh = NLMSG_NEXT(nlh, netlink_bytes)) {
+        char prefixaddr[INET6_ADDRSTRLEN];
+        char localaddr[INET6_ADDRSTRLEN];
+        char* addr = nullptr;
+        prefixaddr[0] = localaddr[0] = '\0';
 
         if (NLMSG_DONE == nlh->nlmsg_type) {
             break;
@@ -194,34 +194,31 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             if (attr->rta_type == IFA_ADDRESS) {
                 if (newifam->ifa_family == AF_INET) {
                     struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                    addr = new char[INET_ADDRSTRLEN];
-                    inet_ntop(AF_INET, in, addr.get(), INET_ADDRSTRLEN);
+                    inet_ntop(AF_INET, in, prefixaddr, INET_ADDRSTRLEN);
                 } else {
                     struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                    addr = new char[INET6_ADDRSTRLEN];
-                    inet_ntop(AF_INET6, in, addr.get(), INET6_ADDRSTRLEN);
+                    inet_ntop(AF_INET6, in, prefixaddr, INET6_ADDRSTRLEN);
                 }
             } else if (attr->rta_type == IFA_LOCAL) {
                 if (newifam->ifa_family == AF_INET) {
                     struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                    localaddr = new char[INET_ADDRSTRLEN];
-                    inet_ntop(AF_INET, in, localaddr.get(), INET_ADDRSTRLEN);
+                    inet_ntop(AF_INET, in, localaddr, INET_ADDRSTRLEN);
                 } else {
                     struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                    localaddr = new char[INET6_ADDRSTRLEN];
-                    inet_ntop(AF_INET6, in, localaddr.get(), INET6_ADDRSTRLEN);
+                    inet_ntop(AF_INET6, in, localaddr, INET6_ADDRSTRLEN);
                 }
             }
         }
-        if (localaddr) {
+        if (localaddr[0]) {
             addr = localaddr;
-        }
-        if (!addr) {
+        } else if (prefixaddr[0]) {
+            addr = prefixaddr;
+        } else {
             continue;
         }
         if (nlh->nlmsg_type == RTM_NEWADDR) {
             LOG(("nsNotifyAddrListener::OnNetlinkMessage: a new address "
-                 "- %s.", addr.get()));
+                 "- %s.", addr));
             struct ifaddrmsg* ifam;
             nsCString addrStr;
             addrStr.Assign(addr);
@@ -242,16 +239,12 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             }
         } else {
             LOG(("nsNotifyAddrListener::OnNetlinkMessage: an address "
-                 "has been deleted - %s.", addr.get()));
+                 "has been deleted - %s.", addr));
             networkChange = true;
             nsCString addrStr;
             addrStr.Assign(addr);
             mAddressInfo.Remove(addrStr);
         }
-
-        // clean it up.
-        localaddr = nullptr;
-        addr = nullptr;
     }
 
     if (networkChange && mAllowChangedEvent) {
