@@ -82,7 +82,7 @@ static const bool FALSE_START_REQUIRE_NPN_DEFAULT = false;
 
 } // unnamed namespace
 
-extern LazyLogModule gPIPNSSLog;
+extern PRLogModuleInfo* gPIPNSSLog;
 
 nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
   : mFd(nullptr),

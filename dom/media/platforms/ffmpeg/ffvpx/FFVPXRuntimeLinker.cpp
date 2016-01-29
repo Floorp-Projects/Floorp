@@ -43,6 +43,7 @@ FFVPXRuntimeLinker::Init()
   }
 
   MOZ_ASSERT(NS_IsMainThread());
+  sLinkStatus = LinkStatus_FAILED;
 
   // We retrieve the path of the XUL library as this is where mozavcodec and
   // mozavutil libs are located.
@@ -85,8 +86,6 @@ FFVPXRuntimeLinker::Init()
     sLinkStatus = LinkStatus_SUCCEEDED;
     return true;
   }
-  sLinkStatus = LinkStatus_FAILED;
-
   return false;
 }
 

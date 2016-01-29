@@ -46,7 +46,7 @@ using mozilla::dom::ContentChild;
 // this enables LogLevel::Debug level information and places all output in
 // the file offlineupdate.log
 //
-extern mozilla::LazyLogModule gOfflineCacheUpdateLog;
+extern PRLogModuleInfo *gOfflineCacheUpdateLog;
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gOfflineCacheUpdateLog, mozilla::LogLevel::Debug, args)

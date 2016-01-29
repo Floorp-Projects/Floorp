@@ -19,7 +19,7 @@
 #include "nsIScriptError.h"
 #include "jswrapper.h"
 
-extern mozilla::LazyLogModule MCD;
+extern PRLogModuleInfo *MCD;
 using mozilla::AutoSafeJSContext;
 
 //*****************************************************************************

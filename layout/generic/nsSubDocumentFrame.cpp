@@ -1270,7 +1270,7 @@ nsSubDocumentFrame::ObtainIntrinsicSizeFrame()
         if (scrollable) {
           nsIFrame* scrolled = scrollable->GetScrolledFrame();
           if (scrolled) {
-            subDocRoot = scrolled->GetFirstPrincipalChild();
+            subDocRoot = scrolled->PrincipalChildList().FirstChild();
           }
         }
       }

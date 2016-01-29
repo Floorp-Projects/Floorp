@@ -78,7 +78,7 @@ RubyColumn::Iterator::SkipUntilExistingFrame()
 
 RubySegmentEnumerator::RubySegmentEnumerator(nsRubyFrame* aRubyFrame)
 {
-  nsIFrame* frame = aRubyFrame->GetFirstPrincipalChild();
+  nsIFrame* frame = aRubyFrame->PrincipalChildList().FirstChild();
   MOZ_ASSERT(!frame ||
              frame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
   mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
@@ -103,7 +103,7 @@ RubyColumnEnumerator::RubyColumnEnumerator(
   const uint32_t rtcCount = aTextContainers.Length();
   mFrames.SetCapacity(rtcCount + 1);
 
-  nsIFrame* rbFrame = aBaseContainer->GetFirstPrincipalChild();
+  nsIFrame* rbFrame = aBaseContainer->PrincipalChildList().FirstChild();
   MOZ_ASSERT(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
   mFrames.AppendElement(static_cast<nsRubyContentFrame*>(rbFrame));
   for (uint32_t i = 0; i < rtcCount; i++) {
@@ -111,7 +111,7 @@ RubyColumnEnumerator::RubyColumnEnumerator(
     // If the container is for span, leave a nullptr here.
     // Spans do not take part in pairing.
     nsIFrame* rtFrame = !container->IsSpanContainer() ?
-      container->GetFirstPrincipalChild() : nullptr;
+      container->PrincipalChildList().FirstChild() : nullptr;
     MOZ_ASSERT(!rtFrame || rtFrame->GetType() == nsGkAtoms::rubyTextFrame);
     mFrames.AppendElement(static_cast<nsRubyContentFrame*>(rtFrame));
   }

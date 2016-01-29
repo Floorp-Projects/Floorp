@@ -90,7 +90,7 @@ CodeGeneratorARM::visitCompare(LCompare* comp)
     else
         masm.ma_cmp(ToRegister(left), ToOperand(right));
     masm.ma_mov(Imm32(0), ToRegister(def));
-    masm.ma_mov(Imm32(1), ToRegister(def), LeaveCC, cond);
+    masm.ma_mov(Imm32(1), ToRegister(def), cond);
 }
 
 void
@@ -1583,8 +1583,8 @@ CodeGeneratorARM::visitNotD(LNotD* ins)
     } else {
         masm.as_vmrs(pc);
         masm.ma_mov(Imm32(0), dest);
-        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Equal);
-        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Overflow);
+        masm.ma_mov(Imm32(1), dest, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, Assembler::Overflow);
     }
 }
 
@@ -1611,8 +1611,8 @@ CodeGeneratorARM::visitNotF(LNotF* ins)
     } else {
         masm.as_vmrs(pc);
         masm.ma_mov(Imm32(0), dest);
-        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Equal);
-        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Overflow);
+        masm.ma_mov(Imm32(1), dest, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, Assembler::Overflow);
     }
 }
 
@@ -2183,7 +2183,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         if (mir->isAtomicAccess())
             masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
         else
-            masm.ma_mov(Imm32(0), d, LeaveCC, Assembler::AboveOrEqual);
+            masm.ma_mov(Imm32(0), d, Assembler::AboveOrEqual);
         masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
     }
     memoryBarrier(mir->barrierAfter());

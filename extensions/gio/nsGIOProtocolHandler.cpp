@@ -37,7 +37,7 @@
 //-----------------------------------------------------------------------------
 
 // NSPR_LOG_MODULES=gio:5
-static mozilla::LazyLogModule sGIOLog("gio");
+static PRLogModuleInfo *sGIOLog;
 #define LOG(args) MOZ_LOG(sGIOLog, mozilla::LogLevel::Debug, args)
 
 
@@ -911,6 +911,8 @@ NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
 nsresult
 nsGIOProtocolHandler::Init()
 {
+  sGIOLog = PR_NewLogModule("gio");
+
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
   {

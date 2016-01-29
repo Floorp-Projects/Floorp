@@ -41,7 +41,7 @@ static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
   nsIAtom* type = aFrame->GetType();
   if (type == nsGkAtoms::columnSetFrame) {
     static_cast<nsColumnSetFrame*>(aFrame)->DrainOverflowColumns();
-    nsIFrame* child = aFrame->GetFirstPrincipalChild();
+    nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
     if (child) {
       return DescendIntoBlockLevelFrame(child);
     }

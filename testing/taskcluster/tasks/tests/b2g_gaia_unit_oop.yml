@@ -12,13 +12,8 @@ task:
       - ./bin/pull_gaia.sh &&
       - >
         python ./mozharness/scripts/gaia_unit.py
-        --no-read-buildbot-config
-        --config-file ./mozharness/configs/b2g/gaia_unit_production_config.py
-        --config-file ./mozharness_configs/gaia_integration_override.py
-        --config-file ./mozharness_configs/remove_executables.py
-        --no-pull
+        --config-file ./mozharness/configs/b2g/taskcluster_gaia_unit_production.py
         --browser-arg -oop
-        --download-symbols ondemand
         --installer-url {{build_url}}
         --test-url {{tests_url}}
         --gaia-repo https://hg.mozilla.org/integration/gaia-central

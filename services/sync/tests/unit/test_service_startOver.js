@@ -28,7 +28,7 @@ function run_test() {
   run_next_test();
 }
 
-add_identity_test(this, function test_resetLocalData() {
+add_identity_test(this, function* test_resetLocalData() {
   yield configureIdentity();
   Service.status.enforceBackoff = true;
   Service.status.backoffInterval = 42;

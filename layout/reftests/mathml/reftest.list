@@ -190,6 +190,7 @@ skip-if(B2G||Mulet) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 7
 == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
+== mo-glyph-size.html mo-glyph-size-ref.html
 skip-if(B2G||Mulet) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html

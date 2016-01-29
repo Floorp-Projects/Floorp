@@ -2368,7 +2368,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           aState.mPresContext->HasPendingInterrupt()) {
         // Need to make sure to pull overflows from any prev-in-flows
         for (nsIFrame* inlineKid = line->mFirstChild; inlineKid;
-             inlineKid = inlineKid->GetFirstPrincipalChild()) {
+             inlineKid = inlineKid->PrincipalChildList().FirstChild()) {
           inlineKid->PullOverflowsFromPrevInFlow();
         }
       }
@@ -7200,7 +7200,7 @@ nsBlockFrame::DoCollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         // XXXmats nsInlineFrame's lazy reparenting depends on NOT doing that.
       }
 
-      DoCollectFloats(aFrame->GetFirstPrincipalChild(), aList, true);
+      DoCollectFloats(aFrame->PrincipalChildList().FirstChild(), aList, true);
       DoCollectFloats(aFrame->GetChildList(kOverflowList).FirstChild(), aList, true);
     }
     if (!aCollectSiblings)

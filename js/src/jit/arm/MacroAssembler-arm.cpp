@@ -272,6 +272,10 @@ void
 MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
                           ALUOp op, SBit s, Condition c)
 {
+    // ma_mov should be used for moves.
+    MOZ_ASSERT(op != OpMov);
+    MOZ_ASSERT(op != OpMvn);
+
     // As it turns out, if you ask for a compare-like instruction you *probably*
     // want it to set condition codes.
     if (dest == InvalidReg)
@@ -301,71 +305,18 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         return;
     }
 
-    if (HasMOVWT()) {
-        // If the operation is a move-a-like then we can try to use movw to move
-        // the bits into the destination. Otherwise, we'll need to fall back on
-        // a multi-instruction format :(
-        // movw/movt does not set condition codes, so don't hold your breath.
-        if (s == LeaveCC && (op == OpMov || op == OpMvn)) {
-            // ARMv7 supports movw/movt. movw zero-extends its 16 bit argument,
-            // so we can set the register this way. movt leaves the bottom 16
-            // bits in tact, so it is unsuitable to move a constant that
-            if (op == OpMov && ((imm.value & ~ 0xffff) == 0)) {
-                MOZ_ASSERT(src1 == InvalidReg);
-                as_movw(dest, Imm16((uint16_t)imm.value), c);
-                return;
-            }
-
-            // If they asked for a mvn rfoo, imm, where ~imm fits into 16 bits
-            // then do it.
-            if (op == OpMvn && (((~imm.value) & ~ 0xffff) == 0)) {
-                MOZ_ASSERT(src1 == InvalidReg);
-                as_movw(dest, Imm16((uint16_t)~imm.value), c);
-                return;
-            }
-
-            // TODO: constant dedup may enable us to add dest, r0, 23 *if* we
-            // are attempting to load a constant that looks similar to one that
-            // already exists. If it can't be done with a single movw then we
-            // *need* to use two instructions since this must be some sort of a
-            // move operation, we can just use a movw/movt pair and get the
-            // whole thing done in two moves. This does not work for ops like
-            // add, since we'd need to do: movw tmp; movt tmp; add dest, tmp,
-            // src1.
-            if (op == OpMvn)
-                imm.value = ~imm.value;
-            as_movw(dest, Imm16(imm.value & 0xffff), c);
-            as_movt(dest, Imm16((imm.value >> 16) & 0xffff), c);
-            return;
-        }
-        // If we weren't doing a movalike, a 16 bit immediate will require 2
-        // instructions. With the same amount of space and (less)time, we can do
-        // two 8 bit operations, reusing the dest register. e.g.
-        //  movw tmp, 0xffff; add dest, src, tmp ror 4
-        // vs.
-        //  add dest, src, 0xff0; add dest, dest, 0xf000000f
-        //
-        // It turns out that there are some immediates that we miss with the
-        // second approach. A sample value is: add dest, src, 0x1fffe this can
-        // be done by movw tmp, 0xffff; add dest, src, tmp lsl 1 since imm8m's
-        // only get even offsets, we cannot encode this. I'll try to encode as
-        // two imm8's first, since they are faster. Both operations should take
-        // 1 cycle, where as add dest, tmp ror 4 takes two cycles to execute.
-    }
-
-    // Either a) this isn't ARMv7 b) this isn't a move start by attempting to
-    // generate a two instruction form. Some things cannot be made into two-inst
-    // forms correctly. Namely, adds dest, src, 0xffff. Since we want the
-    // condition codes (and don't know which ones will be checked), we need to
-    // assume that the overflow flag will be checked and add{,s} dest, src,
-    // 0xff00; add{,s} dest, dest, 0xff is not guaranteed to set the overflow
-    // flag the same as the (theoretical) one instruction variant.
+    // Start by attempting to generate a two instruction form. Some things
+    // cannot be made into two-inst forms correctly. Namely, adds dest, src,
+    // 0xffff. Since we want the condition codes (and don't know which ones
+    // will be checked), we need to assume that the overflow flag will be
+    // checked and add{,s} dest, src, 0xff00; add{,s} dest, dest, 0xff is not
+    // guaranteed to set the overflof flag the same as the (theoretical) one
+    // instruction variant.
     if (alu_dbl(src1, imm, dest, op, s, c))
         return;
 
     // And try with its negative.
-    if (negOp != OpInvalid &&
-        alu_dbl(src1, negImm, negDest, negOp, s, c))
+    if (negOp != OpInvalid && alu_dbl(src1, negImm, negDest, negOp, s, c))
         return;
 
     // Often this code is called with dest as the ScratchRegister.  The register
@@ -381,25 +332,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
     }
 #endif
 
-    // Well, damn. We can use two 16 bit mov's, then do the op or we can do a
-    // single load from a pool then op.
-    if (HasMOVWT()) {
-        // Try to load the immediate into a scratch register then use that
-        as_movw(scratch, Imm16(imm.value & 0xffff), c);
-        if ((imm.value >> 16) != 0)
-            as_movt(scratch, Imm16((imm.value >> 16) & 0xffff), c);
-    } else {
-        // Going to have to use a load. If the operation is a move, then just
-        // move it into the destination register
-        if (op == OpMov) {
-            as_Imm32Pool(dest, imm.value, c);
-            return;
-        } else {
-            // If this isn't just going into a register, then stick it in a
-            // temp, and then proceed.
-            as_Imm32Pool(scratch, imm.value, c);
-        }
-    }
+    ma_mov(imm, scratch, c);
     as_alu(dest, src1, O2Reg(scratch), op, s, c);
 }
 
@@ -479,17 +412,44 @@ MacroAssemblerARM::ma_mov(Register src, Register dest, SBit s, Assembler::Condit
 }
 
 void
-MacroAssemblerARM::ma_mov(Imm32 imm, Register dest,
-                          SBit s, Assembler::Condition c)
+MacroAssemblerARM::ma_mov(Imm32 imm, Register dest, Assembler::Condition c)
 {
-    ma_alu(InvalidReg, imm, dest, OpMov, s, c);
+    // Try mov with Imm8 operand.
+    Imm8 imm8 = Imm8(imm.value);
+    if (!imm8.invalid) {
+        as_alu(dest, InvalidReg, imm8, OpMov, LeaveCC, c);
+        return;
+    }
+
+    // Try mvn with Imm8 operand.
+    Imm32 negImm = imm;
+    Register negDest;
+    ALUOp negOp = ALUNeg(OpMov, dest, &negImm, &negDest);
+    Imm8 negImm8 = Imm8(negImm.value);
+    if (negOp != OpInvalid && !negImm8.invalid) {
+        as_alu(negDest, InvalidReg, negImm8, negOp, LeaveCC, c);
+        return;
+    }
+
+    // Try movw/movt.
+    if (HasMOVWT()) {
+        // ARMv7 supports movw/movt. movw zero-extends its 16 bit argument,
+        // so we can set the register this way. movt leaves the bottom 16
+        // bits in tact, so we always need a movw.
+        as_movw(dest, Imm16(imm.value & 0xffff), c);
+        if (uint32_t(imm.value) >> 16)
+            as_movt(dest, Imm16(uint32_t(imm.value) >> 16), c);
+        return;
+    }
+
+    // If we don't have movw/movt, we need a load.
+    as_Imm32Pool(dest, imm.value, c);
 }
 
 void
-MacroAssemblerARM::ma_mov(ImmWord imm, Register dest,
-                          SBit s, Assembler::Condition c)
+MacroAssemblerARM::ma_mov(ImmWord imm, Register dest, Assembler::Condition c)
 {
-    ma_alu(InvalidReg, Imm32(imm.value), dest, OpMov, s, c);
+    ma_mov(Imm32(imm.value), dest, c);
 }
 
 void
@@ -566,12 +526,6 @@ MacroAssemblerARM::ma_rol(Register shift, Register src, Register dst)
 }
 
 // Move not (dest <- ~src)
-void
-MacroAssemblerARM::ma_mvn(Imm32 imm, Register dest, SBit s, Assembler::Condition c)
-{
-    ma_alu(InvalidReg, imm, dest, OpMvn, s, c);
-}
-
 void
 MacroAssemblerARM::ma_mvn(Register src1, Register dest, SBit s, Assembler::Condition c)
 {
@@ -1015,7 +969,7 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, Regis
     ma_mov(Imm32(0), dest);
     // Set the hold appropriately.
     ma_mov(Imm32(1), hold);
-    ma_mov(Imm32(-1), hold, LeaveCC, Signed);
+    ma_mov(Imm32(-1), hold, Signed);
     ma_rsb(Imm32(0), tmp, SetCC, Signed);
 
     // Begin the main loop.
@@ -2410,10 +2364,10 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
         // Copy the converted value out.
         as_vxfer(output, InvalidReg, scratchDouble, FloatToCore);
         as_vmrs(pc);
-        ma_mov(Imm32(0), output, LeaveCC, Overflow);  // NaN => 0
+        ma_mov(Imm32(0), output, Overflow);  // NaN => 0
         ma_b(&outOfRange, Overflow);  // NaN
         ma_cmp(output, Imm32(0xff));
-        ma_mov(Imm32(0xff), output, LeaveCC, Above);
+        ma_mov(Imm32(0xff), output, Above);
         ma_b(&outOfRange, Above);
         // Convert it back to see if we got the same value back.
         as_vcvt(scratchDouble, VFPRegister(scratchDouble).uintOverlay());

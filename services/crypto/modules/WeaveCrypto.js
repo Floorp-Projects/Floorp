@@ -4,13 +4,12 @@
 
 this.EXPORTED_SYMBOLS = ["WeaveCrypto"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
+var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/ctypes.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ctypes.jsm");
+Cu.import('resource://gre/modules/AppConstants.jsm');
 
 /**
  * Shortcuts for some algorithm SEC OIDs.  Full list available here:
@@ -132,16 +131,16 @@ WeaveCrypto.prototype = {
 
         // XXX really want to be able to pass specific dlopen flags here.
         var nsslib;
-#ifdef MOZ_NATIVE_NSS
-        // Search platform-dependent library paths for system NSS.
-        this.log("Trying NSS library without path");
-        nsslib = ctypes.open(path);
-#else
-        let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
-        file.append(path);
-        this.log("Trying NSS library with path " + file.path);
-        nsslib = ctypes.open(file.path);
-#endif
+        if (AppConstants.MOZ_NATIVE_NSS) {
+            // Search platform-dependent library paths for system NSS.
+            this.log("Trying NSS library without path");
+            nsslib = ctypes.open(path);
+        } else {
+            let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
+            file.append(path);
+            this.log("Trying NSS library with path " + file.path);
+            nsslib = ctypes.open(file.path);
+        }
 
         this.log("Initializing NSS types and function declarations...");
 

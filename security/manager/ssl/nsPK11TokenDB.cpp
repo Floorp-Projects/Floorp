@@ -14,7 +14,7 @@
 
 #include "nsPK11TokenDB.h"
 
-extern mozilla::LazyLogModule gPIPNSSLog;
+extern PRLogModuleInfo* gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 

@@ -9,7 +9,7 @@ function run_test () {
   run_next_test();
 }
 
-add_task(function test_get_remote_tabs () {
+add_task(function* test_get_remote_tabs () {
   let cloudSync = CloudSync();
   let clients = yield cloudSync.tabs.getRemoteTabs();
   equal(clients.length, 0);

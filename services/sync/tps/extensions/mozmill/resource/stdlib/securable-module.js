@@ -321,7 +321,10 @@
        });
        try {
          channel.open2().close();
-       } catch (e if e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+       } catch (e) {
+         if (e.result != Cr.NS_ERROR_FILE_NOT_FOUND) {
+           throw e;
+         }
          return null;
        }
        return newURI.spec;

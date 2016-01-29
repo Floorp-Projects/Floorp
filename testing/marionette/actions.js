@@ -14,7 +14,7 @@ this.EXPORTED_SYMBOLS = ["actions"];
 
 const logger = Log.repository.getLogger("Marionette");
 
-const actions = {};
+this.actions = {};
 
 /**
  * Functionality for (single finger) action chains.

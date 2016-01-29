@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fxa_utils.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_task(function test_findCluster() {
+add_task(function* test_findCluster() {
   _("Test FxA _findCluster()");
 
   _("_findCluster() throws on 500 errors.");

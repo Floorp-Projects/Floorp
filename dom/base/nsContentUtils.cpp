@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <math.h>
 
-#include "prprf.h"
 #include "DecoderTraits.h"
 #include "harfbuzz/hb.h"
 #include "imgICache.h"
@@ -3525,7 +3524,7 @@ nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
 }
 
 void
-nsContentUtils::LogMessageToConsole(const char* aMsg, ...)
+nsContentUtils::LogMessageToConsole(const char* aMsg)
 {
   if (!sConsoleService) { // only need to bother null-checking here
     CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
@@ -3533,17 +3532,7 @@ nsContentUtils::LogMessageToConsole(const char* aMsg, ...)
       return;
     }
   }
-
-  va_list args;
-  va_start(args, aMsg);
-  char* formatted = PR_vsmprintf(aMsg, args);
-  va_end(args);
-  if (!formatted) {
-    return;
-  }
-
-  sConsoleService->LogStringMessage(NS_ConvertUTF8toUTF16(formatted).get());
-  PR_smprintf_free(formatted);
+  sConsoleService->LogStringMessage(NS_ConvertUTF8toUTF16(aMsg).get());
 }
 
 bool
@@ -6928,7 +6917,7 @@ nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
   // has the text frames (containing the content) as its children. This will
   // be the case if we click to the right of any of the text frames, or at the
   // bottom of the text area.
-  nsIFrame* firstChild = aOffsetFrame->GetFirstPrincipalChild();
+  nsIFrame* firstChild = aOffsetFrame->PrincipalChildList().FirstChild();
   if (firstChild) {
     // In this case, the passed-in offset is incorrect, and we want the length
     // of the entire content in the text control frame.
@@ -6941,7 +6930,7 @@ nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
     // frame. Our offset should therefore be the length of the first child of
     // our parent.
     int32_t aOutOffset =
-      aOffsetFrame->GetParent()->GetFirstPrincipalChild()->GetContent()->Length();
+      aOffsetFrame->GetParent()->PrincipalChildList().FirstChild()->GetContent()->Length();
     return aOutOffset;
   }
 

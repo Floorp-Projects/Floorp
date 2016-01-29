@@ -13,7 +13,7 @@
 #include "nsUrlClassifierUtils.h"
 
 // NSPR_LOG_MODULES=UrlClassifierProtocolParser:5
-mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
+PRLogModuleInfo *gUrlClassifierProtocolParserLog = nullptr;
 #define PARSER_LOG(args) MOZ_LOG(gUrlClassifierProtocolParserLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
@@ -77,6 +77,10 @@ ProtocolParser::~ProtocolParser()
 nsresult
 ProtocolParser::Init(nsICryptoHash* aHasher)
 {
+  if (!gUrlClassifierProtocolParserLog) {
+    gUrlClassifierProtocolParserLog =
+      PR_NewLogModule("UrlClassifierProtocolParser");
+  }
   mCryptoHash = aHasher;
   return NS_OK;
 }

@@ -446,7 +446,10 @@ IdentityManager.prototype = {
     // cache.
     try {
       service.recordManager.get(service.storageURL + "meta/fxa_credentials");
-    } catch (ex if !Async.isShutdownException(ex)) {
+    } catch (ex) {
+      if (Async.isShutdownException(ex)) {
+        throw ex;
+      }
       this._log.warn("Failed to pre-fetch the migration sentinel", ex);
     }
   },

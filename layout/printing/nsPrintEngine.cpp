@@ -2238,11 +2238,7 @@ nsPrintEngine::CalcNumPrintablePages(int32_t& aNumPages)
       nsIPageSequenceFrame* pageSequence = po->mPresShell->GetPageSequenceFrame();
       nsIFrame * seqFrame = do_QueryFrame(pageSequence);
       if (seqFrame) {
-        nsIFrame* frame = seqFrame->GetFirstPrincipalChild();
-        while (frame) {
-          aNumPages++;
-          frame = frame->GetNextSibling();
-        }
+        aNumPages += seqFrame->PrincipalChildList().GetLength();
       }
     }
   }
@@ -2867,7 +2863,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
   // dump all the pages and their pointers
   {
   int32_t pageNum = 1;
-  nsIFrame* child = seqFrame->GetFirstPrincipalChild();
+  nsIFrame* child = seqFrame->PrincipalChildList().FirstChild();
   while (child != nullptr) {
     printf("Page: %d - %p\n", pageNum, child);
     pageNum++;
@@ -2879,8 +2875,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
   // Now that we have the page frames
   // find out what the page numbers are for each frame
   int32_t pageNum = 1;
-  nsIFrame* page = seqFrame->GetFirstPrincipalChild();
-  while (page != nullptr) {
+  for (nsIFrame* page : seqFrame->PrincipalChildList()) {
     if (page == startPageFrame) {
       aStartPageNum = pageNum;
     }
@@ -2888,7 +2883,6 @@ nsPrintEngine::GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
       aEndPageNum = pageNum;
     }
     pageNum++;
-    page = page->GetNextSibling();
   }
 
 #ifdef DEBUG_rodsX
@@ -3642,7 +3636,7 @@ static void DumpFrames(FILE*                 out,
   NS_ASSERTION(aRendContext, "Pointer is null!");
   NS_ASSERTION(aFrame, "Pointer is null!");
 
-  nsIFrame* child = aFrame->GetFirstPrincipalChild();
+  nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
   while (child != nullptr) {
     for (int32_t i=0;i<aLevel;i++) {
      fprintf(out, "  ");
@@ -3783,7 +3777,7 @@ static void DumpPrintObjectsList(nsTArray<nsPrintObject*> * aDocList)
         if (sqf) {
           break;
         }
-        rootFrame = rootFrame->GetFirstPrincipalChild();
+        rootFrame = rootFrame->PrincipalChildList().FirstChild();
       }
     }
 

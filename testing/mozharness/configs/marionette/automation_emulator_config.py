@@ -1,4 +1,6 @@
 # This is a template config file for marionette production.
+# TODO: This could be removed after B2G ICS emulator buildbot builds is turned
+#       off, Bug 1209180.
 import os
 
 

@@ -3335,7 +3335,7 @@ IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
     for (nsIFrame* next = c->GetNextSibling(); next; next = next->GetNextSibling()) {
-      if (next->GetFirstPrincipalChild()) {
+      if (next->PrincipalChildList().FirstChild()) {
         return false;
       }
     }

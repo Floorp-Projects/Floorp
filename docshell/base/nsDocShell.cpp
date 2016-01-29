@@ -266,9 +266,9 @@ static uint32_t gValidateOrigin = 0xffffffff;
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
 
 #ifdef DEBUG
-static mozilla::LazyLogModule gDocShellLog("nsDocShell");
+static PRLogModuleInfo* gDocShellLog;
 #endif
-static mozilla::LazyLogModule gDocShellLeakLog("nsDocShellLeak");;
+static PRLogModuleInfo* gDocShellLeakLog;
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] = "chrome://global/locale/appstrings.properties";
@@ -818,7 +818,17 @@ nsDocShell::nsDocShell()
     CallGetService(NS_URIFIXUP_CONTRACTID, &sURIFixup);
   }
 
-  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p created\n", this));
+#ifdef DEBUG
+  if (!gDocShellLog) {
+    gDocShellLog = PR_NewLogModule("nsDocShell");
+  }
+#endif
+  if (!gDocShellLeakLog) {
+    gDocShellLeakLog = PR_NewLogModule("nsDocShellLeak");
+  }
+  if (gDocShellLeakLog) {
+    MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p created\n", this));
+  }
 
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks

@@ -40,7 +40,7 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() override {
-    return do_QueryFrame(GetFirstPrincipalChild());
+    return do_QueryFrame(PrincipalChildList().FirstChild());
   }
 
   virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
