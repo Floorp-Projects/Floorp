@@ -1439,6 +1439,13 @@ ScopeIter::settle()
     if (frame_ && frame_.isFunctionFrame() && frame_.callee()->needsCallObject() &&
         !frame_.hasCallObj())
     {
+        // At the very start of a script that starts with a lexical block, the
+        // static scope will be that block. Skip it if this is the case.
+        if (ssi_.type() == StaticScopeIter<CanGC>::Block)
+            incrementStaticScopeIter();
+
+        // We should now be at the function scope, so since we have no
+        // CallObject, skip that too.
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Function);
         incrementStaticScopeIter();
     }
@@ -1446,8 +1453,14 @@ ScopeIter::settle()
     // Check for trying to iterate a strict eval frame before the prologue has
     // created the CallObject.
     if (frame_ && frame_.isStrictEvalFrame() && !frame_.hasCallObj() && !ssi_.done()) {
+        // Eval frames always have their own lexical scope. Analogous to the
+        // function frame case above, if the script starts with a lexical
+        // block, the SSI could see 2 block scopes here. So skip between 1-2
+        // static block scopes here.
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Block);
         incrementStaticScopeIter();
+        if (ssi_.type() == StaticScopeIter<CanGC>::Block)
+            incrementStaticScopeIter();
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Eval);
         MOZ_ASSERT(maybeStaticScope() == frame_.script()->enclosingStaticScope());
         incrementStaticScopeIter();
