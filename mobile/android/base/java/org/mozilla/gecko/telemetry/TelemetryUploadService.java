@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.telemetry;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -13,6 +14,7 @@ import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.background.BackgroundService;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
@@ -59,12 +61,15 @@ public class TelemetryUploadService extends BackgroundService {
     public void onHandleIntent(final Intent intent) {
         Log.d(LOGTAG, "Service started");
 
-        if (!TelemetryConstants.UPLOAD_ENABLED) {
-            Log.d(LOGTAG, "Telemetry upload feature is compile-time disabled; not handling upload intent.");
+        // Sanity check: is upload enabled? Generally, the caller should check this before starting the service.
+        // Since we don't have the profile here, we rely on the caller to check the enabled state for the profile.
+        if (!isUploadEnabledByAppConfig(this)) {
+            Log.w(LOGTAG, "Upload is not available by configuration; returning");
             return;
         }
 
-        if (!isReadyToUpload(intent)) {
+        if (!isIntentValid(intent)) {
+            Log.w(LOGTAG, "Received invalid Intent; returning");
             return;
         }
 
@@ -82,38 +87,73 @@ public class TelemetryUploadService extends BackgroundService {
         uploadCorePing(docId, seq, profileName, profilePath);
     }
 
-    private boolean isReadyToUpload(final Intent intent) {
-        // Intent can be null. Bug 1025937.
-        if (intent == null) {
-            Log.d(LOGTAG, "Received null intent. Returning.");
+    /**
+     * Determines if the telemetry upload feature is enabled via the application configuration. Prefer to use
+     * {@link #isUploadEnabledByProfileConfig(Context, GeckoProfile)} if the profile is available as it takes into
+     * account more information.
+     *
+     * Note that this method logs debug statements when upload is disabled.
+     */
+    public static boolean isUploadEnabledByAppConfig(final Context context) {
+        if (!TelemetryConstants.UPLOAD_ENABLED) {
+            Log.d(LOGTAG, "Telemetry upload feature is compile-time disabled");
             return false;
         }
 
-        // Don't do anything if the device can't talk to the server.
-        if (!backgroundDataIsEnabled()) {
-            Log.d(LOGTAG, "Background data is not enabled; skipping.");
+        if (!GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
+            Log.d(LOGTAG, "Telemetry upload opt-out");
+            return false;
+        }
+
+        if (!backgroundDataIsEnabled(context)) {
+            Log.d(LOGTAG, "Background data is disabled");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Determines if the telemetry upload feature is enabled via profile & application level configurations. This is the
+     * preferred method.
+     *
+     * Note that this method logs debug statements when upload is disabled.
+     */
+    public static boolean isUploadEnabledByProfileConfig(final Context context, final GeckoProfile profile) {
+        if (profile.inGuestMode()) {
+            Log.d(LOGTAG, "Profile is in guest mode");
+            return false;
+        }
+
+        return isUploadEnabledByAppConfig(context);
+    }
+
+    private boolean isIntentValid(final Intent intent) {
+        // Intent can be null. Bug 1025937.
+        if (intent == null) {
+            Log.d(LOGTAG, "Received null intent");
             return false;
         }
 
         if (intent.getStringExtra(TelemetryConstants.EXTRA_DOC_ID) == null) {
-            Log.w(LOGTAG, "Received invalid doc ID in Intent. Returning");
+            Log.d(LOGTAG, "Received invalid doc ID in Intent");
             return false;
         }
 
         if (!intent.hasExtra(TelemetryConstants.EXTRA_SEQ)) {
-            Log.w(LOGTAG, "Received Intent without sequence number. Returning");
+            Log.d(LOGTAG, "Received Intent without sequence number");
             return false;
         }
 
         if (intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_NAME) == null) {
-            Log.w(LOGTAG, "Received invalid profile name in Intent. Returning");
+            Log.d(LOGTAG, "Received invalid profile name in Intent");
             return false;
         }
 
         // GeckoProfile can use the name to get the path so this isn't strictly necessary.
         // However, getting the path requires parsing an ini file so we optimize by including it here.
         if (intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_PATH) == null) {
-            Log.w(LOGTAG, "Received invalid profile path in Intent. Returning");
+            Log.d(LOGTAG, "Received invalid profile path in Intent");
             return false;
         }
 
