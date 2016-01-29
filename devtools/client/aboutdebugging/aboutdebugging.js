@@ -105,7 +105,7 @@ var AboutDebugging = {
     DebuggerServer.allowChromeProcess = true;
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
 
-    this.client.connect(() => {
+    this.client.connect().then(() => {
       // Show the first available tab.
       this.showTab();
       window.addEventListener("hashchange", () => this.showTab());

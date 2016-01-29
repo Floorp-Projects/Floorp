@@ -24,7 +24,7 @@ function run_test()
   );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function() {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_source();

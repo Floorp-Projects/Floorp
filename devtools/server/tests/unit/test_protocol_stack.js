@@ -63,7 +63,7 @@ function run_test() {
   let client = new DebuggerClient(trace);
   let rootClient;
 
-  client.connect(function onConnect() {
+  client.connect().then(function onConnect() {
     rootClient = RootFront(client);
 
     rootClient.simpleReturn().then(() => {

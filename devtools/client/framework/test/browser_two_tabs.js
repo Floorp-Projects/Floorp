@@ -44,15 +44,15 @@ function openTabs() {
 function connect() {
   // Connect to debugger server to fetch the two tab actors
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(() => {
-    gClient.listTabs(response => {
+  gClient.connect()
+    .then(() => gClient.listTabs())
+    .then(response => {
       // Fetch the tab actors for each tab
       gTabActor1 = response.tabs.filter(a => a.url === TAB_URL_1)[0];
       gTabActor2 = response.tabs.filter(a => a.url === TAB_URL_2)[0];
 
       checkGetTab();
     });
-  });
 }
 
 function checkGetTab() {

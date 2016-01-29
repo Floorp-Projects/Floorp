@@ -26,13 +26,13 @@ function connect(onDone) {
 
   // Setup client and actor used in all tests
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function onConnect() {
-    gClient.listTabs(function onListTabs(aResponse) {
+  gClient.connect()
+    .then(() => gClient.listTabs())
+    .then(aResponse => {
       gActor = aResponse.webappsActor;
       gActorFront = new AppActorFront(gClient, aResponse);
       onDone();
     });
-  });
 }
 
 function webappActorRequest(request, onResponse) {

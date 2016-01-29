@@ -14,7 +14,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function() {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-black-box", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       // XXX: We have to do an executeSoon so that the error isn't caught and

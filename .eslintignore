@@ -76,7 +76,6 @@ browser/components/translation/**
 browser/extensions/pdfjs/**
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/extensions/shumway/**
-browser/fuel/**
 browser/locales/**
 
 # Ignore all of loop since it is imported from github and checked at source.

@@ -38,7 +38,7 @@ window.onload = function() {
   DebuggerServer.addBrowserActors();
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(function onConnect() {
+  client.connect().then(function onConnect() {
     client.listTabs(function onListTabs(aResponse) {
       var form = aResponse.tabs[aResponse.selected];
       var front = FramerateFront(client, form);

@@ -2193,8 +2193,6 @@ ScratchpadWindow.prototype = Heritage.extend(ScratchpadTab.prototype, {
    */
   _attach: function SW__attach()
   {
-    let deferred = promise.defer();
-
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
@@ -2202,19 +2200,11 @@ ScratchpadWindow.prototype = Heritage.extend(ScratchpadTab.prototype, {
     DebuggerServer.allowChromeProcess = true;
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
-    client.connect(() => {
-      client.getProcess().then(aResponse => {
-        if (aResponse.error) {
-          reportError("listTabs", aResponse);
-          deferred.reject(aResponse);
-        }
-        else {
-          deferred.resolve({ form: aResponse.form, client: client });
-        }
+    return client.connect()
+      .then(() => client.getProcess())
+      .then(aResponse => {
+        return { form: aResponse.form, client: client };
       });
-    });
-
-    return deferred.promise;
   }
 });
 

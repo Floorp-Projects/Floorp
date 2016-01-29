@@ -31,6 +31,7 @@ const DominatorTreeItem = module.exports = createClass({
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item
       || this.props.depth != nextProps.depth
+      || this.props.expanded != nextProps.expanded
       || this.props.focused != nextProps.focused;
   },
 
