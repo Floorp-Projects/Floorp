@@ -1,22 +1,27 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js"
-const TEST_BASE = "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
-const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/styleeditor/test/";
-const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/styleeditor/test/";
-const TEST_HOST = 'mochi.test:8888';
+/* All top-level definitions here are exports.  */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+
+"use strict";
+
+const FRAME_SCRIPT_UTILS_URL =
+      "chrome://devtools/content/shared/frame-script-utils.js";
+const TEST_BASE =
+      "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTP =
+      "http://example.com/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTPS =
+      "https://example.com/browser/devtools/client/styleeditor/test/";
+const TEST_HOST = "mochi.test:8888";
+
+const EDITOR_FRAME_SCRIPT = getRootDirectory(gTestPath) + "doc_frame_script.js";
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-// Import the GCLI test helper
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
-  this);
 
 DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -61,8 +66,7 @@ function navigateTo(url) {
   return navigating.promise;
 }
 
-function* cleanup()
-{
+function* cleanup() {
   while (gBrowser.tabs.length > 1) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     yield gDevTools.closeToolbox(target);
@@ -92,6 +96,10 @@ var openStyleEditor = Task.async(function*(tab) {
  */
 var openStyleEditorForURL = Task.async(function* (url, win) {
   let tab = yield addTab(url, win);
+
+  gBrowser.selectedBrowser.messageManager.loadFrameScript(EDITOR_FRAME_SCRIPT,
+                                                          false);
+
   let result = yield openStyleEditor(tab);
   result.tab = tab;
   return result;
@@ -128,15 +136,15 @@ function loadCommonFrameScript(tab) {
  *         Resolves to the response data if a response is expected, immediately
  *         resolves otherwise
  */
-function executeInContent(name, data={}, objects={}, expectResponse=true) {
+function executeInContent(name, data = {}, objects = {},
+                          expectResponse = true) {
   let mm = gBrowser.selectedBrowser.messageManager;
 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
     return waitForContentMessage(name);
-  } else {
-    return promise.resolve();
   }
+  return promise.resolve();
 }
 
 /**
@@ -152,9 +160,27 @@ function waitForContentMessage(name) {
   let def = promise.defer();
   mm.addMessageListener(name, function onMessage(msg) {
     mm.removeMessageListener(name, onMessage);
-    def.resolve(msg);
+    def.resolve(msg.data);
   });
   return def.promise;
 }
 
 registerCleanupFunction(cleanup);
+
+/**
+ * Send an async message to the frame script and get back the requested
+ * computed style property.
+ *
+ * @param {String} selector
+ *        The selector used to obtain the element.
+ * @param {String} pseudo
+ *        pseudo id to query, or null.
+ * @param {String} name
+ *        name of the property.
+ */
+function* getComputedStyleProperty(selector, pseudo, propName) {
+  return yield executeInContent("Test:GetComputedStylePropertyValue",
+                                {selector,
+                                pseudo,
+                                name: propName});
+}

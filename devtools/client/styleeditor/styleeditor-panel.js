@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+"use strict";
+
+const {Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -13,6 +15,7 @@ var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
+/* import-globals-from StyleEditorUtil.jsm */
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 loader.lazyGetter(this, "StyleSheetsFront",
@@ -21,7 +24,7 @@ loader.lazyGetter(this, "StyleSheetsFront",
 loader.lazyGetter(this, "StyleEditorFront",
   () => require("devtools/server/actors/styleeditor").StyleEditorFront);
 
-this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
+var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
 
   this._toolbox = toolbox;
@@ -31,7 +34,7 @@ this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
 
   this.destroy = this.destroy.bind(this);
   this._showError = this._showError.bind(this);
-}
+};
 
 exports.StyleEditorPanel = StyleEditorPanel;
 
@@ -57,8 +60,7 @@ StyleEditorPanel.prototype = {
 
     if (this.target.form.styleSheetsActor) {
       this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
-    }
-    else {
+    } else {
       /* We're talking to a pre-Firefox 29 server-side */
       this._debuggee = StyleEditorFront(this.target.client, this.target.form);
     }
@@ -94,7 +96,8 @@ StyleEditorPanel.prototype = {
     }
 
     let notificationBox = this._toolbox.getNotificationBox();
-    let notification = notificationBox.getNotificationWithValue("styleeditor-error");
+    let notification =
+        notificationBox.getNotificationWithValue("styleeditor-error");
     let level = (data.level === "info") ?
                 notificationBox.PRIORITY_INFO_LOW :
                 notificationBox.PRIORITY_CRITICAL_LOW;
@@ -120,7 +123,7 @@ StyleEditorPanel.prototype = {
    */
   selectStyleSheet: function(href, line, col) {
     if (!this._debuggee || !this.UI) {
-      return;
+      return null;
     }
     return this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
   },
@@ -146,10 +149,10 @@ StyleEditorPanel.prototype = {
 
     return promise.resolve(null);
   },
-}
+};
 
 XPCOMUtils.defineLazyGetter(StyleEditorPanel.prototype, "strings",
-  function () {
+  function() {
     return Services.strings.createBundle(
             "chrome://devtools/locale/styleeditor.properties");
   });
