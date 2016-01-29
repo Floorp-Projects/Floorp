@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the formatting of the file name, line and columns are correct in frame components,
+with optional columns, unknown and non-URL sources.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Frame component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/frame"));
+    ok(Frame, "Should get Frame");
+    let frame;
+
+    // Check when there's a column
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 10,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "mahscripts.js", 55, 10);
+
+    // Check when there's no column
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "mahscripts.js", 55);
+
+    // Check when column === 0
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 0,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "mahscripts.js", 55, 0);
+
+    // Check when there's no parseable URL source
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "self-hosted",
+        line: 1,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "self-hosted",1);
+
+    // Check when there's no source
+    frame = ReactDOM.render(Frame({
+      frame: {
+        line: 1,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "(unknown)",1);
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

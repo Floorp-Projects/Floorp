@@ -11,7 +11,7 @@ var { CATEGORY_MASK } = require("devtools/client/performance/modules/global");
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
-  let { OverviewView, DetailsView, JITOptimizationsView, JsCallTreeView, RecordingsView } = panel.panelWin;
+  let { OverviewView, DetailsView, JsCallTreeView, RecordingsView } = panel.panelWin;
 
   let profilerData = { threads: [gThread] };
 

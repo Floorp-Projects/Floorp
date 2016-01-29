@@ -20,6 +20,9 @@ const CONTENT_LOCATIONS = [
   "hello/<.world (http://localhost:8888/file.js:100:1)",
   "hello/<.world (http://localhost:8888/file.js:100)",
 
+  // Eval
+  "hello/<.world (http://localhost:8888/file.js line 65 > eval:1)",
+
   // Occurs when executing an inline script on a root html page with port
   // (I've never seen it with a column number but check anyway) bug 1164131
   "hello/<.world (http://localhost:8888/:1)",
@@ -72,6 +75,7 @@ add_task(function () {
     ["hello/<.world", "file.js", "myfxosapp", "app://myfxosapp/file.js", 100, 1, "myfxosapp", null],
     ["hello/<.world", "file.js", "localhost:8888", "http://localhost:8888/file.js", 100, 1, "localhost:8888", 8888],
     ["hello/<.world", "file.js", "localhost:8888", "http://localhost:8888/file.js", 100, null, "localhost:8888", 8888],
+    ["hello/<.world", "file.js (eval:1)", "localhost:8888", "http://localhost:8888/file.js", 65, null, "localhost:8888", 8888],
     ["hello/<.world", "/", "localhost:8888", "http://localhost:8888/", 1, null, "localhost:8888", 8888],
     ["hello/<.world", "/", "localhost:8888", "http://localhost:8888/", 100, 50, "localhost:8888", 8888],
     ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost:8888", "http://localhost:8888/profiler.html", 4, null, "localhost:8888", 8888],
