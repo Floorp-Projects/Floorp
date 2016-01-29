@@ -27,6 +27,7 @@
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
+#include "nsDocShell.h"
 #include "nsError.h"
 #include "nsDOMCID.h"
 #include "nsIXPConnect.h"
