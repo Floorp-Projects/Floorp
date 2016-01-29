@@ -50,26 +50,26 @@ sync protocol PPresentation
   manages PPresentationRequest;
 
 child:
-  NotifyAvailableChange(bool aAvailable);
-  NotifySessionStateChange(nsString aSessionId, uint16_t aState);
-  NotifyMessage(nsString aSessionId, nsCString aData);
-  NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
+  async NotifyAvailableChange(bool aAvailable);
+  async NotifySessionStateChange(nsString aSessionId, uint16_t aState);
+  async NotifyMessage(nsString aSessionId, nsCString aData);
+  async NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
 
 parent:
-  __delete__();
+  async __delete__();
 
-  RegisterAvailabilityHandler();
-  UnregisterAvailabilityHandler();
+  async RegisterAvailabilityHandler();
+  async UnregisterAvailabilityHandler();
 
-  RegisterSessionHandler(nsString aSessionId);
-  UnregisterSessionHandler(nsString aSessionId);
+  async RegisterSessionHandler(nsString aSessionId);
+  async UnregisterSessionHandler(nsString aSessionId);
 
-  RegisterRespondingHandler(uint64_t aWindowId);
-  UnregisterRespondingHandler(uint64_t aWindowId);
+  async RegisterRespondingHandler(uint64_t aWindowId);
+  async UnregisterRespondingHandler(uint64_t aWindowId);
 
-  PPresentationRequest(PresentationIPCRequest aRequest);
+  async PPresentationRequest(PresentationIPCRequest aRequest);
 
-  NotifyReceiverReady(nsString aSessionId);
+  async NotifyReceiverReady(nsString aSessionId);
 };
 
 } // namespace dom

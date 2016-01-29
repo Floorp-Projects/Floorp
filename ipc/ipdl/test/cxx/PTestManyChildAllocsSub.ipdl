@@ -7,10 +7,10 @@ protocol PTestManyChildAllocsSub {
     manager PTestManyChildAllocs;
 
 child:
-    __delete__();
+    async __delete__();
 
 parent:
-    Hello();
+    async Hello();
 
     // empty
 };

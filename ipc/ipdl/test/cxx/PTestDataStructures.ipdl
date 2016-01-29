@@ -10,12 +10,12 @@ sync protocol PTestDataStructures {
     manages PTestDataStructuresSub;
 
 child:
-    PTestDataStructuresSub(int i);
+    async PTestDataStructuresSub(int i);
 
-    Start();
+    async Start();
 
 parent:
-    __delete__();
+    async __delete__();
 
     sync Test1(int[] i1)
         returns (int[] o1);

@@ -2639,6 +2639,19 @@ void AsyncPanZoomController::ShareFrameMetricsAcrossProcesses() {
   mSharingFrameMetricsAcrossProcesses = true;
 }
 
+void AsyncPanZoomController::AdjustScrollForSurfaceShift(const ScreenPoint& aShift)
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  CSSPoint adjustment =
+    ViewAs<ParentLayerPixel>(aShift, PixelCastJustification::ScreenIsParentLayerForRoot)
+    / mFrameMetrics.GetZoom();
+  APZC_LOG("%p adjusting scroll position by %s for surface shift\n",
+    this, Stringify(adjustment).c_str());
+  mFrameMetrics.ScrollBy(adjustment);
+  ScheduleCompositeAndMaybeRepaint();
+  UpdateSharedCompositorFrameMetrics();
+}
+
 void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
   mFrameMetrics.ScrollBy(aOffset);
 }

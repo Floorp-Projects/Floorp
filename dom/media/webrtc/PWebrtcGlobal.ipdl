@@ -16,17 +16,17 @@ async protocol PWebrtcGlobal {
   manager PContent;
 
 child: // parent -> child messages
-  GetStatsRequest(int aRequestId, nsString aPcIdFilter);
-  ClearStatsRequest();
-  GetLogRequest(int aRequestId, nsCString aPattern);
-  ClearLogRequest();
-  SetAecLogging(bool aEnable);
-  SetDebugMode(int aLevel);
+  async GetStatsRequest(int aRequestId, nsString aPcIdFilter);
+  async ClearStatsRequest();
+  async GetLogRequest(int aRequestId, nsCString aPattern);
+  async ClearLogRequest();
+  async SetAecLogging(bool aEnable);
+  async SetDebugMode(int aLevel);
 
 parent: // child -> parent messages
-  GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
-  GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
-  __delete__();
+  async GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
+  async GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
+  async __delete__();
 };
 
 } // end namespace net

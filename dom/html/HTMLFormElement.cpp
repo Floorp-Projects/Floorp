@@ -1490,14 +1490,6 @@ HTMLFormElement::RemoveElementFromTableInternal(
   return NS_OK;
 }
 
-static PLDHashOperator
-RemovePastNames(const nsAString& aName,
-                nsCOMPtr<nsISupports>& aData,
-                void* aClosure)
-{
-  return aClosure == aData ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
-}
-
 nsresult
 HTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
                                         const nsAString& aName,
@@ -1507,7 +1499,11 @@ HTMLFormElement::RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
   // the past names map.
   if (aRemoveReason == ElementRemoved) {
     uint32_t oldCount = mPastNameLookupTable.Count();
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+    for (auto iter = mPastNameLookupTable.Iter(); !iter.Done(); iter.Next()) {
+      if (static_cast<void*>(aElement) == iter.Data()) {
+        iter.Remove();
+      }
+    }
     if (oldCount != mPastNameLookupTable.Count()) {
       ++mExpandoAndGeneration.generation;
     }
@@ -2529,7 +2525,11 @@ HTMLFormElement::RemoveImageElementFromTable(HTMLImageElement* aElement,
   // If the element is being removed from the form, we have to remove it from
   // the past names map.
   if (aRemoveReason == ElementRemoved) {
-    mPastNameLookupTable.Enumerate(RemovePastNames, aElement);
+    for (auto iter = mPastNameLookupTable.Iter(); !iter.Done(); iter.Next()) {
+      if (static_cast<void*>(aElement) == iter.Data()) {
+        iter.Remove();
+      }
+    }
   }
 
   return RemoveElementFromTableInternal(mImageNameLookupTable, aElement, aName);

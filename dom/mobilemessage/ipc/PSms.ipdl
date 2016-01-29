@@ -111,46 +111,46 @@ sync protocol PSms {
     manages PMobileMessageCursor;
 
 child:
-  NotifyReceivedMessage(MobileMessageData aMessageData);
+  async NotifyReceivedMessage(MobileMessageData aMessageData);
 
-  NotifyRetrievingMessage(MobileMessageData aMessageData);
+  async NotifyRetrievingMessage(MobileMessageData aMessageData);
 
-  NotifySendingMessage(MobileMessageData aMessageData);
+  async NotifySendingMessage(MobileMessageData aMessageData);
 
-  NotifySentMessage(MobileMessageData aMessageData);
+  async NotifySentMessage(MobileMessageData aMessageData);
 
-  NotifyFailedMessage(MobileMessageData aMessageData);
+  async NotifyFailedMessage(MobileMessageData aMessageData);
 
-  NotifyDeliverySuccessMessage(MobileMessageData aMessageData);
+  async NotifyDeliverySuccessMessage(MobileMessageData aMessageData);
 
-  NotifyDeliveryErrorMessage(MobileMessageData aMessageData);
+  async NotifyDeliveryErrorMessage(MobileMessageData aMessageData);
 
-  NotifyReceivedSilentMessage(MobileMessageData aMessageData);
+  async NotifyReceivedSilentMessage(MobileMessageData aMessageData);
 
-  NotifyReadSuccessMessage(MobileMessageData aMessageData);
+  async NotifyReadSuccessMessage(MobileMessageData aMessageData);
 
-  NotifyReadErrorMessage(MobileMessageData aMessageData);
+  async NotifyReadErrorMessage(MobileMessageData aMessageData);
 
-  NotifyDeletedMessageInfo(DeletedMessageInfoData aDeletedInfo);
+  async NotifyDeletedMessageInfo(DeletedMessageInfoData aDeletedInfo);
 
 parent:
   /**
    * Sent when the child no longer needs to use sms.
    */
-  __delete__();
+  async __delete__();
 
   /**
    * Sent when the child makes an asynchronous request to the parent.
    */
-  PSmsRequest(IPCSmsRequest request);
+  async PSmsRequest(IPCSmsRequest request);
 
   /**
    * Sent when the child makes an asynchronous cursor to the parent.
    */
-  PMobileMessageCursor(IPCMobileMessageCursor request);
+  async PMobileMessageCursor(IPCMobileMessageCursor request);
 
-  AddSilentNumber(nsString aNumber);
-  RemoveSilentNumber(nsString aNumber);
+  async AddSilentNumber(nsString aNumber);
+  async RemoveSilentNumber(nsString aNumber);
 };
 
 } // namespace mobilemessage

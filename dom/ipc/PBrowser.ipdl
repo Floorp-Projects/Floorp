@@ -110,14 +110,14 @@ prio(normal upto urgent) sync protocol PBrowser
     manages PPluginWidget;
 
 both:
-    AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
-                 Principal aPrincipal);
+    async AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
+                       Principal aPrincipal);
 
     /**
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
-    PRenderFrame();
+    async PRenderFrame();
 
 parent:
     /**
@@ -126,7 +126,7 @@ parent:
      * aParentAcc is the id of the accessible in that document the new document
      * is a child of.
      */
-    PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc);
+    async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc);
 
     /*
      * Creates a new remoted nsIWidget connection for windowed plugins
@@ -158,9 +158,9 @@ parent:
      * When child sends this message, parent should move focus to
      * the next or previous focusable element or document.
      */
-    MoveFocus(bool forward, bool forDocumentNavigation);
+    async MoveFocus(bool forward, bool forDocumentNavigation);
 
-    Event(RemoteDOMEvent aEvent);
+    async Event(RemoteDOMEvent aEvent);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
@@ -295,15 +295,15 @@ parent:
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */
-    RequestFocus(bool canRaise);
+    async RequestFocus(bool canRaise);
 
     /**
      * Indicate, based on the current state, that some commands are enabled and
      * some are disabled.
      */
-    EnableDisableCommands(nsString action,
-                          nsCString[] enabledCommands,
-                          nsCString[] disabledCommands);
+    async EnableDisableCommands(nsString action,
+                                nsCString[] enabledCommands,
+                                nsCString[] disabledCommands);
 
     prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
                                                  int32_t IMEOpen);
@@ -341,7 +341,7 @@ parent:
      *   Invalidate any locally cached cursor settings and force an
      *   update.
      */
-    SetCursor(uint32_t value, bool force);
+    async SetCursor(uint32_t value, bool force);
 
     /**
      * Set the native cursor using a custom image.
@@ -363,30 +363,30 @@ parent:
      *   Invalidate any locally cached cursor settings and force an
      *   update.
      */
-    SetCustomCursor(nsCString cursorData, uint32_t width, uint32_t height,
-                    uint32_t stride, uint8_t format,
-                    uint32_t hotspotX, uint32_t hotspotY, bool force);
+    async SetCustomCursor(nsCString cursorData, uint32_t width, uint32_t height,
+                          uint32_t stride, uint8_t format,
+                          uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**
      * Used to set the current text of the status tooltip.
      * Nowadays this is mainly used for link locations on hover.
      */
-    SetStatus(uint32_t type, nsString status);
+    async SetStatus(uint32_t type, nsString status);
 
     /**
      * Show/hide a tooltip when the mouse hovers over an element in the content
      * document.
      */
-    ShowTooltip(uint32_t x, uint32_t y, nsString tooltip);
-    HideTooltip();
+    async ShowTooltip(uint32_t x, uint32_t y, nsString tooltip);
+    async HideTooltip();
 
     /**
      * Create an asynchronous color picker on the parent side,
      * but don't open it yet.
      */
-    PColorPicker(nsString title, nsString initialColor);
+    async PColorPicker(nsString title, nsString initialColor);
 
-    PFilePicker(nsString aTitle, int16_t aMode);
+    async PFilePicker(nsString aTitle, int16_t aMode);
 
     /**
      * Initiates an asynchronous request for one of the special indexedDB
@@ -399,7 +399,7 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    PIndexedDBPermissionRequest(Principal principal);
+    async PIndexedDBPermissionRequest(Principal principal);
 
     /**
      * window.open from inside <iframe mozbrowser> is special.  When the child
@@ -420,7 +420,7 @@ parent:
      * Instructs the TabParent to forward a request to zoom to a rect given in
      * CSS pixels. This rect is relative to the document.
      */
-    ZoomToRect(uint32_t aPresShellId, ViewID aViewId, CSSRect aRect, uint32_t aFlags);
+    async ZoomToRect(uint32_t aPresShellId, ViewID aViewId, CSSRect aRect, uint32_t aFlags);
 
     /**
      * We know for sure that content has either preventDefaulted or not
@@ -429,36 +429,36 @@ parent:
      * batched and only processed for panning and zooming if content does not
      * preventDefault.
      */
-    ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
+    async ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
 
     /**
      * Notifies the APZ code of the results of the gecko hit-test for a
      * particular input block. Each target corresponds to one touch point in the
      * touch event.
      */
-    SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+    async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
 
     /**
      * Notifies the APZ code of the allowed touch-behaviours for a particular
      * input block. Each item in the aFlags array corresponds to one touch point
      * in the touch event.
      */
-    SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aFlags);
+    async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aFlags);
 
     /**
      * Updates the zoom constraints for a scrollable frame in this tab.
      * The zoom controller code lives on the parent side and so this allows it to
      * have up-to-date zoom constraints.
      */
-    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
-                          MaybeZoomConstraints aConstraints);
+    async UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
+                                MaybeZoomConstraints aConstraints);
 
     /**
      * Tells the containing widget whether the given input block results in a
      * swipe. Should be called in response to a WidgetWheelEvent that has
      * mFlags.mCanTriggerSwipe set on it.
      */
-    RespondStartSwipeEvent(uint64_t aInputBlockId, bool aStartSwipe);
+    async RespondStartSwipeEvent(uint64_t aInputBlockId, bool aStartSwipe);
 
     /**
      * Brings up the auth prompt dialog.
@@ -467,49 +467,49 @@ parent:
      * root process.  It will be passed back to the root process with either the
      * OnAuthAvailable or OnAuthCancelled message.
      */
-    AsyncAuthPrompt(nsCString uri, nsString realm, uint64_t aCallbackId);
+    async AsyncAuthPrompt(nsCString uri, nsString realm, uint64_t aCallbackId);
 
-    __delete__();
+    async __delete__();
 
-    ReplyKeyEvent(WidgetKeyboardEvent event);
+    async ReplyKeyEvent(WidgetKeyboardEvent event);
 
-    DispatchAfterKeyboardEvent(WidgetKeyboardEvent event);
+    async DispatchAfterKeyboardEvent(WidgetKeyboardEvent event);
 
     sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
         returns (MaybeNativeKeyBinding bindings);
 
-    SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
-                             int32_t aNativeKeyCode,
-                             uint32_t aModifierFlags,
-                             nsString aCharacters,
-                             nsString aUnmodifiedCharacters,
-                             uint64_t aObserverId);
-    SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
-                               uint32_t aNativeMessage,
-                               uint32_t aModifierFlags,
-                               uint64_t aObserverId);
-    SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
-                              uint64_t aObserverId);
-    SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
+    async SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                   int32_t aNativeKeyCode,
+                                   uint32_t aModifierFlags,
+                                   nsString aCharacters,
+                                   nsString aUnmodifiedCharacters,
+                                   uint64_t aObserverId);
+    async SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                      uint32_t aNativeMessage,
-                                     double aDeltaX,
-                                     double aDeltaY,
-                                     double aDeltaZ,
                                      uint32_t aModifierFlags,
-                                     uint32_t aAdditionalFlags,
                                      uint64_t aObserverId);
-    SynthesizeNativeTouchPoint(uint32_t aPointerId,
-                               TouchPointerState aPointerState,
-                               ScreenIntPoint aPointerScreenPoint,
-                               double aPointerPressure,
-                               uint32_t aPointerOrientation,
-                               uint64_t aObserverId);
-    SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
-                             bool aLongTap,
-                             uint64_t aObserverId);
-    ClearNativeTouchSequence(uint64_t aObserverId);
+    async SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                    uint64_t aObserverId);
+    async SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
+                                           uint32_t aNativeMessage,
+                                           double aDeltaX,
+                                           double aDeltaY,
+                                           double aDeltaZ,
+                                           uint32_t aModifierFlags,
+                                           uint32_t aAdditionalFlags,
+                                           uint64_t aObserverId);
+    async SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                     TouchPointerState aPointerState,
+                                     ScreenIntPoint aPointerScreenPoint,
+                                     double aPointerPressure,
+                                     uint32_t aPointerOrientation,
+                                     uint64_t aObserverId);
+    async SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
+                                   bool aLongTap,
+                                   uint64_t aObserverId);
+    async ClearNativeTouchSequence(uint64_t aObserverId);
 child:
-    NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
+    async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
 
 
 parent:
@@ -540,9 +540,10 @@ parent:
     // Start an APZ drag on a scrollbar
     async StartScrollbarDrag(AsyncDragMetrics aDragMetrics);
 
-    InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                      nsCString visualData, uint32_t width, uint32_t height,
-                      uint32_t stride, uint8_t format, int32_t dragAreaX, int32_t dragAreaY);
+    async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
+                            nsCString visualData, uint32_t width, uint32_t height,
+                            uint32_t stride, uint8_t format,
+                            int32_t dragAreaX, int32_t dragAreaY);
 
     async AudioChannelActivityNotification(uint32_t aAudioChannel,
                                            bool aActive);
@@ -557,74 +558,74 @@ child:
      * content processes always render to a virtual <0, 0> top-left
      * point.
      */
-    Show(ScreenIntSize size,
-         ShowInfo info,
-         TextureFactoryIdentifier textureFactoryIdentifier,
-         uint64_t layersId,
-         nullable PRenderFrame renderFrame,
-         bool parentIsActive);
+    async Show(ScreenIntSize size,
+               ShowInfo info,
+               TextureFactoryIdentifier textureFactoryIdentifier,
+               uint64_t layersId,
+               nullable PRenderFrame renderFrame,
+               bool parentIsActive);
 
-    LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
+    async LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
-    OpenURI(URIParams uri, uint32_t flags);
+    async OpenURI(URIParams uri, uint32_t flags);
 
-    CacheFileDescriptor(nsString path, FileDescriptor fd);
+    async CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
-                     ScreenOrientationInternal orientation,
-                     LayoutDeviceIntPoint chromeDisp) compressall;
+    async UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
+                           ScreenOrientationInternal orientation,
+                           LayoutDeviceIntPoint chromeDisp) compressall;
 
-    UpdateFrame(FrameMetrics frame);
+    async UpdateFrame(FrameMetrics frame);
 
     // The following methods correspond to functions on the GeckoContentController
     // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
     // in that file for these functions.
-    RequestFlingSnap(ViewID aScrollID, CSSPoint aDestination);
-    AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
-    HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
-    HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
-    HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
-    NotifyFlushComplete();
+    async RequestFlingSnap(ViewID aScrollID, CSSPoint aDestination);
+    async AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
+    async HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
+    async HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
+    async HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+    async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
+    async NotifyFlushComplete();
 
 
     /**
      * Sending an activate message moves focus to the child.
      */
-    Activate();
+    async Activate();
 
-    Deactivate();
+    async Deactivate();
 
-    ParentActivated(bool aActivated);
+    async ParentActivated(bool aActivated);
 
     /**
      * StopIMEStateManagement() is called when the process loses focus and
      * should stop managing IME state.
      */
-    StopIMEStateManagement();
+    async StopIMEStateManagement();
 
     /**
      * MenuKeyboardListenerInstalled() is called when menu keyboard listener
      * is installed in the parent process.
      */
-    MenuKeyboardListenerInstalled(bool aInstalled);
+    async MenuKeyboardListenerInstalled(bool aInstalled);
 
     /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
-    MouseEvent(nsString aType,
-               float aX,
-               float aY,
-               int32_t aButton,
-               int32_t aClickCount,
-               int32_t aModifiers,
-               bool aIgnoreRootScrollFrame);
+    async MouseEvent(nsString aType,
+                     float aX,
+                     float aY,
+                     int32_t aButton,
+                     int32_t aClickCount,
+                     int32_t aModifiers,
+                     bool aIgnoreRootScrollFrame);
 
     /**
      * When two consecutive mouse move events would be added to the message queue,
      * they are 'compressed' by dumping the oldest one.
      */
-    RealMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId) compress;
+    async RealMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId) compress;
     /**
      * Mouse move events with |reason == eSynthesized| are sent via a separate
      * message because they do not generate DOM 'mousemove' events, and the
@@ -632,45 +633,45 @@ child:
      * |reason == eReal| event being dropped in favour of an |eSynthesized|
      * event, and thus a DOM 'mousemove' event to be lost.
      */
-    SynthMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    RealMouseButtonEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
-    MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    RealTouchEvent(WidgetTouchEvent aEvent,
-                   ScrollableLayerGuid aGuid,
-                   uint64_t aInputBlockId,
-                   nsEventStatus aApzResponse);
-    RealTouchMoveEvent(WidgetTouchEvent aEvent,
-                       ScrollableLayerGuid aGuid,
-                       uint64_t aInputBlockId,
-                       nsEventStatus aApzResponse);
-    RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
-    PluginEvent(WidgetPluginEvent aEvent);
+    async SynthMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+    async RealMouseButtonEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+    async RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
+    async MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+    async RealTouchEvent(WidgetTouchEvent aEvent,
+                         ScrollableLayerGuid aGuid,
+                         uint64_t aInputBlockId,
+                         nsEventStatus aApzResponse);
+    async RealTouchMoveEvent(WidgetTouchEvent aEvent,
+                             ScrollableLayerGuid aGuid,
+                             uint64_t aInputBlockId,
+                             nsEventStatus aApzResponse);
+    async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
+    async PluginEvent(WidgetPluginEvent aEvent);
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.
      */
-    KeyEvent(nsString aType,
-             int32_t aKeyCode,
-             int32_t aCharCode,
-             int32_t aModifiers,
-             bool aPreventDefault);
+    async KeyEvent(nsString aType,
+                   int32_t aKeyCode,
+                   int32_t aCharCode,
+                   int32_t aModifiers,
+                   bool aPreventDefault);
 
     /**
      * APZ notification for mouse scroll testing events.
      */
-    MouseScrollTestEvent(ViewID aScrollId, nsString aEvent);
+    async MouseScrollTestEvent(ViewID aScrollId, nsString aEvent);
 
-    CompositionEvent(WidgetCompositionEvent event);
+    async CompositionEvent(WidgetCompositionEvent event);
 
-    SelectionEvent(WidgetSelectionEvent event);
+    async SelectionEvent(WidgetSelectionEvent event);
 
     /**
      * Activate event forwarding from client to parent.
      */
-    ActivateFrameEvent(nsString aType, bool capture);
+    async ActivateFrameEvent(nsString aType, bool capture);
 
-    LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
+    async LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
 
     /**
      * Create a asynchronous request to render whatever document is
@@ -685,10 +686,10 @@ child:
      * and if true, |flushLayout| will do just that before rendering
      * the document.  The rendered image will be of size |renderSize|.
      */
-    PDocumentRenderer(nsRect documentRect, Matrix transform,
-                      nsString bgcolor,
-                      uint32_t renderFlags, bool flushLayout,
-                      IntSize renderSize);
+    async PDocumentRenderer(nsRect documentRect, Matrix transform,
+                            nsString bgcolor,
+                            uint32_t renderFlags, bool flushLayout,
+                            IntSize renderSize);
 
     /**
      * Sent by the chrome process when it no longer wants this remote
@@ -696,19 +697,19 @@ child:
      * finalizing its death by sending back __delete__() to the
      * parent.
      */
-    Destroy();
+    async Destroy();
 
 
     /**
      * Tell the child side if it has to update it's touchable region
      * to the parent.
      */
-    SetUpdateHitRegion(bool aEnabled);
+    async SetUpdateHitRegion(bool aEnabled);
 
     /**
      * Update the child side docShell active (resource use) state.
      */
-    SetDocShellIsActive(bool aIsActive, bool aIsHidden);
+    async SetDocShellIsActive(bool aIsActive, bool aIsHidden);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.
@@ -724,7 +725,7 @@ child:
     /**
      * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
      */
-    NavigateByKey(bool aForward, bool aForDocumentNavigation);
+    async NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
     /**
      * The parent (chrome thread) requests that the child inform it when
@@ -743,24 +744,24 @@ child:
      * value (-1) but in the majority of the cases this saves us from two
      * sync requests from the child to the parent.
      */
-    UIResolutionChanged(float dpi, double scale);
+    async UIResolutionChanged(float dpi, double scale);
 
     /**
      * Tell the child that the system theme has changed, and that a repaint
      * is necessary.
      */
-    ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
+    async ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
 
     /**
      * Tell the child of an app's offline status
      */
-    AppOfflineStatus(uint32_t id, bool offline);
+    async AppOfflineStatus(uint32_t id, bool offline);
 
     /**
      * Tell the browser that its frame loader has been swapped
      * with another.
      */
-    SwappedWithOtherRemoteLoader();
+    async SwappedWithOtherRemoteLoader();
 
     /**
      * A potential accesskey was just pressed. Look for accesskey targets
@@ -770,14 +771,14 @@ child:
      * @param isTrusted true if triggered by a trusted key event
      * @param modifierMask indicates which accesskey modifiers are pressed
      */
-    HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
+    async HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
 
     /**
      * Propagate a refresh to the child process
      */
-    AudioChannelChangeNotification(uint32_t aAudioChannel,
-                                   float aVolume,
-                                   bool aMuted);
+    async AudioChannelChangeNotification(uint32_t aAudioChannel,
+                                         float aVolume,
+                                         bool aMuted);
 
 /*
  * FIXME: write protocol!

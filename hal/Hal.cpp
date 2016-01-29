@@ -61,13 +61,10 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace hal {
 
-PRLogModuleInfo *
+mozilla::LogModule *
 GetHalLog()
 {
-  static PRLogModuleInfo *sHalLog;
-  if (!sHalLog) {
-    sHalLog = PR_NewLogModule("hal");
-  }
+  static mozilla::LazyLogModule sHalLog("hal");
   return sHalLog;
 }
 

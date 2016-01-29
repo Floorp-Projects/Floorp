@@ -59,19 +59,19 @@ parent:
   // two messages; see also the state transition rules.  The message
   // is either a response to the constructor (if it was parent->child)
   // or sent after it (if it was child->parent).
-  Attributes(WebBrowserPersistDocumentAttrs aAttrs,
-             OptionalInputStreamParams postData,
-             FileDescriptor[] postFiles);
-  InitFailure(nsresult aStatus);
+  async Attributes(WebBrowserPersistDocumentAttrs aAttrs,
+                   OptionalInputStreamParams postData,
+                   FileDescriptor[] postFiles);
+  async InitFailure(nsresult aStatus);
 
 child:
-  SetPersistFlags(uint32_t aNewFlags);
-  PWebBrowserPersistResources();
-  PWebBrowserPersistSerialize(WebBrowserPersistURIMap aMap,
-                              nsCString aRequestedContentType,
-                              uint32_t aEncoderFlags,
-                              uint32_t aWrapColumn);
-  __delete__();
+  async SetPersistFlags(uint32_t aNewFlags);
+  async PWebBrowserPersistResources();
+  async PWebBrowserPersistSerialize(WebBrowserPersistURIMap aMap,
+                                    nsCString aRequestedContentType,
+                                    uint32_t aEncoderFlags,
+                                    uint32_t aWrapColumn);
+  async __delete__();
 
 state START:
   recv Attributes goto MAIN;

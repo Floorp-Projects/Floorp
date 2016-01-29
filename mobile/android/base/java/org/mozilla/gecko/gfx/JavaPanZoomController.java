@@ -1467,4 +1467,9 @@ class JavaPanZoomController
     public void setOverscrollHandler(final Overscroll handler) {
         mOverscroll = handler;
     }
+
+    @Override
+    public ImmutableViewportMetrics adjustScrollForSurfaceShift(ImmutableViewportMetrics aMetrics, PointF aShift) {
+        return aMetrics.offsetViewportByAndClamp(aShift.x, aShift.y);
+    }
 }

@@ -28,8 +28,8 @@ parent:
    * from a secondary pool that is never persisted to disk, and aPersist is
    * ignored.
    */
-  GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPrivateBrowsing,
-               bool aPersist);
+  async GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPrivateBrowsing,
+                     bool aPersist);
 
   /**
    * Clear per-orgin list of persistent deviceIds stored for enumerateDevices
@@ -40,11 +40,11 @@ parent:
    * aOnlyPrivateBrowsing - if true then only purge the separate in-memory
    *                        per-origin list used in Private Browsing.
    */
-  SanitizeOriginKeys(uint64_t aSinceWhen, bool aOnlyPrivateBrowsing);
+  async SanitizeOriginKeys(uint64_t aSinceWhen, bool aOnlyPrivateBrowsing);
 
 child:
-  GetOriginKeyResponse(uint32_t aRequestId, nsCString key);
-  __delete__();
+  async GetOriginKeyResponse(uint32_t aRequestId, nsCString key);
+  async __delete__();
 };
 
 } // namespace media

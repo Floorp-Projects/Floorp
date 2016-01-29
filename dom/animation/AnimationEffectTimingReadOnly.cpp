@@ -5,20 +5,49 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
+
+#include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnlyBinding.h"
+#include "mozilla/dom/KeyframeEffectBinding.h"
 
 namespace mozilla {
 
-TimingParams&
-TimingParams::operator=(const dom::AnimationEffectTimingProperties& aRhs)
+TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs)
+  : mDuration(aRhs.mDuration)
+  , mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
+  , mIterations(aRhs.mIterations)
+  , mDirection(aRhs.mDirection)
+  , mFill(aRhs.mFill)
 {
-  mDuration = aRhs.mDuration;
-  mDelay = TimeDuration::FromMilliseconds(aRhs.mDelay);
-  mIterations = aRhs.mIterations;
-  mDirection = aRhs.mDirection;
-  mFill = aRhs.mFill;
+}
 
-  return *this;
+TimingParams::TimingParams(double aDuration)
+{
+  mDuration.SetAsUnrestrictedDouble() = aDuration;
+}
+
+/* static */ TimingParams
+TimingParams::FromOptionsUnion(
+  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
+{
+  if (aOptions.IsUnrestrictedDouble()) {
+    return TimingParams(aOptions.GetAsUnrestrictedDouble());
+  } else {
+    MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
+    return TimingParams(aOptions.GetAsKeyframeEffectOptions());
+  }
+}
+
+/* static */ TimingParams
+TimingParams::FromOptionsUnion(
+  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+{
+  if (aOptions.IsUnrestrictedDouble()) {
+    return TimingParams(aOptions.GetAsUnrestrictedDouble());
+  } else {
+    MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
+    return TimingParams(aOptions.GetAsKeyframeAnimationOptions());
+  }
 }
 
 bool

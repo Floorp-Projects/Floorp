@@ -2,12 +2,12 @@ protocol threeDirections {
 
     // sanity check that the three direction specifiers are being accepted
 child:
-    ChildMsg();
+    async ChildMsg();
 
 parent:
-    ParentMsg();
+    async ParentMsg();
 
 both:
-    BothMsg();
+    async BothMsg();
 
 };

@@ -2677,20 +2677,6 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     return NS_OK;
 }
 
-static PLDHashOperator
-FirePendingMergeNotification(nsIURI* aKey, nsCOMPtr<nsIObserver>& aObserver, void* aClosure)
-{
-    aObserver->Observe(aKey, "xul-overlay-merged", EmptyString().get());
-
-    typedef nsInterfaceHashtable<nsURIHashKey,nsIObserver> table;
-    table* observers = static_cast<table*>(aClosure);
-    if (observers) {
-      observers->Remove(aKey);
-    }
-
-    return PL_DHASH_REMOVE;
-}
-
 nsresult
 XULDocument::ResumeWalk()
 {
@@ -3041,9 +3027,23 @@ XULDocument::DoneWalking()
 
         // Walk the set of pending load notifications and notify any observers.
         // See below for detail.
-        if (mPendingOverlayLoadNotifications)
-            mPendingOverlayLoadNotifications->Enumerate(
-                FirePendingMergeNotification, mOverlayLoadObservers.get());
+        if (mPendingOverlayLoadNotifications) {
+            nsInterfaceHashtable<nsURIHashKey,nsIObserver>* observers =
+                mOverlayLoadObservers.get();
+            for (auto iter = mPendingOverlayLoadNotifications->Iter();
+                 !iter.Done();
+                 iter.Next()) {
+                nsIURI* aKey = iter.Key();
+                iter.Data()->Observe(aKey, "xul-overlay-merged",
+                                     EmptyString().get());
+
+                if (observers) {
+                  observers->Remove(aKey);
+                }
+
+                iter.Remove();
+            }
+        }
     }
     else {
         if (mOverlayLoadObservers) {

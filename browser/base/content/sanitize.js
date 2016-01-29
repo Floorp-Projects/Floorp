@@ -695,7 +695,8 @@ Sanitizer.onStartup = Task.async(function*() {
     // One time migration to remove support for the clear saved passwords on exit feature.
     if (!Services.prefs.getBoolPref("privacy.sanitize.migrateClearSavedPwdsOnExit")) {
       let deprecatedPref = "privacy.clearOnShutdown.passwords";
-      let doUpdate = Services.prefs.prefHasUserValue(deprecatedPref) &&
+      let doUpdate = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
+                     Services.prefs.prefHasUserValue(deprecatedPref) &&
                      Services.prefs.getBoolPref(deprecatedPref);
       if (doUpdate) {
         Services.logins.removeAllLogins();

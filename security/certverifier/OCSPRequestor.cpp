@@ -16,7 +16,7 @@
 #include "nsServiceManagerUtils.h"
 #include "secerr.h"
 
-extern PRLogModuleInfo* gCertVerifierLog;
+extern mozilla::LazyLogModule gCertVerifierLog;
 
 namespace mozilla {
 

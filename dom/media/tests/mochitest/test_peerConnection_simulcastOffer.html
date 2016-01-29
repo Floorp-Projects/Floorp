@@ -52,7 +52,9 @@
   ]);
 
   runNetworkTest(() =>
-    pushPrefs(['media.peerconnection.simulcast', true]).then(() => {
+    pushPrefs(['media.peerconnection.simulcast', true],
+              ['media.peerconnection.video.min_bitrate_estimate', 100*1000]).then(() => {
+      SimpleTest.requestCompleteLog();
       var stream;
       var helper = new CaptureStreamTestHelper2D(50,50);
       var canvas = helper.createAndAppendElement('canvas', 'source_canvas');

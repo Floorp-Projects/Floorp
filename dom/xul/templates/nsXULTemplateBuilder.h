@@ -41,6 +41,7 @@ class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
                              public nsStubDocumentObserver
 {
     void CleanUp(bool aIsFinal);
+    void DestroyMatchMap();
 
 public:
     nsXULTemplateBuilder();

@@ -7,19 +7,19 @@ intr protocol PTestShutdown {
     manages PTestShutdownSub;
 
 child:
-    Start();
+    async Start();
 
 parent:
     // NB: we test deletion and crashing only, not shutdown, because
     // crashing is the same code path as shutdown, and other IPDL unit
     // tests check shutdown semantics
-    PTestShutdownSub(bool expectCrash);
+    async PTestShutdownSub(bool expectCrash);
 
     // Used to synchronize between parent and child, to avoid races
     // around flushing socket write queues
     sync Sync();
 
-    __delete__();
+    async __delete__();
 
 
 state START:

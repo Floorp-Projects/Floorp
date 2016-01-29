@@ -25,7 +25,7 @@ protocol PBackgroundIDBDatabaseRequest
   manager PBackgroundIDBDatabase;
 
 child:
-  __delete__(DatabaseRequestResponse response);
+  async __delete__(DatabaseRequestResponse response);
 };
 
 } // namespace indexedDB

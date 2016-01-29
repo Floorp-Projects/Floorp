@@ -21,7 +21,7 @@ protocol PCacheOp
   manager PCache or PCacheStorage;
 
 child:
-  __delete__(ErrorResult aRv, CacheOpResult aResult);
+  async __delete__(ErrorResult aRv, CacheOpResult aResult);
 };
 
 } // namespace cache
