@@ -41,6 +41,12 @@ public:
   int32_t Compare(const ComputedTimingFunction& aRhs) const;
   void AppendToString(nsAString& aResult) const;
 
+  static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
+                           double aPortion)
+  {
+    return aFunction.isSome() ? aFunction->GetValue(aPortion) : aPortion;
+  }
+
 private:
   nsTimingFunction::Type mType;
   nsSMILKeySpline mTimingFunction;
