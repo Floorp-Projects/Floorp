@@ -27,6 +27,7 @@ namespace mozilla {
 namespace dom {
 struct AnimationEffectTimingProperties;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
+class UnrestrictedDoubleOrKeyframeAnimationOptions;
 }
 
 struct TimingParams
@@ -38,6 +39,8 @@ struct TimingParams
 
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
+  static TimingParams FromOptionsUnion(
+    const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions);
 
   // The unitialized state of mDuration represents "auto".
   // Bug 1237173: We will replace this with Maybe<TimeDuration>.
