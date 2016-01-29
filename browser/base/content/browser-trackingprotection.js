@@ -4,7 +4,7 @@
 
 var TrackingProtection = {
   // If the user ignores the doorhanger, we stop showing it after some time.
-  MAX_INTROS: 0,
+  MAX_INTROS: 20,
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   enabledGlobally: false,
