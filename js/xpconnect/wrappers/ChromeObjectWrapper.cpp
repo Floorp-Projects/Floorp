@@ -21,8 +21,8 @@ const ChromeObjectWrapper ChromeObjectWrapper::singleton;
 bool
 ChromeObjectWrapper::defineProperty(JSContext* cx, HandleObject wrapper,
                                     HandleId id,
-                                    Handle<JSPropertyDescriptor> desc,
-                                    JS::ObjectOpResult& result) const
+                                    Handle<PropertyDescriptor> desc,
+                                    ObjectOpResult& result) const
 {
     if (!AccessCheck::checkPassToPrivilegedCode(cx, wrapper, desc.value()))
         return false;

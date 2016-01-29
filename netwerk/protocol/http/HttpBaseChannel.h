@@ -21,7 +21,7 @@
 #include "nsHttpHandler.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIForcePendingChannel.h"
-#include "nsIUploadChannel.h"
+#include "nsIFormPOSTActionChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
@@ -66,7 +66,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIEncodedChannel
                       , public nsIHttpChannel
                       , public nsIHttpChannelInternal
-                      , public nsIUploadChannel
+                      , public nsIFormPOSTActionChannel
                       , public nsIUploadChannel2
                       , public nsISupportsPriority
                       , public nsIClassOfService
@@ -83,6 +83,7 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUPLOADCHANNEL
+  NS_DECL_NSIFORMPOSTACTIONCHANNEL
   NS_DECL_NSIUPLOADCHANNEL2
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSITIMEDCHANNEL

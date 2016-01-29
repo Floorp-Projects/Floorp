@@ -35,10 +35,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
     case LOCAL_GL_SAMPLE_COVERAGE:
     case LOCAL_GL_TRANSFORM_FEEDBACK_PAUSED:
-    case LOCAL_GL_TRANSFORM_FEEDBACK_ACTIVE:
-    case LOCAL_GL_UNPACK_SKIP_IMAGES:
-    case LOCAL_GL_UNPACK_SKIP_PIXELS:
-    case LOCAL_GL_UNPACK_SKIP_ROWS: {
+    case LOCAL_GL_TRANSFORM_FEEDBACK_ACTIVE: {
       realGLboolean b = 0;
       gl->fGetBooleanv(pname, &b);
       return JS::BooleanValue(bool(b));
@@ -86,6 +83,15 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       gl->fGetIntegerv(pname, &val);
       return JS::Int32Value(val);
     }
+
+    case LOCAL_GL_UNPACK_SKIP_IMAGES:
+      return JS::Int32Value(mPixelStore_UnpackSkipImages);
+
+    case LOCAL_GL_UNPACK_SKIP_PIXELS:
+      return JS::Int32Value(mPixelStore_UnpackSkipPixels);
+
+    case LOCAL_GL_UNPACK_SKIP_ROWS:
+      return JS::Int32Value(mPixelStore_UnpackSkipRows);
 
     case LOCAL_GL_MAX_3D_TEXTURE_SIZE:
       return JS::Int32Value(mImplMax3DTextureSize);

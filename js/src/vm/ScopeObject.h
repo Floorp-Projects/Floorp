@@ -807,7 +807,7 @@ class ModuleEnvironmentObject : public LexicalScopeBase
     static bool setProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                             HandleValue receiver, JS::ObjectOpResult& result);
     static bool getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                                         MutableHandle<JSPropertyDescriptor> desc);
+                                         MutableHandle<PropertyDescriptor> desc);
     static bool deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
                                ObjectOpResult& result);
     static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,

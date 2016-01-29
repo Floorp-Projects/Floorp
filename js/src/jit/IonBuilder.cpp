@@ -5044,7 +5044,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         if (types && !types->unknown()) {
             TemporaryTypeSet* clonedTypes = types->clone(alloc_->lifoAlloc());
             if (!clonedTypes)
-                return oom();
+                return false;
             MTypeBarrier* barrier = MTypeBarrier::New(alloc(), callInfo.thisArg(), clonedTypes);
             current->add(barrier);
             if (barrier->type() == MIRType_Undefined)

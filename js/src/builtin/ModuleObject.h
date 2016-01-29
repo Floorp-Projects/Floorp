@@ -152,9 +152,9 @@ class ModuleNamespaceObject : public ProxyObject
         JS::Value getEnumerateFunction(HandleObject proxy) const;
 
         bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                      MutableHandle<JSPropertyDescriptor> desc) const override;
+                                      MutableHandle<PropertyDescriptor> desc) const override;
         bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                            Handle<JSPropertyDescriptor> desc,
+                            Handle<PropertyDescriptor> desc,
                             ObjectOpResult& result) const override;
         bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
                              AutoIdVector& props) const override;

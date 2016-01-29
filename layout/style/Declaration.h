@@ -378,6 +378,11 @@ private:
   void AppendVariableAndValueToString(const nsAString& aName,
                                       nsAString& aResult) const;
 
+  void GetImageLayerValue(nsCSSCompressedDataBlock *data,
+                          nsAString& aValue,
+                          nsCSSValue::Serialization aSerialization,
+                          const nsCSSProperty aTable[]) const;
+
 public:
   /**
    * Returns the property at the given index in the ordered list of

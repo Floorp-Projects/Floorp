@@ -69,14 +69,14 @@ public:
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) = 0;
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) = 0;
     // NB: resolveOwnProperty may decide whether or not to cache what it finds
     // on the holder. If the result is not cached, the lookup will happen afresh
     // for each access, which is the right thing for things like dynamic NodeList
     // properties.
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper,
                                     JS::HandleObject wrapper, JS::HandleObject holder,
-                                    JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc);
+                                    JS::HandleId id, JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                  JS::ObjectOpResult& result) {
@@ -128,13 +128,13 @@ public:
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) override;
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override;
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
-                                    JS::MutableHandle<JSPropertyDescriptor> desc) override;
+                                    JS::MutableHandle<JS::PropertyDescriptor> desc) override;
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::Handle<JS::PropertyDescriptor> desc,
+                        JS::Handle<JS::PropertyDescriptor> existingDesc,
                         JS::ObjectOpResult& result, bool* defined);
     virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector& props);
@@ -145,7 +145,7 @@ public:
 
     static bool resolveDOMCollectionProperty(JSContext* cx, JS::HandleObject wrapper,
                                              JS::HandleObject holder, JS::HandleId id,
-                                             JS::MutableHandle<JSPropertyDescriptor> desc);
+                                             JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     static XPCWrappedNative* getWN(JSObject* wrapper);
 
@@ -168,7 +168,7 @@ public:
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) override
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
     {
         // Xrays for DOM binding objects have a prototype chain that consists of
         // Xrays for the prototypes of the DOM binding object (ignoring changes
@@ -183,10 +183,10 @@ public:
     }
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
-                                    JS::MutableHandle<JSPropertyDescriptor> desc) override;
+                                    JS::MutableHandle<JS::PropertyDescriptor> desc) override;
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::Handle<JS::PropertyDescriptor> desc,
+                        JS::Handle<JS::PropertyDescriptor> existingDesc,
                         JS::ObjectOpResult& result, bool* defined);
     virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector& props);
@@ -216,20 +216,20 @@ public:
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) override
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
     {
         MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
     }
 
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
-                                    JS::MutableHandle<JSPropertyDescriptor> desc) override;
+                                    JS::MutableHandle<JS::PropertyDescriptor> desc) override;
 
     bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id, JS::ObjectOpResult& result);
 
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::Handle<JS::PropertyDescriptor> desc,
+                        JS::Handle<JS::PropertyDescriptor> existingDesc,
                         JS::ObjectOpResult& result, bool* defined);
 
     virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper, unsigned flags,
@@ -317,14 +317,14 @@ public:
     static bool getOwnPropertyFromWrapperIfSafe(JSContext* cx,
                                                 JS::HandleObject wrapper,
                                                 JS::HandleId id,
-                                                JS::MutableHandle<JSPropertyDescriptor> desc);
+                                                JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     // Like the above, but operates in the target compartment.
     static bool getOwnPropertyFromTargetIfSafe(JSContext* cx,
                                                JS::HandleObject target,
                                                JS::HandleObject wrapper,
                                                JS::HandleId id,
-                                               JS::MutableHandle<JSPropertyDescriptor> desc);
+                                               JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     static const JSClass HolderClass;
     static JSXrayTraits singleton;
@@ -343,18 +343,18 @@ public:
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) override
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) override
     {
         MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
     }
 
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
-                                    JS::MutableHandle<JSPropertyDescriptor> desc) override;
+                                    JS::MutableHandle<JS::PropertyDescriptor> desc) override;
 
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-                        JS::Handle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::Handle<JS::PropertyDescriptor> desc,
+                        JS::Handle<JS::PropertyDescriptor> existingDesc,
                         JS::ObjectOpResult& result, bool* defined)
     {
         *defined = false;
@@ -425,9 +425,9 @@ class XrayWrapper : public Base {
 
     /* Standard internal methods. */
     virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                JS::Handle<JSPropertyDescriptor> desc,
+                                JS::Handle<JS::PropertyDescriptor> desc,
                                 JS::ObjectOpResult& result) const override;
     virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                  JS::AutoIdVector& props) const override;
@@ -458,7 +458,7 @@ class XrayWrapper : public Base {
 
     /* SpiderMonkey extensions. */
     virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
     virtual bool hasOwn(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                         bool* bp) const override;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
@@ -511,7 +511,7 @@ public:
 
     virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
 
     // We just forward the high-level methods to the BaseProxyHandler versions
     // which implement them in terms of lower-level methods.
@@ -525,7 +525,7 @@ public:
 
     virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
     virtual bool hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                         bool* bp) const override;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,

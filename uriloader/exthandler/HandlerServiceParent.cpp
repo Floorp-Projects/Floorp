@@ -116,6 +116,7 @@ NS_IMETHODIMP ProxyHandlerInfo::SetPreferredAction(nsHandlerInfoAction aPreferre
                              mHandlerInfo.preferredApplicationHandler(),
                              mHandlerInfo.possibleApplicationHandlers(),
                              aPreferredAction);
+  mPrefAction = aPreferredAction;
   return NS_OK;
 }
 

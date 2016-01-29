@@ -1140,11 +1140,6 @@ class IonBuilder
 
     IonBuilder* outermostBuilder();
 
-    bool oom() {
-        abortReason_ = AbortReason_Alloc;
-        return false;
-    }
-
     struct LoopHeader {
         jsbytecode* pc;
         MBasicBlock* header;

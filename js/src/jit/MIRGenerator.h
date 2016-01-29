@@ -170,8 +170,6 @@ class MIRGenerator
     const CompileInfo* info_;
     const OptimizationInfo* optimizationInfo_;
     TempAllocator* alloc_;
-    JSFunction* fun_;
-    uint32_t nslots_;
     MIRGraph* graph_;
     AbortReason abortReason_;
     bool shouldForceAbort_; // Force AbortReason_Disable

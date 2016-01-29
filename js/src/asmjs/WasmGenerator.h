@@ -28,7 +28,6 @@ namespace js {
 namespace wasm {
 
 class FunctionGenerator;
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 // A slow function describes a function that took longer than msThreshold to
 // validate and compile.
@@ -48,8 +47,8 @@ struct SlowFunction
 typedef Vector<SlowFunction> SlowFunctionVector;
 
 // The ModuleGeneratorData holds all the state shared between the
-// ModuleGenerator and ModuleGeneratorThreadView. The ModuleGeneratorData is
-// encapsulated by ModuleGenerator/ModuleGeneratorThreadView classes which
+// ModuleGenerator and ModuleGeneratorThreadView. The ModuleGeneratorData
+// is encapsulated by ModuleGenerator/ModuleGeneratorThreadView classes which
 // present a race-free interface to the code in each thread assuming any given
 // element is initialized by the ModuleGenerator thread before an index to that
 // element is written to Bytecode sent to a ModuleGeneratorThreadView thread.
@@ -57,15 +56,17 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 
 struct ModuleImportGeneratorData
 {
-    DeclaredSig* sig;
+    const DeclaredSig* sig;
     uint32_t globalDataOffset;
+
+    ModuleImportGeneratorData() : sig(nullptr), globalDataOffset(0) {}
+    explicit ModuleImportGeneratorData(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
 };
 
 typedef Vector<ModuleImportGeneratorData, 0, SystemAllocPolicy> ModuleImportGeneratorDataVector;
 
-// Global variable descriptor, in asm.js only.
-
-struct AsmJSGlobalVariable {
+struct AsmJSGlobalVariable
+{
     ExprType type;
     unsigned globalDataOffset;
     bool isConst;
@@ -159,6 +160,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishTask(IonCompileTask* task);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
     bool startedFuncDefs() const { return !!threadView_; }
+    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
@@ -171,8 +173,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::MacroAssembler& masm() { return masm_; }
     const Uint32Vector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
-    // Global data:
-    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
+    // asm.js global variables:
     bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
     const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
 
@@ -187,7 +188,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Imports:
-    bool initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset);
+    bool initImport(uint32_t importIndex, uint32_t sigIndex);
     uint32_t numImports() const;
     const ModuleImportGeneratorData& import(uint32_t index) const;
     bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
@@ -243,7 +244,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     // Data created during function generation, then handed over to the
     // FuncBytecode in ModuleGenerator::finishFunc().
     UniqueBytecode     bytecode_;
-    SourceCoordsVector callSourceCoords_;
+    Uint32Vector       callSiteLineNums_;
     ValTypeVector      locals_;
 
     uint32_t lineOrBytecode_;
@@ -256,9 +257,8 @@ class MOZ_STACK_CLASS FunctionGenerator
     Bytecode& bytecode() const {
         return *bytecode_;
     }
-    bool addSourceCoords(size_t byteOffset, uint32_t line, uint32_t column) {
-        SourceCoords sc = { byteOffset, line, column };
-        return callSourceCoords_.append(sc);
+    bool addCallSiteLineNum(uint32_t lineno) {
+        return callSiteLineNums_.append(lineno);
     }
     bool addLocal(ValType v) {
         return locals_.append(v);
