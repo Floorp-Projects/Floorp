@@ -503,6 +503,7 @@ var BrowserApp = {
     Distribution.init();
     Tabs.init();
     SearchEngines.init();
+    Experiments.init();
 
     if ("arguments" in window) {
       if (window.arguments[0])
@@ -6954,6 +6955,33 @@ var Telemetry = {
     let histogram = Services.telemetry.getHistogramById(aHistogramId);
     histogram.add(aValue);
   },
+};
+
+var Experiments = {
+
+  // Enable malware download protection (bug 936041)
+  MALWARE_DOWNLOAD_PROTECTION: "malware-download-protection",
+
+  init() {
+    Messaging.sendRequestForResult({
+      type: "Experiments:GetActive"
+    }).then(experiments => {
+      let names = JSON.parse(experiments);
+      for (let name of names) {
+        switch (name) {
+          case this.MALWARE_DOWNLOAD_PROTECTION: {
+            // Apply experiment preferences on the default branch. This allows
+            // us to avoid migrating user prefs when experiments are enabled/disabled,
+            // and it also allows users to override these prefs in about:config.
+            let defaults = Services.prefs.getDefaultBranch(null);
+            defaults.setBoolPref("browser.safebrowsing.downloads.enabled", true);
+            defaults.setBoolPref("browser.safebrowsing.downloads.remote.enabled", true);
+            continue;
+          }
+        }
+      }
+    });
+  }
 };
 
 var ExternalApps = {
