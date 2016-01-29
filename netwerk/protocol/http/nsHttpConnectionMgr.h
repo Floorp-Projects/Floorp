@@ -565,9 +565,6 @@ private:
                                              nsHttpTransaction *trans);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
-    static PLDHashOperator ProcessSpdyPendingQCB(
-        const nsACString &key, nsAutoPtr<nsConnectionEntry> &ent,
-        void *closure);
 
     // used to marshall events to the socket transport thread.
     nsresult PostEvent(nsConnEventHandler  handler,
@@ -630,9 +627,6 @@ private:
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
-    static PLDHashOperator ReadConnectionEntry(const nsACString &key,
-                                               nsAutoPtr<nsConnectionEntry> &ent,
-                                               void *aArg);
     static PLDHashOperator RemoveDeadConnections(const nsACString &key,
         nsAutoPtr<nsConnectionEntry> &ent,
         void *aArg);
