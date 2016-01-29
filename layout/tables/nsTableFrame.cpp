@@ -988,11 +988,9 @@ nsTableFrame::CollectRows(nsIFrame*                   aFrame,
 {
   NS_PRECONDITION(aFrame, "null frame");
   int32_t numRows = 0;
-  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
     aCollection.AppendElement(static_cast<nsTableRowFrame*>(childFrame));
     numRows++;
-    childFrame = childFrame->GetNextSibling();
   }
   return numRows;
 }
@@ -1206,10 +1204,8 @@ nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   // stacking context, in which case the child won't use its passed-in
   // BorderBackground list anyway. It does affect cell borders though; this
   // lets us get cell borders into the nsTableFrame's BorderBackground list.
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
-  while (kid) {
+  for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-    kid = kid->GetNextSibling();
   }
 }
 
@@ -1504,9 +1500,8 @@ nsTableFrame::ProcessRowInserted(nscoord aNewBSize)
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
     NS_ASSERTION(rgFrame, "Must have rgFrame here");
-    nsIFrame* childFrame = rgFrame->GetFirstPrincipalChild();
     // find the row that was inserted first
-    while (childFrame) {
+    for (nsIFrame* childFrame : rgFrame->PrincipalChildList()) {
       nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
       if (rowFrame) {
         if (rowFrame->IsFirstInserted()) {
@@ -1518,7 +1513,6 @@ nsTableFrame::ProcessRowInserted(nscoord aNewBSize)
           return; // found it, so leave
         }
       }
-      childFrame = childFrame->GetNextSibling();
     }
   }
 }
@@ -2439,7 +2433,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
       aPrevFrame = nullptr;
       while (pseudoFrame  && (parentContent ==
                               (content = pseudoFrame->GetContent()))) {
-        pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
+        pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
       if (MOZ_LIKELY(container)) { // XXX need this null-check, see bug 411823.
@@ -2465,7 +2459,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
           pseudoFrame = kidFrame;
           while (pseudoFrame  && (parentContent ==
                                   (content = pseudoFrame->GetContent()))) {
-            pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
+            pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
           }
           int32_t index = container->IndexOf(content);
           if (index > lastIndex && index < newIndex) {
@@ -3923,7 +3917,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
   // aPriorChildFrame is not of type aChildType, so we need start from
   // the beginnng and find the closest one
   nsIFrame* lastMatchingFrame = nullptr;
-  nsIFrame* childFrame = aParentFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = aParentFrame->PrincipalChildList().FirstChild();
   while (childFrame && (childFrame != aPriorChildFrame)) {
     if (aChildType == childFrame->GetType()) {
       lastMatchingFrame = childFrame;
@@ -3940,28 +3934,24 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
   if (!aKidFrame)
     return;
 
-  nsIFrame* cFrame = aKidFrame->GetFirstPrincipalChild();
-  while (cFrame) {
+  for (nsIFrame* cFrame : aKidFrame->PrincipalChildList()) {
     nsTableRowFrame *rowFrame = do_QueryFrame(cFrame);
     if (rowFrame) {
       printf("row(%d)=%p ", rowFrame->GetRowIndex(),
              static_cast<void*>(rowFrame));
-      nsIFrame* childFrame = cFrame->GetFirstPrincipalChild();
-      while (childFrame) {
+      for (nsIFrame* childFrame : cFrame->PrincipalChildList()) {
         nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
         if (cellFrame) {
           int32_t colIndex;
           cellFrame->GetColIndex(colIndex);
           printf("cell(%d)=%p ", colIndex, static_cast<void*>(childFrame));
         }
-        childFrame = childFrame->GetNextSibling();
       }
       printf("\n");
     }
     else {
       DumpRowGroup(rowFrame);
     }
-    cFrame = cFrame->GetNextSibling();
   }
 }
 

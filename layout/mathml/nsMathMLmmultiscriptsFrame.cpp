@@ -173,7 +173,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   // depend only on the current font
   ////////////////////////////////////////
 
-  nsIFrame* baseFrame = aFrame->GetFirstPrincipalChild();
+  nsIFrame* baseFrame = aFrame->PrincipalChildList().FirstChild();
 
   if (!baseFrame) {
     if (tag == nsGkAtoms::mmultiscripts_)
@@ -330,7 +330,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   // Note that only msup starts with a superscript.
   bool isSubScript = (tag != nsGkAtoms::msup_);
 
-  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
   while (childFrame) {
     if (childFrame->GetContent()->IsMathMLElement(nsGkAtoms::mprescripts_)) {
       if (tag != nsGkAtoms::mmultiscripts_) {

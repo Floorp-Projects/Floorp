@@ -1466,7 +1466,7 @@ HyperTextAccessible::CaretLineNumber()
       break;
 
     // Add lines for the sibling frames before the caret
-    nsIFrame *sibling = parentFrame->GetFirstPrincipalChild();
+    nsIFrame *sibling = parentFrame->PrincipalChildList().FirstChild();
     while (sibling && sibling != caretFrame) {
       nsAutoLineIterator lineIterForSibling = sibling->GetLineIterator();
       if (lineIterForSibling) {

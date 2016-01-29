@@ -13,14 +13,10 @@ task:
       - entrypoint
       - ./bin/pull_gaia.sh &&
       - >
-        python ./mozharness/scripts/mulet_unittest.py --no-read-buildbot-config
-        --config-file ./mozharness/configs/b2g/generic_config.py
-        --config-file ./mozharness/configs/b2g/mulet_config.py
-        --config-file ./mozharness_configs/remove_executables.py
-        --no-pull
+        python ./mozharness/scripts/mulet_unittest.py
+        --config-file ./mozharness/configs/b2g/taskcluster_mulet_automation.py
         --installer-url {{build_url}}
         --test-packages-url {{test_packages_url}}
-        --download-symbols ondemand
         --test-suite reftest
         --test-manifest tests/layout/reftests/reftest.list
         --this-chunk {{chunk}}

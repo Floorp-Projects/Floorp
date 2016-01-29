@@ -602,7 +602,7 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
     return false;
 
   if (mHelper.mIsRoot) {
-    nsIFrame *f = mHelper.mScrolledFrame->GetFirstPrincipalChild();
+    nsIFrame *f = mHelper.mScrolledFrame->PrincipalChildList().FirstChild();
     if (f && f->GetType() == nsGkAtoms::svgOuterSVGFrame &&
         static_cast<nsSVGOuterSVGFrame*>(f)->VerticalScrollbarNotNeeded()) {
       // Common SVG case - avoid a bad guess.
@@ -3913,8 +3913,7 @@ ScrollFrameHelper::ReloadChildFrames()
   mScrollCornerBox = nullptr;
   mResizerBox = nullptr;
 
-  nsIFrame* frame = mOuter->GetFirstPrincipalChild();
-  while (frame) {
+  for (nsIFrame* frame : mOuter->PrincipalChildList()) {
     nsIContent* content = frame->GetContent();
     if (content == mOuter->GetContent()) {
       NS_ASSERTION(!mScrolledFrame, "Already found the scrolled frame");
@@ -3940,8 +3939,6 @@ ScrollFrameHelper::ReloadChildFrames()
         mScrollCornerBox = frame;
       }
     }
-
-    frame = frame->GetNextSibling();
   }
 }
 
@@ -5337,7 +5334,7 @@ ScrollFrameHelper::GetScrolledRectInternal(const nsRect& aScrolledFrameOverflowA
   // direction set by the text content overrides the direction of the frame
   if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
       NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    nsIFrame* childFrame = mScrolledFrame->GetFirstPrincipalChild();
+    nsIFrame* childFrame = mScrolledFrame->PrincipalChildList().FirstChild();
     if (childFrame) {
       frameDir =
         (nsBidiPresUtils::ParagraphDirection(childFrame) == NSBIDI_LTR)

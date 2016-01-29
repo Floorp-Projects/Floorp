@@ -577,12 +577,11 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
   ParseSpacingAttributes(aTableFrame);
 
   // mtable is simple and only has one (pseudo) row-group
-  nsIFrame* rgFrame = aTableFrame->GetFirstPrincipalChild();
+  nsIFrame* rgFrame = aTableFrame->PrincipalChildList().FirstChild();
   if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
     return;
 
-  nsIFrame* rowFrame = rgFrame->GetFirstPrincipalChild();
-  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+  for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
     DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
     if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
       // Map row rowalign.
@@ -590,8 +589,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
       // Map row columnalign.
       ParseFrameAttribute(rowFrame, nsGkAtoms::columnalign_, true);
 
-      nsIFrame* cellFrame = rowFrame->GetFirstPrincipalChild();
-      for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+      for (nsIFrame* cellFrame : rowFrame->PrincipalChildList()) {
         DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
         if (IS_TABLE_CELL(cellFrame->GetType())) {
           // Map cell rowalign.
@@ -725,7 +723,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
   nsIFrame* tableFrame = mFrames.FirstChild();
   NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
                "should always have an inner table frame");
-  nsIFrame* rgFrame = tableFrame->GetFirstPrincipalChild();
+  nsIFrame* rgFrame = tableFrame->PrincipalChildList().FirstChild();
   if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
     return NS_OK;
 
@@ -798,7 +796,7 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(int32_t aRowIndex)
     nsIFrame* tableFrame = mFrames.FirstChild();
     NS_ASSERTION(tableFrame && tableFrame->GetType() == nsGkAtoms::tableFrame,
                  "should always have an inner table frame");
-    nsIFrame* rgFrame = tableFrame->GetFirstPrincipalChild();
+    nsIFrame* rgFrame = tableFrame->PrincipalChildList().FirstChild();
     if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
       return nullptr;
     for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {

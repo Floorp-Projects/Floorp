@@ -49,9 +49,9 @@ protected:
   nsCOMArray<nsIWeakReference> m_listeners;
 
   /**
-   * Logging.  The module is called "URILoader"
+   * NSPR logging.  The module is called "URILoader"
    */
-  static mozilla::LazyLogModule mLog;
+  static PRLogModuleInfo* mLog;
   
   friend class nsDocumentOpenInfo;
 };

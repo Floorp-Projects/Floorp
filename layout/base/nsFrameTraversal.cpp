@@ -466,7 +466,7 @@ nsFrameIterator::GetPrevSibling(nsIFrame* aFrame)
 
 nsIFrame*
 nsFrameIterator::GetFirstChildInner(nsIFrame* aFrame) {
-  return aFrame->GetFirstPrincipalChild();
+  return aFrame->PrincipalChildList().FirstChild();
 }
 
 nsIFrame*

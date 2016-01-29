@@ -2276,7 +2276,7 @@ nsIPresShell::GetRootScrollFrame() const
   // Ensure root frame is a viewport frame
   if (!rootFrame || nsGkAtoms::viewportFrame != rootFrame->GetType())
     return nullptr;
-  nsIFrame* theFrame = rootFrame->GetFirstPrincipalChild();
+  nsIFrame* theFrame = rootFrame->PrincipalChildList().FirstChild();
   if (!theFrame || nsGkAtoms::scrollFrame != theFrame->GetType())
     return nullptr;
   return theFrame;
@@ -9591,13 +9591,11 @@ FindTopFrame(nsIFrame* aRoot)
     }
 
     // Try one of the children
-    nsIFrame* kid = aRoot->GetFirstPrincipalChild();
-    while (nullptr != kid) {
+    for (nsIFrame* kid : aRoot->PrincipalChildList()) {
       nsIFrame* result = FindTopFrame(kid);
       if (nullptr != result) {
         return result;
       }
-      kid = kid->GetNextSibling();
     }
   }
   return nullptr;
@@ -10177,10 +10175,8 @@ static void RecurseIndiTotals(nsPresContext* aPresContext,
     free(name);
   }
 
-  nsIFrame* child = aParentFrame->GetFirstPrincipalChild();
-  while (child) {
+  for (nsIFrame* child : aParentFrame->PrincipalChildList()) {
     RecurseIndiTotals(aPresContext, aHT, child, aLevel+1);
-    child = child->GetNextSibling();
   }
 
 }

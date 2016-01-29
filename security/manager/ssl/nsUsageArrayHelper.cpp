@@ -19,7 +19,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-extern LazyLogModule gPIPNSSLog;
+extern PRLogModuleInfo* gPIPNSSLog;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID); // XXX? needed?::
 

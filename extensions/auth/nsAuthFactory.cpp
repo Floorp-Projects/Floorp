@@ -220,12 +220,13 @@ static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
 };
 
 //-----------------------------------------------------------------------------
-mozilla::LazyLogModule gNegotiateLog("negotiateauth");
+PRLogModuleInfo *gNegotiateLog;
 
 // setup nspr logging ...
 static nsresult
 InitNegotiateAuth()
 {
+  gNegotiateLog = PR_NewLogModule("negotiateauth");
   return NS_OK;
 }
 

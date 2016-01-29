@@ -239,7 +239,10 @@ SyncScheduler.prototype = {
          this.setDefaults();
          try {
            Svc.Idle.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
-         } catch (ex if (ex.result == Cr.NS_ERROR_FAILURE)) {
+         } catch (ex) {
+           if (ex.result != Cr.NS_ERROR_FAILURE) {
+             throw ex;
+           }
            // In all likelihood we didn't have an idle observer registered yet.
            // It's all good.
          }

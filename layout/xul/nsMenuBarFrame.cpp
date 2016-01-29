@@ -185,7 +185,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
   // Find a most preferred accesskey which should be returned.
   nsIFrame* foundMenu = nullptr;
   size_t foundIndex = accessKeys.NoIndex;
-  nsIFrame* currFrame = immediateParent->GetFirstPrincipalChild();
+  nsIFrame* currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   while (currFrame) {
     nsIContent* current = currFrame->GetContent();

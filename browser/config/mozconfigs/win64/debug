@@ -30,5 +30,7 @@ ac_add_options --with-branding=browser/branding/nightly
 
 . $topsrcdir/build/win64/mozconfig.vs2013
 
+. "$topsrcdir/build/mozconfig.rust"
+
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"

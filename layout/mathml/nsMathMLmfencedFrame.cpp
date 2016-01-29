@@ -245,7 +245,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   // refactored to use nsMathMLContainerFrame::Reflow() at some stage.
 
   nsReflowStatus childStatus;
-  nsIFrame* firstChild = GetFirstPrincipalChild();
+  nsIFrame* firstChild = PrincipalChildList().FirstChild();
   nsIFrame* childFrame = firstChild;
   nscoord ascent = 0, descent = 0;
   if (firstChild || mOpenChar || mCloseChar || mSeparatorsCount > 0) {
@@ -626,8 +626,7 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingCon
   }
 
   int32_t i = 0;
-  nsIFrame* childFrame = GetFirstPrincipalChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : PrincipalChildList()) {
     // XXX This includes margin while Reflow currently doesn't consider
     // margin, so we may end up with too much space, but, with stretchy
     // characters, this is an approximation anyway.
@@ -641,8 +640,6 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingCon
                         NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel, em);
     }
     i++;
-
-    childFrame = childFrame->GetNextSibling();
   }
 
   if (mCloseChar) {

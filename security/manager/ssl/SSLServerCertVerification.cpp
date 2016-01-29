@@ -133,7 +133,7 @@
 #include "secport.h"
 #include "sslerr.h"
 
-extern mozilla::LazyLogModule gPIPNSSLog;
+extern PRLogModuleInfo* gPIPNSSLog;
 
 using namespace mozilla::pkix;
 

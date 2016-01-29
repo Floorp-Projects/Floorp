@@ -26,7 +26,7 @@
 #include "nsXULAppAPI.h"
 #include "nsContentUtils.h"
 
-extern mozilla::LazyLogModule MCD;
+extern PRLogModuleInfo *MCD;
 
 extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
                                           const char *filename, 
@@ -75,6 +75,8 @@ NS_IMPL_ISUPPORTS(nsReadConfig, nsIReadConfig, nsIObserver)
 nsReadConfig::nsReadConfig() :
     mRead(false)
 {
+    if (!MCD)
+      MCD = PR_NewLogModule("MCD");
 }
 
 nsresult nsReadConfig::Init()

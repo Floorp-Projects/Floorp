@@ -1674,11 +1674,6 @@ class MOZ_STACK_CLASS ModuleValidator
         return sigMap_.add(p, &mg_.sig(*sigIndex), *sigIndex);
     }
 
-    // ModuleGeneratorData limits:
-    static const unsigned MaxSigs    =   4 * 1024;
-    static const unsigned MaxFuncs   = 512 * 1024;
-    static const unsigned MaxImports =   4 * 1024;
-
   public:
     ModuleValidator(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* moduleFunctionNode)
       : cx_(cx),

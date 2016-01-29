@@ -327,7 +327,7 @@ nsMathMLmencloseFrame::PlaceInternal(DrawTarget*          aDrawTarget,
     nsMathMLContainerFrame::Place(aDrawTarget, false, baseSize);
 
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
-      DidReflowChildren(GetFirstPrincipalChild());
+      DidReflowChildren(PrincipalChildList().FirstChild());
       return rv;
     }
 

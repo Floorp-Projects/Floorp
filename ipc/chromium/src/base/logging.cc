@@ -42,7 +42,7 @@ Logger::~Logger()
     break;
   }
 
-  MOZ_LOG(gChromiumPRLog, prlevel, ("%s:%i: %s", mFile, mLine, mMsg ? mMsg : "<no message>"));
+  MOZ_LOG(GetLog(), prlevel, ("%s:%i: %s", mFile, mLine, mMsg ? mMsg : "<no message>"));
   if (xpcomlevel != -1)
     NS_DebugBreak(xpcomlevel, mMsg, NULL, mFile, mLine);
 
@@ -58,7 +58,15 @@ Logger::printf(const char* fmt, ...)
   va_end(args);
 }
 
-LazyLogModule Logger::gChromiumPRLog("chromium");
+PRLogModuleInfo* Logger::gChromiumPRLog;
+
+PRLogModuleInfo* Logger::GetLog()
+{
+  if (!gChromiumPRLog)
+    gChromiumPRLog = PR_NewLogModule("chromium");
+  return gChromiumPRLog;
+}
+
 } // namespace mozilla 
 
 mozilla::Logger&

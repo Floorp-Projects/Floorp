@@ -815,7 +815,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
     return;
   }
   
-  nsIFrame* child = aCurrFrame->GetFirstPrincipalChild();
+  nsIFrame* child = aCurrFrame->PrincipalChildList().FirstChild();
   while (child &&
          !child->GetContent()->IsRootOfNativeAnonymousSubtree() &&
          (!aResult->mVScrollbar || !aResult->mHScrollbar ||

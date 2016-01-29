@@ -382,7 +382,7 @@ BoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
   *aFirstVisibleChild = nullptr;
   nsIFrame* frame = GetFrame(false);
   if (!frame) return NS_OK;
-  nsIFrame* firstFrame = frame->GetFirstPrincipalChild();
+  nsIFrame* firstFrame = frame->PrincipalChildList().FirstChild();
   if (!firstFrame) return NS_OK;
   // get the content for the box and query to a dom element
   nsCOMPtr<nsIDOMElement> el = do_QueryInterface(firstFrame->GetContent());
@@ -429,7 +429,7 @@ BoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
                               nsIDOMElement** aResult)
 {
   *aResult = nullptr;
-  nsIFrame* nextFrame = aParentFrame->GetFirstPrincipalChild();
+  nsIFrame* nextFrame = aParentFrame->PrincipalChildList().FirstChild();
   nsIFrame* prevFrame = nullptr;
   while (nextFrame) {
     if (nextFrame == aFrame)

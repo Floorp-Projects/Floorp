@@ -310,8 +310,8 @@ ServiceWorkerRegistrar::ReadData()
   }
 
   if (!IsSupportedVersion(version)) {
-    nsContentUtils::LogMessageToConsole(
-      "Unsupported service worker registrar version: %s", version.get());
+    nsContentUtils::LogMessageToConsole(nsPrintfCString(
+      "Unsupported service worker registrar version: %s", version.get()).get());
     return NS_ERROR_FAILURE;
   }
 

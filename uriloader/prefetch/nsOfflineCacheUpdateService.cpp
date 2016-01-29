@@ -77,7 +77,7 @@ typedef mozilla::docshell::OfflineCacheUpdateGlue OfflineCacheUpdateGlue;
 // this enables LogLevel::Debug level information and places all output in
 // the file offlineupdate.log
 //
-LazyLogModule gOfflineCacheUpdateLog("nsOfflineCacheUpdate");
+PRLogModuleInfo *gOfflineCacheUpdateLog;
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gOfflineCacheUpdateLog, mozilla::LogLevel::Debug, args)
@@ -257,6 +257,9 @@ nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService()
 nsresult
 nsOfflineCacheUpdateService::Init()
 {
+    if (!gOfflineCacheUpdateLog)
+        gOfflineCacheUpdateLog = PR_NewLogModule("nsOfflineCacheUpdate");
+
     // Observe xpcom-shutdown event
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();

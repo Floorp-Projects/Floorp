@@ -50,7 +50,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 
-mozilla::LazyLogModule nsURILoader::mLog("URILoader");
+PRLogModuleInfo* nsURILoader::mLog = nullptr;
 
 #define LOG(args) MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Debug, args)
 #define LOG_ERROR(args) MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Error, args)
@@ -754,6 +754,9 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
 
 nsURILoader::nsURILoader()
 {
+  if (!mLog) {
+    mLog = PR_NewLogModule("URILoader");
+  }
 }
 
 nsURILoader::~nsURILoader()

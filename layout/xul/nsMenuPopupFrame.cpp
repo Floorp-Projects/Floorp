@@ -236,7 +236,7 @@ nsMenuPopupFrame::EnsureWidget()
 {
   nsView* ourView = GetView();
   if (!ourView->HasWidget()) {
-    NS_ASSERTION(!mGeneratedChildren && !GetFirstPrincipalChild(),
+    NS_ASSERTION(!mGeneratedChildren && !PrincipalChildList().FirstChild(),
                  "Creating widget for MenuPopupFrame with children");
     CreateWidgetForView(ourView);
   }
@@ -1684,7 +1684,7 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
   // try children
   currFrame = aStart;
   do {
-    nsIFrame* childFrame = currFrame->GetFirstPrincipalChild();
+    nsIFrame* childFrame = currFrame->PrincipalChildList().FirstChild();
     nsIScrollableFrame* sf = GetScrollFrame(childFrame);
     if (sf)
       return sf;
