@@ -2102,6 +2102,13 @@ SpdySession31::WriteSegments(nsAHttpSegmentWriter *writer,
     SpdyStream31 *stream = mInputFrameDataStream;
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
+    bool channelPipeFull = false;
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      LOG3(("SpdySession31::WriteSegments session=%p stream=%p 0x%X "
+            "stream channel pipe full\n",
+            this, stream, stream ? stream->StreamID() : 0));
+      channelPipeFull = mInputFrameDataStream->ChannelPipeFull();
+    }
     mSegmentWriter = nullptr;
 
     mLastDataReadEpoch = mLastReadEpoch;
@@ -2137,10 +2144,13 @@ SpdySession31::WriteSegments(nsAHttpSegmentWriter *writer,
     }
 
     if (NS_FAILED(rv)) {
-      LOG3(("SpdySession31 %p data frame read failure %x\n", this, rv));
+      LOG3(("SpdySession31::WriteSegments session=%p stream=%p 0x%X "
+            "data frame read failure %x pipefull=%d\n",
+            this, stream, stream ? stream->StreamID() : 0, rv, channelPipeFull));
       // maybe just blocked reading from network
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+      if ((rv == NS_BASE_STREAM_WOULD_BLOCK) && !channelPipeFull) {
         rv = NS_OK;
+      }
     }
 
     return rv;
