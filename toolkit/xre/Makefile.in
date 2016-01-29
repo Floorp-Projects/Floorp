@@ -19,13 +19,21 @@ $(call warnIfEmpty,TOOLKIT_EM_VERSION)
 # Valid if null: {warn,error}IfEmpty
 DEFINES += -DTOOLKIT_EM_VERSION='"$(TOOLKIT_EM_VERSION)"'
 
+ifdef MOZ_SOURCE_CHANGESET
+MOZ_SOURCE_STAMP = $MOZ_SOURCE_CHANGESET
+else
 MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template='{node}\n' 2>/dev/null))
+endif
 ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
 
   ifdef MOZ_INCLUDE_SOURCE_INFO
+    ifdef MOZ_SOURCE_REPO
+    source_repo = $MOZ_SOURCE_REPO
+    else
     source_repo := $(call getSourceRepo)
+    endif
 
     # extra sanity check for old versions of hg, no showconfig support
     ifneq (,$(filter http%,$(source_repo)))
