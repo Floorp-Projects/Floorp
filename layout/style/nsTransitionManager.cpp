@@ -65,8 +65,9 @@ ElementPropertyTransition::CurrentValuePortion() const
              "Should have one animation property for a transition");
   MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
              "Animation property should have one segment for a transition");
-  return mProperties[0].mSegments[0].mTimingFunction
-         .GetValue(computedTiming.mProgress.Value());
+  return ComputedTimingFunction::GetPortion(
+           mProperties[0].mSegments[0].mTimingFunction,
+           computedTiming.mProgress.Value());
 }
 
 ////////////////////////// CSSTransition ////////////////////////////
@@ -668,7 +669,11 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToValue = endValue;
   segment.mFromKey = 0;
   segment.mToKey = 1;
-  segment.mTimingFunction.Init(tf);
+  if (tf.mType != nsTimingFunction::Type::Linear) {
+    ComputedTimingFunction computedTimingFunction;
+    computedTimingFunction.Init(tf);
+    segment.mTimingFunction = Some(computedTimingFunction);
+  }
 
   RefPtr<CSSTransition> animation =
     new CSSTransition(mPresContext->Document()->GetScopeObject());
