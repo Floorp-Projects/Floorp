@@ -204,7 +204,7 @@ public class BrowserApp extends GeckoApp
     private BrowserToolbar mBrowserToolbar;
     private View mDoorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
-    private Refreshable mTabStrip;
+    private TabStripInterface mTabStrip;
     private ToolbarProgressView mProgressView;
     private FirstrunAnimationContainer mFirstrunAnimationContainer;
     private HomePager mHomePager;
@@ -640,7 +640,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (HardwareUtils.isTablet()) {
-            mTabStrip = (Refreshable) (((ViewStub) findViewById(R.id.tablet_tab_strip)).inflate());
+            mTabStrip = (TabStripInterface) (((ViewStub) findViewById(R.id.tablet_tab_strip)).inflate());
         }
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideOnTouchListener());
@@ -858,6 +858,16 @@ public class BrowserApp extends GeckoApp
             if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false)) {
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     showFirstrunPager();
+
+                    if (HardwareUtils.isTablet()) {
+                        mTabStrip.setOnTabChangedListener(new TabStripInterface.OnTabAddedOrRemovedListener() {
+                            @Override
+                            public void onTabChanged() {
+                                hideFirstrunPager(TelemetryContract.Method.BUTTON);
+                                mTabStrip.setOnTabChangedListener(null);
+                            }
+                        });
+                    }
                 }
                 // Don't bother trying again to show the v1 minimal first run.
                 prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false).apply();
@@ -3975,8 +3985,12 @@ public class BrowserApp extends GeckoApp
         sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
     }
 
-    public static interface Refreshable {
+    public static interface TabStripInterface {
         public void refresh();
+        void setOnTabChangedListener(OnTabAddedOrRemovedListener listener);
+        interface OnTabAddedOrRemovedListener {
+            void onTabChanged();
+        }
     }
 
     @Override
