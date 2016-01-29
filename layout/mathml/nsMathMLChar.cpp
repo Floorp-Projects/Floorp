@@ -942,9 +942,7 @@ ComputeSizeFromParts(nsPresContext* aPresContext,
   // Add the parts that cannot be left out.
   nscoord sum = 0;
   for (int32_t i = first; i <= last; i++) {
-    if (aGlyphs[i] != aGlyphs[glue]) {
-      sum += aSizes[i];
-    }
+    sum += aSizes[i];
   }
 
   // Determine how much is used in joins
