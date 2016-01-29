@@ -1641,7 +1641,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 KeyframeEffectReadOnly::BuildAnimationPropertyList(
     JSContext* aCx,
     Element* aTarget,
-    const Optional<JS::Handle<JSObject*>>& aFrames,
+    JS::Handle<JSObject*> aFrames,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv)
 {
@@ -1657,17 +1657,16 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
   // we can look at the open-ended set of properties on a
   // PropertyIndexedKeyframes or Keyframe.
 
-  if (!aFrames.WasPassed() || !aFrames.Value().get()) {
-    // The argument was omitted, or was explicitly null.  In both cases,
-    // the default dictionary value for PropertyIndexedKeyframes would
-    // result in no keyframes.
+  if (!aFrames) {
+    // The argument was explicitly null.  In this case, the default dictionary
+    // value for PropertyIndexedKeyframes would result in no keyframes.
     return;
   }
 
   // At this point we know we have an object.  We try to convert it to a
   // sequence<Keyframe> first, and if that fails due to not being iterable,
   // we try to convert it to PropertyIndexedKeyframes.
-  JS::Rooted<JS::Value> objectValue(aCx, JS::ObjectValue(*aFrames.Value()));
+  JS::Rooted<JS::Value> objectValue(aCx, JS::ObjectValue(*aFrames));
   JS::ForOfIterator iter(aCx);
   if (!iter.init(objectValue, JS::ForOfIterator::AllowNonIterable)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -1688,7 +1687,7 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
 KeyframeEffectReadOnly::Constructor(
     const GlobalObject& aGlobal,
     Element* aTarget,
-    const Optional<JS::Handle<JSObject*>>& aFrames,
+    JS::Handle<JSObject*> aFrames,
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     ErrorResult& aRv)
 {
