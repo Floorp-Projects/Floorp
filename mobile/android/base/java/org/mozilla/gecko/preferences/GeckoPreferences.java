@@ -14,6 +14,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.DataReportingNotification;
+import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoActivityStatus;
 import org.mozilla.gecko.GeckoAppShell;
@@ -161,6 +162,8 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_TAB_QUEUE = NON_PREF_PREFIX + "tab_queue";
     public static final String PREFS_TAB_QUEUE_LAST_SITE = NON_PREF_PREFIX + "last_site";
     public static final String PREFS_TAB_QUEUE_LAST_TIME = NON_PREF_PREFIX + "last_time";
+
+    private static final String PREFS_DYNAMIC_TOOLBAR = "browser.chrome.dynamictoolbar";
 
     // These values are chosen to be distinct from other Activity constants.
     private static final int REQUEST_CODE_PREF_SCREEN = 5;
@@ -894,6 +897,12 @@ OnSharedPreferenceChangeListener
                             });
                         }
                     });
+                } else if (PREFS_DYNAMIC_TOOLBAR.equals(key)) {
+                    if (DynamicToolbar.isForceDisabled()) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,
