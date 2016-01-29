@@ -135,7 +135,7 @@ protected:
     static int32_t gRefCnt;
     static nsIRDFService* gRDFService;
 
-    static mozilla::LazyLogModule gLog;
+    static PRLogModuleInfo* gLog;
 
     nsresult Init();
     RDFXMLDataSourceImpl(void);
@@ -359,7 +359,7 @@ protected:
 int32_t         RDFXMLDataSourceImpl::gRefCnt = 0;
 nsIRDFService*  RDFXMLDataSourceImpl::gRDFService;
 
-mozilla::LazyLogModule RDFXMLDataSourceImpl::gLog("nsRDFXMLDataSource");
+PRLogModuleInfo* RDFXMLDataSourceImpl::gLog;
 
 static const char kFileURIPrefix[] = "file:";
 static const char kResourceURIPrefix[] = "resource:";
@@ -397,6 +397,8 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsDirty(false),
       mLoadState(eLoadState_Unloaded)
 {
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFXMLDataSource");
 }
 
 
