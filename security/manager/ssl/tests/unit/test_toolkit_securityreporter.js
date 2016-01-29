@@ -110,7 +110,7 @@ function run_test() {
   // be sent even though reporting is enabled.
   add_test(function() {
     server.registerPathHandler("/submit/sslreports",
-                               function(request, response){
+                               function(request, response) {
       do_throw("No report should be sent");
     });
     reporter.reportTLSError(null, "example.com", -1);
