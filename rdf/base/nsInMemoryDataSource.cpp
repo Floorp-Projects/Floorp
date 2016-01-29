@@ -352,10 +352,10 @@ public:
     bool    mPropagateChanges;
 
 private:
-    static mozilla::LazyLogModule gLog;
+    static PRLogModuleInfo* gLog;
 };
 
-mozilla::LazyLogModule InMemoryDataSource::gLog("InMemoryDataSource");
+PRLogModuleInfo* InMemoryDataSource::gLog;
 
 //----------------------------------------------------------------------
 //
@@ -743,6 +743,9 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 
     mPropagateChanges = true;
     MOZ_COUNT_CTOR(InMemoryDataSource);
+
+    if (! gLog)
+        gLog = PR_NewLogModule("InMemoryDataSource");
 }
 
 

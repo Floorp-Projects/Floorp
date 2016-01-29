@@ -3585,7 +3585,7 @@ nsGridContainerFrame::SanityCheckAnonymousGridItems() const
                    "children have been reordered with the 'order' property)");
 */
         MOZ_ASSERT(!prevChildWasAnonGridItem, "two anon grid items in a row");
-        nsIFrame* firstWrappedChild = child->GetFirstPrincipalChild();
+        nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
         MOZ_ASSERT(firstWrappedChild,
                    "anonymous grid item is empty (shouldn't happen)");
         prevChildWasAnonGridItem = true;

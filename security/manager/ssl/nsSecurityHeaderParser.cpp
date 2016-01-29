@@ -46,9 +46,17 @@ IsQuotedPairSymbol(signed char chr) {
   return (chr >= 0);
 }
 
-static mozilla::LazyLogModule sSHParserLog("nsSecurityHeaderParser");
+static PRLogModuleInfo *
+GetSHParserLog()
+{
+  static PRLogModuleInfo *sSHParserLog;
+  if (!sSHParserLog) {
+    sSHParserLog = PR_NewLogModule("nsSecurityHeaderParser");
+  }
+  return sSHParserLog;
+}
 
-#define SHPARSERLOG(args) MOZ_LOG(sSHParserLog, mozilla::LogLevel::Debug, args)
+#define SHPARSERLOG(args) MOZ_LOG(GetSHParserLog(), mozilla::LogLevel::Debug, args)
 
 nsSecurityHeaderParser::nsSecurityHeaderParser(const char *aHeader)
   : mCursor(aHeader)

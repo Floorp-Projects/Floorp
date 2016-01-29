@@ -336,11 +336,13 @@ this.Utils = {
 
     try {
       json = yield CommonUtils.readJSON(path);
-    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
-      // Ignore non-existent files.
     } catch (e) {
-      if (that._log) {
-        that._log.debug("Failed to load json", e);
+      if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+        // Ignore non-existent files.
+      } else {
+        if (that._log) {
+          that._log.debug("Failed to load json", e);
+        }
       }
     }
 

@@ -92,9 +92,10 @@ function prepareServer() {
 function getReassigned() {
   try {
     return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
-  } catch (ex if (ex.result == Cr.NS_ERROR_UNEXPECTED)) {
-    return false;
   } catch (ex) {
+    if (ex.result == Cr.NS_ERROR_UNEXPECTED) {
+      return false;
+    }
     do_throw("Got exception retrieving lastSyncReassigned: " +
              Log.exceptionStr(ex));
   }
@@ -106,7 +107,7 @@ function getReassigned() {
  * Runs `between` between the two. This can be used to undo deliberate failure
  * setup, detach observers, etc.
  */
-function syncAndExpectNodeReassignment(server, firstNotification, between,
+function* syncAndExpectNodeReassignment(server, firstNotification, between,
                                        secondNotification, url) {
   let deferred = Promise.defer();
   function onwards() {
@@ -160,7 +161,7 @@ function syncAndExpectNodeReassignment(server, firstNotification, between,
   yield deferred.promise;
 }
 
-add_task(function test_momentary_401_engine() {
+add_task(function* test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");
   let server = yield prepareServer();
   let john   = server.user("johndoe");
@@ -212,7 +213,7 @@ add_task(function test_momentary_401_engine() {
 });
 
 // This test ends up being a failing fetch *after we're already logged in*.
-add_task(function test_momentary_401_info_collections() {
+add_task(function* test_momentary_401_info_collections() {
   _("Test a failure for info/collections that's resolved by reassignment.");
   let server = yield prepareServer();
 
@@ -235,7 +236,7 @@ add_task(function test_momentary_401_info_collections() {
                                       Service.infoURL);
 });
 
-add_task(function test_momentary_401_storage_loggedin() {
+add_task(function* test_momentary_401_storage_loggedin() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
   let server = yield prepareServer();
@@ -260,7 +261,7 @@ add_task(function test_momentary_401_storage_loggedin() {
                                       Service.storageURL + "meta/global");
 });
 
-add_task(function test_momentary_401_storage_loggedout() {
+add_task(function* test_momentary_401_storage_loggedout() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
   let server = yield prepareServer();
@@ -282,7 +283,7 @@ add_task(function test_momentary_401_storage_loggedout() {
                                       Service.storageURL + "meta/global");
 });
 
-add_task(function test_loop_avoidance_storage() {
+add_task(function* test_loop_avoidance_storage() {
   _("Test that a repeated failure doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
 
@@ -382,7 +383,7 @@ add_task(function test_loop_avoidance_storage() {
   yield deferred.promise;
 });
 
-add_task(function test_loop_avoidance_engine() {
+add_task(function* test_loop_avoidance_engine() {
   _("Test that a repeated 401 in an engine doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
   let server = yield prepareServer();

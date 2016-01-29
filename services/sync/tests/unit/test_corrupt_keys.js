@@ -14,7 +14,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-add_task(function test_locally_changed_keys() {
+add_task(function* test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
   let hmacErrorCount = 0;

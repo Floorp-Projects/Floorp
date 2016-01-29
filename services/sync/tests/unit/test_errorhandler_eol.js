@@ -43,7 +43,7 @@ function sync_httpd_setup(infoHandler) {
   return httpd_setup(handlers);
 }
 
-function setUp(server) {
+function* setUp(server) {
   yield configureIdentity({username: "johndoe"});
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
@@ -66,7 +66,7 @@ function do_check_hard_eol(eh, start) {
   do_check_true(Status.eol);
 }
 
-add_identity_test(this, function test_200_hard() {
+add_identity_test(this, function* test_200_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("hard-eol"));
@@ -88,7 +88,7 @@ add_identity_test(this, function test_200_hard() {
   yield deferred.promise;
 });
 
-add_identity_test(this, function test_513_hard() {
+add_identity_test(this, function* test_513_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler513);
@@ -114,7 +114,7 @@ add_identity_test(this, function test_513_hard() {
   yield deferred.promise;
 });
 
-add_identity_test(this, function test_200_soft() {
+add_identity_test(this, function* test_200_soft() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("soft-eol"));

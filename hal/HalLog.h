@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace hal {
 
-mozilla::LogModule *GetHalLog();
+extern PRLogModuleInfo *GetHalLog();
 #define HAL_LOG(...) \
   MOZ_LOG(mozilla::hal::GetHalLog(), LogLevel::Debug, (__VA_ARGS__))
 #define HAL_ERR(...) \

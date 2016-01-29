@@ -917,7 +917,7 @@ GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
     }
 
     // USUAL CASE: Descend to the first child in principal list.
-    aFrame = aFrame->GetFirstPrincipalChild();
+    aFrame = aFrame->PrincipalChildList().FirstChild();
   }
   return aFrame;
 }
@@ -2023,7 +2023,7 @@ nsFlexContainerFrame::SanityCheckAnonymousFlexItems() const
                  "two anon flex items in a row (shouldn't happen, unless our "
                  "children have been reordered with the 'order' property)");
 
-      nsIFrame* firstWrappedChild = child->GetFirstPrincipalChild();
+      nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
       MOZ_ASSERT(firstWrappedChild,
                  "anonymous flex item is empty (shouldn't happen)");
       prevChildWasAnonFlexItem = true;

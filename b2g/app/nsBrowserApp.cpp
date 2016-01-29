@@ -281,7 +281,6 @@ int main(int argc, _CONST char* argv[])
   int result;
   {
     ScopedLogging log;
-    mozilla::LogModule::Init();
     char **_argv;
 
     /*
