@@ -479,17 +479,15 @@ MacroAssemblerARM::ma_mov(Register src, Register dest, SBit s, Assembler::Condit
 }
 
 void
-MacroAssemblerARM::ma_mov(Imm32 imm, Register dest,
-                          SBit s, Assembler::Condition c)
+MacroAssemblerARM::ma_mov(Imm32 imm, Register dest, Assembler::Condition c)
 {
-    ma_alu(InvalidReg, imm, dest, OpMov, s, c);
+    ma_alu(InvalidReg, imm, dest, OpMov, LeaveCC, c);
 }
 
 void
-MacroAssemblerARM::ma_mov(ImmWord imm, Register dest,
-                          SBit s, Assembler::Condition c)
+MacroAssemblerARM::ma_mov(ImmWord imm, Register dest, Assembler::Condition c)
 {
-    ma_alu(InvalidReg, Imm32(imm.value), dest, OpMov, s, c);
+    ma_mov(Imm32(imm.value), dest, c);
 }
 
 void
@@ -566,12 +564,6 @@ MacroAssemblerARM::ma_rol(Register shift, Register src, Register dst)
 }
 
 // Move not (dest <- ~src)
-void
-MacroAssemblerARM::ma_mvn(Imm32 imm, Register dest, SBit s, Assembler::Condition c)
-{
-    ma_alu(InvalidReg, imm, dest, OpMvn, s, c);
-}
-
 void
 MacroAssemblerARM::ma_mvn(Register src1, Register dest, SBit s, Assembler::Condition c)
 {
@@ -1015,7 +1007,7 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, Regis
     ma_mov(Imm32(0), dest);
     // Set the hold appropriately.
     ma_mov(Imm32(1), hold);
-    ma_mov(Imm32(-1), hold, LeaveCC, Signed);
+    ma_mov(Imm32(-1), hold, Signed);
     ma_rsb(Imm32(0), tmp, SetCC, Signed);
 
     // Begin the main loop.
@@ -2410,10 +2402,10 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
         // Copy the converted value out.
         as_vxfer(output, InvalidReg, scratchDouble, FloatToCore);
         as_vmrs(pc);
-        ma_mov(Imm32(0), output, LeaveCC, Overflow);  // NaN => 0
+        ma_mov(Imm32(0), output, Overflow);  // NaN => 0
         ma_b(&outOfRange, Overflow);  // NaN
         ma_cmp(output, Imm32(0xff));
-        ma_mov(Imm32(0xff), output, LeaveCC, Above);
+        ma_mov(Imm32(0xff), output, Above);
         ma_b(&outOfRange, Above);
         // Convert it back to see if we got the same value back.
         as_vcvt(scratchDouble, VFPRegister(scratchDouble).uintOverlay());
