@@ -347,6 +347,11 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     result.mProgress.SetValue(1.0 - result.mProgress.Value());
   }
 
+  if (aTiming.mFunction) {
+    result.mProgress.SetValue(
+      aTiming.mFunction->GetValue(result.mProgress.Value()));
+  }
+
   return result;
 }
 
