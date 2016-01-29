@@ -10,6 +10,7 @@
 
 this.onpush = handlePush;
 this.onmessage = handleMessage;
+this.onpushsubscriptionchange = handlePushSubscriptionChange;
 
 function getJSON(data) {
   var result = {
@@ -30,8 +31,16 @@ function assert(value, message) {
   }
 }
 
+function broadcast(event, promise) {
+  event.waitUntil(Promise.resolve(promise).then(message => {
+    return self.clients.matchAll().then(clients => {
+      clients.forEach(client => client.postMessage(message));
+    });
+  }));
+}
+
 function reply(event, promise) {
-  event.waitUntil(promise.then(result => {
+  event.waitUntil(Promise.resolve(promise).then(result => {
     event.ports[0].postMessage(result);
   }).catch(error => {
     event.ports[0].postMessage({
@@ -41,30 +50,27 @@ function reply(event, promise) {
 }
 
 function handlePush(event) {
-
-  event.waitUntil(self.clients.matchAll().then(function(result) {
-    if (event instanceof PushEvent) {
-      if (!('data' in event)) {
-        result[0].postMessage({type: "finished", okay: "yes"});
-        return;
-      }
-      var message = {
-        type: "finished",
-        okay: "yes",
-      };
-      if (event.data) {
-        message.data = {
-          text: event.data.text(),
-          arrayBuffer: event.data.arrayBuffer(),
-          json: getJSON(event.data),
-          blob: event.data.blob(),
-        };
-      }
-      result[0].postMessage(message);
+  if (event instanceof PushEvent) {
+    if (!('data' in event)) {
+      broadcast(event, {type: "finished", okay: "yes"});
       return;
     }
-    result[0].postMessage({type: "finished", okay: "no"});
-  }));
+    var message = {
+      type: "finished",
+      okay: "yes",
+    };
+    if (event.data) {
+      message.data = {
+        text: event.data.text(),
+        arrayBuffer: event.data.arrayBuffer(),
+        json: getJSON(event.data),
+        blob: event.data.blob(),
+      };
+    }
+    broadcast(event, message);
+    return;
+  }
+  broadcast(event, {type: "finished", okay: "no"});
 }
 
 function handleMessage(event) {
@@ -116,4 +122,8 @@ function handleMessage(event) {
   }
   reply(event, Promise.reject(
     "Invalid message type: " + event.data.type));
+}
+
+function handlePushSubscriptionChange(event) {
+  broadcast(event, {type: "changed", okay: "yes"});
 }
