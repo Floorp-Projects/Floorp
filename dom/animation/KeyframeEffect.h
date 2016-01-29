@@ -194,7 +194,8 @@ public:
               ErrorResult& aRv)
   {
     return Constructor(aGlobal, aTarget, aFrames,
-                       TimingParams::FromOptionsUnion(aOptions), aRv);
+                       TimingParams::FromOptionsUnion(aOptions, aTarget),
+                       aRv);
   }
 
   // More generalized version for Animatable.animate.
