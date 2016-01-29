@@ -639,17 +639,17 @@ SocialShare = {
         }
         this.sharePage(providerOrigin, pageData, target, anchor);
       });
-      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData", null, { target });
       return;
     }
-    // if this is a share of a selected item, get any microdata
-    if (!pageData.microdata && target) {
-      messageManager.addMessageListener("PageMetadata:MicrodataResult", _dataFn = (msg) => {
-        messageManager.removeMessageListener("PageMetadata:MicrodataResult", _dataFn);
-        pageData.microdata = msg.data;
+    // if this is a share of a selected item, get any microformats
+    if (!pageData.microformats && target) {
+      messageManager.addMessageListener("PageMetadata:MicroformatsResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("PageMetadata:MicroformatsResult", _dataFn);
+        pageData.microformats = msg.data;
         this.sharePage(providerOrigin, pageData, target, anchor);
       });
-      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, { target });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicroformats", null, { target });
       return;
     }
     this.currentShare = pageData;
