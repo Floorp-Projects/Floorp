@@ -47,21 +47,18 @@ function add_test_bulk_actor() {
 /*** Tests ***/
 
 var test_string_error = Task.async(function*(transportFactory, onReady) {
-  let deferred = promise.defer();
   let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
-  client.connect((app, traits) => {
-    do_check_eq(traits.bulk, true);
-    client.listTabs(response => {
-      deferred.resolve(onReady(client, response).then(() => {
-        client.close();
-        transport.close();
-      }));
+  return client.connect().then(([app, traits]) => {
+      do_check_eq(traits.bulk, true);
+      return client.listTabs();
+    }).then(response => {
+      return onReady(client, response);
+    }).then(() => {
+      client.close();
+      transport.close();
     });
-  });
-
-  return deferred.promise;
 });
 
 /*** Reply Types ***/

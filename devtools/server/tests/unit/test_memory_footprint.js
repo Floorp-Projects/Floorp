@@ -39,7 +39,7 @@ function add_browser_actors() {
 
 function connect_client() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function onConnect() {
+  gClient.connect().then(function onConnect() {
     check_footprint("DebuggerClient.connect()", 2000);
   });
 }

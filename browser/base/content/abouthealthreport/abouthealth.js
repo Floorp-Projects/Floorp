@@ -12,11 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const prefs = new Preferences("datareporting.healthreport.");
 
 const PREF_UNIFIED = "toolkit.telemetry.unified";
-const PREF_UNIFIED_OPTIN = "toolkit.telemetry.unifiedIsOptIn";
-
-// Whether v4 behavior is enabled, i.e. unified Telemetry features are on by default.
-const IS_V4 = Preferences.get(PREF_UNIFIED, false) &&
-              !Preferences.get(PREF_UNIFIED_OPTIN, false);
+const PREF_REPORTING_URL = "datareporting.healthreport.about.reportUrl";
 
 var healthReportWrapper = {
   init: function () {
@@ -31,9 +27,7 @@ var healthReportWrapper = {
   },
 
   _getReportURI: function () {
-    const pref = IS_V4 ? "datareporting.healthreport.about.reportUrl"
-                       : "datareporting.healthreport.about.reportUrlUnified";
-    let url = Services.urlFormatter.formatURLPref(pref);
+    let url = Services.urlFormatter.formatURLPref(PREF_REPORTING_URL);
     return Services.io.newURI(url, null, null);
   },
 

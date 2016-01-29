@@ -564,9 +564,7 @@ AddonDebugger.prototype = {
     let transport = DebuggerServer.connectPipe();
     this.client = new DebuggerClient(transport);
 
-    let connected = promise.defer();
-    this.client.connect(connected.resolve);
-    yield connected.promise;
+    yield this.client.connect();
 
     let addonActor = yield getAddonActorForUrl(this.client, aUrl);
 
@@ -1005,11 +1003,7 @@ function generateMouseClickInTab(tab, path) {
 
 function connect(client) {
   info("Connecting client.");
-  return new Promise(function (resolve) {
-    client.connect(function () {
-      resolve();
-    });
-  });
+  return client.connect();
 }
 
 function close(client) {

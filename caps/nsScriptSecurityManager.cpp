@@ -629,6 +629,42 @@ EqualOrSubdomain(nsIURI* aProbeArg, nsIURI* aBase)
     }
 }
 
+static bool
+AllSchemesMatch(nsIURI* aURI, nsIURI* aOtherURI)
+{
+    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(aURI);
+    nsCOMPtr<nsINestedURI> nestedOtherURI = do_QueryInterface(aOtherURI);
+    auto stringComparator = nsCaseInsensitiveCStringComparator();
+    if (!nestedURI && !nestedOtherURI) {
+        // Neither of the URIs is nested, compare their schemes directly:
+        nsAutoCString scheme, otherScheme;
+        aURI->GetScheme(scheme);
+        aOtherURI->GetScheme(otherScheme);
+        return scheme.Equals(otherScheme, stringComparator);
+    }
+    while (nestedURI && nestedOtherURI) {
+        nsCOMPtr<nsIURI> currentURI = do_QueryInterface(nestedURI);
+        nsCOMPtr<nsIURI> currentOtherURI = do_QueryInterface(nestedOtherURI);
+        nsAutoCString scheme, otherScheme;
+        currentURI->GetScheme(scheme);
+        currentOtherURI->GetScheme(otherScheme);
+        if (!scheme.Equals(otherScheme, stringComparator)) {
+            return false;
+        }
+
+        nestedURI->GetInnerURI(getter_AddRefs(currentURI));
+        nestedOtherURI->GetInnerURI(getter_AddRefs(currentOtherURI));
+        nestedURI = do_QueryInterface(currentURI);
+        nestedOtherURI = do_QueryInterface(currentOtherURI);
+    }
+    if (!!nestedURI != !!nestedOtherURI) {
+        // If only one of the scheme chains runs out at one point, clearly the chains
+        // aren't of the same length, so we bail:
+        return false;
+    }
+    return true;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                                                    nsIURI *aTargetURI,
@@ -729,14 +765,30 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     rv = sourceBaseURI->GetScheme(sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
+    // When comparing schemes, if the relevant pref is set, view-source URIs
+    // are reachable from same-protocol (so e.g. file: can link to
+    // view-source:file). This is required for reftests.
+    static bool sViewSourceReachableFromInner = false;
+    static bool sCachedViewSourcePref = false;
+    if (!sCachedViewSourcePref) {
+        sCachedViewSourcePref = true;
+        mozilla::Preferences::AddBoolVarCache(&sViewSourceReachableFromInner,
+            "security.view-source.reachable-from-inner-protocol");
+    }
+
+    bool targetIsViewSource = false;
+
     if (sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME)) {
         // A null principal can target its own URI.
         if (sourceURI == aTargetURI) {
             return NS_OK;
         }
     }
-    else if (targetScheme.Equals(sourceScheme,
-                                 nsCaseInsensitiveCStringComparator()))
+    else if (AllSchemesMatch(sourceURI, aTargetURI) ||
+             (sViewSourceReachableFromInner &&
+              sourceScheme.EqualsIgnoreCase(targetScheme.get()) &&
+              NS_SUCCEEDED(aTargetURI->SchemeIs("view-source", &targetIsViewSource)) &&
+              targetIsViewSource))
     {
         // every scheme can access another URI from the same scheme,
         // as long as they don't represent null principals...
@@ -785,7 +837,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     // at the flags for our one URI.
 
     // Check for system target URI
-    rv = DenyAccessIfURIHasFlags(targetBaseURI,
+    rv = DenyAccessIfURIHasFlags(aTargetURI,
                                  nsIProtocolHandler::URI_DANGEROUS_TO_LOAD);
     if (NS_FAILED(rv)) {
         // Deny access, since the origin principal is not system
@@ -853,7 +905,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     // Check for target URI pointing to a file
-    rv = NS_URIChainHasFlags(targetBaseURI,
+    rv = NS_URIChainHasFlags(aTargetURI,
                              nsIProtocolHandler::URI_IS_LOCAL_FILE,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1639,3 +1691,4 @@ nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
 
     return NS_OK;
 }
+

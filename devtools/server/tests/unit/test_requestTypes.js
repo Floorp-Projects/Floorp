@@ -28,7 +28,7 @@ function run_test()
   DebuggerServer.addBrowserActors();
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(function() {
+  client.connect().then(function() {
     test_requestTypes_request(client);
   });
 

@@ -335,8 +335,15 @@ DebuggerClient.prototype = {
    * @param aOnConnected function
    *        If specified, will be called when the greeting packet is
    *        received from the debugging server.
+   *
+   * @return Promise
+   *         Resolves once connected with an array whose first element
+   *         is the application type, by default "browser", and the second
+   *         element is the traits object (help figure out the features
+   *         and behaviors of the server we connect to. See RootActor).
    */
   connect: function (aOnConnected) {
+    let deferred = promise.defer();
     this.emit("connect");
 
     // Also emit the event on the |DebuggerClient| object (not on the instance),
@@ -348,9 +355,11 @@ DebuggerClient.prototype = {
       if (aOnConnected) {
         aOnConnected(aApplicationType, aTraits);
       }
+      deferred.resolve([aApplicationType, aTraits]);
     });
 
     this._transport.ready();
+    return deferred.promise;
   },
 
   /**

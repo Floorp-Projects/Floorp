@@ -185,7 +185,6 @@
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
 @BINPATH@/components/find.xpt
-@BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
@@ -318,8 +317,6 @@
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/PermissionPromptService.js
 @BINPATH@/components/PermissionPromptService.manifest
-@BINPATH@/components/fuelApplication.manifest
-@BINPATH@/components/fuelApplication.js
 @BINPATH@/components/WebContentConverter.js
 @BINPATH@/components/BrowserComponents.manifest
 @BINPATH@/components/nsBrowserContentHandler.js
