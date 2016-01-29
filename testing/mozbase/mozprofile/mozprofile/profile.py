@@ -385,9 +385,6 @@ class FirefoxProfile(Profile):
                    # Don't send Telemetry reports to the production server. This is
                    # needed as Telemetry sends pings also if FHR upload is enabled.
                    'toolkit.telemetry.server' : 'http://%(server)s/telemetry-dummy/',
-                   # Our current tests expect the unified Telemetry feature to be opt-out,
-                   # which is not true while we hold back shipping it.
-                   'toolkit.telemetry.unifiedIsOptIn': True,
                    }
 
 class MetroFirefoxProfile(Profile):

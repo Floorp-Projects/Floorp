@@ -180,7 +180,7 @@ function run_test()
   let client = new DebuggerClient(trace);
   let rootClient;
 
-  client.connect((applicationType, traits) => {
+  client.connect().then(([applicationType, traits]) => {
     trace.expectReceive({"from":"<actorid>","applicationType":"xpcshell-tests","traits":[]});
     do_check_eq(applicationType, "xpcshell-tests");
 

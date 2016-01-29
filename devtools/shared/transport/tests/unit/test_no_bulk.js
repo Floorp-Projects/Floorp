@@ -26,7 +26,7 @@ var test_bulk_send_error = Task.async(function*(transportFactory) {
   let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
-  client.connect((app, traits) => {
+  return client.connect().then(([app, traits]) => {
     do_check_false(traits.bulk);
 
     try {
@@ -36,8 +36,5 @@ var test_bulk_send_error = Task.async(function*(transportFactory) {
       do_check_true(true);
     }
 
-    deferred.resolve();
   });
-
-  return deferred.promise;
 });

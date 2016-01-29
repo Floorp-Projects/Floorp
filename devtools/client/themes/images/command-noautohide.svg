@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="16" height="16" viewBox="0 0 30 29" xmlns="http://www.w3.org/2000/svg" fill="whitesmoke">
+  <g fill-rule="evenodd">
+    <path d="M3 1v11c0-1.104-.896-2-2-2h11c-1.104 0-2 .896-2 2V1c0 1.104.896 2 2 2H1c1.104 0 2-.896 2-2zM0 1c0-.553.447-1 1-1h11c.553 0 1 .447 1 1v11c0 .553-.447 1-1 1H1c-.553 0-1-.447-1-1V1zM20 1v11c0-1.104-.896-2-2-2h11c-1.104 0-2 .896-2 2V1c0 1.104.896 2 2 2H18c1.104 0 2-.896 2-2zm-3 0c0-.553.447-1 1-1h11c.553 0 1 .447 1 1v11c0 .553-.447 1-1 1H18c-.553 0-1-.447-1-1V1zM20 17v11c0-1.104-.896-2-2-2h11c-1.104 0-2 .896-2 2V17c0 1.104.896 2 2 2H18c1.104 0 2-.896 2-2zm-3 0c0-.553.447-1 1-1h11c.553 0 1 .447 1 1v11c0 .553-.447 1-1 1H18c-.553 0-1-.447-1-1V17zM3 17v11c0-1.104-.896-2-2-2h11c-1.104 0-2 .896-2 2V17c0 1.104.896 2 2 2H1c1.104 0 2-.896 2-2zm-3 0c0-.553.447-1 1-1h11c.553 0 1 .447 1 1v11c0 .553-.447 1-1 1H1c-.553 0-1-.447-1-1V17z"/>
+  </g>
+</svg>

@@ -144,7 +144,7 @@ var test_bulk_request_cs = Task.async(function*(transportFactory, actorType, rep
   let transport = yield transportFactory();
 
   let client = new DebuggerClient(transport);
-  client.connect((app, traits) => {
+  client.connect().then(([app, traits]) => {
     do_check_eq(traits.bulk, true);
     client.listTabs(clientDeferred.resolve);
   });
