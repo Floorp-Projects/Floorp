@@ -26,6 +26,7 @@ class FirefoxMediaTestsJenkins(FirefoxMediaTestsBase):
     def __init__(self):
         super(FirefoxMediaTestsJenkins, self).__init__(
             all_actions=['clobber',
+                         'checkout',
                          'download-and-extract',
                          'create-virtualenv',
                          'install',

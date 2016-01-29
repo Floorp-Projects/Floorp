@@ -26,6 +26,10 @@ config = {
     'download_symbols': 'ondemand',
     'download_tooltool': True,
 
+    # Version control information
+    'firefox_media_repo': 'https://github.com/mjzffr/firefox-media-tests.git',
+    'firefox_media_branch': 'master',
+
     # Default test suite
     'test_suite': 'media-tests',
 
@@ -42,6 +46,7 @@ config = {
 
     'default_actions': [
         'clobber',
+        'checkout',
         'download-and-extract',
         'create-virtualenv',
         'install',
@@ -50,3 +55,18 @@ config = {
 
 }
 
+# General local variable overwrite
+# Bug 1227079 - Python executable eeded to get it executed on Windows
+if platform.system() == 'windows':
+    gittool = [
+        sys.executable,
+        os.path.join(external_tools_path, 'gittool.py')
+    ]
+else:
+    gittool = os.path.join(external_tools_path, 'gittool.py')
+
+exes = {
+    'gittool.py' : gittool,
+}
+
+config['exes'] = exes
