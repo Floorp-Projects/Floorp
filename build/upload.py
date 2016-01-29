@@ -129,6 +129,10 @@ def GetBaseRelativePath(path, local_file, base_path):
     full remote path to place the file in. If base_path is not None, include
     the relative path from base_path to file."""
     if base_path is None or not local_file.startswith(base_path):
+        # Hack to work around OSX uploading the i386 SDK from i386/dist. Both
+        # the i386 SDK and x86-64 SDK end up in the same directory this way.
+        if base_path.endswith('/x86_64/dist'):
+            return GetBaseRelativePath(path, local_file, base_path.replace('/x86_64/', '/i386/'))
         return path
     dir = os.path.dirname(local_file)
     # strip base_path + extra slash and make it unixy
