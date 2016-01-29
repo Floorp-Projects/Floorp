@@ -532,13 +532,19 @@ APZCCallbackHelper::ApplyCallbackTransform(const LayoutDeviceIntPoint& aPoint,
 }
 
 void
-APZCCallbackHelper::ApplyCallbackTransform(WidgetTouchEvent& aEvent,
+APZCCallbackHelper::ApplyCallbackTransform(WidgetEvent& aEvent,
                                            const ScrollableLayerGuid& aGuid,
                                            const CSSToLayoutDeviceScale& aScale)
 {
-  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
-    aEvent.touches[i]->mRefPoint = ApplyCallbackTransform(
-        aEvent.touches[i]->mRefPoint, aGuid, aScale);
+  if (aEvent.AsTouchEvent()) {
+    WidgetTouchEvent& event = *(aEvent.AsTouchEvent());
+    for (size_t i = 0; i < event.touches.Length(); i++) {
+      event.touches[i]->mRefPoint = ApplyCallbackTransform(
+          event.touches[i]->mRefPoint, aGuid, aScale);
+    }
+  } else {
+    aEvent.refPoint = ApplyCallbackTransform(
+        aEvent.refPoint, aGuid, aScale);
   }
 }
 
