@@ -355,6 +355,41 @@ struct IsArithmetic
   : IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPoint<T>::value>
 {};
 
+namespace detail {
+
+template<typename T>
+struct IsMemberPointerHelper : FalseType {};
+
+template<typename T, typename U>
+struct IsMemberPointerHelper<T U::*> : TrueType {};
+
+} // namespace detail
+
+/**
+ * IsMemberPointer determines whether a type is pointer to non-static member
+ * object or a pointer to non-static member function.
+ *
+ * mozilla::IsMemberPointer<int(cls::*)>::value is true
+ * mozilla::IsMemberPointer<int*>::value is false
+ */
+template<typename T>
+struct IsMemberPointer
+  : detail::IsMemberPointerHelper<typename RemoveCV<T>::Type>
+{};
+
+/**
+ * IsScalar determines whether a type is a scalar type.
+ *
+ * mozilla::IsScalar<int>::value is true
+ * mozilla::IsScalar<int*>::value is true
+ * mozilla::IsScalar<cls>::value is false
+ */
+template<typename T>
+struct IsScalar
+  : IntegralConstant<bool, IsArithmetic<T>::value || IsEnum<T>::value ||
+                     IsPointer<T>::value || IsMemberPointer<T>::value>
+{};
+
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
