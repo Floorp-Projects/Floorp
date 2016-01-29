@@ -357,18 +357,14 @@ class MachCommands(MachCommandBase):
         else:
             manifest_path = None
 
-        utility_path = self.bindir
-
         if conditions.is_android(self):
             from mozrunner.devices.android_device import verify_android_device
             verify_android_device(self, install=False)
             return self.run_android_test(tests, symbols_path, manifest_path, log)
 
-        return self.run_desktop_test(tests, symbols_path, manifest_path,
-                                     utility_path, log)
+        return self.run_desktop_test(tests, symbols_path, manifest_path, log)
 
-    def run_desktop_test(self, tests, symbols_path, manifest_path, utility_path,
-                         log):
+    def run_desktop_test(self, tests, symbols_path, manifest_path, log):
         import runcppunittests as cppunittests
         from mozlog import commandline
 
@@ -378,7 +374,6 @@ class MachCommands(MachCommandBase):
 
         options.symbols_path = symbols_path
         options.manifest_path = manifest_path
-        options.utility_path = utility_path
         options.xre_path = self.bindir
 
         try:
