@@ -1111,7 +1111,7 @@ nsGenericHTMLElement::GetFormControlFrame(bool aFlushFrames)
 
     // If we have generated content, the primary frame will be a
     // wrapper frame..  out real frame will be in its child list.
-    for (frame = frame->GetFirstPrincipalChild();
+    for (frame = frame->PrincipalChildList().FirstChild();
          frame;
          frame = frame->GetNextSibling()) {
       form_frame = do_QueryFrame(frame);

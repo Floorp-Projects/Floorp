@@ -464,7 +464,7 @@ IsBidiSplittable(nsIFrame* aFrame)
 static bool
 IsBidiLeaf(nsIFrame* aFrame)
 {
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
+  nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
   return !kid || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer);
 }
 
@@ -670,7 +670,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     nsBlockInFlowLineIterator lineIter(block, block->begin_lines());
     bpd.ResetForNewBlock();
-    TraverseFrames(aBlockFrame, &lineIter, block->GetFirstPrincipalChild(), &bpd);
+    TraverseFrames(aBlockFrame, &lineIter, block->PrincipalChildList().FirstChild(), &bpd);
     // XXX what about overflow lines?
   }
 
@@ -1184,7 +1184,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       }
     } else {
       // For a non-leaf frame, recurse into TraverseFrames
-      nsIFrame* kid = frame->GetFirstPrincipalChild();
+      nsIFrame* kid = frame->PrincipalChildList().FirstChild();
       MOZ_ASSERT(!frame->GetChildList(nsIFrame::kOverflowList).FirstChild(),
                  "should have drained the overflow list above");
       if (kid) {
@@ -1263,7 +1263,7 @@ nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
     // as the container size.
     containerSize = aFirstFrameOnLine->GetSize();
 
-    aFirstFrameOnLine = aFirstFrameOnLine->GetFirstPrincipalChild();
+    aFirstFrameOnLine = aFirstFrameOnLine->PrincipalChildList().FirstChild();
     if (!aFirstFrameOnLine) {
       return 0;
     }
@@ -1281,7 +1281,7 @@ nsBidiPresUtils::GetFirstLeaf(nsIFrame* aFrame)
 {
   nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
-    nsIFrame* firstChild = firstLeaf->GetFirstPrincipalChild();
+    nsIFrame* firstChild = firstLeaf->PrincipalChildList().FirstChild();
     nsIFrame* realFrame = nsPlaceholderFrame::GetRealFrameFor(firstChild);
     firstLeaf = (realFrame->GetType() == nsGkAtoms::letterFrame) ?
                  realFrame : firstChild;
@@ -1307,7 +1307,7 @@ nsBidiPresUtils::GetFrameBaseLevel(nsIFrame* aFrame)
 {
   nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
-    firstLeaf = firstLeaf->GetFirstPrincipalChild();
+    firstLeaf = firstLeaf->PrincipalChildList().FirstChild();
   }
   return NS_GET_BASE_LEVEL(firstLeaf);
 }
@@ -1651,7 +1651,7 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
   if (!IsBidiLeaf(aFrame) || RubyUtils::IsRubyBox(aFrame->GetType())) {
     // Continue for child frames
     nsIFrame* frame;
-    for (frame = aFrame->GetFirstPrincipalChild();
+    for (frame = aFrame->PrincipalChildList().FirstChild();
          frame;
          frame = frame->GetNextSibling()) {
       InitContinuationStates(frame,

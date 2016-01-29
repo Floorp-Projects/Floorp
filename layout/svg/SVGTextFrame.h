@@ -291,7 +291,7 @@ public:
 
   virtual nsContainerFrame* GetContentInsertionFrame() override
   {
-    return GetFirstPrincipalChild()->GetContentInsertionFrame();
+    return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

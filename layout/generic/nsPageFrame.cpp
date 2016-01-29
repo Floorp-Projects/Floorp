@@ -465,7 +465,7 @@ GetNextPage(nsIFrame* aPageContentFrame)
     return nullptr;
   NS_ASSERTION(nextPageFrame->GetType() == nsGkAtoms::pageFrame,
                "pageFrame's sibling is not a page frame...");
-  nsIFrame* f = nextPageFrame->GetFirstPrincipalChild();
+  nsIFrame* f = nextPageFrame->PrincipalChildList().FirstChild();
   NS_ASSERTION(f, "pageFrame has no page content frame!");
   NS_ASSERTION(f->GetType() == nsGkAtoms::pageContentFrame,
                "pageFrame's child is not page content!");

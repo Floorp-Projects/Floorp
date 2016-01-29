@@ -68,7 +68,7 @@ LineBreakBefore(nsIFrame* aFrame,
                 const nsLineList::iterator* aLine)
 {
   for (nsIFrame* child = aFrame; child;
-       child = child->GetFirstPrincipalChild()) {
+       child = child->PrincipalChildList().FirstChild()) {
     if (!child->CanContinueTextRun()) {
       // It is not an inline element. We can break before it.
       return gfxBreakPriority::eNormalBreak;
@@ -241,7 +241,7 @@ nsRubyBaseContainerFrame::AddInlinePrefISize(
   }
   for (uint32_t i = 0, iend = textContainers.Length(); i < iend; i++) {
     if (textContainers[i]->IsSpanContainer()) {
-      nsIFrame* frame = textContainers[i]->GetFirstPrincipalChild();
+      nsIFrame* frame = textContainers[i]->PrincipalChildList().FirstChild();
       nsIFrame::InlinePrefISizeData data;
       frame->AddInlinePrefISize(aRenderingContext, &data);
       MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
@@ -818,7 +818,7 @@ nsRubyBaseContainerFrame::ReflowSpans(const ReflowState& aReflowState)
       continue;
     }
 
-    nsIFrame* rtFrame = container->GetFirstPrincipalChild();
+    nsIFrame* rtFrame = container->PrincipalChildList().FirstChild();
     nsReflowStatus reflowStatus;
     bool pushedFrame;
     nsLineLayout* lineLayout = aReflowState.mTextReflowStates[i]->mLineLayout;

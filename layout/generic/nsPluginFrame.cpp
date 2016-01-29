@@ -1771,7 +1771,7 @@ nsPluginFrame::SetIsDocumentActive(bool aIsActive)
 nsIObjectFrame *
 nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 {
-  nsIFrame* child = aRoot->GetFirstPrincipalChild();
+  nsIFrame* child = aRoot->PrincipalChildList().FirstChild();
 
   while (child) {
     nsIObjectFrame* outFrame = do_QueryFrame(child);

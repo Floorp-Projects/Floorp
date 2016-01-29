@@ -2333,7 +2333,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
       currFrame = aStart->GetParent()->GetNextSibling();
   }
   else
-    currFrame = immediateParent->GetFirstPrincipalChild();
+    currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   while (currFrame) {
     // See if it's a menu item.
@@ -2343,7 +2343,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
-      currFrame = currFrame->GetFirstPrincipalChild();
+      currFrame = currFrame->PrincipalChildList().FirstChild();
     else if (!currFrame->GetNextSibling() &&
              currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();
@@ -2351,7 +2351,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
       currFrame = currFrame->GetNextSibling();
   }
 
-  currFrame = immediateParent->GetFirstPrincipalChild();
+  currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != aStart) {
@@ -2362,7 +2362,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
-      currFrame = currFrame->GetFirstPrincipalChild();
+      currFrame = currFrame->PrincipalChildList().FirstChild();
     else if (!currFrame->GetNextSibling() &&
              currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();

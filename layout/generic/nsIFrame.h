@@ -1088,10 +1088,6 @@ public:
    */
   void GetCrossDocChildLists(nsTArray<ChildList>* aLists);
 
-  nsIFrame* GetFirstPrincipalChild() const {
-    return GetChildList(kPrincipalList).FirstChild();
-  }
-
   // The individual concrete child lists.
   static const ChildListID kPrincipalList = mozilla::layout::kPrincipalList;
   static const ChildListID kAbsoluteList = mozilla::layout::kAbsoluteList;

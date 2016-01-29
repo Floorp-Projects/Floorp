@@ -486,7 +486,7 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
   if (!aFrame)
     return false;
 
-  nsIFrame* first = aFrame->GetParent()->GetFirstPrincipalChild();
+  nsIFrame* first = aFrame->GetParent()->PrincipalChildList().FirstChild();
   while (first) {
     if (first->GetRect().width > 0 &&
         first->GetContent()->IsXULElement(nsGkAtoms::tab))
@@ -518,7 +518,7 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset)
 
   int32_t thisTabIndex = -1, selectedTabIndex = -1;
 
-  nsIFrame* currentTab = aFrame->GetParent()->GetFirstPrincipalChild();
+  nsIFrame* currentTab = aFrame->GetParent()->PrincipalChildList().FirstChild();
   for (int32_t i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
     if (currentTab->GetRect().width == 0)
       continue;

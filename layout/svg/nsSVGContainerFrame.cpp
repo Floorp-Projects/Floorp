@@ -112,7 +112,7 @@ nsSVGContainerFrame::ReflowSVGNonDisplayText(nsIFrame* aContainer)
                !aContainer->IsFrameOfType(nsIFrame::eSVG),
                "it is wasteful to call ReflowSVGNonDisplayText on a container "
                "frame that is not NS_FRAME_IS_NONDISPLAY");
-  for (nsIFrame* kid = aContainer->GetFirstPrincipalChild(); kid;
+  for (nsIFrame* kid = aContainer->PrincipalChildList().FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsIAtom* type = kid->GetType();
     if (type == nsGkAtoms::svgTextFrame) {
