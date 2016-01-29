@@ -5,10 +5,10 @@
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
 
-// Deactivate the standard xpcshell observer, as it turns uncaught
-// rejections into failures, which we don't want here.
-Promise.Debugging.clearUncaughtErrorObservers();
+// Prevent test failures due to the unhandled rejections in this test file.
+PromiseTestUtils.disableUncaughtRejectionObserverForSelfTest();
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test runner
