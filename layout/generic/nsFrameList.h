@@ -245,6 +245,11 @@ public:
 
   bool ContainsFrame(const nsIFrame* aFrame) const;
 
+  /**
+   * Get the number of frames in this list. Note that currently the
+   * implementation has O(n) time complexity. Do not call it repeatedly in hot
+   * code.
+   */
   int32_t GetLength() const;
 
   /**
