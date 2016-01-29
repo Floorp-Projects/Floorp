@@ -8,7 +8,6 @@ task:
 
   payload:
     env:
-      NEED_XVFB: true
       NEED_PULSEAUDIO: true
       MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
       MOZHARNESS_CONFIG: >
@@ -24,11 +23,6 @@ task:
       - --mochitest-suite=plain-chunked
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherderEnv:
