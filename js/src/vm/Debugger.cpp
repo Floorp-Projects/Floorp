@@ -2113,27 +2113,6 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
     JSRuntime* rt = cx->runtime();
     FreeOp* fop = cx->runtime()->defaultFreeOp();
 
-    // Mark active baseline scripts in the observable set so that they don't
-    // get discarded. They will be recompiled.
-    for (JitActivationIterator actIter(rt); !actIter.done(); ++actIter) {
-        if (actIter->compartment()->zone() != zone)
-            continue;
-
-        for (JitFrameIterator iter(actIter); !iter.done(); ++iter) {
-            switch (iter.type()) {
-              case JitFrame_BaselineJS:
-                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
-                break;
-              case JitFrame_IonJS:
-                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
-                for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
-                    MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
-                break;
-              default:;
-            }
-        }
-    }
-
     Vector<JSScript*> scripts(cx);
 
     // Iterate through observable scripts, invalidating their Ion scripts and
@@ -2154,6 +2133,30 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                     if (!AppendAndInvalidateScript(cx, zone, script, scripts))
                         return false;
                 }
+            }
+        }
+    }
+
+    // Code below this point must be infallible to ensure the active bit of
+    // BaselineScripts is in a consistent state.
+    //
+    // Mark active baseline scripts in the observable set so that they don't
+    // get discarded. They will be recompiled.
+    for (JitActivationIterator actIter(rt); !actIter.done(); ++actIter) {
+        if (actIter->compartment()->zone() != zone)
+            continue;
+
+        for (JitFrameIterator iter(actIter); !iter.done(); ++iter) {
+            switch (iter.type()) {
+              case JitFrame_BaselineJS:
+                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
+                break;
+              case JitFrame_IonJS:
+                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
+                for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
+                    MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
+                break;
+              default:;
             }
         }
     }
