@@ -93,6 +93,7 @@ WebrtcVideoConduit::WebrtcVideoConduit():
   mMinBitrate(0),
   mStartBitrate(0),
   mMaxBitrate(0),
+  mMinBitrateEstimate(0),
   mCodecMode(webrtc::kRealtimeVideo)
 {}
 
@@ -294,6 +295,10 @@ WebrtcVideoConduit::InitMain()
       }
       if (mStartBitrate > mMaxBitrate) {
         mStartBitrate = mMaxBitrate;
+      }
+      (void) NS_WARN_IF(NS_FAILED(branch->GetIntPref("media.peerconnection.video.min_bitrate_estimate", &temp)));
+      if (temp >= 0) {
+        mMinBitrateEstimate = temp;
       }
       bool use_loadmanager = false;
       (void) NS_WARN_IF(NS_FAILED(branch->GetBoolPref("media.navigator.load_adapt", &use_loadmanager)));
@@ -721,6 +726,15 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     return kMediaConduitUnknownError;
   }
 
+  if (mMinBitrateEstimate != 0) {
+    mPtrViENetwork->SetBitrateConfig(mChannel,
+                                     mMinBitrateEstimate,
+                                     std::max(video_codec.startBitrate,
+                                              mMinBitrateEstimate),
+                                     std::max(video_codec.maxBitrate,
+                                              mMinBitrateEstimate));
+  }
+
   if (!mVideoCodecStat) {
     mVideoCodecStat = new VideoCodecStatistics(mChannel, mPtrViECodec);
   }
@@ -1040,6 +1054,12 @@ WebrtcVideoConduit::SelectBandwidth(webrtc::VideoCodec& vie_codec,
   if (mStartBitrate && mStartBitrate > vie_codec.startBitrate) {
     vie_codec.startBitrate = mStartBitrate;
   }
+  vie_codec.startBitrate = std::max(vie_codec.startBitrate, vie_codec.minBitrate);
+
+  // Note: mMaxBitrate is the max transport bitrate - it applies to a
+  // single codec encoding, but should also apply to the sum of all
+  // simulcast layers in this encoding!
+  // So sum(layers.maxBitrate) <= mMaxBitrate
   if (mMaxBitrate && mMaxBitrate > vie_codec.maxBitrate) {
     vie_codec.maxBitrate = mMaxBitrate;
   }
@@ -1307,6 +1327,15 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
                   __FUNCTION__, width, height, err);
       return NS_ERROR_FAILURE;
     }
+    if (mMinBitrateEstimate != 0) {
+      mPtrViENetwork->SetBitrateConfig(mChannel,
+                                       mMinBitrateEstimate,
+                                       std::max(vie_codec.startBitrate,
+                                                mMinBitrateEstimate),
+                                       std::max(vie_codec.maxBitrate,
+                                                mMinBitrateEstimate));
+    }
+
     CSFLogDebug(logTag, "%s: Encoder resolution changed to %ux%u @ %ufps, bitrate %u:%u",
                 __FUNCTION__, width, height, mSendingFramerate,
                 vie_codec.minBitrate, vie_codec.maxBitrate);
