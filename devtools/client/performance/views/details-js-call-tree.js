@@ -29,14 +29,15 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
 
     this.container = $("#js-calltree-view .call-tree-cells-container");
 
-    OptimizationsListView.initialize();
+    this.optimizationsElement = $("#jit-optimizations-view");
   },
 
   /**
    * Unbinds events.
    */
   destroy: function () {
-    OptimizationsListView.destroy();
+    ReactDOM.unmountComponentAtNode(this.optimizationsElement);
+    this.optimizationsElement = null;
     this.container = null;
     this.threadNode = null;
     DetailsSubview.destroy.call(this);
@@ -67,24 +68,47 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
     } else {
       this.hideOptimizations();
     }
-    OptimizationsListView.reset();
 
     this.emit(EVENTS.JS_CALL_TREE_RENDERED);
   },
 
   showOptimizations: function () {
-    $("#jit-optimizations-view").classList.remove("hidden");
+    this.optimizationsElement.classList.remove("hidden");
   },
 
   hideOptimizations: function () {
-    $("#jit-optimizations-view").classList.add("hidden");
+    this.optimizationsElement.classList.add("hidden");
   },
 
   _onFocus: function (_, treeItem) {
-    if (PerformanceController.getCurrentRecording().getConfiguration().withJITOptimizations) {
-      OptimizationsListView.setCurrentFrame(this.threadNode, treeItem.frame);
-      OptimizationsListView.render();
+    let recording = PerformanceController.getCurrentRecording();
+    let frameNode = treeItem.frame;
+
+    if (!frameNode) {
+      console.warn("No frame found!");
+      return;
     }
+
+    let frameData = frameNode.getInfo();
+    let optimizationSites = frameNode.hasOptimizations()
+                            ? frameNode.getOptimizations().optimizationSites
+                            : [];
+
+    let optimizations = Optimizations({
+      frameData,
+      optimizationSites,
+      onViewSourceInDebugger: (url, line) => {
+        gToolbox.viewSourceInDebugger(url, line).then(success => {
+          if (success) {
+            this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+          } else {
+            this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+          }
+        });
+      }
+    });
+
+    ReactDOM.render(optimizations, this.optimizationsElement);
 
     this.emit("focus", treeItem);
   },

@@ -7,6 +7,8 @@
 <?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/performance.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/jit-optimizations.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/components-frame.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % performanceDTD SYSTEM "chrome://devtools/locale/performance.dtd">
   %performanceDTD;
@@ -26,7 +28,6 @@
   <script type="application/javascript" src="views/details-memory-flamegraph.js"/>
   <script type="application/javascript" src="views/details.js"/>
   <script type="application/javascript" src="views/recordings.js"/>
-  <script type="application/javascript" src="views/optimizations-list.js"/>
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>
@@ -318,17 +319,7 @@
                 <splitter class="devtools-side-splitter"/>
                 <!-- Optimizations Panel -->
                 <vbox id="jit-optimizations-view"
-                      class="hidden">
-                  <toolbar id="jit-optimizations-toolbar" class="devtools-toolbar">
-                    <hbox id="jit-optimizations-header">
-                      <span class="jit-optimizations-title">&performanceUI.JITOptimizationsTitle;</span>
-                      <span class="header-function-name" />
-                      <span class="header-file opt-url debugger-link" />
-                      <span class="header-line opt-line" />
-                    </hbox>
-                  </toolbar>
-                  <hbox id="optimizations-graph"></hbox>
-                  <vbox id="jit-optimizations-raw-view"></vbox>
+                  class="hidden">
                 </vbox>
               </hbox>
 
