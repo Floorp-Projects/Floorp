@@ -28,10 +28,18 @@
 #include "prsystem.h"
 
 static bool sNTLMv1Forced = false;
-static mozilla::LazyLogModule sNTLMLog("NTLM");
 
-#define LOG(x) MOZ_LOG(sNTLMLog, mozilla::LogLevel::Debug, x)
-#define LOG_ENABLED() MOZ_LOG_TEST(sNTLMLog, mozilla::LogLevel::Debug)
+static PRLogModuleInfo *
+GetNTLMLog()
+{
+  static PRLogModuleInfo *sNTLMLog;
+  if (!sNTLMLog)
+    sNTLMLog = PR_NewLogModule("NTLM");
+  return sNTLMLog;
+}
+
+#define LOG(x) MOZ_LOG(GetNTLMLog(), mozilla::LogLevel::Debug, x)
+#define LOG_ENABLED() MOZ_LOG_TEST(GetNTLMLog(), mozilla::LogLevel::Debug)
 
 static void des_makekey(const uint8_t *raw, uint8_t *key);
 static void des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash);

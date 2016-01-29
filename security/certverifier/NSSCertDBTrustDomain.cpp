@@ -33,7 +33,7 @@
 using namespace mozilla;
 using namespace mozilla::pkix;
 
-extern LazyLogModule gCertVerifierLog;
+extern PRLogModuleInfo* gCertVerifierLog;
 
 static const uint64_t ServerFailureDelaySeconds = 5 * 60;
 

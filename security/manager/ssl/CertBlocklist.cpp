@@ -34,7 +34,7 @@ using namespace mozilla::pkix;
 #define PREF_MAX_STALENESS_IN_SECONDS "security.onecrl.maximum_staleness_in_seconds"
 #define PREF_ONECRL_VIA_AMO "security.onecrl.via.amo"
 
-static LazyLogModule gCertBlockPRLog("CertBlock");
+static PRLogModuleInfo* gCertBlockPRLog;
 
 uint32_t CertBlocklist::sLastBlocklistUpdate = 0U;
 uint32_t CertBlocklist::sLastKintoUpdate = 0U;
@@ -130,6 +130,9 @@ CertBlocklist::CertBlocklist()
   , mBackingFileIsInitialized(false)
   , mBackingFile(nullptr)
 {
+  if (!gCertBlockPRLog) {
+    gCertBlockPRLog = PR_NewLogModule("CertBlock");
+  }
 }
 
 CertBlocklist::~CertBlocklist()
