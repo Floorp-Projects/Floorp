@@ -1,0 +1,143 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * JIT View
+ */
+
+#jit-optimizations-view {
+  width: 350px;
+  overflow-x: auto;
+  min-width: 200px;
+  white-space: nowrap;
+  --jit-tree-row-height: 14;
+  --jit-tree-header-height: 16;
+}
+
+#jit-optimizations-view > div {
+  flex: 1;
+}
+
+#jit-optimizations-view div {
+  display: block;
+}
+
+.tree {
+  /**
+   * Flexing to fill out remaining vertical space.
+   */
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  background-color: var(--theme-body-background);
+}
+
+.optimization-header {
+  height: var(--jit-tree-header-height);
+  padding: 2px 5px;
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+#jit-optimizations-view .header-title {
+  font-weight: bold;
+  padding-right: 7px;
+}
+
+.tree-node {
+  height: var(--jit-tree-row-height);
+  clear: both;
+}
+
+.tree-node button {
+  display: none;
+}
+
+#jit-optimizations-view .optimization-tree-item {
+  display: flex;
+}
+
+#jit-optimizations-view .arrow,
+#jit-optimizations-view .optimization-site,
+#jit-optimizations-view .optimization-attempts,
+#jit-optimizations-view .optimization-attempt,
+#jit-optimizations-view .optimization-types,
+#jit-optimizations-view .optimization-ion-type,
+#jit-optimizations-view .optimization-observed-type {
+  float: left;
+}
+
+#jit-optimizations-view .optimization-outcome.success {
+  color: var(--theme-highlight-green);
+}
+#jit-optimizations-view .optimization-outcome.failure {
+  color: var(--theme-highlight-red);
+}
+
+.opt-icon::before {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
+  background-repeat: no-repeat;
+  background-size: 72px 60px;
+  /* show grey "i" bubble by default */
+  background-position: -36px -36px;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+
+  max-height: 12px;
+}
+
+#jit-optimizations-view .opt-icon {
+  float: left;
+}
+
+#jit-optimizations-view .opt-icon::before {
+  margin: 1px 6px 0 0;
+}
+
+.theme-light .opt-icon::before {
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+}
+.opt-icon.warning::before {
+  background-position: -24px -24px;
+}
+
+/* Frame Component */
+.focused .frame-link-filename,
+.focused .frame-link-column,
+.focused .frame-link-line,
+.focused .frame-link-host,
+.focused .frame-link-colon {
+  color: var(--theme-selection-color);
+}
+
+.frame-link {
+  margin-left: 7px;
+}
+
+.frame-link-filename {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+}
+
+.frame-link-filename:hover {
+  text-decoration: underline;
+}
+
+.frame-link-column,
+.frame-link-line,
+.frame-link-colon {
+  color: var(--theme-highlight-orange);
+}
+
+.frame-link-host {
+  margin-inline-start: 5px;
+  font-size: 90%;
+  color: var(--theme-content-color2);
+}
+
+.frame-link-function-display-name {
+  margin-inline-end: 5px;
+}
