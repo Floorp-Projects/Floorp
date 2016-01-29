@@ -581,8 +581,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
   if (!rgFrame || rgFrame->GetType() != nsGkAtoms::tableRowGroupFrame)
     return;
 
-  nsIFrame* rowFrame = rgFrame->PrincipalChildList().FirstChild();
-  for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
+  for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
     DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
     if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
       // Map row rowalign.
@@ -590,8 +589,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
       // Map row columnalign.
       ParseFrameAttribute(rowFrame, nsGkAtoms::columnalign_, true);
 
-      nsIFrame* cellFrame = rowFrame->PrincipalChildList().FirstChild();
-      for ( ; cellFrame; cellFrame = cellFrame->GetNextSibling()) {
+      for (nsIFrame* cellFrame : rowFrame->PrincipalChildList()) {
         DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
         if (IS_TABLE_CELL(cellFrame->GetType())) {
           // Map cell rowalign.

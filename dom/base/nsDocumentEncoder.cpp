@@ -331,12 +331,10 @@ LineHasNonEmptyContentWorker(nsIFrame* aFrame)
   // Look for non-empty frames, but ignore inline and br frames.
   // For inline frames, descend into the children, if any.
   if (aFrame->GetType() == nsGkAtoms::inlineFrame) {
-    nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
-    while (child) {
+    for (nsIFrame* child : aFrame->PrincipalChildList()) {
       if (LineHasNonEmptyContentWorker(child)) {
         return true;
       }
-      child = child->GetNextSibling();
     }
   } else {
     if (aFrame->GetType() != nsGkAtoms::brFrame &&

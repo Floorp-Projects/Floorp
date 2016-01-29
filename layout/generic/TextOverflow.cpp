@@ -380,13 +380,11 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     return;
   }
 
-  nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
-  while (child) {
+  for (nsIFrame* child : aFrame->PrincipalChildList()) {
     ExamineFrameSubtree(child, aContentArea, aInsideMarkersArea,
                         aFramesToHide, aAlignmentEdges,
                         aFoundVisibleTextOrAtomic,
                         aClippedMarkerEdges);
-    child = child->GetNextSibling();
   }
 }
 

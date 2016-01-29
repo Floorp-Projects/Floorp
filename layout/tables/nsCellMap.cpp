@@ -1569,8 +1569,7 @@ bool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const
   int32_t numNewRows = aRows.Length();
   for (int32_t rowX = 0; rowX < numNewRows; rowX++) {
     nsIFrame* rowFrame = (nsIFrame *) aRows.ElementAt(rowX);
-    nsIFrame* childFrame = rowFrame->PrincipalChildList().FirstChild();
-    while (childFrame) {
+    for (nsIFrame* childFrame : rowFrame->PrincipalChildList()) {
       nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
       if (cellFrame) {
         bool zeroSpan;
@@ -1579,7 +1578,6 @@ bool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const
           return true;
         }
       }
-      childFrame = childFrame->GetNextSibling();
     }
   }
   return false;
@@ -1741,15 +1739,13 @@ nsCellMap::ExpandWithRows(nsTableCellMap&             aMap,
   for (int32_t rowX = startRowIndex; rowX <= endRowIndex; rowX++) {
     nsTableRowFrame* rFrame = aRowFrames.ElementAt(newRowIndex);
     // append cells
-    nsIFrame* cFrame = rFrame->PrincipalChildList().FirstChild();
     int32_t colIndex = 0;
-    while (cFrame) {
+    for (nsIFrame* cFrame : rFrame->PrincipalChildList()) {
       nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
       if (cellFrame) {
         AppendCell(aMap, cellFrame, rowX, false, aRgFirstRowIndex, aDamageArea,
                    &colIndex);
       }
-      cFrame = cFrame->GetNextSibling();
     }
     newRowIndex++;
   }
@@ -2186,13 +2182,11 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap&             aMap,
     int32_t numNewRows = aRowsToInsert->Length();
     for (int32_t newRowX = 0; newRowX < numNewRows; newRowX++) {
       nsTableRowFrame* rFrame = aRowsToInsert->ElementAt(newRowX);
-      nsIFrame* cFrame = rFrame->PrincipalChildList().FirstChild();
-      while (cFrame) {
+      for (nsIFrame* cFrame : rFrame->PrincipalChildList()) {
         nsTableCellFrame *cellFrame = do_QueryFrame(cFrame);
         if (cellFrame) {
           AppendCell(aMap, cellFrame, rowX, false, 0, damageArea);
         }
-        cFrame = cFrame->GetNextSibling();
       }
       rowX++;
     }

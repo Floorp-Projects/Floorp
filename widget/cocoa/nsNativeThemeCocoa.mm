@@ -2087,10 +2087,7 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
   };
 
   // Get the state of any scrollbar buttons in our child frames
-  for (nsIFrame *childFrame = aFrame->PrincipalChildList().FirstChild();
-       childFrame;
-       childFrame = childFrame->GetNextSibling()) {
-
+  for (nsIFrame *childFrame : aFrame->PrincipalChildList()) {
     nsIContent *childContent = childFrame->GetContent();
     if (!childContent) continue;
     int32_t attrIndex = childContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::sbattr, 
