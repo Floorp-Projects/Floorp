@@ -531,8 +531,7 @@ nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
       {
         // The Place() call above didn't request FinishReflowChild(),
         // so let's check that we eventually did through Stretch().
-        nsIFrame* childFrame = PrincipalChildList().FirstChild();
-        for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+        for (nsIFrame* childFrame : PrincipalChildList()) {
           NS_ASSERTION(!(childFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
                        "DidReflow() was never called");
         }
@@ -587,11 +586,9 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIFrame*       aFrame,
   }
   else {
     // propagate down the subtrees
-    nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
-    while (childFrame) {
+    for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
       PropagatePresentationDataFor(childFrame,
         aFlagsValues, aFlagsToUpdate);
-      childFrame = childFrame->GetNextSibling();
     }
   }
 }
@@ -606,8 +603,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
   if (!aParentFrame || !aFlagsToUpdate)
     return;
   int32_t index = 0;
-  nsIFrame* childFrame = aParentFrame->PrincipalChildList().FirstChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : aParentFrame->PrincipalChildList()) {
     if ((index >= aFirstChildIndex) &&
         ((aLastChildIndex <= 0) || ((aLastChildIndex > 0) &&
          (index <= aLastChildIndex)))) {
@@ -615,7 +611,6 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
         aFlagsValues, aFlagsToUpdate);
     }
     index++;
-    childFrame = childFrame->GetNextSibling();
   }
 }
 
@@ -666,14 +661,12 @@ nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIFrame* aParentFrame)
   // the parent
   // 2. As we ascend the tree, transmit any specific change that we want
   // down the subtrees
-  nsIFrame* childFrame = aParentFrame->PrincipalChildList().FirstChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : aParentFrame->PrincipalChildList()) {
     nsIMathMLFrame* childMathMLFrame = do_QueryFrame(childFrame);
     if (childMathMLFrame) {
       childMathMLFrame->InheritAutomaticData(aParentFrame);
     }
     RebuildAutomaticDataForChildren(childFrame);
-    childFrame = childFrame->GetNextSibling();
   }
   nsIMathMLFrame* mathMLFrame = do_QueryFrame(aParentFrame);
   if (mathMLFrame) {
@@ -1555,10 +1548,8 @@ nsMathMLContainerFrame::PropagateFrameFlagFor(nsIFrame* aFrame,
     return;
 
   aFrame->AddStateBits(aFlags);
-  nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
     PropagateFrameFlagFor(childFrame, aFlags);
-    childFrame = childFrame->GetNextSibling();
   }
 }
 
