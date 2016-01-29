@@ -1477,9 +1477,7 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
   // Recursively iterate over the frame tree, for frames that correspond
   // to text content elements.
   if (IsTextContentElement(aFrame->GetContent())) {
-    for (nsIFrame* f = aFrame->PrincipalChildList().FirstChild();
-         f;
-         f = f->GetNextSibling()) {
+    for (nsIFrame* f : aFrame->PrincipalChildList()) {
       TraverseAndRecord(f);
     }
     return;

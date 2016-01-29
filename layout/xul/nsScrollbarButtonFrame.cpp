@@ -233,9 +233,8 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
                                         nsIFrame*& result)
 {
   // recursively search our children
-  nsIFrame* childFrame = start->PrincipalChildList().FirstChild();
-  while (nullptr != childFrame) 
-  {    
+  for (nsIFrame* childFrame : start->PrincipalChildList())
+  {
     // get the content node
     nsIContent* child = childFrame->GetContent();
 
@@ -253,8 +252,6 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
      GetChildWithTag(atom, childFrame, result);
      if (result != nullptr) 
        return NS_OK;
-
-    childFrame = childFrame->GetNextSibling();
   }
 
   result = nullptr;
