@@ -67,7 +67,7 @@ public class SearchWidget extends AppWidgetProvider {
         switch (intent.getAction()) {
             case ACTION_LAUNCH_BROWSER:
                 redirect = buildRedirectIntent(Intent.ACTION_MAIN,
-                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               context.getPackageName(),
                                                AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS,
                                                intent);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
@@ -75,7 +75,7 @@ public class SearchWidget extends AppWidgetProvider {
                 break;
             case ACTION_LAUNCH_NEW_TAB:
                 redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               context.getPackageName(),
                                                AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS,
                                                intent);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
@@ -83,7 +83,7 @@ public class SearchWidget extends AppWidgetProvider {
                 break;
             case ACTION_LAUNCH_SEARCH:
                 redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               context.getPackageName(),
                                                AppConstants.MOZ_ANDROID_SEARCH_INTENT_CLASS,
                                                intent);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
