@@ -202,7 +202,7 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mIsMuted = aReport->isMuted;
 }
 
-static LazyLogModule gJSDiagnostics("JSDiagnostics");
+static PRLogModuleInfo* gJSDiagnostics;
 
 void
 xpc::ErrorReport::LogToConsole()
@@ -232,10 +232,15 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
         fflush(stderr);
     }
 
-    MOZ_LOG(gJSDiagnostics,
-            JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
-            ("file %s, line %u\n%s", NS_LossyConvertUTF16toASCII(mFileName).get(),
-             mLineNumber, NS_LossyConvertUTF16toASCII(mErrorMsg).get()));
+    // Log to the PR Log Module.
+    if (!gJSDiagnostics)
+        gJSDiagnostics = PR_NewLogModule("JSDiagnostics");
+    if (gJSDiagnostics) {
+        MOZ_LOG(gJSDiagnostics,
+                JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
+                ("file %s, line %u\n%s", NS_LossyConvertUTF16toASCII(mFileName).get(),
+                 mLineNumber, NS_LossyConvertUTF16toASCII(mErrorMsg).get()));
+    }
 
     // Log to the console. We do this last so that we can simply return if
     // there's no console service without affecting the other reporting
