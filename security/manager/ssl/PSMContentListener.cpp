@@ -29,7 +29,7 @@
 
 #include "mozilla/Logging.h"
 
-extern mozilla::LazyLogModule gPIPNSSLog;
+extern PRLogModuleInfo* gPIPNSSLog;
 
 namespace mozilla { namespace psm {
 
