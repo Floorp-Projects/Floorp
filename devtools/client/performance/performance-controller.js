@@ -18,6 +18,9 @@ Object.defineProperty(this, "EVENTS", {
   writable: false
 });
 
+var React = require("devtools/client/shared/vendor/react");
+var ReactDOM = require("devtools/client/shared/vendor/react-dom");
+var Optimizations = React.createFactory(require("devtools/client/performance/components/optimizations"));
 var Services = require("Services");
 var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
