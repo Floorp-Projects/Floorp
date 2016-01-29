@@ -402,6 +402,7 @@ private:
   uint32_t mMinBitrate;
   uint32_t mStartBitrate;
   uint32_t mMaxBitrate;
+  uint32_t mMinBitrateEstimate;
 
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;
