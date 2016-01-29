@@ -1,0 +1,68 @@
+<html><head><title>Mocha</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../static/css/mocha.css" />
+<script src="../static/javascript/chai.js"></script>
+<script src="../static/javascript/mocha.js"></script>
+<link rel="stylesheet" href="../static/css/mocha-custom.css" />
+
+<script src="../static/javascript/DOMParser.js"></script>
+
+<script data-cover src="../../microformat-shiv.js"></script>
+
+<script>
+var uncaughtError;
+
+window.addEventListener("error", function(error) {
+uncaughtError = error;
+});
+
+var consoleWarn = console.warn;
+var caughtWarnings = [];
+
+console.warn = function() {
+var args = Array.slice(arguments);
+caughtWarnings.push(args);
+consoleWarn.apply(console, args);
+};
+</script>
+
+<script>
+chai.config.includeStack = true;
+mocha.setup({ui: 'bdd', timeout: 10000});
+</script>
+
+
+<script src="../interface-tests/get-test.js"></script>
+<script src="../interface-tests/getParent-test.js"></script>
+<script src="../interface-tests/count-test.js"></script>
+<script src="../interface-tests/isMicroformat-test.js"></script>
+<script src="../interface-tests/hasMicroformats-test.js"></script>
+
+<script src="../interface-tests/experimental-test.js"></script>
+
+</head><body>
+<h3 class="capitalize">Microformats-shiv: interface tests</h3>
+<div id="mocha"></div>
+</body>
+<script>
+describe("Uncaught Error Check", function() {
+it("should load the tests without errors", function() {
+chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
+});
+});
+
+describe("Unexpected Warnings Check", function() {
+it("should long only the warnings we expect", function() {
+chai.expect(caughtWarnings.length).to.eql(0);
+});
+});
+
+mocha.run(function () {
+var completeNode = document.createElement("p");
+completeNode.setAttribute("id", "complete");
+completeNode.appendChild(document.createTextNode("Complete"));
+document.getElementById("mocha").appendChild(completeNode);
+});
+
+</script>
+</body></html>
