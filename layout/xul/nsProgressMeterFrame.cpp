@@ -135,7 +135,7 @@ nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
   if (nsGkAtoms::mode == aAttribute ||
       (!undetermined &&
        (nsGkAtoms::value == aAttribute || nsGkAtoms::max == aAttribute))) {
-    nsIFrame* barChild = GetFirstPrincipalChild();
+    nsIFrame* barChild = PrincipalChildList().FirstChild();
     if (!barChild) return NS_OK;
     nsIFrame* remainderChild = barChild->GetNextSibling();
     if (!remainderChild) return NS_OK;

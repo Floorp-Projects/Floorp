@@ -64,9 +64,9 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
   // - to force them to trim their leading and trailing whitespaces.
   // - Indicate which frames are suitable for mathvariant
   // - flag single character <mi> frames for special italic treatment
-  for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
+  for (nsIFrame* childFrame = PrincipalChildList().FirstChild(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    for (nsIFrame* childFrame2 = childFrame->GetFirstPrincipalChild();
+    for (nsIFrame* childFrame2 = childFrame->PrincipalChildList().FirstChild();
          childFrame2; childFrame2 = childFrame2->GetNextSibling()) {
       if (childFrame2->GetType() == nsGkAtoms::textFrame) {
         childFrame2->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
@@ -132,7 +132,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.SetBlockStartAscent(0);
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
-  nsIFrame* childFrame = GetFirstPrincipalChild();
+  nsIFrame* childFrame = PrincipalChildList().FirstChild();
   while (childFrame) {
     // ask our children to compute their bounding metrics
     nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(),
@@ -168,7 +168,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   mBoundingMetrics = nsBoundingMetrics();
-  for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
+  for (nsIFrame* childFrame = PrincipalChildList().FirstChild(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
     nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
     GetReflowAndBoundingMetricsFor(childFrame, childSize,
@@ -192,7 +192,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
-    for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
+    for (nsIFrame* childFrame = PrincipalChildList().FirstChild(); childFrame;
          childFrame = childFrame->GetNextSibling()) {
       nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
       GetReflowAndBoundingMetricsFor(childFrame, childSize,
