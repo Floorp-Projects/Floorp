@@ -14,7 +14,6 @@ const TELEMETRY_LOG_PREF = "toolkit.telemetry.log.level";
 const telemetryOriginalLogPref = Preferences.get(TELEMETRY_LOG_PREF, null);
 
 const originalReportUrl = Services.prefs.getCharPref("datareporting.healthreport.about.reportUrl");
-const originalReportUrlUnified = Services.prefs.getCharPref("datareporting.healthreport.about.reportUrlUnified");
 
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
@@ -26,7 +25,6 @@ registerCleanupFunction(function() {
 
   try {
     Services.prefs.setCharPref("datareporting.healthreport.about.reportUrl", originalReportUrl);
-    Services.prefs.setCharPref("datareporting.healthreport.about.reportUrlUnified", originalReportUrlUnified);
     Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
   } catch (ex) {}
 });
@@ -68,8 +66,6 @@ var gTests = [
     Preferences.set(TELEMETRY_LOG_PREF, "Trace");
     yield setupPingArchive();
     Preferences.set("datareporting.healthreport.about.reportUrl",
-                    HTTPS_BASE + "healthreport_testRemoteCommands.html");
-    Preferences.set("datareporting.healthreport.about.reportUrlUnified",
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
   }),
   run: function (iframe)

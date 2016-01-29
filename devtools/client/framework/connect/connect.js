@@ -74,20 +74,14 @@ var submit = Task.async(function*() {
   gClient = new DebuggerClient(transport);
   let delay = Services.prefs.getIntPref("devtools.debugger.remote-timeout");
   gConnectionTimeout = setTimeout(handleConnectionTimeout, delay);
-  let response = yield clientConnect();
+  let response = yield gClient.connect();
   yield onConnectionReady(...response);
 });
-
-function clientConnect() {
-  let deferred = promise.defer();
-  gClient.connect((...args) => deferred.resolve(args));
-  return deferred.promise;
-}
 
 /**
  * Connection is ready. List actors and build buttons.
  */
-var onConnectionReady = Task.async(function*(aType, aTraits) {
+var onConnectionReady = Task.async(function*([aType, aTraits]) {
   clearTimeout(gConnectionTimeout);
 
   let response = yield gClient.listAddons();

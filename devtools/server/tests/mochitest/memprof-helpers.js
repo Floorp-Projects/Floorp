@@ -23,26 +23,14 @@ function startServerAndGetSelectedTabMemprof() {
   DebuggerServer.addBrowserActors();
   var client = new DebuggerClient(DebuggerServer.connectPipe());
 
-  return new Promise((resolve, reject) => {
-    client.connect(response => {
-      if (response.error) {
-        reject(new Error(response.error + ": " + response.message));
-        return;
-      }
+  return client.connect()
+    .then(() => client.listTabs())
+    .then(response => {
+      var form = response.tabs[response.selected];
+      var memprof = MemprofFront(client, form);
 
-      client.listTabs(response => {
-        if (response.error) {
-          reject(new Error(response.error + ": " + response.message));
-          return;
-        }
-
-        var form = response.tabs[response.selected];
-        var memprof = MemprofFront(client, form);
-
-        resolve({ memprof, client });
-      });
+      return { memprof, client };
     });
-  });
 }
 
 function destroyServerAndFinish(client) {
