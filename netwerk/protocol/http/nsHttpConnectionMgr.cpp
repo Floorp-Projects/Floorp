@@ -836,56 +836,6 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
 }
 
 //-----------------------------------------------------------------------------
-// enumeration callbacks
-
-PLDHashOperator
-nsHttpConnectionMgr::VerifyTrafficCB(const nsACString &key,
-                                     nsAutoPtr<nsConnectionEntry> &ent,
-                                     void *closure)
-{
-    // Iterate over all active connections and check them
-    for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
-        nsHttpConnection *conn = ent->mActiveConns[index];
-        conn->CheckForTraffic(true);
-    }
-    // Iterate the idle connections and unmark them for traffic checks
-    for (uint32_t index = 0; index < ent->mIdleConns.Length(); ++index) {
-        nsHttpConnection *conn = ent->mIdleConns[index];
-        conn->CheckForTraffic(false);
-    }
-
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsHttpConnectionMgr::PruneNoTrafficCB(const nsACString &key,
-                                      nsAutoPtr<nsConnectionEntry> &ent,
-                                      void *closure)
-{
-    // Close the connections with no registered traffic
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-
-    LOG(("  pruning no traffic [ci=%s]\n", ent->mConnInfo->HashKey().get()));
-
-    uint32_t numConns = ent->mActiveConns.Length();
-    if (numConns) {
-        // walk the list backwards to allow us to remove entries easily
-        for (int index = numConns-1; index >= 0; index--) {
-            if (ent->mActiveConns[index]->NoTraffic()) {
-              RefPtr<nsHttpConnection> conn = dont_AddRef(ent->mActiveConns[index]);
-              ent->mActiveConns.RemoveElementAt(index);
-              self->DecrementActiveConnCount(conn);
-              conn->Close(NS_ERROR_ABORT);
-              LOG(("  closed active connection due to no traffic [conn=%p]\n",
-                   conn.get()));
-            }
-        }
-    }
-
-    return PL_DHASH_NEXT;
-}
-
-//-----------------------------------------------------------------------------
 
 bool
 nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool considerAll)
@@ -2494,7 +2444,30 @@ nsHttpConnectionMgr::OnMsgPruneNoTraffic(int32_t, ARefBase *)
     LOG(("nsHttpConnectionMgr::OnMsgPruneNoTraffic\n"));
 
     // Prune connections without traffic
-    mCT.Enumerate(PruneNoTrafficCB, this);
+    for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+
+        // Close the connections with no registered traffic.
+        nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+
+        LOG(("  pruning no traffic [ci=%s]\n",
+             ent->mConnInfo->HashKey().get()));
+
+        uint32_t numConns = ent->mActiveConns.Length();
+        if (numConns) {
+            // Walk the list backwards to allow us to remove entries easily.
+            for (int index = numConns - 1; index >= 0; index--) {
+                if (ent->mActiveConns[index]->NoTraffic()) {
+                    RefPtr<nsHttpConnection> conn =
+                        dont_AddRef(ent->mActiveConns[index]);
+                    ent->mActiveConns.RemoveElementAt(index);
+                    DecrementActiveConnCount(conn);
+                    conn->Close(NS_ERROR_ABORT);
+                    LOG(("  closed active connection due to no traffic "
+                         "[conn=%p]\n", conn.get()));
+                }
+            }
+        }
+    }
 
     mPruningNoTraffic = false; // not pruning anymore
 }
@@ -2512,7 +2485,18 @@ nsHttpConnectionMgr::OnMsgVerifyTraffic(int32_t, ARefBase *)
     }
 
     // Mark connections for traffic verification
-    mCT.Enumerate(VerifyTrafficCB, this);
+    for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+
+        // Iterate over all active connections and check them.
+        for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
+            ent->mActiveConns[index]->CheckForTraffic(true);
+        }
+        // Iterate the idle connections and unmark them for traffic checks.
+        for (uint32_t index = 0; index < ent->mIdleConns.Length(); ++index) {
+            ent->mIdleConns[index]->CheckForTraffic(false);
+        }
+    }
 
     // If the timer is already there. we just re-init it
     if(!mTrafficTimer) {
