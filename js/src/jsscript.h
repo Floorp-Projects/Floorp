@@ -2165,8 +2165,8 @@ class LazyScript : public gc::TenuredCell
     // global scripts and eval scripts are never lazified.)
     HeapPtr<StaticFunctionScope*> staticScope_;
 
-    // ScriptSourceObject, or nullptr if the script in which this is nested
-    // has not been compiled yet. This is never a CCW; we don't clone
+    // ScriptSourceObject. We leave this set to nullptr until we generate
+    // bytecode for our immediate parent. This is never a CCW; we don't clone
     // LazyScripts into other compartments.
     HeapPtrObject sourceObject_;
 
