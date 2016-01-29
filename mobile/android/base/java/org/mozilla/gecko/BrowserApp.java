@@ -3931,7 +3931,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void uploadTelemetry(final GeckoProfile profile) {
-        if (!TelemetryConstants.UPLOAD_ENABLED || profile.inGuestMode()) {
+        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(this, profile)) {
             return;
         }
 
