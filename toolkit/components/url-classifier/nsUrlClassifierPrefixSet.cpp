@@ -28,7 +28,7 @@
 using namespace mozilla;
 
 // NSPR_LOG_MODULES=UrlClassifierPrefixSet:5
-static LazyLogModule gUrlClassifierPrefixSetLog("UrlClassifierPrefixSet");
+static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 #define LOG(args) MOZ_LOG(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug)
 
@@ -42,6 +42,8 @@ nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   , mMemoryInUse(0)
   , mMemoryReportPath()
 {
+  if (!gUrlClassifierPrefixSetLog)
+    gUrlClassifierPrefixSetLog = PR_NewLogModule("UrlClassifierPrefixSet");
 }
 
 NS_IMETHODIMP
