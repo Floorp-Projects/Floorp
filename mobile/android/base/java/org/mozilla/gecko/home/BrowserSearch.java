@@ -253,7 +253,7 @@ public class BrowserSearch extends HomeFragment
     @Override
     public void onHiddenChanged(boolean hidden) {
         if (!hidden) {
-            final Tab tab = Tabs.getInstance().getSelectedTab();
+            Tab tab = Tabs.getInstance().getSelectedTab();
             final boolean isPrivate = (tab != null && tab.isPrivate());
 
             // Removes Search Suggestions Loader if in private browsing mode
@@ -593,11 +593,7 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void filterSuggestions() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        final boolean isPrivate = (tab != null && tab.isPrivate());
-
-        if (isPrivate || (!mSuggestionsEnabled && !mSavedSearchesEnabled)) {
-            mSearchHistorySuggestions.clear();
+        if (mSuggestClient == null || (!mSuggestionsEnabled && !mSavedSearchesEnabled)) {
             return;
         }
 
@@ -674,7 +670,16 @@ public class BrowserSearch extends HomeFragment
                     // is also the default engine.
                     searchEngines.add(0, engine);
 
-                    ensureSuggestClientIsSet(suggestTemplate);
+                    // The only time Tabs.getInstance().getSelectedTab() should
+                    // be null is when we're restoring after a crash. We should
+                    // never restore private tabs when that happens, so it
+                    // should be safe to assume that null means non-private.
+                    Tab tab = Tabs.getInstance().getSelectedTab();
+                    final boolean isPrivate = (tab != null && tab.isPrivate());
+
+                    // Only create a new instance of SuggestClient if it hasn't been
+                    // set yet.
+                    maybeSetSuggestClient(suggestTemplate, isPrivate);
                 } else {
                     searchEngines.add(engine);
                 }
@@ -691,15 +696,12 @@ public class BrowserSearch extends HomeFragment
                 mAdapter.notifyDataSetChanged();
             }
 
-            final Tab tab = Tabs.getInstance().getSelectedTab();
-            final boolean isPrivate = (tab != null && tab.isPrivate());
-
             // Show suggestions opt-in prompt only if suggestions are not enabled yet,
             // user hasn't been prompted and we're not on a private browsing tab.
             // The prompt might have been inflated already when this view was previously called.
             // Remove the opt-in prompt if it has been inflated in the view and dealt with by the user,
             // or if we're on a private browsing tab
-            if (!mSuggestionsEnabled && !suggestionsPrompted && !isPrivate) {
+            if (!mSuggestionsEnabled && !suggestionsPrompted && mSuggestClient != null) {
                 showSuggestionsOptIn();
             } else {
                 removeSuggestionsOptIn();
@@ -733,7 +735,12 @@ public class BrowserSearch extends HomeFragment
         mSearchListener.onSearch(searchEngine, mSearchTerm);
     }
 
-    private void ensureSuggestClientIsSet(final String suggestTemplate) {
+    private void maybeSetSuggestClient(final String suggestTemplate, final boolean isPrivate) {
+        if (isPrivate) {
+            mSuggestClient = null;
+            return;
+        }
+
         if (mSuggestClient != null) {
             return;
         }
