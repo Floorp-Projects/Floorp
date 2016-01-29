@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import android.Manifest;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -682,6 +683,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -1377,6 +1379,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -1659,6 +1662,10 @@ public class BrowserApp extends GeckoApp
                 }
             });
 
+        } else if ("Experiments:GetActive".equals(event)) {
+            final List<String> experiments = SwitchBoard.getActiveExperiments(this);
+            final JSONArray json = new JSONArray(experiments);
+            callback.sendSuccess(json.toString());
         } else if ("Favicon:CacheLoad".equals(event)) {
             final String url = message.getString("url");
             getFaviconFromCache(callback, url);
