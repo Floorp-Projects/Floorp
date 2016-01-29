@@ -5,10 +5,12 @@
 from __future__ import print_function, unicode_literals
 
 import errno
+import json
 import os
 import platform
 import sys
 import time
+import uuid
 import __builtin__
 
 from types import ModuleType
@@ -222,6 +224,31 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
         import mach.main
 
+    def telemetry_handler(context, data):
+        # We have not opted-in to telemetry
+        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+            return
+
+        telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
+        try:
+            os.mkdir(telemetry_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        outgoing_dir = os.path.join(telemetry_dir, 'outgoing')
+        try:
+            os.mkdir(outgoing_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        # Add common metadata to help submit sorted data later on.
+        # For now, we'll just record the mach command that was invoked.
+        data['argv'] = sys.argv
+
+        with open(os.path.join(outgoing_dir, str(uuid.uuid4())), 'w') as f:
+            json.dump(data, f, sort_keys=True)
+
     def pre_dispatch_handler(context, handler, args):
         """Perform global checks before command dispatch.
 
@@ -304,6 +331,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         if key == 'pre_dispatch_handler':
             return pre_dispatch_handler
+
+        if key == 'telemetry_handler':
+            return telemetry_handler
 
         raise AttributeError(key)
 
