@@ -22,6 +22,7 @@ loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
+const {NetworkThrottleManager} = require("devtools/shared/webconsole/throttle");
 
 // /////////////////////////////////////////////////////////////////////////////
 // Network logging
@@ -643,7 +644,11 @@ function NetworkMonitor(filters, owner) {
   this.openResponses = {};
   this._httpResponseExaminer =
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
+  this._httpModifyExaminer =
+    DevToolsUtils.makeInfallible(this._httpModifyExaminer).bind(this);
   this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
+  this.throttleData = null;
+  this._throttler = null;
 }
 
 exports.NetworkMonitor = NetworkMonitor;
@@ -704,11 +709,20 @@ NetworkMonitor.prototype = {
                                "http-on-examine-response", false);
       Services.obs.addObserver(this._httpResponseExaminer,
                                "http-on-examine-cached-response", false);
+      Services.obs.addObserver(this._httpModifyExaminer,
+                               "http-on-modify-request", false);
     }
     // In child processes, only watch for service worker requests
     // everything else only happens in the parent process
     Services.obs.addObserver(this._serviceWorkerRequest,
                              "service-worker-synthesized-response", false);
+  },
+
+  _getThrottler: function () {
+    if (this.throttleData !== null && this._throttler === null) {
+      this._throttler = new NetworkThrottleManager(this.throttleData);
+    }
+    return this._throttler;
   },
 
   _serviceWorkerRequest: function (subject, topic, data) {
@@ -822,6 +836,24 @@ NetworkMonitor.prototype = {
       // event with zeroed out values.
       let timings = this._setupHarTimings(httpActivity, true);
       httpActivity.owner.addEventTimings(timings.total, timings.timings);
+    }
+  },
+
+  /**
+   * Observe notifications for the http-on-modify-request topic, coming from
+   * the nsIObserverService.
+   *
+   * @private
+   * @param nsIHttpChannel aSubject
+   * @returns void
+   */
+  _httpModifyExaminer: function (subject) {
+    let throttler = this._getThrottler();
+    if (throttler) {
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (matchRequest(channel, this.filters)) {
+        throttler.manageUpload(channel);
+      }
     }
   },
 
@@ -995,7 +1027,7 @@ NetworkMonitor.prototype = {
 
     httpActivity.owner = this.owner.onNetworkEvent(event);
 
-    this._setupResponseListener(httpActivity);
+    this._setupResponseListener(httpActivity, fromCache);
 
     httpActivity.owner.addRequestHeaders(headers, extraStringData);
     httpActivity.owner.addRequestCookies(cookies);
@@ -1065,9 +1097,16 @@ NetworkMonitor.prototype = {
    * @param object httpActivity
    *        The HTTP activity object we are tracking.
    */
-  _setupResponseListener: function (httpActivity) {
+  _setupResponseListener: function (httpActivity, fromCache) {
     let channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
+
+    if (!fromCache) {
+      let throttler = this._getThrottler();
+      if (throttler) {
+        httpActivity.downloadThrottle = throttler.manage(channel);
+      }
+    }
 
     // The response will be written into the outputStream of this pipe.
     // This allows us to buffer the data we are receiving and read it
@@ -1302,6 +1341,8 @@ NetworkMonitor.prototype = {
                                   "http-on-examine-response");
       Services.obs.removeObserver(this._httpResponseExaminer,
                                   "http-on-examine-cached-response");
+      Services.obs.removeObserver(this._httpModifyExaminer,
+                                  "http-on-modify-request", false);
     }
 
     Services.obs.removeObserver(this._serviceWorkerRequest,
@@ -1312,6 +1353,7 @@ NetworkMonitor.prototype = {
     this.openResponses = {};
     this.owner = null;
     this.filters = null;
+    this._throttler = null;
   },
 };
 
