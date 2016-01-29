@@ -191,7 +191,21 @@ public:
               Element* aTarget,
               JS::Handle<JSObject*> aFrames,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+              ErrorResult& aRv)
+  {
+    return Constructor(aGlobal, aTarget, aFrames,
+                       TimingParams::FromOptionsUnion(aOptions), aRv);
+  }
+
+  // More generalized version for Animatable.animate.
+  // Not exposed to content.
+  static already_AddRefed<KeyframeEffectReadOnly>
+  Constructor(const GlobalObject& aGlobal,
+              Element* aTarget,
+              JS::Handle<JSObject*> aFrames,
+              const TimingParams& aTiming,
               ErrorResult& aRv);
+
   Element* GetTarget() const {
     // Currently we never return animations from the API whose effect
     // targets a pseudo-element so this should never be called when
@@ -332,9 +346,6 @@ protected:
   // changes with regards to this effects's timing including changes to the
   // owning Animation's timing.
   void UpdateTargetRegistration();
-
-  static TimingParams ConvertKeyframeEffectOptions(
-    const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
 
   static void BuildAnimationPropertyList(
     JSContext* aCx,
