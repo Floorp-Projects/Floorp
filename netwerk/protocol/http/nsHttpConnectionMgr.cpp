@@ -2044,22 +2044,14 @@ nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
     leftovers.Clear();
 }
 
-PLDHashOperator
-nsHttpConnectionMgr::ProcessSpdyPendingQCB(const nsACString &key,
-                                           nsAutoPtr<nsConnectionEntry> &ent,
-                                           void *closure)
-{
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    self->ProcessSpdyPendingQ(ent);
-    return PL_DHASH_NEXT;
-}
-
 void
 nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ(int32_t, ARefBase *)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ\n"));
-    mCT.Enumerate(ProcessSpdyPendingQCB, this);
+    for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+        ProcessSpdyPendingQ(iter.Data());
+    }
 }
 
 nsHttpConnection *
@@ -3809,51 +3801,50 @@ nsConnectionEntry::MaxPipelineDepth(nsAHttpTransaction::Classifier aClass)
     return mGreenDepth;
 }
 
-PLDHashOperator
-nsHttpConnectionMgr::ReadConnectionEntry(const nsACString &key,
-                nsAutoPtr<nsConnectionEntry> &ent,
-                void *aArg)
-{
-    if (ent->mConnInfo->GetPrivate())
-        return PL_DHASH_NEXT;
-
-    nsTArray<HttpRetParams> *args = static_cast<nsTArray<HttpRetParams> *> (aArg);
-    HttpRetParams data;
-    data.host = ent->mConnInfo->Origin();
-    data.port = ent->mConnInfo->OriginPort();
-    for (uint32_t i = 0; i < ent->mActiveConns.Length(); i++) {
-        HttpConnInfo info;
-        info.ttl = ent->mActiveConns[i]->TimeToLive();
-        info.rtt = ent->mActiveConns[i]->Rtt();
-        if (ent->mActiveConns[i]->UsingSpdy())
-            info.SetHTTP2ProtocolVersion(ent->mActiveConns[i]->GetSpdyVersion());
-        else
-            info.SetHTTP1ProtocolVersion(ent->mActiveConns[i]->GetLastHttpResponseVersion());
-
-        data.active.AppendElement(info);
-    }
-    for (uint32_t i = 0; i < ent->mIdleConns.Length(); i++) {
-        HttpConnInfo info;
-        info.ttl = ent->mIdleConns[i]->TimeToLive();
-        info.rtt = ent->mIdleConns[i]->Rtt();
-        info.SetHTTP1ProtocolVersion(ent->mIdleConns[i]->GetLastHttpResponseVersion());
-        data.idle.AppendElement(info);
-    }
-    for(uint32_t i = 0; i < ent->mHalfOpens.Length(); i++) {
-        HalfOpenSockets hSocket;
-        hSocket.speculative = ent->mHalfOpens[i]->IsSpeculative();
-        data.halfOpens.AppendElement(hSocket);
-    }
-    data.spdy = ent->mUsingSpdy;
-    data.ssl = ent->mConnInfo->EndToEndSSL();
-    args->AppendElement(data);
-    return PL_DHASH_NEXT;
-}
-
 bool
 nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams> *aArg)
 {
-    mCT.Enumerate(ReadConnectionEntry, aArg);
+    for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+
+        if (ent->mConnInfo->GetPrivate()) {
+            continue;
+        }
+
+        HttpRetParams data;
+        data.host = ent->mConnInfo->Origin();
+        data.port = ent->mConnInfo->OriginPort();
+        for (uint32_t i = 0; i < ent->mActiveConns.Length(); i++) {
+            HttpConnInfo info;
+            info.ttl = ent->mActiveConns[i]->TimeToLive();
+            info.rtt = ent->mActiveConns[i]->Rtt();
+            if (ent->mActiveConns[i]->UsingSpdy()) {
+                info.SetHTTP2ProtocolVersion(
+                    ent->mActiveConns[i]->GetSpdyVersion());
+            } else {
+                info.SetHTTP1ProtocolVersion(
+                    ent->mActiveConns[i]->GetLastHttpResponseVersion());
+            }
+            data.active.AppendElement(info);
+        }
+        for (uint32_t i = 0; i < ent->mIdleConns.Length(); i++) {
+            HttpConnInfo info;
+            info.ttl = ent->mIdleConns[i]->TimeToLive();
+            info.rtt = ent->mIdleConns[i]->Rtt();
+            info.SetHTTP1ProtocolVersion(
+                ent->mIdleConns[i]->GetLastHttpResponseVersion());
+            data.idle.AppendElement(info);
+        }
+        for (uint32_t i = 0; i < ent->mHalfOpens.Length(); i++) {
+            HalfOpenSockets hSocket;
+            hSocket.speculative = ent->mHalfOpens[i]->IsSpeculative();
+            data.halfOpens.AppendElement(hSocket);
+        }
+        data.spdy = ent->mUsingSpdy;
+        data.ssl = ent->mConnInfo->EndToEndSSL();
+        aArg->AppendElement(data);
+    }
+
     return true;
 }
 
