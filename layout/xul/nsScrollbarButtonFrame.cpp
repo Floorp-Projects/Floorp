@@ -233,7 +233,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
                                         nsIFrame*& result)
 {
   // recursively search our children
-  nsIFrame* childFrame = start->GetFirstPrincipalChild();
+  nsIFrame* childFrame = start->PrincipalChildList().FirstChild();
   while (nullptr != childFrame) 
   {    
     // get the content node

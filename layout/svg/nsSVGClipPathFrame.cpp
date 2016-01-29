@@ -340,7 +340,7 @@ nsSVGClipPathFrame::IsValid()
     nsIAtom *type = kid->GetType();
 
     if (type == nsGkAtoms::svgUseFrame) {
-      for (nsIFrame* grandKid = kid->GetFirstPrincipalChild(); grandKid;
+      for (nsIFrame* grandKid = kid->PrincipalChildList().FirstChild(); grandKid;
            grandKid = grandKid->GetNextSibling()) {
 
         nsIAtom *type = grandKid->GetType();

@@ -45,7 +45,7 @@ public:
   virtual nscoord GetAvailableContentBSize(const nsHTMLReflowState& aReflowState);
 
   virtual nsContainerFrame* GetContentInsertionFrame() override {
-    nsIFrame* frame = GetFirstPrincipalChild();
+    nsIFrame* frame = PrincipalChildList().FirstChild();
 
     // if no children return nullptr
     if (!frame)

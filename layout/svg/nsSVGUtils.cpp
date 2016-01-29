@@ -432,7 +432,7 @@ nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame)
 void 
 nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 {
-  nsIFrame *kid = aFrame->GetFirstPrincipalChild();
+  nsIFrame *kid = aFrame->PrincipalChildList().FirstChild();
 
   while (kid) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);

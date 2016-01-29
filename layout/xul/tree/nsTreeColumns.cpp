@@ -738,7 +738,7 @@ nsTreeColumns::EnsureColumns()
     if (!colFrame)
       return;
 
-    colFrame = colFrame->GetFirstPrincipalChild();
+    colFrame = colFrame->PrincipalChildList().FirstChild();
     if (!colFrame)
       return;
 

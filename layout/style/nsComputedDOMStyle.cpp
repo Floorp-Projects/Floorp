@@ -673,7 +673,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       if (type == nsGkAtoms::tableOuterFrame) {
         // If the frame is an outer table frame then we should get the style
         // from the inner table frame.
-        mInnerFrame = mOuterFrame->GetFirstPrincipalChild();
+        mInnerFrame = mOuterFrame->PrincipalChildList().FirstChild();
         NS_ASSERTION(mInnerFrame, "Outer table must have an inner");
         NS_ASSERTION(!mInnerFrame->GetNextSibling(),
                      "Outer table frames should have just one child, "
@@ -4891,7 +4891,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(mozilla::css::Side aSide)
     // the containing block is the viewport, which _does_ include
     // scrollbars.  We have to do some extra work.
     // the first child in the default frame list is what we want
-    nsIFrame* scrollingChild = container->GetFirstPrincipalChild();
+    nsIFrame* scrollingChild = container->PrincipalChildList().FirstChild();
     nsIScrollableFrame *scrollFrame = do_QueryFrame(scrollingChild);
     if (scrollFrame) {
       scrollbarSizes = scrollFrame->GetActualScrollbarSizes();

@@ -439,7 +439,7 @@ static SVGTextFrame*
 FrameIfAnonymousChildReflowed(SVGTextFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "aFrame must not be null");
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
+  nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
   if (NS_SUBTREE_DIRTY(kid)) {
     MOZ_ASSERT(false, "should have already reflowed the anonymous block child");
     return nullptr;
@@ -1477,7 +1477,7 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
   // Recursively iterate over the frame tree, for frames that correspond
   // to text content elements.
   if (IsTextContentElement(aFrame->GetContent())) {
-    for (nsIFrame* f = aFrame->GetFirstPrincipalChild();
+    for (nsIFrame* f = aFrame->PrincipalChildList().FirstChild();
          f;
          f = f->GetNextSibling()) {
       TraverseAndRecord(f);
@@ -1758,8 +1758,8 @@ private:
 uint32_t
 TextFrameIterator::UndisplayedCharacters() const
 {
-  MOZ_ASSERT(!(mRootFrame->GetFirstPrincipalChild() &&
-               NS_SUBTREE_DIRTY(mRootFrame->GetFirstPrincipalChild())),
+  MOZ_ASSERT(!(mRootFrame->PrincipalChildList().FirstChild() &&
+               NS_SUBTREE_DIRTY(mRootFrame->PrincipalChildList().FirstChild())),
              "should have already reflowed the anonymous block child");
 
   if (!mCurrentFrame) {
@@ -1779,7 +1779,7 @@ TextFrameIterator::Next()
   if (mCurrentFrame) {
     do {
       nsIFrame* next = IsTextContentElement(mCurrentFrame->GetContent()) ?
-                         mCurrentFrame->GetFirstPrincipalChild() :
+                         mCurrentFrame->PrincipalChildList().FirstChild() :
                          nullptr;
       if (next) {
         // Descend into this frame, and accumulate its position.
@@ -3667,7 +3667,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 {
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return NS_OK;
 
@@ -3808,7 +3808,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 nsIFrame*
 SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
-  NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
+  NS_ASSERTION(PrincipalChildList().FirstChild(), "must have a child frame");
 
   if (mState & NS_FRAME_IS_NONDISPLAY) {
     // Text frames inside <clipPath> will never have had ReflowSVG called on
@@ -3977,9 +3977,9 @@ SVGBBox
 SVGTextFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
                                   uint32_t aFlags)
 {
-  NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
+  NS_ASSERTION(PrincipalChildList().FirstChild(), "must have a child frame");
   SVGBBox bbox;
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid && NS_SUBTREE_DIRTY(kid)) {
     // Return an empty bbox if our kid's subtree is dirty. This may be called
     // in that situation, e.g. when we're building a display list after an
@@ -4837,7 +4837,7 @@ ShiftAnchoredChunk(nsTArray<mozilla::CharPosition>& aCharPositions,
 void
 SVGTextFrame::AdjustChunksForLineBreaks()
 {
-  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(GetFirstPrincipalChild());
+  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(PrincipalChildList().FirstChild());
   NS_ASSERTION(block, "expected block frame");
 
   nsBlockFrame::line_iterator line = block->begin_lines();
@@ -5128,7 +5128,7 @@ SVGTextFrame::DoGlyphPositioning()
   mPositions.Clear();
   RemoveStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid && NS_SUBTREE_DIRTY(kid)) {
     MOZ_ASSERT(false, "should have already reflowed the kid");
     return;
@@ -5197,8 +5197,8 @@ SVGTextFrame::DoGlyphPositioning()
   double adjustment = 0.0;
   mLengthAdjustScaleFactor = 1.0f;
   if (adjustingTextLength) {
-    nscoord frameLength = vertical ? GetFirstPrincipalChild()->GetRect().height
-                                   : GetFirstPrincipalChild()->GetRect().width;
+    nscoord frameLength = vertical ? PrincipalChildList().FirstChild()->GetRect().height
+                                   : PrincipalChildList().FirstChild()->GetRect().width;
     float actualTextLength =
       static_cast<float>(presContext->AppUnitsToGfxUnits(frameLength) * factor);
 
@@ -5330,7 +5330,7 @@ SVGTextFrame::NotifyGlyphMetricsChange()
 void
 SVGTextFrame::UpdateGlyphPositioning()
 {
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid) {
     return;
   }
@@ -5343,7 +5343,7 @@ SVGTextFrame::UpdateGlyphPositioning()
 void
 SVGTextFrame::MaybeReflowAnonymousBlockChild()
 {
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return;
 
@@ -5386,7 +5386,7 @@ SVGTextFrame::DoReflow()
   }
 
   nsPresContext *presContext = PresContext();
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return;
 
