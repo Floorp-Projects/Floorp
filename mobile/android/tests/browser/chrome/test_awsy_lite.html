@@ -154,7 +154,7 @@
         return;
     }
 
-    dump("opening tab with url [" + kUrls[urlIndex] + "]");
+    info("opening tab with url [" + kUrls[urlIndex] + "]");
     gLastTab = BrowserApp.addTab(kUrls[urlIndex], { selected: true });
     setTimeout(waitForTab, 10000);
   }
