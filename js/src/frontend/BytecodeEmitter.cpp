@@ -1900,9 +1900,18 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
      * bloat where a single live function keeps its whole global script
      * alive.), ScopeCoordinateToTypeSet is not able to find the var/let's
      * associated TypeSet.
+     *
+     * Note the following does not prevent us from optimizing block scopes at
+     * global level, e.g.,
+     *
+     *   { let x; function f() { x = 42; } }
      */
-    if (bceOfDef != this && bceOfDef->sc->isGlobalContext())
+    if (dn->kind() == Definition::LET || dn->kind() == Definition::CONSTANT) {
+        if (IsStaticGlobalLexicalScope(blockScopeOfDef(dn)))
+            return true;
+    } else if (bceOfDef != this && bceOfDef->sc->isGlobalContext()) {
         return true;
+    }
 
     if (!pn->pn_scopecoord.set(parser->tokenStream, hops, slot))
         return false;
