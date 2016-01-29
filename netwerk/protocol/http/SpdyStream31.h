@@ -88,6 +88,7 @@ public:
   int64_t  LocalWindow()  { return mLocalWindow; }
 
   bool     BlockedOnRwin() { return mBlockedOnRwin; }
+  bool     ChannelPipeFull();
 
   // A pull stream has an implicit sink, a pushed stream has a sink
   // once it is matched to a pull stream.

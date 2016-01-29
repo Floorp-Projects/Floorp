@@ -229,6 +229,13 @@ SpdyStream31::WriteSegments(nsAHttpSegmentWriter *writer,
   return rv;
 }
 
+bool
+SpdyStream31::ChannelPipeFull()
+{
+  nsHttpTransaction *trans = mTransaction ? mTransaction->QueryHttpTransaction() : nullptr;
+  return trans ? trans->ChannelPipeFull() : false;
+}
+
 void
 SpdyStream31::CreatePushHashKey(const nsCString &scheme,
                                 const nsCString &hostHeader,
