@@ -336,8 +336,7 @@ struct FuncOffsets : ProfilingOffsets
 
 class CallSiteDesc
 {
-    uint32_t line_;
-    uint32_t column_ : 31;
+    uint32_t lineOrBytecode_ : 31;
     uint32_t kind_ : 1;
   public:
     enum Kind {
@@ -346,15 +345,14 @@ class CallSiteDesc
     };
     CallSiteDesc() {}
     explicit CallSiteDesc(Kind kind)
-      : line_(0), column_(0), kind_(kind)
+      : lineOrBytecode_(0), kind_(kind)
     {}
-    CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
-      : line_(line), column_(column), kind_(kind)
+    CallSiteDesc(uint32_t lineOrBytecode, Kind kind)
+      : lineOrBytecode_(lineOrBytecode), kind_(kind)
     {
-        MOZ_ASSERT(column_ == column, "column must fit in 31 bits");
+        MOZ_ASSERT(lineOrBytecode_ == lineOrBytecode, "must fit in 31 bits");
     }
-    uint32_t line() const { return line_; }
-    uint32_t column() const { return column_; }
+    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
     Kind kind() const { return Kind(kind_); }
 };
 

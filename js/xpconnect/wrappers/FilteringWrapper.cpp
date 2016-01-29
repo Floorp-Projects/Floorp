@@ -35,7 +35,7 @@ Filter(JSContext* cx, HandleObject wrapper, AutoIdVector& props)
 
 template <typename Policy>
 static bool
-FilterPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
+FilterPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id, MutableHandle<PropertyDescriptor> desc)
 {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
@@ -68,7 +68,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                                       HandleId id,
-                                                      JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                      MutableHandle<PropertyDescriptor> desc) const
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
@@ -81,7 +81,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                                          HandleId id,
-                                                         JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                         MutableHandle<PropertyDescriptor> desc) const
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
@@ -185,7 +185,7 @@ bool
 CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
                                               JS::Handle<JSObject*> wrapper,
                                               JS::Handle<jsid> id,
-                                              JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                              JS::MutableHandle<PropertyDescriptor> desc) const
 {
     if (!SecurityXrayDOM::getPropertyDescriptor(cx, wrapper, id, desc))
         return false;
@@ -207,7 +207,7 @@ bool
 CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext* cx,
                                                  JS::Handle<JSObject*> wrapper,
                                                  JS::Handle<jsid> id,
-                                                 JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                 JS::MutableHandle<PropertyDescriptor> desc) const
 {
     // All properties on cross-origin DOM objects are |own|.
     return getPropertyDescriptor(cx, wrapper, id, desc);
@@ -226,7 +226,7 @@ CrossOriginXrayWrapper::ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wra
 bool
 CrossOriginXrayWrapper::defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::Handle<JSPropertyDescriptor> desc,
+                                       JS::Handle<PropertyDescriptor> desc,
                                        JS::ObjectOpResult& result) const
 {
     JS_ReportError(cx, "Permission denied to define property on cross-origin object");

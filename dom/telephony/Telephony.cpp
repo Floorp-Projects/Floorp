@@ -11,6 +11,7 @@
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TelephonyBinding.h"
+#include "mozilla/unused.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
@@ -681,11 +682,18 @@ Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
   }
 
   bool isSingleCall = mCalls.Length();
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  if (isSingleCall) {
-    rv = aMuted ? mCalls[0]->Hold(callback) : mCalls[0]->Resume(callback);
+  if (isSingleCall && mCalls[0]->Switchable()) {
+    if (aMuted && (mCalls[0]->State() == TelephonyCallState::Connected)) {
+      Unused << mCalls[0]->Hold(rv);
+    } else if (!aMuted && (mCalls[0]->State() == TelephonyCallState::Held)) {
+      Unused << mCalls[0]->Resume(rv);
+    }
   } else {
-    rv = aMuted ? mGroup->Hold(callback) : mGroup->Resume(callback);
+    if (aMuted && (mGroup->State() == TelephonyCallGroupState::Connected)) {
+      Unused << mGroup->Hold(rv);
+    } else if (!aMuted && (mGroup->State() == TelephonyCallGroupState::Held)) {
+      Unused << mGroup->Resume(rv);
+    }
   }
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();

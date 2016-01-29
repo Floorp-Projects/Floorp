@@ -6093,8 +6093,8 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
         return;
       }
 
-      JS::Rooted<JSPropertyDescriptor> descRoot(aCx);
-      JS::MutableHandle<JSPropertyDescriptor> desc(&descRoot);
+      JS::Rooted<JS::PropertyDescriptor> descRoot(aCx);
+      JS::MutableHandle<JS::PropertyDescriptor> desc(&descRoot);
       // This check may go through a wrapper, but as we checked above
       // it should be transparent or an xray. This should be fine for now,
       // until the spec is sorted out.

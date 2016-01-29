@@ -68,7 +68,7 @@
     // Listen for initial 'EventManager.start' and disable AccessFu.
     function prefStop() {
       ok(AccessFu._enabled, "AccessFu was started via preference.");
-      AccessFuTest.once_log("EventManager.stop", AccessFuTest.finish);
+      AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
       SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
     }
 

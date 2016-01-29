@@ -98,9 +98,9 @@ class CPOWProxyHandler : public BaseProxyHandler
     }
 
     virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                          MutableHandle<JSPropertyDescriptor> desc) const override;
+                                          MutableHandle<PropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                Handle<PropertyDescriptor> desc,
                                 ObjectOpResult& result) const override;
     virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
                                  AutoIdVector& props) const override;
@@ -119,7 +119,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
 
     virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc) const override;
+                                       MutableHandle<PropertyDescriptor> desc) const override;
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                               AutoIdVector& props) const override;
@@ -161,14 +161,14 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
 
 bool
 CPOWProxyHandler::getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                        MutableHandle<JSPropertyDescriptor> desc) const
+                                        MutableHandle<PropertyDescriptor> desc) const
 {
     FORWARD(getPropertyDescriptor, (cx, proxy, id, desc));
 }
 
 bool
 WrapperOwner::getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                    MutableHandle<JSPropertyDescriptor> desc)
+                                    MutableHandle<PropertyDescriptor> desc)
 {
     ObjectId objId = idOf(proxy);
 
@@ -191,14 +191,14 @@ WrapperOwner::getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId 
 
 bool
 CPOWProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                           MutableHandle<JSPropertyDescriptor> desc) const
+                                           MutableHandle<PropertyDescriptor> desc) const
 {
     FORWARD(getOwnPropertyDescriptor, (cx, proxy, id, desc));
 }
 
 bool
 WrapperOwner::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc)
+                                       MutableHandle<PropertyDescriptor> desc)
 {
     ObjectId objId = idOf(proxy);
 
@@ -221,7 +221,7 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, Handle
 
 bool
 CPOWProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                                 Handle<JSPropertyDescriptor> desc,
+                                 Handle<PropertyDescriptor> desc,
                                  ObjectOpResult& result) const
 {
     FORWARD(defineProperty, (cx, proxy, id, desc, result));
@@ -229,7 +229,7 @@ CPOWProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
 
 bool
 WrapperOwner::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                             Handle<JSPropertyDescriptor> desc,
+                             Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result)
 {
     ObjectId objId = idOf(proxy);
@@ -452,7 +452,7 @@ WrapperOwner::DOMQI(JSContext* cx, JS::HandleObject proxy, JS::CallArgs& args)
     // We could stash the actual QI function on our own function object to avoid
     // if we're called multiple times, but since we're transient, there's no
     // point right now.
-    JS::Rooted<JSPropertyDescriptor> propDesc(cx);
+    JS::Rooted<PropertyDescriptor> propDesc(cx);
     if (!JS_GetPropertyDescriptor(cx, proxy, "QueryInterface", &propDesc))
         return false;
 

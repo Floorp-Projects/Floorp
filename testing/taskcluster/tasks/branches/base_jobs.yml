@@ -270,6 +270,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_reftests.yml
+      tasks/builds/b2g_emulator_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
   web-platform-tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

@@ -20,7 +20,7 @@ enum PropertyDescriptorKind {
 };
 
 static bool
-CheckDescriptor(JS::Handle<JSPropertyDescriptor> desc, PropertyDescriptorKind kind,
+CheckDescriptor(JS::Handle<JS::PropertyDescriptor> desc, PropertyDescriptorKind kind,
                 bool enumerable, bool writable, bool configurable)
 {
     if (!desc.object())
@@ -39,7 +39,7 @@ CheckDescriptor(JS::Handle<JSPropertyDescriptor> desc, PropertyDescriptorKind ki
 BEGIN_TEST(testDefinePropertyIgnoredAttributes)
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    JS::Rooted<JSPropertyDescriptor> desc(cx);
+    JS::Rooted<JS::PropertyDescriptor> desc(cx);
     JS::RootedValue defineValue(cx);
 
     // Try a getter. Allow it to fill in the defaults. Because we're passing a
