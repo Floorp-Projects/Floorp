@@ -45,6 +45,11 @@
 # to select one in your Application.mk
 #
 
+# Sanity check. We can only build for ARM for now.
+ifneq (,$(filter-out armeabi armeabi-v7a x86,$(TARGET_ARCH_ABI)))
+$(error Sorry, Google Breakpad only works on Android ARM and x86 for now!)
+endif
+
 # The top Google Breakpad directory.
 # We assume this Android.mk to be under 'android/google_breakpad'
 
@@ -80,8 +85,7 @@ LOCAL_SRC_FILES := \
     src/client/minidump_file_writer.cc \
     src/common/android/breakpad_getcontext.S \
     src/common/convert_UTF.c \
-    src/common/md5.cc \
-    src/common/string_conversion.cc \
+    src/common/md5.cc src/common/string_conversion.cc \
     src/common/linux/elfutils.cc \
     src/common/linux/file_id.cc \
     src/common/linux/guid_creator.cc \

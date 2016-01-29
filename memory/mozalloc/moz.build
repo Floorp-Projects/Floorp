@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
     'mozalloc_oom.cpp',
 ]
 
-Library('mozalloc')
 FINAL_LIBRARY = 'mozglue'
 
 # The strndup declaration in string.h is in an ifdef __USE_GNU section

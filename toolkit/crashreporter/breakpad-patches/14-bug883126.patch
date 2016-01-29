@@ -1,0 +1,346 @@
+# HG changeset patch
+# User Julian Seward <jseward@acm.org>
+# Date 1372168568 -7200
+#      Tue Jun 25 15:56:08 2013 +0200
+# Node ID 6d06a09b3f5624dd833bd6f905bfd88e3fdec00a
+# Parent  11f7a9321b7d5d85eddc2db16e58e6870a7c4e06
+Bug 883126 - Improve performance of EXIDX unwinding in Breakpad.  r=ted
+
+diff --git a/src/common/arm_ex_to_module.cc b/src/common/arm_ex_to_module.cc
+--- a/src/common/arm_ex_to_module.cc
++++ b/src/common/arm_ex_to_module.cc
+@@ -66,141 +66,126 @@ WITH THE SOFTWARE OR THE USE OR OTHER DE
+ 
+ #define ARM_EXBUF_START(x) (((x) >> 4) & 0x0f)
+ #define ARM_EXBUF_COUNT(x) ((x) & 0x0f)
+ #define ARM_EXBUF_END(x)   (ARM_EXBUF_START(x) + ARM_EXBUF_COUNT(x))
+ 
+ using google_breakpad::ustr__pc;
+ using google_breakpad::ustr__lr;
+ using google_breakpad::ustr__sp;
++using google_breakpad::ustr__ZDra;
++using google_breakpad::ustr__ZDcfa;
+ using google_breakpad::Module;
+ using google_breakpad::ToUniqueString;
+ using google_breakpad::UniqueString;
+ 
+ namespace arm_ex_to_module {
+ 
+ // Translate command from extab_data to command for Module.
+ int ARMExToModule::TranslateCmd(const struct extab_data* edata,
+-                                Module::StackFrameEntry* entry, string& vsp) {
++                                Module::StackFrameEntry* entry,
++                                Module::Expr& vsp) {
+   int ret = 0;
+   switch (edata->cmd) {
+     case ARM_EXIDX_CMD_FINISH:
+       /* Copy LR to PC if there isn't currently a rule for PC in force. */
+       if (entry->initial_rules.find(ustr__pc())
+           == entry->initial_rules.end()) {
+         if (entry->initial_rules.find(ustr__lr())
+             == entry->initial_rules.end()) {
+-          entry->initial_rules[ustr__pc()] = Module::Expr("lr");
++          entry->initial_rules[ustr__pc()] = Module::Expr(ustr__lr(),
++                                                          0, false); // "lr"
+         } else {
+           entry->initial_rules[ustr__pc()] = entry->initial_rules[ustr__lr()];
+         }
+       }
+       break;
+     case ARM_EXIDX_CMD_SUB_FROM_VSP:
+-      {
+-        char c[16];
+-        sprintf(c, " %d -", edata->data);
+-        vsp += c;
+-      }
++      vsp = vsp.add_delta(- static_cast<long>(edata->data));
+       break;
+     case ARM_EXIDX_CMD_ADD_TO_VSP:
+-      {
+-        char c[16];
+-        sprintf(c, " %d +", edata->data);
+-        vsp += c;
+-      }
++      vsp = vsp.add_delta(static_cast<long>(edata->data));
+       break;
+     case ARM_EXIDX_CMD_REG_POP:
+       for (unsigned int i = 0; i < 16; i++) {
+         if (edata->data & (1 << i)) {
+-          entry->initial_rules[ToUniqueString(regnames[i])]
+-            = Module::Expr(vsp + " ^");
+-          vsp += " 4 +";
++          entry->initial_rules[ToUniqueString(regnames[i])] = vsp.deref();
++          vsp = vsp.add_delta(4);
+         }
+       }
+       /* Set cfa in case the SP got popped. */
+       if (edata->data & (1 << 13)) {
+-        Module::Expr& vsp_expr = entry->initial_rules[ustr__sp()];
+-        // It must be a postfix expression (we don't generate anything
+-        // else here), so return -1 to fail out if it isn't.
+-        if (!vsp_expr.isExprPostfix()) {
+-          ret = -1;
+-          break;
+-        };
+-        vsp = vsp_expr.getExprPostfix();
++        vsp = entry->initial_rules[ustr__sp()];
+       }
+       break;
+     case ARM_EXIDX_CMD_REG_TO_SP: {
+       assert (edata->data < 16);
+       const char* const regname = regnames[edata->data];
+       const UniqueString* regname_us = ToUniqueString(regname);
+       if (entry->initial_rules.find(regname_us) == entry->initial_rules.end()) {
+-        entry->initial_rules[ustr__sp()] = Module::Expr(regname);
++        entry->initial_rules[ustr__sp()] = Module::Expr(regname_us,
++                                                        0, false); // "regname"
+       } else {
+         entry->initial_rules[ustr__sp()] = entry->initial_rules[regname_us];
+       }
+-      Module::Expr& vsp_expr = entry->initial_rules[ustr__sp()];
+-      if (!vsp_expr.isExprPostfix()) {
+-        ret = -1;
+-        break;
+-      };
+-      vsp = vsp_expr.getExprPostfix();
++      vsp = entry->initial_rules[ustr__sp()];
+       break;
+     }
+     case ARM_EXIDX_CMD_VFP_POP:
+       /* Don't recover VFP registers, but be sure to adjust the stack
+          pointer. */
+       for (unsigned int i = ARM_EXBUF_START(edata->data);
+            i <= ARM_EXBUF_END(edata->data); i++) {
+-        vsp += " 8 +";
++        vsp = vsp.add_delta(8);
+       }
+       if (!(edata->data & ARM_EXIDX_VFP_FSTMD)) {
+-        vsp += " 4 +";
++        vsp = vsp.add_delta(4);
+       }
+       break;
+     case ARM_EXIDX_CMD_WREG_POP:
+       for (unsigned int i = ARM_EXBUF_START(edata->data);
+            i <= ARM_EXBUF_END(edata->data); i++) {
+-        vsp += " 8 +";
++        vsp = vsp.add_delta(8);
+       }
+       break;
+     case ARM_EXIDX_CMD_WCGR_POP:
+       // Pop wCGR registers under mask {wCGR3,2,1,0}, hence "i < 4"
+       for (unsigned int i = 0; i < 4; i++) {
+         if (edata->data & (1 << i)) {
+-          vsp += " 4 +";
++          vsp = vsp.add_delta(4);
+         }
+       }
+       break;
+     case ARM_EXIDX_CMD_REFUSED:
+     case ARM_EXIDX_CMD_RESERVED:
+       ret = -1;
+       break;
+   }
+   return ret;
+ }
+ 
+ void ARMExToModule::AddStackFrame(uintptr_t addr, size_t size) {
+   stack_frame_entry_ = new Module::StackFrameEntry;
+   stack_frame_entry_->address = addr;
+   stack_frame_entry_->size = size;
+-  stack_frame_entry_->initial_rules[ToUniqueString(kCFA)] = Module::Expr("sp");
+-  vsp_ = "sp";
++  Module::Expr sp_expr = Module::Expr(ustr__sp(), 0, false); // "sp"
++  stack_frame_entry_->initial_rules[ustr__ZDcfa()] = sp_expr; // ".cfa"
++  vsp_ = sp_expr;
+ }
+ 
+ int ARMExToModule::ImproveStackFrame(const struct extab_data* edata) {
+   return TranslateCmd(edata, stack_frame_entry_, vsp_) ;
+ }
+ 
+ void ARMExToModule::DeleteStackFrame() {
+   delete stack_frame_entry_;
+ }
+ 
+ void ARMExToModule::SubmitStackFrame() {
+   // return address always winds up in pc
+-  stack_frame_entry_->initial_rules[ToUniqueString(kRA)]
++  stack_frame_entry_->initial_rules[ustr__ZDra()] // ".ra"
+     = stack_frame_entry_->initial_rules[ustr__pc()];
+   // the final value of vsp is the new value of sp
+   stack_frame_entry_->initial_rules[ustr__sp()] = vsp_;
+   module_->AddStackFrameEntry(stack_frame_entry_);
+ }
+ 
+ } // namespace arm_ex_to_module
+diff --git a/src/common/arm_ex_to_module.h b/src/common/arm_ex_to_module.h
+--- a/src/common/arm_ex_to_module.h
++++ b/src/common/arm_ex_to_module.h
+@@ -89,19 +89,16 @@ struct extab_data {
+   uint32_t data;
+ };
+ 
+ enum extab_cmd_flags {
+   ARM_EXIDX_VFP_SHIFT_16 = 1 << 16,
+   ARM_EXIDX_VFP_FSTMD = 1 << 17, // distinguishes FSTMxxD from FSTMxxX
+ };
+ 
+-const string kRA = ".ra";
+-const string kCFA = ".cfa";
+-
+ static const char* const regnames[] = {
+  "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+  "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc",
+  "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7",
+  "fps", "cpsr"
+ };
+ 
+ // Receives information from arm_ex_reader::ExceptionTableInfo
+@@ -113,17 +110,17 @@ class ARMExToModule {
+   ~ARMExToModule() { }
+   void AddStackFrame(uintptr_t addr, size_t size);
+   int ImproveStackFrame(const struct extab_data* edata);
+   void DeleteStackFrame();
+   void SubmitStackFrame();
+  private:
+   Module* module_;
+   Module::StackFrameEntry* stack_frame_entry_;
+-  string vsp_;
++  Module::Expr vsp_;
+   int TranslateCmd(const struct extab_data* edata,
+                    Module::StackFrameEntry* entry,
+-                   string& vsp);
++                   Module::Expr& vsp);
+ };
+ 
+ } // namespace arm_ex_to_module
+ 
+ #endif // COMMON_ARM_EX_TO_MODULE__
+diff --git a/src/common/module.h b/src/common/module.h
+--- a/src/common/module.h
++++ b/src/common/module.h
+@@ -39,16 +39,20 @@
+ #define COMMON_LINUX_MODULE_H__
+ 
+ #include <iostream>
+ #include <map>
+ #include <set>
+ #include <string>
+ #include <vector>
+ 
++#include <assert.h>
++#include <stdlib.h>
++#include <stdio.h>
++
+ #include "common/symbol_data.h"
+ #include "common/using_std_string.h"
+ #include "common/unique_string.h"
+ #include "google_breakpad/common/breakpad_types.h"
+ 
+ namespace google_breakpad {
+ 
+ using std::set;
+@@ -161,30 +165,98 @@ class Module {
+     // Construct an invalid expression
+     Expr() {
+       postfix_ = "";
+       ident_ = NULL;
+       offset_ = 0;
+       how_ = kExprInvalid;
+     }
+     bool isExprInvalid() const { return how_ == kExprInvalid; }
+-    bool isExprPostfix() const { return how_ == kExprPostfix; }
+ 
+-    // Return the postfix expression string.  This is only
+-    // meaningful on Exprs for which isExprPostfix returns true.
+-    // In all other cases it returns an empty string.
+-    string getExprPostfix() const { return postfix_; }
++    // Return the postfix expression string, either directly,
++    // if this is a postfix expression, or by synthesising it
++    // for a simple expression.
++    string getExprPostfix() const {
++      switch (how_) {
++        case kExprPostfix:
++          return postfix_;
++        case kExprSimple:
++        case kExprSimpleMem: {
++          char buf[40];
++          sprintf(buf, " %ld %c%s", labs(offset_), offset_ < 0 ? '-' : '+',
++                                    how_ == kExprSimple ? "" : " ^");
++          return string(FromUniqueString(ident_)) + string(buf);
++        }
++        case kExprInvalid:
++        default:
++          assert(0 && "getExprPostfix: invalid Module::Expr type");
++          return "Expr::genExprPostfix: kExprInvalid";
++      }
++    }
+ 
+     bool operator==(const Expr& other) const {
+       return how_ == other.how_ &&
+           ident_ == other.ident_ &&
+           offset_ == other.offset_ &&
+           postfix_ == other.postfix_;
+     }
+ 
++    // Returns an Expr which evaluates to |this| + |delta|
++    Expr add_delta(long delta) {
++      if (delta == 0) {
++        return *this;
++      }
++      // If it's a simple form expression of the form "identifier + offset",
++      // simply add |delta| on to |offset|.  In the other two possible
++      // cases:
++      //    *(identifier + offset)
++      //    completely arbitrary postfix expression string
++      // the only option is to "downgrade" it to a postfix expression and add
++      // "+/- delta" at the end of the string, since the result can't be
++      // represented in the simple form.
++      switch (how_) {
++        case kExprSimpleMem:
++        case kExprPostfix: {
++          char buf[40];
++          sprintf(buf, " %ld %c", labs(delta), delta < 0 ? '-' : '+');
++          return Expr(getExprPostfix() + string(buf));
++        }
++        case kExprSimple:
++          return Expr(ident_, offset_ + delta, false);
++        case kExprInvalid:
++        default:
++          assert(0 && "add_delta: invalid Module::Expr type");
++          // Invalid inputs produce an invalid result
++          return Expr();
++      }
++    }
++
++    // Returns an Expr which evaluates to *|this|
++    Expr deref() {
++      // In the simplest case, a kExprSimple can be changed into a
++      // kExprSimpleMem.  In all other cases it has to be dumped as a
++      // postfix string, and " ^" added at the end.
++      switch (how_) {
++        case kExprSimple: {
++          Expr t = *this;
++          t.how_ = kExprSimpleMem;
++          return t;
++        }
++        case kExprSimpleMem:
++        case kExprPostfix: {
++          return Expr(getExprPostfix() + " ^");
++        }
++        case kExprInvalid:
++        default:
++          assert(0 && "deref: invalid Module::Expr type");
++          // Invalid inputs produce an invalid result
++          return Expr();
++      }
++    }
++
+     // The identifier that gives the starting value for simple expressions.
+     const UniqueString* ident_;
+     // The offset to add for simple expressions.
+     long    offset_;
+     // The Postfix expression string to evaluate for non-simple expressions.
+     string  postfix_;
+     // The operation expressed by this expression.
+     ExprHow how_;

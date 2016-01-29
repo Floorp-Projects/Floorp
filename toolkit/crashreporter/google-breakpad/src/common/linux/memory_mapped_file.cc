@@ -46,17 +46,15 @@ namespace google_breakpad {
 
 MemoryMappedFile::MemoryMappedFile() {}
 
-MemoryMappedFile::MemoryMappedFile(const char* path, size_t offset) {
-  Map(path, offset);
+MemoryMappedFile::MemoryMappedFile(const char* path) {
+  Map(path);
 }
 
 MemoryMappedFile::~MemoryMappedFile() {
   Unmap();
 }
 
-#include <unistd.h>
-
-bool MemoryMappedFile::Map(const char* path, size_t offset) {
+bool MemoryMappedFile::Map(const char* path) {
   Unmap();
 
   int fd = sys_open(path, O_RDONLY, 0);
@@ -64,9 +62,7 @@ bool MemoryMappedFile::Map(const char* path, size_t offset) {
     return false;
   }
 
-#if defined(__x86_64__) || defined(__aarch64__) || \
-   (defined(__mips__) && _MIPS_SIM == _ABI64)
-
+#if defined(__x86_64__)
   struct kernel_stat st;
   if (sys_fstat(fd, &st) == -1 || st.st_size < 0) {
 #else
@@ -77,34 +73,25 @@ bool MemoryMappedFile::Map(const char* path, size_t offset) {
     return false;
   }
 
-  // Strangely file size can be negative, but we check above that it is not.
-  size_t file_len = static_cast<size_t>(st.st_size);
-  // If the file does not extend beyond the offset, simply use an empty
-  // MemoryRange and return true. Don't bother to call mmap()
-  // even though mmap() can handle an empty file on some platforms.
-  if (offset >= file_len) {
+  // If the file size is zero, simply use an empty MemoryRange and return
+  // true. Don't bother to call mmap() even though mmap() can handle an
+  // empty file on some platforms.
+  if (st.st_size == 0) {
     sys_close(fd);
     return true;
   }
 
-#if defined(__x86_64__) || defined(__aarch64__) || \
-   (defined(__mips__) && _MIPS_SIM == _ABI64)
-  void* data = sys_mmap(NULL, file_len, PROT_READ, MAP_PRIVATE, fd, offset);
+#if defined(__x86_64__)
+  void* data = sys_mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 #else
-  if ((offset & 4095) != 0) {
-    // Not page aligned.
-    sys_close(fd);
-    return false;
-  }
-  void* data = sys_mmap2(
-      NULL, file_len, PROT_READ, MAP_PRIVATE, fd, offset >> 12);
+  void* data = sys_mmap2(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 #endif
   sys_close(fd);
   if (data == MAP_FAILED) {
     return false;
   }
 
-  content_.Set(data, file_len - offset);
+  content_.Set(data, st.st_size);
   return true;
 }
 

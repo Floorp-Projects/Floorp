@@ -9,6 +9,7 @@ SPHINX_TREES['crashreporter'] = 'docs'
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += [
     'google-breakpad/src/common',
+    'google-breakpad/src/processor',
     'breakpad-windows-libxul'
     ]
 
@@ -22,6 +23,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
         'google-breakpad/src/client',
         'google-breakpad/src/client/mac/crash_generation',
         'google-breakpad/src/client/mac/handler',
+        'google-breakpad/src/processor',
         'google-breakpad/src/tools/mac/dump_syms',
     ]
 
@@ -30,7 +32,10 @@ elif CONFIG['OS_ARCH'] == 'Linux':
         'google-breakpad/src/common',
         'google-breakpad/src/common/linux',
         'google-breakpad/src/client',
-        'google-breakpad/src/client/linux/',
+        'google-breakpad/src/client/linux/crash_generation',
+        'google-breakpad/src/client/linux/handler',
+        'google-breakpad/src/client/linux/minidump_writer',
+        'google-breakpad/src/processor',
         'google-breakpad/src/tools/linux/dump_syms',
     ]
 
@@ -44,6 +49,7 @@ elif CONFIG['OS_ARCH'] == 'SunOS':
     ]
 
 DIRS += [
+    'breakpad-logging',
     'client',
 ]
 
@@ -84,14 +90,6 @@ if CONFIG['OS_TARGET'] == 'Android':
     # NDK5 workarounds
     DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
     DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/gonk-include',
-        ]
-    else:
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
-        ]
 
 if CONFIG['OS_ARCH'] == 'SunOS':
     # there's no define for this normally
@@ -104,10 +102,6 @@ JAR_MANIFESTS += ['jar.mn']
 
 LOCAL_INCLUDES += [
     'google-breakpad/src',
-]
-
-PYTHON_UNIT_TESTS += [
-    'tools/unit-symbolstore.py',
 ]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

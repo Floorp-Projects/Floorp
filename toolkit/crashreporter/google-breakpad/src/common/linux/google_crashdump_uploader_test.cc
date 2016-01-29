@@ -32,6 +32,7 @@
 #include <string>
 
 #include "common/linux/google_crashdump_uploader.h"
+#include "common/linux/libcurl_wrapper.h"
 #include "breakpad_googletest_includes.h"
 #include "common/using_std_string.h"
 
@@ -47,12 +48,10 @@ class MockLibcurlWrapper : public LibcurlWrapper {
                               const string& proxy_userpwd));
   MOCK_METHOD2(AddFile, bool(const string& upload_file_path,
                              const string& basename));
-  MOCK_METHOD5(SendRequest,
+  MOCK_METHOD3(SendRequest,
                bool(const string& url,
                     const std::map<string, string>& parameters,
-                    int* http_status_code,
-                    string* http_header_data,
-                    string* http_response_data));
+                    string* server_response));
 };
 
 class GoogleCrashdumpUploaderTest : public ::testing::Test {
@@ -73,7 +72,7 @@ TEST_F(GoogleCrashdumpUploaderTest, InitFailsCausesUploadFailure) {
                                                                   "",
                                                                   "",
                                                                   &m);
-  ASSERT_FALSE(uploader->Upload(NULL, NULL, NULL));
+  ASSERT_FALSE(uploader->Upload());
 }
 
 TEST_F(GoogleCrashdumpUploaderTest, TestSendRequestHappensWithValidParameters) {
@@ -87,7 +86,7 @@ TEST_F(GoogleCrashdumpUploaderTest, TestSendRequestHappensWithValidParameters) {
   EXPECT_CALL(m, Init()).Times(1).WillOnce(Return(true));
   EXPECT_CALL(m, AddFile(tempfn, _)).WillOnce(Return(true));
   EXPECT_CALL(m,
-              SendRequest("http://foo.com",_,_,_,_)).Times(1).WillOnce(Return(true));
+              SendRequest("http://foo.com",_,_)).Times(1).WillOnce(Return(true));
   GoogleCrashdumpUploader *uploader = new GoogleCrashdumpUploader("foobar",
                                                                   "1.0",
                                                                   "AAA-BBB",
@@ -100,14 +99,14 @@ TEST_F(GoogleCrashdumpUploaderTest, TestSendRequestHappensWithValidParameters) {
                                                                   "",
                                                                   "",
                                                                   &m);
-  ASSERT_TRUE(uploader->Upload(NULL, NULL, NULL));
+  ASSERT_TRUE(uploader->Upload());
 }
 
 
 TEST_F(GoogleCrashdumpUploaderTest, InvalidPathname) {
   MockLibcurlWrapper m;
   EXPECT_CALL(m, Init()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(m, SendRequest(_,_,_,_,_)).Times(0);
+  EXPECT_CALL(m, SendRequest(_,_,_)).Times(0);
   GoogleCrashdumpUploader *uploader = new GoogleCrashdumpUploader("foobar",
                                                                   "1.0",
                                                                   "AAA-BBB",
@@ -120,7 +119,7 @@ TEST_F(GoogleCrashdumpUploaderTest, InvalidPathname) {
                                                                   "",
                                                                   "",
                                                                   &m);
-  ASSERT_FALSE(uploader->Upload(NULL, NULL, NULL));
+  ASSERT_FALSE(uploader->Upload());
 }
 
 TEST_F(GoogleCrashdumpUploaderTest, TestRequiredParametersMustBePresent) {
@@ -136,7 +135,7 @@ TEST_F(GoogleCrashdumpUploaderTest, TestRequiredParametersMustBePresent) {
                                    "http://foo.com",
                                    "",
                                    "");
-  ASSERT_FALSE(uploader.Upload(NULL, NULL, NULL));
+  ASSERT_FALSE(uploader.Upload());
 
   // Test with empty product version.
   GoogleCrashdumpUploader uploader1("product",
@@ -151,7 +150,7 @@ TEST_F(GoogleCrashdumpUploaderTest, TestRequiredParametersMustBePresent) {
                                     "",
                                     "");
 
-  ASSERT_FALSE(uploader1.Upload(NULL, NULL, NULL));
+  ASSERT_FALSE(uploader1.Upload());
 
   // Test with empty client GUID.
   GoogleCrashdumpUploader uploader2("product",
@@ -165,6 +164,6 @@ TEST_F(GoogleCrashdumpUploaderTest, TestRequiredParametersMustBePresent) {
                                     "",
                                     "",
                                     "");
-  ASSERT_FALSE(uploader2.Upload(NULL, NULL, NULL));
+  ASSERT_FALSE(uploader2.Upload());
 }
 }

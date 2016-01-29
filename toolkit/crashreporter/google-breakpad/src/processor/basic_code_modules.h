@@ -67,9 +67,7 @@ class BasicCodeModules : public CodeModules {
   virtual const CodeModule* GetModuleAtIndex(unsigned int index) const;
   virtual const CodeModules* Copy() const;
 
- protected:
-  BasicCodeModules();
-
+ private:
   // The base address of the main module.
   uint64_t main_address_;
 
@@ -77,7 +75,6 @@ class BasicCodeModules : public CodeModules {
   // address range.
   RangeMap<uint64_t, linked_ptr<const CodeModule> > *map_;
 
- private:
   // Disallow copy constructor and assignment operator.
   BasicCodeModules(const BasicCodeModules &that);
   void operator=(const BasicCodeModules &that);

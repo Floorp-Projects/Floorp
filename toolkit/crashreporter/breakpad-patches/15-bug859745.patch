@@ -1,0 +1,96 @@
+# HG changeset patch
+# User Julian Seward <jseward@acm.org>
+# Date 1366643454 -7200
+#      Mon Apr 22 17:10:54 2013 +0200
+# Node ID 3e64f12d9dab619c90bee02ed071bcda0100844e
+# Parent  6d06a09b3f5624dd833bd6f905bfd88e3fdec00a
+Bug 859745 - Install sane unwinding limit for SPS/breakpad.  r=ted
+
+diff --git a/src/google_breakpad/processor/stackwalker.h b/src/google_breakpad/processor/stackwalker.h
+--- a/src/google_breakpad/processor/stackwalker.h
++++ b/src/google_breakpad/processor/stackwalker.h
+@@ -83,17 +83,20 @@ class Stackwalker {
+   // argument.  If no suitable concrete subclass exists, returns NULL.
+   static Stackwalker* StackwalkerForCPU(
+      const SystemInfo* system_info,
+      MinidumpContext* context,
+      MemoryRegion* memory,
+      const CodeModules* modules,
+      StackFrameSymbolizer* resolver_helper);
+ 
+-  static void set_max_frames(uint32_t max_frames) { max_frames_ = max_frames; }
++  static void set_max_frames(uint32_t max_frames) {
++    max_frames_ = max_frames;
++    max_frames_set_ = true;
++  }
+   static uint32_t max_frames() { return max_frames_; }
+ 
+  protected:
+   // system_info identifies the operating system, NULL or empty if unknown.
+   // memory identifies a MemoryRegion that provides the stack memory
+   // for the stack to walk.  modules, if non-NULL, is a CodeModules
+   // object that is used to look up which code module each stack frame is
+   // associated with.  frame_symbolizer is a StackFrameSymbolizer object that
+@@ -191,14 +194,19 @@ class Stackwalker {
+   // the end of the stack has been reached).  GetCallerFrame allocates a new
+   // StackFrame (or StackFrame subclass), ownership of which is taken by
+   // the caller.
+   virtual StackFrame* GetCallerFrame(const CallStack* stack) = 0;
+ 
+   // The maximum number of frames Stackwalker will walk through.
+   // This defaults to 1024 to prevent infinite loops.
+   static uint32_t max_frames_;
++
++  // Keep track of whether max_frames_ has been set by the user, since
++  // it affects whether or not an error message is printed in the case
++  // where an unwind got stopped by the limit.
++  static bool max_frames_set_;
+ };
+ 
+ }  // namespace google_breakpad
+ 
+ 
+ #endif  // GOOGLE_BREAKPAD_PROCESSOR_STACKWALKER_H__
+diff --git a/src/processor/stackwalker.cc b/src/processor/stackwalker.cc
+--- a/src/processor/stackwalker.cc
++++ b/src/processor/stackwalker.cc
+@@ -52,16 +52,17 @@
+ #include "processor/stackwalker_x86.h"
+ #include "processor/stackwalker_amd64.h"
+ #include "processor/stackwalker_arm.h"
+ 
+ namespace google_breakpad {
+ 
+ const int Stackwalker::kRASearchWords = 30;
+ uint32_t Stackwalker::max_frames_ = 1024;
++bool Stackwalker::max_frames_set_ = false;
+ 
+ Stackwalker::Stackwalker(const SystemInfo* system_info,
+                          MemoryRegion* memory,
+                          const CodeModules* modules,
+                          StackFrameSymbolizer* frame_symbolizer)
+     : system_info_(system_info),
+       memory_(memory),
+       modules_(modules),
+@@ -120,17 +121,20 @@ bool Stackwalker::Walk(CallStack* stack,
+         modules_without_symbols->push_back(frame->module);
+       }
+     }
+ 
+     // Add the frame to the call stack.  Relinquish the ownership claim
+     // over the frame, because the stack now owns it.
+     stack->frames_.push_back(frame.release());
+     if (stack->frames_.size() > max_frames_) {
+-      BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
++      // Only emit an error message in the case where the limit that we
++      // reached is the default limit, not set by the user.
++      if (!max_frames_set_)
++        BPLOG(ERROR) << "The stack is over " << max_frames_ << " frames.";
+       break;
+     }
+ 
+     // Get the next frame and take ownership.
+     frame.reset(GetCallerFrame(stack));
+   }
+ 
+   return true;

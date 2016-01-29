@@ -202,6 +202,17 @@ int __breakpad_fdnlist(int fd, nlist_type *list, const char **symbolNames,
   if (CFSwapInt32BigToHost(*((uint32_t *)&buf)) == FAT_MAGIC ||
       /* The following is the big-endian ppc64 check */
       *((unsigned int *)&buf) == FAT_MAGIC) {
+    /* Get host info */
+    host_t host = mach_host_self();
+    unsigned hic = HOST_BASIC_INFO_COUNT;
+    struct host_basic_info hbi;
+    kern_return_t kr;
+    if ((kr = host_info(host, HOST_BASIC_INFO,
+                        (host_info_t)(&hbi), &hic)) != KERN_SUCCESS) {
+      return -1;
+    }
+    mach_port_deallocate(mach_task_self(), host);
+
     /* Read in the fat header */
     struct fat_header fh;
     if (lseek(fd, 0, SEEK_SET) == -1) {

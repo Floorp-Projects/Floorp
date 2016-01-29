@@ -17,6 +17,7 @@
 //
 
 #import "GTMLogger.h"
+#import "GTMGarbageCollection.h"
 #import <fcntl.h>
 #import <unistd.h>
 #import <stdlib.h>
@@ -505,7 +506,7 @@ static BOOL IsVerboseLoggingEnabled(void) {
 // In DEBUG builds, log everything. If we're not in a debug build we'll assume
 // that we're in a Release build.
 - (BOOL)filterAllowsMessage:(NSString *)msg level:(GTMLoggerLevel)level {
-#if defined(DEBUG) && DEBUG
+#if DEBUG
   return YES;
 #endif
 

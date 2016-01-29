@@ -85,15 +85,6 @@ static bool IsClientRequestValid(const ProtocolMessage& msg) {
           msg.assert_info != NULL);
 }
 
-#ifndef NDEBUG
-static bool CheckForIOIncomplete(bool success) {
-  // We should never get an I/O incomplete since we should not execute this
-  // unless the operation has finished and the overlapped event is signaled. If
-  // we do get INCOMPLETE, we have a bug in our code.
-  return success ? false : (GetLastError() == ERROR_IO_INCOMPLETE);
-}
-#endif
-
 CrashGenerationServer::CrashGenerationServer(
     const std::wstring& pipe_name,
     SECURITY_ATTRIBUTES* pipe_sec_attrs,
@@ -121,13 +112,16 @@ CrashGenerationServer::CrashGenerationServer(
       upload_request_callback_(upload_request_callback),
       upload_context_(upload_context),
       generate_dumps_(generate_dumps),
-      pre_fetch_custom_info_(true),
-      dump_path_(dump_path ? *dump_path : L""),
+      dump_generator_(NULL),
       server_state_(IPC_SERVER_STATE_UNINITIALIZED),
       shutting_down_(false),
       overlapped_(),
       client_info_(NULL) {
   InitializeCriticalSection(&sync_);
+
+  if (dump_path) {
+    dump_generator_.reset(new MinidumpGenerator(*dump_path));
+  }
 }
 
 // This should never be called from the OnPipeConnected callback.
@@ -204,7 +198,7 @@ CrashGenerationServer::~CrashGenerationServer() {
   if (overlapped_.hEvent) {
     CloseHandle(overlapped_.hEvent);
   }
-
+  
   DeleteCriticalSection(&sync_);
 }
 
@@ -393,13 +387,18 @@ void CrashGenerationServer::HandleReadingState() {
                                      &overlapped_,
                                      &bytes_count,
                                      FALSE) != FALSE;
+  DWORD error_code = success ? ERROR_SUCCESS : GetLastError();
+
   if (success && bytes_count == sizeof(ProtocolMessage)) {
     EnterStateImmediately(IPC_SERVER_STATE_READ_DONE);
-    return;
-  }
+  } else {
+    // We should never get an I/O incomplete since we should not execute this
+    // unless the Read has finished and the overlapped event is signaled. If
+    // we do get INCOMPLETE, we have a bug in our code.
+    assert(error_code != ERROR_IO_INCOMPLETE);
 
-  assert(!CheckForIOIncomplete(success));
-  EnterStateImmediately(IPC_SERVER_STATE_DISCONNECTING);
+    EnterStateImmediately(IPC_SERVER_STATE_DISCONNECTING);
+  }
 }
 
 // When the server thread serving the client is in the READ_DONE state,
@@ -468,12 +467,18 @@ void CrashGenerationServer::HandleWritingState() {
                                      &overlapped_,
                                      &bytes_count,
                                      FALSE) != FALSE;
+  DWORD error_code = success ? ERROR_SUCCESS : GetLastError();
+
   if (success) {
     EnterStateImmediately(IPC_SERVER_STATE_WRITE_DONE);
     return;
   }
 
-  assert(!CheckForIOIncomplete(success));
+  // We should never get an I/O incomplete since we should not execute this
+  // unless the Write has finished and the overlapped event is signaled. If
+  // we do get INCOMPLETE, we have a bug in our code.
+  assert(error_code != ERROR_IO_INCOMPLETE);
+
   EnterStateImmediately(IPC_SERVER_STATE_DISCONNECTING);
 }
 
@@ -511,6 +516,8 @@ void CrashGenerationServer::HandleReadingAckState() {
                                      &overlapped_,
                                      &bytes_count,
                                      FALSE) != FALSE;
+  DWORD error_code = success ? ERROR_SUCCESS : GetLastError();
+
   if (success) {
     // The connection handshake with the client is now complete; perform
     // the callback.
@@ -543,7 +550,10 @@ void CrashGenerationServer::HandleReadingAckState() {
       }
     }
   } else {
-    assert(!CheckForIOIncomplete(success));
+    // We should never get an I/O incomplete since we should not execute this
+    // unless the Read has finished and the overlapped event is signaled. If
+    // we do get INCOMPLETE, we have a bug in our code.
+    assert(error_code != ERROR_IO_INCOMPLETE);
   }
 
   EnterStateImmediately(IPC_SERVER_STATE_DISCONNECTING);
@@ -821,12 +831,10 @@ void CALLBACK CrashGenerationServer::OnPipeConnected(void* context, BOOLEAN) {
 void CALLBACK CrashGenerationServer::OnDumpRequest(void* context, BOOLEAN) {
   assert(context);
   ClientInfo* client_info = reinterpret_cast<ClientInfo*>(context);
+  client_info->PopulateCustomInfo();
 
   CrashGenerationServer* crash_server = client_info->crash_server();
   assert(crash_server);
-  if (crash_server->pre_fetch_custom_info_) {
-    client_info->PopulateCustomInfo();
-  }
   crash_server->HandleDumpRequest(*client_info);
 
   ResetEvent(client_info->dump_requested_handle());
@@ -913,19 +921,15 @@ bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
     return false;
   }
 
-  MinidumpGenerator dump_generator(dump_path_,
-                                   client.process_handle(),
-                                   client.pid(),
-                                   client_thread_id,
-                                   GetCurrentThreadId(),
-                                   client_ex_info,
-                                   client.assert_info(),
-                                   client.dump_type(),
-                                   true);
-  if (!dump_generator.GenerateDumpFile(dump_path)) {
-    return false;
-  }
-  return dump_generator.WriteMinidump();
+  return dump_generator_->WriteMinidump(client.process_handle(),
+                                        client.pid(),
+                                        client_thread_id,
+                                        GetCurrentThreadId(),
+                                        client_ex_info,
+                                        client.assert_info(),
+                                        client.dump_type(),
+                                        true,
+                                        dump_path);
 }
 
 }  // namespace google_breakpad

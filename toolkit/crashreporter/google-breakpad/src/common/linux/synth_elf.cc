@@ -5,11 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "common/linux/elf_gnu_compat.h"
 #include "common/using_std_string.h"
 
 namespace google_breakpad {
 namespace synth_elf {
+
+#ifndef NT_GNU_BUILD_ID
+#define NT_GNU_BUILD_ID 3
+#endif
 
 ELF::ELF(uint16_t machine,
          uint8_t file_class,

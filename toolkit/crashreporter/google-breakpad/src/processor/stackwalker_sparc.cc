@@ -37,7 +37,7 @@
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 #include "processor/stackwalker_sparc.h"
 
 namespace google_breakpad {

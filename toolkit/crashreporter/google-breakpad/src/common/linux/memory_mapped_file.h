@@ -33,7 +33,6 @@
 #ifndef COMMON_LINUX_MEMORY_MAPPED_FILE_H_
 #define COMMON_LINUX_MEMORY_MAPPED_FILE_H_
 
-#include <stddef.h>
 #include "common/basictypes.h"
 #include "common/memory_range.h"
 
@@ -48,7 +47,7 @@ class MemoryMappedFile {
 
   // Constructor that calls Map() to map a file at |path| into memory.
   // If Map() fails, the object behaves as if it is default constructed.
-  MemoryMappedFile(const char* path, size_t offset);
+  explicit MemoryMappedFile(const char* path);
 
   ~MemoryMappedFile();
 
@@ -57,7 +56,7 @@ class MemoryMappedFile {
   // success. Mapping an empty file will succeed but with data() and size()
   // returning NULL and 0, respectively. An existing mapping is unmapped
   // before a new mapping is created.
-  bool Map(const char* path, size_t offset);
+  bool Map(const char* path);
 
   // Unmaps the memory for the mapped file. It's a no-op if no file is
   // mapped.

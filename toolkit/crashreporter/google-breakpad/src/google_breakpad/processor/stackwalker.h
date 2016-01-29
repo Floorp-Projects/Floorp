@@ -54,7 +54,7 @@
 namespace google_breakpad {
 
 class CallStack;
-class DumpContext;
+class MinidumpContext;
 class StackFrameSymbolizer;
 
 using std::set;
@@ -68,25 +68,22 @@ class Stackwalker {
   // GetCallerFrame.  The frames are further processed to fill all available
   // data.  Returns true if the stackwalk completed, or false if it was
   // interrupted by SymbolSupplier::GetSymbolFile().
-  // Upon return, |modules_without_symbols| will be populated with pointers to
+  // Upon return, modules_without_symbols will be populated with pointers to
   // the code modules (CodeModule*) that DON'T have symbols.
-  // |modules_with_corrupt_symbols| will be populated with pointers to the
-  // modules which have corrupt symbols.  |modules_without_symbols| and
-  // |modules_with_corrupt_symbols| DO NOT take ownership of the code modules.
+  // modules_without_symbols DOES NOT take ownership of the code modules.
   // The lifetime of these code modules is the same as the lifetime of the
   // CodeModules passed to the StackWalker constructor (which currently
   // happens to be the lifetime of the Breakpad's ProcessingState object).
   // There is a check for duplicate modules so no duplicates are expected.
   bool Walk(CallStack* stack,
-            vector<const CodeModule*>* modules_without_symbols,
-            vector<const CodeModule*>* modules_with_corrupt_symbols);
+            vector<const CodeModule*>* modules_without_symbols);
 
   // Returns a new concrete subclass suitable for the CPU that a stack was
   // generated on, according to the CPU type indicated by the context
   // argument.  If no suitable concrete subclass exists, returns NULL.
   static Stackwalker* StackwalkerForCPU(
      const SystemInfo* system_info,
-     DumpContext* context,
+     MinidumpContext* context,
      MemoryRegion* memory,
      const CodeModules* modules,
      StackFrameSymbolizer* resolver_helper);
@@ -133,16 +130,9 @@ class Stackwalker {
   template<typename InstructionType>
   bool ScanForReturnAddress(InstructionType location_start,
                             InstructionType* location_found,
-                            InstructionType* ip_found,
-                            bool is_context_frame) {
-    // When searching for the caller of the context frame,
-    // allow the scanner to look farther down the stack.
-    const int search_words = is_context_frame ?
-      kRASearchWords * 4 :
-      kRASearchWords;
-
+                            InstructionType* ip_found) {
     return ScanForReturnAddress(location_start, location_found, ip_found,
-                                search_words);
+                                kRASearchWords);
   }
 
   // Scan the stack starting at location_start, looking for an address

@@ -9,13 +9,10 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 
 UNIFIED_SOURCES += [
+    '../google-breakpad/src/common/logging.cc',
+    '../google-breakpad/src/common/pathname_stripper.cc',
     '../google-breakpad/src/processor/basic_code_modules.cc',
-    '../google-breakpad/src/processor/dump_context.cc',
-    '../google-breakpad/src/processor/dump_object.cc',
-    '../google-breakpad/src/processor/logging.cc',
     '../google-breakpad/src/processor/minidump.cc',
-    '../google-breakpad/src/processor/pathname_stripper.cc',
-    '../google-breakpad/src/processor/proc_maps_linux.cc',
     'dumputils.cpp',
     'nsTestCrasher.cpp',
 ]
@@ -27,6 +24,10 @@ DEFINES['SHARED_LIBRARY'] = '%s%s%s' % (
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
+
+LOCAL_INCLUDES += [
+    '../google-breakpad/src/',
+]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
 

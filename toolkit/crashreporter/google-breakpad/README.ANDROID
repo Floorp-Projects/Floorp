@@ -5,8 +5,8 @@ This document explains how to use the Google Breakpad client library
 on Android, and later generate valid stack traces from the minidumps
 it generates.
 
-This release supports ARM, x86 and MIPS based Android systems.
-This release requires NDK release r10c or higher.
+This release supports ARM and x86 based Android systems. MIPS is not
+currently supported by Breakpad.
 
 I. Building the client library:
 ===============================
@@ -37,8 +37,8 @@ NOTE: The client library requires a C++ STL implementation,
       It has been tested succesfully with both STLport and GNU libstdc++
 
 
-I.2. Building with a standalone Android toolchain:
---------------------------------------------------
+II.1. Building with a standalone Android toolchain:
+---------------------------------------------------
 
 All you need to do is configure your build with the right 'host'
 value, and disable the processor and tools, as in:

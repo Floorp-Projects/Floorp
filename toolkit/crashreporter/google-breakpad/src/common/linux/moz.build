@@ -22,27 +22,32 @@ if CONFIG['OS_TARGET'] != 'Android':
         'http_upload.cc',
     ]
 
-HostLibrary('host_breakpad_linux_common_s')
-HOST_SOURCES += [
-    'crc32.cc',
-    'dump_symbols.cc',
-    'elf_symbols_to_module.cc',
-    'elfutils.cc',
-    'file_id.cc',
-    'guid_creator.cc',
-    'linux_libc_support.cc',
-    'memory_mapped_file.cc',
-]
-
-HOST_CXXFLAGS += [
-    '-O2',
-    '-g',
-]
+if CONFIG['MOZ_CRASHREPORTER']:
+    HostLibrary('host_breakpad_linux_common_s')
+    HOST_SOURCES += [
+        'dump_symbols.cc',
+        'elf_symbols_to_module.cc',
+        'elfutils.cc',
+        'file_id.cc',
+        'guid_creator.cc',
+        'linux_libc_support.cc',
+        'memory_mapped_file.cc',
+    ]
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
 
 Library('breakpad_linux_common_s')
 
 FINAL_LIBRARY = 'xul'
 
-HOST_DEFINES['NO_STABS_SUPPORT'] = True
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    DEFINES['ELFSIZE'] = 32
 
-include('/toolkit/crashreporter/crashreporter.mozbuild')
+DEFINES['NO_STABS_SUPPORT'] = True
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+

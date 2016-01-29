@@ -619,13 +619,6 @@ class Dumper:
             self.files_record[files] = 0 # record that we submitted jobs for this tuple of files
             self.SubmitJob(files[-1], 'ProcessFilesWork', args=(files, arch_num, arch, vcs_root, after, after_arg), callback=self.ProcessFilesFinished)
 
-    def dump_syms_cmdline(self, file, arch, files):
-        '''
-        Get the commandline used to invoke dump_syms.
-        '''
-        # The Mac dumper overrides this.
-        return [self.dump_syms, file]
-
     def ProcessFilesWork(self, files, arch_num, arch, vcs_root, after, after_arg):
         t_start = time.time()
         self.output_pid(sys.stderr, "Worker processing files: %s" % (files,))
@@ -638,7 +631,7 @@ class Dumper:
         for file in files:
             # files is a tuple of files, containing fallbacks in case the first file doesn't process successfully
             try:
-                cmd = self.dump_syms_cmdline(file, arch, files)
+                cmd = [self.dump_syms] + arch.split() + [file]
                 self.output_pid(sys.stderr, ' '.join(cmd))
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                         stderr=open(os.devnull, 'wb'))
@@ -914,17 +907,6 @@ class Dumper_Mac(Dumper):
         if result['status']:
             # kick off new jobs per-arch with our new list of files
             Dumper.ProcessFiles(self, result['files'], after=AfterMac, after_arg=result['files'][0])
-
-    def dump_syms_cmdline(self, file, arch, files):
-        '''
-        Get the commandline used to invoke dump_syms.
-        '''
-        # dump_syms wants the path to the original binary and the .dSYM
-        # in order to dump all the symbols.
-        if len(files) == 2 and file == files[0] and file.endswith('.dSYM'):
-            # This is the .dSYM bundle.
-            return [self.dump_syms] + arch.split() + ['-g', file, files[1]]
-        return Dumper.dump_syms_cmdline(self, file, arch, files)
 
     def ProcessFilesWorkMac(self, file):
         """dump_syms on Mac needs to be run on a dSYM bundle produced
