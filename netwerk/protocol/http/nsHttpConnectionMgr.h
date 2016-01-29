@@ -627,15 +627,8 @@ private:
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
-    static PLDHashOperator RemoveDeadConnections(const nsACString &key,
-        nsAutoPtr<nsConnectionEntry> &ent,
-        void *aArg);
-
     // Read Timeout Tick handlers
     void TimeoutTick();
-    static PLDHashOperator TimeoutTickCB(const nsACString &key,
-                                         nsAutoPtr<nsConnectionEntry> &ent,
-                                         void *closure);
 
     // For diagnostics
     void OnMsgPrintDiagnostics(int32_t, ARefBase *);
