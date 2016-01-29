@@ -7,7 +7,7 @@ intr protocol PTestRacyReentry {
 
 parent:
     intr E();
-    __delete__();
+    async __delete__();
 
 child:
     async Start();

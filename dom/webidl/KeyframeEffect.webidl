@@ -21,22 +21,12 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
   DOMString                   spacing = "distribute";
 };
 
-// For the constructor:
-//
-// 1. We use Element? for the first argument since we don't support Animatable
-//    for pseudo-elements yet.
-//
-// 2. We use object? instead of
-//
-//    (PropertyIndexedKeyframes or sequence<Keyframe> or SharedKeyframeList)
-//
-//    for the second argument so that we can get the property-value pairs from
-//    the PropertyIndexedKeyframes or Keyframe objects.  We also don't support
-//    SharedKeyframeList yet.
+// For the constructor we use Element? for the first argument since we
+// don't support Animatable for pseudo-elements yet.
 [HeaderFile="mozilla/dom/KeyframeEffect.h",
  Func="nsDocument::IsWebAnimationsEnabled",
  Constructor(Element? target,
-             optional object? frames,
+             object? frames,
              optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   readonly attribute Element?  target;

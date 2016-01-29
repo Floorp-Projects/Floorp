@@ -7,7 +7,7 @@ protocol PTestHandle {
     manager PTestJSON;
 
 child:
-    __delete__();
+    async __delete__();
 };
 
 } // namespace mozilla

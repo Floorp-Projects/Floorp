@@ -27020,6 +27020,10 @@
         "url": "/vibration/silent-ignore.html"
       },
       {
+        "path": "web-animations/animatable/animate.html",
+        "url": "/web-animations/animatable/animate.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },

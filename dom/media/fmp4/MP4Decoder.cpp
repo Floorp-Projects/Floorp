@@ -182,23 +182,46 @@ MP4Decoder::IsEnabled()
   return Preferences::GetBool("media.mp4.enabled");
 }
 
+// sTestH264ExtraData represents the content of the avcC atom found in
+// an AVC1 h264 video. It contains the H264 SPS and PPS NAL.
+// the structure of the avcC atom is as follow:
+// write(0x1);  // version, always 1
+// write(sps[0].data[1]); // profile
+// write(sps[0].data[2]); // compatibility
+// write(sps[0].data[3]); // level
+// write(0xFC | 3); // reserved (6 bits), NULA length size - 1 (2 bits)
+// write(0xE0 | 1); // reserved (3 bits), num of SPS (5 bits)
+// write_word(sps[0].size); // 2 bytes for length of SPS
+// for(size_t i=0 ; i < sps[0].size ; ++i)
+//   write(sps[0].data[i]); // data of SPS
+// write(&b, pps.size());  // num of PPS
+// for(size_t i=0 ; i < pps.size() ; ++i) {
+//   write_word(pps[i].size);  // 2 bytes for length of PPS
+//   for(size_t j=0 ; j < pps[i].size ; ++j)
+//     write(pps[i].data[j]);  // data of PPS
+//   }
+// }
+// here we have a h264 Baseline, 640x360
+// We use a 640x360 extradata, as some video framework (Apple VT) will never
+// attempt to use hardware decoding for small videos.
 static const uint8_t sTestH264ExtraData[] = {
-  0x01, 0x64, 0x00, 0x0a, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x64,
-  0x00, 0x0a, 0xac, 0xd9, 0x44, 0x26, 0x84, 0x00, 0x00, 0x03,
-  0x00, 0x04, 0x00, 0x00, 0x03, 0x00, 0xc8, 0x3c, 0x48, 0x96,
-  0x58, 0x01, 0x00, 0x06, 0x68, 0xeb, 0xe3, 0xcb, 0x22, 0xc0
+  0x01, 0x42, 0xc0, 0x1e, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x42,
+  0xc0, 0x1e, 0xbb, 0x40, 0x50, 0x17, 0xfc, 0xb8, 0x08, 0x80,
+  0x00, 0x00, 0x32, 0x00, 0x00, 0x0b, 0xb5, 0x07, 0x8b, 0x17,
+  0x50, 0x01, 0x00, 0x04, 0x68, 0xce, 0x32, 0xc8
 };
 
 static already_AddRefed<MediaDataDecoder>
 CreateTestH264Decoder(layers::LayersBackend aBackend,
-                      VideoInfo& aConfig)
+                      VideoInfo& aConfig,
+                      FlushableTaskQueue* aTaskQueue)
 {
   aConfig.mMimeType = "video/avc";
   aConfig.mId = 1;
   aConfig.mDuration = 40000;
   aConfig.mMediaTime = 0;
-  aConfig.mDisplay = nsIntSize(64, 64);
-  aConfig.mImage = nsIntRect(0, 0, 64, 64);
+  aConfig.mDisplay = nsIntSize(640, 360);
+  aConfig.mImage = nsIntRect(0, 0, 640, 360);
   aConfig.mExtraData = new MediaByteBuffer();
   aConfig.mExtraData->AppendElements(sTestH264ExtraData,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
@@ -207,23 +230,60 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   RefPtr<MediaDataDecoder> decoder(
-    platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
+    platform->CreateDecoder(aConfig, aTaskQueue, nullptr, aBackend, nullptr));
 
   return decoder.forget();
 }
 
-/* static */ bool
-MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFailureReason)
+/* static */ already_AddRefed<dom::Promise>
+MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* aParent)
 {
-  VideoInfo config;
-  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
-  if (!decoder) {
-    aFailureReason.AssignLiteral("Failed to create H264 decoder");
-    return false;
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise;
+  promise = dom::Promise::Create(aParent, rv);
+  if (rv.Failed()) {
+    rv.SuppressException();
+    return nullptr;
   }
-  bool result = decoder->IsHardwareAccelerated(aFailureReason);
-  decoder->Shutdown();
-  return result;
+  RefPtr<FlushableTaskQueue> taskQueue =
+    new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  VideoInfo config;
+  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config, taskQueue));
+  if (!decoder) {
+    promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to create H264 decoder"));
+    return promise.forget();
+  }
+
+  decoder->Init()
+    ->Then(AbstractThread::MainThread(), __func__,
+           [promise, decoder, taskQueue] (TrackInfo::TrackType aTrack) {
+             nsCString failureReason;
+             bool ok = decoder->IsHardwareAccelerated(failureReason);
+             nsAutoString result;
+             if (ok) {
+               result.AssignLiteral("Yes");
+             } else {
+               result.AssignLiteral("No");
+               if (failureReason.Length()) {
+                 result.AppendLiteral("; ");
+                 AppendUTF8toUTF16(failureReason, result);
+               }
+             }
+             promise->MaybeResolve(result);
+             decoder->Shutdown();
+             taskQueue->BeginShutdown();
+             taskQueue->AwaitShutdownAndIdle();
+           },
+           [promise, decoder, taskQueue] (MediaDataDecoder::DecoderFailureReason aResult) {
+             promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to initialize H264 decoder"));
+             decoder->Shutdown();
+             taskQueue->BeginShutdown();
+             taskQueue->AwaitShutdownAndIdle();
+           });
+
+  return promise.forget();
 }
 
 void

@@ -17,12 +17,12 @@ protocol PBroadcastChannel
   manager PBackground;
 
 parent:
-  PostMessage(ClonedMessageData message);
-  Close();
+  async PostMessage(ClonedMessageData message);
+  async Close();
 
 child:
-  Notify(ClonedMessageData message);
-  __delete__();
+  async Notify(ClonedMessageData message);
+  async __delete__();
 };
 
 } // namespace dom

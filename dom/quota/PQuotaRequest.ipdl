@@ -38,7 +38,7 @@ protocol PQuotaRequest
   manager PQuota;
 
 child:
-  __delete__(RequestResponse response);
+  async __delete__(RequestResponse response);
 };
 
 } // namespace quota

@@ -2,7 +2,7 @@ sync protocol trans_WrongDirection3 {
 
 parent:
     sync Msg();
-    __delete__();
+    async __delete__();
 
 state S1:
     send Msg goto S1;

@@ -243,21 +243,7 @@ private:
   // to track network I/O for timeout purposes
   nsresult   NetworkRead(nsAHttpSegmentWriter *, char *, uint32_t, uint32_t *);
 
-  static PLDHashOperator ShutdownEnumerator(nsAHttpTransaction *,
-                                            nsAutoPtr<SpdyStream31> &,
-                                            void *);
-
-  static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
-                                          nsAutoPtr<SpdyStream31> &,
-                                          void *);
-
-  static PLDHashOperator UpdateServerRwinEnumerator(nsAHttpTransaction *,
-                                                    nsAutoPtr<SpdyStream31> &,
-                                                    void *);
-
-  static PLDHashOperator RestartBlockedOnRwinEnumerator(nsAHttpTransaction *,
-                                                        nsAutoPtr<SpdyStream31> &,
-                                                        void *);
+  void Shutdown();
 
   // This is intended to be nsHttpConnectionMgr:nsConnectionHandle taken
   // from the first transaction on this session. That object contains the

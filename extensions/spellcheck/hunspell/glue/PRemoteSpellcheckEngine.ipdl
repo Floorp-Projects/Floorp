@@ -10,7 +10,7 @@ sync protocol PRemoteSpellcheckEngine {
   manager PContent;
 
 parent:
-  __delete__();
+  async __delete__();
 
   sync Check(nsString aWord) returns (bool aIsMisspelled);
 

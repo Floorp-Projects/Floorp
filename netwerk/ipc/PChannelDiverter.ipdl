@@ -18,7 +18,7 @@ async protocol PChannelDiverter
   manager PNecko;
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 }// namespace net

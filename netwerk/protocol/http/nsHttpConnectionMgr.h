@@ -652,9 +652,7 @@ private:
 
     // For diagnostics
     void OnMsgPrintDiagnostics(int32_t, ARefBase *);
-    static PLDHashOperator PrintDiagnosticsCB(const nsACString &key,
-                                              nsAutoPtr<nsConnectionEntry> &ent,
-                                              void *closure);
+
     nsCString mLogData;
 };
 

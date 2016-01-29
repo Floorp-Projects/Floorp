@@ -1,6 +1,6 @@
 sync protocol jetpack {
 child:
-    __delete__();
+    async __delete__();
 
 state DEAD:
     send __delete__;

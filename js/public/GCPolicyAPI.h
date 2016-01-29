@@ -17,16 +17,18 @@
 //       - Tells the GC how to construct an empty T.
 //
 //   static void trace(JSTracer, T* tp, const char* name)
-//       - Tells the GC how to traverse the edge itself or its children in the
-//         case of an aggregate.
+//       - Tells the GC how to traverse the edge. In the case of an aggregate,
+//         describe how to trace the children.
 //
 //   static bool needsSweep(T* tp)
-//       - Tells the GC how to tell if an edge is about to be finalized. For
-//         aggregates, the meaning is less clear. When the aggregate is used in
-//         a weak container, the return value will determine the semantcs of
-//         that container's weakness. This is the primary reason that GC-
-//         supporting containers can override the policy on a per-container
-//         basis.
+//       - Tells the GC how to determine if an edge is about to be finalized,
+//         and potentially updates the edge for moving GC if not. For
+//         aggregates, it determines the weakness semantics of storing the
+//         aggregate inside a weak container of some sort. For example, you
+//         might specialize a weak table's key type GCPolicy to describe
+//         when an entry should be kept during sweeping. This is the primary
+//         reason that GC-supporting weak containers can override the [sweep?]
+//         policy on a per-container basis.
 
 #ifndef GCPolicyAPI_h
 #define GCPolicyAPI_h
@@ -65,8 +67,8 @@ struct StructGCPolicy
 
 // The default GC policy attempts to defer to methods on the underlying type.
 // Most C++ structures that contain a default constructor, a trace function and
-// a sweep function will work out of the box with Rooted, GCHash{Set,Map}, and
-// GCVector.
+// a sweep function will work out of the box with Rooted, Handle, GCVector,
+// and GCHash{Set,Map}.
 template <typename T> struct GCPolicy : public StructGCPolicy<T> {};
 
 // This policy ignores any GC interaction, e.g. for non-GC types.

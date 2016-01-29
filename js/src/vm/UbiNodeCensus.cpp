@@ -280,16 +280,22 @@ static int compareEntries(const void* lhsVoid, const void* rhsVoid) {
 // A hash map mapping from C strings to counts.
 using CStringCountMap = HashMap<const char*, CountBasePtr, CStringHasher, SystemAllocPolicy>;
 
-// Convert a CStringCountMap into an object with each key one of the c strings
-// from the map and each value the associated count's report. For use with
+// Convert a HashMap into an object with each key one of the entries from the
+// map and each value the associated count's report. For use during census
 // reporting.
+//
+// `Map` must be a `HashMap` from some key type to a `CountBasePtr`.
+//
+// `GetName` must be a callable type which takes `const Map::Key&` and returns
+// `const char*`.
+template <class Map, class GetName>
 static PlainObject*
-cStringCountMapToObject(JSContext* cx, CStringCountMap& map) {
+countMapToObject(JSContext* cx, Map& map, GetName getName) {
     // Build a vector of pointers to entries; sort by total; and then use
     // that to build the result object. This makes the ordering of entries
     // more interesting, and a little less non-deterministic.
 
-    mozilla::Vector<CStringCountMap::Entry*> entries;
+    mozilla::Vector<typename Map::Entry*> entries;
     if (!entries.reserve(map.count())) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -299,7 +305,7 @@ cStringCountMapToObject(JSContext* cx, CStringCountMap& map) {
         entries.infallibleAppend(&r.front());
 
     qsort(entries.begin(), entries.length(), sizeof(*entries.begin()),
-          compareEntries<CStringCountMap::Entry>);
+          compareEntries<typename Map::Entry>);
 
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
@@ -311,7 +317,7 @@ cStringCountMapToObject(JSContext* cx, CStringCountMap& map) {
         if (!thenCount->report(cx, &thenReport))
             return nullptr;
 
-        const char* name = entry->key();
+        const char* name = getName(entry->key());
         MOZ_ASSERT(name);
         JSAtom* atom = Atomize(cx, name, strlen(name));
         if (!atom)
@@ -417,7 +423,9 @@ ByObjectClass::report(JSContext* cx, CountBase& countBase, MutableHandleValue re
 {
     Count& count = static_cast<Count&>(countBase);
 
-    RootedPlainObject obj(cx, cStringCountMapToObject(cx, count.table));
+    RootedPlainObject obj(cx, countMapToObject(cx, count.table, [](const char* key) {
+        return key;
+    }));
     if (!obj)
         return false;
 
@@ -726,10 +734,25 @@ ByAllocationStack::report(JSContext* cx, CountBase& countBase, MutableHandleValu
 
 // A count type that categorizes nodes by their script's filename.
 class ByFilename : public CountType {
+    using UniqueCString = UniquePtr<char, JS::FreePolicy>;
+
+    struct UniqueCStringHasher {
+        using Lookup = UniqueCString;
+
+        static js::HashNumber hash(const Lookup& lookup) {
+            return CStringHasher::hash(lookup.get());
+        }
+
+        static bool match(const UniqueCString& key, const Lookup& lookup) {
+            return CStringHasher::match(key.get(), lookup.get());
+        }
+    };
+
     // A table mapping filenames to their counts. Note that we treat scripts
     // with the same filename as equivalent. If you have several sources with
     // the same filename, then all their scripts will get bucketed together.
-    using Table = CStringCountMap;
+    using Table = HashMap<UniqueCString, CountBasePtr, UniqueCStringHasher,
+                          SystemAllocPolicy>;
     using Entry = Table::Entry;
 
     struct Count : public CountBase {
@@ -804,10 +827,14 @@ ByFilename::count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, cons
     if (!filename)
         return count.noFilename->count(mallocSizeOf, node);
 
-    Table::AddPtr p = count.table.lookupForAdd(filename);
+    UniqueCString myFilename(js_strdup(filename));
+    if (!myFilename)
+        return false;
+
+    Table::AddPtr p = count.table.lookupForAdd(myFilename);
     if (!p) {
         CountBasePtr thenCount(thenType->makeCount());
-        if (!thenCount || !count.table.add(p, filename, Move(thenCount)))
+        if (!thenCount || !count.table.add(p, Move(myFilename), Move(thenCount)))
             return false;
     }
     return p->value()->count(mallocSizeOf, node);
@@ -818,7 +845,9 @@ ByFilename::report(JSContext* cx, CountBase& countBase, MutableHandleValue repor
 {
     Count& count = static_cast<Count&>(countBase);
 
-    RootedPlainObject obj(cx, cStringCountMapToObject(cx, count.table));
+    RootedPlainObject obj(cx, countMapToObject(cx, count.table, [](const UniqueCString& key) {
+        return key.get();
+    }));
     if (!obj)
         return false;
 

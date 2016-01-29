@@ -13,11 +13,11 @@ parent:
     sync GetAnsweredParent() returns (bool answeredParent);
 
 child:
-    Start();
-    Wakeup();
-    Wakeup3();
+    async Start();
+    async Wakeup();
+    async Wakeup3();
     intr Child();
-    __delete__();
+    async __delete__();
 
 state START:
     send Start goto TEST1;

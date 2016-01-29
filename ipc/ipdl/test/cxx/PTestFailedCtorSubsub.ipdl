@@ -8,7 +8,7 @@ intr protocol PTestFailedCtorSubsub {
     manager PTestFailedCtorSub;
 
 parent:
-     __delete__();
+     async __delete__();
 };
 
 }

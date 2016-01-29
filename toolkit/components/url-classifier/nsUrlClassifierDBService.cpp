@@ -55,7 +55,7 @@ using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
-PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
+LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
@@ -1133,8 +1133,6 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
 nsresult
 nsUrlClassifierDBService::Init()
 {
-  if (!gUrlClassifierDbServiceLog)
-    gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
   MOZ_ASSERT(NS_IsMainThread(), "Must initialize DB service on main thread");
   nsCOMPtr<nsIXULRuntime> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
   if (appInfo) {

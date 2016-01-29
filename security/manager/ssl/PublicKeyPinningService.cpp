@@ -23,8 +23,7 @@ using namespace mozilla;
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
-PRLogModuleInfo* gPublicKeyPinningLog =
-  PR_NewLogModule("PublicKeyPinningService");
+LazyLogModule gPublicKeyPinningLog("PublicKeyPinningService");
 
 /**
  Computes in the location specified by base64Out the SHA256 digest

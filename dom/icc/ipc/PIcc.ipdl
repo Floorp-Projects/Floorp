@@ -94,12 +94,12 @@ child:
   /**
    * Notify CardStateChanged with updated CardState.
    */
-  NotifyCardStateChanged(uint32_t aCardState);
+  async NotifyCardStateChanged(uint32_t aCardState);
 
   /**
    * Notify IccInfoChanged with updated IccInfo.
    */
-  NotifyIccInfoChanged(OptionalIccInfoData aInfoData);
+  async NotifyIccInfoChanged(OptionalIccInfoData aInfoData);
 
   /**
    * Notify STK proactive command issue by selected UICC.
@@ -107,23 +107,23 @@ child:
    * @param aStkProactiveCmd
    *        a MozStkCommand instance serialized in JSON.
    */
-  NotifyStkCommand(nsString aStkProactiveCmd);
+  async NotifyStkCommand(nsString aStkProactiveCmd);
 
   /**
    * Notify that STK session is ended by selected UICC.
    */
-  NotifyStkSessionEnd();
+  async NotifyStkSessionEnd();
 
 parent:
   /**
    * Sent when the child no longer needs to use PIcc.
    */
-  __delete__();
+  async __delete__();
 
   /**
    * Sent when the child makes an asynchronous request to the parent.
    */
-  PIccRequest(IccRequest aRequest);
+  async PIccRequest(IccRequest aRequest);
 
   /**
    * Send STK response to the selected UICC.
@@ -133,17 +133,17 @@ parent:
    * @param aResponse
    *        a MozStkResponse instance serialized in JSON.
    */
-  StkResponse(nsString aCommand, nsString aResponse);
+  async StkResponse(nsString aCommand, nsString aResponse);
 
   /**
    * Send STK Menu Selection to the selected UICC.
    */
-  StkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested);
+  async StkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested);
 
   /**
    * Send STK Timer Expiration to the selected UICC.
    */
-  StkTimerExpiration(uint16_t aTimerId, uint32_t aTimerValue);
+  async StkTimerExpiration(uint16_t aTimerId, uint32_t aTimerValue);
 
   /**
    * Send STK Event Download to the selected UICC.
@@ -151,7 +151,7 @@ parent:
    * @param aEvent
    *        a MozStkXxxEvent instance serialized in JSON.
    */
-  StkEventDownload(nsString aEvent);
+  async StkEventDownload(nsString aEvent);
 
   /**
    * Sync call to initialize the updated IccInfo/CardState.

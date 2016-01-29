@@ -4166,6 +4166,11 @@ nsCycleCollector_shutdown()
 
     data->mCollector->Shutdown();
     data->mCollector = nullptr;
+    if (data->mRuntime) {
+      // Run any remaining tasks that may have been enqueued via
+      // RunInStableState during the final cycle collection.
+      data->mRuntime->ProcessStableStateQueue();
+    }
     if (!data->mRuntime) {
       delete data;
       sCollectorData.set(nullptr);

@@ -2,6 +2,6 @@ protocol multimanNonexistentManagers {
     manager Starsky or Hutch;
 
 child:
-    Dummy();
-    __delete__();
+    async Dummy();
+    async __delete__();
 };
