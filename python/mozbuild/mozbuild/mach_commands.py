@@ -1474,23 +1474,21 @@ class PackageFrontend(MachCommandBase):
         artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg)
         return artifacts
 
-    def _compute_defaults(self, tree=None, job=None):
-        # Firefox front-end developers mostly use fx-team.  Post auto-land, make this central.
-        tree = tree or 'fx-team'
+    def _compute_platform(self, job=None):
         if job:
-            return (tree, job)
+            return job
         if self.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
             if self.substs['ANDROID_CPU_ARCH'] == 'x86':
-                return tree, 'android-x86'
-            return tree, 'android-api-11'
+                return 'android-x86'
+            return 'android-api-11'
         # TODO: check for 32/64 bit builds.  We'd like to use HAVE_64BIT_BUILD
         # but that relies on the compile environment.
         if self.defines.get('XP_LINUX', False):
-            return tree, 'linux64'
+            return 'linux64'
         if self.defines.get('XP_MACOSX', False):
-            return tree, 'macosx64'
+            return 'macosx64'
         if self.defines.get('XP_WIN', False):
-            return tree, 'win32'
+            return 'win32'
         raise Exception('Cannot determine default tree and job for |mach artifact|!')
 
     @ArtifactSubCommand('artifact', 'install',
@@ -1502,7 +1500,7 @@ class PackageFrontend(MachCommandBase):
         default=None)
     def artifact_install(self, source=None, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
+        job = self._compute_platform(job)
         artifacts = self._make_artifacts(tree=tree, job=job)
 
         manifest_path = mozpath.join(self.topobjdir, '_build_manifests', 'install', 'dist_bin')
@@ -1528,7 +1526,7 @@ class PackageFrontend(MachCommandBase):
         'Print the last pre-built artifact installed.')
     def artifact_print_last(self, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
+        job = self._compute_platform(job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_last()
         return 0
@@ -1537,7 +1535,7 @@ class PackageFrontend(MachCommandBase):
         'Print local artifact cache for debugging.')
     def artifact_print_cache(self, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
+        job = self._compute_platform(job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_cache()
         return 0
@@ -1546,7 +1544,7 @@ class PackageFrontend(MachCommandBase):
         'Delete local artifacts and reset local artifact cache.')
     def artifact_clear_cache(self, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
+        job = self._compute_platform(job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
         return 0
