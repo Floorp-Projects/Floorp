@@ -96,8 +96,8 @@ public class PromptInput {
 
         @Override
         public Object getValue() {
-            EditText edit = (EditText)mView;
-            return edit.getText();
+            final TextInputLayout inputLayout = (TextInputLayout) mView;
+            return inputLayout.getEditText().getText();
         }
     }
 
@@ -109,7 +109,8 @@ public class PromptInput {
 
         @Override
         public View getView(final Context context) throws UnsupportedOperationException {
-            EditText input = (EditText) super.getView(context);
+            final TextInputLayout inputLayout = (TextInputLayout) super.getView(context);
+            final EditText input = inputLayout.getEditText();
             input.setRawInputType(Configuration.KEYBOARD_12KEY);
             input.setInputType(InputType.TYPE_CLASS_NUMBER |
                                InputType.TYPE_NUMBER_FLAG_SIGNED);
@@ -125,17 +126,11 @@ public class PromptInput {
 
         @Override
         public View getView(Context context) throws UnsupportedOperationException {
-            EditText input = (EditText) super.getView(context);
-            input.setInputType(InputType.TYPE_CLASS_TEXT |
+            final TextInputLayout inputLayout = (TextInputLayout) super.getView(context);
+            inputLayout.getEditText().setInputType(InputType.TYPE_CLASS_TEXT |
                                InputType.TYPE_TEXT_VARIATION_PASSWORD |
                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-            return input;
-        }
-
-        @Override
-        public Object getValue() {
-            EditText edit = (EditText)mView;
-            return edit.getText();
+            return inputLayout;
         }
     }
 
