@@ -839,102 +839,6 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
 // enumeration callbacks
 
 PLDHashOperator
-nsHttpConnectionMgr::ProcessAllTransactionsCB(const nsACString &key,
-                                              nsAutoPtr<nsConnectionEntry> &ent,
-                                              void *closure)
-{
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-    self->ProcessPendingQForEntry(ent, true);
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsHttpConnectionMgr::PruneDeadConnectionsCB(const nsACString &key,
-                                            nsAutoPtr<nsConnectionEntry> &ent,
-                                            void *closure)
-{
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-
-    LOG(("  pruning [ci=%s]\n", ent->mConnInfo->HashKey().get()));
-
-    // Find out how long it will take for next idle connection to not be reusable
-    // anymore.
-    uint32_t timeToNextExpire = UINT32_MAX;
-    int32_t count = ent->mIdleConns.Length();
-    if (count > 0) {
-        for (int32_t i=count-1; i>=0; --i) {
-            nsHttpConnection *conn = ent->mIdleConns[i];
-            if (!conn->CanReuse()) {
-                ent->mIdleConns.RemoveElementAt(i);
-                conn->Close(NS_ERROR_ABORT);
-                NS_RELEASE(conn);
-                self->mNumIdleConns--;
-            } else {
-                timeToNextExpire = std::min(timeToNextExpire, conn->TimeToLive());
-            }
-        }
-    }
-
-    if (ent->mUsingSpdy) {
-        for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
-            nsHttpConnection *conn = ent->mActiveConns[index];
-            if (conn->UsingSpdy()) {
-                if (!conn->CanReuse()) {
-                    // marking it dont reuse will create an active tear down if
-                    // the spdy session is idle.
-                    conn->DontReuse();
-                }
-                else {
-                    timeToNextExpire = std::min(timeToNextExpire,
-                                              conn->TimeToLive());
-                }
-            }
-        }
-    }
-
-    // If time to next expire found is shorter than time to next wake-up, we need to
-    // change the time for next wake-up.
-    if (timeToNextExpire != UINT32_MAX) {
-        uint32_t now = NowInSeconds();
-        uint64_t timeOfNextExpire = now + timeToNextExpire;
-        // If pruning of dead connections is not already scheduled to happen
-        // or time found for next connection to expire is is before
-        // mTimeOfNextWakeUp, we need to schedule the pruning to happen
-        // after timeToNextExpire.
-        if (!self->mTimer || timeOfNextExpire < self->mTimeOfNextWakeUp) {
-            self->PruneDeadConnectionsAfter(timeToNextExpire);
-        }
-    } else {
-        self->ConditionallyStopPruneDeadConnectionsTimer();
-    }
-
-    // if this entry is empty, we have too many entries,
-    // and this doesn't represent some painfully determined
-    // red condition, then we can clean it up and restart from
-    // yellow
-    if (ent->PipelineState()       != PS_RED &&
-        self->mCT.Count()          >  125 &&
-        ent->mIdleConns.Length()   == 0 &&
-        ent->mActiveConns.Length() == 0 &&
-        ent->mHalfOpens.Length()   == 0 &&
-        ent->mPendingQ.Length()    == 0 &&
-        ((!ent->mTestedSpdy && !ent->mUsingSpdy) ||
-         !gHttpHandler->IsSpdyEnabled() ||
-         self->mCT.Count() > 300)) {
-        LOG(("    removing empty connection entry\n"));
-        return PL_DHASH_REMOVE;
-    }
-
-    // otherwise use this opportunity to compact our arrays...
-    ent->mIdleConns.Compact();
-    ent->mActiveConns.Compact();
-    ent->mPendingQ.Compact();
-
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
 nsHttpConnectionMgr::VerifyTrafficCB(const nsACString &key,
                                      nsAutoPtr<nsConnectionEntry> &ent,
                                      void *closure)
@@ -2452,7 +2356,9 @@ nsHttpConnectionMgr::OnMsgProcessPendingQ(int32_t, ARefBase *param)
     if (!ci) {
         LOG(("nsHttpConnectionMgr::OnMsgProcessPendingQ [ci=nullptr]\n"));
         // Try and dispatch everything
-        mCT.Enumerate(ProcessAllTransactionsCB, this);
+        for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+            ProcessPendingQForEntry(iter.Data(), true);
+        }
         return;
     }
 
@@ -2515,8 +2421,86 @@ nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, ARefBase *)
 
     // check canreuse() for all idle connections plus any active connections on
     // connection entries that are using spdy.
-    if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled()))
-        mCT.Enumerate(PruneDeadConnectionsCB, this);
+    if (mNumIdleConns || (mNumActiveConns && gHttpHandler->IsSpdyEnabled())) {
+        for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+            nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+
+            LOG(("  pruning [ci=%s]\n", ent->mConnInfo->HashKey().get()));
+
+            // Find out how long it will take for next idle connection to not
+            // be reusable anymore.
+            uint32_t timeToNextExpire = UINT32_MAX;
+            int32_t count = ent->mIdleConns.Length();
+            if (count > 0) {
+                for (int32_t i = count - 1; i >= 0; --i) {
+                    nsHttpConnection* conn = ent->mIdleConns[i];
+                    if (!conn->CanReuse()) {
+                        ent->mIdleConns.RemoveElementAt(i);
+                        conn->Close(NS_ERROR_ABORT);
+                        NS_RELEASE(conn);
+                        mNumIdleConns--;
+                    } else {
+                        timeToNextExpire =
+                            std::min(timeToNextExpire, conn->TimeToLive());
+                    }
+                }
+            }
+
+            if (ent->mUsingSpdy) {
+                for (uint32_t i = 0; i < ent->mActiveConns.Length(); ++i) {
+                    nsHttpConnection* conn = ent->mActiveConns[i];
+                    if (conn->UsingSpdy()) {
+                        if (!conn->CanReuse()) {
+                            // Marking it don't-reuse will create an active
+                            // tear down if the spdy session is idle.
+                            conn->DontReuse();
+                        } else {
+                            timeToNextExpire =
+                                std::min(timeToNextExpire, conn->TimeToLive());
+                        }
+                    }
+                }
+            }
+
+            // If time to next expire found is shorter than time to next
+            // wake-up, we need to change the time for next wake-up.
+            if (timeToNextExpire != UINT32_MAX) {
+                uint32_t now = NowInSeconds();
+                uint64_t timeOfNextExpire = now + timeToNextExpire;
+                // If pruning of dead connections is not already scheduled to
+                // happen or time found for next connection to expire is is
+                // before mTimeOfNextWakeUp, we need to schedule the pruning to
+                // happen after timeToNextExpire.
+                if (!mTimer || timeOfNextExpire < mTimeOfNextWakeUp) {
+                    PruneDeadConnectionsAfter(timeToNextExpire);
+                }
+            } else {
+                ConditionallyStopPruneDeadConnectionsTimer();
+            }
+
+            // If this entry is empty, we have too many entries, and this
+            // doesn't represent some painfully determined red condition, then
+            // we can clean it up and restart from yellow.
+            if (ent->PipelineState()       != PS_RED &&
+                mCT.Count()                >  125 &&
+                ent->mIdleConns.Length()   == 0 &&
+                ent->mActiveConns.Length() == 0 &&
+                ent->mHalfOpens.Length()   == 0 &&
+                ent->mPendingQ.Length()    == 0 &&
+                ((!ent->mTestedSpdy && !ent->mUsingSpdy) ||
+                 !gHttpHandler->IsSpdyEnabled() ||
+                 mCT.Count() > 300)) {
+                LOG(("    removing empty connection entry\n"));
+                iter.Remove();
+                continue;
+            }
+
+            // Otherwise use this opportunity to compact our arrays...
+            ent->mIdleConns.Compact();
+            ent->mActiveConns.Compact();
+            ent->mPendingQ.Compact();
+        }
+    }
 }
 
 void
