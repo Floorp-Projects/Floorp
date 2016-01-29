@@ -5,6 +5,7 @@
 
 Components.utils.import("resource://gre/modules/PromiseUtils.jsm");
 Components.utils.import("resource://gre/modules/Timer.jsm");
+Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 // Tests for PromiseUtils.jsm
 function run_test() {
@@ -98,8 +99,9 @@ add_task(function* test_reject_resolved_promise() {
 /* Test for the case when a rejected Promise is
  * passed to the reject method */
 add_task(function* test_reject_resolved_promise() {
+  PromiseTestUtils.expectUncaughtRejection(/This one rejects/);
   let def = PromiseUtils.defer();
-  let p = new Promise((resolve, reject) => reject(new Error("This on rejects")));
+  let p = new Promise((resolve, reject) => reject(new Error("This one rejects")));
   def.reject(p);
   yield Assert.rejects(def.promise, Promise, "Rejection with a rejected promise uses the passed promise itself as the reason of rejection");
 });

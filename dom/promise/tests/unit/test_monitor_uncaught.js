@@ -7,6 +7,10 @@
 var { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Timer.jsm", this);
+Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+
+// Prevent test failures due to the unhandled rejections in this test file.
+PromiseTestUtils.disableUncaughtRejectionObserverForSelfTest();
 
 add_task(function* test_globals() {
   Assert.equal(Promise.defer || undefined, undefined, "We are testing DOM Promise.");
