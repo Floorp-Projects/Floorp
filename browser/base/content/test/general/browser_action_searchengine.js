@@ -35,7 +35,7 @@ add_task(function* () {
 
   isnot(result, null, "Should have a result");
   is(result.getAttribute("url"),
-     `moz-action:searchengine,{"engineName":"MozSearch","input":"open a search","searchQuery":"open a search"}`,
+     `moz-action:searchengine,{"engineName":"MozSearch","input":"open%20a%20search","searchQuery":"open%20a%20search"}`,
      "Result should be a moz-action: for the correct search engine");
   is(result.hasAttribute("image"), false, "Result shouldn't have an image attribute");
 
