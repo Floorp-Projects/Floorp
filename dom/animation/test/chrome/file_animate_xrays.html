@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<meta charset=utf-8>
+<script>
+Element.prototype.animate = function() {
+  throw 'Called animate() as defined in content document';
+}
+// Bug 1211783: Use KeyframeEffect (not KeyframeEffectReadOnly) here
+for (var obj of [KeyframeEffectReadOnly, Animation]) {
+  obj = function() {
+    throw 'Called overridden ' + String(obj) + ' constructor';
+  };
+}
+</script>
+<body>
+<div id="target"></div>
+</body>
+</html>
