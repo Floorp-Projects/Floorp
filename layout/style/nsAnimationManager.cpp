@@ -810,7 +810,11 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
   } else {
     tf = &aAnimation.GetTimingFunction();
   }
-  segment.mTimingFunction.Init(*tf);
+  if (tf->mType != nsTimingFunction::Type::Linear) {
+    ComputedTimingFunction computedTimingFunction;
+    computedTimingFunction.Init(*tf);
+    segment.mTimingFunction = Some(computedTimingFunction);
+  }
 
   return true;
 }
