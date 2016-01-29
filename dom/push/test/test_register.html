@@ -65,7 +65,7 @@ http://creativecommons.org/licenses/publicdomain/
 
   add_task(function* waitForPushNotification() {
     yield Promise.all([
-      controlledFrame.waitOnPushMessage(),
+      controlledFrame.waitOnWorkerMessage("finished"),
       fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
         method: "PUT",
         headers: {
