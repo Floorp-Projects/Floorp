@@ -678,7 +678,7 @@ enum class ValuePosition
 struct OrderedKeyframeValueEntry : KeyframeValue
 {
   float mOffset;
-  const ComputedTimingFunction* mTimingFunction;
+  const Maybe<ComputedTimingFunction>* mTimingFunction;
   ValuePosition mPosition;
 
   bool SameKeyframe(const OrderedKeyframeValueEntry& aOther) const
@@ -713,7 +713,9 @@ struct OrderedKeyframeValueEntry : KeyframeValue
       // Third, by easing.
       if (aLhs.mTimingFunction) {
         if (aRhs.mTimingFunction) {
-          int32_t order = aLhs.mTimingFunction->Compare(*aRhs.mTimingFunction);
+          int32_t order =
+            ComputedTimingFunction::Compare(*aLhs.mTimingFunction,
+                                            *aRhs.mTimingFunction);
           if (order != 0) {
             return order < 0;
           }
@@ -1648,14 +1650,6 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
 {
   nsTArray<OrderedKeyframeValueEntry> entries;
 
-  // We need a linear function here to sort key frames correctly.
-  // mTimingFunction in AnimationPropertySegment is Nothing() in case of
-  // the timing function is 'linear'. So if the mTimingFunction is
-  // Nothing(), we need a dummy ComputedTimingFunction to be passed to
-  // ComputedTimingFunction::Compare.
-  ComputedTimingFunction linear;
-  linear.Init(nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR));
-
   for (const AnimationProperty& property : mProperties) {
     for (size_t i = 0, n = property.mSegments.Length(); i < n; i++) {
       const AnimationPropertySegment& segment = property.mSegments[i];
@@ -1678,7 +1672,7 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
       entry->mProperty = property.mProperty;
       entry->mValue = segment.mFromValue;
       entry->mOffset = segment.mFromKey;
-      entry->mTimingFunction = segment.mTimingFunction.ptrOr(&linear);
+      entry->mTimingFunction = &segment.mTimingFunction;
       entry->mPosition =
         segment.mFromKey == segment.mToKey && segment.mFromKey == 0.0f ?
           ValuePosition::First :
@@ -1691,8 +1685,7 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
         entry->mValue = segment.mToValue;
         entry->mOffset = segment.mToKey;
         entry->mTimingFunction = segment.mToKey == 1.0f ?
-          nullptr :
-          segment.mTimingFunction.ptrOr(&linear);
+          nullptr : &segment.mTimingFunction;
         entry->mPosition =
           segment.mFromKey == segment.mToKey && segment.mToKey == 1.0f ?
             ValuePosition::Last :
@@ -1711,10 +1704,10 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
     ComputedKeyframe keyframeDict;
     keyframeDict.mOffset.SetValue(entry->mOffset);
     keyframeDict.mComputedOffset.Construct(entry->mOffset);
-    if (entry->mTimingFunction) {
+    if (entry->mTimingFunction && entry->mTimingFunction->isSome()) {
       // If null, leave easing as its default "linear".
       keyframeDict.mEasing.Truncate();
-      entry->mTimingFunction->AppendToString(keyframeDict.mEasing);
+      entry->mTimingFunction->value().AppendToString(keyframeDict.mEasing);
     }
     keyframeDict.mComposite.SetValue(CompositeOperation::Replace);
 

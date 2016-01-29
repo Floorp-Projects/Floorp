@@ -46,6 +46,8 @@ public:
   {
     return aFunction.isSome() ? aFunction->GetValue(aPortion) : aPortion;
   }
+  static int32_t Compare(const Maybe<ComputedTimingFunction>& aLhs,
+                         const Maybe<ComputedTimingFunction>& aRhs);
 
 private:
   nsTimingFunction::Type mType;
