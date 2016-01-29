@@ -67,9 +67,6 @@ class MemoryRegion {
   virtual bool GetMemoryAtAddress(uint64_t address, uint16_t* value) const = 0;
   virtual bool GetMemoryAtAddress(uint64_t address, uint32_t* value) const = 0;
   virtual bool GetMemoryAtAddress(uint64_t address, uint64_t* value) const = 0;
-
-  // Print a human-readable representation of the object to stdout.
-  virtual void Print() const = 0;
 };
 
 

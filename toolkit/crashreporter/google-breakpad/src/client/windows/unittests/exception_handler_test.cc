@@ -390,7 +390,7 @@ TEST_F(ExceptionHandlerTest, WriteMinidumpTest) {
   // Read the minidump and verify some info.
   Minidump minidump(minidump_filename);
   ASSERT_TRUE(minidump.Read());
-  // TODO(ted): more comprehensive tests...
+  //TODO(ted): more comprehensive tests...
 }
 
 // Test that an additional memory region can be included in the minidump.

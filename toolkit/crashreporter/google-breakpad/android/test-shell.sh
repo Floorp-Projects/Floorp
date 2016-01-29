@@ -52,9 +52,8 @@ if [ ! -f "$TEST_PROGRAM" ]; then
 fi
 
 # Create test directory on the device
-TEST_DIR=/data/local/tmp/test-google-breakpad-$$
-adb_shell mkdir "$TEST_DIR" ||
-    panic "Can't create test directory on device: $TEST_DIR"
+TEST_DIR=/data/local/tmp/test-google-breakpad
+adb_shell mkdir "$TEST_DIR" || panic "Can't create test directory on device"
 
 # Ensure that it is always removed when the script exits.
 clean_test_dir () {

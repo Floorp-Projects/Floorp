@@ -45,13 +45,12 @@ struct StackFrame {
   // stack scanning, it can wind up with dubious frames.
   // In rough order of "trust metric".
   enum FrameTrust {
-    FRAME_TRUST_NONE,      // Unknown
-    FRAME_TRUST_SCAN,      // Scanned the stack, found this
-    FRAME_TRUST_CFI_SCAN,  // Found while scanning stack using call frame info
-    FRAME_TRUST_FP,        // Derived from frame pointer
-    FRAME_TRUST_CFI,       // Derived from call frame info
-    FRAME_TRUST_PREWALKED, // Explicitly provided by some external stack walker.
-    FRAME_TRUST_CONTEXT    // Given as instruction pointer in a context
+    FRAME_TRUST_NONE,     // Unknown
+    FRAME_TRUST_SCAN,     // Scanned the stack, found this
+    FRAME_TRUST_CFI_SCAN, // Scanned the stack using call frame info, found this
+    FRAME_TRUST_FP,       // Derived from frame pointer
+    FRAME_TRUST_CFI,      // Derived from call frame info
+    FRAME_TRUST_CONTEXT   // Given as instruction pointer in a context
   };
 
   StackFrame()
@@ -71,8 +70,6 @@ struct StackFrame {
     switch (trust) {
       case StackFrame::FRAME_TRUST_CONTEXT:
         return "given as instruction pointer in context";
-      case StackFrame::FRAME_TRUST_PREWALKED:
-        return "recovered by external stack walker";
       case StackFrame::FRAME_TRUST_CFI:
         return "call frame info";
       case StackFrame::FRAME_TRUST_CFI_SCAN:

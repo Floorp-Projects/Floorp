@@ -65,15 +65,9 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '../build',
     '/caps',
+    '/toolkit/crashreporter/google-breakpad/src',
     '/tools/profiler',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    # Gonk's bionic doesn't have ucontext.h
-    LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/gonk-include',
-    ]
-
 
 # BHR disabled for Release builds because of bug 965392.
 # BHR disabled for debug builds because of bug 979069.

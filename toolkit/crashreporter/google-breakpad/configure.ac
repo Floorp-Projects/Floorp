@@ -32,14 +32,13 @@ AC_PREREQ(2.57)
 
 AC_INIT(breakpad, 0.1, google-breakpad-dev@googlegroups.com)
 dnl Sanity check: the argument is just a file that should exist.
-AC_CONFIG_SRCDIR(README.md)
+AC_CONFIG_SRCDIR(README)
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE(subdir-objects tar-ustar 1.11.1)
 AM_CONFIG_HEADER(src/config.h)
-AM_MAINTAINER_MODE
 
 AM_PROG_AS
 AC_PROG_CC
@@ -49,28 +48,7 @@ AC_PROG_CXX
 AC_PROG_RANLIB
 AM_CONDITIONAL(GCC, test "$GCC" = yes)   # let the Makefile know if we're gcc
 
-dnl This must come before all the feature tests below.
-AC_ARG_ENABLE(m32,
-              AS_HELP_STRING([--enable-m32],
-                             [Compile/build with -m32]
-                             [(default is no)]),
-              [case "${enableval}" in
-                 yes)
-                   CFLAGS="${CFLAGS} -m32"
-                   CXXFLAGS="${CXXFLAGS} -m32"
-                   usem32=true
-                   ;;
-                 no)
-                   usem32=false
-                   ;;
-                 *)
-                   AC_MSG_ERROR(bad value ${enableval} for --enable-m32)
-                   ;;
-               esac],
-              [usem32=false])
-
 AC_HEADER_STDC
-AC_SYS_LARGEFILE
 m4_include(m4/ax_pthread.m4)
 AX_PTHREAD
 AC_CHECK_HEADERS([a.out.h])
@@ -90,6 +68,25 @@ case $host in
     ;;
 esac
 AM_CONDITIONAL(ANDROID_HOST, test x$ANDROID_HOST = xtrue)
+
+AC_ARG_ENABLE(m32,
+              AS_HELP_STRING([--enable-m32],
+                             [Compile/build with -m32]
+                             [(default is no)]),
+              [case "${enableval}" in
+                 yes)
+                   CFLAGS="${CFLAGS} -m32"
+                   CXXFLAGS="${CXXFLAGS} -m32"
+                   usem32=true
+                   ;;
+                 no)
+                   usem32=false
+                   ;;
+                 *)
+                   AC_MSG_ERROR(bad value ${enableval} for --enable-m32)
+                   ;;
+               esac],
+              [usem32=false])
 
 AC_ARG_ENABLE(processor,
               AS_HELP_STRING([--disable-processor],
@@ -150,10 +147,5 @@ AC_ARG_ENABLE(selftest,
               [selftest=false])
 AM_CONDITIONAL(SELFTEST, test x$selftest = xtrue)
 
-AC_CONFIG_FILES(m4_flatten([
-  breakpad.pc
-  breakpad-client.pc
-  Makefile
-]))
-
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

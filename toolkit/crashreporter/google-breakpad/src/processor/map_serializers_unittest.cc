@@ -49,6 +49,8 @@
 typedef int32_t AddrType;
 typedef int32_t EntryType;
 
+const int kSizeOfInt = 4;
+
 class TestStdMapSerializer : public ::testing::Test {
  protected:
   void SetUp() {

@@ -1,0 +1,1448 @@
+# HG changeset patch
+# User Ted Mielczarek <ted.mielczarek@gmail.com>
+# Date 1360255134 18000
+# Node ID 294ce0d64d35a90be8ea91b719ead8b82aed29f7
+# Parent  d7bfb673574a3afe8b4f76f42fb52e2545770dad
+Rework PostfixEvaluator to use UniqueStringMap
+Patch by Julian Seward <jseward@acm.org>, R=ted
+
+diff --git a/src/common/unique_string.h b/src/common/unique_string.h
+--- a/src/common/unique_string.h
++++ b/src/common/unique_string.h
+@@ -25,16 +25,17 @@
+ // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #ifndef COMMON_UNIQUE_STRING_H_
+ #define COMMON_UNIQUE_STRING_H_
+ 
++#include <map>
+ #include <string>
+ #include "common/using_std_string.h"
+ 
+ namespace google_breakpad {
+ 
+ // Abstract type
+ class UniqueString;
+ 
+@@ -229,11 +230,112 @@
+ 
+ // ".ra"
+ inline static const UniqueString* ustr__ZDra() {
+   static const UniqueString* us = NULL;
+   if (!us) us = ToUniqueString(".ra");
+   return us;
+ }
+ 
++template <typename ValueType>
++class UniqueStringMap
++{
++ private:
++  static const int N_FIXED = 10;
++
++ public:
++  UniqueStringMap() : n_fixed_(0), n_sets_(0), n_gets_(0), n_clears_(0) {};
++  ~UniqueStringMap() {};
++
++  // Empty out the map.
++  void clear() {
++    ++n_clears_;
++    map_.clear();
++    n_fixed_ = 0;
++  }
++
++  // Do "map[ix] = v".
++  void set(const UniqueString* ix, ValueType v) {
++    ++n_sets_;
++    int i;
++    for (i = 0; i < n_fixed_; ++i) {
++      if (fixed_keys_[i] == ix) {
++        fixed_vals_[i] = v;
++        return;
++      }
++    }
++    if (n_fixed_ < N_FIXED) {
++      i = n_fixed_;
++      fixed_keys_[i] = ix;
++      fixed_vals_[i] = v;
++      ++n_fixed_;
++    } else {
++      map_[ix] = v;
++    }
++  }
++
++  // Lookup 'ix' in the map, and also return a success/fail boolean.
++  ValueType get(/*OUT*/bool* have, const UniqueString* ix) const {
++    ++n_gets_;
++    int i;
++    for (i = 0; i < n_fixed_; ++i) {
++      if (fixed_keys_[i] == ix) {
++        *have = true;
++        return fixed_vals_[i];
++      }
++    }
++    typename std::map<const UniqueString*, ValueType>::const_iterator it
++        = map_.find(ix);
++    if (it == map_.end()) {
++      *have = false;
++      return ValueType();
++    } else {
++      *have = true;
++      return it->second;
++    }
++  };
++
++  // Lookup 'ix' in the map, and return zero if it is not present.
++  ValueType get(const UniqueString* ix) const {
++    ++n_gets_;
++    bool found;
++    ValueType v = get(&found, ix);
++    return found ? v : ValueType();
++  }
++
++  // Find out whether 'ix' is in the map.
++  bool have(const UniqueString* ix) const {
++    ++n_gets_;
++    bool found;
++    (void)get(&found, ix);
++    return found;
++  }
++
++  // Copy the contents to a std::map, generally for testing.
++  void copy_to_map(std::map<const UniqueString*, ValueType>* m) const {
++    m->clear();
++    int i;
++    for (i = 0; i < n_fixed_; ++i) {
++      (*m)[fixed_keys_[i]] = fixed_vals_[i];
++    }
++    m->insert(map_.begin(), map_.end());
++  }
++
++  // Note that users of this class rely on having also a sane
++  // assignment operator.  The default one is OK, though.
++  // AFAICT there are no uses of the copy constructor, but if
++  // there were, the default one would also suffice.
++
++ private:
++  // Quick (hopefully) cache
++  const UniqueString* fixed_keys_[N_FIXED];
++  ValueType           fixed_vals_[N_FIXED];
++  int                 n_fixed_;  // 0 .. N_FIXED inclusive
++  // Fallback storage when the cache is filled
++  std::map<const UniqueString*, ValueType> map_;
++
++  // For tracking usage stats.
++  mutable int n_sets_, n_gets_, n_clears_;
++};
++
+ }  // namespace google_breakpad
+ 
+ #endif  // COMMON_UNIQUE_STRING_H_
+diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processor/basic_source_line_resolver_unittest.cc
+--- a/src/processor/basic_source_line_resolver_unittest.cc
++++ b/src/processor/basic_source_line_resolver_unittest.cc
+@@ -24,16 +24,17 @@
+ // LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <stdio.h>
+ 
++#include <map>
+ #include <string>
+ 
+ #include "breakpad_googletest_includes.h"
+ #include "common/scoped_ptr.h"
+ #include "common/using_std_string.h"
+ #include "google_breakpad/processor/basic_source_line_resolver.h"
+ #include "google_breakpad/processor/code_module.h"
+ #include "google_breakpad/processor/stack_frame.h"
+@@ -47,16 +48,17 @@
+ 
+ using google_breakpad::BasicSourceLineResolver;
+ using google_breakpad::CFIFrameInfo;
+ using google_breakpad::CodeModule;
+ using google_breakpad::FromUniqueString;
+ using google_breakpad::MemoryRegion;
+ using google_breakpad::StackFrame;
+ using google_breakpad::ToUniqueString;
++using google_breakpad::UniqueString;
+ using google_breakpad::WindowsFrameInfo;
+ using google_breakpad::linked_ptr;
+ using google_breakpad::scoped_ptr;
+ using google_breakpad::ustr__ZDcfa;
+ using google_breakpad::ustr__ZDra;
+ using google_breakpad::ustr__ZSebx;
+ using google_breakpad::ustr__ZSebp;
+ using google_breakpad::ustr__ZSedi;
+@@ -113,27 +115,30 @@
+ };
+ 
+ // Verify that, for every association in ACTUAL, EXPECTED has the same
+ // association. (That is, ACTUAL's associations should be a subset of
+ // EXPECTED's.) Also verify that ACTUAL has associations for ".ra" and
+ // ".cfa".
+ static bool VerifyRegisters(
+     const char *file, int line,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+-  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
++    const std::map<const UniqueString*, uint32_t> &expected,
++    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual_regmap) {
++  std::map<const UniqueString*, uint32_t> actual;
++  actual_regmap.copy_to_map(&actual);
++
++  std::map<const UniqueString*, uint32_t>::const_iterator a;
+   a = actual.find(ustr__ZDcfa());
+   if (a == actual.end())
+     return false;
+   a = actual.find(ustr__ZDra());
+   if (a == actual.end())
+     return false;
+   for (a = actual.begin(); a != actual.end(); a++) {
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
++    std::map<const UniqueString*, uint32_t>::const_iterator e =
+       expected.find(a->first);
+     if (e == expected.end()) {
+       fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
+               file, line, FromUniqueString(a->first), a->second);
+       return false;
+     }
+     if (e->second != a->second) {
+       fprintf(stderr,
+@@ -258,86 +263,86 @@
+ 
+   frame.instruction = 0x3e9f;
+   frame.module = &module1;
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_FALSE(cfi_frame_info.get());
+ 
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+-  CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
++  std::map<const UniqueString*, uint32_t> expected_caller_registers;
+   MockMemoryRegion memory;
+ 
+   // Regardless of which instruction evaluation takes place at, it
+   // should produce the same values for the caller's registers.
+   expected_caller_registers[ustr__ZDcfa()] = 0x1001c;
+   expected_caller_registers[ustr__ZDra()]  = 0xf6438648;
+   expected_caller_registers[ustr__ZSebp()] = 0x10038;
+   expected_caller_registers[ustr__ZSebx()] = 0x98ecadc3;
+   expected_caller_registers[ustr__ZSesi()] = 0x878f7524;
+   expected_caller_registers[ustr__ZSedi()] = 0x6312f9a5;
+ 
+   frame.instruction = 0x3d40;
+   frame.module = &module1;
+   current_registers.clear();
+-  current_registers[ustr__ZSesp()] = 0x10018;
+-  current_registers[ustr__ZSebp()] = 0x10038;
+-  current_registers[ustr__ZSebx()] = 0x98ecadc3;
+-  current_registers[ustr__ZSesi()] = 0x878f7524;
+-  current_registers[ustr__ZSedi()] = 0x6312f9a5;
++  current_registers.set(ustr__ZSesp(), 0x10018);
++  current_registers.set(ustr__ZSebp(), 0x10038);
++  current_registers.set(ustr__ZSebx(), 0x98ecadc3);
++  current_registers.set(ustr__ZSesi(), 0x878f7524);
++  current_registers.set(ustr__ZSedi(), 0x6312f9a5);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                               expected_caller_registers, caller_registers));
+ 
+   frame.instruction = 0x3d41;
+-  current_registers[ustr__ZSesp()] = 0x10014;
++  current_registers.set(ustr__ZSesp(), 0x10014);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                               expected_caller_registers, caller_registers));
+ 
+   frame.instruction = 0x3d43;
+-  current_registers[ustr__ZSebp()] = 0x10014;
++  current_registers.set(ustr__ZSebp(), 0x10014);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d54;
+-  current_registers[ustr__ZSebx()] = 0x6864f054U;
++  current_registers.set(ustr__ZSebx(), 0x6864f054U);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d5a;
+-  current_registers[ustr__ZSesi()] = 0x6285f79aU;
++  current_registers.set(ustr__ZSesi(), 0x6285f79aU);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d84;
+-  current_registers[ustr__ZSedi()] = 0x64061449U;
++  current_registers.set(ustr__ZSedi(), 0x64061449U);
+   cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+diff --git a/src/processor/cfi_frame_info-inl.h b/src/processor/cfi_frame_info-inl.h
+--- a/src/processor/cfi_frame_info-inl.h
++++ b/src/processor/cfi_frame_info-inl.h
+@@ -35,64 +35,64 @@
+ 
+ #ifndef PROCESSOR_CFI_FRAME_INFO_INL_H_
+ #define PROCESSOR_CFI_FRAME_INFO_INL_H_
+ 
+ #include <string.h>
+ 
+ namespace google_breakpad {
+ 
+-template <typename RegisterType, class RawContextType>
+-bool SimpleCFIWalker<RegisterType, RawContextType>::FindCallerRegisters(
++template <typename RegisterValueType, class RawContextType>
++bool SimpleCFIWalker<RegisterValueType, RawContextType>::FindCallerRegisters(
+     const MemoryRegion &memory,
+     const CFIFrameInfo &cfi_frame_info,
+     const RawContextType &callee_context,
+     int callee_validity,
+     RawContextType *caller_context,
+     int *caller_validity) const {
+-  typedef CFIFrameInfo::RegisterValueMap<RegisterType> ValueMap;
++  typedef CFIFrameInfo::RegisterValueMap<RegisterValueType> ValueMap;
+   ValueMap callee_registers;
+   ValueMap caller_registers;
+-  // Just for brevity.
+-  typename ValueMap::const_iterator caller_none = caller_registers.end();
+ 
+   // Populate callee_registers with register values from callee_context.
+   for (size_t i = 0; i < map_size_; i++) {
+     const RegisterSet &r = register_map_[i];
+     if (callee_validity & r.validity_flag)
+-      callee_registers[r.name] = callee_context.*r.context_member;
++      callee_registers.set(r.name, callee_context.*r.context_member);
+   }
+ 
+   // Apply the rules, and see what register values they yield.
+-  if (!cfi_frame_info.FindCallerRegs<RegisterType>(callee_registers, memory,
+-                                                   &caller_registers))
++  if (!cfi_frame_info
++       .FindCallerRegs<RegisterValueType>(callee_registers, memory,
++                                          &caller_registers))
+     return false;
+ 
+   // Populate *caller_context with the values the rules placed in
+   // caller_registers.
+   memset(caller_context, 0xda, sizeof(*caller_context));
+   *caller_validity = 0;
+   for (size_t i = 0; i < map_size_; i++) {
+     const RegisterSet &r = register_map_[i];
+-    typename ValueMap::const_iterator caller_entry;
+ 
+     // Did the rules provide a value for this register by its name?
+-    caller_entry = caller_registers.find(r.name);
+-    if (caller_entry != caller_none) {
+-      caller_context->*r.context_member = caller_entry->second;
++    bool found = false;
++    RegisterValueType v = caller_registers.get(&found, r.name);
++    if (found) {
++      caller_context->*r.context_member = v;
+       *caller_validity |= r.validity_flag;
+       continue;
+     }
+ 
+     // Did the rules provide a value for this register under its
+     // alternate name?
+     if (r.alternate_name) {
+-      caller_entry = caller_registers.find(r.alternate_name);
+-      if (caller_entry != caller_none) {
+-        caller_context->*r.context_member = caller_entry->second;
++      found = false;
++      v = caller_registers.get(&found, r.alternate_name);
++      if (found) {
++        caller_context->*r.context_member = v;
+         *caller_validity |= r.validity_flag;
+         continue;
+       }
+     }
+ 
+     // Is this a callee-saves register? The walker assumes that these
+     // still hold the caller's value if the CFI doesn't mention them.
+     //
+diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
+--- a/src/processor/cfi_frame_info.cc
++++ b/src/processor/cfi_frame_info.cc
+@@ -66,33 +66,33 @@
+   V cfa;
+   working = registers;
+   if (!evaluator.EvaluateForValue(cfa_rule_, &cfa))
+     return false;
+ 
+   // Then, compute the return address.
+   V ra;
+   working = registers;
+-  working[ustr__ZDcfa()] = cfa;
++  working.set(ustr__ZDcfa(), cfa);
+   if (!evaluator.EvaluateForValue(ra_rule_, &ra))
+     return false;
+ 
+   // Now, compute values for all the registers register_rules_ mentions.
+   for (RuleMap::const_iterator it = register_rules_.begin();
+        it != register_rules_.end(); it++) {
+     V value;
+     working = registers;
+-    working[ustr__ZDcfa()] = cfa;
++    working.set(ustr__ZDcfa(), cfa);
+     if (!evaluator.EvaluateForValue(it->second, &value))
+       return false;
+-    (*caller_registers)[it->first] = value;
++    caller_registers->set(it->first, value);
+   }
+ 
+-  (*caller_registers)[ustr__ZDra()] = ra;
+-  (*caller_registers)[ustr__ZDcfa()] = cfa;
++  caller_registers->set(ustr__ZDra(), ra);
++  caller_registers->set(ustr__ZDcfa(), cfa);
+ 
+   return true;
+ }
+ 
+ // Explicit instantiations for 32-bit and 64-bit architectures.
+ template bool CFIFrameInfo::FindCallerRegs<uint32_t>(
+     const RegisterValueMap<uint32_t> &registers,
+     const MemoryRegion &memory,
+diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
+--- a/src/processor/cfi_frame_info.h
++++ b/src/processor/cfi_frame_info.h
+@@ -64,17 +64,17 @@
+ // changes given by the 'STACK CFI' records up to our instruction's
+ // address. Then, use the FindCallerRegs member function to apply the
+ // rules to the callee frame's register values, yielding the caller
+ // frame's register values.
+ class CFIFrameInfo {
+  public:
+   // A map from register names onto values.
+   template<typename ValueType> class RegisterValueMap:
+-    public map<const UniqueString*, ValueType> { };
++    public UniqueStringMap<ValueType> { };
+ 
+   // Set the expression for computing a call frame address, return
+   // address, or register's value. At least the CFA rule and the RA
+   // rule must be set before calling FindCallerRegs.
+   void SetCFARule(const Module::Expr& rule) { cfa_rule_ = rule; }
+   void SetRARule(const Module::Expr& rule)  { ra_rule_ = rule; }
+   void SetRegisterRule(const UniqueString* register_name,
+                        const Module::Expr& rule) {
+diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_info_unittest.cc
+--- a/src/processor/cfi_frame_info_unittest.cc
++++ b/src/processor/cfi_frame_info_unittest.cc
+@@ -111,19 +111,18 @@
+ 
+ TEST_F(Simple, SetCFAAndRARule) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("330903416631436410"));
+   cfi.SetRARule(Module::Expr("5870666104170902211"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(2U, caller_registers.size());
+-  ASSERT_EQ(330903416631436410ULL, caller_registers[ustr__ZDcfa()]);
+-  ASSERT_EQ(5870666104170902211ULL, caller_registers[ustr__ZDra()]);
++  ASSERT_EQ(330903416631436410ULL, caller_registers.get(ustr__ZDcfa()));
++  ASSERT_EQ(5870666104170902211ULL, caller_registers.get(ustr__ZDra()));
+ 
+   ASSERT_EQ(".cfa: 330903416631436410 .ra: 5870666104170902211",
+             cfi.Serialize());
+ }
+ 
+ TEST_F(Simple, SetManyRules) {
+   ExpectNoMemoryReferences();
+ 
+@@ -136,23 +135,22 @@
+   const UniqueString* reg4 = ToUniqueString("uncopyrightables");
+ 
+   cfi.SetRegisterRule(reg1, Module::Expr(".cfa 54370437 *"));
+   cfi.SetRegisterRule(reg2, Module::Expr("24076308 .cfa +"));
+   cfi.SetRegisterRule(reg3, Module::Expr(".cfa 29801007 -"));
+   cfi.SetRegisterRule(reg4, Module::Expr("92642917 .cfa /"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(6U, caller_registers.size());
+-  ASSERT_EQ(7664691U,           caller_registers[ustr__ZDcfa()]);
+-  ASSERT_EQ(107469446U,         caller_registers[ustr__ZDra()]);
+-  ASSERT_EQ(416732599139967ULL, caller_registers[reg1]);
+-  ASSERT_EQ(31740999U,          caller_registers[reg2]);
+-  ASSERT_EQ(-22136316ULL,       caller_registers[reg3]);
+-  ASSERT_EQ(12U,                caller_registers[reg4]);
++  ASSERT_EQ(7664691U,           caller_registers.get(ustr__ZDcfa()));
++  ASSERT_EQ(107469446U,         caller_registers.get(ustr__ZDra()));
++  ASSERT_EQ(416732599139967ULL, caller_registers.get(reg1));
++  ASSERT_EQ(31740999U,          caller_registers.get(reg2));
++  ASSERT_EQ(-22136316ULL,       caller_registers.get(reg3));
++  ASSERT_EQ(12U,                caller_registers.get(reg4));
+   ASSERT_EQ(".cfa: $temp1 68737028 = $temp2 61072337 = $temp1 $temp2 - "
+             ".ra: .cfa 99804755 + "
+             "pubvexingfjordschmaltzy: .cfa 29801007 - "
+             "register1: .cfa 54370437 * "
+             "uncopyrightables: 92642917 .cfa / "
+             "vodkathumbscrewingly: 24076308 .cfa +",
+             cfi.Serialize());
+ }
+@@ -160,19 +158,18 @@
+ TEST_F(Simple, RulesOverride) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("330903416631436410"));
+   cfi.SetRARule(Module::Expr("5870666104170902211"));
+   cfi.SetCFARule(Module::Expr("2828089117179001"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(2U, caller_registers.size());
+-  ASSERT_EQ(2828089117179001ULL, caller_registers[ustr__ZDcfa()]);
+-  ASSERT_EQ(5870666104170902211ULL, caller_registers[ustr__ZDra()]);
++  ASSERT_EQ(2828089117179001ULL, caller_registers.get(ustr__ZDcfa()));
++  ASSERT_EQ(5870666104170902211ULL, caller_registers.get(ustr__ZDra()));
+   ASSERT_EQ(".cfa: 2828089117179001 .ra: 5870666104170902211",
+             cfi.Serialize());
+ }
+ 
+ class Scope: public CFIFixture, public Test { };
+ 
+ // There should be no value for .cfa in scope when evaluating the CFA rule.
+ TEST_F(Scope, CFALacksCFA) {
+@@ -196,37 +193,35 @@
+ 
+ // The current frame's registers should be in scope when evaluating
+ // the CFA rule.
+ TEST_F(Scope, CFASeesCurrentRegs) {
+   ExpectNoMemoryReferences();
+ 
+   const UniqueString* reg1 = ToUniqueString(".baraminology");
+   const UniqueString* reg2 = ToUniqueString(".ornithorhynchus");
+-  registers[reg1] = 0x06a7bc63e4f13893ULL;
+-  registers[reg2] = 0x5e0bf850bafce9d2ULL;
++  registers.set(reg1, 0x06a7bc63e4f13893ULL);
++  registers.set(reg2, 0x5e0bf850bafce9d2ULL);
+   cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
+   cfi.SetRARule(Module::Expr("0"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(2U, caller_registers.size());
+   ASSERT_EQ(0x06a7bc63e4f13893ULL + 0x5e0bf850bafce9d2ULL,
+-            caller_registers[ustr__ZDcfa()]);
++            caller_registers.get(ustr__ZDcfa()));
+ }
+ 
+ // .cfa should be in scope in the return address expression.
+ TEST_F(Scope, RASeesCFA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("48364076"));
+   cfi.SetRARule(Module::Expr(".cfa"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(2U, caller_registers.size());
+-  ASSERT_EQ(48364076U, caller_registers[ustr__ZDra()]);
++  ASSERT_EQ(48364076U, caller_registers.get(ustr__ZDra()));
+ }
+ 
+ // There should be no value for .ra in scope when evaluating the CFA rule.
+ TEST_F(Scope, RALacksRA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("0"));
+   cfi.SetRARule(Module::Expr(".ra"));
+@@ -236,36 +231,34 @@
+ 
+ // The current frame's registers should be in scope in the return
+ // address expression.
+ TEST_F(Scope, RASeesCurrentRegs) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("10359370"));
+   const UniqueString* reg1 = ToUniqueString("noachian");
+-  registers[reg1] = 0x54dc4a5d8e5eb503ULL;
++  registers.set(reg1, 0x54dc4a5d8e5eb503ULL);
+   cfi.SetRARule(Module::Expr(reg1, 0, false));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(2U, caller_registers.size());
+-  ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers[ustr__ZDra()]);
++  ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers.get(ustr__ZDra()));
+ }
+ 
+ // .cfa should be in scope for register rules.
+ TEST_F(Scope, RegistersSeeCFA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("6515179"));
+   cfi.SetRARule(Module::Expr(".cfa"));
+   const UniqueString* reg1 = ToUniqueString("rogerian");
+   cfi.SetRegisterRule(reg1, Module::Expr(".cfa"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(3U, caller_registers.size());
+-  ASSERT_EQ(6515179U, caller_registers[reg1]);
++  ASSERT_EQ(6515179U, caller_registers.get(reg1));
+ }
+ 
+ // The return address should not be in scope for register rules.
+ TEST_F(Scope, RegsLackRA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("42740329"));
+   cfi.SetRARule(Module::Expr("27045204"));
+@@ -276,27 +269,26 @@
+ }
+ 
+ // Register rules can see the current frame's register values.
+ TEST_F(Scope, RegsSeeRegs) {
+   ExpectNoMemoryReferences();
+ 
+   const UniqueString* reg1 = ToUniqueString("$r1");
+   const UniqueString* reg2 = ToUniqueString("$r2");
+-  registers[reg1] = 0x6ed3582c4bedb9adULL;
+-  registers[reg2] = 0xd27d9e742b8df6d0ULL;
++  registers.set(reg1, 0x6ed3582c4bedb9adULL);
++  registers.set(reg2, 0xd27d9e742b8df6d0ULL);
+   cfi.SetCFARule(Module::Expr("88239303"));
+   cfi.SetRARule(Module::Expr("30503835"));
+   cfi.SetRegisterRule(reg1, Module::Expr("$r1 42175211 = $r2"));
+   cfi.SetRegisterRule(reg2, Module::Expr("$r2 21357221 = $r1"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(4U, caller_registers.size());
+-  ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers[reg1]);
+-  ASSERT_EQ(0x6ed3582c4bedb9adULL, caller_registers[reg2]);
++  ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers.get(reg1));
++  ASSERT_EQ(0x6ed3582c4bedb9adULL, caller_registers.get(reg2));
+ }
+ 
+ // Each rule's temporaries are separate.
+ TEST_F(Scope, SeparateTempsRA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
+   cfi.SetRARule(Module::Expr("0"));
+@@ -440,39 +432,39 @@
+   CFIFrameInfoParseHandler handler;
+ };
+ 
+ class ParseHandler: public ParseHandlerFixture, public Test { };
+ 
+ TEST_F(ParseHandler, CFARARule) {
+   handler.CFARule("reg-for-cfa");
+   handler.RARule("reg-for-ra");
+-  registers[ToUniqueString("reg-for-cfa")] = 0x268a9a4a3821a797ULL;
+-  registers[ToUniqueString("reg-for-ra")] = 0x6301b475b8b91c02ULL;
++  registers.set(ToUniqueString("reg-for-cfa"), 0x268a9a4a3821a797ULL);
++  registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[ustr__ZDcfa()]);
+-  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[ustr__ZDra()]);
++  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers.get(ustr__ZDcfa()));
++  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers.get(ustr__ZDra()));
+ }
+ 
+ TEST_F(ParseHandler, RegisterRules) {
+   handler.CFARule("reg-for-cfa");
+   handler.RARule("reg-for-ra");
+   handler.RegisterRule(ToUniqueString("reg1"), "reg-for-reg1");
+   handler.RegisterRule(ToUniqueString("reg2"), "reg-for-reg2");
+-  registers[ToUniqueString("reg-for-cfa")] = 0x268a9a4a3821a797ULL;
+-  registers[ToUniqueString("reg-for-ra")] = 0x6301b475b8b91c02ULL;
+-  registers[ToUniqueString("reg-for-reg1")] = 0x06cde8e2ff062481ULL;
+-  registers[ToUniqueString("reg-for-reg2")] = 0xff0c4f76403173e2ULL;
++  registers.set(ToUniqueString("reg-for-cfa"), 0x268a9a4a3821a797ULL);
++  registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
++  registers.set(ToUniqueString("reg-for-reg1"), 0x06cde8e2ff062481ULL);
++  registers.set(ToUniqueString("reg-for-reg2"), 0xff0c4f76403173e2ULL);
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                             &caller_registers));
+-  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[ustr__ZDcfa()]);
+-  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[ustr__ZDra()]);
+-  ASSERT_EQ(0x06cde8e2ff062481ULL, caller_registers[ToUniqueString("reg1")]);
+-  ASSERT_EQ(0xff0c4f76403173e2ULL, caller_registers[ToUniqueString("reg2")]);
++  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers.get(ustr__ZDcfa()));
++  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers.get(ustr__ZDra()));
++  ASSERT_EQ(0x06cde8e2ff062481ULL, caller_registers.get(ToUniqueString("reg1")));
++  ASSERT_EQ(0xff0c4f76403173e2ULL, caller_registers.get(ToUniqueString("reg2")));
+ }
+ 
+ struct SimpleCFIWalkerFixture {
+   struct RawContext {
+     uint64_t r0, r1, r2, r3, r4, sp, pc;
+   };
+   enum Validity {
+     R0_VALID = 0x01,
+diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor/fast_source_line_resolver_unittest.cc
+--- a/src/processor/fast_source_line_resolver_unittest.cc
++++ b/src/processor/fast_source_line_resolver_unittest.cc
+@@ -59,16 +59,17 @@
+ using google_breakpad::FromUniqueString;
+ using google_breakpad::ModuleSerializer;
+ using google_breakpad::ModuleComparer;
+ using google_breakpad::CFIFrameInfo;
+ using google_breakpad::CodeModule;
+ using google_breakpad::MemoryRegion;
+ using google_breakpad::StackFrame;
+ using google_breakpad::ToUniqueString;
++using google_breakpad::UniqueString;
+ using google_breakpad::WindowsFrameInfo;
+ using google_breakpad::linked_ptr;
+ using google_breakpad::scoped_ptr;
+ using google_breakpad::ustr__ZDcfa;
+ using google_breakpad::ustr__ZDra;
+ using google_breakpad::ustr__ZSebx;
+ using google_breakpad::ustr__ZSebp;
+ using google_breakpad::ustr__ZSedi;
+@@ -125,27 +126,30 @@
+ };
+ 
+ // Verify that, for every association in ACTUAL, EXPECTED has the same
+ // association. (That is, ACTUAL's associations should be a subset of
+ // EXPECTED's.) Also verify that ACTUAL has associations for ".ra" and
+ // ".cfa".
+ static bool VerifyRegisters(
+     const char *file, int line,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+-  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
++    const std::map<const UniqueString*, uint32_t> &expected,
++    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual_regmap) {
++  std::map<const UniqueString*, uint32_t> actual;
++  actual_regmap.copy_to_map(&actual);
++
++  std::map<const UniqueString*, uint32_t>::const_iterator a;
+   a = actual.find(ustr__ZDcfa());
+   if (a == actual.end())
+     return false;
+   a = actual.find(ustr__ZDra());
+   if (a == actual.end())
+     return false;
+   for (a = actual.begin(); a != actual.end(); a++) {
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
++    std::map<const UniqueString*, uint32_t>::const_iterator e =
+       expected.find(a->first);
+     if (e == expected.end()) {
+       fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
+               file, line, FromUniqueString(a->first), a->second);
+       return false;
+     }
+     if (e->second != a->second) {
+       fprintf(stderr,
+@@ -286,86 +290,87 @@
+ 
+   frame.instruction = 0x3e9f;
+   frame.module = &module1;
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_FALSE(cfi_frame_info.get());
+ 
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+-  CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
++  std::map<const UniqueString*, uint32_t> expected_caller_registers;
+   MockMemoryRegion memory;
+ 
+   // Regardless of which instruction evaluation takes place at, it
+   // should produce the same values for the caller's registers.
++  // should produce the same values for the caller's registers.
+   expected_caller_registers[ustr__ZDcfa()] = 0x1001c;
+-  expected_caller_registers[ustr__ZDra()]  = 0xf6438648;
++  expected_caller_registers[ustr__ZDra()] = 0xf6438648;
+   expected_caller_registers[ustr__ZSebp()] = 0x10038;
+   expected_caller_registers[ustr__ZSebx()] = 0x98ecadc3;
+   expected_caller_registers[ustr__ZSesi()] = 0x878f7524;
+   expected_caller_registers[ustr__ZSedi()] = 0x6312f9a5;
+ 
+   frame.instruction = 0x3d40;
+   frame.module = &module1;
+   current_registers.clear();
+-  current_registers[ustr__ZSesp()] = 0x10018;
+-  current_registers[ustr__ZSebp()] = 0x10038;
+-  current_registers[ustr__ZSebx()] = 0x98ecadc3;
+-  current_registers[ustr__ZSesi()] = 0x878f7524;
+-  current_registers[ustr__ZSedi()] = 0x6312f9a5;
++  current_registers.set(ustr__ZSesp(), 0x10018);
++  current_registers.set(ustr__ZSebp(), 0x10038);
++  current_registers.set(ustr__ZSebx(), 0x98ecadc3);
++  current_registers.set(ustr__ZSesi(), 0x878f7524);
++  current_registers.set(ustr__ZSedi(), 0x6312f9a5);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                               expected_caller_registers, caller_registers));
+ 
+   frame.instruction = 0x3d41;
+-  current_registers[ustr__ZSesp()] = 0x10014;
++  current_registers.set(ustr__ZSesp(), 0x10014);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                               expected_caller_registers, caller_registers));
+ 
+   frame.instruction = 0x3d43;
+-  current_registers[ustr__ZSebp()] = 0x10014;
++  current_registers.set(ustr__ZSebp(), 0x10014);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d54;
+-  current_registers[ustr__ZSebx()] = 0x6864f054U;
++  current_registers.set(ustr__ZSebx(), 0x6864f054U);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d5a;
+-  current_registers[ustr__ZSesi()] = 0x6285f79aU;
++  current_registers.set(ustr__ZSesi(), 0x6285f79aU);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+   frame.instruction = 0x3d84;
+-  current_registers[ustr__ZSedi()] = 0x64061449U;
++  current_registers.set(ustr__ZSedi(), 0x64061449U);
+   cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
+   ASSERT_TRUE(cfi_frame_info.get());
+   ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
+diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evaluator-inl.h
+--- a/src/processor/postfix_evaluator-inl.h
++++ b/src/processor/postfix_evaluator-inl.h
+@@ -185,19 +185,19 @@
+       return false;
+     }
+     if (identifier == ustr__empty() || Index(identifier,0) != '$') {
+       BPLOG(ERROR) << "Can't assign " << HexString(value) << " to " <<
+                       identifier << ": " << expression;
+       return false;
+     }
+ 
+-    (*dictionary_)[identifier] = value;
++    dictionary_->set(identifier, value);
+     if (assigned)
+-      (*assigned)[identifier] = true;
++      assigned->set(identifier, true);
+   } else {
+     // Push it onto the stack as-is, but first convert it either to a
+     // ValueType (if a literal) or to a UniqueString* (if an identifier).
+     //
+     // First, try to treat the value as a literal. Literals may have leading
+     // '-' sign, and the entire remaining string must be parseable as
+     // ValueType. If this isn't possible, it can't be a literal, so treat it
+     // as an identifier instead.
+@@ -300,28 +300,28 @@
+ 
+       return PopValue(result);
+     }
+ 
+     // Simple-form expressions
+     case Module::kExprSimple:
+     case Module::kExprSimpleMem: {
+       // Look up the base value
+-      typename DictionaryType::const_iterator iterator
+-        = dictionary_->find(expr.ident_);
+-      if (iterator == dictionary_->end()) {
++      bool found = false;
++      ValueType v = dictionary_->get(&found, expr.ident_);
++      if (!found) {
+         // The identifier wasn't found in the dictionary.  Don't imply any
+         // default value, just fail.
+-        BPLOG(INFO) << "Identifier " << expr.ident_
++        BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
+                     << " not in dictionary (kExprSimple{Mem})";
+         return false;
+       }
+ 
+       // Form the sum
+-      ValueType sum = iterator->second + (int64_t)expr.offset_;
++      ValueType sum = v + (int64_t)expr.offset_;
+ 
+       // and dereference if necessary
+       if (expr.how_ == Module::kExprSimpleMem) {
+         ValueType derefd;
+         if (!memory_ || !memory_->GetMemoryAtAddress(sum, &derefd)) {
+           return false;
+         }
+         *result = derefd;
+@@ -368,27 +368,27 @@
+   if ((result = PopValueOrIdentifier(&literal, &token)) == POP_RESULT_FAIL) {
+     return false;
+   } else if (result == POP_RESULT_VALUE) {
+     // This is the easy case.
+     *value = literal;
+   } else {  // result == POP_RESULT_IDENTIFIER
+     // There was an identifier at the top of the stack.  Resolve it to a
+     // value by looking it up in the dictionary.
+-    typename DictionaryType::const_iterator iterator =
+-        dictionary_->find(token);
+-    if (iterator == dictionary_->end()) {
++    bool found = false;
++    ValueType v = dictionary_->get(&found, token);
++    if (!found) {
+       // The identifier wasn't found in the dictionary.  Don't imply any
+       // default value, just fail.
+       BPLOG(INFO) << "Identifier " << FromUniqueString(token)
+                   << " not in dictionary";
+       return false;
+     }
+ 
+-    *value = iterator->second;
++    *value = v;
+   }
+ 
+   return true;
+ }
+ 
+ 
+ template<typename ValueType>
+ bool PostfixEvaluator<ValueType>::PopValues(ValueType *value1,
+diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator.h
+--- a/src/processor/postfix_evaluator.h
++++ b/src/processor/postfix_evaluator.h
+@@ -93,18 +93,18 @@
+   StackElem(const UniqueString* ustr) { isValue = false; u.ustr = ustr; }
+   bool isValue;
+   union { ValueType val; const UniqueString* ustr; } u;
+ };
+ 
+ template<typename ValueType>
+ class PostfixEvaluator {
+  public:
+-  typedef map<const UniqueString*, ValueType> DictionaryType;
+-  typedef map<const UniqueString*, bool> DictionaryValidityType;
++  typedef UniqueStringMap<ValueType> DictionaryType;
++  typedef UniqueStringMap<bool>      DictionaryValidityType;
+ 
+   // Create a PostfixEvaluator object that may be used (with Evaluate) on
+   // one or more expressions.  PostfixEvaluator does not take ownership of
+   // either argument.  |memory| may be NULL, in which case dereferencing
+   // (^) will not be supported.  |dictionary| may be NULL, but evaluation
+   // will fail in that case unless set_dictionary is used before calling
+   // Evaluate.
+   PostfixEvaluator(DictionaryType *dictionary, const MemoryRegion *memory)
+diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix_evaluator_unittest.cc
+--- a/src/processor/postfix_evaluator_unittest.cc
++++ b/src/processor/postfix_evaluator_unittest.cc
+@@ -178,22 +178,22 @@
+   validate_data_0[ToUniqueString("$rAdd3")]  = 4;
+   validate_data_0[ToUniqueString("$rMul2")]  = 54;
+ 
+   // The second test set simulates a couple of MSVC program strings.
+   // The data is fudged a little bit because the tests use FakeMemoryRegion
+   // instead of a real stack snapshot, but the program strings are real and
+   // the implementation doesn't know or care that the data is not real.
+   PostfixEvaluator<unsigned int>::DictionaryType dictionary_1;
+-  dictionary_1[ustr__ZSebp()] = 0xbfff0010;
+-  dictionary_1[ustr__ZSeip()] = 0x10000000;
+-  dictionary_1[ustr__ZSesp()] = 0xbfff0000;
+-  dictionary_1[ustr__ZDcbSavedRegs()] = 4;
+-  dictionary_1[ustr__ZDcbParams()] = 4;
+-  dictionary_1[ustr__ZDraSearchStart()] = 0xbfff0020;
++  dictionary_1.set(ustr__ZSebp(), 0xbfff0010);
++  dictionary_1.set(ustr__ZSeip(), 0x10000000);
++  dictionary_1.set(ustr__ZSesp(), 0xbfff0000);
++  dictionary_1.set(ustr__ZDcbSavedRegs(), 4);
++  dictionary_1.set(ustr__ZDcbParams(), 4);
++  dictionary_1.set(ustr__ZDraSearchStart(), 0xbfff0020);
+   const EvaluateTest evaluate_tests_1[] = {
+     { "$T0 $ebp = $eip $T0 4 + ^ = $ebp $T0 ^ = $esp $T0 8 + = "
+       "$L $T0 .cbSavedRegs - = $P $T0 8 + .cbParams + =", true },
+     // Intermediate state: $T0  = 0xbfff0010, $eip = 0xbfff0015,
+     //                     $ebp = 0xbfff0011, $esp = 0xbfff0018,
+     //                     $L   = 0xbfff000c, $P   = 0xbfff001c
+     { "$T0 $ebp = $eip $T0 4 + ^ = $ebp $T0 ^ = $esp $T0 8 + = "
+       "$L $T0 .cbSavedRegs - = $P $T0 8 + .cbParams + = $ebx $T0 28 - ^ =",
+@@ -273,70 +273,65 @@
+     for (map<const UniqueString*, unsigned int>::const_iterator
+             validate_iterator =
+             evaluate_test_set->validate_data->begin();
+         validate_iterator != evaluate_test_set->validate_data->end();
+         ++validate_iterator) {
+       const UniqueString* identifier = validate_iterator->first;
+       unsigned int expected_value = validate_iterator->second;
+ 
+-      map<const UniqueString*, unsigned int>::const_iterator
+-          dictionary_iterator =
+-          evaluate_test_set->dictionary->find(identifier);
+-
+       // The identifier must exist in the dictionary.
+-      if (dictionary_iterator == evaluate_test_set->dictionary->end()) {
++      if (!evaluate_test_set->dictionary->have(identifier)) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
+                         "validate identifier \"%s\", "
+                         "expected %d, observed not found\n",
+                 evaluate_test_set_index, evaluate_test_set_count,
+                 FromUniqueString(identifier), expected_value);
+         return false;
+       }
+ 
+       // The value in the dictionary must be the same as the expected value.
+-      unsigned int observed_value = dictionary_iterator->second;
++      unsigned int observed_value =
++          evaluate_test_set->dictionary->get(identifier);
+       if (expected_value != observed_value) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
+                         "validate identifier \"%s\", "
+                         "expected %d, observed %d\n",
+                 evaluate_test_set_index, evaluate_test_set_count,
+                 FromUniqueString(identifier), expected_value, observed_value);
+         return false;
+       }
+ 
+       // The value must be set in the "assigned" dictionary if it was a
+       // variable.  It must not have been assigned if it was a constant.
+       bool expected_assigned = FromUniqueString(identifier)[0] == '$';
+       bool observed_assigned = false;
+-      PostfixEvaluator<unsigned int>::DictionaryValidityType::const_iterator
+-          iterator_assigned = assigned.find(identifier);
+-      if (iterator_assigned != assigned.end()) {
+-        observed_assigned = iterator_assigned->second;
++      if (assigned.have(identifier)) {
++        observed_assigned = assigned.get(identifier);
+       }
+       if (expected_assigned != observed_assigned) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
+                         "validate assignment of \"%s\", "
+                         "expected %d, observed %d\n",
+                 evaluate_test_set_index, evaluate_test_set_count,
+                 FromUniqueString(identifier), expected_assigned,
+                 observed_assigned);
+         return false;
+       }
+     }
+   }
+ 
+   // EvaluateForValue tests.
+   PostfixEvaluator<unsigned int>::DictionaryType dictionary_2;
+-  dictionary_2[ustr__ZSebp()] = 0xbfff0010;
+-  dictionary_2[ustr__ZSeip()] = 0x10000000;
+-  dictionary_2[ustr__ZSesp()] = 0xbfff0000;
+-  dictionary_2[ustr__ZDcbSavedRegs()] = 4;
+-  dictionary_2[ustr__ZDcbParams()] = 4;
+-  dictionary_2[ustr__ZDraSearchStart()] = 0xbfff0020;
++  dictionary_2.set(ustr__ZSebp(), 0xbfff0010);
++  dictionary_2.set(ustr__ZSeip(), 0x10000000);
++  dictionary_2.set(ustr__ZSesp(), 0xbfff0000);
++  dictionary_2.set(ustr__ZDcbSavedRegs(), 4);
++  dictionary_2.set(ustr__ZDcbParams(), 4);
++  dictionary_2.set(ustr__ZDraSearchStart(), 0xbfff0020);
+   const EvaluateForValueTest evaluate_for_value_tests_2[] = {
+     { "28907223",               true,  28907223 },      // simple constant
+     { "89854293 40010015 +",    true,  89854293 + 40010015 }, // arithmetic
+     { "-870245 8769343 +",      true,  7899098 },       // negative constants
+     { "$ebp $esp - $eip +",     true,  0x10000010 },    // variable references
+     { "18929794 34015074",      false, 0 },             // too many values
+     { "$ebp $ebp 4 - =",        false, 0 },             // too few values
+     { "$new $eip = $new",       true,  0x10000000 },    // make new variable
+@@ -370,41 +365,43 @@
+     if (test->evaluable && result != test->value) {
+       fprintf(stderr, "FAIL: evaluate for value test %d, "
+               "expected value to be 0x%x, but it was 0x%x\n",
+               i, test->value, result);
+       return false;
+     }
+   }
+ 
++  map<const UniqueString*, unsigned int> dictionary_2_map;
++  dictionary_2.copy_to_map(&dictionary_2_map);
+   for (map<const UniqueString*, unsigned int>::iterator v =
+          validate_data_2.begin();
+        v != validate_data_2.end(); v++) {
+     map<const UniqueString*, unsigned int>::iterator a =
+-        dictionary_2.find(v->first);
+-    if (a == dictionary_2.end()) {
++        dictionary_2_map.find(v->first);
++    if (a == dictionary_2_map.end()) {
+       fprintf(stderr, "FAIL: evaluate for value dictionary check: "
+               "expected dict[\"%s\"] to be 0x%x, but it was unset\n",
+               FromUniqueString(v->first), v->second);
+       return false;
+     } else if (a->second != v->second) {
+       fprintf(stderr, "FAIL: evaluate for value dictionary check: "
+               "expected dict[\"%s\"] to be 0x%x, but it was 0x%x\n",
+               FromUniqueString(v->first), v->second, a->second);
+       return false;
+-    } 
+-    dictionary_2.erase(a);
++    }
++    dictionary_2_map.erase(a);
+   }
+-  
++
+   map<const UniqueString*, unsigned int>::iterator remaining =
+-      dictionary_2.begin();
+-  if (remaining != dictionary_2.end()) {
++      dictionary_2_map.begin();
++  if (remaining != dictionary_2_map.end()) {
+     fprintf(stderr, "FAIL: evaluation of test expressions put unexpected "
+             "values in dictionary:\n");
+-    for (; remaining != dictionary_2.end(); remaining++)
++    for (; remaining != dictionary_2_map.end(); remaining++)
+       fprintf(stderr, "    dict[\"%s\"] == 0x%x\n",
+               FromUniqueString(remaining->first), remaining->second);
+     return false;
+   }
+ 
+   return true;
+ }
+ 
+diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
+--- a/src/processor/stackwalker_arm.cc
++++ b/src/processor/stackwalker_arm.cc
+@@ -97,70 +97,70 @@
+     ToUniqueString("fps"), ToUniqueString("cpsr"),
+     NULL
+   };
+ 
+   // Populate a dictionary with the valid register values in last_frame.
+   CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
+   for (int i = 0; register_names[i]; i++)
+     if (last_frame->context_validity & StackFrameARM::RegisterValidFlag(i))
+-      callee_registers[register_names[i]] = last_frame->context.iregs[i];
++      callee_registers.set(register_names[i], last_frame->context.iregs[i]);
+ 
+   // Use the STACK CFI data to recover the caller's register values.
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+   if (!cfi_frame_info->FindCallerRegs(callee_registers, *memory_,
+                                       &caller_registers))
+     return NULL;
+ 
+   // Construct a new stack frame given the values the CFI recovered.
+   scoped_ptr<StackFrameARM> frame(new StackFrameARM());
+   for (int i = 0; register_names[i]; i++) {
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
+-      caller_registers.find(register_names[i]);
+-    if (entry != caller_registers.end()) {
++    bool found = false;
++    uint32_t v = caller_registers.get(&found, register_names[i]);
++    if (found) {
+       // We recovered the value of this register; fill the context with the
+       // value from caller_registers.
+       frame->context_validity |= StackFrameARM::RegisterValidFlag(i);
+-      frame->context.iregs[i] = entry->second;
++      frame->context.iregs[i] = v;
+     } else if (4 <= i && i <= 11 && (last_frame->context_validity &
+                                      StackFrameARM::RegisterValidFlag(i))) {
+       // If the STACK CFI data doesn't mention some callee-saves register, and
+       // it is valid in the callee, assume the callee has not yet changed it.
+       // Registers r4 through r11 are callee-saves, according to the Procedure
+       // Call Standard for the ARM Architecture, which the Linux ABI follows.
+       frame->context_validity |= StackFrameARM::RegisterValidFlag(i);
+       frame->context.iregs[i] = last_frame->context.iregs[i];
+     }
+   }
+   // If the CFI doesn't recover the PC explicitly, then use .ra.
+   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
+-      caller_registers.find(ustr__ZDra());
+-    if (entry != caller_registers.end()) {
++    bool found = false;
++    uint32_t v = caller_registers.get(&found, ustr__ZDra());
++    if (found) {
+       if (fp_register_ == -1) {
+         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
+-        frame->context.iregs[MD_CONTEXT_ARM_REG_PC] = entry->second;
++        frame->context.iregs[MD_CONTEXT_ARM_REG_PC] = v;
+       } else {
+         // The CFI updated the link register and not the program counter.
+         // Handle getting the program counter from the link register.
+         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
+         frame->context_validity |= StackFrameARM::CONTEXT_VALID_LR;
+-        frame->context.iregs[MD_CONTEXT_ARM_REG_LR] = entry->second;
++        frame->context.iregs[MD_CONTEXT_ARM_REG_LR] = v;
+         frame->context.iregs[MD_CONTEXT_ARM_REG_PC] =
+             last_frame->context.iregs[MD_CONTEXT_ARM_REG_LR];
+       }
+     }
+   }
+   // If the CFI doesn't recover the SP explicitly, then use .cfa.
+   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
+-      caller_registers.find(ustr__ZDcfa());
+-    if (entry != caller_registers.end()) {
++    bool found = false;
++    uint32_t v = caller_registers.get(&found, ustr__ZDcfa());
++    if (found) {
+       frame->context_validity |= StackFrameARM::CONTEXT_VALID_SP;
+-      frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = entry->second;
++      frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = v;
+     }
+   }
+ 
+   // If we didn't recover the PC and the SP, then the frame isn't very useful.
+   static const int essentials = (StackFrameARM::CONTEXT_VALID_SP
+                                  | StackFrameARM::CONTEXT_VALID_PC);
+   if ((frame->context_validity & essentials) != essentials)
+     return NULL;
+diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
+--- a/src/processor/stackwalker_x86.cc
++++ b/src/processor/stackwalker_x86.cc
+@@ -194,26 +194,26 @@
+     }
+   }
+ 
+   // Set up the dictionary for the PostfixEvaluator.  %ebp and %esp are used
+   // in each program string, and their previous values are known, so set them
+   // here.
+   PostfixEvaluator<uint32_t>::DictionaryType dictionary;
+   // Provide the current register values.
+-  dictionary[ustr__ZSebp()] = last_frame->context.ebp;
+-  dictionary[ustr__ZSesp()] = last_frame->context.esp;
++  dictionary.set(ustr__ZSebp(), last_frame->context.ebp);
++  dictionary.set(ustr__ZSesp(), last_frame->context.esp);
+   // Provide constants from the debug info for last_frame and its callee.
+   // .cbCalleeParams is a Breakpad extension that allows us to use the
+   // PostfixEvaluator engine when certain types of debugging information
+   // are present without having to write the constants into the program
+   // string as literals.
+-  dictionary[ustr__ZDcbCalleeParams()] = last_frame_callee_parameter_size;
+-  dictionary[ustr__ZDcbSavedRegs()] = last_frame_info->saved_register_size;
+-  dictionary[ustr__ZDcbLocals()] = last_frame_info->local_size;
++  dictionary.set(ustr__ZDcbCalleeParams(), last_frame_callee_parameter_size);
++  dictionary.set(ustr__ZDcbSavedRegs(), last_frame_info->saved_register_size);
++  dictionary.set(ustr__ZDcbLocals(), last_frame_info->local_size);
+ 
+   uint32_t raSearchStart = last_frame->context.esp +
+                             last_frame_callee_parameter_size +
+                             last_frame_info->local_size +
+                             last_frame_info->saved_register_size;
+ 
+   uint32_t raSearchStartOld = raSearchStart;
+   uint32_t found = 0;  // dummy value
+@@ -232,20 +232,20 @@
+     // Skip one slot from the stack and do another scan in order to get the
+     // actual return address.
+     raSearchStart += 4;
+     ScanForReturnAddress(raSearchStart, &raSearchStart, &found, 3);
+   }
+ 
+   // The difference between raSearch and raSearchStart is unknown,
+   // but making them the same seems to work well in practice.
+-  dictionary[ustr__ZDraSearchStart()] = raSearchStart;
+-  dictionary[ustr__ZDraSearch()] = raSearchStart;
++  dictionary.set(ustr__ZDraSearchStart(), raSearchStart);
++  dictionary.set(ustr__ZDraSearch(), raSearchStart);
+ 
+-  dictionary[ustr__ZDcbParams()] = last_frame_info->parameter_size;
++  dictionary.set(ustr__ZDcbParams(), last_frame_info->parameter_size);
+ 
+   // Decide what type of program string to use. The program string is in
+   // postfix notation and will be passed to PostfixEvaluator::Evaluate.
+   // Given the dictionary and the program string, it is possible to compute
+   // the return address and the values of other registers in the calling
+   // function. Because of bugs described below, the stack may need to be
+   // scanned for these values. The results of program string evaluation
+   // will be used to determine whether to scan for better values.
+@@ -325,18 +325,18 @@
+   }
+ 
+   // Now crank it out, making sure that the program string set at least the
+   // two required variables.
+   PostfixEvaluator<uint32_t> evaluator =
+       PostfixEvaluator<uint32_t>(&dictionary, memory_);
+   PostfixEvaluator<uint32_t>::DictionaryValidityType dictionary_validity;
+   if (!evaluator.Evaluate(program_string, &dictionary_validity) ||
+-      dictionary_validity.find(ustr__ZSeip()) == dictionary_validity.end() ||
+-      dictionary_validity.find(ustr__ZSesp()) == dictionary_validity.end()) {
++      !dictionary_validity.have(ustr__ZSeip()) ||
++      !dictionary_validity.have(ustr__ZSesp())) {
+     // Program string evaluation failed. It may be that %eip is not somewhere
+     // with stack frame info, and %ebp is pointing to non-stack memory, so
+     // our evaluation couldn't succeed. We'll scan the stack for a return
+     // address. This can happen if the stack is in a module for which
+     // we don't have symbols, and that module is compiled without a
+     // frame pointer.
+     uint32_t location_start = last_frame->context.esp;
+     uint32_t location, eip;
+@@ -344,69 +344,70 @@
+       // if we can't find an instruction pointer even with stack scanning,
+       // give up.
+       return NULL;
+     }
+ 
+     // This seems like a reasonable return address. Since program string
+     // evaluation failed, use it and set %esp to the location above the
+     // one where the return address was found.
+-    dictionary[ustr__ZSeip()] = eip;
+-    dictionary[ustr__ZSesp()] = location + 4;
++    dictionary.set(ustr__ZSeip(), eip);
++    dictionary.set(ustr__ZSesp(), location + 4);
+     trust = StackFrame::FRAME_TRUST_SCAN;
+   }
+ 
+   // Since this stack frame did not use %ebp in a traditional way,
+   // locating the return address isn't entirely deterministic. In that
+   // case, the stack can be scanned to locate the return address.
+   //
+   // However, if program string evaluation resulted in both %eip and
+   // %ebp values of 0, trust that the end of the stack has been
+   // reached and don't scan for anything else.
+-  if (dictionary[ustr__ZSeip()] != 0 || dictionary[ustr__ZSebp()] != 0) {
++  if (dictionary.get(ustr__ZSeip()) != 0 ||
++      dictionary.get(ustr__ZSebp()) != 0) {
+     int offset = 0;
+ 
+     // This scan can only be done if a CodeModules object is available, to
+     // check that candidate return addresses are in fact inside a module.
+     //
+     // TODO(mmentovai): This ignores dynamically-generated code.  One possible
+     // solution is to check the minidump's memory map to see if the candidate
+     // %eip value comes from a mapped executable page, although this would
+     // require dumps that contain MINIDUMP_MEMORY_INFO, which the Breakpad
+     // client doesn't currently write (it would need to call MiniDumpWriteDump
+     // with the MiniDumpWithFullMemoryInfo type bit set).  Even given this
+     // ability, older OSes (pre-XP SP2) and CPUs (pre-P4) don't enforce
+     // an independent execute privilege on memory pages.
+ 
+-    uint32_t eip = dictionary[ustr__ZSeip()];
++    uint32_t eip = dictionary.get(ustr__ZSeip());
+     if (modules_ && !modules_->GetModuleForAddress(eip)) {
+       // The instruction pointer at .raSearchStart was invalid, so start
+       // looking one 32-bit word above that location.
+-      uint32_t location_start = dictionary[ustr__ZDraSearchStart()] + 4;
++      uint32_t location_start = dictionary.get(ustr__ZDraSearchStart()) + 4;
+       uint32_t location;
+       if (ScanForReturnAddress(location_start, &location, &eip)) {
+         // This is a better return address that what program string
+         // evaluation found.  Use it, and set %esp to the location above the
+         // one where the return address was found.
+-        dictionary[ustr__ZSeip()] = eip;
+-        dictionary[ustr__ZSesp()] = location + 4;
++        dictionary.set(ustr__ZSeip(), eip);
++        dictionary.set(ustr__ZSesp(), location + 4);
+         offset = location - location_start;
+         trust = StackFrame::FRAME_TRUST_CFI_SCAN;
+       }
+     }
+ 
+     if (recover_ebp) {
+       // When trying to recover the previous value of the frame pointer (%ebp),
+       // start looking at the lowest possible address in the saved-register
+       // area, and look at the entire saved register area, increased by the
+       // size of |offset| to account for additional data that may be on the
+       // stack.  The scan is performed from the highest possible address to
+       // the lowest, because the expectation is that the function's prolog
+       // would have saved %ebp early.
+-      uint32_t ebp = dictionary[ustr__ZSebp()];
++      uint32_t ebp = dictionary.get(ustr__ZSebp());
+ 
+       // When a scan for return address is used, it is possible to skip one or
+       // more frames (when return address is not in a known module).  One
+       // indication for skipped frames is when the value of %ebp is lower than
+       // the location of the return address on the stack
+       bool has_skipped_frames =
+         (trust != StackFrame::FRAME_TRUST_CFI && ebp <= raSearchStart + offset);
+ 
+@@ -420,49 +421,49 @@
+              location >= location_end;
+              location -= 4) {
+           if (!memory_->GetMemoryAtAddress(location, &ebp))
+             break;
+ 
+           if (memory_->GetMemoryAtAddress(ebp, &value)) {
+             // The candidate value is a pointer to the same memory region
+             // (the stack).  Prefer it as a recovered %ebp result.
+-            dictionary[ustr__ZSebp()] = ebp;
++            dictionary.set(ustr__ZSebp(), ebp);
+             break;
+           }
+         }
+       }
+     }
+   }
+ 
+   // Create a new stack frame (ownership will be transferred to the caller)
+   // and fill it in.
+   StackFrameX86* frame = new StackFrameX86();
+ 
+   frame->trust = trust;
+   frame->context = last_frame->context;
+-  frame->context.eip = dictionary[ustr__ZSeip()];
+-  frame->context.esp = dictionary[ustr__ZSesp()];
+-  frame->context.ebp = dictionary[ustr__ZSebp()];
++  frame->context.eip = dictionary.get(ustr__ZSeip());
++  frame->context.esp = dictionary.get(ustr__ZSesp());
++  frame->context.ebp = dictionary.get(ustr__ZSebp());
+   frame->context_validity = StackFrameX86::CONTEXT_VALID_EIP |
+                                 StackFrameX86::CONTEXT_VALID_ESP |
+                                 StackFrameX86::CONTEXT_VALID_EBP;
+ 
+   // These are nonvolatile (callee-save) registers, and the program string
+   // may have filled them in.
+-  if (dictionary_validity.find(ustr__ZSebx()) != dictionary_validity.end()) {
+-    frame->context.ebx = dictionary[ustr__ZSebx()];
++  if (dictionary_validity.have(ustr__ZSebx())) {
++    frame->context.ebx = dictionary.get(ustr__ZSebx());
+     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EBX;
+   }
+-  if (dictionary_validity.find(ustr__ZSesi()) != dictionary_validity.end()) {
+-    frame->context.esi = dictionary[ustr__ZSesi()];
++  if (dictionary_validity.have(ustr__ZSesi())) {
++    frame->context.esi = dictionary.get(ustr__ZSesi());
+     frame->context_validity |= StackFrameX86::CONTEXT_VALID_ESI;
+   }
+-  if (dictionary_validity.find(ustr__ZSedi()) != dictionary_validity.end()) {
+-    frame->context.edi = dictionary[ustr__ZSedi()];
++  if (dictionary_validity.have(ustr__ZSedi())) {
++    frame->context.edi = dictionary.get(ustr__ZSedi());
+     frame->context_validity |= StackFrameX86::CONTEXT_VALID_EDI;
+   }
+ 
+   return frame;
+ }
+ 
+ StackFrameX86* StackwalkerX86::GetCallerByCFIFrameInfo(
+     const vector<StackFrame*> &frames,

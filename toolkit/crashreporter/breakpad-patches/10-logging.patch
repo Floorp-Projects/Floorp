@@ -1,0 +1,1963 @@
+changeset:   126589:636cfcab9682
+user:        Julian Seward <jseward@acm.org>
+date:        Thu Mar 28 18:06:39 2013 +0100
+summary:     Bug 853851 - Transition some breakpad logging to BPLOG.  r=ted
+
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/dwarf_cfi_to_module.cc
+--- a/src/common/dwarf_cfi_to_module.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/common/dwarf_cfi_to_module.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -30,18 +30,20 @@
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ // Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+ 
+ // Implementation of google_breakpad::DwarfCFIToModule.
+ // See dwarf_cfi_to_module.h for details.
+ 
+ #include <sstream>
++#include <iomanip>
+ 
+ #include "common/dwarf_cfi_to_module.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ using std::ostringstream;
+ 
+ vector<const UniqueString*> DwarfCFIToModule::RegisterNames::MakeVector(
+     const char* const* strings,
+     size_t size) {
+@@ -226,36 +228,42 @@ bool DwarfCFIToModule::ValExpressionRule
+ 
+ bool DwarfCFIToModule::End() {
+   module_->AddStackFrameEntry(entry_);
+   entry_ = NULL;
+   return true;
+ }
+ 
+ void DwarfCFIToModule::Reporter::UnnamedRegister(size_t offset, int reg) {
+-  fprintf(stderr, "%s, section '%s': "
+-          "the call frame entry at offset 0x%zx refers to register %d,"
+-          " whose name we don't know\n",
+-          file_.c_str(), section_.c_str(), offset, reg);
++  BPLOG(INFO) << file_ << ", section '" << section_ 
++    << "': the call frame entry at offset 0x" 
++    << std::setbase(16) << offset << std::setbase(10)
++    << " refers to register " << reg << ", whose name we don't know";
+ }
+ 
+ void DwarfCFIToModule::Reporter::UndefinedNotSupported(
+     size_t offset,
+     const UniqueString* reg) {
+-  fprintf(stderr, "%s, section '%s': "
+-          "the call frame entry at offset 0x%zx sets the rule for "
+-          "register '%s' to 'undefined', but the Breakpad symbol file format"
+-          " cannot express this\n",
+-          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
++  BPLOG(INFO) << file_ << ", section '" << section_ 
++    << "': the call frame entry at offset 0x" 
++    << std::setbase(16) << offset << std::setbase(10)
++    << " sets the rule for register '" << FromUniqueString(reg)
++    << "' to 'undefined', but the Breakpad symbol file format cannot "
++    << " express this";
+ }
+ 
+ void DwarfCFIToModule::Reporter::ExpressionsNotSupported(
+     size_t offset,
+     const UniqueString* reg) {
+-  fprintf(stderr, "%s, section '%s': "
+-          "the call frame entry at offset 0x%zx uses a DWARF expression to"
+-          " describe how to recover register '%s', "
+-          " but this translator cannot yet translate DWARF expressions to"
+-          " Breakpad postfix expressions\n",
+-          file_.c_str(), section_.c_str(), offset, FromUniqueString(reg));
++  static uint64_t n_complaints = 0; // This isn't threadsafe
++  n_complaints++;
++  if (!is_power_of_2(n_complaints))
++    return;
++  BPLOG(INFO) << file_ << ", section '" << section_ 
++    << "': the call frame entry at offset 0x" 
++    << std::setbase(16) << offset << std::setbase(10)
++    << " uses a DWARF expression to describe how to recover register '"
++    << FromUniqueString(reg) << "', but this translator cannot yet "
++    << "translate DWARF expressions to Breakpad postfix expressions (shown "
++    << n_complaints << " times)";
+ }
+ 
+ } // namespace google_breakpad
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/dwarf_cu_to_module.cc
+--- a/src/common/dwarf_cu_to_module.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/common/dwarf_cu_to_module.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -38,23 +38,24 @@
+ 
+ #include "common/dwarf_cu_to_module.h"
+ 
+ #include <assert.h>
+ #if !defined(__ANDROID__)
+ #include <cxxabi.h>
+ #endif
+ #include <inttypes.h>
+-#include <stdio.h>
+ 
+ #include <algorithm>
+ #include <set>
+ #include <utility>
++#include <iomanip>
+ 
+ #include "common/dwarf_line_to_module.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ using std::map;
+ using std::pair;
+ using std::set;
+ using std::sort;
+ using std::vector;
+@@ -553,84 +554,89 @@ dwarf2reader::DIEHandler *DwarfCUToModul
+     default:
+       return NULL;
+   }
+ }
+ 
+ void DwarfCUToModule::WarningReporter::CUHeading() {
+   if (printed_cu_header_)
+     return;
+-  fprintf(stderr, "%s: in compilation unit '%s' (offset 0x%llx):\n",
+-          filename_.c_str(), cu_name_.c_str(), cu_offset_);
++  BPLOG(INFO)
++    << filename_ << ": in compilation unit '" << cu_name_
++    << "' (offset 0x" << std::setbase(16) << cu_offset_ << std::setbase(10)
++    << "):";
+   printed_cu_header_ = true;
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UnknownSpecification(uint64 offset,
+                                                             uint64 target) {
+   CUHeading();
+-  fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_specification"
+-          " attribute referring to the die at offset 0x%llx, which either"
+-          " was not marked as a declaration, or comes later in the file\n",
+-          filename_.c_str(), offset, target);
++  BPLOG(INFO)
++    << filename_ << ": the DIE at offset 0x" 
++    << std::setbase(16) << offset << std::setbase(10)
++    << " has a DW_AT_specification attribute referring to the die at offset 0x"
++    << std::setbase(16) << target << std::setbase(10)
++    << ", which either was not marked as a declaration, or comes "
++    << "later in the file";
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UnknownAbstractOrigin(uint64 offset,
+                                                              uint64 target) {
+   CUHeading();
+-  fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_abstract_origin"
+-          " attribute referring to the die at offset 0x%llx, which either"
+-          " was not marked as an inline, or comes later in the file\n",
+-          filename_.c_str(), offset, target);
++  BPLOG(INFO)
++    << filename_ << ": the DIE at offset 0x" 
++    << std::setbase(16) << offset << std::setbase(10)
++    << " has a DW_AT_abstract_origin attribute referring to the die at"
++    << " offset 0x" << std::setbase(16) << target << std::setbase(10)
++    << ", which either was not marked as an inline, or comes "
++    << "later in the file";
+ }
+ 
+ void DwarfCUToModule::WarningReporter::MissingSection(const string &name) {
+   CUHeading();
+-  fprintf(stderr, "%s: warning: couldn't find DWARF '%s' section\n",
+-          filename_.c_str(), name.c_str());
++  BPLOG(INFO) << filename_ << ": warning: couldn't find DWARF '"
++    << name << "' section";
+ }
+ 
+ void DwarfCUToModule::WarningReporter::BadLineInfoOffset(uint64 offset) {
+   CUHeading();
+-  fprintf(stderr, "%s: warning: line number data offset beyond end"
+-          " of '.debug_line' section\n",
+-          filename_.c_str());
++  BPLOG(INFO) << filename_ << ": warning: line number data offset beyond "
++    << "end of '.debug_line' section";
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UncoveredHeading() {
+   if (printed_unpaired_header_)
+     return;
+   CUHeading();
+-  fprintf(stderr, "%s: warning: skipping unpaired lines/functions:\n",
+-          filename_.c_str());
++  BPLOG(INFO) << filename_ << ": warning: skipping unpaired lines/functions:";
+   printed_unpaired_header_ = true;
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UncoveredFunction(
+     const Module::Function &function) {
+   if (!uncovered_warnings_enabled_)
+     return;
+   UncoveredHeading();
+-  fprintf(stderr, "    function%s: %s\n",
+-          function.size == 0 ? " (zero-length)" : "",
+-          function.name.c_str());
++  BPLOG(INFO) << "    function" << (function.size == 0 ? " (zero-length)" : "")
++    << ": " << function.name;
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UncoveredLine(const Module::Line &line) {
+   if (!uncovered_warnings_enabled_)
+     return;
+   UncoveredHeading();
+-  fprintf(stderr, "    line%s: %s:%d at 0x%" PRIx64 "\n",
+-          (line.size == 0 ? " (zero-length)" : ""),
+-          line.file->name.c_str(), line.number, line.address);
++  BPLOG(INFO) << "    line" << (line.size == 0 ? " (zero-length)" : "")
++    << ": " << line.file->name << ":" << line.number
++    << " at 0x" << std::setbase(16) << line.address << std::setbase(10);
+ }
+ 
+ void DwarfCUToModule::WarningReporter::UnnamedFunction(uint64 offset) {
+   CUHeading();
+-  fprintf(stderr, "%s: warning: function at offset 0x%llx has no name\n",
+-          filename_.c_str(), offset);
++  BPLOG(INFO) << filename_ << ": warning: function at offset 0x"
++    << std::setbase(16) << offset << std::setbase(10) << " has no name";
+ }
+ 
+ DwarfCUToModule::DwarfCUToModule(FileContext *file_context,
+                                  LineToModuleHandler *line_reader,
+                                  WarningReporter *reporter)
+     : line_reader_(line_reader), has_source_line_info_(false) { 
+   cu_context_ = new CUContext(file_context, reporter);
+   child_context_ = new DIEContext();
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/dwarf_line_to_module.cc
+--- a/src/common/dwarf_line_to_module.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/common/dwarf_line_to_module.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -27,22 +27,21 @@
+ // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ // Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+ 
+ // dwarf_line_to_module.cc: Implementation of DwarfLineToModule class.
+ // See dwarf_line_to_module.h for details. 
+ 
+-#include <stdio.h>
+-
+ #include <string>
+ 
+ #include "common/dwarf_line_to_module.h"
+ #include "common/using_std_string.h"
++#include "common/logging.h"
+ 
+ // Trying to support Windows paths in a reasonable way adds a lot of
+ // variations to test; it would be better to just put off dealing with
+ // it until we actually have to deal with DWARF on Windows.
+ 
+ // Return true if PATH is an absolute path, false if it is relative.
+ static bool PathIsAbsolute(const string &path) {
+   return (path.size() >= 1 && path[0] == '/');
+@@ -84,18 +83,18 @@ void DwarfLineToModule::DefineFile(const
+     // an attribute on the compilation unit, rather than in the program table.
+     dir_name = compilation_dir_;
+   } else {
+     DirectoryTable::const_iterator directory_it = directories_.find(dir_num);
+     if (directory_it != directories_.end()) {
+       dir_name = directory_it->second;
+     } else {
+       if (!warned_bad_directory_number_) {
+-        fprintf(stderr, "warning: DWARF line number data refers to undefined"
+-                " directory numbers\n");
++        BPLOG(INFO) << "warning: DWARF line number data refers to undefined"
++                    << " directory numbers";
+         warned_bad_directory_number_ = true;
+       }
+     }
+   }
+ 
+   string full_name = ExpandPath(name, dir_name);
+ 
+   // Find a Module::File object of the given name, and add it to the
+@@ -120,18 +119,18 @@ void DwarfLineToModule::AddLine(uint64 a
+   } else {
+     omitted_line_end_ = 0;
+   }
+ 
+   // Find the source file being referred to.
+   Module::File *file = files_[file_num];
+   if (!file) {
+     if (!warned_bad_file_number_) {
+-      fprintf(stderr, "warning: DWARF line number data refers to "
+-              "undefined file numbers\n");
++      BPLOG(INFO) << "warning: DWARF line number data refers to "
++                  << "undefined file numbers";
+       warned_bad_file_number_ = true;
+     }
+     return;
+   }
+   Module::Line line;
+   line.address = address;
+   // We set the size when we get the next line or the EndSequence call.
+   line.size = length;
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/linux/dump_symbols.cc
+--- a/src/common/linux/dump_symbols.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/common/linux/dump_symbols.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -63,16 +63,17 @@
+ #include "common/linux/file_id.h"
+ #include "common/module.h"
+ #include "common/scoped_ptr.h"
+ #ifndef NO_STABS_SUPPORT
+ #include "common/stabs_reader.h"
+ #include "common/stabs_to_module.h"
+ #endif
+ #include "common/using_std_string.h"
++#include "common/logging.h"
+ 
+ // This namespace contains helper functions.
+ namespace {
+ 
+ using google_breakpad::DwarfCFIToModule;
+ using google_breakpad::DwarfCUToModule;
+ using google_breakpad::DwarfLineToModule;
+ using google_breakpad::ElfClass;
+@@ -523,16 +524,19 @@ bool LoadSymbols(const string& obj_file,
+                  const bool read_gnu_debug_link,
+                  LoadSymbolsInfo<ElfClass>* info,
+                  SymbolData symbol_data,
+                  Module* module) {
+   typedef typename ElfClass::Addr Addr;
+   typedef typename ElfClass::Phdr Phdr;
+   typedef typename ElfClass::Shdr Shdr;
+ 
++  BPLOG(INFO) << "";
++  BPLOG(INFO) << "LoadSymbols: BEGIN   " << obj_file;
++
+   Addr loading_addr = GetLoadingAddress<ElfClass>(
+       GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff),
+       elf_header->e_phnum);
+   module->SetLoadAddress(loading_addr);
+   info->set_loading_addr(loading_addr, obj_file);
+ 
+   const Shdr* sections =
+       GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
+@@ -592,16 +596,18 @@ bool LoadSymbols(const string& obj_file,
+       // information, the other debugging information could be perfectly
+       // useful.
+       info->LoadedSection(".debug_frame");
+       bool result =
+           LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".debug_frame",
+                                  dwarf_cfi_section, false, 0, 0, big_endian,
+                                  module);
+       found_usable_info = found_usable_info || result;
++      if (result)
++        BPLOG(INFO) << "LoadSymbols:   read CFI from .debug_frame";
+     }
+ 
+     // Linux C++ exception handling information can also provide
+     // unwinding data.
+     const Shdr* eh_frame_section =
+         FindElfSectionByName<ElfClass>(".eh_frame", SHT_PROGBITS,
+                                        sections, names, names_end,
+                                        elf_header->e_shnum);
+@@ -618,16 +624,18 @@ bool LoadSymbols(const string& obj_file,
+                                          elf_header->e_shnum);
+       info->LoadedSection(".eh_frame");
+       // As above, ignore the return value of this function.
+       bool result =
+           LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".eh_frame",
+                                  eh_frame_section, true,
+                                  got_section, text_section, big_endian, module);
+       found_usable_info = found_usable_info || result;
++      if (result)
++        BPLOG(INFO) << "LoadSymbols:   read CFI from .eh_frame";
+     }
+   }
+ 
+   if (!found_debug_info_section && symbol_data != ONLY_CFI) {
+     fprintf(stderr, "%s: file contains no debugging information"
+             " (no \".stab\" or \".debug_info\" sections)\n",
+             obj_file.c_str());
+ 
+@@ -685,24 +693,29 @@ bool LoadSymbols(const string& obj_file,
+                                  ElfClass::kAddrSize,
+                                  module);
+           found_usable_info = found_usable_info || result;
+         }
+       }
+ 
+       // Return true if some usable information was found, since
+       // the caller doesn't want to use .gnu_debuglink.
++      BPLOG(INFO) << "LoadSymbols: " 
++                  << (found_usable_info ? "SUCCESS " : "FAILURE ")
++                  << obj_file;
+       return found_usable_info;
+     }
+ 
+     // No debug info was found, let the user try again with .gnu_debuglink
+     // if present.
++    BPLOG(INFO) << "LoadSymbols: FAILURE " << obj_file;
+     return false;
+   }
+ 
++  BPLOG(INFO) << "LoadSymbols: SUCCESS " << obj_file;
+   return true;
+ }
+ 
+ // Return the breakpad symbol file identifier for the architecture of
+ // ELF_HEADER.
+ template<typename ElfClass>
+ const char* ElfArchitecture(const typename ElfClass::Ehdr* elf_header) {
+   typedef typename ElfClass::Half Half;
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.cc
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/common/logging.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -0,0 +1,139 @@
++// Copyright (c) 2007, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++// logging.cc: Breakpad logging
++//
++// See logging.h for documentation.
++//
++// Author: Mark Mentovai
++
++#include <assert.h>
++#include <errno.h>
++#include <stdio.h>
++#include <string.h>
++#include <time.h>
++
++#include <string>
++
++#include "common/using_std_string.h"
++#include "common/logging.h"
++#include "common/pathname_stripper.h"
++
++#ifdef _WIN32
++#define snprintf _snprintf
++#endif
++
++#ifdef __ANDROID__
++# include <android/log.h>
++#endif
++
++namespace google_breakpad {
++
++LogStream::LogStream(std::ostream &stream, Severity severity,
++                     const char *file, int line)
++    : stream_(stream) {
++  time_t clock;
++  time(&clock);
++  struct tm tm_struct;
++#ifdef _WIN32
++  localtime_s(&tm_struct, &clock);
++#else
++  localtime_r(&clock, &tm_struct);
++#endif
++  char time_string[20];
++  strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", &tm_struct);
++
++  const char *severity_string = "UNKNOWN_SEVERITY";
++  switch (severity) {
++    case SEVERITY_INFO:
++      severity_string = "INFO";
++      break;
++    case SEVERITY_ERROR:
++      severity_string = "ERROR";
++      break;
++  }
++
++  str_ << time_string << ": " << PathnameStripper::File(file) << ":" <<
++          line << ": " << severity_string << ": ";
++}
++
++LogStream::~LogStream() {
++#ifdef __ANDROID__
++  __android_log_print(ANDROID_LOG_ERROR,
++                      "Profiler", "%s", str_.str().c_str());
++#else
++  stream_ << str_.str();
++  stream_ << std::endl;
++#endif
++}
++
++string HexString(uint32_t number) {
++  char buffer[11];
++  snprintf(buffer, sizeof(buffer), "0x%x", number);
++  return string(buffer);
++}
++
++string HexString(uint64_t number) {
++  char buffer[19];
++  snprintf(buffer, sizeof(buffer), "0x%" PRIx64, number);
++  return string(buffer);
++}
++
++string HexString(int number) {
++  char buffer[19];
++  snprintf(buffer, sizeof(buffer), "0x%x", number);
++  return string(buffer);
++}
++
++int ErrnoString(string *error_string) {
++  assert(error_string);
++
++  // strerror isn't necessarily thread-safe.  strerror_r would be preferrable,
++  // but GNU libc uses a nonstandard strerror_r by default, which returns a
++  // char* (rather than an int success indicator) and doesn't necessarily
++  // use the supplied buffer.
++  error_string->assign(strerror(errno));
++  return errno;
++}
++
++}  // namespace google_breakpad
++
++bool is_power_of_2(uint64_t x_in)
++{
++  uint64_t x = x_in;
++  x = x | (x >> 1);
++  x = x | (x >> 2);
++  x = x | (x >> 4);
++  x = x | (x >> 8);
++  x = x | (x >> 16);
++  x = x | (x >> 32);
++  x = x - (x >> 1);
++  // x has now been rounded down to the nearest power of 2 <= x_in.
++  return x == x_in;
++}
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/logging.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/common/logging.h	Thu Apr 04 21:02:11 2013 +0200
+@@ -0,0 +1,182 @@
++// Copyright (c) 2007, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++// logging.h: Breakpad logging
++//
++// Breakpad itself uses Breakpad logging with statements of the form:
++//   BPLOG(severity) << "message";
++// severity may be INFO, ERROR, or other values defined in this file.
++//
++// BPLOG is an overridable macro so that users can customize Breakpad's
++// logging.  Left at the default, logging messages are sent to stderr along
++// with a timestamp and the source code location that produced a message.
++// The streams may be changed by redefining BPLOG_*_STREAM, the logging
++// behavior may be changed by redefining BPLOG_*, and the entire logging
++// system may be overridden by redefining BPLOG(severity).  These
++// redefinitions may be passed to the preprocessor as a command-line flag
++// (-D).
++//
++// If an additional header is required to override Breakpad logging, it can
++// be specified by the BP_LOGGING_INCLUDE macro.  If defined, this header
++// will #include the header specified by that macro.
++//
++// If any initialization is needed before logging, it can be performed by
++// a function called through the BPLOG_INIT macro.  Each main function of
++// an executable program in the Breakpad processor library calls
++// BPLOG_INIT(&argc, &argv); before any logging can be performed; define
++// BPLOG_INIT appropriately if initialization is required.
++//
++// Author: Mark Mentovai
++
++#ifndef PROCESSOR_LOGGING_H__
++#define PROCESSOR_LOGGING_H__
++
++#include <iostream>
++#include <sstream>
++#include <string>
++
++#include "common/using_std_string.h"
++#include "google_breakpad/common/breakpad_types.h"
++
++#ifdef BP_LOGGING_INCLUDE
++#include BP_LOGGING_INCLUDE
++#endif  // BP_LOGGING_INCLUDE
++
++#ifndef THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
++namespace base_logging {
++
++// The open-source copy of logging.h has diverged from Google's internal copy
++// (temporarily, at least).  To support the transition to structured logging
++// a definition for base_logging::LogMessage is needed, which is a ostream-
++// like object for streaming arguments to construct a log message.
++typedef std::ostream LogMessage;
++
++}  // namespace base_logging
++#endif  // THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
++
++namespace google_breakpad {
++
++// These are defined in Microsoft headers.
++#ifdef SEVERITY_ERROR
++#undef SEVERITY_ERROR
++#endif
++
++#ifdef ERROR
++#undef ERROR
++#endif
++
++class LogStream {
++ public:
++  enum Severity {
++    SEVERITY_INFO,
++    SEVERITY_ERROR
++  };
++
++  // Begin logging a message to the stream identified by |stream|, at the
++  // indicated severity.  The file and line parameters should be set so as to
++  // identify the line of source code that is producing a message.
++  LogStream(std::ostream &stream, Severity severity,
++            const char *file, int line);
++
++  // Finish logging by printing a newline and flushing the output stream.
++  ~LogStream();
++
++  // Accumulate text in the str_.  It will be emitted to stream_ when
++  // the object is destructed.
++  template<typename T> std::ostream& operator<<(const T &t) {
++    return str_ << t;
++  }
++
++ private:
++  std::ostream &stream_;
++  std::ostringstream str_;
++
++  // Disallow copy constructor and assignment operator
++  explicit LogStream(const LogStream &that);
++  void operator=(const LogStream &that);
++};
++
++// This class is used to explicitly ignore values in the conditional logging
++// macros.  This avoids compiler warnings like "value computed is not used"
++// and "statement has no effect".
++class LogMessageVoidify {
++ public:
++  LogMessageVoidify() {}
++
++  // This has to be an operator with a precedence lower than << but higher
++  // than ?:
++  void operator&(base_logging::LogMessage &) {}
++};
++
++// Returns number formatted as a hexadecimal string, such as "0x7b".
++string HexString(uint32_t number);
++string HexString(uint64_t number);
++string HexString(int number);
++
++// Returns the error code as set in the global errno variable, and sets
++// error_string, a required argument, to a string describing that error
++// code.
++int ErrnoString(string *error_string);
++
++}  // namespace google_breakpad
++
++// Useful for doing exponential backoff of error reporting
++bool is_power_of_2(uint64_t);
++
++#ifndef BPLOG_INIT
++#define BPLOG_INIT(pargc, pargv)
++#endif  // BPLOG_INIT
++
++#ifndef BPLOG
++#define BPLOG(severity) BPLOG_ ## severity
++#endif  // BPLOG
++
++#ifndef BPLOG_INFO
++#ifndef BPLOG_INFO_STREAM
++#define BPLOG_INFO_STREAM std::clog
++#endif  // BPLOG_INFO_STREAM
++#define BPLOG_INFO google_breakpad::LogStream(BPLOG_INFO_STREAM, \
++                       google_breakpad::LogStream::SEVERITY_INFO, \
++                       __FILE__, __LINE__)
++#endif  // BPLOG_INFO
++
++#ifndef BPLOG_ERROR
++#ifndef BPLOG_ERROR_STREAM
++#define BPLOG_ERROR_STREAM std::cerr
++#endif  // BPLOG_ERROR_STREAM
++#define BPLOG_ERROR google_breakpad::LogStream(BPLOG_ERROR_STREAM, \
++                        google_breakpad::LogStream::SEVERITY_ERROR, \
++                        __FILE__, __LINE__)
++#endif  // BPLOG_ERROR
++
++#define BPLOG_IF(severity, condition) \
++    !(condition) ? (void) 0 : \
++                   google_breakpad::LogMessageVoidify() & BPLOG(severity)
++
++#endif  // PROCESSOR_LOGGING_H__
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/pathname_stripper.cc
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/common/pathname_stripper.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -0,0 +1,56 @@
++// Copyright (c) 2006, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++// pathname_stripper.cc: Manipulates pathnames into their component parts.
++//
++// See pathname_stripper.h for documentation.
++//
++// Author: Mark Mentovai
++
++#include "common/pathname_stripper.h"
++
++namespace google_breakpad {
++
++// static
++string PathnameStripper::File(const string &path) {
++  string::size_type slash = path.rfind('/');
++  string::size_type backslash = path.rfind('\\');
++
++  string::size_type file_start = 0;
++  if (slash != string::npos &&
++      (backslash == string::npos || slash > backslash)) {
++    file_start = slash + 1;
++  } else if (backslash != string::npos) {
++    file_start = backslash + 1;
++  }
++
++  return path.substr(file_start);
++}
++
++}  // namespace google_breakpad
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/pathname_stripper.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/common/pathname_stripper.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -0,0 +1,53 @@
++// Copyright (c) 2006, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++// pathname_stripper.h: Manipulates pathnames into their component parts.
++//
++// Author: Mark Mentovai
++
++#ifndef PROCESSOR_PATHNAME_STRIPPER_H__
++#define PROCESSOR_PATHNAME_STRIPPER_H__
++
++#include <string>
++
++#include "common/using_std_string.h"
++
++namespace google_breakpad {
++
++class PathnameStripper {
++ public:
++  // Given path, a pathname with components separated by slashes (/) or
++  // backslashes (\), returns the trailing component, without any separator.
++  // If path ends in a separator character, returns an empty string.
++  static string File(const string &path);
++};
++
++}  // namespace google_breakpad
++
++#endif  // PROCESSOR_PATHNAME_STRIPPER_H__
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/common/pathname_stripper_unittest.cc
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/src/common/pathname_stripper_unittest.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -0,0 +1,87 @@
++// Copyright (c) 2006, Google Inc.
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met:
++//
++//     * Redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer.
++//     * Redistributions in binary form must reproduce the above
++// copyright notice, this list of conditions and the following disclaimer
++// in the documentation and/or other materials provided with the
++// distribution.
++//     * Neither the name of Google Inc. nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++#include <stdio.h>
++
++#include "processor/pathname_stripper.h"
++#include "processor/logging.h"
++
++#define ASSERT_TRUE(condition) \
++  if (!(condition)) { \
++    fprintf(stderr, "FAIL: %s @ %s:%d\n", #condition, __FILE__, __LINE__); \
++    return false; \
++  }
++
++#define ASSERT_EQ(e1, e2) ASSERT_TRUE((e1) == (e2))
++
++namespace {
++
++using google_breakpad::PathnameStripper;
++
++static bool RunTests() {
++  ASSERT_EQ(PathnameStripper::File("/dir/file"), "file");
++  ASSERT_EQ(PathnameStripper::File("\\dir\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("/dir\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("\\dir/file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir/file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir/\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir\\/file"), "file");
++  ASSERT_EQ(PathnameStripper::File("file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir/"), "");
++  ASSERT_EQ(PathnameStripper::File("dir\\"), "");
++  ASSERT_EQ(PathnameStripper::File("dir/dir/"), "");
++  ASSERT_EQ(PathnameStripper::File("dir\\dir\\"), "");
++  ASSERT_EQ(PathnameStripper::File("dir1/dir2/file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir1\\dir2\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir1/dir2\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir1\\dir2/file"), "file");
++  ASSERT_EQ(PathnameStripper::File(""), "");
++  ASSERT_EQ(PathnameStripper::File("1"), "1");
++  ASSERT_EQ(PathnameStripper::File("1/2"), "2");
++  ASSERT_EQ(PathnameStripper::File("1\\2"), "2");
++  ASSERT_EQ(PathnameStripper::File("/1/2"), "2");
++  ASSERT_EQ(PathnameStripper::File("\\1\\2"), "2");
++  ASSERT_EQ(PathnameStripper::File("dir//file"), "file");
++  ASSERT_EQ(PathnameStripper::File("dir\\\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("/dir//file"), "file");
++  ASSERT_EQ(PathnameStripper::File("\\dir\\\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("c:\\dir\\file"), "file");
++  ASSERT_EQ(PathnameStripper::File("c:\\dir\\file.ext"), "file.ext");
++
++  return true;
++}
++
++}  // namespace
++
++int main(int argc, char **argv) {
++  BPLOG_INIT(&argc, &argv);
++
++  return RunTests() ? 0 : 1;
++}
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/Makefile.in
+--- a/src/processor/Makefile.in	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/Makefile.in	Thu Mar 28 18:06:39 2013 +0100
+@@ -5,44 +5,32 @@
+ DEPTH		= @DEPTH@
+ topsrcdir	= @top_srcdir@
+ srcdir		= @srcdir@
+ VPATH		= @srcdir@
+ 
+ include $(DEPTH)/config/autoconf.mk
+ 
+ LIBRARY_NAME	= breakpad_sps_common_s
+-ifdef MOZ_CRASHREPORTER
+-HOST_LIBRARY_NAME = host_breakpad_sps_common_s
+-endif
+ 
+ LOCAL_INCLUDES 	= -I$(srcdir)/../.. -I$(srcdir)/..
+ 
+ CPPSRCS	= \
+   stackwalker.cc \
+   stackwalker_amd64.cc \
+   stackwalker_arm.cc \
+   stackwalker_ppc.cc \
+   stackwalker_x86.cc \
+   stackwalker_sparc.cc \
+   minidump.cc \
+   basic_source_line_resolver.cc \
+   basic_code_modules.cc \
+   cfi_frame_info.cc \
+   call_stack.cc \
+-  logging.cc \
+-  pathname_stripper.cc \
+   tokenize.cc \
+   source_line_resolver_base.cc \
+   stack_frame_symbolizer.cc \
+   $(NULL)
+ 
+-ifdef MOZ_CRASHREPORTER
+-HOST_CPPSRCS = \
+-  logging.cc \
+-  pathname_stripper.cc \
+-  $(NULL)
+-endif
+-
+ # need static lib
+ FORCE_STATIC_LIB = 1
+ 
+ include $(topsrcdir)/config/rules.mk
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/address_map-inl.h
+--- a/src/processor/address_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/address_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -35,17 +35,17 @@
+ 
+ #ifndef PROCESSOR_ADDRESS_MAP_INL_H__
+ #define PROCESSOR_ADDRESS_MAP_INL_H__
+ 
+ #include "processor/address_map.h"
+ 
+ #include <assert.h>
+ 
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename AddressType, typename EntryType>
+ bool AddressMap<AddressType, EntryType>::Store(const AddressType &address,
+                                                const EntryType &entry) {
+   // Ensure that the specified address doesn't conflict with something already
+   // in the map.
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/basic_code_modules.cc
+--- a/src/processor/basic_code_modules.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/basic_code_modules.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -35,17 +35,17 @@
+ // Author: Mark Mentovai
+ 
+ #include "processor/basic_code_modules.h"
+ 
+ #include <assert.h>
+ 
+ #include "google_breakpad/processor/code_module.h"
+ #include "processor/linked_ptr.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/range_map-inl.h"
+ 
+ namespace google_breakpad {
+ 
+ BasicCodeModules::BasicCodeModules(const CodeModules *that)
+     : main_address_(0),
+       map_(new RangeMap<uint64_t, linked_ptr<const CodeModule> >()) {
+   BPLOG_IF(ERROR, !that) << "BasicCodeModules::BasicCodeModules requires "
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/contained_range_map-inl.h
+--- a/src/processor/contained_range_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/contained_range_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -35,17 +35,17 @@
+ 
+ #ifndef PROCESSOR_CONTAINED_RANGE_MAP_INL_H__
+ #define PROCESSOR_CONTAINED_RANGE_MAP_INL_H__
+ 
+ #include "processor/contained_range_map.h"
+ 
+ #include <assert.h>
+ 
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ 
+ namespace google_breakpad {
+ 
+ 
+ template<typename AddressType, typename EntryType>
+ ContainedRangeMap<AddressType, EntryType>::~ContainedRangeMap() {
+   // Clear frees the children pointed to by the map, and frees the map itself.
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.cc
+--- a/src/processor/logging.cc	Thu Mar 28 18:38:05 2013 +0100
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,115 +0,0 @@
+-// Copyright (c) 2007, Google Inc.
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions are
+-// met:
+-//
+-//     * Redistributions of source code must retain the above copyright
+-// notice, this list of conditions and the following disclaimer.
+-//     * Redistributions in binary form must reproduce the above
+-// copyright notice, this list of conditions and the following disclaimer
+-// in the documentation and/or other materials provided with the
+-// distribution.
+-//     * Neither the name of Google Inc. nor the names of its
+-// contributors may be used to endorse or promote products derived from
+-// this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-// logging.cc: Breakpad logging
+-//
+-// See logging.h for documentation.
+-//
+-// Author: Mark Mentovai
+-
+-#include <assert.h>
+-#include <errno.h>
+-#include <stdio.h>
+-#include <string.h>
+-#include <time.h>
+-
+-#include <string>
+-
+-#include "common/using_std_string.h"
+-#include "processor/logging.h"
+-#include "processor/pathname_stripper.h"
+-
+-#ifdef _WIN32
+-#define snprintf _snprintf
+-#endif
+-
+-namespace google_breakpad {
+-
+-LogStream::LogStream(std::ostream &stream, Severity severity,
+-                     const char *file, int line)
+-    : stream_(stream) {
+-  time_t clock;
+-  time(&clock);
+-  struct tm tm_struct;
+-#ifdef _WIN32
+-  localtime_s(&tm_struct, &clock);
+-#else
+-  localtime_r(&clock, &tm_struct);
+-#endif
+-  char time_string[20];
+-  strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", &tm_struct);
+-
+-  const char *severity_string = "UNKNOWN_SEVERITY";
+-  switch (severity) {
+-    case SEVERITY_INFO:
+-      severity_string = "INFO";
+-      break;
+-    case SEVERITY_ERROR:
+-      severity_string = "ERROR";
+-      break;
+-  }
+-
+-  stream_ << time_string << ": " << PathnameStripper::File(file) << ":" <<
+-             line << ": " << severity_string << ": ";
+-}
+-
+-LogStream::~LogStream() {
+-  stream_ << std::endl;
+-}
+-
+-string HexString(uint32_t number) {
+-  char buffer[11];
+-  snprintf(buffer, sizeof(buffer), "0x%x", number);
+-  return string(buffer);
+-}
+-
+-string HexString(uint64_t number) {
+-  char buffer[19];
+-  snprintf(buffer, sizeof(buffer), "0x%" PRIx64, number);
+-  return string(buffer);
+-}
+-
+-string HexString(int number) {
+-  char buffer[19];
+-  snprintf(buffer, sizeof(buffer), "0x%x", number);
+-  return string(buffer);
+-}
+-
+-int ErrnoString(string *error_string) {
+-  assert(error_string);
+-
+-  // strerror isn't necessarily thread-safe.  strerror_r would be preferrable,
+-  // but GNU libc uses a nonstandard strerror_r by default, which returns a
+-  // char* (rather than an int success indicator) and doesn't necessarily
+-  // use the supplied buffer.
+-  error_string->assign(strerror(errno));
+-  return errno;
+-}
+-
+-}  // namespace google_breakpad
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/logging.h
+--- a/src/processor/logging.h        Thu Apr 04 21:00:31 2013 +0200
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,175 +0,0 @@
+-// Copyright (c) 2007, Google Inc.
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions are
+-// met:
+-//
+-//     * Redistributions of source code must retain the above copyright
+-// notice, this list of conditions and the following disclaimer.
+-//     * Redistributions in binary form must reproduce the above
+-// copyright notice, this list of conditions and the following disclaimer
+-// in the documentation and/or other materials provided with the
+-// distribution.
+-//     * Neither the name of Google Inc. nor the names of its
+-// contributors may be used to endorse or promote products derived from
+-// this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-// logging.h: Breakpad logging
+-//
+-// Breakpad itself uses Breakpad logging with statements of the form:
+-//   BPLOG(severity) << "message";
+-// severity may be INFO, ERROR, or other values defined in this file.
+-//
+-// BPLOG is an overridable macro so that users can customize Breakpad's
+-// logging.  Left at the default, logging messages are sent to stderr along
+-// with a timestamp and the source code location that produced a message.
+-// The streams may be changed by redefining BPLOG_*_STREAM, the logging
+-// behavior may be changed by redefining BPLOG_*, and the entire logging
+-// system may be overridden by redefining BPLOG(severity).  These
+-// redefinitions may be passed to the preprocessor as a command-line flag
+-// (-D).
+-//
+-// If an additional header is required to override Breakpad logging, it can
+-// be specified by the BP_LOGGING_INCLUDE macro.  If defined, this header
+-// will #include the header specified by that macro.
+-//
+-// If any initialization is needed before logging, it can be performed by
+-// a function called through the BPLOG_INIT macro.  Each main function of
+-// an executable program in the Breakpad processor library calls
+-// BPLOG_INIT(&argc, &argv); before any logging can be performed; define
+-// BPLOG_INIT appropriately if initialization is required.
+-//
+-// Author: Mark Mentovai
+-
+-#ifndef PROCESSOR_LOGGING_H__
+-#define PROCESSOR_LOGGING_H__
+-
+-#include <iostream>
+-#include <string>
+-
+-#include "common/using_std_string.h"
+-#include "google_breakpad/common/breakpad_types.h"
+-
+-#ifdef BP_LOGGING_INCLUDE
+-#include BP_LOGGING_INCLUDE
+-#endif  // BP_LOGGING_INCLUDE
+-
+-#ifndef THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+-namespace base_logging {
+-
+-// The open-source copy of logging.h has diverged from Google's internal copy
+-// (temporarily, at least).  To support the transition to structured logging
+-// a definition for base_logging::LogMessage is needed, which is a ostream-
+-// like object for streaming arguments to construct a log message.
+-typedef std::ostream LogMessage;
+-
+-}  // namespace base_logging
+-#endif  // THIRD_PARTY_BREAKPAD_GOOGLE_GLUE_LOGGING_H_
+-
+-namespace google_breakpad {
+-
+-// These are defined in Microsoft headers.
+-#ifdef SEVERITY_ERROR
+-#undef SEVERITY_ERROR
+-#endif
+-
+-#ifdef ERROR
+-#undef ERROR
+-#endif
+-
+-class LogStream {
+- public:
+-  enum Severity {
+-    SEVERITY_INFO,
+-    SEVERITY_ERROR
+-  };
+-
+-  // Begin logging a message to the stream identified by |stream|, at the
+-  // indicated severity.  The file and line parameters should be set so as to
+-  // identify the line of source code that is producing a message.
+-  LogStream(std::ostream &stream, Severity severity,
+-            const char *file, int line);
+-
+-  // Finish logging by printing a newline and flushing the output stream.
+-  ~LogStream();
+-
+-  template<typename T> std::ostream& operator<<(const T &t) {
+-    return stream_ << t;
+-  }
+-
+- private:
+-  std::ostream &stream_;
+-
+-  // Disallow copy constructor and assignment operator
+-  explicit LogStream(const LogStream &that);
+-  void operator=(const LogStream &that);
+-};
+-
+-// This class is used to explicitly ignore values in the conditional logging
+-// macros.  This avoids compiler warnings like "value computed is not used"
+-// and "statement has no effect".
+-class LogMessageVoidify {
+- public:
+-  LogMessageVoidify() {}
+-
+-  // This has to be an operator with a precedence lower than << but higher
+-  // than ?:
+-  void operator&(base_logging::LogMessage &) {}
+-};
+-
+-// Returns number formatted as a hexadecimal string, such as "0x7b".
+-string HexString(uint32_t number);
+-string HexString(uint64_t number);
+-string HexString(int number);
+-
+-// Returns the error code as set in the global errno variable, and sets
+-// error_string, a required argument, to a string describing that error
+-// code.
+-int ErrnoString(string *error_string);
+-
+-}  // namespace google_breakpad
+-
+-#ifndef BPLOG_INIT
+-#define BPLOG_INIT(pargc, pargv)
+-#endif  // BPLOG_INIT
+-
+-#ifndef BPLOG
+-#define BPLOG(severity) BPLOG_ ## severity
+-#endif  // BPLOG
+-
+-#ifndef BPLOG_INFO
+-#ifndef BPLOG_INFO_STREAM
+-#define BPLOG_INFO_STREAM std::clog
+-#endif  // BPLOG_INFO_STREAM
+-#define BPLOG_INFO google_breakpad::LogStream(BPLOG_INFO_STREAM, \
+-                       google_breakpad::LogStream::SEVERITY_INFO, \
+-                       __FILE__, __LINE__)
+-#endif  // BPLOG_INFO
+-
+-#ifndef BPLOG_ERROR
+-#ifndef BPLOG_ERROR_STREAM
+-#define BPLOG_ERROR_STREAM std::cerr
+-#endif  // BPLOG_ERROR_STREAM
+-#define BPLOG_ERROR google_breakpad::LogStream(BPLOG_ERROR_STREAM, \
+-                        google_breakpad::LogStream::SEVERITY_ERROR, \
+-                        __FILE__, __LINE__)
+-#endif  // BPLOG_ERROR
+-
+-#define BPLOG_IF(severity, condition) \
+-    !(condition) ? (void) 0 : \
+-                   google_breakpad::LogMessageVoidify() & BPLOG(severity)
+-
+-#endif  // PROCESSOR_LOGGING_H__
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/minidump.cc
+--- a/src/processor/minidump.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/minidump.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -58,17 +58,17 @@
+ #include <map>
+ #include <vector>
+ 
+ #include "processor/range_map-inl.h"
+ 
+ #include "common/scoped_ptr.h"
+ #include "processor/basic_code_module.h"
+ #include "processor/basic_code_modules.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ 
+ 
+ namespace google_breakpad {
+ 
+ 
+ using std::istream;
+ using std::ifstream;
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/pathname_stripper.cc
+--- a/src/processor/pathname_stripper.cc	Thu Mar 28 18:38:05 2013 +0100
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,56 +0,0 @@
+-// Copyright (c) 2006, Google Inc.
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions are
+-// met:
+-//
+-//     * Redistributions of source code must retain the above copyright
+-// notice, this list of conditions and the following disclaimer.
+-//     * Redistributions in binary form must reproduce the above
+-// copyright notice, this list of conditions and the following disclaimer
+-// in the documentation and/or other materials provided with the
+-// distribution.
+-//     * Neither the name of Google Inc. nor the names of its
+-// contributors may be used to endorse or promote products derived from
+-// this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-// pathname_stripper.cc: Manipulates pathnames into their component parts.
+-//
+-// See pathname_stripper.h for documentation.
+-//
+-// Author: Mark Mentovai
+-
+-#include "processor/pathname_stripper.h"
+-
+-namespace google_breakpad {
+-
+-// static
+-string PathnameStripper::File(const string &path) {
+-  string::size_type slash = path.rfind('/');
+-  string::size_type backslash = path.rfind('\\');
+-
+-  string::size_type file_start = 0;
+-  if (slash != string::npos &&
+-      (backslash == string::npos || slash > backslash)) {
+-    file_start = slash + 1;
+-  } else if (backslash != string::npos) {
+-    file_start = backslash + 1;
+-  }
+-
+-  return path.substr(file_start);
+-}
+-
+-}  // namespace google_breakpad
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/pathname_stripper.h
+--- a/src/processor/pathname_stripper.h	Thu Mar 28 18:38:05 2013 +0100
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,53 +0,0 @@
+-// Copyright (c) 2006, Google Inc.
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions are
+-// met:
+-//
+-//     * Redistributions of source code must retain the above copyright
+-// notice, this list of conditions and the following disclaimer.
+-//     * Redistributions in binary form must reproduce the above
+-// copyright notice, this list of conditions and the following disclaimer
+-// in the documentation and/or other materials provided with the
+-// distribution.
+-//     * Neither the name of Google Inc. nor the names of its
+-// contributors may be used to endorse or promote products derived from
+-// this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-// pathname_stripper.h: Manipulates pathnames into their component parts.
+-//
+-// Author: Mark Mentovai
+-
+-#ifndef PROCESSOR_PATHNAME_STRIPPER_H__
+-#define PROCESSOR_PATHNAME_STRIPPER_H__
+-
+-#include <string>
+-
+-#include "common/using_std_string.h"
+-
+-namespace google_breakpad {
+-
+-class PathnameStripper {
+- public:
+-  // Given path, a pathname with components separated by slashes (/) or
+-  // backslashes (\), returns the trailing component, without any separator.
+-  // If path ends in a separator character, returns an empty string.
+-  static string File(const string &path);
+-};
+-
+-}  // namespace google_breakpad
+-
+-#endif  // PROCESSOR_PATHNAME_STRIPPER_H__
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/pathname_stripper_unittest.cc
+--- a/src/processor/pathname_stripper_unittest.cc	Thu Mar 28 18:38:05 2013 +0100
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,87 +0,0 @@
+-// Copyright (c) 2006, Google Inc.
+-// All rights reserved.
+-//
+-// Redistribution and use in source and binary forms, with or without
+-// modification, are permitted provided that the following conditions are
+-// met:
+-//
+-//     * Redistributions of source code must retain the above copyright
+-// notice, this list of conditions and the following disclaimer.
+-//     * Redistributions in binary form must reproduce the above
+-// copyright notice, this list of conditions and the following disclaimer
+-// in the documentation and/or other materials provided with the
+-// distribution.
+-//     * Neither the name of Google Inc. nor the names of its
+-// contributors may be used to endorse or promote products derived from
+-// this software without specific prior written permission.
+-//
+-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-
+-#include <stdio.h>
+-
+-#include "processor/pathname_stripper.h"
+-#include "processor/logging.h"
+-
+-#define ASSERT_TRUE(condition) \
+-  if (!(condition)) { \
+-    fprintf(stderr, "FAIL: %s @ %s:%d\n", #condition, __FILE__, __LINE__); \
+-    return false; \
+-  }
+-
+-#define ASSERT_EQ(e1, e2) ASSERT_TRUE((e1) == (e2))
+-
+-namespace {
+-
+-using google_breakpad::PathnameStripper;
+-
+-static bool RunTests() {
+-  ASSERT_EQ(PathnameStripper::File("/dir/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("\\dir\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("/dir\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("\\dir/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir/\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir\\/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir/"), "");
+-  ASSERT_EQ(PathnameStripper::File("dir\\"), "");
+-  ASSERT_EQ(PathnameStripper::File("dir/dir/"), "");
+-  ASSERT_EQ(PathnameStripper::File("dir\\dir\\"), "");
+-  ASSERT_EQ(PathnameStripper::File("dir1/dir2/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir1\\dir2\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir1/dir2\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir1\\dir2/file"), "file");
+-  ASSERT_EQ(PathnameStripper::File(""), "");
+-  ASSERT_EQ(PathnameStripper::File("1"), "1");
+-  ASSERT_EQ(PathnameStripper::File("1/2"), "2");
+-  ASSERT_EQ(PathnameStripper::File("1\\2"), "2");
+-  ASSERT_EQ(PathnameStripper::File("/1/2"), "2");
+-  ASSERT_EQ(PathnameStripper::File("\\1\\2"), "2");
+-  ASSERT_EQ(PathnameStripper::File("dir//file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("dir\\\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("/dir//file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("\\dir\\\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("c:\\dir\\file"), "file");
+-  ASSERT_EQ(PathnameStripper::File("c:\\dir\\file.ext"), "file.ext");
+-
+-  return true;
+-}
+-
+-}  // namespace
+-
+-int main(int argc, char **argv) {
+-  BPLOG_INIT(&argc, &argv);
+-
+-  return RunTests() ? 0 : 1;
+-}
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/postfix_evaluator-inl.h
+--- a/src/processor/postfix_evaluator-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/postfix_evaluator-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -41,17 +41,17 @@
+ 
+ #include "processor/postfix_evaluator.h"
+ 
+ #include <stdio.h>
+ 
+ #include <sstream>
+ 
+ #include "google_breakpad/processor/memory_region.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ using std::istringstream;
+ using std::ostringstream;
+ 
+ 
+ // A small class used in Evaluate to make sure to clean up the stack
+@@ -147,17 +147,17 @@ bool PostfixEvaluator<ValueType>::Evalua
+     if (!memory_) {
+       BPLOG(ERROR) << "Attempt to dereference without memory: " <<
+                       expression;
+       return false;
+     }
+ 
+     ValueType address;
+     if (!PopValue(&address)) {
+-      BPLOG(ERROR) << "Could not PopValue to get value to derefence: " <<
++      BPLOG(ERROR) << "Could not PopValue to get value to dereference: " <<
+                       expression;
+       return false;
+     }
+ 
+     ValueType value;
+     if (!memory_->GetMemoryAtAddress(address, &value)) {
+       BPLOG(ERROR) << "Could not dereference memory at address " <<
+                       HexString(address) << ": " << expression;
+@@ -305,18 +305,23 @@ bool PostfixEvaluator<ValueType>::Evalua
+     case Module::kExprSimple:
+     case Module::kExprSimpleMem: {
+       // Look up the base value
+       bool found = false;
+       ValueType v = dictionary_->get(&found, expr.ident_);
+       if (!found) {
+         // The identifier wasn't found in the dictionary.  Don't imply any
+         // default value, just fail.
+-        BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
+-                    << " not in dictionary (kExprSimple{Mem})";
++        static uint64_t n_complaints = 0; // This isn't threadsafe.
++        n_complaints++;
++        if (is_power_of_2(n_complaints)) {
++          BPLOG(INFO) << "Identifier " << FromUniqueString(expr.ident_)
++                      << " not in dictionary (kExprSimple{Mem})"
++                      << " (shown " << n_complaints << " times)";
++        }
+         return false;
+       }
+ 
+       // Form the sum
+       ValueType sum = v + (int64_t)expr.offset_;
+ 
+       // and dereference if necessary
+       if (expr.how_ == Module::kExprSimpleMem) {
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/range_map-inl.h
+--- a/src/processor/range_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/range_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -35,17 +35,17 @@
+ 
+ #ifndef PROCESSOR_RANGE_MAP_INL_H__
+ #define PROCESSOR_RANGE_MAP_INL_H__
+ 
+ 
+ #include <assert.h>
+ 
+ #include "processor/range_map.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ 
+ namespace google_breakpad {
+ 
+ 
+ template<typename AddressType, typename EntryType>
+ bool RangeMap<AddressType, EntryType>::StoreRange(const AddressType &base,
+                                                   const AddressType &size,
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stack_frame_symbolizer.cc
+--- a/src/processor/stack_frame_symbolizer.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stack_frame_symbolizer.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -39,17 +39,17 @@
+ #include "common/scoped_ptr.h"
+ #include "google_breakpad/processor/code_module.h"
+ #include "google_breakpad/processor/code_modules.h"
+ #include "google_breakpad/processor/source_line_resolver_interface.h"
+ #include "google_breakpad/processor/stack_frame.h"
+ #include "google_breakpad/processor/symbol_supplier.h"
+ #include "google_breakpad/processor/system_info.h"
+ #include "processor/linked_ptr.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ StackFrameSymbolizer::StackFrameSymbolizer(
+     SymbolSupplier* supplier,
+     SourceLineResolverInterface* resolver) : supplier_(supplier),
+                                              resolver_(resolver) { }
+ 
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker.cc
+--- a/src/processor/stackwalker.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -41,17 +41,17 @@
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/code_module.h"
+ #include "google_breakpad/processor/code_modules.h"
+ #include "google_breakpad/processor/minidump.h"
+ #include "google_breakpad/processor/stack_frame.h"
+ #include "google_breakpad/processor/stack_frame_symbolizer.h"
+ #include "google_breakpad/processor/system_info.h"
+ #include "processor/linked_ptr.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/stackwalker_ppc.h"
+ #include "processor/stackwalker_sparc.h"
+ #include "processor/stackwalker_x86.h"
+ #include "processor/stackwalker_amd64.h"
+ #include "processor/stackwalker_arm.h"
+ 
+ namespace google_breakpad {
+ 
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker_amd64.cc
+--- a/src/processor/stackwalker_amd64.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker_amd64.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -36,17 +36,17 @@
+ #include <assert.h>
+ 
+ #include "common/scoped_ptr.h"
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/memory_region.h"
+ #include "google_breakpad/processor/source_line_resolver_interface.h"
+ #include "google_breakpad/processor/stack_frame_cpu.h"
+ #include "processor/cfi_frame_info.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/stackwalker_amd64.h"
+ 
+ namespace google_breakpad {
+ 
+ 
+ const StackwalkerAMD64::CFIWalker::RegisterSet
+ StackwalkerAMD64::cfi_register_map_[] = {
+   // It may seem like $rip and $rsp are callee-saves, because the callee is
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker_arm.cc
+--- a/src/processor/stackwalker_arm.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker_arm.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -36,17 +36,17 @@
+ #include <vector>
+ 
+ #include "common/scoped_ptr.h"
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/memory_region.h"
+ #include "google_breakpad/processor/source_line_resolver_interface.h"
+ #include "google_breakpad/processor/stack_frame_cpu.h"
+ #include "processor/cfi_frame_info.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/stackwalker_arm.h"
+ 
+ namespace google_breakpad {
+ 
+ 
+ StackwalkerARM::StackwalkerARM(const SystemInfo* system_info,
+                                const MDRawContextARM* context,
+                                int fp_register,
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker_ppc.cc
+--- a/src/processor/stackwalker_ppc.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker_ppc.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -33,17 +33,17 @@
+ //
+ // Author: Mark Mentovai
+ 
+ 
+ #include "processor/stackwalker_ppc.h"
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/memory_region.h"
+ #include "google_breakpad/processor/stack_frame_cpu.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ 
+ StackwalkerPPC::StackwalkerPPC(const SystemInfo* system_info,
+                                const MDRawContextPPC* context,
+                                MemoryRegion* memory,
+                                const CodeModules* modules,
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker_sparc.cc
+--- a/src/processor/stackwalker_sparc.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker_sparc.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -32,17 +32,17 @@
+ // See stackwalker_sparc.h for documentation.
+ //
+ // Author: Michael Shang
+ 
+ 
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/memory_region.h"
+ #include "google_breakpad/processor/stack_frame_cpu.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/stackwalker_sparc.h"
+ 
+ namespace google_breakpad {
+ 
+ 
+ StackwalkerSPARC::StackwalkerSPARC(const SystemInfo* system_info,
+                                    const MDRawContextSPARC* context,
+                                    MemoryRegion* memory,
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/stackwalker_x86.cc
+--- a/src/processor/stackwalker_x86.cc	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/stackwalker_x86.cc	Thu Mar 28 18:06:39 2013 +0100
+@@ -37,17 +37,17 @@
+ #include <string>
+ 
+ #include "common/scoped_ptr.h"
+ #include "google_breakpad/processor/call_stack.h"
+ #include "google_breakpad/processor/code_modules.h"
+ #include "google_breakpad/processor/memory_region.h"
+ #include "google_breakpad/processor/source_line_resolver_interface.h"
+ #include "google_breakpad/processor/stack_frame_cpu.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/postfix_evaluator-inl.h"
+ #include "processor/stackwalker_x86.h"
+ #include "processor/windows_frame_info.h"
+ #include "processor/cfi_frame_info.h"
+ 
+ namespace google_breakpad {
+ 
+ 
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/static_address_map-inl.h
+--- a/src/processor/static_address_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/static_address_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -33,17 +33,17 @@
+ //
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ #ifndef PROCESSOR_STATIC_ADDRESS_MAP_INL_H__
+ #define PROCESSOR_STATIC_ADDRESS_MAP_INL_H__
+ 
+ #include "processor/static_address_map.h"
+ 
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename AddressType, typename EntryType>
+ bool StaticAddressMap<AddressType, EntryType>::Retrieve(
+     const AddressType &address,
+     const EntryType *&entry, AddressType *entry_address) const {
+ 
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/static_contained_range_map-inl.h
+--- a/src/processor/static_contained_range_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/static_contained_range_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -33,17 +33,17 @@
+ // See static_contained_range_map.h for documentation.
+ //
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ #ifndef PROCESSOR_STATIC_CONTAINED_RANGE_MAP_INL_H__
+ #define PROCESSOR_STATIC_CONTAINED_RANGE_MAP_INL_H__
+ 
+ #include "processor/static_contained_range_map.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename AddressType, typename EntryType>
+ StaticContainedRangeMap<AddressType, EntryType>::StaticContainedRangeMap(
+     const char *base)
+     : base_(*(reinterpret_cast<const AddressType*>(base))),
+       entry_size_(*(reinterpret_cast<const uint32_t*>(base + sizeof(base_)))),
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/static_map-inl.h
+--- a/src/processor/static_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/static_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -33,17 +33,17 @@
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ 
+ #ifndef PROCESSOR_STATIC_MAP_INL_H__
+ #define PROCESSOR_STATIC_MAP_INL_H__
+ 
+ #include "processor/static_map.h"
+ #include "processor/static_map_iterator-inl.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename Key, typename Value, typename Compare>
+ StaticMap<Key, Value, Compare>::StaticMap(const char* raw_data)
+     : raw_data_(raw_data),
+       compare_() {
+   // First 4 Bytes store the number of nodes.
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/static_map_iterator-inl.h
+--- a/src/processor/static_map_iterator-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/static_map_iterator-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -32,17 +32,17 @@
+ //
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ #ifndef PROCESSOR_STATIC_MAP_ITERATOR_INL_H__
+ #define PROCESSOR_STATIC_MAP_ITERATOR_INL_H__
+ 
+ #include "processor/static_map_iterator.h"
+ 
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename Key, typename Value, typename Compare>
+ StaticMapIterator<Key, Value, Compare>::StaticMapIterator(const char* base,
+                                                             const int &index):
+       index_(index), base_(base) {
+   // See static_map.h for documentation on
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/static_range_map-inl.h
+--- a/src/processor/static_range_map-inl.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/static_range_map-inl.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -32,17 +32,17 @@
+ // See static_range_map.h for documentation.
+ //
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ #ifndef PROCESSOR_STATIC_RANGE_MAP_INL_H__
+ #define PROCESSOR_STATIC_RANGE_MAP_INL_H__
+ 
+ #include "processor/static_range_map.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename AddressType, typename EntryType>
+ bool StaticRangeMap<AddressType, EntryType>::RetrieveRange(
+     const AddressType &address, const EntryType *&entry,
+     AddressType *entry_base, AddressType *entry_size) const {
+   MapConstIterator iterator = map_.lower_bound(address);
+diff --git -r 85dd7094b78d -r 636cfcab9682 src/processor/windows_frame_info.h
+--- a/src/processor/windows_frame_info.h	Thu Mar 28 18:38:05 2013 +0100
++++ b/src/processor/windows_frame_info.h	Thu Mar 28 18:06:39 2013 +0100
+@@ -41,17 +41,17 @@
+ #include <string.h>
+ #include <stdlib.h>
+ 
+ #include <string>
+ #include <vector>
+ 
+ #include "common/using_std_string.h"
+ #include "google_breakpad/common/breakpad_types.h"
+-#include "processor/logging.h"
++#include "common/logging.h"
+ #include "processor/tokenize.h"
+ 
+ namespace google_breakpad {
+ 
+ #ifdef _WIN32
+ #define strtoull _strtoui64
+ #endif
+ 

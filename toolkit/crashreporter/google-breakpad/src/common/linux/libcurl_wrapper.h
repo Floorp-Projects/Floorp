@@ -30,9 +30,6 @@
 // A wrapper for libcurl to do HTTP Uploads, to support easy mocking
 // and unit testing of the HTTPUpload class.
 
-#ifndef COMMON_LINUX_LIBCURL_WRAPPER_H_
-#define COMMON_LINUX_LIBCURL_WRAPPER_H_
-
 #include <string>
 #include <map>
 
@@ -43,7 +40,6 @@ namespace google_breakpad {
 class LibcurlWrapper {
  public:
   LibcurlWrapper();
-  ~LibcurlWrapper();
   virtual bool Init();
   virtual bool SetProxy(const string& proxy_host,
                         const string& proxy_userpwd);
@@ -51,9 +47,7 @@ class LibcurlWrapper {
                        const string& basename);
   virtual bool SendRequest(const string& url,
                            const std::map<string, string>& parameters,
-                           int* http_status_code,
-                           string* http_header_data,
-                           string* http_response_data);
+                           string* server_response);
  private:
   // This function initializes class state corresponding to function
   // pointers into the CURL library.
@@ -84,10 +78,7 @@ class LibcurlWrapper {
   CURLcode (*easy_perform_)(CURL *);
   const char* (*easy_strerror_)(CURLcode);
   void (*easy_cleanup_)(CURL *);
-  CURLcode (*easy_getinfo_)(CURL *, CURLINFO info, ...);
   void (*formfree_)(struct curl_httppost *);
 
 };
 }
-
-#endif  // COMMON_LINUX_LIBCURL_WRAPPER_H_

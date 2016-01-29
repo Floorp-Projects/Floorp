@@ -196,7 +196,7 @@ struct FatReaderFixture {
   FatReaderFixture()
       : fat(kBigEndian),
         reporter("reporter filename"),
-        reader(&reporter), object_files() {
+        reader(&reporter), object_files(), object_files_size() { 
     EXPECT_CALL(reporter, BadHeader()).Times(0);
     EXPECT_CALL(reporter, TooShort()).Times(0);
 
@@ -224,12 +224,7 @@ struct FatReaderFixture {
     fat_bytes = reinterpret_cast<const uint8_t *>(contents.data());
     if (expect_parse_success) {
       EXPECT_TRUE(reader.Read(fat_bytes, contents.size()));
-      size_t fat_files_count;
-      const SuperFatArch* fat_files = reader.object_files(&fat_files_count);
-      object_files.resize(fat_files_count);
-      for (size_t i = 0; i < fat_files_count; ++i) {
-        EXPECT_TRUE(fat_files[i].ConvertToFatArch(&object_files[i]));
-      }
+      object_files = reader.object_files(&object_files_size);
     }
     else
       EXPECT_FALSE(reader.Read(fat_bytes, contents.size()));
@@ -239,7 +234,8 @@ struct FatReaderFixture {
   FatReader reader;
   string contents;
   const uint8_t *fat_bytes;
-  vector<struct fat_arch> object_files;
+  const struct fat_arch *object_files;
+  size_t object_files_size;
 };
 
 class FatReaderTest: public FatReaderFixture, public Test { };
@@ -293,7 +289,7 @@ TEST_F(FatReaderTest, NoObjectFiles) {
       .B32(0xcafebabe)              // magic number
       .B32(0);                      // number of architectures
   ReadFat();
-  EXPECT_EQ(0U, object_files.size());
+  EXPECT_EQ(0U, object_files_size);
 }
 
 TEST_F(FatReaderTest, OneObjectFile) {
@@ -308,7 +304,7 @@ TEST_F(FatReaderTest, OneObjectFile) {
       .Mark(&obj1_offset)           
       .Append(0x42, '*');           // dummy contents
   ReadFat();
-  ASSERT_EQ(1U, object_files.size());
+  ASSERT_EQ(1U, object_files_size);
   EXPECT_EQ(0x5e3a6e91, object_files[0].cputype);
   EXPECT_EQ(0x52ccd852, object_files[0].cpusubtype);
   EXPECT_EQ(obj1_offset.Value(), object_files[0].offset);
@@ -338,7 +334,7 @@ TEST_F(FatReaderTest, ThreeObjectFiles) {
   
   ReadFat();
 
-  ASSERT_EQ(3U, object_files.size());
+  ASSERT_EQ(3U, object_files_size);
 
   // First object file.
   EXPECT_EQ(0x0cb92c30, object_files[0].cputype);
@@ -377,7 +373,7 @@ TEST_F(FatReaderTest, BigEndianMachO32) {
 
   // FatReader should treat a Mach-O file as if it were a fat binary file
   // containing one object file --- the whole thing.
-  ASSERT_EQ(1U, object_files.size());
+  ASSERT_EQ(1U, object_files_size);
   EXPECT_EQ(0x1a9d0518, object_files[0].cputype);
   EXPECT_EQ(0x1b779357, object_files[0].cpusubtype);
   EXPECT_EQ(0U, object_files[0].offset);
@@ -399,7 +395,7 @@ TEST_F(FatReaderTest, BigEndianMachO64) {
 
   // FatReader should treat a Mach-O file as if it were a fat binary file
   // containing one object file --- the whole thing.
-  ASSERT_EQ(1U, object_files.size());
+  ASSERT_EQ(1U, object_files_size);
   EXPECT_EQ(0x5aff8487, object_files[0].cputype);
   EXPECT_EQ(0x4c6a57f7, object_files[0].cpusubtype);
   EXPECT_EQ(0U, object_files[0].offset);
@@ -421,7 +417,7 @@ TEST_F(FatReaderTest, LittleEndianMachO32) {
 
   // FatReader should treat a Mach-O file as if it were a fat binary file
   // containing one object file --- the whole thing.
-  ASSERT_EQ(1U, object_files.size());
+  ASSERT_EQ(1U, object_files_size);
   EXPECT_EQ(0x1a9d0518, object_files[0].cputype);
   EXPECT_EQ(0x1b779357, object_files[0].cpusubtype);
   EXPECT_EQ(0U, object_files[0].offset);
@@ -443,7 +439,7 @@ TEST_F(FatReaderTest, LittleEndianMachO64) {
 
   // FatReader should treat a Mach-O file as if it were a fat binary file
   // containing one object file --- the whole thing.
-  ASSERT_EQ(1U, object_files.size());
+  ASSERT_EQ(1U, object_files_size);
   EXPECT_EQ(0x5aff8487, object_files[0].cputype);
   EXPECT_EQ(0x4c6a57f7, object_files[0].cpusubtype);
   EXPECT_EQ(0U, object_files[0].offset);

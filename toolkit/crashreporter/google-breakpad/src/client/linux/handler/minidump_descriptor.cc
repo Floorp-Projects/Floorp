@@ -35,17 +35,11 @@
 
 namespace google_breakpad {
 
-//static
-const MinidumpDescriptor::MicrodumpOnConsole
-    MinidumpDescriptor::kMicrodumpOnConsole = {};
-
 MinidumpDescriptor::MinidumpDescriptor(const MinidumpDescriptor& descriptor)
-    : mode_(descriptor.mode_),
-      fd_(descriptor.fd_),
+    : fd_(descriptor.fd_),
       directory_(descriptor.directory_),
       c_path_(NULL),
-      size_limit_(descriptor.size_limit_),
-      microdump_extra_info_(descriptor.microdump_extra_info_) {
+      size_limit_(descriptor.size_limit_) {
   // The copy constructor is not allowed to be called on a MinidumpDescriptor
   // with a valid path_, as getting its c_path_ would require the heap which
   // can cause problems in compromised environments.
@@ -56,7 +50,6 @@ MinidumpDescriptor& MinidumpDescriptor::operator=(
     const MinidumpDescriptor& descriptor) {
   assert(descriptor.path_.empty());
 
-  mode_ = descriptor.mode_;
   fd_ = descriptor.fd_;
   directory_ = descriptor.directory_;
   path_.clear();
@@ -66,12 +59,11 @@ MinidumpDescriptor& MinidumpDescriptor::operator=(
     UpdatePath();
   }
   size_limit_ = descriptor.size_limit_;
-  microdump_extra_info_ = descriptor.microdump_extra_info_;
   return *this;
 }
 
 void MinidumpDescriptor::UpdatePath() {
-  assert(mode_ == kWriteMinidumpToFile && !directory_.empty());
+  assert(fd_ == -1 && !directory_.empty());
 
   GUID guid;
   char guid_str[kGUIDStringLength + 1];
@@ -80,7 +72,7 @@ void MinidumpDescriptor::UpdatePath() {
   }
 
   path_.clear();
-  path_ = directory_ + "/" + guid_str + ".dmp";
+  path_ = directory_ + "/" + guid_str + ".dmp";  
   c_path_ = path_.c_str();
 }
 

@@ -43,43 +43,33 @@ int usage(const char* self) {
           "[directories-for-debug-file]\n\n", self);
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "  -c    Do not generate CFI section\n");
-  fprintf(stderr, "  -r    Do not handle inter-compilation unit references\n");
   return 1;
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2)
+  if (argc < 2 || argc > 4)
     return usage(argv[0]);
 
   bool cfi = true;
-  bool handle_inter_cu_refs = true;
-  int arg_index = 1;
-  while (arg_index < argc && strlen(argv[arg_index]) > 0 &&
-         argv[arg_index][0] == '-') {
-    if (strcmp("-c", argv[arg_index]) == 0) {
-      cfi = false;
-    } else if (strcmp("-r", argv[arg_index]) == 0) {
-      handle_inter_cu_refs = false;
-    } else {
-      return usage(argv[0]);
-    }
-    ++arg_index;
+  int binary_index = 1;
+  if (strcmp("-c", argv[1]) == 0) {
+    cfi = false;
+    ++binary_index;
   }
-  if (arg_index == argc)
+  if (!cfi && argc == 2)
     return usage(argv[0]);
 
-  const char* binary;
+  const char *binary;
   std::vector<string> debug_dirs;
-  binary = argv[arg_index];
-  for (int debug_dir_index = arg_index + 1;
+  binary = argv[binary_index];
+  for (int debug_dir_index = binary_index + 1;
        debug_dir_index < argc;
        ++debug_dir_index) {
     debug_dirs.push_back(argv[debug_dir_index]);
   }
 
   SymbolData symbol_data = cfi ? ALL_SYMBOL_DATA : NO_CFI;
-  google_breakpad::DumpOptions options(symbol_data, handle_inter_cu_refs);
-  if (!WriteSymbolFile(binary, debug_dirs, options, std::cout)) {
+  if (!WriteSymbolFile(binary, debug_dirs, symbol_data, std::cout)) {
     fprintf(stderr, "Failed to write symbol file.\n");
     return 1;
   }

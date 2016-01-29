@@ -3,7 +3,7 @@
 
 #include "libdis.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
         #define snprintf        _snprintf
         #define inline          __inline
 #endif

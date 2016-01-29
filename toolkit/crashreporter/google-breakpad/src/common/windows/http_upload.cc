@@ -30,7 +30,7 @@
 #include <assert.h>
 
 // Disable exception handler warnings.
-#pragma warning(disable:4530)
+#pragma warning( disable : 4530 )
 
 #include <fstream>
 
@@ -161,7 +161,7 @@ bool HTTPUpload::SendRequest(const wstring &url,
       fwprintf(stderr, L"Could not unset receive timeout, continuing...\n");
     }
   }
-
+  
   if (!HttpSendRequest(request.get(), NULL, 0,
                        const_cast<char *>(request_body.data()),
                        static_cast<DWORD>(request_body.size()))) {
@@ -213,7 +213,8 @@ bool HTTPUpload::ReadResponse(HINTERNET request, wstring *response) {
   BOOL return_code;
 
   while (((return_code = InternetQueryDataAvailable(request, &bytes_available,
-      0, 0)) != 0) && bytes_available > 0) {
+	  0, 0)) != 0) && bytes_available > 0) {
+
     vector<char> response_buffer(bytes_available);
     DWORD size_read;
 
@@ -322,7 +323,6 @@ bool HTTPUpload::GenerateRequestBody(const map<wstring, wstring> &parameters,
 // static
 bool HTTPUpload::GetFileContents(const wstring &filename,
                                  vector<char> *contents) {
-  bool rv = false;
   // The "open" method on pre-MSVC8 ifstream implementations doesn't accept a
   // wchar_t* filename, so use _wfopen directly in that case.  For VC8 and
   // later, _wfopen has been deprecated in favor of _wfopen_s, which does
@@ -338,21 +338,15 @@ bool HTTPUpload::GetFileContents(const wstring &filename,
   if (file.is_open()) {
     file.seekg(0, ios::end);
     std::streamoff length = file.tellg();
-    // Check for loss of data when converting lenght from std::streamoff into
-    // std::vector<char>::size_type
-    std::vector<char>::size_type vector_size =
-        static_cast<std::vector<char>::size_type>(length);
-    if (static_cast<std::streamoff>(vector_size) == length) {
-      contents->resize(vector_size);
-      if (length != 0) {
-        file.seekg(0, ios::beg);
-        file.read(&((*contents)[0]), length);
-      }
-      rv = true;
+    contents->resize(length);
+    if (length != 0) {
+      file.seekg(0, ios::beg);
+      file.read(&((*contents)[0]), length);
     }
     file.close();
+    return true;
   }
-  return rv;
+  return false;
 }
 
 // static

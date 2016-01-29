@@ -33,15 +33,16 @@
 //
 // Author: Dan Waylonis
 
-
-#include <fcntl.h>
-#include <mach-o/loader.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+extern "C" {  // necessary for Leopard
+  #include <fcntl.h>
+  #include <mach-o/loader.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <sys/time.h>
+  #include <sys/types.h>
+  #include <unistd.h>
+}
 
 #include "common/mac/macho_id.h"
 #include "common/mac/macho_walker.h"
@@ -59,7 +60,7 @@ MachoID::MachoID(const char *path)
      crc_(0), 
      md5_context_(), 
      update_function_(NULL) {
-  snprintf(path_, sizeof(path_), "%s", path);
+  strncpy(path_, path, sizeof(path_) - 1);
 }
 
 MachoID::MachoID(const char *path, void *memory, size_t size)
@@ -68,7 +69,7 @@ MachoID::MachoID(const char *path, void *memory, size_t size)
      crc_(0), 
      md5_context_(), 
      update_function_(NULL) {
-  snprintf(path_, sizeof(path_), "%s", path);
+  strncpy(path_, path, sizeof(path_) - 1);
 }
 
 MachoID::~MachoID() {
@@ -123,7 +124,7 @@ void MachoID::UpdateCRC(unsigned char *bytes, size_t size) {
 }
 
 void MachoID::UpdateMD5(unsigned char *bytes, size_t size) {
-  MD5Update(&md5_context_, bytes, static_cast<unsigned>(size));
+  MD5Update(&md5_context_, bytes, size);
 }
 
 void MachoID::Update(MachoWalker *walker, off_t offset, size_t size) {

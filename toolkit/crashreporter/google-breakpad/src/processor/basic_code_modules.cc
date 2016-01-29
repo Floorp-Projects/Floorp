@@ -40,7 +40,7 @@
 
 #include "google_breakpad/processor/code_module.h"
 #include "processor/linked_ptr.h"
-#include "processor/logging.h"
+#include "common/logging.h"
 #include "processor/range_map-inl.h"
 
 namespace google_breakpad {
@@ -71,11 +71,6 @@ BasicCodeModules::BasicCodeModules(const CodeModules *that)
                       " could not be stored";
     }
   }
-}
-
-BasicCodeModules::BasicCodeModules()
-  : main_address_(0),
-    map_(new RangeMap<uint64_t, linked_ptr<const CodeModule> >()) {
 }
 
 BasicCodeModules::~BasicCodeModules() {

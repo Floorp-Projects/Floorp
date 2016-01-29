@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Georg Fritzsche <georg.fritzsche@googlemail.com>
+# Date 1366630152 -7200
+#      Mon Apr 22 13:29:12 2013 +0200
+# Node ID 11f7a9321b7d5d85eddc2db16e58e6870a7c4e06
+# Parent  e74de3db7dd27ffda8f4772f892cfb52c5c35649
+Bug 836829 - Fix missing result check in Mac exception handler. r=ted
+
+diff --git a/src/client/mac/handler/exception_handler.cc b/src/client/mac/handler/exception_handler.cc
+--- a/src/client/mac/handler/exception_handler.cc
++++ b/src/client/mac/handler/exception_handler.cc
+@@ -276,19 +276,23 @@ bool ExceptionHandler::WriteMinidump(boo
+ 
+   use_minidump_write_mutex_ = true;
+   last_minidump_write_result_ = false;
+ 
+   // Lock the mutex.  Since we just created it, this will return immediately.
+   if (pthread_mutex_lock(&minidump_write_mutex_) == 0) {
+     // Send an empty message to the handle port so that a minidump will
+     // be written
+-    SendMessageToHandlerThread(write_exception_stream ?
+-                                   kWriteDumpWithExceptionMessage :
+-                                   kWriteDumpMessage);
++    bool result = SendMessageToHandlerThread(write_exception_stream ?
++                                             kWriteDumpWithExceptionMessage :
++                                             kWriteDumpMessage);
++    if (!result) {
++      pthread_mutex_unlock(&minidump_write_mutex_);
++      return false;
++    }
+ 
+     // Wait for the minidump writer to complete its writing.  It will unlock
+     // the mutex when completed
+     pthread_mutex_lock(&minidump_write_mutex_);
+   }
+ 
+   use_minidump_write_mutex_ = false;
+   UpdateNextID();

@@ -33,13 +33,15 @@
 //
 // Author: Dan Waylonis
 
-#include <assert.h>
-#include <fcntl.h>
-#include <mach-o/arch.h>
-#include <mach-o/fat.h>
-#include <mach-o/loader.h>
-#include <string.h>
-#include <unistd.h>
+extern "C" {  // necessary for Leopard
+  #include <assert.h>
+  #include <fcntl.h>
+  #include <mach-o/arch.h>
+  #include <mach-o/fat.h>
+  #include <mach-o/loader.h>
+  #include <string.h>
+  #include <unistd.h>
+}
 
 #include "common/mac/byteswap.h"
 #include "common/mac/macho_walker.h"
@@ -49,7 +51,7 @@ namespace MacFileUtilities {
 
 MachoWalker::MachoWalker(const char *path, LoadCommandCallback callback,
                          void *context)
-    : file_(-1),
+    : file_(0),
       memory_(NULL),
       memory_size_(0),
       callback_(callback),
@@ -62,7 +64,7 @@ MachoWalker::MachoWalker(const char *path, LoadCommandCallback callback,
 
 MachoWalker::MachoWalker(void *memory, size_t size,
                          LoadCommandCallback callback, void *context)
-    : file_(-1),
+    : file_(0),
       memory_(memory),
       memory_size_(size),
       callback_(callback),

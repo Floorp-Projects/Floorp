@@ -51,9 +51,6 @@ SimpleSerializer<BasicSourceLineResolver::Function>::range_map_serializer_;
 size_t ModuleSerializer::SizeOf(const BasicSourceLineResolver::Module &module) {
   size_t total_size_alloc_ = 0;
 
-  // Size of the "is_corrupt" flag.
-  total_size_alloc_ += SimpleSerializer<bool>::SizeOf(module.is_corrupt_);
-
   // Compute memory size for each map component in Module class.
   int map_index = 0;
   map_sizes_[map_index++] = files_serializer_.SizeOf(module.files_);
@@ -68,22 +65,19 @@ size_t ModuleSerializer::SizeOf(const BasicSourceLineResolver::Module &module) {
      module.cfi_delta_rules_);
 
   // Header size.
-  total_size_alloc_ += kNumberMaps_ * sizeof(uint32_t);
+  total_size_alloc_ = kNumberMaps_ * sizeof(uint32_t);
 
-  for (int i = 0; i < kNumberMaps_; ++i) {
-    total_size_alloc_ += map_sizes_[i];
-  }
+  for (int i = 0; i < kNumberMaps_; ++i)
+   total_size_alloc_ += map_sizes_[i];
 
   // Extra one byte for null terminator for C-string copy safety.
-  total_size_alloc_ += SimpleSerializer<char>::SizeOf(0);
+  ++total_size_alloc_;
 
   return total_size_alloc_;
 }
 
 char *ModuleSerializer::Write(const BasicSourceLineResolver::Module &module,
                               char *dest) {
-  // Write the is_corrupt flag.
-  dest = SimpleSerializer<bool>::Write(module.is_corrupt_, dest);
   // Write header.
   memcpy(dest, map_sizes_, kNumberMaps_ * sizeof(uint32_t));
   dest += kNumberMaps_ * sizeof(uint32_t);
@@ -195,9 +189,8 @@ char* ModuleSerializer::SerializeSymbolFileData(
   scoped_ptr<BasicSourceLineResolver::Module> module(
       new BasicSourceLineResolver::Module("no name"));
   scoped_array<char> buffer(new char[symbol_data.size() + 1]);
-  memcpy(buffer.get(), symbol_data.c_str(), symbol_data.size());
-  buffer.get()[symbol_data.size()] = '\0';
-  if (!module->LoadMapFromMemory(buffer.get(), symbol_data.size() + 1)) {
+  strcpy(buffer.get(), symbol_data.c_str());
+  if (!module->LoadMapFromMemory(buffer.get())) {
     return NULL;
   }
   buffer.reset(NULL);

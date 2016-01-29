@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
 #include <iostream>
 #include <utility>
 
@@ -79,34 +80,8 @@ void Module::AddFunction(Function *function) {
   // FUNC lines must not hold an empty name, so catch the problem early if
   // callers try to add one.
   assert(!function->name.empty());
-
-  // FUNCs are better than PUBLICs as they come with sizes, so remove an extern
-  // with the same address if present.
-  Extern ext(function->address);
-  ExternSet::iterator it_ext = externs_.find(&ext);
-  if (it_ext == externs_.end() &&
-      architecture_ == "arm" &&
-      (function->address & 0x1) == 0) {
-    // ARM THUMB functions have bit 0 set. ARM64 does not have THUMB.
-    Extern arm_thumb_ext(function->address | 0x1);
-    it_ext = externs_.find(&arm_thumb_ext);
-  }
-  if (it_ext != externs_.end()) {
-    delete *it_ext;
-    externs_.erase(it_ext);
-  }
-#if _DEBUG
-  {
-    // There should be no other PUBLIC symbols that overlap with the function.
-    Extern debug_ext(function->address);
-    ExternSet::iterator it_debug = externs_.lower_bound(&ext);
-    assert(it_debug == externs_.end() ||
-           (*it_debug)->address >= function->address + function->size);
-  }
-#endif
-
   std::pair<FunctionSet::iterator,bool> ret = functions_.insert(function);
-  if (!ret.second && (*ret.first != function)) {
+  if (!ret.second) {
     // Free the duplicate that was not inserted because this Module
     // now owns it.
     delete function;
@@ -130,10 +105,21 @@ void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
 }
 
 void Module::AddExtern(Extern *ext) {
-  std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
-  if (!ret.second) {
-    // Free the duplicate that was not inserted because this Module
-    // now owns it.
+  Function func;
+  func.name = ext->name;
+  func.address = ext->address;
+
+  // Since parsing debug section and public info are not necessarily
+  // mutually exclusive, check if the symbol has already been read
+  // as a function to avoid duplicates.
+  if (functions_.find(&func) == functions_.end()) {
+    std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
+    if (!ret.second) {
+      // Free the duplicate that was not inserted because this Module
+      // now owns it.
+      delete ext;
+    }
+  } else {
     delete ext;
   }
 }
@@ -143,9 +129,48 @@ void Module::GetFunctions(vector<Function *> *vec,
   vec->insert(i, functions_.begin(), functions_.end());
 }
 
+template<typename T>
+bool EntryContainsAddress(T entry, Module::Address address) {
+  return entry->address <= address && address < entry->address + entry->size;
+}
+
+Module::Function* Module::FindFunctionByAddress(Address address) {
+  Function search;
+  search.address = address;
+  // Ensure that name always sorts higher than the function name,
+  // so that upper_bound always returns the function just after
+  // the function containing this address.
+  search.name = "\xFF";
+  FunctionSet::iterator it = functions_.upper_bound(&search);
+  if (it == functions_.begin())
+    return NULL;
+
+  it--;
+
+  if (EntryContainsAddress(*it, address))
+    return *it;
+
+  return NULL;
+}
+
 void Module::GetExterns(vector<Extern *> *vec,
                         vector<Extern *>::iterator i) {
   vec->insert(i, externs_.begin(), externs_.end());
+}
+
+Module::Extern* Module::FindExternByAddress(Address address) {
+  Extern search;
+  search.address = address;
+  ExternSet::iterator it = externs_.upper_bound(&search);
+
+  if (it == externs_.begin())
+    return NULL;
+
+  it--;
+  if ((*it)->address > address)
+    return NULL;
+
+  return *it;
 }
 
 Module::File *Module::FindFile(const string &name) {
@@ -162,7 +187,8 @@ Module::File *Module::FindFile(const string &name) {
   FileByNameMap::iterator destiny = files_.lower_bound(&name);
   if (destiny == files_.end()
       || *destiny->first != name) {  // Repeated string comparison, boo hoo.
-    File *file = new File(name);
+    File *file = new File;
+    file->name = name;
     file->source_id = -1;
     destiny = files_.insert(destiny,
                             FileByNameMap::value_type(&file->name, file));
@@ -186,7 +212,7 @@ void Module::GetFiles(vector<File *> *vec) {
     vec->push_back(it->second);
 }
 
-void Module::GetStackFrameEntries(vector<StackFrameEntry*>* vec) const {
+void Module::GetStackFrameEntries(vector<StackFrameEntry *>* vec) {
   vec->clear();
   vec->insert(vec->begin(), stack_frame_entries_.begin(),
               stack_frame_entries_.end());
@@ -201,7 +227,7 @@ Module::StackFrameEntry* Module::FindStackFrameEntryByAddress(Address address) {
     return NULL;
 
   it--;
-  if ((*it)->address <= address && address < (*it)->address + (*it)->size)
+  if (EntryContainsAddress(*it, address))
     return *it;
 
   return NULL;
@@ -242,12 +268,44 @@ bool Module::ReportError() {
   return false;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Module::Expr& expr) {
+  assert(!expr.isExprInvalid());
+  switch (expr.how_) {
+    case Module::kExprSimple:
+      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " +";
+      break;
+    case Module::kExprSimpleMem:
+      stream << FromUniqueString(expr.ident_) << " " << expr.offset_ << " + ^";
+      break;
+    case Module::kExprPostfix:
+      stream << expr.postfix_; break;
+    case Module::kExprInvalid:
+    default:
+      break;
+  }
+  return stream;
+}
+
 bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
+  // Visit the register rules in alphabetical order.  Because
+  // rule_map has the elements in some arbitrary order,
+  // get the names out into a vector, sort them, and visit in
+  // sorted order.
+  std::vector<const UniqueString*> rr_names;
   for (RuleMap::const_iterator it = rule_map.begin();
        it != rule_map.end(); ++it) {
-    if (it != rule_map.begin())
-      stream << ' ';
-    stream << it->first << ": " << it->second;
+    rr_names.push_back(it->first);
+  }
+
+  std::sort(rr_names.begin(), rr_names.end(), LessThan_UniqueString);
+
+  // Now visit the register rules in alphabetical order.
+  for (std::vector<const UniqueString*>::const_iterator name = rr_names.begin();
+       name != rr_names.end();
+       ++name) {
+    if (name != rr_names.begin())
+      stream << " ";
+    stream << FromUniqueString(*name) << ": " << rule_map.find(*name)->second;
   }
   return stream.good();
 }

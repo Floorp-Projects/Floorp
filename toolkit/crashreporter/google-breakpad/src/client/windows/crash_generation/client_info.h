@@ -66,9 +66,6 @@ class ClientInfo {
   HANDLE dump_requested_handle() const { return dump_requested_handle_; }
   HANDLE dump_generated_handle() const { return dump_generated_handle_; }
   DWORD crash_id() const { return crash_id_; }
-  const CustomClientInfo& custom_client_info() const {
-    return custom_client_info_;
-  }
 
   void set_dump_request_wait_handle(HANDLE value) {
     dump_request_wait_handle_ = value;
