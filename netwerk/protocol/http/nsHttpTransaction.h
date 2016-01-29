@@ -143,6 +143,7 @@ public:
     }
     void SetPushedStream(Http2PushedStream *push) { mPushedStream = push; }
     uint32_t InitialRwin() const { return mInitialRwin; };
+    bool ChannelPipeFull() { return mWaitingOnPipeOut; }
 
     // Locked methods to get and set timing info
     const TimingStruct Timings();
@@ -306,6 +307,7 @@ private:
     bool                            mContentDecoding;
     bool                            mContentDecodingCheck;
     bool                            mDeferredSendProgress;
+    bool                            mWaitingOnPipeOut;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
