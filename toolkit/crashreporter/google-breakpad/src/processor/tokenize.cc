@@ -36,7 +36,7 @@
 
 namespace google_breakpad {
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define strtok_r strtok_s
 #endif
 

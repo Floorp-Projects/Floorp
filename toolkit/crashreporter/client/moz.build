@@ -11,6 +11,10 @@ if CONFIG['OS_TARGET'] != 'Android':
         'crashreporter.cpp',
     ]
 
+LOCAL_INCLUDES += [
+    '../google-breakpad/src',
+]
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'crashreporter_win.cpp',
@@ -38,6 +42,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     OS_LIBS += ['-framework Cocoa']
     USE_LIBS += [
         'breakpad_common_s',
+        'breakpad_logging',
         'breakpad_mac_common_s',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':

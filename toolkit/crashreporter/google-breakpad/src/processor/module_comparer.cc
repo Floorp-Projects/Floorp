@@ -58,10 +58,8 @@ bool ModuleComparer::Compare(const string &symbol_data) {
 
   // Load symbol data into basic_module
   scoped_array<char> buffer(new char[symbol_data.size() + 1]);
-  memcpy(buffer.get(), symbol_data.c_str(), symbol_data.size());
-  buffer.get()[symbol_data.size()] = '\0';
-  ASSERT_TRUE(basic_module->LoadMapFromMemory(buffer.get(),
-                                              symbol_data.size() + 1));
+  strcpy(buffer.get(), symbol_data.c_str());
+  ASSERT_TRUE(basic_module->LoadMapFromMemory(buffer.get()));
   buffer.reset();
 
   // Serialize BasicSourceLineResolver::Module.
@@ -72,9 +70,7 @@ bool ModuleComparer::Compare(const string &symbol_data) {
   BPLOG(INFO) << "Serialized size = " << serialized_size << " Bytes";
 
   // Load FastSourceLineResolver::Module using serialized data.
-  ASSERT_TRUE(fast_module->LoadMapFromMemory(serialized_data.get(),
-                                             serialized_size));
-  ASSERT_TRUE(fast_module->IsCorrupt() == basic_module->IsCorrupt());
+  ASSERT_TRUE(fast_module->LoadMapFromMemory(serialized_data.get()));
 
   // Compare FastSourceLineResolver::Module with
   // BasicSourceLineResolver::Module.

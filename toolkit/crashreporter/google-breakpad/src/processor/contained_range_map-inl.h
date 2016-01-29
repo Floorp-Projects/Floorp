@@ -40,7 +40,7 @@
 
 #include <assert.h>
 
-#include "processor/logging.h"
+#include "common/logging.h"
 
 
 namespace google_breakpad {

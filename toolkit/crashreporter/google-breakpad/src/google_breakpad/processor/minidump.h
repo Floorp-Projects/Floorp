@@ -79,8 +79,6 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_H__
 
-#include <stdint.h>
-
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -90,14 +88,11 @@
 #include <string>
 #include <vector>
 
-#include "common/basictypes.h"
 #include "common/using_std_string.h"
+#include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/code_modules.h"
-#include "google_breakpad/processor/dump_context.h"
-#include "google_breakpad/processor/dump_object.h"
 #include "google_breakpad/processor/memory_region.h"
-#include "google_breakpad/processor/proc_maps_linux.h"
 
 
 namespace google_breakpad {
@@ -113,9 +108,11 @@ template<typename AddressType, typename EntryType> class RangeMap;
 
 // MinidumpObject is the base of all Minidump* objects except for Minidump
 // itself.
-class MinidumpObject : public DumpObject {
+class MinidumpObject {
  public:
   virtual ~MinidumpObject() {}
+
+  bool valid() const { return valid_; }
 
  protected:
   explicit MinidumpObject(Minidump* minidump);
@@ -127,14 +124,21 @@ class MinidumpObject : public DumpObject {
   // for access to data about the minidump file itself, such as whether
   // it should be byte-swapped.
   Minidump* minidump_;
+
+  // MinidumpObjects are not valid when created.  When a subclass populates
+  // its own fields, it can set valid_ to true.  Accessors and mutators may
+  // wish to consider or alter the valid_ state as they interact with
+  // objects.
+  bool      valid_;
 };
 
 
 // This class exists primarily to provide a virtual destructor in a base
 // class common to all objects that might be stored in
-// Minidump::mStreamObjects.  Some object types will never be stored in
-// Minidump::mStreamObjects, but are represented as streams and adhere to the
-// same interface, and may be derived from this class.
+// Minidump::mStreamObjects.  Some object types (MinidumpContext) will
+// never be stored in Minidump::mStreamObjects, but are represented as
+// streams and adhere to the same interface, and may be derived from
+// this class.
 class MinidumpStream : public MinidumpObject {
  public:
   virtual ~MinidumpStream() {}
@@ -164,12 +168,49 @@ class MinidumpStream : public MinidumpObject {
 // context for the exception handler (which performs minidump generation),
 // and not the context that caused the exception (which is probably what the
 // user wants).
-class MinidumpContext : public DumpContext {
+class MinidumpContext : public MinidumpStream {
  public:
   virtual ~MinidumpContext();
 
+  // Returns an MD_CONTEXT_* value such as MD_CONTEXT_X86 or MD_CONTEXT_PPC
+  // identifying the CPU type that the context was collected from.  The
+  // returned value will identify the CPU only, and will have any other
+  // MD_CONTEXT_* bits masked out.  Returns 0 on failure.
+  uint32_t GetContextCPU() const;
+
+  // A convenience method to get the instruction pointer out of the
+  // MDRawContext, since it varies per-CPU architecture.
+  bool GetInstructionPointer(uint64_t* ip) const;
+
+  // Returns raw CPU-specific context data for the named CPU type.  If the
+  // context data does not match the CPU type or does not exist, returns
+  // NULL.
+  const MDRawContextAMD64* GetContextAMD64() const;
+  const MDRawContextARM*   GetContextARM() const;
+  const MDRawContextPPC*   GetContextPPC() const;
+  const MDRawContextSPARC* GetContextSPARC() const;
+  const MDRawContextX86*   GetContextX86() const;
+
+  // Print a human-readable representation of the object to stdout.
+  void Print();
+
  protected:
   explicit MinidumpContext(Minidump* minidump);
+
+  // The CPU-specific context structure.
+  union {
+    MDRawContextBase*  base;
+    MDRawContextX86*   x86;
+    MDRawContextPPC*   ppc;
+    MDRawContextAMD64* amd64;
+    // on Solaris SPARC, sparc is defined as a numeric constant,
+    // so variables can NOT be named as sparc
+    MDRawContextSPARC* ctx_sparc;
+    MDRawContextARM*   arm;
+  } context_;
+
+  // Store this separately because of the weirdo AMD64 context
+  uint32_t context_flags_;
 
  private:
   friend class MinidumpThread;
@@ -177,20 +218,15 @@ class MinidumpContext : public DumpContext {
 
   bool Read(uint32_t expected_size);
 
+  // Free the CPU-specific context structure.
+  void FreeContext();
+
   // If the minidump contains a SYSTEM_INFO_STREAM, makes sure that the
   // system info stream gives an appropriate CPU type matching the context
   // CPU type in context_cpu_type.  Returns false if the CPU type does not
   // match.  Returns true if the CPU type matches or if the minidump does
   // not contain a system info stream.
   bool CheckAgainstSystemInfo(uint32_t context_cpu_type);
-
-  // Refers to the Minidump object that is the ultimate parent of this
-  // Some MinidumpObjects are owned by other MinidumpObjects, but at the
-  // root of the ownership tree is always a Minidump.  The Minidump object
-  // is kept here for access to its seeking and reading facilities, and
-  // for access to data about the minidump file itself, such as whether
-  // it should be byte-swapped.
-  Minidump* minidump_;
 };
 
 
@@ -231,7 +267,7 @@ class MinidumpMemoryRegion : public MinidumpObject,
   bool GetMemoryAtAddress(uint64_t address, uint64_t* value) const;
 
   // Print a human-readable representation of the object to stdout.
-  void Print() const;
+  void Print();
 
  protected:
   explicit MinidumpMemoryRegion(Minidump* minidump);
@@ -287,11 +323,6 @@ class MinidumpThread : public MinidumpObject {
 
   // Print a human-readable representation of the object to stdout.
   void Print();
-
-  // Returns the start address of the thread stack memory region.  Returns 0 if
-  // MinidumpThread is invalid.  Note that this method can be called even when
-  // the thread memory cannot be read and GetMemory returns NULL.
-  virtual uint64_t GetStartOfStackMemoryRange() const;
 
  protected:
   explicit MinidumpThread(Minidump* minidump);
@@ -444,7 +475,7 @@ class MinidumpModule : public MinidumpObject,
   // True after a successful Read.  This is different from valid_, which is
   // not set true until ReadAuxiliaryData also completes successfully.
   // module_valid_ is only used by ReadAuxiliaryData and the functions it
-  // calls to determine whether the object is ready for auxiliary data to
+  // calls to determine whether the object is ready for auxiliary data to 
   // be read.
   bool              module_valid_;
 
@@ -553,14 +584,13 @@ class MinidumpMemoryList : public MinidumpStream {
 
   // Random access to memory regions.  Returns the region encompassing
   // the address identified by address.
-  virtual MinidumpMemoryRegion* GetMemoryRegionForAddress(uint64_t address);
+  MinidumpMemoryRegion* GetMemoryRegionForAddress(uint64_t address);
 
   // Print a human-readable representation of the object to stdout.
   void Print();
 
  private:
   friend class Minidump;
-  friend class MockMinidumpMemoryList;
 
   typedef vector<MDMemoryDescriptor>   MemoryDescriptors;
   typedef vector<MinidumpMemoryRegion> MemoryRegions;
@@ -592,10 +622,10 @@ class MinidumpMemoryList : public MinidumpStream {
 
 // MinidumpException wraps MDRawExceptionStream, which contains information
 // about the exception that caused the minidump to be generated, if the
-// minidump was generated in an exception handler called as a result of an
-// exception.  It also provides access to a MinidumpContext object, which
-// contains the CPU context for the exception thread at the time the exception
-// occurred.
+// minidump was generated in an exception handler called as a result of
+// an exception.  It also provides access to a MinidumpContext object,
+// which contains the CPU context for the exception thread at the time
+// the exception occurred.
 class MinidumpException : public MinidumpStream {
  public:
   virtual ~MinidumpException();
@@ -736,7 +766,6 @@ class MinidumpMiscInfo : public MinidumpStream {
 
  private:
   friend class Minidump;
-  friend class TestMinidumpMiscInfo;
 
   static const uint32_t kStreamType = MD_MISC_INFO_STREAM;
 
@@ -745,13 +774,6 @@ class MinidumpMiscInfo : public MinidumpStream {
   bool Read(uint32_t expected_size_);
 
   MDRawMiscInfo misc_info_;
-
-  // Populated by Read.  Contains the converted strings from the corresponding
-  // UTF-16 fields in misc_info_
-  string standard_name_;
-  string daylight_name_;
-  string build_string_;
-  string dbg_bld_str_;
 };
 
 
@@ -797,7 +819,7 @@ class MinidumpMemoryInfo : public MinidumpObject {
   uint64_t GetBase() const { return valid_ ? memory_info_.base_address : 0; }
 
   // The size, in bytes, of the memory region.
-  uint64_t GetSize() const { return valid_ ? memory_info_.region_size : 0; }
+  uint32_t GetSize() const { return valid_ ? memory_info_.region_size : 0; }
 
   // Return true if the memory protection allows execution.
   bool IsExecutable() const;
@@ -812,7 +834,7 @@ class MinidumpMemoryInfo : public MinidumpObject {
   // These objects are managed by MinidumpMemoryInfoList.
   friend class MinidumpMemoryInfoList;
 
-  explicit MinidumpMemoryInfo(Minidump* minidump_);
+  explicit MinidumpMemoryInfo(Minidump* minidump);
 
   // This works like MinidumpStream::Read, but is driven by
   // MinidumpMemoryInfoList.  No size checking is done, because
@@ -845,7 +867,7 @@ class MinidumpMemoryInfoList : public MinidumpStream {
 
   static const uint32_t kStreamType = MD_MEMORY_INFO_LIST_STREAM;
 
-  explicit MinidumpMemoryInfoList(Minidump* minidump_);
+  explicit MinidumpMemoryInfoList(Minidump* minidump);
 
   bool Read(uint32_t expected_size);
 
@@ -856,99 +878,6 @@ class MinidumpMemoryInfoList : public MinidumpStream {
   uint32_t info_count_;
 };
 
-// MinidumpLinuxMaps wraps information about a single mapped memory region
-// from /proc/self/maps.
-class MinidumpLinuxMaps : public MinidumpObject {
- public:
-  // The memory address of the base of the mapped region.
-  uint64_t GetBase() const { return valid_ ? region_.start : 0; }
-  // The size of the mapped region.
-  uint64_t GetSize() const { return valid_ ? region_.end - region_.start : 0; }
-
-  // The permissions of the mapped region.
-  bool IsReadable() const {
-    return valid_ ? region_.permissions & MappedMemoryRegion::READ : false;
-  }
-  bool IsWriteable() const {
-    return valid_ ? region_.permissions & MappedMemoryRegion::WRITE : false;
-  }
-  bool IsExecutable() const {
-    return valid_ ? region_.permissions & MappedMemoryRegion::EXECUTE : false;
-  }
-  bool IsPrivate() const {
-    return valid_ ? region_.permissions & MappedMemoryRegion::PRIVATE : false;
-  }
-
-  // The offset of the mapped region.
-  uint64_t GetOffset() const { return valid_ ? region_.offset : 0; }
-
-  // The major device number.
-  uint8_t GetMajorDevice() const { return valid_ ? region_.major_device : 0; }
-  // The minor device number.
-  uint8_t GetMinorDevice() const { return valid_ ? region_.minor_device : 0; }
-
-  // The inode of the mapped region.
-  uint64_t GetInode() const { return valid_ ? region_.inode : 0; }
-
-  // The pathname of the mapped region.
-  const string GetPathname() const { return valid_ ? region_.path : ""; }
-
-  // Print the contents of this mapping.
-  void Print() const;
-
- private:
-  // These objects are managed by MinidumpLinuxMapsList.
-  friend class MinidumpLinuxMapsList;
-
-  // This caller owns the pointer.
-  explicit MinidumpLinuxMaps(Minidump *minidump);
-
-  // The memory region struct that this class wraps.
-  MappedMemoryRegion region_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpLinuxMaps);
-};
-
-// MinidumpLinuxMapsList corresponds to the Linux-exclusive MD_LINUX_MAPS
-// stream, which contains the contents of /prod/self/maps, which contains
-// the mapped memory regions and their access permissions.
-class MinidumpLinuxMapsList : public MinidumpStream {
- public:
-  virtual ~MinidumpLinuxMapsList();
-
-  // Get number of mappings.
-  unsigned int get_maps_count() const { return valid_ ? maps_count_ : 0; }
-
-  // Get mapping at the given memory address. The caller owns the pointer.
-  const MinidumpLinuxMaps *GetLinuxMapsForAddress(uint64_t address) const;
-  // Get mapping at the given index. The caller owns the pointer.
-  const MinidumpLinuxMaps *GetLinuxMapsAtIndex(unsigned int index) const;
-
-  // Print the contents of /proc/self/maps to stdout.
-  void Print() const;
-
- private:
-  friend class Minidump;
-
-  typedef vector<MinidumpLinuxMaps *> MinidumpLinuxMappings;
-
-  static const uint32_t kStreamType = MD_LINUX_MAPS;
-
-  // The caller owns the pointer.
-  explicit MinidumpLinuxMapsList(Minidump *minidump);
-
-  // Read and load the contents of the process mapping data.
-  // The stream should have data in the form of /proc/self/maps.
-  // This method returns whether the stream was read successfully.
-  bool Read(uint32_t expected_size);
-
-  // The list of individual mappings.
-  MinidumpLinuxMappings *maps_;
-  // The number of mappings.
-  uint32_t maps_count_;
-
-  DISALLOW_COPY_AND_ASSIGN(MinidumpLinuxMapsList);
-};
 
 // Minidump is the user's interface to a minidump file.  It wraps MDRawHeader
 // and provides access to the minidump's top-level stream directory.
@@ -1000,17 +929,14 @@ class Minidump {
   // to avoid exposing an ugly API (GetStream needs to accept a garbage
   // parameter).
   virtual MinidumpThreadList* GetThreadList();
-  virtual MinidumpModuleList* GetModuleList();
-  virtual MinidumpMemoryList* GetMemoryList();
-  virtual MinidumpException* GetException();
-  virtual MinidumpAssertion* GetAssertion();
+  MinidumpModuleList* GetModuleList();
+  MinidumpMemoryList* GetMemoryList();
+  MinidumpException* GetException();
+  MinidumpAssertion* GetAssertion();
   virtual MinidumpSystemInfo* GetSystemInfo();
-  virtual MinidumpMiscInfo* GetMiscInfo();
-  virtual MinidumpBreakpadInfo* GetBreakpadInfo();
-  virtual MinidumpMemoryInfoList* GetMemoryInfoList();
-
-  // The next method also calls GetStream, but is exclusive for Linux dumps.
-  virtual MinidumpLinuxMapsList *GetLinuxMapsList();
+  MinidumpMiscInfo* GetMiscInfo();
+  MinidumpBreakpadInfo* GetBreakpadInfo();
+  MinidumpMemoryInfoList* GetMemoryInfoList();
 
   // The next set of methods are provided for users who wish to access
   // data in minidump files directly, while leveraging the rest of

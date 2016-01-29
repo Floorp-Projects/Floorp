@@ -30,12 +30,14 @@
 #ifndef CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
 #define CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
 
+#include <string>
+#include <vector>
+
+#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/ucontext.h>
-
-#include <string>
 
 #include "client/linux/crash_generation/crash_generation_client.h"
 #include "client/linux/handler/minidump_descriptor.h"
@@ -127,7 +129,7 @@ class ExceptionHandler {
   ExceptionHandler(const MinidumpDescriptor& descriptor,
                    FilterCallback filter,
                    MinidumpCallback callback,
-                   void* callback_context,
+                   void *callback_context,
                    bool install_handler,
                    const int server_fd);
   ~ExceptionHandler();
@@ -142,10 +144,6 @@ class ExceptionHandler {
 
   void set_crash_handler(HandlerCallback callback) {
     crash_handler_ = callback;
-  }
-
-  void set_crash_generation_client(CrashGenerationClient* client) {
-    crash_generation_client_.reset(client);
   }
 
   // Writes a minidump immediately.  This can be used to capture the execution
@@ -192,17 +190,15 @@ class ExceptionHandler {
     siginfo_t siginfo;
     pid_t tid;  // the crashing thread.
     struct ucontext context;
-#if !defined(__ARM_EABI__) && !defined(__mips__)
+#if !defined(__ARM_EABI__)
     // #ifdef this out because FP state is not part of user ABI for Linux ARM.
-    // In case of MIPS Linux FP state is already part of struct
-    // ucontext so 'float_state' is not required.
-    fpstate_t float_state;
+    struct _libc_fpstate float_state;
 #endif
   };
 
   // Returns whether out-of-process dump generation is used or not.
   bool IsOutOfProcess() const {
-    return crash_generation_client_.get() != NULL;
+      return crash_generation_client_.get() != NULL;
   }
 
   // Add information about a memory mapping. This can be used if
@@ -226,7 +222,6 @@ class ExceptionHandler {
 
   // Report a crash signal from an SA_SIGINFO signal handler.
   bool HandleSignal(int sig, siginfo_t* info, void* uc);
-
  private:
   // Save the old signal handlers and install new ones.
   static bool InstallHandlersLocked();
@@ -251,16 +246,18 @@ class ExceptionHandler {
 
   MinidumpDescriptor minidump_descriptor_;
 
-  // Must be volatile. The compiler is unaware of the code which runs in
-  // the signal handler which reads this variable. Without volatile the
-  // compiler is free to optimise away writes to this variable which it
-  // believes are never read.
-  volatile HandlerCallback crash_handler_;
+  HandlerCallback crash_handler_;
+
+  // The global exception handler stack. This is need becuase there may exist
+  // multiple ExceptionHandler instances in a process. Each will have itself
+  // registered in this stack.
+  static std::vector<ExceptionHandler*> *handler_stack_;
+  static pthread_mutex_t handler_stack_mutex_;
 
   // We need to explicitly enable ptrace of parent processes on some
   // kernels, but we need to know the PID of the cloned process before we
   // can do this. We create a pipe which we can use to block the
-  // cloned process after creating it, until we have explicitly enabled
+  // cloned process after creating it, until we have explicitly enabled 
   // ptrace. This is used to store the file descriptors for the pipe
   int fdes[2];
 

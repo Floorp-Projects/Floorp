@@ -60,11 +60,6 @@ class SimpleSerializer<bool> {
     *dest = static_cast<char>(boolean? 255 : 0);
     return ++dest;
   }
-
-  static const char *Read(const char *source, bool *value) {
-    *value = ((*source) == 0 ? false : true);
-    return ++source;
-  }
 };
 
 // Specializations of SimpleSerializer: string

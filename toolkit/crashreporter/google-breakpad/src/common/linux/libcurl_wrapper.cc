@@ -57,8 +57,6 @@ LibcurlWrapper::LibcurlWrapper()
   return;
 }
 
-LibcurlWrapper::~LibcurlWrapper() {}
-
 bool LibcurlWrapper::SetProxy(const string& proxy_host,
                               const string& proxy_userpwd) {
   if (!init_ok_) {
@@ -110,9 +108,7 @@ static size_t WriteCallback(void *ptr, size_t size,
 
 bool LibcurlWrapper::SendRequest(const string& url,
                                  const std::map<string, string>& parameters,
-                                 int* http_status_code,
-                                 string* http_header_data,
-                                 string* http_response_data) {
+                                 string* server_response) {
   (*easy_setopt_)(curl_, CURLOPT_URL, url.c_str());
   std::map<string, string>::const_iterator iter = parameters.begin();
   for (; iter != parameters.end(); ++iter)
@@ -122,27 +118,16 @@ bool LibcurlWrapper::SendRequest(const string& url,
                 CURLFORM_END);
 
   (*easy_setopt_)(curl_, CURLOPT_HTTPPOST, formpost_);
-  if (http_response_data != NULL) {
-    http_response_data->clear();
+  if (server_response != NULL) {
     (*easy_setopt_)(curl_, CURLOPT_WRITEFUNCTION, WriteCallback);
     (*easy_setopt_)(curl_, CURLOPT_WRITEDATA,
-                     reinterpret_cast<void *>(http_response_data));
-  }
-  if (http_header_data != NULL) {
-    http_header_data->clear();
-    (*easy_setopt_)(curl_, CURLOPT_HEADERFUNCTION, WriteCallback);
-    (*easy_setopt_)(curl_, CURLOPT_HEADERDATA,
-                     reinterpret_cast<void *>(http_header_data));
+                     reinterpret_cast<void *>(server_response));
   }
 
   CURLcode err_code = CURLE_OK;
   err_code = (*easy_perform_)(curl_);
   easy_strerror_ = reinterpret_cast<const char* (*)(CURLcode)>
                        (dlsym(curl_lib_, "curl_easy_strerror"));
-
-  if (http_status_code != NULL) {
-    (*easy_getinfo_)(curl_, CURLINFO_RESPONSE_CODE, http_status_code);
-  }
 
 #ifndef NDEBUG
   if (err_code != CURLE_OK)
@@ -223,10 +208,6 @@ bool LibcurlWrapper::SetFunctionPointers() {
   SET_AND_CHECK_FUNCTION_POINTER(easy_cleanup_,
                                  "curl_easy_cleanup",
                                  void(*)(CURL*));
-
-  SET_AND_CHECK_FUNCTION_POINTER(easy_getinfo_,
-                                 "curl_easy_getinfo",
-                                 CURLcode(*)(CURL *, CURLINFO info, ...));
 
   SET_AND_CHECK_FUNCTION_POINTER(slist_free_all_,
                                  "curl_slist_free_all",

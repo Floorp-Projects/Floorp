@@ -1,0 +1,526 @@
+# HG changeset patch
+# User Ted Mielczarek <ted@mielczarek.org>
+# Date 1352220493 18000
+# Node ID c3b1109dd392c16a9fe4e85da693010966dbbf0b
+# Parent  03db269a2868503cca9e80f62ce676aabbf967fd
+Add APIs for querying Module data
+R=glandium at https://breakpad.appspot.com/511003/
+
+diff --git a/src/common/module.cc b/src/common/module.cc
+--- a/src/common/module.cc
++++ b/src/common/module.cc
+@@ -58,17 +58,17 @@
+ 
+ Module::~Module() {
+   for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
+     delete it->second;
+   for (FunctionSet::iterator it = functions_.begin();
+        it != functions_.end(); ++it) {
+     delete *it;
+   }
+-  for (vector<StackFrameEntry *>::iterator it = stack_frame_entries_.begin();
++  for (StackFrameEntrySet::iterator it = stack_frame_entries_.begin();
+        it != stack_frame_entries_.end(); ++it) {
+     delete *it;
+   }
+   for (ExternSet::iterator it = externs_.begin(); it != externs_.end(); ++it)
+     delete *it;
+ }
+ 
+ void Module::SetLoadAddress(Address address) {
+@@ -88,39 +88,84 @@
+ }
+ 
+ void Module::AddFunctions(vector<Function *>::iterator begin,
+                           vector<Function *>::iterator end) {
+   for (vector<Function *>::iterator it = begin; it != end; ++it)
+     AddFunction(*it);
+ }
+ 
+-void Module::AddStackFrameEntry(StackFrameEntry *stack_frame_entry) {
+-  stack_frame_entries_.push_back(stack_frame_entry);
++void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
++  std::pair<StackFrameEntrySet::iterator,bool> ret =
++      stack_frame_entries_.insert(stack_frame_entry);
++  if (!ret.second) {
++    // Free the duplicate that was not inserted because this Module
++    // now owns it.
++    delete stack_frame_entry;
++  }
+ }
+ 
+ void Module::AddExtern(Extern *ext) {
+   std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
+   if (!ret.second) {
+     // Free the duplicate that was not inserted because this Module
+     // now owns it.
+     delete ext;
+   }
+ }
+ 
+ void Module::GetFunctions(vector<Function *> *vec,
+                           vector<Function *>::iterator i) {
+   vec->insert(i, functions_.begin(), functions_.end());
+ }
+ 
++template<typename T>
++bool EntryContainsAddress(T entry, Module::Address address) {
++  return entry->address <= address && address < entry->address + entry->size;
++}
++
++Module::Function* Module::FindFunctionByAddress(Address address) {
++  Function search;
++  search.address = address;
++  // Ensure that name always sorts higher than the function name,
++  // so that upper_bound always returns the function just after
++  // the function containing this address.
++  search.name = "\xFF";
++  FunctionSet::iterator it = functions_.upper_bound(&search);
++  if (it == functions_.begin())
++    return NULL;
++
++  it--;
++
++  if (EntryContainsAddress(*it, address))
++    return *it;
++
++  return NULL;
++}
++
+ void Module::GetExterns(vector<Extern *> *vec,
+                         vector<Extern *>::iterator i) {
+   vec->insert(i, externs_.begin(), externs_.end());
+ }
+ 
++Module::Extern* Module::FindExternByAddress(Address address) {
++  Extern search;
++  search.address = address;
++  ExternSet::iterator it = externs_.upper_bound(&search);
++
++  if (it == externs_.begin())
++    return NULL;
++
++  it--;
++  if ((*it)->address > address)
++    return NULL;
++
++  return *it;
++}
++
+ Module::File *Module::FindFile(const string &name) {
+   // A tricky bit here.  The key of each map entry needs to be a
+   // pointer to the entry's File's name string.  This means that we
+   // can't do the initial lookup with any operation that would create
+   // an empty entry for us if the name isn't found (like, say,
+   // operator[] or insert do), because such a created entry's key will
+   // be a pointer the string passed as our argument.  Since the key of
+   // a map's value type is const, we can't fix it up once we've
+@@ -150,18 +195,35 @@
+ }
+ 
+ void Module::GetFiles(vector<File *> *vec) {
+   vec->clear();
+   for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
+     vec->push_back(it->second);
+ }
+ 
+-void Module::GetStackFrameEntries(vector<StackFrameEntry *> *vec) {
+-  *vec = stack_frame_entries_;
++void Module::GetStackFrameEntries(vector<StackFrameEntry *>* vec) {
++  vec->clear();
++  vec->insert(vec->begin(), stack_frame_entries_.begin(),
++              stack_frame_entries_.end());
++}
++
++Module::StackFrameEntry* Module::FindStackFrameEntryByAddress(Address address) {
++  StackFrameEntry search;
++  search.address = address;
++  StackFrameEntrySet::iterator it = stack_frame_entries_.upper_bound(&search);
++
++  if (it == stack_frame_entries_.begin())
++    return NULL;
++
++  it--;
++  if (EntryContainsAddress(*it, address))
++    return *it;
++
++  return NULL;
+ }
+ 
+ void Module::AssignSourceIds() {
+   // First, give every source file an id of -1.
+   for (FileByNameMap::iterator file_it = files_.begin();
+        file_it != files_.end(); ++file_it) {
+     file_it->second->source_id = -1;
+   }
+@@ -256,17 +318,17 @@
+       stream << "PUBLIC " << hex
+              << (ext->address - load_address_) << " 0 "
+              << ext->name << dec << endl;
+     }
+   }
+ 
+   if (symbol_data != NO_CFI) {
+     // Write out 'STACK CFI INIT' and 'STACK CFI' records.
+-    vector<StackFrameEntry *>::const_iterator frame_it;
++    StackFrameEntrySet::const_iterator frame_it;
+     for (frame_it = stack_frame_entries_.begin();
+          frame_it != stack_frame_entries_.end(); ++frame_it) {
+       StackFrameEntry *entry = *frame_it;
+       stream << "STACK CFI INIT " << hex
+              << (entry->address - load_address_) << " "
+              << entry->size << " " << dec;
+       if (!stream.good()
+           || !WriteRuleMap(entry->initial_rules, stream))
+diff --git a/src/common/module.h b/src/common/module.h
+--- a/src/common/module.h
++++ b/src/common/module.h
+@@ -164,16 +164,23 @@
+ 
+   struct ExternCompare {
+     bool operator() (const Extern *lhs,
+                      const Extern *rhs) const {
+       return lhs->address < rhs->address;
+     }
+   };
+ 
++  struct StackFrameEntryCompare {
++    bool operator() (const StackFrameEntry* lhs,
++                     const StackFrameEntry* rhs) const {
++      return lhs->address < rhs->address;
++    }
++  };
++
+   // Create a new module with the given name, operating system,
+   // architecture, and ID string.
+   Module(const string &name, const string &os, const string &architecture,
+          const string &id);
+   ~Module();
+ 
+   // Set the module's load address to LOAD_ADDRESS; addresses given
+   // for functions and lines will be written to the Breakpad symbol
+@@ -223,37 +230,49 @@
+ 
+   // Insert pointers to the functions added to this module at I in
+   // VEC. The pointed-to Functions are still owned by this module.
+   // (Since this is effectively a copy of the function list, this is
+   // mostly useful for testing; other uses should probably get a more
+   // appropriate interface.)
+   void GetFunctions(vector<Function *> *vec, vector<Function *>::iterator i);
+ 
++  // If this module has a function at ADDRESS, return a pointer to it.
++  // Otherwise, return NULL.
++  Function* FindFunctionByAddress(Address address);
++
+   // Insert pointers to the externs added to this module at I in
+   // VEC. The pointed-to Externs are still owned by this module.
+   // (Since this is effectively a copy of the extern list, this is
+   // mostly useful for testing; other uses should probably get a more
+   // appropriate interface.)
+   void GetExterns(vector<Extern *> *vec, vector<Extern *>::iterator i);
+ 
++  // If this module has an extern whose base address is less than ADDRESS,
++  // return a pointer to it. Otherwise, return NULL.
++  Extern* FindExternByAddress(Address address);
++
+   // Clear VEC and fill it with pointers to the Files added to this
+   // module, sorted by name. The pointed-to Files are still owned by
+   // this module. (Since this is effectively a copy of the file list,
+   // this is mostly useful for testing; other uses should probably get
+   // a more appropriate interface.)
+   void GetFiles(vector<File *> *vec);
+ 
+   // Clear VEC and fill it with pointers to the StackFrameEntry
+   // objects that have been added to this module. (Since this is
+   // effectively a copy of the stack frame entry list, this is mostly
+   // useful for testing; other uses should probably get
+   // a more appropriate interface.)
+   void GetStackFrameEntries(vector<StackFrameEntry *> *vec);
+ 
++  // If this module has a StackFrameEntry whose address range covers
++  // ADDRESS, return it. Otherwise return NULL.
++  StackFrameEntry* FindStackFrameEntryByAddress(Address address);
++
+   // Find those files in this module that are actually referred to by
+   // functions' line number data, and assign them source id numbers.
+   // Set the source id numbers for all other files --- unused by the
+   // source line data --- to -1.  We do this before writing out the
+   // symbol file, at which point we omit any unused files.
+   void AssignSourceIds();
+ 
+   // Call AssignSourceIds, and write this module to STREAM in the
+@@ -299,25 +318,28 @@
+   typedef map<const string *, File *, CompareStringPtrs> FileByNameMap;
+ 
+   // A set containing Function structures, sorted by address.
+   typedef set<Function *, FunctionCompare> FunctionSet;
+ 
+   // A set containing Extern structures, sorted by address.
+   typedef set<Extern *, ExternCompare> ExternSet;
+ 
++  // A set containing StackFrameEntry structures, sorted by address.
++  typedef set<StackFrameEntry*, StackFrameEntryCompare> StackFrameEntrySet;
++
+   // The module owns all the files and functions that have been added
+   // to it; destroying the module frees the Files and Functions these
+   // point to.
+   FileByNameMap files_;    // This module's source files.
+   FunctionSet functions_;  // This module's functions.
+ 
+   // The module owns all the call frame info entries that have been
+   // added to it.
+-  vector<StackFrameEntry *> stack_frame_entries_;
++  StackFrameEntrySet stack_frame_entries_;
+ 
+   // The module owns all the externs that have been added to it;
+   // destroying the module frees the Externs these point to.
+   ExternSet externs_;
+ };
+ 
+ }  // namespace google_breakpad
+ 
+diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
+--- a/src/common/module_unittest.cc
++++ b/src/common/module_unittest.cc
+@@ -329,63 +329,63 @@
+   entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
+     "I think I know";
+   m.AddStackFrameEntry(entry3);
+ 
+   // Check that Write writes STACK CFI records properly.
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+-               "STACK CFI INIT ddb5f41285aa7757 1486493370dc5073 \n"
+-               "STACK CFI INIT 8064f3af5e067e38 de2a5ee55509407"
+-               " .cfa: I think that I shall never see"
+-               " cannoli: a tree whose hungry mouth is prest"
+-               " stromboli: a poem lovely as a tree\n"
+                "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
+                " .cfa: Whose woods are these\n"
+                "STACK CFI 36682fad3763ffff"
+                " .cfa: I think I know"
+                " stromboli: his house is in\n"
+                "STACK CFI 47ceb0f63c269d7f"
+                " calzone: the village though"
+-               " cannoli: he will not see me stopping here\n",
++               " cannoli: he will not see me stopping here\n"
++               "STACK CFI INIT 8064f3af5e067e38 de2a5ee55509407"
++               " .cfa: I think that I shall never see"
++               " cannoli: a tree whose hungry mouth is prest"
++               " stromboli: a poem lovely as a tree\n"
++               "STACK CFI INIT ddb5f41285aa7757 1486493370dc5073 \n",
+                contents.c_str());
+ 
+   // Check that GetStackFrameEntries works.
+   vector<Module::StackFrameEntry *> entries;
+   m.GetStackFrameEntries(&entries);
+   ASSERT_EQ(3U, entries.size());
+   // Check first entry.
+-  EXPECT_EQ(0xddb5f41285aa7757ULL, entries[0]->address);
+-  EXPECT_EQ(0x1486493370dc5073ULL, entries[0]->size);
+-  ASSERT_EQ(0U, entries[0]->initial_rules.size());
+-  ASSERT_EQ(0U, entries[0]->rule_changes.size());
++  EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[0]->address);
++  EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[0]->size);
++  Module::RuleMap entry1_initial;
++  entry1_initial[".cfa"] = "Whose woods are these";
++  EXPECT_THAT(entries[0]->initial_rules, ContainerEq(entry1_initial));
++  Module::RuleChangeMap entry1_changes;
++  entry1_changes[0x36682fad3763ffffULL][".cfa"] = "I think I know";
++  entry1_changes[0x36682fad3763ffffULL]["stromboli"] = "his house is in";
++  entry1_changes[0x47ceb0f63c269d7fULL]["calzone"] = "the village though";
++  entry1_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
++    "he will not see me stopping here";
++  EXPECT_THAT(entries[0]->rule_changes, ContainerEq(entry1_changes));
+   // Check second entry.
+   EXPECT_EQ(0x8064f3af5e067e38ULL, entries[1]->address);
+   EXPECT_EQ(0x0de2a5ee55509407ULL, entries[1]->size);
+   ASSERT_EQ(3U, entries[1]->initial_rules.size());
+   Module::RuleMap entry2_initial;
+   entry2_initial[".cfa"] = "I think that I shall never see";
+   entry2_initial["stromboli"] = "a poem lovely as a tree";
+   entry2_initial["cannoli"] = "a tree whose hungry mouth is prest";
+   EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
+   ASSERT_EQ(0U, entries[1]->rule_changes.size());
+   // Check third entry.
+-  EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[2]->address);
+-  EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[2]->size);
+-  Module::RuleMap entry3_initial;
+-  entry3_initial[".cfa"] = "Whose woods are these";
+-  EXPECT_THAT(entries[2]->initial_rules, ContainerEq(entry3_initial));
+-  Module::RuleChangeMap entry3_changes;
+-  entry3_changes[0x36682fad3763ffffULL][".cfa"] = "I think I know";
+-  entry3_changes[0x36682fad3763ffffULL]["stromboli"] = "his house is in";
+-  entry3_changes[0x47ceb0f63c269d7fULL]["calzone"] = "the village though";
+-  entry3_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
+-    "he will not see me stopping here";
+-  EXPECT_THAT(entries[2]->rule_changes, ContainerEq(entry3_changes));
++  EXPECT_EQ(0xddb5f41285aa7757ULL, entries[2]->address);
++  EXPECT_EQ(0x1486493370dc5073ULL, entries[2]->size);
++  ASSERT_EQ(0U, entries[2]->initial_rules.size());
++  ASSERT_EQ(0U, entries[2]->rule_changes.size());
+ }
+ 
+ TEST(Construct, UniqueFiles) {
+   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+   Module::File *file1 = m.FindFile("foo");
+   Module::File *file2 = m.FindFile(string("bar"));
+   Module::File *file3 = m.FindFile(string("foo"));
+   Module::File *file4 = m.FindFile("bar");
+@@ -483,8 +483,155 @@
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+ 
+   EXPECT_STREQ("MODULE " MODULE_OS " " MODULE_ARCH " "
+                MODULE_ID " " MODULE_NAME "\n"
+                "PUBLIC ffff 0 _xyz\n",
+                contents.c_str());
+ }
++
++TEST(Lookup, Function) {
++  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
++
++  Module::Function *function1 = new(Module::Function);
++  function1->name = "_abc1";
++  function1->address = 0x1000;
++  function1->size = 0x900;
++  function1->parameter_size = 0x0;
++
++  Module::Function *function2 = new(Module::Function);
++  function2->name = "_xyz2";
++  function2->address = 0x2000;
++  function2->size = 0x900;
++  function2->parameter_size = 0x0;
++
++  Module::Function *function3 = new(Module::Function);
++  function3->name = "_def3";
++  function3->address = 0x3000;
++  function3->size = 0x900;
++  function3->parameter_size = 0x0;
++
++  // Put them in a vector.
++  vector<Module::Function *> vec;
++  vec.push_back(function1);
++  vec.push_back(function2);
++  vec.push_back(function3);
++
++  m.AddFunctions(vec.begin(), vec.end());
++
++  // Try looking up functions by address.
++  Module::Function* f = m.FindFunctionByAddress(0x1000);
++  EXPECT_EQ(function1, f);
++  f = m.FindFunctionByAddress(0x18FF);
++  EXPECT_EQ(function1, f);
++
++  f = m.FindFunctionByAddress(0x1900);
++  EXPECT_EQ((Module::Function*)NULL, f);
++  f = m.FindFunctionByAddress(0x1A00);
++  EXPECT_EQ((Module::Function*)NULL, f);
++
++  f = m.FindFunctionByAddress(0x2000);
++  EXPECT_EQ(function2, f);
++  f = m.FindFunctionByAddress(0x28FF);
++  EXPECT_EQ(function2, f);
++
++  f = m.FindFunctionByAddress(0x3000);
++  EXPECT_EQ(function3, f);
++  f = m.FindFunctionByAddress(0x38FF);
++  EXPECT_EQ(function3, f);
++
++  f = m.FindFunctionByAddress(0x3900);
++  EXPECT_EQ((Module::Function*)NULL, f);
++  f = m.FindFunctionByAddress(0x3A00);
++  EXPECT_EQ((Module::Function*)NULL, f);
++}
++
++TEST(Lookup, Externs) {
++  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
++
++  // Two externs.
++  Module::Extern* extern1 = new(Module::Extern);
++  extern1->address = 0x1000;
++  extern1->name = "_abc";
++  Module::Extern* extern2 = new(Module::Extern);
++  extern2->address = 0x2000;
++  extern2->name = "_xyz";
++
++  m.AddExtern(extern1);
++  m.AddExtern(extern2);
++
++  Module::Extern* e = m.FindExternByAddress(0xFFF);
++  EXPECT_EQ((Module::Extern*)NULL, e);
++
++  e = m.FindExternByAddress(0x1000);
++  EXPECT_EQ(extern1, e);
++  e = m.FindExternByAddress(0x1900);
++  EXPECT_EQ(extern1, e);
++  e = m.FindExternByAddress(0x1FFF);
++  EXPECT_EQ(extern1, e);
++
++  e = m.FindExternByAddress(0x2000);
++  EXPECT_EQ(extern2, e);
++  e = m.FindExternByAddress(0x2900);
++  EXPECT_EQ(extern2, e);
++  e = m.FindExternByAddress(0xFFFFFFFF);
++  EXPECT_EQ(extern2, e);
++}
++
++TEST(Lookup, StackFrameEntries) {
++  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
++
++  // First STACK CFI entry, with no initial rules or deltas.
++  Module::StackFrameEntry *entry1 = new Module::StackFrameEntry();
++  entry1->address = 0x2000;
++  entry1->size = 0x900;
++  m.AddStackFrameEntry(entry1);
++
++  // Second STACK CFI entry, with initial rules but no deltas.
++  Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
++  entry2->address = 0x3000;
++  entry2->size = 0x900;
++  entry2->initial_rules[".cfa"] = "I think that I shall never see";
++  entry2->initial_rules["stromboli"] = "a poem lovely as a tree";
++  entry2->initial_rules["cannoli"] = "a tree whose hungry mouth is prest";
++  m.AddStackFrameEntry(entry2);
++
++  // Third STACK CFI entry, with initial rules and deltas.
++  Module::StackFrameEntry *entry3 = new Module::StackFrameEntry();
++  entry3->address = 0x1000;
++  entry3->size = 0x900;
++  entry3->initial_rules[".cfa"] = "Whose woods are these";
++  entry3->rule_changes[0x47ceb0f63c269d7fULL]["calzone"] =
++    "the village though";
++  entry3->rule_changes[0x47ceb0f63c269d7fULL]["cannoli"] =
++    "he will not see me stopping here";
++  entry3->rule_changes[0x36682fad3763ffffULL]["stromboli"] =
++    "his house is in";
++  entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
++    "I think I know";
++  m.AddStackFrameEntry(entry3);
++
++  Module::StackFrameEntry* s = m.FindStackFrameEntryByAddress(0x1000);
++  EXPECT_EQ(entry3, s);
++  s = m.FindStackFrameEntryByAddress(0x18FF);
++  EXPECT_EQ(entry3, s);
++
++  s = m.FindStackFrameEntryByAddress(0x1900);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++  s = m.FindStackFrameEntryByAddress(0x1A00);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++
++  s = m.FindStackFrameEntryByAddress(0x2000);
++  EXPECT_EQ(entry1, s);
++  s = m.FindStackFrameEntryByAddress(0x28FF);
++  EXPECT_EQ(entry1, s);
++
++  s = m.FindStackFrameEntryByAddress(0x3000);
++  EXPECT_EQ(entry2, s);
++  s = m.FindStackFrameEntryByAddress(0x38FF);
++  EXPECT_EQ(entry2, s);
++
++  s = m.FindStackFrameEntryByAddress(0x3900);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++  s = m.FindStackFrameEntryByAddress(0x3A00);
++  EXPECT_EQ((Module::StackFrameEntry*)NULL, s);
++}

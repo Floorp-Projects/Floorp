@@ -28,12 +28,19 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+#define VERBOSE 0
 
+#if VERBOSE
+  static bool gDebugLog = true;
+#else
+  static bool gDebugLog = false;
+#endif
+
+#define DEBUGLOG if (gDebugLog) fprintf
 #define IGNORE_DEBUGGER "BREAKPAD_IGNORE_DEBUGGER"
 
 #import "client/mac/Framework/Breakpad.h"
 
-#include <assert.h>
 #import <Foundation/Foundation.h>
 #include <pthread.h>
 #include <sys/stat.h>
@@ -44,11 +51,10 @@
 #import "client/mac/Framework/Breakpad.h"
 #import "client/mac/Framework/OnDemandServer.h"
 #import "client/mac/handler/protected_memory_allocator.h"
-#include "common/mac/launch_reporter.h"
 #import "common/mac/MachIPC.h"
-#import "common/simple_string_dictionary.h"
+#import "common/mac/SimpleStringDictionary.h"
 
-#if !defined(__EXCEPTIONS) || (__clang__ && !__has_feature(cxx_exceptions))
+#ifndef __EXCEPTIONS
 // This file uses C++ try/catch (but shouldn't). Duplicate the macros from
 // <c++/4.2.1/exception_defines.h> allowing this file to work properly with
 // exceptions disabled even when other C++ libraries are used. #undef the try
@@ -60,11 +66,13 @@
 #define catch(X)  if (false)
 #endif  // __EXCEPTIONS
 
+using google_breakpad::KeyValueEntry;
 using google_breakpad::MachPortSender;
 using google_breakpad::MachReceiveMessage;
 using google_breakpad::MachSendMessage;
 using google_breakpad::ReceivePort;
 using google_breakpad::SimpleStringDictionary;
+using google_breakpad::SimpleStringDictionaryIterator;
 
 //=============================================================================
 // We want any memory allocations which are used by breakpad during the
@@ -97,32 +105,36 @@ pthread_mutex_t gDictionaryMutex;
 // ProtectedMemoryLocker will unprotect this block after taking the lock.
 // Its destructor will first re-protect the memory then release the lock.
 class ProtectedMemoryLocker {
- public:
+public:
+  // allocator may be NULL, in which case no Protect() or Unprotect() calls
+  // will be made, but a lock will still be taken
   ProtectedMemoryLocker(pthread_mutex_t *mutex,
                         ProtectedMemoryAllocator *allocator)
-      : mutex_(mutex),
-        allocator_(allocator) {
+  : mutex_(mutex), allocator_(allocator) {
     // Lock the mutex
-    __attribute__((unused)) int rv = pthread_mutex_lock(mutex_);
-    assert(rv == 0);
+    assert(pthread_mutex_lock(mutex_) == 0);
 
     // Unprotect the memory
-    allocator_->Unprotect();
+    if (allocator_ ) {
+      allocator_->Unprotect();
+    }
   }
 
   ~ProtectedMemoryLocker() {
     // First protect the memory
-    allocator_->Protect();
+    if (allocator_) {
+      allocator_->Protect();
+    }
 
     // Then unlock the mutex
-    __attribute__((unused)) int rv = pthread_mutex_unlock(mutex_);
-    assert(rv == 0);
+    assert(pthread_mutex_unlock(mutex_) == 0);
   };
 
- private:
-  ProtectedMemoryLocker();
+private:
+  //  Keep anybody from ever creating one of these things not on the stack.
+  ProtectedMemoryLocker() { }
   ProtectedMemoryLocker(const ProtectedMemoryLocker&);
-  ProtectedMemoryLocker& operator=(const ProtectedMemoryLocker&);
+  ProtectedMemoryLocker & operator=(ProtectedMemoryLocker&);
 
   pthread_mutex_t           *mutex_;
   ProtectedMemoryAllocator  *allocator_;
@@ -174,8 +186,6 @@ class Breakpad {
   }
 
   bool Initialize(NSDictionary *parameters);
-  bool InitializeInProcess(NSDictionary *parameters);
-  bool InitializeOutOfProcess(NSDictionary *parameters);
 
   bool ExtractParameters(NSDictionary *parameters);
 
@@ -190,17 +200,6 @@ class Breakpad {
                        int exception_code,
                        int exception_subcode,
                        mach_port_t crashing_thread);
-
-  // Dispatches to HandleMinidump().
-  // This gets called instead of ExceptionHandlerDirectCallback when running
-  // with the BREAKPAD_IN_PROCESS option.
-  static bool HandleMinidumpCallback(const char *dump_dir,
-                                     const char *minidump_id,
-                                     void *context,
-                                     bool succeeded);
-
-  // This is only used when BREAKPAD_IN_PROCESS is YES.
-  bool HandleMinidump(const char *dump_dir, const char *minidump_id);
 
   // Since ExceptionHandler (w/o namespace) is defined as typedef in OSX's
   // MachineExceptions.h, we have to explicitly name the handler.
@@ -280,21 +279,6 @@ bool Breakpad::ExceptionHandlerDirectCallback(void *context,
 }
 
 //=============================================================================
-bool Breakpad::HandleMinidumpCallback(const char *dump_dir,
-                                      const char *minidump_id,
-                                      void *context,
-                                      bool succeeded) {
-  Breakpad *breakpad = (Breakpad *)context;
-
-  // If our context is damaged or something, just return false to indicate that
-  // the handler should continue without us.
-  if (!breakpad || !succeeded)
-    return false;
-
-  return breakpad->HandleMinidump(dump_dir, minidump_id);
-}
-
-//=============================================================================
 #pragma mark -
 
 #include <dlfcn.h>
@@ -329,6 +313,7 @@ NSString * GetResourcePath() {
     // executable code, since that's how the Breakpad framework is built.
     resourcePath = [bundlePath stringByAppendingPathComponent:@"Resources/"];
   } else {
+    DEBUGLOG(stderr, "Could not find GetResourcePath\n");
     // fallback plan
     NSBundle *bundle =
         [NSBundle bundleWithIdentifier:@"com.Google.BreakpadFramework"];
@@ -347,6 +332,7 @@ bool Breakpad::Initialize(NSDictionary *parameters) {
 
   // Check for debugger
   if (IsDebuggerActive()) {
+    DEBUGLOG(stderr, "Debugger is active:  Not installing handler\n");
     return true;
   }
 
@@ -355,25 +341,6 @@ bool Breakpad::Initialize(NSDictionary *parameters) {
     return false;
   }
 
-  if ([[parameters objectForKey:@BREAKPAD_IN_PROCESS] boolValue])
-    return InitializeInProcess(parameters);
-  else
-    return InitializeOutOfProcess(parameters);
-}
-
-//=============================================================================
-bool Breakpad::InitializeInProcess(NSDictionary* parameters) {
-  handler_ =
-      new (gBreakpadAllocator->Allocate(
-          sizeof(google_breakpad::ExceptionHandler)))
-          google_breakpad::ExceptionHandler(
-              config_params_->GetValueForKey(BREAKPAD_DUMP_DIRECTORY),
-              0, &HandleMinidumpCallback, this, true, 0);
-  return true;    
-}
-
-//=============================================================================
-bool Breakpad::InitializeOutOfProcess(NSDictionary* parameters) {
   // Get path to Inspector executable.
   NSString *inspectorPathString = KeyValue(@BREAKPAD_INSPECTOR_LOCATION);
 
@@ -540,6 +507,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
   if (!inspectorPathString || !reporterPathString) {
     resourcePath = GetResourcePath();
     if (!resourcePath) {
+      DEBUGLOG(stderr, "Could not get resource path\n");
       return false;
     }
   }
@@ -552,6 +520,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
 
   // Verify that there is an Inspector tool.
   if (![[NSFileManager defaultManager] fileExistsAtPath:inspectorPathString]) {
+    DEBUGLOG(stderr, "Cannot find Inspector tool\n");
     return false;
   }
 
@@ -567,6 +536,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
   // Verify that there is a Reporter application.
   if (![[NSFileManager defaultManager]
              fileExistsAtPath:reporterPathString]) {
+    DEBUGLOG(stderr, "Cannot find Reporter tool\n");
     return false;
   }
 
@@ -576,14 +546,17 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
 
   // The product, version, and URL are required values.
   if (![product length]) {
+    DEBUGLOG(stderr, "Missing required product key.\n");
     return false;
   }
 
   if (![version length]) {
+    DEBUGLOG(stderr, "Missing required version key.\n");
     return false;
   }
 
   if (![urlStr length]) {
+    DEBUGLOG(stderr, "Missing required URL key.\n");
     return false;
   }
 
@@ -680,6 +653,8 @@ bool Breakpad::HandleException(int exception_type,
                                int exception_code,
                                int exception_subcode,
                                mach_port_t crashing_thread) {
+  DEBUGLOG(stderr, "Breakpad: an exception occurred\n");
+
   if (filter_callback_) {
     bool should_handle = filter_callback_(exception_type,
                                           exception_code,
@@ -722,8 +697,8 @@ bool Breakpad::HandleException(int exception_type,
 
   if (result == KERN_SUCCESS) {
     // Now, send a series of key-value pairs to the Inspector.
-    const SimpleStringDictionary::Entry *entry = NULL;
-    SimpleStringDictionary::Iterator iter(*config_params_);
+    const KeyValueEntry *entry = NULL;
+    SimpleStringDictionaryIterator iter(*config_params_);
 
     while ( (entry = iter.Next()) ) {
       KeyValueMessageData keyvalue_data(*entry);
@@ -756,16 +731,6 @@ bool Breakpad::HandleException(int exception_type,
   if (send_and_exit_) return true;
 
   return false;
-}
-
-//=============================================================================
-bool Breakpad::HandleMinidump(const char *dump_dir, const char *minidump_id) {
-  google_breakpad::ConfigFile config_file;
-  config_file.WriteFile(dump_dir, config_params_, dump_dir, minidump_id);
-  google_breakpad::LaunchReporter(
-      config_params_->GetValueForKey(BREAKPAD_REPORTER_EXE_LOCATION),
-      config_file.GetFilePath());
-  return true;
 }
 
 //=============================================================================

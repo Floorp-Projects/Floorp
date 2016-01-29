@@ -38,10 +38,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/procfs.h>
-#if defined(__mips__) && defined(__ANDROID__)
-// To get register definitions.
-#include <asm/reg.h>
-#endif
 
 #include "common/linux/linux_libc_support.h"
 
@@ -78,7 +74,7 @@ bool LinuxCoreDumper::BuildProcPath(char* path, pid_t pid,
   return true;
 }
 
-bool LinuxCoreDumper::CopyFromProcess(void* dest, pid_t child,
+void LinuxCoreDumper::CopyFromProcess(void* dest, pid_t child,
                                       const void* src, size_t length) {
   ElfCoreDump::Addr virtual_address = reinterpret_cast<ElfCoreDump::Addr>(src);
   // TODO(benchan): Investigate whether the data to be copied could span
@@ -88,9 +84,7 @@ bool LinuxCoreDumper::CopyFromProcess(void* dest, pid_t child,
     // If the data segment is not found in the core dump, fill the result
     // with marker characters.
     memset(dest, 0xab, length);
-    return false;
   }
-  return true;
 }
 
 bool LinuxCoreDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
@@ -105,11 +99,6 @@ bool LinuxCoreDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
   memcpy(&stack_pointer, &info->regs.rsp, sizeof(info->regs.rsp));
 #elif defined(__ARM_EABI__)
   memcpy(&stack_pointer, &info->regs.ARM_sp, sizeof(info->regs.ARM_sp));
-#elif defined(__aarch64__)
-  memcpy(&stack_pointer, &info->regs.sp, sizeof(info->regs.sp));
-#elif defined(__mips__)
-  stack_pointer =
-      reinterpret_cast<uint8_t*>(info->mcontext.gregs[MD_CONTEXT_MIPS_REG_SP]);
 #else
 #error "This code hasn't been ported to your platform yet."
 #endif
@@ -130,7 +119,7 @@ bool LinuxCoreDumper::ThreadsResume() {
 }
 
 bool LinuxCoreDumper::EnumerateThreads() {
-  if (!mapped_core_file_.Map(core_path_, 0)) {
+  if (!mapped_core_file_.Map(core_path_)) {
     fprintf(stderr, "Could not map core dump file into memory\n");
     return false;
   }
@@ -194,20 +183,7 @@ bool LinuxCoreDumper::EnumerateThreads() {
         memset(&info, 0, sizeof(ThreadInfo));
         info.tgid = status->pr_pgrp;
         info.ppid = status->pr_ppid;
-#if defined(__mips__)
-#if defined(__ANDROID__)
-        for (int i = EF_R0; i <= EF_R31; i++)
-          info.mcontext.gregs[i - EF_R0] = status->pr_reg[i];
-#else  // __ANDROID__
-        for (int i = EF_REG0; i <= EF_REG31; i++)
-          info.mcontext.gregs[i - EF_REG0] = status->pr_reg[i];
-#endif  // __ANDROID__
-        info.mcontext.mdlo = status->pr_reg[EF_LO];
-        info.mcontext.mdhi = status->pr_reg[EF_HI];
-        info.mcontext.pc = status->pr_reg[EF_CP0_EPC];
-#else  // __mips__
         memcpy(&info.regs, status->pr_reg, sizeof(info.regs));
-#endif  // __mips__
         if (first_thread) {
           crash_thread_ = pid;
           crash_signal_ = status->pr_info.si_signo;

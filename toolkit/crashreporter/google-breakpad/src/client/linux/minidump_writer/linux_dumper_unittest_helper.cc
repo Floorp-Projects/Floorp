@@ -43,14 +43,10 @@
 
 #if defined(__ARM_EABI__)
 #define TID_PTR_REGISTER "r3"
-#elif defined(__aarch64__)
-#define TID_PTR_REGISTER "x3"
 #elif defined(__i386)
 #define TID_PTR_REGISTER "ecx"
 #elif defined(__x86_64)
 #define TID_PTR_REGISTER "rcx"
-#elif defined(__mips__)
-#define TID_PTR_REGISTER "$1"
 #else
 #error This test has not been ported to this platform.
 #endif

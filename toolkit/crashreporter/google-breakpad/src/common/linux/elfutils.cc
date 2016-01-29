@@ -44,7 +44,7 @@ void FindElfClassSection(const char *elf_base,
                          const char *section_name,
                          typename ElfClass::Word section_type,
                          const void **section_start,
-                         size_t *section_size) {
+                         int *section_size) {
   typedef typename ElfClass::Ehdr Ehdr;
   typedef typename ElfClass::Shdr Shdr;
 
@@ -58,10 +58,10 @@ void FindElfClassSection(const char *elf_base,
   assert(elf_header->e_ident[EI_CLASS] == ElfClass::kClass);
 
   const Shdr* sections =
-    GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
+    GetOffset<ElfClass,Shdr>(elf_header, elf_header->e_shoff);
   const Shdr* section_names = sections + elf_header->e_shstrndx;
   const char* names =
-    GetOffset<ElfClass, char>(elf_header, section_names->sh_offset);
+    GetOffset<ElfClass,char>(elf_header, section_names->sh_offset);
   const char *names_end = names + section_names->sh_size;
 
   const Shdr* section =
@@ -79,7 +79,7 @@ template<typename ElfClass>
 void FindElfClassSegment(const char *elf_base,
                          typename ElfClass::Word segment_type,
                          const void **segment_start,
-                         size_t *segment_size) {
+                         int *segment_size) {
   typedef typename ElfClass::Ehdr Ehdr;
   typedef typename ElfClass::Phdr Phdr;
 
@@ -93,7 +93,7 @@ void FindElfClassSegment(const char *elf_base,
   assert(elf_header->e_ident[EI_CLASS] == ElfClass::kClass);
 
   const Phdr* phdrs =
-    GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff);
+    GetOffset<ElfClass,Phdr>(elf_header, elf_header->e_phoff);
 
   for (int i = 0; i < elf_header->e_phnum; ++i) {
     if (phdrs[i].p_type == segment_type) {
@@ -122,7 +122,7 @@ bool FindElfSection(const void *elf_mapped_base,
                     const char *section_name,
                     uint32_t section_type,
                     const void **section_start,
-                    size_t *section_size,
+                    int *section_size,
                     int *elfclass) {
   assert(elf_mapped_base);
   assert(section_start);
@@ -158,7 +158,7 @@ bool FindElfSection(const void *elf_mapped_base,
 bool FindElfSegment(const void *elf_mapped_base,
                     uint32_t segment_type,
                     const void **segment_start,
-                    size_t *segment_size,
+                    int *segment_size,
                     int *elfclass) {
   assert(elf_mapped_base);
   assert(segment_start);

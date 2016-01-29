@@ -32,7 +32,6 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/ucontext.h>
 #include <unistd.h>
 
 #include <list>
@@ -45,11 +44,13 @@ namespace google_breakpad {
 
 class ExceptionHandler;
 
-#if defined(__aarch64__)
-typedef struct fpsimd_context fpstate_t;
-#elif !defined(__ARM_EABI__) && !defined(__mips__)
-typedef struct _libc_fpstate fpstate_t;
-#endif
+struct MappingEntry {
+  MappingInfo first;
+  uint8_t second[sizeof(MDGUID)];
+};
+
+// A list of <MappingInfo, GUID>
+typedef std::list<MappingEntry> MappingList;
 
 // These entries store a list of memory regions that the client wants included
 // in the minidump.

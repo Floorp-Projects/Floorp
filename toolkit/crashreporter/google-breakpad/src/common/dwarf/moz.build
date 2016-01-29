@@ -4,17 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-HostLibrary('host_breakpad_dwarf_s')
-HOST_SOURCES += [
-    'bytereader.cc',
-    'dwarf2diehandler.cc',
-    'dwarf2reader.cc',
-    'functioninfo.cc',
-]
-HOST_CXXFLAGS += [
-    '-O2',
-    '-g',
-]
+if CONFIG['MOZ_CRASHREPORTER']:
+    HostLibrary('host_breakpad_dwarf_s')
+    HOST_SOURCES += [
+        'bytereader.cc',
+        'dwarf2diehandler.cc',
+        'dwarf2reader.cc',
+        'functioninfo.cc',
+    ]
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
+    LOCAL_INCLUDES += [
+        '../..',
+    ]
 
 # need static lib
 FORCE_STATIC_LIB = True
@@ -26,4 +30,3 @@ HOST_CXXFLAGS += [
     '-funsigned-char',
 ]
 
-include('/toolkit/crashreporter/crashreporter.mozbuild')
