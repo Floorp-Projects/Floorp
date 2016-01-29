@@ -71,6 +71,9 @@ public:
     virtual void ProducerAcquireImpl() override {}
     virtual void ProducerReleaseImpl() override;
 
+    virtual void ProducerReadAcquireImpl() override;
+    virtual void ProducerReadReleaseImpl() override {};
+
     virtual GLuint ProdTexture() override {
       return mProdTex;
     }
