@@ -228,6 +228,7 @@
 @BINPATH@/components/toolkit_finalizationwitness.xpt
 @BINPATH@/components/toolkit_formautofill.xpt
 @BINPATH@/components/toolkit_osfile.xpt
+@RESPATH@/components/toolkit_securityreporter.xpt
 #ifdef NIGHTLY_BUILD
 @BINPATH@/components/toolkit_perfmonitoring.xpt
 #endif
@@ -433,6 +434,10 @@
 @BINPATH@/components/privatebrowsing.xpt
 @BINPATH@/components/PrivateBrowsing.manifest
 @BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
+
+; Security Reports
+@RESPATH@/components/SecurityReporter.manifest
+@RESPATH@/components/SecurityReporter.js
 
 ; [Browser Chrome Files]
 @BINPATH@/chrome/toolkit@JAREXT@
