@@ -2242,7 +2242,7 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
 bool
 Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                      JS::Handle<jsid> aId,
-                     JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                     JS::MutableHandle<JS::PropertyDescriptor> aDesc)
 {
   // Note: Keep this in sync with MayResolve.
   if (!JSID_IS_STRING(aId)) {

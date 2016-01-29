@@ -1028,6 +1028,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
         aExtra->left = left;
         break;
       }
+      return false;
     }
   case NS_THEME_FOCUS_OUTLINE:
     {
@@ -1054,6 +1055,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
       } else {
         aExtra->bottom = extra;
       }
+      return false;
     }
   default:
     return false;
@@ -1271,6 +1273,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     // will need to fall through and use the default case as before.
     if (IsRegularMenuItem(aFrame))
       break;
+    MOZ_FALLTHROUGH;
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
@@ -1713,7 +1716,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     if (aFrame && aFrame->GetWritingMode().IsVertical()) {
       return false;
     }
-    // fall through
+    MOZ_FALLTHROUGH;
 
   case NS_THEME_BUTTON:
   case NS_THEME_BUTTON_FOCUS:

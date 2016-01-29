@@ -176,7 +176,7 @@ LossyTwoByteCharsToNewLatin1CharsZ(js::ExclusiveContext* cx,
 
 template <typename CharT>
 extern UTF8CharsZ
-CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<const CharT> chars);
+CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<CharT> chars);
 
 uint32_t
 Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);

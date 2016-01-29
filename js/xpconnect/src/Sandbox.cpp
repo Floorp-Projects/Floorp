@@ -511,7 +511,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
     // After bug 1015790 is fixed, we should be able to remove this unwrapping.
     RootedObject unwrappedProto(cx, js::UncheckedUnwrap(proto, /* stopAtWindowProxy = */ false));
 
-    Rooted<JSPropertyDescriptor> pd(cx);
+    Rooted<JS::PropertyDescriptor> pd(cx);
     if (!JS_GetPropertyDescriptorById(cx, proto, id, &pd))
         return false;
 
@@ -725,7 +725,7 @@ WrapCallable(JSContext* cx, HandleObject callable, HandleObject sandboxProtoProx
 }
 
 template<typename Op>
-bool WrapAccessorFunction(JSContext* cx, Op& op, JSPropertyDescriptor* desc,
+bool WrapAccessorFunction(JSContext* cx, Op& op, PropertyDescriptor* desc,
                           unsigned attrFlag, HandleObject sandboxProtoProxy)
 {
     if (!op) {
@@ -749,7 +749,7 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext* cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                JS::MutableHandle<PropertyDescriptor> desc) const
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
 
@@ -784,7 +784,7 @@ bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
-                                                   JS::MutableHandle<JSPropertyDescriptor> desc)
+                                                   JS::MutableHandle<PropertyDescriptor> desc)
                                                    const
 {
     if (!getPropertyDescriptor(cx, proxy, id, desc))
@@ -822,7 +822,7 @@ xpc::SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
 {
     // This uses getPropertyDescriptor for backward compatibility with
     // the old BaseProxyHandler::get implementation.
-    Rooted<JSPropertyDescriptor> desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     if (!getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
     desc.assertCompleteIfFound();

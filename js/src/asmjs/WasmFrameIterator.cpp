@@ -123,12 +123,10 @@ FrameIterator::functionDisplayAtom() const
 }
 
 unsigned
-FrameIterator::computeLine(uint32_t* column) const
+FrameIterator::lineOrBytecode() const
 {
     MOZ_ASSERT(!done());
-    if (column)
-        *column = callsite_->column();
-    return callsite_->line();
+    return callsite_->lineOrBytecode();
 }
 
 /*****************************************************************************/

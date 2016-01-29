@@ -128,8 +128,12 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
     if (kind == ModuleKind::Wasm) {
         numSigs_ = shared_->sigs.length();
         module_->numFuncs = shared_->funcSigs.length();
-        for (uint32_t i = 0; i < shared_->imports.length(); i++) {
-            if (!addImport(*shared_->imports[i].sig, shared_->imports[i].globalDataOffset))
+        module_->globalBytes = AlignBytes(module_->globalBytes, sizeof(void*));
+        for (ModuleImportGeneratorData& import : shared_->imports) {
+            MOZ_ASSERT(!import.globalDataOffset);
+            import.globalDataOffset = module_->globalBytes;
+            module_->globalBytes += Module::SizeOfImportExit;
+            if (!addImport(*import.sig, import.globalDataOffset))
                 return false;
         }
     }
@@ -302,8 +306,12 @@ ModuleGenerator::funcSig(uint32_t funcIndex) const
 }
 
 bool
-ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset)
+ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex)
 {
+    uint32_t globalDataOffset;
+    if (!allocateGlobalBytes(Module::SizeOfImportExit, sizeof(void*), &globalDataOffset))
+        return false;
+
     MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(importIndex == module_->imports.length());
     if (!addImport(sig(sigIndex), globalDataOffset))
@@ -464,7 +472,7 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
                                      Move(fg->bytecode_),
                                      Move(fg->locals_),
                                      fg->lineOrBytecode_,
-                                     Move(fg->callSourceCoords_),
+                                     Move(fg->callSiteLineNums_),
                                      generateTime);
     if (!func)
         return false;

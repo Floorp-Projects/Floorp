@@ -37,6 +37,9 @@ include images3/reftest.list
 # Lists and Counters Level 3
 include lists-3/reftest.list
 
+# Masking Level 1
+include masking/reftest.list
+
 # Media Queries Level 3
 # include mediaqueries3/reftest.list
 

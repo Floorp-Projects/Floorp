@@ -880,53 +880,71 @@ const KTableEntry nsCSSProps::kTransformStyleKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBackgroundAttachmentKTable[] = {
-  { eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED },
-  { eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL },
-  { eCSSKeyword_local, NS_STYLE_BG_ATTACHMENT_LOCAL },
+const KTableEntry nsCSSProps::kImageLayerAttachmentKTable[] = {
+  { eCSSKeyword_fixed, NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED },
+  { eCSSKeyword_scroll, NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL },
+  { eCSSKeyword_local, NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-static_assert(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
-              NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
-              NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
+static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER == NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
+              NS_STYLE_IMAGELAYER_CLIP_PADDING == NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
+              NS_STYLE_IMAGELAYER_CLIP_CONTENT == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
               "bg-clip and bg-origin style constants must agree");
-const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_BG_ORIGIN_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_BG_ORIGIN_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_BG_ORIGIN_CONTENT },
+const KTableEntry nsCSSProps::kImageLayerOriginKTable[] = {
+  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
+  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
+  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 // Note: Don't change this table unless you update
-// parseBackgroundPosition!
+// ParseImageLayerPosition!
 
-const KTableEntry nsCSSProps::kBackgroundPositionKTable[] = {
-  { eCSSKeyword_center, NS_STYLE_BG_POSITION_CENTER },
-  { eCSSKeyword_top, NS_STYLE_BG_POSITION_TOP },
-  { eCSSKeyword_bottom, NS_STYLE_BG_POSITION_BOTTOM },
-  { eCSSKeyword_left, NS_STYLE_BG_POSITION_LEFT },
-  { eCSSKeyword_right, NS_STYLE_BG_POSITION_RIGHT },
+const KTableEntry nsCSSProps::kImageLayerPositionKTable[] = {
+  { eCSSKeyword_center, NS_STYLE_IMAGELAYER_POSITION_CENTER },
+  { eCSSKeyword_top, NS_STYLE_IMAGELAYER_POSITION_TOP },
+  { eCSSKeyword_bottom, NS_STYLE_IMAGELAYER_POSITION_BOTTOM },
+  { eCSSKeyword_left, NS_STYLE_IMAGELAYER_POSITION_LEFT },
+  { eCSSKeyword_right, NS_STYLE_IMAGELAYER_POSITION_RIGHT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBackgroundRepeatKTable[] = {
-  { eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_NO_REPEAT },
-  { eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_REPEAT },
-  { eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_REPEAT_X },
-  { eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_REPEAT_Y },
+const KTableEntry nsCSSProps::kImageLayerRepeatKTable[] = {
+  { eCSSKeyword_no_repeat,  NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT },
+  { eCSSKeyword_repeat,     NS_STYLE_IMAGELAYER_REPEAT_REPEAT },
+  { eCSSKeyword_repeat_x,   NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X },
+  { eCSSKeyword_repeat_y,   NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBackgroundRepeatPartKTable[] = {
-  { eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_NO_REPEAT },
-  { eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_REPEAT },
+const KTableEntry nsCSSProps::kImageLayerRepeatPartKTable[] = {
+  { eCSSKeyword_no_repeat,  NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT },
+  { eCSSKeyword_repeat,     NS_STYLE_IMAGELAYER_REPEAT_REPEAT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBackgroundSizeKTable[] = {
-  { eCSSKeyword_contain, NS_STYLE_BG_SIZE_CONTAIN },
-  { eCSSKeyword_cover,   NS_STYLE_BG_SIZE_COVER },
+const KTableEntry nsCSSProps::kImageLayerSizeKTable[] = {
+  { eCSSKeyword_contain, NS_STYLE_IMAGELAYER_SIZE_CONTAIN },
+  { eCSSKeyword_cover,   NS_STYLE_IMAGELAYER_SIZE_COVER },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kImageLayerModeKTable[] = {
+  { eCSSKeyword_alpha, NS_STYLE_MASK_MODE_ALPHA },
+  { eCSSKeyword_luminance, NS_STYLE_MASK_MODE_LUMINANCE },
+  // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1224424
+  // It's ambigious at mask shorthand parsing while we have both mask-mode:auto
+  // and mask-size:auto.
+  { eCSSKeyword_auto, NS_STYLE_MASK_MODE_AUTO },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kImageLayerCompositeKTable[] = {
+  { eCSSKeyword_add, NS_STYLE_MASK_COMPOSITE_ADD },
+  { eCSSKeyword_substract, NS_STYLE_MASK_COMPOSITE_SUBSTRACT },
+  { eCSSKeyword_intersect, NS_STYLE_MASK_COMPOSITE_INTERSECT },
+  { eCSSKeyword_exclude, NS_STYLE_MASK_COMPOSITE_EXCLUDE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2857,6 +2875,21 @@ static const nsCSSProperty gScrollSnapTypeSubpropTable[] = {
   eCSSProperty_scroll_snap_type_y,
   eCSSProperty_UNKNOWN
 };
+
+static const nsCSSProperty gMaskSubpropTable[] = {
+  eCSSProperty_mask_image,
+  eCSSProperty_mask_repeat,
+  eCSSProperty_mask_position,
+  eCSSProperty_mask_clip,
+  eCSSProperty_mask_origin,
+  eCSSProperty_mask_size,
+  eCSSProperty_mask_composite,
+  eCSSProperty_mask_mode,
+  eCSSProperty_UNKNOWN
+};
+
+// FIXME: mask-border tables should be added when we implement
+// mask-border properties.
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
