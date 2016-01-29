@@ -425,7 +425,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
     animSegment->startPortion() = segment.mFromKey;
     animSegment->endPortion() = segment.mToKey;
-    animSegment->sampleFn() = ToTimingFunction(Some(segment.mTimingFunction));
+    animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
   }
 }
 

@@ -94,7 +94,7 @@ struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
   StyleAnimationValue mFromValue, mToValue;
-  ComputedTimingFunction mTimingFunction;
+  Maybe<ComputedTimingFunction> mTimingFunction;
 
   bool operator==(const AnimationPropertySegment& aOther) const {
     return mFromKey == aOther.mFromKey &&
