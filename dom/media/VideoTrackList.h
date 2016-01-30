@@ -18,7 +18,8 @@ class VideoTrack;
 class VideoTrackList : public MediaTrackList
 {
 public:
-  VideoTrackList(nsPIDOMWindow* aOwnerWindow, HTMLMediaElement* aMediaElement)
+  VideoTrackList(nsPIDOMWindowInner* aOwnerWindow,
+                 HTMLMediaElement* aMediaElement)
     : MediaTrackList(aOwnerWindow, aMediaElement)
     , mSelectedIndex(-1)
   {}

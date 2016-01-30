@@ -15,7 +15,7 @@
 
 class nsIPrincipal;
 class nsIUUIDGenerator;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -80,10 +80,10 @@ private:
   nsresult CreateFirstRevisionId(uint32_t aAppId, const nsAString& aName,
                                  const nsAString& aManifestURL);
 
-  void GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
+  void GetDataStoresCreate(nsPIDOMWindowInner* aWindow, Promise* aPromise,
                            const nsTArray<DataStoreInfo>& aStores);
 
-  void GetDataStoresResolve(nsPIDOMWindow* aWindow, Promise* aPromise,
+  void GetDataStoresResolve(nsPIDOMWindowInner* aWindow, Promise* aPromise,
                             const nsTArray<DataStoreInfo>& aStores);
 
   nsresult GetDataStoreInfos(const nsAString& aName, const nsAString& aOwner,

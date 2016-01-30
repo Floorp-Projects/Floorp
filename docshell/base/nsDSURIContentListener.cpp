@@ -148,8 +148,8 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
   }
 
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
-    nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(
-      mDocShell ? mDocShell->GetWindow() : nullptr);
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow =
+      mDocShell ? mDocShell->GetWindow() : nullptr;
     NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
     domWindow->Focus();
   }
@@ -294,7 +294,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
   // document must be same-origin with top window.  X-F-O: DENY requires that
   // the document must never be framed.
-  nsCOMPtr<nsPIDOMWindow> thisWindow = mDocShell->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> thisWindow = mDocShell->GetWindow();
   // If we don't have DOMWindow there is no risk of clickjacking
   if (!thisWindow) {
     return true;
@@ -302,7 +302,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
 
   // GetScriptableTop, not GetTop, because we want this to respect
   // <iframe mozbrowser> boundaries.
-  nsCOMPtr<nsPIDOMWindow> topWindow = thisWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = thisWindow->GetScriptableTop();
 
   // if the document is in the top window, it's not in a frame.
   if (thisWindow == topWindow) {
@@ -467,13 +467,12 @@ nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem
 {
   MOZ_ASSERT(aTopDocShellItem, "Need a top docshell");
 
-  nsCOMPtr<nsPIDOMWindow> topOuterWindow = aTopDocShellItem->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = aTopDocShellItem->GetWindow();
   if (!topOuterWindow) {
     return;
   }
 
-  NS_ASSERTION(topOuterWindow->IsOuterWindow(), "Huh?");
-  nsPIDOMWindow* topInnerWindow = topOuterWindow->GetCurrentInnerWindow();
+  nsPIDOMWindowInner* topInnerWindow = topOuterWindow->GetCurrentInnerWindow();
   if (!topInnerWindow) {
     return;
   }

@@ -70,7 +70,7 @@ static void
 DoCommandCallback(Command aCommand, void* aData)
 {
   nsIDocument* doc = static_cast<nsIDocument*>(aData);
-  nsPIDOMWindow* win = doc->GetWindow();
+  nsPIDOMWindowOuter* win = doc->GetWindow();
   if (!win) {
     return;
   }

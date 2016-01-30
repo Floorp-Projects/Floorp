@@ -184,7 +184,7 @@ FilePickerParent::CreateFilePicker()
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(element->OwnerDoc()->GetWindow());
+  nsCOMPtr<mozIDOMWindowProxy> window = element->OwnerDoc()->GetWindow();
   if (!window) {
     return false;
   }

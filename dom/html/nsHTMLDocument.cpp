@@ -1364,7 +1364,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   return rv.StealNSResult();
 }
 
-already_AddRefed<nsIDOMWindow>
+already_AddRefed<nsPIDOMWindowOuter>
 nsHTMLDocument::Open(JSContext* /* unused */,
                      const nsAString& aURL,
                      const nsAString& aName,
@@ -1375,18 +1375,19 @@ nsHTMLDocument::Open(JSContext* /* unused */,
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
 
-  nsCOMPtr<nsPIDOMWindow> window = GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetInnerWindow();
   if (!window) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
-  window = nsPIDOMWindow::GetOuterFromCurrentInner(window);
-  if (!window) {
+  nsCOMPtr<nsPIDOMWindowOuter> outer =
+    nsPIDOMWindowOuter::GetFromCurrentInner(window);
+  if (!outer) {
     rv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  RefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window.get());
-  nsCOMPtr<nsIDOMWindow> newWindow;
+  RefPtr<nsGlobalWindow> win = nsGlobalWindow::Cast(outer);
+  nsCOMPtr<nsPIDOMWindowOuter> newWindow;
   // XXXbz We ignore aReplace for now.
   rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
   return newWindow.forget();
@@ -1442,7 +1443,7 @@ nsHTMLDocument::Open(JSContext* cx,
     return ret.forget();
   }
 
-  nsPIDOMWindow* outer = GetWindow();
+  nsPIDOMWindowOuter* outer = GetWindow();
   if (!outer || (GetInnerWindow() != outer->GetCurrentInnerWindow())) {
     nsCOMPtr<nsIDocument> ret = this;
     return ret.forget();
@@ -1593,8 +1594,7 @@ nsHTMLDocument::Open(JSContext* cx,
   // Hold onto ourselves on the offchance that we're down to one ref
   nsCOMPtr<nsIDocument> kungFuDeathGrip = this;
 
-  nsPIDOMWindow *window = GetInnerWindow();
-  if (window) {
+  if (nsPIDOMWindowInner *window = GetInnerWindow()) {
     // Remember the old scope in case the call to SetNewDocument changes it.
     nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
 
@@ -2217,7 +2217,7 @@ nsHTMLDocument::GetSelection(nsISelection** aReturn)
 Selection*
 nsHTMLDocument::GetSelection(ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetScopeObject());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
   if (!window) {
     return nullptr;
   }
@@ -2227,7 +2227,7 @@ nsHTMLDocument::GetSelection(ErrorResult& aRv)
     return nullptr;
   }
 
-  return static_cast<nsGlobalWindow*>(window.get())->GetSelection(aRv);
+  return nsGlobalWindow::Cast(window)->GetSelection(aRv);
 }
 
 NS_IMETHODIMP
@@ -2575,7 +2575,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
     // the spellchecking state of that node.
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
     if (node) {
-      nsPIDOMWindow *window = GetWindow();
+      nsPIDOMWindowOuter *window = GetWindow();
       if (!window)
         return;
 
@@ -2659,7 +2659,7 @@ nsHTMLDocument::TurnEditingOff()
 {
   NS_ASSERTION(mEditingState != eOff, "Editing is already off.");
 
-  nsPIDOMWindow *window = GetWindow();
+  nsPIDOMWindowOuter *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -2680,7 +2680,7 @@ nsHTMLDocument::TurnEditingOff()
   return NS_OK;
 }
 
-static bool HasPresShell(nsPIDOMWindow *aWindow)
+static bool HasPresShell(nsPIDOMWindowOuter *aWindow)
 {
   nsIDocShell *docShell = aWindow->GetDocShell();
   if (!docShell)
@@ -2730,7 +2730,7 @@ nsHTMLDocument::EditingStateChanged()
 
   // get editing session, make sure this is a strong reference so the
   // window can't get deleted during the rest of this call.
-  nsCOMPtr<nsPIDOMWindow> window = GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -2820,7 +2820,7 @@ nsHTMLDocument::EditingStateChanged()
     // until mEditingState is modified with newState.
     nsAutoScriptBlocker scriptBlocker;
     if (designMode) {
-      nsCOMPtr<nsPIDOMWindow> focusedWindow;
+      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
       nsIContent* focusedContent =
         nsFocusManager::GetFocusedDescendant(window, false,
                                              getter_AddRefs(focusedWindow));
@@ -2955,7 +2955,7 @@ nsHTMLDocument::GetMidasCommandManager(nsICommandManager** aCmdMgr)
 
   *aCmdMgr = nullptr;
 
-  nsPIDOMWindow *window = GetWindow();
+  nsPIDOMWindowOuter *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -3280,7 +3280,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
     return false;
   }
 
-  nsIDOMWindow* window = GetWindow();
+  nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -3375,7 +3375,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID, ErrorResult& rv)
     return false;
   }
 
-  nsIDOMWindow* window = GetWindow();
+  nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -3416,7 +3416,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString& commandID, ErrorResult& rv
     return false;
   }
 
-  nsIDOMWindow* window = GetWindow();
+  nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -3475,7 +3475,7 @@ nsHTMLDocument::QueryCommandState(const nsAString& commandID, ErrorResult& rv)
     return false;
   }
 
-  nsIDOMWindow* window = GetWindow();
+  nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -3595,7 +3595,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString& commandID,
     return;
   }
 
-  nsIDOMWindow* window = GetWindow();
+  nsPIDOMWindowOuter* window = GetWindow();
   if (!window) {
     rv.Throw(NS_ERROR_FAILURE);
     return;

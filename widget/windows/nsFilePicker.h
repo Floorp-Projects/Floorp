@@ -61,7 +61,7 @@ class nsFilePicker :
 public:
   nsFilePicker(); 
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent, const nsAString& aTitle, int16_t aMode);
+  NS_IMETHOD Init(mozIDOMWindowProxy *aParent, const nsAString& aTitle, int16_t aMode);
                   
   NS_DECL_ISUPPORTS
   

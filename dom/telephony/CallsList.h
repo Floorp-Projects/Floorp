@@ -26,7 +26,7 @@ public:
 
   explicit CallsList(Telephony* aTelephony, TelephonyCallGroup* aGroup = nullptr);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   // WrapperCache

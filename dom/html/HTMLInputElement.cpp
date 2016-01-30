@@ -550,7 +550,7 @@ NS_IMPL_ISUPPORTS(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 bool
 HTMLInputElement::IsPopupBlocked() const
 {
-  nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = OwnerDoc()->GetWindow();
   MOZ_ASSERT(win, "window should not be null");
   if (!win) {
     return true;
@@ -581,7 +581,7 @@ HTMLInputElement::InitColorPicker()
 
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
@@ -628,7 +628,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }

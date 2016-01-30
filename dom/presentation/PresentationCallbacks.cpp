@@ -119,7 +119,7 @@ PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
 nsresult
 PresentationResponderLoadingCallback::NotifyReceiverReady()
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mProgress);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(mProgress);
   if (NS_WARN_IF(!window || !window->GetCurrentInnerWindow())) {
     return NS_ERROR_NOT_AVAILABLE;
   }

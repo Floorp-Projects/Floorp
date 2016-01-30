@@ -240,8 +240,8 @@ ContentEventHandler::GetFocusedContent()
   if (!doc) {
     return nullptr;
   }
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(doc->GetWindow());
-  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
   return nsFocusManager::GetFocusedDescendant(window, true,
                                               getter_AddRefs(focusedWindow));
 }

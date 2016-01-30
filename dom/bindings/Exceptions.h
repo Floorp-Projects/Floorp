@@ -15,7 +15,7 @@
 #include "nsStringGlue.h"
 
 class nsIStackFrame;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 template <class T>
 struct already_AddRefed;
 
@@ -31,7 +31,7 @@ Throw(JSContext* cx, nsresult rv, const nsACString& message = EmptyCString());
 
 // Create, throw and report an exception to a given window.
 void
-ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv);
+ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv);
 
 bool
 ThrowExceptionObject(JSContext* aCx, Exception* aException);

@@ -42,7 +42,7 @@ protected:
 private:
   bool IsComposing() const;
   nsresult BeginInputTransactionInternal(
-             nsIDOMWindow* aWindow,
+             mozIDOMWindow* aWindow,
              nsITextInputProcessorCallback* aCallback,
              bool aForTests,
              bool& aSucceeded);

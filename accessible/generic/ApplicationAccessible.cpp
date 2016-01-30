@@ -15,7 +15,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindow.h"
 #include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
@@ -193,7 +192,7 @@ ApplicationAccessible::CacheChildren()
   while (hasMore) {
     nsCOMPtr<nsISupports> window;
     windowEnumerator->GetNext(getter_AddRefs(window));
-    nsCOMPtr<nsPIDOMWindow> DOMWindow = do_QueryInterface(window);
+    nsCOMPtr<nsPIDOMWindowOuter> DOMWindow = do_QueryInterface(window);
     if (DOMWindow) {
       nsCOMPtr<nsIDocument> docNode = DOMWindow->GetDoc();
       if (docNode) {

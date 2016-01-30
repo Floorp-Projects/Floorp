@@ -8,10 +8,10 @@
  * An interface to open a dialog to ask to permission to accept the cookie.
  */
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsICookie;
 
-[scriptable, uuid(72f8bb14-2810-4f38-8d0d-290c5401f54e)]
+[scriptable, uuid(65ca07c3-6241-4de1-bf41-3336470499db)]
 interface nsICookiePromptService : nsISupports
 {
   const uint32_t DENY_COOKIE = 0;
@@ -32,7 +32,7 @@ interface nsICookiePromptService : nsISupports
    *                          2 == accept cookie for current session
    */
 
-  long cookieDialog(in nsIDOMWindow parent,
+  long cookieDialog(in mozIDOMWindowProxy parent,
                     in nsICookie cookie,
                     in ACString hostname,
                     in long cookiesFromHost,

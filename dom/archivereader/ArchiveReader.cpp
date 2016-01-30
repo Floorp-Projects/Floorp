@@ -28,7 +28,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -46,7 +46,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-ArchiveReader::ArchiveReader(Blob& aBlob, nsPIDOMWindow* aWindow,
+ArchiveReader::ArchiveReader(Blob& aBlob, nsPIDOMWindowInner* aWindow,
                              const nsACString& aEncoding)
   : mBlobImpl(aBlob.Impl())
   , mWindow(aWindow)

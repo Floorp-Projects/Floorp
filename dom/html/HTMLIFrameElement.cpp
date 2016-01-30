@@ -64,12 +64,6 @@ HTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
   return nsGenericHTMLFrameElement::GetContentDocument(aContentDocument);
 }
 
-NS_IMETHODIMP
-HTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
-{
-  return nsGenericHTMLFrameElement::GetContentWindow(aContentWindow);
-}
-
 bool
 HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
                                   nsIAtom* aAttribute,

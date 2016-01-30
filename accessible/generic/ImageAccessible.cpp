@@ -132,11 +132,11 @@ ImageAccessible::DoAction(uint8_t aIndex)
   NS_ConvertUTF8toUTF16 spec(utf8spec);
 
   nsIDocument* document = mContent->OwnerDoc();
-  nsCOMPtr<nsPIDOMWindow> piWindow = document->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> piWindow = document->GetWindow();
   if (!piWindow)
     return false;
 
-  nsCOMPtr<nsPIDOMWindow> tmp;
+  nsCOMPtr<nsPIDOMWindowOuter> tmp;
   return NS_SUCCEEDED(piWindow->Open(spec, EmptyString(), EmptyString(),
                                      getter_AddRefs(tmp)));
 }

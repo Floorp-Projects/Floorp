@@ -68,7 +68,7 @@ nsBrowserStatusFilter::RemoveProgressListener(nsIWebProgressListener *aListener)
 }
 
 NS_IMETHODIMP
-nsBrowserStatusFilter::GetDOMWindow(nsIDOMWindow **aResult)
+nsBrowserStatusFilter::GetDOMWindow(mozIDOMWindowProxy **aResult)
 {
     NS_NOTREACHED("nsBrowserStatusFilter::GetDOMWindow");
     return NS_ERROR_NOT_IMPLEMENTED;

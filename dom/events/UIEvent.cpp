@@ -87,8 +87,8 @@ UIEvent::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<UIEvent> e = new UIEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
-  aRv = e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
-                       aParam.mDetail);
+  e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
+                 aParam.mDetail);
   e->SetTrusted(trusted);
   return e.forget();
 }
@@ -136,7 +136,7 @@ UIEvent::GetMovementPoint()
 }
 
 NS_IMETHODIMP
-UIEvent::GetView(nsIDOMWindow** aView)
+UIEvent::GetView(mozIDOMWindowProxy** aView)
 {
   *aView = mView;
   NS_IF_ADDREF(*aView);
@@ -150,20 +150,29 @@ UIEvent::GetDetail(int32_t* aDetail)
   return NS_OK;
 }
 
+void
+UIEvent::InitUIEvent(const nsAString& typeArg,
+                     bool canBubbleArg,
+                     bool cancelableArg,
+                     nsGlobalWindow* viewArg,
+                     int32_t detailArg)
+{
+  auto* view = viewArg ? viewArg->AsInner() : nullptr;
+  InitUIEvent(typeArg, canBubbleArg, cancelableArg, view, detailArg);
+}
+
 NS_IMETHODIMP
 UIEvent::InitUIEvent(const nsAString& typeArg,
                      bool canBubbleArg,
                      bool cancelableArg,
-                     nsIDOMWindow* viewArg,
+                     mozIDOMWindow* viewArg,
                      int32_t detailArg)
 {
-  if (viewArg) {
-    nsCOMPtr<nsPIDOMWindow> view = do_QueryInterface(viewArg);
-    NS_ENSURE_TRUE(view, NS_ERROR_INVALID_ARG);
-  }
   Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
+
   mDetail = detailArg;
-  mView = viewArg;
+  mView = viewArg ? nsPIDOMWindowInner::From(viewArg)->GetOuterWindow() :
+                    nullptr;
 
   return NS_OK;
 }

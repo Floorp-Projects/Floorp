@@ -18,8 +18,6 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 
-class nsIDOMWindow;
-
 namespace mozilla {
 
 class OriginAttributesPattern;
@@ -92,7 +90,7 @@ private:
 
   // Helper for creation of DOM storage objects
   nsresult GetStorageInternal(bool aCreate,
-                              nsIDOMWindow* aWindow,
+                              mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
                               const nsAString& aDocumentURI,
                               bool aPrivate,

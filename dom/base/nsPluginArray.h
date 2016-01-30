@@ -29,8 +29,8 @@ public:
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
-  explicit nsPluginArray(nsPIDOMWindow* aWindow);
-  nsPIDOMWindow* GetParentObject() const;
+  explicit nsPluginArray(nsPIDOMWindowInner* aWindow);
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsPluginArray registers itself as an observer with a weak reference.
@@ -59,7 +59,7 @@ private:
   bool AllowPlugins() const;
   void EnsurePlugins();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsTArray<RefPtr<nsPluginElement> > mPlugins;
 };
 
@@ -70,9 +70,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPluginElement)
 
-  nsPluginElement(nsPIDOMWindow* aWindow, nsIInternalPluginTag* aPluginTag);
+  nsPluginElement(nsPIDOMWindowInner* aWindow,
+                  nsIInternalPluginTag* aPluginTag);
 
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsIInternalPluginTag* PluginTag() const
@@ -101,7 +102,7 @@ protected:
 
   void EnsurePluginMimeTypes();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIInternalPluginTag> mPluginTag;
   nsTArray<RefPtr<nsMimeType> > mMimeTypes;
 };

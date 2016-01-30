@@ -20,7 +20,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothPairingListener, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothPairingListener, DOMEventTargetHelper)
 
-BluetoothPairingListener::BluetoothPairingListener(nsPIDOMWindow* aWindow)
+BluetoothPairingListener::BluetoothPairingListener(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mHasListenedToSignal(false)
 {
@@ -30,7 +30,7 @@ BluetoothPairingListener::BluetoothPairingListener(nsPIDOMWindow* aWindow)
 }
 
 already_AddRefed<BluetoothPairingListener>
-BluetoothPairingListener::Create(nsPIDOMWindow* aWindow)
+BluetoothPairingListener::Create(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);

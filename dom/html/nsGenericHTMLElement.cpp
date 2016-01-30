@@ -129,13 +129,13 @@ public:
 
     nsIDocument* document = mElement->OwnerDoc();
 
-    nsPIDOMWindow* window = document->GetWindow();
+    nsPIDOMWindowOuter* window = document->GetWindow();
     if (!window) {
       return NS_OK;
     }
 
     // Trying to found the top window (equivalent to window.top).
-    if (nsCOMPtr<nsPIDOMWindow> top = window->GetTop()) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetTop()) {
       window = top;
     }
 
@@ -783,7 +783,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
 #undef EVENT
        )
       ) {
-    nsPIDOMWindow *win;
+    nsPIDOMWindowInner *win;
 
     // If we have a document, and it has a window, add the event
     // listener on the window (the inner window). If not, proceed as
@@ -813,10 +813,8 @@ nsGenericHTMLElement::GetOn##name_()                                          \
 {                                                                             \
   if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     /* XXXbz note to self: add tests for this! */                             \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
-    if (win) {                                                                \
-      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                \
-      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);     \
+    if (nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow()) {             \
+      nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                  \
       return globalWin->GetOn##name_();                                       \
     }                                                                         \
     return nullptr;                                                           \
@@ -828,13 +826,12 @@ void                                                                          \
 nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 {                                                                             \
   if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();                   \
     if (!win) {                                                               \
       return;                                                                 \
     }                                                                         \
                                                                               \
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
-    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
+    nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                    \
     return globalWin->SetOn##name_(handler);                                  \
   }                                                                           \
                                                                               \
@@ -846,13 +843,11 @@ nsGenericHTMLElement::GetOn##name_()                                          \
 {                                                                             \
   if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
     /* XXXbz note to self: add tests for this! */                             \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
-    if (win) {                                                                \
-      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                \
-      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);     \
+    if (nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow()) {             \
+      nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                  \
       OnErrorEventHandlerNonNull* errorHandler = globalWin->GetOn##name_();   \
       if (errorHandler) {                                                     \
-        RefPtr<EventHandlerNonNull> handler =                               \
+        RefPtr<EventHandlerNonNull> handler =                                 \
           new EventHandlerNonNull(errorHandler);                              \
         return handler.forget();                                              \
       }                                                                       \
@@ -860,21 +855,20 @@ nsGenericHTMLElement::GetOn##name_()                                          \
     return nullptr;                                                           \
   }                                                                           \
                                                                               \
-  RefPtr<EventHandlerNonNull> handler = nsINode::GetOn##name_();            \
+  RefPtr<EventHandlerNonNull> handler = nsINode::GetOn##name_();              \
   return handler.forget();                                                    \
 }                                                                             \
 void                                                                          \
 nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
 {                                                                             \
   if (IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::frameset)) {            \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                        \
+    nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();                   \
     if (!win) {                                                               \
       return;                                                                 \
     }                                                                         \
                                                                               \
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
-    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
-    RefPtr<OnErrorEventHandlerNonNull> errorHandler;                        \
+    nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                    \
+    RefPtr<OnErrorEventHandlerNonNull> errorHandler;                          \
     if (handler) {                                                            \
       errorHandler = new OnErrorEventHandlerNonNull(handler);                 \
     }                                                                         \
@@ -2403,13 +2397,12 @@ nsGenericHTMLFormElement::FocusState()
   // If the window is not active, do not allow the focus to bring the
   // window to the front.  We update the focus controller, but do
   // nothing else.
-  nsPIDOMWindow* win = doc->GetWindow();
-  if (win) {
-    nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(win->GetPrivateRoot());
+  if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
+    nsCOMPtr<nsPIDOMWindowOuter> rootWindow = win->GetPrivateRoot();
 
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     if (fm && rootWindow) {
-      nsCOMPtr<nsIDOMWindow> activeWindow;
+      nsCOMPtr<mozIDOMWindowProxy> activeWindow;
       fm->GetActiveWindow(getter_AddRefs(activeWindow));
       if (activeWindow == rootWindow) {
         return eActiveWindow;
@@ -2658,7 +2651,7 @@ nsGenericHTMLElement::Blur(mozilla::ErrorResult& aError)
     return;
   }
 
-  nsIDOMWindow* win = doc->GetWindow();
+  nsPIDOMWindowOuter* win = doc->GetWindow();
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (win && fm) {
     aError = fm->ClearFocus(win);
@@ -2800,7 +2793,7 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
     fm->SetFocus(this, nsIFocusManager::FLAG_BYKEY);
 
     // Return true if the element became the current focus within its window.
-    nsPIDOMWindow* window = OwnerDoc()->GetWindow();
+    nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
     focused = (window && window->GetFocusedNode());
   }
 

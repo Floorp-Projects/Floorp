@@ -1173,9 +1173,9 @@ AsWindow(JSContext* cx, JSObject* wrapper)
   if (NS_SUCCEEDED(rv))
       return win;
 
-  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(
+  nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(
       nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, target));
-  return static_cast<nsGlobalWindow*>(piWin.get());
+  return nsGlobalWindow::Cast(piWin);
 }
 
 static bool
@@ -1448,10 +1448,10 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsW
         nsGlobalWindow* win = AsWindow(cx, wrapper);
         // Note: As() unwraps outer windows to get to the inner window.
         if (win) {
-            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index);
+            nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(index);
             if (subframe) {
-                nsGlobalWindow* global = static_cast<nsGlobalWindow*>(subframe.get());
-                global->EnsureInnerWindow();
+                subframe->EnsureInnerWindow();
+                nsGlobalWindow* global = nsGlobalWindow::Cast(subframe);
                 JSObject* obj = global->FastGetGlobalJSObject();
                 if (MOZ_UNLIKELY(!obj)) {
                     // It's gone?
@@ -1594,10 +1594,10 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, Handl
         nsGlobalWindow* win = AsWindow(cx, wrapper);
         // Note: As() unwraps outer windows to get to the inner window.
         if (win) {
-            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index);
+            nsCOMPtr<nsPIDOMWindowOuter> subframe = win->IndexedGetter(index);
             if (subframe) {
-                nsGlobalWindow* global = static_cast<nsGlobalWindow*>(subframe.get());
-                global->EnsureInnerWindow();
+                subframe->EnsureInnerWindow();
+                nsGlobalWindow* global = nsGlobalWindow::Cast(subframe);
                 JSObject* obj = global->FastGetGlobalJSObject();
                 if (MOZ_UNLIKELY(!obj)) {
                     // It's gone?
@@ -1929,9 +1929,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
         nsAutoJSString name;
         if (!name.init(cx, JSID_TO_STRING(id)))
             return false;
-        nsCOMPtr<nsIDOMWindow> childDOMWin = win->GetChildWindow(name);
-        if (childDOMWin) {
-            nsGlobalWindow* cwin = static_cast<nsGlobalWindow*>(childDOMWin.get());
+        if (nsCOMPtr<nsPIDOMWindowOuter> childDOMWin = win->GetChildWindow(name)) {
+            auto* cwin = nsGlobalWindow::Cast(childDOMWin);
             JSObject* childObj = cwin->FastGetGlobalJSObject();
             if (MOZ_UNLIKELY(!childObj))
                 return xpc::Throw(cx, NS_ERROR_FAILURE);

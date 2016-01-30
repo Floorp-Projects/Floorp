@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothClassOfDevice)
 
   static already_AddRefed<BluetoothClassOfDevice>
-    Create(nsPIDOMWindow* aOwner);
+    Create(nsPIDOMWindowInner* aOwner);
 
   uint16_t MajorServiceClass() const
   {
@@ -65,7 +65,7 @@ public:
    */
   void Update(const uint32_t aValue);
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwnerWindow;
   }
@@ -73,7 +73,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  BluetoothClassOfDevice(nsPIDOMWindow* aOwner);
+  BluetoothClassOfDevice(nsPIDOMWindowInner* aOwner);
   ~BluetoothClassOfDevice();
 
   /**
@@ -85,7 +85,7 @@ private:
   uint8_t mMajorDeviceClass;
   uint8_t mMinorDeviceClass;
 
-  nsCOMPtr<nsPIDOMWindow> mOwnerWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mOwnerWindow;
 };
 
 END_BLUETOOTH_NAMESPACE

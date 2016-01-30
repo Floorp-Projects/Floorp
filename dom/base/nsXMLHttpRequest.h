@@ -247,7 +247,7 @@ public:
                  nsILoadGroup* aLoadGroup = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
-    MOZ_ASSERT_IF(nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(
+    MOZ_ASSERT_IF(nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(
       aGlobalObject), win->IsInnerWindow());
     mPrincipal = aPrincipal;
     BindToOwner(aGlobalObject);
@@ -576,7 +576,7 @@ public:
 
   nsresult init(nsIPrincipal* principal,
                 nsIScriptContext* scriptContext,
-                nsPIDOMWindow* globalObject,
+                nsPIDOMWindowInner* globalObject,
                 nsIURI* baseURI);
 
   void SetRequestObserver(nsIRequestObserver* aObserver);

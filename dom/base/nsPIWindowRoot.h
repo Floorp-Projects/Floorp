@@ -11,7 +11,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "nsWeakReference.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsIControllers;
 class nsIController;
 
@@ -30,7 +30,7 @@ class nsPIWindowRoot : public mozilla::dom::EventTarget
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
 
-  virtual nsPIDOMWindow* GetWindow()=0;
+  virtual nsPIDOMWindowOuter* GetWindow()=0;
 
   // get and set the node that is the context of a popup menu
   virtual nsIDOMNode* GetPopupNode() = 0;

@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIDOMWindow.idl"
 
-[scriptable, uuid(0843f3c1-043e-4c64-9d8c-091370548c05)]
+interface mozIDOMWindowProxy;
+
+[scriptable, uuid(e8420a7b-659b-4325-968b-a114a6a067aa)]
 interface nsIBrowserTab : nsISupports {
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindowProxy window;
   readonly attribute float scale;
 };
 

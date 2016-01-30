@@ -19,7 +19,7 @@
 #include "nsTHashtable.h"
 
 class nsIDocument;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -208,7 +208,7 @@ public:
   void
   NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   already_AddRefed<DOMStringList>

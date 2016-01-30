@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIDOMElement;
 
 %{C++
@@ -20,7 +20,7 @@ interface nsIDOMElement;
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(c71ef717-8fb9-425e-98ef-aef5894890f8)]
+[scriptable, uuid(2813a7a3-d084-4d00-acd0-f76620315c02)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -30,7 +30,7 @@ interface nsILoadContext : nsISupports
    * not be same-origin with the document in associatedWindow.  This attribute
    * may be null if there is no associated window.
    */
-  readonly attribute nsIDOMWindow associatedWindow;
+  readonly attribute mozIDOMWindowProxy associatedWindow;
 
   /**
    * topWindow is the top window which is of same type as associatedWindow.
@@ -38,7 +38,7 @@ interface nsILoadContext : nsISupports
    * convenience.  All the same caveats as associatedWindow of apply, of
    * course.  This attribute may be null if there is no associated window.
    */
-  readonly attribute nsIDOMWindow topWindow;
+  readonly attribute mozIDOMWindowProxy topWindow;
 
   /**
    * topFrameElement is the <iframe>, <frame>, or <browser> element which

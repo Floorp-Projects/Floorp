@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * Placeholder interfaces to allow passing inner/outer windows through XPIDL.
+ */
+[scriptable, builtinclass, uuid(75fbabd6-7a2e-4787-aa33-449a33512135)]
+interface mozIDOMWindow : nsISupports
+{};
+
+[scriptable, builtinclass, uuid(53ca090c-e739-48b9-8911-208c72f9191e)]
+interface mozIDOMWindowProxy : nsISupports
+{};

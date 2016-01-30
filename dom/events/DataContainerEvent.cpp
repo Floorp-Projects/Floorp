@@ -17,8 +17,7 @@ DataContainerEvent::DataContainerEvent(EventTarget* aOwner,
                                        WidgetEvent* aEvent)
   : Event(aOwner, aPresContext, aEvent)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mOwner);
-  if (win) {
+  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aOwner)) {
     if (nsIDocument* doc = win->GetExtantDoc()) {
       doc->WarnOnceAbout(nsIDocument::eDataContainerEvent);
     }

@@ -16,7 +16,7 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -98,7 +98,7 @@ public:
     return mObjectStore;
   }
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   void

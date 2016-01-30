@@ -23,7 +23,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Presentation,
                                            DOMEventTargetHelper)
 
-  static already_AddRefed<Presentation> Create(nsPIDOMWindow* aWindow);
+  static already_AddRefed<Presentation> Create(nsPIDOMWindowInner* aWindow);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -36,7 +36,7 @@ public:
   already_AddRefed<PresentationReceiver> GetReceiver() const;
 
 private:
-  explicit Presentation(nsPIDOMWindow* aWindow);
+  explicit Presentation(nsPIDOMWindowInner* aWindow);
 
   ~Presentation();
 

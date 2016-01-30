@@ -103,19 +103,6 @@ NotifyChannelActive(uint64_t aWindowID, AudioChannel aAudioChannel,
   NS_DispatchToCurrentThread(runnable);
 }
 
-already_AddRefed<nsPIDOMWindow>
-GetTopWindow(nsPIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(aWindow);
-
-  nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
-  MOZ_ASSERT(topWindow);
-
-  topWindow = topWindow->GetOuterWindow();
-
-  return topWindow.forget();
-}
-
 bool
 IsParentProcess()
 {
@@ -125,7 +112,7 @@ IsParentProcess()
 class MediaPlaybackRunnable : public nsRunnable
 {
 public:
-  MediaPlaybackRunnable(nsIDOMWindow* aWindow, bool aActive)
+  MediaPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive)
     : mWindow(aWindow)
     , mActive(aActive)
   {}
@@ -146,7 +133,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   bool mActive;
 };
 
@@ -367,7 +354,7 @@ AudioChannelService::UnregisterTabParent(TabParent* aTabParent)
 }
 
 void
-AudioChannelService::GetState(nsPIDOMWindow* aWindow, uint32_t aAudioChannel,
+AudioChannelService::GetState(nsPIDOMWindowOuter* aWindow, uint32_t aAudioChannel,
                               float* aVolume, bool* aMuted)
 {
   MOZ_ASSERT(!aWindow || aWindow->IsOuterWindow());
@@ -385,7 +372,7 @@ AudioChannelService::GetState(nsPIDOMWindow* aWindow, uint32_t aAudioChannel,
   *aMuted = false;
 
   AudioChannelWindow* winData = nullptr;
-  nsCOMPtr<nsPIDOMWindow> window = aWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> window = aWindow;
 
   // The volume must be calculated based on the window hierarchy. Here we go up
   // to the top window and we calculate the volume and the muted flag.
@@ -399,7 +386,7 @@ AudioChannelService::GetState(nsPIDOMWindow* aWindow, uint32_t aAudioChannel,
     *aVolume *= window->GetAudioVolume();
     *aMuted = *aMuted || window->GetAudioMuted();
 
-    nsCOMPtr<nsPIDOMWindow> win = window->GetScriptableParent();
+    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParent();
     if (window == win) {
       break;
     }
@@ -587,12 +574,12 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
 
 void
 AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
-                                                     nsPIDOMWindow* aWindow)
+                                                     nsPIDOMWindowOuter* aWindow)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
-  nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
   if (!topWindow) {
     return;
   }
@@ -612,12 +599,12 @@ AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
 }
 
 void
-AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
+AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
-  nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
   if (!topWindow) {
     return;
   }
@@ -635,7 +622,7 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
 }
 
 void
-AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindow* aWindow,
+AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindowOuter* aWindow,
                                             uint64_t aInnerWindowID,
                                             bool aCapture)
 {
@@ -647,7 +634,7 @@ AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindow* aWindow,
          ("AudioChannelService, SetWindowAudioCaptured, window = %p, "
           "aCapture = %d\n", aWindow, aCapture));
 
-  nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
   if (!topWindow) {
     return;
   }
@@ -740,7 +727,7 @@ AudioChannelService::GetDefaultAudioChannelString(nsAString& aString)
 }
 
 AudioChannelService::AudioChannelWindow*
-AudioChannelService::GetOrCreateWindowData(nsPIDOMWindow* aWindow)
+AudioChannelService::GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -771,7 +758,7 @@ AudioChannelService::GetWindowData(uint64_t aWindowID) const
 }
 
 float
-AudioChannelService::GetAudioChannelVolume(nsPIDOMWindow* aWindow,
+AudioChannelService::GetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
                                            AudioChannel aAudioChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -783,21 +770,19 @@ AudioChannelService::GetAudioChannelVolume(nsPIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelService::GetAudioChannelVolume(nsIDOMWindow* aWindow,
+AudioChannelService::GetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
                                            unsigned short aAudioChannel,
                                            float* aVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  nsCOMPtr<nsPIDOMWindow> window = GetTopWindow(piWindow);
-  MOZ_ASSERT(window->IsOuterWindow());
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
   *aVolume = GetAudioChannelVolume(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
 
 void
-AudioChannelService::SetAudioChannelVolume(nsPIDOMWindow* aWindow,
+AudioChannelService::SetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
                                            AudioChannel aAudioChannel,
                                            float aVolume)
 {
@@ -815,21 +800,19 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelService::SetAudioChannelVolume(nsIDOMWindow* aWindow,
+AudioChannelService::SetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
                                            unsigned short aAudioChannel,
                                            float aVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  nsCOMPtr<nsPIDOMWindow> window = GetTopWindow(piWindow);
-  MOZ_ASSERT(window->IsOuterWindow());
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
   SetAudioChannelVolume(window, (AudioChannel)aAudioChannel, aVolume);
   return NS_OK;
 }
 
 bool
-AudioChannelService::GetAudioChannelMuted(nsPIDOMWindow* aWindow,
+AudioChannelService::GetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
                                           AudioChannel aAudioChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -841,21 +824,19 @@ AudioChannelService::GetAudioChannelMuted(nsPIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelService::GetAudioChannelMuted(nsIDOMWindow* aWindow,
+AudioChannelService::GetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
                                           unsigned short aAudioChannel,
                                           bool* aMuted)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  nsCOMPtr<nsPIDOMWindow> window = GetTopWindow(piWindow);
-  MOZ_ASSERT(window->IsOuterWindow());
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
   *aMuted = GetAudioChannelMuted(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
 
 void
-AudioChannelService::SetAudioChannelMuted(nsPIDOMWindow* aWindow,
+AudioChannelService::SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
                                           AudioChannel aAudioChannel,
                                           bool aMuted)
 {
@@ -878,21 +859,19 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelService::SetAudioChannelMuted(nsIDOMWindow* aWindow,
+AudioChannelService::SetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
                                           unsigned short aAudioChannel,
                                           bool aMuted)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  nsCOMPtr<nsPIDOMWindow> window = GetTopWindow(piWindow);
-  MOZ_ASSERT(window->IsOuterWindow());
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
   SetAudioChannelMuted(window, (AudioChannel)aAudioChannel, aMuted);
   return NS_OK;
 }
 
 bool
-AudioChannelService::IsAudioChannelActive(nsPIDOMWindow* aWindow,
+AudioChannelService::IsAudioChannelActive(nsPIDOMWindowOuter* aWindow,
                                           AudioChannel aAudioChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -904,15 +883,13 @@ AudioChannelService::IsAudioChannelActive(nsPIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelService::IsAudioChannelActive(nsIDOMWindow* aWindow,
+AudioChannelService::IsAudioChannelActive(mozIDOMWindowProxy* aWindow,
                                           unsigned short aAudioChannel,
                                           bool* aActive)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
-  nsCOMPtr<nsPIDOMWindow> window = GetTopWindow(piWindow);
-  MOZ_ASSERT(window->IsOuterWindow());
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
   *aActive = IsAudioChannelActive(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }

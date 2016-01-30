@@ -14,7 +14,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsITransferable.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsISelection;
 class nsITransferable;
 class nsIContent;
@@ -51,7 +51,7 @@ public:
    * aDragNode - [out] the link, image or area being dragged, or null if the
    *             drag occurred on another element.
    */
-  static nsresult GetDragData(nsPIDOMWindow* aWindow,
+  static nsresult GetDragData(nsPIDOMWindowOuter* aWindow,
                               nsIContent* aTarget,
                               nsIContent* aSelectionTargetNode,
                               bool aIsAltKeyPressed,

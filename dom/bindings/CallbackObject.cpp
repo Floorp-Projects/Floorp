@@ -98,7 +98,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
         // from a now-unloaded document we'd have the new document as the
         // script entry point...
         MOZ_ASSERT(win->IsInnerWindow());
-        if (!win->HasActiveDocument()) {
+        if (!win->AsInner()->HasActiveDocument()) {
           // Just bail out from here
           return;
         }

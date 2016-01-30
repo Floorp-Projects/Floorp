@@ -151,7 +151,7 @@ Navigator::Init()
                                "dom.vibrator.max_vibrate_list_len", 128);
 }
 
-Navigator::Navigator(nsPIDOMWindow* aWindow)
+Navigator::Navigator(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
   MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
@@ -373,7 +373,7 @@ NS_IMETHODIMP
 Navigator::GetUserAgent(nsAString& aUserAgent)
 {
   nsCOMPtr<nsIURI> codebaseURI;
-  nsCOMPtr<nsPIDOMWindow> window;
+  nsCOMPtr<nsPIDOMWindowInner> window;
 
   if (mWindow) {
     window = mWindow;
@@ -758,7 +758,7 @@ namespace {
 class VibrateWindowListener : public nsIDOMEventListener
 {
 public:
-  VibrateWindowListener(nsIDOMWindow* aWindow, nsIDocument* aDocument)
+  VibrateWindowListener(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   {
     mWindow = do_GetWeakReference(aWindow);
     mDocument = do_GetWeakReference(aDocument);
@@ -811,7 +811,7 @@ VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
     // empty list, because Vibrate() will fail if we're no longer focused, but
     // CancelVibrate() will succeed, so long as nobody else has started a new
     // vibration pattern.
-    nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
     hal::CancelVibrate(window);
     RemoveListener();
     gVibrateWindowListener = nullptr;
@@ -927,7 +927,7 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
 uint32_t
 Navigator::MaxTouchPoints()
 {
-  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(mWindow);
+  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(mWindow->GetOuterWindow());
 
   NS_ENSURE_TRUE(widget, 0);
   return widget->GetMaxTouchPoints();
@@ -1110,7 +1110,7 @@ Navigator::GetGeolocation(ErrorResult& aRv)
   }
 
   mGeolocation = new Geolocation();
-  if (NS_FAILED(mGeolocation->Init(mWindow->GetOuterWindow()))) {
+  if (NS_FAILED(mGeolocation->Init(mWindow))) {
     mGeolocation = nullptr;
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -1509,7 +1509,7 @@ Navigator::GetDeprecatedBattery(ErrorResult& aRv)
 }
 
 /* static */ already_AddRefed<Promise>
-Navigator::GetDataStores(nsPIDOMWindow* aWindow,
+Navigator::GetDataStores(nsPIDOMWindowInner* aWindow,
                          const nsAString& aName,
                          const nsAString& aOwner,
                          ErrorResult& aRv)
@@ -1923,7 +1923,7 @@ Navigator::GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads,
     return;
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
   win->SetHasGamepadEventListener(true);
   win->GetGamepads(aGamepads);
 }
@@ -1959,7 +1959,7 @@ Navigator::NotifyVRDevicesUpdated()
 {
   // Synchronize the VR devices and resolve the promises in
   // mVRGetDevicesPromises
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
 
   nsTArray<RefPtr<VRDevice>> vrDevs;
   if (win->UpdateVRDevices(vrDevs)) {
@@ -2173,7 +2173,7 @@ Navigator::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 void
-Navigator::SetWindow(nsPIDOMWindow *aInnerWindow)
+Navigator::SetWindow(nsPIDOMWindowInner *aInnerWindow)
 {
   NS_ASSERTION(aInnerWindow->IsInnerWindow(),
                "Navigator must get an inner window!");
@@ -2207,7 +2207,7 @@ Navigator::CheckPermission(const char* type)
 
 /* static */
 bool
-Navigator::CheckPermission(nsPIDOMWindow* aWindow, const char* aType)
+Navigator::CheckPermission(nsPIDOMWindowInner* aWindow, const char* aType)
 {
   if (!aWindow) {
     return false;
@@ -2459,7 +2459,7 @@ Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
 bool
 Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
   return win && nsDOMCameraManager::CheckPermission(win);
 }
 
@@ -2488,7 +2488,7 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
 bool
 Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
 
   // Do not support NFC if NFC content helper does not exist.
   nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
@@ -2564,7 +2564,7 @@ Navigator::HasDataStoreSupport(JSContext* aCx, JSObject* aGlobal)
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(global);
+  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(global);
   if (!win) {
     return false;
   }
@@ -2582,7 +2582,7 @@ Navigator::HasDataStoreSupport(JSContext* aCx, JSObject* aGlobal)
 bool
 Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
   if (!win) {
     return false;
   }
@@ -2610,13 +2610,13 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
 {
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(global);
-  if (NS_WARN_IF(!win)) {
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowFromGlobal(global);
+  if (NS_WARN_IF(!inner)) {
     return false;
   }
 
   // Grant access if it has the permission.
-  if (CheckPermission(win, "presentation")) {
+  if (CheckPermission(inner, "presentation")) {
     return true;
   }
 
@@ -2628,8 +2628,8 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  win = win->GetOuterWindow();
-  nsCOMPtr<nsPIDOMWindow> top = win->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> win = inner->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> top = win->GetTop();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(win);
   nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
   if (!sop || !topSop) {
@@ -2642,7 +2642,8 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  if (!(top = top->GetCurrentInnerWindow())) {
+  nsCOMPtr<nsPIDOMWindowInner> topInner;
+  if (!(topInner = top->GetCurrentInnerWindow())) {
     return false;
   }
 
@@ -2653,7 +2654,7 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
   }
 
   nsAutoString sessionId;
-  presentationService->GetExistentSessionIdAtLaunch(top->WindowID(), sessionId);
+  presentationService->GetExistentSessionIdAtLaunch(topInner->WindowID(), sessionId);
   return !sessionId.IsEmpty();
 }
 
@@ -2672,10 +2673,10 @@ Navigator::MozE10sEnabled()
 }
 
 /* static */
-already_AddRefed<nsPIDOMWindow>
+already_AddRefed<nsPIDOMWindowInner>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {
-  nsCOMPtr<nsPIDOMWindow> win =
+  nsCOMPtr<nsPIDOMWindowInner> win =
     do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(aGlobal));
   MOZ_ASSERT(!win || win->IsInnerWindow());
   return win.forget();
@@ -2788,7 +2789,7 @@ Navigator::ClearUserAgentCache()
 }
 
 nsresult
-Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
+Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
                         bool aIsCallerChrome,
                         nsAString& aUserAgent)
 {

@@ -62,7 +62,7 @@ public:
   }
 };
 
-Telephony::Telephony(nsPIDOMWindow* aOwner)
+Telephony::Telephony(nsPIDOMWindowInner* aOwner)
   : DOMEventTargetHelper(aOwner),
     mIsAudioStartPlaying(false),
     mHaveDispatchedInterruptBeginEvent(false),
@@ -107,7 +107,7 @@ Telephony::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 // static
 already_AddRefed<Telephony>
-Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
+Telephony::Create(nsPIDOMWindowInner* aOwner, ErrorResult& aRv)
 {
   NS_ASSERTION(aOwner, "Null owner!");
 

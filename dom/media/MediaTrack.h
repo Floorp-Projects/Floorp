@@ -89,7 +89,7 @@ protected:
   virtual ~MediaTrack();
 
   void SetTrackList(MediaTrackList* aList);
-  void Init(nsPIDOMWindow* aOwnerWindow);
+  void Init(nsPIDOMWindowInner* aOwnerWindow);
 
   RefPtr<MediaTrackList> mList;
   nsString mId;

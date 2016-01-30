@@ -303,7 +303,7 @@ public:
                                            DOMEventTargetHelper)
 
   PerformanceBase();
-  explicit PerformanceBase(nsPIDOMWindow* aWindow);
+  explicit PerformanceBase(nsPIDOMWindowInner* aWindow);
 
   typedef mozilla::dom::PerformanceEntry PerformanceEntry;
   typedef mozilla::dom::PerformanceObserver PerformanceObserver;
@@ -391,7 +391,7 @@ private:
 class nsPerformance final : public PerformanceBase
 {
 public:
-  nsPerformance(nsPIDOMWindow* aWindow,
+  nsPerformance(nsPIDOMWindowInner* aWindow,
                 nsDOMNavigationTiming* aDOMTiming,
                 nsITimedChannel* aChannel,
                 nsPerformance* aParentPerformance);

@@ -22,7 +22,8 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
 
-  static already_AddRefed<PresentationAvailability> Create(nsPIDOMWindow* aWindow);
+  static already_AddRefed<PresentationAvailability>
+  Create(nsPIDOMWindowInner* aWindow);
 
   virtual void DisconnectFromOwner() override;
 
@@ -35,7 +36,7 @@ public:
   IMPL_EVENT_HANDLER(change);
 
 private:
-  explicit PresentationAvailability(nsPIDOMWindow* aWindow);
+  explicit PresentationAvailability(nsPIDOMWindowInner* aWindow);
 
   ~PresentationAvailability();
 

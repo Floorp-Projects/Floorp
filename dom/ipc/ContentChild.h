@@ -77,7 +77,7 @@ public:
 
   nsresult
   ProvideWindowCommon(TabChild* aTabOpener,
-                      nsIDOMWindow* aOpener,
+                      mozIDOMWindowProxy* aOpener,
                       bool aIframeMoz,
                       uint32_t aChromeFlags,
                       bool aCalledFromJS,
@@ -87,7 +87,7 @@ public:
                       const nsAString& aName,
                       const nsACString& aFeatures,
                       bool* aWindowIsNew,
-                      nsIDOMWindow** aReturn);
+                      mozIDOMWindowProxy** aReturn);
 
   bool Init(MessageLoop* aIOLoop,
             base::ProcessId aParentPid,

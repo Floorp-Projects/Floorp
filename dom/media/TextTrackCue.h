@@ -38,15 +38,15 @@ public:
               const nsAString& aText,
               ErrorResult& aRv)
   {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
     RefPtr<TextTrackCue> ttcue = new TextTrackCue(window, aStartTime,
                                                     aEndTime, aText, aRv);
     return ttcue.forget();
   }
-  TextTrackCue(nsPIDOMWindow* aGlobal, double aStartTime, double aEndTime,
+  TextTrackCue(nsPIDOMWindowInner* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, ErrorResult& aRv);
 
-  TextTrackCue(nsPIDOMWindow* aGlobal, double aStartTime, double aEndTime,
+  TextTrackCue(nsPIDOMWindowInner* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, HTMLTrackElement* aTrackElement,
                ErrorResult& aRv);
 

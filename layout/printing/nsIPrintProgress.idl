@@ -4,17 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsIWebProgressListener.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIObserver;
 interface nsIPrompt;
 
-[scriptable, uuid(594fd36d-5b1b-412f-a74e-ab72099a5bb2)]
+[scriptable, uuid(05f4fb88-e568-4d35-b394-ce0aa3eea6fc)]
 interface nsIPrintProgress: nsIWebProgressListener {
 
   /* Open the progress dialog
      you can specify parameters through an xpcom object
   */
-  void openProgressDialog(in nsIDOMWindow parent, 
+  void openProgressDialog(in mozIDOMWindowProxy parent, 
                           in string dialogURL, 
                           in nsISupports parameters, 
                           in nsIObserver openDialogObserver,

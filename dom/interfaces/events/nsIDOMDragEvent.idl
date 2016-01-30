@@ -8,25 +8,8 @@
 
 interface nsIDOMDataTransfer;
 
-[builtinclass, uuid(12aabbe9-7c70-4bf9-b133-a8d6a120679e)]
+[builtinclass, uuid(d5c0d4c2-c646-4b4b-836e-48408b9c7b80)]
 interface nsIDOMDragEvent : nsIDOMMouseEvent
 {
   readonly attribute nsIDOMDataTransfer dataTransfer;
-
-  void initDragEvent(in DOMString typeArg,
-                     in boolean canBubbleArg,
-                     in boolean cancelableArg,
-                     in nsIDOMWindow aView,
-                     in long aDetail,
-                     in long aScreenX,
-                     in long aScreenY,
-                     in long aClientX,
-                     in long aClientY,
-                     in boolean aCtrlKey,
-                     in boolean aAltKey,
-                     in boolean aShiftKey,
-                     in boolean aMetaKey,
-                     in unsigned short aButton,
-                     in nsIDOMEventTarget aRelatedTarget,
-                     in nsIDOMDataTransfer aDataTransfer);
 };

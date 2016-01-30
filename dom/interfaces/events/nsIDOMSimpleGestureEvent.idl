@@ -104,7 +104,7 @@
  * consuming events.
  */
 
-[builtinclass, uuid(1b9afbf0-2cf0-4a7b-99bc-cd35dbd5b637)]
+[builtinclass, uuid(c397f9a2-4266-4291-b282-3efd6d7afc57)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Swipe direction constants */
@@ -179,24 +179,4 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 
   /* Click count value for taps. */
   readonly attribute unsigned long clickCount;
-
-  void initSimpleGestureEvent(in DOMString typeArg,
-                              in boolean canBubbleArg,
-                              in boolean cancelableArg,
-                              in nsIDOMWindow viewArg,
-                              in long detailArg,
-                              in long screenXArg,
-                              in long screenYArg,
-                              in long clientXArg,
-                              in long clientYArg,
-                              in boolean ctrlKeyArg,
-                              in boolean altKeyArg,
-                              in boolean shiftKeyArg,
-                              in boolean metaKeyArg,
-                              in unsigned short buttonArg,
-                              in nsIDOMEventTarget relatedTargetArg,
-                              in unsigned long allowedDirectionsArg,
-                              in unsigned long directionArg,
-                              in double deltaArg,
-                              in unsigned long clickCount);
 };

@@ -25,7 +25,7 @@ namespace mobileconnection {
 
 NS_IMPL_ISUPPORTS(MobileConnectionCallback, nsIMobileConnectionCallback)
 
-MobileConnectionCallback::MobileConnectionCallback(nsPIDOMWindow* aWindow,
+MobileConnectionCallback::MobileConnectionCallback(nsPIDOMWindowInner* aWindow,
                                                    DOMRequest* aRequest)
   : mWindow(aWindow)
   , mRequest(aRequest)

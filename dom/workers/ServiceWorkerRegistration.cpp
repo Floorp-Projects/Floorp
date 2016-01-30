@@ -75,7 +75,7 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-ServiceWorkerRegistrationBase::ServiceWorkerRegistrationBase(nsPIDOMWindow* aWindow,
+ServiceWorkerRegistrationBase::ServiceWorkerRegistrationBase(nsPIDOMWindowInner* aWindow,
                                                              const nsAString& aScope)
   : DOMEventTargetHelper(aWindow)
   , mScope(aScope)
@@ -98,7 +98,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceW
                                    mInstallingWorker, mWaitingWorker, mActiveWorker);
 #endif
 
-ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
+ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
                                                                          const nsAString& aScope)
   : ServiceWorkerRegistrationBase(aWindow, aScope)
   , mListeningForEvents(false)
@@ -119,7 +119,7 @@ ServiceWorkerRegistrationMainThread::~ServiceWorkerRegistrationMainThread()
 already_AddRefed<workers::ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhichOne)
 {
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (!window) {
     return nullptr;
   }
@@ -259,8 +259,7 @@ ServiceWorkerRegistrationMainThread::RegistrationRemoved()
   // If the registration is being removed completely, remove it from the
   // window registration hash table so that a new registration would get a new
   // wrapper JS object.
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-  if (window) {
+  if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
     window->InvalidateServiceWorkerRegistration(mScope);
   }
 }
@@ -716,7 +715,7 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
                                                       ErrorResult& aRv)
 {
   AssertIsOnMainThread();
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -749,7 +748,7 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
   AssertIsOnMainThread();
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;

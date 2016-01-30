@@ -249,7 +249,7 @@ nsDOMCameraControl::DiscardCachedCameraInstance(nsITimer* aTimer, void* aClosure
 nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
                                        const CameraConfiguration& aInitialConfig,
                                        Promise* aPromise,
-                                       nsPIDOMWindow* aWindow)
+                                       nsPIDOMWindowInner* aWindow)
   : DOMMediaStream()
   , mCameraControl(nullptr)
   , mAudioChannelAgent(nullptr)

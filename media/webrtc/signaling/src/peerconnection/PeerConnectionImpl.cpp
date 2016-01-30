@@ -375,7 +375,7 @@ bool PCUuidGenerator::Generate(std::string* idp) {
   return true;
 }
 
-bool IsPrivateBrowsing(nsPIDOMWindow* aWindow)
+bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow)
 {
 #if defined(MOZILLA_EXTERNAL_LINKAGE)
   return false;
@@ -721,7 +721,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // Currently no standalone unit tests for DataChannel,
   // which is the user of mWindow
   MOZ_ASSERT(aWindow);
-  mWindow = aWindow;
+  mWindow = aWindow->AsInner();
   NS_ENSURE_STATE(mWindow);
 #endif // MOZILLA_INTERNAL_API
 

@@ -41,7 +41,7 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
   return NS_SUCCEEDED(rv);
 }
 
-ServiceWorker::ServiceWorker(nsPIDOMWindow* aWindow,
+ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
                              ServiceWorkerInfo* aInfo)
   : DOMEventTargetHelper(aWindow),
     mInfo(aInfo)
@@ -89,7 +89,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
   if (!window || !window->GetExtantDoc()) {
     NS_WARNING("Trying to call post message from an invalid dom object.");
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

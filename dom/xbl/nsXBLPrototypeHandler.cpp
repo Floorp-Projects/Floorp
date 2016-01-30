@@ -233,18 +233,14 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
 
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
-  nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aTarget));
-  nsCOMPtr<nsPIDOMWindow> window;
-
+  nsCOMPtr<nsPIWindowRoot> winRoot = do_QueryInterface(aTarget);
   if (winRoot) {
-    window = winRoot->GetWindow();
-  }
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = winRoot->GetWindow()) {
+      nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
+      NS_ENSURE_TRUE(innerWindow, NS_ERROR_UNEXPECTED);
 
-  if (window) {
-    window = window->GetCurrentInnerWindow();
-    NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-
-    boundGlobal = do_QueryInterface(window->GetPrivateRoot());
+      boundGlobal = do_QueryInterface(innerWindow->GetPrivateRoot());
+    }
   }
   else boundGlobal = do_QueryInterface(aTarget);
 
@@ -341,7 +337,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsIAtom* aName,
 
   // Check to see if we've already compiled this
   JS::Rooted<JSObject*> globalObject(cx, JS::CurrentGlobalOrNull(cx));
-  nsCOMPtr<nsPIDOMWindow> pWindow = xpc::WindowOrNull(globalObject);
+  nsCOMPtr<nsPIDOMWindowInner> pWindow = xpc::WindowOrNull(globalObject)->AsInner();
   if (pWindow) {
     JS::Rooted<JSObject*> cachedHandler(cx, pWindow->GetCachedXBLPrototypeHandler(this));
     if (cachedHandler) {
@@ -422,8 +418,8 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
   // element and call doCommand on it.
   nsCOMPtr<nsIController> controller;
 
-  nsCOMPtr<nsPIDOMWindow> privateWindow;
-  nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aTarget));
+  nsCOMPtr<nsPIDOMWindowOuter> privateWindow;
+  nsCOMPtr<nsPIWindowRoot> windowRoot = do_QueryInterface(aTarget);
   if (windowRoot) {
     privateWindow = windowRoot->GetWindow();
   }
@@ -469,7 +465,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
     // get the focused element so that we can pageDown only at
     // certain times.
 
-    nsCOMPtr<nsPIDOMWindow> windowToCheck;
+    nsCOMPtr<nsPIDOMWindowOuter> windowToCheck;
     if (windowRoot)
       windowToCheck = windowRoot->GetWindow();
     else
@@ -477,7 +473,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
 
     nsCOMPtr<nsIContent> focusedContent;
     if (windowToCheck) {
-      nsCOMPtr<nsPIDOMWindow> focusedWindow;
+      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
       focusedContent =
         nsFocusManager::GetFocusedDescendant(windowToCheck, true, getter_AddRefs(focusedWindow));
     }
@@ -572,7 +568,7 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   }
 
   if (!controllers) {
-    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aTarget));
+    nsCOMPtr<nsPIDOMWindowOuter> domWindow(do_QueryInterface(aTarget));
     if (domWindow) {
       domWindow->GetControllers(getter_AddRefs(controllers));
     }

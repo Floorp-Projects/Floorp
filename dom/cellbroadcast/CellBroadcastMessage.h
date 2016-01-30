@@ -13,7 +13,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +27,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CellBroadcastMessage)
 
-  CellBroadcastMessage(nsPIDOMWindow* aWindow,
+  CellBroadcastMessage(nsPIDOMWindowInner* aWindow,
                        uint32_t aServiceId,
                        uint32_t aGsmGeographicalScope,
                        uint16_t aMessageCode,
@@ -42,7 +42,7 @@ public:
                        bool aEtwsEmergencyUserAlert,
                        bool aEtwsPopup);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const { return mWindow; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -79,7 +79,7 @@ private:
   // Don't try to use the default constructor.
   CellBroadcastMessage();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   uint32_t mServiceId;
   Nullable<CellBroadcastGsmGeographicalScope> mGsmGeographicalScope;
   uint16_t mMessageCode;
@@ -99,12 +99,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CellBroadcastEtwsInfo)
 
-  CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
+  CellBroadcastEtwsInfo(nsPIDOMWindowInner* aWindow,
                         uint32_t aWarningType,
                         bool aEmergencyUserAlert,
                         bool aPopup);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const { return mWindow; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -125,7 +125,7 @@ private:
   // Don't try to use the default constructor.
   CellBroadcastEtwsInfo();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   Nullable<CellBroadcastEtwsWarningType> mWarningType;
   bool mEmergencyUserAlert;
   bool mPopup;
