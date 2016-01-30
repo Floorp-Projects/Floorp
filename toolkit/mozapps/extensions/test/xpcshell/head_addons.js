@@ -7,6 +7,8 @@ var AM_Ci = Components.interfaces;
 
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
+const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
+const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
@@ -295,6 +297,179 @@ function createAppInfo(id, name, version, platformVersion) {
   registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
+
+function getManifestURIForBundle(file) {
+  if (file.isDirectory()) {
+    file.append("install.rdf");
+    if (file.exists()) {
+      return NetUtil.newURI(file);
+    }
+
+    file.leafName = "manifest.json";
+    if (file.exists()) {
+      return NetUtil.newURI(file);
+    }
+
+    throw new Error("No manifest file present");
+  }
+
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(file);
+  try {
+    let uri = NetUtil.newURI(file);
+
+    if (zip.hasEntry("install.rdf")) {
+      return NetUtil.newURI("jar:" + uri.spec + "!/" + "install.rdf");
+    }
+
+    if (zip.hasEntry("manifest.json")) {
+      return NetUtil.newURI("jar:" + uri.spec + "!/" + "manifest.json");
+    }
+
+    throw new Error("No manifest file present");
+  }
+  finally {
+    zip.close();
+  }
+}
+
+let getIDForManifest = Task.async(function*(manifestURI) {
+  // Load it
+  let inputStream = yield new Promise((resolve, reject) => {
+    NetUtil.asyncFetch({
+      uri: manifestURI,
+      loadUsingSystemPrincipal: true,
+    }, (inputStream, status) => {
+      if (status != Components.results.NS_OK)
+        reject(status);
+      resolve(inputStream);
+    });
+  });
+
+  // Get the data as a string
+  let data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+
+  if (manifestURI.spec.endsWith(".rdf")) {
+    let rdfParser = AM_Cc["@mozilla.org/rdf/xml-parser;1"].
+                    createInstance(AM_Ci.nsIRDFXMLParser)
+    let ds = AM_Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+             createInstance(AM_Ci.nsIRDFDataSource);
+    rdfParser.parseString(ds, manifestURI, data);
+
+    let rdfService = AM_Cc["@mozilla.org/rdf/rdf-service;1"].
+                     getService(AM_Ci.nsIRDFService);
+
+    let rdfID = ds.GetTarget(rdfService.GetResource("urn:mozilla:install-manifest"),
+                             rdfService.GetResource("http://www.mozilla.org/2004/em-rdf#id"),
+                             true);
+    return rdfID.QueryInterface(AM_Ci.nsIRDFLiteral).Value;
+  }
+  else {
+    let manifest = JSON.parse(data);
+    return manifest.applications.gecko.id;
+  }
+});
+
+let gUseRealCertChecks = false;
+function overrideCertDB(handler) {
+  // Unregister the real database. This only works because the add-ons manager
+  // hasn't started up and grabbed the certificate database yet.
+  let registrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
+  let factory = registrar.getClassObject(CERTDB_CID, AM_Ci.nsIFactory);
+  registrar.unregisterFactory(CERTDB_CID, factory);
+
+  // Get the real DB
+  let realCertDB = factory.createInstance(null, AM_Ci.nsIX509CertDB);
+
+  let verifyCert = Task.async(function*(caller, file, result, cert, callback) {
+    // If this isn't a callback we can get directly to through JS then just
+    // pass on the results
+    if (!callback.wrappedJSObject) {
+      caller(callback, result, cert);
+      return;
+    }
+
+    // Bypassing XPConnect allows us to create a fake x509 certificate from
+    // JS
+    callback = callback.wrappedJSObject;
+
+    if (gUseRealCertChecks || result != Components.results.NS_ERROR_SIGNED_JAR_NOT_SIGNED) {
+      // If the real DB found a useful result of some kind then pass it on.
+      caller(callback, result, cert);
+      return;
+    }
+
+    try {
+      let manifestURI = getManifestURIForBundle(file);
+
+      let id = yield getIDForManifest(manifestURI);
+
+      // Make sure to close the open zip file or it will be locked.
+      if (file.isFile()) {
+        Services.obs.notifyObservers(file, "flush-cache-entry", null);
+      }
+
+      let fakeCert = {
+        commonName: id
+      }
+      caller(callback, Components.results.NS_OK, fakeCert);
+    }
+    catch (e) {
+      // If there is any error then just pass along the original results
+      caller(callback, result, cert);
+    }
+  });
+
+  let fakeCertDB = {
+    openSignedAppFileAsync(root, file, callback) {
+      // First try calling the real cert DB
+      realCertDB.openSignedAppFileAsync(root, file, (result, zipReader, cert) => {
+        function call(callback, result, cert) {
+          callback.openSignedAppFileFinished(result, zipReader, cert);
+        }
+
+        verifyCert(call, file.clone(), result, cert, callback);
+      });
+    },
+
+    verifySignedDirectoryAsync(root, dir, callback) {
+      // First try calling the real cert DB
+      realCertDB.verifySignedDirectoryAsync(root, dir, (result, cert) => {
+        function call(callback, result, cert) {
+          callback.verifySignedDirectoryFinished(result, cert);
+        }
+
+        verifyCert(call, dir.clone(), result, cert, callback);
+      });
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIX509CertDB])
+  };
+
+  for (let property of Object.keys(realCertDB)) {
+    if (property in fakeCertDB) {
+      continue;
+    }
+
+    if (typeof realCertDB[property] == "function") {
+      fakeCertDB[property] = realCertDB[property].bind(realCertDB);
+    }
+  }
+
+  let certDBFactory = {
+    createInstance: function(outer, iid) {
+      if (outer != null) {
+        throw Cr.NS_ERROR_NO_AGGREGATION;
+      }
+      return fakeCertDB.QueryInterface(iid);
+    }
+  };
+  registrar.registerFactory(CERTDB_CID, "CertDB",
+                            CERTDB_CONTRACTID, certDBFactory);
+}
+
+overrideCertDB();
 
 /**
  * Tests that an add-on does appear in the crash report annotations, if
@@ -1736,8 +1911,8 @@ Services.prefs.setCharPref("extensions.hotfix.id", "");
 Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0");
 Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
-// Disable signature checks for most tests
-Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
+// Ensure signature checks are enabled by default
+Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 
 // Register a temporary directory for the tests.
 const gTmpD = gProfD.clone();
