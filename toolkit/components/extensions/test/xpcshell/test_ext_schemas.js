@@ -197,6 +197,39 @@ let json = [
      },
 
      {
+       name: "deep",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             foo: {
+               type: "object",
+               properties: {
+                 bar: {
+                   type: "array",
+                   items: {
+                     type: "object",
+                     properties: {
+                       baz: {
+                         type: "object",
+                         properties: {
+                           required: {type: "integer"},
+                           optional: {type: "string", optional: true},
+                         },
+                       },
+                     },
+                   },
+                 },
+               },
+             },
+           },
+         },
+       ],
+     },
+
+     {
        name: "extended1",
        type: "function",
        parameters: [
@@ -447,6 +480,18 @@ add_task(function* () {
                   /must be a relative URL/,
                   "should throw for non-relative URL");
   }
+
+  root.testing.deep({foo: {bar: [{baz: {required: 12, optional: "42"}}]}});
+  verify("call", "testing", "deep", [{foo: {bar: [{baz: {required: 12, optional: "42"}}]}}]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {optional: "42"}}]}}),
+                /Type error for parameter arg \(Error processing foo\.bar\.0\.baz: Property "required" is required\) for testing\.deep/,
+                "should throw with the correct object path");
+
+  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {required: 12, optional: 42}}]}}),
+                /Type error for parameter arg \(Error processing foo\.bar\.0\.baz\.optional: Expected string instead of 42\) for testing\.deep/,
+                "should throw with the correct object path");
 
   root.testing.onFoo.addListener(f);
   do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onFoo"]));
