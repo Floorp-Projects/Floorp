@@ -2153,9 +2153,10 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> aPromise)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(window);
+  nsCOMPtr<nsIGlobalObject> parentObject =
+    do_QueryInterface(window->GetCurrentInnerWindow());
   NS_ENSURE_STATE(parentObject);
 #ifdef MOZ_FMP4
   nsCOMPtr<nsIWidget> widget = GetWidget();
