@@ -621,10 +621,46 @@ class WasmTokenStream
                   case 'a':
                     if (consume(end_, MOZ_UTF16("add")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Add, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("and")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32And, begin, cur_);
                     break;
                   case 'c':
                     if (consume(end_, MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
+                    break;
+                  case 'd':
+                    if (consume(end_, MOZ_UTF16("div_s")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivS, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("div_u")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
+                    break;
+                  case 'm':
+                    if (consume(end_, MOZ_UTF16("mul")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Mul, begin, cur_);
+                    break;
+                  case 'o':
+                    if (consume(end_, MOZ_UTF16("or")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Or, begin, cur_);
+                    break;
+                  case 'r':
+                    if (consume(end_, MOZ_UTF16("rem_s")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("rem_u")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
+                    break;
+                  case 's':
+                    if (consume(end_, MOZ_UTF16("sub")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Sub, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("shl")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Shl, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("shr_s")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrS, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("shr_u")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
+                    break;
+                  case 'x':
+                    if (consume(end_, MOZ_UTF16("xor")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Xor, begin, cur_);
                     break;
                 }
                 break;
