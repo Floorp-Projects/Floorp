@@ -61,6 +61,7 @@ var COLUMN_TYPES = {
 
   JET_coltypUnsignedLong: 14, /* 4-byte unsigned integer */
   JET_coltypLongLong:     15, /* 8-byte signed integer */
+  JET_coltypGUID:         16, /* 16-byte globally unique identifier */
 };
 
 // Not very efficient, but only used for error messages
@@ -386,6 +387,9 @@ ESEDB.prototype = {
       buffer = new ctypes.uint8_t();
     } else if (column.type == "date") {
       buffer = new KERNEL.FILETIME();
+    } else if (column.type == "guid") {
+      let byteArray = ctypes.ArrayType(ctypes.uint8_t);
+      buffer = new byteArray(column.dbSize);
     } else {
       throw "Unknown type " + column.type;
     }
@@ -407,6 +411,22 @@ ESEDB.prototype = {
     }
     if (column.type == "boolean") {
       return buffer ? (255 == buffer.value) : false;
+    }
+    if (column.type == "guid") {
+      if (buffer.length != 16) {
+        Cu.reportError("Buffer size for guid field " + column.id + " should have been 16!");
+        return "";
+      }
+      let rv = "{";
+      for (let i = 0; i < 16; i++) {
+        if (i == 4 || i == 6 || i == 8 || i == 10) {
+          rv += "-";
+        }
+        let byteValue = buffer.addressOfElement(i).contents;
+        // Ensure there's a leading 0
+        rv += ("0" + byteValue.toString(16)).substr(-2);
+      }
+      return rv + "}";
     }
     if (column.type == "date") {
       if (!buffer) {
@@ -456,6 +476,11 @@ ESEDB.prototype = {
         if (dbType != COLUMN_TYPES.JET_coltypLongLong) {
           throw new Error("Invalid column type for column " + column.name +
                           "; expected long long type, got type " + getColTypeName(dbType));
+        }
+      } else if (column.type == "guid") {
+        if (dbType != COLUMN_TYPES.JET_coltypGUID) {
+          throw new Error("Invalid column type for column " + column.name +
+                          "; expected guid type, got type " + getColTypeName(dbType));
         }
       } else if (column.type) {
         throw new Error("Unknown column type " + column.type + " requested for column " +
