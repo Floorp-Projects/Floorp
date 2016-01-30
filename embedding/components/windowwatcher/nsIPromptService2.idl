@@ -8,7 +8,7 @@ interface nsIAuthInformation;
 interface nsIAuthPromptCallback;
 interface nsICancelable;
 interface nsIChannel;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * This is an improved version of nsIPromptService that is less prescriptive
@@ -16,7 +16,7 @@ interface nsIDOMWindow;
  *
  * @status INCOMPLETE do not freeze before fixing bug 228207
  */
-[scriptable, uuid(cf86d196-dbee-4482-9dfa-3477aa128319)]
+[scriptable, uuid(3775ad32-8326-422b-9ff3-87ef1d3f9f0e)]
 interface nsIPromptService2 : nsIPromptService {
   // NOTE: These functions differ from their nsIAuthPrompt counterparts by
   // having additional checkbox parameters
@@ -26,14 +26,14 @@ interface nsIPromptService2 : nsIPromptService {
   //
   // See nsIAuthPrompt2 for documentation on the semantics of the other
   // parameters.
-  boolean promptAuth(in nsIDOMWindow aParent,
+  boolean promptAuth(in mozIDOMWindowProxy aParent,
                      in nsIChannel aChannel,
                      in uint32_t level,
                      in nsIAuthInformation authInfo,
                      in wstring checkboxLabel,
                      inout boolean checkValue);
 
-  nsICancelable asyncPromptAuth(in nsIDOMWindow aParent,
+  nsICancelable asyncPromptAuth(in mozIDOMWindowProxy aParent,
                                 in nsIChannel aChannel,
                                 in nsIAuthPromptCallback aCallback,
                                 in nsISupports aContext,

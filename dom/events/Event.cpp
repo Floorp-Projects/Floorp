@@ -53,9 +53,9 @@ Event::Event(EventTarget* aOwner,
   ConstructorInit(aOwner, aPresContext, aEvent);
 }
 
-Event::Event(nsPIDOMWindow* aParent)
+Event::Event(nsPIDOMWindowInner* aParent)
 {
-  ConstructorInit(static_cast<nsGlobalWindow *>(aParent), nullptr, nullptr);
+  ConstructorInit(nsGlobalWindow::Cast(aParent), nullptr, nullptr);
 }
 
 void
@@ -387,7 +387,7 @@ Event::Init(mozilla::dom::EventTarget* aGlobal)
     return nsContentUtils::ThreadsafeIsCallerChrome();
   }
   bool trusted = false;
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
+  nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);
   if (w) {
     nsCOMPtr<nsIDocument> d = w->GetExtantDoc();
     if (d) {
@@ -543,7 +543,7 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
 
   nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
   if (!node) {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
+    nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(mEvent->currentTarget);
     if (!win) {
       return;
     }
@@ -618,15 +618,6 @@ Event::DuplicatePrivateData()
 NS_IMETHODIMP
 Event::SetTarget(nsIDOMEventTarget* aTarget)
 {
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);
-
-    NS_ASSERTION(!win || !win->IsInnerWindow(),
-                 "Uh, inner window set as event target!");
-  }
-#endif
-
   mEvent->target = do_QueryInterface(aTarget);
   return NS_OK;
 }
@@ -1096,7 +1087,7 @@ Event::TimeStamp() const
       return 0.0;
     }
 
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mOwner);
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(mOwner);
     if (NS_WARN_IF(!win)) {
       return 0.0;
     }
@@ -1123,7 +1114,7 @@ Event::TimeStamp() const
 bool
 Event::GetPreventDefault() const
 {
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mOwner));
+  nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
   if (win) {
     if (nsIDocument* doc = win->GetExtantDoc()) {
       doc->WarnOnceAbout(nsIDocument::eGetPreventDefault);
@@ -1208,13 +1199,9 @@ Event::SetOwner(mozilla::dom::EventTarget* aOwner)
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
+  nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aOwner);
   if (w) {
-    if (w->IsOuterWindow()) {
-      mOwner = do_QueryInterface(w->GetCurrentInnerWindow());
-    } else {
-      mOwner = do_QueryInterface(w);
-    }
+    mOwner = do_QueryInterface(w);
     return;
   }
 

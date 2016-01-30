@@ -12,8 +12,6 @@
 #include "mozilla/Observer.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 
 namespace hal {
@@ -27,7 +25,7 @@ class BatteryManager : public DOMEventTargetHelper
                      , public BatteryObserver
 {
 public:
-  explicit BatteryManager(nsPIDOMWindow* aWindow);
+  explicit BatteryManager(nsPIDOMWindowInner* aWindow);
 
   void Init();
   void Shutdown();
@@ -39,7 +37,7 @@ public:
    * WebIDL Interface
    */
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return GetOwner();
   }

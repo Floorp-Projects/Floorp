@@ -22,7 +22,7 @@ class PermissionStatus final
   friend class PermissionObserver;
 
 public:
-  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindow* aWindow,
+  static already_AddRefed<PermissionStatus> Create(nsPIDOMWindowInner* aWindow,
                                                    PermissionName aName,
                                                    ErrorResult& aRv);
 
@@ -36,7 +36,7 @@ public:
 private:
   ~PermissionStatus();
 
-  PermissionStatus(nsPIDOMWindow* aWindow, PermissionName aName);
+  PermissionStatus(nsPIDOMWindowInner* aWindow, PermissionName aName);
 
   nsresult Init();
 

@@ -29,7 +29,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED(Connection, DOMEventTargetHelper,
 NS_IMPL_ADDREF_INHERITED(dom::network::Connection, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(dom::network::Connection, DOMEventTargetHelper)
 
-Connection::Connection(nsPIDOMWindow* aWindow)
+Connection::Connection(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mType(static_cast<ConnectionType>(kDefaultType))
   , mIsWifi(kDefaultIsWifi)

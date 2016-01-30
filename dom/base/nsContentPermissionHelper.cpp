@@ -46,7 +46,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  explicit VisibilityChangeListener(nsPIDOMWindow* aWindow);
+  explicit VisibilityChangeListener(nsPIDOMWindowInner* aWindow);
 
   void RemoveListener();
   void SetCallback(nsIContentPermissionRequestCallback* aCallback);
@@ -61,7 +61,7 @@ private:
 
 NS_IMPL_ISUPPORTS(VisibilityChangeListener, nsIDOMEventListener)
 
-VisibilityChangeListener::VisibilityChangeListener(nsPIDOMWindow* aWindow)
+VisibilityChangeListener::VisibilityChangeListener(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(aWindow);
 
@@ -99,7 +99,7 @@ VisibilityChangeListener::HandleEvent(nsIDOMEvent* aEvent)
 void
 VisibilityChangeListener::RemoveListener()
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
   if (!window) {
     return;
   }
@@ -365,7 +365,8 @@ nsContentPermissionUtils::CreateContentPermissionRequestParent(const nsTArray<Pe
 }
 
 /* static */ nsresult
-nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, nsPIDOMWindow* aWindow)
+nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest,
+                                        nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(!aWindow || aWindow->IsInnerWindow());
   NS_ENSURE_STATE(aWindow && aWindow->IsCurrentInnerWindow());
@@ -463,7 +464,7 @@ nsContentPermissionUtils::NotifyRemoveContentPermissionRequestChild(
 
 NS_IMPL_ISUPPORTS(nsContentPermissionRequester, nsIContentPermissionRequester)
 
-nsContentPermissionRequester::nsContentPermissionRequester(nsPIDOMWindow* aWindow)
+nsContentPermissionRequester::nsContentPermissionRequester(nsPIDOMWindowInner* aWindow)
   : mWindow(do_GetWeakReference(aWindow))
   , mListener(new VisibilityChangeListener(aWindow))
 {
@@ -480,7 +481,7 @@ nsContentPermissionRequester::GetVisibility(nsIContentPermissionRequestCallback*
 {
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
   if (!window) {
     return NS_ERROR_FAILURE;
   }
@@ -620,7 +621,7 @@ nsContentPermissionRequestProxy::GetTypes(nsIArray** aTypes)
 }
 
 NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetWindow(nsIDOMWindow * *aRequestingWindow)
+nsContentPermissionRequestProxy::GetWindow(mozIDOMWindow * *aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
   *aRequestingWindow = nullptr; // ipc doesn't have a window
@@ -765,7 +766,7 @@ NS_IMPL_ISUPPORTS(RemotePermissionRequest, nsIContentPermissionRequestCallback);
 
 RemotePermissionRequest::RemotePermissionRequest(
   nsIContentPermissionRequest* aRequest,
-  nsPIDOMWindow* aWindow)
+  nsPIDOMWindowInner* aWindow)
   : mRequest(aRequest)
   , mWindow(aWindow)
   , mIPCOpen(false)

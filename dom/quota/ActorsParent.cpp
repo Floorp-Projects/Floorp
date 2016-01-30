@@ -4166,7 +4166,7 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
 
 // static
 nsresult
-QuotaManager::GetInfoFromWindow(nsPIDOMWindow* aWindow,
+QuotaManager::GetInfoFromWindow(nsPIDOMWindowOuter* aWindow,
                                 nsACString* aGroup,
                                 nsACString* aOrigin,
                                 bool* aIsApp)

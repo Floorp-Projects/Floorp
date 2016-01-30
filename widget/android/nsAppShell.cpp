@@ -88,7 +88,7 @@ public:
 
     virtual nsresult Run() {
         const auto& buffer = jni::Object::Ref::From(mBuffer->GetObject());
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
         mBrowserApp->GetBrowserTab(mTabId, getter_AddRefs(tab));
         if (!tab) {
@@ -603,7 +603,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         RefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
         const auto& mBuffer = jni::Object::Ref::From(javaBuffer->GetObject());
 
-        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
         nsAppShell::Get()->mBrowserApp->GetBrowserTab(tabId, getter_AddRefs(tab));
         if (!tab) {

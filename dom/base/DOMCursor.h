@@ -25,7 +25,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMCursor,
                                            DOMRequest)
 
-  DOMCursor(nsPIDOMWindow* aWindow, nsICursorContinueCallback *aCallback);
+  DOMCursor(nsPIDOMWindowInner* aWindow, nsICursorContinueCallback *aCallback);
   DOMCursor(nsIGlobalObject* aGlobal, nsICursorContinueCallback *aCallback);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

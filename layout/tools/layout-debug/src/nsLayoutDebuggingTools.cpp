@@ -97,16 +97,16 @@ nsLayoutDebuggingTools::~nsLayoutDebuggingTools()
 NS_IMPL_ISUPPORTS(nsLayoutDebuggingTools, nsILayoutDebuggingTools)
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
+nsLayoutDebuggingTools::Init(mozIDOMWindow* aWin)
 {
     if (!Preferences::GetService()) {
         return NS_ERROR_UNEXPECTED;
     }
 
     {
-        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWin);
-        if (!window)
+        if (!aWin)
             return NS_ERROR_UNEXPECTED;
+        auto* window = nsPIDOMWindowInner::From(aWin);
         mDocShell = window->GetDocShell();
     }
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_UNEXPECTED);

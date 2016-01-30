@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIObserver;
 interface nsIPrompt;
 interface nsIAuthPrompt;
@@ -36,7 +36,7 @@ interface nsIWindowCreator;
  *   This component must be initialized at application startup by calling
  * setWindowCreator.
  */
-[scriptable, uuid(67bc1691-fbaf-484a-a15b-c96212b45034)]
+[scriptable, uuid(641fe945-6902-4b3f-87c2-0daef32499b3)]
 interface nsIWindowWatcher : nsISupports {
 
   /** Create a new window. It will automatically be added to our list
@@ -65,9 +65,9 @@ interface nsIWindowWatcher : nsISupports {
       @note This method may dispatch a "toplevel-window-ready" notification
             via nsIObserverService if the window did not already exist.
   */
-  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in string aUrl,
-               in string aName, in string aFeatures,
-               in nsISupports aArguments);
+  mozIDOMWindowProxy openWindow(in mozIDOMWindowProxy aParent, in string aUrl,
+                                in string aName, in string aFeatures,
+                                in nsISupports aArguments);
 
   /** Clients of this service can register themselves to be notified
       when a window is opened or closed (added to or removed from this
@@ -106,14 +106,14 @@ interface nsIWindowWatcher : nsISupports {
       @return a new nsIPrompt object
   */
 
-  nsIPrompt getNewPrompter(in nsIDOMWindow aParent);
+  nsIPrompt getNewPrompter(in mozIDOMWindowProxy aParent);
 
   /** Return a newly created nsIAuthPrompt implementation.
       @param aParent the parent window used for posing alerts. can be null.
       @return a new nsIAuthPrompt object
   */
 
-  nsIAuthPrompt getNewAuthPrompter(in nsIDOMWindow aParent);
+  nsIAuthPrompt getNewAuthPrompter(in mozIDOMWindowProxy aParent);
 
   /** Set the window creator callback. It must be filled in by the app.
       openWindow will use it to create new windows.
@@ -135,7 +135,7 @@ interface nsIWindowWatcher : nsISupports {
       @param aWindow the DOM window whose chrome window the caller needs
       @return the corresponding chrome window
   */
-  nsIWebBrowserChrome getChromeForWindow(in nsIDOMWindow aWindow);
+  nsIWebBrowserChrome getChromeForWindow(in mozIDOMWindowProxy aWindow);
 
   /**
       Retrieve an existing window (or frame).
@@ -148,8 +148,8 @@ interface nsIWindowWatcher : nsISupports {
       frame with the given window name. Make sure you understand the
       security implications of this before using this method!
   */
-  nsIDOMWindow getWindowByName(in wstring aTargetName,
-                               in nsIDOMWindow aCurrentWindow);
+  mozIDOMWindowProxy getWindowByName(in wstring aTargetName,
+                                     in mozIDOMWindowProxy aCurrentWindow);
 
   /** The Watcher serves as a global storage facility for the current active
       (frontmost non-floating-palette-type) window, storing and returning
@@ -158,7 +158,7 @@ interface nsIWindowWatcher : nsISupports {
       if no windows are open, but should otherwise always return a valid
       window.
   */
-  attribute nsIDOMWindow activeWindow;
+  attribute mozIDOMWindowProxy activeWindow;
 
 };
 

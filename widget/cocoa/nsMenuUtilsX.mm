@@ -37,7 +37,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
     if (command &&
         NS_SUCCEEDED(command->InitCommandEvent(NS_LITERAL_STRING("command"),
                                                true, true,
-                                               doc->GetWindow(), 0,
+                                               doc->GetInnerWindow(), 0,
                                                false, false, false,
                                                false, nullptr))) {
       event->SetTrusted(true);

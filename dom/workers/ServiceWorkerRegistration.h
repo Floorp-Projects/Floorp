@@ -15,7 +15,7 @@
 // Support for Notification API extension.
 #include "mozilla/dom/NotificationBinding.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -79,7 +79,7 @@ public:
 
   IMPL_EVENT_HANDLER(updatefound)
 
-  ServiceWorkerRegistrationBase(nsPIDOMWindow* aWindow,
+  ServiceWorkerRegistrationBase(nsPIDOMWindowInner* aWindow,
                                 const nsAString& aScope);
 
   JSObject*
@@ -104,6 +104,7 @@ protected:
 class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistrationBase,
                                                   public ServiceWorkerRegistrationListener
 {
+  friend nsPIDOMWindowInner;
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationMainThread,
@@ -164,8 +165,7 @@ public:
   }
 
 private:
-  friend nsPIDOMWindow;
-  ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
+  ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
                                       const nsAString& aScope);
   ~ServiceWorkerRegistrationMainThread();
 

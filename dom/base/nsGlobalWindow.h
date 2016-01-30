@@ -294,8 +294,19 @@ private:
 // belonging to the same outer window, but that's an unimportant
 // side effect of inheriting PRCList).
 
+// NB: Currently nsPIDOMWindowInner and nsPIDOMWindowOuter are identical classes
+// with identical member variables and identical vtables, that only differ in
+// type name. nsGlobalWindow doesn't want to doubly inherit (and have two
+// copies of everything), and it also doesn't want to privilege one over
+// the other by making it possible to convert types through the C++ type system
+// instead of our accessor methods (AsInner and AsOuter) that do dynamic
+// checking. So we inherit from nsPIDOMWindow<nsISupports>, which is also
+// identical to both nsPIDOMWindowInner and nsPIDOMWindowOuter, but not
+// convertible to either.
+
 class nsGlobalWindow : public mozilla::dom::EventTarget,
-                       public nsPIDOMWindow,
+                       public nsPIDOMWindow<nsISupports>,
+                       public nsIDOMWindowInternal,
                        public nsIScriptGlobalObject,
                        public nsIScriptObjectPrincipal,
                        public nsSupportsWeakReference,
@@ -315,10 +326,23 @@ public:
   { }
 #endif
 
-  static nsGlobalWindow* Cast(nsPIDOMWindow* aPIWin) { return static_cast<nsGlobalWindow*>(aPIWin); }
+  static nsGlobalWindow* Cast(nsPIDOMWindowInner* aPIWin) {
+    return static_cast<nsGlobalWindow*>(
+                        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(aPIWin));
+  }
+  static nsGlobalWindow* Cast(mozIDOMWindow* aWin) {
+    return Cast(nsPIDOMWindowInner::From(aWin));
+  }
+  static nsGlobalWindow* Cast(nsPIDOMWindowOuter* aPIWin) {
+    return static_cast<nsGlobalWindow*>(
+                        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(aPIWin));
+  }
+  static nsGlobalWindow* Cast(mozIDOMWindowProxy* aWin) {
+    return Cast(nsPIDOMWindowOuter::From(aWin));
+  }
 
   // public methods
-  nsPIDOMWindow* GetPrivateParent();
+  nsPIDOMWindowOuter* GetPrivateParent();
 
   // callback for close event
   void ReallyCloseWindow();
@@ -329,7 +353,7 @@ public:
   // nsWrapperCache
   virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override
   {
-    return IsInnerWindow() || EnsureInnerWindow() ? GetWrapper() : nullptr;
+    return IsInnerWindow() || AsOuter()->EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
   // nsIGlobalJSObjectHolder
@@ -359,7 +383,7 @@ public:
 
   nsresult
   OpenJS(const nsAString& aUrl, const nsAString& aName,
-         const nsAString& aOptions, nsIDOMWindow **_retval);
+         const nsAString& aOptions, nsPIDOMWindowOuter **_retval);
   void CaptureEvents();
   void ReleaseEvents();
   void Dump(const nsAString& aStr);
@@ -382,14 +406,7 @@ public:
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
-  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override
-  {
-    if (IsOuterWindow()) {
-      return this;
-    }
-
-    return GetOuterFromCurrentInner(this);
-  }
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override
   {
@@ -401,7 +418,7 @@ public:
   }
 
   // nsPIDOMWindow
-  virtual nsPIDOMWindow* GetPrivateRoot() override;
+  virtual nsPIDOMWindowOuter* GetPrivateRoot() override;
 
   // Outer windows only.
   virtual void ActivateOrDeactivate(bool aActivate) override;
@@ -443,7 +460,7 @@ public:
   // Outer windows only.
   void DispatchDOMWindowCreated();
 
-  virtual void SetOpenerWindow(nsIDOMWindow* aOpener,
+  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
                                bool aOriginalOpener) override;
 
   // Outer windows only.
@@ -484,8 +501,8 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // WebIDL interface.
-  already_AddRefed<nsIDOMWindow> IndexedGetterOuter(uint32_t aIndex);
-  already_AddRefed<nsIDOMWindow> IndexedGetter(uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> IndexedGetterOuter(uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
 
   void GetSupportedNames(nsTArray<nsString>& aNames);
 
@@ -516,24 +533,25 @@ public:
   {
     return FromSupports(wrapper->Native());
   }
-  already_AddRefed<nsPIDOMWindow> GetTop() override;
-  nsPIDOMWindow* GetScriptableTop() override;
+  already_AddRefed<nsPIDOMWindowOuter> GetTop() override;
+  nsPIDOMWindowOuter* GetScriptableTop() override;
   inline nsGlobalWindow *GetTopInternal()
   {
     nsGlobalWindow* outer = IsOuterWindow() ? this : GetOuterWindowInternal();
-    nsCOMPtr<nsPIDOMWindow> top = outer ? outer->GetTop() : nullptr;
-    if (top)
-      return static_cast<nsGlobalWindow *>(top.get());
+    nsCOMPtr<nsPIDOMWindowOuter> top = outer ? outer->GetTop() : nullptr;
+    if (top) {
+      return nsGlobalWindow::Cast(top);
+    }
     return nullptr;
   }
 
   inline nsGlobalWindow* GetScriptableTopInternal()
   {
-    nsPIDOMWindow* top = GetScriptableTop();
-    return static_cast<nsGlobalWindow*>(top);
+    nsPIDOMWindowOuter* top = GetScriptableTop();
+    return nsGlobalWindow::Cast(top);
   }
 
-  nsPIDOMWindow* GetChildWindow(const nsAString& aName);
+  nsPIDOMWindowOuter* GetChildWindow(const nsAString& aName);
 
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
@@ -566,23 +584,23 @@ public:
 
   nsGlobalWindow *GetOuterWindowInternal()
   {
-    return static_cast<nsGlobalWindow *>(GetOuterWindow());
+    return nsGlobalWindow::Cast(GetOuterWindow());
   }
 
-  nsGlobalWindow *GetCurrentInnerWindowInternal() const
+  nsGlobalWindow* GetCurrentInnerWindowInternal() const
   {
     MOZ_ASSERT(IsOuterWindow());
-    return static_cast<nsGlobalWindow *>(mInnerWindow);
+    return nsGlobalWindow::Cast(mInnerWindow);
   }
 
-  nsGlobalWindow *EnsureInnerWindowInternal()
+  nsGlobalWindow* EnsureInnerWindowInternal()
   {
-    return static_cast<nsGlobalWindow *>(EnsureInnerWindow());
+    return nsGlobalWindow::Cast(AsOuter()->EnsureInnerWindow());
   }
 
   bool IsCreatingInnerWindow() const
   {
-    return  mCreatingInnerWindow;
+    return mCreatingInnerWindow;
   }
 
   bool IsChromeWindow() const
@@ -675,8 +693,8 @@ public:
   IsTopLevelWindow()
   {
     MOZ_ASSERT(IsOuterWindow());
-    nsPIDOMWindow* parentWindow = GetScriptableTop();
-    return parentWindow == static_cast<nsPIDOMWindow*>(this);
+    nsPIDOMWindowOuter* parentWindow = GetScriptableTop();
+    return parentWindow == this->AsOuter();
   }
 
   virtual void
@@ -856,43 +874,46 @@ public:
   nsresult Focus() override;
   void BlurOuter();
   void Blur(mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMWindow> GetFramesOuter();
+  already_AddRefed<nsPIDOMWindowOuter> GetFramesOuter();
   already_AddRefed<nsIDOMWindowCollection> GetFrames() override;
-  already_AddRefed<nsIDOMWindow> GetFrames(mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
-  already_AddRefed<nsIDOMWindow> GetTopOuter();
-  already_AddRefed<nsIDOMWindow> GetTop(mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetTopOuter();
+  already_AddRefed<nsPIDOMWindowOuter> GetTop(mozilla::ErrorResult& aError);
 
   nsresult GetPrompter(nsIPrompt** aPrompt) override;
 protected:
   explicit nsGlobalWindow(nsGlobalWindow *aOuterWindow);
-  nsPIDOMWindow* GetOpenerWindowOuter();
-  nsPIDOMWindow* GetOpenerWindow(mozilla::ErrorResult& aError);
+  nsPIDOMWindowOuter* GetOpenerWindowOuter();
+  nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
   // Initializes the mWasOffline member variable
   void InitWasOffline();
 public:
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                  mozilla::ErrorResult& aError);
-  already_AddRefed<nsPIDOMWindow> GetOpener() override;
+  already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMWindow> GetParentOuter();
-  already_AddRefed<nsIDOMWindow> GetParent(mozilla::ErrorResult& aError);
-  already_AddRefed<nsPIDOMWindow> GetParent() override;
-  nsPIDOMWindow* GetScriptableParent() override;
+  already_AddRefed<nsPIDOMWindowOuter> GetParentOuter();
+  already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter> GetParent() override;
+  nsPIDOMWindowOuter* GetScriptableParent() override;
   mozilla::dom::Element* GetFrameElementOuter();
   mozilla::dom::Element* GetFrameElement(mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMElement> GetFrameElement() override;
-  already_AddRefed<nsIDOMWindow> OpenOuter(const nsAString& aUrl,
-                                           const nsAString& aName,
-                                           const nsAString& aOptions,
-                                           mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMWindow> Open(const nsAString& aUrl,
-                                      const nsAString& aName,
-                                      const nsAString& aOptions,
-                                      mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter>
+  OpenOuter(const nsAString& aUrl,
+            const nsAString& aName,
+            const nsAString& aOptions,
+            mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter>
+  Open(const nsAString& aUrl,
+       const nsAString& aName,
+       const nsAString& aOptions,
+       mozilla::ErrorResult& aError);
   nsresult Open(const nsAString& aUrl, const nsAString& aName,
-                const nsAString& aOptions, nsPIDOMWindow **_retval) override;
+                const nsAString& aOptions,
+                nsPIDOMWindowOuter **_retval) override;
   mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
   nsIDOMNavigator* GetNavigator() override;
   nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
@@ -1095,24 +1116,27 @@ public:
 
   mozilla::dom::MozSelfSupport* GetMozSelfSupport(mozilla::ErrorResult& aError);
 
-  already_AddRefed<nsIDOMWindow> OpenDialogOuter(JSContext* aCx,
-                                                 const nsAString& aUrl,
-                                                 const nsAString& aName,
-                                                 const nsAString& aOptions,
-                                                 const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
-                                                 mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMWindow> OpenDialog(JSContext* aCx,
-                                            const nsAString& aUrl,
-                                            const nsAString& aName,
-                                            const nsAString& aOptions,
-                                            const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
-                                            mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter>
+  OpenDialogOuter(JSContext* aCx,
+                  const nsAString& aUrl,
+                  const nsAString& aName,
+                  const nsAString& aOptions,
+                  const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
+                  mozilla::ErrorResult& aError);
+  already_AddRefed<nsPIDOMWindowOuter>
+  OpenDialog(JSContext* aCx,
+             const nsAString& aUrl,
+             const nsAString& aName,
+             const nsAString& aOptions,
+             const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
+             mozilla::ErrorResult& aError);
   nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       const nsAString& aOptions,
-                      nsISupports* aExtraArgument, nsIDOMWindow** _retval) override;
+                      nsISupports* aExtraArgument,
+                      nsPIDOMWindowOuter** _retval) override;
   nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
 
-  already_AddRefed<nsIDOMWindow>
+  already_AddRefed<nsPIDOMWindowOuter>
     GetContentInternal(mozilla::ErrorResult& aError, bool aUnprivilegedCaller);
   void GetContentOuter(JSContext* aCx,
                        JS::MutableHandle<JSObject*> aRetval,
@@ -1120,11 +1144,11 @@ public:
   void GetContent(JSContext* aCx,
                   JS::MutableHandle<JSObject*> aRetval,
                   mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMWindow> GetContent()
+  already_AddRefed<nsPIDOMWindowOuter> GetContent()
   {
     MOZ_ASSERT(IsOuterWindow());
     mozilla::ErrorResult ignored;
-    nsCOMPtr<nsIDOMWindow> win =
+    nsCOMPtr<nsPIDOMWindowOuter> win =
       GetContentInternal(ignored, /* aUnprivilegedCaller = */ false);
     ignored.SuppressException();
     return win.forget();
@@ -1193,6 +1217,7 @@ public:
 
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
+  nsPerformance* GetPerformance();
 
 protected:
   // Web IDL helpers
@@ -1288,7 +1313,7 @@ protected:
 
   inline void MaybeClearInnerWindow(nsGlobalWindow* aExpectedInner)
   {
-    if(mInnerWindow == aExpectedInner) {
+    if(mInnerWindow == aExpectedInner->AsInner()) {
       mInnerWindow = nullptr;
     }
   }
@@ -1304,7 +1329,7 @@ protected:
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 
   // Get the parent, returns null if this is a toplevel window
-  nsIDOMWindow* GetParentInternal();
+  nsPIDOMWindowOuter* GetParentInternal();
 
   // popup tracking
   bool IsPopupSpamWindow()
@@ -1334,7 +1359,7 @@ protected:
   OpenNoNavigate(const nsAString& aUrl,
                  const nsAString& aName,
                  const nsAString& aOptions,
-                 nsIDOMWindow** _retval) override;
+                 nsPIDOMWindowOuter** _retval) override;
 
 private:
   /**
@@ -1384,17 +1409,17 @@ private:
    * Outer windows only.
    */
   nsresult OpenInternal(const nsAString& aUrl,
-                                    const nsAString& aName,
-                                    const nsAString& aOptions,
-                                    bool aDialog,
-                                    bool aContentModal,
-                                    bool aCalledNoScript,
-                                    bool aDoJSFixups,
-                                    bool aNavigate,
-                                    nsIArray *argv,
-                                    nsISupports *aExtraArgument,
-                                    JSContext *aJSCallerContext,
-                                    nsIDOMWindow **aReturn);
+                        const nsAString& aName,
+                        const nsAString& aOptions,
+                        bool aDialog,
+                        bool aContentModal,
+                        bool aCalledNoScript,
+                        bool aDoJSFixups,
+                        bool aNavigate,
+                        nsIArray *argv,
+                        nsISupports *aExtraArgument,
+                        JSContext *aJSCallerContext,
+                        nsPIDOMWindowOuter **aReturn);
 
 public:
   // Timeout Functions

@@ -90,7 +90,7 @@ static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
   }
 }
 
-AudioContext::AudioContext(nsPIDOMWindow* aWindow,
+AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
                            bool aIsOffline,
                            AudioChannel aChannel,
                            uint32_t aNumberOfChannels,
@@ -139,7 +139,7 @@ AudioContext::Init()
 
 AudioContext::~AudioContext()
 {
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   if (window) {
     window->RemoveAudioContext(this);
   }
@@ -171,7 +171,7 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                           AudioChannel aChannel,
                           ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -195,7 +195,7 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                           float aSampleRate,
                           ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -759,7 +759,7 @@ public:
   NS_IMETHODIMP
   Run() override
   {
-    nsCOMPtr<nsPIDOMWindow> parent = do_QueryInterface(mAudioContext->GetParentObject());
+    nsPIDOMWindowInner* parent = mAudioContext->GetParentObject();
     if (!parent) {
       return NS_ERROR_FAILURE;
     }

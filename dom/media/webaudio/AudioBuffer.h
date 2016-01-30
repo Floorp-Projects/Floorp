@@ -55,9 +55,9 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioBuffer)
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
-    nsCOMPtr<nsPIDOMWindow> parentObject = do_QueryReferent(mOwnerWindow);
+    nsCOMPtr<nsPIDOMWindowInner> parentObject = do_QueryReferent(mOwnerWindow);
     return parentObject;
   }
 

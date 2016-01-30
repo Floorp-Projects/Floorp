@@ -64,7 +64,7 @@ ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
 
 // Get the URI associated with a window.
 NS_IMETHODIMP
-ThirdPartyUtil::GetURIFromWindow(nsIDOMWindow* aWin, nsIURI** result)
+ThirdPartyUtil::GetURIFromWindow(mozIDOMWindowProxy* aWin, nsIURI** result)
 {
   nsresult rv;
   nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin = do_QueryInterface(aWin);
@@ -108,7 +108,7 @@ ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI,
 // Determine if any URI of the window hierarchy of aWindow is foreign with
 // respect to aSecondURI. See docs for mozIThirdPartyUtil.
 NS_IMETHODIMP
-ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
+ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow,
                                    nsIURI* aURI,
                                    bool* aResult)
 {
@@ -140,7 +140,7 @@ ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
     }
   }
 
-  nsCOMPtr<nsPIDOMWindow> current = do_QueryInterface(aWindow), parent;
+  nsCOMPtr<nsPIDOMWindowOuter> current = nsPIDOMWindowOuter::From(aWindow), parent;
   nsCOMPtr<nsIURI> parentURI;
   do {
     // We use GetScriptableParent rather than GetParent because we consider
@@ -250,7 +250,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
-ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel, nsIDOMWindow** aWin)
+ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel, mozIDOMWindowProxy** aWin)
 {
   NS_ENSURE_ARG(aWin);
 
@@ -261,14 +261,13 @@ ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel, nsIDOMWindow** aWin
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<mozIDOMWindowProxy> window;
   ctx->GetAssociatedWindow(getter_AddRefs(window));
-  nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(window);
-  if (!top) {
+  if (!window) {
     return NS_ERROR_INVALID_ARG;
   }
-  
-  top = top->GetTop();
+
+  nsCOMPtr<nsPIDOMWindowOuter> top = nsPIDOMWindowOuter::From(window)->GetTop();
   top.forget(aWin);
   return NS_OK;
 }

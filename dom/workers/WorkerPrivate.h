@@ -300,10 +300,10 @@ public:
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
   // as these are only used for globals going in and out of the bfcache.
   bool
-  Freeze(JSContext* aCx, nsPIDOMWindow* aWindow);
+  Freeze(JSContext* aCx, nsPIDOMWindowInner* aWindow);
 
   bool
-  Thaw(JSContext* aCx, nsPIDOMWindow* aWindow);
+  Thaw(JSContext* aCx, nsPIDOMWindowInner* aWindow);
 
   void
   Suspend();
@@ -612,7 +612,7 @@ public:
 
   nsIDocument* GetDocument() const;
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetWindow()
   {
     AssertIsOnMainThread();
@@ -768,7 +768,7 @@ public:
   GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
 
   void
-  CloseSharedWorkersForWindow(nsPIDOMWindow* aWindow);
+  CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
   CloseAllSharedWorkers();
@@ -960,7 +960,8 @@ public:
   };
 
   static nsresult
-  GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
+  GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+              WorkerPrivate* aParent,
               const nsAString& aScriptURL, bool aIsChromeWorker,
               LoadGroupBehavior aLoadGroupBehavior, WorkerType aWorkerType,
               WorkerLoadInfo* aLoadInfo);

@@ -109,7 +109,7 @@ NS_IMPL_RELEASE_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 
 struct SpeechRecognition::TestConfig SpeechRecognition::mTestConfig;
 
-SpeechRecognition::SpeechRecognition(nsPIDOMWindow* aOwnerWindow)
+SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
   , mEndpointer(kSAMPLE_RATE)
   , mAudioSamplesPerChunk(mEndpointer.FrameSize())
@@ -185,7 +185,7 @@ already_AddRefed<SpeechRecognition>
 SpeechRecognition::Constructor(const GlobalObject& aGlobal,
                                ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -779,7 +779,7 @@ SpeechRecognition::SetRecognitionService(ErrorResult& aRv)
     return true;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if(!window) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return false;

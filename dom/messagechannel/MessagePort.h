@@ -16,7 +16,7 @@
 #undef PostMessage
 #endif
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -47,11 +47,11 @@ public:
                                            DOMEventTargetHelper)
 
   static already_AddRefed<MessagePort>
-  Create(nsPIDOMWindow* aWindow, const nsID& aUUID,
+  Create(nsPIDOMWindowInner* aWindow, const nsID& aUUID,
          const nsID& aDestinationUUID, ErrorResult& aRv);
 
   static already_AddRefed<MessagePort>
-  Create(nsPIDOMWindow* aWindow, const MessagePortIdentifier& aIdentifier,
+  Create(nsPIDOMWindowInner* aWindow, const MessagePortIdentifier& aIdentifier,
          ErrorResult& aRv);
 
   // For IPC.
@@ -90,7 +90,7 @@ public:
   void Closed();
 
 private:
-  explicit MessagePort(nsPIDOMWindow* aWindow);
+  explicit MessagePort(nsPIDOMWindowInner* aWindow);
   ~MessagePort();
 
   enum State {

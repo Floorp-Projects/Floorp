@@ -6,6 +6,9 @@
 #include "nsISupports.idl"
 #include "nsIDOMWindow.idl"
 
+interface mozIDOMWindow;
+interface mozIDOMWindowProxy;
+
 /**
  * The nsIDOMUIEvent interface is the datatype for all UI events in the
  * Document Object Model.
@@ -24,15 +27,15 @@ class Event;
 
 [ptr] native EventPtr(mozilla::dom::Event);
 
-[builtinclass, uuid(75996b57-51f0-4c9c-aaaa-e35eaf347b66)]
+[builtinclass, uuid(85ae52eb-37fa-4fd9-a2e6-c7d0f2a521b3)]
 interface nsIDOMUIEvent : nsISupports
 {
-  readonly attribute nsIDOMWindow       view;
+  readonly attribute mozIDOMWindowProxy view;
   readonly attribute long               detail;
   void                      initUIEvent(in DOMString typeArg,
                                         in boolean canBubbleArg,
                                         in boolean cancelableArg,
-                                        in nsIDOMWindow viewArg,
+                                        in mozIDOMWindow viewArg,
                                         in long detailArg);
 
   const long SCROLL_PAGE_UP = -32768;

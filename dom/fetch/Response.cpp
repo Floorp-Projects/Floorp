@@ -163,7 +163,7 @@ Response::Constructor(const GlobalObject& aGlobal,
   // interception.
   if (NS_IsMainThread()) {
     ChannelInfo info;
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (window) {
       nsIDocument* doc = window->GetExtantDoc();
       MOZ_ASSERT(doc);

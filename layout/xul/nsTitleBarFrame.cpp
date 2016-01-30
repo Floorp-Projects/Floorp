@@ -134,7 +134,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          }
          else {
            nsIPresShell* presShell = aPresContext->PresShell();
-           nsPIDOMWindow *window = presShell->GetDocument()->GetWindow();
+           nsPIDOMWindowOuter *window = presShell->GetDocument()->GetWindow();
            if (window) {
              window->MoveBy(nsMoveBy.x, nsMoveBy.y);
            }

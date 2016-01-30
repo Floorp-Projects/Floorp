@@ -23,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TVManager, DOMEventTargetHelper)
 
-  static already_AddRefed<TVManager> Create(nsPIDOMWindow* aWindow);
+  static already_AddRefed<TVManager> Create(nsPIDOMWindowInner* aWindow);
 
   // WebIDL (internal functions)
 
@@ -40,7 +40,7 @@ public:
   already_AddRefed<Promise> GetTuners(ErrorResult& aRv);
 
 private:
-  explicit TVManager(nsPIDOMWindow* aWindow);
+  explicit TVManager(nsPIDOMWindowInner* aWindow);
 
   ~TVManager();
 

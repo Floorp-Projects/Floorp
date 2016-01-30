@@ -86,7 +86,7 @@ private:
     int32_t mTimePerFrame;
     ScopedFreePtr<unsigned char> mData;
     size_t mDataSize;
-    nsCOMPtr<nsIDOMWindow> mWindow;
+    nsCOMPtr<nsPIDOMWindowOuter> mWindow;
     RefPtr<layers::SourceSurfaceImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
     Monitor mMonitor;

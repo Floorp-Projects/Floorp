@@ -84,8 +84,8 @@ NS_IMPL_DOMTARGET_DEFAULTS(DOMEventTargetHelper)
 
 DOMEventTargetHelper::~DOMEventTargetHelper()
 {
-  if (nsPIDOMWindow* owner = GetOwner()) {
-    static_cast<nsGlobalWindow*>(owner)->RemoveEventTargetObject(this);
+  if (nsPIDOMWindowInner* owner = GetOwner()) {
+    nsGlobalWindow::Cast(owner)->RemoveEventTargetObject(this);
   }
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -94,9 +94,8 @@ DOMEventTargetHelper::~DOMEventTargetHelper()
 }
 
 void
-DOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
+DOMEventTargetHelper::BindToOwner(nsPIDOMWindowInner* aOwner)
 {
-  MOZ_ASSERT_IF(aOwner, aOwner->IsInnerWindow());
   nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOwner);
   BindToOwner(glob);
 }
@@ -107,7 +106,7 @@ DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
   nsCOMPtr<nsIGlobalObject> parentObject = do_QueryReferent(mParentObject);
   if (parentObject) {
     if (mOwnerWindow) {
-      static_cast<nsGlobalWindow*>(mOwnerWindow)->RemoveEventTargetObject(this);
+      nsGlobalWindow::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
       mOwnerWindow = nullptr;
     }
     mParentObject = nullptr;
@@ -117,11 +116,10 @@ DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
     mParentObject = do_GetWeakReference(aOwner);
     MOZ_ASSERT(mParentObject, "All nsIGlobalObjects must support nsISupportsWeakReference");
     // Let's cache the result of this QI for fast access and off main thread usage
-    mOwnerWindow = nsCOMPtr<nsPIDOMWindow>(do_QueryInterface(aOwner)).get();
+    mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOwner)).get();
     if (mOwnerWindow) {
-      MOZ_ASSERT(mOwnerWindow->IsInnerWindow());
       mHasOrHasHadOwnerWindow = true;
-      static_cast<nsGlobalWindow*>(mOwnerWindow)->AddEventTargetObject(this);
+      nsGlobalWindow::Cast(mOwnerWindow)->AddEventTargetObject(this);
     }
   }
 }
@@ -130,7 +128,7 @@ void
 DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
 {
   if (mOwnerWindow) {
-    static_cast<nsGlobalWindow*>(mOwnerWindow)->RemoveEventTargetObject(this);
+    nsGlobalWindow::Cast(mOwnerWindow)->RemoveEventTargetObject(this);
     mOwnerWindow = nullptr;
     mParentObject = nullptr;
     mHasOrHasHadOwnerWindow = false;
@@ -141,11 +139,10 @@ DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
       mParentObject = do_GetWeakReference(aOther->GetParentObject());
       MOZ_ASSERT(mParentObject, "All nsIGlobalObjects must support nsISupportsWeakReference");
       // Let's cache the result of this QI for fast access and off main thread usage
-      mOwnerWindow = nsCOMPtr<nsPIDOMWindow>(do_QueryInterface(aOther->GetParentObject())).get();
+      mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOther->GetParentObject())).get();
       if (mOwnerWindow) {
-        MOZ_ASSERT(mOwnerWindow->IsInnerWindow());
         mHasOrHasHadOwnerWindow = true;
-        static_cast<nsGlobalWindow*>(mOwnerWindow)->AddEventTargetObject(this);
+        nsGlobalWindow::Cast(mOwnerWindow)->AddEventTargetObject(this);
       }
     }
   }
@@ -351,8 +348,8 @@ DOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
   if (NS_FAILED(*aRv)) {
     return nullptr;
   }
-  nsPIDOMWindow* owner = GetOwner();
-  return owner ? static_cast<nsGlobalWindow*>(owner)->GetContextInternal()
+  nsPIDOMWindowInner* owner = GetOwner();
+  return owner ? nsGlobalWindow::Cast(owner)->GetContextInternal()
                : nullptr;
 }
 

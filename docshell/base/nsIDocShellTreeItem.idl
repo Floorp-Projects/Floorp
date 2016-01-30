@@ -8,7 +8,7 @@
 
 interface nsIDocShellTreeOwner;
 interface nsIDocument;
-interface nsPIDOMWindow;
+interface nsPIDOMWindowOuter;
 
 
 /**
@@ -17,7 +17,7 @@ interface nsPIDOMWindow;
  * node or a leaf. 
  */
 
-[scriptable, uuid(edb99640-8378-4106-8673-e701a086eb1c)]
+[scriptable, uuid(9b7c586f-9214-480c-a2c4-49b526fff1a6)]
 interface nsIDocShellTreeItem : nsISupports
 {
 	/*
@@ -179,6 +179,6 @@ interface nsIDocShellTreeItem : nsISupports
 	                                      in nsIDocShellTreeItem aOriginalRequestor);
 
   [noscript,nostdcall,notxpcom] nsIDocument getDocument();
-  [noscript,nostdcall,notxpcom] nsPIDOMWindow getWindow();
+  [noscript,nostdcall,notxpcom] nsPIDOMWindowOuter getWindow();
 };
 

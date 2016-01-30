@@ -10,7 +10,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -29,8 +29,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceIterableDouble)
 
-  explicit TestInterfaceIterableDouble(nsPIDOMWindow* aParent);
-  nsPIDOMWindow* GetParentObject() const;
+  explicit TestInterfaceIterableDouble(nsPIDOMWindowInner* aParent);
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   static already_AddRefed<TestInterfaceIterableDouble>
@@ -41,7 +41,7 @@ public:
   nsAString& GetValueAtIndex(uint32_t aIndex);
 private:
   virtual ~TestInterfaceIterableDouble() {}
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, nsString>> mValues;
 };
 

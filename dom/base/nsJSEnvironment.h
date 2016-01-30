@@ -15,7 +15,6 @@
 #include "nsIXPConnect.h"
 #include "nsIArray.h"
 #include "mozilla/Attributes.h"
-#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
@@ -173,8 +172,6 @@ private:
 
   static bool DOMOperationCallback(JSContext *cx);
 };
-
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {

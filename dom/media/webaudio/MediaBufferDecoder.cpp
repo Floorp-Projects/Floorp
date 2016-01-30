@@ -587,9 +587,8 @@ WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode)
     break;
   }
 
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(mContext->GetParentObject());
   nsIDocument* doc = nullptr;
-  if (pWindow) {
+  if (nsPIDOMWindowInner* pWindow = mContext->GetParentObject()) {
     doc = pWindow->GetExtantDoc();
   }
   nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,

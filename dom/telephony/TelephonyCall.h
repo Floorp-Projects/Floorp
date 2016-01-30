@@ -15,7 +15,7 @@
 
 #include "nsITelephonyService.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -47,7 +47,7 @@ public:
                                            DOMEventTargetHelper)
   friend class Telephony;
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -190,7 +190,7 @@ public:
   ChangeGroup(TelephonyCallGroup* aGroup);
 
 private:
-  explicit TelephonyCall(nsPIDOMWindow* aOwner);
+  explicit TelephonyCall(nsPIDOMWindowInner* aOwner);
 
   ~TelephonyCall();
 

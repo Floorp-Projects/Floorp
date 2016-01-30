@@ -42,7 +42,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   MOZ_ASSERT(NS_IsMainThread());
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
-  nsCOMPtr<nsPIDOMWindow> window = Navigator::GetWindowFromGlobal(global);
+  nsCOMPtr<nsPIDOMWindowInner> window = Navigator::GetWindowFromGlobal(global);
   if (!window) {
     return false;
   }
@@ -55,7 +55,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   return Preferences::GetBool("dom.serviceWorkers.enabled", false);
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindow* aWindow)
+ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
 }
@@ -82,8 +82,7 @@ ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
 void
 ServiceWorkerContainer::RemoveReadyPromise()
 {
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-  if (window) {
+  if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();
     if (!swm) {
@@ -150,8 +149,8 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     // XXXnsm. One of our devtools browser test calls register() from a content
     // script where there is no valid entry document. Use the window to resolve
     // the uri in that case.
-    nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-    nsCOMPtr<nsPIDOMWindow> outerWindow;
+    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+    nsCOMPtr<nsPIDOMWindowOuter> outerWindow;
     if (window && (outerWindow = window->GetOuterWindow()) &&
         outerWindow->GetServiceWorkersTestingEnabled()) {
       baseURI = window->GetDocBaseURI();
@@ -320,7 +319,7 @@ ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

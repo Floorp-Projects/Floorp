@@ -42,7 +42,7 @@ public:
                                                          DOMEventTargetHelper)
 
   // WrapperCache
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }
@@ -85,7 +85,7 @@ public:
   void FireError(nsresult aError);
   void FireDetailedError(DOMError* aError);
 
-  explicit DOMRequest(nsPIDOMWindow* aWindow);
+  explicit DOMRequest(nsPIDOMWindowInner* aWindow);
   explicit DOMRequest(nsIGlobalObject* aGlobal);
 
 protected:

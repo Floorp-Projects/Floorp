@@ -10,7 +10,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -29,15 +29,15 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceSetlikeNode)
   explicit TestInterfaceSetlikeNode(JSContext* aCx,
-                                    nsPIDOMWindow* aParent);
-  nsPIDOMWindow* GetParentObject() const;
+                                    nsPIDOMWindowInner* aParent);
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   static already_AddRefed<TestInterfaceSetlikeNode>
     Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
 private:
   virtual ~TestInterfaceSetlikeNode() {}
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
 } // namespace dom

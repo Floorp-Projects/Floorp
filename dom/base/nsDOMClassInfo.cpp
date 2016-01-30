@@ -1082,12 +1082,12 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   // Only do this if the global object is a window.
   // XXX Is there a better way to check this?
   nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
-  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryInterface(globalNative);
+  nsCOMPtr<nsPIDOMWindowInner> piwin = do_QueryInterface(globalNative);
   if (!piwin) {
     return NS_OK;
   }
 
-  nsGlobalWindow *win = nsGlobalWindow::FromSupports(globalNative);
+  nsGlobalWindow *win = nsGlobalWindow::Cast(piwin);
   if (win->IsClosedOrClosing()) {
     return NS_OK;
   }
@@ -1098,18 +1098,6 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   if (win->FastGetGlobalJSObject() &&
       js::GetObjectCompartment(global) != js::GetObjectCompartment(win->FastGetGlobalJSObject())) {
     return NS_OK;
-  }
-
-  if (win->IsOuterWindow()) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
-    win = win->GetCurrentInnerWindowInternal();
-
-    if (!win || !(global = win->GetGlobalJSObject()) ||
-        win->IsClosedOrClosing()) {
-      return NS_OK;
-    }
   }
 
   // Don't overwrite a property set by content.
@@ -1288,7 +1276,7 @@ class nsDOMConstructor final : public nsIDOMDOMConstructor
 protected:
   nsDOMConstructor(const char16_t* aName,
                    bool aIsConstructable,
-                   nsPIDOMWindow* aOwner)
+                   nsPIDOMWindowInner* aOwner)
     : mClassName(aName),
       mConstructable(aIsConstructable),
       mWeakOwner(do_GetWeakReference(aOwner))
@@ -1302,7 +1290,7 @@ public:
   static nsresult Create(const char16_t* aName,
                          const nsDOMClassInfoData* aData,
                          const nsGlobalNameStruct* aNameStruct,
-                         nsPIDOMWindow* aOwner,
+                         nsPIDOMWindowInner* aOwner,
                          nsDOMConstructor** aResult);
 
   NS_DECL_ISUPPORTS
@@ -1387,7 +1375,7 @@ nsresult
 nsDOMConstructor::Create(const char16_t* aName,
                          const nsDOMClassInfoData* aData,
                          const nsGlobalNameStruct* aNameStruct,
-                         nsPIDOMWindow* aOwner,
+                         nsPIDOMWindowInner* aOwner,
                          nsDOMConstructor** aResult)
 {
   *aResult = nullptr;
@@ -1396,8 +1384,8 @@ nsDOMConstructor::Create(const char16_t* aName,
   // caller can't access the outer window's current inner window then try to use
   // the owner (so long as it is, in fact, an inner window). If that doesn't
   // work then prevent creation also.
-  nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
-  nsPIDOMWindow* currentInner =
+  nsPIDOMWindowOuter* outerWindow = aOwner->GetOuterWindow();
+  nsPIDOMWindowInner* currentInner =
     outerWindow ? outerWindow->GetCurrentInnerWindow() : aOwner;
   if (!currentInner ||
       (aOwner != currentInner &&
@@ -1443,13 +1431,13 @@ NS_INTERFACE_MAP_END
 nsresult
 nsDOMConstructor::PreCreate(JSContext *cx, JSObject *globalObj, JSObject **parentObj)
 {
-  nsCOMPtr<nsPIDOMWindow> owner(do_QueryReferent(mWeakOwner));
+  nsCOMPtr<nsPIDOMWindowInner> owner(do_QueryReferent(mWeakOwner));
   if (!owner) {
     // Can't do anything.
     return NS_OK;
   }
 
-  nsGlobalWindow *win = static_cast<nsGlobalWindow *>(owner.get());
+  nsGlobalWindow *win = nsGlobalWindow::Cast(owner);
   return SetParentToWindow(win, parentObj);
 }
 
@@ -1724,7 +1712,8 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                "Wrong type or missing ci_data!");
 
   RefPtr<nsDOMConstructor> constructor;
-  nsresult rv = nsDOMConstructor::Create(name, ci_data, name_struct, aWin,
+  nsresult rv = nsDOMConstructor::Create(name, ci_data, name_struct,
+                                         aWin->AsInner(),
                                          getter_AddRefs(constructor));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1899,7 +1888,7 @@ OldBindingConstructorEnabled(const nsGlobalNameStruct *aStruct,
 
 static nsresult
 LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
-                     nsPIDOMWindow *win,
+                     nsPIDOMWindowInner *win,
                      JS::MutableHandle<JS::PropertyDescriptor> desc);
 
 // static
@@ -1940,7 +1929,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                           JS::MutableHandle<JS::PropertyDescriptor> desc)
 {
   if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
-    return LookupComponentsShim(cx, obj, aWin, desc);
+    return LookupComponentsShim(cx, obj, aWin->AsInner(), desc);
   }
 
 #ifdef USE_CONTROLLERS_SHIM
@@ -2097,7 +2086,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     rv = nsDOMConstructor::Create(class_name,
                                   nullptr,
                                   name_struct,
-                                  static_cast<nsPIDOMWindow*>(aWin),
+                                  aWin->AsInner(),
                                   getter_AddRefs(constructor));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2204,8 +2193,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     RefPtr<nsDOMConstructor> constructor;
     rv = nsDOMConstructor::Create(class_name, nullptr, name_struct,
-                                  static_cast<nsPIDOMWindow*>(aWin),
-                                  getter_AddRefs(constructor));
+                                  aWin->AsInner(), getter_AddRefs(constructor));
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JS::Value> val(cx);
@@ -2228,9 +2216,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     // Before defining a global property, check for a named subframe of the
     // same name. If it exists, we don't want to shadow it.
-    nsCOMPtr<nsIDOMWindow> childWin = aWin->GetChildWindow(name);
-    if (childWin)
+    if (nsCOMPtr<nsPIDOMWindowOuter> childWin = aWin->GetChildWindow(name)) {
       return NS_OK;
+    }
 
     nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2239,16 +2227,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
     if (gpi) {
-      rv = gpi->Init(aWin, &prop_val);
+      rv = gpi->Init(aWin->AsInner(), &prop_val);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (prop_val.isPrimitive() && !prop_val.isNull()) {
-      if (aWin->IsOuterWindow()) {
-        nsGlobalWindow *inner = aWin->GetCurrentInnerWindowInternal();
-        NS_ENSURE_TRUE(inner, NS_ERROR_UNEXPECTED);
-      }
-
       rv = nsContentUtils::WrapNative(cx, native, &prop_val, true);
     }
 
@@ -2299,7 +2282,7 @@ const InterfaceShimEntry kInterfaceShimMap[] =
 
 static nsresult
 LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
-                     nsPIDOMWindow *win,
+                     nsPIDOMWindowInner *win,
                      JS::MutableHandle<JS::PropertyDescriptor> desc)
 {
   // Keep track of how often this happens.

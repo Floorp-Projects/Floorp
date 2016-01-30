@@ -12,13 +12,11 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "nsIDOMScrollAreaEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class ScrollAreaEvent : public UIEvent,
-                        public nsIDOMScrollAreaEvent
+class ScrollAreaEvent : public UIEvent
 {
 public:
   ScrollAreaEvent(EventTarget* aOwner,
@@ -26,8 +24,6 @@ public:
                   InternalScrollAreaEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIDOMSCROLLAREAEVENT
 
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)
 
@@ -67,15 +63,10 @@ public:
   void InitScrollAreaEvent(const nsAString& aType,
                            bool aCanBubble,
                            bool aCancelable,
-                           nsIDOMWindow* aView,
+                           nsGlobalWindow* aView,
                            int32_t aDetail,
                            float aX, float aY,
-                           float aWidth, float aHeight,
-                           ErrorResult& aRv)
-  {
-    aRv = InitScrollAreaEvent(aType, aCanBubble, aCancelable, aView,
-                              aDetail, aX, aY, aWidth, aHeight);
-  }
+                           float aWidth, float aHeight);
 
 protected:
   ~ScrollAreaEvent() {}

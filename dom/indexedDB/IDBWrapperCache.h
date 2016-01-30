@@ -12,7 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInnter;
 
 namespace mozilla {
 namespace dom {
@@ -45,7 +45,7 @@ public:
 
 protected:
   explicit IDBWrapperCache(DOMEventTargetHelper* aOwner);
-  explicit IDBWrapperCache(nsPIDOMWindow* aOwner);
+  explicit IDBWrapperCache(nsPIDOMWindowInner* aOwner);
 
   virtual ~IDBWrapperCache();
 };

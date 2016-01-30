@@ -16,7 +16,7 @@ using namespace mozilla::dom::telephony;
 NS_IMPL_ISUPPORTS_INHERITED(TelephonyDialCallback, TelephonyCallback,
                             nsITelephonyDialCallback)
 
-TelephonyDialCallback::TelephonyDialCallback(nsPIDOMWindow* aWindow,
+TelephonyDialCallback::TelephonyDialCallback(nsPIDOMWindowInner* aWindow,
                                              Telephony* aTelephony,
                                              Promise* aPromise)
   : TelephonyCallback(aPromise), mWindow(aWindow), mTelephony(aTelephony)

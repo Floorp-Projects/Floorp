@@ -18,7 +18,7 @@
 #include "mozilla/dom/AudioChannelBinding.h"
 
 class nsIRunnable;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 struct PRLogModuleInfo;
 
 namespace mozilla {
@@ -74,21 +74,21 @@ public:
    * Return the state to indicate this audioChannel for his window should keep
    * playing/muted.
    */
-  void GetState(nsPIDOMWindow* aWindow, uint32_t aChannel,
+  void GetState(nsPIDOMWindowOuter* aWindow, uint32_t aChannel,
                 float* aVolume, bool* aMuted);
 
   /* Methods for the BrowserElementAudioChannel */
-  float GetAudioChannelVolume(nsPIDOMWindow* aWindow, AudioChannel aChannel);
+  float GetAudioChannelVolume(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
 
-  void SetAudioChannelVolume(nsPIDOMWindow* aWindow, AudioChannel aChannel,
+  void SetAudioChannelVolume(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel,
                              float aVolume);
 
-  bool GetAudioChannelMuted(nsPIDOMWindow* aWindow, AudioChannel aChannel);
+  bool GetAudioChannelMuted(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
 
-  void SetAudioChannelMuted(nsPIDOMWindow* aWindow, AudioChannel aChannel,
+  void SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel,
                             bool aMuted);
 
-  bool IsAudioChannelActive(nsPIDOMWindow* aWindow, AudioChannel aChannel);
+  bool IsAudioChannelActive(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
 
   /**
    * Return true if there is a telephony channel active in this process
@@ -113,19 +113,18 @@ public:
 
   bool AnyAudioChannelIsActive();
 
-  void RefreshAgentsVolume(nsPIDOMWindow* aWindow);
+  void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow);
 
   void RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
-                                       nsPIDOMWindow* aWindow);
+                                       nsPIDOMWindowOuter* aWindow);
 
   // This method needs to know the inner window that wants to capture audio. We
   // group agents per top outer window, but we can have multiple innerWindow per
   // top outerWindow (subiframes, etc.) and we have to identify all the agents
   // just for a particular innerWindow.
-  void SetWindowAudioCaptured(nsPIDOMWindow* aWindow,
+  void SetWindowAudioCaptured(nsPIDOMWindowOuter* aWindow,
                               uint64_t aInnerWindowID,
                               bool aCapture);
-
 
 #ifdef MOZ_WIDGET_GONK
   void RegisterSpeakerManager(SpeakerManagerService* aSpeakerManager)
@@ -204,7 +203,7 @@ private:
   };
 
   AudioChannelWindow*
-  GetOrCreateWindowData(nsPIDOMWindow* aWindow);
+  GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow);
 
   AudioChannelWindow*
   GetWindowData(uint64_t aWindowID) const;

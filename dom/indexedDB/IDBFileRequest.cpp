@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-IDBFileRequest::IDBFileRequest(nsPIDOMWindow* aWindow,
+IDBFileRequest::IDBFileRequest(nsPIDOMWindowInner* aWindow,
                                IDBFileHandle* aFileHandle,
                                bool aWrapAsDOMRequest)
   : DOMRequest(aWindow)
@@ -41,7 +41,7 @@ IDBFileRequest::~IDBFileRequest()
 
 // static
 already_AddRefed<IDBFileRequest>
-IDBFileRequest::Create(nsPIDOMWindow* aOwner, IDBFileHandle* aFileHandle,
+IDBFileRequest::Create(nsPIDOMWindowInner* aOwner, IDBFileHandle* aFileHandle,
                        bool aWrapAsDOMRequest)
 {
   MOZ_ASSERT(aFileHandle);

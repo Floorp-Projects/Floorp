@@ -21,12 +21,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMError)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-DOMError::DOMError(nsPIDOMWindow* aWindow)
+DOMError::DOMError(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }
 
-DOMError::DOMError(nsPIDOMWindow* aWindow, nsresult aValue)
+DOMError::DOMError(nsPIDOMWindowInner* aWindow, nsresult aValue)
   : mWindow(aWindow)
 {
   nsCString name, message;
@@ -36,13 +36,13 @@ DOMError::DOMError(nsPIDOMWindow* aWindow, nsresult aValue)
   CopyUTF8toUTF16(message, mMessage);
 }
 
-DOMError::DOMError(nsPIDOMWindow* aWindow, const nsAString& aName)
+DOMError::DOMError(nsPIDOMWindowInner* aWindow, const nsAString& aName)
   : mWindow(aWindow)
   , mName(aName)
 {
 }
 
-DOMError::DOMError(nsPIDOMWindow* aWindow, const nsAString& aName,
+DOMError::DOMError(nsPIDOMWindowInner* aWindow, const nsAString& aName,
                    const nsAString& aMessage)
   : mWindow(aWindow)
   , mName(aName)
@@ -65,7 +65,7 @@ DOMError::Constructor(const GlobalObject& aGlobal,
                       const nsAString& aName, const nsAString& aMessage,
                       ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   // Window is null for chrome code.
 

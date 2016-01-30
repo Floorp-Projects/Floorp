@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 
 class nsIColorPickerShownCallback;
-class nsIDOMWindow;
+class mozIDOMWindowProxy;
 @class NSColorPanelWrapper;
 @class NSColor;
 
@@ -21,7 +21,7 @@ class nsColorPicker final : public nsIColorPicker
 public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIDOMWindow* aParent, const nsAString& aTitle,
+  NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
                   const nsAString& aInitialColor) override;
   NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) override;
 

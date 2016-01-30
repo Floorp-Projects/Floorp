@@ -15,7 +15,6 @@
 
 class nsGlobalWindow;
 class nsIPrincipal;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {

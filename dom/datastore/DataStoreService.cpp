@@ -133,7 +133,7 @@ static uint64_t gCounterID = 0;
 typedef nsClassHashtable<nsUint32HashKey, DataStoreInfo> HashApp;
 
 void
-RejectPromise(nsPIDOMWindow* aWindow, Promise* aPromise, nsresult aRv)
+RejectPromise(nsPIDOMWindowInner* aWindow, Promise* aPromise, nsresult aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(NS_FAILED(aRv));
@@ -317,7 +317,7 @@ HomeScreenPrefCallback(const char* aPrefName, void* /* aClosure */)
 class PendingRequest
 {
 public:
-  void Init(nsPIDOMWindow* aWindow, Promise* aPromise,
+  void Init(nsPIDOMWindowInner* aWindow, Promise* aPromise,
             const nsTArray<DataStoreInfo>& aStores,
             const nsTArray<nsString>& aPendingDataStores)
   {
@@ -327,7 +327,7 @@ public:
     mPendingDataStores = aPendingDataStores;
   }
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Promise> mPromise;
   nsTArray<DataStoreInfo> mStores;
 
@@ -787,7 +787,7 @@ DataStoreService::InstallAccessDataStore(uint32_t aAppId,
 }
 
 NS_IMETHODIMP
-DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
+DataStoreService::GetDataStores(mozIDOMWindow* aWindow,
                                 const nsAString& aName,
                                 const nsAString& aOwner,
                                 nsISupports** aDataStores)
@@ -795,7 +795,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
   // FIXME This will be a thread-safe method.
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
   if (!window) {
     return NS_ERROR_FAILURE;
   }
@@ -861,7 +861,8 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
 }
 
 void
-DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
+DataStoreService::GetDataStoresCreate(nsPIDOMWindowInner* aWindow,
+                                      Promise* aPromise,
                                       const nsTArray<DataStoreInfo>& aStores)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -894,7 +895,7 @@ DataStoreService::GetDataStoresCreate(nsPIDOMWindow* aWindow, Promise* aPromise,
 }
 
 void
-DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
+DataStoreService::GetDataStoresResolve(nsPIDOMWindowInner* aWindow,
                                        Promise* aPromise,
                                        const nsTArray<DataStoreInfo>& aStores)
 {

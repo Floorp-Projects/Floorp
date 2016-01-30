@@ -27,12 +27,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothPairingHandle)
 
   static already_AddRefed<BluetoothPairingHandle>
-    Create(nsPIDOMWindow* aOwner,
+    Create(nsPIDOMWindowInner* aOwner,
            const nsAString& aDeviceAddress,
            const nsAString& aType,
            const nsAString& aPasskey);
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwner;
   }
@@ -56,7 +56,7 @@ public:
   already_AddRefed<Promise> Reject(ErrorResult& aRv);
 
 private:
-  BluetoothPairingHandle(nsPIDOMWindow* aOwner,
+  BluetoothPairingHandle(nsPIDOMWindowInner* aOwner,
                          const nsAString& aDeviceAddress,
                          const nsAString& aType,
                          const nsAString& aPasskey);
@@ -71,7 +71,7 @@ private:
    */
   bool GetSspVariant(BluetoothSspVariant& aVariant);
 
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
   nsString mDeviceAddress;
   nsString mType;
   nsString mPasskey;

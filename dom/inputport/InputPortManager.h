@@ -12,7 +12,7 @@
 #include "nsWrapperCache.h"
 
 class nsIInputPortService;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -28,10 +28,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(InputPortManager)
   NS_DECL_NSIINPUTPORTSERVICECALLBACK
 
-  static already_AddRefed<InputPortManager> Create(nsPIDOMWindow* aWindow, ErrorResult& aRv);
+  static already_AddRefed<InputPortManager>
+  Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   // WebIDL (internal functions)
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -39,7 +40,7 @@ public:
   already_AddRefed<Promise> GetInputPorts(ErrorResult& aRv);
 
 private:
-  explicit InputPortManager(nsPIDOMWindow* aWindow);
+  explicit InputPortManager(nsPIDOMWindowInner* aWindow);
 
   ~InputPortManager();
 
@@ -51,7 +52,7 @@ private:
 
   nsTArray<RefPtr<Promise>> mPendingGetInputPortsPromises;
   nsTArray<RefPtr<InputPort>> mInputPorts;
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsCOMPtr<nsIInputPortService> mInputPortService;
   bool mIsReady;
 };

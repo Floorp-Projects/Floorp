@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIPrintSettings;
 interface nsIWebProgressListener;
 
@@ -14,7 +14,7 @@ interface nsIWebProgressListener;
  * nsIWebBrowserPrint corresponds to the main interface
  * for printing an embedded Gecko web browser window/document
  */
-[scriptable, uuid(9A7CA4B0-FBBA-11d4-A869-00105A183419)]
+[scriptable, uuid(c9a934ed-fff1-4971-bfba-6c25ad70e1e6)]
 interface nsIWebBrowserPrint : nsISupports
 {
   /**
@@ -55,7 +55,7 @@ interface nsIWebBrowserPrint : nsISupports
    * This enables any consumers of the interface to have access
    * to the "current" child DOMWindow at later points in the execution
    */
-  readonly attribute nsIDOMWindow currentChildDOMWindow;
+  readonly attribute mozIDOMWindowProxy currentChildDOMWindow;
 
   /**
    * Returns whether it is in Print mode
@@ -113,7 +113,7 @@ interface nsIWebBrowserPrint : nsISupports
    * @return void
    */
   void printPreview(in nsIPrintSettings aThePrintSettings,
-                    in nsIDOMWindow aChildDOMWin,
+                    in mozIDOMWindowProxy aChildDOMWin,
                     in nsIWebProgressListener aWPListener);
 
   /**

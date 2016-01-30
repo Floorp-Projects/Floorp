@@ -256,9 +256,7 @@ IDBDatabase::Create(IDBOpenDBRequest* aRequest,
   db->SetScriptOwner(aRequest->GetScriptOwner());
 
   if (NS_IsMainThread()) {
-    if (nsPIDOMWindow* window = aFactory->GetParentObject()) {
-      MOZ_ASSERT(window->IsInnerWindow());
-
+    if (nsPIDOMWindowInner* window = aFactory->GetParentObject()) {
       uint64_t windowId = window->WindowID();
 
       RefPtr<Observer> observer = new Observer(db, windowId);
@@ -404,7 +402,7 @@ IDBDatabase::RefreshSpec(bool aMayDelete)
   }
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 IDBDatabase::GetParentObject() const
 {
   return mFactory->GetParentObject();
@@ -453,7 +451,7 @@ IDBDatabase::ObjectStoreNames() const
 already_AddRefed<nsIDocument>
 IDBDatabase::GetOwnerDocument() const
 {
-  if (nsPIDOMWindow* window = GetOwner()) {
+  if (nsPIDOMWindowInner* window = GetOwner()) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     return doc.forget();
   }
