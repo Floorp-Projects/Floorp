@@ -48,6 +48,7 @@ DIRS += [
     'reader',
     'remotebrowserutils',
     'reflect',
+    'securityreporter',
     'sqlite',
     'startup',
     'statusfilter',
