@@ -296,6 +296,18 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::Block:
         return DecodeBlock(f, expected);
       case Expr::I32Add:
+      case Expr::I32Sub:
+      case Expr::I32Mul:
+      case Expr::I32DivS:
+      case Expr::I32DivU:
+      case Expr::I32RemS:
+      case Expr::I32RemU:
+      case Expr::I32And:
+      case Expr::I32Or:
+      case Expr::I32Xor:
+      case Expr::I32Shl:
+      case Expr::I32ShrS:
+      case Expr::I32ShrU:
         return DecodeBinaryOperator(f, expected);
       default:
         break;
