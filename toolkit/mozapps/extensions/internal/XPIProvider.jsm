@@ -1641,11 +1641,18 @@ function verifyZipSignedState(aFile, aAddon) {
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
-    certDB.openSignedAppFileAsync(root, aFile, (aRv, aZipReader, aCert) => {
-      if (aZipReader)
-        aZipReader.close();
-      resolve(getSignedStatus(aRv, aCert, aAddon.id));
-    });
+    let callback = {
+      openSignedAppFileFinished: function(aRv, aZipReader, aCert) {
+        if (aZipReader)
+          aZipReader.close();
+        resolve(getSignedStatus(aRv, aCert, aAddon.id));
+      }
+    };
+    // This allows the certificate DB to get the raw JS callback object so the
+    // test code can pass through objects that XPConnect would reject.
+    callback.wrappedJSObject = callback;
+
+    certDB.openSignedAppFileAsync(root, aFile, callback);
   });
 }
 
@@ -1671,9 +1678,16 @@ function verifyDirSignedState(aDir, aAddon) {
     root = Ci.nsIX509CertDB.AddonsStageRoot;
 
   return new Promise(resolve => {
-    certDB.verifySignedDirectoryAsync(root, aDir, (aRv, aCert) => {
-      resolve(getSignedStatus(aRv, aCert, aAddon.id));
-    });
+    let callback = {
+      verifySignedDirectoryFinished: function(aRv, aCert) {
+        resolve(getSignedStatus(aRv, aCert, aAddon.id));
+      }
+    };
+    // This allows the certificate DB to get the raw JS callback object so the
+    // test code can pass through objects that XPConnect would reject.
+    callback.wrappedJSObject = callback;
+
+    certDB.verifySignedDirectoryAsync(root, aDir, callback);
   });
 }
 
