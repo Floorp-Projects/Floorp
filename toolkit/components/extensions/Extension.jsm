@@ -383,6 +383,10 @@ GlobalManager = {
 
         let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
         let schemaWrapper = {
+          get cloneScope() {
+            return context.cloneScope;
+          },
+
           callFunction(ns, name, args) {
             return schemaApi[ns][name](...args);
           },
@@ -623,6 +627,10 @@ ExtensionData.prototype = {
         url: this.baseURI && this.baseURI.spec,
 
         principal: this.principal,
+
+        logError: error => {
+          this.logger.warn(`Loading extension '${this.id}': Reading manifest: ${error}`);
+        },
       };
 
       let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);

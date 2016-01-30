@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testSchema() {
+add_task(function* testEmptySchema() {
   function background() {
     browser.test.assertTrue(!("manifest" in browser), "browser.manifest is not defined");
     browser.test.notifyPass("schema");
@@ -29,6 +29,40 @@ add_task(function* testSchema() {
   yield extension.awaitFinish("schema");
 
   yield extension.unload();
+});
+
+add_task(function* testUnknownProperties() {
+  function background() {
+    browser.test.notifyPass("loaded");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["unknownPermission"],
+
+      unknown_property: {},
+    },
+
+    background: `(${background})()`,
+  });
+
+  let messages = [
+    {message: /processing permissions\.0: Unknown permission "unknownPermission"/},
+    {message: /processing unknown_property: An unexpected property was found in the WebExtension manifest/},
+  ];
+
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, messages);
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("loaded");
+
+  yield extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
 });
 </script>
 
