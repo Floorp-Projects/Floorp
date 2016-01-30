@@ -235,7 +235,7 @@ function loadLibraries() {
 }
 
 function ESEDB(rootPath, dbPath, logPath) {
-  log.error("Created db");
+  log.info("Created db");
   this.rootPath = rootPath;
   this.dbPath = dbPath;
   this.logPath = logPath;
