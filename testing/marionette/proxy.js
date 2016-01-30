@@ -6,6 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/modal.js");
 
 this.EXPORTED_SYMBOLS = ["proxy"];
@@ -44,20 +45,19 @@ this.proxy = {};
  *     Callback for sending async messages.
  */
 proxy.toListener = function(mmFn, sendAsyncFn) {
-  let sender = new proxy.AsyncContentSender(mmFn, sendAsyncFn);
+  let sender = new proxy.AsyncMessageChannel(mmFn, sendAsyncFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
 /**
- * With the AsyncContentSender it is possible to make asynchronous calls
- * to the message listener in a frame script.
+ * Provides a transparent interface between chrome- and content space.
  *
- * The responses from content are expected to be JSON Objects, where an
- * {@code error} key indicates that an error occured, and a {@code value}
- * entry that the operation was successful.  It is the value of the
- * {@code value} key that is returned to the consumer through a promise.
+ * The AsyncMessageChannel is an abstraction of the message manager
+ * IPC architecture allowing calls to be made to any registered message
+ * listener in Marionette.  The {@code #send(...)} method returns a promise
+ * that gets resolved when the message handler calls {@code .reply(...)}.
  */
-proxy.AsyncContentSender = class {
+proxy.AsyncMessageChannel = class {
   constructor(mmFn, sendAsyncFn) {
     this.sendAsync = sendAsyncFn;
     // TODO(ato): Bug 1242595
@@ -73,8 +73,14 @@ proxy.AsyncContentSender = class {
   }
 
   /**
-   * Call registered function in the frame script environment of the
-   * current browsing context's content frame.
+   * Send a message across the channel.  The name of the function to
+   * call must be registered as a message listener.
+   *
+   * Usage:
+   *
+   *     let channel = new AsyncMessageChannel(
+   *         messageManager, sendAsyncMessage.bind(this));
+   *     let rv = yield channel.send("remoteFunction", ["argument"]);
    *
    * @param {string} name
    *     Function to call in the listener, e.g. for the message listener
@@ -86,6 +92,10 @@ proxy.AsyncContentSender = class {
    *
    * @return {Promise}
    *     A promise that resolves to the result of the command.
+   * @throws {TypeError}
+   *     If an unsupported reply type is received.
+   * @throws {WebDriverError}
+   *     If an error is returned over the channel.
    */
   send(name, args = []) {
     let uuid = uuidgen.generateUUID().toString();
@@ -93,15 +103,27 @@ proxy.AsyncContentSender = class {
     this.activeMessageId = uuid;
 
     return new Promise((resolve, reject) => {
-      let path = proxy.AsyncContentSender.makeReplyPath(uuid);
+      let path = proxy.AsyncMessageChannel.makePath(uuid);
       let cb = msg => {
         this.activeMessageId = null;
-        if ("error" in msg.json) {
-          reject(msg.objects.error);
-        } else {
-          resolve(msg.json.value);
+
+        switch (msg.json.type) {
+          case proxy.AsyncMessageChannel.ReplyType.Ok:
+          case proxy.AsyncMessageChannel.ReplyType.Value:
+            resolve(msg.json.data);
+            break;
+
+          case proxy.AsyncMessageChannel.ReplyType.Error:
+            let err = error.fromJson(msg.json.data);
+            reject(err);
+            break;
+
+          default:
+            throw new TypeError(
+                `Unknown async response type: ${msg.json.type}`);
         }
       };
+
       this.dialogueObserver_ = (subject, topic) => {
         this.cancelAll();
         resolve();
@@ -112,13 +134,80 @@ proxy.AsyncContentSender = class {
       this.addListener_(path, cb);
       modal.addHandler(this.dialogueObserver_);
 
+      // sendAsync is GeckoDriver#sendAsync
       this.sendAsync(name, marshal(args), uuid);
     });
   }
 
+  /**
+   * Reply to an asynchronous request.
+   *
+   * Passing an WebDriverError prototype will cause the receiving channel
+   * to throw this error.
+   *
+   * Usage:
+   *
+   *     let channel = proxy.AsyncMessageChannel(
+   *         messageManager, sendAsyncMessage.bind(this));
+   *
+   *     // throws in requester:
+   *     channel.reply(uuid, new WebDriverError());
+   *
+   *     // returns with value:
+   *     channel.reply(uuid, "hello world!");
+   *
+   *     // returns with undefined:
+   *     channel.reply(uuid);
+   *
+   * @param {UUID} uuid
+   *     Unique identifier of the request.
+   * @param {?=} obj
+   *     Message data to reply with.
+   */
+  reply(uuid, obj = undefined) {
+    // TODO(ato): Eventually the uuid will be hidden in the dispatcher
+    // in listener, and passing it explicitly to this function will be
+    // unnecessary.
+    if (typeof obj == "undefined") {
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Ok);
+    } else if (error.isError(obj)) {
+      let serr = error.toJson(obj);
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Error, serr);
+    } else {
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Value, obj);
+    }
+  }
+
+  sendReply_(uuid, type, data = undefined) {
+    let path = proxy.AsyncMessageChannel.makePath(uuid);
+    let msg = {type: type, data: data};
+    // here sendAsync is actually the content frame's
+    // sendAsyncMessage(path, message) global
+    this.sendAsync(path, msg);
+  }
+
+  /**
+   * Produces a path, or a name, for the message listener handler that
+   * listens for a reply.
+   *
+   * @param {UUID} uuid
+   *     Unique identifier of the channel request.
+   *
+   * @return {string}
+   *     Path to be used for nsIMessageListener.addMessageListener.
+   */
+  static makePath(uuid) {
+    return "Marionette:asyncReply:" + uuid;
+  }
+
+  /**
+   * Abort listening for responses, remove all modal dialogue handlers,
+   * and cancel any ongoing requests in the listener.
+   */
   cancelAll() {
     this.removeAllListeners_();
     modal.removeHandler(this.dialogueObserver_);
+    // TODO(ato): It's not ideal to have listener specific behaviour here:
     this.sendAsync("cancelRequest");
   }
 
@@ -146,10 +235,11 @@ proxy.AsyncContentSender = class {
     }
     return ok;
   }
-
-  static makeReplyPath(uuid) {
-    return "Marionette:asyncReply:" + uuid;
-  }
+};
+proxy.AsyncMessageChannel.ReplyType = {
+  Ok: 0,
+  Value: 1,
+  Error: 2,
 };
 
 /**

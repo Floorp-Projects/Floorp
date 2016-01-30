@@ -1,2 +1,2 @@
-marionette-transport == 1.1.0
+marionette-transport == 1.2.0
 mozrunner >= 6.9

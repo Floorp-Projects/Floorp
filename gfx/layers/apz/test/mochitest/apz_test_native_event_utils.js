@@ -117,10 +117,14 @@ function synthesizeNativeWheelAndWaitForWheelEvent(aElement, aX, aY, aDeltaX, aD
 // If the event targets content in a subdocument, |aElement| should be inside
 // the subdocument.  See synthesizeNativeWheel for details on the other
 // parameters.
+var scrollActionId = 0;
 function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
+  scrollActionId++;
+  dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] initiating scroll action " + scrollActionId + "\n");
   var targetWindow = aElement.ownerDocument.defaultView;
   var useCapture = true;  // scroll events don't always bubble
   targetWindow.addEventListener("scroll", function scrollWaiter(e) {
+    dump("[WHEEL_TRANS_LOG] [" + Date.now() + "] scroll action " + scrollActionId + ": received scroll event, target is " + e.target + " with id " + e.target.id + "\n");
     targetWindow.removeEventListener("scroll", scrollWaiter, useCapture);
     setTimeout(aCallback, 0);
   }, useCapture);

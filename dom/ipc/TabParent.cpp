@@ -1450,7 +1450,7 @@ bool TabParent::RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent)
   localEvent.widget = widget;
   localEvent.refPoint -= GetChildProcessOffset();
 
-  widget->DispatchAPZAwareEvent(&localEvent);
+  widget->DispatchInputEvent(&localEvent);
   return true;
 }
 

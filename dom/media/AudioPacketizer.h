@@ -8,7 +8,7 @@
 
 #include <mozilla/PodOperations.h>
 #include <mozilla/Assertions.h>
-#include <nsAutoPtr.h>
+#include <mozilla/UniquePtr.h>
 #include <AudioSampleFormat.h>
 
 // Enable this to warn when `Output` has been called but not enough data was
@@ -62,8 +62,8 @@ public:
       // the exact right size in order to not waste space.
       uint32_t newLength = AvailableSamples() + inputSamples;
       uint32_t toCopy = AvailableSamples();
-      nsAutoPtr<InputType> oldStorage = mStorage;
-      mStorage = new InputType[newLength];
+      UniquePtr<InputType[]> oldStorage = mozilla::Move(mStorage);
+      mStorage = mozilla::MakeUnique<InputType[]>(newLength);
       // Copy the old data at the beginning of the new storage.
       if (WriteIndex() >= ReadIndex()) {
         PodCopy(mStorage.get(),
@@ -186,7 +186,7 @@ private:
   uint64_t mReadIndex;
   uint64_t mWriteIndex;
   // Storage for the samples
-  nsAutoPtr<InputType> mStorage;
+  mozilla::UniquePtr<InputType[]> mStorage;
   // Length of the buffer, in samples
   uint32_t mLength;
 };
