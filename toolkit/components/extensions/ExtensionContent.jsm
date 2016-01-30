@@ -37,6 +37,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   runSafeSyncWithoutClone,
+  BaseContext,
   LocaleData,
   MessageBroker,
   Messenger,
@@ -227,109 +228,103 @@ var ExtensionManager;
 // Scope in which extension content script code can run. It uses
 // Cu.Sandbox to run the code. There is a separate scope for each
 // frame.
-function ExtensionContext(extensionId, contentWindow, contextOptions = {}) {
-  let { isExtensionPage } = contextOptions;
+class ExtensionContext extends BaseContext {
+  constructor(extensionId, contentWindow, contextOptions = {}) {
+    super();
 
-  this.isExtensionPage = isExtensionPage;
-  this.extension = ExtensionManager.get(extensionId);
-  this.extensionId = extensionId;
-  this.contentWindow = contentWindow;
+    let { isExtensionPage } = contextOptions;
 
-  this.onClose = new Set();
+    this.isExtensionPage = isExtensionPage;
+    this.extension = ExtensionManager.get(extensionId);
+    this.extensionId = extensionId;
+    this.contentWindow = contentWindow;
 
-  let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-  let outerWindowId = utils.outerWindowID;
-  let frameId = contentWindow == contentWindow.top ? 0 : outerWindowId;
-  this.frameId = frameId;
+    let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    let outerWindowId = utils.outerWindowID;
+    let frameId = contentWindow == contentWindow.top ? 0 : outerWindowId;
+    this.frameId = frameId;
 
-  let mm = getWindowMessageManager(contentWindow);
-  this.messageManager = mm;
+    let mm = getWindowMessageManager(contentWindow);
+    this.messageManager = mm;
 
-  let prin;
-  let contentPrincipal = contentWindow.document.nodePrincipal;
-  let ssm = Services.scriptSecurityManager;
-  if (ssm.isSystemPrincipal(contentPrincipal)) {
-    // Make sure we don't hand out the system principal by accident.
-    prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
-  } else {
+    let prin;
+    let contentPrincipal = contentWindow.document.nodePrincipal;
+    let ssm = Services.scriptSecurityManager;
+
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, {addonId: extensionId});
-    prin = [contentPrincipal, extensionPrincipal];
-  }
+    Object.defineProperty(this, "principal",
+                          {value: extensionPrincipal, enumerable: true, configurable: true});
 
-  if (isExtensionPage) {
-    if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
-      throw new Error("Invalid target window for this extension context");
+    if (ssm.isSystemPrincipal(contentPrincipal)) {
+      // Make sure we don't hand out the system principal by accident.
+      prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+    } else {
+      prin = [contentPrincipal, extensionPrincipal];
     }
-    // This is an iframe with content script API enabled and its principal should be the
-    // contentWindow itself. (we create a sandbox with the contentWindow as principal and with X-rays disabled
-    // because it enables us to create the APIs object in this sandbox object and then copying it
-    // into the iframe's window, see Bug 1214658 for rationale)
-    this.sandbox = Cu.Sandbox(contentWindow, {
-      sandboxPrototype: contentWindow,
-      wantXrays: false,
-      isWebExtensionContentScript: true,
-    });
-  } else {
-    this.sandbox = Cu.Sandbox(prin, {
-      sandboxPrototype: contentWindow,
-      wantXrays: true,
-      isWebExtensionContentScript: true,
-      wantGlobalProperties: ["XMLHttpRequest"],
-    });
+
+    if (isExtensionPage) {
+      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
+        throw new Error("Invalid target window for this extension context");
+      }
+      // This is an iframe with content script API enabled and its principal should be the
+      // contentWindow itself. (we create a sandbox with the contentWindow as principal and with X-rays disabled
+      // because it enables us to create the APIs object in this sandbox object and then copying it
+      // into the iframe's window, see Bug 1214658 for rationale)
+      this.sandbox = Cu.Sandbox(contentWindow, {
+        sandboxPrototype: contentWindow,
+        wantXrays: false,
+        isWebExtensionContentScript: true,
+      });
+    } else {
+      this.sandbox = Cu.Sandbox(prin, {
+        sandboxPrototype: contentWindow,
+        wantXrays: true,
+        isWebExtensionContentScript: true,
+        wantGlobalProperties: ["XMLHttpRequest"],
+      });
+    }
+
+    let delegate = {
+      getSender(context, target, sender) {
+        // Nothing to do here.
+      },
+    };
+
+    let url = contentWindow.location.href;
+    let broker = ExtensionContent.getBroker(mm);
+    // The |sender| parameter is passed directly to the extension.
+    let sender = {id: this.extension.uuid, frameId, url};
+    // Properties in |filter| must match those in the |recipient|
+    // parameter of sendMessage.
+    let filter = {extensionId, frameId};
+    this.messenger = new Messenger(this, broker, sender, filter, delegate);
+
+    this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
+
+    // Sandboxes don't get Xrays for some weird compatibility
+    // reason. However, we waive here anyway in case that changes.
+    Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
+
+    injectAPI(api(this), this.chromeObj);
+
+    // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
+    if (isExtensionPage) {
+      Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
+      Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
+    }
   }
 
-  let delegate = {
-    getSender(context, target, sender) {
-      // Nothing to do here.
-    },
-  };
-
-  let url = contentWindow.location.href;
-  let broker = ExtensionContent.getBroker(mm);
-  // The |sender| parameter is passed directly to the extension.
-  let sender = {id: this.extension.uuid, frameId, url};
-  // Properties in |filter| must match those in the |recipient|
-  // parameter of sendMessage.
-  let filter = {extensionId, frameId};
-  this.messenger = new Messenger(this, broker, sender, filter, delegate);
-
-  this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
-
-  // Sandboxes don't get Xrays for some weird compatibility
-  // reason. However, we waive here anyway in case that changes.
-  Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
-
-  injectAPI(api(this), this.chromeObj);
-
-  // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
-  if (isExtensionPage) {
-    Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
-    Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
-  }
-}
-
-ExtensionContext.prototype = {
   get cloneScope() {
     return this.sandbox;
-  },
+  }
 
   execute(script, shouldRun) {
     script.tryInject(this.extension, this.contentWindow, this.sandbox, shouldRun);
-  },
-
-  callOnClose(obj) {
-    this.onClose.add(obj);
-  },
-
-  forgetOnClose(obj) {
-    this.onClose.delete(obj);
-  },
+  }
 
   close() {
-    for (let obj of this.onClose) {
-      obj.close();
-    }
+    super.unload();
 
     // Overwrite the content script APIs with an empty object if the APIs objects are still
     // defined in the content window (See Bug 1214658 for rationale).
@@ -338,11 +333,10 @@ ExtensionContext.prototype = {
       Cu.createObjectIn(this.contentWindow, { defineAs: "browser" });
       Cu.createObjectIn(this.contentWindow, { defineAs: "chrome" });
     }
-
     Cu.nukeSandbox(this.sandbox);
     this.sandbox = null;
-  },
-};
+  }
+}
 
 function windowId(window) {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)

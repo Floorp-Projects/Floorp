@@ -112,6 +112,53 @@ DefaultWeakMap.prototype = {
   },
 };
 
+class BaseContext {
+  constructor() {
+    this.onClose = new Set();
+  }
+
+  get cloneScope() {
+    throw new Error("Not implemented");
+  }
+
+  get principal() {
+    throw new Error("Not implemented");
+  }
+
+  checkLoadURL(url, options = {}) {
+    let ssm = Services.scriptSecurityManager;
+
+    let flags = ssm.STANDARD;
+    if (!options.allowScript) {
+      flags |= ssm.DISALLOW_SCRIPT;
+    }
+    if (!options.allowInheritsPrincipal) {
+      flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
+    }
+
+    try {
+      ssm.checkLoadURIStrWithPrincipal(this.principal, url, flags);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  callOnClose(obj) {
+    this.onClose.add(obj);
+  }
+
+  forgetOnClose(obj) {
+    this.onClose.delete(obj);
+  }
+
+  unload() {
+    for (let obj of this.onClose) {
+      obj.close();
+    }
+  }
+}
+
 function LocaleData(data) {
   this.defaultLocale = data.defaultLocale;
   this.selectedLocale = data.selectedLocale;
@@ -786,6 +833,7 @@ this.ExtensionUtils = {
   runSafeSyncWithoutClone,
   runSafe,
   runSafeSync,
+  BaseContext,
   DefaultWeakMap,
   EventManager,
   LocaleData,
