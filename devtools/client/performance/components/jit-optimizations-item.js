@@ -6,7 +6,11 @@ const { Cu } = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const STRINGS_URI = "chrome://devtools/locale/jit-optimizations.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const { PluralForm } = require("resource://gre/modules/PluralForm.jsm");
 const { DOM: dom, PropTypes, createClass, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome
+} = require("devtools/client/performance/modules/logic/jit");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples");
@@ -17,8 +21,8 @@ const PROPNAME_MAX_LENGTH = 4;
 const TREE_ROW_HEIGHT = 14;
 
 const OPTIMIZATION_ITEM_TYPES = ["site", "attempts", "types", "attempt", "type", "observedtype"];
-const OptimizationsItem = module.exports = createClass({
-  displayName: "OptimizationsItem",
+const JITOptimizationsItem = module.exports = createClass({
+  displayName: "JITOptimizationsItem",
 
   propTypes: {
     onViewSourceInDebugger: PropTypes.func.isRequired,
@@ -73,18 +77,21 @@ const OptimizationsItem = module.exports = createClass({
     }
 
     let sampleString = PluralForm.get(site.samples, JIT_SAMPLES).replace("#1", site.samples);
-    let text = `${lastStrategy}${propString} – (${sampleString})`;
+    let text = dom.span(
+      { className: "optimization-site-title" },
+      `${lastStrategy}${propString} – (${sampleString})`
+    );
     let frame = Frame({
       onClick: () => onViewSourceInDebugger(frameData.url, site.data.line),
       frame: {
         source: frameData.url,
-        line: site.data.line,
+        line: +site.data.line,
         column: site.data.column,
       }
     })
     let children = [text, frame];
 
-    if (!site.hasSuccessfulOutcome()) {
+    if (!hasSuccessfulOutcome(site)) {
       children.unshift(dom.span({ className: "opt-icon warning" }));
     }
 
@@ -104,7 +111,7 @@ const OptimizationsItem = module.exports = createClass({
   },
 
   _renderAttempt({ item: attempt }) {
-    let success = JITOptimizations.isSuccessfulOutcome(attempt.outcome);
+    let success = isSuccessfulOutcome(attempt.outcome);
     let { strategy, outcome } = attempt;
     return dom.span({ className: "optimization-attempt" },
       dom.span({ className: "optimization-strategy" }, strategy),
@@ -119,7 +126,8 @@ const OptimizationsItem = module.exports = createClass({
 
   _renderObservedType({ onViewSourceInDebugger, item: type }) {
     let children = [
-      `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`
+      dom.span({ className: "optimization-observed-type-keyed" },
+        `${type.keyedBy}${type.name ? ` → ${type.name}` : ""}`)
     ];
 
     // If we have a line and location, make a link to the debugger

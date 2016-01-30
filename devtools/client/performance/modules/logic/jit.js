@@ -121,41 +121,6 @@ const OptimizationSite = function (id, opts) {
 };
 
 /**
- * Returns a boolean indicating if the passed in OptimizationSite
- * has a "good" outcome at the end of its attempted strategies.
- *
- * @param {Array<string>} stringTable
- * @return {boolean}
- */
-
-OptimizationSite.prototype.hasSuccessfulOutcome = function () {
-  let attempts = this.getAttempts();
-  let lastOutcome = attempts[attempts.length - 1].outcome;
-  return OptimizationSite.isSuccessfulOutcome(lastOutcome);
-};
-
-/**
- * Returns the last attempted OptimizationAttempt for this OptimizationSite.
- *
- * @return {Array<OptimizationAttempt>}
- */
-
-OptimizationSite.prototype.getAttempts = function () {
-  return this.data.attempts;
-};
-
-/**
- * Returns all IonTypes in this OptimizationSite.
- *
- * @return {Array<IonType>}
- */
-
-OptimizationSite.prototype.getIonTypes = function () {
-  return this.data.types;
-};
-
-
-/**
  * Constructor for JITOptimizations. A collection of OptimizationSites for a frame.
  *
  * @constructor
@@ -240,8 +205,22 @@ JITOptimizations.prototype = {
  * @return {boolean}
  */
 
-OptimizationSite.isSuccessfulOutcome = JITOptimizations.isSuccessfulOutcome = function (outcome) {
+function isSuccessfulOutcome (outcome) {
   return !!~SUCCESSFUL_OUTCOMES.indexOf(outcome);
+};
+
+/**
+ * Takes an OptimizationSite. Returns a boolean indicating if the passed
+ * in OptimizationSite has a "good" outcome at the end of its attempted strategies.
+ *
+ * @param {OptimizationSite} optimizationSite
+ * @return {boolean}
+ */
+
+function hasSuccessfulOutcome (optimizationSite) {
+  let attempts = optimizationSite.data.attempts;
+  let lastOutcome = attempts[attempts.length - 1].outcome;
+  return isSuccessfulOutcome(lastOutcome);
 };
 
 function maybeString(stringTable, index) {
@@ -355,3 +334,6 @@ function createTierGraphDataFromFrameNode (frameNode, sampleTimes, bucketSize) {
 exports.createTierGraphDataFromFrameNode = createTierGraphDataFromFrameNode;
 exports.OptimizationSite = OptimizationSite;
 exports.JITOptimizations = JITOptimizations;
+exports.hasSuccessfulOutcome = hasSuccessfulOutcome;
+exports.isSuccessfulOutcome = isSuccessfulOutcome;
+exports.SUCCESSFUL_OUTCOMES = SUCCESSFUL_OUTCOMES;
