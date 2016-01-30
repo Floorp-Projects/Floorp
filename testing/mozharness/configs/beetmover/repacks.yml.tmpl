@@ -1,0 +1,61 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for the non en-US locales"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  # common deliverables
+  {{ locale }}:
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+# Bug 1242782 - release promotion mozharness l10n tasks should upload checksum and sigs
+#    checksum:
+#      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums
+#      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums
+#    checksum_sig:
+#      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums.asc
+#      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+
+  {% if platform == "win32" %}
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    stub_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup Stub {{ version }}.exe
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+  {% endif %}
+
+  {% if platform == "win64" %}
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+  {% endif %}
+
+  {% if platform == "linux-i686" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+  {% endif %}
+
+  {% if platform == "linux-x86_64" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+  {% endif %}
+
+  {% if platform == "mac" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.dmg
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox {{ version }}.dmg
+  {% endif %}
+
+{% endfor %}
