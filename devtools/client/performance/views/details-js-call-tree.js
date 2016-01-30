@@ -94,7 +94,7 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
                             ? frameNode.getOptimizations().optimizationSites
                             : [];
 
-    let optimizations = Optimizations({
+    let optimizations = JITOptimizationsView({
       frameData,
       optimizationSites,
       onViewSourceInDebugger: (url, line) => {

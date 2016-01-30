@@ -9,7 +9,7 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("../../shared/components/tree"));
-const OptimizationsItem = createFactory(require("./optimizations-item"));
+const OptimizationsItem = createFactory(require("./jit-optimizations-item"));
 const FrameView = createFactory(require("../../shared/components/frame"));
 
 const onClickTooltipString = frame =>
@@ -19,13 +19,45 @@ const JIT_TITLE = L10N.getStr("jit.title");
 // in `devtools/client/themes/jit-optimizations.css`
 const TREE_ROW_HEIGHT = 14;
 
-const Optimizations = module.exports = createClass({
-  displayName: "Optimizations",
+const optimizationAttemptModel = {
+  id: PropTypes.number.isRequired,
+  strategy: PropTypes.string.isRequired,
+  outcome: PropTypes.string.isRequired,
+};
+
+const optimizationObservedTypeModel = {
+  keyedBy: PropTypes.string.isRequired,
+  name: PropTypes.string,
+  location: PropTypes.string,
+  line: PropTypes.string,
+};
+
+const optimizationIonTypeModel = {
+  id: PropTypes.number.isRequired,
+  typeset: PropTypes.arrayOf(optimizationObservedTypeModel),
+  site: PropTypes.number.isRequired,
+  mirType: PropTypes.number.isRequired,
+};
+
+const optimizationSiteModel = {
+  id: PropTypes.number.isRequired,
+  propertyName: PropTypes.string,
+  line: PropTypes.number.isRequired,
+  column: PropTypes.number.isRequired,
+  data: PropTypes.shape({
+    attempts: PropTypes.arrayOf(optimizationAttemptModel).isRequired,
+    types: PropTypes.arrayOf(optimizationIonTypeModel).isRequired,
+  }).isRequired,
+};
+
+const JITOptimizations = module.exports = createClass({
+  displayName: "JITOptimizations",
 
   propTypes: {
     onViewSourceInDebugger: PropTypes.func.isRequired,
     frameData: PropTypes.object.isRequired,
-    optimizationSites: PropTypes.array.isRequired,
+    optimizationSites: PropTypes.arrayOf(optimizationSiteModel).isRequired,
+    autoExpandDepth: PropTypes.number,
   },
 
   getInitialState() {
@@ -35,7 +67,9 @@ const Optimizations = module.exports = createClass({
   },
 
   getDefaultProps() {
-    return {};
+    return {
+      autoExpandDepth: 0
+    };
   },
 
   render() {
@@ -82,7 +116,7 @@ const Optimizations = module.exports = createClass({
   },
 
   _createTree(props) {
-    let { frameData, onViewSourceInDebugger, optimizationSites: sites } = this.props;
+    let { autoExpandDepth, frameData, onViewSourceInDebugger, optimizationSites: sites } = this.props;
 
     let getSite = id => sites.find(site => site.id === id);
     let getIonTypeForObserved = type =>
@@ -124,7 +158,7 @@ const Optimizations = module.exports = createClass({
     };
 
     return Tree({
-      autoExpandDepth: 0,
+      autoExpandDepth,
       getParent: node => {
         let site = getSite(node.id);
         let parent;
