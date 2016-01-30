@@ -58,3 +58,7 @@ body[token] > #qr-code {
 #token a {
   align-self: center;
 }
+
+#qr-size-note {
+  text-align: center
+}
