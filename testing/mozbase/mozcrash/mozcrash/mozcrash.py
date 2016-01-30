@@ -364,7 +364,7 @@ if mozinfo.isWin:
     OpenProcess = kernel32.OpenProcess
     CloseHandle = kernel32.CloseHandle
 
-    def write_minidump(pid, dump_directory):
+    def write_minidump(pid, dump_directory, utility_path):
         """
         Write a minidump for a process.
 
@@ -379,13 +379,38 @@ if mozinfo.isWin:
         FILE_ATTRIBUTE_NORMAL = 0x80
         INVALID_HANDLE_VALUE = -1
 
+        file_name = os.path.join(dump_directory,
+                                 str(uuid.uuid4()) + ".dmp")
+
+        if (mozinfo.info['bits'] != ctypes.sizeof(ctypes.c_voidp) * 8 and
+            utility_path):
+            # We're not going to be able to write a minidump with ctypes if our
+            # python process was compiled for a different architecture than
+            # firefox, so we invoke the minidumpwriter utility program.
+
+            log = get_logger()
+            minidumpwriter = os.path.normpath(os.path.join(utility_path,
+                                                           "minidumpwriter.exe"))
+            log.info("Using %s to write a dump to %s for [%d]" %
+                     (minidumpwriter, file_name, pid))
+            if not os.path.exists(minidumpwriter):
+                log.error("minidumpwriter not found in %s" % utility_path)
+                return
+
+            if isinstance(file_name, unicode):
+                # Convert to a byte string before sending to the shell.
+                file_name = file_name.encode(sys.getfilesystemencoding())
+
+            status = subprocess.Popen([minidumpwriter, str(pid), file_name]).wait()
+            if status:
+                log.error("minidumpwriter exited with status: %d" % status)
+            return
+
         proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
                                   0, pid)
         if not proc_handle:
             return
 
-        file_name = os.path.join(dump_directory,
-                                 str(uuid.uuid4()) + ".dmp")
         if not isinstance(file_name, unicode):
             # Convert to unicode explicitly so our path will be valid as input
             # to CreateFileW
@@ -433,7 +458,7 @@ else:
         """
         os.kill(pid, signal.SIGKILL)
 
-def kill_and_get_minidump(pid, dump_directory=None):
+def kill_and_get_minidump(pid, dump_directory, utility_path=None):
     """
     Attempt to kill a process and leave behind a minidump describing its
     execution state.
@@ -453,7 +478,7 @@ def kill_and_get_minidump(pid, dump_directory=None):
     """
     needs_killing = True
     if mozinfo.isWin:
-        write_minidump(pid, dump_directory)
+        write_minidump(pid, dump_directory, utility_path)
     elif mozinfo.isLinux or mozinfo.isMac:
         os.kill(pid, signal.SIGABRT)
         needs_killing = False

@@ -223,6 +223,9 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
   name = "Marionette:" + name;
 
+  // TODO(ato): When proxy.AsyncMessageChannel
+  // is used for all chrome <-> content communication
+  // this can be removed.
   if (cmdId) {
     msg.command_id = cmdId;
   }
@@ -242,8 +245,8 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
       this.mm.sendAsyncMessage(name + remoteFrameId, msg);
     } catch (e) {
       switch(e.result) {
-        case Components.results.NS_ERROR_FAILURE:
-        case Components.results.NS_ERROR_NOT_INITIALIZED:
+        case Cr.NS_ERROR_FAILURE:
+        case Cr.NS_ERROR_NOT_INITIALIZED:
           throw new NoSuchWindowError();
         default:
           throw new WebDriverError(e.toString());

@@ -184,7 +184,7 @@ function dispatch(fn) {
       if (typeof rv == "undefined") {
         sendOk(id);
       } else {
-        sendResponse({value: rv}, id);
+        sendResponse(rv, id);
       }
     };
 
@@ -398,42 +398,56 @@ function deleteSession(msg) {
   actions.touchIds = {};
 }
 
-/*
- * Helper methods
- */
-
 /**
- * Generic method to send a message to the server
+ * Send asynchronous reply to chrome.
+ *
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
+ * @param {AsyncContentSender.ResponseType} type
+ *     Type of response.
+ * @param {?=} data
+ *     JSON serialisable object to accompany the message.  Defaults to
+ *     an empty dictionary.
  */
-function sendToServer(path, data = {}, objs, id) {
-  if (id) {
-    data.command_id = id;
-  }
-  sendAsyncMessage(path, data, objs);
+function sendToServer(uuid, data = undefined) {
+  let channel = new proxy.AsyncMessageChannel(
+      () => this,
+      sendAsyncMessage.bind(this));
+  channel.reply(uuid, data);
 }
 
 /**
- * Send response back to server
+ * Send asynchronous reply with value to chrome.
+ *
+ * @param {?} obj
+ *     JSON serialisable object of arbitrary type and complexity.
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
  */
-function sendResponse(value, id) {
-  let path = proxy.AsyncContentSender.makeReplyPath(id);
-  sendToServer(path, value, null, id);
+function sendResponse(obj, id) {
+  sendToServer(id, obj);
 }
 
 /**
- * Send ack back to server
+ * Send asynchronous reply to chrome.
+ *
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
  */
-function sendOk(id) {
-  let path = proxy.AsyncContentSender.makeReplyPath(id);
-  sendToServer(path, {}, null, id);
+function sendOk(uuid) {
+  sendToServer(uuid);
 }
 
 /**
- * Send error message to server
+ * Send asynchronous error reply to chrome.
+ *
+ * @param {Error} err
+ *     Error to notify chrome of.
+ * @param {UUID} uuid
+ *     Unique identifier of the request.
  */
-function sendError(err, id) {
-  let path = proxy.AsyncContentSender.makeReplyPath(id);
-  sendToServer(path, {error: null}, {error: err}, id);
+function sendError(err, uuid) {
+  sendToServer(uuid, err);
 }
 
 /**
@@ -549,7 +563,7 @@ function createExecuteContentSandbox(win, timeout) {
           _emu_cbs = {};
           sendError(new WebDriverError("Emulator callback still pending when finish() called"), id);
         } else {
-          sendResponse({value: elementManager.wrapValue(obj)}, id);
+          sendResponse(elementManager.wrapValue(obj), id);
         }
       }
 
@@ -631,7 +645,7 @@ function executeScript(msg, directInject) {
         sendError(new JavaScriptError("Marionette.finish() not called"), asyncTestCommandId);
       }
       else {
-        sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
+        sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
       }
     }
     else {
@@ -657,7 +671,7 @@ function executeScript(msg, directInject) {
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
-      sendResponse({value: elementManager.wrapValue(res)}, asyncTestCommandId);
+      sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
     }
   } catch (e) {
     let err = new JavaScriptError(
@@ -1713,7 +1727,7 @@ function switchToFrame(msg) {
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 
-  sendResponse({value: rv}, command_id);
+  sendResponse(rv, command_id);
 }
 
 function addCookie(cookie) {
@@ -1766,8 +1780,8 @@ function deleteAllCookies() {
 }
 
 function getAppCacheStatus(msg) {
-  sendResponse({ value: curContainer.frame.applicationCache.status },
-               msg.json.command_id);
+  sendResponse(
+      curContainer.frame.applicationCache.status, msg.json.command_id);
 }
 
 // emulator callbacks

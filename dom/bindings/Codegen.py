@@ -1036,10 +1036,7 @@ class CGHeaders(CGWrapper):
                 headerSet.add("mozilla/dom/Nullable.h")
             unrolled = t.unroll()
             if unrolled.isUnion():
-                if len(config.filenamesPerUnion[unrolled.name]) > 1:
-                    headerSet.add("mozilla/dom/UnionTypes.h")
-                else:
-                    headerSet.add(self.getDeclarationFilename(unrolled))
+                headerSet.add(self.getUnionDeclarationFilename(config, unrolled))
                 bindingHeaders.add("mozilla/dom/UnionConversions.h")
             elif unrolled.isDate():
                 if dictionary or jsImplementedDescriptors:
@@ -1195,6 +1192,20 @@ class CGHeaders(CGWrapper):
         basename = os.path.basename(decl.filename())
         return basename.replace('.webidl', 'Binding.h')
 
+    @staticmethod
+    def getUnionDeclarationFilename(config, unionType):
+        assert unionType.isUnion()
+        assert unionType.unroll() == unionType
+        # If a union is "defined" in multiple files, it goes in UnionTypes.h.
+        if len(config.filenamesPerUnion[unionType.name]) > 1:
+            return "mozilla/dom/UnionTypes.h"
+        # If a union is defined by a built-in typedef, it also goes in
+        # UnionTypes.h.
+        assert len(config.filenamesPerUnion[unionType.name]) == 1
+        if "<unknown>" in config.filenamesPerUnion[unionType.name]:
+            return "mozilla/dom/UnionTypes.h"
+        return CGHeaders.getDeclarationFilename(unionType)
+
 
 def SortedDictValues(d):
     """
@@ -1290,10 +1301,7 @@ def UnionTypes(unionTypes, config):
                     # And add headers for the type we're parametrized over
                     addHeadersForType(f.inner)
 
-            if len(config.filenamesPerUnion[t.name]) > 1:
-                implheaders.add("mozilla/dom/UnionTypes.h")
-            else:
-                implheaders.add(CGHeaders.getDeclarationFilename(t))
+            implheaders.add(CGHeaders.getUnionDeclarationFilename(config, t))
             for f in t.flatMemberTypes:
                 assert not f.nullable()
                 addHeadersForType(f)
@@ -1356,8 +1364,9 @@ def UnionConversions(unionTypes, config):
                     # And the internal type of the MozMap
                     addHeadersForType(f.inner, providers)
 
-            if len(config.filenamesPerUnion[t.name]) == 1:
-                headers.add(CGHeaders.getDeclarationFilename(t))
+            # We plan to include UnionTypes.h no matter what, so it's
+            # OK if we throw it into the set here.
+            headers.add(CGHeaders.getUnionDeclarationFilename(config, t))
 
             for f in t.flatMemberTypes:
                 addHeadersForType(f, providers)
