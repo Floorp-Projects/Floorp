@@ -2736,7 +2736,7 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitUnaryMir<MAbs>(f, ExprType::I32, def);
       case Expr::I32Neg:
         return EmitUnaryMir<MAsmJSNeg>(f, ExprType::I32, def);
-      case Expr::I32Ior:
+      case Expr::I32Or:
         return EmitBitwise<MBitOr>(f, def);
       case Expr::I32And:
         return EmitBitwise<MBitAnd>(f, def);
