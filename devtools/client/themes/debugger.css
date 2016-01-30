@@ -66,6 +66,12 @@
   -moz-image-region: rect(0,16px,16px,0);
 }
 
+@media (min-resolution: 1.1dppx) {
+  #sources-toolbar .devtools-toolbarbutton:not([label]) {
+    -moz-image-region: rect(0,32px,32px,0);
+  }
+}
+
 #black-box {
   list-style-image: url(images/debugger-blackbox.png);
 }
@@ -87,30 +93,17 @@
 }
 
 #toggle-breakpoints {
-  list-style-image: url(images/debugger-toggleBreakpoints.png);
+  list-style-image: url(images/debugger-toggleBreakpoints.svg);
+  -moz-image-region: rect(0,32px,16px,16px) !important;
 }
 
 #toggle-breakpoints[checked] {
-  -moz-image-region: rect(0,32px,16px,16px) !important;
+  -moz-image-region: rect(0,16px,16px,0) !important;
 }
 
 #toggle-breakpoints[checked] > image {
   /* This button has a special checked image, don't make it blue */
   filter: none;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #sources-toolbar .devtools-toolbarbutton:not([label]) {
-    -moz-image-region: rect(0,32px,32px,0);
-  }
-
-  #toggle-breakpoints {
-    list-style-image: url(images/debugger-toggleBreakpoints@2x.png);
-  }
-
-  #toggle-breakpoints[checked] {
-    -moz-image-region: rect(0,64px,32px,32px) !important;
-  }
 }
 
 #toggle-promise-debugger {
