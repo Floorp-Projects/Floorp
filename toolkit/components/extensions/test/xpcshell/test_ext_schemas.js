@@ -126,6 +126,30 @@ let json = [
          {name: "xyz", type: "object", additionalProperties: {type: "any"}},
        ],
      },
+
+     {
+       name: "patternprop",
+       type: "function",
+       parameters: [
+         {
+           name: "obj",
+           type: "object",
+           properties: {"prop1": {type: "string", pattern: "^\\d+$"}},
+           patternProperties: {
+             "(?i)^prop\\d+$": {type: "string"},
+             "^foo\\d+$": {type: "string"},
+           },
+         },
+       ],
+     },
+
+     {
+       name: "pattern",
+       type: "function",
+       parameters: [
+         {name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$"},
+       ],
+     },
    ],
 
    events: [
@@ -283,10 +307,51 @@ add_task(function* () {
 
   root.testing.quosimodo({a: 10, b: 20, c: 30});
   verify("call", "testing", "quosimodo", [{a: 10, b: 20, c: 30}]);
+  tallied = null;
 
   Assert.throws(() => root.testing.quosimodo(10),
                 /Incorrect argument types/,
                 "should throw for wrong type");
+
+  root.testing.patternprop({prop1: "12", prop2: "42", Prop3: "43", foo1: "x"});
+  verify("call", "testing", "patternprop", [{prop1: "12", prop2: "42", Prop3: "43", foo1: "x"}]);
+  tallied = null;
+
+  root.testing.patternprop({prop1: "12"});
+  verify("call", "testing", "patternprop", [{prop1: "12"}]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.patternprop({prop1: "12", foo1: null}),
+                /Expected string instead of null/,
+                "should throw for wrong property type");
+
+  Assert.throws(() => root.testing.patternprop({prop1: "xx", prop2: "yy"}),
+                /String "xx" must match \/\^\\d\+\$\//,
+                "should throw for wrong property type");
+
+  Assert.throws(() => root.testing.patternprop({prop1: "12", prop2: 42}),
+                /Expected string instead of 42/,
+                "should throw for wrong property type");
+
+  Assert.throws(() => root.testing.patternprop({prop1: "12", prop2: null}),
+                /Expected string instead of null/,
+                "should throw for wrong property type");
+
+  Assert.throws(() => root.testing.patternprop({prop1: "12", propx: "42"}),
+                /Unexpected property "propx"/,
+                "should throw for unexpected property");
+
+  Assert.throws(() => root.testing.patternprop({prop1: "12", Foo1: "x"}),
+                /Unexpected property "Foo1"/,
+                "should throw for unexpected property");
+
+  root.testing.pattern("DEADbeef");
+  verify("call", "testing", "pattern", ["DEADbeef"]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.pattern("DEADcow"),
+                /String "DEADcow" must match \/\^\[0-9a-f\]\+\$\/i/,
+                "should throw for non-match");
 
   root.testing.onFoo.addListener(f);
   do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onFoo"]));

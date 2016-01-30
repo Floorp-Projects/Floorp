@@ -45,6 +45,17 @@ function readJSON(uri) {
   });
 }
 
+// Parses a regular expression, with support for the Python extended
+// syntax that allows setting flags by including the string (?im)
+function parsePattern(pattern) {
+  let flags = "";
+  let match = /^\(\?([im]*)\)(.*)/.exec(pattern);
+  if (match) {
+    [, flags, pattern] = match;
+  }
+  return new RegExp(pattern, flags);
+}
+
 function getValueBaseType(value) {
   let t = typeof(value);
   if (t == "object") {
@@ -171,11 +182,12 @@ class RefType extends Type {
 }
 
 class StringType extends Type {
-  constructor(enumeration, minLength, maxLength) {
+  constructor(enumeration, minLength, maxLength, pattern) {
     super();
     this.enumeration = enumeration;
     this.minLength = minLength;
     this.maxLength = maxLength;
+    this.pattern = pattern;
   }
 
   normalize(value) {
@@ -198,6 +210,10 @@ class StringType extends Type {
       return {error: `String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`};
     }
 
+    if (this.pattern && !this.pattern.test(value)) {
+      return {error: `String ${JSON.stringify(value)} must match ${this.pattern}`};
+    }
+
     return r;
   }
 
@@ -217,10 +233,11 @@ class StringType extends Type {
 }
 
 class ObjectType extends Type {
-  constructor(properties, additionalProperties, isInstanceOf) {
+  constructor(properties, additionalProperties, patternProperties, isInstanceOf) {
     super();
     this.properties = properties;
     this.additionalProperties = additionalProperties;
+    this.patternProperties = patternProperties;
     this.isInstanceOf = isInstanceOf;
   }
 
@@ -236,6 +253,7 @@ class ObjectType extends Type {
 
     if (this.isInstanceOf) {
       if (Object.keys(this.properties).length ||
+          this.patternProperties.length ||
           !(this.additionalProperties instanceof AnyType)) {
         throw new Error("InternalError: isInstanceOf can only be used with objects that are otherwise unrestricted");
       }
@@ -280,9 +298,10 @@ class ObjectType extends Type {
       }
     }
 
-    let result = {};
-    for (let prop of Object.keys(this.properties)) {
-      let {type, optional, unsupported} = this.properties[prop];
+    let remainingProps = new Set(Object.keys(properties));
+
+    let checkProperty = (prop, propType, result) => {
+      let {type, optional, unsupported} = propType;
       if (unsupported) {
         if (prop in properties) {
           return {error: `Property "${prop}" is unsupported by Firefox`};
@@ -296,26 +315,48 @@ class ObjectType extends Type {
             return r;
           }
           result[prop] = r.value;
+          properties[prop] = r.value;
         }
+        remainingProps.delete(prop);
       } else if (!optional) {
         return {error: `Property "${prop}" is required`};
       } else {
         result[prop] = null;
       }
+    };
+
+    let result = {};
+    for (let prop of Object.keys(this.properties)) {
+      let error = checkProperty(prop, this.properties[prop], result);
+      if (error) {
+        return error;
+      }
     }
 
     for (let prop of Object.keys(properties)) {
-      if (!(prop in this.properties)) {
-        if (this.additionalProperties) {
-          let r = this.additionalProperties.normalize(properties[prop]);
-          if (r.error) {
-            return r;
+      for (let {pattern, type} of this.patternProperties) {
+        if (pattern.test(prop)) {
+          let error = checkProperty(prop, type, result);
+          if (error) {
+            return error;
           }
-          result[prop] = r.value;
-        } else {
-          return {error: `Unexpected property "${prop}"`};
         }
       }
+    }
+
+    if (this.additionalProperties) {
+      for (let prop of remainingProps) {
+        let type = this.additionalProperties;
+        let r = type.normalize(properties[prop]);
+        if (r.error) {
+          return r;
+        }
+        result[prop] = r.value;
+      }
+    } else if (remainingProps.size == 1) {
+      return {error: `Unexpected property "${[...remainingProps]}"`};
+    } else if (remainingProps.size) {
+      return {error: `Unexpected properties: ${[...remainingProps]}`};
     }
 
     return {value: result};
@@ -702,7 +743,7 @@ this.Schemas = {
 
     // Otherwise it's a normal type...
     if (type.type == "string") {
-      checkTypeProperties("enum", "minLength", "maxLength");
+      checkTypeProperties("enum", "minLength", "maxLength", "pattern");
 
       let enumeration = type.enum || null;
       if (enumeration) {
@@ -717,19 +758,46 @@ this.Schemas = {
           }
         });
       }
+      let pattern = null;
+      if (type.pattern) {
+        try {
+          pattern = parsePattern(type.pattern);
+        } catch (e) {
+          throw new Error(`Internal error: Invalid pattern ${JSON.stringify(type.pattern)}`);
+        }
+      }
       return new StringType(enumeration,
                             type.minLength || 0,
-                            type.maxLength || Infinity);
+                            type.maxLength || Infinity,
+                            pattern);
     } else if (type.type == "object") {
-      let properties = {};
-      for (let propName of Object.keys(type.properties || {})) {
-        let propType = this.parseType(namespaceName, type.properties[propName],
-                                      ["optional", "unsupported", "deprecated"]);
-        properties[propName] = {
-          type: propType,
-          optional: type.properties[propName].optional || false,
-          unsupported: type.properties[propName].unsupported || false,
+      let parseProperty = (type, extraProps = []) => {
+        return {
+          type: this.parseType(namespaceName, type,
+                               ["unsupported", "deprecated", ...extraProps]),
+          optional: type.optional || false,
+          unsupported: type.unsupported || false,
         };
+      };
+
+      let properties = Object.create(null);
+      for (let propName of Object.keys(type.properties || {})) {
+        properties[propName] = parseProperty(type.properties[propName], ["optional"]);
+      }
+
+      let patternProperties = [];
+      for (let propName of Object.keys(type.patternProperties || {})) {
+        let pattern;
+        try {
+          pattern = parsePattern(propName);
+        } catch (e) {
+          throw new Error(`Internal error: Invalid property pattern ${JSON.stringify(propName)}`);
+        }
+
+        patternProperties.push({
+          pattern,
+          type: parseProperty(type.patternProperties[propName]),
+        });
       }
 
       let additionalProperties = null;
@@ -737,8 +805,8 @@ this.Schemas = {
         additionalProperties = this.parseType(namespaceName, type.additionalProperties);
       }
 
-      checkTypeProperties("properties", "additionalProperties", "isInstanceOf");
-      return new ObjectType(properties, additionalProperties, type.isInstanceOf || null);
+      checkTypeProperties("properties", "additionalProperties", "patternProperties", "isInstanceOf");
+      return new ObjectType(properties, additionalProperties, patternProperties, type.isInstanceOf || null);
     } else if (type.type == "array") {
       checkTypeProperties("items", "minItems", "maxItems");
       return new ArrayType(this.parseType(namespaceName, type.items),
