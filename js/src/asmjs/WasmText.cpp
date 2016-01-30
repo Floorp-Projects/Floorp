@@ -587,9 +587,31 @@ class WasmTokenStream
                     return WasmToken(WasmToken::ValueType, ValType::F32, begin, cur_);
 
                 switch (*cur_) {
+                  case 'a':
+                    if (consume(end_, MOZ_UTF16("add")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Add, begin, cur_);
+                    break;
                   case 'c':
                     if (consume(end_, MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("copysign")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
+                    break;
+                  case 'd':
+                    if (consume(end_, MOZ_UTF16("div")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
+                    break;
+                  case 'm':
+                    if (consume(end_, MOZ_UTF16("max")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Max, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("min")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Min, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("mul")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Mul, begin, cur_);
+                    break;
+                  case 's':
+                    if (consume(end_, MOZ_UTF16("sub")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F32Sub, begin, cur_);
                     break;
                 }
                 break;
@@ -599,9 +621,31 @@ class WasmTokenStream
                     return WasmToken(WasmToken::ValueType, ValType::F64, begin, cur_);
 
                 switch (*cur_) {
+                  case 'a':
+                    if (consume(end_, MOZ_UTF16("add")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Add, begin, cur_);
+                    break;
                   case 'c':
                     if (consume(end_, MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("copysign")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
+                    break;
+                  case 'd':
+                    if (consume(end_, MOZ_UTF16("div")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Div, begin, cur_);
+                    break;
+                  case 'm':
+                    if (consume(end_, MOZ_UTF16("max")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Max, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("min")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Min, begin, cur_);
+                    if (consume(end_, MOZ_UTF16("mul")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Mul, begin, cur_);
+                    break;
+                  case 's':
+                    if (consume(end_, MOZ_UTF16("sub")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::F64Sub, begin, cur_);
                     break;
                 }
             }

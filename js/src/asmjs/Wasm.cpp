@@ -308,6 +308,20 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32Shl:
       case Expr::I32ShrS:
       case Expr::I32ShrU:
+      case Expr::F32Add:
+      case Expr::F32Sub:
+      case Expr::F32Mul:
+      case Expr::F32Div:
+      case Expr::F32Min:
+      case Expr::F32Max:
+      case Expr::F32CopySign:
+      case Expr::F64Add:
+      case Expr::F64Sub:
+      case Expr::F64Mul:
+      case Expr::F64Div:
+      case Expr::F64Min:
+      case Expr::F64Max:
+      case Expr::F64CopySign:
         return DecodeBinaryOperator(f, expected);
       default:
         break;
