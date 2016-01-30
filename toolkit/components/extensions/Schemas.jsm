@@ -455,10 +455,49 @@ class ValueProperty extends Entry {
 // Represents a "property" defined in a schema namespace that is not a
 // constant.
 class TypeProperty extends Entry {
-  constructor(name, type) {
+  constructor(namespaceName, name, type, writable) {
     super();
+    this.namespaceName = namespaceName;
     this.name = name;
     this.type = type;
+    this.writable = writable;
+  }
+
+  throwError(global, msg) {
+    global = Cu.getGlobalForObject(global);
+    throw new global.Error(`${msg} for ${this.namespaceName}.${this.name}.`);
+  }
+
+  inject(name, dest, wrapperFuncs) {
+    if (this.unsupported) {
+      return;
+    }
+
+    let getStub = () => {
+      return wrapperFuncs.getProperty(this.namespaceName, name);
+    };
+
+    let desc = {
+      configurable: false,
+      enumerable: true,
+
+      get: Cu.exportFunction(getStub, dest),
+    };
+
+    if (this.writable) {
+      let setStub = (value) => {
+        let normalized = this.type.normalize(value);
+        if (normalized.error) {
+          this.throwError(dest, normalized.error);
+        }
+
+        wrapperFuncs.setProperty(this.namespaceName, name, normalized.value);
+      };
+
+      desc.set = Cu.exportFunction(setStub, dest);
+    }
+
+    Object.defineProperty(dest, name, desc);
   }
 }
 
@@ -747,8 +786,9 @@ this.Schemas = {
     } else {
       // We ignore the "optional" attribute on properties since we
       // don't inject anything here anyway.
-      let type = this.parseType(namespaceName, prop, ["optional"]);
-      this.register(namespaceName, name, new TypeProperty(name, type));
+      let type = this.parseType(namespaceName, prop, ["optional", "writable"]);
+      this.register(namespaceName, name, new TypeProperty(namespaceName, name, type),
+                    prop.writable);
     }
   },
 

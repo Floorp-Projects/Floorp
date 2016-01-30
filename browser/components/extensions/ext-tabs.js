@@ -466,7 +466,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         runSafe(context, callback, result);
       },
 
-      _execute: function(tabId, details, kind, callback) {
+      _execute: function(tabId, details, kind) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
 
@@ -492,11 +492,10 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
         if (details.file !== null) {
           let url = context.uri.resolve(details.file);
-          if (extension.isExtensionURL(url)) {
-            // We should really set |lastError| here, and go straight to
-            // the callback, but we don't have |lastError| yet.
-            options[kind].push(url);
+          if (!extension.isExtensionURL(url)) {
+            return Promise.reject({ message: "Files to be injected must be within the extension" });
           }
+          options[kind].push(url);
         }
         if (details.allFrames) {
           options.all_frames = details.allFrames;
@@ -508,21 +507,18 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = details.runAt;
         }
 
-        // TODO: Set lastError.
-        context.sendMessage(mm, "Extension:Execute", { options }, recipient)
-          .then(result => {
-            if (callback) {
-              runSafe(context, callback, result);
-            }
-          });
+        return context.sendMessage(mm, "Extension:Execute", { options }, recipient)
+                      .then(value => [value]);
       },
 
       executeScript: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, "js", callback);
+        return context.wrapPromise(self.tabs._execute(tabId, details, "js"),
+                                   callback);
       },
 
       insertCSS: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, "css", callback);
+        return context.wrapPromise(self.tabs._execute(tabId, details, "css"),
+                                   callback);
       },
 
       connect: function(tabId, connectInfo) {

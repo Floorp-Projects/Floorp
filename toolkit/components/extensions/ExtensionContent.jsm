@@ -67,6 +67,10 @@ var api = context => {
         return context.messenger.connect(context.messageManager, name, recipient);
       },
 
+      get lastError() {
+        return context.lastError;
+      },
+
       getManifest: function() {
         return Cu.cloneInto(context.extension.manifest, context.cloneScope);
       },
@@ -98,6 +102,10 @@ var api = context => {
     extension: {
       getURL: function(url) {
         return context.extension.baseURI.resolve(url);
+      },
+
+      get lastError() {
+        return context.lastError;
       },
 
       inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
