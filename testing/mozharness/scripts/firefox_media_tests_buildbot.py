@@ -37,7 +37,6 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
             config_options=config_options,
             all_actions=['clobber',
                          'read-buildbot-config',
-                         'checkout',
                          'download-and-extract',
                          'create-virtualenv',
                          'install',

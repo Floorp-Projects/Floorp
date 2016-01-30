@@ -354,29 +354,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 nsEventStatus
 PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 {
-  if (!mTabChild) {
-    return nsEventStatus_eIgnore;
-  }
-
-  switch (aEvent->mClass) {
-    case eMouseEventClass:
-      Unused <<
-        mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
-      break;
-    case eKeyboardEventClass:
-      Unused <<
-        mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unsupported event type");
-  }
-
-  return nsEventStatus_eIgnore;
-}
-
-nsEventStatus
-PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
-{
   if (!AsyncPanZoomEnabled()) {
     nsEventStatus status = nsEventStatus_eIgnore;
     DispatchEvent(aEvent, status);
@@ -391,6 +368,14 @@ PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
     case eWheelEventClass:
       Unused <<
         mTabChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
+      break;
+    case eMouseEventClass:
+      Unused <<
+        mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
+      break;
+    case eKeyboardEventClass:
+      Unused <<
+        mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unsupported event type");

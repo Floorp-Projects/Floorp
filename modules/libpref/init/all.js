@@ -600,7 +600,11 @@ pref("apz.pan_repaint_interval", 16);
 // Whether to print the APZC tree for debugging
 pref("apz.printtree", false);
 
+#ifdef NIGHTLY_BUILD
+pref("apz.record_checkerboarding", true);
+#else
 pref("apz.record_checkerboarding", false);
+#endif
 pref("apz.smooth_scroll_repaint_interval", 16);
 pref("apz.test.logging_enabled", false);
 pref("apz.touch_start_tolerance", "0.1");
@@ -4626,8 +4630,9 @@ pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
 // 0 - disabled, 1 - enabled, 2 - autodetect
-// Enabling it for Windows is tracked by bug 736048.
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
+pref("dom.w3c_touch_events.enabled", 0);
+#elif defined(XP_WIN) && !defined(NIGHTLY_BUILD)
 pref("dom.w3c_touch_events.enabled", 0);
 #else
 pref("dom.w3c_touch_events.enabled", 2);

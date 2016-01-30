@@ -2695,7 +2695,7 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
             WidgetMouseEvent synthEvent(true, eMouseUp, this,
                                         WidgetMouseEvent::eSynthesized);
             synthEvent.button = buttonType;
-            DispatchAPZAwareEvent(&synthEvent);
+            DispatchInputEvent(&synthEvent);
         }
     }
 }
@@ -2817,7 +2817,7 @@ nsWindow::OnButtonPressEvent(GdkEventButton *aEvent)
     InitButtonEvent(event, aEvent);
     event.pressure = mLastMotionPressure;
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
 
     // right menu click on linux should also pop up a context menu
     if (domButton == WidgetMouseEvent::eRightButton &&
@@ -2860,7 +2860,7 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
     gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
     event.pressure = pressure ? pressure : mLastMotionPressure;
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
     mLastMotionPressure = pressure;
 }
 
@@ -3228,7 +3228,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
     wheelEvent.time = aEvent->time;
     wheelEvent.timeStamp = GetEventTimeStamp(aEvent->time);
 
-    DispatchAPZAwareEvent(&wheelEvent);
+    DispatchInputEvent(&wheelEvent);
 }
 
 void
@@ -3445,7 +3445,7 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
         *event.touches.AppendElement() = touch.forget();
     }
 
-    DispatchAPZAwareEvent(&event);
+    DispatchInputEvent(&event);
     return TRUE;
 }
 #endif

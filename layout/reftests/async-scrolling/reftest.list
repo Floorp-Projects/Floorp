@@ -15,6 +15,7 @@ skip-if(!asyncPan) == nested-1.html nested-1-ref.html
 skip-if(!asyncPan) == nested-2.html nested-2-ref.html
 skip-if(!asyncPan) == position-fixed-1.html position-fixed-1-ref.html
 skip-if(!asyncPan) == position-fixed-2.html position-fixed-2-ref.html
+skip-if(!asyncPan) == position-fixed-body.html position-fixed-body-ref.html
 skip-if(!asyncPan) == position-fixed-cover-1.html position-fixed-cover-1-ref.html
 skip-if(!asyncPan) == position-fixed-cover-2.html position-fixed-cover-2-ref.html
 skip-if(!asyncPan) == position-fixed-cover-3.html position-fixed-cover-3-ref.html

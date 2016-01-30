@@ -3928,7 +3928,7 @@ bool nsWindow::DispatchContentCommandEvent(WidgetContentCommandEvent* aEvent)
 
 bool nsWindow::DispatchWheelEvent(WidgetWheelEvent* aEvent)
 {
-  nsEventStatus status = DispatchAPZAwareEvent(aEvent->AsInputEvent());
+  nsEventStatus status = DispatchInputEvent(aEvent->AsInputEvent());
   return ConvertStatus(status);
 }
 
@@ -4266,7 +4266,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       }
     }
 
-    result = ConvertStatus(DispatchAPZAwareEvent(&event));
+    result = ConvertStatus(DispatchInputEvent(&event));
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in EventListenerManager::HandleEvent()
@@ -6507,13 +6507,13 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
     if (!touchInput.mTimeStamp.IsNull()) {
       // Convert MultiTouchInput to WidgetTouchEvent interface.
       WidgetTouchEvent widgetTouchEvent = touchInput.ToWidgetTouchEvent(this);
-      DispatchAPZAwareEvent(&widgetTouchEvent);
+      DispatchInputEvent(&widgetTouchEvent);
     }
     // Dispatch touch end event if we have one.
     if (!touchEndInput.mTimeStamp.IsNull()) {
       // Convert MultiTouchInput to WidgetTouchEvent interface.
       WidgetTouchEvent widgetTouchEvent = touchEndInput.ToWidgetTouchEvent(this);
-      DispatchAPZAwareEvent(&widgetTouchEvent);
+      DispatchInputEvent(&widgetTouchEvent);
     }
   }
 

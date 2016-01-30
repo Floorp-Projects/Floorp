@@ -1012,14 +1012,13 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   MOZ_ASSERT(NS_IsMainThread());
   InputAPZContext context(aGuid, aInputBlockId, aApzResponse);
 
-  // If this is a touch event and APZ has targeted it to an APZC in the root
+  // If this is an event that the APZ has targeted to an APZC in the root
   // process, apply that APZC's callback-transform before dispatching the
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
   // the event there (see e.g. TabChild::RecvRealTouchEvent()).
-  // TODO: Do other types of events (than touch) need this?
-  if (aEvent->AsTouchEvent() && aGuid.mLayersId == mCompositorParent->RootLayerTreeId()) {
-    APZCCallbackHelper::ApplyCallbackTransform(*aEvent->AsTouchEvent(), aGuid,
+  if (aGuid.mLayersId == mCompositorParent->RootLayerTreeId()) {
+    APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
         GetDefaultScale());
   }
 
@@ -1030,7 +1029,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   UniquePtr<WidgetEvent> original(aEvent->Duplicate());
   DispatchEvent(aEvent, status);
 
-  if (mAPZC && !context.WasRoutedToChildProcess()) {
+  if (mAPZC && !context.WasRoutedToChildProcess() && aInputBlockId) {
     // EventStateManager did not route the event into the child process.
     // It's safe to communicate to APZ that the event has been processed.
     // TODO: Eventually we'll be able to move the SendSetTargetAPZCNotification
@@ -1061,21 +1060,6 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
     }
   }
 
-  return status;
-}
-
-nsEventStatus
-nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
-{
-  if (mAPZC) {
-    nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, nullptr, nullptr);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-      return result;
-    }
-  }
-
-  nsEventStatus status;
-  DispatchEvent(aEvent, status);
   return status;
 }
 
@@ -1146,7 +1130,7 @@ private:
 };
 
 nsEventStatus
-nsBaseWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
+nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
