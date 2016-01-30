@@ -346,7 +346,11 @@ function stripPrefix(spec)
 }
 
 function makeActionURI(action, params) {
-  let url = "moz-action:" + action + "," + JSON.stringify(params);
+  let encodedParams = {};
+  for (let key in params) {
+    encodedParams[key] = encodeURIComponent(params[key]);
+  }
+  let url = "moz-action:" + action + "," + JSON.stringify(encodedParams);
   return NetUtil.newURI(url);
 }
 
@@ -360,7 +364,11 @@ function makeSearchMatch(input, extra = {}) {
     engineName: extra.engineName || "MozSearch",
     input,
     searchQuery: "searchQuery" in extra ? extra.searchQuery : input,
-    alias: extra.alias, // may be undefined which is expected.
+  };
+  if ("alias" in extra) {
+    // May be undefined, which is expected, but in that case make sure it's not
+    // included in the params of the moz-action URL.
+    params.alias = extra.alias;
   }
   let style = [ "action", "searchengine" ];
   if (extra.heuristic) {

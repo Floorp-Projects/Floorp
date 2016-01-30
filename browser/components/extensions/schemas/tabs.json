@@ -49,8 +49,8 @@
           "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted."},
           "active": {"type": "boolean", "description": "Whether the tab is active in its window. (Does not necessarily mean the window is focused.)"},
           "pinned": {"type": "boolean", "description": "Whether the tab is pinned."},
-          "audible": {"unsupported": true, "type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
-          "mutedInfo": {"unsupported": true, "$ref": "MutedInfo", "optional": true, "description": "Current tab muted state and the reason for the last state change."},
+          "audible": {"type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
+          "mutedInfo": {"$ref": "MutedInfo", "optional": true, "description": "Current tab muted state and the reason for the last state change."},
           "url": {"type": "string", "optional": true, "description": "The URL the tab is displaying. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},
           "title": {"type": "string", "optional": true, "description": "The title of the tab. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},
           "favIconUrl": {"type": "string", "optional": true, "description": "The URL of the tab's favicon. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission. It may also be an empty string if the tab is loading."},
@@ -432,13 +432,11 @@
                 "description": "Whether the tabs are pinned."
               },
               "audible": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tabs are audible."
               },
               "muted": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tabs are muted."
@@ -593,7 +591,6 @@
                 "description": "Whether the tab should be pinned."
               },
               "muted": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tab should be muted."
@@ -948,13 +945,11 @@
                 "description": "The tab's new pinned state."
               },
               "audible": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "The tab's new audible state."
               },
               "mutedInfo": {
-                "unsupported": true,
                 "$ref": "MutedInfo",
                 "optional": true,
                 "description": "The tab's new muted state and the reason for the change."

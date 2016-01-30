@@ -122,17 +122,17 @@ const ANALYZE_PAGES_THRESHOLD = 100;
 // expiration will be more aggressive, to bring back history to a saner size.
 const OVERLIMIT_PAGES_THRESHOLD = 1000;
 
-const USECS_PER_DAY = 86400000000;
+const MSECS_PER_DAY = 86400000;
 const ANNOS_EXPIRE_POLICIES = [
   { bind: "expire_days",
     type: Ci.nsIAnnotationService.EXPIRE_DAYS,
-    time: 7 * USECS_PER_DAY },
+    time: 7 * 1000 * MSECS_PER_DAY },
   { bind: "expire_weeks",
     type: Ci.nsIAnnotationService.EXPIRE_WEEKS,
-    time: 30 * USECS_PER_DAY },
+    time: 30 * 1000 * MSECS_PER_DAY },
   { bind: "expire_months",
     type: Ci.nsIAnnotationService.EXPIRE_MONTHS,
-    time: 180 * USECS_PER_DAY },
+    time: 180 * 1000 * MSECS_PER_DAY },
 ];
 
 // When we expire we can use these limits:
@@ -362,8 +362,10 @@ const EXPIRATION_QUERIES = {
   QUERY_SELECT_NOTIFICATIONS: {
     sql: `SELECT url, guid, MAX(visit_date) AS visit_date,
                  MAX(IFNULL(MIN(p_id, 1), MIN(v_id, 0))) AS whole_entry,
-                 expected_results
-          FROM expiration_notify
+                 expected_results,
+                 (SELECT MAX(visit_date) FROM expiration_notify
+                  WHERE url = n.url AND p_id ISNULL) AS most_recent_expired_visit
+          FROM expiration_notify n
           GROUP BY url`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
@@ -644,8 +646,20 @@ nsPlacesExpiration.prototype = {
       let guid = row.getResultByName("guid");
       let visitDate = row.getResultByName("visit_date");
       let wholeEntry = row.getResultByName("whole_entry");
+      let mostRecentExpiredVisit = row.getResultByName("most_recent_expired_visit");
       let reason = Ci.nsINavHistoryObserver.REASON_EXPIRED;
       let observers = PlacesUtils.history.getObservers();
+
+      if (mostRecentExpiredVisit) {
+        try {
+          let days = parseInt((Date.now() - (mostRecentExpiredVisit / 1000)) / MSECS_PER_DAY);
+          Services.telemetry
+                  .getHistogramById("PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS")
+                  .add(days);
+        } catch (ex) {
+          Components.utils.reportError("Unable to report telemetry.");
+        }
+      }
 
       // Dispatch expiration notifications to history.
       if (wholeEntry) {

@@ -81,6 +81,7 @@ ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_requ
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
+  BaseContext,
   LocaleData,
   MessageBroker,
   Messenger,
@@ -161,13 +162,14 @@ var Management = {
     // Recursively copy properties from source to dest.
     function copy(dest, source) {
       for (let prop in source) {
-        if (typeof(source[prop]) == "object") {
+        let desc = Object.getOwnPropertyDescriptor(source, prop);
+        if (typeof(desc.value) == "object") {
           if (!(prop in dest)) {
             dest[prop] = {};
           }
           copy(dest[prop], source[prop]);
         } else {
-          dest[prop] = source[prop];
+          Object.defineProperty(dest, prop, desc);
         }
       }
     }
@@ -218,63 +220,45 @@ var gContextId = 0;
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
 // |incognito| is the content running in a private context (default: false).
-ExtensionPage = function(extension, params) {
-  let {type, contentWindow, uri} = params;
-  this.extension = extension;
-  this.type = type;
-  this.contentWindow = contentWindow || null;
-  this.uri = uri || extension.baseURI;
-  this.incognito = params.incognito || false;
-  this.onClose = new Set();
-  this.contextId = gContextId++;
-  this.unloaded = false;
+ExtensionPage = class extends BaseContext {
+  constructor(extension, params) {
+    super();
 
-  // This is the MessageSender property passed to extension.
-  // It can be augmented by the "page-open" hook.
-  let sender = {id: extension.uuid};
-  if (uri) {
-    sender.url = uri.spec;
+    let {type, contentWindow, uri} = params;
+    this.extension = extension;
+    this.type = type;
+    this.contentWindow = contentWindow || null;
+    this.uri = uri || extension.baseURI;
+    this.incognito = params.incognito || false;
+    this.contextId = gContextId++;
+    this.unloaded = false;
+
+    // This is the MessageSender property passed to extension.
+    // It can be augmented by the "page-open" hook.
+    let sender = {id: extension.uuid};
+    if (uri) {
+      sender.url = uri.spec;
+    }
+    let delegate = {
+      getSender() {},
+    };
+    Management.emit("page-load", this, params, sender, delegate);
+
+    // Properties in |filter| must match those in the |recipient|
+    // parameter of sendMessage.
+    let filter = {extensionId: extension.id};
+    this.messenger = new Messenger(this, globalBroker, sender, filter, delegate);
+
+    this.extension.views.add(this);
   }
-  let delegate = {
-    getSender() {},
-  };
-  Management.emit("page-load", this, params, sender, delegate);
 
-  // Properties in |filter| must match those in the |recipient|
-  // parameter of sendMessage.
-  let filter = {extensionId: extension.id};
-  this.messenger = new Messenger(this, globalBroker, sender, filter, delegate);
-
-  this.extension.views.add(this);
-};
-
-ExtensionPage.prototype = {
   get cloneScope() {
     return this.contentWindow;
-  },
+  }
 
   get principal() {
     return this.contentWindow.document.nodePrincipal;
-  },
-
-  checkLoadURL(url, options = {}) {
-    let ssm = Services.scriptSecurityManager;
-
-    let flags = ssm.STANDARD;
-    if (!options.allowScript) {
-      flags |= ssm.DISALLOW_SCRIPT;
-    }
-    if (!options.allowInheritsPrincipal) {
-      flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
-    }
-
-    try {
-      ssm.checkLoadURIStrWithPrincipal(this.principal, url, flags);
-    } catch (e) {
-      return false;
-    }
-    return true;
-  },
+  }
 
   // A wrapper around MessageChannel.sendMessage which adds the extension ID
   // to the recipient object, and ensures replies are not processed after the
@@ -285,21 +269,13 @@ ExtensionPage.prototype = {
     sender.contextId = this.contextId;
 
     return MessageChannel.sendMessage(target, messageName, data, recipient, sender);
-  },
-
-  callOnClose(obj) {
-    this.onClose.add(obj);
-  },
-
-  forgetOnClose(obj) {
-    this.onClose.delete(obj);
-  },
+  }
 
   // Called when the extension shuts down.
   shutdown() {
     Management.emit("page-shutdown", this);
     this.unload();
-  },
+  }
 
   // This method is called when an extension page navigates away or
   // its tab is closed.
@@ -322,10 +298,8 @@ ExtensionPage.prototype = {
 
     this.extension.views.delete(this);
 
-    for (let obj of this.onClose) {
-      obj.close();
-    }
-  },
+    super.unload();
+  }
 };
 
 // Responsible for loading extension APIs into the right globals.
@@ -379,6 +353,14 @@ GlobalManager = {
       let schemaWrapper = {
         callFunction(ns, name, args) {
           return schemaApi[ns][name].apply(null, args);
+        },
+
+        getProperty(ns, name) {
+          return schemaApi[ns][name];
+        },
+
+        setProperty(ns, name, value) {
+          schemaApi[ns][name] = value;
         },
 
         addListener(ns, name, listener, args) {

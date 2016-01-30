@@ -116,11 +116,10 @@ function hasBreakpoint(ctx, line) {
   if (cm.lineInfo(line) === null) {
     return null;
   }
-  let markers = cm.lineInfo(line).gutterMarkers;
+  let markers = cm.lineInfo(line).wrapClass;
 
   return markers != null &&
-    markers.breakpoints &&
-    markers.breakpoints.classList.contains("breakpoint");
+         markers.contains("breakpoint");
 }
 
 /**
@@ -143,7 +142,7 @@ function addBreakpoint(ctx, line, cond) {
       return;
     }
 
-    ed.addMarker(line, "breakpoints", "breakpoint");
+    ed.addLineClass(line, "breakpoint");
     meta.breakpoints[line] = { condition: cond };
 
     // TODO(jwl): why is `info` null when breaking on page reload?
@@ -152,6 +151,9 @@ function addBreakpoint(ctx, line, cond) {
       meta.breakpoints[info.line] = null;
     });
 
+    if (cond) {
+      setBreakpointCondition(ctx, line);
+    }
     ed.emit("breakpointAdded", line);
     deferred.resolve();
   }
@@ -185,7 +187,8 @@ function removeBreakpoint(ctx, line) {
   let info = cm.lineInfo(line);
 
   meta.breakpoints[info.line] = null;
-  ed.removeMarker(info.line, "breakpoints", "breakpoint");
+  ed.removeLineClass(info.line, "breakpoint");
+  ed.removeLineClass(info.line, "conditional");
   ed.emit("breakpointRemoved", line);
 }
 
@@ -197,21 +200,26 @@ function moveBreakpoint(ctx, fromLine, toLine) {
 
   ed.removeBreakpoint(fromLine);
   ed.addBreakpoint(toLine);
-  let info = cm.lineInfo(toLine);
-  let marker = ed.getMarker(info.line, "breakpoints", "breakpoint");
-  if (marker) {
-    marker.setAttribute("adding", "");
-    marker.style.position = "relative";
-    marker.style.top = -(toTop - fromTop) + "px";
-    marker.style.transform = "translateY(" + (toTop - fromTop) + "px)";
-    marker.addEventListener("transitionend", function(e) {
-      // For some reason, we have to reset the styles after the marker
-      // is already removed, not before.
-      e.target.removeAttribute("adding");
-      e.target.style.transform = "none";
-      e.target.style.top = "0px";
-    });
+}
+
+function setBreakpointCondition(ctx, line) {
+  let { ed, cm } = ctx;
+  let info = cm.lineInfo(line);
+
+  // The line does not exist in the editor. This is harmless, the
+  // architecture calling this assumes the editor will handle this
+  // gracefully, and make sure breakpoints exist when they need to.
+  if (!info) {
+    return;
   }
+
+  ed.addLineClass(line, "conditional");
+}
+
+function removeBreakpointCondition(ctx, line) {
+  let { ed, cm } = ctx;
+
+  ed.removeLineClass(line, "conditional");
 }
 
 /**
@@ -241,7 +249,6 @@ function setDebugLocation(ctx, line) {
   clearDebugLocation(ctx);
 
   meta.debugLocation = line;
-  ed.addMarker(line, "breakpoints", "debugLocation");
   ed.addLineClass(line, "debug-line");
 }
 
@@ -265,7 +272,6 @@ function clearDebugLocation(ctx) {
   let meta = dbginfo.get(ed);
 
   if (meta.debugLocation != null) {
-    ed.removeMarker(meta.debugLocation, "breakpoints", "debugLocation");
     ed.removeLineClass(meta.debugLocation, "debug-line");
     meta.debugLocation = null;
   }
@@ -296,7 +302,8 @@ function findPrev(ctx, query) {
 // Export functions
 
 [
-  initialize, hasBreakpoint, addBreakpoint, removeBreakpoint,
-  moveBreakpoint, getBreakpoints, setDebugLocation, getDebugLocation,
-  clearDebugLocation, find, findNext, findPrev
+  initialize, hasBreakpoint, addBreakpoint, removeBreakpoint, moveBreakpoint,
+  setBreakpointCondition, removeBreakpointCondition, getBreakpoints,
+  setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
+  findPrev
 ].forEach(func => module.exports[func.name] = func);

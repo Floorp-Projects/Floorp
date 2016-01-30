@@ -99,6 +99,9 @@
             "type": "string",
             "description": "Details about the error which occurred."
           }
+        },
+        "additionalProperties": {
+          "type": "any"
         }
       },
       "id": {

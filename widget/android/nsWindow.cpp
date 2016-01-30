@@ -2920,11 +2920,14 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         window.RemoveIMEComposition();
 
         {
+            // Use text selection to set target postion(s) for
+            // insert, or replace, of text.
             WidgetSelectionEvent event(true, eSetSelection, &window);
             window.InitEvent(event, nullptr);
             event.mOffset = uint32_t(aStart);
             event.mLength = uint32_t(aEnd - aStart);
             event.mExpandToClusterBoundary = false;
+            event.mReason = nsISelectionListener::IME_REASON;
             window.DispatchEvent(&event);
         }
 

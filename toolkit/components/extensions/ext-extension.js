@@ -27,6 +27,10 @@ extensions.registerSchemaAPI("extension", null, (extension, context) => {
         return result;
       },
 
+      get lastError() {
+        return context.lastError;
+      },
+
       get inIncognitoContext() {
         return context.incognito;
       },
