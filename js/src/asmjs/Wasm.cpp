@@ -24,6 +24,9 @@
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmText.h"
 
+#include "jsatominlines.h"
+#include "jsobjinlines.h"
+
 using namespace js;
 using namespace js::wasm;
 
