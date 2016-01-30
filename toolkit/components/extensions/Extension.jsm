@@ -70,6 +70,8 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.j
 ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
+const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
+
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
@@ -111,10 +113,15 @@ var Management = {
       return this.initialized;
     }
 
-    let promises = [];
-    for (let schema of ExtensionManagement.getSchemas()) {
-      promises.push(Schemas.load(schema));
-    }
+    // Load order matters here. The base manifest defines types which are
+    // extended by other schemas, so needs to be loaded first.
+    let promise = Schemas.load(BASE_SCHEMA).then(() => {
+      let promises = [];
+      for (let schema of ExtensionManagement.getSchemas()) {
+        promises.push(Schemas.load(schema));
+      }
+      return Promise.all(promises);
+    });
 
     for (let script of ExtensionManagement.getScripts()) {
       let scope = {extensions: this,
@@ -127,7 +134,7 @@ var Management = {
       this.scopes.push(scope);
     }
 
-    this.initialized = Promise.all(promises);
+    this.initialized = promise;
     return this.initialized;
   },
 
@@ -551,20 +558,31 @@ ExtensionData.prototype = {
   // Reads the extension's |manifest.json| file, and stores its
   // parsed contents in |this.manifest|.
   readManifest() {
-    return this.readJSON("manifest.json").then(manifest => {
-      this.manifest = manifest;
+    return Promise.all([
+      this.readJSON("manifest.json"),
+      Management.lazyInit(),
+    ]).then(([manifest]) => {
+      let context = {
+        url: (this.baseURI || this.rootURI).spec,
+
+        principal: this.principal,
+      };
+
+      let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
+      if (normalized.error) {
+        this.manifestError(normalized.error);
+        this.manifest = manifest;
+      } else {
+        this.manifest = normalized.value;
+      }
 
       try {
         this.id = this.manifest.applications.gecko.id;
       } catch (e) {
-        // Errors are handled by the type check below.
+        // Errors are handled by the type checks above.
       }
 
-      if (typeof this.id != "string") {
-        this.manifestError("Missing required `applications.gecko.id` property");
-      }
-
-      return manifest;
+      return this.manifest;
     });
   },
 
@@ -579,7 +597,7 @@ ExtensionData.prototype = {
   // If a "default_locale" is specified in that manifest, returns it
   // as a Gecko-compatible locale string. Otherwise, returns null.
   get defaultLocale() {
-    if ("default_locale" in this.manifest) {
+    if (this.manifest.default_locale != null) {
       return this.normalizeLocaleCode(this.manifest.default_locale);
     }
 
@@ -975,7 +993,9 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     this.webAccessibleResources = resources;
 
     for (let directive in manifest) {
-      Management.emit("manifest_" + directive, directive, this, manifest);
+      if (manifest[directive] !== null) {
+        Management.emit("manifest_" + directive, directive, this, manifest);
+      }
     }
 
     let data = Services.ppmm.initialProcessData;
@@ -1027,13 +1047,19 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       return Promise.reject(e);
     }
 
-    let lazyInit = Management.lazyInit();
+    return this.readManifest().then(() => {
+      if (!this.hasShutdown) {
+        return this.initLocale();
+      }
+    }).then(() => {
+      if (this.errors.length) {
+        // b2g add-ons generate manifest errors that we've silently
+        // ignoring prior to adding this check.
+        if (!this.rootURI.schemeIs("app")) {
+          return Promise.reject({errors: this.errors});
+        }
+      }
 
-    return lazyInit.then(() => {
-      return this.readManifest();
-    }).then(() => {
-      return this.initLocale();
-    }).then(() => {
       if (this.hasShutdown) {
         return;
       }
@@ -1046,6 +1072,11 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     }).catch(e => {
       dump(`Extension error: ${e} ${e.filename || e.fileName}:${e.lineNumber}\n`);
       Cu.reportError(e);
+
+      ExtensionManagement.shutdownExtension(this.uuid);
+
+      this.cleanupGeneratedFile();
+
       throw e;
     });
   },
@@ -1072,6 +1103,9 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   shutdown() {
     this.hasShutdown = true;
     if (!this.manifest) {
+      ExtensionManagement.shutdownExtension(this.uuid);
+
+      this.cleanupGeneratedFile();
       return;
     }
 
@@ -1093,7 +1127,6 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
     ExtensionManagement.shutdownExtension(this.uuid);
 
-    // Clean up a generated file.
     this.cleanupGeneratedFile();
   },
 

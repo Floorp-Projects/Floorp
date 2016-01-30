@@ -9,6 +9,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   instanceOf,
@@ -147,14 +149,18 @@ const FORMATS = {
   url(string, context) {
     let url = new URL(string).href;
 
-    context.checkLoadURL(url);
+    if (!context.checkLoadURL(url)) {
+      throw new Error(`Access denied for URL ${url}`);
+    }
     return url;
   },
 
   relativeUrl(string, context) {
     let url = new URL(string, context.url).href;
 
-    context.checkLoadURL(url);
+    if (!context.checkLoadURL(url)) {
+      throw new Error(`Access denied for URL ${url}`);
+    }
     return url;
   },
 
@@ -945,7 +951,7 @@ this.Schemas = {
       }
 
       let additionalProperties = null;
-      if ("additionalProperties" in type) {
+      if (type.additionalProperties) {
         additionalProperties = this.parseType(namespaceName, type.additionalProperties);
       }
 
@@ -1106,6 +1112,18 @@ this.Schemas = {
       for (let [name, entry] of ns) {
         entry.inject(name, obj, new Context(wrapperFuncs));
       }
+
+      if (!Object.keys(obj).length) {
+        delete dest[namespace];
+      }
     }
+  },
+
+  normalize(obj, typeName, context) {
+    let [namespaceName, prop] = typeName.split(".");
+    let ns = this.namespaces.get(namespaceName);
+    let type = ns.get(prop);
+
+    return type.normalize(obj, new Context(context));
   },
 };

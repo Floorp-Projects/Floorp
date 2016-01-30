@@ -1889,6 +1889,10 @@ SpecialPowersAPI.prototype = {
     });
     let unloadPromise = new Promise(resolve => { resolveUnload = resolve; });
 
+    startupPromise.catch(() => {
+      this._removeMessageListener("SPExtensionMessage", listener);
+    });
+
     handler = Cu.waiveXrays(handler);
     ext = Cu.waiveXrays(ext);
 
