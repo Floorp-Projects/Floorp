@@ -214,6 +214,7 @@
 #include "gc/GCTrace.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
+#include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
 #include "jit/JitcodeMap.h"
