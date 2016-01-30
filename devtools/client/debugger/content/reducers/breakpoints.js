@@ -101,6 +101,7 @@ function update(state = initialState, action, emitChange) {
   case constants.SET_BREAKPOINT_CONDITION: {
     const id = makeLocationId(action.breakpoint.location);
     const bp = state.breakpoints[id];
+    emitChange("breakpoint-condition-updated", bp);
 
     if (action.status === 'start') {
       return mergeIn(state, ['breakpoints', id], {
@@ -117,8 +118,10 @@ function update(state = initialState, action, emitChange) {
       });
     }
     else if (action.status === 'error') {
+      emitChange("breakpoint-removed", bp);
       return deleteIn(state, ['breakpoints', id]);
     }
+
     break;
   }}
 

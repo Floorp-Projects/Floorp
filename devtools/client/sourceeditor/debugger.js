@@ -151,6 +151,9 @@ function addBreakpoint(ctx, line, cond) {
       meta.breakpoints[info.line] = null;
     });
 
+    if (cond) {
+      setBreakpointCondition(ctx, line);
+    }
     ed.emit("breakpointAdded", line);
     deferred.resolve();
   }
@@ -185,6 +188,7 @@ function removeBreakpoint(ctx, line) {
 
   meta.breakpoints[info.line] = null;
   ed.removeLineClass(info.line, "breakpoint");
+  ed.removeLineClass(info.line, "conditional");
   ed.emit("breakpointRemoved", line);
 }
 
@@ -196,6 +200,26 @@ function moveBreakpoint(ctx, fromLine, toLine) {
 
   ed.removeBreakpoint(fromLine);
   ed.addBreakpoint(toLine);
+}
+
+function setBreakpointCondition(ctx, line) {
+  let { ed, cm } = ctx;
+  let info = cm.lineInfo(line);
+
+  // The line does not exist in the editor. This is harmless, the
+  // architecture calling this assumes the editor will handle this
+  // gracefully, and make sure breakpoints exist when they need to.
+  if (!info) {
+    return;
+  }
+
+  ed.addLineClass(line, "conditional");
+}
+
+function removeBreakpointCondition(ctx, line) {
+  let { ed, cm } = ctx;
+
+  ed.removeLineClass(line, "conditional");
 }
 
 /**
@@ -278,7 +302,8 @@ function findPrev(ctx, query) {
 // Export functions
 
 [
-  initialize, hasBreakpoint, addBreakpoint, removeBreakpoint,
-  moveBreakpoint, getBreakpoints, setDebugLocation, getDebugLocation,
-  clearDebugLocation, find, findNext, findPrev
+  initialize, hasBreakpoint, addBreakpoint, removeBreakpoint, moveBreakpoint,
+  setBreakpointCondition, removeBreakpointCondition, getBreakpoints,
+  setDebugLocation, getDebugLocation, clearDebugLocation, find, findNext,
+  findPrev
 ].forEach(func => module.exports[func.name] = func);
