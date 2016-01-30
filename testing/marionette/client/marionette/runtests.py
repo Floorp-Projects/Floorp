@@ -6,7 +6,6 @@ import sys
 
 from marionette import __version__
 from marionette_driver import __version__ as driver_version
-from marionette_transport import __version__ as transport_version
 from marionette.marionette_test import MarionetteTestCase, MarionetteJSTestCase
 from marionette.runner import (
     BaseMarionetteTestRunner,
@@ -42,11 +41,9 @@ class MarionetteHarness(object):
         parser.add_argument('--version', action='version',
             help="Show version information.",
             version="%(prog)s {version}"
-                    " (using marionette-driver: {driver_version}, "
-                    "marionette-transport: {transport_version})".format(
+                    " (using marionette-driver: {driver_version}, ".format(
                         version=__version__,
-                        driver_version=driver_version,
-                        transport_version=transport_version
+                        driver_version=driver_version
                     ))
         mozlog.commandline.add_logging_group(parser)
         args = parser.parse_args()
