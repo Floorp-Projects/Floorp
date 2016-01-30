@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 // this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gDocLoaderLog = nullptr;
+mozilla::LazyLogModule gDocLoaderLog("DocLoader");
 
 
 #if defined(DEBUG)
@@ -115,10 +115,6 @@ nsDocLoader::nsDocLoader()
     mDontFlushLayout(false),
     mIsFlushingLayout(false)
 {
-  if (nullptr == gDocLoaderLog) {
-      gDocLoaderLog = PR_NewLogModule("DocLoader");
-  }
-
   ClearInternalProgress();
 
   MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
