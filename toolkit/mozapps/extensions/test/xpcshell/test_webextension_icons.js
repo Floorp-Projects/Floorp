@@ -2,6 +2,23 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+// thisTestLeaksUncaughtRejectionsAndShouldBeFixed
+for (let i = 0; i < 4; i++) {
+  if (TEST_UNPACKED) {
+    let codeAsString = ("" + Components.results.NS_ERROR_FILE_NOT_FOUND);
+    PromiseTestUtils.expectUncaughtRejection(r => r.message == codeAsString);
+  } else {
+    PromiseTestUtils.expectUncaughtRejection(/Failed to open input source/);
+  }
+}
+
 const ID = "webextension1@tests.mozilla.org";
 
 const profileDir = gProfD.clone();
