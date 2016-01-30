@@ -4,6 +4,7 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
     if (event.detail.changed.indexOf("soundplaying") >= 0) {
       is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+      is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
       return true;
     }
     return false;
@@ -72,10 +73,22 @@ function* test_tooltip(icon, expectedTooltip, isActiveTab) {
   leave_icon(icon);
 }
 
+// The set of tabs which have ever had their mute state changed.
+// Used to determine whether the tab should have a muteReason value.
+let everMutedTabs = new WeakSet();
+
 function get_wait_for_mute_promise(tab, expectMuted) {
   return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, event => {
     if (event.detail.changed.indexOf("muted") >= 0) {
       is(tab.hasAttribute("muted"), expectMuted, "The tab should " + (expectMuted ? "" : "not ") + "be muted");
+      is(tab.muted, expectMuted, "The tab muted property " + (expectMuted ? "" : "not ") + "be true");
+
+      if (expectMuted || everMutedTabs.has(tab)) {
+        everMutedTabs.add(tab);
+        is(tab.muteReason, null, "The tab should have a null muteReason value");
+      } else {
+        is(tab.muteReason, undefined, "The tab should have an undefined muteReason value");
+      }
       return true;
     }
     return false;
@@ -166,6 +179,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   ok(tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
+  ok(tab.muted && !tab.soundPlaying, "Tab should still be muted but not playing");
 
   yield test_tooltip(icon, "Unmute tab", isActiveTab);
 
@@ -173,6 +187,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   ok(!tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should not be be muted or playing");
+  ok(!tab.muted && !tab.soundPlaying, "Tab should not be be muted or playing");
 
   // Make sure it's possible to mute using the context menu.
   yield test_muting_using_menu(tab, false);
@@ -183,6 +198,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
 function* test_swapped_browser_while_playing(oldTab, newBrowser) {
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
+  is(oldTab.muteReason, null, "Expected the correct muteReason attribute on the old tab");
   ok(oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
 
   let newTab = gBrowser.getTabForBrowser(newBrowser);
@@ -195,6 +211,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
   yield AttrChangePromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
   ok(newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   let receivedSoundPlaying = 0;
@@ -208,6 +225,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
   });
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
   ok(newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
@@ -217,6 +235,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
 
 function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
+  is(oldTab.muteReason, null, "Expected the correct muteReason property on the old tab");
   ok(!oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
 
   let newTab = gBrowser.getTabForBrowser(newBrowser);
@@ -239,12 +258,14 @@ function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   yield AttrChangePromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
   ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   // Wait to see if an audio-playback event is dispatched.
   yield AudioPlaybackPromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
   ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
@@ -340,6 +361,7 @@ function* test_cross_process_load() {
     yield soundPlayingStoppedPromise;
 
     ok(!tab.hasAttribute("soundplaying"), "Tab should not be playing sound any more");
+    ok(!tab.soundPlaying, "Tab should not be playing sound any more");
   }
 
   yield BrowserTestUtils.withNewTab({

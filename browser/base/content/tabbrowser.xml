@@ -2501,6 +2501,7 @@
             let modifiedAttrs = [];
             if (aOtherTab.hasAttribute("muted")) {
               aOurTab.setAttribute("muted", "true");
+              aOurTab.muteReason = aOtherTab.muteReason;
               ourBrowser.mute();
               modifiedAttrs.push("muted");
             }
@@ -6080,6 +6081,25 @@
           return this.getAttribute("hidden") == "true";
         </getter>
       </property>
+      <property name="muted" readonly="true">
+        <getter>
+          return this.getAttribute("muted") == "true";
+        </getter>
+      </property>
+      <!--
+      Describes how the tab ended up in this mute state. May be any of:
+
+       - undefined: The tabs mute state has never changed.
+       - null: The mute state was last changed through the UI.
+       - Any string: The ID was changed through an extension API. The string
+                     must be the ID of the extension which changed it.
+      -->
+      <field name="muteReason">undefined</field>
+      <property name="soundPlaying" readonly="true">
+        <getter>
+          return this.getAttribute("soundplaying") == "true";
+        </getter>
+      </property>
 
       <property name="lastAccessed">
         <getter>
@@ -6162,6 +6182,7 @@
       </method>
 
       <method name="toggleMuteAudio">
+        <parameter name="aMuteReason"/>
         <body>
         <![CDATA[
           let tabContainer = this.parentNode;
@@ -6173,6 +6194,7 @@
             browser.mute();
             this.setAttribute("muted", "true");
           }
+          this.muteReason = aMuteReason || null;
           tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);
         ]]>
         </body>
