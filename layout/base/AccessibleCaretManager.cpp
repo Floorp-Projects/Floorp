@@ -116,17 +116,10 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
   }
 
   // eSetSelection events from the Fennec widget IME can be generated
-  // by autoSuggest, autoCorrect, and nsCaret position changes.
+  // by autoSuggest / autoCorrect composition changes, or by TYPE_REPLACE_TEXT
+  // actions, either positioning cursor for text insert, or selecting
+  // text-to-be-replaced. None should affect AccessibleCaret visibility.
   if (aReason & nsISelectionListener::IME_REASON) {
-    if (GetCaretMode() == CaretMode::Cursor) {
-      // Caret position changes need us to open/update,
-      // or hide the AccessibleCaret.
-      FlushLayout();
-      UpdateCarets();
-    } else {
-      // Ignore transient autoSuggest selection styling,
-      // or autoCorrect text updates.
-    }
     return NS_OK;
   }
 
