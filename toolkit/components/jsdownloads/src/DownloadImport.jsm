@@ -174,7 +174,7 @@ this.DownloadImport.prototype = {
             yield this.list.add(download);
 
             if (resumeDownload) {
-              download.start().catch(() => {});
+              download.start();
             } else {
               yield download.refresh();
             }

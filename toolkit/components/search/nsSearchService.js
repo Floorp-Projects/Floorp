@@ -4453,13 +4453,6 @@ SearchService.prototype = {
   },
 
   _addObservers: function SRCH_SVC_addObservers() {
-    if (this._observersAdded) {
-      // There might be a race between synchronous and asynchronous
-      // initialization for which we try to register the observers twice.
-      return;
-    }
-    this._observersAdded = true;
-
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, false);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
 
@@ -4502,7 +4495,6 @@ SearchService.prototype = {
       () => shutdownState
     );
   },
-  _observersAdded: false,
 
   _removeObservers: function SRCH_SVC_removeObservers() {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
