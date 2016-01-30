@@ -285,6 +285,7 @@ add_task(function*() {
   gAppInfo.browserTabsRemoteAutostart = true;
   Services.prefs.setBoolPref("extensions.e10sBlocksEnabling", true);
   Services.prefs.setCharPref("extensions.hotfix.id", ID);
+  Services.prefs.setBoolPref("extensions.hotfix.cert.checkAttributes", false);
 
   yield check_normal();
 });

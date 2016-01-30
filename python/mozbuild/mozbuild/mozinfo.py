@@ -92,6 +92,7 @@ def build_dict(config, env=os.environ):
     d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')
     d['addon_signing'] = substs.get('MOZ_ADDON_SIGNING') == '1'
+    d['require_signing'] = substs.get('MOZ_REQUIRE_SIGNING') == '1'
     d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
 
     def guess_platform():
