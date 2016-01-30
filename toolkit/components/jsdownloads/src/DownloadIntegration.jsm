@@ -1080,7 +1080,7 @@ this.DownloadObserver = {
     this._wakeTimer = null;
 
     for (let download of this._canceledOfflineDownloads) {
-      download.start().catch(() => {});
+      download.start();
     }
   },
 
