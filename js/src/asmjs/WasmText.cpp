@@ -90,6 +90,7 @@ class WasmAstSig : public WasmAstBase
 
 enum class WasmAstKind
 {
+    BinaryOperator,
     Block,
     Call,
     Const,
@@ -321,6 +322,24 @@ class WasmAstModule : public WasmAstNode
     }
 };
 
+class WasmAstBinaryOperator final : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* lhs_;
+    WasmAstExpr* rhs_;
+
+  public:
+    static const WasmAstKind Kind = WasmAstKind::BinaryOperator;
+    explicit WasmAstBinaryOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
+      : WasmAstExpr(Kind),
+        expr_(expr), lhs_(lhs), rhs_(rhs)
+    {}
+
+    Expr expr() const { return expr_; }
+    WasmAstExpr* lhs() const { return lhs_; }
+    WasmAstExpr* rhs() const { return rhs_; }
+};
+
 /*****************************************************************************/
 // wasm text token stream
 
@@ -329,6 +348,7 @@ class WasmToken
   public:
     enum Kind
     {
+        BinaryOpcode,
         Block,
         Call,
         CallImport,
@@ -359,6 +379,7 @@ class WasmToken
     union {
         uint32_t integer_;
         ValType valueType_;
+        Expr expr_;
     } u;
   public:
     explicit WasmToken() = default;
@@ -386,6 +407,15 @@ class WasmToken
         MOZ_ASSERT(begin != end);
         MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
         u.valueType_ = valueType;
+    }
+    explicit WasmToken(Kind kind, Expr expr, const char16_t* begin, const char16_t* end)
+      : kind_(kind),
+        begin_(begin),
+        end_(end)
+    {
+        MOZ_ASSERT(begin != end);
+        MOZ_ASSERT(kind_ == BinaryOpcode);
+        u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
       : kind_(Error),
@@ -415,6 +445,10 @@ class WasmToken
     ValType valueType() const {
         MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
         return u.valueType_;
+    }
+    Expr expr() const {
+        MOZ_ASSERT(kind_ == BinaryOpcode);
+        return u.expr_;
     }
 };
 
@@ -547,15 +581,29 @@ class WasmTokenStream
           case 'f':
             if (consume(end_, MOZ_UTF16("unc")))
                 return WasmToken(WasmToken::Func, begin, cur_);
+
             if (consume(end_, MOZ_UTF16("32"))) {
-                if (consume(end_, MOZ_UTF16(".const")))
-                    return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
-                return WasmToken(WasmToken::ValueType, ValType::F32, begin, cur_);
+                if (!consume(end_, MOZ_UTF16(".")))
+                    return WasmToken(WasmToken::ValueType, ValType::F32, begin, cur_);
+
+                switch (*cur_) {
+                  case 'c':
+                    if (consume(end_, MOZ_UTF16("const")))
+                        return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
+                    break;
+                }
+                break;
             }
             if (consume(end_, MOZ_UTF16("64"))) {
-                if (consume(end_, MOZ_UTF16(".const")))
-                    return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
-                return WasmToken(WasmToken::ValueType, ValType::F64, begin, cur_);
+                if (!consume(end_, MOZ_UTF16(".")))
+                    return WasmToken(WasmToken::ValueType, ValType::F64, begin, cur_);
+
+                switch (*cur_) {
+                  case 'c':
+                    if (consume(end_, MOZ_UTF16("const")))
+                        return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
+                    break;
+                }
             }
             break;
 
@@ -566,14 +614,32 @@ class WasmTokenStream
 
           case 'i':
             if (consume(end_, MOZ_UTF16("32"))) {
-                if (consume(end_, MOZ_UTF16(".const")))
-                    return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
-                return WasmToken(WasmToken::ValueType, ValType::I32, begin, cur_);
+                if (!consume(end_, MOZ_UTF16(".")))
+                    return WasmToken(WasmToken::ValueType, ValType::I32, begin, cur_);
+
+                switch (*cur_) {
+                  case 'a':
+                    if (consume(end_, MOZ_UTF16("add")))
+                        return WasmToken(WasmToken::BinaryOpcode, Expr::I32Add, begin, cur_);
+                    break;
+                  case 'c':
+                    if (consume(end_, MOZ_UTF16("const")))
+                        return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
+                    break;
+                }
+                break;
             }
             if (consume(end_, MOZ_UTF16("64"))) {
-                if (consume(end_, MOZ_UTF16(".const")))
-                    return WasmToken(WasmToken::Const, ValType::I64, begin, cur_);
-                return WasmToken(WasmToken::ValueType, ValType::I64, begin, cur_);
+                if (!consume(end_, MOZ_UTF16(".")))
+                    return WasmToken(WasmToken::ValueType, ValType::I64, begin, cur_);
+
+                switch (*cur_) {
+                  case 'c':
+                    if (consume(end_, MOZ_UTF16("const")))
+                        return WasmToken(WasmToken::Const, ValType::I64, begin, cur_);
+                    break;
+                }
+                break;
             }
             if (consume(end_, MOZ_UTF16("mport")))
                 return WasmToken(WasmToken::Import, begin, cur_);
@@ -786,14 +852,30 @@ ParseSetLocal(WasmParseContext& c)
     return new(c.lifo) WasmAstSetLocal(localIndex.integer(), *value);
 }
 
+static WasmAstBinaryOperator*
+ParseBinaryOperator(WasmParseContext& c, Expr expr)
+{
+    WasmAstExpr* lhs = ParseExpr(c);
+    if (!lhs)
+        return nullptr;
+
+    WasmAstExpr* rhs = ParseExpr(c);
+    if (!rhs)
+        return nullptr;
+
+    return new(c.lifo) WasmAstBinaryOperator(expr, lhs, rhs);
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
-    WasmToken expr = c.ts.get();
+    WasmToken token = c.ts.get();
 
-    switch (expr.kind()) {
+    switch (token.kind()) {
       case WasmToken::Nop:
         return new(c.lifo) WasmAstNop;
+      case WasmToken::BinaryOpcode:
+        return ParseBinaryOperator(c, token.expr());
       case WasmToken::Block:
         return ParseBlock(c);
       case WasmToken::Call:
@@ -801,13 +883,13 @@ ParseExprInsideParens(WasmParseContext& c)
       case WasmToken::CallImport:
         return ParseCall(c, Expr::CallImport);
       case WasmToken::Const:
-        return ParseConst(c, expr);
+        return ParseConst(c, token);
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::SetLocal:
         return ParseSetLocal(c);
       default:
-        c.ts.generateError(expr, c.error);
+        c.ts.generateError(token, c.error);
         return nullptr;
     }
 }
@@ -1054,11 +1136,21 @@ EncodeSetLocal(Encoder& e, WasmAstSetLocal& sl)
 }
 
 static bool
+EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
+{
+    return e.writeExpr(b.expr()) &&
+           EncodeExpr(e, *b.lhs()) &&
+           EncodeExpr(e, *b.rhs());
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
       case WasmAstKind::Nop:
         return e.writeExpr(Expr::Nop);
+      case WasmAstKind::BinaryOperator:
+        return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
       case WasmAstKind::Block:
         return EncodeBlock(e, expr.as<WasmAstBlock>());
       case WasmAstKind::Call:
