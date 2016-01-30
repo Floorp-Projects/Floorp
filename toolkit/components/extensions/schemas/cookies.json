@@ -4,6 +4,20 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "cookies"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "cookies",
     "description": "Use the <code>browser.cookies</code> API to query and modify cookies, and to be notified when they change.",
     "types": [

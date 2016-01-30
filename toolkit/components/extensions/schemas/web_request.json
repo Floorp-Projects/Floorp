@@ -4,6 +4,21 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "webRequest",
+            "webRequestBlocking"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "webRequest",
     "description": "Use the <code>browser.webRequest</code> API to observe and analyze traffic and to intercept, block, or modify requests in-flight.",
     "properties": {

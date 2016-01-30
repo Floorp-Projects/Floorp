@@ -4,6 +4,25 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "browser_action": {
+            "type": "object",
+            "properties": {
+              "default_title": { "type": "string", "optional": true },
+              "default_icon": { "$ref": "IconPath", "optional": true },
+              "default_popup": { "type": "string", "format": "relativeUrl", "optional": true }
+            },
+            "optional": true
+          }
+        }
+      }
+    ]
+  },
+  {
     "namespace": "browserAction",
     "description": "Use browser actions to put icons in the main browser toolbar, to the right of the address bar. In addition to its icon, a browser action can also have a tooltip, a badge, and a popup.",
     "types": [

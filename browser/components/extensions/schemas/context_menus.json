@@ -4,6 +4,20 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "contextMenus"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "contextMenus",
     "description": "Use the <code>browser.contextMenus</code> API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
     "properties": {

@@ -4,6 +4,25 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "page_action": {
+            "type": "object",
+            "properties": {
+              "default_title": { "type": "string", "optional": true },
+              "default_icon": { "$ref": "IconPath", "optional": true },
+              "default_popup": { "type": "string", "format": "relativeUrl", "optional": true }
+            },
+            "optional": true
+          }
+        }
+      }
+    ]
+  },
+  {
     "namespace": "pageAction",
     "description": "Use the <code>browser.pageAction</code> API to put icons inside the address bar. Page actions represent actions that can be taken on the current page, but that aren't applicable to all pages.",
     "types": [

@@ -1,0 +1,229 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "id": "WebExtensionManifest",
+        "type": "object",
+        "description": "Represents a WebExtension manifest.json file",
+        "properties": {
+          "manifest_version": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 2
+          },
+
+          "applications": {
+            "type": "object",
+            "properties": {
+              "gecko": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "ExtensionID" },
+
+                  "update_url": {
+                    "type": "string",
+                    "format": "url",
+                    "optional": true
+                  },
+
+                  "strict_min_version": {
+                    "type": "string",
+                    "optional": true
+                  },
+
+                  "strict_max_version": {
+                    "type": "string",
+                    "optional": true
+                  }
+                }
+              }
+            }
+          },
+
+          "name": {
+            "type": "string",
+            "optional": false
+          },
+
+          "description": {
+            "type": "string",
+            "optional": true
+          },
+
+          "version": {
+            "type": "string",
+            "optional": false
+          },
+
+          "icons": {
+            "type": "object",
+            "optional": true,
+            "patternProperties": {
+              "^[1-9]\\d*$": { "type": "string" }
+            }
+          },
+
+          "background": {
+            "choices": [
+              {
+                "type": "object",
+                "properties": {
+                  "page": { "$ref": "ExtensionURL" }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "scripts": {
+                    "type": "array",
+                    "items": { "$ref": "ExtensionURL" }
+                  }
+                }
+              }
+            ],
+            "optional": true
+          },
+
+          "content_scripts": {
+            "type": "array",
+            "optional": true,
+            "items": { "$ref": "ContentScript" }
+          },
+
+          "permissions": {
+            "type": "array",
+            "items": { "$ref": "Permission" },
+            "optional": true
+          },
+
+          "web_accessible_resources": {
+            "type": "array",
+            "items": { "type": "string" },
+            "optional": true
+          }
+        }
+      },
+      {
+        "id": "Permission",
+        "choices": [
+          {
+            "type": "string",
+            "enum": [
+              "alarms",
+              "idle",
+              "notifications",
+              "storage"
+            ]
+          },
+          { "$ref": "MatchPattern" }
+        ]
+      },
+      {
+        "id": "ExtensionURL",
+        "type": "string",
+        "format": "strictRelativeUrl"
+      },
+      {
+        "id": "ExtensionID",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "(?i)^\\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\}$"
+          },
+          {
+            "type": "string",
+            "pattern": "(?i)^[a-z0-9-._]*@[a-z0-9-._]+$"
+          }
+        ]
+      },
+      {
+        "id": "MatchPattern",
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["<all_urls>"]
+          },
+          {
+            "type": "string",
+            "pattern": "^(https?|file|ftp|app|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
+          },
+          {
+            "type": "string",
+            "pattern": "^file:///.*$"
+          }
+        ]
+      },
+      {
+        "id": "ContentScript",
+        "type": "object",
+        "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time. Based on InjectDetails, but using underscore rather than camel case naming conventions.",
+        "properties": {
+          "matches": {
+            "type": "array",
+            "optional": false,
+            "minItems": 1,
+            "items": { "$ref": "MatchPattern" }
+          },
+          "exclude_matches": {
+            "type": "array",
+            "optional": true,
+            "minItems": 1,
+            "items": { "$ref": "MatchPattern" }
+          },
+          "css": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of CSS files to inject",
+            "items": { "$ref": "ExtensionURL" }
+          },
+          "js": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of CSS files to inject",
+            "items": { "$ref": "ExtensionURL" }
+          },
+          "all_frames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
+          "match_about_blank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "run_at": {
+            "$ref": "extensionTypes.RunAt",
+            "optional": true,
+            "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          }
+        }
+      },
+      {
+        "id": "IconPath",
+        "choices": [
+          {
+            "type": "object",
+            "patternProperties": {
+              "^[1-9]\\d*$": { "$ref": "ExtensionURL" }
+            },
+            "additionalProperties": false
+          },
+          { "$ref": "ExtensionURL" }
+        ]
+      },
+      {
+        "id": "IconImageData",
+        "choices": [
+          {
+            "type": "object",
+            "patternProperties": {
+              "^[1-9]\\d*$": {
+                "type": "object",
+                "isInstanceOf": "ImageData"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "isInstanceOf": "ImageData"
+          }
+        ]
+      }
+    ]
+  }
+]
