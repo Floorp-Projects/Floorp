@@ -115,6 +115,8 @@ DefaultWeakMap.prototype = {
 class BaseContext {
   constructor() {
     this.onClose = new Set();
+    this.checkedLastError = false;
+    this._lastError = null;
   }
 
   get cloneScope() {
@@ -150,6 +152,87 @@ class BaseContext {
 
   forgetOnClose(obj) {
     this.onClose.delete(obj);
+  }
+
+  get lastError() {
+    this.checkedLastError = true;
+    return this._lastError;
+  }
+
+  set lastError(val) {
+    this.checkedLastError = false;
+    this._lastError = val;
+  }
+
+  /**
+   * Sets the value of `.lastError` to `error`, calls the given
+   * callback, and reports an error if the value has not been checked
+   * when the callback returns.
+   *
+   * @param {object} error An object with a `message` property. May
+   *     optionally be an `Error` object belonging to the target scope.
+   * @param {function} callback The callback to call.
+   * @returns {*} The return value of callback.
+   */
+  withLastError(error, callback) {
+    if (!(error instanceof this.cloneScope.Error)) {
+      error = new this.cloneScope.Error(error.message);
+    }
+    this.lastError = error;
+    try {
+      return callback();
+    } finally {
+      if (!this.checkedLastError) {
+        Cu.reportError(`Unchecked lastError value: ${error}`);
+      }
+      this.lastError = null;
+    }
+  }
+
+  /**
+   * Wraps the given promise so it can be safely returned to extension
+   * code in this context.
+   *
+   * If `callback` is provided, however, it is used as a completion
+   * function for the promise, and no promise is returned. In this case,
+   * the callback is called when the promise resolves or rejects. In the
+   * latter case, `lastError` is set to the rejection value, and the
+   * callback funciton must check `browser.runtime.lastError` or
+   * `extension.runtime.lastError` in order to prevent it being reported
+   * to the console.
+   *
+   * @param {Promise} promise The promise with which to wrap the
+   *     callback. Must resolve to an array, or other iterable, each
+   *     element of which will be passed as an argument to the callback.
+   *
+   * @param {function} [callback] The callback function to wrap
+   *
+   * @returns {Promise|undefined} If callback is null, a promise object
+   *     belonging to the target scope. Otherwise, undefined.
+   */
+  wrapPromise(promise, callback = null) {
+    if (callback) {
+      promise.then(
+        args => {
+          runSafeSync(this, callback, ...args);
+        },
+        error => {
+          this.withLastError(error, () => {
+            runSafeSync(this, callback);
+          });
+        });
+    } else {
+      return new this.cloneScope.Promise((resolve, reject) => {
+        promise.then(
+          value => { runSafeSync(this, resolve, value); },
+          value => {
+            if (!(value instanceof this.cloneScope.Error)) {
+              value = new this.cloneScope.Error(value.message);
+            }
+            runSafeSyncWithoutClone(reject, value);
+          });
+      });
+    }
   }
 
   unload() {
@@ -493,14 +576,14 @@ function injectAPI(source, dest) {
       continue;
     }
 
-    let value = source[prop];
-    if (typeof(value) == "function") {
-      Cu.exportFunction(value, dest, {defineAs: prop});
-    } else if (typeof(value) == "object") {
+    let desc = Object.getOwnPropertyDescriptor(source, prop);
+    if (typeof(desc.value) == "function") {
+      Cu.exportFunction(desc.value, dest, {defineAs: prop});
+    } else if (typeof(desc.value) == "object") {
       let obj = Cu.createObjectIn(dest, {defineAs: prop});
-      injectAPI(value, obj);
+      injectAPI(desc.value, obj);
     } else {
-      dest[prop] = value;
+      Object.defineProperty(dest, prop, desc);
     }
   }
 }

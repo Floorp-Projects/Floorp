@@ -47,7 +47,16 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
           [extensionId, message, options, responseCallback] = args;
         }
         let recipient = {extensionId: extensionId ? extensionId : extension.id};
+
+        if (!GlobalManager.extensionMap.has(recipient.extensionId)) {
+          return context.wrapPromise(Promise.reject({ message: "Invalid extension ID" }),
+                                     responseCallback);
+        }
         return context.messenger.sendMessage(Services.cpmm, message, recipient, responseCallback);
+      },
+
+      get lastError() {
+        return context.lastError;
       },
 
       getManifest() {

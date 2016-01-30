@@ -162,13 +162,14 @@ var Management = {
     // Recursively copy properties from source to dest.
     function copy(dest, source) {
       for (let prop in source) {
-        if (typeof(source[prop]) == "object") {
+        let desc = Object.getOwnPropertyDescriptor(source, prop);
+        if (typeof(desc.value) == "object") {
           if (!(prop in dest)) {
             dest[prop] = {};
           }
           copy(dest[prop], source[prop]);
         } else {
-          dest[prop] = source[prop];
+          Object.defineProperty(dest, prop, desc);
         }
       }
     }
@@ -352,6 +353,14 @@ GlobalManager = {
       let schemaWrapper = {
         callFunction(ns, name, args) {
           return schemaApi[ns][name].apply(null, args);
+        },
+
+        getProperty(ns, name) {
+          return schemaApi[ns][name];
+        },
+
+        setProperty(ns, name, value) {
+          schemaApi[ns][name] = value;
         },
 
         addListener(ns, name, listener, args) {
