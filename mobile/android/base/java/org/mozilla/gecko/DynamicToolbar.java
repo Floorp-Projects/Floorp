@@ -6,9 +6,13 @@ import org.mozilla.gecko.PrefsHelper.PrefHandlerBase;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 public class DynamicToolbar {
+    private static final String LOGTAG = "DynamicToolbar";
+
     private static final String STATE_ENABLED = "dynamic_toolbar";
     private static final String CHROME_PREF = "browser.chrome.dynamictoolbar";
 
@@ -17,6 +21,9 @@ public class DynamicToolbar {
     // the pref from Gecko telling us to turn it on.
     private volatile boolean prefEnabled;
     private boolean accessibilityEnabled;
+    // On some device we have to force-disable the dynamic toolbar because of
+    // bugs in the Android code. See bug 1231554.
+    private final boolean forceDisabled;
 
     private final int prefObserverId;
     private final EnumSet<PinReason> pinFlags = EnumSet.noneOf(PinReason.class);
@@ -48,6 +55,21 @@ public class DynamicToolbar {
     public DynamicToolbar() {
         // Listen to the dynamic toolbar pref
         prefObserverId = PrefsHelper.getPref(CHROME_PREF, new PrefHandler());
+        forceDisabled = isForceDisabled();
+        if (forceDisabled) {
+            Log.i(LOGTAG, "Force-disabling dynamic toolbar for " + Build.MODEL + " (" + Build.DEVICE + "/" + Build.PRODUCT + ")");
+        }
+    }
+
+    public static boolean isForceDisabled() {
+        // Force-disable dynamic toolbar on the variants of the Galaxy Note 10.1
+        // and Note 8.0 running Android 4.1.2. (Bug 1231554). This includes
+        // the following model numbers:
+        //  GT-N8000, GT-N8005, GT-N8010, GT-N8013, GT-N8020
+        //  GT-N5100, GT-N5110, GT-N5120
+        return Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN
+            && (Build.MODEL.startsWith("GT-N80") ||
+                Build.MODEL.startsWith("GT-N51"));
     }
 
     public void destroy() {
@@ -82,6 +104,10 @@ public class DynamicToolbar {
 
     public boolean isEnabled() {
         ThreadUtils.assertOnUiThread();
+
+        if (forceDisabled) {
+            return false;
+        }
 
         return prefEnabled && !accessibilityEnabled;
     }

@@ -11,13 +11,21 @@ DEFINES += \
   -DCPPFLAGS='$(CPPFLAGS)' \
   $(NULL)
 
+ifdef MOZ_SOURCE_CHANGESET
+MOZ_SOURCE_STAMP = $(MOZ_SOURCE_CHANGESET)
+else
 MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template='{node}\n' 2>/dev/null)
+endif
 ifdef MOZ_SOURCE_STAMP
 DEFINES += -DSOURCE_CHANGESET='$(MOZ_SOURCE_STAMP)'
 endif
 
 ifdef MOZ_INCLUDE_SOURCE_INFO
+ifdef MOZ_SOURCE_REPO
+source_repo = $(MOZ_SOURCE_REPO)
+else
 source_repo ?= $(call getSourceRepo)
+endif
 ifneq (,$(filter http%,$(source_repo)))
   DEFINES += -DSOURCE_REPO='$(source_repo)'
 else ifneq (,$(strip $(source_repo)))

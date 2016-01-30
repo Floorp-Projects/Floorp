@@ -2937,7 +2937,7 @@ var SessionStoreInternal = {
       }
 
       if (!!winData.tabs[t].muted != tabs[t].linkedBrowser.audioMuted) {
-        tabs[t].toggleMuteAudio();
+        tabs[t].toggleMuteAudio(winData.tabs[t].muteReason);
       }
     }
 
@@ -3207,7 +3207,7 @@ var SessionStoreInternal = {
     }
 
     if (!!tabData.muted != browser.audioMuted) {
-      tab.toggleMuteAudio();
+      tab.toggleMuteAudio(tabData.muteReason);
     }
 
     if (tabData.lastAccessed) {

@@ -1,0 +1,45 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="33" height="12" viewBox="0 0 33 12">
+  <defs>
+    <style>
+      use:not(:target) {
+        display: none;
+      }
+      #light {
+        fill: #46afe3;
+      }
+      #light-hover {
+        fill: #9aa6b3;
+      }
+      #light-active {
+        fill: #2cbb0f;
+      }
+      #light-conditional {
+        fill: #d97e00;
+      }
+      #dark {
+        fill: #46afe3;
+      }
+      #dark-hover {
+        fill: #3d454d;
+      }
+      #dark-active {
+        fill: #70bf53;
+      }
+      #dark-conditional {
+        fill: #d89b28;
+      }
+    </style>
+    <path id="base-path" d="M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z"/>
+  </defs>
+  <use xlink:href="#base-path" id="light"/>
+  <use xlink:href="#base-path" id="light-hover"/>
+  <use xlink:href="#base-path" id="light-active"/>
+  <use xlink:href="#base-path" id="light-conditional"/>
+  <use xlink:href="#base-path" id="dark"/>
+  <use xlink:href="#base-path" id="dark-hover"/>
+  <use xlink:href="#base-path" id="dark-active"/>
+  <use xlink:href="#base-path" id="dark-conditional"/>
+</svg>

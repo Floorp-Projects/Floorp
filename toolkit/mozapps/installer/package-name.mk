@@ -156,14 +156,20 @@ ifndef INCLUDED_RCS_MK
   include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
 endif
 
+ifdef MOZ_SOURCE_CHANGESET
+MOZ_SOURCE_STAMP = $(MOZ_SOURCE_CHANGESET)
+else
 MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(MOZILLA_DIR) parent --template="{node}\n" 2>/dev/null))
+endif
 
 ###########################################################################
 # bug: 746277 - preserve existing functionality.
 # MOZILLA_DIR="": cd $(SPACE); hg # succeeds if ~/.hg exists
 ###########################################################################
 ifdef MOZ_INCLUDE_SOURCE_INFO
+ifndef MOZ_SOURCE_REPO
 MOZ_SOURCE_REPO = $(call getSourceRepo,$(MOZILLA_DIR)$(NULL) $(NULL))
+endif
 endif
 
 MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).txt
