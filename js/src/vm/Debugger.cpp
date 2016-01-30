@@ -2480,7 +2480,7 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     // `Debugger::logTenurePromotion`, we can't hold onto CCWs inside the log,
     // and instead have unwrapped cross-compartment edges. We need to be sure to
     // mark those here.
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    tenurePromotionsLog.trace(trc);
 }
 
 /*
@@ -2656,8 +2656,8 @@ Debugger::trace(JSTracer* trc)
         TraceEdge(trc, &frameobj, "live Debugger.Frame");
     }
 
-    AllocationsLog::trace(&allocationsLog, trc);
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    allocationsLog.trace(trc);
+    tenurePromotionsLog.trace(trc);
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);

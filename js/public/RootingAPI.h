@@ -581,28 +581,15 @@ struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
 
 } /* namespace js */
 
-namespace JS {
-
-// Non pointer types -- structs or classes that contain GC pointers, either as
-// a member or in a more complex container layout -- can also be stored in a
-// [Persistent]Rooted if it derives from JS::Traceable. A JS::Traceable stored
-// in a [Persistent]Rooted must implement the method:
-//     |static void trace(T*, JSTracer*)|
-class Traceable
-{
-};
-
-} /* namespace JS */
-
 namespace js {
 
 template <typename T>
 class DispatchWrapper
 {
-    static_assert(mozilla::IsBaseOf<JS::Traceable, T>::value,
+    static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
                   "DispatchWrapper is intended only for usage with a Traceable");
 
-    using TraceFn = void (*)(T*, JSTracer*);
+    using TraceFn = void (*)(JSTracer*, T*, const char*);
     TraceFn tracer;
 #if JS_BITS_PER_WORD == 32
     uint32_t padding; // Ensure the storage fields have CellSize alignment.
@@ -612,7 +599,7 @@ class DispatchWrapper
   public:
     template <typename U>
     MOZ_IMPLICIT DispatchWrapper(U&& initial)
-      : tracer(&T::trace),
+      : tracer(&GCPolicy<T>::trace),
         storage(mozilla::Forward<U>(initial))
     { }
 
@@ -624,10 +611,10 @@ class DispatchWrapper
 
     // Trace the contained storage (of unknown type) using the trace function
     // we set aside when we did know the type.
-    static void TraceWrapped(JSTracer* trc, JS::Traceable* thingp, const char* name) {
+    static void TraceWrapped(JSTracer* trc, T* thingp, const char* name) {
         auto wrapper = reinterpret_cast<DispatchWrapper*>(
                            uintptr_t(thingp) - offsetof(DispatchWrapper, storage));
-        wrapper->tracer(&wrapper->storage, trc);
+        wrapper->tracer(trc, &wrapper->storage, name);
     }
 };
 
@@ -670,9 +657,6 @@ namespace JS {
 template <typename T>
 class MOZ_RAII Rooted : public js::RootedBase<T>
 {
-    static_assert(!mozilla::IsConvertible<T, Traceable*>::value,
-                  "Rooted takes pointer or Traceable types but not Traceable* type");
-
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
     void registerWithRootLists(js::RootLists& roots) {
         this->stack = &roots.stackRoots_[JS::MapTypeToRootKind<T>::kind];
@@ -727,14 +711,14 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
 
     /*
      * For pointer types, the TraceKind for tracing is based on the list it is
-     * in (selected via rootKind), so no additional storage is required here.
-     * All Traceable, however, share the same list, so the function to
-     * call for tracing is stored adjacent to the struct. Since C++ cannot
-     * templatize on storage class, this is implemented via the wrapper class
-     * DispatchWrapper.
+     * in (selected via MapTypeToRootKind), so no additional storage is
+     * required here. Non-pointer types, however, share the same list, so the
+     * function to call for tracing is stored adjacent to the struct. Since C++
+     * cannot templatize on storage class, this is implemented via the wrapper
+     * class DispatchWrapper.
      */
     using MaybeWrapped = typename mozilla::Conditional<
-        mozilla::IsBaseOf<Traceable, T>::value,
+        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
         js::DispatchWrapper<T>,
         T>::Type;
     MaybeWrapped ptr;
@@ -1071,7 +1055,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     // See the comment above Rooted::ptr.
     using MaybeWrapped = typename mozilla::Conditional<
-        mozilla::IsBaseOf<Traceable, T>::value,
+        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
         js::DispatchWrapper<T>,
         T>::Type;
 

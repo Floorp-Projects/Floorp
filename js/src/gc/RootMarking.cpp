@@ -42,6 +42,18 @@ typedef RootedValueMap::Enum RootEnum;
 template <typename T>
 using TraceFunction = void (*)(JSTracer* trc, T* ref, const char* name);
 
+// For more detail see JS::Rooted::ptr and js::DispatchWrapper.
+//
+// The JS::RootKind::Traceable list contains a bunch of totally disparate
+// types, but the instantiations of DispatchWrapper below need /something/ in
+// the type field. We use the following type as a compatible stand-in. No
+// actual methods from ConcreteTraceable type are actually used at runtime --
+// the real trace function has been stored inline in the DispatchWrapper.
+struct ConcreteTraceable {
+    ConcreteTraceable() { MOZ_CRASH("instantiation of ConcreteTraceable"); }
+    void trace(JSTracer*) {}
+};
+
 template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
 static inline void
 MarkExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* name)
@@ -62,7 +74,8 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 #undef MARK_ROOTS
     MarkExactStackRootList<jsid>(trc, stackRoots_[JS::RootKind::Id], "exact-id");
     MarkExactStackRootList<Value>(trc, stackRoots_[JS::RootKind::Value], "exact-value");
-    MarkExactStackRootList<JS::Traceable, js::DispatchWrapper<JS::Traceable>::TraceWrapped>(
+    MarkExactStackRootList<ConcreteTraceable,
+                           js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(
         trc, stackRoots_[JS::RootKind::Traceable], "Traceable");
 }
 
@@ -92,7 +105,8 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 #undef MARK_ROOTS
     MarkPersistentRootedList<jsid>(trc, heapRoots_[JS::RootKind::Id], "persistent-id");
     MarkPersistentRootedList<Value>(trc, heapRoots_[JS::RootKind::Value], "persistent-value");
-    MarkPersistentRootedList<JS::Traceable, js::DispatchWrapper<JS::Traceable>::TraceWrapped>(trc,
+    MarkPersistentRootedList<ConcreteTraceable,
+                             js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(trc,
             heapRoots_[JS::RootKind::Traceable], "persistent-traceable");
 }
 
@@ -108,8 +122,9 @@ template <typename T>
 static void
 FinishPersistentRootedChain(mozilla::LinkedList<PersistentRooted<void*>>& listArg)
 {
-    while (!listArg.isEmpty())
-        listArg.getFirst()->reset();
+    auto& list = reinterpret_cast<mozilla::LinkedList<PersistentRooted<T>>&>(listArg);
+    while (!list.isEmpty())
+        list.getFirst()->reset();
 }
 
 void
@@ -121,7 +136,7 @@ JS_FOR_EACH_TRACEKIND(FINISH_ROOT_LIST)
 #undef FINISH_ROOT_LIST
     FinishPersistentRootedChain<jsid>(heapRoots_[JS::RootKind::Id]);
     FinishPersistentRootedChain<Value>(heapRoots_[JS::RootKind::Value]);
-    FinishPersistentRootedChain<JS::Traceable>(heapRoots_[JS::RootKind::Traceable]);
+    FinishPersistentRootedChain<ConcreteTraceable>(heapRoots_[JS::RootKind::Traceable]);
 }
 
 inline void
