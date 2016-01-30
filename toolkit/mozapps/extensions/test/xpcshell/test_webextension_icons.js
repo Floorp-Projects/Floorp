@@ -73,47 +73,6 @@ add_task(function*() {
   yield promiseRestartManager();
 });
 
-// Test filtering invalid icon sizes
-add_task(function*() {
-  writeWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      32: "icon32.png",
-      banana: "bananana.png",
-      "20.5": "icon20.5.png",
-      "20.0": "also invalid",
-      "123banana": "123banana.png",
-      64: "icon64.png"
-    }
-  }, profileDir);
-
-  yield promiseRestartManager();
-
-  let addon = yield promiseAddonByID(ID);
-  do_check_neq(addon, null);
-
-  let uri = do_get_addon_root_uri(profileDir, ID);
-
-  deepEqual(addon.icons, {
-      32: uri + "icon32.png",
-      64: uri + "icon64.png"
-  });
-
-  equal(addon.iconURL, uri + "icon64.png");
-  equal(addon.icon64URL, uri + "icon64.png");
-
-  addon.uninstall();
-
-  yield promiseRestartManager();
-});
-
 // Test AddonManager.getPreferredIconURL for retina screen sizes
 add_task(function*() {
   writeWebManifestForExtension({

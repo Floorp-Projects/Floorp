@@ -279,10 +279,7 @@ let wrapper = {
   url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
 
   checkLoadURL(url) {
-    if (url.startsWith("chrome:")) {
-      throw new Error("Access denied");
-    }
-    return url;
+    return !url.startsWith("chrome:");
   },
 
   callFunction(ns, name, args) {

@@ -135,7 +135,7 @@ add_task(function* checkUpdateMetadata() {
     addon: {
       manifest: {
         version: "1.0",
-        application: { gecko: { strict_max_version: "45" } },
+        applications: { gecko: { strict_max_version: "45" } },
       }
     },
     updates: {
@@ -240,7 +240,7 @@ add_task(function* checkIllegalUpdateURL() {
       });
     });
 
-    ok(messages.some(msg => /nsIScriptSecurityManager.checkLoadURIStrWithPrincipal/.test(msg)),
+    ok(messages.some(msg => /Access denied for URL|may not load or link to|is not a valid URL/.test(msg)),
        "Got checkLoadURI error");
   }
 });

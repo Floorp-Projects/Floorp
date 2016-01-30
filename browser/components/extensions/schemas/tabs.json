@@ -4,6 +4,21 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "activeTab",
+            "tabs"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "tabs",
     "description": "Use the <code>browser.tabs</code> API to interact with the browser's tab system. You can use this API to create, modify, and rearrange tabs in the browser.",
     "types": [

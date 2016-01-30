@@ -4,6 +4,20 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "default_locale": {
+            "type": "string",
+            "optional": "true"
+          }
+        }
+      }
+    ]
+  },
+  {
     "namespace": "i18n",
     "description": "Use the <code>browser.i18n</code> infrastructure to implement internationalization across your whole app or extension.",
     "types": [
