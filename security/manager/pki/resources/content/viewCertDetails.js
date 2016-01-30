@@ -76,7 +76,7 @@ function setWindowName()
     //var token = pk11db.findTokenByName(tokenName);
 
     //var cert = certdb.findCertByNickname(token, myName);
-    cert = certdb.findCertByNickname(null, myName);
+    cert = certdb.findCertByNickname(myName);
   } else {
     var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
     var cert = params.objects.queryElementAt(0, nsIX509Cert);
@@ -265,7 +265,7 @@ function updateCertDump()
     var dbKey = item.firstChild.firstChild.getAttribute('display');
     //  Get the cert from the cert database
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-    var cert = certdb.findCertByDBKey(dbKey,null);
+    var cert = certdb.findCertByDBKey(dbKey);
     asn1Tree.loadASN1Structure(cert.ASN1Structure);
   }
   displaySelected();
@@ -290,7 +290,7 @@ function getCurrentCert()
     var item = tree.contentView.getItemAtIndex(realIndex);
     var dbKey = item.firstChild.firstChild.getAttribute('display');
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-    var cert = certdb.findCertByDBKey(dbKey,null);
+    var cert = certdb.findCertByDBKey(dbKey);
     return cert;
   }
   /* shouldn't really happen */
