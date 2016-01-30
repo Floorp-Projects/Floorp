@@ -531,13 +531,21 @@ WinUtils::SystemScaleFactor()
   // The result of GetDeviceCaps won't change dynamically, as it predates
   // per-monitor DPI and support for on-the-fly resolution changes.
   // Therefore, we only need to look it up once.
-  static int logPixelsY = 0;
-  if (!logPixelsY) {
+  static double systemScale = 0;
+  if (systemScale == 0) {
     HDC screenDC = GetDC(nullptr);
-    logPixelsY = GetDeviceCaps(screenDC, LOGPIXELSY);
+    systemScale = GetDeviceCaps(screenDC, LOGPIXELSY) / 96.0;
     ReleaseDC(nullptr, screenDC);
+
+    if (systemScale == 0) {
+      // Bug 1012487 - This can occur when the Screen DC is used off the
+      // main thread on windows. For now just assume a 100% DPI for this
+      // drawing call.
+      // XXX - fixme!
+      return 1.0;
+    }
   }
-  return logPixelsY / 96.0;
+  return systemScale;
 }
 
 #ifndef WM_DPICHANGED
@@ -601,19 +609,7 @@ WinUtils::LogToPhysFactor(HMONITOR aMonitor)
     return dpiY / 96.0;
   }
 
-  // The system DPI will never change during the session.
-  HDC hdc = ::GetDC(nullptr);
-  double result = ::GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
-  ::ReleaseDC(nullptr, hdc);
-
-  if (result == 0) {
-    // Bug 1012487 - This can occur when the Screen DC is used off the
-    // main thread on windows. For now just assume a 100% DPI for this
-    // drawing call.
-    // XXX - fixme!
-    result = 1.0;
-  }
-  return result;
+  return SystemScaleFactor();
 }
 
 /* static */
