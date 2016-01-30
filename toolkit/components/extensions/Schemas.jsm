@@ -76,6 +76,64 @@ function getValueBaseType(value) {
   return t;
 }
 
+class Context {
+  constructor(params) {
+    this.params = params;
+
+    this.path = [];
+
+    let props = ["addListener", "callFunction",
+                 "hasListener", "removeListener",
+                 "getProperty", "setProperty"];
+    for (let prop of props) {
+      this[prop] = params[prop];
+    }
+
+    if ("checkLoadURL" in params) {
+      this.checkLoadURL = params.checkLoadURL;
+    }
+  }
+
+  get url() {
+    return this.params.url;
+  }
+
+  get principal() {
+    return this.params.principal || Services.scriptSecurityManager.createNullPrincipal({});
+  }
+
+  checkLoadURL(url) {
+    let ssm = Services.scriptSecurityManager;
+    try {
+      ssm.checkLoadURIStrWithPrincipal(this.principal, url,
+                                       ssm.DISALLOW_INHERIT_PRINCIPAL);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  error(message) {
+    if (this.currentTarget) {
+      return {error: `Error processing ${this.currentTarget}: ${message}`};
+    }
+    return {error: message};
+  }
+
+  get currentTarget() {
+    return this.path.join(".");
+  }
+
+  withPath(component, callback) {
+    this.path.push(component);
+    try {
+      return callback();
+    } finally {
+      this.path.pop();
+    }
+  }
+}
+
 
 /**
  * The methods in this singleton represent the "format" specifier for
@@ -136,8 +194,8 @@ class Type extends Entry {
   // include "nulls" in place of omitted optional properties. The
   // result of this function is either {error: "Some type error"} or
   // {value: <normalized-value>}.
-  normalize(value) {
-    return {error: "invalid type"};
+  normalize(value, context) {
+    return context.error("invalid type");
   }
 
   // Unlike normalize, this function does a shallow check to see if
@@ -151,11 +209,11 @@ class Type extends Entry {
 
   // Helper method that simply relies on checkBaseType to implement
   // normalize. Subclasses can choose to use it or not.
-  normalizeBase(type, value) {
+  normalizeBase(type, value, context) {
     if (this.checkBaseType(getValueBaseType(value))) {
       return {value};
     }
-    return {error: `Expected ${type} instead of ${JSON.stringify(value)}`};
+    return context.error(`Expected ${type} instead of ${JSON.stringify(value)}`);
   }
 }
 
@@ -184,14 +242,20 @@ class ChoiceType extends Type {
   }
 
   normalize(value, context) {
+    let error;
+
+    let baseType = getValueBaseType(value);
     for (let choice of this.choices) {
-      let r = choice.normalize(value, context);
-      if (!r.error) {
-        return r;
+      if (choice.checkBaseType(baseType)) {
+        let r = choice.normalize(value, context);
+        if (!r.error) {
+          return r;
+        }
+        error = r.error;
       }
     }
 
-    return {error: "No valid choice"};
+    return context.error(error || `Unexpected value ${JSON.stringify(value)}`);
   }
 
   checkBaseType(baseType) {
@@ -238,7 +302,7 @@ class StringType extends Type {
   }
 
   normalize(value, context) {
-    let r = this.normalizeBase("string", value);
+    let r = this.normalizeBase("string", value, context);
     if (r.error) {
       return r;
     }
@@ -247,25 +311,25 @@ class StringType extends Type {
       if (this.enumeration.includes(value)) {
         return {value};
       }
-      return {error: `Invalid enumeration value ${JSON.stringify(value)}`};
+      return context.error(`Invalid enumeration value ${JSON.stringify(value)}`);
     }
 
     if (value.length < this.minLength) {
-      return {error: `String ${JSON.stringify(value)} is too short (must be ${this.minLength})`};
+      return context.error(`String ${JSON.stringify(value)} is too short (must be ${this.minLength})`);
     }
     if (value.length > this.maxLength) {
-      return {error: `String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`};
+      return context.error(`String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`);
     }
 
     if (this.pattern && !this.pattern.test(value)) {
-      return {error: `String ${JSON.stringify(value)} must match ${this.pattern}`};
+      return context.error(`String ${JSON.stringify(value)} must match ${this.pattern}`);
     }
 
     if (this.format) {
       try {
         r.value = this.format(r.value, context);
       } catch (e) {
-        return {error: String(e)};
+        return context.error(String(e));
       }
     }
 
@@ -314,7 +378,7 @@ class ObjectType extends Type {
   }
 
   normalize(value, context) {
-    let v = this.normalizeBase("object", value);
+    let v = this.normalizeBase("object", value, context);
     if (v.error) {
       return v;
     }
@@ -327,7 +391,7 @@ class ObjectType extends Type {
       }
 
       if (!instanceOf(value, this.isInstanceOf)) {
-        return {error: `Object must be an instance of ${this.isInstanceOf}`};
+        return context.error(`Object must be an instance of ${this.isInstanceOf}`);
       }
 
       // This is kind of a hack, but we can't normalize things that
@@ -345,7 +409,7 @@ class ObjectType extends Type {
 
     let klass = Cu.getClassName(value, true);
     if (klass != "Object") {
-      return {error: `Expected a plain JavaScript object, got a ${klass}`};
+      return context.error(`Expected a plain JavaScript object, got a ${klass}`);
     }
 
     let properties = Object.create(null);
@@ -356,7 +420,7 @@ class ObjectType extends Type {
       for (let prop of Object.getOwnPropertyNames(waived)) {
         let desc = Object.getOwnPropertyDescriptor(waived, prop);
         if (desc.get || desc.set) {
-          return {error: "Objects cannot have getters or setters on properties"};
+          return context.error("Objects cannot have getters or setters on properties");
         }
         if (!desc.enumerable) {
           // Chrome ignores non-enumerable properties.
@@ -372,13 +436,13 @@ class ObjectType extends Type {
       let {type, optional, unsupported} = propType;
       if (unsupported) {
         if (prop in properties) {
-          return {error: `Property "${prop}" is unsupported by Firefox`};
+          return context.error(`Property "${prop}" is unsupported by Firefox`);
         }
       } else if (prop in properties) {
         if (optional && (properties[prop] === null || properties[prop] === undefined)) {
           result[prop] = null;
         } else {
-          let r = type.normalize(properties[prop], context);
+          let r = context.withPath(prop, () => type.normalize(properties[prop], context));
           if (r.error) {
             return r;
           }
@@ -387,7 +451,7 @@ class ObjectType extends Type {
         }
         remainingProps.delete(prop);
       } else if (!optional) {
-        return {error: `Property "${prop}" is required`};
+        return context.error(`Property "${prop}" is required`);
       } else {
         result[prop] = null;
       }
@@ -415,16 +479,16 @@ class ObjectType extends Type {
     if (this.additionalProperties) {
       for (let prop of remainingProps) {
         let type = this.additionalProperties;
-        let r = type.normalize(properties[prop], context);
+        let r = context.withPath(prop, () => type.normalize(properties[prop], context));
         if (r.error) {
           return r;
         }
         result[prop] = r.value;
       }
     } else if (remainingProps.size == 1) {
-      return {error: `Unexpected property "${[...remainingProps]}"`};
+      return context.error(`Unexpected property "${[...remainingProps]}"`);
     } else if (remainingProps.size) {
-      return {error: `Unexpected properties: ${[...remainingProps]}`};
+      return context.error(`Unexpected properties: ${[...remainingProps]}`);
     }
 
     return {value: result};
@@ -432,14 +496,14 @@ class ObjectType extends Type {
 }
 
 class NumberType extends Type {
-  normalize(value) {
-    let r = this.normalizeBase("number", value);
+  normalize(value, context) {
+    let r = this.normalizeBase("number", value, context);
     if (r.error) {
       return r;
     }
 
     if (isNaN(value) || !Number.isFinite(value)) {
-      return {error: "NaN or infinity are not valid"};
+      return context.error("NaN or infinity are not valid");
     }
 
     return r;
@@ -457,22 +521,22 @@ class IntegerType extends Type {
     this.maximum = maximum;
   }
 
-  normalize(value) {
-    let r = this.normalizeBase("integer", value);
+  normalize(value, context) {
+    let r = this.normalizeBase("integer", value, context);
     if (r.error) {
       return r;
     }
 
     // Ensure it's between -2**31 and 2**31-1
     if ((value | 0) !== value) {
-      return {error: "Integer is out of range"};
+      return context.error("Integer is out of range");
     }
 
     if (value < this.minimum) {
-      return {error: `Integer ${value} is too small (must be at least ${this.minimum})`};
+      return context.error(`Integer ${value} is too small (must be at least ${this.minimum})`);
     }
     if (value > this.maximum) {
-      return {error: `Integer ${value} is too big (must be at most ${this.maximum})`};
+      return context.error(`Integer ${value} is too big (must be at most ${this.maximum})`);
     }
 
     return r;
@@ -484,8 +548,8 @@ class IntegerType extends Type {
 }
 
 class BooleanType extends Type {
-  normalize(value) {
-    return this.normalizeBase("boolean", value);
+  normalize(value, context) {
+    return this.normalizeBase("boolean", value, context);
   }
 
   checkBaseType(baseType) {
@@ -502,14 +566,14 @@ class ArrayType extends Type {
   }
 
   normalize(value, context) {
-    let v = this.normalizeBase("array", value);
+    let v = this.normalizeBase("array", value, context);
     if (v.error) {
       return v;
     }
 
     let result = [];
-    for (let element of value) {
-      element = this.itemType.normalize(element, context);
+    for (let [i, element] of value.entries()) {
+      element = context.withPath(String(i), () => this.itemType.normalize(element, context));
       if (element.error) {
         return element;
       }
@@ -517,11 +581,11 @@ class ArrayType extends Type {
     }
 
     if (result.length < this.minItems) {
-      return {error: `Array requires at least ${this.minItems} items; you have ${result.length}`};
+      return context.error(`Array requires at least ${this.minItems} items; you have ${result.length}`);
     }
 
     if (result.length > this.maxItems) {
-      return {error: `Array requires at most ${this.maxItems} items; you have ${result.length}`};
+      return context.error(`Array requires at most ${this.maxItems} items; you have ${result.length}`);
     }
 
     return {value: result};
@@ -538,8 +602,8 @@ class FunctionType extends Type {
     this.parameters = parameters;
   }
 
-  normalize(value) {
-    return this.normalizeBase("function", value);
+  normalize(value, context) {
+    return this.normalizeBase("function", value, context);
   }
 
   checkBaseType(baseType) {
@@ -710,7 +774,7 @@ class FunctionEntry extends CallEntry {
     }
 
     let stub = (...args) => {
-      let actuals = this.checkParameters(args, dest, wrapperFuncs);
+      let actuals = this.checkParameters(args, dest, new Context(wrapperFuncs));
       return wrapperFuncs.callFunction(this.namespaceName, name, actuals);
     };
     Cu.exportFunction(stub, dest, {defineAs: name});
@@ -725,8 +789,8 @@ class Event extends CallEntry {
     this.unsupported = unsupported;
   }
 
-  checkListener(global, listener) {
-    let r = this.type.normalize(listener);
+  checkListener(global, listener, context) {
+    let r = this.type.normalize(listener, context);
     if (r.error) {
       this.throwError(global, "Invalid listener");
     }
@@ -738,19 +802,21 @@ class Event extends CallEntry {
       return;
     }
 
+    let context = new Context(wrapperFuncs);
+
     let addStub = (listener, ...args) => {
-      listener = this.checkListener(dest, listener);
-      let actuals = this.checkParameters(args, dest);
+      listener = this.checkListener(dest, listener, context);
+      let actuals = this.checkParameters(args, dest, context);
       return wrapperFuncs.addListener(this.namespaceName, name, listener, actuals);
     };
 
     let removeStub = (listener) => {
-      listener = this.checkListener(dest, listener);
+      listener = this.checkListener(dest, listener, context);
       return wrapperFuncs.removeListener(this.namespaceName, name, listener);
     };
 
     let hasStub = (listener) => {
-      listener = this.checkListener(dest, listener);
+      listener = this.checkListener(dest, listener, context);
       return wrapperFuncs.hasListener(this.namespaceName, name, listener);
     };
 
@@ -783,7 +849,7 @@ this.Schemas = {
       let allowedSet = new Set([...allowedProperties, ...extra, "description"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
-          throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property "${prop}" in type "${type.name}"`);
+          throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
         }
       }
     }
@@ -1038,7 +1104,7 @@ this.Schemas = {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        entry.inject(name, obj, wrapperFuncs);
+        entry.inject(name, obj, new Context(wrapperFuncs));
       }
     }
   },
