@@ -2101,6 +2101,9 @@ this.DownloadCopySaver.prototype = {
           // In case an error occurs while setting up the chain of objects for
           // the download, ensure that we release the resources of the saver.
           backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
+          // Since we're not going to handle deferSaveComplete.promise below,
+          // we need to make sure that the rejection is handled.
+          deferSaveComplete.promise.catch(() => {});
           throw ex;
         }
 
