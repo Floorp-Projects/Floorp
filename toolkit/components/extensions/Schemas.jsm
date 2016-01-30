@@ -16,9 +16,11 @@ var {
 
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
-/* globals Schemas */
+/* globals Schemas, URL */
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
+
+Cu.importGlobalProperties(["URL"]);
 
 function readJSON(uri) {
   return new Promise((resolve, reject) => {
@@ -73,6 +75,45 @@ function getValueBaseType(value) {
   }
   return t;
 }
+
+
+/**
+ * The methods in this singleton represent the "format" specifier for
+ * JSON Schema string types.
+ *
+ * Each method either returns a normalized version of the original
+ * value, or throws an error if the value is not valid for the given
+ * format.
+ */
+const FORMATS = {
+  url(string, context) {
+    let url = new URL(string).href;
+
+    context.checkLoadURL(url);
+    return url;
+  },
+
+  relativeUrl(string, context) {
+    let url = new URL(string, context.url).href;
+
+    context.checkLoadURL(url);
+    return url;
+  },
+
+  strictRelativeUrl(string, context) {
+    // Do not accept a string which resolves as an absolute URL, or any
+    // protocol-relative URL.
+    if (!string.startsWith("//")) {
+      try {
+        new URL(string);
+      } catch (e) {
+        return FORMATS.relativeUrl(string, context);
+      }
+    }
+
+    throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
+  },
+};
 
 // Schema files contain namespaces, and each namespace contains types,
 // properties, functions, and events. An Entry is a base class for
@@ -136,9 +177,9 @@ class ChoiceType extends Type {
     this.choices = choices;
   }
 
-  normalize(value) {
+  normalize(value, context) {
     for (let choice of this.choices) {
-      let r = choice.normalize(value);
+      let r = choice.normalize(value, context);
       if (!r.error) {
         return r;
       }
@@ -162,13 +203,13 @@ class RefType extends Type {
     this.reference = reference;
   }
 
-  normalize(value) {
+  normalize(value, context) {
     let ns = Schemas.namespaces.get(this.namespaceName);
     let type = ns.get(this.reference);
     if (!type) {
       throw new Error(`Internal error: Type ${this.reference} not found`);
     }
-    return type.normalize(value);
+    return type.normalize(value, context);
   }
 
   checkBaseType(baseType) {
@@ -182,15 +223,16 @@ class RefType extends Type {
 }
 
 class StringType extends Type {
-  constructor(enumeration, minLength, maxLength, pattern) {
+  constructor(enumeration, minLength, maxLength, pattern, format) {
     super();
     this.enumeration = enumeration;
     this.minLength = minLength;
     this.maxLength = maxLength;
     this.pattern = pattern;
+    this.format = format;
   }
 
-  normalize(value) {
+  normalize(value, context) {
     let r = this.normalizeBase("string", value);
     if (r.error) {
       return r;
@@ -212,6 +254,14 @@ class StringType extends Type {
 
     if (this.pattern && !this.pattern.test(value)) {
       return {error: `String ${JSON.stringify(value)} must match ${this.pattern}`};
+    }
+
+    if (this.format) {
+      try {
+        r.value = this.format(r.value, context);
+      } catch (e) {
+        return {error: String(e)};
+      }
     }
 
     return r;
@@ -245,7 +295,7 @@ class ObjectType extends Type {
     return baseType == "object";
   }
 
-  normalize(value) {
+  normalize(value, context) {
     let v = this.normalizeBase("object", value);
     if (v.error) {
       return v;
@@ -310,7 +360,7 @@ class ObjectType extends Type {
         if (optional && (properties[prop] === null || properties[prop] === undefined)) {
           result[prop] = null;
         } else {
-          let r = type.normalize(properties[prop]);
+          let r = type.normalize(properties[prop], context);
           if (r.error) {
             return r;
           }
@@ -347,7 +397,7 @@ class ObjectType extends Type {
     if (this.additionalProperties) {
       for (let prop of remainingProps) {
         let type = this.additionalProperties;
-        let r = type.normalize(properties[prop]);
+        let r = type.normalize(properties[prop], context);
         if (r.error) {
           return r;
         }
@@ -433,7 +483,7 @@ class ArrayType extends Type {
     this.maxItems = maxItems;
   }
 
-  normalize(value) {
+  normalize(value, context) {
     let v = this.normalizeBase("array", value);
     if (v.error) {
       return v;
@@ -441,7 +491,7 @@ class ArrayType extends Type {
 
     let result = [];
     for (let element of value) {
-      element = this.itemType.normalize(element);
+      element = this.itemType.normalize(element, context);
       if (element.error) {
         return element;
       }
@@ -559,7 +609,7 @@ class CallEntry extends Entry {
     throw new global.Error(`${msg} for ${this.namespaceName}.${this.name}.`);
   }
 
-  checkParameters(args, global) {
+  checkParameters(args, global, context) {
     let fixedArgs = [];
 
     // First we create a new array, fixedArgs, that is the same as
@@ -617,7 +667,7 @@ class CallEntry extends Entry {
         return null;
       } else {
         let parameter = this.parameters[parameterIndex];
-        let r = parameter.type.normalize(arg);
+        let r = parameter.type.normalize(arg, context);
         if (r.error) {
           this.throwError(global, `Type error for parameter ${parameter.name} (${r.error})`);
         }
@@ -642,7 +692,7 @@ class FunctionEntry extends CallEntry {
     }
 
     let stub = (...args) => {
-      let actuals = this.checkParameters(args, dest);
+      let actuals = this.checkParameters(args, dest, wrapperFuncs);
       return wrapperFuncs.callFunction(this.namespaceName, name, actuals);
     };
     Cu.exportFunction(stub, dest, {defineAs: name});
@@ -743,7 +793,7 @@ this.Schemas = {
 
     // Otherwise it's a normal type...
     if (type.type == "string") {
-      checkTypeProperties("enum", "minLength", "maxLength", "pattern");
+      checkTypeProperties("enum", "minLength", "maxLength", "pattern", "format");
 
       let enumeration = type.enum || null;
       if (enumeration) {
@@ -758,6 +808,7 @@ this.Schemas = {
           }
         });
       }
+
       let pattern = null;
       if (type.pattern) {
         try {
@@ -766,10 +817,19 @@ this.Schemas = {
           throw new Error(`Internal error: Invalid pattern ${JSON.stringify(type.pattern)}`);
         }
       }
+
+      let format = null;
+      if (type.format) {
+        if (!(type.format in FORMATS)) {
+          throw new Error(`Internal error: Invalid string format ${type.format}`);
+        }
+        format = FORMATS[type.format];
+      }
       return new StringType(enumeration,
                             type.minLength || 0,
                             type.maxLength || Infinity,
-                            pattern);
+                            pattern,
+                            format);
     } else if (type.type == "object") {
       let parseProperty = (type, extraProps = []) => {
         return {

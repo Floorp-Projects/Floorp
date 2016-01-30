@@ -150,6 +150,22 @@ let json = [
          {name: "arg", type: "string", pattern: "(?i)^[0-9a-f]+$"},
        ],
      },
+
+     {
+       name: "format",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             url: {type: "string", "format": "url", "optional": true},
+             relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
+             strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
+           },
+         },
+       ],
+     },
    ],
 
    events: [
@@ -182,6 +198,15 @@ function verify(...args) {
 }
 
 let wrapper = {
+  url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
+
+  checkLoadURL(url) {
+    if (url.startsWith("chrome:")) {
+      throw new Error("Access denied");
+    }
+    return url;
+  },
+
   callFunction(ns, name, args) {
     tally("call", ns, name, args);
   },
@@ -352,6 +377,31 @@ add_task(function* () {
   Assert.throws(() => root.testing.pattern("DEADcow"),
                 /String "DEADcow" must match \/\^\[0-9a-f\]\+\$\/i/,
                 "should throw for non-match");
+
+  root.testing.format({url: "http://foo/bar",
+                       relativeUrl: "http://foo/bar"});
+  verify("call", "testing", "format", [{url: "http://foo/bar",
+                                        relativeUrl: "http://foo/bar",
+                                        strictRelativeUrl: null}]);
+  tallied = null;
+
+  root.testing.format({relativeUrl: "foo.html", strictRelativeUrl: "foo.html"});
+  verify("call", "testing", "format", [{url: null,
+                                        relativeUrl: `${wrapper.url}foo.html`,
+                                        strictRelativeUrl: `${wrapper.url}foo.html`}]);
+  tallied = null;
+
+  for (let format of ["url", "relativeUrl"]) {
+    Assert.throws(() => root.testing.format({[format]: "chrome://foo/content/"}),
+                  /Access denied/,
+                  "should throw for access denied");
+  }
+
+  for (let url of ["//foo.html", "http://foo/bar.html"]) {
+    Assert.throws(() => root.testing.format({strictRelativeUrl: url}),
+                  /must be a relative URL/,
+                  "should throw for non-relative URL");
+  }
 
   root.testing.onFoo.addListener(f);
   do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onFoo"]));
