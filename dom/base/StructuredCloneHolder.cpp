@@ -1041,7 +1041,7 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
     // This can be null.
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mParent);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mParent);
 
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];

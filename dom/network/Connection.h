@@ -33,7 +33,7 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  explicit Connection(nsPIDOMWindow *aWindow);
+  explicit Connection(nsPIDOMWindowInner* aWindow);
 
   void Shutdown();
 

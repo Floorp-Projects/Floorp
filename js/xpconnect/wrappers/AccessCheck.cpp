@@ -125,7 +125,7 @@ IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
         return false;
     }
 
-    nsCOMPtr<nsIDOMWindow> domwin;
+    nsCOMPtr<mozIDOMWindowProxy> domwin;
     if (JSID_IS_INT(id)) {
         col->Item(JSID_TO_INT(id), getter_AddRefs(domwin));
     } else if (JSID_IS_STRING(id)) {

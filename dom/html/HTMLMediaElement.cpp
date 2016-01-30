@@ -1863,7 +1863,7 @@ already_AddRefed<DOMMediaStream>
 HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
                                         MediaStreamGraph* aGraph)
 {
-  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return nullptr;
   }
@@ -3210,7 +3210,7 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 
   mSrcStream = aStream;
 
-  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return;
   }
@@ -5025,12 +5025,12 @@ already_AddRefed<nsIPrincipal>
 HTMLMediaElement::GetTopLevelPrincipal()
 {
   RefPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
+  nsCOMPtr<nsPIDOMWindowInner> window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return nullptr;
   }
-  window = window->GetOuterWindow();
-  nsCOMPtr<nsPIDOMWindow> top = window->GetTop();
+  // XXXkhuey better hope we always have an outer ...
+  nsCOMPtr<nsPIDOMWindowOuter> top = window->GetOuterWindow()->GetTop();
   if (!top) {
     return nullptr;
   }
@@ -5055,8 +5055,7 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
   if (aCapture != mAudioCapturedByWindow) {
     if (aCapture) {
       mAudioCapturedByWindow = true;
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(OwnerDoc()->GetParentObject());
+      nsCOMPtr<nsPIDOMWindowInner> window = OwnerDoc()->GetInnerWindow();
       uint64_t id = window->WindowID();
       MediaStreamGraph* msg =
         MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
@@ -5096,7 +5095,7 @@ AudioTrackList*
 HTMLMediaElement::AudioTracks()
 {
   if (!mAudioTrackList) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(OwnerDoc()->GetParentObject());
     mAudioTrackList = new AudioTrackList(window, this);
   }
   return mAudioTrackList;
@@ -5106,7 +5105,7 @@ VideoTrackList*
 HTMLMediaElement::VideoTracks()
 {
   if (!mVideoTrackList) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(OwnerDoc()->GetParentObject());
     mVideoTrackList = new VideoTrackList(window, this);
   }
   return mVideoTrackList;

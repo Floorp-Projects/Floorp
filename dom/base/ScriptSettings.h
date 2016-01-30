@@ -18,7 +18,7 @@
 #include "jsapi.h"
 #include "js/Debug.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 class nsGlobalWindow;
 class nsIScriptContext;
 class nsIDocument;
@@ -251,13 +251,13 @@ public:
 
   // Convenience functions to take an nsPIDOMWindow* or nsGlobalWindow*,
   // when it is more easily available than an nsIGlobalObject.
-  bool Init(nsPIDOMWindow* aWindow);
-  bool Init(nsPIDOMWindow* aWindow, JSContext* aCx);
+  bool Init(nsPIDOMWindowInner* aWindow);
+  bool Init(nsPIDOMWindowInner* aWindow, JSContext* aCx);
 
   bool Init(nsGlobalWindow* aWindow);
   bool Init(nsGlobalWindow* aWindow, JSContext* aCx);
 
-  bool InitWithLegacyErrorReporting(nsPIDOMWindow* aWindow);
+  bool InitWithLegacyErrorReporting(nsPIDOMWindowInner* aWindow);
   bool InitWithLegacyErrorReporting(nsGlobalWindow* aWindow);
 
   JSContext* cx() const {

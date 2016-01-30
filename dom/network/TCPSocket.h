@@ -43,7 +43,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(LegacyMozTCPSocket)
 
-  explicit LegacyMozTCPSocket(nsPIDOMWindow* aWindow);
+  explicit LegacyMozTCPSocket(nsPIDOMWindowInner* aWindow);
 
   already_AddRefed<TCPServerSocket>
   Listen(uint16_t aPort,

@@ -307,7 +307,7 @@ DOMStorageManager::DropCache(DOMStorageCache* aCache)
 
 nsresult
 DOMStorageManager::GetStorageInternal(bool aCreate,
-                                      nsIDOMWindow* aWindow,
+                                      mozIDOMWindow* aWindow,
                                       nsIPrincipal* aPrincipal,
                                       const nsAString& aDocumentURI,
                                       bool aPrivate,
@@ -358,8 +358,10 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
   }
 
   if (aRetval) {
+    nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
+
     nsCOMPtr<nsIDOMStorage> storage = new DOMStorage(
-      aWindow, this, cache, aDocumentURI, aPrincipal, aPrivate);
+      inner, this, cache, aDocumentURI, aPrincipal, aPrivate);
     storage.forget(aRetval);
   }
 
@@ -374,7 +376,7 @@ DOMStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal)
 }
 
 NS_IMETHODIMP
-DOMStorageManager::CreateStorage(nsIDOMWindow* aWindow,
+DOMStorageManager::CreateStorage(mozIDOMWindow* aWindow,
                                  nsIPrincipal* aPrincipal,
                                  const nsAString& aDocumentURI,
                                  bool aPrivate,
@@ -385,7 +387,7 @@ DOMStorageManager::CreateStorage(nsIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-DOMStorageManager::GetStorage(nsIDOMWindow* aWindow,
+DOMStorageManager::GetStorage(mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
                               bool aPrivate,
                               nsIDOMStorage** aRetval)

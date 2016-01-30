@@ -99,7 +99,7 @@ xpcAccessibleDocument::GetDOMDocument(nsIDOMDocument** aDOMDocument)
 }
 
 NS_IMETHODIMP
-xpcAccessibleDocument::GetWindow(nsIDOMWindow** aDOMWindow)
+xpcAccessibleDocument::GetWindow(mozIDOMWindowProxy** aDOMWindow)
 {
   NS_ENSURE_ARG_POINTER(aDOMWindow);
   *aDOMWindow = nullptr;

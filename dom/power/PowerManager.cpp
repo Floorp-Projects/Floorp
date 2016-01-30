@@ -41,7 +41,7 @@ PowerManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 nsresult
-PowerManager::Init(nsIDOMWindow *aWindow)
+PowerManager::Init(nsPIDOMWindowInner* aWindow)
 {
   mWindow = aWindow;
 
@@ -196,7 +196,7 @@ PowerManager::SetCpuSleepAllowed(bool aAllowed)
 }
 
 already_AddRefed<PowerManager>
-PowerManager::CreateInstance(nsPIDOMWindow* aWindow)
+PowerManager::CreateInstance(nsPIDOMWindowInner* aWindow)
 {
   RefPtr<PowerManager> powerManager = new PowerManager();
   if (NS_FAILED(powerManager->Init(aWindow))) {

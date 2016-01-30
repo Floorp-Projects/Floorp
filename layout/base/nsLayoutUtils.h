@@ -54,7 +54,7 @@ class nsIFrame;
 class nsStyleCoord;
 class nsStyleCorners;
 class gfxContext;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class imgIRequest;
 class nsIDocument;
 struct gfxPoint;
@@ -1972,7 +1972,7 @@ public:
    * complicated than it ought to be in multi-monitor situations.
    */
   static nsDeviceContext*
-  GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow);
+  GetDeviceContextForScreenInfo(nsPIDOMWindowOuter* aWindow);
 
   /**
    * Some frames with 'position: fixed' (nsStylePosition::mDisplay ==

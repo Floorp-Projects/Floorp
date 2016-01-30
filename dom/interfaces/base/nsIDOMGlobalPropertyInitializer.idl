@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMWindow.idl"
+#include "nsISupports.idl"
 
-[scriptable, uuid(6368a821-d3e2-4cbd-9699-5a8ba569e2f3)]
+interface mozIDOMWindow;
+
+[scriptable, uuid(5842e275-797f-4afb-b7e0-e29f0cb312ae)]
 interface nsIDOMGlobalPropertyInitializer : nsISupports
 {
   /*
@@ -15,5 +17,5 @@ interface nsIDOMGlobalPropertyInitializer : nsISupports
    *
    * @returns a JS Object to use use as the property's value.
    */
-  jsval init(in nsIDOMWindow window);
+  jsval init(in mozIDOMWindow window);
 };

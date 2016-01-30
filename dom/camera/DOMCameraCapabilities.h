@@ -195,10 +195,10 @@ public:
   // Great Renaming proposed in bug 983177.
   static bool HasSupport(JSContext* aCx, JSObject* aGlobal);
 
-  explicit CameraCapabilities(nsPIDOMWindow* aWindow,
+  explicit CameraCapabilities(nsPIDOMWindowInner* aWindow,
                               ICameraControl* aCameraControl);
 
-  nsPIDOMWindow* GetParentObject() const { return mWindow; }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -231,7 +231,7 @@ protected:
 
   nsresult TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& aSizes);
 
-  RefPtr<nsPIDOMWindow> mWindow;
+  RefPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<ICameraControl> mCameraControl;
   RefPtr<CameraClosedListenerProxy<CameraCapabilities>> mListener;
 

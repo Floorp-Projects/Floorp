@@ -97,8 +97,7 @@ protected:
   nsresult LoadSrc();
   nsIDocument* GetContentDocument();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
-  already_AddRefed<nsPIDOMWindow> GetContentWindow();
-  nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
+  already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 
   RefPtr<nsFrameLoader> mFrameLoader;
 

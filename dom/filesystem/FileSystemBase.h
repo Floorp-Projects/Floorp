@@ -10,7 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -39,7 +39,7 @@ public:
     return mString;
   }
 
-  virtual nsPIDOMWindow*
+  virtual nsPIDOMWindowInner*
   GetWindow() const;
 
   /**

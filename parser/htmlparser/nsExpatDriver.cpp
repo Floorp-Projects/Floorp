@@ -1247,20 +1247,20 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
   if (doc) {
-    nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
-    if (!win) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowInner> inner;
+    if (win) {
+      inner = win->GetCurrentInnerWindow();
+    } else {
       bool aHasHadScriptHandlingObject;
       nsIScriptGlobalObject *global =
         doc->GetScriptHandlingObject(aHasHadScriptHandlingObject);
       if (global) {
-        win = do_QueryInterface(global);
+        inner = do_QueryInterface(global);
       }
     }
-    if (win && !win->IsInnerWindow()) {
-      win = win->GetCurrentInnerWindow();
-    }
-    if (win) {
-      mInnerWindowID = win->WindowID();
+    if (inner) {
+      mInnerWindowID = inner->WindowID();
     }
   }
 

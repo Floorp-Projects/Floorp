@@ -16,7 +16,7 @@
 
 class nsIWidget;
 class nsIFile;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -39,7 +39,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-    NS_IMETHODIMP Init(nsIDOMWindow* aParent, const nsAString& aTitle, int16_t aMode) override;
+    NS_IMETHODIMP Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle, int16_t aMode) override;
     NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter) override;
     NS_IMETHODIMP GetDefaultString(nsAString& aDefaultString) override;
     NS_IMETHODIMP SetDefaultString(const nsAString& aDefaultString) override;

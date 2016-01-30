@@ -4469,7 +4469,7 @@ XULDocument::GetWindowRoot()
     return nullptr;
   }
 
-    nsCOMPtr<nsPIDOMWindow> piWin = mDocumentContainer->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> piWin = mDocumentContainer->GetWindow();
     return piWin ? piWin->GetTopWindowRoot() : nullptr;
 }
 

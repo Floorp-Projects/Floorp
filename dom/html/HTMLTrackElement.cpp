@@ -150,7 +150,7 @@ HTMLTrackElement::CreateTextTrack()
 
   NS_ENSURE_TRUE_VOID(parentObject);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(parentObject);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
   mTrack = new TextTrack(window, kind, label, srcLang,
                          TextTrackMode::Disabled,
                          TextTrackReadyState::NotLoaded,

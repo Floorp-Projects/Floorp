@@ -60,7 +60,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(Icc, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Icc, DOMEventTargetHelper)
 
-Icc::Icc(nsPIDOMWindow* aWindow, nsIIcc* aHandler, nsIIccInfo* aIccInfo)
+Icc::Icc(nsPIDOMWindowInner* aWindow, nsIIcc* aHandler, nsIIccInfo* aIccInfo)
   : mLive(true)
   , mHandler(aHandler)
 {

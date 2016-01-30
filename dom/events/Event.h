@@ -53,7 +53,7 @@ public:
   Event(EventTarget* aOwner,
         nsPresContext* aPresContext,
         WidgetEvent* aEvent);
-  explicit Event(nsPIDOMWindow* aWindow);
+  explicit Event(nsPIDOMWindowInner* aWindow);
 
 protected:
   virtual ~Event();

@@ -27,9 +27,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Permissions)
 
-  explicit Permissions(nsPIDOMWindow* aWindow);
+  explicit Permissions(nsPIDOMWindowInner* aWindow);
 
-  nsPIDOMWindow* GetParentObject() const { return mWindow; }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -41,7 +41,7 @@ public:
 private:
   ~Permissions();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 } // namespace dom

@@ -34,7 +34,7 @@ Activity::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 nsresult
-Activity::Initialize(nsPIDOMWindow* aWindow,
+Activity::Initialize(nsPIDOMWindowInner* aWindow,
                      JSContext* aCx,
                      const ActivityOptions& aOptions)
 {
@@ -97,7 +97,7 @@ Activity::~Activity()
   }
 }
 
-Activity::Activity(nsPIDOMWindow* aWindow)
+Activity::Activity(nsPIDOMWindowInner* aWindow)
   : DOMRequest(aWindow)
 {
 }

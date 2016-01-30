@@ -19,7 +19,7 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -79,7 +79,7 @@ public:
   AbortFileHandles();
 
   // WebIDL
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();

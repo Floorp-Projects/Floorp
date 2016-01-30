@@ -121,8 +121,8 @@ public:
 protected:
   virtual ~nsSelectionCommandsBase() {}
 
-  static nsresult  GetPresShellFromWindow(nsPIDOMWindow *aWindow, nsIPresShell **aPresShell);
-  static nsresult  GetSelectionControllerFromWindow(nsPIDOMWindow *aWindow, nsISelectionController **aSelCon);
+  static nsresult  GetPresShellFromWindow(nsPIDOMWindowOuter *aWindow, nsIPresShell **aPresShell);
+  static nsresult  GetSelectionControllerFromWindow(nsPIDOMWindowOuter *aWindow, nsISelectionController **aSelCon);
 
   // no member variables, please, we're stateless!
 };
@@ -203,7 +203,7 @@ nsSelectionCommandsBase::DoCommandParams(const char *aCommandName,
 // protected methods
 
 nsresult
-nsSelectionCommandsBase::GetPresShellFromWindow(nsPIDOMWindow *aWindow, nsIPresShell **aPresShell)
+nsSelectionCommandsBase::GetPresShellFromWindow(nsPIDOMWindowOuter *aWindow, nsIPresShell **aPresShell)
 {
   *aPresShell = nullptr;
   NS_ENSURE_TRUE(aWindow, NS_ERROR_FAILURE);
@@ -216,7 +216,7 @@ nsSelectionCommandsBase::GetPresShellFromWindow(nsPIDOMWindow *aWindow, nsIPresS
 }
 
 nsresult
-nsSelectionCommandsBase::GetSelectionControllerFromWindow(nsPIDOMWindow *aWindow, nsISelectionController **aSelCon)
+nsSelectionCommandsBase::GetSelectionControllerFromWindow(nsPIDOMWindowOuter *aWindow, nsISelectionController **aSelCon)
 {
   *aSelCon = nullptr;
 
@@ -234,7 +234,7 @@ nsSelectionCommandsBase::GetSelectionControllerFromWindow(nsPIDOMWindow *aWindow
 
 // Helpers for nsSelectMoveScrollCommand and nsPhysicalSelectMoveScrollCommand
 static void
-AdjustFocusAfterCaretMove(nsPIDOMWindow* aWindow)
+AdjustFocusAfterCaretMove(nsPIDOMWindowOuter* aWindow)
 {
   // adjust the focus to the new caret position
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -246,7 +246,7 @@ AdjustFocusAfterCaretMove(nsPIDOMWindow* aWindow)
 }
 
 static bool
-IsCaretOnInWindow(nsPIDOMWindow* aWindow, nsISelectionController* aSelCont)
+IsCaretOnInWindow(nsPIDOMWindowOuter* aWindow, nsISelectionController* aSelCont)
 {
   // We allow the caret to be moved with arrow keys on any window for which
   // the caret is enabled. In particular, this includes caret-browsing mode
@@ -301,7 +301,7 @@ static const struct BrowseCommand {
 nsresult
 nsSelectMoveScrollCommand::DoCommand(const char *aCommandName, nsISupports *aCommandContext)
 {
-  nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aCommandContext));
+  nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
@@ -354,7 +354,7 @@ nsresult
 nsPhysicalSelectMoveScrollCommand::DoCommand(const char *aCommandName,
                                              nsISupports *aCommandContext)
 {
-  nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aCommandContext));
+  nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
@@ -406,7 +406,7 @@ nsresult
 nsSelectCommand::DoCommand(const char *aCommandName,
                            nsISupports *aCommandContext)
 {
-  nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aCommandContext));
+  nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
@@ -444,7 +444,7 @@ nsresult
 nsPhysicalSelectCommand::DoCommand(const char *aCommandName,
                                    nsISupports *aCommandContext)
 {
-  nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aCommandContext));
+  nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
   NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
@@ -487,7 +487,7 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
       strcmp(aCommandName, "cmd_cut"))
     return NS_OK;
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
@@ -511,7 +511,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
       strcmp(aCommandName, "cmd_copyAndCollapseToEnd"))
     return NS_OK;
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsIDocShell *docShell = window->GetDocShell();
@@ -640,7 +640,7 @@ nsSelectionCommand::GetContentViewerEditFromContext(nsISupports *aContext,
   NS_ENSURE_ARG(aEditInterface);
   *aEditInterface = nullptr;
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
 
   nsIDocShell *docShell = window->GetDocShell();
@@ -932,7 +932,7 @@ nsClipboardDragDropHookCommand::DoCommandParams(const char *aCommandName,
 {
   NS_ENSURE_ARG(aParams);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aCommandContext);
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aCommandContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsIDocShell *docShell = window->GetDocShell();

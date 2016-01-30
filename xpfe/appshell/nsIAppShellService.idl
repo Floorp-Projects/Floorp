@@ -8,7 +8,7 @@
 interface nsIXULWindow;
 interface nsIWindowlessBrowser;
 interface nsIURI;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIAppShell;
 interface nsITabParent;
 
@@ -18,7 +18,7 @@ interface nsITabParent;
 #include "js/TypeDecls.h"
 %}
 
-[scriptable, uuid(0cc1c790-6873-4b31-944f-71d3725e373d)]
+[scriptable, uuid(19266025-354c-4bb9-986b-3483b2b1cdef)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -84,7 +84,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  readonly attribute nsIDOMWindow hiddenDOMWindow;
+  readonly attribute mozIDOMWindowProxy hiddenDOMWindow;
 
   /**
    * Return the (singleton) application hidden private window, automatically
@@ -102,7 +102,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden private window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  readonly attribute nsIDOMWindow hiddenPrivateDOMWindow;
+  readonly attribute mozIDOMWindowProxy hiddenPrivateDOMWindow;
 
   /**
    * Return the (singleton) application hidden window as an nsIDOMWindow,
@@ -112,7 +112,7 @@ interface nsIAppShellService : nsISupports
    * @aJSContext       the corresponding JavaScript context
    */
   [noscript]
-  void getHiddenWindowAndJSContext(out nsIDOMWindow aHiddenDOMWindow,
+  void getHiddenWindowAndJSContext(out mozIDOMWindowProxy aHiddenDOMWindow,
                                    out JSContext aJSContext);
 
   /**

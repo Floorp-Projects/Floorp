@@ -15,7 +15,7 @@ interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
 interface nsITaskbarOverlayIconController;
 interface nsIJumpListBuilder;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 /*
  * nsIWinTaskbar
@@ -49,7 +49,7 @@ interface nsIDOMWindow;
  * See nsIJumpListBuilder for more information.
  */
 
-[scriptable, uuid(3232f40a-e94b-432d-9496-096abf1387bd)]
+[scriptable, uuid(11751471-9246-4c72-a80f-0c7df765d640)]
 interface nsIWinTaskbar : nsISupports
 {
   /**
@@ -149,7 +149,7 @@ interface nsIWinTaskbar : nsISupports
    * @throw NS_ERROR_FAILURE if the property on the window could not be set.
    * @throw NS_ERROR_UNEXPECTED for general failures.
    */
-  void setGroupIdForWindow(in nsIDOMWindow aParent, in AString aIdentifier);
+  void setGroupIdForWindow(in mozIDOMWindow aParent, in AString aIdentifier);
 
   /**
    * Notify the taskbar that a window is about to enter full screen mode.
@@ -161,7 +161,7 @@ interface nsIWinTaskbar : nsISupports
    * @throw NS_ERROR_UNEXPECTED for general failures.
    * @throw NS_ERROR_NOT_AVAILABLE if the taskbar cannot be obtained.
    */
-  void prepareFullScreen(in nsIDOMWindow aWindow, in boolean aFullScreen);
+  void prepareFullScreen(in mozIDOMWindow aWindow, in boolean aFullScreen);
 
   /**
    * Notify the taskbar that a window identified by its HWND is about to enter

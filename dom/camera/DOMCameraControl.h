@@ -24,7 +24,7 @@
 #endif
 
 class nsDOMDeviceStorage;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 class nsIDOMBlob;
 
 namespace mozilla {
@@ -66,11 +66,11 @@ public:
   nsDOMCameraControl(uint32_t aCameraId,
                      const dom::CameraConfiguration& aInitialConfig,
                      dom::Promise* aPromise,
-                     nsPIDOMWindow* aWindow);
+                     nsPIDOMWindowInner* aWindow);
 
   void Shutdown();
 
-  nsPIDOMWindow* GetParentObject() const { return mWindow; }
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   MediaStream* GetCameraStream() const override;
 
@@ -235,7 +235,7 @@ protected:
   RefPtr<TrackCreatedListener> mTrackCreatedListener;
 
   // set once when this object is created
-  nsCOMPtr<nsPIDOMWindow>   mWindow;
+  nsCOMPtr<nsPIDOMWindowInner>   mWindow;
 
   dom::CameraStartRecordingOptions mOptions;
   RefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;

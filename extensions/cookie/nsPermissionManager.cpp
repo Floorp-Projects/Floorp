@@ -1968,19 +1968,15 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestPermissionFromWindow(nsIDOMWindow* aWindow,
+nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
                                               const char* aType,
                                               uint32_t* aPermission)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(window, NS_NOINTERFACE);
-
-  nsPIDOMWindow* innerWindow = window->IsInnerWindow() ?
-    window.get() :
-    window->GetCurrentInnerWindow();
+  NS_ENSURE_ARG(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
 
   // Get the document for security check
-  nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
+  nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
   NS_ENSURE_TRUE(document, NS_NOINTERFACE);
 
   nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();

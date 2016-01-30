@@ -47,7 +47,7 @@ MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
                            ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -63,7 +63,7 @@ MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
   return isoDep.forget();
 }
 
-MozIsoDepTech::MozIsoDepTech(nsPIDOMWindow* aWindow, MozNFCTag& aNFCTag)
+MozIsoDepTech::MozIsoDepTech(nsPIDOMWindowInner* aWindow, MozNFCTag& aNFCTag)
  : mWindow(aWindow)
  , mTag(&aNFCTag)
 {

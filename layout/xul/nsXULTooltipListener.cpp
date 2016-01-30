@@ -564,7 +564,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     NS_WARNING("Unable to retrieve the tooltip node document.");
     return NS_ERROR_FAILURE;
   }
-  nsPIDOMWindow *window = document->GetWindow();
+  nsPIDOMWindowOuter *window = document->GetWindow();
   if (!window) {
     return NS_OK;
   }

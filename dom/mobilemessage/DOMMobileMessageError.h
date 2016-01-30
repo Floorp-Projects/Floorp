@@ -22,10 +22,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMMobileMessageError, DOMError)
 
-  DOMMobileMessageError(nsPIDOMWindow* aWindow, const nsAString& aName,
+  DOMMobileMessageError(nsPIDOMWindowInner* aWindow, const nsAString& aName,
                         SmsMessage* aSms);
 
-  DOMMobileMessageError(nsPIDOMWindow* aWindow, const nsAString& aName,
+  DOMMobileMessageError(nsPIDOMWindowInner* aWindow, const nsAString& aName,
                         MmsMessage* aMms);
 
   virtual JSObject*

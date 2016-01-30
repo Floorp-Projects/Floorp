@@ -81,15 +81,14 @@ GetDOMEventTarget(nsWebBrowser* aInBrowser, EventTarget** aTarget)
     return NS_ERROR_INVALID_POINTER;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<mozIDOMWindowProxy> domWindow;
   aInBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   if (!domWindow) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
-  NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
-  nsPIDOMWindow* rootWindow = domWindowPrivate->GetPrivateRoot();
+  auto* outerWindow = nsPIDOMWindowOuter::From(domWindow);
+  nsPIDOMWindowOuter* rootWindow = outerWindow->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
   nsCOMPtr<EventTarget> target = rootWindow->GetChromeEventHandler();
   NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
@@ -266,7 +265,7 @@ nsDocShellTreeOwner::EnsurePrompter()
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch && mWebBrowser) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
       wwatch->GetNewPrompter(domWindow, getter_AddRefs(mPrompter));
@@ -283,7 +282,7 @@ nsDocShellTreeOwner::EnsureAuthPrompter()
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch && mWebBrowser) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
       wwatch->GetNewAuthPrompter(domWindow, getter_AddRefs(mAuthPrompter));
@@ -295,7 +294,7 @@ void
 nsDocShellTreeOwner::AddToWatcher()
 {
   if (mWebBrowser) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
       nsCOMPtr<nsPIWindowWatcher> wwatch(
@@ -314,7 +313,7 @@ void
 nsDocShellTreeOwner::RemoveFromWatcher()
 {
   if (mWebBrowser) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
     if (domWindow) {
       nsCOMPtr<nsPIWindowWatcher> wwatch(
@@ -1768,13 +1767,12 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   // so we can get at it later from command code, etc.:
 
   // get the dom window
-  nsCOMPtr<nsIDOMWindow> win;
+  nsCOMPtr<mozIDOMWindowProxy> win;
   res = mWebBrowser->GetContentDOMWindow(getter_AddRefs(win));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(win));
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  auto* window = nsPIDOMWindowOuter::From(win);
   nsCOMPtr<nsPIWindowRoot> root = window->GetTopWindowRoot();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
   if (root) {

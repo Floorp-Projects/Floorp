@@ -346,7 +346,7 @@ IsPresContextInScriptAnimationCallback(nsPresContext* aPresContext)
   }
   // Treat timeouts/setintervals as scripted animation callbacks for our
   // purposes.
-  nsPIDOMWindow* win = aPresContext->Document()->GetInnerWindow();
+  nsPIDOMWindowInner* win = aPresContext->Document()->GetInnerWindow();
   return win && win->IsRunningTimeout();
 }
 

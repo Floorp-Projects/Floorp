@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DataStore,
                                            DOMEventTargetHelper)
 
-  explicit DataStore(nsPIDOMWindow* aWindow);
+  explicit DataStore(nsPIDOMWindowInner* aWindow);
 
   // WebIDL (internal functions)
 

@@ -40,14 +40,13 @@ public:
 
   void InitDragEvent(const nsAString& aType,
                      bool aCanBubble, bool aCancelable,
-                     nsIDOMWindow* aView, int32_t aDetail,
+                     nsGlobalWindow* aView, int32_t aDetail,
                      int32_t aScreenX, int32_t aScreenY,
                      int32_t aClientX, int32_t aClientY,
                      bool aCtrlKey, bool aAltKey, bool aShiftKey,
                      bool aMetaKey, uint16_t aButton,
                      EventTarget* aRelatedTarget,
-                     DataTransfer* aDataTransfer,
-                     ErrorResult& aError);
+                     DataTransfer* aDataTransfer);
 
   static already_AddRefed<DragEvent> Constructor(const GlobalObject& aGlobal,
                                                  const nsAString& aType,

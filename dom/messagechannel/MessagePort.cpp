@@ -12,6 +12,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageChannel.h"
+#include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/MessagePortList.h"
@@ -116,7 +117,7 @@ public:
 
     JSContext* cx = jsapi.cx();
 
-    nsCOMPtr<nsPIDOMWindow> window =
+    nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(mPort->GetParentObject());
 
     ErrorResult rv;
@@ -133,10 +134,10 @@ public:
     RefPtr<MessageEvent> event =
       new MessageEvent(eventTarget, nullptr, nullptr);
 
-    event->InitMessageEvent(NS_LITERAL_STRING("message"),
+    event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                             false /* non-bubbling */,
                             false /* cancelable */, value, EmptyString(),
-                            EmptyString(), nullptr);
+                            EmptyString(), nullptr, nullptr);
     event->SetTrusted(true);
     event->SetSource(mPort);
 
@@ -282,7 +283,7 @@ NS_IMPL_ISUPPORTS(ForceCloseHelper, nsIIPCBackgroundChildCreateCallback)
 
 } // namespace
 
-MessagePort::MessagePort(nsPIDOMWindow* aWindow)
+MessagePort::MessagePort(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mInnerID(0)
   , mMessageQueueEnabled(false)
@@ -300,7 +301,7 @@ MessagePort::~MessagePort()
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsPIDOMWindow* aWindow, const nsID& aUUID,
+MessagePort::Create(nsPIDOMWindowInner* aWindow, const nsID& aUUID,
                     const nsID& aDestinationUUID, ErrorResult& aRv)
 {
   RefPtr<MessagePort> mp = new MessagePort(aWindow);
@@ -310,7 +311,7 @@ MessagePort::Create(nsPIDOMWindow* aWindow, const nsID& aUUID,
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsPIDOMWindow* aWindow,
+MessagePort::Create(nsPIDOMWindowInner* aWindow,
                     const MessagePortIdentifier& aIdentifier,
                     ErrorResult& aRv)
 {
@@ -966,7 +967,7 @@ MessagePort::RemoveDocFromBFCache()
     return;
   }
 
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   if (!window) {
     return;
   }

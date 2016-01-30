@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[uuid(60ab25b9-3246-4f50-b0d4-21e73ba88cd6)]
+[uuid(012a8982-c9d3-4614-91e2-18ee51c97c06)]
 interface nsIDOMHTMLFrameElement : nsISupports
 {
            attribute DOMString        frameBorder;
@@ -29,5 +29,4 @@ interface nsIDOMHTMLFrameElement : nsISupports
            attribute DOMString        src;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
-  readonly attribute nsIDOMWindow     contentWindow;
 };

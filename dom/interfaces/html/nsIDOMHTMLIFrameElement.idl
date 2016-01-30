@@ -32,7 +32,6 @@ interface nsIDOMHTMLIFrameElement : nsISupports
            attribute DOMString        width;
   // Introduced in DOM Level 2:
   readonly attribute nsIDOMDocument   contentDocument;
-  readonly attribute nsIDOMWindow     contentWindow;
 
            attribute boolean          allowFullscreen;
 };
