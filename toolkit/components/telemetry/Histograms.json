@@ -3240,6 +3240,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "PLACES: Number of unique pages"
   },
+  "PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS": {
+    "alert_emails": ["mbonardo@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 30,
+    "high": 730,
+    "n_buckets": 12,
+    "description": "PLACES: the most recent expired visit in days"
+  },
   "PLACES_BOOKMARKS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",

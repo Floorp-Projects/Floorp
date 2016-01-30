@@ -149,10 +149,15 @@ function BrowserLoader(baseURI, window) {
   const mainLoader = loaders.Loader(opts);
   const require = loaders.Require(mainLoader, mainModule);
 
-  if(hotReloadEnabled) {
+  if (hotReloadEnabled) {
     const watcher = devtools.require("devtools/client/shared/file-watcher");
-    watcher.on("file-changed", (_, fileURI) => {
+    function onFileChanged(_, fileURI) {
       hotReloadFile(window, require, mainLoader, componentProxies, fileURI);
+    }
+    watcher.on("file-changed", onFileChanged);
+
+    window.addEventListener("unload", () => {
+      watcher.off("file-changed", onFileChanged);
     });
   }
 

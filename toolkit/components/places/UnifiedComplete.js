@@ -582,9 +582,11 @@ function stripHttpAndTrim(spec) {
  * @return String representation of the built moz-action: URL
  */
 function makeActionURL(action, params) {
-  let url = "moz-action:" + action + "," + JSON.stringify(params);
-  // Make a nsIURI out of this to ensure it's encoded properly.
-  return NetUtil.newURI(url).spec;
+  let encodedParams = {};
+  for (let key in params) {
+    encodedParams[key] = encodeURIComponent(params[key]);
+  }
+  return "moz-action:" + action + "," + JSON.stringify(encodedParams);
 }
 
 /**
@@ -1307,14 +1309,22 @@ Search.prototype = {
       return false;
     }
 
+    // getFixupURIInfo() escaped the URI, so it may not be pretty.  Embed the
+    // escaped URL in the action URI since that URL should be "canonical".  But
+    // pass the pretty, unescaped URL as the match comment, since it's likely
+    // to be displayed to the user, and in any case the front-end should not
+    // rely on it being canonical.
+    let escapedURL = uri.spec;
+    let displayURL = textURIService.unEscapeURIForUI("UTF-8", uri.spec);
+
     let value = makeActionURL("visiturl", {
-      url: uri.spec,
+      url: escapedURL,
       input: this._originalSearchString,
     });
 
     let match = {
       value: value,
-      comment: uri.spec,
+      comment: displayURL,
       style: "action visiturl",
       frecency: 0,
     };

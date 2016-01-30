@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+		<meta charset="UTF-8">
+		<title>Count Microformats</title>
+		<meta name="description" content="microformat-shiv - A light-weight cross browser javascript microformats 2 parser" />
+
+        <link rel="stylesheet" href="css/testrunner.css">
+        <link rel="stylesheet" href="css/prettify.css">
+		
+		
+		<!-- loads Modules to help with debugging ie windows.Modules -->
+		<script src="../../lib/utilities.js"></script>
+		<script src="../../lib/domutils.js"></script>
+		<script src="../../lib/url.js"></script>
+		<script src="../../lib/html.js"></script>
+		<script src="../../lib/text.js"></script>
+		<script src="../../lib/dates.js"></script>
+		<script src="../../lib/isodate.js"></script>
+		<script src="../../lib/parser.js"></script>
+		<script src="../../lib/parser-implied.js"></script>
+		<script src="../../lib/parser-includes.js"></script>
+		<script src="../../lib/parser-rels.js"></script>
+		
+		<script src="../../lib/maps/h-adr.js"></script>
+		<script src="../../lib/maps/h-card.js"></script>
+		<script src="../../lib/maps/h-entry.js"></script>
+		<script src="../../lib/maps/h-event.js"></script>
+		<script src="../../lib/maps/h-feed.js"></script>
+		<script src="../../lib/maps/h-geo.js"></script>
+		<script src="../../lib/maps/h-item.js"></script>
+		<script src="../../lib/maps/h-listing.js"></script>
+		<script src="../../lib/maps/h-news.js"></script>
+		<script src="../../lib/maps/h-org.js"></script>
+		<script src="../../lib/maps/h-product.js"></script>
+		<script src="../../lib/maps/h-recipe.js"></script>
+		<script src="../../lib/maps/h-resume.js"></script>
+		<script src="../../lib/maps/h-review-aggregate.js"></script>
+		<script src="../../lib/maps/h-review.js"></script>
+		<script src="../../lib/maps/rel.js"></script>
+		
+			
+		<script src="javascript/beautify.js"></script>
+        <script src="javascript/prettify.js"></script>	
+			
+		<script src="javascript/count.js"></script>	
+
+	</head>
+	
+	<body>
+        
+		<p>microformat-shiv</p>
+        <h1>Count Microformats</h1>
+		<p>Type or copy and paste the HTML you want to parse into the box below.</p>
+        
+                <form id="mf-form" class="tool-interface" method="get" action="">
+	          		<p>
+	          			<label for="html">HTML</label>
+<textarea id="html" name="html">&lt;a class="h-card" href="http://glennjones.net"&gt;
+     &lt;span class="p-given-name"&gt;Glenn&lt;/span&gt;
+     &lt;span class="p-family-name"&gt;Jones&lt;/span&gt;
+&lt;/a&gt;
+&lt;a class="h-card" href="http://janedoe.net"&gt;
+     &lt;span class="p-given-name"&gt;Jane&lt;/span&gt;
+     &lt;span class="p-family-name"&gt;Doe&lt;/span&gt;
+&lt;/a&gt;
+&lt;a class="h-event" href="http://janedoe.net"&gt;
+     &lt;span class="p-name"&gt;Event&lt;/span&gt;
+     &lt;span class="dt-start"&gt;2015-07-01&lt;/span&gt;
+&lt;/a&gt;
+</textarea>
+	          		</p>
+					  
+	          		<input class="button" value="Count" type="submit">
+	         	</form>
+                 
+             <h1>Parser JSON</h1>
+            <div id="parser-json"><pre class="prettyprint"><code class="language-json"></code></pre></div>
+
+ 
+	
+	</body>
+</html>

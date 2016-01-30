@@ -484,12 +484,20 @@ this.MessageChannel = {
           result: this.RESULT_ERROR,
           messageName: data.channelId,
           recipient: {},
-          error,
+          error: {},
         };
 
         if (error && typeof(error) == "object") {
           if (error.result) {
             response.result = error.result;
+          }
+          // Error objects are not structured-clonable, so just copy
+          // over the important properties.
+          for (let key of ["fileName", "filename", "lineNumber",
+                           "columnNumber", "message", "stack", "result"]) {
+            if (key in error) {
+              response.error[key] = error[key];
+            }
           }
         }
 
@@ -513,7 +521,7 @@ this.MessageChannel = {
     } else if (data.result === this.RESULT_SUCCESS) {
       handler.resolve(data.value);
     } else {
-      handler.reject(data);
+      handler.reject(data.error);
     }
   },
 
