@@ -33,7 +33,7 @@ namespace js {
 template <typename T,
           size_t MinInlineCapacity = 0,
           typename AllocPolicy = TempAllocPolicy>
-class GCVector : public JS::Traceable
+class GCVector
 {
     mozilla::Vector<T, MinInlineCapacity, AllocPolicy> vector;
 

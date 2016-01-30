@@ -1049,7 +1049,7 @@ struct DefaultHasher<AbstractFramePtr> {
 // entries that must be scanned through, and to avoid the headaches of
 // maintaining a cache for each compartment and invalidating stale cache entries
 // in the presence of cross-compartment calls.
-class LiveSavedFrameCache : public JS::Traceable
+class LiveSavedFrameCache
 {
   public:
     using FramePtr = mozilla::Variant<AbstractFramePtr, jit::CommonFrameLayout*>;
@@ -1102,7 +1102,7 @@ class LiveSavedFrameCache : public JS::Traceable
     }
 
     static mozilla::Maybe<FramePtr> getFramePtr(FrameIter& iter);
-    static void trace(LiveSavedFrameCache* cache, JSTracer* trc);
+    void trace(JSTracer* trc);
 
     void find(JSContext* cx, FrameIter& frameIter, MutableHandleSavedFrame frame) const;
     bool insert(JSContext* cx, FramePtr& framePtr, jsbytecode* pc, HandleSavedFrame savedFrame);

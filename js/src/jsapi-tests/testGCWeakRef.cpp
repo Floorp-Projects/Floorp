@@ -10,13 +10,13 @@
 
 #include "jsapi-tests/tests.h"
 
-struct MyHeap : JS::Traceable
+struct MyHeap
 {
     explicit MyHeap(JSObject* obj) : weak(obj) {}
     js::WeakRef<JSObject*> weak;
 
-    static void trace(MyHeap* self, JSTracer* trc) {
-        js::TraceWeakEdge(trc, &self->weak, "weak");
+    void trace(JSTracer* trc) {
+        js::TraceWeakEdge(trc, &weak, "weak");
     }
 };
 

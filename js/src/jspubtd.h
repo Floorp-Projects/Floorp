@@ -242,6 +242,13 @@ class JS_PUBLIC_API(AutoGCRooter)
     void operator=(AutoGCRooter& ida) = delete;
 };
 
+// Our instantiations of Rooted<void*> and PersistentRooted<void*> require an
+// instantiation of MapTypeToRootKind.
+template <>
+struct MapTypeToRootKind<void*> {
+    static const RootKind kind = RootKind::Traceable;
+};
+
 } /* namespace JS */
 
 namespace js {
