@@ -32,7 +32,7 @@ nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_t aElemAlign) const
   // mAutoBuf.  So just cast |this| to nsAutoArray* and read &mAutoBuf!
 
   const void* autoBuf =
-    &reinterpret_cast<const nsAutoArrayBase<nsTArray<uint32_t>, 1>*>(this)->mAutoBuf;
+    &reinterpret_cast<const AutoTArray<nsTArray<uint32_t>, 1>*>(this)->mAutoBuf;
 
   // If we're on a 32-bit system and aElemAlign is 8, we need to adjust our
   // pointer to take into account the extra alignment in the auto array.
@@ -89,7 +89,7 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
   // Note that this means that we can't store elements with alignment 16 in an
   // nsTArray, because GetAutoArrayBuffer(16) could lie outside the memory
   // owned by this AutoTArray.  We statically assert that elem_type's
-  // alignment is 8 bytes or less in nsAutoArrayBase.
+  // alignment is 8 bytes or less in AutoTArray.
 
   static_assert(sizeof(nsTArrayHeader) > 4,
                 "see comment above");
@@ -403,7 +403,7 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
   // job for AutoTArray!  (One of the two arrays we're swapping is using an
   // auto buffer, so we're likely not allocating a lot of space here.  But one
   // could, in theory, allocate a huge AutoTArray on the heap.)
-  nsAutoArrayBase<nsTArray_Impl<uint8_t, ActualAlloc>, 64> temp;
+  AutoTArray<nsTArray_Impl<uint8_t, ActualAlloc>, 64> temp;
   if (!ActualAlloc::Successful(temp.template EnsureCapacity<ActualAlloc>(smallerLength,
                                                                          aElemSize))) {
     return ActualAlloc::FailureResult();
