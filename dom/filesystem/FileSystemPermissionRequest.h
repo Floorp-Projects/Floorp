@@ -12,7 +12,7 @@
 #include "nsIContentPermissionPrompt.h"
 #include "nsString.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -40,7 +40,7 @@ private:
   nsCString mPermissionType;
   nsCString mPermissionAccess;
   RefPtr<FileSystemTaskBase> mTask;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };

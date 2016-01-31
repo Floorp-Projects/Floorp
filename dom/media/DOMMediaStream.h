@@ -291,7 +291,7 @@ public:
                                            DOMEventTargetHelper)
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMMEDIASTREAM_IID)
 
-  nsIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mWindow;
   }
@@ -449,21 +449,21 @@ public:
   /**
    * Create a DOMMediaStream whose underlying input stream is a SourceMediaStream.
    */
-  static already_AddRefed<DOMMediaStream> CreateSourceStream(nsIDOMWindow* aWindow,
-                                                             MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream>
+  CreateSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
 
   /**
    * Create a DOMMediaStream whose underlying input stream is a TrackUnionStream.
    */
-  static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                                                                 MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream>
+  CreateTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
 
   /**
    * Create an DOMMediaStream whose underlying input stream is an
    * AudioCaptureStream.
    */
-  static already_AddRefed<DOMMediaStream> CreateAudioCaptureStream(
-    nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream>
+  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
 
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
@@ -511,9 +511,9 @@ protected:
   virtual ~DOMMediaStream();
 
   void Destroy();
-  void InitSourceStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
-  void InitTrackUnionStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
-  void InitAudioCaptureStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
+  void InitSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  void InitTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  void InitAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
 
   // Sets up aStream as mInputStream. A producer may append data to a
   // SourceMediaStream input stream, or connect another stream to a
@@ -557,7 +557,7 @@ protected:
   StreamTime mLogicalStreamStartTime;
 
   // We need this to track our parent object.
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
   // MediaStreams are owned by the graph, but we tell them when to die,
   // and they won't die until we let them.
@@ -644,21 +644,22 @@ public:
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow,
+  CreateSourceStream(nsPIDOMWindowInner* aWindow,
                      MediaStreamGraph* aGraph);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow,
+  CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                          MediaStreamGraph* aGraph);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is an
    * AudioCaptureStream. */
-  static already_AddRefed<DOMLocalMediaStream> CreateAudioCaptureStream(
-    nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMLocalMediaStream>
+  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
+                           MediaStreamGraph* aGraph);
 
 protected:
   virtual ~DOMLocalMediaStream();
@@ -682,7 +683,7 @@ public:
    * Create a DOMAudioNodeMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMAudioNodeMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow,
+  CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                          AudioNode* aNode,
                          MediaStreamGraph* aGraph);
 
@@ -706,7 +707,8 @@ class DOMHwMediaStream : public DOMLocalMediaStream
 public:
   DOMHwMediaStream();
 
-  static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsIDOMWindow* aWindow, OverlayImage* aImage = nullptr);
+  static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsPIDOMWindowInner* aWindow,
+                                                           OverlayImage* aImage = nullptr);
   virtual DOMHwMediaStream* AsDOMHwMediaStream() override { return this; }
   int32_t RequestOverlayId();
   void SetOverlayId(int32_t aOverlayId);

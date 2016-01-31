@@ -194,13 +194,13 @@ OfflineCacheUpdateParent::ApplicationCacheAvailable(nsIApplicationCache *aApplic
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetAssociatedWindow(nsIDOMWindow * *aAssociatedWindow)
+OfflineCacheUpdateParent::GetAssociatedWindow(mozIDOMWindowProxy** aAssociatedWindow)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetTopWindow(nsIDOMWindow * *aTopWindow)
+OfflineCacheUpdateParent::GetTopWindow(mozIDOMWindowProxy** aTopWindow)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

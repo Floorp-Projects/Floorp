@@ -85,10 +85,10 @@ public:
    * Others
    ***************************************************************************/
   static already_AddRefed<BluetoothDevice>
-    Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
+    Create(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);
 
   void Notify(const BluetoothSignal& aParam); // BluetoothSignalObserver
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return GetOwner();
   }
@@ -98,7 +98,7 @@ public:
   virtual void DisconnectFromOwner() override;
 
 private:
-  BluetoothDevice(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
+  BluetoothDevice(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);
   ~BluetoothDevice();
 
   /**

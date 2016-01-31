@@ -526,6 +526,11 @@ bool
 js::proxy_create(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject create(cx, &args.callee());
+    if (!GlobalObject::warnOnceAboutProxyCreate(cx, create))
+        return false;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "create", "0", "s");
@@ -555,6 +560,11 @@ bool
 js::proxy_createFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject createFunction(cx, &args.callee());
+    if (!GlobalObject::warnOnceAboutProxyCreate(cx, createFunction))
+        return false;
+
     if (args.length() < 2) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "createFunction", "1", "");

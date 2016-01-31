@@ -172,13 +172,13 @@ public:
                              ErrorResult& aRv,
                              JSCompartment* aCompartment) override;
 
-  explicit nsDOMDeviceStorage(nsPIDOMWindow* aWindow);
+  explicit nsDOMDeviceStorage(nsPIDOMWindowInner* aWindow);
 
   static int InstanceCount() { return sInstanceCount; }
 
   static void InvalidateVolumeCaches();
 
-  nsresult Init(nsPIDOMWindow* aWindow, const nsAString& aType,
+  nsresult Init(nsPIDOMWindowInner* aWindow, const nsAString& aType,
                 const nsAString& aVolName);
 
   bool IsAvailable();
@@ -191,7 +191,7 @@ public:
                                const nsAString& aVolName);
 
   // WebIDL
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -264,17 +264,17 @@ public:
   GetRoot(ErrorResult& aRv);
 
   static void
-  CreateDeviceStorageFor(nsPIDOMWindow* aWin,
+  CreateDeviceStorageFor(nsPIDOMWindowInner* aWin,
                          const nsAString& aType,
                          nsDOMDeviceStorage** aStore);
 
   static void
-  CreateDeviceStorageByNameAndType(nsPIDOMWindow* aWin,
+  CreateDeviceStorageByNameAndType(nsPIDOMWindowInner* aWin,
                                    const nsAString& aName,
                                    const nsAString& aType,
                                    nsDOMDeviceStorage** aStore);
 
-  bool Equals(nsPIDOMWindow* aWin,
+  bool Equals(nsPIDOMWindowInner* aWin,
               const nsAString& aName,
               const nsAString& aType);
 
@@ -315,7 +315,8 @@ public:
 private:
   ~nsDOMDeviceStorage();
 
-  static nsresult CheckPrincipal(nsPIDOMWindow* aWindow, bool aIsAppsStorage,
+  static nsresult CheckPrincipal(nsPIDOMWindowInner* aWindow,
+                                 bool aIsAppsStorage,
                                  nsIPrincipal** aPrincipal);
 
   already_AddRefed<DOMRequest>
@@ -326,7 +327,7 @@ private:
   GetInternal(const nsAString& aPath, bool aEditable, ErrorResult& aRv);
 
   void
-  DeleteInternal(nsPIDOMWindow* aWin, const nsAString& aPath,
+  DeleteInternal(nsPIDOMWindowInner* aWin, const nsAString& aPath,
                  DOMRequest* aRequest);
 
   already_AddRefed<DOMCursor>
@@ -348,7 +349,7 @@ private:
     GetStorageByName(const nsAString &aStorageName);
 
   static already_AddRefed<nsDOMDeviceStorage>
-    GetStorageByNameAndType(nsPIDOMWindow* aWin,
+    GetStorageByNameAndType(nsPIDOMWindowInner* aWin,
                             const nsAString& aStorageName,
                             const nsAString& aType);
 

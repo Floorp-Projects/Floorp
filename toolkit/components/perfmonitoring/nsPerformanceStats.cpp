@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- *//* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -62,19 +61,19 @@ namespace {
  * @return null if the code is not executed in a window or in
  * case of error, a nsPIDOMWindow otherwise.
  */
-already_AddRefed<nsPIDOMWindow>
+already_AddRefed<nsPIDOMWindowOuter>
 GetPrivateWindow(JSContext* cx) {
-  nsCOMPtr<nsPIDOMWindow> win = xpc::CurrentWindowOrNull(cx);
+  nsGlobalWindow* win = xpc::CurrentWindowOrNull(cx);
   if (!win) {
     return nullptr;
   }
 
-  win = win->GetOuterWindow();
-  if (!win) {
+  nsPIDOMWindowOuter* outer = win->AsInner()->GetOuterWindow();
+  if (!outer) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> top = win->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
   if (!top) {
     return nullptr;
   }
@@ -1070,9 +1069,8 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& ou
 
   // Find out if the compartment is executed by a window. If so, its
   // duration should count towards the total duration of the window.
-  nsCOMPtr<nsPIDOMWindow> ptop = GetPrivateWindow(cx);
   uint64_t windowId = 0;
-  if (ptop) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> ptop = GetPrivateWindow(cx)) {
     windowId = ptop->WindowID();
     auto entry = mWindowIdToGroup.PutEntry(windowId);
     if (!entry->GetGroup()) {

@@ -43,7 +43,7 @@ public:
   nsresult DispatchConnectionAvailableEvent(PresentationConnection* aConnection);
 
 private:
-  PresentationRequest(nsPIDOMWindow* aWindow,
+  PresentationRequest(nsPIDOMWindowInner* aWindow,
                       const nsAString& aUrl);
 
   ~PresentationRequest();

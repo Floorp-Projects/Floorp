@@ -105,7 +105,7 @@ NS_IMETHODIMP
 XULCommandEvent::InitCommandEvent(const nsAString& aType,
                                   bool aCanBubble,
                                   bool aCancelable,
-                                  nsIDOMWindow* aView,
+                                  mozIDOMWindow* aView,
                                   int32_t aDetail,
                                   bool aCtrlKey,
                                   bool aAltKey,
@@ -113,9 +113,8 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
                                   bool aMetaKey,
                                   nsIDOMEvent* aSourceEvent)
 {
-  nsresult rv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable,
-                                     aView, aDetail);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto* view = nsGlobalWindow::Cast(nsPIDOMWindowInner::From(aView));
+  UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, view, aDetail);
 
   mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
                                              aShiftKey, aMetaKey);

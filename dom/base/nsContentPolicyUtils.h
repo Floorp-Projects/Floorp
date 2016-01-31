@@ -184,7 +184,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
               *decision = nsIContentPolicy::ACCEPT;                           \
               nsCOMPtr<nsINode> n = do_QueryInterface(context);               \
               if (!n) {                                                       \
-                  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(context);   \
+                  nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(context);\
                   n = win ? win->GetExtantDoc() : nullptr;                    \
               }                                                               \
               if (n) {                                                        \
@@ -299,7 +299,7 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
         return nullptr;
     }
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
+    nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
 
     if (!window) {
         // our context might be a document (which also QIs to nsIDOMNode), so

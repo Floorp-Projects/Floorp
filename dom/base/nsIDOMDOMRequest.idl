@@ -6,7 +6,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIDOMDOMCursor;
 interface nsICursorContinueCallback;
 
@@ -24,16 +24,16 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval onerror;
 };
 
-[scriptable, builtinclass, uuid(df58d5d6-4b02-4e4c-9b29-adbff06c6206)]
+[scriptable, builtinclass, uuid(9a57e5de-ce93-45fa-8145-755722834f7c)]
 interface nsIDOMRequestService : nsISupports
 {
-  nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
+  nsIDOMDOMRequest createRequest(in mozIDOMWindow window);
   /*
    * @param aCallback
    *        Called when `continue()' is called in the cursor, should be used to
    *        notify the data provider that content wants the next result.
    */
-  nsIDOMDOMCursor createCursor(in nsIDOMWindow window,
+  nsIDOMDOMCursor createCursor(in mozIDOMWindow window,
                                in nsICursorContinueCallback aCallback);
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);

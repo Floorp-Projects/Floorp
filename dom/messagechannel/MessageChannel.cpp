@@ -29,7 +29,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MessageChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MessageChannel::MessageChannel(nsPIDOMWindow* aWindow)
+MessageChannel::MessageChannel(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }
@@ -48,12 +48,12 @@ MessageChannel::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 MessageChannel::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   // window can be null in workers.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   return Constructor(window, aRv);
 }
 
 /* static */ already_AddRefed<MessageChannel>
-MessageChannel::Constructor(nsPIDOMWindow* aWindow, ErrorResult& aRv)
+MessageChannel::Constructor(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
   nsID portUUID1;
   aRv = nsContentUtils::GenerateUUIDInPlace(portUUID1);

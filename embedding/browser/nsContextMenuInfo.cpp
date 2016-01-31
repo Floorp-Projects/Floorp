@@ -259,14 +259,13 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode* aDOMNode,
   domNode->GetOwnerDocument(getter_AddRefs(document));
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<mozIDOMWindowProxy> window;
   document->GetDefaultView(getter_AddRefs(window));
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
-  MOZ_ASSERT(piWindow);
-  piWindow = piWindow->GetCurrentInnerWindow();
-  MOZ_ASSERT(piWindow);
+  auto* piWindow = nsPIDOMWindowOuter::From(window);
+  nsPIDOMWindowInner* innerWindow = piWindow->GetCurrentInnerWindow();
+  MOZ_ASSERT(innerWindow);
 
   nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
   nsAutoString bgStringValue;
@@ -283,7 +282,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode* aDOMNode,
 
     ErrorResult dummy;
     nsCOMPtr<nsICSSDeclaration> computedStyle =
-      piWindow->GetComputedStyle(*domElement, EmptyString(), dummy);
+      innerWindow->GetComputedStyle(*domElement, EmptyString(), dummy);
     dummy.SuppressException();
     if (computedStyle) {
       nsCOMPtr<nsIDOMCSSValue> cssValue;

@@ -21,14 +21,14 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothDiscoveryHandle, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothDiscoveryHandle, DOMEventTargetHelper)
 
-BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow)
+BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
   MOZ_ASSERT(aWindow);
 }
 
 BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(
-  nsPIDOMWindow* aWindow,
+  nsPIDOMWindowInner* aWindow,
   const nsTArray<nsString>& aServiceUuids,
   const nsAString& aLeScanUuid)
   : DOMEventTargetHelper(aWindow)
@@ -44,7 +44,7 @@ BluetoothDiscoveryHandle::~BluetoothDiscoveryHandle()
 
 // static
 already_AddRefed<BluetoothDiscoveryHandle>
-BluetoothDiscoveryHandle::Create(nsPIDOMWindow* aWindow)
+BluetoothDiscoveryHandle::Create(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -56,7 +56,7 @@ BluetoothDiscoveryHandle::Create(nsPIDOMWindow* aWindow)
 
 already_AddRefed<BluetoothDiscoveryHandle>
 BluetoothDiscoveryHandle::Create(
-  nsPIDOMWindow* aWindow,
+  nsPIDOMWindowInner* aWindow,
   const nsTArray<nsString>& aServiceUuids,
   const nsAString& aLeScanUuid)
 {

@@ -13,7 +13,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIURI;
 
 /**
@@ -24,7 +24,7 @@ interface nsIURI;
  * or the provider does not provide a window, the window watcher will proceed
  * to actually open a new window.
  */
-[scriptable, uuid(f607bd66-08e5-4d2e-ad83-9f9f3ca17658)]
+[scriptable, uuid(e97a3830-15ef-499b-8372-c22d128091c1)]
 interface nsIWindowProvider : nsISupports
 {
   /**
@@ -90,13 +90,13 @@ interface nsIWindowProvider : nsISupports
    * @see nsIWindowWatcher for more information on aFeatures.
    * @see nsIWebBrowserChrome for more information on aChromeFlags.
    */
-  nsIDOMWindow provideWindow(in nsIDOMWindow aParent,
-                             in unsigned long aChromeFlags,
-                             in boolean aCalledFromJS,
-                             in boolean aPositionSpecified,
-                             in boolean aSizeSpecified,
-                             in nsIURI aURI,
-                             in AString aName,
-                             in AUTF8String aFeatures,
-                             out boolean aWindowIsNew);
+  mozIDOMWindowProxy provideWindow(in mozIDOMWindowProxy aParent,
+                                   in unsigned long aChromeFlags,
+                                   in boolean aCalledFromJS,
+                                   in boolean aPositionSpecified,
+                                   in boolean aSizeSpecified,
+                                   in nsIURI aURI,
+                                   in AString aName,
+                                   in AUTF8String aFeatures,
+                                   out boolean aWindowIsNew);
 };

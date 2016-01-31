@@ -33,11 +33,11 @@
 interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(a15cd7ef-f7a0-43d2-be86-8bf488dc760b)]
+[scriptable, uuid(4dcb3851-eba2-4e42-b236-82d2596fca22)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -165,7 +165,7 @@ interface nsIPermissionManager : nsISupports
    * permission to perform a given action.  System principals will always
    * have permissions granted.
    */
-  uint32_t testPermissionFromWindow(in nsIDOMWindow window,
+  uint32_t testPermissionFromWindow(in mozIDOMWindow window,
                                     in string type);
 
   /**

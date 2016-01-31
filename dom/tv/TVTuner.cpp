@@ -30,7 +30,7 @@ NS_IMPL_RELEASE_INHERITED(TVTuner, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TVTuner)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TVTuner::TVTuner(nsPIDOMWindow* aWindow)
+TVTuner::TVTuner(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mStreamType(0)
 {
@@ -41,7 +41,7 @@ TVTuner::~TVTuner()
 }
 
 /* static */ already_AddRefed<TVTuner>
-TVTuner::Create(nsPIDOMWindow* aWindow,
+TVTuner::Create(nsPIDOMWindowInner* aWindow,
                 nsITVTunerData* aData)
 {
   RefPtr<TVTuner> tuner = new TVTuner(aWindow);
@@ -209,7 +209,7 @@ TVTuner::ReloadMediaStream()
 nsresult
 TVTuner::InitMediaStream()
 {
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   RefPtr<DOMMediaStream> stream = nullptr;
   if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_HW) {
     stream = DOMHwMediaStream::CreateHwStream(window);
@@ -255,7 +255,7 @@ TVTuner::CreateSimulatedMediaStream()
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(GetOwner()));
+  nsCOMPtr<nsPIDOMWindowInner> domWin = GetOwner();
   if (NS_WARN_IF(!domWin)) {
     return nullptr;
   }

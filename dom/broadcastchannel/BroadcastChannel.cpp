@@ -121,7 +121,7 @@ public:
     }
 
     // Window doesn't exist for some kind of workers (eg: SharedWorkers)
-    nsPIDOMWindow* window = wp->GetWindow();
+    nsPIDOMWindowInner* window = wp->GetWindow();
     if (!window) {
       return true;
     }
@@ -299,7 +299,7 @@ private:
 
 } // namespace
 
-BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
+BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
                                    const PrincipalInfo& aPrincipalInfo,
                                    const nsACString& aOrigin,
                                    const nsAString& aChannel,
@@ -334,7 +334,8 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
                               const nsAString& aChannel,
                               ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(aGlobal.GetAsSupports());
   // Window is null in workers.
 
   nsAutoCString origin;
@@ -671,7 +672,7 @@ BroadcastChannel::RemoveDocFromBFCache()
     return;
   }
 
-  nsPIDOMWindow* window = GetOwner();
+  nsPIDOMWindowInner* window = GetOwner();
   if (!window) {
     return;
   }

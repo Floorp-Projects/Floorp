@@ -18,7 +18,7 @@ IccCardLockError::Constructor(const GlobalObject& aGlobal,
                               int16_t aRetryCount,
                               ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -29,7 +29,7 @@ IccCardLockError::Constructor(const GlobalObject& aGlobal,
   return result.forget();
 }
 
-IccCardLockError::IccCardLockError(nsPIDOMWindow* aWindow,
+IccCardLockError::IccCardLockError(nsPIDOMWindowInner* aWindow,
                                    const nsAString& aName,
                                    int16_t aRetryCount)
   : DOMError(aWindow, aName)

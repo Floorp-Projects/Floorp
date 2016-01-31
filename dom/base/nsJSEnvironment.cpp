@@ -329,7 +329,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
                      nsEventStatus *aStatus)
 {
   bool called = false;
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aScriptGlobal));
+  nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(aScriptGlobal));
   nsIDocShell *docShell = win ? win->GetDocShell() : nullptr;
   if (docShell) {
     RefPtr<nsPresContext> presContext;
@@ -342,7 +342,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
       // Dispatch() must be synchronous for the recursion block
       // (errorDepth) to work.
       RefPtr<ErrorEvent> event =
-        ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win.get()),
+        ErrorEvent::Constructor(nsGlobalWindow::Cast(win),
                                 NS_LITERAL_STRING("error"),
                                 aErrorEventInit);
       event->SetTrusted(true);
@@ -359,7 +359,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 class ScriptErrorEvent : public nsRunnable
 {
 public:
-  ScriptErrorEvent(nsPIDOMWindow* aWindow,
+  ScriptErrorEvent(nsPIDOMWindowInner* aWindow,
                    JSRuntime* aRuntime,
                    xpc::ErrorReport* aReport,
                    JS::Handle<JS::Value> aError)
@@ -371,7 +371,7 @@ public:
   NS_IMETHOD Run()
   {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsPIDOMWindow* win = mWindow;
+    nsPIDOMWindowInner* win = mWindow;
     MOZ_ASSERT(win);
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
@@ -401,7 +401,7 @@ public:
       }
 
       RefPtr<ErrorEvent> event =
-        ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win),
+        ErrorEvent::Constructor(nsGlobalWindow::Cast(win),
                                 NS_LITERAL_STRING("error"), init);
       event->SetTrusted(true);
 
@@ -430,7 +430,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsPIDOMWindow>         mWindow;
+  nsCOMPtr<nsPIDOMWindowInner>  mWindow;
   RefPtr<xpc::ErrorReport>      mReport;
   JS::PersistentRootedValue       mError;
 
@@ -466,9 +466,9 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   // javascript", and not invoking any error reporters. This is exactly what we
   // want here.
   if (nsIScriptContext* scx = GetScriptContextFromJSContext(cx)) {
-    nsCOMPtr<nsPIDOMWindow> outer = do_QueryInterface(scx->GetGlobalObject());
+    nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryInterface(scx->GetGlobalObject());
     if (outer) {
-      globalObject = static_cast<nsGlobalWindow*>(outer->GetCurrentInnerWindow());
+      globalObject = nsGlobalWindow::Cast(outer->GetCurrentInnerWindow());
     }
   }
 
@@ -492,7 +492,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   if (globalObject) {
     RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
     bool isChrome = nsContentUtils::IsSystemPrincipal(globalObject->PrincipalOrNull());
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(globalObject);
     xpcReport->Init(report, message, isChrome, win ? win->WindowID() : 0);
 
     // If we can't dispatch an event to a window, report it to the console
@@ -519,7 +519,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 }
 
 void
-DispatchScriptErrorEvent(nsPIDOMWindow *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
+DispatchScriptErrorEvent(nsPIDOMWindowInner *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
                          JS::Handle<JS::Value> exception)
 {
   nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rt, xpcReport, exception));

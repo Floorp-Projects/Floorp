@@ -40,7 +40,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-DOMStorage::DOMStorage(nsIDOMWindow* aWindow,
+DOMStorage::DOMStorage(nsPIDOMWindowInner* aWindow,
                        DOMStorageManager* aManager,
                        DOMStorageCache* aCache,
                        const nsAString& aDocumentURI,
@@ -235,7 +235,7 @@ static const char kStorageEnabled[] = "dom.storage.enabled";
 
 // static, public
 bool
-DOMStorage::CanUseStorage(nsPIDOMWindow* aWindow, DOMStorage* aStorage)
+DOMStorage::CanUseStorage(nsPIDOMWindowInner* aWindow, DOMStorage* aStorage)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
   // It doesn't work with mIsPrivate flag at all, since it is checked

@@ -62,14 +62,13 @@ public:
   void GetCode(nsAString& aCode);
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                    nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
+                    nsGlobalWindow* aView, bool aCtrlKey, bool aAltKey,
                     bool aShiftKey, bool aMetaKey,
-                    uint32_t aKeyCode, uint32_t aCharCode,
-                    ErrorResult& aRv)
+                    uint32_t aKeyCode, uint32_t aCharCode)
   {
-    aRv = InitKeyEvent(aType, aCanBubble, aCancelable, aView,
-                       aCtrlKey, aAltKey, aShiftKey,aMetaKey,
-                       aKeyCode, aCharCode);
+    auto* view = aView ? aView->AsInner() : nullptr;
+    InitKeyEvent(aType, aCanBubble, aCancelable, view, aCtrlKey, aAltKey,
+                 aShiftKey, aMetaKey, aKeyCode, aCharCode);
   }
 
 protected:

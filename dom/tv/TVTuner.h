@@ -31,7 +31,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TVTuner, DOMEventTargetHelper)
 
-  static already_AddRefed<TVTuner> Create(nsPIDOMWindow* aWindow,
+  static already_AddRefed<TVTuner> Create(nsPIDOMWindowInner* aWindow,
                                           nsITVTunerData* aData);
   nsresult NotifyImageSizeChanged(uint32_t aWidth, uint32_t aHeight);
 
@@ -64,7 +64,7 @@ public:
   nsresult ReloadMediaStream();
 
 private:
-  explicit TVTuner(nsPIDOMWindow* aWindow);
+  explicit TVTuner(nsPIDOMWindowInner* aWindow);
 
   ~TVTuner();
 

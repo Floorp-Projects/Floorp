@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-MediaTrackList::MediaTrackList(nsPIDOMWindow* aOwnerWindow,
+MediaTrackList::MediaTrackList(nsPIDOMWindowInner* aOwnerWindow,
                                HTMLMediaElement* aMediaElement)
   : DOMEventTargetHelper(aOwnerWindow)
   , mMediaElement(aMediaElement)

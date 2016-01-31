@@ -614,7 +614,7 @@ public:
   void OnStartSignedPackageRequest(nsIChannel* aChannel,
                                    const nsACString& aPackageId);
 
-  void AudioChannelChangeNotification(nsPIDOMWindow* aWindow,
+  void AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
                                       AudioChannel aAudioChannel,
                                       float aVolume,
                                       bool aMuted);

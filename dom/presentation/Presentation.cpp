@@ -25,13 +25,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Presentation)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<Presentation>
-Presentation::Create(nsPIDOMWindow* aWindow)
+Presentation::Create(nsPIDOMWindowInner* aWindow)
 {
   RefPtr<Presentation> presentation = new Presentation(aWindow);
   return NS_WARN_IF(!presentation->Init()) ? nullptr : presentation.forget();
 }
 
-Presentation::Presentation(nsPIDOMWindow* aWindow)
+Presentation::Presentation(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
 }

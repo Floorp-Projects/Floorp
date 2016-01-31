@@ -349,10 +349,8 @@ HTMLFrameSetElement::IsEventAttributeName(nsIAtom *aName)
   type_*                                                                       \
   HTMLFrameSetElement::GetOn##name_()                                          \
   {                                                                            \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
-    if (win) {                                                                 \
-      nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                 \
-      nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);      \
+    if (nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow()) {              \
+      nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                   \
       return globalWin->GetOn##name_();                                        \
     }                                                                          \
     return nullptr;                                                            \
@@ -360,13 +358,12 @@ HTMLFrameSetElement::IsEventAttributeName(nsIAtom *aName)
   void                                                                         \
   HTMLFrameSetElement::SetOn##name_(type_* handler)                            \
   {                                                                            \
-    nsPIDOMWindow* win = OwnerDoc()->GetInnerWindow();                         \
+    nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();                    \
     if (!win) {                                                                \
       return;                                                                  \
     }                                                                          \
                                                                                \
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                   \
-    nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);        \
+    nsGlobalWindow* globalWin = nsGlobalWindow::Cast(win);                     \
     return globalWin->SetOn##name_(handler);                                   \
   }
 #define WINDOW_EVENT(name_, id_, type_, struct_)                               \

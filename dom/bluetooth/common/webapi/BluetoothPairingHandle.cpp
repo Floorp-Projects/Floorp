@@ -27,7 +27,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothPairingHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-BluetoothPairingHandle::BluetoothPairingHandle(nsPIDOMWindow* aOwner,
+BluetoothPairingHandle::BluetoothPairingHandle(nsPIDOMWindowInner* aOwner,
                                                const nsAString& aDeviceAddress,
                                                const nsAString& aType,
                                                const nsAString& aPasskey)
@@ -51,7 +51,7 @@ BluetoothPairingHandle::~BluetoothPairingHandle()
 }
 
 already_AddRefed<BluetoothPairingHandle>
-BluetoothPairingHandle::Create(nsPIDOMWindow* aOwner,
+BluetoothPairingHandle::Create(nsPIDOMWindowInner* aOwner,
                                const nsAString& aDeviceAddress,
                                const nsAString& aType,
                                const nsAString& aPasskey)

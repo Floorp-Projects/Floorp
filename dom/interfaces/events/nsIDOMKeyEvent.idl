@@ -5,7 +5,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[builtinclass, uuid(f4082a63-73c0-49ad-86e0-c406a54573f7)]
+[builtinclass, uuid(2e52eb99-670d-469a-b51f-8efee2dd091d)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
@@ -236,7 +236,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   void                      initKeyEvent(in DOMString typeArg,
                                          in boolean canBubbleArg,
                                          in boolean cancelableArg,
-                                         in nsIDOMWindow viewArg,
+                                         in mozIDOMWindow viewArg,
                                          in boolean ctrlKeyArg,
                                          in boolean altKeyArg,
                                          in boolean shiftKeyArg,

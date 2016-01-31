@@ -365,13 +365,6 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::Init(nsISupports* aOwner)
 {
     mOwner = aOwner;
-    if (nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aOwner)) {
-        if (win->IsOuterWindow()) {
-            // Must be bound to inner window, innerize if necessary.
-            mOwner = win->GetCurrentInnerWindow();
-        }
-    }
-
     return NS_OK;
 }
 
@@ -1211,7 +1204,7 @@ nsIDocument*
 txMozillaXSLTProcessor::getLoaderDoc()
 {
     if (mOwner) {
-        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mOwner);
+        nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(mOwner);
         if (win) {
             return win->GetExtantDoc();
         }

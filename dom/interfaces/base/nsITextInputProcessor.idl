@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMKeyEvent;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsITextInputProcessorCallback;
 
 /**
@@ -254,7 +254,7 @@ interface nsITextInputProcessorCallback;
  *   TIP.keyup(leftShift);
  */
 
-[scriptable, builtinclass, uuid(581f6619-76ed-478c-905d-b8e6553a714a)]
+[scriptable, builtinclass, uuid(47ae2181-2e98-4d58-84a2-b8db6764ce9a)]
 interface nsITextInputProcessor : nsISupports
 {
   /**
@@ -278,7 +278,7 @@ interface nsITextInputProcessor : nsISupports
    *                        when this returns true.  If this returns false,
    *                        your TIP should wait next chance.
    */
-  boolean beginInputTransaction(in nsIDOMWindow aWindow,
+  boolean beginInputTransaction(in mozIDOMWindow aWindow,
                                 in nsITextInputProcessorCallback aCallback);
 
   /**
@@ -290,7 +290,7 @@ interface nsITextInputProcessor : nsISupports
    */
   [optional_argc] boolean
     beginInputTransactionForTests(
-      in nsIDOMWindow aWindow,
+      in mozIDOMWindow aWindow,
       [optional] in nsITextInputProcessorCallback aCallback);
 
   /**

@@ -13,7 +13,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsCOMPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsIWidget;
 
 class nsBaseFilePicker : public nsIFilePicker
@@ -22,7 +22,7 @@ public:
   nsBaseFilePicker(); 
   virtual ~nsBaseFilePicker();
 
-  NS_IMETHOD Init(nsIDOMWindow *aParent,
+  NS_IMETHOD Init(mozIDOMWindowProxy* aParent,
                   const nsAString& aTitle,
                   int16_t aMode);
 
@@ -47,8 +47,7 @@ protected:
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
 
-  // This is an innerWindow.
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowOuter> mParent;
   int16_t mMode;
 };
 

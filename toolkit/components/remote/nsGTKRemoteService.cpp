@@ -50,14 +50,11 @@ nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
   return NS_OK;
 }
 
-static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
+static nsIWidget* GetMainWidget(nsPIDOMWindowInner* aWindow)
 {
   // get the native window for this instance
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(window, nullptr);
-
   nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(window->GetDocShell()));
+    (do_QueryInterface(aWindow->GetDocShell()));
   NS_ENSURE_TRUE(baseWindow, nullptr);
 
   nsCOMPtr<nsIWidget> mainWidget;
@@ -66,9 +63,9 @@ static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
 }
 
 NS_IMETHODIMP
-nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
+nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow)
 {
-  nsIWidget* mainWidget = GetMainWidget(aWindow);
+  nsIWidget* mainWidget = GetMainWidget(nsPIDOMWindowInner::From(aWindow));
   NS_ENSURE_TRUE(mainWidget, NS_ERROR_FAILURE);
 
   GtkWidget* widget =

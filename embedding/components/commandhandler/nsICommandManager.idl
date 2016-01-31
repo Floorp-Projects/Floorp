@@ -7,7 +7,7 @@
 #include "nsIObserver.idl"
 #include "nsICommandParams.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /*
  * nsICommandManager is an interface used to executing user-level commands,
@@ -20,7 +20,7 @@ interface nsIDOMWindow;
  */
  
  
-[scriptable, uuid(080D2001-F91E-11D4-A73C-F9242928207C)]
+[scriptable, uuid(bb5a1730-d83b-4fa2-831b-35b9d5842e84)]
 interface nsICommandManager : nsISupports
 {
   /*
@@ -50,7 +50,7 @@ interface nsICommandManager : nsISupports
    *
    */
   boolean     isCommandSupported(in string aCommandName,
-                                 in nsIDOMWindow aTargetWindow);
+                                 in mozIDOMWindowProxy aTargetWindow);
 
   /*
    * Ask the command manager if the specified command is currently.
@@ -58,7 +58,7 @@ interface nsICommandManager : nsISupports
    * If aTargetWindow is null, the focused window is used.
    */
   boolean     isCommandEnabled(in string aCommandName,
-                               in nsIDOMWindow aTargetWindow);
+                               in mozIDOMWindowProxy aTargetWindow);
 
   /*
    * Get the state of the specified commands.
@@ -76,7 +76,7 @@ interface nsICommandManager : nsISupports
    * state from the command.
    */
   void        getCommandState(in string aCommandName,
-                              in nsIDOMWindow aTargetWindow,
+                              in mozIDOMWindowProxy aTargetWindow,
                   /* inout */ in nsICommandParams aCommandParams);
     
   /*
@@ -90,7 +90,7 @@ interface nsICommandManager : nsISupports
    */
   void        doCommand(in string aCommandName,
                         in nsICommandParams aCommandParams,
-                        in nsIDOMWindow aTargetWindow);
+                        in mozIDOMWindowProxy aTargetWindow);
 
 };
 

@@ -6,13 +6,13 @@
 
 interface nsIDOMHTMLElement;
 interface nsIWebVTTListener;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIVariant;
 
 /**
  * Interface for a wrapper of a JS WebVTT parser (vtt.js).
  */
-[scriptable, uuid(acf6e493-0092-4b26-b172-241e375c57ab)]
+[scriptable, uuid(8dfe016e-1701-4618-9f5e-9a6154e853f0)]
 interface nsIWebVTTParserWrapper : nsISupports
 {
   /**
@@ -24,7 +24,7 @@ interface nsIWebVTTParserWrapper : nsISupports
    *               VTTRegions.
    *
    */
-  void loadParser(in nsIDOMWindow window);
+  void loadParser(in mozIDOMWindow window);
 
   /**
    * Attempts to parse the stream's data as WebVTT format. When it successfully
@@ -60,7 +60,7 @@ interface nsIWebVTTParserWrapper : nsISupports
    * @param cue    The cue whose content will be converted to a document
    *               fragment.
    */
-  nsIDOMHTMLElement convertCueToDOMTree(in nsIDOMWindow window,
+  nsIDOMHTMLElement convertCueToDOMTree(in mozIDOMWindow window,
                                         in nsISupports cue);
 
 
@@ -78,7 +78,7 @@ interface nsIWebVTTParserWrapper : nsISupports
    *                computed.
    * @param overlay The HTMLElement that the cues will be displayed within.
    */
-  void processCues(in nsIDOMWindow window, in nsIVariant cues,
+  void processCues(in mozIDOMWindow window, in nsIVariant cues,
                    in nsISupports overlay);
 };
 

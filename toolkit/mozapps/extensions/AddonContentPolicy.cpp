@@ -47,7 +47,7 @@ GetWindowIDFromContext(nsISupports* aContext, uint64_t *aResult)
   nsCOMPtr<nsIDocument> document = content->OwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIDOMWindow> window = document->GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> window = document->GetInnerWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   *aResult = window->WindowID();

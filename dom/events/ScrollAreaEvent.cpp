@@ -26,41 +26,21 @@ NS_IMPL_ADDREF_INHERITED(ScrollAreaEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(ScrollAreaEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(ScrollAreaEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMScrollAreaEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
-
-#define FORWARD_GETTER(_name)                                                  \
-  NS_IMETHODIMP                                                                \
-  ScrollAreaEvent::Get ## _name(float* aResult)                                \
-  {                                                                            \
-    *aResult = _name();                                                        \
-    return NS_OK;                                                              \
-  }
-
-FORWARD_GETTER(X)
-FORWARD_GETTER(Y)
-FORWARD_GETTER(Width)
-FORWARD_GETTER(Height)
-
-NS_IMETHODIMP
+void
 ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
                                      bool aCanBubble,
                                      bool aCancelable,
-                                     nsIDOMWindow* aView,
+                                     nsGlobalWindow* aView,
                                      int32_t aDetail,
                                      float aX,
                                      float aY,
                                      float aWidth,
                                      float aHeight)
 {
-  nsresult rv =
-    UIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  UIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
   mClientArea->SetRect(aX, aY, aWidth, aHeight);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(void)

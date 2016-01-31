@@ -411,7 +411,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
                             const Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
                             ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -512,7 +512,7 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
     nsAutoString trackId;
     aTrack.GetId(trackId);
     const char16_t* params[] = { trackId.get() };
-    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
+    nsCOMPtr<nsPIDOMWindowInner> pWindow = GetParentObject();
     nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("Media"),
@@ -589,7 +589,7 @@ DOMMediaStream::IsFinished()
 }
 
 void
-DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow,
+DOMMediaStream::InitSourceStream(nsPIDOMWindowInner* aWindow,
                                  MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
@@ -599,7 +599,7 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow,
 }
 
 void
-DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
+DOMMediaStream::InitTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                      MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
@@ -609,7 +609,7 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
 }
 
 void
-DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
+DOMMediaStream::InitAudioCaptureStream(nsPIDOMWindowInner* aWindow,
                                        MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
@@ -666,7 +666,7 @@ DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph)
 }
 
 already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
+DOMMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                    MediaStreamGraph* aGraph)
 {
   RefPtr<DOMMediaStream> stream = new DOMMediaStream();
@@ -675,7 +675,7 @@ DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
 }
 
 already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
+DOMMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                        MediaStreamGraph* aGraph)
 {
   RefPtr<DOMMediaStream> stream = new DOMMediaStream();
@@ -684,7 +684,7 @@ DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 }
 
 already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
+DOMMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
                                          MediaStreamGraph* aGraph)
 {
   RefPtr<DOMMediaStream> stream = new DOMMediaStream();
@@ -719,7 +719,7 @@ DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
   MOZ_RELEASE_ASSERT(!aRv.Failed());
 
   promise->MaybeReject(new MediaStreamError(
-      static_cast<nsPIDOMWindow*>(mWindow.get()),
+      mWindow,
       NS_LITERAL_STRING("OverconstrainedError"),
       NS_LITERAL_STRING(""),
       NS_LITERAL_STRING("")));
@@ -985,7 +985,7 @@ DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 void
 DOMLocalMediaStream::Stop()
 {
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
+  nsCOMPtr<nsPIDOMWindowInner> pWindow = GetParentObject();
   nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Media"),
@@ -1005,7 +1005,7 @@ DOMLocalMediaStream::StopImpl()
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
+DOMLocalMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                         MediaStreamGraph* aGraph)
 {
   RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
@@ -1014,7 +1014,7 @@ DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
+DOMLocalMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                             MediaStreamGraph* aGraph)
 {
   RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
@@ -1023,7 +1023,7 @@ DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 }
 
 already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
+DOMLocalMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
                                               MediaStreamGraph* aGraph)
 {
   RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
@@ -1041,7 +1041,7 @@ DOMAudioNodeMediaStream::~DOMAudioNodeMediaStream()
 }
 
 already_AddRefed<DOMAudioNodeMediaStream>
-DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
+DOMAudioNodeMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                                 AudioNode* aNode,
                                                 MediaStreamGraph* aGraph)
 {
@@ -1059,7 +1059,8 @@ DOMHwMediaStream::~DOMHwMediaStream()
 }
 
 already_AddRefed<DOMHwMediaStream>
-DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow, OverlayImage* aImage)
+DOMHwMediaStream::CreateHwStream(nsPIDOMWindowInner* aWindow,
+                                 OverlayImage* aImage)
 {
   RefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
 

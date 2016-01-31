@@ -317,7 +317,7 @@ CameraCapabilities::HasSupport(JSContext* aCx, JSObject* aGlobal)
   return Navigator::HasCameraSupport(aCx, aGlobal);
 }
 
-CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow,
+CameraCapabilities::CameraCapabilities(nsPIDOMWindowInner* aWindow,
                                        ICameraControl* aCameraControl)
   : mWindow(aWindow)
   , mCameraControl(aCameraControl)

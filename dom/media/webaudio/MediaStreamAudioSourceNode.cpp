@@ -101,8 +101,7 @@ void
 MediaStreamAudioSourceNode::PrincipalChanged(DOMMediaStream* aDOMMediaStream)
 {
   bool subsumes = false;
-  nsPIDOMWindow* parent = Context()->GetParentObject();
-  if (parent) {
+  if (nsPIDOMWindowInner* parent = Context()->GetParentObject()) {
     nsIDocument* doc = parent->GetExtantDoc();
     if (doc) {
       nsIPrincipal* docPrincipal = doc->NodePrincipal();

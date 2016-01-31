@@ -121,7 +121,7 @@ public:
 
   // Helper
   static void GenerateAllowedAudioChannels(
-                 nsPIDOMWindow* aWindow,
+                 nsPIDOMWindowInner* aWindow,
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
                  const nsAString& aManifestURL,

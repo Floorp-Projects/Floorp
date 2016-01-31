@@ -80,7 +80,7 @@ FileSystemPermissionRequest::GetPrincipal(nsIPrincipal** aRequestingPrincipal)
 }
 
 NS_IMETHODIMP
-FileSystemPermissionRequest::GetWindow(nsIDOMWindow** aRequestingWindow)
+FileSystemPermissionRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 {
   NS_IF_ADDREF(*aRequestingWindow = mWindow);
   return NS_OK;
