@@ -119,11 +119,6 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
     RunTest(rt, cx, &array);
   }
 
-  {
-    AutoFallibleTArray<ElementT, InitialElements> array;
-    RunTest(rt, cx, &array);
-  }
-
   JS_LeaveCompartment(cx, oldCompartment);
 }
 
