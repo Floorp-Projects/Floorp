@@ -81,7 +81,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'CSS animations running on the compositor should not update style ' +
        'on the main thread');
-    div.remove(div);
+    div.remove();
   });
 
   add_task_if_omta_enabled(function* no_restyling_for_compositor_transitions() {
@@ -98,7 +98,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'CSS transitions running on the compositor should not update style ' +
        'on the main thread');
-    div.remove(div);
+    div.remove();
   });
 
   add_task_if_omta_enabled(function* no_restyling_when_animation_duration_is_changed() {
@@ -114,7 +114,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Animations running on the compositor should not update style ' +
        'on the main thread');
-    div.remove(div);
+    div.remove();
   });
 
   add_task_if_omta_enabled(function* only_one_restyling_after_finish_is_called() {
@@ -130,7 +130,7 @@ waitForAllPaints(function() {
     is(markers.length, 1,
        'Animations running on the compositor should only update style ' +
        'once after finish() is called');
-    div.remove(div);
+    div.remove();
   });
 
   add_task(function* no_restyling_mouse_movement_on_finished_transition() {
@@ -155,7 +155,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Bug 1219236: Finished transitions should never cause restyles ' +
        'when mouse is moved on the animations');
-    div.remove(div);
+    div.remove();
   });
 
   add_task(function* no_restyling_mouse_movement_on_finished_animation() {
@@ -178,7 +178,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Bug 1219236: Finished animations should never cause restyles ' +
        'when mouse is moved on the animations');
-    div.remove(div);
+    div.remove();
   });
 
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_out_of_view_element() {
@@ -194,7 +194,7 @@ waitForAllPaints(function() {
     todo_is(markers.length, 0,
             'Bug 1166500: Animations running on the compositor in out of ' +
             'view element should never cause restyles');
-    div.remove(div);
+    div.remove();
   });
 
   add_task(function* no_restyling_main_thread_animations_out_of_view_element() {
@@ -208,7 +208,7 @@ waitForAllPaints(function() {
     todo_is(markers.length, 0,
             'Bug 1166500: Animations running on the main-thread in out of ' +
             'view element should never cause restyles');
-    div.remove(div);
+    div.remove();
   });
 
   /*
@@ -249,7 +249,7 @@ waitForAllPaints(function() {
     todo_is(markers.length, 0,
             'Bug 1166500: Animations running on the main-thread in elements ' +
             'which are scrolled out should never cause restyles');
-    parentElement.remove(div);
+    parentElement.remove();
   });
 
   /*
@@ -269,7 +269,7 @@ waitForAllPaints(function() {
     todo_is(markers.length, 0,
             'Bug 1237454: Animations running on the compositor in ' +
             'visibility hidden element should never cause restyles');
-    div.remove(div);
+    div.remove();
   });
   */
 
@@ -284,7 +284,7 @@ waitForAllPaints(function() {
     todo_is(markers.length, 0,
             'Bug 1237454: Animations running on the main-thread in ' +
             'visibility hidden element should never cause restyles');
-    div.remove(div);
+    div.remove();
   });
 
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_after_pause_is_called() {
@@ -302,10 +302,10 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Bug 1232563: Paused animations running on the compositor should ' +
        'never cause restyles once after pause() is called');
-    div.remove(div);
+    div.remove();
   });
 
-  add_task(function* no_restyling_matn_thread_animations_after_pause_is_called() {
+  add_task(function* no_restyling_main_thread_animations_after_pause_is_called() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
 
@@ -319,7 +319,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Bug 1232563: Paused animations running on the main-thread should ' +
        'never cause restyles after pause() is called');
-    div.remove(div);
+    div.remove();
   });
 
 });
