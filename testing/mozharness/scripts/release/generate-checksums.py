@@ -211,7 +211,14 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
                 self.fatal("Failed to sign {}".format(sums))
 
     def upload(self):
-        files = []
+        # we need to provide the public side of the gpg key so that people can
+        # verify the detached signatures
+        dirs = self.query_abs_dirs()
+        tools_dir = path.join(dirs["abs_work_dir"], "tools")
+        self.copyfile(os.path.join(tools_dir, 'scripts', 'release', 'KEY'),
+                      'KEY')
+        files = ['KEY']
+
         for fmt in self.config["formats"]:
             files.append(self._get_sums_filename(fmt))
             files.append("{}.asc".format(self._get_sums_filename(fmt)))
