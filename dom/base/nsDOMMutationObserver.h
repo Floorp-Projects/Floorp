@@ -465,7 +465,7 @@ class nsDOMMutationObserver final : public nsISupports,
                                     public nsWrapperCache
 {
 public:
-  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,
+  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindowInner>&& aOwner,
                         mozilla::dom::MutationCallback& aCb,
                         bool aChrome)
   : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
@@ -599,7 +599,7 @@ protected:
   static void AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver,
                                            uint32_t aMutationLevel);
 
-  nsCOMPtr<nsPIDOMWindow>                            mOwner;
+  nsCOMPtr<nsPIDOMWindowInner>                       mOwner;
 
   nsCOMArray<nsMutationReceiver>                     mReceivers;
   nsClassHashtable<nsISupportsHashKey,

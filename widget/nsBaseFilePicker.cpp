@@ -74,11 +74,11 @@ class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  explicit nsBaseFilePickerEnumerator(nsPIDOMWindow* aParent,
+  explicit nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
                                       nsISimpleEnumerator* iterator,
                                       int16_t aMode)
     : mIterator(iterator)
-    , mParent(aParent)
+    , mParent(aParent->GetCurrentInnerWindow())
     , mMode(aMode)
   {}
 
@@ -138,7 +138,7 @@ protected:
 
 private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   int16_t mMode;
 };
 
@@ -156,19 +156,18 @@ nsBaseFilePicker::~nsBaseFilePicker()
 
 }
 
-NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
+NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
                                      const nsAString& aTitle,
                                      int16_t aMode)
 {
   NS_PRECONDITION(aParent, "Null parent passed to filepicker, no file "
                   "picker for you!");
-  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
+
+  mParent = nsPIDOMWindowOuter::From(aParent);
+
+  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(mParent->GetOuterWindow());
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  mParent = do_QueryInterface(aParent);
-  if (!mParent->IsInnerWindow()) {
-    mParent = mParent->GetCurrentInnerWindow();
-  }
 
   mMode = aMode;
   InitNative(widget, aTitle);

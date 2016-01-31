@@ -25,7 +25,7 @@ nsFilePickerProxy::~nsFilePickerProxy()
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
+nsFilePickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
                         int16_t aMode)
 {
   TabChild* tabChild = TabChild::GetFrom(aParent);
@@ -33,10 +33,7 @@ nsFilePickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
     return NS_ERROR_FAILURE;
   }
 
-  mParent = do_QueryInterface(aParent);
-  if (!mParent->IsInnerWindow()) {
-    mParent = mParent->GetCurrentInnerWindow();
-  }
+  mParent = nsPIDOMWindowOuter::From(aParent);
 
   mMode = aMode;
 

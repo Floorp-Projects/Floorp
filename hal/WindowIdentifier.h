@@ -10,7 +10,8 @@
 #include "mozilla/Types.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace hal {
@@ -59,14 +60,15 @@ public:
    * Note that these constructors allow an implicit conversion to a
    * WindowIdentifier.
    */
-  explicit WindowIdentifier(nsIDOMWindow* window);
+  explicit WindowIdentifier(nsPIDOMWindowInner* window);
 
   /**
    * Create a new WindowIdentifier with the given id array and window.
    * This automatically grabs the window's ID and appends it to the
    * array.
    */
-  WindowIdentifier(const InfallibleTArray<uint64_t>& id, nsIDOMWindow* window);
+  WindowIdentifier(const InfallibleTArray<uint64_t>& id,
+                   nsPIDOMWindowInner* window);
 
   /**
    * Get the list of window and process IDs we contain.
@@ -90,7 +92,7 @@ public:
   /**
    * Get the window this object wraps.
    */
-  nsIDOMWindow* GetWindow() const;
+  nsPIDOMWindowInner* GetWindow() const;
 
 private:
   /**
@@ -99,7 +101,7 @@ private:
   uint64_t GetWindowID() const;
 
   AutoInfallibleTArray<uint64_t, 3> mID;
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   bool mIsEmpty;
 };
 

@@ -72,7 +72,9 @@ nsPrintingPromptService::Init()
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy *parent,
+                                         nsIWebBrowserPrint *webBrowserPrint,
+                                         nsIPrintSettings *printSettings)
 {
     NS_ENSURE_ARG(webBrowserPrint);
     NS_ENSURE_ARG(printSettings);
@@ -81,7 +83,8 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                              NS_PRINTDIALOGSERVICE_CONTRACTID));
     if (dlgPrint)
-      return dlgPrint->Show(parent, printSettings, webBrowserPrint);
+      return dlgPrint->Show(nsPIDOMWindowOuter::From(parent),
+                            printSettings, webBrowserPrint);
 
     // Show the built-in dialog instead
     ParamBlock block;
@@ -94,7 +97,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
+nsPrintingPromptService::ShowProgress(mozIDOMWindowProxy*      parent, 
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
@@ -115,7 +118,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 
     nsCOMPtr<nsIPrintProgressParams> prtProgressParams = new nsPrintProgressParams();
 
-    nsCOMPtr<nsIDOMWindow> parentWindow = parent;
+    nsCOMPtr<mozIDOMWindowProxy> parentWindow = parent;
 
     if (mWatcher && !parentWindow) {
         mWatcher->GetActiveWindow(getter_AddRefs(parentWindow));
@@ -134,7 +137,9 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
+nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent,
+                                       nsIPrintSettings *printSettings,
+                                       nsIObserver *aObs)
 {
     NS_ENSURE_ARG(printSettings);
 
@@ -142,7 +147,8 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
     nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                              NS_PRINTDIALOGSERVICE_CONTRACTID));
     if (dlgPrint)
-      return dlgPrint->ShowPageSetup(parent, printSettings);
+      return dlgPrint->ShowPageSetup(nsPIDOMWindowOuter::From(parent),
+                                     printSettings);
 
     ParamBlock block;
     nsresult rv = block.Init();
@@ -154,7 +160,9 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPrinterProperties(mozIDOMWindowProxy *parent,
+                                               const char16_t *printerName,
+                                               nsIPrintSettings *printSettings)
 {
     /* fixme: We simply ignore the |aPrinter| argument here
      * We should get the supported printer attributes from the printer and 
@@ -177,7 +185,7 @@ nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const char1
 }
 
 nsresult
-nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
+nsPrintingPromptService::DoDialog(mozIDOMWindowProxy *aParent,
                                   nsIDialogParamBlock *aParamBlock, 
                                   nsIWebBrowserPrint *aWebBrowserPrint, 
                                   nsIPrintSettings* aPS,
@@ -195,7 +203,7 @@ nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
     // get a parent, if at all possible
     // (though we'd rather this didn't fail, it's OK if it does. so there's
     // no failure or null check.)
-    nsCOMPtr<nsIDOMWindow> activeParent; // retain ownership for method lifetime
+    nsCOMPtr<mozIDOMWindowProxy> activeParent;
     if (!aParent) 
     {
         mWatcher->GetActiveWindow(getter_AddRefs(activeParent));
@@ -226,7 +234,7 @@ nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
     NS_ASSERTION(array, "array must be a supports");
 
 
-    nsCOMPtr<nsIDOMWindow> dialog;
+    nsCOMPtr<mozIDOMWindowProxy> dialog;
     rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
                               "centerscreen,chrome,modal,titlebar", arguments,
                               getter_AddRefs(dialog));

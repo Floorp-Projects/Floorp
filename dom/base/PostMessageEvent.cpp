@@ -11,10 +11,12 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
+#include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsGlobalWindow.h"
 #include "nsIPresShell.h"
@@ -120,7 +122,7 @@ PostMessageEvent::Run()
 
   ErrorResult rv;
   JS::Rooted<JS::Value> messageData(cx);
-  nsCOMPtr<nsPIDOMWindow> window = targetWindow.get();
+  nsCOMPtr<nsPIDOMWindowInner> window = targetWindow->AsInner();
 
   Read(window, cx, &messageData, rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -128,14 +130,18 @@ PostMessageEvent::Run()
   }
 
   // Create the event
-  nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
-    do_QueryInterface(static_cast<nsPIDOMWindow*>(targetWindow.get()));
+  nsCOMPtr<mozilla::dom::EventTarget> eventTarget = do_QueryObject(targetWindow);
   RefPtr<MessageEvent> event =
     new MessageEvent(eventTarget, nullptr, nullptr);
 
-  event->InitMessageEvent(NS_LITERAL_STRING("message"), false /*non-bubbling */,
-                          false /*cancelable */, messageData, mCallerOrigin,
-                          EmptyString(), mSource);
+
+  Nullable<WindowProxyOrMessagePort> source;
+  source.SetValue().SetAsWindowProxy() = mSource ? mSource->AsOuter() : nullptr;
+
+  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
+                          false /*non-bubbling */, false /*cancelable */,
+                          messageData, mCallerOrigin,
+                          EmptyString(), source, nullptr);
 
   nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
 
@@ -156,7 +162,7 @@ PostMessageEvent::Run()
   WidgetEvent* internalEvent = event->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
+  EventDispatcher::Dispatch(window,
                             presContext,
                             internalEvent,
                             static_cast<dom::Event*>(event.get()),

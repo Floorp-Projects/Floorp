@@ -50,7 +50,7 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
   return NS_OK;
 }
 
-nsLocation::nsLocation(nsPIDOMWindow* aWindow, nsIDocShell *aDocShell)
+nsLocation::nsLocation(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell)
   : mInnerWindow(aWindow)
 {
   MOZ_ASSERT(aDocShell);
@@ -136,7 +136,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
-    nsCOMPtr<nsPIDOMWindow> incumbent =
+    nsCOMPtr<nsPIDOMWindowInner> incumbent =
       do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
     if (incumbent) {
       doc = incumbent->GetDoc();
@@ -263,7 +263,7 @@ nsLocation::SetURI(nsIURI* aURI, bool aReplace)
     }
 
     // Get the incumbent script's browsing context to set as source.
-    nsCOMPtr<nsPIDOMWindow> sourceWindow =
+    nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
       do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
     if (sourceWindow) {
       loadInfo->SetSourceDocShell(sourceWindow->GetDocShell());
@@ -520,9 +520,9 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
      */
     bool inScriptTag = false;
     nsIScriptContext* scriptContext = nullptr;
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetEntryGlobal());
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(GetEntryGlobal());
     if (win) {
-      scriptContext = static_cast<nsGlobalWindow*>(win.get())->GetContextInternal();
+      scriptContext = nsGlobalWindow::Cast(win)->GetContextInternal();
     }
 
     if (scriptContext) {
@@ -846,7 +846,7 @@ nsLocation::Reload(bool aForceget)
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  nsCOMPtr<nsPIDOMWindow> window = docShell ? docShell->GetWindow() : nullptr;
+  nsCOMPtr<nsPIDOMWindowOuter> window = docShell ? docShell->GetWindow() : nullptr;
 
   if (window && window->IsHandlingResizeEvent()) {
     // location.reload() was called on a window that is handling a
@@ -956,7 +956,7 @@ nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   // the docshell. If that fails, just return null and hope that the caller passed
   // an absolute URI.
   if (!doc && GetDocShell()) {
-    nsCOMPtr<nsPIDOMWindow> docShellWin = do_QueryInterface(GetDocShell()->GetScriptGlobalObject());
+    nsCOMPtr<nsPIDOMWindowOuter> docShellWin = do_QueryInterface(GetDocShell()->GetScriptGlobalObject());
     if (docShellWin) {
       doc = docShellWin->GetDoc();
     }
@@ -974,7 +974,7 @@ nsLocation::CallerSubsumes()
   // principal of the Location object itself.  This is why we need this check
   // even though we only allow limited cross-origin access to Location objects
   // in general.
-  nsCOMPtr<nsIDOMWindow> outer = mInnerWindow->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> outer = mInnerWindow->GetOuterWindow();
   if (MOZ_UNLIKELY(!outer))
     return false;
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);

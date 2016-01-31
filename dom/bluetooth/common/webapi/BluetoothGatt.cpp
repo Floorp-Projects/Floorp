@@ -48,7 +48,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothGatt, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothGatt, DOMEventTargetHelper)
 
-BluetoothGatt::BluetoothGatt(nsPIDOMWindow* aWindow,
+BluetoothGatt::BluetoothGatt(nsPIDOMWindowInner* aWindow,
                              const nsAString& aDeviceAddr)
   : DOMEventTargetHelper(aWindow)
   , mClientIf(0)

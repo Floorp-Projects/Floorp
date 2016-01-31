@@ -41,7 +41,7 @@ public:
   NS_IMETHOD GetMimeType(nsAString& aType) final override;
   NS_IMETHOD GetDocType(nsAString& aType) final override;
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument) final override;
-  NS_IMETHOD GetWindow(nsIDOMWindow** aDOMWindow) final override;
+  NS_IMETHOD GetWindow(mozIDOMWindowProxy** aDOMWindow) final override;
   NS_IMETHOD GetParentDocument(nsIAccessibleDocument** aDocument)
     final override;
   NS_IMETHOD GetChildDocumentCount(uint32_t* aCount) final override;

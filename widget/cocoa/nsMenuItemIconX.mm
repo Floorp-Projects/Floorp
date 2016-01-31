@@ -178,11 +178,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
     if (!document)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsPIDOMWindow> window = document->GetWindow();
-    if (!window)
-      return NS_ERROR_FAILURE;
-
-    window = window->GetCurrentInnerWindow();
+    nsCOMPtr<nsPIDOMWindowInner> window = document->GetInnerWindow();
     if (!window)
       return NS_ERROR_FAILURE;
 

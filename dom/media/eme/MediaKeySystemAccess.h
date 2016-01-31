@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeySystemAccess)
 
 public:
-  explicit MediaKeySystemAccess(nsPIDOMWindow* aParent,
+  explicit MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                 const nsAString& aKeySystem,
                                 const nsAString& aCDMVersion,
                                 const MediaKeySystemConfiguration& aConfig);
@@ -38,7 +38,7 @@ protected:
   ~MediaKeySystemAccess();
 
 public:
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -58,7 +58,7 @@ public:
   static bool IsSupported(const nsAString& aKeySystem,
                           const Sequence<MediaKeySystemConfiguration>& aConfigs);
 
-  static void NotifyObservers(nsIDOMWindow* aWindow,
+  static void NotifyObservers(nsPIDOMWindowInner* aWindow,
                               const nsAString& aKeySystem,
                               MediaKeySystemStatus aStatus);
 
@@ -71,7 +71,7 @@ public:
                                  MediaKeySystemConfiguration& aOutConfig);
 
 private:
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
   const nsString mCDMVersion;
   const MediaKeySystemConfiguration mConfig;

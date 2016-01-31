@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIPrincipal;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIDOMElement;
 interface nsIArray;
 
@@ -65,7 +65,7 @@ interface nsIContentPermissionRequester : nsISupports {
  * permission to perform a privileged operation such as
  * geolocation.
  */
-[scriptable, uuid(408c8fcd-1420-4aff-94d8-39bf74d79219)]
+[scriptable, uuid(875733da-0ac0-4a26-8c76-70a30876be46)]
 interface nsIContentPermissionRequest : nsISupports {
   /**
    *  The array will include the request types. Elements of this array are
@@ -84,7 +84,7 @@ interface nsIContentPermissionRequest : nsISupports {
    *  in when using out of process content.  window or
    *  element can be null but not both.
    */
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindow window;
   readonly attribute nsIDOMElement element;
 
   /**

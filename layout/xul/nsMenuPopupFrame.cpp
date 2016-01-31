@@ -891,8 +891,7 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
     if (mTriggerContent) {
       nsIDocument* doc = mContent->GetCurrentDoc();
       if (doc) {
-        nsPIDOMWindow* win = doc->GetWindow();
-        if (win) {
+        if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
           nsCOMPtr<nsPIWindowRoot> root = win->GetTopWindowRoot();
           if (root) {
             root->SetPopupNode(nullptr);

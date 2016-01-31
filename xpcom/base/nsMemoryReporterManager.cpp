@@ -13,7 +13,6 @@
 #include "nsMemoryReporterManager.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIGlobalObject.h"
@@ -2475,7 +2474,7 @@ nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback)
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
+nsMemoryReporterManager::SizeOfTab(mozIDOMWindowProxy* aTopWindow,
                                    int64_t* aJSObjectsSize,
                                    int64_t* aJSStringsSize,
                                    int64_t* aJSOtherSize,
@@ -2487,7 +2486,7 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
                                    double*  aNonJSMilliseconds)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aTopWindow);
-  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aTopWindow);
+  auto* piWindow = nsPIDOMWindowOuter::From(aTopWindow);
   if (NS_WARN_IF(!global) || NS_WARN_IF(!piWindow)) {
     return NS_ERROR_FAILURE;
   }

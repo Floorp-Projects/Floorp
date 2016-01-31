@@ -77,7 +77,7 @@ DeviceStorageFileSystem::Init(nsDOMDeviceStorage* aDeviceStorage)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aDeviceStorage);
-  nsCOMPtr<nsPIDOMWindow> window = aDeviceStorage->GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = aDeviceStorage->GetOwner();
   MOZ_ASSERT(window->IsInnerWindow());
   mWindowId = window->WindowID();
 }
@@ -89,13 +89,13 @@ DeviceStorageFileSystem::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 DeviceStorageFileSystem::GetWindow() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
   MOZ_ASSERT_IF(!mShutdown, window);
-  return window;
+  return window ? window->AsInner() : nullptr;
 }
 
 void

@@ -15,6 +15,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsError.h"
@@ -72,16 +73,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDataChannel)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 nsDOMDataChannel::nsDOMDataChannel(already_AddRefed<mozilla::DataChannel>& aDataChannel,
-                                   nsPIDOMWindow* aWindow)
-  : DOMEventTargetHelper(aWindow && aWindow->IsOuterWindow() ?
-                           aWindow->GetCurrentInnerWindow() : aWindow)
+                                   nsPIDOMWindowInner* aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mDataChannel(aDataChannel)
   , mBinaryType(DC_BINARY_TYPE_BLOB)
 {
 }
 
 nsresult
-nsDOMDataChannel::Init(nsPIDOMWindow* aDOMWindow)
+nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow)
 {
   nsresult rv;
   nsAutoString urlParam;
@@ -414,9 +414,8 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
 
   RefPtr<MessageEvent> event = NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
-  rv = event->InitMessageEvent(NS_LITERAL_STRING("message"), false, false,
-                               jsData, mOrigin, EmptyString(), nullptr);
-  NS_ENSURE_SUCCESS(rv,rv);
+  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), false, false,
+                          jsData, mOrigin, EmptyString(), nullptr, nullptr);
   event->SetTrusted(true);
 
   LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
@@ -494,7 +493,7 @@ nsDOMDataChannel::AppReady()
 /* static */
 nsresult
 NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& aDataChannel,
-                     nsPIDOMWindow* aWindow,
+                     nsPIDOMWindowInner* aWindow,
                      nsIDOMDataChannel** aDomDataChannel)
 {
   RefPtr<nsDOMDataChannel> domdc =

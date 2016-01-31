@@ -199,14 +199,10 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
   if (mTabParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
     nsCOMPtr<Element> frameElement = mTabParent->GetOwnerElement();
     if (frameElement) {
+      nsCOMPtr<nsPIDOMWindowOuter> win =frameElement->OwnerDoc()->GetWindow();
+      NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+
       nsresult rv;
-      nsCOMPtr<nsIDOMWindow> win =
-        do_QueryInterface(frameElement->OwnerDoc()->GetWindow(), &rv);
-
-      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
-        return rv;
-      }
-
       nsCOMPtr<nsIWindowWatcher> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
 

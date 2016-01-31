@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 /* static */ already_AddRefed<PermissionStatus>
-PermissionStatus::Create(nsPIDOMWindow* aWindow,
+PermissionStatus::Create(nsPIDOMWindowInner* aWindow,
                          PermissionName aName,
                          ErrorResult& aRv)
 {
@@ -29,7 +29,7 @@ PermissionStatus::Create(nsPIDOMWindow* aWindow,
   return status.forget();
 }
 
-PermissionStatus::PermissionStatus(nsPIDOMWindow* aWindow,
+PermissionStatus::PermissionStatus(nsPIDOMWindowInner* aWindow,
                                    PermissionName aName)
   : DOMEventTargetHelper(aWindow)
   , mName(aName)
@@ -76,7 +76,7 @@ PermissionStatus::UpdateState()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     return NS_ERROR_FAILURE;
   }
@@ -96,7 +96,7 @@ PermissionStatus::UpdateState()
 nsIPrincipal*
 PermissionStatus::GetPrincipal() const
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     return nullptr;
   }

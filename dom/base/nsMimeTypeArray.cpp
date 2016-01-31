@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray,
                                       mWindow,
                                       mMimeTypes)
 
-nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindow* aWindow)
+nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }
@@ -52,7 +52,7 @@ nsMimeTypeArray::Refresh()
   mMimeTypes.Clear();
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 nsMimeTypeArray::GetParentObject() const
 {
   MOZ_ASSERT(mWindow);
@@ -217,7 +217,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType, mWindow, mPluginElement)
 
-nsMimeType::nsMimeType(nsPIDOMWindow* aWindow,
+nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow,
                        nsPluginElement* aPluginElement,
                        const nsAString& aType,
                        const nsAString& aDescription,
@@ -230,7 +230,7 @@ nsMimeType::nsMimeType(nsPIDOMWindow* aWindow,
 {
 }
 
-nsMimeType::nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aType)
+nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow, const nsAString& aType)
   : mWindow(aWindow),
     mPluginElement(nullptr),
     mType(aType)
@@ -241,7 +241,7 @@ nsMimeType::~nsMimeType()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 nsMimeType::GetParentObject() const
 {
   MOZ_ASSERT(mWindow);

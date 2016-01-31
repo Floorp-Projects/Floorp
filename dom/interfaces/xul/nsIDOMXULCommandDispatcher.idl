@@ -8,14 +8,14 @@
 interface nsIDOMElement;
 interface nsIController;
 interface nsIControllers;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 
-[scriptable, uuid(f3c50361-14fe-11d3-bf87-00105a1b0627)]
+[scriptable, uuid(a9fa9fd3-8d62-4f94-9ed8-3ea9c3cf0773)]
 interface nsIDOMXULCommandDispatcher : nsISupports
 {
             attribute nsIDOMElement    focusedElement;
-            attribute nsIDOMWindow     focusedWindow;
+            attribute mozIDOMWindowProxy focusedWindow;
 
   void                      addCommandUpdater(in nsIDOMElement updater,
                                               in DOMString events,

@@ -153,15 +153,21 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
     if (NS_FAILED(rv)) return rv;
     return mAuthPrompter->QueryInterface(aIID, aSink);
   }
+  if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy))) {
+    return GetWindowDOMWindow(reinterpret_cast<mozIDOMWindowProxy**>(aSink));
+  }
   if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
-    return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindow**>(aSink));
+    nsCOMPtr<mozIDOMWindowProxy> window = nullptr;
+    rv = GetWindowDOMWindow(getter_AddRefs(window));
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(window);
+    domWindow.forget(aSink);
+    return rv;
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
-    nsIDOMWindow* domWindow = nullptr;
-    rv = GetWindowDOMWindow(&domWindow);
-    nsIDOMWindowInternal* domWindowInternal =
-      static_cast<nsIDOMWindowInternal*>(domWindow);
-    *aSink = domWindowInternal;
+    nsCOMPtr<mozIDOMWindowProxy> window = nullptr;
+    rv = GetWindowDOMWindow(getter_AddRefs(window));
+    nsCOMPtr<nsIDOMWindowInternal> domWindowInternal = do_QueryInterface(window);
+    domWindowInternal.forget(aSink);
     return rv;
   }
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
@@ -1034,7 +1040,7 @@ NS_IMETHODIMP nsXULWindow::EnsurePrompter()
   if (mPrompter)
     return NS_OK;
    
-  nsCOMPtr<nsIDOMWindow> ourWindow;
+  nsCOMPtr<mozIDOMWindowProxy> ourWindow;
   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWindowWatcher> wwatch = 
@@ -1050,7 +1056,7 @@ NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
   if (mAuthPrompter)
     return NS_OK;
       
-  nsCOMPtr<nsIDOMWindow> ourWindow;
+  nsCOMPtr<mozIDOMWindowProxy> ourWindow;
   nsresult rv = GetWindowDOMWindow(getter_AddRefs(ourWindow));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
@@ -1239,9 +1245,10 @@ bool nsXULWindow::LoadSizeFromXUL()
 
   if (gotSize) {
     // constrain to screen size
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     GetWindowDOMWindow(getter_AddRefs(domWindow));
-    if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(domWindow)) {
+    if (domWindow) {
+      auto* window = nsPIDOMWindowOuter::From(domWindow);
       nsCOMPtr<nsIDOMScreen> screen = window->GetScreen();
       if (screen) {
         int32_t screenWidth;
@@ -1323,9 +1330,9 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   }
 
   if (sizeMode == nsSizeMode_Fullscreen) {
-    nsCOMPtr<nsIDOMWindow> ourWindow;
+    nsCOMPtr<mozIDOMWindowProxy> ourWindow;
     GetWindowDOMWindow(getter_AddRefs(ourWindow));
-    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(ourWindow);
+    auto* piWindow = nsPIDOMWindowOuter::From(ourWindow);
     piWindow->SetFullScreen(true);
   } else {
     mWindow->SetSizeMode(sizeMode);
@@ -1541,7 +1548,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   bool isFullscreen = false;
-  if (nsPIDOMWindow* domWindow = mDocShell->GetWindow()) {
+  if (nsPIDOMWindowOuter* domWindow = mDocShell->GetWindow()) {
     isFullscreen = domWindow->GetFullScreen();
   }
 
@@ -1653,7 +1660,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
+NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(mozIDOMWindowProxy** aDOMWindow)
 {
   NS_ENSURE_STATE(mDocShell);
 
@@ -2079,17 +2086,16 @@ void nsXULWindow::PlaceWindowLayersBehind(uint32_t aLowLevel,
 
 void nsXULWindow::SetContentScrollbarVisibility(bool aVisible)
 {
-  nsCOMPtr<nsPIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
+  nsCOMPtr<nsPIDOMWindowOuter> contentWin(do_GetInterface(mPrimaryContentShell));
   if (!contentWin) {
     return;
   }
 
   MOZ_ASSERT(contentWin->IsOuterWindow());
-  contentWin = contentWin->GetCurrentInnerWindow();
-  if (contentWin) {
+  if (nsPIDOMWindowInner* innerWindow = contentWin->GetCurrentInnerWindow()) {
     mozilla::ErrorResult rv;
 
-    RefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(contentWin.get());
+    RefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(reinterpret_cast<nsPIDOMWindow<nsISupports>*>(innerWindow));
     RefPtr<mozilla::dom::BarProp> scrollbars = window->GetScrollbars(rv);
     if (scrollbars) {
       scrollbars->SetVisible(aVisible, rv);

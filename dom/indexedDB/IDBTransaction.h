@@ -16,7 +16,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -263,7 +263,7 @@ public:
     return mLoggingSerialNumber;
   }
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   IDBTransactionMode

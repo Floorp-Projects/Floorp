@@ -20,7 +20,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MMICall)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MMICall::MMICall(nsPIDOMWindow* aWindow, const nsAString& aServiceCode)
+MMICall::MMICall(nsPIDOMWindowInner* aWindow, const nsAString& aServiceCode)
   : mWindow(aWindow), mServiceCode(aServiceCode)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
@@ -41,7 +41,7 @@ MMICall::~MMICall()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 MMICall::GetParentObject() const
 {
   return mWindow;

@@ -818,7 +818,7 @@ IDBTransaction::NextIndexId()
   return mNextIndexId++;
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 IDBTransaction::GetParentObject() const
 {
   AssertIsOnOwningThread();

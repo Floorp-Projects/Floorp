@@ -114,7 +114,7 @@ public:
    * Create a CanvasCaptureMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<CanvasCaptureMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow,
+  CreateSourceStream(nsPIDOMWindowInner* aWindow,
                      HTMLCanvasElement* aCanvas);
 
 protected:

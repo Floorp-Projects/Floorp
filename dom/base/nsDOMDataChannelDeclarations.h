@@ -17,11 +17,11 @@ namespace mozilla {
    class DataChannel;
 }
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 nsresult
 NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& dataChannel,
-                     nsPIDOMWindow* aWindow,
+                     nsPIDOMWindowInner* aWindow,
                      nsIDOMDataChannel** domDataChannel);
 
 // Tell DataChannel it's ok to deliver open and message events

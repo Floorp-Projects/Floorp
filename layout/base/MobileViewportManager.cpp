@@ -41,7 +41,7 @@ MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,
 
   MVM_LOG("%p: creating with presShell %p document %p\n", this, mPresShell, aDocument);
 
-  if (nsCOMPtr<nsPIDOMWindow> window = mDocument->GetWindow()) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
     mEventTarget = window->GetChromeEventHandler();
   }
   if (mEventTarget) {

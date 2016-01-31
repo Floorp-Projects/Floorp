@@ -805,13 +805,13 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    nsPIDOMWindow* win = mOwnerContent->OwnerDoc()->GetWindow();
+    nsPIDOMWindowOuter* win = mOwnerContent->OwnerDoc()->GetWindow();
     bool parentIsActive = false;
     if (win) {
       nsCOMPtr<nsPIWindowRoot> windowRoot =
-        static_cast<nsGlobalWindow*>(win)->GetTopWindowRoot();
+        nsGlobalWindow::Cast(win)->GetTopWindowRoot();
       if (windowRoot) {
-        nsPIDOMWindow* topWin = windowRoot->GetWindow();
+        nsPIDOMWindowOuter* topWin = windowRoot->GetWindow();
         parentIsActive = topWin && topWin->IsActive();
       }
     }
@@ -938,9 +938,8 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   mRemoteBrowser->SetBrowserDOMWindow(otherBrowserDOMWindow);
 
   // Native plugin windows used by this remote content need to be reparented.
-  nsPIDOMWindow* newWin = ourDoc->GetWindow();
-  if (newWin) {
-    RefPtr<nsIWidget> newParent = ((nsGlobalWindow*)newWin)->GetMainWidget();
+  if (nsPIDOMWindowOuter* newWin = ourDoc->GetWindow()) {
+    RefPtr<nsIWidget> newParent = nsGlobalWindow::Cast(newWin)->GetMainWidget();
     const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
       aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
     for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
@@ -1150,8 +1149,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ourWindow = ourDocshell->GetWindow();
-  nsCOMPtr<nsPIDOMWindow> otherWindow = otherDocshell->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> ourWindow = ourDocshell->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> otherWindow = otherDocshell->GetWindow();
 
   nsCOMPtr<Element> ourFrameElement =
     ourWindow->GetFrameElementInternal();
@@ -1427,7 +1426,7 @@ nsFrameLoader::StartDestroy()
 
   // Let our window know that we are gone
   if (mDocShell) {
-    nsCOMPtr<nsPIDOMWindow> win_private(mDocShell->GetWindow());
+    nsCOMPtr<nsPIDOMWindowOuter> win_private(mDocShell->GetWindow());
     if (win_private) {
       win_private->SetFrameElementInternal(nullptr);
     }
@@ -1852,7 +1851,7 @@ nsFrameLoader::MaybeCreateDocShell()
   nsCOMPtr<Element> frame_element = mOwnerContent;
   NS_ASSERTION(frame_element, "frame loader owner element not a DOM element!");
 
-  nsCOMPtr<nsPIDOMWindow> win_private(mDocShell->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> win_private(mDocShell->GetWindow());
   nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
   if (win_private) {
     win_private->SetFrameElementInternal(frame_element);
@@ -2068,7 +2067,7 @@ nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
@@ -2227,7 +2226,7 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindow> parentWin = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> parentWin = doc->GetWindow();
   if (!parentWin) {
     return false;
   }
@@ -2296,7 +2295,7 @@ nsFrameLoader::TryRemoteBrowser()
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   parentDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
-  nsCOMPtr<nsIDOMWindow> rootWin = rootItem->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> rootWin = rootItem->GetWindow();
   nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
 
   if (rootChromeWin) {

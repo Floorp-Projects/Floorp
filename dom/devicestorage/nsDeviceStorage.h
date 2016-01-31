@@ -7,7 +7,6 @@
 #ifndef nsDeviceStorage_h
 #define nsDeviceStorage_h
 
-class nsPIDOMWindow;
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"

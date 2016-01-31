@@ -46,7 +46,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsCOMPtr<nsPIDOMWindow> window = mDesktopNotification->GetOwner();
+    nsCOMPtr<nsPIDOMWindowInner> window = mDesktopNotification->GetOwner();
     nsContentPermissionUtils::AskPermission(this, window);
     return NS_OK;
   }
@@ -77,7 +77,7 @@ DesktopNotification::PostDesktopNotification()
   nsCOMPtr<nsIAppNotificationService> appNotifier =
     do_GetService("@mozilla.org/system-alerts-service;1");
   if (appNotifier) {
-    nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
     uint32_t appId = (window.get())->GetDoc()->NodePrincipal()->GetAppId();
 
     if (appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
@@ -134,7 +134,7 @@ DesktopNotification::PostDesktopNotification()
 DesktopNotification::DesktopNotification(const nsAString & title,
                                          const nsAString & description,
                                          const nsAString & iconURL,
-                                         nsPIDOMWindow *aWindow,
+                                         nsPIDOMWindowInner* aWindow,
                                          nsIPrincipal* principal)
   : DOMEventTargetHelper(aWindow)
   , mTitle(title)
@@ -284,7 +284,7 @@ DesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 }
 
 NS_IMETHODIMP
-DesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
+DesktopNotificationRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 {
   if (!mDesktopNotification) {
     return NS_ERROR_NOT_INITIALIZED;

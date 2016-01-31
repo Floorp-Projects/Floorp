@@ -82,7 +82,7 @@ Directory::~Directory()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 Directory::GetParentObject() const
 {
   return mFileSystem->GetWindow();

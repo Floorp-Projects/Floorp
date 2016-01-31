@@ -52,7 +52,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LegacyMozTCPSocket)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-LegacyMozTCPSocket::LegacyMozTCPSocket(nsPIDOMWindow* aWindow)
+LegacyMozTCPSocket::LegacyMozTCPSocket(nsPIDOMWindowInner* aWindow)
 : mGlobal(do_QueryInterface(aWindow))
 {
 }
@@ -170,10 +170,7 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
 #endif
 {
   if (aGlobal) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
-    if (window && window->IsOuterWindow()) {
-      window = window->GetCurrentInnerWindow();
-    }
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (window) {
       mInnerWindowID = window->WindowID();
     }

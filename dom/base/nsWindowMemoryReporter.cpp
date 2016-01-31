@@ -71,13 +71,12 @@ AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
 
   // Measure this window's descendents.
   for (uint32_t i = 0; i < length; i++) {
-      nsCOMPtr<nsIDOMWindow> child;
+      nsCOMPtr<mozIDOMWindowProxy> child;
       rv = frames->Item(i, getter_AddRefs(child));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_STATE(child);
 
-      nsGlobalWindow* childWin =
-        static_cast<nsGlobalWindow*>(static_cast<nsIDOMWindow *>(child.get()));
+      nsGlobalWindow* childWin = nsGlobalWindow::Cast(child);
 
       rv = AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -86,9 +85,9 @@ AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
 }
 
 static nsresult
-NonJSSizeOfTab(nsPIDOMWindow* aWindow, size_t* aDomSize, size_t* aStyleSize, size_t* aOtherSize)
+NonJSSizeOfTab(nsPIDOMWindowOuter* aWindow, size_t* aDomSize, size_t* aStyleSize, size_t* aOtherSize)
 {
-  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(aWindow);
+  nsGlobalWindow* window = nsGlobalWindow::Cast(aWindow);
 
   nsTabSizes sizes;
   nsresult rv = AddNonJSSizeOfWindowAndItsDescendents(window, &sizes);
@@ -130,12 +129,11 @@ nsWindowMemoryReporter::Get()
 }
 
 static already_AddRefed<nsIURI>
-GetWindowURI(nsIDOMWindow *aWindow)
+GetWindowURI(nsGlobalWindow* aWindow)
 {
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(pWindow, nullptr);
+  NS_ENSURE_TRUE(aWindow, nullptr);
 
-  nsCOMPtr<nsIDocument> doc = pWindow->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
   nsCOMPtr<nsIURI> uri;
 
   if (doc) {
@@ -144,14 +142,14 @@ GetWindowURI(nsIDOMWindow *aWindow)
 
   if (!uri) {
     nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrincipal =
-      do_QueryInterface(aWindow);
+      do_QueryObject(aWindow);
     NS_ENSURE_TRUE(scriptObjPrincipal, nullptr);
 
     // GetPrincipal() will print a warning if the window does not have an outer
     // window, so check here for an outer window first.  This code is
     // functionally correct if we leave out the GetOuterWindow() check, but we
     // end up printing a lot of warnings during debug mochitests.
-    if (pWindow->GetOuterWindow()) {
+    if (aWindow->GetOuterWindow()) {
       nsIPrincipal* principal = scriptObjPrincipal->GetPrincipal();
       if (principal) {
         principal->GetURI(getter_AddRefs(uri));
@@ -735,17 +733,19 @@ CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
     static_cast<CheckForGhostWindowsEnumeratorData*>(aClosure);
 
   nsWeakPtr weakKey = do_QueryInterface(aKey);
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(weakKey);
-  if (!window) {
+  nsCOMPtr<mozIDOMWindow> iwindow = do_QueryReferent(weakKey);
+  if (!iwindow) {
     // The window object has been destroyed.  Stop tracking its weak ref in our
     // hashtable.
     return PL_DHASH_REMOVE;
   }
 
+  nsPIDOMWindowInner* window = nsPIDOMWindowInner::From(iwindow);
+
   // Avoid calling GetTop() if we have no outer window.  Nothing will break if
   // we do, but it will spew debug output, which can cause our test logs to
   // overflow.
-  nsCOMPtr<nsPIDOMWindow> top;
+  nsCOMPtr<nsPIDOMWindowOuter> top;
   if (window->GetOuterWindow()) {
     top = window->GetOuterWindow()->GetTop();
   }
@@ -755,7 +755,7 @@ CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
     return PL_DHASH_REMOVE;
   }
 
-  nsCOMPtr<nsIURI> uri = GetWindowURI(window);
+  nsCOMPtr<nsIURI> uri = GetWindowURI(nsGlobalWindow::Cast(window));
 
   nsAutoCString domain;
   if (uri) {
@@ -777,11 +777,8 @@ CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
     } else if ((data->now - aTimeStamp).ToSeconds() > data->ghostTimeout) {
       // This definitely is a ghost window, so add it to ghostWindowIDs, if
       // that is not null.
-      if (data->ghostWindowIDs) {
-        nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(window);
-        if (pWindow) {
-          data->ghostWindowIDs->PutEntry(pWindow->WindowID());
-        }
+      if (data->ghostWindowIDs && window) {
+        data->ghostWindowIDs->PutEntry(window->WindowID());
       }
     }
   }

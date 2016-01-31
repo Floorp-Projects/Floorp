@@ -545,14 +545,14 @@ AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture)
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = GetOwner();
   if (!ownerWindow) {
     return NS_OK;
   }
 
   if (aCapture != mCaptured) {
     if (aCapture) {
-      nsCOMPtr<nsPIDOMWindow> window = Context()->GetParentObject();
+      nsCOMPtr<nsPIDOMWindowInner> window = Context()->GetParentObject();
       uint64_t id = window->WindowID();
       mCaptureStreamPort =
         mStream->Graph()->ConnectToCaptureStream(id, mStream);

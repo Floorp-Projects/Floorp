@@ -38,7 +38,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(IccManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IccManager, DOMEventTargetHelper)
 
-IccManager::IccManager(nsPIDOMWindow* aWindow)
+IccManager::IccManager(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
   uint32_t numberOfServices =

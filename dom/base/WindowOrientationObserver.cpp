@@ -39,7 +39,7 @@ WindowOrientationObserver::Notify(
   const mozilla::hal::ScreenConfiguration& aConfiguration)
 {
   uint16_t currentAngle = aConfiguration.angle();
-  if (mAngle != currentAngle && mWindow->IsCurrentInnerWindow()) {
+  if (mAngle != currentAngle && mWindow->AsInner()->IsCurrentInnerWindow()) {
     mAngle = currentAngle;
     mWindow->GetOuterWindow()->DispatchCustomEvent(NS_LITERAL_STRING("orientationchange"));
   }

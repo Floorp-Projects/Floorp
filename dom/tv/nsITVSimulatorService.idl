@@ -4,14 +4,15 @@
 
 #include "nsISupports.idl"
 #include "nsITVService.idl"
-#include "nsIDOMWindow.idl"
+
+interface mozIDOMWindow;
 
 %{C++
 #define TV_SIMULATOR_SERVICE_CONTRACTID\
   "@mozilla.org/tv/simulatorservice;1"
 %}
 
-[scriptable, uuid(8ecae67d-a959-4f8a-a786-14dc12bd8d3c)]
+[scriptable, uuid(3f670994-5915-415a-b906-7ead54bb3be1)]
 interface nsITVSimulatorService : nsITVService
 {
   /*
@@ -26,6 +27,6 @@ interface nsITVSimulatorService : nsITVService
   void getSimulatorVideoBlobURL(in DOMString tunerId,
                                 in DOMString sourceType,
                                 in DOMString channelNumber,
-                                in nsIDOMWindow window,
+                                in mozIDOMWindow window,
                                 [retval] out DOMString blobUrl);
 };
