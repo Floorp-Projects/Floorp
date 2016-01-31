@@ -99,9 +99,9 @@ public:
                            const ScrollableLayerGuid& aGuid,
                            const CSSToLayoutDeviceScale& aScale);
 
-    /* Convenience function for applying a callback transform to all refpoints
-     * in the input event. */
-    static void ApplyCallbackTransform(WidgetEvent& aEvent,
+    /* Convenience function for applying a callback transform to all touch
+     * points of a touch event. */
+    static void ApplyCallbackTransform(WidgetTouchEvent& aEvent,
                                        const ScrollableLayerGuid& aGuid,
                                        const CSSToLayoutDeviceScale& aScale);
 
