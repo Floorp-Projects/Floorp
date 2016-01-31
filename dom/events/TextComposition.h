@@ -429,7 +429,7 @@ private:
  */
 
 class TextCompositionArray final :
-  public nsAutoTArray<RefPtr<TextComposition>, 2>
+  public AutoTArray<RefPtr<TextComposition>, 2>
 {
 public:
   // Looking for per native IME context.

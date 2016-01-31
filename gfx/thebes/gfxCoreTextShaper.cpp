@@ -349,10 +349,10 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     // Testing indicates that CTRunGetGlyphsPtr (almost?) always succeeds,
     // and so allocating a new array and copying data with CTRunGetGlyphs
     // will be extremely rare.
-    // If this were not the case, we could use an nsAutoTArray<> to
+    // If this were not the case, we could use an AutoTArray<> to
     // try and avoid the heap allocation for small runs.
     // It's possible that some future change to CoreText will mean that
-    // CTRunGetGlyphsPtr fails more often; if this happens, nsAutoTArray<>
+    // CTRunGetGlyphsPtr fails more often; if this happens, AutoTArray<>
     // may become an attractive option.
     glyphs = ::CTRunGetGlyphsPtr(aCTRun);
     if (!glyphs) {
@@ -390,7 +390,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     double runWidth = ::CTRunGetTypographicBounds(aCTRun, ::CFRangeMake(0, 0),
                                                   nullptr, nullptr, nullptr);
 
-    nsAutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
+    AutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
     gfxShapedText::CompressedGlyph *charGlyphs =
         aShapedText->GetCharacterGlyphs() + aOffset;
 

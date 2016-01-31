@@ -36,7 +36,7 @@ GetAllSpeechSynthActors(InfallibleTArray<mozilla::dom::SpeechSynthesisParent*>& 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActors.IsEmpty());
 
-  nsAutoTArray<mozilla::dom::ContentParent*, 20> contentActors;
+  AutoTArray<mozilla::dom::ContentParent*, 20> contentActors;
   mozilla::dom::ContentParent::GetAll(contentActors);
 
   for (uint32_t contentIndex = 0;

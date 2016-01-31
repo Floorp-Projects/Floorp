@@ -1148,7 +1148,7 @@ gfxFontEntry*
 gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
                                 bool& aNeedsSyntheticBold)
 {
-    nsAutoTArray<gfxFontEntry*,4> matched;
+    AutoTArray<gfxFontEntry*,4> matched;
     FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold);
     if (!matched.IsEmpty()) {
         return matched[0];
@@ -1636,7 +1636,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontLis
 {
     uint32_t dataLength;
     const char *nameData = hb_blob_get_data(aNameTable, &dataLength);
-    nsAutoTArray<nsString,4> otherFamilyNames;
+    AutoTArray<nsString,4> otherFamilyNames;
 
     ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
                                 otherFamilyNames, useFullName);
@@ -1721,7 +1721,7 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         aFontInfoData->mLoadOtherNames &&
         !asyncFontLoaderDisabled)
     {
-        nsAutoTArray<nsString,4> otherFamilyNames;
+        AutoTArray<nsString,4> otherFamilyNames;
         bool foundOtherNames =
             aFontInfoData->GetOtherFamilyNames(mName, otherFamilyNames);
         if (foundOtherNames) {

@@ -1405,7 +1405,7 @@ BuildAnimationPropertyListFromKeyframeSequence(
 {
   // Convert the object in aIterator to sequence<Keyframe>, producing
   // an array of OffsetIndexedKeyframe objects.
-  nsAutoTArray<OffsetIndexedKeyframe,4> keyframes;
+  AutoTArray<OffsetIndexedKeyframe,4> keyframes;
   if (!ConvertKeyframeSequence(aCx, aIterator, keyframes)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

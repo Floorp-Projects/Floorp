@@ -308,7 +308,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
   // faster for the far more common case of there not being any such
   // attributes.
   // Also check for SVG elements which require special handling
-  nsAutoTArray<nsString, 5> baseAttrs;
+  AutoTArray<nsString, 5> baseAttrs;
   nsString attr;
   const nsIContent *elem = this;
   do {
@@ -1328,7 +1328,7 @@ public:
   }
 
 private:
-  nsAutoTArray<nsCOMPtr<nsIContent>,
+  AutoTArray<nsCOMPtr<nsIContent>,
                SUBTREE_UNBINDINGS_PER_RUNNABLE> mSubtreeRoots;
   RefPtr<ContentUnbinder>                     mNext;
   ContentUnbinder*                              mLast;
@@ -1528,11 +1528,11 @@ FragmentOrElement::CanSkipInCC(nsINode* aNode)
 
   // nodesToUnpurple contains nodes which will be removed
   // from the purple buffer if the DOM tree is black.
-  nsAutoTArray<nsIContent*, 1020> nodesToUnpurple;
+  AutoTArray<nsIContent*, 1020> nodesToUnpurple;
   // grayNodes need script traverse, so they aren't removed from
   // the purple buffer, but are marked to be in black subtree so that
   // traverse is faster.
-  nsAutoTArray<nsINode*, 1020> grayNodes;
+  AutoTArray<nsINode*, 1020> grayNodes;
 
   bool foundBlack = root->IsBlack();
   if (root != currentDoc) {
@@ -1598,8 +1598,8 @@ FragmentOrElement::CanSkipInCC(nsINode* aNode)
   return !NeedsScriptTraverse(aNode);
 }
 
-nsAutoTArray<nsINode*, 1020>* gPurpleRoots = nullptr;
-nsAutoTArray<nsIContent*, 1020>* gNodesToUnbind = nullptr;
+AutoTArray<nsINode*, 1020>* gPurpleRoots = nullptr;
+AutoTArray<nsIContent*, 1020>* gNodesToUnbind = nullptr;
 
 void ClearCycleCollectorCleanupData()
 {
@@ -1702,7 +1702,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
 
   // nodesToClear contains nodes which are either purple or
   // gray.
-  nsAutoTArray<nsIContent*, 1020> nodesToClear;
+  AutoTArray<nsIContent*, 1020> nodesToClear;
 
   bool foundBlack = root->IsBlack();
   bool domOnlyCycle = false;
@@ -1751,7 +1751,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
     root->SetIsPurpleRoot(true);
     if (domOnlyCycle) {
       if (!gNodesToUnbind) {
-        gNodesToUnbind = new nsAutoTArray<nsIContent*, 1020>();
+        gNodesToUnbind = new AutoTArray<nsIContent*, 1020>();
       }
       gNodesToUnbind->AppendElement(static_cast<nsIContent*>(root));
       for (uint32_t i = 0; i < nodesToClear.Length(); ++i) {
@@ -1763,7 +1763,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
       return true;
     } else {
       if (!gPurpleRoots) {
-        gPurpleRoots = new nsAutoTArray<nsINode*, 1020>();
+        gPurpleRoots = new AutoTArray<nsINode*, 1020>();
       }
       gPurpleRoots->AppendElement(root);
     }

@@ -43,7 +43,7 @@
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion, etc
-#include "nsTArray.h"                   // for nsAutoTArray
+#include "nsTArray.h"                   // for AutoTArray
 #ifdef MOZ_ENABLE_SKIA
 #include "skia/include/core/SkCanvas.h"         // for SkCanvas
 #include "skia/include/core/SkBitmapDevice.h"   // for SkBitmapDevice
@@ -897,7 +897,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
   } else {
     ContainerLayer* container =
         static_cast<ContainerLayer*>(aPaintContext.mLayer);
-    nsAutoTArray<Layer*, 12> children;
+    AutoTArray<Layer*, 12> children;
     container->SortChildrenBy3DZOrder(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
       Layer* layer = children.ElementAt(i);

@@ -751,7 +751,7 @@ public:
       UpdateAfterSendChunk(chunkSamples, bytesCopied, aSamplesRead);
     } else {
       // Interleave data to a temporary buffer.
-      nsAutoTArray<AudioDataValue, 9600> pcm;
+      AutoTArray<AudioDataValue, 9600> pcm;
       pcm.SetLength(bytesToCopy);
       AudioDataValue* interleavedSource = pcm.Elements();
       AudioTrackEncoder::InterleaveTrackData(aChunk, chunkSamples,
@@ -853,7 +853,7 @@ private:
                          * mOMXAEncoder.mChannels * sizeof(AudioDataValue);
     uint32_t dstSamplesCopied = aSamplesNum;
     if (mOMXAEncoder.mResampler) {
-      nsAutoTArray<AudioDataValue, 9600> pcm;
+      AutoTArray<AudioDataValue, 9600> pcm;
       pcm.SetLength(bytesToCopy);
       AudioTrackEncoder::InterleaveTrackData(aSource, aSamplesNum,
                                              mOMXAEncoder.mChannels,

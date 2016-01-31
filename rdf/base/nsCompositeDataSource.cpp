@@ -129,7 +129,7 @@ protected:
     nsISimpleEnumerator* mCurrent;
     nsIRDFNode*  mResult;
     int32_t      mNext;
-    nsAutoTArray<nsCOMPtr<nsIRDFNode>, 8>  mAlreadyReturned;
+    AutoTArray<nsCOMPtr<nsIRDFNode>, 8>  mAlreadyReturned;
     bool mAllowNegativeAssertions;
     bool mCoalesceDuplicateArcs;
 };

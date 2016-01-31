@@ -2043,7 +2043,7 @@ PluginInstanceChild::ImmGetCompositionStringProc(HIMC aIMC, DWORD aIndex,
     if (!sCurrentPluginInstance) {
         return IMM_ERROR_GENERAL;
     }
-    nsAutoTArray<uint8_t, 16> dist;
+    AutoTArray<uint8_t, 16> dist;
     int32_t length = 0; // IMM_ERROR_NODATA
     sCurrentPluginInstance->SendGetCompositionString(aIndex, &dist, &length);
     if (length == IMM_ERROR_NODATA || length == IMM_ERROR_GENERAL) {
