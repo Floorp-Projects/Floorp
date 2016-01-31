@@ -399,7 +399,7 @@ protected:
   bool InitChildGlobalInternal(nsISupports* aScope, const nsACString& aID);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  AutoTArray<JS::Heap<JSObject*>, 2> mAnonymousGlobalScopes;
+  nsAutoTArray<JS::Heap<JSObject*>, 2> mAnonymousGlobalScopes;
 
   static nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>* sCachedScripts;
   static nsScriptCacheCleaner* sScriptCacheCleaner;

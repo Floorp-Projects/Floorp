@@ -350,8 +350,8 @@ private:
   APZTestData mApzTestData;
 
   RefPtr<ShadowLayerForwarder> mForwarder;
-  AutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
-  AutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
+  nsAutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
+  nsAutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
   mozilla::TimeStamp mTransactionStart;
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;

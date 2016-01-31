@@ -539,7 +539,7 @@ private:
     InMemoryDataSource* mDataSource;
     nsIRDFResource*     mSource;
     nsIRDFNode*         mTarget;
-    AutoTArray<nsCOMPtr<nsIRDFResource>, 8> mAlreadyReturned;
+    nsAutoTArray<nsCOMPtr<nsIRDFResource>, 8> mAlreadyReturned;
     nsIRDFResource*     mCurrent;
     Assertion*          mAssertion;
     nsCOMPtr<nsISupportsArray> mHashArcs;

@@ -667,7 +667,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  AutoTArray<nsString, 1> stackSequence;
+  nsAutoTArray<nsString, 1> stackSequence;
 
   if (aStoreNames.IsString()) {
     stackSequence.AppendElement(aStoreNames.GetAsString());
@@ -848,8 +848,8 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 
   class MOZ_STACK_CLASS Helper final
   {
-    typedef AutoTArray<RefPtr<IDBTransaction>, 20> StrongTransactionArray;
-    typedef AutoTArray<IDBTransaction*, 20> WeakTransactionArray;
+    typedef nsAutoTArray<RefPtr<IDBTransaction>, 20> StrongTransactionArray;
+    typedef nsAutoTArray<IDBTransaction*, 20> WeakTransactionArray;
 
   public:
     static void

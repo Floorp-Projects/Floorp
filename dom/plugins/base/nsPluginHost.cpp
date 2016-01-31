@@ -2111,7 +2111,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
   if (NS_FAILED(rv))
     return rv;
 
-  AutoTArray<nsCOMPtr<nsIFile>, 6> pluginFiles;
+  nsAutoTArray<nsCOMPtr<nsIFile>, 6> pluginFiles;
 
   bool hasMore;
   while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
@@ -3666,7 +3666,7 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPos
   const char CRLFCRLF[] = {CR,LF,CR,LF,'\0'}; // C string"\r\n\r\n"
   const char ContentLenHeader[] = "Content-length";
 
-  AutoTArray<const char*, 8> singleLF;
+  nsAutoTArray<const char*, 8> singleLF;
   const char *pSCntlh = 0;// pointer to start of ContentLenHeader in inPostData
   const char *pSod = 0;   // pointer to start of data in inPostData
   const char *pEoh = 0;   // pointer to end of headers in inPostData

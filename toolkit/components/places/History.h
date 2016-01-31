@@ -192,7 +192,7 @@ private:
    * mRecentlyVisitedURIs remembers URIs which are recently added to the DB,
    * to avoid saving these locations repeatedly in a short period.
    */
-  typedef AutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE>
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE>
           RecentlyVisitedArray;
   RecentlyVisitedArray mRecentlyVisitedURIs;
   RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;

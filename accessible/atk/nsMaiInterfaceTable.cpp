@@ -273,7 +273,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
 {
   *aSelected = nullptr;
 
-  AutoTArray<uint32_t, 10> cols;
+  nsAutoTArray<uint32_t, 10> cols;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     accWrap->AsTable()->SelectedColIndices(&cols);
@@ -300,7 +300,7 @@ getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
 static gint
 getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
 {
-  AutoTArray<uint32_t, 10> rows;
+  nsAutoTArray<uint32_t, 10> rows;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
   if (accWrap) {
     accWrap->AsTable()->SelectedRowIndices(&rows);

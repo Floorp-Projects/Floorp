@@ -1739,13 +1739,13 @@ private:
    * Stack of frames corresponding to <textPath> elements that are in scope
    * for the current frame.
    */
-  AutoTArray<nsIFrame*, 1> mTextPathFrames;
+  nsAutoTArray<nsIFrame*, 1> mTextPathFrames;
 
   /**
    * Stack of dominant-baseline values to record as we traverse through the
    * frame tree.
    */
-  AutoTArray<uint8_t, 8> mBaselines;
+  nsAutoTArray<uint8_t, 8> mBaselines;
 
   /**
    * The iterator's current position relative to mSubtree.

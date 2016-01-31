@@ -105,7 +105,7 @@ static char16_t GetBidiControl(nsStyleContext* aStyleContext,
 
 struct BidiParagraphData {
   nsString            mBuffer;
-  AutoTArray<char16_t, 16> mEmbeddingStack;
+  nsAutoTArray<char16_t, 16> mEmbeddingStack;
   nsTArray<nsIFrame*> mLogicalFrames;
   nsTArray<nsLineBox*> mLinePerFrame;
   nsDataHashtable<nsISupportsHashKey, int32_t> mContentToFrameIndex;
@@ -394,7 +394,7 @@ struct BidiLineData {
   nsTArray<nsIFrame*> mLogicalFrames;
   nsTArray<nsIFrame*> mVisualFrames;
   nsTArray<int32_t> mIndexMap;
-  AutoTArray<uint8_t, 18> mLevels;
+  nsAutoTArray<uint8_t, 18> mLevels;
   bool mIsReordered;
 
   BidiLineData(nsIFrame* aFirstFrameOnLine, int32_t   aNumFramesOnLine)

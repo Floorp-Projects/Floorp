@@ -76,7 +76,7 @@ protected:
   DocAccessible* mDocument;
 
   /**
-   * Pending events array. Don't make this an AutoTArray; we use
+   * Pending events array. Don't make this an nsAutoTArray; we use
    * SwapElements() on it.
    */
   nsTArray<RefPtr<AccEvent> > mEvents;

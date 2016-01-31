@@ -102,8 +102,8 @@ AudioCaptureStream::MixerCallback(AudioDataValue* aMixedBuffer,
                                   AudioSampleFormat aFormat, uint32_t aChannels,
                                   uint32_t aFrames, uint32_t aSampleRate)
 {
-  AutoTArray<nsTArray<AudioDataValue>, MONO> output;
-  AutoTArray<const AudioDataValue*, MONO> bufferPtrs;
+  nsAutoTArray<nsTArray<AudioDataValue>, MONO> output;
+  nsAutoTArray<const AudioDataValue*, MONO> bufferPtrs;
   output.SetLength(MONO);
   bufferPtrs.SetLength(MONO);
 

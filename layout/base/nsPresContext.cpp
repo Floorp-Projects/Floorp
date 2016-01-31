@@ -3112,7 +3112,7 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
           continue;
         LayoutDeviceIntRect bounds;
         pluginsToMove[j].mChild->GetBounds(bounds);
-        AutoTArray<LayoutDeviceIntRect,1> clipRects;
+        nsAutoTArray<LayoutDeviceIntRect,1> clipRects;
         pluginsToMove[j].mChild->GetWindowClipRegion(&clipRects);
         if (HasOverlap(bounds.TopLeft(), clipRects,
                        config->mBounds.TopLeft(),

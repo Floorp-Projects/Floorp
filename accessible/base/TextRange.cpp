@@ -24,7 +24,7 @@ TextPoint::operator <(const TextPoint& aPoint) const
   // Build the chain of parents
   Accessible* p1 = mContainer;
   Accessible* p2 = aPoint.mContainer;
-  AutoTArray<Accessible*, 30> parents1, parents2;
+  nsAutoTArray<Accessible*, 30> parents1, parents2;
   do {
     parents1.AppendElement(p1);
     p1 = p1->Parent();
@@ -76,7 +76,7 @@ TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const
   Accessible* p2 = mEndContainer->GetChildAtOffset(mEndOffset);
 
   uint32_t pos1 = 0, pos2 = 0;
-  AutoTArray<Accessible*, 30> parents1, parents2;
+  nsAutoTArray<Accessible*, 30> parents1, parents2;
   Accessible* container =
     CommonParent(p1, p2, &parents1, &pos1, &parents2, &pos2);
 
@@ -146,7 +146,7 @@ bool
 TextRange::Crop(Accessible* aContainer)
 {
   uint32_t boundaryPos = 0, containerPos = 0;
-  AutoTArray<Accessible*, 30> boundaryParents, containerParents;
+  nsAutoTArray<Accessible*, 30> boundaryParents, containerParents;
 
   // Crop the start boundary.
   Accessible* container = nullptr;

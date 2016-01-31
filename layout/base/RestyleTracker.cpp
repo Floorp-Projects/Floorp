@@ -165,7 +165,7 @@ RestyleTracker::DoProcessRestyles()
     while (mPendingRestyles.Count()) {
       if (mHaveLaterSiblingRestyles) {
         // Convert them to individual restyles on all the later siblings
-        AutoTArray<RefPtr<Element>, RESTYLE_ARRAY_STACKSIZE> laterSiblingArr;
+        nsAutoTArray<RefPtr<Element>, RESTYLE_ARRAY_STACKSIZE> laterSiblingArr;
         for (auto iter = mPendingRestyles.Iter(); !iter.Done(); iter.Next()) {
           auto element = static_cast<dom::Element*>(iter.Key());
           // Only collect the entries that actually need restyling by us (and
@@ -280,7 +280,7 @@ RestyleTracker::DoProcessRestyles()
       // scratch array instead of calling out to ProcessOneRestyle while
       // enumerating the hashtable.  Use the stack if we can, otherwise
       // fall back on heap-allocation.
-      AutoTArray<RestyleEnumerateData, RESTYLE_ARRAY_STACKSIZE> restyleArr;
+      nsAutoTArray<RestyleEnumerateData, RESTYLE_ARRAY_STACKSIZE> restyleArr;
       RestyleEnumerateData* restylesToProcess =
         restyleArr.AppendElements(mPendingRestyles.Count());
       if (restylesToProcess) {

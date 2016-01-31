@@ -152,7 +152,7 @@ protected:
   };
 
   // Stack to store one olState struct per <OL>.
-  AutoTArray<olState, 8> mOLStateStack;
+  nsAutoTArray<olState, 8> mOLStateStack;
 
   bool HasNoChildren(nsIContent* aContent);
 };

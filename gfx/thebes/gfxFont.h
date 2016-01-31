@@ -2083,7 +2083,7 @@ protected:
 
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
-    AutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
+    nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
     nsAutoPtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver> > > mGlyphChangeObservers;
 
     gfxFloat                   mAdjustedSize;

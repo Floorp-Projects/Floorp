@@ -390,7 +390,7 @@ private:
                                 const RestyleHintData& aRestyleHintData);
 
   typedef nsClassHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
-  typedef AutoTArray< RefPtr<Element>, 32> RestyleRootArray;
+  typedef nsAutoTArray< RefPtr<Element>, 32> RestyleRootArray;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS, one flag
   // from ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS, and might also include

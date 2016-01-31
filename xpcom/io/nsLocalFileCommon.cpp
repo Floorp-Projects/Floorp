@@ -210,8 +210,8 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
   aResult.Truncate(0);
 
   nsAutoString thisPath, fromPath;
-  AutoTArray<char16_t*, 32> thisNodes;
-  AutoTArray<char16_t*, 32> fromNodes;
+  nsAutoTArray<char16_t*, 32> thisNodes;
+  nsAutoTArray<char16_t*, 32> fromNodes;
 
   rv = GetPath(thisPath);
   if (NS_FAILED(rv)) {

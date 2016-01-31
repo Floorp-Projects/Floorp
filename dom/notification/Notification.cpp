@@ -158,7 +158,7 @@ public:
     MOZ_ASSERT(ok);
 
     ErrorResult result;
-    AutoTArray<RefPtr<Notification>, 5> notifications;
+    nsAutoTArray<RefPtr<Notification>, 5> notifications;
 
     for (uint32_t i = 0; i < mStrings.Length(); ++i) {
       RefPtr<Notification> n =
@@ -2094,7 +2094,7 @@ public:
     RefPtr<Promise> workerPromise = mPromiseProxy->WorkerPromise();
 
     ErrorResult result;
-    AutoTArray<RefPtr<Notification>, 5> notifications;
+    nsAutoTArray<RefPtr<Notification>, 5> notifications;
     for (uint32_t i = 0; i < mStrings.Length(); ++i) {
       RefPtr<Notification> n =
         Notification::ConstructFromFields(aWorkerPrivate->GlobalScope(),

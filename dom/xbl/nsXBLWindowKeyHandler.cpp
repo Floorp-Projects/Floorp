@@ -441,7 +441,7 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
 {
-  AutoTArray<nsShortcutCandidate, 10> accessKeys;
+  nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
   nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
 
   if (accessKeys.IsEmpty()) {

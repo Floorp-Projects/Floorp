@@ -419,7 +419,7 @@ private:
   // Subtracting eCSSProperty_COUNT from those values that represent custom
   // properties results in an index into mVariableOrder, which identifies the
   // specific variable the custom property declaration is for.
-  AutoTArray<uint32_t, 8> mOrder;
+  nsAutoTArray<uint32_t, 8> mOrder;
 
   // variable names of custom properties found in mOrder
   nsTArray<nsString> mVariableOrder;

@@ -59,7 +59,7 @@ nsresult
 nsLineBreaker::FlushCurrentWord()
 {
   uint32_t length = mCurrentWord.Length();
-  AutoTArray<uint8_t,4000> breakState;
+  nsAutoTArray<uint8_t,4000> breakState;
   if (!breakState.AppendElements(length))
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -187,7 +187,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
       return rv;
   }
 
-  AutoTArray<uint8_t,4000> breakState;
+  nsAutoTArray<uint8_t,4000> breakState;
   if (aSink) {
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -313,7 +313,7 @@ nsLineBreaker::FindHyphenationPoints(nsHyphenator *aHyphenator,
                                      uint8_t *aBreakState)
 {
   nsDependentSubstring string(aTextStart, aTextLimit);
-  AutoTArray<bool,200> hyphens;
+  AutoFallibleTArray<bool,200> hyphens;
   if (NS_SUCCEEDED(aHyphenator->Hyphenate(string, hyphens))) {
     for (uint32_t i = 0; i + 1 < string.Length(); ++i) {
       if (hyphens[i]) {
@@ -368,7 +368,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, u
       return rv;
   }
 
-  AutoTArray<uint8_t,4000> breakState;
+  nsAutoTArray<uint8_t,4000> breakState;
   if (aSink) {
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;

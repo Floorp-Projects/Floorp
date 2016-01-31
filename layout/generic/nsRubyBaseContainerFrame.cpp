@@ -334,8 +334,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   // Since there are pointers refer to reflow states and line layouts,
   // it is necessary to guarantee that they won't be moved. For this
   // reason, they are wrapped in UniquePtr here.
-  AutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
-  AutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
+  nsAutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
+  nsAutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
   reflowStates.SetCapacity(rtcCount);
   lineLayouts.SetCapacity(rtcCount);
 
@@ -451,7 +451,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
 {
   ContinuationTraversingState mBase;
-  AutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
+  nsAutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
   const AutoRubyTextContainerArray& mTextContainers;
 
   PullFrameState(nsRubyBaseContainerFrame* aBaseContainer,

@@ -50,7 +50,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 {
   HAL_LOG("Vibrate: Sending to parent process.");
 
-  AutoTArray<uint32_t, 8> p(pattern);
+  AutoInfallibleTArray<uint32_t, 8> p(pattern);
 
   WindowIdentifier newID(id);
   newID.AppendProcessID();

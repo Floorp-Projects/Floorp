@@ -1356,7 +1356,7 @@ NS_IMETHODIMP_(void)
 imgLoader::ClearCacheForControlledDocument(nsIDocument* aDoc)
 {
   MOZ_ASSERT(aDoc);
-  AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
+  nsAutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
   imgCacheTable& cache = GetCache(false);
   for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
     auto& key = iter.Key();

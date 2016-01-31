@@ -127,7 +127,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     uint8_t ivSize = parser->mSinf.mDefaultIVSize;
 
     // The size comes from an 8 bit field
-    AutoTArray<uint8_t, 256> cenc;
+    nsAutoTArray<uint8_t, 256> cenc;
     cenc.SetLength(s->mCencRange.Length());
     if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cenc.Elements(), cenc.Length(),
                                  &bytesRead) || bytesRead != cenc.Length()) {

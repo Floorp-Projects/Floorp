@@ -523,12 +523,12 @@ gfxFontEntry::TryGetColorGlyphs()
 
 class gfxFontEntry::FontTableBlobData {
 public:
-    explicit FontTableBlobData(nsTArray<uint8_t>&& aBuffer)
-        : mTableData(Move(aBuffer))
-        , mHashtable(nullptr)
-        , mHashKey(0)
+    // Adopts the content of aBuffer.
+    explicit FontTableBlobData(FallibleTArray<uint8_t>& aBuffer)
+        : mHashtable(nullptr), mHashKey(0)
     {
         MOZ_COUNT_CTOR(FontTableBlobData);
+        mTableData.SwapElements(aBuffer);
     }
 
     ~FontTableBlobData() {
@@ -570,8 +570,8 @@ public:
     }
 
 private:
-    // The font table data block
-    nsTArray<uint8_t> mTableData;
+    // The font table data block, owned (via adoption)
+    FallibleTArray<uint8_t> mTableData;
 
     // The blob destroy function needs to know the owning hashtable
     // and the hashtable key, so that it can remove the entry.
@@ -584,12 +584,12 @@ private:
 
 hb_blob_t *
 gfxFontEntry::FontTableHashEntry::
-ShareTableAndGetBlob(nsTArray<uint8_t>&& aTable,
+ShareTableAndGetBlob(FallibleTArray<uint8_t>& aTable,
                      nsTHashtable<FontTableHashEntry> *aHashtable)
 {
     Clear();
     // adopts elements of aTable
-    mSharedBlobData = new FontTableBlobData(Move(aTable));
+    mSharedBlobData = new FontTableBlobData(aTable);
     mBlob = hb_blob_create(mSharedBlobData->GetTable(),
                            mSharedBlobData->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
@@ -656,7 +656,7 @@ gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t **aBlob)
 
 hb_blob_t *
 gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
-                                       nsTArray<uint8_t>* aBuffer)
+                                       FallibleTArray<uint8_t>* aBuffer)
 {
     if (MOZ_UNLIKELY(!mFontTableCache)) {
         // we do this here rather than on fontEntry construction
@@ -675,7 +675,7 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
         return nullptr;
     }
 
-    return entry->ShareTableAndGetBlob(Move(*aBuffer), mFontTableCache);
+    return entry->ShareTableAndGetBlob(*aBuffer, mFontTableCache);
 }
 
 static int
@@ -725,7 +725,7 @@ gfxFontEntry::GetFontTable(uint32_t aTag)
         return blob;
     }
 
-    nsTArray<uint8_t> buffer;
+    FallibleTArray<uint8_t> buffer;
     bool haveTable = NS_SUCCEEDED(CopyFontTable(aTag, buffer));
 
     return ShareFontTableAndGetBlob(aTag, haveTable ? &buffer : nullptr);
@@ -1148,7 +1148,7 @@ gfxFontEntry*
 gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
                                 bool& aNeedsSyntheticBold)
 {
-    AutoTArray<gfxFontEntry*,4> matched;
+    nsAutoTArray<gfxFontEntry*,4> matched;
     FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold);
     if (!matched.IsEmpty()) {
         return matched[0];
@@ -1636,7 +1636,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontLis
 {
     uint32_t dataLength;
     const char *nameData = hb_blob_get_data(aNameTable, &dataLength);
-    AutoTArray<nsString,4> otherFamilyNames;
+    nsAutoTArray<nsString,4> otherFamilyNames;
 
     ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
                                 otherFamilyNames, useFullName);
@@ -1721,7 +1721,7 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         aFontInfoData->mLoadOtherNames &&
         !asyncFontLoaderDisabled)
     {
-        AutoTArray<nsString,4> otherFamilyNames;
+        nsAutoTArray<nsString,4> otherFamilyNames;
         bool foundOtherNames =
             aFontInfoData->GetOtherFamilyNames(mName, otherFamilyNames);
         if (foundOtherNames) {

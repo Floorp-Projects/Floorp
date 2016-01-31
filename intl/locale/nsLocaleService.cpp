@@ -178,7 +178,7 @@ nsLocaleService::nsLocaleService(void)
     CFStringRef userLocaleStr = ::CFLocaleGetIdentifier(userLocaleRef);
     ::CFRetain(userLocaleStr);
 
-    AutoTArray<UniChar, 32> buffer;
+    nsAutoTArray<UniChar, 32> buffer;
     int size = ::CFStringGetLength(userLocaleStr);
     buffer.SetLength(size + 1);
     CFRange range = ::CFRangeMake(0, size);

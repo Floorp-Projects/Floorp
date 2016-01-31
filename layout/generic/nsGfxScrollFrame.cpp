@@ -2711,7 +2711,7 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
   bool overlayScrollbars =
     LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
 
-  AutoTArray<nsIFrame*, 3> scrollParts;
+  nsAutoTArray<nsIFrame*, 3> scrollParts;
   for (nsIFrame* kid : mOuter->PrincipalChildList()) {
     if (kid == mScrolledFrame ||
         (kid->IsAbsPosContaininingBlock() || overlayScrollbars) != aPositioned)

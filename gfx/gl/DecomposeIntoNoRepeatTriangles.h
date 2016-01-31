@@ -45,8 +45,8 @@ public:
     }
 private:
     // Reserve inline storage for one quad (2 triangles, 3 coords).
-    AutoTArray<coord, 6> mVertexCoords;
-    AutoTArray<coord, 6> mTexCoords;
+    nsAutoTArray<coord, 6> mVertexCoords;
+    nsAutoTArray<coord, 6> mTexCoords;
 
     static void
     AppendRectToCoordArray(InfallibleTArray<coord>& array, GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1);

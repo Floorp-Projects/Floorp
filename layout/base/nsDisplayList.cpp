@@ -966,7 +966,7 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
 void
 nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, const nsRect& aDirtyRect)
 {
-  AutoTArray<nsIFrame::ChildList,4> childListArray;
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
   aDirtyFrame->GetChildLists(&childListArray);
   nsIFrame::ChildListArrayIterator lists(childListArray);
   for (; !lists.IsDone(); lists.Next()) {
@@ -1471,7 +1471,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 
   bool anyVisible = false;
 
-  AutoTArray<nsDisplayItem*, 512> elements;
+  nsAutoTArray<nsDisplayItem*, 512> elements;
   MoveListTo(this, &elements);
 
   for (int32_t i = elements.Length() - 1; i >= 0; --i) {
@@ -1908,7 +1908,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     aState->mItemBuffer.AppendElement(item);
   }
 
-  AutoTArray<FramesWithDepth, 16> temp;
+  nsAutoTArray<FramesWithDepth, 16> temp;
   for (int32_t i = aState->mItemBuffer.Length() - 1; i >= itemBufferStart; --i) {
     // Pop element off the end of the buffer. We want to shorten the buffer
     // so that recursive calls to HitTest have more buffer space.
@@ -1928,7 +1928,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       if (!item->GetClip().MayIntersect(aRect)) {
         continue;
       }
-      AutoTArray<nsIFrame*, 1> neverUsed;
+      nsAutoTArray<nsIFrame*, 1> neverUsed;
       // Start gethering leaves of the 3D rendering context, and
       // append leaves at the end of mItemBuffer.  Leaves are
       // processed at following iterations.
@@ -1939,7 +1939,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
       continue;
     }
     if (same3DContext || item->GetClip().MayIntersect(r)) {
-      AutoTArray<nsIFrame*, 16> outFrames;
+      nsAutoTArray<nsIFrame*, 16> outFrames;
       item->HitTest(aBuilder, aRect, aState, &outFrames);
 
       // For 3d transforms with preserve-3d we add hit frames into the temp list
@@ -3663,7 +3663,7 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
   nsPresContext* presContext = mFrame->PresContext();
-  AutoTArray<nsRect,10> rects;
+  nsAutoTArray<nsRect,10> rects;
   ComputeDisjointRectangles(mVisibleRegion, &rects);
 
   PROFILER_LABEL("nsDisplayBoxShadowOuter", "Paint",
@@ -3751,7 +3751,7 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
-  AutoTArray<nsRect,10> rects;
+  nsAutoTArray<nsRect,10> rects;
   ComputeDisjointRectangles(mVisibleRegion, &rects);
 
   PROFILER_LABEL("nsDisplayBoxShadowInner", "Paint",

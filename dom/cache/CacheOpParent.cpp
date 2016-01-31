@@ -79,8 +79,8 @@ CacheOpParent::Execute(Manager* aManager)
     const CachePutAllArgs& args = mOpArgs.get_CachePutAllArgs();
     const nsTArray<CacheRequestResponse>& list = args.requestResponseList();
 
-    AutoTArray<nsCOMPtr<nsIInputStream>, 256> requestStreamList;
-    AutoTArray<nsCOMPtr<nsIInputStream>, 256> responseStreamList;
+    nsAutoTArray<nsCOMPtr<nsIInputStream>, 256> requestStreamList;
+    nsAutoTArray<nsCOMPtr<nsIInputStream>, 256> responseStreamList;
 
     for (uint32_t i = 0; i < list.Length(); ++i) {
       requestStreamList.AppendElement(
@@ -221,7 +221,7 @@ CacheOpParent::DeserializeCacheStream(const CacheReadStreamOrVoid& aStreamOrVoid
   }
 
   // Option 3: A stream was serialized using normal methods.
-  AutoTArray<FileDescriptor, 4> fds;
+  nsAutoTArray<FileDescriptor, 4> fds;
   if (readStream.fds().type() ==
       OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
 

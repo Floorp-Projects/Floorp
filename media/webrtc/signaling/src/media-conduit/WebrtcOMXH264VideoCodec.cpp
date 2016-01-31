@@ -786,7 +786,7 @@ private:
       uint32_t offset;
       uint32_t size;
     };
-    AutoTArray<nal_entry, 1> nals;
+    nsAutoTArray<nal_entry, 1> nals;
 
     // Break input encoded data into NALUs and send each one to callback.
     const uint8_t* data = aEncodedImage._buffer;

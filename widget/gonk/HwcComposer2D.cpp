@@ -341,7 +341,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             LOGD("Container layer needs intermediate surface");
             return false;
         }
-        AutoTArray<Layer*, 12> children;
+        nsAutoTArray<Layer*, 12> children;
         container->SortChildrenBy3DZOrder(children);
 
         for (uint32_t i = 0; i < children.Length(); i++) {

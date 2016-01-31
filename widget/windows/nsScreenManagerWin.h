@@ -43,7 +43,7 @@ private:
   uint32_t mNumberOfScreens;
 
     // cache the screens to avoid the memory allocations
-  AutoTArray<ScreenListItem, 8> mScreenList;
+  nsAutoTArray<ScreenListItem, 8> mScreenList;
 
 };
 

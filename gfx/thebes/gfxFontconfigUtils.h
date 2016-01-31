@@ -260,11 +260,11 @@ protected:
             return mFonts;
         }
 
-        // Don't memmove the AutoTArray.
+        // Don't memmove the nsAutoTArray.
         enum { ALLOW_MEMMOVE = false };
     private:
         // There is usually only one font, but sometimes more.
-        AutoTArray<nsCountedRef<FcPattern>,1> mFonts;
+        nsAutoTArray<nsCountedRef<FcPattern>,1> mFonts;
     };
 
     class LangSupportEntry : public CopiedFcStrEntry {

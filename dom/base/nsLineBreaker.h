@@ -206,9 +206,9 @@ private:
                              const char16_t *aTextLimit,
                              uint8_t *aBreakState);
 
-  AutoTArray<char16_t,100> mCurrentWord;
+  nsAutoTArray<char16_t,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
-  AutoTArray<TextItem,2>    mTextItems;
+  nsAutoTArray<TextItem,2>    mTextItems;
   nsIAtom*                    mCurrentWordLanguage;
   bool                        mCurrentWordContainsMixedLang;
   bool                        mCurrentWordContainsComplexChar;

@@ -202,8 +202,8 @@ VorbisTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     vorbis_analysis_buffer(&mVorbisDsp, (int)sourceSegment->GetDuration());
 
   int framesCopied = 0;
-  AutoTArray<AudioDataValue, 9600> interleavedPcm;
-  AutoTArray<AudioDataValue, 9600> nonInterleavedPcm;
+  nsAutoTArray<AudioDataValue, 9600> interleavedPcm;
+  nsAutoTArray<AudioDataValue, 9600> nonInterleavedPcm;
   interleavedPcm.SetLength(sourceSegment->GetDuration() * mChannels);
   nonInterleavedPcm.SetLength(sourceSegment->GetDuration() * mChannels);
   while (!iter.IsEnded()) {

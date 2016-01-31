@@ -1270,7 +1270,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
 {
     // Keep a queue of "ungenerated" elements that we have to probe
     // for generated content.
-    AutoTArray<nsIContent*, 8> ungenerated;
+    nsAutoTArray<nsIContent*, 8> ungenerated;
     if (ungenerated.AppendElement(aElement) == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 

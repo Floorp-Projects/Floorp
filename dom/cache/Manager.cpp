@@ -74,12 +74,12 @@ public:
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
       // Clean up orphaned Cache objects
-      AutoTArray<CacheId, 8> orphanedCacheIdList;
+      nsAutoTArray<CacheId, 8> orphanedCacheIdList;
       nsresult rv = db::FindOrphanedCacheIds(aConn, orphanedCacheIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
       for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
-        AutoTArray<nsID, 16> deletedBodyIdList;
+        nsAutoTArray<nsID, 16> deletedBodyIdList;
         rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -88,7 +88,7 @@ public:
       }
 
       // Clean up orphaned body objects
-      AutoTArray<nsID, 64> knownBodyIdList;
+      nsAutoTArray<nsID, 64> knownBodyIdList;
       rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
 
       rv = BodyDeleteOrphanedFiles(aDBDir, knownBodyIdList);
@@ -1373,7 +1373,7 @@ Manager::Listener::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                                 const SavedResponse& aSavedResponse,
                                 StreamList* aStreamList)
 {
-  AutoTArray<SavedResponse, 1> responseList;
+  nsAutoTArray<SavedResponse, 1> responseList;
   responseList.AppendElement(aSavedResponse);
   OnOpComplete(Move(aRv), aResult, INVALID_CACHE_ID, responseList,
                nsTArray<SavedRequest>(), aStreamList);
@@ -1902,7 +1902,7 @@ Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList)
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
 
-  AutoTArray<nsID, 64> deleteNowList;
+  nsAutoTArray<nsID, 64> deleteNowList;
   deleteNowList.SetCapacity(aDeletedBodyIdList.Length());
 
   for (uint32_t i = 0; i < aDeletedBodyIdList.Length(); ++i) {

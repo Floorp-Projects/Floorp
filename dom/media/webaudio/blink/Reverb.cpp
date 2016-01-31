@@ -81,11 +81,11 @@ Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulse
 {
     float scale = 1;
 
-    AutoTArray<const float*,4> irChannels;
+    nsAutoTArray<const float*,4> irChannels;
     for (size_t i = 0; i < impulseResponse->GetChannels(); ++i) {
         irChannels.AppendElement(impulseResponse->GetData(i));
     }
-    AutoTArray<float,1024> tempBuf;
+    nsAutoTArray<float,1024> tempBuf;
 
     if (normalize) {
         scale = calculateNormalizationScale(impulseResponse, impulseResponseBufferLength, sampleRate);

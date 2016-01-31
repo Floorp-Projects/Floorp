@@ -222,7 +222,7 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut)
   aReadStreamOut->id() = mId;
   mControl->SerializeControl(aReadStreamOut);
 
-  AutoTArray<FileDescriptor, 4> fds;
+  nsAutoTArray<FileDescriptor, 4> fds;
   SerializeInputStream(mStream, aReadStreamOut->params(), fds);
 
   mControl->SerializeFds(aReadStreamOut, fds);
@@ -451,7 +451,7 @@ ReadStream::Create(const CacheReadStream& aReadStream)
   }
   MOZ_ASSERT(control);
 
-  AutoTArray<FileDescriptor, 4> fds;
+  nsAutoTArray<FileDescriptor, 4> fds;
   control->DeserializeFds(aReadStream, fds);
 
   nsCOMPtr<nsIInputStream> stream =

@@ -205,7 +205,7 @@ private:
   // addition and removal.
   // There is a high chance of there being at least one ServiceWorker
   // associated with this all the time.
-  AutoTArray<ServiceWorker*, 1> mInstances;
+  nsAutoTArray<ServiceWorker*, 1> mInstances;
 
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;

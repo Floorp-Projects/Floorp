@@ -744,7 +744,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
 
 nsresult
 gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
-                                      nsTArray<uint8_t>& aBuffer)
+                                      FallibleTArray<uint8_t>& aBuffer)
 {
     NS_ASSERTION(!mIsDataUserFont,
                  "data fonts should be reading tables directly from memory");

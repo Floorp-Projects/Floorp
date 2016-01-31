@@ -5245,7 +5245,7 @@ nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
 
   AddStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT);
   
-  AutoTArray<nsIFrame::ChildList,4> childListArray;
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
   GetCrossDocChildLists(&childListArray);
 
   nsIFrame::ChildListArrayIterator lists(childListArray);
@@ -5261,7 +5261,7 @@ void
 nsIFrame::ClearInvalidationStateBits()
 {
   if (HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    AutoTArray<nsIFrame::ChildList,4> childListArray;
+    nsAutoTArray<nsIFrame::ChildList,4> childListArray;
     GetCrossDocChildLists(&childListArray);
 
     nsIFrame::ChildListArrayIterator lists(childListArray);
@@ -8956,7 +8956,7 @@ nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame)
 {
   aFrame->AddStateBits(NS_FRAME_IN_POPUP);
 
-  AutoTArray<nsIFrame::ChildList,4> childListArray;
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
   aFrame->GetCrossDocChildLists(&childListArray);
 
   nsIFrame::ChildListArrayIterator lists(childListArray);
@@ -8978,7 +8978,7 @@ nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 
   aFrame->RemoveStateBits(NS_FRAME_IN_POPUP);
 
-  AutoTArray<nsIFrame::ChildList,4> childListArray;
+  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
   aFrame->GetCrossDocChildLists(&childListArray);
 
   nsIFrame::ChildListArrayIterator lists(childListArray);

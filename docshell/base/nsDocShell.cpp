@@ -1688,7 +1688,7 @@ nsDocShell::FirePageHideNotification(bool aIsUnload)
       mTiming->NotifyUnloadEventEnd();
     }
 
-    AutoTArray<nsCOMPtr<nsIDocShell>, 8> kids;
+    nsAutoTArray<nsCOMPtr<nsIDocShell>, 8> kids;
     uint32_t n = mChildList.Length();
     kids.SetCapacity(n);
     for (uint32_t i = 0; i < n; i++) {
@@ -4396,7 +4396,7 @@ nsDocShell::RemoveFromSessionHistory()
 
   int32_t index = 0;
   sessionHistory->GetIndex(&index);
-  AutoTArray<uint64_t, 16> ids;
+  nsAutoTArray<uint64_t, 16> ids;
   ids.AppendElement(mHistoryID);
   internalHistory->RemoveEntries(ids, index);
   return NS_OK;
@@ -4487,7 +4487,7 @@ nsDocShell::ClearFrameHistory(nsISHEntry* aEntry)
 
   int32_t count = 0;
   shcontainer->GetChildCount(&count);
-  AutoTArray<uint64_t, 16> ids;
+  nsAutoTArray<uint64_t, 16> ids;
   for (int32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> child;
     shcontainer->GetChildAt(i, getter_AddRefs(child));
