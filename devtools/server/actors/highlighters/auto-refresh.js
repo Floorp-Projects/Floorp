@@ -37,7 +37,6 @@ function AutoRefreshHighlighter(highlighterEnv) {
   EventEmitter.decorate(this);
 
   this.highlighterEnv = highlighterEnv;
-  this.win = highlighterEnv.window;
 
   this.currentNode = null;
   this.currentQuads = {};
@@ -46,6 +45,16 @@ function AutoRefreshHighlighter(highlighterEnv) {
 }
 
 AutoRefreshHighlighter.prototype = {
+  /**
+   * Window corresponding to the current highlighterEnv
+   */
+  get win() {
+    if (!this.highlighterEnv) {
+      return null;
+    }
+    return this.highlighterEnv.window;
+  },
+
   /**
    * Show the highlighter on a given node
    * @param {DOMNode} node
@@ -189,7 +198,6 @@ AutoRefreshHighlighter.prototype = {
     this.hide();
 
     this.highlighterEnv = null;
-    this.win = null;
     this.currentNode = null;
   }
 };
