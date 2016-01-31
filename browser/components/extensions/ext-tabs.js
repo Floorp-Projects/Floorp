@@ -269,13 +269,17 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       create: function(createProperties, callback) {
-        let url = createProperties.url || aboutNewTabService.newTabURL;
-        url = context.uri.resolve(url);
-
         function createInWindow(window) {
-          let tab = window.gBrowser.addTab(url);
+          let url;
+          if (createProperties.url !== null) {
+            url = context.uri.resolve(createProperties.url);
+          } else {
+            url = window.BROWSER_NEW_TAB_URL;
+          }
 
+          let tab = window.gBrowser.addTab(url);
           let active = true;
+
           if (createProperties.active !== null) {
             active = createProperties.active;
           }
@@ -299,6 +303,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         let window = createProperties.windowId !== null ?
           WindowManager.getWindow(createProperties.windowId) :
           WindowManager.topWindow;
+
         if (!window.gBrowser) {
           let obs = (finishedWindow, topic, data) => {
             if (finishedWindow != window) {
