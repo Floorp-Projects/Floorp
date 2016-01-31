@@ -35,7 +35,7 @@ CallsList::~CallsList()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 CallsList::GetParentObject() const
 {
   return mTelephony->GetOwner();

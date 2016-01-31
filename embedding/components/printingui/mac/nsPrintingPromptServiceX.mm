@@ -12,6 +12,7 @@
 #include "nsIPrintingPromptService.h"
 #include "nsIFactory.h"
 #include "nsIPrintDialogService.h"
+#include "nsPIDOMWindow.h"
 
 //*****************************************************************************
 // nsPrintingPromptService
@@ -37,14 +38,16 @@ nsresult nsPrintingPromptService::Init()
 //*****************************************************************************   
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
-  if (dlgPrint)
-    return dlgPrint->Show(parent, printSettings, webBrowserPrint);
+  if (dlgPrint) {
+    return dlgPrint->Show(nsPIDOMWindowOuter::From(parent), printSettings,
+                          webBrowserPrint);
+  }
 
   return NS_ERROR_FAILURE;
 
@@ -52,7 +55,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent, 
+nsPrintingPromptService::ShowProgress(mozIDOMWindowProxy*      parent,
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
@@ -65,13 +68,14 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
+nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
-  if (dlgPrint)
-    return dlgPrint->ShowPageSetup(parent, printSettings);
+  if (dlgPrint) {
+    return dlgPrint->ShowPageSetup(nsPIDOMWindowOuter::From(parent), printSettings);
+  }
 
   return NS_ERROR_FAILURE;
 
@@ -79,7 +83,7 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
 }
 
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPrinterProperties(mozIDOMWindowProxy *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

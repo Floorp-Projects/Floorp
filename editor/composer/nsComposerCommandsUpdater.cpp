@@ -213,16 +213,11 @@ nsComposerCommandsUpdater::DidMerge(nsITransactionManager *aManager,
 #endif
 
 nsresult
-nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
+nsComposerCommandsUpdater::Init(nsPIDOMWindowOuter* aDOMWindow)
 {
   NS_ENSURE_ARG(aDOMWindow);
   mDOMWindow = do_GetWeakReference(aDOMWindow);
-
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
-  if (window)
-  {
-    mDocShell = do_GetWeakReference(window->GetDocShell());
-  }
+  mDocShell = do_GetWeakReference(aDOMWindow->GetDocShell());
   return NS_OK;
 }
 
@@ -339,10 +334,7 @@ nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 bool
 nsComposerCommandsUpdater::SelectionIsCollapsed()
 {
-  nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryReferent(mDOMWindow);
-  NS_ENSURE_TRUE(domWindow, true);
-
-  domWindow = domWindow->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryReferent(mDOMWindow);
   NS_ENSURE_TRUE(domWindow, true);
 
   if (nsCOMPtr<nsISelection> domSelection = domWindow->GetSelection())

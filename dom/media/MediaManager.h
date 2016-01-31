@@ -171,7 +171,7 @@ public:
   typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
   already_AddRefed<PledgeVoid>
-  ApplyConstraintsToTrack(nsPIDOMWindow* aWindow,
+  ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
                           TrackID aID, bool aIsAudio,
                           const dom::MediaTrackConstraints& aConstraints);
 
@@ -426,7 +426,7 @@ public:
     return !!sSingleton;
   }
 
-  static nsresult NotifyRecordingStatusChange(nsPIDOMWindow* aWindow,
+  static nsresult NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow,
                                               const nsString& aMsg,
                                               const bool& aIsAudio,
                                               const bool& aIsVideo);
@@ -450,30 +450,30 @@ public:
     GetUserMediaCallbackMediaStreamListener *aListener);
 
   nsresult GetUserMedia(
-    nsPIDOMWindow* aWindow,
+    nsPIDOMWindowInner* aWindow,
     const dom::MediaStreamConstraints& aConstraints,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
 
-  nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
+  nsresult GetUserMediaDevices(nsPIDOMWindowInner* aWindow,
                                const dom::MediaStreamConstraints& aConstraints,
                                nsIGetUserMediaDevicesSuccessCallback* onSuccess,
                                nsIDOMGetUserMediaErrorCallback* onError,
                                uint64_t aInnerWindowID = 0,
                                const nsAString& aCallID = nsString());
 
-  nsresult EnumerateDevices(nsPIDOMWindow* aWindow,
+  nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
                             nsIDOMGetUserMediaErrorCallback* aOnFailure);
 
-  nsresult EnumerateDevices(nsPIDOMWindow* aWindow, dom::Promise& aPromise);
+  nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow, dom::Promise& aPromise);
   void OnNavigation(uint64_t aWindowID);
   bool IsActivelyCapturingOrHasAPermission(uint64_t aWindowId);
 
   MediaEnginePrefs mPrefs;
 
   typedef nsTArray<RefPtr<MediaDevice>> SourceSet;
-  static bool IsPrivateBrowsing(nsPIDOMWindow *window);
+  static bool IsPrivateBrowsing(nsPIDOMWindowInner* window);
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
   typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
@@ -520,7 +520,7 @@ private:
   void Shutdown();
 
   void StopScreensharing(uint64_t aWindowID);
-  void IterateWindowListeners(nsPIDOMWindow *aWindow,
+  void IterateWindowListeners(nsPIDOMWindowInner *aWindow,
                               WindowListenerCallback aCallback,
                               void *aData);
 

@@ -41,7 +41,7 @@ NS_IMPL_ISUPPORTS0(MediaMgrError)
 namespace dom {
 
 MediaStreamError::MediaStreamError(
-    nsPIDOMWindow* aParent,
+    nsPIDOMWindowInner* aParent,
     const nsAString& aName,
     const nsAString& aMessage,
     const nsAString& aConstraint)

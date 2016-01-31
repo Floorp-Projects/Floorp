@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileNetworkInfo)
   NS_INTERFACE_MAP_ENTRY(nsIMobileNetworkInfo)
 NS_INTERFACE_MAP_END
 
-MobileNetworkInfo::MobileNetworkInfo(nsPIDOMWindow* aWindow)
+MobileNetworkInfo::MobileNetworkInfo(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }

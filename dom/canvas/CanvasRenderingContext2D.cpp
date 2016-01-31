@@ -2864,8 +2864,7 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aEleme
     nsCOMPtr<nsIDOMElement> focusedElement;
     fm->GetFocusedElement(getter_AddRefs(focusedElement));
     if (SameCOMIdentity(aElement.AsDOMNode(), focusedElement)) {
-      nsPIDOMWindow *window = aElement.OwnerDoc()->GetWindow();
-      if (window) {
+      if (nsPIDOMWindowOuter *window = aElement.OwnerDoc()->GetWindow()) {
         return window->ShouldShowFocusRing();
       }
     }
@@ -4812,6 +4811,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
                                      const nsAString& bgColor,
                                      uint32_t flags, ErrorResult& error)
 {
+  MOZ_ASSERT(window.IsInnerWindow());
+
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
   if (!gfxASurface::CheckSurfaceSize(gfx::IntSize(int32_t(w), int32_t(h)),
@@ -4836,7 +4837,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
 
   // Flush layout updates
   if (!(flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH)) {
-    nsContentUtils::FlushLayoutForTree(&window);
+    nsContentUtils::FlushLayoutForTree(window.AsInner()->GetOuterWindow());
   }
 
   RefPtr<nsPresContext> presContext;
@@ -4993,13 +4994,14 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& elem,
       return;
     }
 
-    nsCOMPtr<nsIDOMWindow> window = docShell->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
     if (!window) {
       error.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    return DrawWindow(window, x, y, w, h, bgColor, flags);
+    return DrawWindow(window->GetCurrentInnerWindow(), x, y, w, h,
+                      bgColor, flags);
   }
 
   // protect against too-large surfaces that will cause allocation

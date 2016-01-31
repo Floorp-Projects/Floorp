@@ -42,37 +42,31 @@ NS_IMPL_ADDREF_INHERITED(CompositionEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(CompositionEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(CompositionEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCompositionEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
-NS_IMETHODIMP
-CompositionEvent::GetData(nsAString& aData)
+void
+CompositionEvent::GetData(nsAString& aData) const
 {
   aData = mData;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-CompositionEvent::GetLocale(nsAString& aLocale)
+void
+CompositionEvent::GetLocale(nsAString& aLocale) const
 {
   aLocale = mLocale;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 CompositionEvent::InitCompositionEvent(const nsAString& aType,
                                        bool aCanBubble,
                                        bool aCancelable,
-                                       nsIDOMWindow* aView,
+                                       nsGlobalWindow* aView,
                                        const nsAString& aData,
                                        const nsAString& aLocale)
 {
-  nsresult rv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   mData = aData;
   mLocale = aLocale;
-  return NS_OK;
 }
 
 } // namespace dom

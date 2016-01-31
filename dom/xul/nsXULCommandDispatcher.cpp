@@ -93,8 +93,7 @@ already_AddRefed<nsPIWindowRoot>
 nsXULCommandDispatcher::GetWindowRoot()
 {
   if (mDocument) {
-    nsCOMPtr<nsPIDOMWindow> window(mDocument->GetWindow());
-    if (window) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
       return window->GetTopWindowRoot();
     }
   }
@@ -103,17 +102,17 @@ nsXULCommandDispatcher::GetWindowRoot()
 }
 
 nsIContent*
-nsXULCommandDispatcher::GetRootFocusedContentAndWindow(nsPIDOMWindow** aWindow)
+nsXULCommandDispatcher::GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow)
 {
   *aWindow = nullptr;
 
-  if (mDocument) {
-    nsCOMPtr<nsPIDOMWindow> win = mDocument->GetWindow();
-    if (win) {
-      nsCOMPtr<nsPIDOMWindow> rootWindow = win->GetPrivateRoot();
-      if (rootWindow) {
-        return nsFocusManager::GetFocusedDescendant(rootWindow, true, aWindow);
-      }
+  if (!mDocument) {
+    return nullptr;
+  }
+
+  if (nsCOMPtr<nsPIDOMWindowOuter> win = mDocument->GetWindow()) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> rootWindow = win->GetPrivateRoot()) {
+      return nsFocusManager::GetFocusedDescendant(rootWindow, true, aWindow);
     }
   }
 
@@ -125,7 +124,7 @@ nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 {
   *aElement = nullptr;
 
-  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
   nsIContent* focusedContent =
     GetRootFocusedContentAndWindow(getter_AddRefs(focusedWindow));
   if (focusedContent) {
@@ -146,11 +145,11 @@ nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
+nsXULCommandDispatcher::GetFocusedWindow(mozIDOMWindowProxy** aWindow)
 {
   *aWindow = nullptr;
 
-  nsCOMPtr<nsPIDOMWindow> window;
+  nsCOMPtr<nsPIDOMWindowOuter> window;
   GetRootFocusedContentAndWindow(getter_AddRefs(window));
   if (!window)
     return NS_OK;
@@ -178,17 +177,17 @@ nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
     return fm->SetFocus(aElement, 0);
 
   // if aElement is null, clear the focus in the currently focused child window
-  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
   GetRootFocusedContentAndWindow(getter_AddRefs(focusedWindow));
   return fm->ClearFocus(focusedWindow);
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::SetFocusedWindow(nsIDOMWindow* aWindow)
+nsXULCommandDispatcher::SetFocusedWindow(mozIDOMWindowProxy* aWindow)
 {
   NS_ENSURE_TRUE(aWindow, NS_OK); // do nothing if set to null
 
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
+  nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -215,7 +214,7 @@ nsXULCommandDispatcher::AdvanceFocus()
 NS_IMETHODIMP
 nsXULCommandDispatcher::RewindFocus()
 {
-  nsCOMPtr<nsPIDOMWindow> win;
+  nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   nsCOMPtr<nsIDOMElement> result;
@@ -229,7 +228,7 @@ nsXULCommandDispatcher::RewindFocus()
 NS_IMETHODIMP
 nsXULCommandDispatcher::AdvanceFocusIntoSubtree(nsIDOMElement* aElt)
 {
-  nsCOMPtr<nsPIDOMWindow> win;
+  nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   nsCOMPtr<nsIDOMElement> result;

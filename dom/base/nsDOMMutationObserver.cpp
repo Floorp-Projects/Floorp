@@ -779,7 +779,7 @@ nsDOMMutationObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                    mozilla::dom::MutationCallback& aCb,
                                    mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -820,7 +820,7 @@ nsDOMMutationObserver::HandleMutation()
   }
   mTransientReceivers.Clear();
 
-  nsPIDOMWindow* outer = mOwner->GetOuterWindow();
+  nsPIDOMWindowOuter* outer = mOwner->GetOuterWindow();
   if (!mPendingMutationCount || !outer ||
       outer->GetCurrentInnerWindow() != mOwner) {
     ClearPendingRecords();

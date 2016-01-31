@@ -56,11 +56,11 @@ public:
    * Others
    ***************************************************************************/
   // Never returns null
-  static already_AddRefed<BluetoothManager> Create(nsPIDOMWindow* aWindow);
-  static bool CheckPermission(nsPIDOMWindow* aWindow);
+  static already_AddRefed<BluetoothManager> Create(nsPIDOMWindowInner* aWindow);
+  static bool CheckPermission(nsPIDOMWindowInner* aWindow);
 
   void Notify(const BluetoothSignal& aData); // BluetoothSignalObserver
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }
@@ -84,7 +84,7 @@ public:
   static bool B2GGattClientEnabled(JSContext* cx, JSObject* aGlobal);
 
 private:
-  BluetoothManager(nsPIDOMWindow* aWindow);
+  BluetoothManager(nsPIDOMWindowInner* aWindow);
   ~BluetoothManager();
 
   /**

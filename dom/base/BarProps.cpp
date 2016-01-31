@@ -28,10 +28,10 @@ BarProp::~BarProp()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 BarProp::GetParentObject() const
 {
-  return mDOMWindow;
+  return mDOMWindow->AsInner();
 }
 
 JSObject*

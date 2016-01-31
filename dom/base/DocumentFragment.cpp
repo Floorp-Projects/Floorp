@@ -116,7 +116,7 @@ DocumentFragment::DumpContent(FILE* out, int32_t aIndent,
 DocumentFragment::Constructor(const GlobalObject& aGlobal,
                               ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

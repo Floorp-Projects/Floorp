@@ -13,7 +13,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 
 class nsIDOMEvent;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 class EventChainPreVisitor;
@@ -86,7 +86,7 @@ public:
 
 private:
   // This class can only be created from the RuntimeService.
-  SharedWorker(nsPIDOMWindow* aWindow,
+  SharedWorker(nsPIDOMWindowInner* aWindow,
                WorkerPrivate* aWorkerPrivate,
                MessagePort* aMessagePort);
 

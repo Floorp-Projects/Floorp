@@ -60,7 +60,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 nsIDOMNode*
 inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
 {
-  nsPIDOMWindow* pwin = aDoc.GetWindow();
+  nsPIDOMWindowOuter* pwin = aDoc.GetWindow();
   if (!pwin) {
     return nullptr;
   }

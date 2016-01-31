@@ -134,7 +134,7 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 }
 
 void
-ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv)
+ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv)
 {
   MOZ_ASSERT(aRv != NS_ERROR_UNCATCHABLE_EXCEPTION,
              "Doesn't make sense to report uncatchable exceptions!");

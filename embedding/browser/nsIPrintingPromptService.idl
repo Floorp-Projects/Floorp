@@ -14,7 +14,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(75D1553D-63BF-4b5d-A8F7-E4E4CAC21BA4)]
+[scriptable, uuid(328daa3e-09e4-455f-bb6f-0a921766042f)]
 interface nsIPrintingPromptService : nsISupports
 {
    /**
@@ -100,7 +100,7 @@ interface nsIPrintingPromptService : nsISupports
    *  @param printSettings - PrintSettings for print "job" (required)
    *
    */
-  void showPrintDialog(in nsIDOMWindow parent,
+  void showPrintDialog(in mozIDOMWindowProxy parent,
                        in nsIWebBrowserPrint webBrowserPrint,
                        in nsIPrintSettings printSettings);
 
@@ -119,7 +119,7 @@ interface nsIPrintingPromptService : nsISupports
    *                        (usually the caller) shouldn't wait
    *                        For Print Preview Progress there is intermediate progress
    */
-  void showProgress(in nsIDOMWindow parent,
+  void showProgress(in mozIDOMWindowProxy parent,
                     in nsIWebBrowserPrint webBrowserPrint,
                     in nsIPrintSettings printSettings,
                     in nsIObserver openDialogObserver,
@@ -137,7 +137,7 @@ interface nsIPrintingPromptService : nsISupports
    *                object has changed while the dialog is being shown. 
    *                For example, some platforms may implement an "Apply" button (not required)
    */
-  void showPageSetup(in nsIDOMWindow parent,
+  void showPageSetup(in mozIDOMWindowProxy parent,
                      in nsIPrintSettings printSettings,
                      in nsIObserver aObs);
 
@@ -151,7 +151,7 @@ interface nsIPrintingPromptService : nsISupports
    *  @param printerName - name of printer (required)
    *  @param printSettings - PrintSettings for page setup (required)
    */
-  void showPrinterProperties(in nsIDOMWindow parent,
+  void showPrinterProperties(in mozIDOMWindowProxy parent,
                              in wstring printerName,
                              in nsIPrintSettings printSettings);
 

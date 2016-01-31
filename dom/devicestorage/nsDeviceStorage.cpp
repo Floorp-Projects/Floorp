@@ -2417,7 +2417,7 @@ public:
       return Allow(JS::UndefinedHandleValue);
     }
 
-    mWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+    mWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID)->AsInner();
     if (NS_WARN_IF(!mWindow)) {
       return Cancel();
     }
@@ -2480,7 +2480,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetWindow(nsIDOMWindow * *aRequestingWindow) override
+  NS_IMETHOD GetWindow(mozIDOMWindow * *aRequestingWindow) override
   {
     NS_IF_ADDREF(*aRequestingWindow = mWindow);
     return NS_OK;
@@ -2509,7 +2509,7 @@ private:
   RefPtr<DeviceStorageRequest> mRequest;
   uint64_t mWindowID;
   PrincipalInfo mPrincipalInfo;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
@@ -2541,7 +2541,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, DOMEventTargetHelper)
 
 int nsDOMDeviceStorage::sInstanceCount = 0;
 
-nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
+nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsShareable(false)
   , mIsRemovable(false)
@@ -2605,7 +2605,7 @@ nsDOMDeviceStorage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
 }
 
 nsresult
-nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
+nsDOMDeviceStorage::Init(nsPIDOMWindowInner* aWindow, const nsAString &aType,
                          const nsAString &aVolName)
 {
   MOZ_ASSERT(aWindow);
@@ -2675,7 +2675,9 @@ nsDOMDeviceStorage::~nsDOMDeviceStorage()
 
 // static
 nsresult
-nsDOMDeviceStorage::CheckPrincipal(nsPIDOMWindow* aWindow, bool aIsAppsStorage, nsIPrincipal** aPrincipal)
+nsDOMDeviceStorage::CheckPrincipal(nsPIDOMWindowInner* aWindow,
+                                   bool aIsAppsStorage,
+                                   nsIPrincipal** aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -2800,7 +2802,7 @@ nsDOMDeviceStorage::GetOrderedVolumeNames(
 
 // static
 void
-nsDOMDeviceStorage::CreateDeviceStorageFor(nsPIDOMWindow* aWin,
+nsDOMDeviceStorage::CreateDeviceStorageFor(nsPIDOMWindowInner* aWin,
                                            const nsAString &aType,
                                            nsDOMDeviceStorage** aStore)
 {
@@ -2818,7 +2820,7 @@ nsDOMDeviceStorage::CreateDeviceStorageFor(nsPIDOMWindow* aWin,
 // static
 void
 nsDOMDeviceStorage::CreateDeviceStorageByNameAndType(
-  nsPIDOMWindow* aWin,
+  nsPIDOMWindowInner* aWin,
   const nsAString& aName,
   const nsAString& aType,
   nsDOMDeviceStorage** aStore)
@@ -2844,7 +2846,7 @@ nsDOMDeviceStorage::CreateDeviceStorageByNameAndType(
 }
 
 bool
-nsDOMDeviceStorage::Equals(nsPIDOMWindow* aWin,
+nsDOMDeviceStorage::Equals(nsPIDOMWindowInner* aWin,
                            const nsAString& aName,
                            const nsAString& aType)
 {
@@ -2920,7 +2922,7 @@ nsDOMDeviceStorage::GetStorageByName(const nsAString& aStorageName)
 
 // static
 already_AddRefed<nsDOMDeviceStorage>
-nsDOMDeviceStorage::GetStorageByNameAndType(nsPIDOMWindow* aWin,
+nsDOMDeviceStorage::GetStorageByNameAndType(nsPIDOMWindowInner* aWin,
                                             const nsAString& aStorageName,
                                             const nsAString& aType)
 {

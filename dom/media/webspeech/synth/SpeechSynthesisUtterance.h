@@ -28,7 +28,7 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper
   friend class nsSynthVoiceRegistry;
 
 public:
-  SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow, const nsAString& aText);
+  SpeechSynthesisUtterance(nsPIDOMWindowInner* aOwnerWindow, const nsAString& aText);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesisUtterance,

@@ -315,17 +315,13 @@ HttpBaseChannel::SetDocshellUserAgentOverride()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<mozIDOMWindowProxy> domWindow;
   loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
   if (!domWindow) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> pDomWindow = do_QueryInterface(domWindow);
-  if (!pDomWindow) {
-    return NS_OK;
-  }
-
+  auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
   nsIDocShell* docshell = pDomWindow->GetDocShell();
   if (!docshell) {
     return NS_OK;
@@ -1863,7 +1859,7 @@ HttpBaseChannel::GetTopWindowURI(nsIURI **aTopWindowURI)
     if (!util) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    nsCOMPtr<nsIDOMWindow> win;
+    nsCOMPtr<mozIDOMWindowProxy> win;
     nsresult rv = util->GetTopWindowForChannel(this, getter_AddRefs(win));
     if (NS_SUCCEEDED(rv)) {
       rv = util->GetURIFromWindow(win, getter_AddRefs(mTopWindowURI));
@@ -3093,23 +3089,21 @@ HttpBaseChannel::GetPerformance()
     if (!loadContext) {
         return nullptr;
     }
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
     if (!domWindow) {
         return nullptr;
     }
-    nsCOMPtr<nsPIDOMWindow> pDomWindow = do_QueryInterface(domWindow);
+    auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
     if (!pDomWindow) {
         return nullptr;
     }
-    if (!pDomWindow->IsInnerWindow()) {
-        pDomWindow = pDomWindow->GetCurrentInnerWindow();
-        if (!pDomWindow) {
-            return nullptr;
-        }
+    nsCOMPtr<nsPIDOMWindowInner> innerWindow = pDomWindow->GetCurrentInnerWindow();
+    if (!innerWindow) {
+      return nullptr;
     }
 
-    nsPerformance* docPerformance = pDomWindow->GetPerformance();
+    nsPerformance* docPerformance = innerWindow->GetPerformance();
     if (!docPerformance) {
       return nullptr;
     }

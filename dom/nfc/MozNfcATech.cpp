@@ -47,7 +47,7 @@ MozNfcATech::Constructor(const GlobalObject& aGlobal,
                          ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -62,7 +62,7 @@ MozNfcATech::Constructor(const GlobalObject& aGlobal,
   return nfcA.forget();
 }
 
-MozNfcATech::MozNfcATech(nsPIDOMWindow* aWindow, MozNFCTag& aNFCTag)
+MozNfcATech::MozNfcATech(nsPIDOMWindowInner* aWindow, MozNFCTag& aNFCTag)
  : mWindow(aWindow)
  , mTag(&aNFCTag)
 {

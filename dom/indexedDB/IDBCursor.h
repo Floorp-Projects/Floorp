@@ -16,7 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -124,7 +124,7 @@ public:
   { }
 #endif
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   void

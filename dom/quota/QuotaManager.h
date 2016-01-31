@@ -26,7 +26,7 @@ class nsIPrincipal;
 class nsIThread;
 class nsITimer;
 class nsIURI;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsIRunnable;
 
 BEGIN_QUOTA_NAMESPACE
@@ -327,7 +327,7 @@ public:
                        bool* aIsApp);
 
   static nsresult
-  GetInfoFromWindow(nsPIDOMWindow* aWindow,
+  GetInfoFromWindow(nsPIDOMWindowOuter* aWindow,
                     nsACString* aGroup,
                     nsACString* aOrigin,
                     bool* aIsApp);

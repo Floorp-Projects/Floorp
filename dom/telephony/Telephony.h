@@ -20,7 +20,7 @@
 // assume they see the definition of TelephonyCall.
 #include "TelephonyCall.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -71,7 +71,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Telephony,
                                            DOMEventTargetHelper)
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -143,7 +143,7 @@ public:
   IMPL_EVENT_HANDLER(remoteresumed)
 
   static already_AddRefed<Telephony>
-  Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);
+  Create(nsPIDOMWindowInner* aOwner, ErrorResult& aRv);
 
   void
   AddCall(TelephonyCall* aCall)
@@ -174,7 +174,7 @@ public:
   }
 
 private:
-  explicit Telephony(nsPIDOMWindow* aOwner);
+  explicit Telephony(nsPIDOMWindowInner* aOwner);
   ~Telephony();
 
   void

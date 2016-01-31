@@ -13,7 +13,7 @@
 #include "nsICellBroadcastService.h"
 #include "js/TypeDecls.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -40,13 +40,13 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   static already_AddRefed<CellBroadcast>
-  Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);
+  Create(nsPIDOMWindowInner* aOwner, ErrorResult& aRv);
 
   CellBroadcast() = delete;
-  CellBroadcast(nsPIDOMWindow *aWindow,
+  CellBroadcast(nsPIDOMWindowInner* aWindow,
                 nsICellBroadcastService* aService);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const { return GetOwner(); }
 
   virtual JSObject*

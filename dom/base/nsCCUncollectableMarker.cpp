@@ -215,12 +215,10 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
     }
   }
   if (doc) {
-    nsPIDOMWindow* inner = doc->GetInnerWindow();
-    if (inner) {
+    if (nsPIDOMWindowInner* inner = doc->GetInnerWindow()) {
       inner->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
     }
-    nsPIDOMWindow* outer = doc->GetWindow();
-    if (outer) {
+    if (nsPIDOMWindowOuter* outer = doc->GetWindow()) {
       outer->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
     }
   }
@@ -300,8 +298,7 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
   nsCOMPtr<nsISupports> iter;
   while (NS_SUCCEEDED(aWindowList->GetNext(getter_AddRefs(iter))) &&
          iter) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(iter);
-    if (window) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(iter)) {
       nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
 
       MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);

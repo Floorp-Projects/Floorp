@@ -886,7 +886,7 @@ nsFrameMessageManager::PrivateNoteIntentionalCrash()
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::GetContent(nsIDOMWindow** aContent)
+nsFrameMessageManager::GetContent(mozIDOMWindowProxy** aContent)
 {
   *aContent = nullptr;
   return NS_OK;

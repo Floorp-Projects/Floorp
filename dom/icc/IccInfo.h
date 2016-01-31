@@ -11,7 +11,7 @@
 #include "nsIIccInfo.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -28,13 +28,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IccInfo)
   NS_DECL_NSIICCINFO
 
-  explicit IccInfo(nsPIDOMWindow* aWindow);
+  explicit IccInfo(nsPIDOMWindowInner* aWindow);
   explicit IccInfo(const icc::IccInfoData& aData);
 
   void
   Update(nsIIccInfo* aInfo);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -69,7 +69,7 @@ public:
 protected:
   virtual ~IccInfo() {}
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   // To prevent compiling error in OS_WIN in auto-generated UnifiedBindingsXX.cpp,
   // we have all data fields expended here instead of having a data member of
   // |IccInfoData| defined in PIccTypes.h which indirectly includes "windows.h"
@@ -91,7 +91,7 @@ public:
   NS_FORWARD_NSIICCINFO(IccInfo::)
   NS_DECL_NSIGSMICCINFO
 
-  explicit GsmIccInfo(nsPIDOMWindow* aWindow);
+  explicit GsmIccInfo(nsPIDOMWindowInner* aWindow);
   explicit GsmIccInfo(const icc::IccInfoData& aData);
 
   void
@@ -119,7 +119,7 @@ public:
   NS_FORWARD_NSIICCINFO(IccInfo::)
   NS_DECL_NSICDMAICCINFO
 
-  explicit CdmaIccInfo(nsPIDOMWindow* aWindow);
+  explicit CdmaIccInfo(nsPIDOMWindowInner* aWindow);
   explicit CdmaIccInfo(const icc::IccInfoData& aData);
 
   void

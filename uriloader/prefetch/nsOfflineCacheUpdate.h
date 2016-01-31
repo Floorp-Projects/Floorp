@@ -340,7 +340,7 @@ public:
                       nsIURI *aDocumentURI,
                       nsIPrincipal* aLoadingPrincipal,
                       nsIDOMDocument *aDocument,
-                      nsIDOMWindow* aWindow,
+                      nsPIDOMWindowInner* aWindow,
                       nsIFile* aCustomProfileDir,
                       nsIOfflineCacheUpdate **aUpdate);
 

@@ -107,7 +107,7 @@ private:
   RefPtr<BluetoothManager> mManager;
 };
 
-BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
+BluetoothManager::BluetoothManager(nsPIDOMWindowInner *aWindow)
   : DOMEventTargetHelper(aWindow)
   , mDefaultAdapterIndex(-1)
 {
@@ -172,7 +172,7 @@ BluetoothManager::GetAdapters(nsTArray<RefPtr<BluetoothAdapter> >& aAdapters)
 
 // static
 already_AddRefed<BluetoothManager>
-BluetoothManager::Create(nsPIDOMWindow* aWindow)
+BluetoothManager::Create(nsPIDOMWindowInner* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);

@@ -964,12 +964,13 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
         args->AppendElement(heightArg);
     }
 
-    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
     ww->OpenWindow(nullptr, url, "_blank", "chrome,dialog=no,all",
                    args, getter_AddRefs(domWindow));
     MOZ_ASSERT(domWindow);
 
-    nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(domWindow);
+    nsCOMPtr<nsIWidget> widget =
+        WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(domWindow));
     MOZ_ASSERT(widget);
 
     const auto window = static_cast<nsWindow*>(widget.get());
@@ -1470,7 +1471,7 @@ nsWindow::BringToFront()
     // window that is created will be first in the window list but won't yet
     // be focused.
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-    nsCOMPtr<nsIDOMWindow> existingTopWindow;
+    nsCOMPtr<mozIDOMWindowProxy> existingTopWindow;
     fm->GetActiveWindow(getter_AddRefs(existingTopWindow));
     if (existingTopWindow && FindTopLevel() == nsWindow::TopWindow())
         return;

@@ -37,14 +37,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationReceiver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationReceiver>
-PresentationReceiver::Create(nsPIDOMWindow* aWindow,
+PresentationReceiver::Create(nsPIDOMWindowInner* aWindow,
                              const nsAString& aSessionId)
 {
   RefPtr<PresentationReceiver> receiver = new PresentationReceiver(aWindow);
   return NS_WARN_IF(!receiver->Init(aSessionId)) ? nullptr : receiver.forget();
 }
 
-PresentationReceiver::PresentationReceiver(nsPIDOMWindow* aWindow)
+PresentationReceiver::PresentationReceiver(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
 }

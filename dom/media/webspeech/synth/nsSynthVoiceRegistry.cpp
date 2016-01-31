@@ -624,9 +624,7 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
   float volume = aUtterance.Volume();
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    nsCOMPtr<nsPIDOMWindow> topWindow =
-      do_QueryInterface(aUtterance.GetOwner());
-    if (topWindow) {
+    if (nsCOMPtr<nsPIDOMWindowInner> topWindow = aUtterance.GetOwner()) {
       float audioVolume = 1.0f;
       bool muted = false;
       service->GetState(topWindow->GetOuterWindow(),

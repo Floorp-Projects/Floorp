@@ -73,7 +73,7 @@ public:
                                         aPrincipal, aCx, aArgc, aRetval)
       : NS_ERROR_NULL_POINTER;
   }
-  NS_IMETHOD GetContent(nsIDOMWindow** aContent) override;
+  NS_IMETHOD GetContent(mozIDOMWindowProxy** aContent) override;
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) override;
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER

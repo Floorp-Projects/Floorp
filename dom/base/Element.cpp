@@ -2018,11 +2018,11 @@ Element::ShouldBlur(nsIContent *aContent)
   if (!document)
     return false;
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(document->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> window = document->GetWindow();
   if (!window)
     return false;
 
-  nsCOMPtr<nsPIDOMWindow> focusedFrame;
+  nsCOMPtr<nsPIDOMWindowOuter> focusedFrame;
   nsIContent* contentToBlur =
     nsFocusManager::GetFocusedDescendant(window, false, getter_AddRefs(focusedFrame));
   if (contentToBlur == aContent)
@@ -3233,7 +3233,6 @@ Element::AttrValueToCORSMode(const nsAttrValue* aValue)
 static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
-  nsCOMPtr<nsPIDOMWindow> win = aDoc->GetWindow();
   if (aDoc->NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED) {
     // Request is in a web app and in the same origin as the web app.
     // Don't enforce as strict security checks for web apps, the user

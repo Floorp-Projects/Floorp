@@ -93,7 +93,7 @@ private:
   RefPtr<BluetoothDevice> mDevice;
 };
 
-BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
+BluetoothDevice::BluetoothDevice(nsPIDOMWindowInner* aWindow,
                                  const BluetoothValue& aValue)
   : DOMEventTargetHelper(aWindow)
   , mPaired(false)
@@ -214,7 +214,7 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
 
 // static
 already_AddRefed<BluetoothDevice>
-BluetoothDevice::Create(nsPIDOMWindow* aWindow,
+BluetoothDevice::Create(nsPIDOMWindowInner* aWindow,
                         const BluetoothValue& aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());

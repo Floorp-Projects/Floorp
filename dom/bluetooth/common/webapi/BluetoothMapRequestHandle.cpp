@@ -26,7 +26,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothMapRequestHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-BluetoothMapRequestHandle::BluetoothMapRequestHandle(nsPIDOMWindow* aOwner)
+BluetoothMapRequestHandle::BluetoothMapRequestHandle(nsPIDOMWindowInner* aOwner)
   : mOwner(aOwner)
 {
   MOZ_ASSERT(aOwner);
@@ -37,7 +37,7 @@ BluetoothMapRequestHandle::~BluetoothMapRequestHandle()
 }
 
 already_AddRefed<BluetoothMapRequestHandle>
-BluetoothMapRequestHandle::Create(nsPIDOMWindow* aOwner)
+BluetoothMapRequestHandle::Create(nsPIDOMWindowInner* aOwner)
 {
   MOZ_ASSERT(aOwner);
 

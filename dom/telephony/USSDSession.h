@@ -30,10 +30,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(USSDSession)
 
-  USSDSession(nsPIDOMWindow* aWindow, nsITelephonyService* aService,
+  USSDSession(nsPIDOMWindowInner* aWindow, nsITelephonyService* aService,
               uint32_t aServiceId);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   virtual JSObject*
@@ -56,7 +56,7 @@ private:
   already_AddRefed<Promise>
   CreatePromise(ErrorResult& aRv);
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsITelephonyService> mService;
   uint32_t mServiceId;
 };

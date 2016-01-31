@@ -52,11 +52,11 @@
 
 using namespace mozilla;
 
-static HWND hwndForDOMWindow( nsISupports * );
+static HWND hwndForDOMWindow( mozIDOMWindowProxy * );
 
 static
 nsresult
-GetMostRecentWindow(const char16_t* aType, nsIDOMWindow** aWindow) {
+GetMostRecentWindow(const char16_t* aType, mozIDOMWindowProxy** aWindow) {
     nsresult rv;
     nsCOMPtr<nsIWindowMediator> med( do_GetService( NS_WINDOWMEDIATOR_CONTRACTID, &rv ) );
     if ( NS_FAILED( rv ) )
@@ -70,7 +70,7 @@ GetMostRecentWindow(const char16_t* aType, nsIDOMWindow** aWindow) {
 
 static
 void
-activateWindow( nsIDOMWindow *win ) {
+activateWindow( mozIDOMWindowProxy *win ) {
     // Try to get native window handle.
     HWND hwnd = hwndForDOMWindow( win );
     if ( hwnd ) {
@@ -82,7 +82,7 @@ activateWindow( nsIDOMWindow *win ) {
         ::SetForegroundWindow( hwnd );
     } else {
         // Use internal method.
-        nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(win);
+        nsCOMPtr<nsPIDOMWindowOuter> piWin = nsPIDOMWindowOuter::From(win);
         piWin->Focus();
     }
 }
@@ -625,7 +625,7 @@ struct MessageWindow {
             (void)nsNativeAppSupportWin::HandleCommandLine((char*)cds->lpData, workingDir, nsICommandLine::STATE_REMOTE_AUTO);
 
             // Get current window and return its window handle.
-            nsCOMPtr<nsIDOMWindow> win;
+            nsCOMPtr<mozIDOMWindowProxy> win;
             GetMostRecentWindow( 0, getter_AddRefs( win ) );
             return win ? (LRESULT)hwndForDOMWindow( win ) : 0;
         }
@@ -1006,18 +1006,17 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     // something goes wrong.
                     do {
                         // Get most recently used Nav window.
-                        nsCOMPtr<nsIDOMWindow> navWin;
+                        nsCOMPtr<mozIDOMWindowProxy> navWin;
                         GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(),
                                              getter_AddRefs( navWin ) );
-                        nsCOMPtr<nsPIDOMWindow> piNavWin = do_QueryInterface(navWin);
+                        nsCOMPtr<nsPIDOMWindowOuter> piNavWin = do_QueryInterface(navWin);
                         if ( !piNavWin ) {
                             // There is not a window open
                             break;
                         }
 
                         // Get content window.
-                        nsCOMPtr<nsIDOMWindow> internalContent_ = nsGlobalWindow::Cast(piNavWin)->GetContent();
-                        nsCOMPtr<nsPIDOMWindow> internalContent = do_QueryInterface(internalContent_);
+                        nsCOMPtr<nsPIDOMWindowOuter> internalContent = nsGlobalWindow::Cast(piNavWin)->GetContent();
                         if ( !internalContent ) {
                             break;
                         }
@@ -1260,7 +1259,7 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
 }
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
-    nsCOMPtr<nsIDOMWindow> navWin;
+    nsCOMPtr<mozIDOMWindowProxy> navWin;
     GetMostRecentWindow( MOZ_UTF16("navigator:browser"), getter_AddRefs( navWin ) );
     if ( navWin ) {
         // Activate that window.
@@ -1444,7 +1443,7 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
     sarg->SetData(nsDependentCString(args));
 
   if (wwatch && sarg) {
-    nsCOMPtr<nsIDOMWindow> newWindow;
+    nsCOMPtr<mozIDOMWindowProxy> newWindow;
     rv = wwatch->OpenWindow(0, urlstr, "_blank", "chrome,dialog=no,all",
                    sarg, getter_AddRefs(newWindow));
 #if MOZ_DEBUG_DDE
@@ -1455,11 +1454,11 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
   return rv;
 }
 
-HWND hwndForDOMWindow( nsISupports *window ) {
-    nsCOMPtr<nsPIDOMWindow> pidomwindow( do_QueryInterface(window) );
-    if ( !pidomwindow ) {
+HWND hwndForDOMWindow(mozIDOMWindowProxy *window ) {
+    if ( !window ) {
         return 0;
     }
+    nsCOMPtr<nsPIDOMWindowOuter > pidomwindow = nsPIDOMWindowOuter::From(window);
 
     nsCOMPtr<nsIBaseWindow> ppBaseWindow =
         do_QueryInterface( pidomwindow->GetDocShell() );
@@ -1484,7 +1483,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
     // If at all possible, hand the request off to the most recent
     // browser window.
 
-    nsCOMPtr<nsIDOMWindow> navWin;
+    nsCOMPtr<mozIDOMWindowProxy> navWin;
     GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
 
     // This isn't really a loop.  We just use "break" statements to fall
@@ -1503,7 +1502,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
           if ( navItem ) {
             nsCOMPtr<nsIDocShellTreeItem> rootItem;
             navItem->GetRootTreeItem( getter_AddRefs( rootItem ) );
-            nsCOMPtr<nsIDOMWindow> rootWin =
+            nsCOMPtr<nsPIDOMWindowOuter> rootWin =
               rootItem ? rootItem->GetWindow() : nullptr;
             nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(rootWin));
             if ( chromeWin )
@@ -1514,7 +1513,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
           nsCOMPtr<nsIURI> uri;
           NS_NewURI( getter_AddRefs( uri ), NS_LITERAL_CSTRING("about:blank"), 0, 0 );
           if ( uri ) {
-            nsCOMPtr<nsIDOMWindow> container;
+            nsCOMPtr<mozIDOMWindowProxy> container;
             rv = bwin->OpenURI( uri, 0,
                                 nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
                                 nsIBrowserDOMWindow::OPEN_EXTERNAL,

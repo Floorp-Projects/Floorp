@@ -37,7 +37,7 @@ class FMRadioRequest final : public FMRadioReplyRunnable
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
+  FMRadioRequest(nsPIDOMWindowInner* aWindow, FMRadio* aFMRadio)
     : DOMRequest(aWindow)
     , mType(FMRadioRequestArgs::T__None)
   {
@@ -47,7 +47,7 @@ public:
     mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
   }
 
-  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio,
+  FMRadioRequest(nsPIDOMWindowInner* aWindow, FMRadio* aFMRadio,
     FMRadioRequestArgs::Type aType)
     : DOMRequest(aWindow)
   {
@@ -119,7 +119,7 @@ FMRadio::~FMRadio()
 }
 
 void
-FMRadio::Init(nsPIDOMWindow *aWindow)
+FMRadio::Init(nsPIDOMWindowInner *aWindow)
 {
   BindToOwner(aWindow);
 
@@ -339,7 +339,7 @@ FMRadio::GetRdsgroup(JSContext* cx, JS::MutableHandle<JSObject*> retval)
 already_AddRefed<DOMRequest>
 FMRadio::Enable(double aFrequency)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -354,7 +354,7 @@ FMRadio::Enable(double aFrequency)
 already_AddRefed<DOMRequest>
 FMRadio::Disable()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -368,7 +368,7 @@ FMRadio::Disable()
 already_AddRefed<DOMRequest>
 FMRadio::SetFrequency(double aFrequency)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -382,7 +382,7 @@ FMRadio::SetFrequency(double aFrequency)
 already_AddRefed<DOMRequest>
 FMRadio::SeekUp()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -396,7 +396,7 @@ FMRadio::SeekUp()
 already_AddRefed<DOMRequest>
 FMRadio::SeekDown()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -410,7 +410,7 @@ FMRadio::SeekDown()
 already_AddRefed<DOMRequest>
 FMRadio::CancelSeek()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -424,7 +424,7 @@ FMRadio::CancelSeek()
 already_AddRefed<DOMRequest>
 FMRadio::EnableRDS()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }
@@ -437,7 +437,7 @@ FMRadio::EnableRDS()
 already_AddRefed<DOMRequest>
 FMRadio::DisableRDS()
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
     return nullptr;
   }

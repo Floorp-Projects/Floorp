@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsIFrameLoaderOwner;
@@ -17,7 +18,7 @@ interface nsIOpenURIInFrameParams : nsISupports
   attribute boolean isPrivate;
 };
 
-[scriptable, uuid(31da1ce2-aec4-4c26-ac66-d622935c3bf4)]
+[scriptable, uuid(9d17f3dd-672b-451e-afd2-b1115df780d5)]
 
 /**
  * The C++ source has access to the browser script source through
@@ -83,8 +84,9 @@ interface nsIBrowserDOMWindow : nsISupports
    *                 is used only when aWhere == OPEN_DEFAULTWINDOW.
    * @return the window into which the URI was opened.
   */
-  nsIDOMWindow openURI(in nsIURI aURI, in nsIDOMWindow aOpener,
-                       in short aWhere, in short aContext);
+  mozIDOMWindowProxy
+  openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
+          in short aWhere, in short aContext);
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.

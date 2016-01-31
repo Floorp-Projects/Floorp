@@ -6,6 +6,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/MessageEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
@@ -32,7 +33,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationConnection)
   NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-PresentationConnection::PresentationConnection(nsPIDOMWindow* aWindow,
+PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
                                                const nsAString& aId,
                                                PresentationConnectionState aState)
   : DOMEventTargetHelper(aWindow)
@@ -46,7 +47,7 @@ PresentationConnection::PresentationConnection(nsPIDOMWindow* aWindow,
 }
 
 /* static */ already_AddRefed<PresentationConnection>
-PresentationConnection::Create(nsPIDOMWindow* aWindow,
+PresentationConnection::Create(nsPIDOMWindowInner* aWindow,
                                const nsAString& aId,
                                PresentationConnectionState aState)
 {
@@ -284,15 +285,10 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
   RefPtr<MessageEvent> messageEvent =
     NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
-  rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                      false, false,
-                                      aData,
-                                      origin,
-                                      EmptyString(), nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  messageEvent->InitMessageEvent(nullptr,
+                                 NS_LITERAL_STRING("message"),
+                                 false, false, aData, origin,
+                                 EmptyString(), nullptr, nullptr);
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =

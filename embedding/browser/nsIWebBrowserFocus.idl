@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIDOMElement;
 
 #include "nsISupports.idl"
@@ -19,7 +19,7 @@ interface nsIDOMElement;
  * reactivated for the browser's focus memory to work correctly.
  */
 
-[scriptable, uuid(9c5d3c58-1dd1-11b2-a1c9-f3699284657a)]
+[scriptable, uuid(7f8c754e-5b36-44be-bc96-191b49f08ea6)]
 interface nsIWebBrowserFocus : nsISupports
 {
   /**
@@ -66,7 +66,7 @@ interface nsIWebBrowserFocus : nsISupports
    * The currently focused nsDOMWindow when the browser is active,
    * or the last focused nsDOMWindow when the browser is inactive.
    */
-  attribute nsIDOMWindow focusedWindow;
+  attribute mozIDOMWindowProxy focusedWindow;
   
   /**
    * The currently focused nsDOMElement when the browser is active,

@@ -43,10 +43,10 @@ public:
   Constructor(const GlobalObject& aGlobal, Blob& aBlob,
               const ArchiveReaderOptions& aOptions, ErrorResult& aError);
 
-  ArchiveReader(Blob& aBlob, nsPIDOMWindow* aWindow,
+  ArchiveReader(Blob& aBlob, nsPIDOMWindowInner* aWindow,
                 const nsACString& aEncoding);
 
-  nsIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mWindow;
   }
@@ -85,7 +85,7 @@ protected:
   RefPtr<BlobImpl> mBlobImpl;
 
   // The window is needed by the requests
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
   // Are we ready to return data?
   enum {

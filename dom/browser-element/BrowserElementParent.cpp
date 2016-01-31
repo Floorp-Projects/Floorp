@@ -246,11 +246,11 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
 
 /* static */
 BrowserElementParent::OpenWindowResult
-BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
+BrowserElementParent::OpenWindowInProcess(nsPIDOMWindowOuter* aOpenerWindow,
                                           nsIURI* aURI,
                                           const nsAString& aName,
                                           const nsACString& aFeatures,
-                                          nsIDOMWindow** aReturnWindow)
+                                          mozIDOMWindowProxy** aReturnWindow)
 {
   *aReturnWindow = nullptr;
 
@@ -262,8 +262,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   // GetScriptableTop gets us the <iframe mozbrowser>'s window; we'll use its
   // frame element, rather than aOpenerWindow's frame element, as our "opener
   // frame element" below.
-  nsCOMPtr<nsPIDOMWindow> openerWindow = do_QueryInterface(aOpenerWindow);
-  nsCOMPtr<nsPIDOMWindow> win = openerWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> win = aOpenerWindow->GetScriptableTop();
 
   nsCOMPtr<Element> openerFrameElement = win->GetFrameElementInternal();
   NS_ENSURE_TRUE(openerFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
@@ -297,7 +296,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   frameLoader->GetDocShell(getter_AddRefs(docshell));
   NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
-  nsCOMPtr<nsIDOMWindow> window = docshell->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = docshell->GetWindow();
   window.forget(aReturnWindow);
 
   return !!*aReturnWindow ? opened : BrowserElementParent::OPEN_WINDOW_CANCELLED;
