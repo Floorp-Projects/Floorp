@@ -8047,7 +8047,7 @@ class ObjectStoreGetRequestOp final
   const uint32_t mObjectStoreId;
   RefPtr<Database> mDatabase;
   const OptionalKeyRange mOptionalKeyRange;
-  AutoFallibleTArray<StructuredCloneReadInfo, 1> mResponse;
+  AutoTArray<StructuredCloneReadInfo, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -8208,7 +8208,7 @@ class IndexGetRequestOp final
 
   RefPtr<Database> mDatabase;
   const OptionalKeyRange mOptionalKeyRange;
-  AutoFallibleTArray<StructuredCloneReadInfo, 1> mResponse;
+  AutoTArray<StructuredCloneReadInfo, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -8235,7 +8235,7 @@ class IndexGetKeyRequestOp final
   friend class TransactionBase;
 
   const OptionalKeyRange mOptionalKeyRange;
-  AutoFallibleTArray<Key, 1> mResponse;
+  AutoTArray<Key, 1> mResponse;
   const uint32_t mLimit;
   const bool mGetAll;
 
@@ -18199,7 +18199,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  AutoFallibleTArray<uint8_t, 512> uncompressed;
+  AutoTArray<uint8_t, 512> uncompressed;
   if (NS_WARN_IF(!uncompressed.SetLength(uncompressedLength, fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
