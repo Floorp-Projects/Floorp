@@ -1236,6 +1236,41 @@ nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames)
   SetCaptureState(nullptr);
 }
 
+void
+nsXULPopupManager::EnableRollup(nsIContent* aPopup, bool aShouldRollup)
+{
+#ifndef MOZ_GTK
+  if (aShouldRollup) {
+    nsMenuChainItem* item = mNoHidePanels;
+    while (item) {
+      if (item->Content() == aPopup) {
+        item->Detach(&mNoHidePanels);
+        nsIContent* oldmenu = nullptr;
+        if (mPopups)
+          oldmenu = mPopups->Content();
+        item->SetParent(mPopups);
+        mPopups = item;
+        SetCaptureState(oldmenu);
+        return;
+      }
+      item = item->GetParent();
+    }
+  } else {
+    nsMenuChainItem* item = mPopups;
+    while (item) {
+      if (item->Content() == aPopup) {
+        item->Detach(&mPopups);
+        item->SetParent(mNoHidePanels);
+        mNoHidePanels = item;
+        SetCaptureState(nullptr);
+        return;
+      }
+      item = item->GetParent();
+    }
+  }
+#endif
+}
+
 bool
 nsXULPopupManager::IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected)
 {
