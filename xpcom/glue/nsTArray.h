@@ -57,9 +57,6 @@ struct TileClient;
 // nsTArray and AutoTArray are infallible by default. To opt-in to fallible
 // behaviour, use the `mozilla::fallible` parameter and check the return value.
 //
-// InfallibleTArray and AutoInfallibleTArray are aliases for nsTArray and
-// AutoTArray.
-//
 // If you just want to declare the nsTArray types (e.g., if you're in a header
 // file and don't need the full nsTArray definitions) consider including
 // nsTArrayForwardDeclare.h instead of nsTArray.h.

@@ -31,6 +31,5 @@ template<class E, size_t N>
 class AutoTArray;
 
 #define InfallibleTArray nsTArray
-#define AutoInfallibleTArray AutoTArray
 
 #endif
