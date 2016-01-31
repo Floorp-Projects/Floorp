@@ -2664,7 +2664,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
                         nsIContent& aNewLeftNode)
 {
   // Remember all selection points.
-  nsAutoTArray<SavedRange, 10> savedRanges;
+  AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
     SelectionType type(1 << i);
     SavedRange range;
@@ -2811,7 +2811,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
   nsINode* parent = GetNodeLocation(aNodeToKeep, &keepOffset);
 
   // Remember all selection points.
-  nsAutoTArray<SavedRange, 10> savedRanges;
+  AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
     SelectionType type(1 << i);
     SavedRange range;

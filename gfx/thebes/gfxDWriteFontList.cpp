@@ -70,7 +70,7 @@ GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
     }
 
     BOOL exists;
-    nsAutoTArray<wchar_t,32> faceName;
+    AutoTArray<wchar_t,32> faceName;
     UINT32 englishIdx = 0;
     hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
     if (FAILED(hr)) {
@@ -114,7 +114,7 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
         return E_FAIL;
     }
 
-    nsAutoTArray<wchar_t,32> faceName;
+    AutoTArray<wchar_t,32> faceName;
     UINT32 englishIdx = 0;
     hr = infostrings->FindLocaleName(L"en-us", &englishIdx, &exists);
     if (FAILED(hr)) {
@@ -633,7 +633,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         if (FAILED(mFontFace->GetFiles(&numberOfFiles, nullptr))) {
             return NS_ERROR_FAILURE;
         }
-        nsAutoTArray<IDWriteFontFile*,1> files;
+        AutoTArray<IDWriteFontFile*,1> files;
         files.AppendElements(numberOfFiles);
         if (FAILED(mFontFace->GetFiles(&numberOfFiles, files.Elements()))) {
             return NS_ERROR_FAILURE;
@@ -1517,7 +1517,7 @@ void
 DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 {
     // lookup the family
-    nsAutoTArray<wchar_t, 32> famName;
+    AutoTArray<wchar_t, 32> famName;
 
     uint32_t len = aFamilyName.Length();
     if(!famName.SetLength(len + 1, fallible)) {

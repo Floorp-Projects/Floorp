@@ -309,7 +309,7 @@ InternalHeaders::CORSHeaders(InternalHeaders* aHeaders)
   aHeaders->Get(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"), acExposedNames, result);
   MOZ_ASSERT(!result.Failed());
 
-  nsAutoTArray<nsCString, 5> exposeNamesArray;
+  AutoTArray<nsCString, 5> exposeNamesArray;
   nsCCharSeparatedTokenizer exposeTokens(acExposedNames, ',');
   while (exposeTokens.hasMoreTokens()) {
     const nsDependentCSubstring& token = exposeTokens.nextToken();

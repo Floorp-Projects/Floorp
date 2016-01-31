@@ -332,7 +332,7 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& a
   uint32_t i = 0;
   bool ok = true;
   while (i < aNotifications.Length()) {
-    nsAutoTArray<ImageCompositeNotification,1> notifications;
+    AutoTArray<ImageCompositeNotification,1> notifications;
     notifications.AppendElement(aNotifications[i]);
     uint32_t end = i + 1;
     MOZ_ASSERT(aNotifications[i].imageContainerParent());

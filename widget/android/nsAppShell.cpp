@@ -478,7 +478,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
 
     case AndroidGeckoEvent::SENSOR_EVENT: {
-        nsAutoTArray<float, 4> values;
+        AutoTArray<float, 4> values;
         mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
 
         switch (type) {

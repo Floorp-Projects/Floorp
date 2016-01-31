@@ -1048,7 +1048,7 @@ DocAccessibleChild::RecvColHeaderCells(const uint64_t& aID,
 {
   TableCellAccessible* acc = IdToTableCellAccessible(aID);
   if (acc) {
-    nsAutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<Accessible*, 10> headerCells;
     acc->ColHeaderCells(&headerCells);
     aCells->SetCapacity(headerCells.Length());
     for (uint32_t i = 0; i < headerCells.Length(); ++i) {
@@ -1066,7 +1066,7 @@ DocAccessibleChild::RecvRowHeaderCells(const uint64_t& aID,
 {
   TableCellAccessible* acc = IdToTableCellAccessible(aID);
   if (acc) {
-    nsAutoTArray<Accessible*, 10> headerCells;
+    AutoTArray<Accessible*, 10> headerCells;
     acc->RowHeaderCells(&headerCells);
     aCells->SetCapacity(headerCells.Length());
     for (uint32_t i = 0; i < headerCells.Length(); ++i) {
@@ -1368,7 +1368,7 @@ DocAccessibleChild::RecvTableSelectedCells(const uint64_t& aID,
 {
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
-    nsAutoTArray<Accessible*, 30> cells;
+    AutoTArray<Accessible*, 30> cells;
     acc->SelectedCells(&cells);
     aCellIDs->SetCapacity(cells.Length());
     for (uint32_t i = 0; i < cells.Length(); ++i) {
@@ -1529,7 +1529,7 @@ DocAccessibleChild::RecvSelectedItems(const uint64_t& aID,
 {
   Accessible* acc = IdToAccessibleSelect(aID);
   if (acc) {
-    nsAutoTArray<Accessible*, 10> selectedItems;
+    AutoTArray<Accessible*, 10> selectedItems;
     acc->SelectedItems(&selectedItems);
     aSelectedItemIDs->SetCapacity(selectedItems.Length());
     for (size_t i = 0; i < selectedItems.Length(); ++i) {

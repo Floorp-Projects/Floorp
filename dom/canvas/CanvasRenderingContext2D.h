@@ -1034,7 +1034,7 @@ protected:
     bool fontExplicitLanguage;
   };
 
-  nsAutoTArray<ContextState, 3> mStyleStack;
+  AutoTArray<ContextState, 3> mStyleStack;
 
   inline ContextState& CurrentState() {
     return mStyleStack[mStyleStack.Length() - 1];

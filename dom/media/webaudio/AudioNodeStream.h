@@ -41,7 +41,7 @@ public:
 
   enum { AUDIO_TRACK = 1 };
 
-  typedef nsAutoTArray<AudioBlock, 1> OutputChunks;
+  typedef AutoTArray<AudioBlock, 1> OutputChunks;
 
   // Flags re main thread updates and stream output.
   typedef unsigned Flags;

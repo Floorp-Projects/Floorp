@@ -3128,14 +3128,14 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
 {
   AssertIsOnMainThread();
 
-  nsAutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
+  AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
   GetAllSharedWorkers(sharedWorkers);
 
   if (sharedWorkers.IsEmpty()) {
     return;
   }
 
-  nsAutoTArray<WindowAction, 10> windowActions;
+  AutoTArray<WindowAction, 10> windowActions;
   nsresult rv;
 
   // First fire the error event at all SharedWorker objects. This may include
@@ -5154,7 +5154,7 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
     }
   }
 
-  nsAutoTArray<ParentType*, 10> children;
+  AutoTArray<ParentType*, 10> children;
   children.AppendElements(mChildWorkers);
 
   for (uint32_t index = 0; index < children.Length(); index++) {
@@ -5951,7 +5951,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
                         (now - actual_now).ToMilliseconds()));
   }
 
-  nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
+  AutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
     nsAutoPtr<TimeoutInfo>& info = mTimeouts[index];
     if (info->mTargetTime > now) {

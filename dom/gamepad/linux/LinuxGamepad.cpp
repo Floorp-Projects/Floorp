@@ -77,7 +77,7 @@ private:
   struct udev_monitor* mMonitor;
   guint mMonitorSourceID;
   // Information about currently connected gamepads.
-  nsAutoTArray<Gamepad,4> mGamepads;
+  AutoTArray<Gamepad,4> mGamepads;
 };
 
 // singleton instance

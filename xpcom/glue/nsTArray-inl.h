@@ -39,7 +39,7 @@ nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_t aElemAlign) const
 
   static_assert(sizeof(void*) != 4 ||
                 (MOZ_ALIGNOF(mozilla::AlignedElem<8>) == 8 &&
-                 sizeof(nsAutoTArray<mozilla::AlignedElem<8>, 1>) ==
+                 sizeof(AutoTArray<mozilla::AlignedElem<8>, 1>) ==
                    sizeof(void*) + sizeof(nsTArrayHeader) +
                    4 + sizeof(mozilla::AlignedElem<8>)),
                 "auto array padding wasn't what we expected");
@@ -82,13 +82,13 @@ nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const
   //   * GetAutoArrayBuffer(8) is at most 4 bytes past GetAutoArrayBuffer(4), and
   //   * sizeof(nsTArrayHeader) > 4.
   //
-  // Since nsAutoTArray always contains an nsTArrayHeader,
+  // Since AutoTArray always contains an nsTArrayHeader,
   // GetAutoArrayBuffer(8) will always point inside the auto array object,
   // even if it doesn't point at the beginning of the header.
   //
   // Note that this means that we can't store elements with alignment 16 in an
   // nsTArray, because GetAutoArrayBuffer(16) could lie outside the memory
-  // owned by this nsAutoTArray.  We statically assert that elem_type's
+  // owned by this AutoTArray.  We statically assert that elem_type's
   // alignment is 8 bytes or less in nsAutoArrayBase.
 
   static_assert(sizeof(nsTArrayHeader) > 4,
@@ -439,8 +439,8 @@ nsTArray_base<Alloc, Copy>::EnsureNotUsingAutoArrayBuffer(size_type aElemSize)
   if (UsesAutoArrayBuffer()) {
 
     // If you call this on a 0-length array, we'll set that array's mHdr to
-    // sEmptyHdr, in flagrant violation of the nsAutoTArray invariants.  It's
-    // up to you to set it back!  (If you don't, the nsAutoTArray will forget
+    // sEmptyHdr, in flagrant violation of the AutoTArray invariants.  It's
+    // up to you to set it back!  (If you don't, the AutoTArray will forget
     // that it has an auto buffer.)
     if (Length() == 0) {
       mHdr = EmptyHdr();

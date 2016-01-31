@@ -605,7 +605,7 @@ protected:
   nsClassHashtable<nsISupportsHashKey,
                    nsCOMArray<nsMutationReceiver> >  mTransientReceivers;
   // MutationRecords which are being constructed.
-  nsAutoTArray<nsDOMMutationRecord*, 4>              mCurrentMutations;
+  AutoTArray<nsDOMMutationRecord*, 4>              mCurrentMutations;
   // MutationRecords which will be handed to the callback at the end of
   // the microtask.
   RefPtr<nsDOMMutationRecord>                      mFirstPendingMutation;
@@ -621,11 +621,11 @@ protected:
   uint64_t                                           mId;
 
   static uint64_t                                    sCount;
-  static nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
+  static AutoTArray<RefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
   static nsDOMMutationObserver*                      sCurrentObserver;
 
   static uint32_t                                    sMutationLevel;
-  static nsAutoTArray<nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
+  static AutoTArray<AutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
                                                      sCurrentlyHandlingObservers;
 };
 
@@ -740,7 +740,7 @@ private:
   
   static nsAutoMutationBatch* sCurrentBatch;
   nsAutoMutationBatch* mPreviousBatch;
-  nsAutoTArray<BatchObserver, 2> mObservers;
+  AutoTArray<BatchObserver, 2> mObservers;
   nsTArray<nsCOMPtr<nsIContent> > mRemovedNodes;
   nsTArray<nsCOMPtr<nsIContent> > mAddedNodes;
   nsINode* mBatchTarget;
@@ -907,7 +907,7 @@ private:
   };
 
   static nsAutoAnimationMutationBatch* sCurrentBatch;
-  nsAutoTArray<nsDOMMutationObserver*, 2> mObservers;
+  AutoTArray<nsDOMMutationObserver*, 2> mObservers;
   typedef nsTArray<Entry> EntryArray;
   nsClassHashtable<nsPtrHashKey<nsINode>, EntryArray> mEntryTable;
   // List of nodes referred to by mEntryTable so we can sort them
