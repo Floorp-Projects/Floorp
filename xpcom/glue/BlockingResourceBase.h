@@ -100,7 +100,7 @@ protected:
 #ifdef MOZ_CALLSTACK_DISABLED
   typedef bool AcquisitionState;
 #else
-  typedef AutoTArray<void*, 24> AcquisitionState;
+  typedef nsAutoTArray<void*, 24> AcquisitionState;
 #endif
 
   /**

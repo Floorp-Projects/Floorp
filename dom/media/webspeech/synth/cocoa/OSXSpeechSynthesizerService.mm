@@ -275,7 +275,7 @@ EnumVoicesRunnable::Run()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  AutoTArray<OSXVoice, 64> list;
+  nsAutoTArray<OSXVoice, 64> list;
 
   NSArray* voices = [NSSpeechSynthesizer availableVoices];
   NSString* defaultVoice = [NSSpeechSynthesizer defaultVoice];

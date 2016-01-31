@@ -47,7 +47,7 @@ CleanupChildFds(CacheReadStream& aReadStream, CleanupAction aAction)
     return;
   }
 
-  AutoTArray<FileDescriptor, 4> fds;
+  nsAutoTArray<FileDescriptor, 4> fds;
 
   FileDescriptorSetChild* fdSetActor =
     static_cast<FileDescriptorSetChild*>(aReadStream.fds().get_PFileDescriptorSetChild());
@@ -107,7 +107,7 @@ CleanupParentFds(CacheReadStream& aReadStream, CleanupAction aAction)
     return;
   }
 
-  AutoTArray<FileDescriptor, 4> fds;
+  nsAutoTArray<FileDescriptor, 4> fds;
 
   FileDescriptorSetParent* fdSetActor =
     static_cast<FileDescriptorSetParent*>(aReadStream.fds().get_PFileDescriptorSetParent());
@@ -306,7 +306,7 @@ MatchInPutList(InternalRequest* aRequest,
     RefPtr<InternalHeaders> cachedResponseHeaders =
       TypeUtils::ToInternalHeaders(cachedResponse.headers());
 
-    AutoTArray<nsCString, 16> varyHeaders;
+    nsAutoTArray<nsCString, 16> varyHeaders;
     ErrorResult rv;
     cachedResponseHeaders->GetAll(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
     MOZ_ALWAYS_TRUE(!rv.Failed());

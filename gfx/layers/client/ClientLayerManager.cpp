@@ -26,7 +26,7 @@
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
 #include "nsIWidgetListener.h"
-#include "nsTArray.h"                   // for AutoTArray
+#include "nsTArray.h"                   // for AutoInfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
 #include "mozilla/dom/WindowBinding.h"  // for Overfill Callback
@@ -603,7 +603,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
-  AutoTArray<EditReply, 10> replies;
+  AutoInfallibleTArray<EditReply, 10> replies;
   if (mForwarder->EndTransaction(&replies, mRegionToClear,
         mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
         mIsRepeatTransaction, transactionStart, &sent)) {

@@ -71,8 +71,8 @@ private:
   CancelableTask* mPreallocateAppProcessTask;
 
   // The array containing the preallocated processes. 4 as the inline storage size
-  // should be enough so we don't need to grow the AutoTArray.
-  AutoTArray<RefPtr<ContentParent>, 4> mSpareProcesses;
+  // should be enough so we don't need to grow the nsAutoTArray.
+  nsAutoTArray<RefPtr<ContentParent>, 4> mSpareProcesses;
 
   // Nuwa process is ready for creating new process.
   bool mIsNuwaReady;

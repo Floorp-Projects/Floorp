@@ -140,7 +140,7 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
 {
   switch(aChunk.mBufferFormat) {
     case AUDIO_FORMAT_S16: {
-      AutoTArray<const int16_t*, 2> array;
+      nsAutoTArray<const int16_t*, 2> array;
       array.SetLength(aOutputChannels);
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const int16_t*>(aChunk.mChannelData[i]);
@@ -149,7 +149,7 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
       break;
     }
     case AUDIO_FORMAT_FLOAT32: {
-      AutoTArray<const float*, 2> array;
+      nsAutoTArray<const float*, 2> array;
       array.SetLength(aOutputChannels);
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const float*>(aChunk.mChannelData[i]);

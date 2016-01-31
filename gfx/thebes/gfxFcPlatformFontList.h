@@ -137,7 +137,7 @@ protected:
     // override to pull data from FTFace
     virtual nsresult
     CopyFontTable(uint32_t aTableTag,
-                  nsTArray<uint8_t>& aBuffer) override;
+                  FallibleTArray<uint8_t>& aBuffer) override;
 
     // if HB or GR faces are gone, close down the FT_Face
     void MaybeReleaseFTFace();

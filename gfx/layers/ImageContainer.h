@@ -634,7 +634,7 @@ public:
   }
 
 private:
-  AutoTArray<ImageContainer::OwningImage,4> mImages;
+  nsAutoTArray<ImageContainer::OwningImage,4> mImages;
 };
 
 struct PlanarYCbCrData {

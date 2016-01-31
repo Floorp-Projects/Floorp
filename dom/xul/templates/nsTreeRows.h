@@ -187,7 +187,7 @@ public:
     class iterator {
     protected:
         int32_t mRowIndex;
-        AutoTArray<Link, 8> mLink;
+        nsAutoTArray<Link, 8> mLink;
 
         void Next();
         void Prev();

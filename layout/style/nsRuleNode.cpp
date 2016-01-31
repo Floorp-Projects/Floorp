@@ -3956,7 +3956,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
-  AutoTArray<nsStyleContext*, 8> contextPath;
+  nsAutoTArray<nsStyleContext*, 8> contextPath;
   contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
@@ -6686,8 +6686,8 @@ template <class ComputedValueItem>
 static void
 SetImageLayerList(nsStyleContext* aStyleContext,
                   const nsCSSValue& aValue,
-                  AutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
-                  const AutoTArray<nsStyleImageLayers::Layer, 1> &aParentLayers,
+                  nsAutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
+                  const nsAutoTArray<nsStyleImageLayers::Layer, 1> &aParentLayers,
                   ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
                   ComputedValueItem aInitialValue,
                   uint32_t aParentItemCount,
@@ -6751,8 +6751,8 @@ template <class ComputedValueItem>
 static void
 SetImageLayerPairList(nsStyleContext* aStyleContext,
                       const nsCSSValue& aValue,
-                      AutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
-                      const AutoTArray<nsStyleImageLayers::Layer, 1>
+                      nsAutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
+                      const nsAutoTArray<nsStyleImageLayers::Layer, 1>
                                                                  &aParentLayers,
                       ComputedValueItem nsStyleImageLayers::Layer::*
                                                                 aResultLocation,
@@ -6818,7 +6818,7 @@ SetImageLayerPairList(nsStyleContext* aStyleContext,
 
 template <class ComputedValueItem>
 static void
-FillBackgroundList(AutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
+FillBackgroundList(nsAutoTArray< nsStyleImageLayers::Layer, 1> &aLayers,
     ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
     uint32_t aItemCount, uint32_t aFillCount)
 {
@@ -10040,7 +10040,7 @@ nsRuleNode::Sweep()
     return true;
   }
 
-  AutoTArray<nsRuleNode*, 70> sweepQueue;
+  nsAutoTArray<nsRuleNode*, 70> sweepQueue;
   sweepQueue.AppendElement(this);
   while (!sweepQueue.IsEmpty()) {
     nsTArray<nsRuleNode*>::index_type last = sweepQueue.Length() - 1;

@@ -1433,7 +1433,7 @@ nsTableRowGroupFrame::AppendFrames(ChildListID     aListID,
 
   // collect the new row frames in an array
   // XXXbz why are we doing the QI stuff?  There shouldn't be any non-rows here.
-  AutoTArray<nsTableRowFrame*, 8> rows;
+  nsAutoTArray<nsTableRowFrame*, 8> rows;
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     nsTableRowFrame *rowFrame = do_QueryFrame(e.get());
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");

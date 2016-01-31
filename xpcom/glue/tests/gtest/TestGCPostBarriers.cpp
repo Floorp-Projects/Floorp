@@ -115,7 +115,12 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
   }
 
   {
-    AutoTArray<ElementT, InitialElements> array;
+    nsAutoTArray<ElementT, InitialElements> array;
+    RunTest(rt, cx, &array);
+  }
+
+  {
+    AutoFallibleTArray<ElementT, InitialElements> array;
     RunTest(rt, cx, &array);
   }
 

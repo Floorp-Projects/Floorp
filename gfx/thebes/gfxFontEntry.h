@@ -337,7 +337,7 @@ public:
     // Pass nullptr for aBuffer to indicate that the table is not present and
     // nullptr will be returned.  Also returns nullptr on OOM.
     hb_blob_t *ShareFontTableAndGetBlob(uint32_t aTag,
-                                        nsTArray<uint8_t>* aTable);
+                                        FallibleTArray<uint8_t>* aTable);
 
     // Get the font's unitsPerEm from the 'head' table, in the case of an
     // sfnt resource. Will return kInvalidUPEM for non-sfnt fonts,
@@ -469,7 +469,7 @@ protected:
     // Copy a font table into aBuffer.
     // The caller will be responsible for ownership of the data.
     virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                   nsTArray<uint8_t>& aBuffer) {
+                                   FallibleTArray<uint8_t>& aBuffer) {
         NS_NOTREACHED("forgot to override either GetFontTable or CopyFontTable?");
         return NS_ERROR_FAILURE;
     }
@@ -605,7 +605,7 @@ private:
         // recorded in the hashtable entry so that others may use the same
         // table.
         hb_blob_t *
-        ShareTableAndGetBlob(nsTArray<uint8_t>&& aTable,
+        ShareTableAndGetBlob(FallibleTArray<uint8_t>& aTable,
                              nsTHashtable<FontTableHashEntry> *aHashtable);
 
         // Return a strong reference to the blob.

@@ -73,7 +73,7 @@ private:
     };
     // There is only one of entry in this array unless characters from scripts
     // of other languages are measured.
-    AutoTArray<FontSetByLangEntry,1> mFontSets;
+    nsAutoTArray<FontSetByLangEntry,1> mFontSets;
 
     gfxFloat mSizeAdjustFactor;
     PangoLanguage *mPangoLanguage;

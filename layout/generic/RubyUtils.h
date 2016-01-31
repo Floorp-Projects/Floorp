@@ -97,7 +97,7 @@ public:
  * of the given ruby base container.
  */
 class MOZ_STACK_CLASS AutoRubyTextContainerArray final
-  : public AutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
+  : public nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
 {
 public:
   explicit AutoRubyTextContainerArray(nsRubyBaseContainerFrame* aBaseContainer);
@@ -131,7 +131,7 @@ private:
 struct MOZ_STACK_CLASS RubyColumn
 {
   nsRubyBaseFrame* mBaseFrame;
-  AutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
+  nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
   bool mIsIntraLevelWhitespace;
 
   RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
@@ -204,7 +204,7 @@ private:
   // Frames in this array are NOT necessary part of the current column.
   // When in doubt, use GetFrameAtLevel to access it.
   // See GetFrameAtLevel() and Next() for more info.
-  AutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
+  nsAutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
   // Whether we are on a column for intra-level whitespaces
   bool mAtIntraLevelWhitespace;
 };

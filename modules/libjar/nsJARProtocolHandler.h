@@ -23,7 +23,7 @@ class nsIRemoteOpenFileListener;
 class nsJARProtocolHandler final : public nsIJARProtocolHandler
                                  , public nsSupportsWeakReference
 {
-    typedef AutoTArray<nsCOMPtr<nsIRemoteOpenFileListener>, 5>
+    typedef nsAutoTArray<nsCOMPtr<nsIRemoteOpenFileListener>, 5>
             RemoteFileListenerArray;
 
 public:

@@ -578,7 +578,7 @@ EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
                                           nsCSSPropertySet&
                                             aPropertiesOverridden)
 {
-  AutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
+  nsAutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
   {
     nsCSSPropertySet propertiesToTrackAsSet;
     for (KeyframeEffectReadOnly* effect : aEffectSet) {

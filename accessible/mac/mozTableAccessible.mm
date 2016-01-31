@@ -207,12 +207,12 @@
       return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
                                                  cell->ColExtent())];
     if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
-      AutoTArray<Accessible*, 10> headerCells;
+      nsAutoTArray<Accessible*, 10> headerCells;
       cell->RowHeaderCells(&headerCells);
       return ConvertToNSArray(headerCells);
     }
     if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
-      AutoTArray<Accessible*, 10> headerCells;
+      nsAutoTArray<Accessible*, 10> headerCells;
       cell->ColHeaderCells(&headerCells);
       return ConvertToNSArray(headerCells);
     }

@@ -429,9 +429,9 @@ private:
     nsCOMPtr<nsIDOMEvent> mEvent;
   };
 
-  AutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
-  AutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
-  AutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
+  nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
+  nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
+  nsAutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
   nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;

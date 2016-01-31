@@ -18,7 +18,7 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
 
   memset(aBreakBefore, false, aLength * sizeof(uint8_t));
 
-  AutoTArray<PangoLogAttr, 2000> attrBuffer;
+  nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLength + 1))
     return;
 

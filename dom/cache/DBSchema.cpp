@@ -588,11 +588,11 @@ DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
   // Delete the bodies explicitly as we need to read out the body IDs
   // anyway.  These body IDs must be deleted one-by-one as content may
   // still be referencing them invidivually.
-  AutoTArray<EntryId, 256> matches;
+  nsAutoTArray<EntryId, 256> matches;
   nsresult rv = QueryAll(aConn, aCacheId, matches);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  AutoTArray<IdCount, 16> deletedSecurityIdList;
+  nsAutoTArray<IdCount, 16> deletedSecurityIdList;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
                      deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -720,7 +720,7 @@ CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
 
   *aFoundResponseOut = false;
 
-  AutoTArray<EntryId, 1> matches;
+  nsAutoTArray<EntryId, 1> matches;
   nsresult rv = QueryCache(aConn, aCacheId, aRequest, aParams, matches, 1);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -747,7 +747,7 @@ CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
   MOZ_ASSERT(aConn);
   nsresult rv;
 
-  AutoTArray<EntryId, 256> matches;
+  nsAutoTArray<EntryId, 256> matches;
   if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -781,11 +781,11 @@ CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
 
   CacheQueryParams params(false, false, false, false,
                            NS_LITERAL_STRING(""));
-  AutoTArray<EntryId, 256> matches;
+  nsAutoTArray<EntryId, 256> matches;
   nsresult rv = QueryCache(aConn, aCacheId, aRequest, params, matches);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  AutoTArray<IdCount, 16> deletedSecurityIdList;
+  nsAutoTArray<IdCount, 16> deletedSecurityIdList;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
                      deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -814,7 +814,7 @@ CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
 
   *aSuccessOut = false;
 
-  AutoTArray<EntryId, 256> matches;
+  nsAutoTArray<EntryId, 256> matches;
   nsresult rv = QueryCache(aConn, aCacheId, aRequest, aParams, matches);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -822,7 +822,7 @@ CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
     return rv;
   }
 
-  AutoTArray<IdCount, 16> deletedSecurityIdList;
+  nsAutoTArray<IdCount, 16> deletedSecurityIdList;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
                      deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -845,7 +845,7 @@ CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
   MOZ_ASSERT(aConn);
   nsresult rv;
 
-  AutoTArray<EntryId, 256> matches;
+  nsAutoTArray<EntryId, 256> matches;
   if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -912,7 +912,7 @@ StorageMatch(mozIStorageConnection* aConn,
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  AutoTArray<CacheId, 32> cacheIdList;
+  nsAutoTArray<CacheId, 32> cacheIdList;
 
   bool hasMoreData = false;
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
@@ -1218,7 +1218,7 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  AutoTArray<nsCString, 8> varyValues;
+  nsAutoTArray<nsCString, 8> varyValues;
 
   bool hasMoreData = false;
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {

@@ -247,7 +247,7 @@ protected:
   void DeleteIEndBEndBorders();
 
   nsTableFrame&               mTableFrame;
-  AutoTArray<nsColInfo, 8>  mCols;
+  nsAutoTArray<nsColInfo, 8>  mCols;
   nsCellMap*                  mFirstMap;
   // border collapsing info
   BCInfo*                     mBCInfo;

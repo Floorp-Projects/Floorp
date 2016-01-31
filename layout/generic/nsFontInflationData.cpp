@@ -100,7 +100,7 @@ NearestCommonAncestorFirstInFlow(nsIFrame *aFrame1, nsIFrame *aFrame2,
   aFrame2 = aFrame2->FirstInFlow();
   aKnownCommonAncestor = aKnownCommonAncestor->FirstInFlow();
 
-  AutoTArray<nsIFrame*, 32> ancestors1, ancestors2;
+  nsAutoTArray<nsIFrame*, 32> ancestors1, ancestors2;
   for (nsIFrame *f = aFrame1; f != aKnownCommonAncestor;
        (f = f->GetParent()) && (f = f->FirstInFlow())) {
     ancestors1.AppendElement(f);
@@ -132,7 +132,7 @@ ComputeDescendantISize(const nsHTMLReflowState& aAncestorReflowState,
     return aAncestorReflowState.ComputedISize();
   }
 
-  AutoTArray<nsIFrame*, 16> frames;
+  AutoInfallibleTArray<nsIFrame*, 16> frames;
   for (nsIFrame *f = aDescendantFrame; f != ancestorFrame;
        f = f->GetParent()->FirstInFlow()) {
     frames.AppendElement(f);
@@ -238,7 +238,7 @@ nsFontInflationData::FindEdgeInflatableFrameIn(nsIFrame* aFrame,
   }
 
   // FIXME: aDirection!
-  AutoTArray<FrameChildList, 4> lists;
+  nsAutoTArray<FrameChildList, 4> lists;
   aFrame->GetChildLists(&lists);
   for (uint32_t i = 0, len = lists.Length(); i < len; ++i) {
     const nsFrameList& list =

@@ -542,9 +542,9 @@ struct ParamTraits<InfallibleTArray<E> >
 };
 
 template<typename E, size_t N>
-struct ParamTraits<AutoTArray<E, N>> : ParamTraits<nsTArray<E>>
+struct ParamTraits<nsAutoTArray<E, N>> : ParamTraits<nsTArray<E>>
 {
-  typedef AutoTArray<E, N> paramType;
+  typedef nsAutoTArray<E, N> paramType;
 };
 
 template<>

@@ -1498,7 +1498,7 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
     gfxFontEntry *entry = mFont->GetFontEntry();
 
     // insert any merged features into hb_feature array
-    AutoTArray<hb_feature_t,20> features;
+    nsAutoTArray<hb_feature_t,20> features;
     MergeFontFeatures(style,
                       entry->mFeatureSettings,
                       aShapedText->DisableLigatures(),
@@ -1579,11 +1579,11 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(DrawTarget     *aDrawTarget,
         return NS_OK;
     }
 
-    AutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
+    nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
 
     uint32_t wordLength = aLength;
     static const int32_t NO_GLYPH = -1;
-    AutoTArray<int32_t,SMALL_GLYPH_RUN> charToGlyphArray;
+    AutoFallibleTArray<int32_t,SMALL_GLYPH_RUN> charToGlyphArray;
     if (!charToGlyphArray.SetLength(wordLength, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

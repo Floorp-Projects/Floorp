@@ -548,7 +548,7 @@ nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
 
   BringSelfUpToDate(true);
 
-  AutoTArray<nsIAtom*, 8> atoms;
+  nsAutoTArray<nsIAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     nsIContent *content = mElements.ElementAt(i);
     if (content->HasID()) {

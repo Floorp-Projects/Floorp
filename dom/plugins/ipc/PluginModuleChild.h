@@ -363,7 +363,7 @@ private:
         bool _savedNestableTasksAllowed;
     };
 
-    AutoTArray<IncallFrame, 8> mIncallPumpingStack;
+    nsAutoTArray<IncallFrame, 8> mIncallPumpingStack;
 
     static LRESULT CALLBACK NestedInputEventHook(int code,
                                                  WPARAM wParam,

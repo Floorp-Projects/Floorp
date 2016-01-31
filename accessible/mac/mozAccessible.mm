@@ -420,7 +420,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
         nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
         nsAccUtils::GetAccAttr(attributes, nsGkAtoms::linethickness_, thickness);
       } else {
-        AutoTArray<Attribute, 10> attrs;
+        nsAutoTArray<Attribute, 10> attrs;
         proxy->Attributes(&attrs);
         for (size_t i = 0 ; i < attrs.Length() ; i++) {
           if (attrs.ElementAt(i).Name() == "thickness") {
@@ -684,11 +684,11 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
   // get the array of children.
   if (accWrap) {
-    AutoTArray<Accessible*, 10> childrenArray;
+    nsAutoTArray<Accessible*, 10> childrenArray;
     accWrap->GetUnignoredChildren(&childrenArray);
     mChildren = ConvertToNSArray(childrenArray);
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    AutoTArray<ProxyAccessible*, 10> childrenArray;
+    nsAutoTArray<ProxyAccessible*, 10> childrenArray;
     GetProxyUnignoredChildren(proxy, &childrenArray);
     mChildren = ConvertToNSArray(childrenArray);
   }

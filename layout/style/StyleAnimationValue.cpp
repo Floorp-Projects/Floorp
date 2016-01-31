@@ -2567,7 +2567,7 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
     return true;
   }
 
-  AutoTArray<PropertyStyleAnimationValuePair,1> values;
+  nsAutoTArray<PropertyStyleAnimationValuePair,1> values;
   bool ok = ComputeValues(aProperty, nsCSSProps::eIgnoreEnabledState,
                           aTargetElement, styleRule, values,
                           aIsContextSensitive);

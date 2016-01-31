@@ -21,7 +21,7 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
 
   int outItems = 0;
   HRESULT result;
-  AutoTArray<SCRIPT_ITEM, 64> items;
+  nsAutoTArray<SCRIPT_ITEM, 64> items;
   char16ptr_t text = aText;
 
   memset(aBreakBefore, false, aLength);
@@ -42,7 +42,7 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
   for (int iItem = 0; iItem < outItems; ++iItem)  {
     uint32_t endOffset = (iItem + 1 == outItems ? aLength : items[iItem + 1].iCharPos);
     uint32_t startOffset = items[iItem].iCharPos;
-    AutoTArray<SCRIPT_LOGATTR, 64> sla;
+    nsAutoTArray<SCRIPT_LOGATTR, 64> sla;
     
     if (!sla.AppendElements(endOffset - startOffset))
       return;

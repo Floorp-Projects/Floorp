@@ -183,7 +183,7 @@ public:
 
 private:
   SensorData mSensorData;
-  AutoTArray<float, 4> mSensorValues;
+  nsAutoTArray<float, 4> mSensorValues;
 };
 
 namespace hal_impl {

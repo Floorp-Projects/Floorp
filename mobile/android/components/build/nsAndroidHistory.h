@@ -65,7 +65,7 @@ private:
    * need to cache the pending visit and make sure it doesn't redirect.
    */
   RefPtr<nsITimer> mTimer;
-  typedef AutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE> PendingVisitArray;
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE> PendingVisitArray;
   PendingVisitArray mPendingVisitURIs;
 
   bool RemovePendingVisitURI(nsIURI* aURI);
@@ -75,7 +75,7 @@ private:
    * mRecentlyVisitedURIs remembers URIs which are recently added to the DB,
    * to avoid saving these locations repeatedly in a short period.
    */
-  typedef AutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE> RecentlyVisitedArray;
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE> RecentlyVisitedArray;
   RecentlyVisitedArray mRecentlyVisitedURIs;
   RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;
 
@@ -86,7 +86,7 @@ private:
    * mEmbedURIs remembers URIs which are explicitly not added to the DB,
    * to avoid wasting time on these locations.
    */
-  typedef AutoTArray<nsCOMPtr<nsIURI>, EMBED_URI_SIZE> EmbedArray;
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, EMBED_URI_SIZE> EmbedArray;
   EmbedArray::index_type mEmbedURIsNextIndex;
   EmbedArray mEmbedURIs;
 

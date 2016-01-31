@@ -150,7 +150,7 @@ private:
     RefPtr<txAExprResult> mGlobalVarPlaceholderValue;
     int32_t mRecursionDepth;
 
-    AutoTArray<TemplateRule, 10> mTemplateRules;
+    AutoInfallibleTArray<TemplateRule, 10> mTemplateRules;
 
     txIEvalContext* mEvalContext;
     txIEvalContext* mInitialEvalContext;

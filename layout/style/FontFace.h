@@ -55,14 +55,14 @@ public:
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
     virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;
-    const AutoTArray<FontFace*,1>& GetFontFaces() { return mFontFaces; }
+    const nsAutoTArray<FontFace*,1>& GetFontFaces() { return mFontFaces; }
 
   protected:
     // The FontFace objects that use this user font entry.  We need to store
     // an array of these, not just a single pointer, since the user font
     // cache can return the same entry for different FontFaces that have
     // the same descriptor values and come from the same origin.
-    AutoTArray<FontFace*,1> mFontFaces;
+    nsAutoTArray<FontFace*,1> mFontFaces;
   };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

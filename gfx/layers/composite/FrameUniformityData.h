@@ -30,7 +30,7 @@ struct LayerTransforms {
   gfx::Point GetStdDev();
 
   // 60 fps * 5 seconds worth of data
-  AutoTArray<gfx::Point, 300> mTransforms;
+  nsAutoTArray<gfx::Point, 300> mTransforms;
 };
 
 class LayerTransformRecorder {

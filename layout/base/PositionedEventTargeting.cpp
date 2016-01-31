@@ -595,7 +595,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
                                     restrictToDescendants, prefs, aFlags);
   PET_LOG("Expanded point to target rect %s\n",
     mozilla::layers::Stringify(targetRect).c_str());
-  AutoTArray<nsIFrame*,8> candidates;
+  nsAutoTArray<nsIFrame*,8> candidates;
   nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect, candidates, flags);
   if (NS_FAILED(rv)) {
     return target;

@@ -607,7 +607,7 @@ ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
                                              nsISupports* aClosure,
                                              bool aAnonymize)
 {
-  AutoTArray<ContentParent*, 16> cps;
+  nsAutoTArray<ContentParent*, 16> cps;
   ContentParent::GetAllEvenIfDead(cps);
 
   for (uint32_t i = 0; i < cps.Length(); i++) {
@@ -911,7 +911,7 @@ ContentParent::JoinAllSubprocesses()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  AutoTArray<ContentParent*, 8> processes;
+  nsAutoTArray<ContentParent*, 8> processes;
   GetAll(processes);
   if (processes.IsEmpty()) {
     printf_stderr("There are no live subprocesses.");
@@ -5145,7 +5145,7 @@ ContentParent::IgnoreIPCPrincipal()
 void
 ContentParent::NotifyUpdatedDictionaries()
 {
-  AutoTArray<ContentParent*, 8> processes;
+  nsAutoTArray<ContentParent*, 8> processes;
   GetAll(processes);
 
   nsCOMPtr<nsISpellChecker> spellChecker(do_GetService(NS_SPELLCHECKER_CONTRACTID));

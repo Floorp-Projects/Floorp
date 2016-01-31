@@ -28,8 +28,12 @@ template<class E>
 class FallibleTArray;
 
 template<class E, size_t N>
-class AutoTArray;
+class nsAutoTArray;
+
+template<class E, size_t N>
+class AutoFallibleTArray;
 
 #define InfallibleTArray nsTArray
+#define AutoInfallibleTArray nsAutoTArray
 
 #endif

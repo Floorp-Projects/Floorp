@@ -778,7 +778,7 @@ ProxyAccessible::TableSelectedRowCount()
 void
 ProxyAccessible::TableSelectedCells(nsTArray<ProxyAccessible*>* aCellIDs)
 {
-  AutoTArray<uint64_t, 30> cellIDs;
+  nsAutoTArray<uint64_t, 30> cellIDs;
   Unused << mDoc->SendTableSelectedCells(mID, &cellIDs);
   aCellIDs->SetCapacity(cellIDs.Length());
   for (uint32_t i = 0; i < cellIDs.Length(); ++i) {
@@ -857,7 +857,7 @@ ProxyAccessible::AtkTableRowHeader(int32_t aRow)
 void
 ProxyAccessible::SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems)
 {
-  AutoTArray<uint64_t, 10> itemIDs;
+  nsAutoTArray<uint64_t, 10> itemIDs;
   Unused << mDoc->SendSelectedItems(mID, &itemIDs);
   aSelectedItems->SetCapacity(itemIDs.Length());
   for (size_t i = 0; i < itemIDs.Length(); ++i) {

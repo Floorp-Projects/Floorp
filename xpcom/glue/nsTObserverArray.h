@@ -422,7 +422,7 @@ public:
   };
 
 protected:
-  AutoTArray<T, N> mArray;
+  nsAutoTArray<T, N> mArray;
 };
 
 template<class T>
