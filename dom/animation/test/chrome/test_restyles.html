@@ -322,6 +322,21 @@ waitForAllPaints(function() {
     div.remove();
   });
 
+  add_task_if_omta_enabled(function* only_one_restyling_when_current_time_is_set_to_middle_of_duration() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+
+    animation.currentTime = 50000; // 50s
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 1,
+       'Bug 1235478: Animations running on the compositor should only once ' +
+       'update style when currentTime is set to middle of duration time');
+    div.remove();
+  });
+
 });
 
 </script>
