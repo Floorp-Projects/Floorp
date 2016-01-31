@@ -70,7 +70,7 @@ class StructuredCloneData : public StructuredCloneHolder
 public:
   StructuredCloneData()
     : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
-                            StructuredCloneHolder::TransferringNotSupported,
+                            StructuredCloneHolder::TransferringSupported,
                             StructuredCloneHolder::DifferentProcess)
     , mExternalData(nullptr)
     , mExternalDataLength(0)
@@ -104,6 +104,11 @@ public:
 
   void Write(JSContext* aCx,
              JS::Handle<JS::Value> aValue,
+             ErrorResult &aRv);
+
+  void Write(JSContext* aCx,
+             JS::Handle<JS::Value> aValue,
+             JS::Handle<JS::Value> aTransfers,
              ErrorResult &aRv);
 
   void UseExternalData(uint64_t* aData, size_t aDataLength)
