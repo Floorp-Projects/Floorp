@@ -1797,37 +1797,35 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& aEvent,
+TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& event,
                                  const ScrollableLayerGuid& aGuid,
                                  const uint64_t& aInputBlockId)
 {
-  return RecvRealMouseButtonEvent(aEvent, aGuid, aInputBlockId);
+  return RecvRealMouseButtonEvent(event, aGuid, aInputBlockId);
 }
 
 bool
-TabChild::RecvSynthMouseMoveEvent(const WidgetMouseEvent& aEvent,
+TabChild::RecvSynthMouseMoveEvent(const WidgetMouseEvent& event,
                                   const ScrollableLayerGuid& aGuid,
                                   const uint64_t& aInputBlockId)
 {
-  return RecvRealMouseButtonEvent(aEvent, aGuid, aInputBlockId);
+  return RecvRealMouseButtonEvent(event, aGuid, aInputBlockId);
 }
 
 bool
-TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
+TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& event,
                                    const ScrollableLayerGuid& aGuid,
                                    const uint64_t& aInputBlockId)
 {
   nsEventStatus unused;
   InputAPZContext context(aGuid, aInputBlockId, unused);
 
-  WidgetMouseEvent localEvent(aEvent);
+  WidgetMouseEvent localEvent(event);
   localEvent.widget = mPuppetWidget;
-  APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
-      mPuppetWidget->GetDefaultScale());
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
-  if (aEvent.mFlags.mHandledByAPZ) {
-    mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
+  if (event.mFlags.mHandledByAPZ) {
+    mAPZEventState->ProcessMouseEvent(event, aGuid, aInputBlockId);
   }
   return true;
 }
@@ -1843,18 +1841,16 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
   }
 
-  WidgetWheelEvent localEvent(aEvent);
-  localEvent.widget = mPuppetWidget;
-  APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
-      mPuppetWidget->GetDefaultScale());
-  APZCCallbackHelper::DispatchWidgetEvent(localEvent);
+  WidgetWheelEvent event(aEvent);
+  event.widget = mPuppetWidget;
+  APZCCallbackHelper::DispatchWidgetEvent(event);
 
-  if (localEvent.mCanTriggerSwipe) {
-    SendRespondStartSwipeEvent(aInputBlockId, localEvent.TriggersSwipe());
+  if (event.mCanTriggerSwipe) {
+    SendRespondStartSwipeEvent(aInputBlockId, event.TriggersSwipe());
   }
 
   if (aEvent.mFlags.mHandledByAPZ) {
-    mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
+    mAPZEventState->ProcessWheelEvent(event, aGuid, aInputBlockId);
   }
   return true;
 }

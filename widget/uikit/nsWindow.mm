@@ -185,7 +185,7 @@ private:
         event.refPoint = loc;
         event.touches.AppendElement(t);
     }
-    aWindow->DispatchInputEvent(&event);
+    aWindow->DispatchAPZAwareEvent(&event);
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event

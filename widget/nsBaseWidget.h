@@ -252,8 +252,12 @@ public:
                           const FrameMetrics::ViewID& aViewId,
                           const CSSRect& aRect,
                           const uint32_t& aFlags) override;
-  // Dispatch an event that must be first be routed through APZ.
+  // Helper function for dispatching events which are not processed by APZ,
+  // but need to be transformed by APZ.
   nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) override;
+
+  // Dispatch an event that must be first be routed through APZ.
+  nsEventStatus DispatchAPZAwareEvent(mozilla::WidgetInputEvent* aEvent) override;
 
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
