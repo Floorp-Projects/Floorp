@@ -992,7 +992,7 @@ DOMHighResTimeStamp
 PerformanceBase::ResolveTimestampFromName(const nsAString& aName,
                                           ErrorResult& aRv)
 {
-  nsAutoTArray<RefPtr<PerformanceEntry>, 1> arr;
+  AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   DOMHighResTimeStamp ts;
   Optional<nsAString> typeParam;
   nsAutoString str;

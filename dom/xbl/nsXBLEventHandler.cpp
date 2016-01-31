@@ -140,7 +140,7 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   if (!key)
     return NS_OK;
 
-  nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
+  AutoTArray<nsShortcutCandidate, 10> accessKeys;
   nsContentUtils::GetAccelKeyCandidates(key, accessKeys);
 
   if (accessKeys.IsEmpty()) {

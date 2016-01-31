@@ -257,7 +257,7 @@ void
 nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
 {
   nsTableFrame::RowGroupArray orderedRowGroups;
-  nsAutoTArray<nsCellMap*, 8> maps;
+  AutoTArray<nsCellMap*, 8> maps;
 
   aTableFrame->OrderRowGroups(orderedRowGroups);
   if (!orderedRowGroups.Length()) {
@@ -1453,7 +1453,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   // if the new cell could potentially span into other rows and collide with
   // originating cells there, we will play it safe and just rebuild the map
   if (aRebuildIfNecessary && (aRowIndex < mContentRowCount - 1) && (rowSpan > 1)) {
-    nsAutoTArray<nsTableCellFrame*, 1> newCellArray;
+    AutoTArray<nsTableCellFrame*, 1> newCellArray;
     newCellArray.AppendElement(aCellFrame);
     aMap.RebuildConsideringCells(this, &newCellArray, aRowIndex, startColIndex, true, aDamageArea);
     return origData;

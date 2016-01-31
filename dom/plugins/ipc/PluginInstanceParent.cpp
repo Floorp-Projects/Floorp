@@ -807,7 +807,7 @@ PluginInstanceParent::SetCurrentImage(Image* aImage)
     ImageContainer::NonOwningImage holder(aImage);
     holder.mFrameID = ++mFrameID;
 
-    nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+    AutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(holder);
     mImageContainer->SetCurrentImages(imageList);
 
@@ -959,7 +959,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
             gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
         RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), sourceSurface);
 
-        nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+        AutoTArray<ImageContainer::NonOwningImage,1> imageList;
         imageList.AppendElement(
             ImageContainer::NonOwningImage(image));
 

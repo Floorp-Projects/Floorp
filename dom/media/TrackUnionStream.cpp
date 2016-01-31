@@ -67,8 +67,8 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     if (IsFinishedOnGraphThread()) {
       return;
     }
-    nsAutoTArray<bool,8> mappedTracksFinished;
-    nsAutoTArray<bool,8> mappedTracksWithMatchingInputTracks;
+    AutoTArray<bool,8> mappedTracksFinished;
+    AutoTArray<bool,8> mappedTracksWithMatchingInputTracks;
     for (uint32_t i = 0; i < mTrackMap.Length(); ++i) {
       mappedTracksFinished.AppendElement(true);
       mappedTracksWithMatchingInputTracks.AppendElement(false);

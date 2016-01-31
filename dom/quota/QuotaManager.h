@@ -500,7 +500,7 @@ private:
   // by any mutex but it is only ever touched on the IO thread.
   nsTArray<nsCString> mInitializedOrigins;
 
-  nsAutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
+  AutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
 
   nsString mIndexedDBPath;
   nsString mStoragePath;

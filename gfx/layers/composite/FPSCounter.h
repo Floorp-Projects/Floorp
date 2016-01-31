@@ -12,7 +12,7 @@
 #include "GLDefs.h"                     // for GLuint
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
-#include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl, etc
+#include "nsTArray.h"                   // for AutoTArray, nsTArray_Impl, etc
 #include "prio.h"                       // for NSPR file i/o
 
 namespace mozilla {
@@ -87,7 +87,7 @@ private:
    * read at an offset except our latest write
    * we don't need an explicit read pointer.
    */
-  nsAutoTArray<TimeStamp, kMaxFrames> mFrameTimestamps;
+  AutoTArray<TimeStamp, kMaxFrames> mFrameTimestamps;
   int mWriteIndex;      // points to next open write slot
   int mIteratorIndex;   // used only when iterating
   const char* mFPSName;

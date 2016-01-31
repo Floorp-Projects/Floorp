@@ -4474,8 +4474,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         # reallocation behavior for arrays.  In particular, if we use auto
         # arrays for sequences and have a sequence of elements which are
         # themselves sequences or have sequences as members, we have a problem.
-        # In that case, resizing the outermost nsAutoTarray to the right size
-        # will memmove its elements, but nsAutoTArrays are not memmovable and
+        # In that case, resizing the outermost AutoTArray to the right size
+        # will memmove its elements, but AutoTArrays are not memmovable and
         # hence will end up with pointers to bogus memory, which is bad.  To
         # deal with this, we typically map WebIDL sequences to our Sequence
         # type, which is in fact memmovable.  The one exception is when we're
@@ -8389,7 +8389,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            nsAutoTArray<nsString, 8> names;
+            AutoTArray<nsString, 8> names;
             ErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
             if (rv.MaybeSetPendingException(cx)) {
@@ -10456,7 +10456,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            nsAutoTArray<nsString, 8> names;
+            AutoTArray<nsString, 8> names;
             ErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
             if (rv.MaybeSetPendingException(cx)) {

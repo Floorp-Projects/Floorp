@@ -183,5 +183,5 @@ class nsNativeTheme : public nsITimerCallback
  private:
   uint32_t mAnimatedContentTimeout;
   nsCOMPtr<nsITimer> mAnimatedContentTimer;
-  nsAutoTArray<nsCOMPtr<nsIContent>, 20> mAnimatedContentList;
+  AutoTArray<nsCOMPtr<nsIContent>, 20> mAnimatedContentList;
 };

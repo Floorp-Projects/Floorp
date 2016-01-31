@@ -2504,7 +2504,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   }
 #endif
 
-  nsAutoTArray<nsIFrame*, 4> subtrees;
+  AutoTArray<nsIFrame*, 4> subtrees;
   subtrees.AppendElement(aFrame);
 
   do {
@@ -2555,7 +2555,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
       // recursion).
       // Note that nsHTMLReflowState::InitResizeFlags has some similar
       // code; see comments there for how and why it differs.
-      nsAutoTArray<nsIFrame*, 32> stack;
+      AutoTArray<nsIFrame*, 32> stack;
       stack.AppendElement(subtreeRoot);
 
       do {
@@ -4348,7 +4348,7 @@ PresShell::ReconstructFrames(void)
 void
 nsIPresShell::ReconstructStyleDataInternal()
 {
-  nsAutoTArray<RefPtr<mozilla::dom::Element>,1> scopeRoots;
+  AutoTArray<RefPtr<mozilla::dom::Element>,1> scopeRoots;
   mChangedScopeStyleRoots.SwapElements(scopeRoots);
 
   if (mStylesHaveChanged) {
@@ -5856,7 +5856,7 @@ public:
                                  nsDisplayListBuilder::EVENT_DELIVERY,
                                  /* aBuildCert= */ false);
     nsDisplayList list;
-    nsAutoTArray<nsIFrame*, 100> outFrames;
+    AutoTArray<nsIFrame*, 100> outFrames;
     nsDisplayItem::HitTestState hitTestState;
     builder.EnterPresShell(mFrame);
     nsRect bounds = mShell->GetPresContext()->GetVisibleArea();
@@ -6749,7 +6749,7 @@ PresShell::DispatchAfterKeyboardEvent(nsINode* aTarget,
   }
 
   // Build up a target chain. Each item in the chain will receive an after event.
-  nsAutoTArray<nsCOMPtr<Element>, 5> chain;
+  AutoTArray<nsCOMPtr<Element>, 5> chain;
   bool targetIsIframe = false;
   BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
   DispatchAfterKeyboardEventInternal(chain, aEvent, aEmbeddedCancelled);
@@ -6784,7 +6784,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   MOZ_ASSERT(aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyUp);
 
   // Build up a target chain. Each item in the chain will receive a before event.
-  nsAutoTArray<nsCOMPtr<Element>, 5> chain;
+  AutoTArray<nsCOMPtr<Element>, 5> chain;
   bool targetIsIframe = false;
   BuildTargetChainForBeforeAfterKeyboardEvent(aTarget, chain, targetIsIframe);
 

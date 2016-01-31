@@ -311,7 +311,7 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
     return nullptr;
   }
 
-  nsAutoTArray<Attribute, 10> attrs;
+  AutoTArray<Attribute, 10> attrs;
   proxy->TextAttributes(false, aOffset, &attrs, &startOffset, &endOffset);
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -337,7 +337,7 @@ getDefaultAttributesCB(AtkText *aText)
     return nullptr;
   }
 
-  nsAutoTArray<Attribute, 10> attrs;
+  AutoTArray<Attribute, 10> attrs;
   proxy->DefaultTextAttributes(&attrs);
   return ConvertToAtkTextAttributeSet(attrs);
 }

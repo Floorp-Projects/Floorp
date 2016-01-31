@@ -16352,10 +16352,10 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   // are database files then we need to cleanup stored files (if it's needed)
   // and also get the usage.
 
-  nsAutoTArray<nsString, 20> subdirsToProcess;
+  AutoTArray<nsString, 20> subdirsToProcess;
   nsTArray<nsCOMPtr<nsIFile>> unknownFiles;
   nsTHashtable<nsStringHashKey> validSubdirs(20);
-  nsAutoTArray<FileManagerInitInfo, 20> initInfos;
+  AutoTArray<FileManagerInitInfo, 20> initInfos;
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -18217,7 +18217,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   aInfo->mData.SwapElements(uncompressed);
 
   if (!aFileIds.IsVoid()) {
-    nsAutoTArray<int64_t, 10> array;
+    AutoTArray<int64_t, 10> array;
     nsresult rv = ConvertFileIdsToArray(aFileIds, array);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -23344,7 +23344,7 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   const IndexMetadata& metadata = mOp->mMetadata;
   const int64_t& objectStoreId = mOp->mObjectStoreId;
 
-  nsAutoTArray<IndexUpdateInfo, 32> updateInfos;
+  AutoTArray<IndexUpdateInfo, 32> updateInfos;
   rv = IDBObjectStore::AppendIndexUpdateInfo(metadata.id(),
                                              metadata.keyPath(),
                                              metadata.unique(),

@@ -1526,7 +1526,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
   // with very many next-in-flows
   nsIFrame* nextNextInFlow = aNextInFlow->GetNextInFlow();
   if (nextNextInFlow) {
-    nsAutoTArray<nsIFrame*, 8> frames;
+    AutoTArray<nsIFrame*, 8> frames;
     for (nsIFrame* f = nextNextInFlow; f; f = f->GetNextInFlow()) {
       frames.AppendElement(f);
     }

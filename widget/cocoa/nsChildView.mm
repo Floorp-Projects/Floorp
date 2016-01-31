@@ -4125,7 +4125,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
       uint32_t popupsToRollup = UINT32_MAX;
-      nsAutoTArray<nsIWidget*, 5> widgetChain;
+      AutoTArray<nsIWidget*, 5> widgetChain;
       uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
       for (uint32_t i = 0; i < widgetChain.Length(); i++) {
         nsIWidget* widget = widgetChain[i];

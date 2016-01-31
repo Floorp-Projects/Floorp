@@ -52,17 +52,17 @@ struct TileClient;
 //
 //   nsTArray<T>,
 //   FallibleTArray<T>,
-//   nsAutoTArray<T, N>, and
+//   AutoTArray<T, N>, and
 //   AutoFallibleTArray<T, N>.
 //
-// nsTArray and nsAutoTArray are infallible; if one tries to make an allocation
+// nsTArray and AutoTArray are infallible; if one tries to make an allocation
 // which fails, it crashes the program.  In contrast, FallibleTArray and
 // AutoFallibleTArray are fallible; if you use one of these classes, you must
 // check the return values of methods such as Append() which may allocate.  If
 // in doubt, choose an infallible type.
 //
 // InfallibleTArray and AutoInfallibleTArray are aliases for nsTArray and
-// nsAutoTArray.
+// AutoTArray.
 //
 // If you just want to declare the nsTArray types (e.g., if you're in a header
 // file and don't need the full nsTArray definitions) consider including
@@ -456,14 +456,14 @@ protected:
   };
 
   // Helper function for SwapArrayElements. Ensures that if the array
-  // is an nsAutoTArray that it doesn't use the built-in buffer.
+  // is an AutoTArray that it doesn't use the built-in buffer.
   template<typename ActualAlloc>
   bool EnsureNotUsingAutoArrayBuffer(size_type aElemSize);
 
-  // Returns true if this nsTArray is an nsAutoTArray with a built-in buffer.
+  // Returns true if this nsTArray is an AutoTArray with a built-in buffer.
   bool IsAutoArray() const { return mHdr->mIsAutoArray; }
 
-  // Returns a Header for the built-in buffer of this nsAutoTArray.
+  // Returns a Header for the built-in buffer of this AutoTArray.
   Header* GetAutoArrayBuffer(size_t aElemAlign)
   {
     MOZ_ASSERT(IsAutoArray(), "Should be an auto array to call this");
@@ -475,8 +475,8 @@ protected:
     return GetAutoArrayBufferUnsafe(aElemAlign);
   }
 
-  // Returns a Header for the built-in buffer of this nsAutoTArray, but doesn't
-  // assert that we are an nsAutoTArray.
+  // Returns a Header for the built-in buffer of this AutoTArray, but doesn't
+  // assert that we are an AutoTArray.
   Header* GetAutoArrayBufferUnsafe(size_t aElemAlign)
   {
     return const_cast<Header*>(static_cast<const nsTArray_base<Alloc, Copy>*>(
@@ -484,7 +484,7 @@ protected:
   }
   const Header* GetAutoArrayBufferUnsafe(size_t aElemAlign) const;
 
-  // Returns true if this is an nsAutoTArray and it currently uses the
+  // Returns true if this is an AutoTArray and it currently uses the
   // built-in buffer to store its elements.
   bool UsesAutoArrayBuffer() const;
 
@@ -786,7 +786,7 @@ struct ItemComparatorFirstElementGT
 
 //
 // nsTArray_Impl contains most of the guts supporting nsTArray, FallibleTArray,
-// nsAutoTArray, and AutoFallibleTArray.
+// AutoTArray, and AutoFallibleTArray.
 //
 // The only situation in which you might need to use nsTArray_Impl in your code
 // is if you're writing code which mutates a TArray which may or may not be
@@ -2205,7 +2205,7 @@ public:
 };
 
 //
-// nsAutoArrayBase is a base class for AutoFallibleTArray and nsAutoTArray.
+// nsAutoArrayBase is a base class for AutoFallibleTArray and AutoTArray.
 // You shouldn't use this class directly.
 //
 template<class TArrayBase, size_t N>
@@ -2228,7 +2228,7 @@ public:
 protected:
   nsAutoArrayBase() { Init(); }
 
-  // We need this constructor because nsAutoTArray and friends all have
+  // We need this constructor because AutoTArray and friends all have
   // implicit copy-constructors.  If we don't have this method, those
   // copy-constructors will call nsAutoArrayBase's implicit copy-constructor,
   // which won't call Init() and set up the auto buffer!
@@ -2307,29 +2307,29 @@ class nsAutoArrayBase<TArrayBase, 0> : public TArrayBase
 };
 
 //
-// nsAutoTArray<E, N> is an infallible vector class with N elements of inline
+// AutoTArray<E, N> is an infallible vector class with N elements of inline
 // storage.  If you try to store more than N elements inside an
-// nsAutoTArray<E, N>, we'll call malloc() and store them all on the heap.
+// AutoTArray<E, N>, we'll call malloc() and store them all on the heap.
 //
-// Note that you can cast an nsAutoTArray<E, N> to
+// Note that you can cast an AutoTArray<E, N> to
 // |const AutoFallibleTArray<E, N>&|.
 //
 template<class E, size_t N>
-class nsAutoTArray : public nsAutoArrayBase<nsTArray<E>, N>
+class AutoTArray : public nsAutoArrayBase<nsTArray<E>, N>
 {
-  typedef nsAutoTArray<E, N> self_type;
+  typedef AutoTArray<E, N> self_type;
   typedef nsAutoArrayBase<nsTArray<E>, N> Base;
 
 public:
-  nsAutoTArray() {}
+  AutoTArray() {}
 
   template<typename Allocator>
-  explicit nsAutoTArray(const nsTArray_Impl<E, Allocator>& aOther)
+  explicit AutoTArray(const nsTArray_Impl<E, Allocator>& aOther)
   {
     Base::AppendElements(aOther);
   }
   template<typename Allocator>
-  explicit nsAutoTArray(nsTArray_Impl<E, Allocator>&& aOther)
+  explicit AutoTArray(nsTArray_Impl<E, Allocator>&& aOther)
     : Base(mozilla::Move(aOther))
   {
   }
@@ -2378,34 +2378,34 @@ public:
     return *this;
   }
 
-  operator const nsAutoTArray<E, N>&() const
+  operator const AutoTArray<E, N>&() const
   {
-    return *reinterpret_cast<const nsAutoTArray<E, N>*>(this);
+    return *reinterpret_cast<const AutoTArray<E, N>*>(this);
   }
 };
 
 template<class E, size_t N>
-struct nsTArray_CopyChooser<nsAutoTArray<E, N>>
+struct nsTArray_CopyChooser<AutoTArray<E, N>>
 {
-  typedef nsTArray_CopyWithConstructors<nsAutoTArray<E, N>> Type;
+  typedef nsTArray_CopyWithConstructors<AutoTArray<E, N>> Type;
 };
 
-// Assert that nsAutoTArray doesn't have any extra padding inside.
+// Assert that AutoTArray doesn't have any extra padding inside.
 //
 // It's important that the data stored in this auto array takes up a multiple of
-// 8 bytes; e.g. nsAutoTArray<uint32_t, 1> wouldn't work.  Since nsAutoTArray
+// 8 bytes; e.g. AutoTArray<uint32_t, 1> wouldn't work.  Since AutoTArray
 // contains a pointer, its size must be a multiple of alignof(void*).  (This is
 // because any type may be placed into an array, and there's no padding between
 // elements of an array.)  The compiler pads the end of the structure to
 // enforce this rule.
 //
-// If we used nsAutoTArray<uint32_t, 1> below, this assertion would fail on a
+// If we used AutoTArray<uint32_t, 1> below, this assertion would fail on a
 // 64-bit system, where the compiler inserts 4 bytes of padding at the end of
 // the auto array to make its size a multiple of alignof(void*) == 8 bytes.
 
-static_assert(sizeof(nsAutoTArray<uint32_t, 2>) ==
+static_assert(sizeof(AutoTArray<uint32_t, 2>) ==
               sizeof(void*) + sizeof(nsTArrayHeader) + sizeof(uint32_t) * 2,
-              "nsAutoTArray shouldn't contain any extra padding, "
+              "AutoTArray shouldn't contain any extra padding, "
               "see the comment");
 
 // Definitions of nsTArray_Impl methods

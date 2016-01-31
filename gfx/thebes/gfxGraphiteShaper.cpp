@@ -313,7 +313,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
             charGlyphs[offs].SetSimpleGlyph(appAdvance, gids[c.baseGlyph]);
         } else {
             // not a one-to-one mapping with simple metrics: use DetailedGlyph
-            nsAutoTArray<gfxShapedText::DetailedGlyph,8> details;
+            AutoTArray<gfxShapedText::DetailedGlyph,8> details;
             float clusterLoc;
             for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
                 gfxShapedText::DetailedGlyph* d = details.AppendElement();

@@ -221,14 +221,14 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
     ("%p NativeKeyBindings::KeyPress, interpreting", this));
 
-  nsAutoTArray<KeyBindingsCommand, 2> bindingCommands;
+  AutoTArray<KeyBindingsCommand, 2> bindingCommands;
   nsCocoaUtils::GetCommandsFromKeyEvent(cocoaEvent, bindingCommands);
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
     ("%p NativeKeyBindings::KeyPress, bindingCommands=%u",
      this, bindingCommands.Length()));
 
-  nsAutoTArray<Command, 4> geckoCommands;
+  AutoTArray<Command, 4> geckoCommands;
 
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {
     SEL selector = bindingCommands[i].selector;

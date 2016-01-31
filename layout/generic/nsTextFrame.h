@@ -662,7 +662,7 @@ protected:
     }
   };
   struct TextDecorations {
-    nsAutoTArray<LineDecoration, 1> mOverlines, mUnderlines, mStrikes;
+    AutoTArray<LineDecoration, 1> mOverlines, mUnderlines, mStrikes;
 
     TextDecorations() { }
 
