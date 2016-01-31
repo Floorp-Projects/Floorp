@@ -20,7 +20,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/utf8.webapp";
+var url = "http://test/chrome/dom/apps/tests/apps/utf8.webapp";
 
 confirmNextPopup();
 navigator.mozApps.install(url, null).onsuccess = function onInstall() {
