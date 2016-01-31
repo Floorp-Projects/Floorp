@@ -101,6 +101,5 @@ def init(debugger):
     debugger.HandleCommand("type synthetic add -x \"nsTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"AutoTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"FallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
-    debugger.HandleCommand("type synthetic add -x \"AutoFallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("command script add -f lldbutils.general.prefcnt -f lldbutils.general.prefcnt prefcnt")
     debugger.HandleCommand("command script add -f lldbutils.general.callfunc -f lldbutils.general.callfunc callfunc")
