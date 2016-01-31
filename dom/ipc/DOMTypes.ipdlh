@@ -24,10 +24,19 @@ union OptionalID
   void_t;
 };
 
+struct MessagePortIdentifier
+{
+  nsID uuid;
+  nsID destinationUuid;
+  uint32_t sequenceId;
+  bool neutered;
+};
+
 struct ClonedMessageData
 {
   SerializedStructuredCloneBuffer data;
   PBlob[] blobs;
+  MessagePortIdentifier[] identfiers;
 };
 
 union BlobData

@@ -5,18 +5,10 @@
 include protocol PBackground;
 include protocol PBlob;
 
-using struct nsID from "nsID.h";
+include DOMTypes;
 
 namespace mozilla {
 namespace dom {
-
-struct MessagePortIdentifier
-{
-  nsID uuid;
-  nsID destinationUuid;
-  uint32_t sequenceId;
-  bool neutered;
-};
 
 struct MessagePortMessage
 {
