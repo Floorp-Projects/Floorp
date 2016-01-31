@@ -49,7 +49,7 @@ function noArgs(next) {
 }
 
 function parseError(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/json_syntax_error.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/json_syntax_error.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "MANIFEST_PARSE_ERROR", "manifest with syntax error");
@@ -58,7 +58,7 @@ function parseError(next) {
 }
 
 function invalidManifest(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/missing_required_field.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/missing_required_field.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
@@ -67,7 +67,7 @@ function invalidManifest(next) {
 }
 
 function permissionDenied(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/no_delegated_install.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/no_delegated_install.webapp";
 
   confirmNextPopup();
   var request = navigator.mozApps.install(url, null);
@@ -87,7 +87,7 @@ function permissionDenied(next) {
 }
 
 function invalidContent(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/bad_content_type.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/bad_content_type.webapp";
 
   var request = navigator.mozApps.install(url, null);
 
@@ -106,7 +106,7 @@ function invalidContent(next) {
 }
 
 function invalidLaunchPath(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_launch_path.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
@@ -115,7 +115,7 @@ function invalidLaunchPath(next) {
 }
 
 function invalidLaunchPath2(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_launch_path2.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_launch_path2.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
@@ -124,7 +124,7 @@ function invalidLaunchPath2(next) {
 }
 
 function invalidEntryPoint(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_entry_point.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_entry_point.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
@@ -133,7 +133,7 @@ function invalidEntryPoint(next) {
 }
 
 function invalidLocaleEntryPoint(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_locale_entry_point.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_locale_entry_point.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
@@ -142,7 +142,7 @@ function invalidLocaleEntryPoint(next) {
 }
 
 function invalidActivityHref(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_activity_href.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has non-relative URI for activity href");
@@ -151,7 +151,7 @@ function invalidActivityHref(next) {
 }
 
 function invalidActivityHref2(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_activity_href2.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_activity_href2.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has data: URI for activity href");
@@ -160,7 +160,7 @@ function invalidActivityHref2(next) {
 }
 
 function invalidMessage(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/invalid_message.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_message.webapp";
 
   navigator.mozApps.install(url, null).onerror = function onInstallError() {
     is(this.error.name, "INVALID_MANIFEST", "Manifest has absolute message href");
@@ -197,7 +197,7 @@ function fileURL(next) {
 }
 
 function originNotAllowed(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_example.com.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/installs_allowed_from_example.com.webapp";
 
   var request = navigator.mozApps.install(url, null);
 
@@ -216,7 +216,7 @@ function originNotAllowed(next) {
 }
 
 function originAllowed(next) {
-  var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/installs_allowed_from_chrome_mochitests.webapp";
+  var url = "http://test/chrome/dom/apps/tests/apps/installs_allowed_from_chrome_mochitests.webapp";
 
   confirmNextPopup();
   var request = navigator.mozApps.install(url, null);

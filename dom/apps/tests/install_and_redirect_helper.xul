@@ -5,7 +5,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script>
-    var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+    var url = "http://test/chrome/dom/apps/tests/apps/basic.webapp";
     navigator.mozApps.install(url, null);
     document.location = "about:blank";
   </script>
