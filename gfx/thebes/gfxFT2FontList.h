@@ -78,7 +78,7 @@ public:
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
     virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                   FallibleTArray<uint8_t>& aBuffer) override;
+                                   nsTArray<uint8_t>& aBuffer) override;
 
     // Check for various kinds of brokenness, and set flags on the entry
     // accordingly so that we avoid using bad font tables

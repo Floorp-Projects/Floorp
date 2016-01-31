@@ -216,7 +216,7 @@ public:
 
 protected:
     virtual nsresult
-    CopyFontTable(uint32_t aTableTag, FallibleTArray<uint8_t>& aBuffer) override;
+    CopyFontTable(uint32_t aTableTag, nsTArray<uint8_t>& aBuffer) override;
 
     void MaybeReleaseFTFace();
 
@@ -228,7 +228,7 @@ private:
 
 nsresult
 gfxSystemFcFontEntry::CopyFontTable(uint32_t aTableTag,
-                                    FallibleTArray<uint8_t>& aBuffer)
+                                    nsTArray<uint8_t>& aBuffer)
 {
     if (!mFTFaceInitialized) {
         mFTFaceInitialized = true;
