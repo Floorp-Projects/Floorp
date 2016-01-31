@@ -199,7 +199,7 @@ public:
     mChannel->SynthesizeStatus(mInternalResponse->GetUnfilteredStatus(),
                                mInternalResponse->GetUnfilteredStatusText());
 
-    AutoTArray<InternalHeaders::Entry, 5> entries;
+    nsAutoTArray<InternalHeaders::Entry, 5> entries;
     mInternalResponse->UnfilteredHeaders()->GetEntries(entries);
     for (uint32_t i = 0; i < entries.Length(); ++i) {
        mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);

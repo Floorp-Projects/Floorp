@@ -844,7 +844,7 @@ public:
   
   nsPoint GetPositionIgnoringScrolling();
 
-  typedef AutoTArray<nsIContent*, 2> ContentArray;
+  typedef nsAutoTArray<nsIContent*, 2> ContentArray;
   static void DestroyContentArray(ContentArray* aArray);
 
 #define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, dtor)             \

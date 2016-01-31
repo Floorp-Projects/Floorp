@@ -717,7 +717,7 @@ private:
 
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
-    AutoTArray<GlyphRun,1>        mGlyphRuns;
+    nsAutoTArray<GlyphRun,1>        mGlyphRuns;
 
     void             *mUserData;
     gfxFontGroup     *mFontGroup; // addrefed on creation, but our reference

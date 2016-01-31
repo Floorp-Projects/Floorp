@@ -470,7 +470,7 @@ Key::EncodeLocaleString(const nsDependentString& aString, uint8_t aTypeOffset,
   }
   MOZ_ASSERT(collator);
 
-  AutoTArray<uint8_t, 128> keyBuffer;
+  nsAutoTArray<uint8_t, 128> keyBuffer;
   int32_t sortKeyLength = ucol_getSortKey(collator, ustr, length,
                                           keyBuffer.Elements(),
                                           keyBuffer.Length());

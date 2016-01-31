@@ -128,7 +128,7 @@ nsReturnRef<HRTFKernel> HRTFElevation::calculateKernelForAzimuthElevation(int az
     // Note that depending on the fftSize returned by the panner, we may be truncating the impulse response.
     const size_t resampledResponseLength = fftSizeForSampleRate(sampleRate) / 2;
 
-    AutoTArray<AudioDataValue, 2 * ResponseFrameSize> resampled;
+    nsAutoTArray<AudioDataValue, 2 * ResponseFrameSize> resampled;
     if (sampleRate == rawSampleRate) {
         resampledResponse = response;
         MOZ_ASSERT(resampledResponseLength == ResponseFrameSize);
@@ -163,7 +163,7 @@ nsReturnRef<HRTFKernel> HRTFElevation::calculateKernelForAzimuthElevation(int az
     }
 
 #ifdef MOZ_SAMPLE_TYPE_S16
-    AutoTArray<float, 2 * ResponseFrameSize> floatArray;
+    nsAutoTArray<float, 2 * ResponseFrameSize> floatArray;
     floatArray.SetLength(resampledResponseLength);
     float *floatResponse = floatArray.Elements();
     ConvertAudioSamples(resampledResponse,

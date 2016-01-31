@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* A handy class that will allocate data for size*T objects on the stack and
- * otherwise allocate them on the heap. It is similar in purpose to AutoTArray */
+ * otherwise allocate them on the heap. It is similar in purpose to nsAutoTArray */
 
 template <class T, size_t size>
 class StackArray

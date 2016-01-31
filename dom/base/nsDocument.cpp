@@ -3366,7 +3366,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
   if (!rootFrame)
     return NS_OK; // return nothing to premature XUL callers as a reminder to wait
 
-  AutoTArray<nsIFrame*,8> outFrames;
+  nsAutoTArray<nsIFrame*,8> outFrames;
   nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
@@ -11188,7 +11188,7 @@ nsDocument::RestorePreviousFullScreenState()
   }
 
   nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
-  AutoTArray<nsDocument*, 8> exitDocs;
+  nsAutoTArray<nsDocument*, 8> exitDocs;
 
   nsIDocument* doc = fullScreenDoc;
   // Collect all subdocuments.
@@ -11805,7 +11805,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // order, but we traverse the doctree in a leaf-to-root order, so we save
   // references to the documents we must dispatch to so that we get the order
   // as specified.
-  AutoTArray<nsIDocument*, 8> changed;
+  nsAutoTArray<nsIDocument*, 8> changed;
 
   // Remember the root document, so that if a full-screen document is hidden
   // we can reset full-screen state in the remaining visible full-screen documents.

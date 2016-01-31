@@ -91,7 +91,7 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
-    AutoTArray<CSSStyleSheet*, 32> xblSheetArray;
+    nsAutoTArray<CSSStyleSheet*, 32> xblSheetArray;
     styleSet->AppendAllXBLStyleSheets(xblSheetArray);
 
     // The XBL stylesheet array will quite often be full of duplicates. Cope:

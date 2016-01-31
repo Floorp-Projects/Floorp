@@ -32,7 +32,7 @@ nsCString
 GetFrameState(nsIFrame* aFrame)
 {
   nsCString result;
-  AutoTArray<const char*,3> groups;
+  nsAutoTArray<const char*,3> groups;
 
   nsFrameState state = aFrame->GetStateBits();
 

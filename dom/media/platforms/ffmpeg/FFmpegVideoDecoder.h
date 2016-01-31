@@ -123,7 +123,7 @@ private:
     }
 
   private:
-    AutoTArray<DurationElement, 16> mMap;
+    nsAutoTArray<DurationElement, 16> mMap;
   };
 
   DurationMap mDurationMap;

@@ -275,7 +275,7 @@ private:
 
   /**
    * A pending accessible tree update notifications for content insertions.
-   * Don't make this an AutoTArray; we use SwapElements() on it.
+   * Don't make this an nsAutoTArray; we use SwapElements() on it.
    */
   nsTArray<RefPtr<ContentInsertion> > mContentInsertions;
 
@@ -309,7 +309,7 @@ private:
   nsTHashtable<nsCOMPtrHashKey<nsIContent> > mTextHash;
 
   /**
-   * Other notifications like DOM events. Don't make this an AutoTArray; we
+   * Other notifications like DOM events. Don't make this an nsAutoTArray; we
    * use SwapElements() on it.
    */
   nsTArray<RefPtr<Notification> > mNotifications;

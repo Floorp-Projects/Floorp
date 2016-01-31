@@ -221,7 +221,7 @@ protected:
         RDFContentSinkParseMode  mParseMode;
     };
 
-    AutoTArray<RDFContextStackElement, 8>* mContextStack;
+    nsAutoTArray<RDFContextStackElement, 8>* mContextStack;
 
     nsCOMPtr<nsIURI> mDocumentURL;
 
@@ -1416,7 +1416,7 @@ RDFContentSinkImpl::PushContext(nsIRDFResource         *aResource,
                                 RDFContentSinkParseMode aParseMode)
 {
     if (! mContextStack) {
-        mContextStack = new AutoTArray<RDFContextStackElement, 8>();
+        mContextStack = new nsAutoTArray<RDFContextStackElement, 8>();
         if (! mContextStack)
             return 0;
     }

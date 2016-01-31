@@ -130,20 +130,20 @@ protected:
 
   /* Rationale for using nsTArray<SVGLength> and not nsTArray<SVGLength, 1>:
    *
-   * It might seem like we should use AutoTArray<SVGLength, 1> instead of
+   * It might seem like we should use nsAutoTArray<SVGLength, 1> instead of
    * nsTArray<SVGLength>. That would preallocate space for one SVGLength and
    * avoid an extra memory allocation call in the common case of the 'x'
    * and 'y' attributes each containing a single length (and the 'dx' and 'dy'
    * attributes being empty). However, consider this:
    *
-   * An empty nsTArray uses sizeof(Header*). An AutoTArray<class E,
+   * An empty nsTArray uses sizeof(Header*). An nsAutoTArray<class E,
    * uint32_t N> on the other hand uses sizeof(Header*) +
    * (2 * sizeof(uint32_t)) + (N * sizeof(E)), which for one SVGLength is
    * sizeof(Header*) + 16 bytes.
    *
    * Now consider that for text elements we have four length list attributes
    * (x, y, dx, dy), each of which can have a baseVal and an animVal list. If
-   * we were to go the AutoTArray<SVGLength, 1> route for each of these, we'd
+   * we were to go the nsAutoTArray<SVGLength, 1> route for each of these, we'd
    * end up using at least 160 bytes for these four attributes alone, even
    * though we only need storage for two SVGLengths (16 bytes) in the common
    * case!!

@@ -21,7 +21,7 @@ xpcAccessibleSelectable::GetSelectedItems(nsIArray** aSelectedItems)
     return NS_ERROR_FAILURE;
   NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
 
-  AutoTArray<Accessible*, 10> items;
+  nsAutoTArray<Accessible*, 10> items;
   Intl()->SelectedItems(&items);
 
   uint32_t itemCount = items.Length();

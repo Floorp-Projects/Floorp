@@ -49,7 +49,7 @@ CopyChunkToBlock(AudioChunk& aInput, AudioBlock *aBlock,
                  uint32_t aOffsetInBlock)
 {
   uint32_t blockChannels = aBlock->ChannelCount();
-  AutoTArray<const T*,2> channels;
+  nsAutoTArray<const T*,2> channels;
   if (aInput.IsNull()) {
     channels.SetLength(blockChannels);
     PodZero(channels.Elements(), blockChannels);
@@ -137,7 +137,7 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MOZ_ASSERT(mInputs.Length() == 1);
 
   MediaStream* source = mInputs[0]->GetSource();
-  AutoTArray<AudioSegment,1> audioSegments;
+  nsAutoTArray<AudioSegment,1> audioSegments;
   uint32_t inputChannels = 0;
   for (StreamBuffer::TrackIter tracks(source->mBuffer, MediaSegment::AUDIO);
        !tracks.IsEnded(); tracks.Next()) {
@@ -192,7 +192,7 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   uint32_t accumulateIndex = 0;
   if (inputChannels) {
-    AutoTArray<float,GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
+    nsAutoTArray<float,GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
     for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
       AudioBlock tmpChunk;
       ConvertSegmentToAudioBlock(&audioSegments[i], &tmpChunk, inputChannels);

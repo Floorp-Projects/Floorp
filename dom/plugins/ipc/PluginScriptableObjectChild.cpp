@@ -436,7 +436,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   NS_ASSERTION(actor, "This shouldn't ever be null!");
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
-  AutoTArray<PluginIdentifier, 10> identifiers;
+  AutoInfallibleTArray<PluginIdentifier, 10> identifiers;
   bool success;
   actor->CallEnumerate(&identifiers, &success);
 
@@ -775,7 +775,7 @@ PluginScriptableObjectChild::AnswerInvoke(const PluginIdentifier& aId,
     return true;
   }
 
-  AutoTArray<NPVariant, 10> convertedArgs;
+  AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, mozilla::fallible)) {
@@ -845,7 +845,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(InfallibleTArray<Variant>&& aAr
     return true;
   }
 
-  AutoTArray<NPVariant, 10> convertedArgs;
+  AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, mozilla::fallible)) {
@@ -1096,7 +1096,7 @@ PluginScriptableObjectChild::AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
     return true;
   }
 
-  AutoTArray<NPVariant, 10> convertedArgs;
+  AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
   if (!convertedArgs.SetLength(argCount, mozilla::fallible)) {

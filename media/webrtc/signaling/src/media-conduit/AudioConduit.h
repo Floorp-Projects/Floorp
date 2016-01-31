@@ -273,7 +273,7 @@ private:
     TimeStamp mTimeStamp;
     uint32_t mRTPTimeStamp; // RTP timestamps received
   };
-  AutoTArray<Processing,8> mProcessing;
+  nsAutoTArray<Processing,8> mProcessing;
 
   int mChannel;
   RecvCodecList    mRecvCodecList;

@@ -2141,7 +2141,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
       shiftedChar = shiftedChars.mChars[cnt - skipShiftedChars];
     if (skipUnshiftedChars <= cnt)
       unshiftedChar = unshiftedChars.mChars[cnt - skipUnshiftedChars];
-    AutoTArray<AlternativeCharCode, 5> altArray;
+    nsAutoTArray<AlternativeCharCode, 5> altArray;
 
     if (shiftedChar || unshiftedChar) {
       AlternativeCharCode chars(unshiftedChar, shiftedChar);
@@ -3189,7 +3189,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
       break;
   }
 
-  AutoTArray<KeyPair,10> keySequence;
+  nsAutoTArray<KeyPair,10> keySequence;
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
   NS_ASSERTION(aNativeKeyCode >= 0 && aNativeKeyCode < 256,
                "Native VK key code out of range");
@@ -3230,7 +3230,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
         NativeKey nativeKey(aWidget, keyDownMsg, modKeyState);
         nativeKey.HandleKeyDownMessage();
       } else {
-        AutoTArray<NativeKey::FakeCharMsg, 10> fakeCharMsgs;
+        nsAutoTArray<NativeKey::FakeCharMsg, 10> fakeCharMsgs;
         for (uint32_t j = 0; j < chars.Length(); j++) {
           NativeKey::FakeCharMsg* fakeCharMsg = fakeCharMsgs.AppendElement();
           fakeCharMsg->mCharCode = chars.CharAt(j);

@@ -1472,7 +1472,7 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 
 static bool
 GetStrokeDashData(nsIFrame* aFrame,
-                  nsTArray<gfxFloat>& aDashes,
+                  FallibleTArray<gfxFloat>& aDashes,
                   gfxFloat* aDashOffset,
                   gfxTextContextPaint *aContextPaint)
 {
@@ -1576,7 +1576,7 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
     break;
   }
 
-  AutoTArray<gfxFloat, 10> dashes;
+  AutoFallibleTArray<gfxFloat, 10> dashes;
   gfxFloat dashOffset;
   if (GetStrokeDashData(aFrame, dashes, &dashOffset, aContextPaint)) {
     aContext->SetDash(dashes.Elements(), dashes.Length(), dashOffset);

@@ -133,7 +133,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
   gfxTextRun::GlyphRunIterator iter(aSrc, 0, aSrc->GetLength());
   uint32_t offset = 0;
-  AutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
+  nsAutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
   while (iter.NextRun()) {
     gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType,
@@ -605,10 +605,10 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                                               gfxMissingFontRecorder* aMFR)
 {
   nsAutoString convertedString;
-  AutoTArray<bool,50> charsToMergeArray;
-  AutoTArray<bool,50> deletedCharsArray;
-  AutoTArray<uint8_t,50> canBreakBeforeArray;
-  AutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
+  nsAutoTArray<bool,50> charsToMergeArray;
+  nsAutoTArray<bool,50> deletedCharsArray;
+  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
+  nsAutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
 
   bool mergeNeeded = TransformString(aTextRun->mString,
                                      convertedString,

@@ -160,7 +160,7 @@ protected:
   RefPtr<nsGenericHTMLElement> mBody;
   RefPtr<nsGenericHTMLElement> mHead;
 
-  AutoTArray<SinkContext*, 8> mContextStack;
+  nsAutoTArray<SinkContext*, 8> mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
 

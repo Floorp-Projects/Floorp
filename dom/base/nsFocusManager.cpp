@@ -1370,7 +1370,7 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindowOuter* aWindow1,
   nsCOMPtr<nsIDocShellTreeItem> dsti2 = aWindow2->GetDocShell();
   NS_ENSURE_TRUE(dsti2, nullptr);
 
-  AutoTArray<nsIDocShellTreeItem*, 30> parents1, parents2;
+  nsAutoTArray<nsIDocShellTreeItem*, 30> parents1, parents2;
   do {
     parents1.AppendElement(dsti1);
     nsCOMPtr<nsIDocShellTreeItem> parentDsti1;

@@ -1151,7 +1151,7 @@ nsTreeContentView::EnsureSubtree(int32_t aIndex)
     return 0;
   }
 
-  AutoTArray<nsAutoPtr<Row>, 8> rows;
+  nsAutoTArray<nsAutoPtr<Row>, 8> rows;
   int32_t index = 0;
   Serialize(child, aIndex, &index, rows);
   // We can't use InsertElementsAt since the destination can't steal
@@ -1226,7 +1226,7 @@ nsTreeContentView::InsertRowFor(nsIContent* aParent, nsIContent* aChild)
 int32_t
 nsTreeContentView::InsertRow(int32_t aParentIndex, int32_t aIndex, nsIContent* aContent)
 {
-  AutoTArray<nsAutoPtr<Row>, 8> rows;
+  nsAutoTArray<nsAutoPtr<Row>, 8> rows;
   if (aContent->IsXULElement(nsGkAtoms::treeitem)) {
     SerializeItem(aContent, aParentIndex, &aIndex, rows);
   } else if (aContent->IsXULElement(nsGkAtoms::treeseparator)) {

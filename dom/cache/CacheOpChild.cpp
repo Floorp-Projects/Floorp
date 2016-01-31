@@ -219,7 +219,7 @@ CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 void
 CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
 {
-  AutoTArray<RefPtr<Response>, 256> responses;
+  nsAutoTArray<RefPtr<Response>, 256> responses;
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
@@ -233,7 +233,7 @@ CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
 void
 CacheOpChild::HandleRequestList(const nsTArray<CacheRequest>& aRequestList)
 {
-  AutoTArray<RefPtr<Request>, 256> requests;
+  nsAutoTArray<RefPtr<Request>, 256> requests;
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {

@@ -147,8 +147,8 @@ protected:
     
     void Append(const nsAString& aTitle, const nsAString& aFilter);
   private:
-    AutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;
-    AutoTArray<nsString, 2> mStrings;
+    nsAutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;
+    nsAutoTArray<nsString, 2> mStrings;
   };
 
   ComDlgFilterSpec       mComFilterList;

@@ -534,7 +534,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   char            **outArray;
   int32_t         numPrefs;
   int32_t         dwIndex;
-  AutoTArray<nsCString, 32> prefArray;
+  nsAutoTArray<nsCString, 32> prefArray;
 
   NS_ENSURE_ARG(aStartingAt);
   NS_ENSURE_ARG_POINTER(aCount);

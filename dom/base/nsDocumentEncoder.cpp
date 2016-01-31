@@ -162,11 +162,11 @@ protected:
   uint32_t          mEndDepth;
   int32_t           mStartRootIndex;
   int32_t           mEndRootIndex;
-  AutoTArray<nsINode*, 8>    mCommonAncestors;
-  AutoTArray<nsIContent*, 8> mStartNodes;
-  AutoTArray<int32_t, 8>     mStartOffsets;
-  AutoTArray<nsIContent*, 8> mEndNodes;
-  AutoTArray<int32_t, 8>     mEndOffsets;
+  nsAutoTArray<nsINode*, 8>    mCommonAncestors;
+  nsAutoTArray<nsIContent*, 8> mStartNodes;
+  nsAutoTArray<int32_t, 8>     mStartOffsets;
+  nsAutoTArray<nsIContent*, 8> mEndNodes;
+  nsAutoTArray<int32_t, 8>     mEndOffsets;
   bool              mHaltRangeHint;  
   // Used when context has already been serialized for
   // table cell selections (where parent is <tr>)

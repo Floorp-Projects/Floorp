@@ -129,7 +129,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
                                                                 kCFBundleNameKey);
 
             if (bundleName) {
-              AutoTArray<UniChar, 255> buffer;
+              nsAutoTArray<UniChar, 255> buffer;
               CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
               buffer.SetLength(bundleNameLength);
               ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
@@ -477,7 +477,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                             kLSItemDisplayName, (CFTypeRef *) &cfAppName);
     }
     if (cfAppName) {
-      AutoTArray<UniChar, 255> buffer;
+      nsAutoTArray<UniChar, 255> buffer;
       CFIndex appNameLength = ::CFStringGetLength(cfAppName);
       buffer.SetLength(appNameLength);
       ::CFStringGetCharacters(cfAppName, CFRangeMake(0, appNameLength),
@@ -512,7 +512,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     if (cfType) {
       CFStringRef cfTypeDesc = NULL;
       if (::LSCopyKindStringForMIMEType(cfType, &cfTypeDesc) == noErr) {
-        AutoTArray<UniChar, 255> buffer;
+        nsAutoTArray<UniChar, 255> buffer;
         CFIndex typeDescLength = ::CFStringGetLength(cfTypeDesc);
         buffer.SetLength(typeDescLength);
         ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),

@@ -206,10 +206,10 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
     uint32_t glyphCount = gr_seg_n_slots(aSegment);
 
     // identify clusters; graphite may have reordered/expanded/ligated glyphs.
-    AutoTArray<Cluster,SMALL_GLYPH_RUN> clusters;
-    AutoTArray<uint16_t,SMALL_GLYPH_RUN> gids;
-    AutoTArray<float,SMALL_GLYPH_RUN> xLocs;
-    AutoTArray<float,SMALL_GLYPH_RUN> yLocs;
+    AutoFallibleTArray<Cluster,SMALL_GLYPH_RUN> clusters;
+    AutoFallibleTArray<uint16_t,SMALL_GLYPH_RUN> gids;
+    AutoFallibleTArray<float,SMALL_GLYPH_RUN> xLocs;
+    AutoFallibleTArray<float,SMALL_GLYPH_RUN> yLocs;
 
     if (!clusters.SetLength(aLength, fallible) ||
         !gids.SetLength(glyphCount, fallible) ||
@@ -313,7 +313,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
             charGlyphs[offs].SetSimpleGlyph(appAdvance, gids[c.baseGlyph]);
         } else {
             // not a one-to-one mapping with simple metrics: use DetailedGlyph
-            AutoTArray<gfxShapedText::DetailedGlyph,8> details;
+            nsAutoTArray<gfxShapedText::DetailedGlyph,8> details;
             float clusterLoc;
             for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
                 gfxShapedText::DetailedGlyph* d = details.AppendElement();

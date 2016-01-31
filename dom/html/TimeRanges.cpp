@@ -112,7 +112,7 @@ void
 TimeRanges::Normalize(double aTolerance)
 {
   if (mRanges.Length() >= 2) {
-    AutoTArray<TimeRange,4> normalized;
+    nsAutoTArray<TimeRange,4> normalized;
 
     mRanges.Sort(CompareTimeRanges());
 
@@ -147,7 +147,7 @@ TimeRanges::Union(const TimeRanges* aOtherRanges, double aTolerance)
 void
 TimeRanges::Intersection(const TimeRanges* aOtherRanges)
 {
-  AutoTArray<TimeRange,4> intersection;
+  nsAutoTArray<TimeRange,4> intersection;
 
   const nsTArray<TimeRange>& otherRanges = aOtherRanges->mRanges;
   for (index_type i = 0, j = 0; i < mRanges.Length() && j < otherRanges.Length();) {

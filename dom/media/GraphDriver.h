@@ -519,7 +519,7 @@ private:
    * shutdown of the audio stream. */
   nsCOMPtr<nsIThread> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
-  AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
+  nsAutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
   /* This is set during initialization, and can be read safely afterwards. */
   dom::AudioChannel mAudioChannel;
   /* Used to queue us to add the mixer callback on first run. */

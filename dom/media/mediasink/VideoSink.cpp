@@ -314,13 +314,13 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
 {
   AssertOwnerThread();
 
-  AutoTArray<RefPtr<MediaData>,16> frames;
+  nsAutoTArray<RefPtr<MediaData>,16> frames;
   VideoQueue().GetFirstElements(aMaxFrames, &frames);
   if (frames.IsEmpty() || !mContainer) {
     return;
   }
 
-  AutoTArray<ImageContainer::NonOwningImage,16> images;
+  nsAutoTArray<ImageContainer::NonOwningImage,16> images;
   TimeStamp lastFrameTime;
   MediaSink::PlaybackParams params = mAudioSink->GetPlaybackParams();
   for (uint32_t i = 0; i < frames.Length(); ++i) {

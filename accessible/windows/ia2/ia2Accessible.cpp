@@ -768,7 +768,7 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges,
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  AutoTArray<TextRange, 1> ranges;
+  nsAutoTArray<TextRange, 1> ranges;
   acc->Document()->SelectionRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++) {

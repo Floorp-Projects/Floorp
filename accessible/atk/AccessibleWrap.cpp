@@ -759,7 +759,7 @@ getAttributesCB(AtkObject *aAtkObj)
   if (!proxy)
     return nullptr;
 
-  AutoTArray<Attribute, 10> attrs;
+  nsAutoTArray<Attribute, 10> attrs;
   proxy->Attributes(&attrs);
   if (attrs.IsEmpty())
     return nullptr;
@@ -1019,7 +1019,7 @@ refRelationSetCB(AtkObject *aAtkObj)
         continue;
 
       size_t targetCount = targetSets[i].Length();
-      AutoTArray<AtkObject*, 5> wrappers;
+      nsAutoTArray<AtkObject*, 5> wrappers;
       for (size_t j = 0; j < targetCount; j++)
         wrappers.AppendElement(GetWrapperFor(targetSets[i][j]));
 
@@ -1664,7 +1664,7 @@ AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible, int32_t aColIdx)
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  nsAutoTArray<Accessible*, 10> headerCells;
   tableCell->ColHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;
@@ -1698,7 +1698,7 @@ AccessibleWrap::GetRowHeader(TableAccessible* aAccessible, int32_t aRowIdx)
     return nullptr;
   }
 
-  AutoTArray<Accessible*, 10> headerCells;
+  nsAutoTArray<Accessible*, 10> headerCells;
   tableCell->RowHeaderCells(&headerCells);
   if (headerCells.IsEmpty()) {
     return nullptr;

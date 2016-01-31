@@ -371,7 +371,7 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges)
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoTArray<TextRange, 1> ranges;
+  nsAutoTArray<TextRange, 1> ranges;
   Intl()->SelectionRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++)

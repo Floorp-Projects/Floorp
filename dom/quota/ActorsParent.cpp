@@ -2476,7 +2476,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   if (newTemporaryStorageUsage > quotaManager->mTemporaryStorageLimit) {
     // This will block the thread without holding the lock while waitting.
 
-    AutoTArray<RefPtr<DirectoryLockImpl>, 10> locks;
+    nsAutoTArray<RefPtr<DirectoryLockImpl>, 10> locks;
 
     uint64_t sizeToBeFreed =
       quotaManager->LockedCollectOriginsForEviction(delta, locks);
@@ -3801,7 +3801,7 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
 
   // All the locks that block this new exclusive lock need to be invalidated.
   // We also need to notify clients to abort operations for them.
-  AutoTArray<nsAutoPtr<nsTHashtable<nsCStringHashKey>>,
+  nsAutoTArray<nsAutoPtr<nsTHashtable<nsCStringHashKey>>,
                Client::TYPE_MAX> origins;
   origins.SetLength(Client::TYPE_MAX);
 

@@ -94,7 +94,7 @@ GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActors.IsEmpty());
 
-  AutoTArray<ContentParent*, 20> contentActors;
+  nsAutoTArray<ContentParent*, 20> contentActors;
   ContentParent::GetAll(contentActors);
 
   for (uint32_t contentIndex = 0;
@@ -102,7 +102,7 @@ GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
        contentIndex++) {
     MOZ_ASSERT(contentActors[contentIndex]);
 
-    AutoTArray<PBluetoothParent*, 5> bluetoothActors;
+    AutoInfallibleTArray<PBluetoothParent*, 5> bluetoothActors;
     contentActors[contentIndex]->ManagedPBluetoothParent(bluetoothActors);
 
     for (uint32_t bluetoothIndex = 0;
@@ -490,7 +490,7 @@ BluetoothService::SetEnabled(bool aEnabled)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  AutoTArray<BluetoothParent*, 10> childActors;
+  AutoInfallibleTArray<BluetoothParent*, 10> childActors;
   GetAllBluetoothActors(childActors);
 
   for (uint32_t index = 0; index < childActors.Length(); index++) {
@@ -574,7 +574,7 @@ BluetoothService::HandleShutdown()
 
   Cleanup();
 
-  AutoTArray<BluetoothParent*, 10> childActors;
+  AutoInfallibleTArray<BluetoothParent*, 10> childActors;
   GetAllBluetoothActors(childActors);
 
   if (!childActors.IsEmpty()) {

@@ -598,7 +598,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
       // frame tree geometry (the width on an ancestor) rather than
       // style.
 
-      AutoTArray<nsIFrame*, 32> stack;
+      nsAutoTArray<nsIFrame*, 32> stack;
       stack.AppendElement(frame);
 
       do {

@@ -59,7 +59,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   int32_t count = 0;
   bool isSubScript = !mContent->IsMathMLElement(nsGkAtoms::msup_);
 
-  AutoTArray<nsIFrame*, 8> subScriptFrames;
+  nsAutoTArray<nsIFrame*, 8> subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     if (childFrame->GetContent()->IsMathMLElement(nsGkAtoms::mprescripts_)) {

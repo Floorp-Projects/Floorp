@@ -866,7 +866,7 @@ Navigator::RemoveIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
 bool
 Navigator::Vibrate(uint32_t aDuration)
 {
-  AutoTArray<uint32_t, 1> pattern;
+  nsAutoTArray<uint32_t, 1> pattern;
   pattern.AppendElement(aDuration);
   return Vibrate(pattern);
 }

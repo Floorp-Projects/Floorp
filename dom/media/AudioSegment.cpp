@@ -85,9 +85,9 @@ void
 AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
                   uint32_t aSampleRate)
 {
-  AutoTArray<AudioDataValue, SilentChannel::AUDIO_PROCESSING_FRAMES* GUESS_AUDIO_CHANNELS>
+  nsAutoTArray<AudioDataValue, SilentChannel::AUDIO_PROCESSING_FRAMES* GUESS_AUDIO_CHANNELS>
   buf;
-  AutoTArray<const AudioDataValue*, GUESS_AUDIO_CHANNELS> channelData;
+  nsAutoTArray<const AudioDataValue*, GUESS_AUDIO_CHANNELS> channelData;
   uint32_t offsetSamples = 0;
   uint32_t duration = GetDuration();
 
@@ -132,7 +132,7 @@ AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
         MOZ_ASSERT(channelData.Length() == aOutputChannels);
       } else if (channelData.Length() > aOutputChannels) {
         // Down mix.
-        AutoTArray<AudioDataValue*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
+        nsAutoTArray<AudioDataValue*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
         outChannelPtrs.SetLength(aOutputChannels);
         uint32_t offsetSamples = 0;
         for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
@@ -166,7 +166,7 @@ AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
 void
 AudioSegment::WriteTo(uint64_t aID, AudioMixer& aMixer, uint32_t aOutputChannels, uint32_t aSampleRate)
 {
-  AutoTArray<AudioDataValue,SilentChannel::AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> buf;
+  nsAutoTArray<AudioDataValue,SilentChannel::AUDIO_PROCESSING_FRAMES*GUESS_AUDIO_CHANNELS> buf;
   // Offset in the buffer that will be written to the mixer, in samples.
   uint32_t offset = 0;
 

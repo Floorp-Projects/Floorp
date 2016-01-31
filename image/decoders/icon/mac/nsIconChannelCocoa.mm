@@ -350,7 +350,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 
   // create our buffer
   int32_t bufferCapacity = 2 + [bitmapRep bytesPerPlane];
-  AutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer; // initial size is for
+  nsAutoTArray<uint8_t, 3 + 16 * 16 * 5> iconBuffer; // initial size is for
                                                      // 16x16
   iconBuffer.SetLength(bufferCapacity);
 

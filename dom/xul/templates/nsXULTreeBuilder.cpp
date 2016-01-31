@@ -1463,7 +1463,7 @@ nsXULTreeBuilder::OpenSubtreeOf(nsTreeRows::Subtree* aSubtree,
                                 nsIXULTemplateResult *aResult,
                                 int32_t* aDelta)
 {
-    AutoTArray<int32_t, 8> open;
+    nsAutoTArray<int32_t, 8> open;
     int32_t count = 0;
 
     int32_t rulecount = mQuerySets.Length();

@@ -26,7 +26,7 @@ public:
 
   virtual bool RecvAsyncDelete() override;
 
-  AutoTArray<ImageHost*,1> mImageHosts;
+  nsAutoTArray<ImageHost*,1> mImageHosts;
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override {}

@@ -199,10 +199,10 @@ private:
   RefPtr<mozilla::dom::Element> mElement;
 
   // For handling table rows
-  AutoTArray<bool, 8> mHasWrittenCellsForRow;
+  nsAutoTArray<bool, 8> mHasWrittenCellsForRow;
   
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
-  AutoTArray<bool, 8> mIsInCiteBlockquote;
+  nsAutoTArray<bool, 8> mIsInCiteBlockquote;
 
   // The output data
   nsAString*            mOutputString;

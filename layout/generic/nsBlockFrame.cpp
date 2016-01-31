@@ -7219,7 +7219,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   bool anyLineDirty = false;
 
   // Check that the float list is what we would have built
-  AutoTArray<nsIFrame*, 8> lineFloats;
+  nsAutoTArray<nsIFrame*, 8> lineFloats;
   for (line_iterator line = begin_lines(), line_end = end_lines();
        line != line_end; ++line) {
     if (line->HasFloats()) {
@@ -7234,7 +7234,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
     }
   }
   
-  AutoTArray<nsIFrame*, 8> storedFloats;
+  nsAutoTArray<nsIFrame*, 8> storedFloats;
   bool equal = true;
   uint32_t i = 0;
   for (nsIFrame* f : mFloats) {
