@@ -135,7 +135,7 @@ protected:
 
     // One pattern is the common case and some subclasses rely on successful
     // addition of the first element to the array.
-    AutoFallibleTArray<nsCountedRef<FcPattern>,1> mPatterns;
+    AutoTArray<nsCountedRef<FcPattern>,1> mPatterns;
 
     static cairo_user_data_key_t sFontEntryKey;
 };

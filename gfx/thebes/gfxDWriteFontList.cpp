@@ -304,7 +304,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
             idx = 0;
         }
     }
-    AutoFallibleTArray<WCHAR, 32> famName;
+    AutoTArray<WCHAR, 32> famName;
     UINT32 length;
     
     hr = names->GetStringLength(idx, &length);
@@ -1065,7 +1065,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
             englishIdx = 0;
         }
 
-        AutoFallibleTArray<WCHAR, 32> enName;
+        AutoTArray<WCHAR, 32> enName;
         UINT32 length;
 
         hr = names->GetStringLength(englishIdx, &length);
@@ -1110,7 +1110,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
 
         for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
             UINT32 nameLen;
-            AutoFallibleTArray<WCHAR, 32> localizedName;
+            AutoTArray<WCHAR, 32> localizedName;
 
             // only add other names
             if (nameIndex == englishIdx) {
@@ -1331,7 +1331,7 @@ static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
         index = 0;
     }
 
-    AutoFallibleTArray<WCHAR, 32> name;
+    AutoTArray<WCHAR, 32> name;
     UINT32 length;
 
     hr = familyNames->GetStringLength(index, &length);
