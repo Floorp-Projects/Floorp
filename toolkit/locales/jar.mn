@@ -62,6 +62,7 @@
   locale/@AB_CD@/global/keys.properties                 (%chrome/global/keys.properties)
   locale/@AB_CD@/global/languageNames.properties        (%chrome/global/languageNames.properties)
   locale/@AB_CD@/global/mozilla.dtd                     (%chrome/global/mozilla.dtd)
+  locale/@AB_CD@/global/narrate.properties              (%chrome/global/narrate.properties)
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
   locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
   locale/@AB_CD@/global/printdialog.dtd                 (%chrome/global/printdialog.dtd)
