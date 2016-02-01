@@ -799,6 +799,40 @@ enum class SimdType : uint8_t {
     Count
 };
 
+// Get the boolean SIMD type with the same shape as t.
+//
+// This is the result type of a comparison operation, and it can also be used to
+// identify the geometry of a SIMD type.
+inline SimdType
+GetBooleanSimdType(SimdType t)
+{
+    switch(t) {
+      case SimdType::Int8x16:
+      case SimdType::Uint8x16:
+      case SimdType::Bool8x16:
+        return SimdType::Bool8x16;
+
+      case SimdType::Int16x8:
+      case SimdType::Uint16x8:
+      case SimdType::Bool16x8:
+        return SimdType::Bool16x8;
+
+      case SimdType::Int32x4:
+      case SimdType::Uint32x4:
+      case SimdType::Float32x4:
+      case SimdType::Bool32x4:
+        return SimdType::Bool32x4;
+
+      case SimdType::Float64x2:
+      case SimdType::Bool64x2:
+        return SimdType::Bool64x2;
+
+      case SimdType::Count:
+        break;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad SIMD type");
+}
+
 // Complete set of SIMD operations.
 //
 // No SIMD types implement all of these operations.
