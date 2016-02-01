@@ -475,7 +475,8 @@ html|a:hover:active,
 
 /* Hide the actual checkbox */
 html|input[type="checkbox"] {
-  visibility: hidden;
+  opacity: 0;
+  width: 0;
   position: absolute;
 }
 
