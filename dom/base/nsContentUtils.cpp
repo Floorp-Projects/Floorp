@@ -288,8 +288,6 @@ bool nsContentUtils::sFragmentParsingActive = false;
 bool nsContentUtils::sDOMWindowDumpEnabled;
 #endif
 
-mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
-
 // Subset of http://www.whatwg.org/specs/web-apps/current-work/#autofill-field-name
 enum AutocompleteFieldName
 {
@@ -7156,12 +7154,6 @@ nsContentUtils::DOMWindowDumpEnabled()
 #else
   return true;
 #endif
-}
-
-mozilla::LogModule*
-nsContentUtils::DOMDumpLog()
-{
-  return sDOMDumpLog;
 }
 
 bool
