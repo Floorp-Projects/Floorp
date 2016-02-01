@@ -1,36 +1,4 @@
-# This make file should be identical to the beta mozconfig, apart from the
-# safeguard below
-MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}
-
-if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
-  MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
-  MOZ_AUTOMATION_UPDATE_PACKAGING=1
-fi
-
-# some b2g desktop builds still happen on i686 machines, and the tooltool
-# toolchain is x86_64 only.
-# We also deal with valgrind builds here, they don't use tooltool manifests at
-# all yet.
-if [ -z "$no_tooltool" ]
-then
-  CC="$topsrcdir/gcc/bin/gcc"
-  CXX="$topsrcdir/gcc/bin/g++"
-
-  # We want to make sure we use binutils and other binaries in the tooltool
-  # package.
-  mk_add_options PATH="$topsrcdir/gcc/bin:$PATH"
-else
-  CC="/tools/gcc-4.7.3-0moz1/bin/gcc"
-  CXX="/tools/gcc-4.7.3-0moz1/bin/g++"
-fi
-
-ac_add_options --enable-official-branding
-
-mk_add_options MOZ_PGO=1
-
-# safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
-# defines.sh during the beta cycle
-export BUILDING_RELEASE=1
-export MOZILLA_OFFICIAL=1
-
+# The source "build" only needs a mozconfig because we use the build system as
+# our script for generating it. This allows us to run configure without any
+# extra dependencies on specific toolchains, e.g. gtk3.
 ac_add_options --disable-compile-environment
