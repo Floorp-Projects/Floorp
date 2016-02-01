@@ -3386,6 +3386,15 @@
     "description": "Time taken to download a specified distribution file (msec)",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_BOOKMARKS_COUNT": {
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": "8000",
+    "n_buckets": 20,
+    "description": "Number of bookmarks stored in the browser DB",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "bug_numbers": [1244704]
+  },
   "FENNEC_FAVICONS_COUNT": {
     "expires_in_version": "40",
     "kind": "exponential",
