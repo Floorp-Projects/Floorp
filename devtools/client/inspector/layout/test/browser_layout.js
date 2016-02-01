@@ -127,14 +127,16 @@ var res2 = [
 ];
 
 add_task(function*() {
-  let style = "div { position: absolute; top: 42px; left: 42px; height: 100.111px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
+  let style = "div { position: absolute; top: 42px; left: 42px; " +
+              "height: 100.111px; width: 100px; border: 10px solid black; " +
+              "padding: 20px; margin: 30px auto;}";
   let html = "<style>" + style + "</style><div></div>";
 
   yield addTab("data:text/html," + encodeURIComponent(html));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openLayoutView();
   yield selectNode("div", inspector);
 
-  yield runTests(inspector, view);
+  yield runTests(inspector, view, testActor);
 });
 
 addTest("Test that the initial values of the box model are correct",
@@ -143,21 +145,23 @@ function*(inspector, view) {
 
   for (let i = 0; i < res1.length; i++) {
     let elt = viewdoc.querySelector(res1[i].selector);
-    is(elt.textContent, res1[i].value, res1[i].selector + " has the right value.");
+    is(elt.textContent, res1[i].value,
+       res1[i].selector + " has the right value.");
   }
 });
 
 addTest("Test that changing the document updates the box model",
-function*(inspector, view) {
+function*(inspector, view, testActor) {
   let viewdoc = view.doc;
 
   let onUpdated = waitForUpdate(inspector);
-  inspector.selection.node.style.height = "150px";
-  inspector.selection.node.style.paddingRight = "50px";
+  yield testActor.setAttribute("div", "style",
+                               "height:150px;padding-right:50px;");
   yield onUpdated;
 
   for (let i = 0; i < res2.length; i++) {
     let elt = viewdoc.querySelector(res2[i].selector);
-    is(elt.textContent, res2[i].value, res2[i].selector + " has the right value after style update.");
+    is(elt.textContent, res2[i].value,
+       res2[i].selector + " has the right value after style update.");
   }
 });
