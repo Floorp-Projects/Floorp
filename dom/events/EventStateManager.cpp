@@ -2006,6 +2006,7 @@ EventStateManager::GetContentViewer(nsIContentViewer** aCv)
 
   nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
   fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  if (!focusedWindow) return NS_ERROR_FAILURE;
 
   auto* ourWindow = nsPIDOMWindowOuter::From(focusedWindow);
 
