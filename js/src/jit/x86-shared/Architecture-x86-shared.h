@@ -21,7 +21,10 @@ namespace js {
 namespace jit {
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
-static const bool SupportsUint32x4FloatConversions = false;
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+
+// Does this architecture support comparisons of unsigned 32x4 integer vectors?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
 
 #if defined(JS_CODEGEN_X86)
 // In bytes: slots needed for potential memory->memory move spills.
