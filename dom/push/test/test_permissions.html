@@ -11,7 +11,6 @@ http://creativecommons.org/licenses/publicdomain/
   <title>Test for Bug 1038811</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -31,8 +30,15 @@ http://creativecommons.org/licenses/publicdomain/
 
   var registration;
   add_task(function* start() {
-    yield setupPrefs();
-    yield setPushPermission(false);
+    SpecialPowers.addPermission("desktop-notification", false, document);
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({"set": [
+        ["dom.push.enabled", true],
+        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+        ]}, resolve);
+    });
 
     var url = "worker.js" + "?" + Math.random();
     registration = yield navigator.serviceWorker.register(url, {scope: "."});
@@ -69,7 +75,12 @@ http://creativecommons.org/licenses/publicdomain/
       state: "prompt",
     }];
     for (var test of tests) {
-      yield setPushPermission(test.action);
+      if (test.action == permissionManager.UNKNOWN_ACTION) {
+        SpecialPowers.removePermission("desktop-notification", document);
+      } else {
+        SpecialPowers.addPermission("desktop-notification",
+          test.action, document);
+      }
       var state = yield registration.pushManager.permissionState();
       is(state, test.state, JSON.stringify(test));
     }
