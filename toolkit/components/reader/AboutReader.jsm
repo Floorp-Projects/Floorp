@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NarrateControls", "resource://gre/modules/narrate/NarrateControls.jsm");
 
 var gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
@@ -101,6 +102,10 @@ var AboutReader = function(mm, win, articlePromise) {
   this._setFontType(fontType);
 
   this._setupFontSizeButtons();
+
+  if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
+    new NarrateControls(mm, win);
+  }
 
   this._loadArticle();
 }
