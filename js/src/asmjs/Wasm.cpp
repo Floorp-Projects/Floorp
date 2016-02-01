@@ -700,9 +700,18 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 static bool
 DecodeUnknownSection(JSContext* cx, Decoder& d)
 {
-    const char* unused;
-    if (!d.readCString(&unused))
+    const char* sectionName;
+    if (!d.readCString(&sectionName))
         return Fail(cx, d, "failed to read section name");
+
+    if (!strcmp(sectionName, SigSection) ||
+        !strcmp(sectionName, ImportSection) ||
+        !strcmp(sectionName, DeclSection) ||
+        !strcmp(sectionName, ExportSection) ||
+        !strcmp(sectionName, CodeSection))
+    {
+        return Fail(cx, d, "known section out of order");
+    }
 
     if (!d.skipSection())
         return Fail(cx, d, "unable to skip unknown section");
@@ -730,14 +739,14 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!DecodeSignatureSection(cx, d, init.get()))
         return false;
 
-    if (!DecodeDeclarationSection(cx, d, init.get()))
-        return false;
-
     *dynamicLink = MakeUnique<DynamicLinkData>();
     if (!*dynamicLink)
         return false;
 
     if (!DecodeImportSection(cx, d, init.get(), dynamicLink->get()))
+        return false;
+
+    if (!DecodeDeclarationSection(cx, d, init.get()))
         return false;
 
     ModuleGenerator mg(cx);
