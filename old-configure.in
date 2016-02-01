@@ -3264,12 +3264,12 @@ _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 if test "$LIBEVENT_DIR" = yes; then
     PKG_CHECK_MODULES(MOZ_LIBEVENT, libevent,
-        MOZ_NATIVE_LIBEVENT=1,
+        MOZ_SYSTEM_LIBEVENT=1,
         LIBEVENT_DIR=/usr)
 fi
 if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
-    MOZ_NATIVE_LIBEVENT=
-elif test -z "$MOZ_NATIVE_LIBEVENT"; then
+    MOZ_SYSTEM_LIBEVENT=
+elif test -z "$MOZ_SYSTEM_LIBEVENT"; then
     CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
     LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
     MOZ_CHECK_HEADER(event.h,
@@ -3278,16 +3278,16 @@ elif test -z "$MOZ_NATIVE_LIBEVENT"; then
          fi],
         AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
     AC_CHECK_LIB(event, event_init,
-                 [MOZ_NATIVE_LIBEVENT=1
+                 [MOZ_SYSTEM_LIBEVENT=1
                   MOZ_LIBEVENT_CFLAGS="-I${LIBEVENT_DIR}/include"
                   MOZ_LIBEVENT_LIBS="-L${LIBEVENT_DIR}/lib -levent"],
-                 [MOZ_NATIVE_LIBEVENT= MOZ_LIBEVENT_CFLAGS= MOZ_LIBEVENT_LIBS=])
+                 [MOZ_SYSTEM_LIBEVENT= MOZ_LIBEVENT_CFLAGS= MOZ_LIBEVENT_LIBS=])
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-AC_SUBST(MOZ_NATIVE_LIBEVENT)
+AC_SUBST(MOZ_SYSTEM_LIBEVENT)
 
 dnl ========================================================
 dnl = If NSS was not detected in the system,
@@ -3299,10 +3299,10 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.23, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.23, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
-if test -n "$MOZ_NATIVE_NSS"; then
+if test -n "$MOZ_SYSTEM_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
    NSS_CFLAGS="-I${DIST}/include/nss"
@@ -3377,12 +3377,12 @@ if test -n "${JPEG_DIR}" -a "${JPEG_DIR}" != "yes"; then
     LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
 fi
 if test -z "$JPEG_DIR" -o "$JPEG_DIR" = no; then
-    MOZ_NATIVE_JPEG=
+    MOZ_SYSTEM_JPEG=
 else
-    AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [MOZ_NATIVE_JPEG=1 MOZ_JPEG_LIBS="-ljpeg"], MOZ_NATIVE_JPEG=)
+    AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [MOZ_SYSTEM_JPEG=1 MOZ_JPEG_LIBS="-ljpeg"], MOZ_SYSTEM_JPEG=)
 fi
 
-if test "$MOZ_NATIVE_JPEG" = 1; then
+if test "$MOZ_SYSTEM_JPEG" = 1; then
     AC_TRY_COMPILE([ #include <stdio.h>
                      #include <sys/types.h>
                      #include <jpeglib.h> ],
@@ -3393,14 +3393,14 @@ if test "$MOZ_NATIVE_JPEG" = 1; then
                      #error "libjpeg-turbo JCS_EXTENSIONS required"
                      #endif
                      ],
-                   MOZ_NATIVE_JPEG=1,
+                   MOZ_SYSTEM_JPEG=1,
                    AC_MSG_ERROR([Insufficient JPEG library version for --with-system-jpeg]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if test -n "${JPEG_DIR}" -a -d "${JPEG_DIR}" -a "$MOZ_NATIVE_JPEG" = 1; then
+if test -n "${JPEG_DIR}" -a -d "${JPEG_DIR}" -a "$MOZ_SYSTEM_JPEG" = 1; then
     MOZ_JPEG_CFLAGS="-I${JPEG_DIR}/include"
     MOZ_JPEG_LIBS="-L${JPEG_DIR}/lib ${MOZ_JPEG_LIBS}"
 fi
@@ -3410,7 +3410,7 @@ dnl system ZLIB support
 dnl ========================================================
 MOZ_ZLIB_CHECK([1.2.3])
 
-if test "$MOZ_LINKER" = 1 -a "$MOZ_NATIVE_ZLIB" != 1; then
+if test "$MOZ_LINKER" = 1 -a "$MOZ_SYSTEM_ZLIB" != 1; then
     AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
@@ -3432,16 +3432,16 @@ if test -n "${BZ2_DIR}" -a "${BZ2_DIR}" != "yes"; then
     LDFLAGS="-L${BZ2_DIR}/lib $LDFLAGS"
 fi
 if test -z "$BZ2_DIR" -o "$BZ2_DIR" = no; then
-    MOZ_NATIVE_BZ2=
+    MOZ_SYSTEM_BZ2=
 else
-    AC_CHECK_LIB(bz2, BZ2_bzread, [MOZ_NATIVE_BZ2=1 MOZ_BZ2_LIBS="-lbz2"],
-    [MOZ_NATIVE_BZ2= MOZ_BZ2_CFLAGS= MOZ_BZ2_LIBS=])
+    AC_CHECK_LIB(bz2, BZ2_bzread, [MOZ_SYSTEM_BZ2=1 MOZ_BZ2_LIBS="-lbz2"],
+    [MOZ_SYSTEM_BZ2= MOZ_BZ2_CFLAGS= MOZ_BZ2_LIBS=])
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_NATIVE_BZ2" = 1; then
+if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
     MOZ_BZ2_CFLAGS="-I${BZ2_DIR}/include"
     MOZ_BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
 fi
@@ -3462,14 +3462,14 @@ if test -n "${PNG_DIR}" -a "${PNG_DIR}" != "yes"; then
     LDFLAGS="-L${PNG_DIR}/lib $LDFLAGS"
 fi
 if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
-    MOZ_NATIVE_PNG=
+    MOZ_SYSTEM_PNG=
 else
-    AC_CHECK_LIB(png, png_get_valid, [MOZ_NATIVE_PNG=1 MOZ_PNG_LIBS="-lpng"],
+    AC_CHECK_LIB(png, png_get_valid, [MOZ_SYSTEM_PNG=1 MOZ_PNG_LIBS="-lpng"],
                  AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
     AC_CHECK_LIB(png, png_get_acTL, ,
                  AC_MSG_ERROR([--with-system-png won't work because the system's libpng doesn't have APNG support]))
 fi
-if test "$MOZ_NATIVE_PNG" = 1; then
+if test "$MOZ_SYSTEM_PNG" = 1; then
     AC_TRY_COMPILE([ #include <stdio.h>
                      #include <sys/types.h>
                      #include <png.h> ],
@@ -3479,20 +3479,20 @@ if test "$MOZ_NATIVE_PNG" = 1; then
                      #ifndef PNG_UINT_31_MAX
                      #error "Insufficient libpng version."
                      #endif ],
-                   MOZ_NATIVE_PNG=1,
+                   MOZ_SYSTEM_PNG=1,
                    AC_MSG_ERROR([--with-system-png requested but no working libpng found]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_NATIVE_PNG" = 1; then
+if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_SYSTEM_PNG" = 1; then
     MOZ_PNG_CFLAGS="-I${PNG_DIR}/include"
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
 MOZ_PNG_ARM_NEON_CHECK=
-if test "$MOZ_NATIVE_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
+if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
     MOZ_ARG_ENABLE_STRING(png-arm-neon-support,
         [  --enable-png-arm-neon-support=TYPE
              Options include:
@@ -3527,13 +3527,13 @@ dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(system-hunspell,
 [  --enable-system-hunspell
                           Use system hunspell (located with pkgconfig)],
-    MOZ_NATIVE_HUNSPELL=1 )
+    MOZ_SYSTEM_HUNSPELL=1 )
 
-if test -n "$MOZ_NATIVE_HUNSPELL"; then
+if test -n "$MOZ_SYSTEM_HUNSPELL"; then
     PKG_CHECK_MODULES(MOZ_HUNSPELL, hunspell)
 fi
 
-AC_SUBST(MOZ_NATIVE_HUNSPELL)
+AC_SUBST(MOZ_SYSTEM_HUNSPELL)
 
 dnl ========================================================
 dnl system libffi Support
@@ -5216,7 +5216,7 @@ dnl system libvpx Support
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(system-libvpx,
 [  --with-system-libvpx    Use system libvpx (located with pkgconfig)],
-    MOZ_NATIVE_LIBVPX=1)
+    MOZ_SYSTEM_LIBVPX=1)
 
 MOZ_LIBVPX_CFLAGS=
 MOZ_LIBVPX_LIBS=
@@ -5227,7 +5227,7 @@ fi
 
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LIBS=$LIBS
-if test -n "$MOZ_NATIVE_LIBVPX"; then
+if test -n "$MOZ_SYSTEM_LIBVPX"; then
     dnl ============================
     dnl === libvpx Version check ===
     dnl ============================
@@ -5253,7 +5253,7 @@ fi
 CFLAGS=$_SAVE_CFLAGS
 LIBS=$_SAVE_LIBS
 
-AC_SUBST(MOZ_NATIVE_LIBVPX)
+AC_SUBST(MOZ_SYSTEM_LIBVPX)
 AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
 
@@ -5263,7 +5263,7 @@ else
     MOZ_TREMOR=1
 fi
 
-if test -z "$MOZ_NATIVE_LIBVPX"; then
+if test -z "$MOZ_SYSTEM_LIBVPX"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
@@ -5883,7 +5883,7 @@ dnl = libjpeg-turbo configuration
 dnl ========================================================
 MOZ_LIBJPEG_TURBO=
 LIBJPEG_TURBO_USE_YASM=
-if test -z "$MOZ_NATIVE_JPEG"; then
+if test -z "$MOZ_SYSTEM_JPEG"; then
     MOZ_LIBJPEG_TURBO=1
 fi
 
@@ -5892,7 +5892,7 @@ MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
     MOZ_LIBJPEG_TURBO=,
     MOZ_LIBJPEG_TURBO=1)
 
-if test "$MOZ_NATIVE_JPEG" = 1 -a "$MOZ_LIBJPEG_TURBO" = 1; then
+if test "$MOZ_SYSTEM_JPEG" = 1 -a "$MOZ_LIBJPEG_TURBO" = 1; then
     AC_MSG_ERROR([cannot use --with-system-jpeg with --enable-libjpeg-turbo.])
 fi
 
@@ -6449,13 +6449,13 @@ dnl ========================================================
 dnl Check for sqlite
 dnl ========================================================
 
-MOZ_NATIVE_SQLITE=
+MOZ_SYSTEM_SQLITE=
 MOZ_ARG_ENABLE_BOOL(system-sqlite,
 [  --enable-system-sqlite  Use system sqlite (located with pkgconfig)],
-MOZ_NATIVE_SQLITE=1,
-MOZ_NATIVE_SQLITE= )
+MOZ_SYSTEM_SQLITE=1,
+MOZ_SYSTEM_SQLITE= )
 
-if test -n "$MOZ_NATIVE_SQLITE"
+if test -n "$MOZ_SYSTEM_SQLITE"
 then
     dnl ============================
     dnl === SQLite Version check ===
@@ -6609,10 +6609,10 @@ then
     fi
 fi
 
-if test -n "$MOZ_NATIVE_SQLITE"; then
-    AC_DEFINE(MOZ_NATIVE_SQLITE)
+if test -n "$MOZ_SYSTEM_SQLITE"; then
+    AC_DEFINE(MOZ_SYSTEM_SQLITE)
 fi
-AC_SUBST(MOZ_NATIVE_SQLITE)
+AC_SUBST(MOZ_SYSTEM_SQLITE)
 
 dnl ========================================================
 dnl = Enable help viewer (off by default)
@@ -6902,7 +6902,7 @@ if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-replace-malloc requires --enable-jemalloc])
 elif test -n "$MOZ_REPLACE_MALLOC"; then
     AC_DEFINE(MOZ_REPLACE_MALLOC)
-    MOZ_NATIVE_JEMALLOC=
+    MOZ_SYSTEM_JEMALLOC=
 
     dnl Replace-malloc Mac linkage quirks
     if test -n "$MACOSX_DEPLOYMENT_TARGET"; then
@@ -6964,15 +6964,15 @@ dnl = Jemalloc build setup
 dnl ========================================================
 if test -z "$MOZ_MEMORY"; then
   if test -n "$MOZ_JEMALLOC4" -a -z "$MOZ_REPLACE_MALLOC"; then
-    MOZ_NATIVE_JEMALLOC=1
+    MOZ_SYSTEM_JEMALLOC=1
     AC_CHECK_FUNCS(mallctl nallocx,,
-      [MOZ_NATIVE_JEMALLOC=
+      [MOZ_SYSTEM_JEMALLOC=
        break])
-    if test -n "$MOZ_NATIVE_JEMALLOC"; then
+    if test -n "$MOZ_SYSTEM_JEMALLOC"; then
       MOZ_MEMORY=1
       AC_DEFINE(MOZ_MEMORY)
       AC_DEFINE(MOZ_JEMALLOC4)
-      AC_DEFINE(MOZ_NATIVE_JEMALLOC)
+      AC_DEFINE(MOZ_SYSTEM_JEMALLOC)
     fi
   fi
   case "${target}" in
@@ -7037,7 +7037,7 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_JEMALLOC4)
-AC_SUBST(MOZ_NATIVE_JEMALLOC)
+AC_SUBST(MOZ_SYSTEM_JEMALLOC)
 AC_SUBST(MOZ_CRT)
 export MOZ_CRT
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
@@ -7751,7 +7751,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-if test -z "$MOZ_NATIVE_ZLIB"; then
+if test -z "$MOZ_SYSTEM_ZLIB"; then
 if test -n "$JS_SHARED_LIBRARY"; then
   ZLIB_IN_MOZGLUE=1
   AC_DEFINE(ZLIB_IN_MOZGLUE)
@@ -8595,9 +8595,9 @@ HOST_CXXFLAGS=`echo \
     $HOST_CXXFLAGS`
 
 AC_SUBST(_DEPEND_CFLAGS)
-AC_SUBST(MOZ_NATIVE_JPEG)
-AC_SUBST(MOZ_NATIVE_PNG)
-AC_SUBST(MOZ_NATIVE_BZ2)
+AC_SUBST(MOZ_SYSTEM_JPEG)
+AC_SUBST(MOZ_SYSTEM_PNG)
+AC_SUBST(MOZ_SYSTEM_BZ2)
 
 AC_SUBST_LIST(MOZ_JPEG_CFLAGS)
 AC_SUBST_LIST(MOZ_JPEG_LIBS)
@@ -8620,9 +8620,9 @@ if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_B2G_LOADER"; then
 fi
 AC_SUBST(MOZ_B2G_LOADER)
 
-AC_SUBST(MOZ_NATIVE_NSPR)
+AC_SUBST(MOZ_SYSTEM_NSPR)
 
-AC_SUBST(MOZ_NATIVE_NSS)
+AC_SUBST(MOZ_SYSTEM_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
 
 HOST_CMFLAGS=-fobjc-exceptions
@@ -8920,7 +8920,7 @@ if test "$MOZ_TREE_FREETYPE"; then
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
    # Spaces in the *_CFLAGS and *_LIBS variables are intentionally placed
    # to force freetype to use our settings rather than autodetecting
-   if test -n "$MOZ_NATIVE_PNG"; then
+   if test -n "$MOZ_SYSTEM_PNG"; then
      export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS "
    else
      export LIBPNG_CFLAGS="-I$_objdir/dist/include"
@@ -9020,7 +9020,7 @@ fi
 if test -n "$ZLIB_IN_MOZGLUE"; then
    MOZ_ZLIB_LIBS=
 fi
-export MOZ_NATIVE_ZLIB
+export MOZ_SYSTEM_ZLIB
 export MOZ_ZLIB_CFLAGS
 export MOZ_ZLIB_LIBS
 export MOZ_APP_NAME

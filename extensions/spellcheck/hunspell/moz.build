@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['glue']
-if not CONFIG['MOZ_NATIVE_HUNSPELL']:
+if not CONFIG['MOZ_SYSTEM_HUNSPELL']:
     DIRS += ['src']
 
 if CONFIG['ENABLE_TESTS']:

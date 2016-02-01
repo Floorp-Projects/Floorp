@@ -6,7 +6,7 @@
 
 Library('icu')
 
-if CONFIG['MOZ_NATIVE_ICU']:
+if CONFIG['MOZ_SYSTEM_ICU']:
     OS_LIBS += CONFIG['MOZ_ICU_LIBS']
 else:
     # Order needs to be preserved

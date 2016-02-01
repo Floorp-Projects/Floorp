@@ -6,9 +6,9 @@ AC_DEFUN([MOZ_CONFIG_FFI], [
 
 MOZ_ARG_ENABLE_BOOL(system-ffi,
 [  --enable-system-ffi       Use system libffi (located with pkgconfig)],
-    MOZ_NATIVE_FFI=1 )
+    MOZ_SYSTEM_FFI=1 )
 
-if test -n "$MOZ_NATIVE_FFI"; then
+if test -n "$MOZ_SYSTEM_FFI"; then
     # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
     # for non-GCC compilers.
     if test -z "$GNU_CC"; then
@@ -18,14 +18,14 @@ if test -n "$MOZ_NATIVE_FFI"; then
     fi
 fi
 
-AC_SUBST(MOZ_NATIVE_FFI)
+AC_SUBST(MOZ_SYSTEM_FFI)
 
 ])
 
 AC_DEFUN([MOZ_SUBCONFIGURE_FFI], [
 if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
-  if test "$BUILD_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
+  if test "$BUILD_CTYPES" -a -z "$MOZ_SYSTEM_FFI"; then
     # Run the libffi 'configure' script.
     ac_configure_args="--disable-shared --enable-static --disable-raw-api"
     if test "$MOZ_DEBUG"; then
