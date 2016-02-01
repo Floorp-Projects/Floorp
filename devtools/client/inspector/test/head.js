@@ -146,7 +146,9 @@ var openInspector = Task.async(function*(hostType) {
   let inspector = toolbox.getPanel("inspector");
 
   info("Waiting for the inspector to update");
-  yield inspector.once("inspector-updated");
+  if (inspector._updateProgress) {
+    yield inspector.once("inspector-updated");
+  }
 
   yield registerTestActor(toolbox.target.client);
   let testActor = yield getTestActor(toolbox);
