@@ -123,7 +123,18 @@ add_task(function* () {
               browser.tabs.onUpdated.addListener(onUpdated);
             });
 
-            promiseTabs.create(test.create).then(tab => {
+            let createdPromise = new Promise(resolve => {
+              let onCreated = tab => {
+                browser.test.assertTrue("id" in tab, `Expected tabs.onCreated callback to receive tab object`);
+                resolve();
+              };
+              browser.tabs.onCreated.addListener(onCreated);
+            });
+
+            Promise.all([
+              promiseTabs.create(test.create),
+              createdPromise,
+            ]).then(([tab]) => {
               tabId = tab.id;
 
               for (let key of Object.keys(expected)) {
