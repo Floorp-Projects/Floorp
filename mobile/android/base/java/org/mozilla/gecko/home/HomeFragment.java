@@ -221,13 +221,14 @@ public abstract class HomeFragment extends Fragment {
 
             // Fetch an icon big enough for use as a home screen icon.
             final String displayTitle = info.getDisplayTitle();
-            new AsyncTask<Void, Void, Void>() {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
-                protected Void doInBackground(Void... voids) {
+                public void run() {
                     GeckoAppShell.createShortcut(displayTitle, info.url);
-                    return null;
+
                 }
-            }.execute();
+            });
+
             return true;
         }
 
