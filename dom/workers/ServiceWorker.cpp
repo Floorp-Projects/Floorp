@@ -101,13 +101,6 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   aRv = workerPrivate->SendMessageEvent(aCx, aMessage, aTransferable, Move(clientInfo));
 }
 
-WorkerPrivate*
-ServiceWorker::GetWorkerPrivate() const
-{
-  ServiceWorkerPrivate* workerPrivate = mInfo->WorkerPrivate();
-  return workerPrivate->GetWorkerPrivate();
-}
-
 } // namespace workers
 } // namespace dom
 } // namespace mozilla
