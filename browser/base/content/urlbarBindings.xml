@@ -37,7 +37,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           <html:input anonid="input"
                       class="autocomplete-textbox urlbar-input textbox-input uri-element-right-align"
                       allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,value,type=inputtype,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+                      inputmode="url"
+                      xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
         </xul:hbox>
         <xul:dropmarker anonid="historydropmarker"
                         class="autocomplete-history-dropmarker urlbar-history-dropmarker"
