@@ -23,6 +23,8 @@ public:
 
   AudioStreamTrack* AsAudioStreamTrack() override { return this; }
 
+  const AudioStreamTrack* AsAudioStreamTrack() const override { return this; }
+
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("audio"); }
 };

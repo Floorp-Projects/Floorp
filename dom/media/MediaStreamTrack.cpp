@@ -27,6 +27,23 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamTrackSource)
 NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(MediaStreamTrackSource, mPrincipal)
 
+already_AddRefed<Promise>
+MediaStreamTrackSource::ApplyConstraints(nsPIDOMWindowInner* aWindow,
+                                         const dom::MediaTrackConstraints& aConstraints,
+                                         ErrorResult &aRv)
+{
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(aWindow);
+  RefPtr<Promise> promise = Promise::Create(go, aRv);
+  MOZ_RELEASE_ASSERT(!aRv.Failed());
+
+  promise->MaybeReject(new MediaStreamError(
+    aWindow,
+    NS_LITERAL_STRING("OverconstrainedError"),
+    NS_LITERAL_STRING(""),
+    NS_LITERAL_STRING("")));
+  return promise.forget();
+}
+
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
                                    TrackID aInputTrackID, const nsString& aLabel,
                                    MediaStreamTrackSource* aSource)
@@ -144,7 +161,8 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                          "constraints %s", this, NS_ConvertUTF16toUTF8(str).get()));
   }
 
-  return mOwningStream->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
+  nsPIDOMWindowInner* window = mOwningStream->GetParentObject();
+  return GetSource().ApplyConstraints(window, aConstraints, aRv);
 }
 
 MediaStreamGraph*
