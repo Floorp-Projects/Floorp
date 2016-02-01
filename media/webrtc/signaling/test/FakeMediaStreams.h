@@ -32,6 +32,7 @@ namespace mozilla {
    class MediaStreamGraphImpl;
    class MediaSegment;
    class PeerConnectionImpl;
+   class RemoteSourceStreamInfo;
 };
 
 
@@ -298,12 +299,14 @@ protected:
 class Fake_MediaStreamTrack
 {
   friend class mozilla::PeerConnectionImpl;
+  friend class mozilla::RemoteSourceStreamInfo;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamTrack)
 
   Fake_MediaStreamTrack(bool aIsVideo, Fake_DOMMediaStream* aOwningStream) :
     mIsVideo (aIsVideo),
-    mOwningStream (aOwningStream)
+    mOwningStream (aOwningStream),
+    mTrackID(mIsVideo ? 1 : 0)
   {
     static size_t counter = 0;
     std::ostringstream os;
@@ -311,7 +314,6 @@ public:
     mID = os.str();
   }
 
-  mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
   std::string GetId() const { return mID; }
   void AssignId(const std::string& id) { mID = id; }
   const Fake_MediaStreamTrack* AsVideoStreamTrack() const
@@ -334,9 +336,8 @@ private:
   ~Fake_MediaStreamTrack() {}
 
   const bool mIsVideo;
-protected:
   Fake_DOMMediaStream* mOwningStream;
-private:
+  mozilla::TrackID mTrackID;
   std::string mID;
 };
 
@@ -517,6 +518,7 @@ typedef Fake_DOMMediaStream DOMMediaStream;
 typedef Fake_DOMMediaStream DOMLocalMediaStream;
 
 namespace dom {
+typedef Fake_MediaStreamTrack MediaStreamTrack;
 typedef Fake_MediaStreamTrackSource MediaStreamTrackSource;
 }
 }

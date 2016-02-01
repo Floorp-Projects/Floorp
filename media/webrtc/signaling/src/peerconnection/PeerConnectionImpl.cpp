@@ -215,13 +215,12 @@ public:
       // track id from the start, but we're stuck doing this fixup after the
       // fact.
       nsresult rv = wrapper.impl()->GetRemoteTrackId(streamId,
-                                                     tracks[i]->GetTrackID(),
+                                                     *tracks[i],
                                                      &trackId);
 
       if (NS_FAILED(rv)) {
-        CSFLogError(logTag, "%s: Failed to get string track id for %u, rv = %u",
-                            __FUNCTION__,
-                            static_cast<unsigned>(tracks[i]->GetTrackID()),
+        CSFLogError(logTag, "%s: Failed to get string track id for %p, rv = %u",
+                            __FUNCTION__, tracks[i].get(),
                             static_cast<unsigned>(rv));
         MOZ_ASSERT(false);
         continue;
@@ -2186,14 +2185,14 @@ PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 nsresult
 PeerConnectionImpl::GetRemoteTrackId(const std::string streamId,
-                                     TrackID numericTrackId,
+                                     const MediaStreamTrack& aTrack,
                                      std::string* trackId) const
 {
   if (IsClosed()) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return mMedia->GetRemoteTrackId(streamId, numericTrackId, trackId);
+  return mMedia->GetRemoteTrackId(streamId, aTrack, trackId);
 }
 #endif
 

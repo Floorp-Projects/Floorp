@@ -218,8 +218,10 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
     return TRACK_INVALID;
   }
 
-  nsresult GetTrackId(TrackID numericTrackId, std::string* trackId) const
+  nsresult GetTrackId(const dom::MediaStreamTrack& track, std::string* trackId) const
   {
+    TrackID numericTrackId = track.mTrackID;
+
     if (numericTrackId <= 0 ||
         static_cast<size_t>(numericTrackId) > mTrackIdMap.size()) {
       return NS_ERROR_INVALID_ARG;;
@@ -315,7 +317,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                             const std::string& trackId);
 
   nsresult GetRemoteTrackId(const std::string streamId,
-                            TrackID numericTrackId,
+                            const dom::MediaStreamTrack& track,
                             std::string* trackId) const;
 
   // Get a specific local stream
