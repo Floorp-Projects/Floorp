@@ -1307,6 +1307,9 @@ auto GLController::Destroy() const -> void
 constexpr char GLController::DisposeNative_t::name[];
 constexpr char GLController::DisposeNative_t::signature[];
 
+constexpr char GLController::OnSizeChanged_t::name[];
+constexpr char GLController::OnSizeChanged_t::signature[];
+
 constexpr char GLController::PauseCompositor_t::name[];
 constexpr char GLController::PauseCompositor_t::signature[];
 

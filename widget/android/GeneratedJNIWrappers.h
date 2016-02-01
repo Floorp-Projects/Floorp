@@ -3583,6 +3583,25 @@ public:
     };
 
 public:
+    struct OnSizeChanged_t {
+        typedef GLController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "onSizeChanged";
+        static constexpr char signature[] =
+                "(IIII)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct PauseCompositor_t {
         typedef GLController Owner;
         typedef void ReturnType;
