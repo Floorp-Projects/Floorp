@@ -20,8 +20,8 @@
 
 <script> 
 
-var url1 = "http://test1.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
-var url2 = "http://test2.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+var url1 = "http://test1.example.com/chrome/dom/apps/tests/apps/basic.webapp";
+var url2 = "http://test2.example.com/chrome/dom/apps/tests/apps/basic.webapp";
 
 // References to the apps we install, so we can uninstall them afterward.
 // Note that app2 is set by the helper page, which throws "TypeError: can't
@@ -58,7 +58,7 @@ function installAppFromOwnOrigin(next) {
  */
 function installAppFromOtherOrigin(next) {
   document.getElementById("iframe").setAttribute("src",
-    "http://test2.example.com/chrome/dom/tests/mochitest/webapps/cross_origin.html");
+    "http://test2.example.com/chrome/dom/apps/tests/cross_origin.html");
 
   window.addEventListener("message", function onMessage(event) {
     if (event.data == "next") {

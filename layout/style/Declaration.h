@@ -152,14 +152,6 @@ public:
   void RemoveVariableDeclaration(const nsAString& aName);
 
   /**
-   * Returns whether a custom property declaration for a variable with
-   * a given name exists on this object.
-   *
-   * @param aName The variable name (i.e., without the "--" prefix).
-   */
-  bool HasVariableDeclaration(const nsAString& aName) const;
-
-  /**
    * Gets the string value for a custom property declaration of a variable
    * with a given name.
    *

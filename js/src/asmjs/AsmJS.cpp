@@ -6037,7 +6037,7 @@ CheckBitwise(FunctionValidator& f, ParseNode* bitwise, Type* type)
     }
 
     switch (bitwise->getKind()) {
-      case PNK_BITOR:  if (!f.writeOp(Expr::I32Ior))  return false; break;
+      case PNK_BITOR:  if (!f.writeOp(Expr::I32Or))   return false; break;
       case PNK_BITAND: if (!f.writeOp(Expr::I32And))  return false; break;
       case PNK_BITXOR: if (!f.writeOp(Expr::I32Xor))  return false; break;
       case PNK_LSH:    if (!f.writeOp(Expr::I32Shl))  return false; break;

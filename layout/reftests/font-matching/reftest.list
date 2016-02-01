@@ -63,7 +63,7 @@ HTTP(..) == weightmapping-45.html weightmapping-45-ref.html
 HTTP(..) == weightmapping-458.html weightmapping-458-ref.html
 HTTP(..) == weightmapping-478.html weightmapping-478-ref.html
 HTTP(..) == weightmapping-7.html weightmapping-7-ref.html
-HTTP(..) == weightmapping-12579.html weightmapping-12579-ref.html
+fuzzy-if(OSX==1010,1,30) HTTP(..) == weightmapping-12579.html weightmapping-12579-ref.html
 
 skip-if(B2G||Mulet) HTTP(..) == stretchmapping-all.html stretchmapping-all-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) HTTP(..) == stretchmapping-reverse.html stretchmapping-reverse-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

@@ -58,7 +58,7 @@ SimpleTest.registerCleanupFunction(() =>
                                   Ci.nsIPermissionManager.ALLOW_ACTION)
 );
 
-var gManifestURL = "http://www.example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+var gManifestURL = "http://www.example.com/chrome/dom/apps/tests/apps/basic.webapp";
 
 function onInstall() {
   var testAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);

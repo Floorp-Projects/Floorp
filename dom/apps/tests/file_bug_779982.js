@@ -1,7 +1,7 @@
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.setAllAppsLaunchable(true);
 
-var fileTestOnCurrentOrigin = 'http://example.org/tests/dom/tests/mochitest/webapps/file_bug_779982.html';
+var fileTestOnCurrentOrigin = 'http://example.org/tests/dom/apps/tests/file_bug_779982.html';
 
 var gData = [
   // APP 1
