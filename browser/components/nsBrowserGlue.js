@@ -120,11 +120,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
 XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
                                   "resource://gre/modules/SimpleServiceDiscovery.jsm");
 
-if (AppConstants.NIGHTLY_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
-                                    "resource:///modules/SignInToWebsite.jsm");
-}
-
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
@@ -747,11 +742,6 @@ BrowserGlue.prototype = {
 
     WebappManager.init();
     PageThumbs.init();
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("dom.identity.enabled")) {
-        SignInToWebsiteUX.init();
-      }
-    }
     webrtcUI.init();
     AboutHome.init();
 
@@ -1082,11 +1072,6 @@ BrowserGlue.prototype = {
 
     NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("dom.identity.enabled")) {
-        SignInToWebsiteUX.uninit();
-      }
-    }
     webrtcUI.uninit();
     FormValidationHandler.uninit();
     if (AppConstants.NIGHTLY_BUILD) {
