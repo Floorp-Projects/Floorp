@@ -35,8 +35,10 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
                                                       aContext->Graph()))
 {
   // Ensure an audio track with the correct ID is exposed to JS
+  nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
   RefPtr<MediaStreamTrackSource> source =
-    new BasicUnstoppableTrackSource(MediaSourceEnum::AudioCapture);
+    new BasicUnstoppableTrackSource(doc->NodePrincipal(),
+                                    MediaSourceEnum::AudioCapture);
   mDOMStream->CreateOwnDOMTrack(AudioNodeStream::AUDIO_TRACK,
                                 MediaSegment::AUDIO, nsString(), source);
 
@@ -46,11 +48,6 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::EXTERNAL_OUTPUT);
   mPort = outputStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
-
-  nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
-  if (doc) {
-    mDOMStream->CombineWithPrincipal(doc->NodePrincipal());
-  }
 }
 
 MediaStreamAudioDestinationNode::~MediaStreamAudioDestinationNode()

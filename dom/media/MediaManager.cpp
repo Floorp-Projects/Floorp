@@ -891,7 +891,7 @@ public:
       MediaStreamGraph::GetInstance(graphDriverType,
                                     dom::AudioChannel::Normal);
 
-    RefPtr<DOMLocalMediaStream> domStream;
+    RefPtr<DOMMediaStream> domStream;
     RefPtr<SourceMediaStream> stream;
     // AudioCapture is a special case, here, in the sense that we're not really
     // using the audio source and the SourceMediaStream, which acts as
@@ -899,10 +899,12 @@ public:
     // them down instead.
     if (mAudioDevice &&
         mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
-      domStream = DOMLocalMediaStream::CreateAudioCaptureStream(window, msg);
       // It should be possible to pipe the capture stream to anything. CORS is
       // not a problem here, we got explicit user content.
-      domStream->SetPrincipal(window->GetExtantDoc()->NodePrincipal());
+      nsCOMPtr<nsIPrincipal> principal = window->GetExtantDoc()->NodePrincipal();
+      domStream =
+        DOMMediaStream::CreateAudioCaptureStream(window, principal, msg);
+
       stream = msg->CreateSourceStream(nullptr); // Placeholder
       msg->RegisterCaptureStreamForWindow(
             mWindowID, domStream->GetInputStream()->AsProcessedStream());

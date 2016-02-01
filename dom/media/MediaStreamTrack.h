@@ -143,9 +143,10 @@ protected:
 class BasicUnstoppableTrackSource : public MediaStreamTrackSource
 {
 public:
-  explicit BasicUnstoppableTrackSource(const MediaSourceEnum aMediaSource =
+  explicit BasicUnstoppableTrackSource(nsIPrincipal* aPrincipal,
+                                       const MediaSourceEnum aMediaSource =
                                          MediaSourceEnum::Other)
-    : MediaStreamTrackSource(nullptr, true), mMediaSource(aMediaSource) {}
+    : MediaStreamTrackSource(aPrincipal, true), mMediaSource(aMediaSource) {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
