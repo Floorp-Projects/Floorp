@@ -120,12 +120,12 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       onCreated: new EventManager(context, "tabs.onCreated", fire => {
         let listener = event => {
           let tab = event.originalTarget;
-          fire({tab: TabManager.convert(extension, tab)});
+          fire(TabManager.convert(extension, tab));
         };
 
         let windowListener = window => {
           for (let tab of window.gBrowser.tabs) {
-            fire({tab: TabManager.convert(extension, tab)});
+            fire(TabManager.convert(extension, tab));
           }
         };
 
