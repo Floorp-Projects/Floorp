@@ -29,15 +29,15 @@ function setupPrefs() {
 function injectControlledFrame(target = document.body) {
   return new Promise(function(res, rej) {
     var iframe = document.createElement("iframe");
-    iframe.src = "/tests/dom/push/test/frame.html";
+    iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
 
     var controlledFrame = {
       remove() {
         target.removeChild(iframe);
         iframe = null;
       },
-      waitOnWorkerMessage(type) {
-        return iframe ? iframe.contentWindow.waitOnWorkerMessage(type) :
+      waitOnPushMessage() {
+        return iframe ? iframe.contentWindow.waitOnPushMessage() :
                Promise.reject(new Error("Frame removed from document"));
       },
     };
