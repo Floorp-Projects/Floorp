@@ -1408,13 +1408,13 @@ nsresult OggReader::SeekInUnbuffered(int64_t aTarget,
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-OggReader::Seek(int64_t aTarget, int64_t aEndTime)
+OggReader::Seek(SeekTarget aTarget, int64_t aEndTime)
 {
-  nsresult res = SeekInternal(aTarget, aEndTime);
+  nsresult res = SeekInternal(aTarget.mTime, aEndTime);
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(aTarget, __func__);
+    return SeekPromise::CreateAndResolve(aTarget.mTime, __func__);
   }
 }
 

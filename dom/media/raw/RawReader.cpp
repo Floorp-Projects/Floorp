@@ -206,14 +206,14 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-RawReader::Seek(int64_t aTime, int64_t aEndTime)
+RawReader::Seek(SeekTarget aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
 
   uint32_t frame = mCurrentFrame;
-  if (aTime >= UINT_MAX)
+  if (aTarget.mTime >= UINT_MAX)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  mCurrentFrame = aTime * mFrameRate / USECS_PER_S;
+  mCurrentFrame = aTarget.mTime * mFrameRate / USECS_PER_S;
 
   CheckedUint32 offset = CheckedUint32(mCurrentFrame) * mFrameSize;
   offset += sizeof(RawVideoHeader);
@@ -230,15 +230,15 @@ RawReader::Seek(int64_t aTime, int64_t aEndTime)
     NS_ENSURE_TRUE(!self->mShutdown, false);
     bool skip = false;
     return self->DecodeVideoFrame(skip, 0);
-  }, [self, aTime] () {
+  }, [self, aTarget] () {
     MOZ_ASSERT(self->OnTaskQueue());
     return self->mVideoQueue.Peek() &&
-           self->mVideoQueue.Peek()->GetEndTime() >= aTime;
-  })->Then(OwnerThread(), __func__, [self, p, aTime] () {
+           self->mVideoQueue.Peek()->GetEndTime() >= aTarget.mTime;
+  })->Then(OwnerThread(), __func__, [self, p, aTarget] () {
     while (self->mVideoQueue.GetSize() >= 2) {
       RefPtr<VideoData> releaseMe = self->mVideoQueue.PopFront();
     }
-    p->Resolve(aTime, __func__);
+    p->Resolve(aTarget.mTime, __func__);
   }, [self, p, frame] {
     self->mCurrentFrame = frame;
     self->mVideoQueue.Reset();

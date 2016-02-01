@@ -329,13 +329,13 @@ DirectShowReader::DecodeVideoFrame(bool &aKeyframeSkip,
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-DirectShowReader::Seek(int64_t aTargetUs, int64_t aEndTime)
+DirectShowReader::Seek(SeekTarget aTarget, int64_t aEndTime)
 {
-  nsresult res = SeekInternal(aTargetUs);
+  nsresult res = SeekInternal(aTarget.mTime);
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(aTargetUs, __func__);
+    return SeekPromise::CreateAndResolve(aTarget.mTime, __func__);
   }
 }
 
