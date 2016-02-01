@@ -372,6 +372,12 @@ ModuleGenerator::exportFuncIndex(uint32_t index) const
     return exportFuncIndices_[index];
 }
 
+uint32_t
+ModuleGenerator::exportEntryOffset(uint32_t index) const
+{
+    return funcEntryOffsets_[exportFuncIndices_[index]];
+}
+
 const Sig&
 ModuleGenerator::exportSig(uint32_t index) const
 {
