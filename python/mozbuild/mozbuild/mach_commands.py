@@ -1407,7 +1407,7 @@ class ArtifactSubCommand(SubCommand):
     def __call__(self, func):
         after = SubCommand.__call__(self, func)
         jobchoices = {
-            'android-api-11',
+            'android-api-15',
             'android-x86',
             'linux',
             'linux64',
@@ -1480,7 +1480,7 @@ class PackageFrontend(MachCommandBase):
         if self.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
             if self.substs['ANDROID_CPU_ARCH'] == 'x86':
                 return 'android-x86'
-            return 'android-api-11'
+            return 'android-api-15'
         # TODO: check for 32/64 bit builds.  We'd like to use HAVE_64BIT_BUILD
         # but that relies on the compile environment.
         if self.defines.get('XP_LINUX', False):
