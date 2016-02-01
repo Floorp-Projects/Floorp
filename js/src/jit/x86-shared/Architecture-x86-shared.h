@@ -20,6 +20,9 @@
 namespace js {
 namespace jit {
 
+// Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
+static const bool SupportsUint32x4FloatConversions = false;
+
 #if defined(JS_CODEGEN_X86)
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles

@@ -3377,7 +3377,10 @@ IonBuilder::boxSimd(CallInfo& callInfo, MInstruction* ins, InlineTypedObject* te
 {
     MSimdBox* obj = MSimdBox::New(alloc(), constraints(), ins, templateObj,
                                   templateObj->group()->initialHeap(constraints()));
-    current->add(ins);
+
+    // In some cases, ins has already been added to current.
+    if (!ins->block())
+        current->add(ins);
     current->add(obj);
     current->push(obj);
 
@@ -3525,16 +3528,15 @@ IonBuilder::inlineSimdConvert(CallInfo& callInfo, JSNative native, bool isCast,
     if (!canInlineSimd(callInfo, native, 1, &templateObj))
         return InliningStatus_NotInlined;
 
-    // TODO JSO: Implement unsigned integer conversions.
-    if (sign == SimdSign::Unsigned)
-        return InliningStatus_NotInlined;
-
     // See comment in inlineSimdBinary
     MInstruction* ins;
     if (isCast)
+        // Signed/Unsigned doesn't matter for bitcasts.
         ins = MSimdReinterpretCast::New(alloc(), callInfo.getArg(0), fromType, toType);
     else
-        ins = MSimdConvert::New(alloc(), callInfo.getArg(0), fromType, toType);
+        // Possibly expand into multiple instructions.
+        ins = MSimdConvert::AddLegalized(alloc(), current, callInfo.getArg(0),
+                                         fromType, toType, sign);
 
     return boxSimd(callInfo, ins, templateObj);
 }

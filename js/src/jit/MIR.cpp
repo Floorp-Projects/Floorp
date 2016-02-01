@@ -1037,6 +1037,105 @@ MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
     return MSimdShuffle::New(alloc, vector(0), vector(1), type(), lanes[0], lanes[1], lanes[2], lanes[3]);
 }
 
+MInstruction*
+MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* obj,
+                           MIRType fromType, MIRType toType, SimdSign sign)
+{
+    if (SupportsUint32x4FloatConversions || sign != SimdSign::Unsigned) {
+        MInstruction* ins = New(alloc, obj, fromType, toType, sign);
+        addTo->add(ins);
+        return ins;
+    }
+
+    // This architecture can't do Uint32x4 <-> Float32x4 conversions (Hi SSE!)
+    MOZ_ASSERT(sign == SimdSign::Unsigned);
+    if (fromType == MIRType_Int32x4 && toType == MIRType_Float32x4) {
+        // Converting Uint32x4 -> Float32x4. This algorithm is from LLVM.
+        //
+        // Split the input number into high and low parts:
+        //
+        // uint32_t hi = x >> 16;
+        // uint32_t lo = x & 0xffff;
+        //
+        // Insert these parts as the low mantissa bits in a float32 number with
+        // the corresponding exponent:
+        //
+        // float fhi = (bits-as-float)(hi | 0x53000000); // 0x1.0p39f + hi*2^16
+        // float flo = (bits-as-float)(lo | 0x4b000000); // 0x1.0p23f + lo
+        //
+        // Subtract the bias from the hi part:
+        //
+        // fhi -= (0x1.0p39 + 0x1.0p23) // hi*2^16 - 0x1.0p23
+        //
+        // And finally combine:
+        //
+        // result = flo + fhi // lo + hi*2^16.
+
+        // Compute hi = obj >> 16 (lane-wise unsigned shift).
+        MInstruction* c16 = MConstant::New(alloc, Int32Value(16));
+        addTo->add(c16);
+        MInstruction* hi = MSimdShift::New(alloc, obj, c16, MSimdShift::ursh, MIRType_Int32x4);
+        addTo->add(hi);
+
+        // Compute lo = obj & 0xffff (lane-wise).
+        MInstruction* m16 =
+          MSimdConstant::New(alloc, SimdConstant::SplatX4(0xffff), MIRType_Int32x4);
+        addTo->add(m16);
+        MInstruction* lo =
+          MSimdBinaryBitwise::New(alloc, obj, m16, MSimdBinaryBitwise::and_, MIRType_Int32x4);
+        addTo->add(lo);
+
+        // Mix in the exponents.
+        MInstruction* exphi =
+          MSimdConstant::New(alloc, SimdConstant::SplatX4(0x53000000), MIRType_Int32x4);
+        addTo->add(exphi);
+        MInstruction* mhi =
+          MSimdBinaryBitwise::New(alloc, hi, exphi, MSimdBinaryBitwise::or_, MIRType_Int32x4);
+        addTo->add(mhi);
+        MInstruction* explo =
+          MSimdConstant::New(alloc, SimdConstant::SplatX4(0x4b000000), MIRType_Int32x4);
+        addTo->add(explo);
+        MInstruction* mlo =
+          MSimdBinaryBitwise::New(alloc, lo, explo, MSimdBinaryBitwise::or_, MIRType_Int32x4);
+        addTo->add(mlo);
+
+        // Bit-cast both to Float32x4.
+        MInstruction* fhi =
+          MSimdReinterpretCast::New(alloc, mhi, MIRType_Int32x4, MIRType_Float32x4);
+        addTo->add(fhi);
+        MInstruction* flo =
+          MSimdReinterpretCast::New(alloc, mlo, MIRType_Int32x4, MIRType_Float32x4);
+        addTo->add(flo);
+
+        // Subtract out the bias: 0x1.0p39f + 0x1.0p23f.
+        // MSVC doesn't support the hexadecimal float syntax.
+        const float BiasValue = 549755813888.f + 8388608.f;
+        MInstruction* bias =
+          MSimdConstant::New(alloc, SimdConstant::SplatX4(BiasValue), MIRType_Float32x4);
+        addTo->add(bias);
+        MInstruction* fhi_debiased =
+          MSimdBinaryArith::New(alloc, fhi, bias, MSimdBinaryArith::Op_sub, MIRType_Float32x4);
+        addTo->add(fhi_debiased);
+
+        // Compute the final result.
+        MInstruction* result = MSimdBinaryArith::New(alloc, fhi_debiased, flo,
+                                                     MSimdBinaryArith::Op_add, MIRType_Float32x4);
+        addTo->add(result);
+
+        return result;
+    }
+
+    if (fromType == MIRType_Float32x4 && toType == MIRType_Int32x4) {
+        // The Float32x4 -> Uint32x4 conversion can throw if the input is out of
+        // range. This is handled by the LFloat32x4ToUint32x4 expansion.
+        MInstruction* ins = New(alloc, obj, fromType, toType, sign);
+        addTo->add(ins);
+        return ins;
+    }
+
+    MOZ_CRASH("Unhandled SIMD type conversion");
+}
+
 template <typename T>
 static void
 PrintOpcodeOperation(T* mir, GenericPrinter& out)
