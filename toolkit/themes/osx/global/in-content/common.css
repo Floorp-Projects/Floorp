@@ -86,6 +86,7 @@ xul|*.inline-link:-moz-focusring {
 xul|button:-moz-focusring,
 xul|menulist:-moz-focusring,
 xul|checkbox:-moz-focusring > .checkbox-check,
+html|input[type="checkbox"]:-moz-focusring + html|label:before,
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {
   outline: 2px solid rgba(0,149,221,0.5);
