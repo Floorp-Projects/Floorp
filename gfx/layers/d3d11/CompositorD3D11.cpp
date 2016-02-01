@@ -1126,13 +1126,24 @@ CompositorD3D11::EndFrame()
   if (oldSize == mSize) {
     RefPtr<IDXGISwapChain1> chain;
     HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
-    nsString vendorID;
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    gfxInfo->GetAdapterVendorID(vendorID);
-    bool isNvidia = vendorID.EqualsLiteral("0x10de") && !gfxWindowsPlatform::GetPlatform()->IsWARP();
-    if (SUCCEEDED(hr) && chain && !isNvidia) {
-        // Avoid partial present on Nvidia hardware to try to work around
-        // bug 1189940
+    // We can force partial present or block partial present, based on the value of
+    // this preference; the default is to disable it on Nvidia (bug 1189940)
+    bool allowPartialPresent = false;
+
+    int32_t partialPresentPref = gfxPrefs::PartialPresent();
+    if (partialPresentPref > 0) {
+      allowPartialPresent = true;
+    } else if (partialPresentPref < 0) {
+      allowPartialPresent = false;
+    } else if (partialPresentPref == 0) {
+      nsString vendorID;
+      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+      gfxInfo->GetAdapterVendorID(vendorID);
+      allowPartialPresent = !vendorID.EqualsLiteral("0x10de") ||
+                            gfxWindowsPlatform::GetPlatform()->IsWARP();
+    }
+
+    if (SUCCEEDED(hr) && chain && allowPartialPresent) {
       DXGI_PRESENT_PARAMETERS params;
       PodZero(&params);
       params.DirtyRectsCount = mInvalidRegion.GetNumRects();
