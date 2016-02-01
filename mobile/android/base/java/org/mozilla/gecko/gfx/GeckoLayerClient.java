@@ -277,9 +277,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             Log.d(LOGTAG, "Window-size changed to " + mWindowSize);
         }
 
-        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,
-                                                             mScreenSize.width, mScreenSize.height);
-        GeckoAppShell.sendEventToGecko(event);
+        mView.getGLController().onSizeChanged(mWindowSize.width, mWindowSize.height,
+                                              mScreenSize.width, mScreenSize.height);
 
         String json = "";
         try {
@@ -297,7 +296,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 json = jsonObj.toString();
             }
         } catch (Exception e) {
-            Log.e(LOGTAG, "Unable to convert point to JSON for " + event, e);
+            Log.e(LOGTAG, "Unable to convert point to JSON", e);
         }
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", json));
     }

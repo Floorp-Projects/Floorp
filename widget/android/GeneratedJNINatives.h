@@ -259,6 +259,10 @@ public:
                 mozilla::jni::NativeStub<GLController::DisposeNative_t, Impl>
                 ::template Wrap<&Impl::DisposeNative>),
 
+        mozilla::jni::MakeNativeMethod<GLController::OnSizeChanged_t>(
+                mozilla::jni::NativeStub<GLController::OnSizeChanged_t, Impl>
+                ::template Wrap<&Impl::OnSizeChanged>),
+
         mozilla::jni::MakeNativeMethod<GLController::PauseCompositor_t>(
                 mozilla::jni::NativeStub<GLController::PauseCompositor_t, Impl>
                 ::template Wrap<&Impl::PauseCompositor>),
