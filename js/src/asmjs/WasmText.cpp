@@ -1466,10 +1466,10 @@ AstToBinary(WasmAstModule& module)
     if (!EncodeSignatureSection(e, module))
         return nullptr;
 
-    if (!EncodeDeclarationSection(e, module))
+    if (!EncodeImportSection(e, module))
         return nullptr;
 
-    if (!EncodeImportSection(e, module))
+    if (!EncodeDeclarationSection(e, module))
         return nullptr;
 
     if (!EncodeExportSection(e, module))
