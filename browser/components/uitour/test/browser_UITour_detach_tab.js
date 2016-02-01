@@ -25,7 +25,7 @@ function test() {
  * In particular this scenario happens for detaching the tab (ie. moving it to a new window).
  */
 var tests = [
-  taskify(function* test_move_tab_to_new_window(done) {
+  taskify(function* test_move_tab_to_new_window() {
     let onVisibilityChange = (aEvent) => {
       if (!document.hidden && window != UITour.getChromeWindow(aEvent.target)) {
         gContentAPI.showHighlight("appMenu");
