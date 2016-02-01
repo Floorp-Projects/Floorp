@@ -17,6 +17,7 @@
 #include "AudioCompactor.h"
 #include "Intervals.h"
 #include "TimeUnits.h"
+#include "SeekTarget.h"
 
 namespace mozilla {
 
@@ -177,7 +178,7 @@ public:
   // Moves the decode head to aTime microseconds. aEndTime denotes the end
   // time of the media in usecs. This is only needed for OggReader, and should
   // probably be removed somehow.
-  virtual RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) = 0;
+  virtual RefPtr<SeekPromise> Seek(SeekTarget aTarget, int64_t aEndTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media

@@ -345,7 +345,8 @@ status_t AudioOffloadPlayer::DoSeek()
   MOZ_ASSERT(mSeekTarget.IsValid());
   CHECK(mAudioSink.get());
 
-  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("DoSeek ( %lld )", mSeekTarget.mTime));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug,
+                    "DoSeek ( %lld )", mSeekTarget.mTime);
 
   mReachedEOS = false;
   mPositionTimeMediaUs = -1;
@@ -557,7 +558,8 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
             kKeyTime, &mPositionTimeMediaUs));
       }
 
-      if (mSeekTarget.IsValid() && seekTimeUs == mSeekTarget.mTime) {
+      if (mSeekTarget.IsValid() &&
+          seekTimeUs == mSeekTarget.mTime) {
         MOZ_ASSERT(mSeekTarget.IsValid());
         mSeekTarget.Reset();
         if (!mSeekPromise.IsEmpty()) {
