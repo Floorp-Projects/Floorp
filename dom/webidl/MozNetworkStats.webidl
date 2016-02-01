@@ -14,7 +14,7 @@ dictionary NetworkStatsGetOptions
    * Note that, these two options cannot be specified at the same time for now;
    * others, an NS_ERROR_NOT_IMPLMENTED exception will be thrown.
    */
-  DOMString appManifestURL? = null;
+  DOMString? appManifestURL = null;
   DOMString serviceType = "";
   /**
    * If it is set as true, only the browsing traffic, which is generated from
