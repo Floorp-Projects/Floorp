@@ -19,6 +19,8 @@
 #include "nsICaptivePortalService.h"
 #include "nsICryptoHash.h"
 #include "nsINetworkInterceptController.h"
+#include "nsINSSErrorsService.h"
+#include "nsISecurityReporter.h"
 #include "nsIStringBundle.h"
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
@@ -1321,6 +1323,56 @@ nsHttpChannel::ProcessSecurityHeaders()
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
+}
+
+/**
+ * Decide whether or not to send a security report and, if so, give the
+ * SecurityReporter the information required to send such a report.
+ */
+void
+nsHttpChannel::ProcessSecurityReport(nsresult status) {
+    uint32_t errorClass;
+    nsCOMPtr<nsINSSErrorsService> errSvc =
+            do_GetService("@mozilla.org/nss_errors_service;1");
+    // getErrorClass will throw a generic NS_ERROR_FAILURE if the error code is
+    // not in the set of errors covered by the NSS errors service.
+    nsresult rv = errSvc->GetErrorClass(status, &errorClass);
+    if (!NS_SUCCEEDED(rv)) {
+        return;
+    }
+
+    // if the content was not loaded succesfully and we have security info,
+    // send a TLS error report - we must do this early as other parts of
+    // OnStopRequest can return early
+    bool reportingEnabled =
+            Preferences::GetBool("security.ssl.errorReporting.enabled");
+    bool reportingAutomatic =
+            Preferences::GetBool("security.ssl.errorReporting.automatic");
+    if (!mSecurityInfo || !reportingEnabled || !reportingAutomatic) {
+        return;
+    }
+
+    nsCOMPtr<nsITransportSecurityInfo> secInfo =
+            do_QueryInterface(mSecurityInfo);
+    nsCOMPtr<nsISecurityReporter> errorReporter =
+            do_GetService("@mozilla.org/securityreporter;1");
+
+    if (!secInfo || !mURI) {
+        return;
+    }
+
+    nsAutoCString hostStr;
+    int32_t port;
+    rv = mURI->GetHost(hostStr);
+    if (!NS_SUCCEEDED(rv)) {
+        return;
+    }
+
+    rv = mURI->GetPort(&port);
+
+    if (NS_SUCCEEDED(rv)) {
+        errorReporter->ReportTLSError(secInfo, hostStr, port);
+    }
 }
 
 bool
@@ -5764,6 +5816,13 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%x]\n",
         this, request, status));
+
+    MOZ_ASSERT(NS_IsMainThread(),
+               "OnStopRequest should only be called from the main thread");
+
+    if (NS_FAILED(status)) {
+        ProcessSecurityReport(status);
+    }
 
     if (mTimingEnabled && request == mCachePump) {
         mCacheReadEnd = TimeStamp::Now();

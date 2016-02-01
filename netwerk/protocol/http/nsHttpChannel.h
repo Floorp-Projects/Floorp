@@ -366,6 +366,11 @@ private:
     nsresult ProcessSecurityHeaders();
 
     /**
+     * A function that will, if the feature is enabled, send security reports.
+     */
+    void ProcessSecurityReport(nsresult status);
+
+    /**
      * A function to process a single security header (STS or PKP), assumes
      * some basic sanity checks have been applied to the channel. Called
      * from ProcessSecurityHeaders.
