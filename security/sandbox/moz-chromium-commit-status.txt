@@ -5,3 +5,7 @@ b533d6533585377edd63ec6500469f6c4fba602a   chromium/sandbox/win/src/sharedmem_ip
 034bd64db1806d85b2ceacc736074ac07722af4a   chromium/sandbox/win/src/service_resolver_64.cc
 de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.cc
 de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.h
+0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/file_policy_test.cc
+0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/filesystem_policy.cc
+0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.cc
+0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.h

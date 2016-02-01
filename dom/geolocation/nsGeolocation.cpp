@@ -1277,7 +1277,8 @@ Geolocation::Init(nsPIDOMWindowInner* aContentDom)
 
     mPrincipal = doc->NodePrincipal();
 
-    if (XRE_IsContentProcess()) {
+    if (Preferences::GetBool("dom.wakelock.enabled") &&
+        XRE_IsContentProcess()) {
       doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                   /* listener */ this,
                                   /* use capture */ true,
@@ -1380,7 +1381,8 @@ Geolocation::Shutdown()
   mPendingCallbacks.Clear();
   mWatchingCallbacks.Clear();
 
-  if (XRE_IsContentProcess()) {
+  if (Preferences::GetBool("dom.wakelock.enabled") &&
+      XRE_IsContentProcess()) {
     if (nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mOwner)) {
       nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
       if (doc) {

@@ -444,15 +444,6 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 
 typedef nsTArray< RefPtr<nsGlobalWindow> > WindowArray;
 
-static
-PLDHashOperator
-GetWindows(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aClosure)
-{
-  ((WindowArray *)aClosure)->AppendElement(aWindow);
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
                                        nsISupports* aClosure, bool aAnonymize)
@@ -464,7 +455,9 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
   // Hold on to every window in memory so that window objects can't be
   // destroyed while we're calling the memory reporter callback.
   WindowArray windows;
-  windowsById->Enumerate(GetWindows, &windows);
+  for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+    windows.AppendElement(iter.Data());
+  }
 
   // Get the IDs of all the "ghost" windows, and call aCb->Callback() for each
   // one.
@@ -687,19 +680,6 @@ nsWindowMemoryReporter::AsyncCheckForGhostWindows()
   }
 }
 
-static PLDHashOperator
-BackdateTimeStampsEnumerator(nsISupports *aKey, TimeStamp &aTimeStamp,
-                             void* aClosure)
-{
-  TimeStamp *minTimeStamp = static_cast<TimeStamp*>(aClosure);
-
-  if (!aTimeStamp.IsNull() && aTimeStamp > *minTimeStamp) {
-    aTimeStamp = *minTimeStamp;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsWindowMemoryReporter::ObserveAfterMinimizeMemoryUsage()
 {
@@ -712,78 +692,12 @@ nsWindowMemoryReporter::ObserveAfterMinimizeMemoryUsage()
   TimeStamp minTimeStamp = TimeStamp::Now() -
                            TimeDuration::FromSeconds(GetGhostTimeout());
 
-  mDetachedWindows.Enumerate(BackdateTimeStampsEnumerator,
-                             &minTimeStamp);
-}
-
-struct CheckForGhostWindowsEnumeratorData
-{
-  nsTHashtable<nsCStringHashKey> *nonDetachedDomains;
-  nsTHashtable<nsUint64HashKey> *ghostWindowIDs;
-  nsIEffectiveTLDService *tldService;
-  uint32_t ghostTimeout;
-  TimeStamp now;
-};
-
-static PLDHashOperator
-CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
-                               void* aClosure)
-{
-  CheckForGhostWindowsEnumeratorData *data =
-    static_cast<CheckForGhostWindowsEnumeratorData*>(aClosure);
-
-  nsWeakPtr weakKey = do_QueryInterface(aKey);
-  nsCOMPtr<mozIDOMWindow> iwindow = do_QueryReferent(weakKey);
-  if (!iwindow) {
-    // The window object has been destroyed.  Stop tracking its weak ref in our
-    // hashtable.
-    return PL_DHASH_REMOVE;
-  }
-
-  nsPIDOMWindowInner* window = nsPIDOMWindowInner::From(iwindow);
-
-  // Avoid calling GetTop() if we have no outer window.  Nothing will break if
-  // we do, but it will spew debug output, which can cause our test logs to
-  // overflow.
-  nsCOMPtr<nsPIDOMWindowOuter> top;
-  if (window->GetOuterWindow()) {
-    top = window->GetOuterWindow()->GetTop();
-  }
-
-  if (top) {
-    // The window is no longer detached, so we no longer want to track it.
-    return PL_DHASH_REMOVE;
-  }
-
-  nsCOMPtr<nsIURI> uri = GetWindowURI(nsGlobalWindow::Cast(window));
-
-  nsAutoCString domain;
-  if (uri) {
-    // GetBaseDomain works fine if |uri| is null, but it outputs a warning
-    // which ends up overrunning the mochitest logs.
-    data->tldService->GetBaseDomain(uri, 0, domain);
-  }
-
-  if (data->nonDetachedDomains->Contains(domain)) {
-    // This window shares a domain with a non-detached window, so reset its
-    // clock.
-    aTimeStamp = TimeStamp();
-  } else {
-    // This window does not share a domain with a non-detached window, so it
-    // meets ghost criterion (2).
-    if (aTimeStamp.IsNull()) {
-      // This may become a ghost window later; start its clock.
-      aTimeStamp = data->now;
-    } else if ((data->now - aTimeStamp).ToSeconds() > data->ghostTimeout) {
-      // This definitely is a ghost window, so add it to ghostWindowIDs, if
-      // that is not null.
-      if (data->ghostWindowIDs && window) {
-        data->ghostWindowIDs->PutEntry(window->WindowID());
-      }
+  for (auto iter = mDetachedWindows.Iter(); !iter.Done(); iter.Next()) {
+    TimeStamp& timeStamp = iter.Data();
+    if (!timeStamp.IsNull() && timeStamp > minTimeStamp) {
+      timeStamp = minTimeStamp;
     }
   }
-
-  return PL_DHASH_NEXT;
 }
 
 /**
@@ -846,11 +760,64 @@ nsWindowMemoryReporter::CheckForGhostWindows(
 
   // Update mDetachedWindows and write the ghost window IDs into aOutGhostIDs,
   // if it's not null.
-  CheckForGhostWindowsEnumeratorData ghostEnumData =
-    { &nonDetachedWindowDomains, aOutGhostIDs, tldService,
-      GetGhostTimeout(), mLastCheckForGhostWindows };
-  mDetachedWindows.Enumerate(CheckForGhostWindowsEnumerator,
-                             &ghostEnumData);
+  uint32_t ghostTimeout = GetGhostTimeout();
+  TimeStamp now = mLastCheckForGhostWindows;
+  for (auto iter = mDetachedWindows.Iter(); !iter.Done(); iter.Next()) {
+    nsWeakPtr weakKey = do_QueryInterface(iter.Key());
+    nsCOMPtr<mozIDOMWindow> iwindow = do_QueryReferent(weakKey);
+    if (!iwindow) {
+      // The window object has been destroyed.  Stop tracking its weak ref in
+      // our hashtable.
+      iter.Remove();
+      continue;
+    }
+
+    nsPIDOMWindowInner* window = nsPIDOMWindowInner::From(iwindow);
+
+    // Avoid calling GetTop() if we have no outer window.  Nothing will break if
+    // we do, but it will spew debug output, which can cause our test logs to
+    // overflow.
+    nsCOMPtr<nsPIDOMWindowOuter> top;
+    if (window->GetOuterWindow()) {
+      top = window->GetOuterWindow()->GetTop();
+    }
+
+    if (top) {
+      // The window is no longer detached, so we no longer want to track it.
+      iter.Remove();
+      continue;
+    }
+
+    nsCOMPtr<nsIURI> uri = GetWindowURI(nsGlobalWindow::Cast(window));
+
+    nsAutoCString domain;
+    if (uri) {
+      // GetBaseDomain works fine if |uri| is null, but it outputs a warning
+      // which ends up overrunning the mochitest logs.
+      tldService->GetBaseDomain(uri, 0, domain);
+    }
+
+    TimeStamp& timeStamp = iter.Data();
+
+    if (nonDetachedWindowDomains.Contains(domain)) {
+      // This window shares a domain with a non-detached window, so reset its
+      // clock.
+      timeStamp = TimeStamp();
+    } else {
+      // This window does not share a domain with a non-detached window, so it
+      // meets ghost criterion (2).
+      if (timeStamp.IsNull()) {
+        // This may become a ghost window later; start its clock.
+        timeStamp = now;
+      } else if ((now - timeStamp).ToSeconds() > ghostTimeout) {
+        // This definitely is a ghost window, so add it to aOutGhostIDs, if
+        // that is not null.
+        if (aOutGhostIDs && window) {
+          aOutGhostIDs->PutEntry(window->WindowID());
+        }
+      }
+    }
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsWindowMemoryReporter::GhostWindowsReporter,
@@ -890,7 +857,9 @@ nsWindowMemoryReporter::UnlinkGhostWindows()
   // Hold on to every window in memory so that window objects can't be
   // destroyed while we're calling the UnlinkGhostWindows callback.
   WindowArray windows;
-  windowsById->Enumerate(GetWindows, &windows);
+  for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+    windows.AppendElement(iter.Data());
+  }
 
   // Get the IDs of all the "ghost" windows, and unlink them all.
   nsTHashtable<nsUint64HashKey> ghostWindows;

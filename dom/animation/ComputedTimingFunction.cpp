@@ -96,4 +96,29 @@ ComputedTimingFunction::AppendToString(nsAString& aResult) const
   }
 }
 
+/* static */ int32_t
+ComputedTimingFunction::Compare(const Maybe<ComputedTimingFunction>& aLhs,
+                                const Maybe<ComputedTimingFunction>& aRhs)
+{
+  // We can't use |operator<| for const Maybe<>& here because
+  // 'ease' is prior to 'linear' which is represented by Nothing().
+  // So we have to convert Nothing() as 'linear' and check it first.
+  nsTimingFunction::Type lhsType = aLhs.isNothing() ?
+    nsTimingFunction::Type::Linear : aLhs->GetType();
+  nsTimingFunction::Type rhsType = aRhs.isNothing() ?
+    nsTimingFunction::Type::Linear : aRhs->GetType();
+
+  if (lhsType != rhsType) {
+    return int32_t(lhsType) - int32_t(rhsType);
+  }
+
+  // Both of them are Nothing().
+  if (lhsType == nsTimingFunction::Type::Linear) {
+    return 0;
+  }
+
+  // Other types.
+  return aLhs->Compare(aRhs.value());
+}
+
 } // namespace mozilla

@@ -875,9 +875,9 @@ private:
                                   nsIContent* aStopBefore,
                                   EventStates aState,
                                   bool aAddState);
-  static PLDHashOperator ResetLastOverForContent(const uint32_t& aIdx,
-                                                 RefPtr<OverOutElementsWrapper>& aChunk,
-                                                 void* aClosure);
+  static void ResetLastOverForContent(const uint32_t& aIdx,
+                                      RefPtr<OverOutElementsWrapper>& aChunk,
+                                      nsIContent* aClosure);
   void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
                                nsEventStatus& aStatus,
                                bool dispatchedToContentProcess);
