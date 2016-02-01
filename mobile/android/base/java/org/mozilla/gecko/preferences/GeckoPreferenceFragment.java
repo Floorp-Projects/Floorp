@@ -60,7 +60,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     }
 
     private static final String LOGTAG = "GeckoPreferenceFragment";
-    private int mPrefsRequestId;
+    private PrefsHelper.PrefHandler mPrefsRequest;
     private Locale lastLocale = Locale.getDefault();
 
     @Override
@@ -87,7 +87,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
         PreferenceScreen screen = getPreferenceScreen();
         setPreferenceScreen(screen);
-        mPrefsRequestId = ((GeckoPreferences)getActivity()).setupPreferences(screen);
+        mPrefsRequest = ((GeckoPreferences)getActivity()).setupPreferences(screen);
         syncPreference = (SyncPreference) findPreference(GeckoPreferences.PREFS_SYNC);
     }
 
@@ -248,8 +248,9 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mPrefsRequestId > 0) {
-            PrefsHelper.removeObserver(mPrefsRequestId);
+        if (mPrefsRequest != null) {
+            PrefsHelper.removeObserver(mPrefsRequest);
+            mPrefsRequest = null;
         }
 
         final int res = getResource();
