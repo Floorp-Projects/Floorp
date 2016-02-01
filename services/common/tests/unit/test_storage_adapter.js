@@ -48,7 +48,7 @@ function test_collection_operations() {
     let adapter = do_get_kinto_adapter();
     yield adapter.open();
     let record = {id:"test-id", foo:"bar"};
-    yield adapter.create(record);
+    yield adapter.execute((transaction) => transaction.create(record));
     let newRecord = yield adapter.get("test-id");
     // ensure the record is the same as when it was added
     deepEqual(record, newRecord);
@@ -61,13 +61,11 @@ function test_collection_operations() {
     yield adapter.open();
     // create a second record
     let record = {id:"test-id-2", foo:"baz"};
-    yield adapter.create(record);
+    yield adapter.execute((transaction) => transaction.create(record));
     let newRecord = yield adapter.get("test-id-2");
     deepEqual(record, newRecord);
     // delete the record
-    let id = yield adapter.delete(record.id);
-    // ensure the delete resolved with the record id
-    do_check_eq(record.id, id);
+    yield adapter.execute((transaction) => transaction.delete(record.id));
     newRecord = yield adapter.get(record.id);
     // ... and ensure it's no longer there
     do_check_eq(newRecord, undefined);
@@ -95,8 +93,8 @@ function test_collection_operations() {
     let originalRecord = {id:"test-id", foo:"bar"};
     let updatedRecord = {id:"test-id", foo:"baz"};
     yield adapter.clear();
-    yield adapter.create(originalRecord);
-    yield adapter.update(updatedRecord);
+    yield adapter.execute((transaction) => transaction.create(originalRecord));
+    yield adapter.execute((transaction) => transaction.update(updatedRecord));
     // ensure the record exists
     let newRecord = yield adapter.get("test-id");
     // ensure the record is the same as when it was added
@@ -111,9 +109,30 @@ function test_collection_operations() {
     let originalRecord = {id:"test-id-1", foo:"bar"};
     let records = yield adapter.list();
     do_check_eq(records.length, 1);
-    yield adapter.create(originalRecord);
+    yield adapter.execute((transaction) => transaction.create(originalRecord));
     records = yield adapter.list();
     do_check_eq(records.length, 2);
+    yield adapter.close();
+  });
+
+  // test aborting transaction
+  add_task(function* test_kinto_aborting_transaction() {
+    let adapter = do_get_kinto_adapter();
+    yield adapter.open();
+    yield adapter.clear();
+    let record = {id: 1, foo: "bar"};
+    let error = null;
+    try {
+      yield adapter.execute((transaction) => {
+        transaction.create(record);
+        throw new Error("unexpected");
+      });
+    } catch (e) {
+      error = e;
+    }
+    do_check_neq(error, null);
+    records = yield adapter.list();
+    do_check_eq(records.length, 0);
     yield adapter.close();
   });
 
