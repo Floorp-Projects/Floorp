@@ -25,6 +25,7 @@
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4eb8f37d2239ea7746462aa603f585116a9eaa92"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>
   <project name="platform_system_libpdu" path="system/libpdu" remote="b2g" revision="ac4e539dbd73522c466ebffba53edea61702082f"/>
   <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3799a1cb57f08e9468d1cec6c74f8abe93ddae36"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
