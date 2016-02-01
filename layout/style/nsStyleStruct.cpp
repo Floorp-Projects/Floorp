@@ -3789,7 +3789,6 @@ nsStyleUserInterface::nsStyleUserInterface(void)
   mUserInput = NS_STYLE_USER_INPUT_AUTO;
   mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
   mUserFocus = NS_STYLE_USER_FOCUS_NONE;
-  mWindowDragging = NS_STYLE_WINDOW_DRAGGING_NO_DRAG;
 
   mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
 
@@ -3801,7 +3800,6 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) 
   mUserInput(aSource.mUserInput),
   mUserModify(aSource.mUserModify),
   mUserFocus(aSource.mUserFocus),
-  mWindowDragging(aSource.mWindowDragging),
   mCursor(aSource.mCursor)
 { 
   MOZ_COUNT_CTOR(nsStyleUserInterface);
@@ -3841,10 +3839,6 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
     NS_UpdateHint(hint, nsChangeHint_NeutralChange);
   }
 
-  if (mWindowDragging != aOther.mWindowDragging) {
-    NS_UpdateHint(hint, nsChangeHint_SchedulePaint);
-  }
-
   return hint;
 }
 
@@ -3873,6 +3867,7 @@ nsStyleUIReset::nsStyleUIReset(void)
   mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   mForceBrokenImageIcon = 0;
   mIMEMode = NS_STYLE_IME_MODE_AUTO;
+  mWindowDragging = NS_STYLE_WINDOW_DRAGGING_DEFAULT;
   mWindowShadow = NS_STYLE_WINDOW_SHADOW_DEFAULT;
 }
 
@@ -3882,6 +3877,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
   mUserSelect = aSource.mUserSelect;
   mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
   mIMEMode = aSource.mIMEMode;
+  mWindowDragging = aSource.mWindowDragging;
   mWindowShadow = aSource.mWindowShadow;
 }
 
@@ -3903,6 +3899,11 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
   }
   if (mUserSelect != aOther.mUserSelect)
     return NS_STYLE_HINT_VISUAL;
+
+  if (mWindowDragging != aOther.mWindowDragging) {
+    return nsChangeHint_SchedulePaint;
+  }
+
   return NS_STYLE_HINT_NONE;
 }
 
