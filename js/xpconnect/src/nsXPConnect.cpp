@@ -400,13 +400,18 @@ InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
     if (shouldDiscardSystemSource || extraWarningsForSystemJS)
         isSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
 
+    short status = aPrincipal->GetAppStatus();
+
+    // Enable the ECMA-402 experimental formatToParts in certified apps.
+    if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
+        aOptions.creationOptions()
+                .setExperimentalDateTimeFormatFormatToPartsEnabled(true);
+    }
+
     if (shouldDiscardSystemSource) {
-        bool discardSource = isSystem;
-        if (!discardSource) {
-            short status = aPrincipal->GetAppStatus();
-            discardSource = status == nsIPrincipal::APP_STATUS_PRIVILEGED ||
-                            status == nsIPrincipal::APP_STATUS_CERTIFIED;
-        }
+        bool discardSource = isSystem ||
+                             (status == nsIPrincipal::APP_STATUS_PRIVILEGED ||
+                              status == nsIPrincipal::APP_STATUS_CERTIFIED);
 
         aOptions.behaviors().setDiscardSource(discardSource);
     }
