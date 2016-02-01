@@ -2116,6 +2116,7 @@ const KTableEntry nsCSSProps::kWidthKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kWindowDraggingKTable[] = {
+  { eCSSKeyword_default, NS_STYLE_WINDOW_DRAGGING_DEFAULT },
   { eCSSKeyword_drag, NS_STYLE_WINDOW_DRAGGING_DRAG },
   { eCSSKeyword_no_drag, NS_STYLE_WINDOW_DRAGGING_NO_DRAG },
   { eCSSKeyword_UNKNOWN, -1 }
