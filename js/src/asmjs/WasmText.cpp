@@ -88,40 +88,32 @@ class WasmAstSig : public WasmAstBase
     }
 };
 
-enum class WasmAstKind
+class WasmAstNode : public WasmAstBase
+{};
+
+enum class WasmAstExprKind
 {
     BinaryOperator,
     Block,
     Call,
     Const,
-    Export,
-    Func,
     GetLocal,
-    Import,
-    Module,
     Nop,
     SetLocal
 };
 
-class WasmAstNode : public WasmAstBase
-{
-    const WasmAstKind kind_;
-
-  public:
-    explicit WasmAstNode(WasmAstKind kind)
-      : kind_(kind)
-    {}
-    WasmAstKind kind() const { return kind_; }
-};
-
 class WasmAstExpr : public WasmAstNode
 {
+    const WasmAstExprKind kind_;
+
   protected:
-    explicit WasmAstExpr(WasmAstKind kind)
-      : WasmAstNode(kind)
+    explicit WasmAstExpr(WasmAstExprKind kind)
+      : kind_(kind)
     {}
 
   public:
+    WasmAstExprKind kind() const { return kind_; }
+
     template <class T>
     T& as() {
         MOZ_ASSERT(kind() == T::Kind);
@@ -132,7 +124,7 @@ class WasmAstExpr : public WasmAstNode
 struct WasmAstNop : WasmAstExpr
 {
     WasmAstNop()
-      : WasmAstExpr(WasmAstKind::Nop)
+      : WasmAstExpr(WasmAstExprKind::Nop)
     {}
 };
 
@@ -141,7 +133,7 @@ class WasmAstConst : public WasmAstExpr
     const Val val_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Const;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Const;
     explicit WasmAstConst(Val val)
       : WasmAstExpr(Kind),
         val_(val)
@@ -154,7 +146,7 @@ class WasmAstGetLocal : public WasmAstExpr
     uint32_t localIndex_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::GetLocal;
+    static const WasmAstExprKind Kind = WasmAstExprKind::GetLocal;
     explicit WasmAstGetLocal(uint32_t localIndex)
       : WasmAstExpr(Kind),
         localIndex_(localIndex)
@@ -170,7 +162,7 @@ class WasmAstSetLocal : public WasmAstExpr
     WasmAstExpr& value_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::SetLocal;
+    static const WasmAstExprKind Kind = WasmAstExprKind::SetLocal;
     WasmAstSetLocal(uint32_t localIndex, WasmAstExpr& value)
       : WasmAstExpr(Kind),
         localIndex_(localIndex),
@@ -189,7 +181,7 @@ class WasmAstBlock : public WasmAstExpr
     WasmAstExprVector exprs_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Block;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Block;
     explicit WasmAstBlock(WasmAstExprVector&& exprs)
       : WasmAstExpr(Kind),
         exprs_(Move(exprs))
@@ -205,7 +197,7 @@ class WasmAstCall : public WasmAstExpr
     WasmAstExprVector args_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Call;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Call;
     WasmAstCall(Expr expr, uint32_t index, WasmAstExprVector&& args)
       : WasmAstExpr(Kind), expr_(expr), index_(index), args_(Move(args))
     {}
@@ -223,8 +215,7 @@ class WasmAstFunc : public WasmAstNode
 
   public:
     WasmAstFunc(uint32_t sigIndex, WasmAstValTypeVector&& varTypes, WasmAstExpr* maybeBody)
-      : WasmAstNode(WasmAstKind::Func),
-        sigIndex_(sigIndex),
+      : sigIndex_(sigIndex),
         varTypes_(Move(varTypes)),
         maybeBody_(maybeBody)
     {}
@@ -241,7 +232,7 @@ class WasmAstImport : public WasmAstNode
 
   public:
     WasmAstImport(TwoByteChars module, TwoByteChars func, uint32_t sigIndex)
-      : WasmAstNode(WasmAstKind::Import), module_(module), func_(func), sigIndex_(sigIndex)
+      : module_(module), func_(func), sigIndex_(sigIndex)
     {}
     TwoByteChars module() const { return module_; }
     TwoByteChars func() const { return func_; }
@@ -255,7 +246,7 @@ class WasmAstExport : public WasmAstNode
 
   public:
     WasmAstExport(TwoByteChars name, uint32_t funcIndex)
-      : WasmAstNode(WasmAstKind::Export), name_(name), funcIndex_(funcIndex)
+      : name_(name), funcIndex_(funcIndex)
     {}
     TwoByteChars name() const { return name_; }
     size_t funcIndex() const { return funcIndex_; }
@@ -278,8 +269,7 @@ class WasmAstModule : public WasmAstNode
 
   public:
     explicit WasmAstModule(LifoAlloc& lifo)
-      : WasmAstNode(WasmAstKind::Module),
-        lifo_(lifo),
+      : lifo_(lifo),
         funcs_(lifo),
         imports_(lifo),
         exports_(lifo),
@@ -329,7 +319,7 @@ class WasmAstBinaryOperator final : public WasmAstExpr
     WasmAstExpr* rhs_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::BinaryOperator;
+    static const WasmAstExprKind Kind = WasmAstExprKind::BinaryOperator;
     explicit WasmAstBinaryOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
       : WasmAstExpr(Kind),
         expr_(expr), lhs_(lhs), rhs_(rhs)
@@ -1227,19 +1217,19 @@ static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
-      case WasmAstKind::Nop:
+      case WasmAstExprKind::Nop:
         return e.writeExpr(Expr::Nop);
-      case WasmAstKind::BinaryOperator:
+      case WasmAstExprKind::BinaryOperator:
         return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
-      case WasmAstKind::Block:
+      case WasmAstExprKind::Block:
         return EncodeBlock(e, expr.as<WasmAstBlock>());
-      case WasmAstKind::Call:
+      case WasmAstExprKind::Call:
         return EncodeCall(e, expr.as<WasmAstCall>());
-      case WasmAstKind::Const:
+      case WasmAstExprKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
-      case WasmAstKind::GetLocal:
+      case WasmAstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
-      case WasmAstKind::SetLocal:
+      case WasmAstExprKind::SetLocal:
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       default:;
     }
