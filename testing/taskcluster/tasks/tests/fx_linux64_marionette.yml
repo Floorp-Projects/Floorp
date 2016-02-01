@@ -13,6 +13,7 @@ task:
         MOZHARNESS_CONFIG: >
           mozharness/configs/marionette/prod_config.py
           mozharness/configs/remove_executables.py
+    maxRunTime: 5400
   metadata:
     name: '[TC] Linux64 marionette'
     description: Marionette unittest run
