@@ -24,6 +24,7 @@
 #include "nsIDocument.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
@@ -157,7 +158,9 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
  * 3) MediaRecorder::Stop is called by user or the document is going to
  *    inactive or invisible.
  */
-class MediaRecorder::Session: public nsIObserver
+class MediaRecorder::Session: public nsIObserver,
+                              public PrincipalChangeObserver<MediaStreamTrack>,
+                              public DOMMediaStream::TrackListener
 {
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -295,17 +298,51 @@ class MediaRecorder::Session: public nsIObserver
      : mSession(aSession) {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
     {
+      if (mSession->mStopIssued) {
+        return;
+      }
+
+      MOZ_RELEASE_ASSERT(aStream);
+      mSession->MediaStreamReady(*aStream);
+
       uint8_t trackTypes = 0;
       nsTArray<RefPtr<mozilla::dom::AudioStreamTrack>> audioTracks;
       aStream->GetAudioTracks(audioTracks);
       if (!audioTracks.IsEmpty()) {
         trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
+        mSession->ConnectMediaStreamTrack(*audioTracks[0]);
       }
 
       nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
       aStream->GetVideoTracks(videoTracks);
       if (!videoTracks.IsEmpty()) {
         trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
+        mSession->ConnectMediaStreamTrack(*videoTracks[0]);
+      }
+
+      if (audioTracks.Length() > 1 ||
+          videoTracks.Length() > 1) {
+        // When MediaRecorder supports multiple tracks, we should set up a single
+        // MediaInputPort from the input stream, and let main thread check
+        // track principals async later.
+        nsPIDOMWindowInner* window = mSession->mRecorder->GetParentObject();
+        nsIDocument* document = window ? window->GetExtantDoc() : nullptr;
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                        NS_LITERAL_CSTRING("Media"),
+                                        document,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "MediaRecorderMultiTracksNotSupported");
+        mSession->DoSessionEndTask(NS_ERROR_ABORT);
+        return;
+      }
+
+      NS_ASSERTION(trackTypes != 0, "TracksAvailableCallback without any tracks available");
+
+      // Check that we may access the tracks' content.
+      if (!mSession->MediaStreamTracksPrincipalSubsumes()) {
+        LOG(LogLevel::Warning, ("Session.NotifyTracksAvailable MediaStreamTracks principal check failed"));
+        mSession->DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
+        return;
       }
 
       LOG(LogLevel::Debug, ("Session.NotifyTracksAvailable track type = (%d)", trackTypes));
@@ -376,11 +413,50 @@ public:
     , mNeedSessionEndTask(true)
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_COUNT_CTOR(MediaRecorder::Session);
 
     uint32_t maxMem = Preferences::GetUint("media.recorder.max_memory",
                                            MAX_ALLOW_MEMORY_BUFFER);
     mEncodedBufferCache = new EncodedBufferCache(maxMem);
     mLastBlobTimeStamp = TimeStamp::Now();
+  }
+
+  void PrincipalChanged(MediaStreamTrack* aTrack) override
+  {
+    NS_ASSERTION(mMediaStreamTracks.Contains(aTrack),
+                 "Principal changed for unrecorded track");
+    if (!MediaStreamTracksPrincipalSubsumes()) {
+      DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override
+  {
+    LOG(LogLevel::Warning, ("Session.NotifyTrackAdded %p Raising error due to track set change", this));
+    DoSessionEndTask(NS_ERROR_ABORT);
+  }
+
+  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override
+  {
+    RefPtr<MediaInputPort> foundInputPort;
+    for (RefPtr<MediaInputPort> inputPort : mInputPorts) {
+      if (aTrack->IsForwardedThrough(inputPort)) {
+        foundInputPort = inputPort;
+        break;
+      }
+    }
+
+    if (foundInputPort) {
+      // A recorded track was removed or ended. End it in the recording.
+      // Don't raise an error.
+      foundInputPort->Destroy();
+      DebugOnly<bool> removed = mInputPorts.RemoveElement(foundInputPort);
+      MOZ_ASSERT(removed);
+      return;
+    }
+
+    LOG(LogLevel::Warning, ("Session.NotifyTrackRemoved %p Raising error due to track set change", this));
+    DoSessionEndTask(NS_ERROR_ABORT);
   }
 
   void Start()
@@ -395,15 +471,26 @@ public:
 
     mTrackUnionStream->SetAutofinish(true);
 
-    // Bind this Track Union Stream with Source Media.
-    mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream());
-
     DOMMediaStream* domStream = mRecorder->Stream();
     if (domStream) {
-      // Get the track type hint from DOM media stream.
+      // Get the available tracks from the DOMMediaStream.
+      // The callback will report back tracks that we have to connect to
+      // mTrackUnionStream and listen to principal changes on.
       TracksAvailableCallback* tracksAvailableCallback = new TracksAvailableCallback(this);
       domStream->OnTracksAvailable(tracksAvailableCallback);
     } else {
+      // Check that we may access the audio node's content.
+      if (!AudioNodePrincipalSubsumes()) {
+        LOG(LogLevel::Warning, ("Session.Start AudioNode principal check failed"));
+        DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+      }
+      // Bind this Track Union Stream with Source Media.
+      RefPtr<MediaInputPort> inputPort =
+        mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream());
+      mInputPorts.AppendElement(inputPort.forget());
+      MOZ_ASSERT(mInputPorts[mInputPorts.Length()-1]);
+
       // Web Audio node has only audio.
       InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK);
     }
@@ -491,6 +578,7 @@ private:
   // Only DestroyRunnable is allowed to delete Session object.
   virtual ~Session()
   {
+    MOZ_COUNT_DTOR(MediaRecorder::Session);
     LOG(LogLevel::Debug, ("Session.~Session (%p)", this));
     CleanupStreams();
   }
@@ -552,6 +640,60 @@ private:
         mLastBlobTimeStamp = TimeStamp::Now();
       }
     }
+  }
+
+  void MediaStreamReady(DOMMediaStream& aStream) {
+    mMediaStream = &aStream;
+    aStream.RegisterTrackListener(this);
+  }
+
+  void ConnectMediaStreamTrack(MediaStreamTrack& aTrack)
+  {
+    mMediaStreamTracks.AppendElement(&aTrack);
+    aTrack.AddPrincipalChangeObserver(this);
+    RefPtr<MediaInputPort> inputPort =
+      aTrack.ForwardTrackContentsTo(mTrackUnionStream);
+    MOZ_ASSERT(inputPort);
+    mInputPorts.AppendElement(inputPort.forget());
+    MOZ_ASSERT(mInputPorts[mInputPorts.Length()-1]);
+  }
+
+  bool PrincipalSubsumes(nsIPrincipal* aPrincipal)
+  {
+    if (!mRecorder->GetOwner())
+      return false;
+    nsCOMPtr<nsIDocument> doc = mRecorder->GetOwner()->GetExtantDoc();
+    if (!doc) {
+      return false;
+    }
+    if (!aPrincipal) {
+      return false;
+    }
+    bool subsumes;
+    if (NS_FAILED(doc->NodePrincipal()->Subsumes(aPrincipal, &subsumes))) {
+      return false;
+    }
+    return subsumes;
+  }
+
+  bool MediaStreamTracksPrincipalSubsumes()
+  {
+    MOZ_ASSERT(mRecorder->mDOMStream);
+    nsCOMPtr<nsIPrincipal> principal = nullptr;
+    for (RefPtr<MediaStreamTrack>& track : mMediaStreamTracks) {
+      nsContentUtils::CombineResourcePrincipals(&principal, track->GetPrincipal());
+    }
+    return PrincipalSubsumes(principal);
+  }
+
+  bool AudioNodePrincipalSubsumes()
+  {
+    MOZ_ASSERT(mRecorder->mAudioNode != nullptr);
+    nsIDocument* doc = mRecorder->mAudioNode->GetOwner()
+                     ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
+                     : nullptr;
+    nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
+    return PrincipalSubsumes(principal);
   }
 
   bool CheckPermission(const char* aType)
@@ -685,8 +827,11 @@ private:
     if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");
     }
-    if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
-      MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
+    if (rv != NS_ERROR_DOM_SECURITY_ERR) {
+      // Don't push a blob if there was a security error.
+      if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
+        MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
+      }
     }
     if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
@@ -701,10 +846,11 @@ private:
       }
       mInputStream = nullptr;
     }
-    if (mInputPort) {
-      mInputPort->Destroy();
-      mInputPort = nullptr;
+    for (RefPtr<MediaInputPort>& inputPort : mInputPorts) {
+      MOZ_ASSERT(inputPort);
+      inputPort->Destroy();
     }
+    mInputPorts.Clear();
 
     if (mTrackUnionStream) {
       if (mEncoder) {
@@ -713,6 +859,16 @@ private:
       mTrackUnionStream->Destroy();
       mTrackUnionStream = nullptr;
     }
+
+    if (mMediaStream) {
+      mMediaStream->UnregisterTrackListener(this);
+      mMediaStream = nullptr;
+    }
+
+    for (RefPtr<MediaStreamTrack>& track : mMediaStreamTracks) {
+      track->RemovePrincipalChangeObserver(this);
+    }
+    mMediaStreamTracks.Clear();
   }
 
   NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
@@ -752,7 +908,14 @@ private:
   // Pause/ Resume controller.
   RefPtr<ProcessedMediaStream> mTrackUnionStream;
   RefPtr<SourceMediaStream> mInputStream;
-  RefPtr<MediaInputPort> mInputPort;
+  nsTArray<RefPtr<MediaInputPort>> mInputPorts;
+
+  // Stream currently recorded.
+  RefPtr<DOMMediaStream> mMediaStream;
+
+  // Tracks currently recorded. This should be a subset of mMediaStream's track
+  // set.
+  nsTArray<RefPtr<MediaStreamTrack>> mMediaStreamTracks;
 
   // Runnable thread for read data from MediaEncode.
   nsCOMPtr<nsIThread> mReadThread;
@@ -885,17 +1048,6 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
   if (GetSourceMediaStream()->IsFinished() || GetSourceMediaStream()->IsDestroyed()) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  // Check if source media stream is valid. See bug 919051.
-  if (mDOMStream && !mDOMStream->GetPrincipal()) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  if (!CheckPrincipal()) {
-    aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
@@ -1177,11 +1329,7 @@ nsresult
 MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
-  if (!CheckPrincipal()) {
-    // Media is not same-origin, don't allow the data out.
-    RefPtr<nsIDOMBlob> blob = aBlob;
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+
   BlobEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -1254,29 +1402,6 @@ MediaRecorder::NotifyError(nsresult aRv)
   return;
 }
 
-bool MediaRecorder::CheckPrincipal()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
-  if (!mDOMStream && !mAudioNode) {
-    return false;
-  }
-  if (!GetOwner())
-    return false;
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
-  if (!doc) {
-    return false;
-  }
-  nsIPrincipal* srcPrincipal = GetSourcePrincipal();
-  if (!srcPrincipal) {
-    return false;
-  }
-  bool subsumes;
-  if (NS_FAILED(doc->NodePrincipal()->Subsumes(srcPrincipal, &subsumes))) {
-    return false;
-  }
-  return subsumes;
-}
-
 void
 MediaRecorder::RemoveSession(Session* aSession)
 {
@@ -1310,17 +1435,6 @@ MediaRecorder::GetSourceMediaStream()
   }
   MOZ_ASSERT(mAudioNode != nullptr);
   return mPipeStream ? mPipeStream.get() : mAudioNode->GetStream();
-}
-
-nsIPrincipal*
-MediaRecorder::GetSourcePrincipal()
-{
-  if (mDOMStream != nullptr) {
-    return mDOMStream->GetPrincipal();
-  }
-  MOZ_ASSERT(mAudioNode != nullptr);
-  nsIDocument* doc = mAudioNode->GetOwner() ? mAudioNode->GetOwner()->GetExtantDoc() : nullptr;
-  return doc ? doc->NodePrincipal() : nullptr;
 }
 
 size_t
