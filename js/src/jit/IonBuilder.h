@@ -860,23 +860,27 @@ class IonBuilder
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
 
-    InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType);
+    InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target,
+                              MIRType simdType, SimdSign sign = SimdSign::NotApplicable);
 
     template <typename T>
     InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,
                                     typename T::Operation op, MIRType mirType);
     InliningStatus inlineSimdComp(CallInfo& callInfo, JSNative native,
-                                  MSimdBinaryComp::Operation op, MIRType compType);
+                                  MSimdBinaryComp::Operation op,
+                                  MIRType compType, SimdSign sign);
     InliningStatus inlineSimdUnary(CallInfo& callInfo, JSNative native,
                                    MSimdUnaryArith::Operation op, MIRType mirType);
-    InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native, MIRType vecType);
+    InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
+                                         MIRType vecType, SimdSign sign);
     InliningStatus inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, MIRType mirType);
     InliningStatus inlineSimdSplat(CallInfo& callInfo, JSNative native, MIRType mirType);
     InliningStatus inlineSimdShuffle(CallInfo& callInfo, JSNative native, MIRType type,
                                      unsigned numVectors, unsigned numLanes);
     InliningStatus inlineSimdCheck(CallInfo& callInfo, JSNative native, MIRType type);
     InliningStatus inlineSimdConvert(CallInfo& callInfo, JSNative native, bool isCast,
-                                     MIRType from, MIRType to);
+                                     MIRType from, MIRType to,
+                                     SimdSign sign = SimdSign::NotApplicable);
     InliningStatus inlineSimdSelect(CallInfo& callInfo, JSNative native, MIRType type);
 
     bool prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, MInstruction** elements,
