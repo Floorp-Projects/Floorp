@@ -726,15 +726,12 @@ this.PushServiceHttp2 = {
       .then(record => this._subscribeResource(record)
         .then(recordNew => {
           if (this._mainPushService) {
-            this._mainPushService
-                .updateRegistrationAndNotifyApp(aSubscriptionUri, recordNew)
-                .catch(Cu.reportError);
+            this._mainPushService.updateRegistrationAndNotifyApp(aSubscriptionUri,
+                                                                 recordNew);
           }
         }, error => {
           if (this._mainPushService) {
-            this._mainPushService
-                .dropRegistrationAndNotifyApp(aSubscriptionUri)
-                .catch(Cu.reportError);
+            this._mainPushService.dropRegistrationAndNotifyApp(aSubscriptionUri);
           }
         })
       );

@@ -1,17 +1,5 @@
 "use strict";
 
-Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-// thisTestLeaksUncaughtRejectionsAndShouldBeFixed
-if (!TEST_UNPACKED) {
-  PromiseTestUtils.expectUncaughtRejection(/NS_ERROR_FILE_NOT_FOUND/);
-}
-
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
 // We don't have an easy way to serve update manifests from a secure URL.

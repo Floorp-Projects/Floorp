@@ -22,7 +22,6 @@ var _profileInitialized = false;
 _register_modules_protocol_handler();
 
 var _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
-var _PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
 
 // Support a common assertion library, Assert.jsm.
 var AssertCls = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
@@ -214,6 +213,7 @@ function _do_main() {
 
 function _do_quit() {
   _testLogger.info("exiting test");
+  _Promise.Debugging.flushUncaughtErrors();
   _quit = true;
 }
 
@@ -499,8 +499,16 @@ function _execute_test() {
   // Call do_get_idle() to restore the factory and get the service.
   _fakeIdleService.activate();
 
-  _PromiseTestUtils.init();
-  _PromiseTestUtils.Assert = Assert;
+  _Promise.Debugging.clearUncaughtErrorObservers();
+  _Promise.Debugging.addUncaughtErrorObserver(function observer({message, date, fileName, stack, lineNumber}) {
+    let text = " A promise chain failed to handle a rejection: " +
+        message + " - rejection date: " + date;
+    _testLogger.error(text,
+                      {
+                        stack: _format_stack(stack),
+                        source_file: fileName
+                      });
+  });
 
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
@@ -531,7 +539,6 @@ function _execute_test() {
     }
     do_test_finished("MAIN run_test");
     _do_main();
-    _PromiseTestUtils.assertNoUncaughtRejections();
   } catch (e) {
     _passed = false;
     // do_check failures are already logged and set _quit to true and throw
@@ -580,9 +587,6 @@ function _execute_test() {
                       });
   };
 
-  let thr = Components.classes["@mozilla.org/thread-manager;1"]
-              .getService().currentThread;
-
   let func;
   while ((func = _cleanupFunctions.pop())) {
     let result;
@@ -598,6 +602,8 @@ function _execute_test() {
       let complete = false;
       let promise = result.then(null, reportCleanupError);
       promise = promise.then(() => complete = true);
+      let thr = Components.classes["@mozilla.org/thread-manager;1"]
+                  .getService().currentThread;
       while (!complete) {
         thr.processNextEvent(true);
       }
@@ -607,14 +613,8 @@ function _execute_test() {
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();
 
-  try {
-    _PromiseTestUtils.ensureDOMPromiseRejectionsProcessed();
-    _PromiseTestUtils.assertNoUncaughtRejections();
-    _PromiseTestUtils.assertNoMoreExpectedRejections();
-  } finally {
-    // It's important to terminate the module to avoid crashes on shutdown.
-    _PromiseTestUtils.uninit();
-  }
+  if (!_passed)
+    return;
 }
 
 /**
@@ -1516,8 +1516,8 @@ function run_next_test()
   function _run_next_test()
   {
     if (_gTestIndex < _gTests.length) {
-      // Check for uncaught rejections as early and often as possible.
-      _PromiseTestUtils.assertNoUncaughtRejections();
+      // Flush uncaught errors as early and often as possible.
+      _Promise.Debugging.flushUncaughtErrors();
       let _properties;
       [_properties, _gRunningTest,] = _gTests[_gTestIndex++];
       if (typeof(_properties.skip_if) == "function" && _properties.skip_if()) {
@@ -1538,18 +1538,10 @@ function run_next_test()
 
       if (_properties._isTask) {
         _gTaskRunning = true;
-        _Task.spawn(_gRunningTest).then(() => {
-          _gTaskRunning = false;
-          run_next_test();
-        }, ex => {
-          _gTaskRunning = false;
-          try {
-            do_report_unexpected_exception(ex);
-          } catch (ex) {
-            // The above throws NS_ERROR_ABORT and we don't want this to show up
-            // as an unhandled rejection later.
-          }
-        });
+        _Task.spawn(_gRunningTest).then(
+          () => { _gTaskRunning = false; run_next_test(); },
+          (ex) => { _gTaskRunning = false; do_report_unexpected_exception(ex); }
+        );
       } else {
         // Exceptions do not kill asynchronous tests, so they'll time out.
         try {

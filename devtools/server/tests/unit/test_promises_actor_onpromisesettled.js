@@ -8,8 +8,6 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
-
 const { PromisesFront } = require("devtools/server/actors/promises");
 
 var events = require("sdk/event/core");
@@ -54,7 +52,6 @@ function* testPromisesSettled(client, form, makeResolvePromise,
   let foundResolvedPromise = yield onPromiseSettled;
   ok(foundResolvedPromise, "Found our resolved promise");
 
-  PromiseTestUtils.expectUncaughtRejection(r => r.message == resolution);
   onPromiseSettled = oncePromiseSettled(front, resolution, false, true);
   let rejectedPromise = makeRejectPromise(resolution);
   let foundRejectedPromise = yield onPromiseSettled;
