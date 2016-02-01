@@ -171,7 +171,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
-    const Uint32Vector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
     // asm.js global variables:
     bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
@@ -197,6 +196,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool declareExport(uint32_t funcIndex, uint32_t* exportIndex);
     uint32_t numExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
+    uint32_t exportEntryOffset(uint32_t index) const;
     const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
 
