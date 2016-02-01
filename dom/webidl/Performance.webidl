@@ -17,9 +17,6 @@ typedef sequence <PerformanceEntry> PerformanceEntryList;
 interface Performance {
   [DependsOn=DeviceState, Affects=Nothing]
   DOMHighResTimeStamp now();
-
-  [Throws]
-  DOMHighResTimeStamp translateTime(DOMHighResTimeStamp time, (Window or Worker or SharedWorker or ServiceWorker) timeSource);
 };
 
 [Exposed=Window]
