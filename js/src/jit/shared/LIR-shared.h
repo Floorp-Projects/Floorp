@@ -3806,6 +3806,29 @@ class LFloat32x4ToInt32x4 : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Float32x4 to Uint32x4 needs one GPR temp and one FloatReg temp.
+class LFloat32x4ToUint32x4 : public LInstructionHelper<1, 1, 2>
+{
+  public:
+    LIR_HEADER(Float32x4ToUint32x4);
+    explicit LFloat32x4ToUint32x4(const LAllocation& input, const LDefinition& tempR,
+                                  const LDefinition& tempF)
+    {
+        setOperand(0, input);
+        setTemp(0, tempR);
+        setTemp(1, tempF);
+    }
+    const LDefinition* tempR() {
+        return getTemp(0);
+    }
+    const LDefinition* tempF() {
+        return getTemp(1);
+    }
+    const MSimdConvert* mir() const {
+        return mir_->toSimdConvert();
+    }
+};
+
 // Double raised to a half power.
 class LPowHalfD : public LInstructionHelper<1, 1, 0>
 {
