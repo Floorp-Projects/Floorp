@@ -103,7 +103,7 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, ModuleKind kind)
 {
     if (!funcIndexToExport_.init())
         return false;
@@ -115,6 +115,8 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, ModuleKind kind)
     module_->globalBytes = InitialGlobalDataBytes;
     module_->compileArgs = CompileArgs(cx_);
     module_->kind = kind;
+    module_->heapUsage = HeapUsage::None;
+    module_->filename = Move(filename);
 
     link_ = MakeUnique<StaticLinkData>();
     if (!link_)
@@ -266,6 +268,13 @@ ModuleGenerator::allocateGlobalVar(ValType type, bool isConst, uint32_t* index)
 
     *index = shared_->globals.length();
     return shared_->globals.append(AsmJSGlobalVariable(ToExprType(type), offset, isConst));
+}
+
+void
+ModuleGenerator::initHeapUsage(HeapUsage heapUsage)
+{
+    MOZ_ASSERT(module_->heapUsage == HeapUsage::None);
+    module_->heapUsage = heapUsage;
 }
 
 void
@@ -610,9 +619,7 @@ ModuleGenerator::defineOutOfBoundsStub(Offsets offsets)
 }
 
 bool
-ModuleGenerator::finish(HeapUsage heapUsage,
-                        CacheableChars filename,
-                        CacheableCharsVector&& prettyFuncNames,
+ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
                         SlowFunctionVector* slowFuncs)
@@ -620,11 +627,9 @@ ModuleGenerator::finish(HeapUsage heapUsage,
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(finishedFuncs_);
 
-    module_->heapUsage = heapUsage;
-    module_->filename = Move(filename);
     module_->prettyFuncNames = Move(prettyFuncNames);
 
-    if (!GenerateStubs(*this, UsesHeap(heapUsage)))
+    if (!GenerateStubs(*this, UsesHeap(module_->heapUsage)))
         return false;
 
     masm_.finish();
