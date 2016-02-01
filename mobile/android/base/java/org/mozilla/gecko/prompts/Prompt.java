@@ -546,6 +546,11 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     }
 
     public interface PromptCallback {
+
+        /**
+         * Called when the Prompt has been completed (i.e. when the user has selected an item or action in the Prompt).
+         * This callback is run on the UI thread.
+         */
         public void onPromptFinished(String jsonResult);
     }
 }
