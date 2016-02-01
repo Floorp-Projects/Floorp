@@ -4,17 +4,19 @@
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
   <script>
 
-    function waitOnWorkerMessage(type) {
-      return new Promise(function(res, rej) {
-        function onMessage(e) {
-          if (e.data.type == type) {
-            navigator.serviceWorker.removeEventListener("message", onMessage);
+
+    function waitOnPushMessage()
+    {
+      var p = new Promise(function(res, rej) {
+        navigator.serviceWorker.onmessage = function(e) {
+          if (e.data.type == "finished") {
             (e.data.okay == "yes" ? res : rej)(e.data);
           }
-        }
-        navigator.serviceWorker.addEventListener("message", onMessage);
+        };
       });
+      return p;
     }
+
 
   </script>
 </head>
