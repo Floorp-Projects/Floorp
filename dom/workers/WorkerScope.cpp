@@ -438,9 +438,10 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
            .extraWarningsOverride().set(extraWarnings);
 
   const bool inCertifiedApp = mWorkerPrivate->IsInCertifiedApp();
+  const bool sharedMemoryEnabled = xpc::SharedMemoryEnabled();
 
   JS::CompartmentCreationOptions& creationOptions = options.creationOptions();
-  creationOptions.setSharedMemoryAndAtomicsEnabled(xpc::SharedMemoryEnabled());
+  creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled)
                  .setExperimentalDateTimeFormatFormatToPartsEnabled(inCertifiedApp);
 
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
