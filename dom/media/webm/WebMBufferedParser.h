@@ -279,9 +279,11 @@ public:
   bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                  uint64_t* aStartTime, uint64_t* aEndTime);
 
-  // Returns true if aTime is is present in mTimeMapping and sets aOffset to
+  // Returns true if mTimeMapping is not empty and sets aOffset to
   // the latest offset for which decoding can resume without data
-  // dependencies to arrive at aTime.
+  // dependencies to arrive at aTime. aTime will be clamped to the start
+  // of mTimeMapping if it is earlier than the first element, and to the end
+  // if later than the last
   bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);
 
   // Returns end offset of init segment or -1 if none found.
