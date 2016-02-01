@@ -156,6 +156,16 @@ const FORMATS = {
   },
 
   relativeUrl(string, context) {
+    if (!context.url) {
+      // If there's no context URL, return relative URLs unresolved, and
+      // skip security checks for them.
+      try {
+        new URL(string);
+      } catch (e) {
+        return string;
+      }
+    }
+
     let url = new URL(string, context.url).href;
 
     if (!context.checkLoadURL(url)) {
