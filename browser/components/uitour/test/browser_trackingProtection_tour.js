@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var gTestTab;
@@ -11,38 +8,34 @@ const { UrlClassifierTestUtils } = Cu.import("resource://testing-common/UrlClass
 
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
-  taskify(function* test_setup() {
-    Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
-    yield UrlClassifierTestUtils.addTestTrackers();
+add_task(function* test_setup() {
+  Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
+  yield UrlClassifierTestUtils.addTestTrackers();
 
-    registerCleanupFunction(function() {
-      UrlClassifierTestUtils.cleanupTestTrackers();
-      Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
-    });
-  }),
+  registerCleanupFunction(function() {
+    UrlClassifierTestUtils.cleanupTestTrackers();
+    Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
+  });
+});
 
-  taskify(function* test_unblock_target() {
-    yield* checkToggleTarget("controlCenter-trackingUnblock");
-  }),
+add_UITour_task(function* test_unblock_target() {
+  yield* checkToggleTarget("controlCenter-trackingUnblock");
+});
 
-  taskify(function* setup_block_target() {
-    // Preparation for test_block_target. These are separate since the reload
-    // interferes with UITour as it does a teardown. All we really care about
-    // is the permission manager entry but UITour tests shouldn't rely on that
-    // implementation detail.
-    TrackingProtection.disableForCurrentPage();
-  }),
+add_UITour_task(function* setup_block_target() {
+  // Preparation for test_block_target. These are separate since the reload
+  // interferes with UITour as it does a teardown. All we really care about
+  // is the permission manager entry but UITour tests shouldn't rely on that
+  // implementation detail.
+  TrackingProtection.disableForCurrentPage();
+});
 
-  taskify(function* test_block_target() {
-    yield* checkToggleTarget("controlCenter-trackingBlock");
-    TrackingProtection.enableForCurrentPage();
-  }),
-];
+add_UITour_task(function* test_block_target() {
+  yield* checkToggleTarget("controlCenter-trackingBlock");
+  TrackingProtection.enableForCurrentPage();
+});
 
 
 function* checkToggleTarget(targetID) {
@@ -72,7 +65,7 @@ function* checkToggleTarget(targetID) {
 
   let hideMenuPromise =
         promisePanelElementHidden(window, gIdentityHandler._identityPopup);
-  gContentAPI.hideMenu("controlCenter");
+  yield gContentAPI.hideMenu("controlCenter");
   yield hideMenuPromise;
 
   ok(!is_visible(popup), "The tooltip should now be hidden.");

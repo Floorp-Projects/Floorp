@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -9,15 +6,11 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
-  taskify(function* test_closeTab() {
-    // Setting gTestTab to null indicates that the tab has already been closed,
-    // and if this does not happen the test run will fail.
-    gContentAPI.closeTab();
-    gTestTab = null;
-  }),
-];
+add_UITour_task(function* test_closeTab() {
+  // Setting gTestTab to null indicates that the tab has already been closed,
+  // and if this does not happen the test run will fail.
+  yield gContentAPI.closeTab();
+  gTestTab = null;
+});

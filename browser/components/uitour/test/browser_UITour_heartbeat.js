@@ -345,7 +345,7 @@ var tests = [
                               "What is this?", dummyURL);
   },
 
-  taskify(function* test_invalidEngagementButtonLabel(done) {
+  taskify(function* test_invalidEngagementButtonLabel() {
     let engagementURL = "http://example.com";
     let flowId = "invalidEngagementButtonLabel-" + Math.random();
 
@@ -362,7 +362,7 @@ var tests = [
 
   }),
 
-  taskify(function* test_privateWindowsOnly_noneOpen(done) {
+  taskify(function* test_privateWindowsOnly_noneOpen() {
     let engagementURL = "http://example.com";
     let flowId = "privateWindowsOnly_noneOpen-" + Math.random();
 
@@ -379,7 +379,7 @@ var tests = [
        "If there are no private windows opened, tour init should be prevented");
   }),
 
-  taskify(function* test_privateWindowsOnly_notMostRecent(done) {
+  taskify(function* test_privateWindowsOnly_notMostRecent() {
     let engagementURL = "http://example.com";
     let flowId = "notMostRecent-" + Math.random();
 
