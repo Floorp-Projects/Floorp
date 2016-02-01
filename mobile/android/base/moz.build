@@ -505,6 +505,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'restrictions/GuestProfileConfiguration.java',
     'restrictions/Restrictable.java',
     'restrictions/RestrictedProfileConfiguration.java',
+    'restrictions/RestrictionCache.java',
     'restrictions/RestrictionConfiguration.java',
     'restrictions/RestrictionProvider.java',
     'ScreenshotObserver.java',
