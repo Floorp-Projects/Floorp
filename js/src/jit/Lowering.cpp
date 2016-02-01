@@ -4101,12 +4101,28 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
     LUse use = useRegister(input);
     if (ins->type() == MIRType_Int32x4) {
         MOZ_ASSERT(input->type() == MIRType_Float32x4);
-        LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
-        if (!gen->compilingAsmJS())
-            assignSnapshot(lir, Bailout_BoundsCheck);
-        define(lir, ins);
+        switch (ins->signedness()) {
+          case SimdSign::Signed: {
+              LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
+              if (!gen->compilingAsmJS())
+                  assignSnapshot(lir, Bailout_BoundsCheck);
+              define(lir, ins);
+              break;
+          }
+          case SimdSign::Unsigned: {
+              LFloat32x4ToUint32x4* lir =
+                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::INT32X4));
+              if (!gen->compilingAsmJS())
+                  assignSnapshot(lir, Bailout_BoundsCheck);
+              define(lir, ins);
+              break;
+          }
+          default:
+            MOZ_CRASH("Unexpected SimdConvert sign");
+        }
     } else if (ins->type() == MIRType_Float32x4) {
         MOZ_ASSERT(input->type() == MIRType_Int32x4);
+        MOZ_ASSERT(ins->signedness() == SimdSign::Signed, "Unexpected SimdConvert sign");
         define(new(alloc()) LInt32x4ToFloat32x4(use), ins);
     } else {
         MOZ_CRASH("Unknown SIMD kind when generating constant");

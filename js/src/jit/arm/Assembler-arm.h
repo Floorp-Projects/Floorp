@@ -220,6 +220,9 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
 
 static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 
+// Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+
 static const Scale ScalePointer = TimesFour;
 
 class Instruction;

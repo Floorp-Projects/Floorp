@@ -109,6 +109,9 @@ static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 16;
 
 static MOZ_CONSTEXPR_VAR uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 
+// Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+
 static MOZ_CONSTEXPR_VAR Scale ScalePointer = TimesEight;
 
 class Assembler : public AssemblerMIPSShared

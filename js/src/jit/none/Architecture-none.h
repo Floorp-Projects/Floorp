@@ -18,6 +18,9 @@ static const bool SupportsSimd = false;
 static const uint32_t SimdMemoryAlignment = 4; // Make it 4 to avoid a bunch of div-by-zero warnings
 static const uint32_t AsmJSStackAlignment = 8;
 
+// Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+
 class Registers
 {
   public:

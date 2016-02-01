@@ -2306,6 +2306,91 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     }
 }
 
+// Convert Float32x4 to Uint32x4.
+//
+// If any input lane value is out of range or NaN, bail out.
+void
+CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
+{
+    FloatRegister in = ToFloatRegister(ins->input());
+    FloatRegister out = ToFloatRegister(ins->output());
+    Register temp = ToRegister(ins->tempR());
+    FloatRegister tempF = ToFloatRegister(ins->tempF());
+
+    // Classify lane values into 4 disjoint classes:
+    //
+    //   N-lanes:             in < -0.0
+    //   A-lanes:     -0.0 <= in <= 0x0.ffffffp31
+    //   B-lanes: 0x1.0p31 <= in <= 0x0.ffffffp32
+    //   V-lanes: 0x1.0p32 <= in, or isnan(in)
+    //
+    // We need to bail out to throw a RangeError if we see any N-lanes or
+    // V-lanes.
+    //
+    // For A-lanes and B-lanes, we make two float -> int32 conversions:
+    //
+    //   A = cvttps2dq(in)
+    //   B = cvttps2dq(in - 0x1.0p31f)
+    //
+    // Note that the subtraction for the B computation is exact for B-lanes.
+    // There is no rounding, so B is the low 31 bits of the correctly converted
+    // result.
+    //
+    // The cvttps2dq instruction produces 0x80000000 when the input is NaN or
+    // out of range for a signed int32_t. This conveniently provides the missing
+    // high bit for B, so the desired result is A for A-lanes and A|B for
+    // B-lanes.
+
+    ScratchSimd128Scope scratch(masm);
+
+    // First we need to filter out N-lanes. We need to use a floating point
+    // comparison to do that because cvttps2dq maps the negative range
+    // [-0x0.ffffffp0;-0.0] to 0. We can't simply look at the sign bits of in
+    // because -0.0 is a valid input.
+    // TODO: It may be faster to let ool code deal with -0.0 and skip the
+    // vcmpleps here.
+    masm.zeroFloat32x4(scratch);
+    masm.vcmpleps(Operand(in), scratch, scratch);
+    masm.vmovmskps(scratch, temp);
+    masm.cmp32(temp, Imm32(15));
+    bailoutIf(Assembler::NotEqual, ins->snapshot());
+
+    // TODO: If the majority of lanes are A-lanes, it could be faster to compute
+    // A first, use vmovmskps to check for any non-A-lanes and handle them in
+    // ool code. OTOH, we we're wrong about the lane distribution, that would be
+    // slower.
+
+    // Compute B in |scratch|.
+    static const float Adjust = 0x80000000; // 0x1.0p31f for the benefit of MSVC.
+    static const SimdConstant Bias = SimdConstant::SplatX4(-Adjust);
+    masm.loadConstantFloat32x4(Bias, scratch);
+    masm.packedAddFloat32(Operand(in), scratch);
+    masm.convertFloat32x4ToInt32x4(scratch, scratch);
+
+    // Compute A in |out|. This is the last time we use |in| and the first time
+    // we use |out|, so we can tolerate if they are the same register.
+    masm.convertFloat32x4ToInt32x4(in, out);
+
+    // Since we filtered out N-lanes, we can identify A-lanes by the sign bits
+    // in A: Any A-lanes will be positive in A, and B-lanes and V-lanes will be
+    // 0x80000000 in A. Compute a mask of non-A-lanes into |tempF|.
+    masm.zeroFloat32x4(tempF);
+    masm.packedGreaterThanInt32x4(Operand(out), tempF);
+
+    // Clear the A-lanes in B.
+    masm.bitwiseAndX4(Operand(tempF), scratch);
+
+    // Compute the final result: A for A-lanes, A|B for B-lanes.
+    masm.bitwiseOrX4(Operand(scratch), out);
+
+    // We still need to filter out the V-lanes. They would show up as 0x80000000
+    // in both A and B. Since we cleared the valid A-lanes in B, the V-lanes are
+    // the remaining negative lanes in B.
+    masm.vmovmskps(scratch, temp);
+    masm.cmp32(temp, Imm32(0));
+    bailoutIf(Assembler::NotEqual, ins->snapshot());
+}
+
 void
 CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4* ins)
 {
