@@ -817,100 +817,14 @@ bool ClampToUint8(JSContext* cx, unsigned argc, Value* vp);
 bool GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Usage: GetFloat32x4TypeDescr()
+ * Usage: GetSimdTypeDescr(simdTypeRepr)
  *
- * Returns the Float32x4 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetFloat32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetFloat64x2TypeDescr()
+ * Returns one of the SIMD type objects, identified by `simdTypeRepr` which must
+ * be one of the JS_SIMDTYPEREPR_* constants.
  *
- * Returns the Float64x2 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
+ * The SIMD pseudo-module must have been initialized for this to be safe.
  */
-bool GetFloat64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetBool8x16TypeDescr()
- *
- * Returns the Bool8x16 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetBool8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetBool16x8TypeDescr()
- *
- * Returns the Bool16x8 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetBool16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetBool32x4TypeDescr()
- *
- * Returns the Bool32x4 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetBool32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetBool64x2TypeDescr()
- *
- * Returns the Bool64x2 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetBool64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetInt8x16TypeDescr()
- *
- * Returns the Int8x16 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetInt8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetInt16x8TypeDescr()
- *
- * Returns the Int16x8 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetInt16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetInt32x4TypeDescr()
- *
- * Returns the Int32x4 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetInt32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetUint8x16TypeDescr()
- *
- * Returns the Uint8x16 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetUint8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetUint16x8TypeDescr()
- *
- * Returns the Uint16x8 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetUint16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetUint32x4TypeDescr()
- *
- * Returns the Uint32x4 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetUint32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
+bool GetSimdTypeDescr(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: Store_int8(targetDatum, targetOffset, value)
