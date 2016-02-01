@@ -7,16 +7,14 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Helper class to get/set gecko prefs.
@@ -24,187 +22,253 @@ import java.util.ArrayList;
 public final class PrefsHelper {
     private static final String LOGTAG = "GeckoPrefsHelper";
 
-    private static boolean sRegistered;
-    private static int sUniqueRequestId = 1;
-    static final SparseArray<PrefHandler> sCallbacks = new SparseArray<PrefHandler>();
+    // Map pref name to ArrayList for multiple observers or PrefHandler for single observer.
+    private static final SimpleArrayMap<String, Object> OBSERVERS = new SimpleArrayMap<>();
 
-    @WrapForJNI @RobocopTarget
-    /* package */ static native void getPrefsById(int requestId, String[] prefNames, boolean observe);
-    @WrapForJNI @RobocopTarget
-    /* package */ static native void removePrefsObserver(int requestId);
+    @WrapForJNI
+    private static final int PREF_INVALID = -1;
+    @WrapForJNI
+    private static final int PREF_FINISH = 0;
+    @WrapForJNI
+    private static final int PREF_BOOL = 1;
+    @WrapForJNI
+    private static final int PREF_INT = 2;
+    @WrapForJNI
+    private static final int PREF_STRING = 3;
 
-    public static int getPref(String prefName, PrefHandler callback) {
-        return getPrefsInternal(new String[] { prefName }, callback);
-    }
+    @WrapForJNI(stubName = "GetPrefs")
+    private static native void nativeGetPrefs(String[] prefNames, PrefHandler handler);
+    @WrapForJNI(stubName = "SetPref")
+    private static native void nativeSetPref(String prefName, boolean flush, int type,
+                                             boolean boolVal, int intVal, String strVal);
+    @WrapForJNI(stubName = "AddObserver")
+    private static native void nativeAddObserver(String[] prefNames, PrefHandler handler,
+                                                 String[] prefsToObserve);
+    @WrapForJNI(stubName = "RemoveObserver")
+    private static native void nativeRemoveObserver(String[] prefToUnobserve);
 
-    public static int getPrefs(String[] prefNames, PrefHandler callback) {
-        return getPrefsInternal(prefNames, callback);
-    }
-
-    public static int getPrefs(ArrayList<String> prefNames, PrefHandler callback) {
-        return getPrefsInternal(prefNames.toArray(new String[prefNames.size()]), callback);
-    }
-
-    private static int getPrefsInternal(String[] prefNames, PrefHandler callback) {
-        int requestId;
-        synchronized (PrefsHelper.class) {
-            ensureRegistered();
-
-            requestId = sUniqueRequestId++;
-            sCallbacks.put(requestId, callback);
-        }
-
-        // Because we use JS to handle pref events, we need to wait until the RUNNING state.
-        // If we ever convert that to native code, we can switch to using the JNI_READY state.
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.RUNNING)) {
-            getPrefsById(requestId, prefNames, callback.isObserver());
+    @RobocopTarget
+    public static void getPrefs(final String[] prefNames, final PrefHandler callback) {
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeGetPrefs(prefNames, callback);
         } else {
             GeckoThread.queueNativeCallUntil(
-                    GeckoThread.State.RUNNING, PrefsHelper.class, "getPrefsById",
-                    requestId, prefNames, callback.isObserver());
+                    GeckoThread.State.PROFILE_READY, PrefsHelper.class, "nativeGetPrefs",
+                    String[].class, prefNames, PrefHandler.class, callback);
         }
-        return requestId;
     }
 
-    private static void ensureRegistered() {
-        if (sRegistered) {
+    public static void getPref(final String prefName, final PrefHandler callback) {
+        getPrefs(new String[] { prefName }, callback);
+    }
+
+    public static void getPrefs(final ArrayList<String> prefNames, final PrefHandler callback) {
+        getPrefs(prefNames.toArray(new String[prefNames.size()]), callback);
+    }
+
+    @RobocopTarget
+    public static void setPref(final String pref, final Object value, final boolean flush) {
+        final int type;
+        boolean boolVal = false;
+        int intVal = 0;
+        String strVal = null;
+
+        if (value instanceof Boolean) {
+            type = PREF_BOOL;
+            boolVal = (Boolean) value;
+        } else if (value instanceof Integer) {
+            type = PREF_INT;
+            intVal = (Integer) value;
+        } else {
+            type = PREF_STRING;
+            strVal = String.valueOf(value);
+        }
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeSetPref(pref, flush, type, boolVal, intVal, strVal);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY, PrefsHelper.class, "nativeSetPref",
+                    String.class, pref, flush, type, boolVal, intVal, String.class, strVal);
+        }
+    }
+
+    public static void setPref(final String pref, final Object value) {
+        setPref(pref, value, /* flush */ false);
+    }
+
+    @RobocopTarget
+    public synchronized static void addObserver(final String[] prefNames,
+                                                final PrefHandler handler) {
+        List<String> prefsToObserve = null;
+
+        for (String pref : prefNames) {
+            final Object existing = OBSERVERS.get(pref);
+
+            if (existing == null) {
+                // Not observing yet, so add observer.
+                if (prefsToObserve == null) {
+                    prefsToObserve = new ArrayList<>(prefNames.length);
+                }
+                prefsToObserve.add(pref);
+                OBSERVERS.put(pref, handler);
+
+            } else if (existing instanceof PrefHandler) {
+                // Already observing one, so turn it into an array.
+                final List<PrefHandler> handlerList = new ArrayList<>(2);
+                handlerList.add((PrefHandler) existing);
+                handlerList.add(handler);
+                OBSERVERS.put(pref, handlerList);
+
+            } else {
+                // Already observing multiple, so add to existing array.
+                @SuppressWarnings("unchecked")
+                final List<PrefHandler> handlerList = (List) existing;
+                handlerList.add(handler);
+            }
+        }
+
+        final String[] namesToObserve = prefsToObserve == null ? null :
+                prefsToObserve.toArray(new String[prefsToObserve.size()]);
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeAddObserver(prefNames, handler, namesToObserve);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY, PrefsHelper.class, "nativeAddObserver",
+                    String[].class, prefNames, PrefHandler.class, handler,
+                    String[].class, namesToObserve);
+        }
+    }
+
+    @RobocopTarget
+    public synchronized static void removeObserver(final PrefHandler handler) {
+        List<String> prefsToUnobserve = null;
+
+        for (int i = OBSERVERS.size() - 1; i >= 0; i--) {
+            final Object existing = OBSERVERS.valueAt(i);
+            boolean removeObserver = false;
+
+            if (existing == handler) {
+                removeObserver = true;
+
+            } else if (!(existing instanceof PrefHandler)) {
+                // Removing existing handler from list.
+                @SuppressWarnings("unchecked")
+                final List<PrefHandler> handlerList = (List) existing;
+                if (handlerList.remove(handler) && handlerList.isEmpty()) {
+                    removeObserver = true;
+                }
+            }
+
+            if (removeObserver) {
+                // Removed last handler, so remove observer.
+                if (prefsToUnobserve == null) {
+                    prefsToUnobserve = new ArrayList<>();
+                }
+                prefsToUnobserve.add(OBSERVERS.keyAt(i));
+                OBSERVERS.removeAt(i);
+            }
+        }
+
+        if (prefsToUnobserve == null) {
             return;
         }
 
-        GeckoEventListener listener = new GeckoEventListener() {
-            @Override
-            public void handleMessage(String event, JSONObject message) {
-                try {
-                    PrefHandler callback;
-                    synchronized (PrefsHelper.class) {
-                        try {
-                            int requestId = message.getInt("requestId");
-                            callback = sCallbacks.get(requestId);
-                            if (callback != null && !callback.isObserver()) {
-                                sCallbacks.delete(requestId);
-                            }
-                        } catch (Exception e) {
-                            callback = null;
-                        }
-                    }
+        final String[] namesToUnobserve =
+                prefsToUnobserve.toArray(new String[prefsToUnobserve.size()]);
 
-                    if (callback == null) {
-                        Log.d(LOGTAG, "Preferences:Data message had an unknown requestId; ignoring");
-                        return;
-                    }
-
-                    JSONArray jsonPrefs = message.getJSONArray("preferences");
-                    for (int i = 0; i < jsonPrefs.length(); i++) {
-                        JSONObject pref = jsonPrefs.getJSONObject(i);
-                        String name = pref.getString("name");
-                        String type = pref.getString("type");
-                        try {
-                            if ("bool".equals(type)) {
-                                callback.prefValue(name, pref.getBoolean("value"));
-                            } else if ("int".equals(type)) {
-                                callback.prefValue(name, pref.getInt("value"));
-                            } else if ("string".equals(type)) {
-                                callback.prefValue(name, pref.getString("value"));
-                            } else {
-                                Log.e(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
-                            }
-                        } catch (Exception e) {
-                            Log.e(LOGTAG, "Handler for preference [" + name + "] threw exception", e);
-                        }
-                    }
-                    callback.finish();
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "Error handling Preferences:Data message", e);
-                }
-            }
-        };
-        EventDispatcher.getInstance().registerGeckoThreadListener(listener, "Preferences:Data");
-        sRegistered = true;
-    }
-
-    public static void setPref(String pref, Object value) {
-        setPref(pref, value, false);
-    }
-
-    public static void setPref(String pref, Object value, boolean flush) {
-        if (pref == null || pref.length() == 0) {
-            throw new IllegalArgumentException("Pref name must be non-empty");
-        }
-
-        try {
-            JSONObject jsonPref = new JSONObject();
-            jsonPref.put("name", pref);
-            jsonPref.put("flush", flush);
-
-            if (value instanceof Boolean) {
-                jsonPref.put("type", "bool");
-                jsonPref.put("value", ((Boolean)value).booleanValue());
-            } else if (value instanceof Integer) {
-                jsonPref.put("type", "int");
-                jsonPref.put("value", ((Integer)value).intValue());
-            } else {
-                jsonPref.put("type", "string");
-                jsonPref.put("value", String.valueOf(value));
-            }
-
-            GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Set", jsonPref.toString());
-            GeckoAppShell.sendEventToGecko(event);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error setting pref [" + pref + "]", e);
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeRemoveObserver(namesToUnobserve);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY, PrefsHelper.class, "nativeRemoveObserver",
+                    String[].class, namesToUnobserve);
         }
     }
 
-    public static void removeObserver(int requestId) {
-        if (requestId < 0) {
-            throw new IllegalArgumentException("Invalid request ID");
+    @WrapForJNI
+    private static void callPrefHandler(final PrefHandler handler, int type, final String pref,
+                                        boolean boolVal, int intVal, String strVal) {
+        switch (type) {
+            case PREF_FINISH:
+                handler.finish();
+                return;
+            case PREF_BOOL:
+                handler.prefValue(pref, boolVal);
+                return;
+            case PREF_INT:
+                handler.prefValue(pref, intVal);
+                return;
+            case PREF_STRING:
+                handler.prefValue(pref, strVal);
+                return;
+        }
+        throw new IllegalArgumentException();
+    }
+
+    @WrapForJNI
+    private synchronized static void onPrefChange(final String pref, final int type,
+                                                  final boolean boolVal, final int intVal,
+                                                  final String strVal) {
+        final Object existing = OBSERVERS.get(pref);
+
+        if (existing == null) {
+            return;
         }
 
-        synchronized (PrefsHelper.class) {
-            PrefHandler callback = sCallbacks.get(requestId);
-            sCallbacks.delete(requestId);
+        final Iterator<PrefHandler> itor;
+        PrefHandler handler;
 
-            if (callback == null) {
-                Log.e(LOGTAG, "Unknown request ID " + requestId);
+        if (existing instanceof PrefHandler) {
+            itor = null;
+            handler = (PrefHandler) existing;
+        } else {
+            @SuppressWarnings("unchecked")
+            final List<PrefHandler> handlerList = (List) existing;
+            if (handlerList.isEmpty()) {
                 return;
             }
+            itor = handlerList.iterator();
+            handler = itor.next();
         }
 
-        GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:RemoveObserver",
-                                                           Integer.toString(requestId));
-        GeckoAppShell.sendEventToGecko(event);
+        do {
+            callPrefHandler(handler, type, pref, boolVal, intVal, strVal);
+            handler.finish();
+
+            handler = itor != null && itor.hasNext() ? itor.next() : null;
+        } while (handler != null);
     }
 
     public interface PrefHandler {
         void prefValue(String pref, boolean value);
         void prefValue(String pref, int value);
         void prefValue(String pref, String value);
-        boolean isObserver();
         void finish();
     }
 
     public static abstract class PrefHandlerBase implements PrefHandler {
         @Override
         public void prefValue(String pref, boolean value) {
-            Log.w(LOGTAG, "Unhandled boolean value for pref [" + pref + "]");
+            throw new UnsupportedOperationException(
+                    "Unhandled boolean pref " + pref + "; wrong type?");
         }
 
         @Override
         public void prefValue(String pref, int value) {
-            Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
+            throw new UnsupportedOperationException(
+                    "Unhandled int pref " + pref + "; wrong type?");
         }
 
         @Override
         public void prefValue(String pref, String value) {
-            Log.w(LOGTAG, "Unhandled String value for pref [" + pref + "]");
+            throw new UnsupportedOperationException(
+                    "Unhandled String pref " + pref + "; wrong type?");
         }
 
         @Override
         public void finish() {
-        }
-
-        @Override
-        public boolean isObserver() {
-            return false;
         }
     }
 }
