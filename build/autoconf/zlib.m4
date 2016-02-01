@@ -26,11 +26,11 @@ if test -z "$MOZ_ZLIB_LIBS$MOZ_ZLIB_CFLAGS$SKIP_LIBRARY_CHECKS"; then
         LDFLAGS="$MOZ_ZLIB_LIBS $LDFLAGS"
     fi
     if test -z "$ZLIB_DIR" -o "$ZLIB_DIR" = no; then
-        MOZ_NATIVE_ZLIB=
+        MOZ_SYSTEM_ZLIB=
     else
-        AC_CHECK_LIB(z, gzread, [MOZ_NATIVE_ZLIB=1 MOZ_ZLIB_LIBS="$MOZ_ZLIB_LIBS -lz"],
-            [MOZ_NATIVE_ZLIB=])
-        if test "$MOZ_NATIVE_ZLIB" = 1; then
+        AC_CHECK_LIB(z, gzread, [MOZ_SYSTEM_ZLIB=1 MOZ_ZLIB_LIBS="$MOZ_ZLIB_LIBS -lz"],
+            [MOZ_SYSTEM_ZLIB=])
+        if test "$MOZ_SYSTEM_ZLIB" = 1; then
             MOZZLIBNUM=`echo $MOZZLIB | awk -F. changequote(<<, >>)'{printf "0x%x\n", (((<<$>>1 * 16 + <<$>>2) * 16) + <<$>>3) * 16 + <<$>>4}'changequote([, ])`
             AC_TRY_COMPILE([ #include <stdio.h>
                              #include <string.h>
@@ -38,7 +38,7 @@ if test -z "$MOZ_ZLIB_LIBS$MOZ_ZLIB_CFLAGS$SKIP_LIBRARY_CHECKS"; then
                            [ #if ZLIB_VERNUM < $MOZZLIBNUM
                              #error "Insufficient zlib version ($MOZZLIBNUM required)."
                              #endif ],
-                           MOZ_NATIVE_ZLIB=1,
+                           MOZ_SYSTEM_ZLIB=1,
                            AC_MSG_ERROR([Insufficient zlib version for --with-system-zlib ($MOZZLIB required)]))
         fi
     fi
@@ -49,6 +49,6 @@ fi
 
 AC_SUBST_LIST(MOZ_ZLIB_CFLAGS)
 AC_SUBST_LIST(MOZ_ZLIB_LIBS)
-AC_SUBST(MOZ_NATIVE_ZLIB)
+AC_SUBST(MOZ_SYSTEM_ZLIB)
 
 ])

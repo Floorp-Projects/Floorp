@@ -6,7 +6,7 @@
 
 Library('crmf')
 
-if CONFIG['MOZ_NATIVE_NSS']:
+if CONFIG['MOZ_SYSTEM_NSS']:
     OS_LIBS += [l for l in CONFIG['NSS_LIBS'] if l.startswith('-L')]
     OS_LIBS += ['-lcrmf']
 else:

@@ -60,7 +60,7 @@ USE_LIBS += [
     'mar',
 ]
 
-if CONFIG['MOZ_NATIVE_BZ2']:
+if CONFIG['MOZ_SYSTEM_BZ2']:
     OS_LIBS += CONFIG['MOZ_BZ2_LIBS']
 else:
     USE_LIBS += [
