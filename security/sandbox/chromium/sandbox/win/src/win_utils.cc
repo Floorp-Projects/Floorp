@@ -156,6 +156,7 @@ bool ResolveRegistryName(base::string16 name, base::string16* resolved_name) {
 //    \??\c:\some\foo\bar
 //    \Device\HarddiskVolume0\some\foo\bar
 //    \??\HarddiskVolume0\some\foo\bar
+//    \??\UNC\SERVER\Share\some\foo\bar
 DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
   // Check if it's a pipe. We can't query the attributes of a pipe.
   if (IsPipe(full_path)) {
@@ -171,18 +172,25 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
   if (!has_drive && !is_device_path && !nt_path)
     return ERROR_INVALID_NAME;
 
-  bool added_implied_device = false;
   if (!has_drive) {
-      path = base::string16(kNTDotPrefix) + path;
-      added_implied_device = true;
+    // Add Win32 device namespace prefix, required for some Windows APIs.
+    path.insert(0, kNTDotPrefix);
   }
 
-  base::string16::size_type last_pos = base::string16::npos;
-  bool passed_once = false;
+  // Ensure that volume path matches start of path.
+  wchar_t vol_path[MAX_PATH];
+  if (!::GetVolumePathNameW(path.c_str(), vol_path, MAX_PATH)) {
+    return ERROR_INVALID_NAME;
+  }
+  size_t vol_path_len = wcslen(vol_path);
+  if (!EqualPath(path, vol_path, vol_path_len)) {
+    return ERROR_INVALID_NAME;
+  }
+
+  // vol_path will include a trailing slash, so reduce size for loop check.
+  --vol_path_len;
 
   do {
-    path = path.substr(0, last_pos);
-
     DWORD attributes = ::GetFileAttributes(path.c_str());
     if (INVALID_FILE_ATTRIBUTES == attributes) {
       DWORD error = ::GetLastError();
@@ -190,10 +198,6 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
           error != ERROR_PATH_NOT_FOUND &&
           error != ERROR_INVALID_NAME) {
         // Unexpected error.
-        if (passed_once && added_implied_device &&
-            (path.rfind(L'\\') == kNTDotPrefixLen - 1)) {
-          break;
-        }
         NOTREACHED_NT();
         return error;
       }
@@ -203,9 +207,8 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
       return ERROR_SUCCESS;
     }
 
-    passed_once = true;
-    last_pos = path.rfind(L'\\');
-  } while (last_pos > 2);  // Skip root dir.
+    path.resize(path.rfind(L'\\'));
+  } while (path.size() > vol_path_len);  // Skip root dir.
 
   *result = false;
   return ERROR_SUCCESS;
@@ -226,11 +229,11 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
   DCHECK_NT(!path.empty());
 
   // This may end with a backslash.
-  const wchar_t kBackslash = '\\';
-  if (path[path.length() - 1] == kBackslash)
-    path = path.substr(0, path.length() - 1);
+  if (path.back() == L'\\') {
+    path.pop_back();
+  }
 
-  // Perfect match (case-insesitive check).
+  // Perfect match (case-insensitive check).
   if (EqualPath(actual_path, path))
     return true;
 
@@ -239,40 +242,44 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
 
   if (!has_drive && nt_path) {
     base::string16 simple_actual_path;
-    if (!IsDevicePath(actual_path, &simple_actual_path))
-      return false;
-
-    // Perfect match (case-insesitive check).
-    return (EqualPath(simple_actual_path, path));
+    if (IsDevicePath(path, &path)) {
+      if (IsDevicePath(actual_path, &simple_actual_path)) {
+        // Perfect match (case-insensitive check).
+        return (EqualPath(simple_actual_path, path));
+      } else {
+        return false;
+      }
+    } else {
+      // Add Win32 device namespace for GetVolumePathName.
+      path.insert(0, kNTDotPrefix);
+    }
   }
 
-  if (!has_drive)
+  // Get the volume path in the same format as actual_path.
+  wchar_t vol_path[MAX_PATH];
+  if (!::GetVolumePathName(path.c_str(), vol_path, MAX_PATH)) {
     return false;
-
-  // We only need 3 chars, but let's alloc a buffer for four.
-  wchar_t drive[4] = {0};
-  wchar_t vol_name[MAX_PATH];
-  memcpy(drive, &path[0], 2 * sizeof(*drive));
-
-  // We'll get a double null terminated string.
-  DWORD vol_length = ::QueryDosDeviceW(drive, vol_name, MAX_PATH);
-  if (vol_length < 2 || vol_length == MAX_PATH)
+  }
+  size_t vol_path_len = wcslen(vol_path);
+  base::string16 nt_vol;
+  if (!GetNtPathFromWin32Path(vol_path, &nt_vol)) {
     return false;
-
-  // Ignore the nulls at the end.
-  vol_length = static_cast<DWORD>(wcslen(vol_name));
+  }
 
   // The two paths should be the same length.
-  if (vol_length + path.size() - 2 != actual_path.size())
+  if (nt_vol.size() + path.size() - vol_path_len != actual_path.size()) {
     return false;
+  }
 
-  // Check up to the drive letter.
-  if (!EqualPath(actual_path, vol_name, vol_length))
+  // Check the volume matches.
+  if (!EqualPath(actual_path, nt_vol.c_str(), nt_vol.size())) {
     return false;
+  }
 
-  // Check the path after the drive letter.
-  if (!EqualPath(actual_path, vol_length, path, 2))
+  // Check the path after the volume matches.
+  if (!EqualPath(actual_path, nt_vol.size(), path, vol_path_len)) {
     return false;
+  }
 
   return true;
 }
