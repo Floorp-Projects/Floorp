@@ -914,6 +914,14 @@ constexpr char GeckoSmsManager::NotifyThreadCursorResult_t::signature[];
 
 constexpr char GeckoThread::name[];
 
+constexpr char GeckoThread::CheckAndSetState_t::name[];
+constexpr char GeckoThread::CheckAndSetState_t::signature[];
+
+auto GeckoThread::CheckAndSetState(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1) -> bool
+{
+    return mozilla::jni::Method<CheckAndSetState_t>::Call(nullptr, nullptr, a0, a1);
+}
+
 constexpr char GeckoThread::PumpMessageLoop_t::name[];
 constexpr char GeckoThread::PumpMessageLoop_t::signature[];
 
