@@ -3028,10 +3028,21 @@ TSFTextStore::InsertEmbedded(DWORD dwFlags,
 }
 
 void
-TSFTextStore::SetInputScope(const nsString& aHTMLInputType)
+TSFTextStore::SetInputScope(const nsString& aHTMLInputType,
+                            const nsString& aHTMLInputInputMode)
 {
   mInputScopes.Clear();
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
+    if (aHTMLInputInputMode.EqualsLiteral("url")) {
+      mInputScopes.AppendElement(IS_URL);
+    } else if (aHTMLInputInputMode.EqualsLiteral("email")) {
+      mInputScopes.AppendElement(IS_EMAIL_SMTPEMAILADDRESS);
+    } else if (aHTMLInputType.EqualsLiteral("tel")) {
+      mInputScopes.AppendElement(IS_TELEPHONE_FULLTELEPHONENUMBER);
+      mInputScopes.AppendElement(IS_TELEPHONE_LOCALNUMBER);
+    } else if (aHTMLInputType.EqualsLiteral("numeric")) {
+      mInputScopes.AppendElement(IS_NUMBER);
+    }
     return;
   }
   
@@ -4559,7 +4570,8 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
             "ITfTheadMgr::AssociateFocus() failure"));
     return false;
   }
-  sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
+  sEnabledTextStore->SetInputScope(aContext.mHTMLInputType,
+                                   aContext.mHTMLInputInputmode);
 
   if (sEnabledTextStore->mSink) {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
@@ -5296,7 +5308,8 @@ TSFTextStore::SetInputContext(nsWindowBase* aWidget,
 
   if (aAction.mFocusChange != InputContextAction::FOCUS_NOT_CHANGED) {
     if (sEnabledTextStore) {
-      sEnabledTextStore->SetInputScope(aContext.mHTMLInputType);
+      sEnabledTextStore->SetInputScope(aContext.mHTMLInputType,
+                                       aContext.mHTMLInputInputmode);
     }
     return;
   }

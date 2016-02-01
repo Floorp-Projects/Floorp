@@ -393,7 +393,7 @@ IMEHandler::OnDestroyWindow(nsWindow* aWindow)
   if (!sIsInTSFMode) {
     // MSDN says we need to set IS_DEFAULT to avoid memory leak when we use
     // SetInputScopes API. Use an empty string to do this.
-    SetInputScopeForIMM32(aWindow, EmptyString());
+    SetInputScopeForIMM32(aWindow, EmptyString(), EmptyString());
   }
 #endif // #ifdef NS_ENABLE_TSF
   AssociateIMEContext(aWindow, true);
@@ -444,7 +444,8 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
     }
   } else {
     // Set at least InputScope even when TextStore is not available.
-    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType);
+    SetInputScopeForIMM32(aWindow, aInputContext.mHTMLInputType,
+                          aInputContext.mHTMLInputInputmode);
   }
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -517,7 +518,8 @@ IMEHandler::CurrentKeyboardLayoutHasIME()
 // static
 void
 IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
-                                  const nsAString& aHTMLInputType)
+                                  const nsAString& aHTMLInputType,
+                                  const nsAString& aHTMLInputInputmode)
 {
   if (sIsInTSFMode || !sSetInputScopes || aWindow->Destroyed()) {
     return;
@@ -526,9 +528,28 @@ IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
   const InputScope* scopes = nullptr;
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html
   if (aHTMLInputType.IsEmpty() || aHTMLInputType.EqualsLiteral("text")) {
-    static const InputScope inputScopes[] = { IS_DEFAULT };
-    scopes = &inputScopes[0];
-    arraySize = ArrayLength(inputScopes);
+    if (aHTMLInputInputmode.EqualsLiteral("url")) {
+      static const InputScope inputScopes[] = { IS_URL };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("email")) {
+      static const InputScope inputScopes[] = { IS_EMAIL_SMTPEMAILADDRESS };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("tel")) {
+      static const InputScope inputScopes[] =
+        {IS_TELEPHONE_LOCALNUMBER, IS_TELEPHONE_FULLTELEPHONENUMBER};
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else if (aHTMLInputInputmode.EqualsLiteral("numeric")) {
+      static const InputScope inputScopes[] = { IS_NUMBER };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    } else {
+      static const InputScope inputScopes[] = { IS_DEFAULT };
+      scopes = &inputScopes[0];
+      arraySize = ArrayLength(inputScopes);
+    }
   } else if (aHTMLInputType.EqualsLiteral("url")) {
     static const InputScope inputScopes[] = { IS_URL };
     scopes = &inputScopes[0];
