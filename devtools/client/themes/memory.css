@@ -107,6 +107,10 @@ html, body, #app, #memory-tool {
   background-image: url(chrome://devtools/skin/images/clear.svg);
 }
 
+#diff-snapshots::before {
+  background-image: url(chrome://devtools/skin/images/diff.svg);
+}
+
 @media (min-resolution: 1.1dppx) {
   #take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
