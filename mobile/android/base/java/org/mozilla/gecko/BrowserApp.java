@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import android.Manifest;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -2214,36 +2215,33 @@ public class BrowserApp extends GeckoApp
         }
 
         String url = "";
+        String telemetryMsg = "urlbar-empty";
 
         final Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             final String userSearchTerm = tab.getUserRequested();
+            final String tabURL = tab.getURL();
 
             // Check to see if there's a user-entered search term,
             // which we save whenever the user performs a search.
-            final String telemetryMsg;
             if (!TextUtils.isEmpty(userSearchTerm)) {
                 url = userSearchTerm;
                 telemetryMsg = "urlbar-userentered";
-            } else {
-                url = tab.getURL();
-                telemetryMsg = url.isEmpty() ? "urlbar-empty" : "urlbar-url";
+            } else if (!TextUtils.isEmpty(tabURL)) {
+                url = tabURL;
+                telemetryMsg = "urlbar-url";
             }
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.ACTIONBAR, telemetryMsg);
         }
+
         enterEditingMode(url);
+        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.ACTIONBAR, telemetryMsg);
     }
 
     /**
      * Enters editing mode with the specified URL. If a null
      * url is given, the empty String will be used instead.
      */
-    private void enterEditingMode(String url) {
-        if (url == null) {
-            url = "";
-        }
-
+    private void enterEditingMode(@NonNull String url) {
         if (mBrowserToolbar.isEditing() || mBrowserToolbar.isAnimating()) {
             return;
         }
