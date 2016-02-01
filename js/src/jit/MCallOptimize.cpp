@@ -3060,6 +3060,11 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
 IonBuilder::InliningStatus
 IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
 {
+    if (!JitSupportsSimd()) {
+        trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
+        return InliningStatus_NotInlined;
+    }
+
     JSNative native = target->native();
     const JSJitInfo* jitInfo = target->jitInfo();
     MOZ_ASSERT(jitInfo && jitInfo->type() == JSJitInfo::InlinableNative);
@@ -3262,6 +3267,11 @@ bool SimdTypeToMIRType(SimdType type, MIRType* mirType)
 IonBuilder::InliningStatus
 IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 {
+    if (!JitSupportsSimd()) {
+        trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
+        return InliningStatus_NotInlined;
+    }
+
     // Generic constructor of SIMD valuesX4.
     MIRType simdType;
     if (!SimdTypeToMIRType(descr->type(), &simdType))
@@ -3432,9 +3442,12 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, MIRType mirType
 IonBuilder::InliningStatus
 IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, MIRType vecType)
 {
-    InlineTypedObject* templateObj = nullptr;
-    if (!canInlineSimd(callInfo, native, 2, &templateObj))
+    // extractLane() returns a scalar, so don't use canInlineSimd() which looks
+    // for a template object.
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
+    }
 
     MDefinition* arg = callInfo.getArg(1);
     if (!arg->isConstantValue() || arg->type() != MIRType_Int32)
@@ -3533,9 +3546,12 @@ IonBuilder::inlineSimdShuffle(CallInfo& callInfo, JSNative native, MIRType mirTy
 IonBuilder::InliningStatus
 IonBuilder::inlineSimdAnyAllTrue(CallInfo& callInfo, bool IsAllTrue, JSNative native)
 {
-    InlineTypedObject* templateObj = nullptr;
-    if (!canInlineSimd(callInfo, native, 1, &templateObj))
+    // anyTrue() / allTrue() return a scalar, so don't use canInlineSimd() which looks
+    // for a template object.
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
+    }
 
     MUnaryInstruction* ins;
     if (IsAllTrue)
