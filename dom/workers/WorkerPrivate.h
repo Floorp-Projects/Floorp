@@ -914,7 +914,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
 
   nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
   nsCOMPtr<nsITimer> mGCTimer;
   nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;
