@@ -670,7 +670,7 @@ class Artifacts(object):
 
     def _guess_artifact_job(self):
         if buildconfig.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
-            if self.substs['ANDROID_CPU_ARCH'] == 'x86':
+            if buildconfig.substs['ANDROID_CPU_ARCH'] == 'x86':
                 return 'android-x86'
             return 'android-api-15'
 
