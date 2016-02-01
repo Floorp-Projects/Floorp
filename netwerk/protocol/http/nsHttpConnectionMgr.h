@@ -513,13 +513,6 @@ private:
     // NOTE: these members are only accessed on the socket transport thread
     //-------------------------------------------------------------------------
 
-    static PLDHashOperator ProcessAllTransactionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-
-    static PLDHashOperator PruneDeadConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    static PLDHashOperator ShutdownPassCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    static PLDHashOperator ClosePersistentConnectionsCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    static PLDHashOperator VerifyTrafficCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
-    static PLDHashOperator PruneNoTrafficCB(const nsACString &, nsAutoPtr<nsConnectionEntry> &, void *);
     bool     ProcessPendingQForEntry(nsConnectionEntry *, bool considerAll);
     bool     IsUnderPressure(nsConnectionEntry *ent,
                              nsHttpTransaction::Classifier classification);
@@ -572,9 +565,6 @@ private:
                                              nsHttpTransaction *trans);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
-    static PLDHashOperator ProcessSpdyPendingQCB(
-        const nsACString &key, nsAutoPtr<nsConnectionEntry> &ent,
-        void *closure);
 
     // used to marshall events to the socket transport thread.
     nsresult PostEvent(nsConnEventHandler  handler,
@@ -637,18 +627,8 @@ private:
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
-    static PLDHashOperator ReadConnectionEntry(const nsACString &key,
-                                               nsAutoPtr<nsConnectionEntry> &ent,
-                                               void *aArg);
-    static PLDHashOperator RemoveDeadConnections(const nsACString &key,
-        nsAutoPtr<nsConnectionEntry> &ent,
-        void *aArg);
-
     // Read Timeout Tick handlers
     void TimeoutTick();
-    static PLDHashOperator TimeoutTickCB(const nsACString &key,
-                                         nsAutoPtr<nsConnectionEntry> &ent,
-                                         void *closure);
 
     // For diagnostics
     void OnMsgPrintDiagnostics(int32_t, ARefBase *);

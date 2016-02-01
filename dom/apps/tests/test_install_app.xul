@@ -21,7 +21,7 @@
 <script>
 <![CDATA[
 
-var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+var url = "http://test/chrome/dom/apps/tests/apps/basic.webapp";
 var app;
 
 var steps = [

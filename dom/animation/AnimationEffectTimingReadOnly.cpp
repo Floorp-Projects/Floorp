@@ -12,13 +12,15 @@
 
 namespace mozilla {
 
-TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs)
+TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs,
+                           const dom::Element* aTarget)
   : mDuration(aRhs.mDuration)
   , mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
   , mIterations(aRhs.mIterations)
   , mDirection(aRhs.mDirection)
   , mFill(aRhs.mFill)
 {
+  mFunction = AnimationUtils::ParseEasing(aTarget, aRhs.mEasing);
 }
 
 TimingParams::TimingParams(double aDuration)
@@ -28,25 +30,27 @@ TimingParams::TimingParams(double aDuration)
 
 /* static */ TimingParams
 TimingParams::FromOptionsUnion(
-  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
+  const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+  const dom::Element* aTarget)
 {
   if (aOptions.IsUnrestrictedDouble()) {
     return TimingParams(aOptions.GetAsUnrestrictedDouble());
   } else {
     MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
-    return TimingParams(aOptions.GetAsKeyframeEffectOptions());
+    return TimingParams(aOptions.GetAsKeyframeEffectOptions(), aTarget);
   }
 }
 
 /* static */ TimingParams
 TimingParams::FromOptionsUnion(
-  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+  const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+  const dom::Element* aTarget)
 {
   if (aOptions.IsUnrestrictedDouble()) {
     return TimingParams(aOptions.GetAsUnrestrictedDouble());
   } else {
     MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
-    return TimingParams(aOptions.GetAsKeyframeAnimationOptions());
+    return TimingParams(aOptions.GetAsKeyframeAnimationOptions(), aTarget);
   }
 }
 
@@ -68,7 +72,8 @@ TimingParams::operator==(const TimingParams& aOther) const
          mDelay == aOther.mDelay &&
          mIterations == aOther.mIterations &&
          mDirection == aOther.mDirection &&
-         mFill == aOther.mFill;
+         mFill == aOther.mFill &&
+         mFunction == aOther.mFunction;
 }
 
 namespace dom {
@@ -82,6 +87,16 @@ JSObject*
 AnimationEffectTimingReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return AnimationEffectTimingReadOnlyBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+AnimationEffectTimingReadOnly::GetEasing(nsString& aRetVal) const
+{
+  if (mTiming.mFunction.isSome()) {
+    mTiming.mFunction->AppendToString(aRetVal);
+  } else {
+    aRetVal.AssignLiteral("linear");
+  }
 }
 
 } // namespace dom

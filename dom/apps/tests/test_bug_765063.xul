@@ -50,6 +50,6 @@ confirmNextPopup();
   <!-- Load a page that initiates an app installation and then immediately
      - redirects to a page at a different origin.  We can't do this directly
      - inside this test page, because that would cause the test to hang. -->
-  <iframe src="http://test/chrome/dom/tests/mochitest/webapps/install_and_redirect_helper.xul"/>
+  <iframe src="http://test/chrome/dom/apps/tests/install_and_redirect_helper.xul"/>
 
 </window>

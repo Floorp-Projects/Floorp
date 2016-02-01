@@ -76,10 +76,6 @@ private:
         HashTableMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                             const void *key);
 
-    static PLDHashOperator
-        FillSortedArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                        uint32_t number, void *arg);
-
     static int SortArray(const void *a, const void *b, void *closure);
 
     /* state used only during enumeration */
