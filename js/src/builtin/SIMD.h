@@ -799,6 +799,45 @@ enum class SimdType : uint8_t {
     Count
 };
 
+// The integer SIMD types have a lot of operations that do the exact same thing
+// for signed and unsigned integer types. Sometimes it is simpler to treat
+// signed and unsigned integer SIMD types as the same type, using a SimdSign to
+// distinguish the few cases where there is a difference.
+enum class SimdSign {
+    // Signedness is not applicable to this type. (i.e., Float or Bool).
+    NotApplicable,
+    // Treat as an unsigned integer with a range 0 .. 2^N-1.
+    Unsigned,
+    // Treat as a signed integer in two's complement encoding.
+    Signed,
+};
+
+// Get the signedness of a SIMD type.
+inline SimdSign
+GetSimdSign(SimdType t)
+{
+    switch(t) {
+      case SimdType::Int8x16:
+      case SimdType::Int16x8:
+      case SimdType::Int32x4:
+        return SimdSign::Signed;
+
+      case SimdType::Uint8x16:
+      case SimdType::Uint16x8:
+      case SimdType::Uint32x4:
+        return SimdSign::Unsigned;
+
+      default:
+        return SimdSign::NotApplicable;
+    }
+}
+
+inline bool
+IsSignedIntSimdType(SimdType type)
+{
+    return GetSimdSign(type) == SimdSign::Signed;
+}
+
 // Get the boolean SIMD type with the same shape as t.
 //
 // This is the result type of a comparison operation, and it can also be used to
@@ -1040,8 +1079,6 @@ struct Bool64x2 {
         return BooleanValue(value);
     }
 };
-
-bool IsSignedIntSimdType(SimdType type);
 
 PropertyName* SimdTypeToName(JSContext* cx, SimdType type);
 

@@ -203,7 +203,9 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
       // SIMD natives.
       case InlinableNative::SimdInt32x4:
-        return inlineSimd(callInfo, target, MIRType_Int32x4);
+        return inlineSimd(callInfo, target, MIRType_Int32x4, SimdSign::Signed);
+      case InlinableNative::SimdUint32x4:
+        return inlineSimd(callInfo, target, MIRType_Int32x4, SimdSign::Unsigned);
       case InlinableNative::SimdFloat32x4:
         return inlineSimd(callInfo, target, MIRType_Float32x4);
       case InlinableNative::SimdBool32x4:
@@ -3057,8 +3059,10 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
 }
 
 // Main entry point for SIMD inlining.
+// When the controlling simdType is an integer type, sign indicates whether the lanes should
+// be treated as signed or unsigned integers.
 IonBuilder::InliningStatus
-IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
+IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType, SimdSign sign)
 {
     if (!JitSupportsSimd()) {
         trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
@@ -3069,7 +3073,10 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
     const JSJitInfo* jitInfo = target->jitInfo();
     MOZ_ASSERT(jitInfo && jitInfo->type() == JSJitInfo::InlinableNative);
     SimdOperation simdOp = SimdOperation(jitInfo->nativeOp);
+
     MOZ_ASSERT(IsSimdType(simdType));
+    MOZ_ASSERT((sign != SimdSign::NotApplicable) == IsIntegerSimdType(simdType),
+               "Signedness must be specified for ints, and only for ints");
 
     switch(simdOp) {
       case SimdOperation::Constructor:
@@ -3082,7 +3089,7 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
       case SimdOperation::Fn_splat:
         return inlineSimdSplat(callInfo, native, simdType);
       case SimdOperation::Fn_extractLane:
-        return inlineSimdExtractLane(callInfo, native, simdType);
+        return inlineSimdExtractLane(callInfo, native, simdType, sign);
       case SimdOperation::Fn_replaceLane:
         return inlineSimdReplaceLane(callInfo, native, simdType);
       case SimdOperation::Fn_select:
@@ -3149,9 +3156,8 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
       case SimdOperation::Fn_shiftLeftByScalar:
         return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::lsh, simdType);
       case SimdOperation::Fn_shiftRightByScalar:
-        // TODO: select opcode from simdType signedness.
-        MOZ_ASSERT(simdType == MIRType_Int32x4);
-        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rsh, simdType);
+        return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rshForSign(sign),
+                                            simdType);
       case SimdOperation::Fn_shiftRightArithmeticByScalar:
         return inlineSimdBinary<MSimdShift>(callInfo, native, MSimdShift::rsh, simdType);
       case SimdOperation::Fn_shiftRightLogicalByScalar:
@@ -3165,25 +3171,33 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
 
         // Comparisons.
       case SimdOperation::Fn_lessThan:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThan, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThan,
+                              simdType, sign);
       case SimdOperation::Fn_lessThanOrEqual:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThanOrEqual, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::lessThanOrEqual,
+                              simdType, sign);
       case SimdOperation::Fn_equal:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::equal, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::equal,
+                              simdType, sign);
       case SimdOperation::Fn_notEqual:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::notEqual, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::notEqual,
+                              simdType, sign);
       case SimdOperation::Fn_greaterThan:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThan, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThan,
+                              simdType, sign);
       case SimdOperation::Fn_greaterThanOrEqual:
-        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThanOrEqual, simdType);
+        return inlineSimdComp(callInfo, native, MSimdBinaryComp::greaterThanOrEqual,
+                              simdType, sign);
 
         // Int <-> Float conversions.
       case SimdOperation::Fn_fromInt32x4:
-        return inlineSimdConvert(callInfo, native, false, MIRType_Int32x4, simdType);
+        return inlineSimdConvert(callInfo, native, false, MIRType_Int32x4,
+                                 simdType, SimdSign::Signed);
       case SimdOperation::Fn_fromUint32x4:
-        return InliningStatus_NotInlined;
+        return inlineSimdConvert(callInfo, native, false, MIRType_Int32x4,
+                                 simdType, SimdSign::Unsigned);
       case SimdOperation::Fn_fromFloat32x4:
-        return inlineSimdConvert(callInfo, native, false, MIRType_Float32x4, simdType);
+        return inlineSimdConvert(callInfo, native, false, MIRType_Float32x4, simdType, sign);
 
         // Load/store.
       case SimdOperation::Fn_load:
@@ -3208,10 +3222,10 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, MIRType simdType)
       case SimdOperation::Fn_fromInt16x8Bits:
         return InliningStatus_NotInlined;
       case SimdOperation::Fn_fromInt32x4Bits:
+      case SimdOperation::Fn_fromUint32x4Bits:
         return inlineSimdConvert(callInfo, native, true, MIRType_Int32x4, simdType);
       case SimdOperation::Fn_fromUint8x16Bits:
       case SimdOperation::Fn_fromUint16x8Bits:
-      case SimdOperation::Fn_fromUint32x4Bits:
         return InliningStatus_NotInlined;
       case SimdOperation::Fn_fromFloat32x4Bits:
         return inlineSimdConvert(callInfo, native, true, MIRType_Float32x4, simdType);
@@ -3391,10 +3405,14 @@ IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Op
 
 IonBuilder::InliningStatus
 IonBuilder::inlineSimdComp(CallInfo& callInfo, JSNative native, MSimdBinaryComp::Operation op,
-                           MIRType mirType)
+                           MIRType mirType, SimdSign sign)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    // TODO JSO: Implement unsigned integer comparisons.
+    if (sign == SimdSign::Unsigned)
         return InliningStatus_NotInlined;
 
     // If the type of any of the arguments is neither a SIMD type, an Object
@@ -3440,7 +3458,8 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, MIRType mirType
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, MIRType vecType)
+IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
+                                  MIRType vecType, SimdSign sign)
 {
     // extractLane() returns a scalar, so don't use canInlineSimd() which looks
     // for a template object.
@@ -3448,6 +3467,10 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, MIRType v
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
+
+    // TODO JSO: Implement unsigned integer lane values.
+    if (sign == SimdSign::Unsigned)
+        return InliningStatus_NotInlined;
 
     MDefinition* arg = callInfo.getArg(1);
     if (!arg->isConstantValue() || arg->type() != MIRType_Int32)
@@ -3491,12 +3514,19 @@ IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, MIRType m
     return boxSimd(callInfo, ins, templateObj);
 }
 
+// Inline a SIMD conversion or bitcast. When isCast==false, one of the types
+// must be floating point and the other integer. In this case, sign indicates if
+// the integer lanes should be treated as signed or unsigned integers.
 IonBuilder::InliningStatus
 IonBuilder::inlineSimdConvert(CallInfo& callInfo, JSNative native, bool isCast,
-                              MIRType fromType, MIRType toType)
+                              MIRType fromType, MIRType toType, SimdSign sign)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 1, &templateObj))
+        return InliningStatus_NotInlined;
+
+    // TODO JSO: Implement unsigned integer conversions.
+    if (sign == SimdSign::Unsigned)
         return InliningStatus_NotInlined;
 
     // See comment in inlineSimdBinary
