@@ -21,7 +21,7 @@ task:
       total: 10
     suite:
       name: mochitest
-      flavor: mochitest-devtools-chrome
+      flavor: mochitest-devtools-chrome-chunked
     treeherder:
       groupName: Desktop mochitests
       groupSymbol: tc-M-e10s
