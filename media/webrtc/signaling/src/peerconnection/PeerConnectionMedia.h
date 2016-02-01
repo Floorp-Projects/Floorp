@@ -158,6 +158,15 @@ public:
     return dom::MediaSourceEnum::Other;
   }
 
+  already_AddRefed<dom::Promise>
+  ApplyConstraints(nsPIDOMWindowInner* aWindow,
+                   const dom::MediaTrackConstraints& aConstraints,
+                   ErrorResult &aRv) override
+  {
+    NS_ERROR("Can't ApplyConstraints() a remote source!");
+    return nullptr;
+  }
+
   void Stop() override { NS_ERROR("Can't stop a remote source!"); }
 
   void SetPrincipal(nsIPrincipal* aPrincipal)

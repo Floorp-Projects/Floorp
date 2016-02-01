@@ -175,7 +175,7 @@ public:
 
   already_AddRefed<PledgeVoid>
   ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
-                          TrackID aID, bool aIsAudio,
+                          TrackID aID,
                           const dom::MediaTrackConstraints& aConstraints);
 
   // mVideo/AudioDevice are set by Activate(), so we assume they're capturing

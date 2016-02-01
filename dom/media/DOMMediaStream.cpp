@@ -18,8 +18,6 @@
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/MediaStreamError.h"
-#include "mozilla/dom/Promise.h"
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
@@ -749,25 +747,6 @@ DOMMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
   stream->InitAudioCaptureStream(aPrincipal, aGraph);
   return stream.forget();
 }
-
-already_AddRefed<Promise>
-DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
-                                        const MediaTrackConstraints& aConstraints,
-                                        ErrorResult &aRv)
-{
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  RefPtr<Promise> promise = Promise::Create(go, aRv);
-  MOZ_RELEASE_ASSERT(!aRv.Failed());
-
-  promise->MaybeReject(new MediaStreamError(
-      mWindow,
-      NS_LITERAL_STRING("OverconstrainedError"),
-      NS_LITERAL_STRING(""),
-      NS_LITERAL_STRING("")));
-  return promise.forget();
-}
-
-
 
 void
 DOMMediaStream::PrincipalChanged(MediaStreamTrack* aTrack)
