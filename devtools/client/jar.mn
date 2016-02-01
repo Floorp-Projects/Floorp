@@ -347,3 +347,4 @@ devtools.jar:
     skin/images/security-state-local.svg (themes/images/security-state-local.svg)
     skin/images/security-state-secure.svg (themes/images/security-state-secure.svg)
     skin/images/security-state-weak.svg (themes/images/security-state-weak.svg)
+    skin/images/diff.svg (themes/images/diff.svg)

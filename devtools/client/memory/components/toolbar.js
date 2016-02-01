@@ -179,8 +179,7 @@ const Toolbar = module.exports = createClass({
               disabled: snapshots.length < 2,
               onClick: onToggleDiffing,
               title: L10N.getStr("diff-snapshots.tooltip"),
-            },
-            L10N.getStr("diff-snapshots")
+            }
           ),
 
           dom.button(
