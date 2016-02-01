@@ -38,31 +38,24 @@ var mockShellService = new MockObjectRegisterer("@mozilla.org/browser/shell-serv
 // Temporarily disabled, see note at test_setDefaultBrowser.
 // mockShellService.register();
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
+/* This test is disabled (bug 1180714) since the MockObjectRegisterer
+ is not actually replacing the original ShellService.
+add_UITour_task(function* test_setDefaultBrowser() {
+  try {
+    yield gContentAPI.setConfiguration("defaultBrowser");
+    ok(setDefaultBrowserCalled, "setDefaultBrowser called");
+  } finally {
+    mockShellService.unregister();
+  }
+});
+*/
 
-  /* This test is disabled (bug 1180714) since the MockObjectRegisterer
-     is not actually replacing the original ShellService.
-  taskify(function* test_setDefaultBrowser() {
-    try {
-      gContentAPI.setConfiguration("defaultBrowser");
-      ok(setDefaultBrowserCalled, "setDefaultBrowser called");
-    } finally {
-      mockShellService.unregister();
-    }
-  }),
-  */
-
-  taskify(function* test_isDefaultBrowser(done) {
-    let shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                          .getService(Components.interfaces.nsIShellService);
-    let isDefault = shell.isDefaultBrowser(false);
-    gContentAPI.getConfiguration("appinfo", (data) => {
-      is(isDefault, data.defaultBrowser, "gContentAPI result should match shellService.isDefaultBrowser");
-      done();
-    });
-  }),
-];
+add_UITour_task(function* test_isDefaultBrowser() {
+  let shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+        .getService(Components.interfaces.nsIShellService);
+  let isDefault = shell.isDefaultBrowser(false);
+  let data = yield getConfigurationPromise("appinfo");
+  is(isDefault, data.defaultBrowser, "gContentAPI result should match shellService.isDefaultBrowser");
+});

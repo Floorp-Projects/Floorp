@@ -8,41 +8,37 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
-  taskify(function* test_showMenu() {
-    is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
-    yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
-    is_element_visible(CONTROL_CENTER_PANEL, "Panel should be visible after showMenu");
+add_UITour_task(function* test_showMenu() {
+  is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
+  yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
+  is_element_visible(CONTROL_CENTER_PANEL, "Panel should be visible after showMenu");
 
-    yield gURLBar.focus();
-    is_element_visible(CONTROL_CENTER_PANEL, "Panel should remain visible after focus outside");
+  yield gURLBar.focus();
+  is_element_visible(CONTROL_CENTER_PANEL, "Panel should remain visible after focus outside");
 
-    yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
-    is_element_visible(CONTROL_CENTER_PANEL,
-                       "Panel should remain visible and callback called after a 2nd showMenu");
+  yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
+  is_element_visible(CONTROL_CENTER_PANEL,
+                     "Panel should remain visible and callback called after a 2nd showMenu");
 
-    yield BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: "about:blank"
-    }, function*() {
-      ok(true, "Tab opened");
-    });
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "about:blank"
+  }, function*() {
+    ok(true, "Tab opened");
+  });
 
-    is_element_hidden(CONTROL_CENTER_PANEL, "Panel should hide upon tab switch");
-  }),
+  is_element_hidden(CONTROL_CENTER_PANEL, "Panel should hide upon tab switch");
+});
 
-  taskify(function* test_hideMenu() {
-    is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
-    yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
-    is_element_visible(CONTROL_CENTER_PANEL, "Panel should be visible after showMenu");
-    let hidePromise = promisePanelElementHidden(window, CONTROL_CENTER_PANEL);
-    gContentAPI.hideMenu(CONTROL_CENTER_MENU_NAME);
-    yield hidePromise;
+add_UITour_task(function* test_hideMenu() {
+  is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
+  yield showMenuPromise(CONTROL_CENTER_MENU_NAME);
+  is_element_visible(CONTROL_CENTER_PANEL, "Panel should be visible after showMenu");
+  let hidePromise = promisePanelElementHidden(window, CONTROL_CENTER_PANEL);
+  yield gContentAPI.hideMenu(CONTROL_CENTER_MENU_NAME);
+  yield hidePromise;
 
-    is_element_hidden(CONTROL_CENTER_PANEL, "Panel should hide after hideMenu");
-  }),
-];
+  is_element_hidden(CONTROL_CENTER_PANEL, "Panel should hide after hideMenu");
+});

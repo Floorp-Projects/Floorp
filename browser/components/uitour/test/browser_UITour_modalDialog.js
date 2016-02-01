@@ -80,7 +80,7 @@ function test() {
 
 
 var tests = [
-  taskify(function* test_modal_dialog_while_opening_tooltip(done) {
+  taskify(function* test_modal_dialog_while_opening_tooltip() {
     let panelShown;
     let popup;
 
