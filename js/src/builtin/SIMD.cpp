@@ -39,21 +39,6 @@ using mozilla::NumberIsInt32;
 
 static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
 
-bool
-js::IsSignedIntSimdType(SimdType type)
-{
-    switch (type) {
-      case SimdType::Int32x4:
-        return true;
-      case SimdType::Float32x4:
-      case SimdType::Bool32x4:
-        return false;
-      default:
-        break;
-   }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown SIMD type");
-}
-
 PropertyName*
 js::SimdTypeToName(JSContext* cx, SimdType type)
 {
@@ -252,6 +237,10 @@ FLOAT32X4_FUNCTION_LIST(TDEFN)
 INT32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
 
+#define TDEFN(Name, Func, Operands) DEFN(Uint32x4, Name)
+UINT32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
 #define TDEFN(Name, Func, Operands) DEFN(Bool32x4, Name)
 BOOL32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
@@ -317,7 +306,7 @@ const JSFunctionSpec Uint16x8Defn::Methods[] = {
 
 const JSFunctionSpec Uint32x4Defn::Methods[] = {
 #define SIMD_UINT32X4_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_uint32x4_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_uint32x4_##Name, Operands, 0, SimdUint32x4_##Name),
     UINT32X4_FUNCTION_LIST(SIMD_UINT32X4_FUNCTION_ITEM)
 #undef SIMD_UINT32X4_FUNCTION_ITEM
     JS_FS_END
