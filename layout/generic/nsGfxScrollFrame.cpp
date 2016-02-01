@@ -1992,8 +1992,12 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
 }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+struct PluginSearchCtx {
+  nsIFrame* outer;
+  bool begin;
+};
 static void
-NotifyPluginFramesCallback(nsISupports* aSupports, void* aFlag)
+NotifyPluginFramesCallback(nsISupports* aSupports, void* aCtx)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSupports);
   if (content) {
@@ -2001,16 +2005,22 @@ NotifyPluginFramesCallback(nsISupports* aSupports, void* aFlag)
     if (frame) {
       nsPluginFrame* plugin = do_QueryFrame(frame);
       if (plugin) {
-        plugin->SetScrollVisibility(aFlag != nullptr);
+        PluginSearchCtx* pCtx = static_cast<PluginSearchCtx*>(aCtx);
+        // Check to be sure this plugin is contained within a subframe of
+        // the nsGfxScrollFrame that initiated this callback.
+        if (nsLayoutUtils::IsAncestorFrameCrossDoc(pCtx->outer, plugin, nullptr)) {
+          plugin->SetScrollVisibility(pCtx->begin);
+        }
       }
     }
   }
 }
+
 static bool
-NotifyPluginSubframesCallback(nsIDocument* aDocument, void* aFlag)
+NotifyPluginSubframesCallback(nsIDocument* aDocument, void* aCtx)
 {
   aDocument->EnumerateActivityObservers(NotifyPluginFramesCallback,
-                                        aFlag);
+                                        aCtx);
   return true;
 }
 #endif
@@ -2025,11 +2035,11 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
   if (XRE_IsContentProcess()) {
     if (aEvent != mAsyncScrollEvent) {
       nsPresContext* presContext = mOuter->PresContext();
-      bool begin = (aEvent == BEGIN_DOM);
+      PluginSearchCtx ctx = { mOuter, (aEvent == BEGIN_DOM) };
       presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
-                                                          (void*)begin);
+                                                          (void*)&ctx);
       presContext->Document()->EnumerateSubDocuments(NotifyPluginSubframesCallback,
-                                                     (void*)begin);
+                                                     (void*)&ctx);
 
       mAsyncScrollEvent = aEvent;
     }
