@@ -3028,17 +3028,40 @@ protected:
     PrefsHelper(jobject instance) : Class(instance) {}
 
 public:
-    struct GetPrefsById_t {
+    struct CallPrefHandler_t {
         typedef PrefsHelper Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
                 int32_t,
-                mozilla::jni::ObjectArray::Param,
-                bool> Args;
-        static constexpr char name[] = "getPrefsById";
+                mozilla::jni::String::Param,
+                bool,
+                int32_t,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "callPrefHandler";
         static constexpr char signature[] =
-                "(I[Ljava/lang/String;Z)V";
+                "(Lorg/mozilla/gecko/PrefsHelper$PrefHandler;ILjava/lang/String;ZILjava/lang/String;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto CallPrefHandler(mozilla::jni::Object::Param, int32_t, mozilla::jni::String::Param, bool, int32_t, mozilla::jni::String::Param) -> void;
+
+public:
+    struct AddObserver_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ObjectArray::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "nativeAddObserver";
+        static constexpr char signature[] =
+                "([Ljava/lang/String;Lorg/mozilla/gecko/PrefsHelper$PrefHandler;[Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
@@ -3046,20 +3069,95 @@ public:
     };
 
 public:
-    struct RemovePrefsObserver_t {
+    struct GetPrefs_t {
         typedef PrefsHelper Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                int32_t> Args;
-        static constexpr char name[] = "removePrefsObserver";
+                mozilla::jni::ObjectArray::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "nativeGetPrefs";
         static constexpr char signature[] =
-                "(I)V";
+                "([Ljava/lang/String;Lorg/mozilla/gecko/PrefsHelper$PrefHandler;)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
+
+public:
+    struct RemoveObserver_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ObjectArray::Param> Args;
+        static constexpr char name[] = "nativeRemoveObserver";
+        static constexpr char signature[] =
+                "([Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct SetPref_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                bool,
+                int32_t,
+                bool,
+                int32_t,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "nativeSetPref";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;ZIZILjava/lang/String;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct OnPrefChange_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int32_t,
+                bool,
+                int32_t,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "onPrefChange";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;IZILjava/lang/String;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto OnPrefChange(mozilla::jni::String::Param, int32_t, bool, int32_t, mozilla::jni::String::Param) -> void;
+
+public:
+    static const int32_t PREF_BOOL = 1;
+
+public:
+    static const int32_t PREF_FINISH = 0;
+
+public:
+    static const int32_t PREF_INT = 2;
+
+public:
+    static const int32_t PREF_INVALID = -1;
+
+public:
+    static const int32_t PREF_STRING = 3;
 
 public:
     template<class Impl> class Natives;

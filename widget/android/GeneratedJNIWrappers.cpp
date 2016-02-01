@@ -1118,11 +1118,33 @@ auto GeckoView::Window::GlController() const -> mozilla::jni::Object::LocalRef
 
 constexpr char PrefsHelper::name[];
 
-constexpr char PrefsHelper::GetPrefsById_t::name[];
-constexpr char PrefsHelper::GetPrefsById_t::signature[];
+constexpr char PrefsHelper::CallPrefHandler_t::name[];
+constexpr char PrefsHelper::CallPrefHandler_t::signature[];
 
-constexpr char PrefsHelper::RemovePrefsObserver_t::name[];
-constexpr char PrefsHelper::RemovePrefsObserver_t::signature[];
+auto PrefsHelper::CallPrefHandler(mozilla::jni::Object::Param a0, int32_t a1, mozilla::jni::String::Param a2, bool a3, int32_t a4, mozilla::jni::String::Param a5) -> void
+{
+    return mozilla::jni::Method<CallPrefHandler_t>::Call(nullptr, nullptr, a0, a1, a2, a3, a4, a5);
+}
+
+constexpr char PrefsHelper::AddObserver_t::name[];
+constexpr char PrefsHelper::AddObserver_t::signature[];
+
+constexpr char PrefsHelper::GetPrefs_t::name[];
+constexpr char PrefsHelper::GetPrefs_t::signature[];
+
+constexpr char PrefsHelper::RemoveObserver_t::name[];
+constexpr char PrefsHelper::RemoveObserver_t::signature[];
+
+constexpr char PrefsHelper::SetPref_t::name[];
+constexpr char PrefsHelper::SetPref_t::signature[];
+
+constexpr char PrefsHelper::OnPrefChange_t::name[];
+constexpr char PrefsHelper::OnPrefChange_t::signature[];
+
+auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool a2, int32_t a3, mozilla::jni::String::Param a4) -> void
+{
+    return mozilla::jni::Method<OnPrefChange_t>::Call(nullptr, nullptr, a0, a1, a2, a3, a4);
+}
 
 constexpr char Restrictions::name[];
 
