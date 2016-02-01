@@ -98,6 +98,9 @@ txAttribute::txAttribute(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
 nsresult
 txAttribute::execute(txExecutionState& aEs)
 {
+    nsAutoPtr<txTextHandler> handler(
+        static_cast<txTextHandler*>(aEs.popResultHandler()));
+
     nsAutoString name;
     nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -129,9 +132,6 @@ txAttribute::execute(txExecutionState& aEs)
     else if (colon) {
         nsId = mMappings->lookupNamespace(prefix);
     }
-
-    nsAutoPtr<txTextHandler> handler(
-        static_cast<txTextHandler*>(aEs.popResultHandler()));
 
     // add attribute if everything was ok
     return nsId != kNameSpaceID_Unknown ?
