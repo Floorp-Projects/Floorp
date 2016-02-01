@@ -563,7 +563,7 @@ ExtensionData.prototype = {
       Management.lazyInit(),
     ]).then(([manifest]) => {
       let context = {
-        url: (this.baseURI || this.rootURI).spec,
+        url: this.baseURI && this.baseURI.spec,
 
         principal: this.principal,
       };
