@@ -652,7 +652,7 @@ public:
   virtual void PrincipalChanged(DOMMediaStream* aMediaStream) override;
 
   nsresult GetRemoteTrackId(const std::string streamId,
-                            TrackID numericTrackId,
+                            const dom::MediaStreamTrack& track,
                             std::string* trackId) const;
 #endif
 

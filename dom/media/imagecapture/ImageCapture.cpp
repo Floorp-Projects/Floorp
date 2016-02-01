@@ -148,7 +148,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
   if (rv == NS_ERROR_NOT_IMPLEMENTED) {
     IC_LOG("MediaEngine doesn't support TakePhoto(), it falls back to MediaStreamGraph.");
     RefPtr<CaptureTask> task =
-      new CaptureTask(this, mVideoStreamTrack->GetTrackID());
+      new CaptureTask(this);
 
     // It adds itself into MediaStreamGraph, so ImageCapture doesn't need to hold
     // the reference.

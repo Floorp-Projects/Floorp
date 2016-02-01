@@ -533,7 +533,7 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
   }
 
   LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)",
-                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+                       this, &aTrack, aTrack.mOwningStream.get(), aTrack.mTrackID));
 
   if (mPlaybackStream->Graph() != aTrack.Graph()) {
     NS_ASSERTION(false, "Cannot combine tracks from different MediaStreamGraphs");
@@ -563,7 +563,7 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
   // Hook up the underlying track with our underlying playback stream.
   RefPtr<MediaInputPort> inputPort =
     GetPlaybackStream()->AllocateInputPort(aTrack.GetOwnedStream(),
-                                           aTrack.GetTrackID());
+                                           aTrack.mTrackID);
   RefPtr<TrackPort> trackPort =
     new TrackPort(inputPort, &aTrack, TrackPort::InputPortOwnership::OWNED);
   mTracks.AppendElement(trackPort.forget());
@@ -576,7 +576,7 @@ void
 DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
 {
   LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p with ID %d)",
-                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+                       this, &aTrack, aTrack.mOwningStream.get(), aTrack.mTrackID));
 
   RefPtr<TrackPort> toRemove = FindPlaybackTrackPort(aTrack);
   if (!toRemove) {
@@ -588,7 +588,7 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   // to block it in the port. Doing this for a locked track is still OK as it
   // will first block the track, then destroy the port. Both cause the track to
   // end.
-  toRemove->BlockTrackId(aTrack.GetTrackID());
+  toRemove->BlockTrackId(aTrack.mTrackID);
 
   DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
   MOZ_ASSERT(removed);
@@ -887,7 +887,7 @@ DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
   for (const RefPtr<TrackPort>& info : mOwnedTracks) {
     if (info->GetInputPort() &&
         info->GetInputPort()->GetSource() == aInputStream &&
-        info->GetTrack()->GetInputTrackID() == aInputTrackID) {
+        info->GetTrack()->mInputTrackID == aInputTrackID) {
       // This track is owned externally but in our playback stream.
       return info->GetTrack();
     }
@@ -915,7 +915,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
   for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetInputPort() == mPlaybackPort &&
         aInputStream == mOwnedStream &&
-        info->GetTrack()->GetInputTrackID() == aInputTrackID) {
+        info->GetTrack()->mInputTrackID == aInputTrackID) {
       // This track is in our owned and playback streams.
       return info->GetTrack();
     }
