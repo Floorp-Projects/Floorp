@@ -25,17 +25,10 @@ interface nsIUITelemetryObserver : nsISupports {
                 in wstring extras);
 };
 
-[scriptable, uuid(78ec5811-78ee-4239-a554-3303f823dbbc)]
+[scriptable, uuid(0370450f-2e9c-4d16-b333-8ca6ce31a5ff)]
 interface nsIAndroidBrowserApp : nsISupports {
   readonly attribute nsIBrowserTab selectedTab;
   nsIBrowserTab getBrowserTab(in int32_t tabId);
-  void getPreferences(in int32_t requestId,
-                      [array, size_is(count)] in wstring prefNames,
-                      in unsigned long count);
-  void observePreferences(in int32_t requestId,
-                          [array, size_is(count)] in wstring prefNames,
-                          in unsigned long count);
-  void removePreferenceObservers(in int32_t requestId);
   nsIUITelemetryObserver getUITelemetryObserver();
 };
 
