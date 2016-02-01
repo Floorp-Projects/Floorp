@@ -8,6 +8,7 @@
 
 #include "base/logging.h"
 #include "base/win/scoped_handle.h"
+#include "base/win/windows_version.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
 #include "sandbox/win/src/policy_params.h"
@@ -66,18 +67,16 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
     return false;
   }
 
-  // Don't do any pre-processing if the name starts like the the native
-  // object manager style.
-  if (0 != _wcsnicmp(mod_name.c_str(), kNTObjManPrefix, kNTObjManPrefixLen)) {
-    // TODO(cpu) bug 32224: This prefix add is a hack because we don't have the
-    // infrastructure to normalize names. In any case we need to escape the
-    // question marks.
-    if (!PreProcessName(mod_name, &mod_name)) {
-      // The path to be added might contain a reparse point.
-      NOTREACHED();
-      return false;
-    }
+  if (!PreProcessName(mod_name, &mod_name)) {
+    // The path to be added might contain a reparse point.
+    NOTREACHED();
+    return false;
+  }
 
+  // TODO(cpu) bug 32224: This prefix add is a hack because we don't have the
+  // infrastructure to normalize names. In any case we need to escape the
+  // question marks.
+  if (_wcsnicmp(mod_name.c_str(), kNTDevicePrefix, kNTDevicePrefixLen)) {
     mod_name = FixNTPrefixForMatch(mod_name);
     name = mod_name.c_str();
   }
