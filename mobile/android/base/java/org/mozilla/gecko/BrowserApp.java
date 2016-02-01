@@ -1157,7 +1157,12 @@ public class BrowserApp extends GeckoApp
                     final String title = tab.getDisplayTitle();
 
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url);
+                        ThreadUtils.postToBackgroundThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                GeckoAppShell.createShortcut(title, url);
+                            }
+                        });
                     }
                 }
             }
