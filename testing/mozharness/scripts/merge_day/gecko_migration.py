@@ -16,21 +16,21 @@ and
 http://hg.mozilla.org/build/tools/file/084bc4e2fc76/release/merge_helper.py
 """
 
-from getpass import getpass
 import os
 import pprint
 import subprocess
 import sys
+from getpass import getpass
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.errors import HgErrorList
-from mozharness.base.log import INFO, FATAL
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.base.vcs.mercurial import MercurialVCS
 from mozharness.mozilla.selfserve import SelfServeMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
+from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.mozilla.merge import GeckoMigrationMixin
 
 VALID_MIGRATION_BEHAVIORS = (
     "beta_to_release", "aurora_to_beta", "central_to_aurora", "release_to_esr",
@@ -39,7 +39,8 @@ VALID_MIGRATION_BEHAVIORS = (
 
 
 # GeckoMigration {{{1
-class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMixin):
+class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
+                     SelfServeMixin, BuildbotMixin, GeckoMigrationMixin):
     config_options = [
         [['--hg-user', ], {
             "action": "store",
@@ -160,13 +161,26 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         self.info(pprint.pformat(self.gecko_repos))
         return self.gecko_repos
 
-    def query_hg_revision(self, path):
-        """ Avoid making 'pull' a required action every run, by being able
-            to fall back to figuring out the revision from the cloned repo
-            """
-        m = MercurialVCS(log_obj=self.log_obj, config=self.config)
-        revision = m.get_revision_from_path(path)
-        return revision
+    def query_commit_dirs(self):
+        dirs = self.query_abs_dirs()
+        commit_dirs = [dirs['abs_to_dir']]
+        if self.config['migration_behavior'] == 'central_to_aurora':
+            commit_dirs.append(dirs['abs_from_dir'])
+        return commit_dirs
+
+    def query_commit_message(self):
+        return "Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release"
+
+    def query_push_dirs(self):
+        dirs = self.query_abs_dirs()
+        return dirs.get('abs_from_dir'), dirs.get('abs_to_dir')
+
+    def query_push_args(self, cwd):
+        if cwd == self.query_abs_dirs()['abs_to_dir'] and \
+                self.config['migration_behavior'] == 'beta_to_release':
+            return ['--new-branch']
+        else:
+            return []
 
     def query_from_revision(self):
         """ Shortcut to get the revision for the from repo
@@ -179,11 +193,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             """
         dirs = self.query_abs_dirs()
         return self.query_hg_revision(dirs['abs_to_dir'])
-
-    def get_fx_version(self, path):
-        version_path = os.path.join(path, "browser", "config", "version.txt")
-        contents = self.read_from_file(version_path, error_level=FATAL)
-        return contents.split(".")
 
     def hg_tag(self, cwd, tags, user=None, message=None, revision=None,
                force=None, halt_on_failure=True):
@@ -209,23 +218,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             cmd, cwd=cwd, halt_on_failure=halt_on_failure,
             error_list=HgErrorList
         )
-
-    def hg_commit(self, cwd, message, user=None, ignore_no_changes=False):
-        """ Commit changes to hg.
-            """
-        cmd = self.query_exe('hg', return_type='list') + [
-            'commit', '-m', message]
-        if user:
-            cmd.extend(['-u', user])
-        success_codes = [0]
-        if ignore_no_changes:
-            success_codes.append(1)
-        self.run_command(
-            cmd, cwd=cwd, error_list=HgErrorList,
-            halt_on_failure=True,
-            success_codes=success_codes
-        )
-        return self.query_hg_revision(cwd)
 
     def hg_merge_via_debugsetparents(self, cwd, old_head, new_head,
                                      preserve_tags=True, user=None):
@@ -289,16 +281,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
                 )
             else:
                 self.info(".hgtags file is identical, no need to commit")
-
-    def replace(self, file_name, from_, to_):
-        """ Replace text in a file.
-            """
-        text = self.read_from_file(file_name, error_level=FATAL)
-        new_text = text.replace(from_, to_)
-        if text == new_text:
-            self.fatal("Cannot replace '%s' to '%s' in '%s'" %
-                       (from_, to_, file_name))
-        self.write_to_file(file_name, new_text, error_level=FATAL)
 
     def remove_locales(self, file_name, locales):
         """ Remove locales from shipped-locales (m-r only)
@@ -369,11 +351,11 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
                 error_list=HgErrorList,
                 halt_on_failure=True,
             )
-        next_ma_version = self.get_fx_version(dirs['abs_to_dir'])[0]
+        next_ma_version = self.get_version(dirs['abs_to_dir'])[0]
         self.bump_version(dirs['abs_to_dir'], next_ma_version, next_ma_version, "a1", "a2")
         self.apply_replacements()
         # bump m-c version
-        curr_mc_version = self.get_fx_version(dirs['abs_from_dir'])[0]
+        curr_mc_version = self.get_version(dirs['abs_from_dir'])[0]
         next_mc_version = str(int(curr_mc_version) + 1)
         self.bump_version(
             dirs['abs_from_dir'], curr_mc_version, next_mc_version, "a1", "a1",
@@ -392,7 +374,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             staging beta user repo migrations.
             """
         dirs = self.query_abs_dirs()
-        mb_version = self.get_fx_version(dirs['abs_to_dir'])[0]
+        mb_version = self.get_version(dirs['abs_to_dir'])[0]
         self.bump_version(dirs['abs_to_dir'], mb_version, mb_version, "a2", "")
         self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
@@ -473,12 +455,13 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             halt_on_failure=True,
         )
 
+# Actions {{{1
     def bump_second_digit(self, *args, **kwargs):
         """Bump second digit.
 
          ESR need only the second digit bumped as a part of merge day."""
         dirs = self.query_abs_dirs()
-        version = self.get_fx_version(dirs['abs_to_dir'])
+        version = self.get_version(dirs['abs_to_dir'])
         curr_version = ".".join(version)
         next_version = list(version)
         # bump the second digit
@@ -491,56 +474,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             self.replace(os.path.join(dirs['abs_to_dir'], f["file"]),
                          curr_version, next_version + f["suffix"])
         self.touch_clobber_file(dirs['abs_to_dir'])
-
-# Actions {{{1
-    def clean_repos(self):
-        """ We may end up with contaminated local repos at some point, but
-            we don't want to have to clobber and reclone from scratch every
-            time.
-
-            This is an attempt to clean up the local repos without needing a
-            clobber.
-            """
-        dirs = self.query_abs_dirs()
-        hg = self.query_exe("hg", return_type="list")
-        hg_repos = self.query_gecko_repos()
-        hg_strip_error_list = [{
-            'substr': r'''abort: empty revision set''', 'level': INFO,
-            'explanation': "Nothing to clean up; we're good!",
-        }] + HgErrorList
-        for repo_config in hg_repos:
-            repo_name = repo_config["dest"]
-            repo_path = os.path.join(dirs['abs_work_dir'], repo_name)
-            if os.path.exists(repo_path):
-                # hg up -C to discard uncommitted changes
-                self.run_command(
-                    hg + ["up", "-C", "-r", repo_config['revision']],
-                    cwd=repo_path,
-                    error_list=HgErrorList,
-                    halt_on_failure=True,
-                )
-                # discard unpushed commits
-                status = self.retry(
-                    self.run_command,
-                    args=(hg + ["--config", "extensions.mq=", "strip",
-                          "--no-backup", "outgoing()"], ),
-                    kwargs={
-                        'cwd': repo_path,
-                        'error_list': hg_strip_error_list,
-                        'return_type': 'num_errors',
-                        'success_codes': (0, 255),
-                    },
-                )
-                if status not in [0, 255]:
-                    self.fatal("Issues stripping outgoing revisions!")
-                # 2nd hg up -C to make sure we're not on a stranded head
-                # which can happen when reverting debugsetparents
-                self.run_command(
-                    hg + ["up", "-C", "-r", repo_config['revision']],
-                    cwd=repo_path,
-                    error_list=HgErrorList,
-                    halt_on_failure=True,
-                )
 
     def pull(self):
         """ Pull tools first, then use hgtool for the gecko repos
@@ -560,8 +493,8 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         """ Perform the migration.
             """
         dirs = self.query_abs_dirs()
-        from_fx_major_version = self.get_fx_version(dirs['abs_from_dir'])[0]
-        to_fx_major_version = self.get_fx_version(dirs['abs_to_dir'])[0]
+        from_fx_major_version = self.get_version(dirs['abs_from_dir'])[0]
+        to_fx_major_version = self.get_version(dirs['abs_to_dir'])[0]
         base_from_rev = self.query_from_revision()
         base_to_rev = self.query_to_revision()
         base_tag = self.config['base_tag'] % {'major_version': from_fx_major_version}
@@ -599,54 +532,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         getattr(self, self.config['migration_behavior'])(end_tag=end_tag)
         self.info("Verify the diff, and apply any manual changes, such as disabling features, and --commit-changes")
 
-    def commit_changes(self):
-        """ Do the commit.
-            """
-        hg = self.query_exe("hg", return_type="list")
-        dirs = self.query_abs_dirs()
-        commit_dirs = [dirs['abs_to_dir']]
-        if self.config['migration_behavior'] == 'central_to_aurora':
-            commit_dirs.append(dirs['abs_from_dir'])
-        for cwd in commit_dirs:
-            self.run_command(hg + ["diff"], cwd=cwd)
-            self.hg_commit(
-                cwd, user=self.config['hg_user'],
-                message="Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release"
-            )
-        self.info("Now verify |hg out| and |hg out --patch| if you're paranoid, and --push")
-
-    def push(self):
-        """
-            """
-        error_message = """Push failed!  If there was a push race, try rerunning
-the script (--clean-repos --pull --migrate).  The second run will be faster."""
-        dirs = self.query_abs_dirs()
-        hg = self.query_exe("hg", return_type="list")
-        for cwd in (dirs.get('abs_from_dir'), dirs.get('abs_to_dir')):
-            if not cwd:
-                self.warning("Skipping %s" % cwd)
-                continue
-            push_cmd = hg + ['push']
-            if cwd == dirs['abs_to_dir'] and self.config['migration_behavior'] == 'beta_to_release':
-                push_cmd.append('--new-branch')
-            status = self.run_command(
-                push_cmd,
-                cwd=cwd,
-                error_list=HgErrorList,
-                success_codes=[0, 1],
-            )
-            if status == 1:
-                self.warning("No changes for %s!" % cwd)
-            elif status:
-                if cwd == dirs['abs_from_dir'] and self.config['migration_behavior'] == 'central_to_aurora':
-                    message = """m-c push failed!
-You may be able to fix by |hg rebase| and rerunning --push if successful.
-If not, try rerunning the script (--clean-repos --pull --migrate).
-The second run will be faster."""
-                else:
-                    message = error_message
-                self.fatal(message)
-
     def trigger_builders(self):
         """Triggers builders that should be run directly after a merge.
         There are two different types of things we trigger:
@@ -675,5 +560,4 @@ The second run will be faster."""
 
 # __main__ {{{1
 if __name__ == '__main__':
-    gecko_migration = GeckoMigration()
-    gecko_migration.run_and_exit()
+    GeckoMigration().run_and_exit()
