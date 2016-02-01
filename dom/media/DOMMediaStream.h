@@ -421,11 +421,6 @@ public:
   virtual bool AddDirectListener(MediaStreamDirectListener *aListener) { return false; }
   virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) {}
 
-  virtual already_AddRefed<dom::Promise>
-  ApplyConstraintsToTrack(TrackID aTrackID,
-                          const MediaTrackConstraints& aConstraints,
-                          ErrorResult &aRv);
-
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
 

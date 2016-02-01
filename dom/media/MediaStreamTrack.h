@@ -80,6 +80,15 @@ public:
   virtual nsresult TakePhoto(MediaEnginePhotoCallback*) const { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
+   * We provide a fallback solution to ApplyConstraints() here.
+   * Sources that support ApplyConstraints() will have to override it.
+   */
+  virtual already_AddRefed<Promise>
+  ApplyConstraints(nsPIDOMWindowInner* aWindow,
+                   const dom::MediaTrackConstraints& aConstraints,
+                   ErrorResult &aRv);
+
+  /**
    * Called by the source interface when all registered sinks have unregistered.
    */
   virtual void Stop() = 0;
@@ -193,6 +202,9 @@ public:
 
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }
+
+  virtual const AudioStreamTrack* AsAudioStreamTrack() const { return nullptr; }
+  virtual const VideoStreamTrack* AsVideoStreamTrack() const { return nullptr; }
 
   // WebIDL
   virtual void GetKind(nsAString& aKind) = 0;

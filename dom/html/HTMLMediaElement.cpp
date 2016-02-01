@@ -1886,6 +1886,15 @@ public:
     return MediaSourceEnum::Other;
   }
 
+  already_AddRefed<Promise>
+  ApplyConstraints(nsPIDOMWindowInner* aWindow,
+                   const dom::MediaTrackConstraints& aConstraints,
+                   ErrorResult &aRv) override
+  {
+    NS_ERROR("ApplyConstraints not implemented for media element capture");
+    return nullptr;
+  }
+
   void Stop() override
   {
     NS_ERROR("We're reporting remote=true to not be stoppable. "
