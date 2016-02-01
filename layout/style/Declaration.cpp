@@ -1617,13 +1617,6 @@ Declaration::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-bool
-Declaration::HasVariableDeclaration(const nsAString& aName) const
-{
-  return (mVariables && mVariables->Has(aName)) ||
-         (mImportantVariables && mImportantVariables->Has(aName));
-}
-
 void
 Declaration::GetVariableDeclaration(const nsAString& aName,
                                     nsAString& aValue) const

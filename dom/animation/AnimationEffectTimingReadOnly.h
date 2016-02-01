@@ -26,6 +26,7 @@ namespace mozilla {
 
 namespace dom {
 struct AnimationEffectTimingProperties;
+class Element;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
 }
@@ -34,13 +35,16 @@ struct TimingParams
 {
   TimingParams() = default;
   explicit TimingParams(
-    const dom::AnimationEffectTimingProperties& aTimingProperties);
+    const dom::AnimationEffectTimingProperties& aTimingProperties,
+    const dom::Element* aTarget);
   explicit TimingParams(double aDuration);
 
   static TimingParams FromOptionsUnion(
-    const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
+    const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+    const dom::Element* aTarget);
   static TimingParams FromOptionsUnion(
-    const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions);
+    const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+    const dom::Element* aTarget);
 
   // The unitialized state of mDuration represents "auto".
   // Bug 1237173: We will replace this with Maybe<TimeDuration>.
@@ -49,6 +53,7 @@ struct TimingParams
   double mIterations = 1.0; // Can be NaN, negative, +/-Infinity
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
+  Maybe<ComputedTimingFunction> mFunction;
 
   bool operator==(const TimingParams& aOther) const;
   bool operator!=(const TimingParams& aOther) const
@@ -87,7 +92,7 @@ public:
     aRetVal = mTiming.mDuration;
   }
   PlaybackDirection Direction() const { return mTiming.mDirection; }
-  void GetEasing(nsString& aRetVal) const { aRetVal.AssignLiteral("linear"); }
+  void GetEasing(nsString& aRetVal) const;
 
   const TimingParams& AsTimingParams() const { return mTiming; }
   void SetTimingParams(const TimingParams& aTiming) { mTiming = aTiming; }

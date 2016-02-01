@@ -5030,19 +5030,17 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
   return true;
 }
 
-PLDHashOperator
+void
 EventStateManager::ResetLastOverForContent(
                      const uint32_t& aIdx,
                      RefPtr<OverOutElementsWrapper>& aElemWrapper,
-                     void* aClosure)
+                     nsIContent* aContent)
 {
-  nsIContent* content = static_cast<nsIContent*>(aClosure);
   if (aElemWrapper && aElemWrapper->mLastOverElement &&
-      nsContentUtils::ContentIsDescendantOf(aElemWrapper->mLastOverElement, content)) {
+      nsContentUtils::ContentIsDescendantOf(aElemWrapper->mLastOverElement,
+                                            aContent)) {
     aElemWrapper->mLastOverElement = nullptr;
   }
-
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -5091,8 +5089,11 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 
   // See bug 292146 for why we want to null this out
   ResetLastOverForContent(0, mMouseEnterLeaveHelper, aContent);
-  mPointersEnterLeaveHelper.Enumerate(
-    &EventStateManager::ResetLastOverForContent, aContent);
+  for (auto iter = mPointersEnterLeaveHelper.Iter();
+       !iter.Done();
+       iter.Next()) {
+    ResetLastOverForContent(iter.Key(), iter.Data(), aContent);
+  }
 }
 
 bool

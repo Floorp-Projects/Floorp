@@ -89,7 +89,7 @@ enum class Expr : uint16_t
     I32DivU,
     I32RemS,
     I32RemU,
-    I32Ior,
+    I32Or,
     I32And,
     I32Xor,
     I32Shl,

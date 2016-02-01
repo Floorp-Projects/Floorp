@@ -13,7 +13,6 @@
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
 #include "GonkNativeWindow.h"
-#include "GonkNativeWindowClient.h"
 #include "mozilla/layers/FenceUtils.h"
 #include "mozilla/UniquePtr.h"
 #include <ui/Fence.h>

@@ -13,6 +13,8 @@
 #include "prlink.h"
 #include "mozilla/Logging.h"
 
+using mozilla::LogLevel;
+
 static PRLogModuleInfo* sIdleLog = nullptr;
 
 typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,

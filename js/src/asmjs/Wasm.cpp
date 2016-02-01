@@ -267,6 +267,13 @@ DecodeBlock(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
+DecodeBinaryOperator(FunctionDecoder& f, ExprType expected)
+{
+    return DecodeExpr(f, expected) &&
+           DecodeExpr(f, expected);
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -288,6 +295,34 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeSetLocal(f, expected);
       case Expr::Block:
         return DecodeBlock(f, expected);
+      case Expr::I32Add:
+      case Expr::I32Sub:
+      case Expr::I32Mul:
+      case Expr::I32DivS:
+      case Expr::I32DivU:
+      case Expr::I32RemS:
+      case Expr::I32RemU:
+      case Expr::I32And:
+      case Expr::I32Or:
+      case Expr::I32Xor:
+      case Expr::I32Shl:
+      case Expr::I32ShrS:
+      case Expr::I32ShrU:
+      case Expr::F32Add:
+      case Expr::F32Sub:
+      case Expr::F32Mul:
+      case Expr::F32Div:
+      case Expr::F32Min:
+      case Expr::F32Max:
+      case Expr::F32CopySign:
+      case Expr::F64Add:
+      case Expr::F64Sub:
+      case Expr::F64Mul:
+      case Expr::F64Div:
+      case Expr::F64Min:
+      case Expr::F64Max:
+      case Expr::F64CopySign:
+        return DecodeBinaryOperator(f, expected);
       default:
         break;
     }

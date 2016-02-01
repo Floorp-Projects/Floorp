@@ -144,10 +144,6 @@ protected:
 private:
   friend class nsAutoPtr<SpdyStream31>;
 
-  static PLDHashOperator hdrHashEnumerate(const nsACString &,
-                                          nsAutoPtr<nsCString> &,
-                                          void *);
-
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
   nsresult GenerateSynFrame();
 

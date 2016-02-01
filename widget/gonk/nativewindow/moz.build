@@ -17,7 +17,6 @@
 EXPORTS += [
     'GonkBufferQueue.h',
     'GonkNativeWindow.h',
-    'GonkNativeWindowClient.h',
 ]
 
 if CONFIG['ANDROID_VERSION'] >= '19':
@@ -32,7 +31,6 @@ if CONFIG['ANDROID_VERSION'] >= '21':
         'GonkBufferQueueLL/GonkBufferQueueProducer.h',
         'GonkBufferQueueLL/GonkBufferSlot.h',
         'GonkConsumerBaseLL.h',
-        'GonkNativeWindowClientLL.h',
         'GonkNativeWindowLL.h',
         'IGonkGraphicBufferConsumerLL.h',
     ]
@@ -40,7 +38,6 @@ elif CONFIG['ANDROID_VERSION'] >= '19':
     EXPORTS += [
         'GonkBufferQueueKK.h',
         'GonkConsumerBaseKK.h',
-        'GonkNativeWindowClientKK.h',
         'GonkNativeWindowKK.h',
         'IGonkGraphicBufferConsumerKK.h',
     ]
@@ -48,12 +45,10 @@ elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
     EXPORTS += [
         'GonkBufferQueueJB.h',
         'GonkConsumerBaseJB.h',
-        'GonkNativeWindowClientJB.h',
         'GonkNativeWindowJB.h',
     ]
 elif CONFIG['ANDROID_VERSION'] == '15':
     EXPORTS += [
-        'GonkNativeWindowClientICS.h',
         'GonkNativeWindowICS.h',
     ]
 
@@ -67,7 +62,6 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']
             'GonkBufferQueueLL/GonkBufferQueueProducer.cpp',
             'GonkBufferQueueLL/GonkBufferSlot.cpp',
             'GonkConsumerBaseLL.cpp',
-            'GonkNativeWindowClientLL.cpp',
             'GonkNativeWindowLL.cpp',
             'IGonkGraphicBufferConsumerLL.cpp',
         ]
@@ -75,7 +69,6 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']
         SOURCES += [
             'GonkBufferQueueKK.cpp',
             'GonkConsumerBaseKK.cpp',
-            'GonkNativeWindowClientKK.cpp',
             'GonkNativeWindowKK.cpp',
             'IGonkGraphicBufferConsumerKK.cpp',
         ]
@@ -83,12 +76,10 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER'] or CONFIG['MOZ_WEBRTC']
         SOURCES += [
             'GonkBufferQueueJB.cpp',
             'GonkConsumerBaseJB.cpp',
-            'GonkNativeWindowClientJB.cpp',
             'GonkNativeWindowJB.cpp',
         ]
     elif CONFIG['ANDROID_VERSION'] == '15':
         SOURCES += [
-            'GonkNativeWindowClientICS.cpp',
             'GonkNativeWindowICS.cpp',
         ]
 

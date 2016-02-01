@@ -1643,7 +1643,7 @@ MediaDecoderStateMachine::InitiateSeek()
   // Do the seek.
   RefPtr<MediaDecoderStateMachine> self = this;
   mSeekRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
-                                 &MediaDecoderReader::Seek, mCurrentSeek.mTarget.mTime,
+                                 &MediaDecoderReader::Seek, mCurrentSeek.mTarget.mTime + StartTime(),
                                  Duration().ToMicroseconds())
     ->Then(OwnerThread(), __func__,
            [self] (int64_t) -> void {
