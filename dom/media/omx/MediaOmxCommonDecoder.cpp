@@ -231,7 +231,7 @@ MediaOmxCommonDecoder::ChangeState(PlayState aState)
 }
 
 void
-MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget)
+MediaOmxCommonDecoder::CallSeek(SeekTarget aTarget)
 {
   if (!mAudioOffloadPlayer) {
     MediaDecoder::CallSeek(aTarget);

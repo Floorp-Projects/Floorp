@@ -52,7 +52,7 @@ public:
                         MetadataTags** aTags) override;
 
   RefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) override;
+  Seek(SeekTarget aTarget, int64_t aEndTime) override;
 
 protected:
   void NotifyDataArrivedInternal() override;
