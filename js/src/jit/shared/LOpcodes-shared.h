@@ -26,6 +26,7 @@
     _(SimdAnyTrue)                  \
     _(SimdReinterpretCast)          \
     _(SimdExtractElementI)          \
+    _(SimdExtractElementU2D)        \
     _(SimdExtractElementB)          \
     _(SimdExtractElementF)          \
     _(SimdInsertElementI)           \

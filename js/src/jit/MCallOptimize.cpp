@@ -3468,10 +3468,6 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
         return InliningStatus_NotInlined;
     }
 
-    // TODO JSO: Implement unsigned integer lane values.
-    if (sign == SimdSign::Unsigned)
-        return InliningStatus_NotInlined;
-
     MDefinition* arg = callInfo.getArg(1);
     if (!arg->isConstantValue() || arg->type() != MIRType_Int32)
         return InliningStatus_NotInlined;
@@ -3481,8 +3477,13 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
 
     // See comment in inlineSimdBinary
     MIRType laneType = SimdTypeToLaneType(vecType);
+
+    // An Uint32 lane can't be represented in MIRType_Int32. Get it as a double.
+    if (sign == SimdSign::Unsigned && vecType == MIRType_Int32x4)
+        laneType = MIRType_Double;
+
     MSimdExtractElement* ins = MSimdExtractElement::New(alloc(), callInfo.getArg(0),
-                                                        vecType, laneType, SimdLane(lane));
+                                                        vecType, laneType, SimdLane(lane), sign);
     current->add(ins);
     current->push(ins);
     callInfo.setImplicitlyUsedUnchecked();

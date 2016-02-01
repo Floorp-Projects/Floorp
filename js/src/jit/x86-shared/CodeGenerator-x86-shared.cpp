@@ -2484,13 +2484,10 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
     }
 }
 
+// Extract an integer lane from the vector register |input| and place it in |output|.
 void
-CodeGeneratorX86Shared::visitSimdExtractElementB(LSimdExtractElementB* ins)
+CodeGeneratorX86Shared::emitSimdExtractLane(FloatRegister input, Register output, unsigned lane)
 {
-    FloatRegister input = ToFloatRegister(ins->input());
-    Register output = ToRegister(ins->output());
-
-    SimdLane lane = ins->lane();
     if (lane == LaneX) {
         // The value we want to extract is in the low double-word
         masm.moveLowInt32(input, output);
@@ -2501,6 +2498,15 @@ CodeGeneratorX86Shared::visitSimdExtractElementB(LSimdExtractElementB* ins)
         masm.shuffleInt32(mask, input, ScratchSimd128Reg);
         masm.moveLowInt32(ScratchSimd128Reg, output);
     }
+}
+
+void
+CodeGeneratorX86Shared::visitSimdExtractElementB(LSimdExtractElementB* ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    emitSimdExtractLane(input, output, ins->lane());
 
     // We need to generate a 0/1 value. We have 0/-1.
     masm.and32(Imm32(1), output);
@@ -2512,18 +2518,18 @@ CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    SimdLane lane = ins->lane();
-    if (lane == LaneX) {
-        // The value we want to extract is in the low double-word
-        masm.moveLowInt32(input, output);
-    } else if (AssemblerX86Shared::HasSSE41()) {
-        masm.vpextrd(lane, input, output);
-    } else {
-        uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
-        ScratchSimd128Scope scratch(masm);
-        masm.shuffleInt32(mask, input, scratch);
-        masm.moveLowInt32(scratch, output);
-    }
+    emitSimdExtractLane(input, output, ins->lane());
+}
+
+void
+CodeGeneratorX86Shared::visitSimdExtractElementU2D(LSimdExtractElementU2D* ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    emitSimdExtractLane(input, temp, ins->lane());
+    masm.convertUInt32ToDouble(temp, output);
 }
 
 void

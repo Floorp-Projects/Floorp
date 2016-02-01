@@ -280,6 +280,24 @@ class LSimdExtractElementF : public LSimdExtractElementBase
     {}
 };
 
+// Extracts an element from an Uint32x4 SIMD vector, converts to double.
+class LSimdExtractElementU2D : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(SimdExtractElementU2D);
+    explicit LSimdExtractElementU2D(const LAllocation& base, const LDefinition& temp) {
+        setOperand(0, base);
+        setTemp(0, temp);
+    }
+    SimdLane lane() const {
+        return mir_->toSimdExtractElement()->lane();
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
+
 class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
 {
   protected:
