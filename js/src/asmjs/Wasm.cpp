@@ -350,6 +350,32 @@ DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator
 }
 
 /*****************************************************************************/
+// dynamic link data
+
+struct ImportName
+{
+    UniqueChars module;
+    UniqueChars func;
+
+    ImportName(UniqueChars module, UniqueChars func)
+      : module(Move(module)), func(Move(func))
+    {}
+    ImportName(ImportName&& rhs)
+      : module(Move(rhs.module)), func(Move(rhs.func))
+    {}
+};
+
+typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
+
+struct DynamicLinkData
+{
+    ImportNameVector importNames;
+    ExportMap exportMap;
+};
+
+typedef UniquePtr<DynamicLinkData> UniqueDynamicLinkData;
+
+/*****************************************************************************/
 // wasm decoding and generation
 
 static bool
@@ -448,23 +474,8 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
     return true;
 }
 
-struct ImportName
-{
-    UniqueChars module;
-    UniqueChars func;
-
-    ImportName(UniqueChars module, UniqueChars func)
-      : module(Move(module)), func(Move(func))
-    {}
-    ImportName(ImportName&& rhs)
-      : module(Move(rhs.module)), func(Move(rhs.func))
-    {}
-};
-
-typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
-
 static bool
-DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
 {
     if (!d.readCStringIf(FuncSubsection))
         return Fail(cx, d, "expected 'func' tag");
@@ -495,11 +506,11 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
     if (!funcName)
         return false;
 
-    return importNames->emplaceBack(Move(moduleName), Move(funcName));
+    return link->importNames.emplaceBack(Move(moduleName), Move(funcName));
 }
 
 static bool
-DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* imports)
+DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
 {
     if (!d.readCStringIf(ImportSection))
         return true;
@@ -516,7 +527,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
         return Fail(cx, d, "too many imports");
 
     for (uint32_t i = 0; i < numImports; i++) {
-        if (!DecodeImport(cx, d, init, imports))
+        if (!DecodeImport(cx, d, init, link))
             return false;
     }
 
@@ -527,7 +538,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
 }
 
 static bool
-DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, ExportMap* exportMap)
+DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
 {
     if (!d.readCStringIf(FuncSubsection))
         return Fail(cx, d, "expected 'func' tag");
@@ -543,27 +554,29 @@ DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, ExportMap* exportMa
     if (!mg.declareExport(funcIndex, &exportIndex))
         return false;
 
-    MOZ_ASSERT(exportIndex <= exportMap->exportNames.length());
-    if (exportIndex == exportMap->exportNames.length()) {
+    ExportMap& exportMap = link->exportMap;
+
+    MOZ_ASSERT(exportIndex <= exportMap.exportNames.length());
+    if (exportIndex == exportMap.exportNames.length()) {
         UniqueChars funcName(JS_smprintf("%u", unsigned(funcIndex)));
-        if (!funcName || !exportMap->exportNames.emplaceBack(Move(funcName)))
+        if (!funcName || !exportMap.exportNames.emplaceBack(Move(funcName)))
             return false;
     }
 
-    if (!exportMap->fieldsToExports.append(exportIndex))
+    if (!exportMap.fieldsToExports.append(exportIndex))
         return false;
 
     const char* chars;
     if (!d.readCString(&chars))
         return Fail(cx, d, "expected export external name string");
 
-    return exportMap->fieldNames.emplaceBack(DuplicateString(chars));
+    return exportMap.fieldNames.emplaceBack(DuplicateString(chars));
 }
 
 typedef HashSet<const char*, CStringHasher> CStringSet;
 
 static bool
-DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, ExportMap* exportMap)
+DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
 {
     if (!d.readCStringIf(ExportSection))
         return true;
@@ -580,7 +593,7 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, ExportMap* 
         return Fail(cx, d, "too many exports");
 
     for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeExport(cx, d, mg, exportMap))
+        if (!DecodeExport(cx, d, mg, link))
             return false;
     }
 
@@ -590,7 +603,7 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, ExportMap* 
     CStringSet dupSet(cx);
     if (!dupSet.init())
         return false;
-    for (const UniqueChars& prevName : exportMap->fieldNames) {
+    for (const UniqueChars& prevName : link->exportMap.fieldNames) {
         CStringSet::AddPtr p = dupSet.lookupForAdd(prevName.get());
         if (p)
             return Fail(cx, d, "duplicate export");
@@ -699,8 +712,7 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
 
 static bool
 DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t length,
-             ImportNameVector* importNames, ExportMap* exportMap,
-             MutableHandle<WasmModuleObject*> moduleObj)
+             UniqueDynamicLinkData* dynamicLink, MutableHandle<WasmModuleObject*> moduleObj)
 {
     Decoder d(bytes, bytes + length);
 
@@ -721,17 +733,19 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!DecodeDeclarationSection(cx, d, init.get()))
         return false;
 
-    if (!DecodeImportSection(cx, d, init.get(), importNames))
+    *dynamicLink = MakeUnique<DynamicLinkData>();
+    if (!*dynamicLink)
+        return false;
+
+    if (!DecodeImportSection(cx, d, init.get(), dynamicLink->get()))
         return false;
 
     ModuleGenerator mg(cx);
-    if (!mg.init(Move(init)))
+    if (!mg.init(Move(init), Move(filename)))
         return false;
 
-    if (!DecodeExportsSection(cx, d, mg, exportMap))
+    if (!DecodeExportsSection(cx, d, mg, dynamicLink->get()))
         return false;
-
-    HeapUsage heapUsage = HeapUsage::None;
 
     if (!DecodeCodeSection(cx, d, mg))
         return false;
@@ -747,9 +761,9 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
         return Fail(cx, d, "failed to consume all bytes of module");
 
     UniqueModuleData module;
-    UniqueStaticLinkData link;
+    UniqueStaticLinkData staticLink;
     SlowFunctionVector slowFuncs(cx);
-    if (!mg.finish(heapUsage, Move(filename), Move(funcNames), &module, &link, &slowFuncs))
+    if (!mg.finish(Move(funcNames), &module, &staticLink, &slowFuncs))
         return false;
 
     moduleObj.set(WasmModuleObject::create(cx));
@@ -759,7 +773,7 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!moduleObj->init(cx->new_<Module>(Move(module))))
         return false;
 
-    return moduleObj->module().staticallyLink(cx, *link);
+    return moduleObj->module().staticallyLink(cx, *staticLink);
 }
 
 /*****************************************************************************/
@@ -887,10 +901,9 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
     if (!DescribeScriptedCaller(cx, &filename))
         return false;
 
-    ImportNameVector importNames;
-    ExportMap exportMap;
+    UniqueDynamicLinkData link;
     Rooted<WasmModuleObject*> moduleObj(cx);
-    if (!DecodeModule(cx, Move(filename), bytes, length, &importNames, &exportMap, &moduleObj)) {
+    if (!DecodeModule(cx, Move(filename), bytes, length, &link, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
@@ -903,11 +916,11 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         return Fail(cx, "Heap not implemented yet");
 
     Rooted<FunctionVector> imports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, importNames, &imports))
+    if (!ImportFunctions(cx, importObj, link->importNames, &imports))
         return false;
 
     RootedObject exportObj(cx);
-    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, exportMap, &exportObj))
+    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, link->exportMap, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);
