@@ -106,7 +106,7 @@ http://creativecommons.org/licenses/publicdomain/
 
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
-      controlledFrame.waitOnWorkerMessage("finished"),
+      controlledFrame.waitOnPushMessage(),
       webpush(pushSubscription, message),
     ]).then(([message]) => message);
   }
@@ -161,7 +161,7 @@ http://creativecommons.org/licenses/publicdomain/
 
     // Send a blank message.
     var [message] = yield Promise.all([
-      controlledFrame.waitOnWorkerMessage("finished"),
+      controlledFrame.waitOnPushMessage(),
       fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
         method: "PUT",
         headers: {
