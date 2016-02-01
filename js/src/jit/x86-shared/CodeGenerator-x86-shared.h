@@ -185,6 +185,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
 
+    void emitSimdExtractLane(FloatRegister input, Register output, unsigned lane);
+
   public:
     CodeGeneratorX86Shared(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
@@ -265,6 +267,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdReinterpretCast(LSimdReinterpretCast* lir);
     void visitSimdExtractElementB(LSimdExtractElementB* lir);
     void visitSimdExtractElementI(LSimdExtractElementI* lir);
+    void visitSimdExtractElementU2D(LSimdExtractElementU2D* lir);
     void visitSimdExtractElementF(LSimdExtractElementF* lir);
     void visitSimdInsertElementI(LSimdInsertElementI* lir);
     void visitSimdInsertElementF(LSimdInsertElementF* lir);
