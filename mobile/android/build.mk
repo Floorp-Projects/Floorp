@@ -11,8 +11,6 @@ package:
 	@$(MAKE) -C mobile/android/installer
 
 ifeq ($(OS_TARGET),Android)
-sdk_level=$(shell $(ADB) shell getprop ro.build.version.sdk)
-permissions-required=$(shell if [ $(sdk_level) -gt 22 ] ; then echo yes ; else echo no ; fi)
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)
 ANDROID_SERIAL = $(MOZ_ANDROID_INSTALL_TARGET)
 endif
@@ -36,12 +34,7 @@ endif
 endif
 
 install::
-ifeq ($(permissions-required),yes)
-
-	$(ADB) install -r -g $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
-else
 	$(ADB) install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
-endif
 else
 	@echo 'Mobile can't be installed directly.'
 	@exit 1
