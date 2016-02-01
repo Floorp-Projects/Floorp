@@ -94,7 +94,7 @@ struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
   StyleAnimationValue mFromValue, mToValue;
-  ComputedTimingFunction mTimingFunction;
+  Maybe<ComputedTimingFunction> mTimingFunction;
 
   bool operator==(const AnimationPropertySegment& aOther) const {
     return mFromKey == aOther.mFromKey &&
@@ -194,7 +194,8 @@ public:
               ErrorResult& aRv)
   {
     return Constructor(aGlobal, aTarget, aFrames,
-                       TimingParams::FromOptionsUnion(aOptions), aRv);
+                       TimingParams::FromOptionsUnion(aOptions, aTarget),
+                       aRv);
   }
 
   // More generalized version for Animatable.animate.

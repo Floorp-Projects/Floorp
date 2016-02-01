@@ -11,12 +11,14 @@ from firefox_puppeteer.testcases import FirefoxTestCase
 class TestFaviconInAutocomplete(FirefoxTestCase):
 
     PREF_SUGGEST_SEARCHES = 'browser.urlbar.suggest.searches'
+    PREF_SUGGEST_BOOKMARK = 'browser.urlbar.suggest.bookmark'
 
     def setUp(self):
         FirefoxTestCase.setUp(self)
 
-        # Disable search suggestions to get results only for history and bookmarks
+        # Disable suggestions for searches and bookmarks to get results only for history
         self.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
+        self.prefs.set_pref(self.PREF_SUGGEST_BOOKMARK, False)
 
         self.places.remove_all_history()
 

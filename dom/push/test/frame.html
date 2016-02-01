@@ -5,7 +5,7 @@
   <script>
 
 
-    function waitOnPushMessage()
+    function waitOnPushMessage(pushSubscription)
     {
       var p = new Promise(function(res, rej) {
         navigator.serviceWorker.onmessage = function(e) {
