@@ -148,7 +148,10 @@ public:
       }
       if (!source) {
         NS_ASSERTION(false, "Dynamic track created without an explicit TrackSource");
-        source = new BasicUnstoppableTrackSource();
+        nsPIDOMWindowInner* window = mStream->GetParentObject();
+        nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+        nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
+        source = new BasicUnstoppableTrackSource(principal);
       }
       track = mStream->CreateOwnDOMTrack(aTrackID, aType, nsString(), source);
     }
@@ -656,12 +659,12 @@ DOMMediaStream::InitTrackUnionStream(MediaStreamGraph* aGraph)
 }
 
 void
-DOMMediaStream::InitAudioCaptureStream(MediaStreamGraph* aGraph)
+DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGraph* aGraph)
 {
   const TrackID AUDIO_TRACK = 1;
 
   RefPtr<BasicUnstoppableTrackSource> audioCaptureSource =
-    new BasicUnstoppableTrackSource(MediaSourceEnum::AudioCapture);
+    new BasicUnstoppableTrackSource(aPrincipal, MediaSourceEnum::AudioCapture);
 
   AudioCaptureStream* audioCaptureStream =
     static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK));
@@ -737,11 +740,13 @@ DOMMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
 
 already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
+                                         nsIPrincipal* aPrincipal,
                                          MediaStreamGraph* aGraph)
 {
+  // Audio capture doesn't create tracks dynamically
   MediaStreamTrackSourceGetter* getter = nullptr;
   RefPtr<DOMMediaStream> stream = new DOMMediaStream(aWindow, getter);
-  stream->InitAudioCaptureStream(aGraph);
+  stream->InitAudioCaptureStream(aPrincipal, aGraph);
   return stream.forget();
 }
 
@@ -1105,17 +1110,6 @@ DOMLocalMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
   RefPtr<DOMLocalMediaStream> stream =
     new DOMLocalMediaStream(aWindow, aTrackSourceGetter);
   stream->InitTrackUnionStream(aGraph);
-  return stream.forget();
-}
-
-already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
-                                              MediaStreamGraph* aGraph)
-{
-  // AudioCapture doesn't create tracks dynamically
-  MediaStreamTrackSourceGetter* getter = nullptr;
-  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream(aWindow, getter);
-  stream->InitAudioCaptureStream(aGraph);
   return stream.forget();
 }
 
