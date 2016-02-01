@@ -52,23 +52,24 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
  * view is visible and ready
  */
 function openLayoutView() {
-  return openInspectorSidebarTab("layoutview").then(({toolbox, inspector}) => {
+  return openInspectorSidebarTab("layoutview").then(data => {
     // The actual highligher show/hide methods are mocked in layoutview tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
-      highlighter.showBoxModel = function(nodeFront, options) {
+      highlighter.showBoxModel = function(nodeFront) {
         return promise.resolve();
       };
       highlighter.hideBoxModel = function() {
         return promise.resolve();
       };
     }
-    mockHighlighter(toolbox);
+    mockHighlighter(data.toolbox);
 
     return {
-      toolbox,
-      inspector,
-      view: inspector.layoutview
+      toolbox: data.toolbox,
+      inspector: data.inspector,
+      view: data.inspector.layoutview,
+      testActor: data.testActor
     };
   });
 }
