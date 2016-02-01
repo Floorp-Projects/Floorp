@@ -122,8 +122,15 @@ public:
    */
   inline void ScheduleTextUpdate(nsIContent* aTextNode)
   {
-    if (mTextHash.PutEntry(aTextNode))
-      ScheduleProcessing();
+    // Make sure we are not called with a node that is not in the DOM tree or
+    // not visible.
+    MOZ_ASSERT(aTextNode->GetParentNode(), "A text node is not in DOM");
+    MOZ_ASSERT(aTextNode->GetPrimaryFrame(), "A text node doesn't have a frame");
+    MOZ_ASSERT(aTextNode->GetPrimaryFrame()->StyleVisibility()->IsVisible(),
+               "A text node is not visible");
+
+    mTextHash.PutEntry(aTextNode);
+    ScheduleProcessing();
   }
 
   /**

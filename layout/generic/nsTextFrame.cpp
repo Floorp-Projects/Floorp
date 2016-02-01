@@ -8501,7 +8501,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
 #ifdef ACCESSIBILITY
   // Schedule the update of accessible tree since rendered text might be changed.
-  ReflowTextA11yNotifier(presContext, mContent);
+  if (StyleVisibility()->IsVisible()) {
+    ReflowTextA11yNotifier(presContext, mContent);
+  }
 #endif
 
   /////////////////////////////////////////////////////////////////////
