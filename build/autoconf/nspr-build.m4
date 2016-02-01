@@ -137,10 +137,10 @@ fi
 if test -n "$_IS_OUTER_CONFIGURE"; then
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR($NSPR_MINVER, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([you do not have NSPR installed or your version is older than $NSPR_MINVER.])])
+    AM_PATH_NSPR($NSPR_MINVER, [MOZ_SYSTEM_NSPR=1], [AC_MSG_ERROR([you do not have NSPR installed or your version is older than $NSPR_MINVER.])])
 fi
 
-if test -n "$MOZ_NATIVE_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
+if test -n "$MOZ_SYSTEM_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
     AC_TRY_COMPILE([#include "prtypes.h"],
@@ -178,8 +178,8 @@ AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_LIB_DIR)
 
 NSPR_PKGCONF_CHECK="nspr"
-if test -n "$MOZ_NATIVE_NSPR"; then
-    # piggy back on $MOZ_NATIVE_NSPR to set a variable for the nspr check for js.pc
+if test -n "$MOZ_SYSTEM_NSPR"; then
+    # piggy back on $MOZ_SYSTEM_NSPR to set a variable for the nspr check for js.pc
     NSPR_PKGCONF_CHECK="nspr >= $NSPR_MINVER"
 
     _SAVE_CFLAGS=$CFLAGS

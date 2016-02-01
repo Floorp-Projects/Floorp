@@ -6,7 +6,7 @@
 
 DIRS += ['crmf']
 
-if CONFIG['MOZ_NATIVE_NSS']:
+if CONFIG['MOZ_SYSTEM_NSS']:
     Library('nss')
     OS_LIBS += CONFIG['NSS_LIBS']
 elif CONFIG['MOZ_FOLD_LIBS']:
