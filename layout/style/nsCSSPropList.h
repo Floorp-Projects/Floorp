@@ -3674,7 +3674,7 @@ CSS_PROP_POSITION(
     kWidthKTable,
     offsetof(nsStylePosition, mWidth),
     eStyleAnimType_Coord)
-CSS_PROP_USERINTERFACE(
+CSS_PROP_UIRESET(
     -moz-window-dragging,
     _moz_window_dragging,
     CSS_PROP_DOMPROP_PREFIXED(WindowDragging),

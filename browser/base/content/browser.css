@@ -72,10 +72,6 @@ toolbar[customizable="true"] {
 #toolbar-menubar {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-stub");
 }
-
-toolbar[customizable="true"]:not([nowindowdrag="true"]) {
-  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
-}
 %endif
 
 #toolbar-menubar[autohide="true"] {
@@ -227,10 +223,7 @@ toolbar[customizing] > .overflow-button {
 
 #titlebar {
   -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
-
-%ifdef XP_MACOSX
   -moz-window-dragging: drag;
-%endif
 }
 
 #titlebar-spacer {
@@ -297,6 +290,11 @@ toolbar[customizing] > .overflow-button {
   display: none !important;
 }
 
+#main-window[tabsintitlebar] #TabsToolbar,
+#main-window[tabsintitlebar] #toolbar-menubar:not([autohide=true]),
+#main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):-moz-lwtheme {
+  -moz-window-dragging: drag;
+}
 %endif
 
 %endif
@@ -357,6 +355,16 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
 toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-box-flex: 1;
+}
+
+/* Ensure that empty parts of the bookmarks container can be dragged on OSX, and on other OSes
+ * only when a lwtheme is in use. */
+%ifdef XP_MACOSX
+#PlacesToolbarItems {
+%else
+#main-window[tabsintitlebar] #PlacesToolbarItems:-moz-lwtheme {
+%endif
+  -moz-window-dragging: drag;
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {

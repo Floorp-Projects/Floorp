@@ -2951,6 +2951,7 @@ struct nsStyleUIReset
   uint8_t   mUserSelect;      // [reset] (selection-style)
   uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
   uint8_t   mIMEMode;         // [reset]
+  uint8_t   mWindowDragging;  // [reset]
   uint8_t   mWindowShadow;    // [reset]
 };
 
@@ -3017,7 +3018,6 @@ struct nsStyleUserInterface
   uint8_t   mUserInput;       // [inherited]
   uint8_t   mUserModify;      // [inherited] (modify-content)
   uint8_t   mUserFocus;       // [inherited] (auto-select)
-  uint8_t   mWindowDragging;  // [inherited]
 
   uint8_t   mCursor;          // [inherited] See nsStyleConsts.h
 
