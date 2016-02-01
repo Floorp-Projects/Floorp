@@ -950,11 +950,6 @@ namespace {
       result.mSize = result.mSizeContainingRect = kVeryLargeNegativeNumber;
       return result;
     }
-    SizePair& operator=(const SizePair& aOther) {
-      mSizeContainingRect = aOther.mSizeContainingRect;
-      mSize = aOther.mSize;
-      return *this;
-    }
     bool operator<(const SizePair& aOther) const {
       if (mSizeContainingRect < aOther.mSizeContainingRect)
         return true;
