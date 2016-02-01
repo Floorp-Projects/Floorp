@@ -23,8 +23,15 @@ body {
   margin-bottom: 0.5em;
 }
 
+#refreshButton {
+  vertical-align: middle;
+}
+
 .category {
   cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
 }
 
 .category .category-name {
@@ -36,6 +43,7 @@ body {
 .warningBackground:not([hidden]) {
   display: flex;
 }
+
 .warningBackground {
   flex-direction: column;
   box-sizing: border-box;
@@ -54,7 +62,7 @@ body {
 .title {
   position: relative;
   border-bottom: 1px solid var(--in-content-box-border-color);
-  margin-bottom: 2em;
+  margin-bottom: 1em;
   padding-bottom: 0.5em;
 }
 
@@ -81,7 +89,7 @@ body {
 }
 
 .tab {
-  padding: 0.5em;
+  padding: 0.5em 0;
 }
 
 .tab table {
@@ -91,7 +99,7 @@ body {
 
 hr {
   border: none;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
 th {
