@@ -51,7 +51,7 @@ public class TelemetryPingGenerator {
                 appName + '/' +
                 appVersion + '/' +
                 appUpdateChannel + '/' +
-                appBuildId + '/';
+                appBuildId;
     }
 
     /**
