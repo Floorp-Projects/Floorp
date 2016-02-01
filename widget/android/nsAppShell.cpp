@@ -341,6 +341,11 @@ nsAppShell::Observe(nsISupports* aSubject,
             }
         }
         removeObserver = true;
+
+    } else if (!strcmp(aTopic, "nsPref:changed")) {
+        if (jni::IsAvailable()) {
+            mozilla::PrefsHelper::OnPrefChange(aData);
+        }
     }
 
     if (removeObserver) {
