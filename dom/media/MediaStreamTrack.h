@@ -22,6 +22,7 @@ class MediaStreamGraph;
 class MediaStreamTrackListener;
 class PeerConnectionImpl;
 class ProcessedMediaStream;
+class RemoteSourceStreamInfo;
 
 namespace dom {
 
@@ -170,8 +171,9 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // some internal state, e.g., GetInputStream(), GetOwnedStream().
   friend class mozilla::DOMMediaStream;
 
-  // PeerConnectionImpl.cpp needs to know our owning DOMStream and bound track id.
+  // PeerConnection and friends need to know our owning DOMStream and track id.
   friend class mozilla::PeerConnectionImpl;
+  friend class mozilla::RemoteSourceStreamInfo;
 
 public:
   /**
@@ -186,24 +188,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
                                            DOMEventTargetHelper)
 
-  DOMMediaStream* GetParentObject() const { return mOwningStream; }
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
-
-  /**
-   * Returns the DOMMediaStream owning this track.
-   */
-  DOMMediaStream* GetStream() const { return mOwningStream; }
-
-  /**
-   * Returns the TrackID this stream has in its owning DOMMediaStream's Owned
-   * stream.
-   */
-  TrackID GetTrackID() const { return mTrackID; }
-
-  /**
-   * Returns the TrackID this MediaStreamTrack has in its input MSG-MediaStream.
-   */
-  TrackID GetInputTrackID() const { return mInputTrackID; }
 
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }

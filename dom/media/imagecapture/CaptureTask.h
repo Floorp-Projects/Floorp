@@ -60,9 +60,8 @@ public:
   void DetachTrack();
 
   // CaptureTask should be created on main thread.
-  CaptureTask(dom::ImageCapture* aImageCapture, TrackID aTrackID)
+  explicit CaptureTask(dom::ImageCapture* aImageCapture)
     : mImageCapture(aImageCapture)
-    , mTrackID(aTrackID)
     , mImageGrabbedOrTrackEnd(false)
     , mPrincipalChanged(false) {}
 
@@ -77,8 +76,6 @@ protected:
   // change in this class unless it clears this reference after a blob or error
   // event to script.
   RefPtr<dom::ImageCapture> mImageCapture;
-
-  TrackID mTrackID;
 
   // True when an image is retrieved from MediaStreamGraph or MediaStreamGraph
   // sends a track finish, end, or removed event.

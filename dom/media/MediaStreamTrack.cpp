@@ -84,6 +84,13 @@ NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaStreamTrack)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
+nsPIDOMWindowInner*
+MediaStreamTrack::GetParentObject() const
+{
+  MOZ_RELEASE_ASSERT(mOwningStream);
+  return mOwningStream->GetParentObject();
+}
+
 void
 MediaStreamTrack::GetId(nsAString& aID) const
 {
@@ -137,7 +144,7 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                          "constraints %s", this, NS_ConvertUTF16toUTF8(str).get()));
   }
 
-  return GetStream()->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
+  return mOwningStream->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
 }
 
 MediaStreamGraph*
@@ -180,8 +187,8 @@ MediaStreamTrack::GetInputDOMStream()
 {
   MediaStreamTrack* originalTrack =
     mOriginalTrack ? mOriginalTrack.get() : this;
-  MOZ_RELEASE_ASSERT(originalTrack->GetStream());
-  return originalTrack->GetStream();
+  MOZ_RELEASE_ASSERT(originalTrack->mOwningStream);
+  return originalTrack->mOwningStream;
 }
 
 MediaStream*
@@ -195,7 +202,7 @@ MediaStreamTrack::GetInputStream()
 ProcessedMediaStream*
 MediaStreamTrack::GetOwnedStream()
 {
-  return GetStream()->GetOwnedStream();
+  return mOwningStream->GetOwnedStream();
 }
 
 void
