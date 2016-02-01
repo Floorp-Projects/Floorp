@@ -17603,7 +17603,7 @@ QuotaClient::DetermineMaintenanceAction(mozIStorageConnection* aConnection,
     return rv;
   }
 
-  MOZ_ASSERT(lastVacuumSize > 0);
+  NS_ASSERTION(lastVacuumSize > 0, "Thy last vacuum size shall be greater than zero, less than zero shall thy last vacuum size not be. Zero is right out.");
 
   // This shouldn't really be possible...
   if (NS_WARN_IF(mMaintenanceStartTime <= lastVacuumTime)) {
