@@ -141,7 +141,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="566810728cd485ff2f30766499d32ada7cbd487a"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="3e4affc1794fef1ad96d6fcc727cca92b032a429"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="5fff3b73c4ca30765ac70a696fcc2c81979eb384"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="c0dd0098328f3992e1ca09d6d4355729243863d5"/>
