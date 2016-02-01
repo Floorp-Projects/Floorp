@@ -31,7 +31,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/net/ReferrerPolicy.h"
-#include "mozilla/Logging.h"
 #include "nsIContentPolicy.h"
 
 #if defined(XP_WIN)
@@ -2376,16 +2375,9 @@ public:
                                   const nsAString& aVersion);
 
   /**
-   * Returns true if the browser.dom.window.dump.enabled pref is set.
+   * Return true if the browser.dom.window.dump.enabled pref is set.
    */
   static bool DOMWindowDumpEnabled();
-
-  /**
-   * Returns a LogModule that dump calls from content script are logged to.
-   * This can be enabled with the 'Dump' module, and is useful for synchronizing
-   * content JS to other logging modules.
-   */
-  static mozilla::LogModule* DOMDumpLog();
 
   /**
    * Returns whether a content is an insertion point for XBL
@@ -2740,7 +2732,6 @@ private:
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   static bool sDOMWindowDumpEnabled;
 #endif
-  static mozilla::LazyLogModule sDOMDumpLog;
 };
 
 class MOZ_RAII nsAutoScriptBlocker {
