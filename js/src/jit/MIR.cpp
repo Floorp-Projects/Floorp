@@ -1136,6 +1136,49 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
     MOZ_CRASH("Unhandled SIMD type conversion");
 }
 
+MInstruction*
+MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                              MDefinition* right, Operation op, MIRType opType, SimdSign sign)
+{
+    bool IsEquality = op == equal || op == notEqual;
+
+    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && !IsEquality) {
+        MOZ_ASSERT(opType == MIRType_Int32x4);
+        // This is an order comparison of Uint32x4 vectors which are not supported on this target.
+        // Simply offset |left| and |right| by INT_MIN, then do a signed comparison.
+        MInstruction* bias =
+          MSimdConstant::New(alloc, SimdConstant::SplatX4(int32_t(0x80000000)), opType);
+        addTo->add(bias);
+
+        // Add the bias.
+        MInstruction* bleft =
+          MSimdBinaryArith::New(alloc, left, bias, MSimdBinaryArith::Op_add, opType);
+        addTo->add(bleft);
+        MInstruction* bright =
+          MSimdBinaryArith::New(alloc, right, bias, MSimdBinaryArith::Op_add, opType);
+        addTo->add(bright);
+
+        // Do the equivalent signed comparison.
+        MInstruction* result =
+          MSimdBinaryComp::New(alloc, bleft, bright, op, opType, SimdSign::Signed);
+        addTo->add(result);
+
+        return result;
+    }
+
+    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && opType == MIRType_Int32x4) {
+        // The sign doesn't matter for equality tests. Flip it to make the
+        // backend assertions happy.
+        MOZ_ASSERT(IsEquality);
+        sign = SimdSign::Signed;
+    }
+
+    // This is a legal operation already. Just create the instruction requested.
+    MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, opType, sign);
+    addTo->add(result);
+    return result;
+}
+
 template <typename T>
 static void
 PrintOpcodeOperation(T* mir, GenericPrinter& out)

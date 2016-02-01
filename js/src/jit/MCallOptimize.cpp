@@ -3414,10 +3414,6 @@ IonBuilder::inlineSimdComp(CallInfo& callInfo, JSNative native, MSimdBinaryComp:
     if (!canInlineSimd(callInfo, native, 2, &templateObj))
         return InliningStatus_NotInlined;
 
-    // TODO JSO: Implement unsigned integer comparisons.
-    if (sign == SimdSign::Unsigned)
-        return InliningStatus_NotInlined;
-
     // If the type of any of the arguments is neither a SIMD type, an Object
     // type, or a Value, then the applyTypes phase will add a fallible box &
     // unbox sequence.  This does not matter much as all binary SIMD
@@ -3425,7 +3421,8 @@ IonBuilder::inlineSimdComp(CallInfo& callInfo, JSNative native, MSimdBinaryComp:
     // with non SIMD-arguments.
     MDefinition* lhs = callInfo.getArg(0);
     MDefinition* rhs = callInfo.getArg(1);
-    MSimdBinaryComp* ins = MSimdBinaryComp::New(alloc(), lhs, rhs, op, mirType);
+    MInstruction* ins =
+      MSimdBinaryComp::AddLegalized(alloc(), current, lhs, rhs, op, mirType, sign);
     return boxSimd(callInfo, ins, templateObj);
 }
 
