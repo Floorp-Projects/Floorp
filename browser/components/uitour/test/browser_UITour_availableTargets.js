@@ -71,7 +71,7 @@ add_UITour_task(function* test_availableTargets_changeWidgets() {
      "Targets should not be cached after reset");
 });
 
-add_UITour_task(function test_availableTargets_exceptionFromGetTarget() {
+add_UITour_task(function* test_availableTargets_exceptionFromGetTarget() {
   // The query function for the "search" target will throw if it's not found.
   // Make sure the callback still fires with the other available targets.
   CustomizableUI.removeWidgetFromArea("search-container");
