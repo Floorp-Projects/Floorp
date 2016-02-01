@@ -418,7 +418,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
 
     _status=0;
   abort:
-    if(_status)
+    if(_status && ctx)
       nr_ice_ctx_destroy_cb(0,0,ctx);
 
     return(_status);
