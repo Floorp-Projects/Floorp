@@ -167,34 +167,45 @@ class TestNat {
 };
 
 /**
- * Subclass of NrSocket that can simulate things like being behind a NAT, packet
- * loss, latency, packet rewriting, etc. Also exposes some stuff that assists in
- * diagnostics.
+ * Subclass of NrSocketBase that can simulate things like being behind a NAT,
+ * packet loss, latency, packet rewriting, etc. Also exposes some stuff that
+ * assists in diagnostics.
+ * This is accomplished by wrapping an "internal" socket (that handles traffic
+ * behind the NAT), and a collection of "external" sockets (that handle traffic
+ * into/out of the NAT)
  */
-class TestNrSocket : public NrSocket {
+class TestNrSocket : public NrSocketBase {
   public:
     explicit TestNrSocket(TestNat *nat);
-
-    virtual ~TestNrSocket();
 
     bool has_port_mappings() const;
     bool is_my_external_tuple(const nr_transport_addr &addr) const;
 
-    // Overrides of NrSocket
+    // Overrides of NrSocketBase
+    int create(nr_transport_addr *addr) override;
     int sendto(const void *msg, size_t len,
                int flags, nr_transport_addr *to) override;
     int recvfrom(void * buf, size_t maxlen,
                  size_t *len, int flags,
                  nr_transport_addr *from) override;
+    int getaddr(nr_transport_addr *addrp) override;
+    void close() override;
     int connect(nr_transport_addr *addr) override;
     int write(const void *msg, size_t len, size_t *written) override;
     int read(void *buf, size_t maxlen, size_t *len) override;
 
+    int listen(int backlog) override;
+    int accept(nr_transport_addr *addrp, nr_socket **sockp) override;
     int async_wait(int how, NR_async_cb cb, void *cb_arg,
                    char *function, int line) override;
     int cancel(int how) override;
 
+    // Need override since this is virtual in NrSocketBase
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestNrSocket, override)
+
   private:
+    virtual ~TestNrSocket();
+
     class UdpPacket {
       public:
         UdpPacket(const void *msg, size_t len, const nr_transport_addr &addr) :
@@ -215,7 +226,7 @@ class TestNrSocket : public NrSocket {
     class PortMapping {
       public:
         PortMapping(const nr_transport_addr &remote_address,
-                    const RefPtr<NrSocket> &external_socket);
+                    const RefPtr<NrSocketBase> &external_socket);
 
         int sendto(const void *msg, size_t len, const nr_transport_addr &to);
         int async_wait(int how, NR_async_cb cb, void *cb_arg,
@@ -225,7 +236,7 @@ class TestNrSocket : public NrSocket {
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PortMapping);
 
         PRIntervalTime last_used_;
-        RefPtr<NrSocket> external_socket_;
+        RefPtr<NrSocketBase> external_socket_;
         // For non-symmetric, most of the data here doesn't matter
         nr_transport_addr remote_address_;
 
@@ -243,10 +254,10 @@ class TestNrSocket : public NrSocket {
                        PortMapping **port_mapping_used) const;
     void destroy_stale_port_mappings();
 
-    static void port_mapping_readable_callback(void *ext_sock_v,
-                                               int how,
-                                               void *test_sock_v);
-    void on_port_mapping_readable(NrSocket *external_socket);
+    static void socket_readable_callback(void *real_sock_v,
+                                         int how,
+                                         void *test_sock_v);
+    void on_socket_readable(NrSocketBase *external_or_internal_socket);
     void fire_readable_callback();
 
     static void port_mapping_tcp_passthrough_callback(void *ext_sock_v,
@@ -257,18 +268,21 @@ class TestNrSocket : public NrSocket {
     static void port_mapping_writeable_callback(void *ext_sock_v,
                                                 int how,
                                                 void *test_sock_v);
-    void write_to_port_mapping(NrSocket *external_socket);
+    void write_to_port_mapping(NrSocketBase *external_socket);
     bool is_tcp_connection_behind_nat() const;
 
     PortMapping* get_port_mapping(const nr_transport_addr &remote_addr,
                                   TestNat::NatBehavior filter) const;
     PortMapping* create_port_mapping(
         const nr_transport_addr &remote_addr,
-        const RefPtr<NrSocket> &external_socket) const;
-    RefPtr<NrSocket> create_external_socket(
+        const RefPtr<NrSocketBase> &external_socket) const;
+    RefPtr<NrSocketBase> create_external_socket(
         const nr_transport_addr &remote_addr) const;
 
-    RefPtr<NrSocket> readable_socket_;
+    RefPtr<NrSocketBase> readable_socket_;
+    // The socket for the "internal" address; used to talk to stuff behind the
+    // same nat.
+    RefPtr<NrSocketBase> internal_socket_;
     RefPtr<TestNat> nat_;
     // Since our comparison logic is different depending on what kind of NAT
     // we simulate, and the STL does not make it very easy to switch out the

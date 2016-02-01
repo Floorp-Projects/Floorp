@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/Webapps.jsm");
 // since then we can make this test install its own personal webapp from any
 // origin.
 //
-let url = "http://example.com/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+let url = "http://example.com/chrome/dom/apps/tests/apps/basic.webapp";
 
 let app, notInstalled, _isLaunchable;
 

@@ -2098,7 +2098,7 @@ TEST_F(IceGatherTest, TestFakeStunServerNoNatDefaultRouteOnly) {
 
 TEST_F(IceGatherTest, TestStunTcpServerTrickle) {
   UseFakeStunTcpServerWithResponse("192.0.3.1", 3333);
-  TestStunServer::GetInstance(AF_INET)->SetDelay(500);
+  TestStunTcpServer::GetInstance(AF_INET)->SetDelay(500);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
   WaitForGather();
