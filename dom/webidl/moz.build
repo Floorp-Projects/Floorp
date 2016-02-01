@@ -97,6 +97,7 @@ WEBIDL_FILES = [
     'CSSAnimation.webidl',
     'CSSLexer.webidl',
     'CSSPrimitiveValue.webidl',
+    'CSSPseudoElement.webidl',
     'CSSRuleList.webidl',
     'CSSStyleDeclaration.webidl',
     'CSSStyleSheet.webidl',
