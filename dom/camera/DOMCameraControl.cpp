@@ -331,11 +331,6 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   // we are not user/DOM facing anyway.
   CreateAndAddPlaybackStreamListener(mInput);
 
-  MOZ_ASSERT(mWindow, "Shouldn't be created with a null window!");
-  if (mWindow->GetExtantDoc()) {
-    CombineWithPrincipal(mWindow->GetExtantDoc()->NodePrincipal());
-  }
-
   // Register a listener for camera events.
   mListener = new DOMCameraControlListener(this, mInput);
   mCameraControl->AddListener(mListener);
@@ -526,11 +521,17 @@ nsDOMCameraControl::GetCameraStream() const
 
 void
 nsDOMCameraControl::TrackCreated(TrackID aTrackID) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(mWindow, "Shouldn't have been created with a null window!");
+  nsIPrincipal* principal = mWindow->GetExtantDoc()
+                          ? mWindow->GetExtantDoc()->NodePrincipal()
+                          : nullptr;
+
   // This track is not connected through a port.
   MediaInputPort* inputPort = nullptr;
   dom::VideoStreamTrack* track =
     new dom::VideoStreamTrack(this, aTrackID, aTrackID, nsString(),
-                              new BasicUnstoppableTrackSource());
+                              new BasicUnstoppableTrackSource(principal));
   RefPtr<TrackPort> port =
     new TrackPort(inputPort, track,
                   TrackPort::InputPortOwnership::OWNED);

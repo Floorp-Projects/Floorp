@@ -512,7 +512,9 @@ public:
    * AudioCaptureStream.
    */
   static already_AddRefed<DOMMediaStream>
-  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
+                           nsIPrincipal* aPrincipal,
+                           MediaStreamGraph* aGraph);
 
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
@@ -559,7 +561,7 @@ protected:
   void Destroy();
   void InitSourceStream(MediaStreamGraph* aGraph);
   void InitTrackUnionStream(MediaStreamGraph* aGraph);
-  void InitAudioCaptureStream(MediaStreamGraph* aGraph);
+  void InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGraph* aGraph);
 
   // Sets up aStream as mInputStream. A producer may append data to a
   // SourceMediaStream input stream, or connect another stream to a
@@ -709,13 +711,6 @@ public:
   CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                          MediaStreamGraph* aGraph,
                          MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
-
-  /**
-   * Create an nsDOMLocalMediaStream whose underlying stream is an
-   * AudioCaptureStream. */
-  static already_AddRefed<DOMLocalMediaStream>
-  CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
-                           MediaStreamGraph* aGraph);
 
 protected:
   virtual ~DOMLocalMediaStream();
