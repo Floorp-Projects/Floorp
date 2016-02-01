@@ -215,7 +215,7 @@ add_task(function* test_notifications()
     let download3 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     let promiseAttempt1 = download1.start();
     let promiseAttempt2 = download2.start();
-    download3.start().catch(() => {});
+    download3.start();
 
     // Add downloads to list.
     yield list.add(download1);
@@ -250,8 +250,8 @@ add_task(function* test_no_notifications()
     let list = yield promiseNewList(isPrivate);
     let download1 = yield promiseNewDownload(httpUrl("interruptible.txt"));
     let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
-    download1.start().catch(() => {});
-    download2.start().catch(() => {});
+    download1.start();
+    download2.start();
 
     // Add downloads to list.
     yield list.add(download1);
@@ -316,7 +316,7 @@ add_task(function* test_suspend_resume()
   {
     return Task.spawn(function* () {
       let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
-      download.start().catch(() => {});
+      download.start();
       list.add(download);
       return download;
     });

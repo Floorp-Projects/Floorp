@@ -348,7 +348,7 @@ add_task(function* test_history_expiration()
 
   // Work with one finished download and one canceled download.
   yield downloadOne.start();
-  downloadTwo.start().catch(() => {});
+  downloadTwo.start();
   yield downloadTwo.cancel();
 
   // We must replace the visits added while executing the downloads with visits
@@ -471,7 +471,7 @@ add_task(function* test_DownloadSummary()
   // Add a public download that has been canceled midway.
   let canceledPublicDownload =
       yield promiseNewDownload(httpUrl("interruptible.txt"));
-  canceledPublicDownload.start().catch(() => {});
+  canceledPublicDownload.start();
   yield promiseDownloadMidway(canceledPublicDownload);
   yield canceledPublicDownload.cancel();
   yield publicList.add(canceledPublicDownload);
@@ -479,7 +479,7 @@ add_task(function* test_DownloadSummary()
   // Add a public download that is in progress.
   let inProgressPublicDownload =
       yield promiseNewDownload(httpUrl("interruptible.txt"));
-  inProgressPublicDownload.start().catch(() => {});
+  inProgressPublicDownload.start();
   yield promiseDownloadMidway(inProgressPublicDownload);
   yield publicList.add(inProgressPublicDownload);
 
@@ -488,7 +488,7 @@ add_task(function* test_DownloadSummary()
     source: { url: httpUrl("interruptible.txt"), isPrivate: true },
     target: getTempFile(TEST_TARGET_FILE_NAME).path,
   });
-  inProgressPrivateDownload.start().catch(() => {});
+  inProgressPrivateDownload.start();
   yield promiseDownloadMidway(inProgressPrivateDownload);
   yield privateList.add(inProgressPrivateDownload);
 
