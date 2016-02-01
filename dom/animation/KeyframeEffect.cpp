@@ -1663,13 +1663,26 @@ void
 KeyframeEffectReadOnly::GetTarget(
     Nullable<OwningElementOrCSSPseudoElement>& aRv) const
 {
-  // Currently we never return animations from the API whose effect
-  // targets a pseudo-element so this should never be called when
-  // mPseudoType is not 'none' (see bug 1174575).
-  MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
-             "Requesting the target of a KeyframeEffect that targets a"
-             " pseudo-element is not yet supported.");
-  aRv.Value().SetAsElement() = mTarget;
+  if (!mTarget) {
+    aRv.SetNull();
+    return;
+  }
+
+  switch (mPseudoType) {
+    case nsCSSPseudoElements::ePseudo_before:
+    case nsCSSPseudoElements::ePseudo_after:
+      aRv.SetValue().SetAsCSSPseudoElement() =
+        CSSPseudoElement::GetCSSPseudoElement(mTarget, mPseudoType);
+      break;
+
+    case nsCSSPseudoElements::ePseudo_NotPseudoElement:
+      aRv.SetValue().SetAsElement() = mTarget;
+      break;
+
+    default:
+      NS_NOTREACHED("Animation of unsupported pseudo-type");
+      aRv.SetNull();
+  }
 }
 
 void

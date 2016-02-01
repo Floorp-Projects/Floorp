@@ -11,6 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/RefPtr.h"
+#include "nsCSSPseudoElements.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -27,20 +29,29 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CSSPseudoElement)
 
 protected:
-  virtual ~CSSPseudoElement() = default;
+  virtual ~CSSPseudoElement();
 
 public:
   ParentObject GetParentObject() const
   {
-    // This will be implemented in later patch.
-    return ParentObject(nullptr, nullptr);
+    return mParentElement->GetParentObject();
   }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetType(nsString& aRetVal) const { }
-  already_AddRefed<Element> ParentElement() const { return nullptr; }
+  void GetType(nsString& aRetVal) const
+  {
+    MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
+               "All pseudo-types allowed by this class should have a"
+               " corresponding atom");
+    nsCSSPseudoElements::GetPseudoAtom(mPseudoType)->ToString(aRetVal);
+  }
+  already_AddRefed<Element> ParentElement() const
+  {
+    RefPtr<Element> retVal(mParentElement);
+    return retVal.forget();
+  }
 
   void GetAnimations(nsTArray<RefPtr<Animation>>& aRetVal);
   already_AddRefed<Animation>
@@ -48,6 +59,26 @@ public:
             JS::Handle<JSObject*> aFrames,
             const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
             ErrorResult& aError);
+
+  // Given an element:pseudoType pair, returns the CSSPseudoElement stored as a
+  // property on |aElement|. If there is no CSSPseudoElement for the specified
+  // pseudo-type on element, a new CSSPseudoElement will be created and stored
+  // on the element.
+  static already_AddRefed<CSSPseudoElement>
+    GetCSSPseudoElement(Element* aElement, nsCSSPseudoElements::Type aType);
+
+private:
+  // Only ::before and ::after are supported.
+  CSSPseudoElement(Element* aElement, nsCSSPseudoElements::Type aType);
+
+  static nsIAtom*
+  GetCSSPseudoElementPropertyAtom(nsCSSPseudoElements::Type aType);
+
+  // mParentElement needs to be an owning reference since if script is holding
+  // on to the pseudo-element, it needs to continue to be able to refer to
+  // the parent element.
+  RefPtr<Element> mParentElement;
+  nsCSSPseudoElements::Type mPseudoType;
 };
 
 } // namespace dom
