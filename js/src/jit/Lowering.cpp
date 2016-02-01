@@ -4310,9 +4310,11 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp* ins)
         ins->reverse();
 
     if (ins->specialization() == MIRType_Int32x4) {
+        MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
         LSimdBinaryCompIx4* add = new(alloc()) LSimdBinaryCompIx4();
         lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
     } else if (ins->specialization() == MIRType_Float32x4) {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
         LSimdBinaryCompFx4* add = new(alloc()) LSimdBinaryCompFx4();
         lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
     } else {
