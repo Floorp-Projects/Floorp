@@ -867,6 +867,58 @@ public:
 #endif
     }
 
+    void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight,
+                       int32_t aScreenWidth, int32_t aScreenHeight)
+    {
+        if (aWindowWidth != window.mBounds.width ||
+            aWindowHeight != window.mBounds.height) {
+
+            window.Resize(aWindowWidth, aWindowHeight, /* repaint */ false);
+        }
+
+        if (aScreenWidth == gAndroidScreenBounds.width &&
+            aScreenHeight == gAndroidScreenBounds.height) {
+
+            return;
+        }
+
+        gAndroidScreenBounds.width = aScreenWidth;
+        gAndroidScreenBounds.height = aScreenHeight;
+
+        if (!XRE_IsParentProcess() &&
+            !Preferences::GetBool("browser.tabs.remote.desktopbehavior",
+                                  false)) {
+            return;
+        }
+
+        // Tell the content process the new screen size.
+        nsTArray<ContentParent*> cplist;
+        ContentParent::GetAll(cplist);
+        for (uint32_t i = 0; i < cplist.Length(); ++i) {
+            Unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
+        }
+
+        if (gContentCreationNotifier) {
+            return;
+        }
+
+        // If the content process is not created yet, wait until it's
+        // created and then tell it the screen size.
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (!obs) {
+            return;
+        }
+
+        RefPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
+        if (NS_FAILED(obs->AddObserver(notifier, "xpcom-shutdown", false)) ||
+            NS_FAILED(obs->AddObserver(
+                notifier, "ipc:content-created", false))) {
+            return;
+        }
+
+        gContentCreationNotifier = notifier;
+    }
+
     void CreateCompositor(int32_t aWidth, int32_t aHeight)
     {
         window.CreateLayerManager(aWidth, aHeight);
@@ -965,7 +1017,7 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
     }
 
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    ww->OpenWindow(nullptr, url, "_blank", "chrome,dialog=no,all",
+    ww->OpenWindow(nullptr, url, nullptr, "chrome,dialog=0,resizable",
                    args, getter_AddRefs(domWindow));
     MOZ_ASSERT(domWindow);
 
@@ -985,6 +1037,16 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
             aCls.Env(), GLController::Ref::From(aGLController)));
 
     gGeckoViewWindow = window;
+
+    if (window->mWidgetListener) {
+        nsCOMPtr<nsIXULWindow> xulWindow(
+                window->mWidgetListener->GetXULWindow());
+        if (xulWindow) {
+            // Out window is not intrinsically sized, so tell nsXULWindow to
+            // not set a size for us.
+            xulWindow->SetIntrinsicallySized(false);
+        }
+    }
 }
 
 void
@@ -1750,6 +1812,10 @@ nsWindow::OnSizeChanged(const gfx::IntSize& aSize)
 
     if (mWidgetListener) {
         mWidgetListener->WindowResized(this, aSize.width, aSize.height);
+    }
+
+    if (mAttachedWidgetListener) {
+        mAttachedWidgetListener->WindowResized(this, aSize.width, aSize.height);
     }
 }
 
