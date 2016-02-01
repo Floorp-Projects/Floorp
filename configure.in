@@ -8710,15 +8710,14 @@ if test "$MOZILLA_OFFICIAL"; then
     MOZ_INCLUDE_SOURCE_INFO=1
 fi
 
-# On official builds, we need to know in Telemetry what revision this is built from.
-# This is e.g. needed to match incoming data to a specific revision of the Histograms.json
-# file.
-if test "$MOZILLA_OFFICIAL" && test -d ${_topsrcdir}/.hg; then
-  SOURCE_REV=`cd $_topsrcdir && hg parent --template='{node|short}'`
-  SOURCE_REPO=`cd $_topsrcdir && hg showconfig paths.default | sed -e 's|^ssh://|http://|' -e 's|/$||'`
-  SOURCE_REV_URL=$SOURCE_REPO/rev/$SOURCE_REV
-else
-  SOURCE_REV_URL=
+# External builds (specifically Ubuntu) may drop the hg repo information, so we allow to
+# explicitly set the repository and changeset information in.
+if test "$MOZILLA_OFFICIAL"; then
+    if test -z "$MOZ_SOURCE_REPO" && test -z "$MOZ_SOURCE_CHANGESET" && test -d ${_topsrcdir}/.hg; then
+        MOZ_SOURCE_CHANGESET=`cd $_topsrcdir && hg parent --template='{node}'`
+        MOZ_SOURCE_REPO=`cd $_topsrcdir && hg showconfig paths.default | sed -e 's|^ssh://|http://|' -e 's|/$||'`
+    fi
+    SOURCE_REV_URL=$MOZ_SOURCE_REPO/rev/$MOZ_SOURCE_CHANGESET
 fi
 AC_SUBST(SOURCE_REV_URL)
 
