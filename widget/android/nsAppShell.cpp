@@ -735,15 +735,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::SIZE_CHANGED: {
-        // store the last resize event to dispatch it to new windows with a FORCED_RESIZE event
-        if (curEvent.get() != gLastSizeChange) {
-            gLastSizeChange = AndroidGeckoEvent::CopyResizeEvent(curEvent.get());
-        }
-        nsWindow::OnGlobalAndroidEvent(curEvent.get());
-        break;
-    }
-
     case AndroidGeckoEvent::VISITED: {
 #ifdef MOZ_ANDROID_HISTORY
         nsCOMPtr<IHistory> history = services::GetHistoryService();
@@ -950,13 +941,6 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
             queue.insertBack(this);
             break;
         }
-    }
-}
-
-void
-nsAppShell::ResendLastResizeEvent(nsWindow* aDest) {
-    if (gLastSizeChange) {
-        nsWindow::OnGlobalAndroidEvent(gLastSizeChange);
     }
 }
 

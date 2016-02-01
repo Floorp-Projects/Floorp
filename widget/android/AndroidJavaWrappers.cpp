@@ -344,10 +344,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
     mAckNeeded = jenv->GetBooleanField(jobj, jAckNeededField);
 
     switch (mType) {
-        case SIZE_CHANGED:
-            ReadPointArray(mPoints, jenv, jPoints, 2);
-            break;
-
         case NATIVE_GESTURE_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
@@ -518,17 +514,6 @@ AndroidGeckoEvent::Init(int aType)
 {
     mType = aType;
     mAckNeeded = false;
-}
-
-void
-AndroidGeckoEvent::Init(AndroidGeckoEvent *aResizeEvent)
-{
-    NS_ASSERTION(aResizeEvent->Type() == SIZE_CHANGED, "Init called on non-SIZE_CHANGED event");
-
-    mType = FORCED_RESIZE;
-    mAckNeeded = false;
-    mTime = aResizeEvent->mTime;
-    mPoints = aResizeEvent->mPoints; // x,y coordinates
 }
 
 bool
