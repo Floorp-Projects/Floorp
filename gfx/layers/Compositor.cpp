@@ -369,11 +369,13 @@ Compositor::ComputeBackdropCopyRect(const gfx::Rect& aRect,
   renderBounds.MoveBy(rtOffset);
 
   // Apply the layer transform.
-  gfx::Rect dest = aTransform.TransformAndClipBounds(aRect, renderBounds);
+  gfx::RectDouble dest = aTransform.TransformAndClipBounds(
+    gfx::RectDouble(aRect.x, aRect.y, aRect.width, aRect.height),
+    gfx::RectDouble(renderBounds.x, renderBounds.y, renderBounds.width, renderBounds.height));
   dest -= rtOffset;
 
   // Ensure we don't round out to -1, which trips up Direct3D.
-  dest.IntersectRect(dest, gfx::Rect(0, 0, rtSize.width, rtSize.height));
+  dest.IntersectRect(dest, gfx::RectDouble(0, 0, rtSize.width, rtSize.height));
 
   // Round out to integer.
   gfx::IntRect result;
