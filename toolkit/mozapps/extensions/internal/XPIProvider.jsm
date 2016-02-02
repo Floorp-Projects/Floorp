@@ -108,7 +108,6 @@ const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
-const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
@@ -123,7 +122,6 @@ const PREF_EM_HOTFIX_ID               = "extensions.hotfix.id";
 const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes";
 const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
 
-const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
 const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/extensions.properties";
 
@@ -2662,29 +2660,12 @@ this.XPIProvider = {
 
       AddonManagerPrivate.markProviderSafe(this);
 
-      if (aAppChanged === undefined) {
-        // For new profiles we will never need to show the add-on selection UI
-        Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
-      }
-      else if (aAppChanged && !this.allAppGlobal &&
-               Preferences.get(PREF_EM_SHOW_MISMATCH_UI, true)) {
-        if (!Preferences.get(PREF_SHOWN_SELECTION_UI, false)) {
-          // Flip a flag to indicate that we interrupted startup with an interactive prompt
-          Services.startup.interrupted = true;
-          // This *must* be modal as it has to block startup.
-          var features = "chrome,centerscreen,dialog,titlebar,modal";
-          Services.ww.openWindow(null, URI_EXTENSION_SELECT_DIALOG, "", features, null);
-          Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
-          // Ensure any changes to the add-ons list are flushed to disk
-          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
-                                     !XPIDatabase.writeAddonsList());
-        }
-        else {
-          let addonsToUpdate = this.shouldForceUpdateCheck(aAppChanged);
-          if (addonsToUpdate) {
-            this.showUpgradeUI(addonsToUpdate);
-            flushCaches = true;
-          }
+      if (aAppChanged && !this.allAppGlobal &&
+          Preferences.get(PREF_EM_SHOW_MISMATCH_UI, true)) {
+        let addonsToUpdate = this.shouldForceUpdateCheck(aAppChanged);
+        if (addonsToUpdate) {
+          this.showUpgradeUI(addonsToUpdate);
+          flushCaches = true;
         }
       }
 
