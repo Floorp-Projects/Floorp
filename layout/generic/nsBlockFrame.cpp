@@ -6826,7 +6826,6 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     NS_ASSERTION((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
                                     NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
                  "how can we have a bullet already?");
-    nsPresContext* presContext = PresContext();
 
 #ifdef DEBUG
     // The only times a block that is an anonymous box is allowed to have a
@@ -6849,12 +6848,12 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
        pseudo == nsCSSAnonBoxes::mozSVGText) &&
       GetType() != nsGkAtoms::comboboxControlFrame &&
       !IsFrameOfType(eMathML) &&
-      RefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nullptr;
+      RefPtr<nsStyleContext>(GetFirstLetterStyle(PresContext())) != nullptr;
     NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
 #endif
-    
+
     AddFrames(aChildList, nullptr);
 
     // Create a list bullet if this is a list-item. Note that this is
@@ -6882,39 +6881,51 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       // Resolve style for the bullet frame
       const nsStyleList* styleList = StyleList();
       CounterStyle* style = styleList->GetCounterStyle();
-      nsCSSPseudoElements::Type pseudoType = style->IsBullet() ?
-        nsCSSPseudoElements::ePseudo_mozListBullet :
-        nsCSSPseudoElements::ePseudo_mozListNumber;
 
-      nsIPresShell *shell = presContext->PresShell();
-
-      nsStyleContext* parentStyle =
-        CorrectStyleParentFrame(this,
-          nsCSSPseudoElements::GetPseudoAtom(pseudoType))->StyleContext();
-      RefPtr<nsStyleContext> kidSC = shell->StyleSet()->
-        ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
-                                  parentStyle, nullptr);
-
-      // Create bullet frame
-      nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
-      bullet->Init(mContent, this, nullptr);
-
-      // If the list bullet frame should be positioned inside then add
-      // it to the flow now.
-      if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
-            styleList->mListStylePosition) {
-        nsFrameList bulletList(bullet, bullet);
-        AddFrames(bulletList, nullptr);
-        Properties().Set(InsideBulletProperty(), bullet);
-        AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
-      } else {
-        nsFrameList* bulletList = new (shell) nsFrameList(bullet, bullet);
-        Properties().Set(OutsideBulletProperty(), bulletList);
-        AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
-      }
+      CreateBulletFrameForListItem(
+        style->IsBullet(),
+        styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE);
     }
   } else {
     nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  }
+}
+
+void
+nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
+                                           bool aListStylePositionInside)
+{
+  nsIPresShell* shell = PresContext()->PresShell();
+
+  nsCSSPseudoElements::Type pseudoType = aCreateBulletList ?
+    nsCSSPseudoElements::ePseudo_mozListBullet :
+    nsCSSPseudoElements::ePseudo_mozListNumber;
+
+  nsStyleContext* parentStyle =
+    CorrectStyleParentFrame(this,
+                            nsCSSPseudoElements::GetPseudoAtom(pseudoType))->
+    StyleContext();
+
+  RefPtr<nsStyleContext> kidSC = shell->StyleSet()->
+    ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
+                              parentStyle, nullptr);
+
+  // Create bullet frame
+  nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
+  bullet->Init(mContent, this, nullptr);
+
+  // If the list bullet frame should be positioned inside then add
+  // it to the flow now.
+  if (aListStylePositionInside) {
+
+    nsFrameList bulletList(bullet, bullet);
+    AddFrames(bulletList, nullptr);
+    Properties().Set(InsideBulletProperty(), bullet);
+    AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
+  } else {
+    nsFrameList* bulletList = new (shell) nsFrameList(bullet, bullet);
+    Properties().Set(OutsideBulletProperty(), bulletList);
+    AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 }
 

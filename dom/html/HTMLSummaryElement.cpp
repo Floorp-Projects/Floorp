@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLSummaryElement.h"
 
+#include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
@@ -17,6 +18,23 @@ HTMLSummaryElement::~HTMLSummaryElement()
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLSummaryElement)
+
+bool
+HTMLSummaryElement::IsMainSummary() const
+{
+  HTMLDetailsElement* details = GetDetails();
+  if (!details) {
+    return false;
+  }
+
+  return details->GetFirstSummary() == this || IsRootOfNativeAnonymousSubtree();
+}
+
+HTMLDetailsElement*
+HTMLSummaryElement::GetDetails() const
+{
+  return HTMLDetailsElement::FromContentOrNull(GetParent());
+}
 
 JSObject*
 HTMLSummaryElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)

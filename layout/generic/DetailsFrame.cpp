@@ -41,3 +41,42 @@ DetailsFrame::GetType() const
 {
   return nsGkAtoms::detailsFrame;
 }
+
+void
+DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
+{
+  if (aListID == kPrincipalList) {
+    auto* details = HTMLDetailsElement::FromContent(GetContent());
+    bool isOpen = details->Open();
+
+    if (isOpen) {
+      // If details is open, the first summary needs to be rendered as if it is
+      // the first child.
+      for (nsIFrame* child : aChildList) {
+        auto* realFrame = nsPlaceholderFrame::GetRealFrameFor(child);
+        auto* cif = realFrame->GetContentInsertionFrame();
+        if (cif && cif->GetType() == nsGkAtoms::summaryFrame) {
+          // Take out the first summary frame and insert it to the beginning of
+          // the list.
+          aChildList.RemoveFrame(child);
+          aChildList.InsertFrame(nullptr, nullptr, child);
+          break;
+        }
+      }
+    }
+
+#ifdef DEBUG
+    nsIFrame* realFrame =
+      nsPlaceholderFrame::GetRealFrameFor(isOpen ?
+                                          aChildList.FirstChild() :
+                                          aChildList.OnlyChild());
+    MOZ_ASSERT(realFrame, "Principal list of details should not be empty!");
+    nsIFrame* summaryFrame = realFrame->GetContentInsertionFrame();
+    MOZ_ASSERT(summaryFrame->GetType() == nsGkAtoms::summaryFrame,
+               "The frame should be summary frame!");
+#endif
+
+  }
+
+  nsBlockFrame::SetInitialChildList(aListID, aChildList);
+}
