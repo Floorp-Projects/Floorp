@@ -30,6 +30,7 @@ namespace mozilla {
 namespace dom {
 
 class EventTarget;
+class EventMessageAutoOverride;
 class WantsPopupControlCheck;
 #define GENERATED_EVENT(EventClass_) class EventClass_;
 #include "mozilla/dom/GeneratedEventList.h"
@@ -239,6 +240,7 @@ protected:
   void SetEventType(const nsAString& aEventTypeArg);
   already_AddRefed<nsIContent> GetTargetFromFrame();
 
+  friend class EventMessageAutoOverride;
   friend class WantsPopupControlCheck;
   void SetWantsPopupControlCheck(bool aCheck)
   {
@@ -266,6 +268,48 @@ protected:
   // True when popup control check should rely on event.type, not
   // WidgetEvent.mMessage.
   bool                        mWantsPopupControlCheck;
+};
+
+/**
+ * RAII helper-class to override an event's message (i.e. its DOM-exposed
+ * type), for as long as the object is alive.  Restores the original
+ * EventMessage when destructed.
+ *
+ * Notable requirements:
+ *  - The original & overriding messages must be known (not eUnidentifiedEvent).
+ *  - The original & overriding messages must be different.
+ *  - The passed-in nsIDOMEvent must outlive this RAII helper.
+ */
+class MOZ_RAII EventMessageAutoOverride
+{
+public:
+  explicit EventMessageAutoOverride(nsIDOMEvent* aEvent,
+                                    EventMessage aOverridingMessage)
+    : mEvent(aEvent->InternalDOMEvent()),
+      mOrigMessage(mEvent->mEvent->mMessage)
+  {
+    MOZ_ASSERT(aOverridingMessage != mOrigMessage,
+               "Don't use this class if you're not actually overriding");
+    MOZ_ASSERT(aOverridingMessage != eUnidentifiedEvent,
+               "Only use this class with a valid overriding EventMessage");
+    MOZ_ASSERT(mOrigMessage != eUnidentifiedEvent &&
+               mEvent->mEvent->typeString.IsEmpty(),
+               "Only use this class on events whose overridden type is "
+               "known (so we can restore it properly)");
+
+    mEvent->mEvent->mMessage = aOverridingMessage;
+  }
+
+  ~EventMessageAutoOverride()
+  {
+    mEvent->mEvent->mMessage = mOrigMessage;
+  }
+
+protected:
+  // Non-owning ref, which should be safe since we're a stack-allocated object
+  // with limited lifetime. Whoever creates us should keep mEvent alive.
+  Event* const MOZ_NON_OWNING_REF mEvent;
+  const EventMessage mOrigMessage;
 };
 
 class MOZ_STACK_CLASS WantsPopupControlCheck
