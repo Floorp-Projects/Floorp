@@ -105,8 +105,6 @@
   locale/@AB_CD@/mozapps/extensions/extensions.properties         (%chrome/mozapps/extensions/extensions.properties)
   locale/@AB_CD@/mozapps/extensions/blocklist.dtd                 (%chrome/mozapps/extensions/blocklist.dtd)
   locale/@AB_CD@/mozapps/extensions/about.dtd                     (%chrome/mozapps/extensions/about.dtd)
-  locale/@AB_CD@/mozapps/extensions/selectAddons.dtd              (%chrome/mozapps/extensions/selectAddons.dtd)
-  locale/@AB_CD@/mozapps/extensions/selectAddons.properties       (%chrome/mozapps/extensions/selectAddons.properties)
   locale/@AB_CD@/mozapps/extensions/update.dtd                    (%chrome/mozapps/extensions/update.dtd)
   locale/@AB_CD@/mozapps/extensions/update.properties             (%chrome/mozapps/extensions/update.properties)
   locale/@AB_CD@/mozapps/extensions/newaddon.dtd                  (%chrome/mozapps/extensions/newaddon.dtd)
