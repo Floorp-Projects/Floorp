@@ -14,36 +14,6 @@
 "use strict";
 
 function backgroundScript() {
-  function get(details) {
-    return new Promise(resolve => {
-      browser.cookies.get(details, resolve);
-    });
-  }
-
-  function getAll(details) {
-    return new Promise(resolve => {
-      browser.cookies.getAll(details, resolve);
-    });
-  }
-
-  function set(details) {
-    return new Promise(resolve => {
-      browser.cookies.set(details, resolve);
-    });
-  }
-
-  function remove(details) {
-    return new Promise(resolve => {
-      browser.cookies.remove(details, resolve);
-    });
-  }
-
-  function getAllCookieStores() {
-    return new Promise(resolve => {
-      browser.cookies.getAllCookieStores(resolve);
-    });
-  }
-
   function assertExpected(cookie, expected) {
     for (let key of Object.keys(cookie)) {
       browser.test.assertTrue(key in expected, "found property " + key);
@@ -68,30 +38,30 @@ function backgroundScript() {
     storeId: "firefox-default",
   };
 
-  set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
+  browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
     assertExpected(cookie, expected);
-    return get({url: TEST_URL, name: "name1"});
+    return browser.cookies.get({url: TEST_URL, name: "name1"});
   }).then(cookie => {
     assertExpected(cookie, expected);
-    return getAll({domain: "example.org"});
+    return browser.cookies.getAll({domain: "example.org"});
   }).then(cookies => {
     browser.test.assertEq(cookies.length, 1, "only found one cookie for example.org");
     assertExpected(cookies[0], expected);
-    return remove({url: TEST_URL, name: "name1"});
+    return browser.cookies.remove({url: TEST_URL, name: "name1"});
   }).then(details => {
     assertExpected(details, {url: TEST_URL, name: "name1", storeId: "firefox-default"});
-    return get({url: TEST_URL, name: "name1"});
+    return browser.cookies.get({url: TEST_URL, name: "name1"});
   }).then(cookie => {
     browser.test.assertEq(cookie, null);
-    return getAllCookieStores();
+    return browser.cookies.getAllCookieStores();
   }).then(stores => {
     browser.test.assertEq(stores.length, 1);
     browser.test.assertEq(stores[0].id, "firefox-default");
     browser.test.assertEq(stores[0].tabIds.length, 0); // Todo: Implement this.
-    return set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
+    return browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
   }).then(cookie => {
     browser.test.assertEq(cookie.hostOnly, false, "not a hostOnly cookie");
-    return remove({url: TEST_URL, name: "name2"});
+    return browser.cookies.remove({url: TEST_URL, name: "name2"});
   }).then(details => {
     assertExpected(details, {url: TEST_URL, name: "name2", storeId: "firefox-default"});
   }).then(() => {
