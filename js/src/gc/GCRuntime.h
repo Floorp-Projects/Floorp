@@ -21,6 +21,7 @@
 namespace js {
 
 class AutoLockGC;
+class NonEscapingWrapperVector;
 class VerifyPreTracer;
 
 namespace gc {
@@ -589,6 +590,8 @@ class GCRuntime
     void removeRoot(Value* vp);
     void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
+    void registerStackWrapperVector(NonEscapingWrapperVector* vec);
+
     bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
@@ -921,6 +924,7 @@ class GCRuntime
                                JS::gcreason::Reason reason);
     void bufferGrayRoots();
     void markCompartments();
+    void traceStackWrappers(JSTracer* trc);
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::Phase phase);
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
@@ -1021,6 +1025,9 @@ class GCRuntime
     ChunkPool             fullChunks_;
 
     RootedValueMap rootsHash;
+
+    // The list of currently live stack-stored wrappers.
+    mozilla::LinkedList<NonEscapingWrapperVector> stackWrappers;
 
     size_t maxMallocBytes;
 
