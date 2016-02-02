@@ -427,7 +427,7 @@ TEST(MP4Demuxer, GetNextKeyframe)
   });
 }
 
-TEST(MP4Demuxer, ZeroInMoov)
+TEST(MP4Demuxer, ZeroInLastMoov)
 {
   RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("short-zero-in-moov.mp4");
   binding->RunTestAndWait([binding] () {
@@ -436,3 +436,12 @@ TEST(MP4Demuxer, ZeroInMoov)
   });
 }
 
+
+TEST(MP4Demuxer, ZeroInMoovQuickTime)
+{
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("short-zero-inband.mov");
+  binding->RunTestAndWait([binding] () {
+    // It demuxes without error. That is sufficient.
+    binding->mTaskQueue->BeginShutdown();
+  });
+}
