@@ -7,7 +7,6 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 // Cookies from private tabs currently can't be enumerated.
@@ -242,25 +241,24 @@ function* query(detailsIn, props, extension) {
 extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
   let self = {
     cookies: {
-      get: function(details, callback) {
+      get: function(details) {
         // FIXME: We don't sort by length of path and creation time.
         for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
-          runSafe(context, callback, convert(cookie));
-          return;
+          return Promise.resolve(convert(cookie));
         }
 
         // Found no match.
-        runSafe(context, callback, null);
+        return Promise.resolve(null);
       },
 
-      getAll: function(details, callback) {
+      getAll: function(details) {
         let allowed = ["url", "name", "domain", "path", "secure", "session", "storeId"];
         let result = Array.from(query(details, allowed, extension), convert);
 
-        runSafe(context, callback, result);
+        return Promise.resolve(result);
       },
 
-      set: function(details, callback) {
+      set: function(details) {
         let uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
 
         let path;
@@ -283,42 +281,35 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         // Ignore storeID.
 
         let cookieAttrs = { host: details.domain, path: path, isSecure: secure };
-        if (checkSetCookiePermissions(extension, uri, cookieAttrs)) {
-          // TODO: Set |lastError| when false.
-          //
-          // The permission check may have modified the domain, so use
-          // the new value instead.
-          Services.cookies.add(cookieAttrs.host, path, name, value,
-                               secure, httpOnly, isSession, expiry);
+        if (!checkSetCookiePermissions(extension, uri, cookieAttrs)) {
+          return Promise.reject({message: `Permission denied to set cookie ${JSON.stringify(details)}`});
         }
 
-        if (callback) {
-          self.cookies.get(details, callback);
-        }
+        // The permission check may have modified the domain, so use
+        // the new value instead.
+        Services.cookies.add(cookieAttrs.host, path, name, value,
+                             secure, httpOnly, isSession, expiry);
+
+        return self.cookies.get(details);
       },
 
-      remove: function(details, callback) {
+      remove: function(details) {
         for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
           Services.cookies.remove(cookie.host, cookie.name, cookie.path, false);
-          if (callback) {
-            runSafe(context, callback, {
-              url: details.url,
-              name: details.name,
-              storeId: DEFAULT_STORE,
-            });
-          }
           // Todo: could there be multiple per subdomain?
-          return;
+          return Promise.resolve({
+            url: details.url,
+            name: details.name,
+            storeId: DEFAULT_STORE,
+          });
         }
 
-        if (callback) {
-          runSafe(context, callback, null);
-        }
+        return Promise.resolve(null);
       },
 
-      getAllCookieStores: function(callback) {
+      getAllCookieStores: function() {
         // Todo: list all the tabIds for non-private tabs
-        runSafe(context, callback, [{id: DEFAULT_STORE, tabIds: []}]);
+        return Promise.resolve([{id: DEFAULT_STORE, tabIds: []}]);
       },
 
       onChanged: new EventManager(context, "cookies.onChanged", fire => {
