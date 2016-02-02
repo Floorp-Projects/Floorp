@@ -264,13 +264,15 @@ IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
   // Compute the new scale due to the CSS transform property.
   nsPresContext* presContext = aFrame->PresContext();
   RuleNodeCacheConditions dummy;
+  bool dummyBool;
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform =
     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
                                            aFrame->StyleContext(),
                                            presContext,
                                            dummy, refBox,
-                                           presContext->AppUnitsPerCSSPixel());
+                                           presContext->AppUnitsPerCSSPixel(),
+                                           &dummyBool);
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {
     // We don't attempt to handle 3D transforms; just assume the scale changed.

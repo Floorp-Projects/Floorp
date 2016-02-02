@@ -326,12 +326,14 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       }
       case eCSSKeyword_interpolatematrix:
       {
+        bool dummy;
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, array,
                                                          aContext,
                                                          aPresContext,
                                                          conditions,
-                                                         aRefBox);
+                                                         aRefBox,
+                                                         &dummy);
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
@@ -5292,6 +5294,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 
   /* Get the matrix, then change its basis to factor in the origin. */
   RuleNodeCacheConditions dummy;
+  bool dummyBool;
   Matrix4x4 result;
   // Call IsSVGTransformed() regardless of the value of
   // disp->mSpecifiedTransform, since we still need any transformFromSVGParent.
@@ -5305,7 +5308,8 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
                                                     frame ? frame->StyleContext() : nullptr,
                                                     frame ? frame->PresContext() : nullptr,
-                                                    dummy, refBox, aAppUnitsPerPixel);
+                                                    dummy, refBox, aAppUnitsPerPixel,
+                                                    &dummyBool);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /

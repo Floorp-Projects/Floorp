@@ -279,7 +279,8 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
                          nsStyleContext* aContext,
                          nsPresContext* aPresContext,
                          RuleNodeCacheConditions& aConditions,
-                         TransformReferenceBox& aRefBox)
+                         TransformReferenceBox& aRefBox,
+                         bool* aContains3dTransform)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
@@ -288,13 +289,15 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
     matrix1 = nsStyleTransformMatrix::ReadTransforms(aData->Item(1).GetListValue(),
                              aContext, aPresContext,
                              aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel());
+                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
+                             aContains3dTransform);
   }
   if (aData->Item(2).GetUnit() == eCSSUnit_List) {
     matrix2 = ReadTransforms(aData->Item(2).GetListValue(),
                              aContext, aPresContext,
                              aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel());
+                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
+                             aContains3dTransform);
   }
   double progress = aData->Item(3).GetPercentValue();
 
@@ -614,8 +617,10 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                            nsStyleContext* aContext,
                            nsPresContext* aPresContext,
                            RuleNodeCacheConditions& aConditions,
-                           TransformReferenceBox& aRefBox)
+                           TransformReferenceBox& aRefBox,
+                           bool* aContains3dTransform)
 {
+  MOZ_ASSERT(aContains3dTransform);
   NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
   // It's OK if aContext and aPresContext are null if the caller already
   // knows that all length units have been converted to pixels (as
@@ -633,6 +638,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                       aConditions, aRefBox);
     break;
   case eCSSKeyword_translatez:
+    *aContains3dTransform = true;
     ProcessTranslateZ(aMatrix, aData, aContext, aPresContext,
                       aConditions);
     break;
@@ -641,6 +647,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                      aConditions, aRefBox);
     break;
   case eCSSKeyword_translate3d:
+    *aContains3dTransform = true;
     ProcessTranslate3D(aMatrix, aData, aContext, aPresContext,
                        aConditions, aRefBox);
     break;
@@ -651,12 +658,14 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessScaleY(aMatrix, aData);
     break;
   case eCSSKeyword_scalez:
+    *aContains3dTransform = true;
     ProcessScaleZ(aMatrix, aData);
     break;
   case eCSSKeyword_scale:
     ProcessScale(aMatrix, aData);
     break;
   case eCSSKeyword_scale3d:
+    *aContains3dTransform = true;
     ProcessScale3D(aMatrix, aData);
     break;
   case eCSSKeyword_skewx:
@@ -669,16 +678,20 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessSkew(aMatrix, aData);
     break;
   case eCSSKeyword_rotatex:
+    *aContains3dTransform = true;
     ProcessRotateX(aMatrix, aData);
     break;
   case eCSSKeyword_rotatey:
+    *aContains3dTransform = true;
     ProcessRotateY(aMatrix, aData);
     break;
   case eCSSKeyword_rotatez:
+    *aContains3dTransform = true;
   case eCSSKeyword_rotate:
     ProcessRotateZ(aMatrix, aData);
     break;
   case eCSSKeyword_rotate3d:
+    *aContains3dTransform = true;
     ProcessRotate3D(aMatrix, aData);
     break;
   case eCSSKeyword_matrix:
@@ -686,14 +699,17 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                   aConditions, aRefBox);
     break;
   case eCSSKeyword_matrix3d:
+    *aContains3dTransform = true;
     ProcessMatrix3D(aMatrix, aData, aContext, aPresContext,
                     aConditions, aRefBox);
     break;
   case eCSSKeyword_interpolatematrix:
     ProcessInterpolateMatrix(aMatrix, aData, aContext, aPresContext,
-                             aConditions, aRefBox);
+                             aConditions, aRefBox,
+                             aContains3dTransform);
     break;
   case eCSSKeyword_perspective:
+    *aContains3dTransform = true;
     ProcessPerspective(aMatrix, aData, aContext, aPresContext, 
                        aConditions);
     break;
@@ -719,7 +735,8 @@ ReadTransforms(const nsCSSValueList* aList,
                nsPresContext* aPresContext,
                RuleNodeCacheConditions& aConditions,
                TransformReferenceBox& aRefBox,
-               float aAppUnitsPerMatrixUnit)
+               float aAppUnitsPerMatrixUnit,
+               bool* aContains3dTransform)
 {
   Matrix4x4 result;
 
@@ -737,13 +754,14 @@ ReadTransforms(const nsCSSValueList* aList,
 
     /* Read in a single transform matrix. */
     MatrixForTransformFunction(result, currElem.GetArrayValue(), aContext,
-                               aPresContext, aConditions, aRefBox);
+                               aPresContext, aConditions, aRefBox,
+                               aContains3dTransform);
   }
 
   float scale = float(nsPresContext::AppUnitsPerCSSPixel()) / aAppUnitsPerMatrixUnit;
   result.PreScale(1/scale, 1/scale, 1/scale);
   result.PostScale(scale, scale, scale);
-  
+
   return result;
 }
 
