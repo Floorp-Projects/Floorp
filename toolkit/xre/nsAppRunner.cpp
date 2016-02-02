@@ -66,7 +66,6 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIIOService2.h"
-#include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIProcess.h"
@@ -4701,31 +4700,25 @@ mozilla::BrowserTabsRemoteAutostart()
    * which currently doesn't work well with e10s.
    */
   bool disabledForBidi = false;
-  do { // to allow 'break' to abort this block if a call fails
-    nsresult rv;
-    nsCOMPtr<nsILocaleService> ls =
-      do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      break;
 
-    nsCOMPtr<nsILocale> appLocale;
-    rv = ls->GetApplicationLocale(getter_AddRefs(appLocale));
-    if (NS_FAILED(rv))
-      break;
+  nsAutoCString locale;
+  nsCOMPtr<nsIXULChromeRegistry> registry =
+   mozilla::services::GetXULChromeRegistryService();
+  if (registry) {
+     registry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), locale);
+  }
 
-    nsString localeStr;
-    rv = appLocale->
-      GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), localeStr);
-    if (NS_FAILED(rv))
-      break;
+  int32_t index = locale.FindChar('-');
+  if (index >= 0) {
+    locale.Truncate(index);
+  }
 
-    if (localeStr.EqualsLiteral("ar") ||
-        localeStr.EqualsLiteral("fa") ||
-        localeStr.EqualsLiteral("he") ||
-        localeStr.EqualsLiteral("ur")) {
-      disabledForBidi = true;
-    }
-  } while (0);
+  if (locale.EqualsLiteral("ar") ||
+      locale.EqualsLiteral("fa") ||
+      locale.EqualsLiteral("he") ||
+      locale.EqualsLiteral("ur")) {
+    disabledForBidi = true;
+  }
 
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
   bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
