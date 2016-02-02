@@ -2948,6 +2948,32 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I64StoreMem16:
       case Expr::I64StoreMem32:
       case Expr::I64StoreMem:
+      case Expr::I64Clz:
+      case Expr::I64Ctz:
+      case Expr::I64Popcnt:
+      case Expr::I64Add:
+      case Expr::I64Sub:
+      case Expr::I64Mul:
+      case Expr::I64DivS:
+      case Expr::I64DivU:
+      case Expr::I64RemS:
+      case Expr::I64RemU:
+      case Expr::I64Or:
+      case Expr::I64And:
+      case Expr::I64Xor:
+      case Expr::I64Shl:
+      case Expr::I64ShrU:
+      case Expr::I64ShrS:
+      case Expr::I64Eq:
+      case Expr::I64Ne:
+      case Expr::I64LtS:
+      case Expr::I64LeS:
+      case Expr::I64LtU:
+      case Expr::I64LeU:
+      case Expr::I64GtS:
+      case Expr::I64GeS:
+      case Expr::I64GtU:
+      case Expr::I64GeU:
         MOZ_CRASH("NYI");
       case Expr::Unreachable:
         break;

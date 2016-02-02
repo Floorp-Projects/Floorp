@@ -49,6 +49,35 @@ testComparison('i32', 'gt_u', 40, 40, 0);
 testComparison('i32', 'ge_s', 40, 40, 1);
 testComparison('i32', 'ge_u', 40, 40, 1);
 
+//testUnary('i64', 'clz', 40, 58); // TODO: NYI
+//testUnary('i64', 'ctz', 40, 0); // TODO: NYI
+//testUnary('i64', 'popcnt', 40, 0); // TODO: NYI
+
+//testBinary('i64', 'add', 40, 2, 42); // TODO: NYI
+//testBinary('i64', 'sub', 40, 2, 38); // TODO: NYI
+//testBinary('i64', 'mul', 40, 2, 80); // TODO: NYI
+//testBinary('i64', 'div_s', -40, 2, -20); // TODO: NYI
+//testBinary('i64', 'div_u', -40, 2, 2147483628); // TODO: NYI
+//testBinary('i64', 'rem_s', 40, -3, 1); // TODO: NYI
+//testBinary('i64', 'rem_u', 40, -3, 40); // TODO: NYI
+//testBinary('i64', 'and', 42, 6, 2); // TODO: NYI
+//testBinary('i64', 'or', 42, 6, 46); // TODO: NYI
+//testBinary('i64', 'xor', 42, 2, 40); // TODO: NYI
+//testBinary('i64', 'shl', 40, 2, 160); // TODO: NYI
+//testBinary('i64', 'shr_s', -40, 2, -10); // TODO: NYI
+//testBinary('i64', 'shr_u', -40, 2, 1073741814); // TODO: NYI
+
+//testComparison('i64', 'eq', 40, 40, 1); // TODO: NYI
+//testComparison('i64', 'ne', 40, 40, 0); // TODO: NYI
+//testComparison('i64', 'lt_s', 40, 40, 0); // TODO: NYI
+//testComparison('i64', 'lt_u', 40, 40, 0); // TODO: NYI
+//testComparison('i64', 'le_s', 40, 40, 1); // TODO: NYI
+//testComparison('i64', 'le_u', 40, 40, 1); // TODO: NYI
+//testComparison('i64', 'gt_s', 40, 40, 0); // TODO: NYI
+//testComparison('i64', 'gt_u', 40, 40, 0); // TODO: NYI
+//testComparison('i64', 'ge_s', 40, 40, 1); // TODO: NYI
+//testComparison('i64', 'ge_u', 40, 40, 1); // TODO: NYI
+
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result f32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
