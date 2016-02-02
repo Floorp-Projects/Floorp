@@ -14,7 +14,7 @@ add_task(function* test() {
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
                                     function* (browser) {
     yield ContentTask.spawn(browser, URL, function* (URL) {
-      let history = docShell.sessionHistory;
+      let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
       let count = 0;
 
       let testDone = {};
