@@ -57,12 +57,6 @@ interface nsICacheStorage : nsISupports
   const uint32_t OPEN_SECRETLY = 1 << 5;
 
   /**
-   * Entry is being opened as part of a service worker interception.  Do not
-   * allow the cache to be disabled in this case.
-   */
-  const uint32_t OPEN_INTERCEPTED = 1 << 6;
-
-  /**
    * Asynchronously opens a cache entry for the specified URI.
    * Result is fetched asynchronously via the callback.
    *
