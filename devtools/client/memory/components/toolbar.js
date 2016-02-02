@@ -67,7 +67,10 @@ const Toolbar = module.exports = createClass({
         },
 
         dom.label(
-          { className: "breakdown-by" },
+          {
+            className: "breakdown-by",
+            title: L10N.getStr("toolbar.breakdownBy.tooltip"),
+          },
           L10N.getStr("toolbar.breakdownBy"),
           dom.select(
             {
@@ -75,10 +78,11 @@ const Toolbar = module.exports = createClass({
               className: "select-breakdown",
               onChange: e => onBreakdownChange(e.target.value),
             },
-            breakdowns.map(({ name, displayName }) => dom.option(
+            breakdowns.map(({ name, tooltip, displayName }) => dom.option(
               {
                 key: name,
-                value: name
+                value: name,
+                title: tooltip,
               },
               displayName
             ))
@@ -86,7 +90,9 @@ const Toolbar = module.exports = createClass({
         ),
 
         dom.label(
-          {},
+          {
+            title: L10N.getStr("checkbox.invertTree.tooltip")
+          },
           dom.input({
             id: "invert-tree-checkbox",
             type: "checkbox",
@@ -103,6 +109,7 @@ const Toolbar = module.exports = createClass({
           type: "search",
           className: "devtools-searchinput",
           placeholder: L10N.getStr("filter.placeholder"),
+          title: L10N.getStr("filter.tooltip"),
           onChange: event => setFilterString(event.target.value),
           value: !!filterString ? filterString : undefined,
         })
@@ -116,17 +123,21 @@ const Toolbar = module.exports = createClass({
         },
 
         dom.label(
-          { className: "label-by" },
+          {
+            className: "label-by",
+            title: L10N.getStr("toolbar.labelBy.tooltip"),
+          },
           L10N.getStr("toolbar.labelBy"),
           dom.select(
             {
               id: "select-dominator-tree-breakdown",
               onChange: e => onDominatorTreeBreakdownChange(e.target.value),
             },
-            dominatorTreeBreakdowns.map(({ name, displayName }) => dom.option(
+            dominatorTreeBreakdowns.map(({ name, tooltip, displayName }) => dom.option(
               {
                 key: name,
-                value: name
+                value: name,
+                title: tooltip,
               },
               displayName
             ))
@@ -138,7 +149,9 @@ const Toolbar = module.exports = createClass({
     let viewSelect;
     if (view !== viewState.DIFFING) {
       viewSelect = dom.label(
-        {},
+        {
+          title: L10N.getStr("toolbar.view.tooltip"),
+        },
         L10N.getStr("toolbar.view"),
         dom.select(
           {
@@ -146,10 +159,20 @@ const Toolbar = module.exports = createClass({
             onChange: e => onViewChange(e.target.value),
             defaultValue: viewState.CENSUS,
           },
-          dom.option({ value: viewState.CENSUS },
-                     L10N.getStr("toolbar.view.census")),
-          dom.option({ value: viewState.DOMINATOR_TREE },
-                     L10N.getStr("toolbar.view.dominators"))
+          dom.option(
+            {
+              value: viewState.CENSUS,
+              title: L10N.getStr("toolbar.view.census.tooltip"),
+            },
+            L10N.getStr("toolbar.view.census")
+          ),
+          dom.option(
+            {
+              value: viewState.DOMINATOR_TREE,
+              title: L10N.getStr("toolbar.view.dominators.tooltip"),
+            },
+            L10N.getStr("toolbar.view.dominators")
+          )
         )
       );
     }
@@ -202,7 +225,9 @@ const Toolbar = module.exports = createClass({
         ),
 
         dom.label(
-          {},
+          {
+            title: L10N.getStr("checkbox.recordAllocationStacks.tooltip"),
+          },
           dom.input({
             id: "record-allocation-stacks-checkbox",
             type: "checkbox",
