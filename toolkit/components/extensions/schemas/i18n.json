@@ -33,6 +33,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Gets the accept-languages of the browser. This is different from the locale used by the browser; to get the locale, use $(ref:i18n.getUILanguage).",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -81,6 +82,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Detects the language of the provided text using CLD.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",

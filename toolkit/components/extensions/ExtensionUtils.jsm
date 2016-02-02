@@ -112,6 +112,13 @@ DefaultWeakMap.prototype = {
   },
 };
 
+class SpreadArgs extends Array {
+  constructor(args) {
+    super();
+    this.push(...args);
+  }
+}
+
 class BaseContext {
   constructor() {
     this.onClose = new Set();
@@ -202,8 +209,8 @@ class BaseContext {
    * to the console.
    *
    * @param {Promise} promise The promise with which to wrap the
-   *     callback. Must resolve to an array, or other iterable, each
-   *     element of which will be passed as an argument to the callback.
+   *     callback. May resolve to a `SpreadArgs` instance, in which case
+   *     each element will be used as a separate argument.
    *
    * @param {function} [callback] The callback function to wrap
    *
@@ -214,7 +221,11 @@ class BaseContext {
     if (callback) {
       promise.then(
         args => {
-          runSafeSync(this, callback, ...args);
+          if (args instanceof SpreadArgs) {
+            runSafeSync(this, callback, ...args);
+          } else {
+            runSafeSync(this, callback, args);
+          }
         },
         error => {
           this.withLastError(error, () => {
@@ -925,6 +936,7 @@ this.ExtensionUtils = {
   injectAPI,
   MessageBroker,
   Messenger,
+  SpreadArgs,
   extend,
   flushJarCache,
   instanceOf,
