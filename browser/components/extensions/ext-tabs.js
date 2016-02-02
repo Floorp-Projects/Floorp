@@ -507,18 +507,15 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = details.runAt;
         }
 
-        return context.sendMessage(mm, "Extension:Execute", { options }, recipient)
-                      .then(value => [value]);
+        return context.sendMessage(mm, "Extension:Execute", { options }, recipient);
       },
 
-      executeScript: function(tabId, details, callback) {
-        return context.wrapPromise(self.tabs._execute(tabId, details, "js"),
-                                   callback);
+      executeScript: function(tabId, details) {
+        return self.tabs._execute(tabId, details, "js");
       },
 
-      insertCSS: function(tabId, details, callback) {
-        return context.wrapPromise(self.tabs._execute(tabId, details, "css"),
-                                   callback);
+      insertCSS: function(tabId, details) {
+        return self.tabs._execute(tabId, details, "css");
       },
 
       connect: function(tabId, connectInfo) {
