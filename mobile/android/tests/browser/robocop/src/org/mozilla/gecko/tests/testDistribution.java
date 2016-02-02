@@ -392,20 +392,36 @@ public class testDistribution extends ContentProviderTest {
     }
 
     private JSONArray getPrefs(String[] prefNames) throws JSONException {
-        Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-        mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
+        final JSONArray result = new JSONArray();
 
-        JSONObject data = null;
-        int requestId = -1;
+        mActions.getPrefs(prefNames, new Actions.PrefHandlerBase() {
+            private void addItem(String pref, Object value) {
+                try {
+                    final JSONObject item = new JSONObject();
+                    item.put("name", pref).put("value", value);
+                    result.put(item);
+                } catch (final JSONException e) {
+                    mAsserter.ok(false, "exception getting prefs", e.toString());
+                }
+            }
 
-        // Wait until we get the correct "Preferences:Data" event
-        while (requestId != PREF_REQUEST_ID) {
-            data = new JSONObject(eventExpecter.blockForEventData());
-            requestId = data.getInt("requestId");
-        }
-        eventExpecter.unregisterListener();
+            @Override // Actions.PrefHandlerBase
+            public void prefValue(String pref, boolean value) {
+                addItem(pref, value);
+            }
 
-        return data.getJSONArray("preferences");
+            @Override // Actions.PrefHandlerBase
+            public void prefValue(String pref, int value) {
+                addItem(pref, value);
+            }
+
+            @Override // Actions.PrefHandlerBase
+            public void prefValue(String pref, String value) {
+                addItem(pref, value);
+            }
+        }).waitForFinish();
+
+        return result;
     }
 
     // Sets the distribution locale preference for the test.
@@ -414,56 +430,39 @@ public class testDistribution extends ContentProviderTest {
     }
 
     // Test localized distribution and preferences values stored in preferences.json
-    private void checkLocalizedPreferences(String aLocale) {
-        String prefAbout = "distribution.about";
-        String prefLocalizeable = "distribution.test.localizeable";
-        String prefLocalizeableOverride = "distribution.test.localizeable-override";
+    private void checkLocalizedPreferences(final String aLocale) {
+        final String prefAbout = "distribution.about";
+        final String prefLocalizeable = "distribution.test.localizeable";
+        final String prefLocalizeableOverride = "distribution.test.localizeable-override";
+        final String[] prefNames = { prefAbout, prefLocalizeable, prefLocalizeableOverride };
 
-        try {
-            final String[] prefNames = { prefAbout, prefLocalizeable, prefLocalizeableOverride };
-
-            Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
-
-            JSONObject data = null;
-            int requestId = -1;
-
-            // Wait until we get the correct "Preferences:Data" event
-            while (requestId != PREF_REQUEST_ID) {
-                data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
-            }
-            eventExpecter.unregisterListener();
-
-            JSONArray preferences = data.getJSONArray("preferences");
-            for (int i = 0; i < preferences.length(); i++) {
-                JSONObject pref = (JSONObject) preferences.get(i);
-                String name = pref.getString("name");
-
+        mActions.getPrefs(prefNames, new Actions.PrefHandlerBase() {
+            @Override // Actions.PrefHandlerBase
+            public void prefValue(String name, String value) {
                 if (name.equals(prefAbout)) {
                     if (aLocale.equals("en-US")) {
-                        mAsserter.is(pref.getString("value"), "Test Partner", "check " + prefAbout);
+                        mAsserter.is(value, "Test Partner", "check " + prefAbout);
                     } else if (aLocale.equals("es-MX")) {
-                        mAsserter.is(pref.getString("value"), "Afiliado de Prueba", "check " + prefAbout);
+                        mAsserter.is(value, "Afiliado de Prueba", "check " + prefAbout);
                     }
                 } else if (name.equals(prefLocalizeable)) {
                     if (aLocale.equals("en-US")) {
-                        mAsserter.is(pref.getString("value"), "http://test.org/en-US/en-US/", "check " + prefLocalizeable);
+                        mAsserter.is(value, "http://test.org/en-US/en-US/", "check " + prefLocalizeable);
                     } else if (aLocale.equals("es-MX")) {
-                        mAsserter.is(pref.getString("value"), "http://test.org/es-MX/es-MX/", "check " + prefLocalizeable);
+                        mAsserter.is(value, "http://test.org/es-MX/es-MX/", "check " + prefLocalizeable);
                     }
                 } else if (name.equals(prefLocalizeableOverride)) {
                     if (aLocale.equals("en-US")) {
-                        mAsserter.is(pref.getString("value"), "http://cheese.com", "check " + prefLocalizeableOverride);
+                        mAsserter.is(value, "http://cheese.com", "check " + prefLocalizeableOverride);
                     } else if (aLocale.equals("es-MX")) {
-                        mAsserter.is(pref.getString("value"), "http://test.org/es-MX/", "check " + prefLocalizeableOverride);
+                        mAsserter.is(value, "http://test.org/es-MX/", "check " + prefLocalizeableOverride);
                     }
+                } else {
+                    // Raise exception.
+                    super.prefValue(name, value);
                 }
             }
-
-        } catch (JSONException e) {
-            mAsserter.ok(false, "exception getting preferences", e.toString());
-        }
+        }).waitForFinish();
     }
 
     // Copies the mock package to the data directory and returns the file path to it.

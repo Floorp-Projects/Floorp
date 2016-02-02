@@ -39,6 +39,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
 using mozilla::dom::EncodingUtils;
@@ -523,9 +524,9 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         dom::Element* element = aNode->AsElement();
 
         uint32_t attsCount = element->GetAttrCount();
-        nsAutoArrayPtr<txStylesheetAttr> atts;
+        UniquePtr<txStylesheetAttr[]> atts;
         if (attsCount > 0) {
-            atts = new txStylesheetAttr[attsCount];
+            atts = MakeUnique<txStylesheetAttr[]>(attsCount);
             uint32_t counter;
             for (counter = 0; counter < attsCount; ++counter) {
                 txStylesheetAttr& att = atts[counter];
@@ -541,7 +542,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
 
         rv = aCompiler->startElement(ni->NamespaceID(),
                                      ni->NameAtom(),
-                                     ni->GetPrefixAtom(), atts,
+                                     ni->GetPrefixAtom(), atts.get(),
                                      attsCount);
         NS_ENSURE_SUCCESS(rv, rv);
 

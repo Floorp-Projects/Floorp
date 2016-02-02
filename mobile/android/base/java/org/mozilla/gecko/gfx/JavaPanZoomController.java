@@ -135,6 +135,8 @@ class JavaPanZoomController
     // Handler to be notified when overscroll occurs
     private Overscroll mOverscroll;
 
+    private final PrefsHelper.PrefHandler mPrefsObserver;
+
     public JavaPanZoomController(PanZoomTarget target, View view, EventDispatcher eventDispatcher) {
         mTarget = target;
         mSubscroller = new SubdocumentScrollHelper(eventDispatcher);
@@ -158,7 +160,7 @@ class JavaPanZoomController
         String[] prefs = { "ui.scrolling.axis_lock_mode",
                            "ui.scrolling.negate_wheel_scroll",
                            "ui.scrolling.gamepad_dead_zone" };
-        PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
+        mPrefsObserver = new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
                 if (pref.equals("ui.scrolling.axis_lock_mode")) {
                     if (value.equals("standard")) {
@@ -182,13 +184,8 @@ class JavaPanZoomController
                     mNegateWheelScroll = value;
                 }
             }
-
-            @Override
-            public boolean isObserver() {
-                return true;
-            }
-
-        });
+        };
+        PrefsHelper.addObserver(prefs, mPrefsObserver);
 
         Axis.initPrefs();
 
@@ -202,6 +199,7 @@ class JavaPanZoomController
 
     @Override
     public void destroy() {
+        PrefsHelper.removeObserver(mPrefsObserver);
         mEventDispatcher.unregisterGeckoThreadListener(this,
             MESSAGE_ZOOM_RECT,
             MESSAGE_ZOOM_PAGE,

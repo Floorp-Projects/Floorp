@@ -10,22 +10,27 @@ interface nsIContentURIGrouper;
 interface nsILoadContext;
 interface mozIStorageConnection;
 
-[scriptable, uuid(746c7a02-f6c1-4869-b434-7c8b86e60e61)]
+[scriptable, uuid(43635c53-b445-4c4e-8cc5-562697299b55)]
 interface nsIContentPrefObserver : nsISupports
 {
   /**
    * Called when a content pref is set to a different value.
-   * 
+   *
    * @param    aGroup      the group to which the pref belongs, or null
    *                       if it's a global pref (applies to all sites)
    * @param    aName       the name of the pref that was set
    * @param    aValue      the new value of the pref
+   * @param    aIsPrivate  an optional flag determining whether the
+   *                       original context is private or not
    */
-  void onContentPrefSet(in AString aGroup, in AString aName, in nsIVariant aValue);
+  void onContentPrefSet(in AString aGroup,
+                        in AString aName,
+                        in nsIVariant aValue,
+                        [optional] in boolean aIsPrivate);
 
   /**
    * Called when a content pref is removed.
-   * 
+   *
    * @param    aGroup      the group to which the pref belongs, or null
    *                       if it's a global pref (applies to all sites)
    * @param    aName       the name of the pref that was removed
@@ -58,7 +63,7 @@ interface nsIContentPrefService : nsISupports
    *
    * @param    aGroup      the group for which to get the pref, as an nsIURI
    *                       from which the hostname will be used, a string
-   *                       (typically in the format of a hostname), or null 
+   *                       (typically in the format of a hostname), or null
    *                       to get the global pref (applies to all sites)
    * @param    aName       the name of the pref to get
    * @param    aPrivacyContext
@@ -99,7 +104,7 @@ interface nsIContentPrefService : nsISupports
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
   void setPref(in nsIVariant aGroup, in AString aName, in nsIVariant aValue, in nsILoadContext aPrivacyContext);
-  
+
   /**
    * Check whether or not a pref exists.
    *
@@ -142,7 +147,7 @@ interface nsIContentPrefService : nsISupports
    * @param    aGroup      the group for which to remove the pref, as an nsIURI
    *                       from which the hostname will be used, a string
    *                       (typically in the format of a hostname), or null
-   *                       to remove the global pref (applies to all sites) 
+   *                       to remove the global pref (applies to all sites)
    * @param    aName       the name of the pref to remove
    * @param    aPrivacyContext
    *                       a context from which to determine the privacy status
@@ -185,13 +190,13 @@ interface nsIContentPrefService : nsISupports
    * @param    aGroup      the group for which to retrieve prefs, as an nsIURI
    *                       from which the hostname will be used, a string
    *                       (typically in the format of a hostname), or null
-   *                       to get the global prefs (apply to all sites) 
+   *                       to get the global prefs (apply to all sites)
    * @param    aPrivacyContext
    *                       a context from which to determine the privacy status
    *                       of the pref (ie. whether to search for prefs in memory
    *                       or in permanent storage), obtained from a relevant
    *                       window or channel.
-   * 
+   *
    * @returns  a property bag of prefs
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    */
@@ -206,21 +211,21 @@ interface nsIContentPrefService : nsISupports
    *                        of the pref (ie. whether to search for prefs in memory
    *                        or in permanent storage), obtained from a relevant
    *                        window or channel.
-   * 
+   *
    * @returns  a property bag of prefs
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
   nsIPropertyBag2 getPrefsByName(in AString aName, in nsILoadContext aContext);
-  
+
   /**
    * Add an observer.
-   * 
+   *
    * @param    aName       the setting to observe, or null to add
    *                       a generic observer that observes all settings
    * @param    aObserver   the observer to add
    */
   void addObserver(in AString aName, in nsIContentPrefObserver aObserver);
-  
+
   /**
    * Remove an observer.
    *

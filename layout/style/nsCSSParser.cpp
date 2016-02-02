@@ -186,6 +186,10 @@ public:
                              nsIPrincipal* aSheetPrincipal,
                              nsCSSValue& aValue);
 
+  bool ParseTransformProperty(const nsAString& aPropValue,
+                              bool aDisallowRelativeValues,
+                              nsCSSValue& aResult);
+
   void ParseMediaList(const nsSubstring& aBuffer,
                       nsIURI* aURL, // for error reporting
                       uint32_t aLineNumber, // for error reporting
@@ -910,13 +914,13 @@ protected:
   bool ParseBorderStyle();
   bool ParseBorderWidth();
 
-  bool ParseCalc(nsCSSValue &aValue, int32_t aVariantMask);
+  bool ParseCalc(nsCSSValue &aValue, uint32_t aVariantMask);
   bool ParseCalcAdditiveExpression(nsCSSValue& aValue,
-                                     int32_t& aVariantMask);
+                                   uint32_t& aVariantMask);
   bool ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
-                                           int32_t& aVariantMask,
-                                           bool *aHadFinalWS);
-  bool ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask);
+                                         uint32_t& aVariantMask,
+                                         bool *aHadFinalWS);
+  bool ParseCalcTerm(nsCSSValue& aValue, uint32_t& aVariantMask);
   bool RequireWhitespace();
 
   // For "flex" shorthand property, defined in CSS Flexbox spec
@@ -1028,7 +1032,7 @@ protected:
   bool ParseListStyleType(nsCSSValue& aValue);
   bool ParseMargin();
   bool ParseClipPath();
-  bool ParseTransform(bool aIsPrefixed);
+  bool ParseTransform(bool aIsPrefixed, bool aDisallowRelativeValues = false);
   bool ParseObjectPosition();
   bool ParseOutline();
   bool ParseOverflow();
@@ -1153,7 +1157,7 @@ protected:
 
   // Variant parsing methods
   CSSParseResult ParseVariant(nsCSSValue& aValue,
-                              int32_t aVariantMask,
+                              uint32_t aVariantMask,
                               const KTableEntry aKeywordTable[]);
   CSSParseResult ParseVariantWithRestrictions(nsCSSValue& aValue,
                                               int32_t aVariantMask,
@@ -1249,7 +1253,7 @@ protected:
   bool ParseAttr(nsCSSValue& aValue);
   bool ParseSymbols(nsCSSValue& aValue);
   bool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
-  bool TranslateDimension(nsCSSValue& aValue, int32_t aVariantMask,
+  bool TranslateDimension(nsCSSValue& aValue, uint32_t aVariantMask,
                             float aNumber, const nsString& aUnit);
   bool ParseImageOrientation(nsCSSValue& aAngle);
   bool ParseImageRect(nsCSSValue& aImage);
@@ -1302,12 +1306,13 @@ protected:
   bool ParseInsetFunction(nsCSSValue& aValue);
 
   /* Functions for transform Parsing */
-  bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue);
-  bool ParseFunction(nsCSSKeyword aFunction, const int32_t aAllowedTypes[],
-                     int32_t aVariantMaskAll, uint16_t aMinElems,
+  bool ParseSingleTransform(bool aIsPrefixed, bool aDisallowRelativeValues,
+                            nsCSSValue& aValue);
+  bool ParseFunction(nsCSSKeyword aFunction, const uint32_t aAllowedTypes[],
+                     uint32_t aVariantMaskAll, uint16_t aMinElems,
                      uint16_t aMaxElems, nsCSSValue &aValue);
-  bool ParseFunctionInternals(const int32_t aVariantMask[],
-                              int32_t aVariantMaskAll,
+  bool ParseFunctionInternals(const uint32_t aVariantMask[],
+                              uint32_t aVariantMaskAll,
                               uint16_t aMinElems,
                               uint16_t aMaxElems,
                               InfallibleTArray<nsCSSValue>& aOutput);
@@ -1862,6 +1867,48 @@ CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
   } else {
     aValue.Reset();
   }
+}
+
+bool
+CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
+                                      bool aDisallowRelativeValues,
+                                      nsCSSValue& aValue)
+{
+  RefPtr<Declaration> declaration = new Declaration();
+  declaration->InitializeEmpty();
+
+  mData.AssertInitialState();
+  mTempData.AssertInitialState();
+
+  nsCSSScanner scanner(aPropValue, 0);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, nullptr);
+  InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
+
+  bool parsedOK = ParseTransform(false, aDisallowRelativeValues);
+  // We should now be at EOF
+  if (parsedOK && GetToken(true)) {
+    parsedOK = false;
+  }
+
+  bool changed = false;
+  if (parsedOK) {
+    declaration->ExpandTo(&mData);
+    changed = mData.TransferFromBlock(mTempData, eCSSProperty_transform,
+                                      PropertyEnabledState(), false,
+                                      true, false, declaration,
+                                      GetDocument());
+    declaration->CompressFrom(&mData);
+  }
+
+  if (changed) {
+    aValue = *declaration->GetNormalBlock()->ValueFor(eCSSProperty_transform);
+  } else {
+    aValue.Reset();
+  }
+
+  ReleaseScanner();
+
+  return parsedOK;
 }
 
 void
@@ -7348,7 +7395,7 @@ const UnitInfo UnitData[] = {
 
 bool
 CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
-                                  int32_t aVariantMask,
+                                  uint32_t aVariantMask,
                                   float aNumber,
                                   const nsString& aUnit)
 {
@@ -7377,6 +7424,11 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
          eCSSUnit_ViewportMax == units)) {
       // Viewport units aren't allowed right now, probably because we're
       // inside an @page declaration. Fail.
+      return false;
+    }
+
+    if ((VARIANT_ABSOLUTE_DIMENSION & aVariantMask) != 0 &&
+        !nsCSSValue::IsPixelLengthUnit(units)) {
       return false;
     }
   } else {
@@ -7524,7 +7576,7 @@ CSSParserImpl::ParseOneOrLargerVariant(nsCSSValue& aValue,
 // Assigns to aValue iff it returns CSSParseResult::Ok.
 CSSParseResult
 CSSParserImpl::ParseVariant(nsCSSValue& aValue,
-                            int32_t aVariantMask,
+                            uint32_t aVariantMask,
                             const KTableEntry aKeywordTable[])
 {
   NS_ASSERTION(!(mHashlessColorQuirk && (aVariantMask & VARIANT_COLOR)) ||
@@ -12899,7 +12951,7 @@ CSSParserImpl::ParseBorderColors(nsCSSProperty aProperty)
 
 // Parse the top level of a calc() expression.
 bool
-CSSParserImpl::ParseCalc(nsCSSValue &aValue, int32_t aVariantMask)
+CSSParserImpl::ParseCalc(nsCSSValue &aValue, uint32_t aVariantMask)
 {
   // Parsing calc expressions requires, in a number of cases, looking
   // for a token that is *either* a value of the property or a number.
@@ -12947,7 +12999,7 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, int32_t aVariantMask)
 // data structure.
 bool
 CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
-                                           int32_t& aVariantMask)
+                                           uint32_t& aVariantMask)
 {
   MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
   nsCSSValue *storage = &aValue;
@@ -13007,7 +13059,7 @@ struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
 // aHadFinalWS parameter.
 bool
 CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
-                                                 int32_t& aVariantMask,
+                                                 uint32_t& aVariantMask,
                                                  bool *aHadFinalWS)
 {
   MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
@@ -13016,7 +13068,7 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
 
   nsCSSValue *storage = &aValue;
   for (;;) {
-    int32_t variantMask;
+    uint32_t variantMask;
     if (afterDivision || gotValue) {
       variantMask = VARIANT_NUMBER;
     } else {
@@ -13104,7 +13156,7 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
 //    aVariantMask*** to reflect which one it has parsed by either
 //    removing VARIANT_NUMBER or removing all other bits.
 bool
-CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask)
+CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, uint32_t& aVariantMask)
 {
   MOZ_ASSERT(aVariantMask != 0, "unexpected variant mask");
   if (!GetToken(true))
@@ -15027,8 +15079,8 @@ CSSParserImpl::ParseTextCombineUpright(nsCSSValue& aValue)
  * ParseFunction.
  */
 bool
-CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
-                                      int32_t aVariantMaskAll,
+CSSParserImpl::ParseFunctionInternals(const uint32_t aVariantMask[],
+                                      uint32_t aVariantMaskAll,
                                       uint16_t aMinElems,
                                       uint16_t aMaxElems,
                                       InfallibleTArray<nsCSSValue> &aOutput)
@@ -15039,7 +15091,7 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
 
   for (uint16_t index = 0; index < aMaxElems; ++index) {
     nsCSSValue newValue;
-    int32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
+    uint32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
     if (ParseVariant(newValue, m, nullptr) != CSSParseResult::Ok) {
       break;
     }
@@ -15087,8 +15139,8 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
  */
 bool
 CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
-                             const int32_t aAllowedTypes[],
-                             int32_t aAllowedTypesAll,
+                             const uint32_t aAllowedTypes[],
+                             uint32_t aAllowedTypesAll,
                              uint16_t aMinElems, uint16_t aMaxElems,
                              nsCSSValue &aValue)
 {
@@ -15139,6 +15191,10 @@ CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
  * returns an error.
  *
  * @param aToken The token identifying the function.
+ * @param aIsPrefixed If true, parse matrices using the matrix syntax
+ *   for -moz-transform.
+ * @param aDisallowRelativeValues If true, only allow variants that are
+ *   numbers or have non-relative dimensions.
  * @param aMinElems [out] The minimum number of elements to read.
  * @param aMaxElems [out] The maximum number of elements to read
  * @param aVariantMask [out] The variant mask to use during parsing
@@ -15146,9 +15202,10 @@ CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
  */
 static bool GetFunctionParseInformation(nsCSSKeyword aToken,
                                         bool aIsPrefixed,
+                                        bool aDisallowRelativeValues,
                                         uint16_t &aMinElems,
                                         uint16_t &aMaxElems,
-                                        const int32_t *& aVariantMask)
+                                        const uint32_t *& aVariantMask)
 {
 /* These types represent the common variant masks that will be used to
    * parse out the individual functions.  The order in the enumeration
@@ -15156,12 +15213,16 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
    */
   enum { eLengthPercentCalc,
          eLengthCalc,
+         eAbsoluteLengthCalc,
          eTwoLengthPercentCalcs,
+         eTwoAbsoluteLengthCalcs,
          eTwoLengthPercentCalcsOneLengthCalc,
+         eThreeAbsoluteLengthCalc,
          eAngle,
          eTwoAngles,
          eNumber,
          ePositiveLength,
+         ePositiveAbsoluteLength,
          eTwoNumbers,
          eThreeNumbers,
          eThreeNumbersOneAngle,
@@ -15171,15 +15232,19 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
          eMatrix3dPrefixed,
          eNumVariantMasks };
   static const int32_t kMaxElemsPerFunction = 16;
-  static const int32_t kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
+  static const uint32_t kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
     {VARIANT_LPCALC},
-    {VARIANT_LENGTH|VARIANT_CALC},
+    {VARIANT_LCALC},
+    {VARIANT_LB},
     {VARIANT_LPCALC, VARIANT_LPCALC},
-    {VARIANT_LPCALC, VARIANT_LPCALC, VARIANT_LENGTH|VARIANT_CALC},
+    {VARIANT_LBCALC, VARIANT_LBCALC},
+    {VARIANT_LPCALC, VARIANT_LPCALC, VARIANT_LCALC},
+    {VARIANT_LBCALC, VARIANT_LBCALC, VARIANT_LBCALC},
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
     {VARIANT_LENGTH|VARIANT_POSITIVE_DIMENSION},
+    {VARIANT_LB|VARIANT_POSITIVE_DIMENSION},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_ANGLE_OR_ZERO},
@@ -15195,10 +15260,31 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
      VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
      VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
      VARIANT_LPNCALC, VARIANT_LPNCALC, VARIANT_LNCALC, VARIANT_NUMBER}};
+  // Map from a mask to a congruent mask that excludes relative variants.
+  static const int32_t kNonRelativeVariantMap[eNumVariantMasks] = {
+    eAbsoluteLengthCalc,
+    eAbsoluteLengthCalc,
+    eAbsoluteLengthCalc,
+    eTwoAbsoluteLengthCalcs,
+    eTwoAbsoluteLengthCalcs,
+    eThreeAbsoluteLengthCalc,
+    eThreeAbsoluteLengthCalc,
+    eAngle,
+    eTwoAngles,
+    eNumber,
+    ePositiveAbsoluteLength,
+    ePositiveAbsoluteLength,
+    eTwoNumbers,
+    eThreeNumbers,
+    eThreeNumbersOneAngle,
+    eMatrix,
+    eMatrix,
+    eMatrix3d,
+    eMatrix3d };
 
 #ifdef DEBUG
   static const uint8_t kVariantMaskLengths[eNumVariantMasks] =
-    {1, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 6, 6, 16, 16};
+    {1, 1, 1, 2, 2, 3, 3, 1, 2, 1, 1, 1, 2, 3, 4, 6, 6, 16, 16};
 #endif
 
   int32_t variantIndex = eNumVariantMasks;
@@ -15304,6 +15390,10 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
     return false;
   }
 
+  if (aDisallowRelativeValues) {
+    variantIndex = kNonRelativeVariantMap[variantIndex];
+  }
+
   NS_ASSERTION(aMinElems > 0, "Didn't update minimum elements!");
   NS_ASSERTION(aMaxElems > 0, "Didn't update maximum elements!");
   NS_ASSERTION(aMinElems <= aMaxElems, "aMinElems > aMaxElems!");
@@ -15376,7 +15466,9 @@ bool CSSParserImpl::ParseWillChange()
  * error if something goes wrong.
  */
 bool
-CSSParserImpl::ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue)
+CSSParserImpl::ParseSingleTransform(bool aIsPrefixed,
+                                    bool aDisallowRelativeValues,
+                                    nsCSSValue& aValue)
 {
   if (!GetToken(true))
     return false;
@@ -15386,12 +15478,14 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue)
     return false;
   }
 
-  const int32_t* variantMask;
+  const uint32_t* variantMask;
   uint16_t minElems, maxElems;
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
 
   if (!GetFunctionParseInformation(keyword, aIsPrefixed,
-                                   minElems, maxElems, variantMask))
+                                   aDisallowRelativeValues,
+                                   minElems, maxElems,
+                                   variantMask))
     return false;
 
   return ParseFunction(keyword, variantMask, 0, minElems, maxElems, aValue);
@@ -15400,7 +15494,8 @@ CSSParserImpl::ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue)
 /* Parses a transform property list by continuously reading in properties
  * and constructing a matrix from it.
  */
-bool CSSParserImpl::ParseTransform(bool aIsPrefixed)
+bool
+CSSParserImpl::ParseTransform(bool aIsPrefixed, bool aDisallowRelativeValues)
 {
   nsCSSValue value;
   // 'inherit', 'initial', 'unset' and 'none' must be alone
@@ -15411,7 +15506,8 @@ bool CSSParserImpl::ParseTransform(bool aIsPrefixed)
     list->mHead = new nsCSSValueList;
     nsCSSValueList* cur = list->mHead;
     for (;;) {
-      if (!ParseSingleTransform(aIsPrefixed, cur->mValue)) {
+      if (!ParseSingleTransform(aIsPrefixed, aDisallowRelativeValues,
+                                cur->mValue)) {
         return false;
       }
       if (CheckEndProperty()) {
@@ -15785,7 +15881,7 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
   }
 
   // Set up the parsing rules based on the filter function.
-  int32_t variantMask = VARIANT_PN;
+  uint32_t variantMask = VARIANT_PN;
   bool rejectNegativeArgument = true;
   bool clampArgumentToOne = false;
   switch (functionName) {
@@ -17189,6 +17285,15 @@ nsCSSParser::ParseLonghandProperty(const nsCSSProperty aPropID,
   static_cast<CSSParserImpl*>(mImpl)->
     ParseLonghandProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
                           aSheetPrincipal, aResult);
+}
+
+bool
+nsCSSParser::ParseTransformProperty(const nsAString& aPropValue,
+                                    bool             aDisallowRelativeValues,
+                                    nsCSSValue&      aResult)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseTransformProperty(aPropValue, aDisallowRelativeValues, aResult);
 }
 
 void

@@ -26,6 +26,7 @@
     _(SimdAnyTrue)                  \
     _(SimdReinterpretCast)          \
     _(SimdExtractElementI)          \
+    _(SimdExtractElementU2D)        \
     _(SimdExtractElementB)          \
     _(SimdExtractElementF)          \
     _(SimdInsertElementI)           \
@@ -185,6 +186,7 @@
     _(ValueToObjectOrNull)          \
     _(Int32x4ToFloat32x4)           \
     _(Float32x4ToInt32x4)           \
+    _(Float32x4ToUint32x4)          \
     _(Start)                        \
     _(OsrEntry)                     \
     _(OsrValue)                     \
