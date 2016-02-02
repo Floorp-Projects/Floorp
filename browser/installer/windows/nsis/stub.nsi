@@ -1564,6 +1564,14 @@ Function OnDownload
       WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "InstallDirectoryPath" "$INSTDIR"
       ; Don't create the QuickLaunch or Taskbar shortcut from the launched installer
       WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "QuickLaunchShortcut" "false"
+
+      ; Either avoid or force adding a taskbar pin based on the checkbox value:
+      ${If} $CheckboxShortcutOnBar == 0
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "false"
+      ${Else}
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "true"
+      ${EndIf}
+
       ${If} $CheckboxShortcutOnDesktop == 1
         WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "true"
       ${Else}
@@ -1586,14 +1594,10 @@ Function OnDownload
       WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "MaintenanceService" "false"
 !endif
 
-      ; Write migrated to the shortcuts.ini file to prevent the installer
-      ; from creating a taskbar shortcut (Bug 791613).
+      ; Delete the taskbar shortcut history to ensure we do the right thing based on
+      ; the config file above.
       ${GetShortcutsLogPath} $0
       Delete "$0"
-      ; Workaround to prevent pinning to the taskbar.
-      ${If} $CheckboxShortcutOnBar == 0
-        WriteIniStr "$0" "TASKBAR" "Migrated" "true"
-      ${EndIf}
 
       GetFunctionAddress $0 RemoveFileProgressCallback
       ${RemovePrecompleteEntries} $0
