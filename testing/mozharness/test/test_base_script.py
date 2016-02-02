@@ -704,7 +704,7 @@ class TestScriptDecorators(unittest.TestCase):
         self.assertEqual(len(self.s._listeners['pre_run']), 1)
         self.assertEqual(len(self.s._listeners['pre_action']), 3)
         self.assertEqual(len(self.s._listeners['post_action']), 3)
-        self.assertEqual(len(self.s._listeners['post_run']), 2)
+        self.assertEqual(len(self.s._listeners['post_run']), 3)
 
     def test_pre_post_fired(self):
         self.s = BaseScriptWithDecorators(initial_config_file='test/test.json')
