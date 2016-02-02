@@ -538,13 +538,13 @@ GonkGPSGeolocationProvider::RequestSettingValue(const char* aKey)
   nsCOMPtr<nsISettingsServiceLock> lock;
   nsresult rv = ss->CreateLock(nullptr, getter_AddRefs(lock));
   if (NS_FAILED(rv)) {
-    ERR("error while createLock setting '%s': %d\n", aKey, rv);
+    ERR("error while createLock setting '%s': %d\n", aKey, uint32_t(rv));
     return;
   }
 
   rv = lock->Get(aKey, this);
   if (NS_FAILED(rv)) {
-    ERR("error while get setting '%s': %d\n", aKey, rv);
+    ERR("error while get setting '%s': %d\n", aKey, uint32_t(rv));
     return;
   }
 }
