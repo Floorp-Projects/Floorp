@@ -214,23 +214,26 @@ FormAutoComplete.prototype = {
             // If there were datalist results result is a FormAutoCompleteResult
             // as defined in nsFormAutoCompleteResult.jsm with the entire list
             // of results in wrappedResult._values and only the results from
-            // form history in wrappedResults.entries.
+            // form history in wrappedResult.entries.
             // First, grab the entire list of old results.
             let allResults = wrappedResult._labels;
             let datalistResults, datalistLabels;
             if (allResults) {
                 // We have datalist results, extract them from the values array.
-                datalistLabels = allResults.slice(wrappedResult.entries.length);
-                let filtered = [];
+                // Both allResults and values arrays are in the form of:
+                // |--wR.entries--|
+                // <history entries><datalist entries>
+                let oldLabels = allResults.slice(wrappedResult.entries.length);
+                let oldValues = wrappedResult._values.slice(wrappedResult.entries.length);
+
+                datalistLabels = [];
                 datalistResults = [];
-                for (let i = 0; i < datalistLabels.length; ++i) {
-                    if (datalistLabels[i].toLowerCase().includes(searchString)) {
-                        filtered.push(datalistLabels[i]);
-                        datalistResults.push(wrappedResult._values[i]);
+                for (let i = 0; i < oldLabels.length; ++i) {
+                    if (oldLabels[i].toLowerCase().includes(searchString)) {
+                        datalistLabels.push(oldLabels[i]);
+                        datalistResults.push(oldValues[i]);
                     }
                 }
-
-                datalistLabels = filtered;
             }
 
             let searchTokens = searchString.split(/\s+/);
@@ -260,6 +263,9 @@ FormAutoComplete.prototype = {
                 let comments = new Array(filteredEntries.length + datalistResults.length).fill("");
                 comments[filteredEntries.length] = "separator";
 
+                // History entries don't have labels (their labels would be read
+                // from their values). Pad out the labels array so the datalist
+                // results (which do have separate values and labels) line up.
                 datalistLabels = new Array(filteredEntries.length).fill("").concat(datalistLabels);
                 wrappedResult._values = filteredEntries.concat(datalistResults);
                 wrappedResult._labels = datalistLabels;
@@ -301,19 +307,18 @@ FormAutoComplete.prototype = {
     mergeResults(historyResult, datalistResult) {
         let values = datalistResult.wrappedJSObject._values;
         let labels = datalistResult.wrappedJSObject._labels;
-        let comments = [];
+        let comments = new Array(values.length).fill("");
 
-        // formHistoryResult will be null if form autocomplete is disabled. We
+        // historyResult will be null if form autocomplete is disabled. We
         // still want the list values to display.
         let entries = historyResult.wrappedJSObject.entries;
-        let historyResults = entries.map(function(entry) { return entry.text });
+        let historyResults = entries.map(entry => entry.text);
         let historyComments = new Array(entries.length).fill("");
 
         // fill out the comment column for the suggestions
         // if we have any suggestions, put a label at the top
         if (values.length) {
             comments[0] = "separator";
-            comments.fill(1, "");
         }
 
         // now put the history results above the datalist suggestions
