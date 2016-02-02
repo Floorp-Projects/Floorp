@@ -4564,15 +4564,15 @@ CheckFloatCoercionArg(FunctionValidator& f, ParseNode* inputNode, Type inputType
                       size_t opcodeAt)
 {
     if (inputType.isMaybeDouble()) {
-        f.patchOp(opcodeAt, Expr::F32FromF64);
+        f.patchOp(opcodeAt, Expr::F32DemoteF64);
         return true;
     }
     if (inputType.isSigned()) {
-        f.patchOp(opcodeAt, Expr::F32FromS32);
+        f.patchOp(opcodeAt, Expr::F32ConvertSI32);
         return true;
     }
     if (inputType.isUnsigned()) {
-        f.patchOp(opcodeAt, Expr::F32FromU32);
+        f.patchOp(opcodeAt, Expr::F32ConvertUI32);
         return true;
     }
     if (inputType.isFloatish()) {
@@ -4820,7 +4820,7 @@ class CheckSimdScalarArgs
 
             // We emitted a double literal and actually want a float32.
             MOZ_ASSERT(patchAt != size_t(-1));
-            f.patchOp(patchAt, Expr::F32FromF64);
+            f.patchOp(patchAt, Expr::F32DemoteF64);
             return true;
         }
 
@@ -5411,11 +5411,11 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
         if (actual.isMaybeDouble())
             f.patchOp(patchAt, Expr::Id);
         else if (actual.isMaybeFloat())
-            f.patchOp(patchAt, Expr::F64FromF32);
+            f.patchOp(patchAt, Expr::F64PromoteF32);
         else if (actual.isSigned())
-            f.patchOp(patchAt, Expr::F64FromS32);
+            f.patchOp(patchAt, Expr::F64ConvertSI32);
         else if (actual.isUnsigned())
-            f.patchOp(patchAt, Expr::F64FromU32);
+            f.patchOp(patchAt, Expr::F64ConvertUI32);
         else
             return f.failf(expr, "%s is not a subtype of double?, float?, signed or unsigned", actual.toChars());
         break;
@@ -5631,7 +5631,7 @@ CheckCoerceToInt(FunctionValidator& f, ParseNode* expr, Type* type)
         return false;
 
     if (operandType.isMaybeDouble() || operandType.isMaybeFloat()) {
-        Expr opcode = operandType.isMaybeDouble() ? Expr::I32SConvertF64 : Expr::I32SConvertF32;
+        Expr opcode = operandType.isMaybeDouble() ? Expr::I32TruncSF64 : Expr::I32TruncSF32;
         f.patchOp(opcodeAt, opcode);
         *type = Type::Signed;
         return true;
