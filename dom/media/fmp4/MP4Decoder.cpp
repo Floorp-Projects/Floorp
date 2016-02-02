@@ -107,6 +107,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
     aMIMETypeExcludingCodecs.EqualsASCII(VIDEO_3GPP) ||
 #endif
     aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") ||
+    aMIMETypeExcludingCodecs.EqualsASCII("video/quicktime") ||
     aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v");
   if (!isMP4Audio && !isMP4Video) {
     return false;
