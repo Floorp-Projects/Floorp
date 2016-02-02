@@ -246,10 +246,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_bc.yml
-  mochitest-browser-chrome-e10s:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_mochitest_bc_e10s.yml
   mochitest-chrome:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
