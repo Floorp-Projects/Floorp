@@ -265,10 +265,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
     case PositionChangedResult::Changed:
       switch (aHint) {
         case UpdateCaretsHint::Default:
-          // On Fennec, always show accessiblecaret even if the input is empty
-          // to make ActionBar visible.
-          if (sCaretsExtendedVisibility ||
-              HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
+          if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
             mFirstCaret->SetAppearance(Appearance::Normal);
           } else {
             mFirstCaret->SetAppearance(Appearance::NormalNotShown);
