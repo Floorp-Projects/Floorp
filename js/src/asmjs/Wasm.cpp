@@ -323,6 +323,10 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
         return DecodeUnaryOperator(f, expected, ExprType::I32);
+      case Expr::I64Clz:
+      case Expr::I64Ctz:
+      case Expr::I64Popcnt:
+        return DecodeUnaryOperator(f, expected, ExprType::I64);
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
@@ -353,6 +357,20 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32ShrS:
       case Expr::I32ShrU:
         return DecodeBinaryOperator(f, expected, ExprType::I32);
+      case Expr::I64Add:
+      case Expr::I64Sub:
+      case Expr::I64Mul:
+      case Expr::I64DivS:
+      case Expr::I64DivU:
+      case Expr::I64RemS:
+      case Expr::I64RemU:
+      case Expr::I64And:
+      case Expr::I64Or:
+      case Expr::I64Xor:
+      case Expr::I64Shl:
+      case Expr::I64ShrS:
+      case Expr::I64ShrU:
+        return DecodeBinaryOperator(f, expected, ExprType::I64);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
@@ -380,6 +398,17 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32GeS:
       case Expr::I32GeU:
         return DecodeComparisonOperator(f, expected, ExprType::I32);
+      case Expr::I64Eq:
+      case Expr::I64Ne:
+      case Expr::I64LtS:
+      case Expr::I64LtU:
+      case Expr::I64LeS:
+      case Expr::I64LeU:
+      case Expr::I64GtS:
+      case Expr::I64GtU:
+      case Expr::I64GeS:
+      case Expr::I64GeU:
+        return DecodeComparisonOperator(f, expected, ExprType::I64);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -394,6 +423,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64Gt:
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, expected, ExprType::F64);
+      case Expr::I32WrapI64:
+        return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::I64);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
       case Expr::I32ReinterpretF32:
@@ -401,15 +432,32 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F64);
+      case Expr::I64ExtendSI32:
+      case Expr::I64ExtendUI32:
+        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::I32);
+      case Expr::I64TruncSF32:
+      case Expr::I64TruncUF32:
+        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F32);
+      case Expr::I64TruncSF64:
+      case Expr::I64TruncUF64:
+      case Expr::I64ReinterpretF64:
+        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F64);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
       case Expr::F32ReinterpretI32:
         return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I32);
+      case Expr::F32ConvertSI64:
+      case Expr::F32ConvertUI64:
+        return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I64);
       case Expr::F32DemoteF64:
         return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::F64);
       case Expr::F64ConvertSI32:
       case Expr::F64ConvertUI32:
         return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I32);
+      case Expr::F64ConvertSI64:
+      case Expr::F64ConvertUI64:
+      case Expr::F64ReinterpretI64:
+        return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I64);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::F32);
       default:
