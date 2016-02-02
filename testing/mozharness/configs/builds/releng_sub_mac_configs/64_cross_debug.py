@@ -39,6 +39,5 @@ config = {
         ##
     },
     'src_mozconfig': 'browser/config/mozconfigs/macosx64/debug',
-    'purge_minsize': 10,
     #######################
 }
