@@ -30,7 +30,9 @@ function test() {
                                      ['dom.serviceWorkers.exemptFromPerDomainMax', true],
                                      ['dom.serviceWorkers.testing.enabled', true],
                                      ['dom.serviceWorkers.interception.enabled', true],
-                                     ['dom.caches.enabled', true]]},
+                                     ['dom.caches.enabled', true],
+                                     ['browser.cache.disk.enable', false],
+                                     ['browser.cache.memory.enable', false]]},
                             function() {
     var url = gTestRoot + 'browser_base_force_refresh.html';
     var tab = gBrowser.addTab();
@@ -39,24 +41,37 @@ function test() {
     tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
     gBrowser.loadURI(url);
 
+    function done() {
+      tab.linkedBrowser.messageManager.removeMessageListener("test:event", eventHandler);
+
+      gBrowser.removeTab(tab);
+      executeSoon(finish);
+    }
+
     var cachedLoad = false;
+    var baseLoadCount = 0;
 
     function eventHandler(msg) {
       if (msg.data.type === 'base-load') {
+        baseLoadCount += 1;
         if (cachedLoad) {
-          tab.linkedBrowser.messageManager.removeMessageListener("test:event", eventHandler);
-
-          gBrowser.removeTab(tab);
-          executeSoon(finish);
+          is(baseLoadCount, 2, 'cached load should occur before second base load');
+          return done();
+        }
+        if (baseLoadCount !== 1) {
+          ok(false, 'base load without cached load should only occur once');
+          return done();
         }
       } else if (msg.data.type === 'base-register') {
         ok(!cachedLoad, 'cached load should not occur before base register');
-        refresh();
+        is(baseLoadCount, 1, 'register should occur after first base load');
       } else if (msg.data.type === 'base-sw-ready') {
         ok(!cachedLoad, 'cached load should not occur before base ready');
+        is(baseLoadCount, 1, 'ready should occur after first base load');
         refresh();
       } else if (msg.data.type === 'cached-load') {
         ok(!cachedLoad, 'cached load should not occur twice');
+        is(baseLoadCount, 1, 'cache load occur after first base load');
         cachedLoad = true;
         forceRefresh();
       }
