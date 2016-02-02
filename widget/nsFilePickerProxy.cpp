@@ -156,7 +156,9 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
         return true;
       }
 
-      RefPtr<File> file = File::Create(mParent, blobImpl);
+      nsPIDOMWindowInner* inner =
+        mParent ? mParent->GetCurrentInnerWindow() : nullptr;
+      RefPtr<File> file = File::Create(inner, blobImpl);
       MOZ_ASSERT(file);
 
       mFilesOrDirectories.AppendElement(file);
