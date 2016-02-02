@@ -2286,7 +2286,7 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   }
 
   // Build the chain of parents
-  nsAutoTArray<nsINode*, 30> parents1, parents2;
+  AutoTArray<nsINode*, 30> parents1, parents2;
   do {
     parents1.AppendElement(aNode1);
     aNode1 = aNode1->GetParentNode();
@@ -2335,7 +2335,7 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
            0;
   }
 
-  nsAutoTArray<nsINode*, 32> parents1, parents2;
+  AutoTArray<nsINode*, 32> parents1, parents2;
   nsINode* node1 = aParent1;
   nsINode* node2 = aParent2;
   do {
@@ -4287,7 +4287,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     return frag.forget();
   }
 
-  nsAutoTArray<nsString, 32> tagStack;
+  AutoTArray<nsString, 32> tagStack;
   nsAutoString uriStr, nameStr;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
   // just in case we have a text node
@@ -6853,7 +6853,7 @@ nsContentUtils::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
   int32_t newChildCount = aDest->GetChildCount();
   if (newChildCount && nsContentUtils::
         HasMutationListeners(aDoc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-    nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
+    AutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
     NS_ASSERTION(newChildCount - aOldChildCount >= 0,
                  "What, some unexpected dom mutation has happened?");
     childNodes.SetCapacity(newChildCount - aOldChildCount);
@@ -7920,7 +7920,7 @@ nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
 
   int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
-  nsAutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
+  AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
   kids.AppendElements(childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     aItem->GetChildAt(i, getter_AddRefs(kids[i]));
@@ -7945,7 +7945,7 @@ nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
 {
   int32_t childCount = 0;
   aItem->GetChildCount(&childCount);
-  nsAutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
+  AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
   kids.AppendElements(childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     aItem->GetChildAt(i, getter_AddRefs(kids[i]));
@@ -8534,7 +8534,7 @@ private:
     }
   }
 
-  nsAutoTArray<Unit, STRING_BUFFER_UNITS> mUnits;
+  AutoTArray<Unit, STRING_BUFFER_UNITS> mUnits;
   nsAutoPtr<StringBuilder>                mNext;
   StringBuilder*                          mLast;
   // mLength is used only in the first StringBuilder object in the linked list.

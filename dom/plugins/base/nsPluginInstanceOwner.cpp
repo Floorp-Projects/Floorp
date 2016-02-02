@@ -903,7 +903,7 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
         *aLength = aDist->Length();
         return true;
       }
-      nsAutoTArray<uint32_t, 16> clauses;
+      AutoTArray<uint32_t, 16> clauses;
       clauses.AppendElement(0);
       for (TextRange& range : *ranges) {
         if (!range.IsClause()) {

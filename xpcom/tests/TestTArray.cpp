@@ -340,12 +340,12 @@ static bool test_move_array() {
   // And the other ctor
   nsTArray<Countable> copyCountableArray2(Move(differentAllocatorCountableArray));
   // with auto
-  nsAutoTArray<Countable, 3> autoCountableArray(Move(copyCountableArray2));
+  AutoTArray<Countable, 3> autoCountableArray(Move(copyCountableArray2));
   // operator=
   copyCountableArray2 = Move(autoCountableArray);
   // Mix with FallibleTArray
   FallibleTArray<Countable> differentAllocatorCountableArray2(Move(copyCountableArray2));
-  nsAutoTArray<Countable, 4> autoCountableArray2(Move(differentAllocatorCountableArray2));
+  AutoTArray<Countable, 4> autoCountableArray2(Move(differentAllocatorCountableArray2));
   differentAllocatorCountableArray2 = Move(autoCountableArray2);
 
   if (Countable::Count() != 12)
@@ -389,12 +389,12 @@ static bool test_move_array() {
   // And the other ctor
   nsTArray<Moveable> copyMoveableArray2(Move(differentAllocatorMoveableArray));
   // with auto
-  nsAutoTArray<Moveable, 3> autoMoveableArray(Move(copyMoveableArray2));
+  AutoTArray<Moveable, 3> autoMoveableArray(Move(copyMoveableArray2));
   // operator=
   copyMoveableArray2 = Move(autoMoveableArray);
   // Mix with FallibleTArray
   FallibleTArray<Moveable> differentAllocatorMoveableArray2(Move(copyMoveableArray2));
-  nsAutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
+  AutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
   differentAllocatorMoveableArray2 = Move(autoMoveableArray2);
 
   if (Moveable::Count() != 8)
@@ -595,12 +595,12 @@ static bool test_ptrarray() {
 #ifdef DEBUG
 static bool test_autoarray() {
   uint32_t data[] = {4,6,8,2,4,1,5,7,3};
-  nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
+  AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
   if (hdr == nsTArray<uint32_t>().DebugGetHeader())
     return false;
-  if (hdr == nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader())
+  if (hdr == AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader())
     return false;
 
   array.AppendElement(1u);
@@ -642,7 +642,7 @@ static bool test_autoarray() {
   array.Compact();
   array.AppendElements(data, ArrayLength(data));
   uint32_t data3[] = {5, 7, 11};
-  nsAutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data3)> array3;
+  AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data3)> array3;
   array3.AppendElements(data3, ArrayLength(data3));  
   array.SwapElements(array3);
   for (i = 0; i < ArrayLength(data); ++i) {
@@ -775,8 +775,8 @@ static bool test_swap() {
 
   // Swap two auto arrays.
   {
-    nsAutoTArray<int, 8> a;
-    nsAutoTArray<int, 6> b;
+    AutoTArray<int, 8> a;
+    AutoTArray<int, 6> b;
 
     a.AppendElements(data1, ArrayLength(data1));
     b.AppendElements(data2, ArrayLength(data2));
@@ -794,8 +794,8 @@ static bool test_swap() {
   // Swap two auto arrays -- one whose data lives on the heap, the other whose
   // data lives on the stack -- which each fits into the other's auto storage.
   {
-    nsAutoTArray<int, 3> a;
-    nsAutoTArray<int, 3> b;
+    AutoTArray<int, 3> a;
+    AutoTArray<int, 3> b;
 
     a.AppendElements(data1, ArrayLength(data1));
     a.RemoveElementAt(3);
@@ -827,8 +827,8 @@ static bool test_swap() {
   // Swap two auto arrays which are using heap storage such that one fits into
   // the other's auto storage, but the other needs to stay on the heap.
   {
-    nsAutoTArray<int, 3> a;
-    nsAutoTArray<int, 2> b;
+    AutoTArray<int, 3> a;
+    AutoTArray<int, 2> b;
     a.AppendElements(data1, ArrayLength(data1));
     a.RemoveElementAt(3);
 
@@ -851,8 +851,8 @@ static bool test_swap() {
 
   // Swap two arrays, neither of which fits into the other's auto-storage.
   {
-    nsAutoTArray<int, 1> a;
-    nsAutoTArray<int, 3> b;
+    AutoTArray<int, 1> a;
+    AutoTArray<int, 3> b;
 
     a.AppendElements(data1, ArrayLength(data1));
     b.AppendElements(data2, ArrayLength(data2));
@@ -863,10 +863,10 @@ static bool test_swap() {
     CHECK_ARRAY(b, data1);
   }
 
-  // Swap an empty nsTArray with a non-empty nsAutoTArray.
+  // Swap an empty nsTArray with a non-empty AutoTArray.
   {
     nsTArray<int> a;
-    nsAutoTArray<int, 3> b;
+    AutoTArray<int, 3> b;
 
     b.AppendElements(data2, ArrayLength(data2));
     CHECK_IS_USING_AUTO(b);
@@ -881,8 +881,8 @@ static bool test_swap() {
   // Swap two big auto arrays.
   {
     const unsigned size = 8192;
-    nsAutoTArray<unsigned, size> a;
-    nsAutoTArray<unsigned, size> b;
+    AutoTArray<unsigned, size> a;
+    AutoTArray<unsigned, size> b;
 
     for (unsigned i = 0; i < size; i++) {
       a.AppendElement(i);
@@ -929,7 +929,7 @@ static bool test_swap() {
   // it doesn't forget the fact that it has an auto buffer.
   {
     nsTArray<int> a;
-    nsAutoTArray<int, 3> b;
+    AutoTArray<int, 3> b;
 
     a.AppendElements(data1, ArrayLength(data1));
 
@@ -946,8 +946,8 @@ static bool test_swap() {
 
   // Same thing as the previous test, but with more auto arrays.
   {
-    nsAutoTArray<int, 16> a;
-    nsAutoTArray<int, 3> b;
+    AutoTArray<int, 16> a;
+    AutoTArray<int, 3> b;
 
     a.AppendElements(data1, ArrayLength(data1));
 
@@ -962,9 +962,9 @@ static bool test_swap() {
     CHECK_IS_USING_AUTO(b);
   }
 
-  // Swap an empty nsTArray and an empty nsAutoTArray.
+  // Swap an empty nsTArray and an empty AutoTArray.
   {
-    nsAutoTArray<int, 8> a;
+    AutoTArray<int, 8> a;
     nsTArray<int> b;
 
     a.SwapElements(b);
@@ -975,11 +975,11 @@ static bool test_swap() {
     CHECK_EQ_INT(b.Length(), 0);
   }
 
-  // Swap empty auto array with non-empty nsAutoTArray using malloc'ed storage.
+  // Swap empty auto array with non-empty AutoTArray using malloc'ed storage.
   // I promise, all these tests have a point.
   {
-    nsAutoTArray<int, 2> a;
-    nsAutoTArray<int, 1> b;
+    AutoTArray<int, 2> a;
+    AutoTArray<int, 1> b;
 
     a.AppendElements(data1, ArrayLength(data1));
 
@@ -1047,8 +1047,8 @@ static bool test_conversion_operator() {
 
   nsTArray<int> t;
   const nsTArray<int> tconst;
-  nsAutoTArray<int, 8> tauto;
-  const nsAutoTArray<int, 8> tautoconst;
+  AutoTArray<int, 8> tauto;
+  const AutoTArray<int, 8> tautoconst;
 
 #define CHECK_ARRAY_CAST(type)                                 \
   do {                                                         \
@@ -1103,7 +1103,7 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   AutoInfallibleTArray<int, N> iauto;
 
   nsTArray<int> t;
-  nsAutoTArray<int, N> tauto;
+  AutoTArray<int, N> tauto;
 
 #define LPAREN (
 #define RPAREN )
@@ -1129,7 +1129,7 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
     static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
     static_cast<BufAccessor<AutoInfallibleTArray<int, N> >&>(iauto).GetHdr(),
     static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-    static_cast<BufAccessor<nsAutoTArray<int, N> >&>(tauto).GetHdr(),
+    static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(),
     nullptr
   };
 
@@ -1152,7 +1152,7 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
     static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
     static_cast<BufAccessor<AutoInfallibleTArray<int, N> >&>(iauto).GetHdr(),
     static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-    static_cast<BufAccessor<nsAutoTArray<int, N> >&>(tauto).GetHdr(),
+    static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(),
     nullptr
   };
 

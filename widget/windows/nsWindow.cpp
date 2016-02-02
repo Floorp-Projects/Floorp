@@ -6624,7 +6624,7 @@ static HRGN
 CreateHRGNFromArray(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
   int32_t size = sizeof(RGNDATAHEADER) + sizeof(RECT)*aRects.Length();
-  nsAutoTArray<uint8_t,100> buf;
+  AutoTArray<uint8_t,100> buf;
   buf.SetLength(size);
   RGNDATA* data = reinterpret_cast<RGNDATA*>(buf.Elements());
   RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
@@ -7406,7 +7406,7 @@ nsWindow::GetPopupsToRollup(nsIRollupListener* aRollupListener,
   // to rollup some of them if the click is in a parent menu of the current
   // submenu.
   *aPopupsToRollup = UINT32_MAX;
-  nsAutoTArray<nsIWidget*, 5> widgetChain;
+  AutoTArray<nsIWidget*, 5> widgetChain;
   uint32_t sameTypeCount =
     aRollupListener->GetSubmenuWidgetChain(&widgetChain);
   for (uint32_t i = 0; i < widgetChain.Length(); ++i) {

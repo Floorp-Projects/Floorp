@@ -1331,7 +1331,7 @@ ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
 void
 ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 {
-  nsAutoTArray<Layer*, 10> toSort;
+  AutoTArray<Layer*, 10> toSort;
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();

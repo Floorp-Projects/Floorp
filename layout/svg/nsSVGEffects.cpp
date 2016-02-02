@@ -680,7 +680,7 @@ nsSVGRenderingObserverList::InvalidateAll()
   if (mObservers.Count() == 0)
     return;
 
-  nsAutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<nsSVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
     observers.AppendElement(it.Get()->GetKey());
@@ -698,7 +698,7 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
   if (mObservers.Count() == 0)
     return;
 
-  nsAutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<nsSVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
     nsSVGRenderingObserver* obs = it.Get()->GetKey();
@@ -716,7 +716,7 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
 void
 nsSVGRenderingObserverList::RemoveAll()
 {
-  nsAutoTArray<nsSVGRenderingObserver*,10> observers;
+  AutoTArray<nsSVGRenderingObserver*,10> observers;
 
   for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
     observers.AppendElement(it.Get()->GetKey());

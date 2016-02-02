@@ -94,7 +94,7 @@ GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActors.IsEmpty());
 
-  nsAutoTArray<ContentParent*, 20> contentActors;
+  AutoTArray<ContentParent*, 20> contentActors;
   ContentParent::GetAll(contentActors);
 
   for (uint32_t contentIndex = 0;

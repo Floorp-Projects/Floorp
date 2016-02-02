@@ -121,7 +121,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         }
       }
 
-      nsAutoTArray<char,200> utf8hyphens;
+      AutoTArray<char,200> utf8hyphens;
       utf8hyphens.SetLength(utf8.Length() + 5);
       char **rep = nullptr;
       int *pos = nullptr;

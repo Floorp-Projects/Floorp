@@ -35,7 +35,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
 {
   if (aImage) {
     MutexAutoLock lock(mMutex);
-    nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+    AutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(
         ImageContainer::NonOwningImage(aImage, aTargetTime, ++mFrameID));
     SetCurrentFramesLocked(aIntrinsicSize, imageList);

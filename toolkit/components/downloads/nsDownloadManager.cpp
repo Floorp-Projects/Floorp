@@ -272,7 +272,7 @@ nsDownloadManager::RemoveDownloadsForURI(mozIStorageStatement* aStatement, nsIUR
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMore = false;
-  nsAutoTArray<nsCString, 4> downloads;
+  AutoTArray<nsCString, 4> downloads;
   // Get all the downloads that match the provided URI
   while (NS_SUCCEEDED(aStatement->ExecuteStep(&hasMore)) &&
          hasMore) {

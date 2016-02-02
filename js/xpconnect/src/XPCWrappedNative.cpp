@@ -1288,7 +1288,7 @@ class MOZ_STACK_CLASS CallMethodHelper
     const uint16_t mVTableIndex;
     HandleId mIdxValueId;
 
-    nsAutoTArray<nsXPTCVariant, 8> mDispatchParams;
+    AutoTArray<nsXPTCVariant, 8> mDispatchParams;
     uint8_t mJSContextIndex; // TODO make const
     uint8_t mOptArgcIndex; // TODO make const
 

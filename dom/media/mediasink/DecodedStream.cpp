@@ -500,7 +500,7 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   audio->EnsureAudioBuffer();
   RefPtr<SharedBuffer> buffer = audio->mAudioBuffer;
   AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
-  nsAutoTArray<const AudioDataValue*, 2> channels;
+  AutoTArray<const AudioDataValue*, 2> channels;
   for (uint32_t i = 0; i < audio->mChannels; ++i) {
     channels.AppendElement(bufferData + i * audio->mFrames);
   }
@@ -522,7 +522,7 @@ DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
 
   AudioSegment output;
   uint32_t rate = mInfo.mAudio.mRate;
-  nsAutoTArray<RefPtr<MediaData>,10> audio;
+  AutoTArray<RefPtr<MediaData>,10> audio;
   TrackID audioTrackId = mInfo.mAudio.mTrackId;
   SourceMediaStream* sourceStream = mData->mStream;
 
@@ -587,7 +587,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin)
 
   VideoSegment output;
   TrackID videoTrackId = mInfo.mVideo.mTrackId;
-  nsAutoTArray<RefPtr<MediaData>, 10> video;
+  AutoTArray<RefPtr<MediaData>, 10> video;
   SourceMediaStream* sourceStream = mData->mStream;
 
   // It's OK to hold references to the VideoData because VideoData

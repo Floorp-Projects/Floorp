@@ -372,7 +372,7 @@ nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
         cellFrame->GetRowIndex(rowIndex);
         cellFrame->GetColIndex(colIndex);
         RemoveCell(cellFrame, rowIndex);
-        nsAutoTArray<nsTableCellFrame*, 1> cells;
+        AutoTArray<nsTableCellFrame*, 1> cells;
         cells.AppendElement(cellFrame);
         InsertCells(cells, rowIndex, colIndex - 1);
 
@@ -1007,7 +1007,7 @@ nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups)
     RowGroupArray orderedRowGroups;
     OrderRowGroups(orderedRowGroups);
 
-    nsAutoTArray<nsTableRowFrame*, 8> rows;
+    AutoTArray<nsTableRowFrame*, 8> rows;
     // Loop over the rowgroups and check if some of them are new, if they are
     // insert cellmaps in the order that is predefined by OrderRowGroups,
     // XXXbz this code is O(N*M) where N is number of new rowgroups
