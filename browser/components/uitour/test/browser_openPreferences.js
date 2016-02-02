@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -9,35 +6,31 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
-  taskify(function* test_openPreferences() {
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences");
-    gContentAPI.openPreferences();
-    let tab = yield promiseTabOpened;
-    yield BrowserTestUtils.removeTab(tab);
-  }),
+add_UITour_task(function* test_openPreferences() {
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences");
+  yield gContentAPI.openPreferences();
+  let tab = yield promiseTabOpened;
+  yield BrowserTestUtils.removeTab(tab);
+});
 
-  taskify(function* test_openInvalidPreferences() {
-    gContentAPI.openPreferences(999);
+add_UITour_task(function* test_openInvalidPreferences() {
+  yield gContentAPI.openPreferences(999);
 
-    try {
-      yield waitForConditionPromise(() => {
-        return gBrowser.selectedBrowser.currentURI.spec.startsWith("about:preferences");
-      }, "Check if about:preferences opened");
-      ok(false, "No about:preferences tab should have opened");
-    } catch (ex) {
-      ok(true, "No about:preferences tab opened: " + ex);
-    }
-  }),
+  try {
+    yield waitForConditionPromise(() => {
+      return gBrowser.selectedBrowser.currentURI.spec.startsWith("about:preferences");
+    }, "Check if about:preferences opened");
+    ok(false, "No about:preferences tab should have opened");
+  } catch (ex) {
+    ok(true, "No about:preferences tab opened: " + ex);
+  }
+});
 
-  taskify(function* test_openPrivacyPreferences() {
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
-    gContentAPI.openPreferences("privacy");
-    let tab = yield promiseTabOpened;
-    yield BrowserTestUtils.removeTab(tab);
-  }),
-];
+add_UITour_task(function* test_openPrivacyPreferences() {
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
+  yield gContentAPI.openPreferences("privacy");
+  let tab = yield promiseTabOpened;
+  yield BrowserTestUtils.removeTab(tab);
+});

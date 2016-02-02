@@ -84,7 +84,7 @@ class Context {
 
     this.path = [];
 
-    let props = ["addListener", "callFunction",
+    let props = ["addListener", "callFunction", "callAsyncFunction",
                  "hasListener", "removeListener",
                  "getProperty", "setProperty"];
     for (let prop of props) {
@@ -156,6 +156,16 @@ const FORMATS = {
   },
 
   relativeUrl(string, context) {
+    if (!context.url) {
+      // If there's no context URL, return relative URLs unresolved, and
+      // skip security checks for them.
+      try {
+        new URL(string);
+      } catch (e) {
+        return string;
+      }
+    }
+
     let url = new URL(string, context.url).href;
 
     if (!context.checkLoadURL(url)) {
@@ -603,9 +613,10 @@ class ArrayType extends Type {
 }
 
 class FunctionType extends Type {
-  constructor(parameters) {
+  constructor(parameters, isAsync) {
     super();
     this.parameters = parameters;
+    this.isAsync = isAsync;
   }
 
   normalize(value, context) {
@@ -769,9 +780,12 @@ class CallEntry extends Entry {
 
 // Represents a "function" defined in a schema namespace.
 class FunctionEntry extends CallEntry {
-  constructor(namespaceName, name, type, unsupported, allowAmbiguousOptionalArguments) {
+  constructor(namespaceName, name, type, unsupported, allowAmbiguousOptionalArguments, returns) {
     super(namespaceName, name, type.parameters, allowAmbiguousOptionalArguments);
     this.unsupported = unsupported;
+    this.returns = returns;
+
+    this.isAsync = type.isAsync;
   }
 
   inject(name, dest, wrapperFuncs) {
@@ -779,10 +793,20 @@ class FunctionEntry extends CallEntry {
       return;
     }
 
-    let stub = (...args) => {
-      let actuals = this.checkParameters(args, dest, new Context(wrapperFuncs));
-      return wrapperFuncs.callFunction(this.namespaceName, name, actuals);
-    };
+    let context = new Context(wrapperFuncs);
+    let stub;
+    if (this.isAsync) {
+      stub = (...args) => {
+        let actuals = this.checkParameters(args, dest, context);
+        let callback = actuals.pop();
+        return wrapperFuncs.callAsyncFunction(this.namespaceName, name, actuals, callback);
+      };
+    } else {
+      stub = (...args) => {
+        let actuals = this.checkParameters(args, dest, context);
+        return wrapperFuncs.callFunction(this.namespaceName, name, actuals);
+      };
+    }
     Cu.exportFunction(stub, dest, {defineAs: name});
   }
 }
@@ -976,20 +1000,35 @@ this.Schemas = {
       checkTypeProperties();
       return new BooleanType();
     } else if (type.type == "function") {
+      let isAsync = typeof(type.async) == "string";
+
       let parameters = null;
       if ("parameters" in type) {
         parameters = [];
         for (let param of type.parameters) {
+          // Callbacks default to optional for now, because of promise
+          // handling.
+          let isCallback = isAsync && param.name == type.async;
+
           parameters.push({
             type: this.parseType(namespaceName, param, ["name", "optional"]),
             name: param.name,
-            optional: param.optional || false,
+            optional: param.optional == null ? isCallback : param.optional,
           });
         }
       }
 
-      checkTypeProperties("parameters");
-      return new FunctionType(parameters);
+      if (isAsync) {
+        if (!parameters || !parameters.length || parameters[parameters.length - 1].name != type.async) {
+          throw new Error(`Internal error: "async" property must name the last parameter of the function.`);
+        }
+        if (type.returns || type.allowAmbiguousOptionalArguments) {
+          throw new Error(`Internal error: Async functions must not have return values or ambiguous arguments.`);
+        }
+      }
+
+      checkTypeProperties("parameters", "async", "returns");
+      return new FunctionType(parameters, isAsync);
     } else if (type.type == "any") {
       // Need to see what minimum and maximum are supposed to do here.
       checkTypeProperties("minimum", "maximum");
@@ -1041,15 +1080,13 @@ this.Schemas = {
   },
 
   loadFunction(namespaceName, fun) {
-    // We ignore this property for now.
-    let returns = fun.returns;  // eslint-disable-line no-unused-vars
-
     let f = new FunctionEntry(namespaceName, fun.name,
                               this.parseType(namespaceName, fun,
                                              ["name", "unsupported", "deprecated", "returns",
                                               "allowAmbiguousOptionalArguments"]),
                               fun.unsupported || false,
-                              fun.allowAmbiguousOptionalArguments || false);
+                              fun.allowAmbiguousOptionalArguments || false,
+                              fun.returns || null);
     this.register(namespaceName, fun.name, f);
   },
 

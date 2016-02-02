@@ -1,14 +1,36 @@
 /* TODO: May break up into component local CSS.  Pending future discussions by
  * React component group on how to best handle CSS. */
 
-html, body, #app, #viewports {
+html, body {
+  margin: 0;
   height: 100%;
 }
 
-#viewports {
+body {
+  /* Only allow horizontal scrolling when more viewports are added */
+  overflow-y: hidden;
+}
+
+#app {
+  height: 100%;
+  /* Center the viewports container */
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#viewports {
+  /* Snap to the top of the app when there isn't enough vertical space anymore
+     to center the viewports (so we don't loose the toolbar) */
+  position: sticky;
+  top: 0;
+  /* Make sure left-most viewport is visible when there's horizontal overflow.
+     That is, when the horizontal space become smaller than the viewports and a
+     scrollbar appears, then the first viewport will still be visible */
+  left: 0;
+  /* Individual viewports are inline elements, make sure they stay on a single
+     line */
+  white-space: nowrap;
 }
 
 /**
@@ -16,6 +38,9 @@ html, body, #app, #viewports {
  */
 
 .viewport {
+  display: inline-block;
+  /* Align all viewports to the top */
+  vertical-align: top;
   border: 1px solid var(--theme-splitter-color);
   box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
 }

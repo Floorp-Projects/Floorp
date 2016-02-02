@@ -1398,8 +1398,6 @@ pref("social.sidebar.unload_timeout_ms", 10000);
 pref("social.share.activationPanelEnabled", true);
 pref("social.shareDirectory", "https://activations.cdn.mozilla.net/sharePanel.html");
 
-pref("dom.identity.enabled", false);
-
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
