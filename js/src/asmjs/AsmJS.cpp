@@ -4011,8 +4011,7 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
         return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
 
     size_t opcodeAt;
-    size_t numArgsAt;
-    if (!f.tempOp(&opcodeAt) || !f.tempU8(&numArgsAt))
+    if (!f.tempOp(&opcodeAt))
         return false;
 
     ParseNode* firstArg = CallArgList(callNode);
@@ -4020,28 +4019,31 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
     if (!CheckExpr(f, firstArg, &firstType))
         return false;
 
+    Expr expr;
     if (firstType.isMaybeDouble()) {
         *type = Type::Double;
         firstType = Type::MaybeDouble;
-        f.patchOp(opcodeAt, isMax ? Expr::F64Max : Expr::F64Min);
+        expr = isMax ? Expr::F64Max : Expr::F64Min;
     } else if (firstType.isMaybeFloat()) {
         *type = Type::Float;
         firstType = Type::MaybeFloat;
-        f.patchOp(opcodeAt, isMax ? Expr::F32Max : Expr::F32Min);
+        expr = isMax ? Expr::F32Max : Expr::F32Min;
     } else if (firstType.isSigned()) {
         *type = Type::Signed;
         firstType = Type::Signed;
-        f.patchOp(opcodeAt, isMax ? Expr::I32Max : Expr::I32Min);
+        expr = isMax ? Expr::I32Max : Expr::I32Min;
     } else {
         return f.failf(firstArg, "%s is not a subtype of double?, float? or signed",
                        firstType.toChars());
     }
+    f.patchOp(opcodeAt, expr);
 
     unsigned numArgs = CallArgListLength(callNode);
-    f.patchU8(numArgsAt, numArgs);
-
     ParseNode* nextArg = NextNode(firstArg);
     for (unsigned i = 1; i < numArgs; i++, nextArg = NextNode(nextArg)) {
+        if (i != numArgs - 1 && !f.writeOp(expr))
+            return false;
+
         Type nextType;
         if (!CheckExpr(f, nextArg, &nextType))
             return false;

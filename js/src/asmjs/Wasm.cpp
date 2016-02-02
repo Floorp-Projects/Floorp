@@ -383,20 +383,18 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F32Sub:
       case Expr::F32Mul:
       case Expr::F32Div:
-        return DecodeBinaryOperator(f, expected, ExprType::F32);
       case Expr::F32Min:
       case Expr::F32Max:
-        return f.fail("NYI: min/max");
+        return DecodeBinaryOperator(f, expected, ExprType::F32);
       case Expr::F32CopySign:
         return f.fail("NYI: copysign");
       case Expr::F64Add:
       case Expr::F64Sub:
       case Expr::F64Mul:
       case Expr::F64Div:
-        return DecodeBinaryOperator(f, expected, ExprType::F64);
       case Expr::F64Min:
       case Expr::F64Max:
-        return f.fail("NYI: min/max");
+        return DecodeBinaryOperator(f, expected, ExprType::F64);
       case Expr::F64CopySign:
         return f.fail("NYI: copysign");
       case Expr::I32Eq:
