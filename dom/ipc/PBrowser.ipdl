@@ -70,6 +70,7 @@ using class mozilla::dom::ipc::StructuredCloneData from "ipc/IPCMessageUtils.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
 using nsSizeMode from "nsIWidgetListener.h";
+using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 
 namespace mozilla {
 namespace dom {
@@ -284,7 +285,7 @@ parent:
     /**
      * Set IME candidate window by windowless plugin if plugin has focus.
      */
-    async SetCandidateWindowForPlugin(int32_t aX, int32_t aY);
+    async SetCandidateWindowForPlugin(CandidateWindowPosition aPosition);
 
     /**
      *  When plugin event isn't consumed, call this

@@ -2396,13 +2396,13 @@ PluginInstanceParent::RecvGetCompositionString(const uint32_t& aIndex,
 }
 
 bool
-PluginInstanceParent::RecvSetCandidateWindow(const int32_t& aX,
-                                             const int32_t& aY)
+PluginInstanceParent::RecvSetCandidateWindow(
+    const mozilla::widget::CandidateWindowPosition& aPosition)
 {
 #if defined(OS_WIN)
     nsPluginInstanceOwner* owner = GetOwner();
     if (owner) {
-        owner->SetCandidateWindow(aX, aY);
+        owner->SetCandidateWindow(aPosition);
     }
 #endif
     return true;
