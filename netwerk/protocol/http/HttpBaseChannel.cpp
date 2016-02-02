@@ -2732,6 +2732,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     httpInternal->SetAllowSpdy(mAllowSpdy);
     httpInternal->SetAllowAltSvc(mAllowAltSvc);
 
+    RefPtr<nsHttpChannel> realChannel;
+    CallQueryInterface(newChannel, realChannel.StartAssignment());
+    if (realChannel) {
+      realChannel->SetTopWindowURI(mTopWindowURI);
+    }
+
     // update the DocumentURI indicator since we are being redirected.
     // if this was a top-level document channel, then the new channel
     // should have its mDocumentURI point to newURI; otherwise, we
