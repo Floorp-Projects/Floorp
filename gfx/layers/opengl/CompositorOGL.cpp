@@ -1124,16 +1124,9 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   }
 
   if (BlendOpIsMixBlendMode(blendMode)) {
-    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform);
-    mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
-
-    // Create a transform from adjusted clip space to render target space,
-    // translate it for the backdrop rect, then transform it into the backdrop's
-    // uv-space.
     gfx::Matrix4x4 transform;
-    transform.PostScale(mRenderBounds.width, mRenderBounds.height, 1.0);
-    transform.PostTranslate(-rect.x, -rect.y, 0.0);
-    transform.PostScale(1 / float(rect.width), 1 / float(rect.height), 1.0);
+    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &transform);
+    mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
     program->SetBackdropTransform(transform);
   }
 
