@@ -115,6 +115,7 @@ body {
 #global-toolbar > *,
 #timeline-toolbar > * {
   min-height: var(--toolbar-height);
+  border-color: var(--theme-splitter-color);
   border-width: 0 0 0 1px;
   display: flex;
   justify-content: center;
