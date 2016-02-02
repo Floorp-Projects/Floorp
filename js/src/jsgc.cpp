@@ -1787,6 +1787,12 @@ GCRuntime::removeRoot(Value* vp)
     poke();
 }
 
+void
+GCRuntime::registerStackWrapperVector(NonEscapingWrapperVector* vec)
+{
+    stackWrappers.insertBack(vec);
+}
+
 extern JS_FRIEND_API(bool)
 js::AddRawValueRoot(JSContext* cx, Value* vp, const char* name)
 {
@@ -6106,7 +6112,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         MOZ_FALLTHROUGH;
 
       case MARK:
-        AutoGCRooter::traceAllWrappers(&marker);
+        traceStackWrappers(&marker);
 
         /* If we needed delayed marking for gray roots, then collect until done. */
         if (!hasBufferedGrayRoots()) {

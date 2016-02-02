@@ -862,81 +862,60 @@ class ErrorCopier
 };
 
 /*
- * AutoWrapperVector and AutoWrapperRooter can be used to store wrappers that
- * are obtained from the cross-compartment map. However, these classes should
- * not be used if the wrapper will escape. For example, it should not be stored
- * in the heap.
+ * NonEscapingWrapperVector can be used to safely store unbarriered wrappers
+ * obtained from the cross-compartment map that do not escape onto the heap.
  *
- * The AutoWrapper rooters are different from other autorooters because their
- * wrappers are marked on every GC slice rather than just the first one. If
- * there's some wrapper that we want to use temporarily without causing it to be
- * marked, we can use these AutoWrapper classes. If we get unlucky and a GC
- * slice runs during the code using the wrapper, the GC will mark the wrapper so
- * that it doesn't get swept out from under us. Otherwise, the wrapper needn't
- * be marked. This is useful in functions like JS_TransplantObject that
- * manipulate wrappers in compartments that may no longer be alive.
+ * The reason that we need this class is complex, but straightforward enough
+ * with the right background. Specifically, we need to be able to observe
+ * wrappers in dead compartments without revivifying the compartment.
+ * For example, if we TransplantObject from a compartment that is becoming
+ * dead into a new or existing compartment (e.g. the user clicked the back
+ * button), we do not want to hold the old tab live (particularly if that
+ * navigation was caused by a misbehaving site).
+ *
+ * What this means is that we must skip the barrier when observing the weakly
+ * held Value. The result of skipping the read barrier means that if we store
+ * the wrapper on the stack after marking our roots in the first slice and
+ * continue using it after sweeping, it will get swept out from under us.
+ * Additionally, it means that if we leak the wrapper onto the heap, it will
+ * get held live, but not be present in the wrapper map. In this case a future
+ * compartmental GC can sweep the thing while it is live on the heap, leading
+ * to a UAF, sec-crits, and crashes.
+ *
+ * The mechanism the NonEscapingWrapperVector uses to prevent the above badness
+ * from happening is to mark all such wrappers at every GC slice. This can keep
+ * a compartment live for longer than we'd like, but only in the (hopefully
+ * rare) case that a GC happens while we are manipulating the wrapper.
  */
 
-/*
- * This class stores the data for AutoWrapperVector and AutoWrapperRooter. It
- * should not be used in any other situations.
- */
-struct WrapperValue
+class MOZ_RAII NonEscapingWrapperVector
+  : public mozilla::LinkedListElement<NonEscapingWrapperVector>
 {
-    /*
-     * We use unsafeGet() in the constructors to avoid invoking a read barrier
-     * on the wrapper, which may be dead (see the comment about bug 803376 in
-     * jsgc.cpp regarding this). If there is an incremental GC while the wrapper
-     * is in use, the AutoWrapper rooter will ensure the wrapper gets marked.
-     */
-    explicit WrapperValue(const WrapperMap::Ptr& ptr)
-      : value(*ptr->value().unsafeGet())
-    {}
+    using Vec = js::GCVector<Value, 1, RuntimeAllocPolicy>;
+    Vec storage;
 
-    explicit WrapperValue(const WrapperMap::Enum& e)
-      : value(*e.front().value().unsafeGet())
-    {}
-
-    Value& get() { return value; }
-    Value get() const { return value; }
-    operator const Value&() const { return value; }
-    JSObject& toObject() const { return value.toObject(); }
-
-  private:
-    Value value;
-};
-
-class MOZ_RAII AutoWrapperVector : public JS::AutoVectorRooterBase<WrapperValue>
-{
   public:
-    explicit AutoWrapperVector(JSContext* cx
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooterBase<WrapperValue>(cx, WRAPVECTOR)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    explicit NonEscapingWrapperVector(JSRuntime* rt) : storage(rt) {
+        rt->gc.registerStackWrapperVector(this);
     }
 
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
+    bool reserve(size_t aRequest) { return storage.reserve(aRequest); }
 
-class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
-  public:
-    AutoWrapperRooter(JSContext* cx, WrapperValue v
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, WRAPPER), value(v)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    Value& operator[](size_t aIndex) { return storage[aIndex]; }
+    Value* begin() { return storage.begin(); }
+    Value* end() { return storage.end(); }
+
+    // Avoid the barrier, for the reason described above. See bug 803376 and
+    // the comment about said bug in jsgc.cpp.
+    void infallibleAppend(const WrapperMap::Enum& e) {
+        storage.infallibleAppend(*e.front().value().unsafeGet());
     }
-
-    operator JSObject*() const {
-        return value.get().toObjectOrNull();
+    void infallibleAppend(const WrapperMap::Ptr& p) {
+        storage.infallibleAppend(*p->value().unsafeGet());
     }
-
-    friend void JS::AutoGCRooter::trace(JSTracer* trc);
-
-  private:
-    WrapperValue value;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    bool append(const WrapperMap::Enum& e) {
+        return storage.append(*e.front().value().unsafeGet());
+    }
 };
 
 } /* namespace js */
