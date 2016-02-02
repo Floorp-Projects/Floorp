@@ -7,7 +7,6 @@
 #include "LayerAnimationUtils.h"
 #include "mozilla/ComputedTimingFunction.h" // For ComputedTimingFunction
 #include "mozilla/layers/LayersMessages.h" // For TimingFunction etc.
-#include "mozilla/Maybe.h" // For Maybe<>
 
 namespace mozilla {
 namespace layers {
