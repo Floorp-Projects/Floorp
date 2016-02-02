@@ -1037,8 +1037,6 @@ static bool test_fallible()
 static bool test_conversion_operator() {
   FallibleTArray<int> f;
   const FallibleTArray<int> fconst;
-  AutoFallibleTArray<int, 8> fauto;
-  const AutoFallibleTArray<int, 8> fautoconst;
 
   InfallibleTArray<int> i;
   const InfallibleTArray<int> iconst;
@@ -1056,10 +1054,6 @@ static bool test_conversion_operator() {
     if ((void*)&z1 != (void*)&f) return false;                 \
     const type<int>& z2 = fconst;                              \
     if ((void*)&z2 != (void*)&fconst) return false;            \
-    const type<int>& z3 = fauto;                               \
-    if ((void*)&z3 != (void*)&fauto) return false;             \
-    const type<int>& z4 = fautoconst;                          \
-    if ((void*)&z4 != (void*)&fautoconst) return false;        \
     const type<int>& z5 = i;                                   \
     if ((void*)&z5 != (void*)&i) return false;                 \
     const type<int>& z6 = iconst;                              \
@@ -1097,7 +1091,6 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   // 1050 because sizeof(int)*1050 is more than a page typically.
   const int N = 1050;
   FallibleTArray<int> f;
-  AutoFallibleTArray<int, N> fauto;
 
   InfallibleTArray<int> i;
   AutoInfallibleTArray<int, N> iauto;
@@ -1110,7 +1103,6 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
 #define FOR_EACH(pre, post)                                    \
   do {                                                         \
     pre f post;                                                \
-    pre fauto post;                                            \
     pre i post;                                                \
     pre iauto post;                                            \
     pre t post;                                                \
@@ -1125,7 +1117,6 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
 
   void* initial_Hdrs[] = {
     static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-    static_cast<BufAccessor<AutoFallibleTArray<int, N> >&>(fauto).GetHdr(),
     static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
     static_cast<BufAccessor<AutoInfallibleTArray<int, N> >&>(iauto).GetHdr(),
     static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
@@ -1148,7 +1139,6 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
 
   void* current_Hdrs[] = {
     static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-    static_cast<BufAccessor<AutoFallibleTArray<int, N> >&>(fauto).GetHdr(),
     static_cast<BufAccessor<InfallibleTArray<int> >&>(i).GetHdr(),
     static_cast<BufAccessor<AutoInfallibleTArray<int, N> >&>(iauto).GetHdr(),
     static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
