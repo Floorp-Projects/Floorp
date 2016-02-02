@@ -21,7 +21,7 @@ public:
 
   bool IsValid();
 
-  nsresult Hyphenate(const nsAString& aText, FallibleTArray<bool>& aHyphens);
+  nsresult Hyphenate(const nsAString& aText, nsTArray<bool>& aHyphens);
 
 private:
   ~nsHyphenator();

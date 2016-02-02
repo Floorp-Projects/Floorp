@@ -173,7 +173,7 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     } else {
         uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
         charmap = new gfxCharacterMap();
-        AutoFallibleTArray<uint8_t,16384> cmap;
+        AutoTArray<uint8_t, 16384> cmap;
         rv = CopyFontTable(kCMAP, cmap);
 
         if (NS_SUCCEEDED(rv)) {
@@ -234,8 +234,7 @@ GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold
 }
 
 nsresult
-GDIFontEntry::CopyFontTable(uint32_t aTableTag,
-                            FallibleTArray<uint8_t>& aBuffer)
+GDIFontEntry::CopyFontTable(uint32_t aTableTag, nsTArray<uint8_t>& aBuffer)
 {
     if (!IsTrueType()) {
         return NS_ERROR_FAILURE;
