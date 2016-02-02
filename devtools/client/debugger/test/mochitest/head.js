@@ -588,9 +588,9 @@ AddonDebugger.prototype = {
     info("Addon debugger panel shown successfully.");
 
     this.debuggerPanel = toolbox.getCurrentPanel();
+    yield waitForSourceShown(this.debuggerPanel, '');
 
-    // Wait for the initial resume...
-    yield prepareDebugger(this.debuggerPanel);
+    prepareDebugger(this.debuggerPanel);
     yield this._attachConsole();
   }),
 
