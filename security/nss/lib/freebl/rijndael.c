@@ -7,6 +7,7 @@
 #endif
 
 #include "prinit.h"
+#include "prenv.h"
 #include "prerr.h"
 #include "secerr.h"
 
@@ -1041,7 +1042,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 #ifdef USE_HW_AES
     if (has_intel_aes == 0) {
 	unsigned long eax, ebx, ecx, edx;
-	char *disable_hw_aes = getenv("NSS_DISABLE_HW_AES");
+	char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
 
 	if (disable_hw_aes == NULL) {
 	    freebl_cpuid(1, &eax, &ebx, &ecx, &edx);

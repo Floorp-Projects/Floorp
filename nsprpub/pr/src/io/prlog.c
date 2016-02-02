@@ -238,13 +238,7 @@ void _PR_InitLog(void)
         }
         PR_SetLogBuffering(isSync ? 0 : bufSize);
 
-#ifdef XP_UNIX
-        if ((getuid() != geteuid()) || (getgid() != getegid())) {
-            return;
-        }
-#endif /* XP_UNIX */
-
-        ev = PR_GetEnv("NSPR_LOG_FILE");
+        ev = PR_GetEnvSecure("NSPR_LOG_FILE");
         if (ev && ev[0]) {
             if (!PR_SetLogFile(ev)) {
 #ifdef XP_PC

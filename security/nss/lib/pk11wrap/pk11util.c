@@ -84,7 +84,7 @@ SECMOD_Shutdown()
     nss_DumpModuleLog();
 
 #ifdef DEBUG
-    if (PR_GetEnv("NSS_STRICT_SHUTDOWN")) {
+    if (PR_GetEnvSecure("NSS_STRICT_SHUTDOWN")) {
 	PORT_Assert(secmod_PrivateModuleCount == 0);
     }
 #endif
