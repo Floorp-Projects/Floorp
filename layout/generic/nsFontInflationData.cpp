@@ -132,7 +132,7 @@ ComputeDescendantISize(const nsHTMLReflowState& aAncestorReflowState,
     return aAncestorReflowState.ComputedISize();
   }
 
-  AutoInfallibleTArray<nsIFrame*, 16> frames;
+  AutoTArray<nsIFrame*, 16> frames;
   for (nsIFrame *f = aDescendantFrame; f != ancestorFrame;
        f = f->GetParent()->FirstInFlow()) {
     frames.AppendElement(f);

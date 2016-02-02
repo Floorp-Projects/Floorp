@@ -668,7 +668,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     mTxn->AddEdit(OpSetLayerAttributes(nullptr, Shadow(shadow), attrs));
   }
 
-  AutoInfallibleTArray<Edit, 10> cset;
+  AutoTArray<Edit, 10> cset;
   size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
   MOZ_ASSERT(nCsets > 0 || mTxn->RotationChanged(), "should have bailed by now");
 

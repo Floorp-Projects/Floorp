@@ -436,7 +436,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   NS_ASSERTION(actor, "This shouldn't ever be null!");
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
-  AutoInfallibleTArray<PluginIdentifier, 10> identifiers;
+  AutoTArray<PluginIdentifier, 10> identifiers;
   bool success;
   actor->CallEnumerate(&identifiers, &success);
 
