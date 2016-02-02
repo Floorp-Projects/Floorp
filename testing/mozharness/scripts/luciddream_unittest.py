@@ -12,8 +12,8 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.errors import BaseErrorList, TarErrorList, ZipErrorList
-from mozharness.base.log import ERROR, WARNING, FATAL, INFO
+from mozharness.base.errors import BaseErrorList, TarErrorList
+from mozharness.base.log import ERROR, FATAL, INFO
 from mozharness.base.script import (
     BaseScript,
     PreScriptAction,

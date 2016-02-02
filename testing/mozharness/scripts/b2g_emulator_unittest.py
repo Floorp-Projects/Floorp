@@ -14,7 +14,7 @@ import sys
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import BaseErrorList, TarErrorList
-from mozharness.base.log import ERROR, WARNING
+from mozharness.base.log import ERROR
 from mozharness.base.script import (
     BaseScript,
     PreScriptAction,

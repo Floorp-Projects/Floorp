@@ -21,7 +21,7 @@ import glob
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import BaseErrorList
-from mozharness.base.log import INFO, ERROR, WARNING
+from mozharness.base.log import INFO, ERROR
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
@@ -566,7 +566,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                       os.path.join(abs_app_dir))
 
     def preflight_mozmill(self, suites):
-        c = self.config
         dirs = self.query_abs_dirs()
         abs_app_dir = self.query_abs_app_dir()
         abs_app_plugins_dir = os.path.join(abs_app_dir, 'plugins')
@@ -588,7 +587,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
     def _run_category_suites(self, suite_category, preflight_run_method=None):
         """run suite(s) to a specific category"""
-        c = self.config
         dirs = self.query_abs_dirs()
         suites = self._query_specified_suites(suite_category)
         abs_app_dir = self.query_abs_app_dir()

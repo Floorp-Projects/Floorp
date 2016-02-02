@@ -19,7 +19,7 @@ from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.release import ReleaseMixin
 from mozharness.base.python import VirtualenvMixin
-from mozharness.base.log import ERROR, FATAL
+from mozharness.base.log import FATAL
 
 try:
     import simplejson as json

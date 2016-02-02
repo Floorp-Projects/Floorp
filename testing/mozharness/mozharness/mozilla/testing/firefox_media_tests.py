@@ -6,7 +6,6 @@
 # ***** BEGIN LICENSE BLOCK *****
 
 import copy
-import glob
 import os
 import re
 import urlparse

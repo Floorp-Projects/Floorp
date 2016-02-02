@@ -185,7 +185,7 @@ class UpdateDescriptionAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
                          "' /  title: '" + title + "', short_desc: '" +
                          short_desc[0:20] + "'..., long_desc: '" +
                          long_desc[0:20] + "...'")
-                listing_response = service.edits().listings().update(
+                service.edits().listings().update(
                     editId=edit_id, packageName=package_name, language=locale,
                     body={'fullDescription': long_desc,
                           'shortDescription': short_desc,

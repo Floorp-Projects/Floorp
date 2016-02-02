@@ -9,7 +9,6 @@
 Author: Armen Zambrano G.
 """
 import os
-import stat
 
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import VCSScript
@@ -23,8 +22,6 @@ class VCSToolsScript(VCSScript):
     '''
     @PreScriptAction('checkout')
     def _pre_checkout(self, action):
-        dirs = self.query_abs_dirs()
-
         if self.config.get('developer_mode'):
             # We put them on base_work_dir to prevent the clobber action
             # to delete them before we use them
