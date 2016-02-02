@@ -7218,14 +7218,16 @@ else
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
-    WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-    dnl Look for a broken crtdll.obj
-    WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
-    lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
-    if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_CRT=1
+    if test "$MSVS_VERSION" != "2015"; then
+        WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
+        dnl Look for a broken crtdll.obj
+        WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+        lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+        if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+          MOZ_CRT=1
+        fi
+        rm crtdll.obj
     fi
-    rm crtdll.obj
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
