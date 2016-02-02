@@ -35,6 +35,9 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("Details"), aResult);
   }
 #endif
+
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList& aChildList) override;
 };
 
 #endif // DetailsFrame_h

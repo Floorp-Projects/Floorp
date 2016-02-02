@@ -18,6 +18,20 @@ HTMLDetailsElement::~HTMLDetailsElement()
 
 NS_IMPL_ELEMENT_CLONE(HTMLDetailsElement)
 
+nsIContent*
+HTMLDetailsElement::GetFirstSummary() const
+{
+  // XXX: Bug 1245032: Might want to cache the first summary element.
+  for (nsIContent* child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::summary)) {
+      return child;
+    }
+  }
+  return nullptr;
+}
+
 nsChangeHint
 HTMLDetailsElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                            int32_t aModType) const

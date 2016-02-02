@@ -29,6 +29,8 @@ public:
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLDetailsElement, details)
 
+  nsIContent* GetFirstSummary() const;
+
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
