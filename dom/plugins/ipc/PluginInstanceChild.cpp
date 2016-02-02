@@ -2065,14 +2065,22 @@ PluginInstanceChild::ImmSetCandidateWindowProc(HIMC aIMC, LPCANDIDATEFORM aForm)
     }
 
     if (!sCurrentPluginInstance ||
-        aForm->dwIndex != 0 ||
-        !(aForm->dwStyle & CFS_CANDIDATEPOS)) {
-        // Flash only uses CFS_CANDIDATEPOS with index == 0.
+        aForm->dwIndex != 0) {
         return FALSE;
     }
 
-    sCurrentPluginInstance->SendSetCandidateWindow(
-        aForm->ptCurrentPos.x, aForm->ptCurrentPos.y);
+    CandidateWindowPosition position;
+    position.mPoint.x = aForm->ptCurrentPos.x;
+    position.mPoint.y = aForm->ptCurrentPos.y;
+    position.mExcludeRect = !!(aForm->dwStyle & CFS_EXCLUDE);
+    if (position.mExcludeRect) {
+      position.mRect.x = aForm->rcArea.left;
+      position.mRect.y = aForm->rcArea.top;
+      position.mRect.width = aForm->rcArea.right - aForm->rcArea.left;
+      position.mRect.height = aForm->rcArea.bottom - aForm->rcArea.top;
+    }
+
+    sCurrentPluginInstance->SendSetCandidateWindow(position);
     return TRUE;
 }
 

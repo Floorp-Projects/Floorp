@@ -950,6 +950,26 @@ struct ParamTraits<mozilla::ContentCache>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::widget::CandidateWindowPosition>
+{
+  typedef mozilla::widget::CandidateWindowPosition paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mPoint);
+    WriteParam(aMsg, aParam.mRect);
+    WriteParam(aMsg, aParam.mExcludeRect);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mRect) &&
+           ReadParam(aMsg, aIter, &aResult->mExcludeRect);
+  }
+};
+
 } // namespace IPC
 
 #endif // nsGUIEventIPC_h__
