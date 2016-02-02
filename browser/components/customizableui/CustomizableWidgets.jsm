@@ -338,13 +338,12 @@ const CustomizableWidgets = [
       this._tabsList = doc.getElementById("PanelUI-remotetabs-tabslist");
       Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED, false);
 
-      let deck = doc.getElementById("PanelUI-remotetabs-deck");
       if (SyncedTabs.isConfiguredToSyncTabs) {
         if (SyncedTabs.hasSyncedThisSession) {
-          deck.selectedIndex = this.deckIndices.DECKINDEX_TABS;
+          this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
         } else {
           // Sync hasn't synced tabs yet, so show the "fetching" panel.
-          deck.selectedIndex = this.deckIndices.DECKINDEX_FETCHING;
+          this.setDeckIndex(this.deckIndices.DECKINDEX_FETCHING);
         }
         // force a background sync.
         SyncedTabs.syncTabs().catch(ex => {
@@ -354,7 +353,7 @@ const CustomizableWidgets = [
         this._showTabs();
       } else {
         // not configured to sync tabs, so no point updating the list.
-        deck.selectedIndex = this.deckIndices.DECKINDEX_TABSDISABLED;
+        this.setDeckIndex(this.deckIndices.DECKINDEX_TABSDISABLED);
       }
     },
     onViewHiding() {
@@ -371,6 +370,14 @@ const CustomizableWidgets = [
           break;
       }
     },
+    setDeckIndex(index) {
+      let deck = this._tabsList.ownerDocument.getElementById("PanelUI-remotetabs-deck");
+      // We call setAttribute instead of relying on the XBL property setter due
+      // to things going wrong when we try and set the index before the XBL
+      // binding has been created - see bug 1241851 for the gory details.
+      deck.setAttribute("selectedIndex", index);
+    },
+
     _showTabsPromise: Promise.resolve(),
     // Update the tab list after any existing in-flight updates are complete.
     _showTabs() {
@@ -381,7 +388,6 @@ const CustomizableWidgets = [
     // Return a new promise to update the tab list.
     __showTabs() {
       let doc = this._tabsList.ownerDocument;
-      let deck = doc.getElementById("PanelUI-remotetabs-deck");
       return SyncedTabs.getTabClients().then(clients => {
         // The view may have been hidden while the promise was resolving.
         if (!this._tabsList) {
@@ -394,11 +400,11 @@ const CustomizableWidgets = [
         }
 
         if (clients.length === 0) {
-          deck.selectedIndex = this.deckIndices.DECKINDEX_NOCLIENTS;
+          this.setDeckIndex(this.deckIndices.DECKINDEX_NOCLIENTS);
           return;
         }
 
-        deck.selectedIndex = this.deckIndices.DECKINDEX_TABS;
+        this.setDeckIndex(this.deckIndices.DECKINDEX_TABS);
         this._clearTabList();
         this._sortFilterClientsAndTabs(clients);
         let fragment = doc.createDocumentFragment();
