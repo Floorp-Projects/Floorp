@@ -288,29 +288,35 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         """VirtualenvMixin.create_virtualenv() assuemes we're using
         self.config['virtualenv_modules']. Since we are installing
         talos from its source, we have to wrap that method here."""
-        # install mozbase first, so we use in-tree versions
+        # require pip >= 1.5 so pip will prefer .whl files to install
+        modules = ['pip>=1.5']
+        # register mozbase and wptserve first, so we use in-tree versions
         if not self.run_local:
-            mozbase_requirements = os.path.join(
+            tests_dir = os.path.join(
                 self.query_abs_dirs()['abs_work_dir'],
-                'tests',
-                'config',
-                'mozbase_requirements.txt'
-            )
-        else:
+                'tests')
             mozbase_requirements = os.path.join(
-                os.path.dirname(self.talos_path),
+                tests_dir,
                 'config',
                 'mozbase_requirements.txt'
             )
+            modules.append(os.path.join(tests_dir, 'tools', 'wptserve'))
+        else:
+            testing_dir = os.path.dirname(self.talos_path)
+            mozbase_requirements = os.path.join(
+                testing_dir,
+                'config',
+                'mozbase_requirements.txt'
+            )
+            modules.append(
+                os.path.join(testing_dir,
+                             'web-platform', 'tests', 'tools', 'wptserve'))
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
             two_pass=True,
             editable=True,
         )
-        # require pip >= 1.5 so pip will prefer .whl files to install
-        super(Talos, self).create_virtualenv(
-            modules=['pip>=1.5']
-        )
+        super(Talos, self).create_virtualenv(modules=modules)
         # talos in harness requires what else is
         # listed in talos requirements.txt file.
         self.install_module(
