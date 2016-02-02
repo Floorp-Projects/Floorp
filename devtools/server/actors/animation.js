@@ -138,13 +138,15 @@ var AnimationPlayerActor = ActorClass({
   },
 
   /**
-   * Get the name associated with the player. This is used to match
-   * up the player with values in the computed animation-name or
-   * transition-property property.
+   * Get the name of this animation. This can be either the animation.id
+   * property if it was set, or the keyframe rule name or the transition
+   * property.
    * @return {String}
    */
   getName: function() {
-    if (this.isAnimation()) {
+    if (this.player.id) {
+      return this.player.id;
+    } else if (this.isAnimation()) {
       return this.player.animationName;
     } else if (this.isTransition()) {
       return this.player.transitionProperty;
