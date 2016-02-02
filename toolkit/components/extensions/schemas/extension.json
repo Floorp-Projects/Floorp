@@ -101,6 +101,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves the state of the extension's access to Incognito-mode (as determined by the user-controlled 'Allowed in Incognito' checkbox.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -120,6 +121,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves the state of the extension's access to the 'file://' scheme (as determined by the user-controlled 'Allow access to File URLs' checkbox.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",

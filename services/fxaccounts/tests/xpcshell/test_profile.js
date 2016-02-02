@@ -234,11 +234,19 @@ add_task(function* fetchAndCacheProfileOnce() {
   try {
     yield request1;
     throw new Error("should have rejected");
-  } catch (ex if ex == "oh noes") {}
+  } catch (ex) {
+    if (ex != "oh noes") {
+      throw ex;
+    }
+  }
   try {
     yield request2;
     throw new Error("should have rejected");
-  } catch (ex if ex == "oh noes") {}
+  } catch (ex) {
+    if (ex != "oh noes") {
+      throw ex;
+    }
+  }
 
   // but a new request should work.
   client.fetchProfile = function () {
