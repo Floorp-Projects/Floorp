@@ -398,7 +398,7 @@ UsingArabicOrHebrewScriptSystemLocale()
 
 nsresult
 gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
-                                  FallibleTArray<uint8_t> &aBuffer)
+                                  nsTArray<uint8_t> &aBuffer)
 {
     gfxDWriteFontList *pFontList = gfxDWriteFontList::PlatformFontList();
 
@@ -679,7 +679,7 @@ gfxDWriteFontEntry::IsCJKFont()
     mIsCJK = false;
 
     const uint32_t kOS2Tag = TRUETYPE_TAG('O','S','/','2');
-    AutoFallibleTArray<uint8_t,128> buffer;
+    AutoTArray<uint8_t, 128> buffer;
     if (CopyFontTable(kOS2Tag, buffer) != NS_OK) {
         return mIsCJK;
     }
