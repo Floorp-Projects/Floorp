@@ -1091,7 +1091,9 @@ public:
 
   class BoxCallback {
   public:
+    BoxCallback() : mIncludeCaptionBoxForTable(true) {}
     virtual void AddBox(nsIFrame* aFrame) = 0;
+    bool mIncludeCaptionBoxForTable;
   };
   /**
    * Collect all CSS boxes associated with aFrame and its
