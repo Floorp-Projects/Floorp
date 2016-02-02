@@ -2913,7 +2913,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::Select:
       case Expr::Br:
       case Expr::BrIf:
-      case Expr::I8Const:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
       case Expr::F32CopySign:
