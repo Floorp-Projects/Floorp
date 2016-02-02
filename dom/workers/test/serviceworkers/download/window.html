@@ -24,7 +24,7 @@ function wait_until_controlled() {
 }
 addEventListener('load', function(event) {
   var registration;
-  navigator.serviceWorker.register('download_worker.js').then(function(swr) {
+  navigator.serviceWorker.register('worker.js').then(function(swr) {
     registration = swr;
 
     // While the iframe below is a navigation, we still wait until we are
