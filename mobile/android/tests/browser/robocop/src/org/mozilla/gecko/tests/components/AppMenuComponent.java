@@ -35,8 +35,6 @@ import com.jayway.android.robotium.solo.Solo;
 public class AppMenuComponent extends BaseComponent {
     private static final long MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 7500L;
 
-    private Boolean hasLegacyMenu = null;
-
     public enum MenuItem {
         FORWARD(R.string.forward),
         NEW_TAB(R.string.new_tab),
@@ -88,60 +86,27 @@ public class AppMenuComponent extends BaseComponent {
         fAssertFalse("Menu is not open", isMenuOpen());
     }
 
-    /**
-     * Legacy Android devices doesn't have hierarchical menus. Sub-menus, such as "Page", are missing in these devices.
-     * Try to determine if the menu item "Page" is present.
-     *
-     * TODO : This fragile way to determine legacy menus should be replaced with a check for 6-panel menu item.
-     *
-     * @return true if there is a legacy menu.
-     */
-    private boolean hasLegacyMenu() {
-        if (hasLegacyMenu == null) {
-            hasLegacyMenu = findAppMenuItemView(MenuItem.PAGE.getString(mSolo)) == null;
-        }
-
-        return hasLegacyMenu;
-    }
-
     public void assertMenuItemIsDisabledAndVisible(PageMenuItem pageMenuItem) {
         openAppMenu();
 
-        if (!hasLegacyMenu()) {
-            // Non-legacy devices have hierarchical menu, check for parent menu item "page".
-            final View parentMenuItemView = findAppMenuItemView(MenuItem.PAGE.getString(mSolo));
-            if (parentMenuItemView.isEnabled()) {
-                fAssertTrue("The parent 'page' menu item is enabled", parentMenuItemView.isEnabled());
-                fAssertEquals("The parent 'page' menu item is visible", View.VISIBLE,
-                        parentMenuItemView.getVisibility());
+        // Non-legacy devices have hierarchical menu, check for parent menu item "page".
+        final View parentMenuItemView = findAppMenuItemView(MenuItem.PAGE.getString(mSolo));
+        if (parentMenuItemView.isEnabled()) {
+            fAssertTrue("The parent 'page' menu item is enabled", parentMenuItemView.isEnabled());
+            fAssertEquals("The parent 'page' menu item is visible", View.VISIBLE,
+            parentMenuItemView.getVisibility());
 
-                // Parent menu "page" is enabled, open page menu and check for menu item represented by pageMenuItem.
-                pressMenuItem(MenuItem.PAGE.getString(mSolo));
-
-                final View pageMenuItemView = findAppMenuItemView(pageMenuItem.getString(mSolo));
-                fAssertNotNull("The page menu item is not null", pageMenuItemView);
-                fAssertFalse("The page menu item is not enabled", pageMenuItemView.isEnabled());
-                fAssertEquals("The page menu item is visible", View.VISIBLE, pageMenuItemView.getVisibility());
-            } else {
-                fAssertFalse("The parent 'page' menu item is not enabled", parentMenuItemView.isEnabled());
-                fAssertEquals("The parent 'page' menu item is visible", View.VISIBLE, parentMenuItemView.getVisibility());
-            }
-        } else {
-            // Legacy devices (Android 2.3 and earlier) don't have the parent menu, "Page", so check directly for the menu
-            // item represented by pageMenuItem.
-            //
-            // We need to make sure the appropriate menu view is constructed
-            // so open the "More" menu to additionally construct those views.
-            openLegacyMoreMenu();
+            // Parent menu "page" is enabled, open page menu and check for menu item represented by pageMenuItem.
+            pressMenuItem(MenuItem.PAGE.getString(mSolo));
 
             final View pageMenuItemView = findAppMenuItemView(pageMenuItem.getString(mSolo));
+            fAssertNotNull("The page menu item is not null", pageMenuItemView);
             fAssertFalse("The page menu item is not enabled", pageMenuItemView.isEnabled());
             fAssertEquals("The page menu item is visible", View.VISIBLE, pageMenuItemView.getVisibility());
-
-            // Close the "More" menu.
-            mSolo.goBack();
+        } else {
+            fAssertFalse("The parent 'page' menu item is not enabled", parentMenuItemView.isEnabled());
+            fAssertEquals("The parent 'page' menu item is visible", View.VISIBLE, parentMenuItemView.getVisibility());
         }
-
         // Close the App Menu.
         mSolo.goBack();
     }
@@ -207,32 +172,23 @@ public class AppMenuComponent extends BaseComponent {
     }
 
     private void pressMenuItem(final String menuItemTitle) {
-        if (!hasLegacyMenu()) {
             final View menuItemView = findAppMenuItemView(menuItemTitle);
             fAssertTrue("Menu is open", isMenuOpen(menuItemView));
 
             fAssertTrue(String.format("The menu item %s is enabled", menuItemTitle), menuItemView.isEnabled());
             fAssertEquals(String.format("The menu item %s is visible", menuItemTitle), View.VISIBLE,
-                    menuItemView.getVisibility());
+            menuItemView.getVisibility());
 
             mSolo.clickOnView(menuItemView);
-        } else {
-            fAssertTrue("Menu is open", isMenuOpen(menuItemTitle));
-            pressLegacyMenuItem(menuItemTitle);
-        }
     }
 
     private void pressSubMenuItem(final String parentMenuItemTitle, final String childMenuItemTitle) {
         openAppMenu();
 
-        if (!hasLegacyMenu()) {
-            pressMenuItem(parentMenuItemTitle);
+        pressMenuItem(parentMenuItemTitle);
 
-            // Child menu item is not pressed yet, Click on it.
-            pressMenuItem(childMenuItemTitle);
-        } else {
-            pressLegacyMenuItem(childMenuItemTitle);
-        }
+        // Child menu item is not pressed yet, Click on it.
+        pressMenuItem(childMenuItemTitle);        
     }
 
     public void pressMenuItem(MenuItem menuItem) {
@@ -258,25 +214,6 @@ public class AppMenuComponent extends BaseComponent {
         waitForMenuOpen();
     }
 
-    /**
-     * Opens the "More" options menu on legacy Android devices. Assumes the base menu
-     * (i.e. {@link #openAppMenu()}) has already been called and thus the menu is open.
-     */
-    private void openLegacyMoreMenu() {
-        fAssertTrue("The base menu is already open", isMenuOpen());
-
-        // Since there may be more views with "More" on the screen,
-        // this is not robust. However, there may not be a better way.
-        mSolo.clickOnText("^More$");
-
-        WaitHelper.waitFor("legacy \"More\" menu to open", new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                return isLegacyMoreMenuOpen();
-            }
-        });
-    }
-
     private void pressOverflowMenuButton() {
         final View overflowMenuButton = getOverflowMenuButtonView();
 
@@ -295,12 +232,6 @@ public class AppMenuComponent extends BaseComponent {
         // We choose these options because New Tab is near the top of the menu and Page is near the middle/bottom.
         // Intermittently, the menu doesn't scroll to top so we can't just use the first item in the list.
         return isMenuOpen(MenuItem.NEW_TAB.getString(mSolo)) || isMenuOpen(MenuItem.PAGE.getString(mSolo));
-    }
-
-    private boolean isLegacyMoreMenuOpen() {
-        // Check if the first menu option is visible.
-        final String shareTitle = mSolo.getString(R.string.share);
-        return RobotiumHelper.searchExactText(shareTitle, true);
     }
 
     /**
