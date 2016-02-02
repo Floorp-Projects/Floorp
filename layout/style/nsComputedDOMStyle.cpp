@@ -1343,13 +1343,15 @@ nsComputedDOMStyle::DoGetTransform()
                                                        nsSize(0, 0));
 
    RuleNodeCacheConditions dummy;
+   bool dummyBool;
    gfx::Matrix4x4 matrix =
      nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
                                             mStyleContext,
                                             mStyleContext->PresContext(),
                                             dummy,
                                             refBox,
-                                            float(mozilla::AppUnitsPerCSSPixel()));
+                                            float(mozilla::AppUnitsPerCSSPixel()),
+                                            &dummyBool);
 
   return MatrixToCSSValue(matrix);
 }
