@@ -2056,7 +2056,6 @@ or run without that action (ie: --no-{action})"
 
     def update(self):
         """ submit balrog update steps. """
-        c = self.config
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping balrog submission.")
             return
