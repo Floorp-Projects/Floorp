@@ -6498,11 +6498,7 @@ function isTabEmpty(aTab) {
 }
 
 function BrowserOpenSyncTabs() {
-  if (Services.prefs.getBoolPref("services.sync.syncedTabsUIRefresh")) {
-    gSyncUI.openSyncedTabsPanel();
-  } else {
-    switchToTabHavingURI("about:sync-tabs", true);
-  }
+  gSyncUI.openSyncedTabsPanel();
 }
 
 /**
