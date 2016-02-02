@@ -1461,19 +1461,14 @@ typedef bool IsMax;
 static bool
 EmitMathMinMax(FunctionCompiler& f, ExprType type, bool isMax, MDefinition** def)
 {
-    size_t numArgs = f.readU8();
-    MOZ_ASSERT(numArgs >= 2);
-    MDefinition* lastDef;
-    if (!EmitExpr(f, type, &lastDef))
+    MDefinition* lhs;
+    if (!EmitExpr(f, type, &lhs))
+        return false;
+    MDefinition* rhs;
+    if (!EmitExpr(f, type, &rhs))
         return false;
     MIRType mirType = ToMIRType(type);
-    for (size_t i = 1; i < numArgs; i++) {
-        MDefinition* next;
-        if (!EmitExpr(f, type, &next))
-            return false;
-        lastDef = f.minMax(lastDef, next, mirType, isMax);
-    }
-    *def = lastDef;
+    *def = f.minMax(lhs, rhs, mirType, isMax);
     return true;
 }
 
