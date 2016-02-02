@@ -4,19 +4,20 @@
 
 package org.mozilla.gecko.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Extend JSONObject to do little things, like, y'know, accessing members.
@@ -288,10 +289,34 @@ public class ExtendedJSONObject {
     return this.object.toString();
   }
 
-  public void put(String key, Object value) {
+  protected void putRaw(String key, Object value) {
     @SuppressWarnings("unchecked")
     Map<Object, Object> map = this.object;
     map.put(key, value);
+  }
+
+  public void put(String key, String value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, boolean value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, long value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, int value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, ExtendedJSONObject value) {
+    this.putRaw(key, value);
+  }
+
+  public void put(String key, JSONArray value) {
+    this.putRaw(key, value);
   }
 
   /**
