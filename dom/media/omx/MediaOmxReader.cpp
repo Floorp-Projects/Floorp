@@ -538,7 +538,7 @@ MediaOmxReader::Seek(SeekTarget aTarget, int64_t aEndTime)
     // stream to the preceeding keyframe first, get the stream time, and then
     // seek the audio stream to match the video stream's time. Otherwise, the
     // audio and video streams won't be in sync after the seek.
-    mVideoSeekTimeUs = aTarget.mTime;
+    mVideoSeekTimeUs = aTarget.GetTime().ToMicroseconds();
 
     RefPtr<MediaOmxReader> self = this;
     mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
@@ -551,7 +551,7 @@ MediaOmxReader::Seek(SeekTarget aTarget, int64_t aEndTime)
       self->mSeekPromise.Resolve(aTarget.GetTime(), __func__);
     }));
   } else {
-    mAudioSeekTimeUs = mVideoSeekTimeUs = GetTime().ToMicroseconds();
+    mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget.GetTime().ToMicroseconds();
     mSeekPromise.Resolve(aTarget.GetTime(), __func__);
   }
 
