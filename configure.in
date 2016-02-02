@@ -1439,57 +1439,7 @@ if test "$GNU_CC"; then
         fi
     fi
 
-    # Turn on gcc/clang warnings:
-    # https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
-
-    # -Wall - lots of useful warnings
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Wignored-qualifiers - catches return types with qualifiers like const
-    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
-    # -Wtype-limits - catches overflow bugs, few false positives
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wempty-body"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wignored-qualifiers"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wpointer-arith"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
-
-    # -Wclass-varargs - catches objects passed by value to variadic functions.
-    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wsometimes-initialized - catches some uninitialized values
-    # -Wunreachable-code-aggressive - catches lots of dead code
-    #
-    # XXX: at the time of writing, the version of clang used on the OS X test
-    # machines has a bug that causes it to reject some valid files if both
-    # -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
-    # specified. We work around this by instead using
-    # -Werror=non-literal-null-conversion, but we only do that when
-    # --enable-warnings-as-errors is specified so that no unexpected fatal
-    # warnings are produced.
-    MOZ_C_SUPPORTS_WARNING(-W, class-varargs, ac_c_has_wclass_varargs)
-
-    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
-        MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
-    fi
-    MOZ_C_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_c_has_sometimes_uninitialized)
-    MOZ_C_SUPPORTS_WARNING(-W, unreachable-code-aggressive, ac_c_has_wunreachable_code_aggressive)
-
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
-
-    # Turn off some non-useful warnings that -Wall turns on.
-
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
-    MOZ_C_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_c_has_wno_unused_local_typedef)
+    MOZ_SET_WARNINGS_CFLAGS
 
     _DEFINES_CFLAGS='-include $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1524,79 +1474,7 @@ if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
 
-    # Turn on gcc/clang warnings:
-    # https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
-
-    # -Wall - lots of useful warnings
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Wignored-qualifiers - catches return types with qualifiers like const
-    # -Woverloaded-virtual - function declaration hides virtual function from base class
-    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
-    # -Wtype-limits - catches overflow bugs, few false positives
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wempty-body"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wignored-qualifiers"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
-
-    # -Wclass-varargs - catches objects passed by value to variadic functions.
-    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
-    # -Wrange-loop-analysis - catches copies during range-based for loops.
-    # -Wsometimes-initialized - catches some uninitialized values
-    # -Wunreachable-code - catches some dead code
-    # -Wunreachable-code-return - catches dead code after return call
-    #
-    # XXX: at the time of writing, the version of clang used on the OS X test
-    # machines has a bug that causes it to reject some valid files if both
-    # -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
-    # specified. We work around this by instead using
-    # -Werror=non-literal-null-conversion, but we only do that when
-    # --enable-warnings-as-errors is specified so that no unexpected fatal
-    # warnings are produced.
-    MOZ_CXX_SUPPORTS_WARNING(-W, class-varargs, ac_cxx_has_wclass_varargs)
-
-    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
-        MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_non_literal_null_conversion)
-    fi
-    MOZ_CXX_SUPPORTS_WARNING(-W, range-loop-analysis, ac_cxx_has_range_loop_analysis)
-    MOZ_CXX_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_cxx_has_sometimes_uninitialized)
-    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code, ac_cxx_has_wunreachable_code)
-    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code-return, ac_cxx_has_wunreachable_code_return)
-
-    # -Wcast-align - catches problems with cast alignment
-    if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
-       # Don't use -Wcast-align with ICC or clang
-       case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
-           hppa | ia64 | sparc | arm)
-           ;;
-           *)
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
-           ;;
-       esac
-    fi
-
-    # Turn off some non-useful warnings that -Wall turns on.
-
-    # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
-
-    # -Wno-inline-new-delete - we inline 'new' and 'delete' in mozalloc
-    # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
-    MOZ_CXX_SUPPORTS_WARNING(-Wno-, inline-new-delete, ac_cxx_has_wno_inline_new_delete)
-    MOZ_CXX_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_cxx_has_wno_unused_local_typedef)
-
-    # Recent clang and gcc support C++11 deleted functions without warnings if
-    # compiling with -std=c++0x or -std=gnu++0x (or c++11 or gnu++11 in very new
-    # versions).  We can't use -std=c++0x yet, so gcc's support must remain
-    # unused.  But clang's warning can be disabled, so when compiling with clang
-    # we use it to opt out of the warning, enabling (macro-encapsulated) use of
-    # deleted function syntax.
-    if test "$CLANG_CXX"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
-        MOZ_CXX_SUPPORTS_WARNING(-Wno-, extended-offsetof, ac_cxx_has_wno_extended_offsetof)
-    fi
+    MOZ_SET_WARNINGS_CXXFLAGS
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -7009,26 +6887,6 @@ dnl = Disable treating compiler warnings as errors
 dnl ========================================================
 if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
-elif test "$GNU_CC"; then
-    # Prevent the following GCC warnings from being treated as errors:
-    # -Wmaybe-uninitialized - too many false positives
-    # -Wdeprecated-declarations - we don't want our builds held hostage when a
-    #   platform-specific API becomes deprecated.
-    # -Wfree-nonheap-object - false positives during PGO
-    # -Warray-bounds - false positives depending on optimization
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_c_has_noerror_maybe_uninitialized)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_cxx_has_noerror_maybe_uninitialized)
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_c_has_noerror_deprecated_declarations)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_cxx_has_noerror_deprecated_declarations)
-    MOZ_C_SUPPORTS_WARNING(-W, no-error=array-bounds, ac_c_has_noerror_array_bounds)
-    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=array-bounds, ac_cxx_has_noerror_array_bounds)
-
-    if test -n "$MOZ_PGO"; then
-        MOZ_C_SUPPORTS_WARNING(-W, no-error=coverage-mismatch, ac_c_has_noerror_coverage_mismatch)
-        MOZ_CXX_SUPPORTS_WARNING(-W, no-error=coverage-mismatch, ac_cxx_has_noerror_coverage_mismatch)
-        MOZ_C_SUPPORTS_WARNING(-W, no-error=free-nonheap-object, ac_c_has_noerror_free_nonheap_object)
-        MOZ_CXX_SUPPORTS_WARNING(-W, no-error=free-nonheap-object, ac_cxx_has_noerror_free_nonheap_object)
-    fi
 fi
 
 dnl ========================================================
