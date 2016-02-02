@@ -53,13 +53,9 @@ struct TileClient;
 //   nsTArray<T>,
 //   FallibleTArray<T>,
 //   AutoTArray<T, N>, and
-//   AutoFallibleTArray<T, N>.
 //
-// nsTArray and AutoTArray are infallible; if one tries to make an allocation
-// which fails, it crashes the program.  In contrast, FallibleTArray and
-// AutoFallibleTArray are fallible; if you use one of these classes, you must
-// check the return values of methods such as Append() which may allocate.  If
-// in doubt, choose an infallible type.
+// nsTArray and AutoTArray are infallible by default. To opt-in to fallible
+// behaviour, use the `mozilla::fallible` parameter and check the return value.
 //
 // InfallibleTArray and AutoInfallibleTArray are aliases for nsTArray and
 // AutoTArray.
@@ -786,7 +782,7 @@ struct ItemComparatorFirstElementGT
 
 //
 // nsTArray_Impl contains most of the guts supporting nsTArray, FallibleTArray,
-// AutoTArray, and AutoFallibleTArray.
+// AutoTArray.
 //
 // The only situation in which you might need to use nsTArray_Impl in your code
 // is if you're writing code which mutates a TArray which may or may not be
@@ -2205,7 +2201,7 @@ public:
 };
 
 //
-// nsAutoArrayBase is a base class for AutoFallibleTArray and AutoTArray.
+// nsAutoArrayBase is a base class for AutoTArray.
 // You shouldn't use this class directly.
 //
 template<class TArrayBase, size_t N>
@@ -2311,9 +2307,6 @@ class nsAutoArrayBase<TArrayBase, 0> : public TArrayBase
 // storage.  If you try to store more than N elements inside an
 // AutoTArray<E, N>, we'll call malloc() and store them all on the heap.
 //
-// Note that you can cast an AutoTArray<E, N> to
-// |const AutoFallibleTArray<E, N>&|.
-//
 template<class E, size_t N>
 class AutoTArray : public nsAutoArrayBase<nsTArray<E>, N>
 {
@@ -2339,48 +2332,6 @@ public:
   {
     Base::operator=(other);
     return *this;
-  }
-
-  operator const AutoFallibleTArray<E, N>&() const
-  {
-    return *reinterpret_cast<const AutoFallibleTArray<E, N>*>(this);
-  }
-};
-
-//
-// AutoFallibleTArray<E, N> is a fallible vector class with N elements of
-// inline storage.
-//
-template<class E, size_t N>
-class AutoFallibleTArray : public nsAutoArrayBase<FallibleTArray<E>, N>
-{
-  typedef AutoFallibleTArray<E, N> self_type;
-  typedef nsAutoArrayBase<FallibleTArray<E>, N> Base;
-
-public:
-  AutoFallibleTArray() {}
-
-  template<typename Allocator>
-  explicit AutoFallibleTArray(const nsTArray_Impl<E, Allocator>& aOther)
-  {
-    Base::AppendElements(aOther);
-  }
-  template<typename Allocator>
-  explicit AutoFallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
-    : Base(mozilla::Move(aOther))
-  {
-  }
-
-  template<typename Allocator>
-  self_type& operator=(const nsTArray_Impl<E, Allocator>& other)
-  {
-    Base::operator=(other);
-    return *this;
-  }
-
-  operator const AutoTArray<E, N>&() const
-  {
-    return *reinterpret_cast<const AutoTArray<E, N>*>(this);
   }
 };
 
