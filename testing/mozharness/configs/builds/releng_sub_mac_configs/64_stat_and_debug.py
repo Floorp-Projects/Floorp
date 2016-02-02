@@ -17,7 +17,6 @@ config = {
     'debug_build': True,
     'stage_platform': 'macosx64-st-an-debug',
     'build_type': 'st-an-debug',
-    'purge_minsize': 12,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/macosx64/\
 clang.manifest",
     'platform_supports_post_upload_to_latest': False,

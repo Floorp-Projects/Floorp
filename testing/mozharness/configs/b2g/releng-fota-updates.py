@@ -69,7 +69,6 @@ config = {
         "WGET_OPTS": "-c -q",
         "PATH": "/tools/python27/bin:%(PATH)s",
     },
-    "purge_minsize": 15,
     "clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
     "is_automation": True,
     "repo_mirror_dir": "/builds/git-shared/repo",

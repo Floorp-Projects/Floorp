@@ -35,6 +35,5 @@ config = {
         ##
     },
     'src_mozconfig': 'browser/config/mozconfigs/macosx64/opt-static-analysis',
-    'purge_minsize': 10,
     #######################
 }
