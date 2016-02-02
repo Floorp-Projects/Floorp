@@ -32,8 +32,8 @@ testBinary('f32', 'add', 40, 2, 42);
 testBinary('f32', 'sub', 40, 2, 38);
 testBinary('f32', 'mul', 40, 2, 80);
 testBinary('f32', 'div', 40, 3, 13.333333015441895);
-//testBinary('f32', 'min', 40, 2, 2); // TODO: NYI
-//testBinary('f32', 'max', 40, 2, 40); // TODO: NYI
+testBinary('f32', 'min', 40, 2, 2);
+testBinary('f32', 'max', 40, 2, 40);
 //testBinary('f32', 'copysign', 40, -2, -40); // TODO: NYI
 
 testComparison('f32', 'eq', 40, 40, 1);
@@ -55,8 +55,8 @@ testBinary('f64', 'add', 40, 2, 42);
 testBinary('f64', 'sub', 40, 2, 38);
 testBinary('f64', 'mul', 40, 2, 80);
 testBinary('f64', 'div', 40, 3, 13.333333333333334);
-//testBinary('f64', 'min', 40, 2, 2); // TODO: NYI
-//testBinary('f64', 'max', 40, 2, 40); // TODO: NYI
+testBinary('f64', 'min', 40, 2, 2);
+testBinary('f64', 'max', 40, 2, 40);
 //testBinary('f64', 'copysign', 40, -2, -40); // TODO: NYI
 
 testComparison('f64', 'eq', 40, 40, 1);
