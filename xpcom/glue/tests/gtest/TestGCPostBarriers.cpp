@@ -115,7 +115,7 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
   }
 
   {
-    nsAutoTArray<ElementT, InitialElements> array;
+    AutoTArray<ElementT, InitialElements> array;
     RunTest(rt, cx, &array);
   }
 

@@ -830,7 +830,7 @@ MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool int
 
   if (!mStaticPrev) {
     NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
-    gNeuteredWindows = new nsAutoTArray<HWND, 20>();
+    gNeuteredWindows = new AutoTArray<HWND, 20>();
     NS_ASSERTION(gNeuteredWindows, "Out of memory!");
   }
 }

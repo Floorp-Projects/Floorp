@@ -100,7 +100,7 @@ NearestCommonAncestorFirstInFlow(nsIFrame *aFrame1, nsIFrame *aFrame2,
   aFrame2 = aFrame2->FirstInFlow();
   aKnownCommonAncestor = aKnownCommonAncestor->FirstInFlow();
 
-  nsAutoTArray<nsIFrame*, 32> ancestors1, ancestors2;
+  AutoTArray<nsIFrame*, 32> ancestors1, ancestors2;
   for (nsIFrame *f = aFrame1; f != aKnownCommonAncestor;
        (f = f->GetParent()) && (f = f->FirstInFlow())) {
     ancestors1.AppendElement(f);
@@ -238,7 +238,7 @@ nsFontInflationData::FindEdgeInflatableFrameIn(nsIFrame* aFrame,
   }
 
   // FIXME: aDirection!
-  nsAutoTArray<FrameChildList, 4> lists;
+  AutoTArray<FrameChildList, 4> lists;
   aFrame->GetChildLists(&lists);
   for (uint32_t i = 0, len = lists.Length(); i < len; ++i) {
     const nsFrameList& list =

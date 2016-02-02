@@ -29,7 +29,7 @@
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsAutoTArray
+#include "nsTArray.h"                   // for AutoTArray
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
 #include "VRManager.h"                  // for VRManager
@@ -190,7 +190,7 @@ ContainerRenderVR(ContainerT* aContainer,
 
   compositor->SetRenderTarget(surface);
 
-  nsAutoTArray<Layer*, 12> children;
+  AutoTArray<Layer*, 12> children;
   aContainer->SortChildrenBy3DZOrder(children);
 
   gfx::Matrix4x4 origTransform = aContainer->GetEffectiveTransform();
@@ -336,7 +336,7 @@ NeedToDrawCheckerboardingForLayer(Layer* aLayer, Color* aOutCheckerboardingColor
 struct PreparedData
 {
   RefPtr<CompositingRenderTarget> mTmpTarget;
-  nsAutoTArray<PreparedLayer, 12> mLayers;
+  AutoTArray<PreparedLayer, 12> mLayers;
   bool mNeedsSurfaceCopy;
 };
 
@@ -361,7 +361,7 @@ ContainerPrepare(ContainerT* aContainer,
   /**
    * Determine which layers to draw.
    */
-  nsAutoTArray<Layer*, 12> children;
+  AutoTArray<Layer*, 12> children;
   aContainer->SortChildrenBy3DZOrder(children);
 
   for (uint32_t i = 0; i < children.Length(); i++) {

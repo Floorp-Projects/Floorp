@@ -183,7 +183,7 @@ TEST(VorbisTrackEncoder, EncodedFrame)
   for (int i = 0; i < rate; i++) {
     data[i] = ((i%8)*4000) - (7*4000)/2;
   }
-  nsAutoTArray<const AudioDataValue*,1> channelData;
+  AutoTArray<const AudioDataValue*,1> channelData;
   channelData.AppendElement(data);
   AudioSegment segment;
   segment.AppendFrames(samples.forget(), channelData, 44100);

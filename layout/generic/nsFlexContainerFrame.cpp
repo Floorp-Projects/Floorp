@@ -3671,7 +3671,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord contentBoxMainSize = GetMainSizeFromReflowState(aReflowState,
                                                           axisTracker);
 
-  nsAutoTArray<StrutInfo, 1> struts;
+  AutoTArray<StrutInfo, 1> struts;
   DoFlexLayout(aPresContext, aDesiredSize, aReflowState, aStatus,
                contentBoxMainSize, availableBSizeForContent,
                struts, axisTracker);
