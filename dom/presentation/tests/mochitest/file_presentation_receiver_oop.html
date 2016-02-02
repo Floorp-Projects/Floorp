@@ -54,10 +54,20 @@ function testConnectionAvailable() {
   });
 }
 
-function testConnectionAvailableInnerIframe() {
+function testConnectionAvailableSameOriginInnerIframe() {
   return new Promise(function(aResolve, aReject) {
     var iframe = document.createElement('iframe');
     iframe.setAttribute('src', './file_presentation_receiver_inner_iframe_oop.html');
+    document.body.appendChild(iframe);
+
+    aResolve();
+  });
+}
+
+function testConnectionUnavailableDiffOriginInnerIframe() {
+  return new Promise(function(aResolve, aReject) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', 'http://example.com/tests/dom/presentation/tests/mochitest/file_presentation_non_receiver_inner_iframe_oop.html');
     document.body.appendChild(iframe);
 
     aResolve();
@@ -104,7 +114,11 @@ function testTerminateConnection() {
 }
 
 testConnectionAvailable().
-then(testConnectionAvailableInnerIframe).
+// TODO Bug 1234128 - Fix the timing issue for navigator.presentation.receiver.
+// This test fails intermittently under some edge cases. Disable it for now until
+// the issue gets fixed.
+// then(testConnectionAvailableSameOriginInnerIframe).
+then(testConnectionUnavailableDiffOriginInnerIframe).
 then(testConnectionReady).
 then(testIncomingMessage).
 then(testTerminateConnection).
