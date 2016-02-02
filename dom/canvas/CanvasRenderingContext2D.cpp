@@ -4374,8 +4374,8 @@ ClipImageDimension(double& aSourceCoord, double& aSourceSize, int32_t aImageSize
 
 // drawImage(in HTMLImageElement image, in float dx, in float dy);
 //   -- render image from 0,0 at dx,dy top-left coords
-// drawImage(in HTMLImageElement image, in float dx, in float dy, in float sw, in float sh);
-//   -- render image from 0,0 at dx,dy top-left coords clipping it to sw,sh
+// drawImage(in HTMLImageElement image, in float dx, in float dy, in float dw, in float dh);
+//   -- render image from 0,0 at dx,dy top-left coords clipping it to dw,dh
 // drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
 //   -- render the region defined by (sx,sy,sw,wh) in image-local space into the region (dx,dy,dw,dh) on the canvas
 
@@ -4398,9 +4398,11 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
   MOZ_ASSERT(aOptional_argc == 0 || aOptional_argc == 2 || aOptional_argc == 6);
 
+  if (!ValidateRect(aDx, aDy, aDw, aDh, true)) {
+    return;
+  }
   if (aOptional_argc == 6) {
-    if  (!ValidateRect(aSx, aSy, aSw, aSh, true) ||
-         !ValidateRect(aDx, aDy, aDw, aDh, true)) {
+    if (!ValidateRect(aSx, aSy, aSw, aSh, true)) {
       return;
     }
   }
