@@ -10,7 +10,6 @@ Cu.import("resource://devtools/shared/event-emitter.js");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -261,16 +260,17 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
         browserActionOf(extension).setProperty(tab, "title", title);
       },
 
-      getTitle: function(details, callback) {
+      getTitle: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let title = browserActionOf(extension).getProperty(tab, "title");
-        runSafe(context, callback, title);
+        return Promise.resolve(title);
       },
 
-      setIcon: function(details, callback) {
+      setIcon: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let icon = IconDetails.normalize(details, extension, context);
         browserActionOf(extension).setProperty(tab, "icon", icon);
+        return Promise.resolve();
       },
 
       setBadgeText: function(details) {
@@ -278,10 +278,10 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
         browserActionOf(extension).setProperty(tab, "badgeText", details.text);
       },
 
-      getBadgeText: function(details, callback) {
+      getBadgeText: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let text = browserActionOf(extension).getProperty(tab, "badgeText");
-        runSafe(context, callback, text);
+        return Promise.resolve(text);
       },
 
       setPopup: function(details) {
@@ -295,10 +295,10 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
         browserActionOf(extension).setProperty(tab, "popup", url);
       },
 
-      getPopup: function(details, callback) {
+      getPopup: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let popup = browserActionOf(extension).getProperty(tab, "popup");
-        runSafe(context, callback, popup);
+        return Promise.resolve(popup);
       },
 
       setBadgeBackgroundColor: function(details) {
@@ -309,7 +309,7 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
       getBadgeBackgroundColor: function(details, callback) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let color = browserActionOf(extension).getProperty(tab, "badgeBackgroundColor");
-        runSafe(context, callback, color);
+        return Promise.resolve(color);
       },
     },
   };

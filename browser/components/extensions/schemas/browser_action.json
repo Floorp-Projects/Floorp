@@ -72,6 +72,7 @@
         "name": "getTitle",
         "type": "function",
         "description": "Gets the title of the browser action.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -100,6 +101,7 @@
         "name": "setIcon",
         "type": "function",
         "description": "Sets the icon for the browser action. The icon can be specified either as the path to an image file or as the pixel data from a canvas element, or as dictionary of either one of those. Either the <b>path</b> or the <b>imageData</b> property must be specified.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -169,6 +171,7 @@
         "name": "getPopup",
         "type": "function",
         "description": "Gets the html document set as the popup for this browser action.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -219,6 +222,7 @@
         "name": "getBadgeText",
         "type": "function",
         "description": "Gets the badge text of the browser action. If no tab is specified, the non-tab-specific badge text is returned.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -272,6 +276,7 @@
         "name": "getBadgeBackgroundColor",
         "type": "function",
         "description": "Gets the background color of the browser action.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -329,6 +334,7 @@
         "type": "function",
         "description": "Opens the extension popup window in the active window but does not grant tab permissions.",
         "unsupported": true,
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
