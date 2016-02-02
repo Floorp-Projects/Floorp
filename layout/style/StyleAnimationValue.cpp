@@ -3656,12 +3656,14 @@ StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
   MOZ_ASSERT(list->mHead);
 
   RuleNodeCacheConditions dontCare;
+  bool dontCareBool;
   nsStyleTransformMatrix::TransformReferenceBox refBox(aForFrame);
   Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
                           list->mHead,
                           aForFrame->StyleContext(),
                           aForFrame->PresContext(), dontCare, refBox,
-                          aForFrame->PresContext()->AppUnitsPerDevPixel());
+                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                          &dontCareBool);
 
   Matrix transform2d;
   bool canDraw2D = transform.CanDraw2D(&transform2d);
