@@ -14313,9 +14313,11 @@ nsDocShell::InFrameSwap()
 NS_IMETHODIMP
 nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError)
 {
-  nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
-  if (doc) {
-    doc->WarnOnceAbout(nsIDocument::DeprecatedOperations(aWarning), aAsError);
+  if (mContentViewer) {
+    nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::DeprecatedOperations(aWarning), aAsError);
+    }
   }
   return NS_OK;
 }
