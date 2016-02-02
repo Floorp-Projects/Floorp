@@ -70,6 +70,7 @@
         "name": "getTitle",
         "type": "function",
         "description": "Gets the title of the page action.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -97,6 +98,7 @@
         "name": "setIcon",
         "type": "function",
         "description": "Sets the icon for the page action. The icon can be specified either as the path to an image file or as the pixel data from a canvas element, or as dictionary of either one of those. Either the <b>path</b> or the <b>imageData</b> property must be specified.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -157,6 +159,7 @@
         "name": "getPopup",
         "type": "function",
         "description": "Gets the html document set as the popup for this page action.",
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
