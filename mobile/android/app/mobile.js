@@ -922,6 +922,10 @@ pref("layout.accessiblecaret.enabled", true);
 #else
 pref("layout.accessiblecaret.enabled", false);
 #endif
+
+// Android need persistent carets and actionbar. Turn off the caret timeout.
+pref("layout.accessiblecaret.timeout_ms", 0);
+
 // Android generates long tap (mouse) events.
 pref("layout.accessiblecaret.use_long_tap_injector", false);
 
