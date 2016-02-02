@@ -778,7 +778,7 @@ TRY_AGAIN_NO_SHARING:
 
     GLXContext glxContext = shareContext ? shareContext->mContext : nullptr;
     if (glx.HasCreateContextAttribs()) {
-        nsAutoTArray<int, 11> attrib_list;
+        AutoTArray<int, 11> attrib_list;
         if (glx.HasRobustness()) {
             int robust_attribs[] = {
                 LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,

@@ -123,7 +123,7 @@ ImageClientSingle::FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaite
 bool
 ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags)
 {
-  nsAutoTArray<ImageContainer::OwningImage,4> images;
+  AutoTArray<ImageContainer::OwningImage,4> images;
   uint32_t generationCounter;
   aContainer->GetCurrentImages(&images, &generationCounter);
 
@@ -149,7 +149,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
 
   nsTArray<Buffer> newBuffers;
-  nsAutoTArray<CompositableForwarder::TimedTextureClient,4> textures;
+  AutoTArray<CompositableForwarder::TimedTextureClient,4> textures;
 
   for (auto& img : images) {
     Image* image = img.mImage;

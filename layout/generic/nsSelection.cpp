@@ -3674,7 +3674,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
   if (mUserInitiated) {
-    nsAutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
+    AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
     *aOutIndex = -1;
 
     if (!aNoStartSelect && mType == nsISelectionController::SELECTION_NORMAL &&

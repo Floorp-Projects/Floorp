@@ -114,7 +114,7 @@ public:
     // an Array of Response objects.  The following code unwraps these
     // JS values back to an nsTArray<RefPtr<Response>>.
 
-    nsAutoTArray<RefPtr<Response>, 256> responseList;
+    AutoTArray<RefPtr<Response>, 256> responseList;
     responseList.SetCapacity(mRequestList.Length());
 
     bool isArray;
@@ -571,7 +571,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  nsAutoTArray<RefPtr<Promise>, 256> fetchList;
+  AutoTArray<RefPtr<Promise>, 256> fetchList;
   fetchList.SetCapacity(aRequestList.Length());
 
   // Begin fetching each request in parallel.  For now, if an error occurs just

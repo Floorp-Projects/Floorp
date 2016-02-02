@@ -1353,7 +1353,7 @@ gfxFT2FontList::GetSystemFontList(InfallibleTArray<FontListEntry>* retValue)
 static void
 LoadSkipSpaceLookupCheck(nsTHashtable<nsStringHashKey>& aSkipSpaceLookupCheck)
 {
-    nsAutoTArray<nsString, 5> skiplist;
+    AutoTArray<nsString, 5> skiplist;
     gfxFontUtils::GetPrefsFontList(
         "font.whitelist.skip_default_features_space_check",
         skiplist);

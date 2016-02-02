@@ -1018,10 +1018,10 @@ public:
   };
 
 private:
-  nsAutoTArray<MappedFlow,10>   mMappedFlows;
-  nsAutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
-  nsAutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
-  nsAutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
+  AutoTArray<MappedFlow,10>   mMappedFlows;
+  AutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
+  AutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
+  AutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   DrawTarget*                   mDrawTarget;
@@ -1923,7 +1923,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= gfxTextRunFactory::TEXT_INCOMING_ARABICCHAR;
   }
 
-  nsAutoTArray<int32_t,50> textBreakPoints;
+  AutoTArray<int32_t,50> textBreakPoints;
   TextRunUserData dummyData;
   TextRunMappedFlow dummyMappedFlow;
 
@@ -2174,7 +2174,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   NS_ASSERTION(nextBreakIndex == mLineBreakBeforeFrames.Length(),
                "Didn't find all the frames to break-before...");
   gfxSkipCharsIterator iter(skipChars);
-  nsAutoTArray<uint32_t,50> textBreakPointsAfterTransform;
+  AutoTArray<uint32_t,50> textBreakPointsAfterTransform;
   for (uint32_t i = 0; i < textBreakPoints.Length(); ++i) {
     nsTextFrameUtils::AppendLineBreakOffset(&textBreakPointsAfterTransform, 
             iter.ConvertOriginalToSkipped(textBreakPoints[i]));
@@ -2316,7 +2316,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 
   gfxSkipChars skipChars;
 
-  nsAutoTArray<int32_t,50> textBreakPoints;
+  AutoTArray<int32_t,50> textBreakPoints;
   TextRunUserData dummyData;
   TextRunMappedFlow dummyMappedFlow;
 

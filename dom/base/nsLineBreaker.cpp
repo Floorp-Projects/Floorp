@@ -59,7 +59,7 @@ nsresult
 nsLineBreaker::FlushCurrentWord()
 {
   uint32_t length = mCurrentWord.Length();
-  nsAutoTArray<uint8_t,4000> breakState;
+  AutoTArray<uint8_t,4000> breakState;
   if (!breakState.AppendElements(length))
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -187,7 +187,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
       return rv;
   }
 
-  nsAutoTArray<uint8_t,4000> breakState;
+  AutoTArray<uint8_t,4000> breakState;
   if (aSink) {
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -368,7 +368,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, u
       return rv;
   }
 
-  nsAutoTArray<uint8_t,4000> breakState;
+  AutoTArray<uint8_t,4000> breakState;
   if (aSink) {
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;

@@ -35,7 +35,7 @@
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"            // for ImageContainer::AddRef, etc
-#include "nsTArray.h"                   // for nsAutoTArray, nsTArray, etc
+#include "nsTArray.h"                   // for AutoTArray, nsTArray, etc
 #include "nsTArrayForwardDeclare.h"     // for AutoInfallibleTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
@@ -146,7 +146,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
   MOZ_ASSERT(aCompositable->GetIPDLActor());
   MOZ_ASSERT(aCompositable->IsConnected());
 
-  nsAutoTArray<TimedTexture,4> textures;
+  AutoTArray<TimedTexture,4> textures;
 
   for (auto& t : aTextures) {
     MOZ_ASSERT(t.mTextureClient);

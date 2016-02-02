@@ -347,7 +347,7 @@ LookupAlternateValues(gfxFontFeatureValueSet *featureLookup,
     uint32_t numAlternates = altValue.Length();
     for (uint32_t i = 0; i < numAlternates; i++) {
         const gfxAlternateValue& av = altValue.ElementAt(i);
-        nsAutoTArray<uint32_t,4> values;
+        AutoTArray<uint32_t,4> values;
 
         // map <family, name, feature> ==> <values>
         bool found =
@@ -522,7 +522,7 @@ gfxFontShaper::MergeFontFeatures(
 
     // add font-specific feature values from style rules
     if (aStyle->featureValueLookup && numAlts > 0) {
-        nsAutoTArray<gfxFontFeature,4> featureList;
+        AutoTArray<gfxFontFeature,4> featureList;
 
         // insert list of alternate feature settings
         LookupAlternateValues(aStyle->featureValueLookup, aFamilyName,
@@ -2190,8 +2190,8 @@ gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget,
                           const mozilla::gfx::Point& aPoint,
                           uint32_t aGlyphId) const
 {
-    nsAutoTArray<uint16_t, 8> layerGlyphs;
-    nsAutoTArray<mozilla::gfx::Color, 8> layerColors;
+    AutoTArray<uint16_t, 8> layerGlyphs;
+    AutoTArray<mozilla::gfx::Color, 8> layerColors;
 
     if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, layerGlyphs, layerColors)) {
         return false;
@@ -3148,8 +3148,8 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                 // apply uppercase transform to the string
                 nsDependentSubstring origString(aText + runStart, runLength);
                 nsAutoString convertedString;
-                nsAutoTArray<bool,50> charsToMergeArray;
-                nsAutoTArray<bool,50> deletedCharsArray;
+                AutoTArray<bool,50> charsToMergeArray;
+                AutoTArray<bool,50> deletedCharsArray;
 
                 bool mergeNeeded = nsCaseTransformTextRunFactory::
                     TransformString(origString,
