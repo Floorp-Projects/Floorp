@@ -12,7 +12,6 @@ var gFirstSourceLabel = "code_ugly-5.js";
 var gSecondSourceLabel = "code_ugly-6.js";
 
 var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
-Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
 function test(){
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
@@ -25,28 +24,31 @@ function test(){
     gOptions = gDebugger.DebuggerView.Options;
     gView = gDebugger.DebuggerView;
 
-    // Should be on by default.
-    testAutoPrettyPrintOn();
+    Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, gFirstSourceLabel);
+      testSourceIsUgly();
 
-    waitForSourceShown(gPanel, gFirstSourceLabel)
-      .then(testSourceIsUgly)
-      .then(() => waitForSourceShown(gPanel, gFirstSourceLabel))
-      .then(testSourceIsPretty)
-      .then(disableAutoPrettyPrint)
-      .then(testAutoPrettyPrintOff)
-      .then(() => {
-        let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-        gSources.selectedIndex = 1;
-        return finished;
-      })
-      .then(testSecondSourceLabel)
-      .then(testSourceIsUgly)
-       // Re-enable auto pretty printing for browser_dbg_auto-pretty-print-02.js
-      .then(enableAutoPrettyPrint)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-      })
+      enableAutoPrettyPrint();
+      testAutoPrettyPrintOn();
+
+      reload(gPanel);
+      yield waitForSourceShown(gPanel, gFirstSourceLabel);
+      testSourceIsUgly();
+      yield waitForSourceShown(gPanel, gFirstSourceLabel);
+      testSourceIsPretty();
+      disableAutoPrettyPrint();
+      testAutoPrettyPrintOff();
+
+      let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
+      gSources.selectedIndex = 1;
+      yield finished;
+
+      testSecondSourceLabel();
+      testSourceIsUgly();
+
+      enableAutoPrettyPrint();
+      yield closeDebuggerAndFinish(gPanel);
+    });
   });
 }
 
