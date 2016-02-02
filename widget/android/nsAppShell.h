@@ -139,8 +139,6 @@ public:
                              mozilla::UniquePtr<Event>(*eventFactory)(
                                     mozilla::UniquePtr<Event>&&) = nullptr);
 
-    void ResendLastResizeEvent(nsWindow* aDest);
-
     void SetBrowserApp(nsIAndroidBrowserApp* aBrowserApp) {
         mBrowserApp = aBrowserApp;
     }

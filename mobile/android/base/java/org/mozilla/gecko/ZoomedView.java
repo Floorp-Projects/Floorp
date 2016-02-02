@@ -66,8 +66,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     private int currentZoomFactorIndex;
     private boolean isSimplifiedUI;
     private int defaultZoomFactor;
-    private int prefDefaultZoomFactorObserverId;
-    private int prefSimplifiedUIObserverId;
+    private PrefsHelper.PrefHandler prefObserver;
 
     private ImageView zoomedImageView;
     private LayerView layerView;
@@ -248,8 +247,10 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     }
 
     void destroy() {
-        PrefsHelper.removeObserver(prefDefaultZoomFactorObserverId);
-        PrefsHelper.removeObserver(prefSimplifiedUIObserverId);
+        if (prefObserver != null) {
+            PrefsHelper.removeObserver(prefObserver);
+            prefObserver = null;
+        }
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                 "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
@@ -518,7 +519,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     }
 
     private void getPrefs() {
-        prefSimplifiedUIObserverId = PrefsHelper.getPref("ui.zoomedview.simplified", new PrefsHelper.PrefHandlerBase() {
+        prefObserver = new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, boolean simplified) {
                 isSimplifiedUI = simplified;
@@ -531,13 +532,6 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             }
 
             @Override
-            public boolean isObserver() {
-                return true;
-            }
-        });
-
-        prefDefaultZoomFactorObserverId = PrefsHelper.getPref("ui.zoomedview.defaultZoomFactor", new PrefsHelper.PrefHandlerBase() {
-            @Override
             public void prefValue(String pref, int defaultZoomFactorFromSettings) {
                 defaultZoomFactor = defaultZoomFactorFromSettings;
                 if (isSimplifiedUI) {
@@ -547,12 +541,10 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                 }
                 updateUI();
             }
-
-            @Override
-            public boolean isObserver() {
-                return true;
-            }
-        });
+        };
+        PrefsHelper.addObserver(new String[] { "ui.zoomedview.simplified",
+                                               "ui.zoomedview.defaultZoomFactor" },
+                                prefObserver);
     }
 
     private void startZoomDisplay(LayerView aLayerView, final int leftFromGecko, final int topFromGecko) {

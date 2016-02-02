@@ -167,3 +167,10 @@ assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([importSection([{sigI
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([{sigIndex:1, module:"a", func:"b"}])]))), TypeError, /signature index out of range/);
 wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([])])));
 wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([{sigIndex:0, module:"a", func:""}])])), {a:()=>{}});
+
+Math.sin();
+wasmEval(toBuf(moduleWithSections([
+    trivialSigSection,
+    importSection([{sigIndex:0, module:"a", func:""}]),
+    trivialDeclSection,
+    trivialCodeSection])), {a:()=>{}});

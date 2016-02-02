@@ -3591,8 +3591,23 @@ JSObject*
 CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
                    JS::CompartmentOptions& aOptions);
 
-// InitGlobalObject enters the compartment of aGlobal, so it doesn't matter what
-// compartment aJSContext is in.
+// Modify the provided compartment options, consistent with |aPrincipal| and
+// with globally-cached values of various preferences.
+//
+// Call this function *before* |aOptions| is used to create the corresponding
+// global object, as not all of the options it sets can be modified on an
+// existing global object.  (The type system should make this obvious, because
+// you can't get a *mutable* JS::CompartmentOptions& from an existing global
+// object.)
+void
+InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
+                        nsIPrincipal* aPrincipal);
+
+// Finish initializing an already-created, not-yet-exposed-to-script global
+// object.  This will attach a Components object (if necessary) and call
+// |JS_FireOnNewGlobalObject| (if necessary).
+//
+// If you must modify compartment options, see InitGlobalObjectOptions above.
 bool
 InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal,
                  uint32_t aFlags);

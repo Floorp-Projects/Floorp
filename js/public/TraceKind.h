@@ -60,6 +60,16 @@ static_assert(uintptr_t(JS::TraceKind::BaseShape) & OutOfLineTraceKindMask, "mas
 static_assert(uintptr_t(JS::TraceKind::JitCode) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::LazyScript) & OutOfLineTraceKindMask, "mask bits are set");
 
+// When this header is imported inside SpiderMonkey, the class definitions are
+// available and we can query those definitions to find the correct kind
+// directly from the class hierarchy.
+template <typename T>
+struct MapTypeToTraceKind {
+    static const JS::TraceKind kind = T::TraceKind;
+};
+
+// When this header is used outside SpiderMonkey, the class definitions are not
+// available, so the following table containing all public GC types is used.
 #define JS_FOR_EACH_TRACEKIND(D) \
  /* PrettyName       TypeName           AddToCCKind */ \
     D(BaseShape,     js::BaseShape,     true) \
@@ -72,14 +82,68 @@ static_assert(uintptr_t(JS::TraceKind::LazyScript) & OutOfLineTraceKindMask, "ma
     D(String,        JSString,          false) \
     D(Symbol,        JS::Symbol,        false)
 
-// Map from base trace type to the trace kind.
-template <typename T> struct MapTypeToTraceKind {};
+// Map from all public types to their trace kind.
 #define JS_EXPAND_DEF(name, type, _) \
     template <> struct MapTypeToTraceKind<type> { \
         static const JS::TraceKind kind = JS::TraceKind::name; \
     };
 JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
+
+// RootKind is closely related to TraceKind. Whereas TraceKind's indices are
+// laid out for convenient embedding as a pointer tag, the indicies of RootKind
+// are designed for use as array keys via EnumeratedArray.
+enum class RootKind : int8_t
+{
+    // These map 1:1 with trace kinds.
+    BaseShape = 0,
+    JitCode,
+    LazyScript,
+    Object,
+    ObjectGroup,
+    Script,
+    Shape,
+    String,
+    Symbol,
+
+    // These tagged pointers are special-cased for performance.
+    Id,
+    Value,
+
+    // Everything else.
+    Traceable,
+
+    Limit
+};
+
+// Most RootKind correspond directly to a trace kind.
+template <TraceKind traceKind> struct MapTraceKindToRootKind {};
+#define JS_EXPAND_DEF(name, _0, _1) \
+    template <> struct MapTraceKindToRootKind<JS::TraceKind::name> { \
+        static const JS::RootKind kind = JS::RootKind::name; \
+    };
+JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF)
+#undef JS_EXPAND_DEF
+
+// Specify the RootKind for all types. Value and jsid map to special cases;
+// pointer types we can derive directly from the TraceKind; everything else
+// should go in the Traceable list and use GCPolicy<T>::trace for tracing.
+template <typename T>
+struct MapTypeToRootKind {
+    static const JS::RootKind kind = JS::RootKind::Traceable;
+};
+template <typename T>
+struct MapTypeToRootKind<T*> {
+    static const JS::RootKind kind = \
+        JS::MapTraceKindToRootKind<JS::MapTypeToTraceKind<T>::kind>::kind;
+};
+template <> struct MapTypeToRootKind<JS::Value> {
+    static const JS::RootKind kind = JS::RootKind::Value;
+};
+template <> struct MapTypeToRootKind<jsid> {
+    static const JS::RootKind kind = JS::RootKind::Id;
+};
+template <> struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout

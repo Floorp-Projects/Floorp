@@ -1389,7 +1389,7 @@ js::gc::FinishPersistentRootedChains(RootLists& roots)
     FinishPersistentRootedChain(roots.getPersistentRootedList<JSString*>());
     FinishPersistentRootedChain(roots.getPersistentRootedList<jsid>());
     FinishPersistentRootedChain(roots.getPersistentRootedList<Value>());
-    FinishPersistentRootedChain(roots.heapRoots_[THING_ROOT_TRACEABLE]);
+    FinishPersistentRootedChain(roots.heapRoots_[JS::RootKind::Traceable]);
 }
 
 void

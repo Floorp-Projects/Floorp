@@ -651,14 +651,14 @@ static bool ValidInputSize(int32_t size) {
 status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
     ALOGV("entering parseChunk %lld/%d", *offset, depth);
     uint32_t hdr[2];
-    ssize_t nbytes;
-    if ((nbytes = mDataSource->readAt(*offset, hdr, 8)) < 8) {
-        if (nbytes == 4) {
-          if (!hdr[0]) {
-            *offset += 4;
-            return OK;
-          }
-        }
+    if (mDataSource->readAt(*offset, hdr, 4) < 4) {
+        return ERROR_IO;
+    }
+    if (!hdr[0]) {
+        *offset += 4;
+        return OK;
+    }
+    if (mDataSource->readAt(*offset + 4, hdr + 1, 4) < 4) {
         return ERROR_IO;
     }
     uint64_t chunk_size = ntohl(hdr[0]);

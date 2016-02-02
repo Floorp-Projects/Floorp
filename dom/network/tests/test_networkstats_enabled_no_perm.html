@@ -27,25 +27,11 @@
     ok(!SpecialPowers.hasPermission("networkstats-manage", document),
       "Has no permission 'networkstats-manage'.");
 
-    ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
+    ok(!('mozNetworkStats' in navigator),
+       "navigator.mozNetworkStats should not exist when permission not set");
 
-    is(navigator.mozNetworkStats, null,
-      "mozNetworkStats should be null when no permission.");
-
-    var error;
-    try {
-      navigator.mozNetworkStats.getAvailableNetworks;
-
-      ok(false,
-    	   "Accessing navigator.mozNetworkStats.getAvailableNetworks should throw!");
-        } catch (ex) {
-          error = ex;
-        }
-
-   ok(error,
-     "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
-   SimpleTest.finish();
-}
+    SimpleTest.finish();
+  }
 </script>
 </pre>
 </body>

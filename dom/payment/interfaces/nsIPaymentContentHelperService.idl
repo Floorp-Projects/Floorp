@@ -5,13 +5,14 @@
 #include "domstubs.idl"
 
 interface nsIDOMDOMRequest;
+interface mozIDOMWindow;
 
-[scriptable, uuid(44fb7308-7d7b-4975-8a27-e01fe9623bdb)]
-interface nsINavigatorPayment : nsISupports
+[scriptable, uuid(80035846-6732-4fcc-961b-f336b65218f4)]
+interface nsIPaymentContentHelperService : nsISupports
 {
   // The 'jwts' parameter can be either a single DOMString or an array of
   // DOMStrings. In both cases, it represents the base64url encoded and
   // digitally signed payment information. Each payment provider should
   // define its supported JWT format.
-  nsIDOMDOMRequest pay(in jsval jwts);
+  nsIDOMDOMRequest pay(in mozIDOMWindow window, in jsval jwts);
 };

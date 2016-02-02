@@ -30,7 +30,6 @@ namespace dom {
 
 class PerformanceEntry;
 class PerformanceObserver;
-class WindowOrWorkerOrSharedWorkerOrServiceWorker;
 
 } // namespace dom
 } // namespace mozilla
@@ -317,11 +316,6 @@ public:
   void ClearResourceTimings();
 
   virtual DOMHighResTimeStamp Now() const = 0;
-
-  DOMHighResTimeStamp
-  TranslateTime(DOMHighResTimeStamp aTime,
-                const mozilla::dom::WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
-                mozilla::ErrorResult& aRv);
 
   void Mark(const nsAString& aName, mozilla::ErrorResult& aRv);
   void ClearMarks(const mozilla::dom::Optional<nsAString>& aName);

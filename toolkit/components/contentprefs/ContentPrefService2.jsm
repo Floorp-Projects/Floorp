@@ -254,7 +254,7 @@ ContentPrefService2.prototype = {
       this._pbStore.set(group, name, value);
       this._schedule(function () {
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
-        this._cps._notifyPrefSet(group, name, value);
+        this._cps._notifyPrefSet(group, name, value, context.usePrivateBrowsing);
       });
       return;
     }
@@ -327,7 +327,7 @@ ContentPrefService2.prototype = {
           this._cache.setWithCast(group, name, value);
         cbHandleCompletion(callback, reason);
         if (ok)
-          this._cps._notifyPrefSet(group, name, value);
+          this._cps._notifyPrefSet(group, name, value, context && context.usePrivateBrowsing);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
