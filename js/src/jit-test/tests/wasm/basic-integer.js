@@ -78,9 +78,9 @@ testComparison('i32', 'ge_u', 40, 40, 1);
 //testComparison('i64', 'ge_s', 40, 40, 1); // TODO: NYI
 //testComparison('i64', 'ge_u', 40, 40, 1); // TODO: NYI
 
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result f32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.clz (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.clz (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result f32) (i32.clz (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
 
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
