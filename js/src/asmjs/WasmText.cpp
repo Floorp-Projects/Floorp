@@ -96,6 +96,7 @@ enum class WasmAstExprKind
     BinaryOperator,
     Block,
     Call,
+    ComparisonOperator,
     Const,
     GetLocal,
     Nop,
@@ -347,6 +348,24 @@ class WasmAstBinaryOperator final : public WasmAstExpr
     WasmAstExpr* rhs() const { return rhs_; }
 };
 
+class WasmAstComparisonOperator final : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* lhs_;
+    WasmAstExpr* rhs_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::ComparisonOperator;
+    explicit WasmAstComparisonOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
+      : WasmAstExpr(Kind),
+        expr_(expr), lhs_(lhs), rhs_(rhs)
+    {}
+
+    Expr expr() const { return expr_; }
+    WasmAstExpr* lhs() const { return lhs_; }
+    WasmAstExpr* rhs() const { return rhs_; }
+};
+
 /*****************************************************************************/
 // wasm text token stream
 
@@ -360,6 +379,7 @@ class WasmToken
         Call,
         CallImport,
         CloseParen,
+        ComparisonOpcode,
         Const,
         EndOfFile,
         Error,
@@ -422,7 +442,7 @@ class WasmToken
         end_(end)
     {
         MOZ_ASSERT(begin != end);
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode);
         u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
@@ -455,7 +475,7 @@ class WasmToken
         return u.valueType_;
     }
     Expr expr() const {
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode);
         return u.expr_;
     }
 };
@@ -613,9 +633,25 @@ class WasmTokenStream
                     if (consume(MOZ_UTF16("div")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
                     break;
+                  case 'e':
+                    if (consume(MOZ_UTF16("eq")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Eq, begin, cur_);
+                    break;
                   case 'f':
                     if (consume(MOZ_UTF16("floor")))
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F32Floor, begin, cur_);
+                    break;
+                  case 'g':
+                    if (consume(MOZ_UTF16("ge")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ge, begin, cur_);
+                    if (consume(MOZ_UTF16("gt")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Gt, begin, cur_);
+                    break;
+                  case 'l':
+                    if (consume(MOZ_UTF16("le")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Le, begin, cur_);
+                    if (consume(MOZ_UTF16("lt")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Lt, begin, cur_);
                     break;
                   case 'm':
                     if (consume(MOZ_UTF16("max")))
@@ -630,6 +666,8 @@ class WasmTokenStream
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F32Nearest, begin, cur_);
                     if (consume(MOZ_UTF16("neg")))
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F32Neg, begin, cur_);
+                    if (consume(MOZ_UTF16("ne")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ne, begin, cur_);
                     break;
                   case 's':
                     if (consume(MOZ_UTF16("sqrt")))
@@ -667,9 +705,25 @@ class WasmTokenStream
                     if (consume(MOZ_UTF16("div")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Div, begin, cur_);
                     break;
+                  case 'e':
+                    if (consume(MOZ_UTF16("eq")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Eq, begin, cur_);
+                    break;
                   case 'f':
                     if (consume(MOZ_UTF16("floor")))
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F64Floor, begin, cur_);
+                    break;
+                  case 'g':
+                    if (consume(MOZ_UTF16("ge")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ge, begin, cur_);
+                    if (consume(MOZ_UTF16("gt")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Gt, begin, cur_);
+                    break;
+                  case 'l':
+                    if (consume(MOZ_UTF16("le")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Le, begin, cur_);
+                    if (consume(MOZ_UTF16("lt")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Lt, begin, cur_);
                     break;
                   case 'm':
                     if (consume(MOZ_UTF16("max")))
@@ -684,6 +738,8 @@ class WasmTokenStream
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F64Nearest, begin, cur_);
                     if (consume(MOZ_UTF16("neg")))
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F64Neg, begin, cur_);
+                    if (consume(MOZ_UTF16("ne")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ne, begin, cur_);
                     break;
                   case 's':
                     if (consume(MOZ_UTF16("sqrt")))
@@ -730,9 +786,37 @@ class WasmTokenStream
                     if (consume(MOZ_UTF16("div_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
                     break;
+                  case 'e':
+                    if (consume(MOZ_UTF16("eq")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Eq, begin, cur_);
+                    break;
+                  case 'g':
+                    if (consume(MOZ_UTF16("ge_s")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeS, begin, cur_);
+                    if (consume(MOZ_UTF16("ge_u")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeU, begin, cur_);
+                    if (consume(MOZ_UTF16("gt_s")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtS, begin, cur_);
+                    if (consume(MOZ_UTF16("gt_u")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtU, begin, cur_);
+                    break;
+                  case 'l':
+                    if (consume(MOZ_UTF16("le_s")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeS, begin, cur_);
+                    if (consume(MOZ_UTF16("le_u")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeU, begin, cur_);
+                    if (consume(MOZ_UTF16("lt_s")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtS, begin, cur_);
+                    if (consume(MOZ_UTF16("lt_u")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtU, begin, cur_);
+                    break;
                   case 'm':
                     if (consume(MOZ_UTF16("mul")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Mul, begin, cur_);
+                    break;
+                  case 'n':
+                    if (consume(MOZ_UTF16("ne")))
+                        return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Ne, begin, cur_);
                     break;
                   case 'o':
                     if (consume(MOZ_UTF16("or")))
@@ -1012,6 +1096,20 @@ ParseBinaryOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstBinaryOperator(expr, lhs, rhs);
 }
 
+static WasmAstComparisonOperator*
+ParseComparisonOperator(WasmParseContext& c, Expr expr)
+{
+    WasmAstExpr* lhs = ParseExpr(c);
+    if (!lhs)
+        return nullptr;
+
+    WasmAstExpr* rhs = ParseExpr(c);
+    if (!rhs)
+        return nullptr;
+
+    return new(c.lifo) WasmAstComparisonOperator(expr, lhs, rhs);
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -1030,6 +1128,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseCall(c, Expr::CallImport);
       case WasmToken::Const:
         return ParseConst(c, token);
+      case WasmToken::ComparisonOpcode:
+        return ParseComparisonOperator(c, token.expr());
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::SetLocal:
@@ -1299,6 +1399,14 @@ EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
 }
 
 static bool
+EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
+{
+    return e.writeExpr(b.expr()) &&
+           EncodeExpr(e, *b.lhs()) &&
+           EncodeExpr(e, *b.rhs());
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -1310,6 +1418,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeBlock(e, expr.as<WasmAstBlock>());
       case WasmAstExprKind::Call:
         return EncodeCall(e, expr.as<WasmAstCall>());
+      case WasmAstExprKind::ComparisonOperator:
+        return EncodeComparisonOperator(e, expr.as<WasmAstComparisonOperator>());
       case WasmAstExprKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
       case WasmAstExprKind::GetLocal:

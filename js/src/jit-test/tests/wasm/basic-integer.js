@@ -16,6 +16,10 @@ function testBinary(type, opcode, lhs, rhs, expect) {
   assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
 }
 
+function testComparison(type, opcode, lhs, rhs, expect) {
+  assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))')(lhs, rhs), expect);
+}
+
 testUnary('i32', 'clz', 40, 26);
 //testUnary('i32', 'ctz', 40, 0); // TODO: NYI
 //testUnary('i32', 'popcnt', 40, 0); // TODO: NYI
@@ -34,9 +38,24 @@ testBinary('i32', 'shl', 40, 2, 160);
 testBinary('i32', 'shr_s', -40, 2, -10);
 testBinary('i32', 'shr_u', -40, 2, 1073741814);
 
+testComparison('i32', 'eq', 40, 40, 1);
+testComparison('i32', 'ne', 40, 40, 0);
+testComparison('i32', 'lt_s', 40, 40, 0);
+testComparison('i32', 'lt_u', 40, 40, 0);
+testComparison('i32', 'le_s', 40, 40, 1);
+testComparison('i32', 'le_u', 40, 40, 1);
+testComparison('i32', 'gt_s', 40, 40, 0);
+testComparison('i32', 'gt_u', 40, 40, 0);
+testComparison('i32', 'ge_s', 40, 40, 1);
+testComparison('i32', 'ge_u', 40, 40, 1);
+
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (i32.popcnt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
 
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result i32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result f32) (i32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
+
+assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result i32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result i32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result f32) (i32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
