@@ -958,7 +958,7 @@ IMEHandler::GetOnScreenKeyboardWindow()
 {
   const wchar_t kOSKClassName[] = L"IPTip_Main_Window";
   HWND osk = ::FindWindowW(kOSKClassName, nullptr);
-  if (::IsWindow(osk) && ::IsWindowEnabled(osk)) {
+  if (::IsWindow(osk) && ::IsWindowEnabled(osk) && ::IsWindowVisible(osk)) {
     return osk;
   }
   return nullptr;
