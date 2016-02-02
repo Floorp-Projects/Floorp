@@ -310,7 +310,7 @@ if test -n "$gonkdir" ; then
     dnl Add -llog by default, since we use it all over the place.
     LIBS="$LIBS -llog"
 
-    LDFLAGS="-mandroid -L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ $LDFLAGS"
+    LDFLAGS="-mandroid -L$GONK_OUT_INTERMEDIATES/lib -Wl,-rpath-link=$GONK_OUT_INTERMEDIATES/lib --sysroot=$GONK_OUT_INTERMEDIATES/ $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
     if test -z "$HOST_CPPFLAGS" ; then
