@@ -4101,12 +4101,28 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
     LUse use = useRegister(input);
     if (ins->type() == MIRType_Int32x4) {
         MOZ_ASSERT(input->type() == MIRType_Float32x4);
-        LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
-        if (!gen->compilingAsmJS())
-            assignSnapshot(lir, Bailout_BoundsCheck);
-        define(lir, ins);
+        switch (ins->signedness()) {
+          case SimdSign::Signed: {
+              LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
+              if (!gen->compilingAsmJS())
+                  assignSnapshot(lir, Bailout_BoundsCheck);
+              define(lir, ins);
+              break;
+          }
+          case SimdSign::Unsigned: {
+              LFloat32x4ToUint32x4* lir =
+                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::INT32X4));
+              if (!gen->compilingAsmJS())
+                  assignSnapshot(lir, Bailout_BoundsCheck);
+              define(lir, ins);
+              break;
+          }
+          default:
+            MOZ_CRASH("Unexpected SimdConvert sign");
+        }
     } else if (ins->type() == MIRType_Float32x4) {
         MOZ_ASSERT(input->type() == MIRType_Int32x4);
+        MOZ_ASSERT(ins->signedness() == SimdSign::Signed, "Unexpected SimdConvert sign");
         define(new(alloc()) LInt32x4ToFloat32x4(use), ins);
     } else {
         MOZ_CRASH("Unknown SIMD kind when generating constant");
@@ -4133,18 +4149,27 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement* ins)
 
     switch (ins->input()->type()) {
       case MIRType_Int32x4: {
+        MOZ_ASSERT(ins->signedness() != SimdSign::NotApplicable);
         // Note: there could be int16x8 in the future, which doesn't use the
         // same instruction. We either need to pass the arity or create new LIns.
         LUse use = useRegisterAtStart(ins->input());
-        define(new(alloc()) LSimdExtractElementI(use), ins);
+        if (ins->type() == MIRType_Double) {
+            // Extract an Uint32 lane into a double.
+            MOZ_ASSERT(ins->signedness() == SimdSign::Unsigned);
+            define(new (alloc()) LSimdExtractElementU2D(use, temp()), ins);
+        } else {
+            define(new (alloc()) LSimdExtractElementI(use), ins);
+        }
         break;
       }
       case MIRType_Float32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
         LUse use = useRegisterAtStart(ins->input());
         define(new(alloc()) LSimdExtractElementF(use), ins);
         break;
       }
       case MIRType_Bool32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
         LUse use = useRegisterAtStart(ins->input());
         define(new(alloc()) LSimdExtractElementB(use), ins);
         break;
@@ -4294,9 +4319,11 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp* ins)
         ins->reverse();
 
     if (ins->specialization() == MIRType_Int32x4) {
+        MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
         LSimdBinaryCompIx4* add = new(alloc()) LSimdBinaryCompIx4();
         lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
     } else if (ins->specialization() == MIRType_Float32x4) {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
         LSimdBinaryCompFx4* add = new(alloc()) LSimdBinaryCompFx4();
         lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
     } else {

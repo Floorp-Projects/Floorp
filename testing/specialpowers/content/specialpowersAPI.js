@@ -14,7 +14,6 @@ var Cu = Components.utils;
 Cu.import("chrome://specialpowers/content/MockFilePicker.jsm");
 Cu.import("chrome://specialpowers/content/MockColorPicker.jsm");
 Cu.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
-Cu.import("chrome://specialpowers/content/MockPaymentsUIGlue.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -459,10 +458,6 @@ SpecialPowersAPI.prototype = {
 
   get MockPermissionPrompt() {
     return MockPermissionPrompt;
-  },
-
-  get MockPaymentsUIGlue() {
-    return MockPaymentsUIGlue;
   },
 
   loadChromeScript: function (url) {

@@ -1,14 +1,14 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include "nsISupports.idl"
-
-interface nsIDOMDOMRequest;
-
-[scriptable,  uuid(72c4e583-389d-4d1b-9424-702feabb6055)]
-interface nsIDOMMozNetworkStatsManager : nsISupports
-{
+[NavigatorProperty="mozNetworkStats",
+ JSImplementation="@mozilla.org/networkStatsManager;1",
+ CheckAnyPermissions="networkstats-manage",
+ Pref="dom.mozNetworkStats.enabled"]
+interface MozNetworkStatsManager {
   /**
    * Constants for known interface types.
    */
@@ -21,12 +21,12 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    * If options is provided, per-app or per-system service usage will be
    * retrieved; otherwise the target will be overall system usage.
    *
-   * If success, the request result will be an nsIDOMMozNetworkStats object.
+   * If success, the request result will be an MozNetworkStats object.
    */
-  nsIDOMDOMRequest getSamples(in nsISupports network,
-                              in jsval start,
-                              in jsval end,
-                   [optional] in jsval options /* NetworkStatsGetOptions */);
+  DOMRequest getSamples(MozNetworkStatsInterface network,
+                        Date start,
+                        Date end,
+               optional NetworkStatsGetOptions options);
 
   /**
    * Install an alarm on a network. The network must be in the return of
@@ -39,9 +39,9 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    *
    * If success, the |result| field of the DOMRequest keeps the alarm Id.
    */
-  nsIDOMDOMRequest addAlarm(in nsISupports network,
-                            in long long threshold,
-                            [optional] in jsval options /* NetworkStatsAlarmOptions */);
+  DOMRequest addAlarm(MozNetworkStatsInterface network,
+                      long long threshold,
+             optional NetworkStatsAlarmOptions options);
 
   /**
    * Obtain all alarms for those networks returned by getAvailableNetworks().
@@ -55,33 +55,33 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    *  - threshold
    *  - data
    */
-  nsIDOMDOMRequest getAllAlarms([optional] in nsISupports network);
+  DOMRequest getAllAlarms(optional MozNetworkStatsInterface network);
 
   /**
    * Remove all network alarms. If an |alarmId| is provided, then only that
    * alarm is removed.
    */
-  nsIDOMDOMRequest removeAlarms([optional] in long alarmId);
+  DOMRequest removeAlarms(optional unsigned long alarmId = 0);
 
   /**
    * Remove all stats related with the provided network from DB.
    */
-  nsIDOMDOMRequest clearStats(in nsISupports network);
+  DOMRequest clearStats(MozNetworkStatsInterface network);
 
   /**
    * Remove all stats in the database.
    */
-  nsIDOMDOMRequest clearAllStats();
+  DOMRequest clearAllStats();
 
   /**
    * Return available networks that used to be saved in the database.
    */
-  nsIDOMDOMRequest getAvailableNetworks(); // array of MozNetworkStatsInterface.
+  DOMRequest getAvailableNetworks(); // array of MozNetworkStatsInterface.
 
   /**
    * Return available service types that used to be saved in the database.
    */
-  nsIDOMDOMRequest getAvailableServiceTypes(); // array of string.
+  DOMRequest getAvailableServiceTypes(); // array of string.
 
   /**
    * Minimum time in milliseconds between samples stored in the database.

@@ -11,14 +11,28 @@ var tests = [
   function* observerForName_set() {
     yield set("a.com", "foo", 1);
     let args = yield on("Set", ["foo", null, "bar"]);
-    observerArgsOK(args.foo, [["a.com", "foo", 1]]);
-    observerArgsOK(args.null, [["a.com", "foo", 1]]);
+    observerArgsOK(args.foo, [["a.com", "foo", 1, false]]);
+    observerArgsOK(args.null, [["a.com", "foo", 1, false]]);
     observerArgsOK(args.bar, []);
 
     yield setGlobal("foo", 2);
     args = yield on("Set", ["foo", null, "bar"]);
-    observerArgsOK(args.foo, [[null, "foo", 2]]);
-    observerArgsOK(args.null, [[null, "foo", 2]]);
+    observerArgsOK(args.foo, [[null, "foo", 2, false]]);
+    observerArgsOK(args.null, [[null, "foo", 2, false]]);
+    observerArgsOK(args.bar, []);
+  },
+
+  function* observerForName_set_private() {
+    yield set("a.com", "foo", 1, { usePrivateBrowsing: true });
+    let args = yield on("Set", ["foo", null, "bar"]);
+    observerArgsOK(args.foo, [["a.com", "foo", 1, true]]);
+    observerArgsOK(args.null, [["a.com", "foo", 1, true]]);
+    observerArgsOK(args.bar, []);
+
+    yield setGlobal("foo", 2, { usePrivateBrowsing: true });
+    args = yield on("Set", ["foo", null, "bar"]);
+    observerArgsOK(args.foo, [[null, "foo", 2, true]]);
+    observerArgsOK(args.null, [[null, "foo", 2, true]]);
     observerArgsOK(args.bar, []);
   },
 
@@ -125,7 +139,7 @@ var tests = [
     yield set("a.com", "foo", 1);
     yield wait();
     observerArgsOK(args.foo, []);
-    observerArgsOK(args.null, [["a.com", "foo", 1]]);
+    observerArgsOK(args.null, [["a.com", "foo", 1, false]]);
     observerArgsOK(args.bar, []);
     args.reset();
 

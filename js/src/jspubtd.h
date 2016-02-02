@@ -12,12 +12,14 @@
  */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsprototypes.h"
 #include "jstypes.h"
 
+#include "js/TraceKind.h"
 #include "js/TypeDecls.h"
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
@@ -262,52 +264,12 @@ enum StackKind
     StackKindCount
 };
 
-enum ThingRootKind
-{
-    THING_ROOT_OBJECT,
-    THING_ROOT_SHAPE,
-    THING_ROOT_BASE_SHAPE,
-    THING_ROOT_OBJECT_GROUP,
-    THING_ROOT_STRING,
-    THING_ROOT_SYMBOL,
-    THING_ROOT_JIT_CODE,
-    THING_ROOT_SCRIPT,
-    THING_ROOT_LAZY_SCRIPT,
-    THING_ROOT_ID,
-    THING_ROOT_VALUE,
-    THING_ROOT_TRACEABLE,
-    THING_ROOT_LIMIT
-};
-
-template <typename T>
-struct RootKind;
-
-/*
- * Specifically mark the ThingRootKind of externally visible types, so that
- * JSAPI users may use JSRooted... types without having the class definition
- * available.
- */
-template<typename T, ThingRootKind Kind>
-struct SpecificRootKind
-{
-    static ThingRootKind rootKind() { return Kind; }
-};
-
-template <> struct RootKind<JSObject*> : SpecificRootKind<JSObject*, THING_ROOT_OBJECT> {};
-template <> struct RootKind<JSFlatString*> : SpecificRootKind<JSFlatString*, THING_ROOT_STRING> {};
-template <> struct RootKind<JSFunction*> : SpecificRootKind<JSFunction*, THING_ROOT_OBJECT> {};
-template <> struct RootKind<JSString*> : SpecificRootKind<JSString*, THING_ROOT_STRING> {};
-template <> struct RootKind<JS::Symbol*> : SpecificRootKind<JS::Symbol*, THING_ROOT_SYMBOL> {};
-template <> struct RootKind<JSScript*> : SpecificRootKind<JSScript*, THING_ROOT_SCRIPT> {};
-template <> struct RootKind<jsid> : SpecificRootKind<jsid, THING_ROOT_ID> {};
-template <> struct RootKind<JS::Value> : SpecificRootKind<JS::Value, THING_ROOT_VALUE> {};
-
 // Abstracts JS rooting mechanisms so they can be shared between the JSContext
 // and JSRuntime.
 class RootLists
 {
     // Stack GC roots for stack-allocated GC heap pointers.
-    JS::Rooted<void*>* stackRoots_[THING_ROOT_LIMIT];
+    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit, JS::Rooted<void*>*> stackRoots_;
     template <typename T> friend class JS::Rooted;
 
     // Stack GC roots for stack-allocated AutoFooRooter classes.
@@ -316,14 +278,12 @@ class RootLists
 
   public:
     RootLists() : autoGCRooters_(nullptr) {
-        mozilla::PodArrayZero(stackRoots_);
+        for (auto& stackRootPtr : stackRoots_) {
+            stackRootPtr = nullptr;
+        }
     }
 
-    template <class T>
-    inline JS::Rooted<T>* gcRooters() {
-        js::ThingRootKind kind = RootKind<T>::rootKind();
-        return reinterpret_cast<JS::Rooted<T>*>(stackRoots_[kind]);
-    }
+    void traceStackRoots(JSTracer* trc);
 
     void checkNoGCRooters();
 
@@ -334,7 +294,8 @@ class RootLists
     friend void js::gc::MarkPersistentRootedChainsInLists(RootLists&, JSTracer*);
     friend void js::gc::FinishPersistentRootedChains(RootLists&);
 
-    mozilla::LinkedList<JS::PersistentRooted<void*>> heapRoots_[THING_ROOT_LIMIT];
+    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
+                             mozilla::LinkedList<JS::PersistentRooted<void*>>> heapRoots_;
 
     /* Specializations of this return references to the appropriate list. */
     template<typename Referent>
@@ -345,42 +306,42 @@ template<>
 inline mozilla::LinkedList<JS::PersistentRootedFunction>&
 RootLists::getPersistentRootedList<JSFunction*>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSFunction*>>&>(
-        heapRoots_[THING_ROOT_OBJECT]);
+        heapRoots_[JS::RootKind::Object]);
 }
 
 template<>
 inline mozilla::LinkedList<JS::PersistentRootedObject>&
 RootLists::getPersistentRootedList<JSObject*>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSObject*>>&>(
-        heapRoots_[THING_ROOT_OBJECT]);
+        heapRoots_[JS::RootKind::Object]);
 }
 
 template<>
 inline mozilla::LinkedList<JS::PersistentRootedId>&
 RootLists::getPersistentRootedList<jsid>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<jsid>>&>(
-        heapRoots_[THING_ROOT_ID]);
+        heapRoots_[JS::RootKind::Id]);
 }
 
 template<>
 inline mozilla::LinkedList<JS::PersistentRootedScript>&
 RootLists::getPersistentRootedList<JSScript*>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSScript*>>&>(
-        heapRoots_[THING_ROOT_SCRIPT]);
+        heapRoots_[JS::RootKind::Script]);
 }
 
 template<>
 inline mozilla::LinkedList<JS::PersistentRootedString>&
 RootLists::getPersistentRootedList<JSString*>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JSString*>>&>(
-        heapRoots_[THING_ROOT_STRING]);
+        heapRoots_[JS::RootKind::String]);
 }
 
 template<>
 inline mozilla::LinkedList<JS::PersistentRootedValue>&
 RootLists::getPersistentRootedList<JS::Value>() {
     return reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::Value>>&>(
-        heapRoots_[THING_ROOT_VALUE]);
+        heapRoots_[JS::RootKind::Value]);
 }
 
 struct ContextFriendFields

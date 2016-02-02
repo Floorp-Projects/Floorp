@@ -250,15 +250,13 @@ Directory::GetPath(nsAString& aRetval) const
 already_AddRefed<Promise>
 Directory::GetFilesAndDirectories()
 {
-  nsresult error = NS_OK;
-  nsString realPath;
   ErrorResult rv;
   RefPtr<GetDirectoryListingTask> task =
     new GetDirectoryListingTask(mFileSystem, mPath, mFilters, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return nullptr;
   }
-  task->SetError(error);
+
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
 }

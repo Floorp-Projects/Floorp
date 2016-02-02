@@ -55,6 +55,7 @@
 #define VARIANT_NONNEGATIVE_DIMENSION 0x20000000 // Only lengths greater than or equal to 0.0
 // Keyword used iff gfx.font_rendering.opentype_svg.enabled is true:
 #define VARIANT_OPENTYPE_SVG_KEYWORD 0x40000000
+#define VARIANT_ABSOLUTE_DIMENSION 0x80000000 // B Only lengths with absolute length unit
 
 // Variants that can consume more than one token
 #define VARIANT_MULTIPLE_TOKENS \
@@ -106,6 +107,8 @@
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_UO   (VARIANT_URL | VARIANT_NONE)
 #define VARIANT_ANGLE_OR_ZERO (VARIANT_ANGLE | VARIANT_ZERO_ANGLE)
+#define VARIANT_LB   (VARIANT_LENGTH | VARIANT_ABSOLUTE_DIMENSION)
+#define VARIANT_LBCALC (VARIANT_LB | VARIANT_CALC)
 #define VARIANT_LCALC  (VARIANT_LENGTH | VARIANT_CALC)
 #define VARIANT_LPCALC (VARIANT_LCALC | VARIANT_PERCENT)
 #define VARIANT_LNCALC (VARIANT_LCALC | VARIANT_NUMBER)

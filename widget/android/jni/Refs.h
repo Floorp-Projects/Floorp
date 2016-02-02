@@ -776,6 +776,11 @@ private:
     }
 
 public:
+    MOZ_IMPLICIT Type(decltype(nullptr))
+        : Ref<String>(nullptr)
+        , mEnv(nullptr)
+    {}
+
     MOZ_IMPLICIT Type(const String::Ref& ref)
         : Ref<String>(ref.Get())
         , mEnv(nullptr)

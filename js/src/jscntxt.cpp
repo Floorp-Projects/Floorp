@@ -186,8 +186,9 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
 void
 RootLists::checkNoGCRooters() {
 #ifdef DEBUG
-    for (int i = 0; i < THING_ROOT_LIMIT; ++i)
-        MOZ_ASSERT(stackRoots_[i] == nullptr);
+    for (auto const& stackRootPtr : stackRoots_) {
+        MOZ_ASSERT(stackRootPtr == nullptr);
+    }
 #endif
 }
 

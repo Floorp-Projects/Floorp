@@ -106,15 +106,7 @@ public class testPasswordEncrypt extends BaseTest {
     }
 
     private void toggleMasterPassword(String passwd) {
-        JSONObject jsonPref = new JSONObject();
-        try {
-            jsonPref.put("name", "privacy.masterpassword.enabled");
-            jsonPref.put("type", "string");
-            jsonPref.put("value", passwd);
-            setPreferenceAndWaitForChange(jsonPref);
-        } catch (Exception ex) { 
-            mAsserter.ok(false, "exception in toggleMasterPassword", ex.toString());
-        }
+        setPreferenceAndWaitForChange("privacy.masterpassword.enabled", passwd);
     }
 
     @Override

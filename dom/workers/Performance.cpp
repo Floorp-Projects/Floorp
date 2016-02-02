@@ -32,7 +32,7 @@ DOMHighResTimeStamp
 Performance::Now() const
 {
   TimeDuration duration =
-    TimeStamp::Now() - mWorkerPrivate->CreationTimeStamp();
+    TimeStamp::Now() - mWorkerPrivate->NowBaseTimeStamp();
   return RoundTime(duration.ToMilliseconds());
 }
 
@@ -52,7 +52,7 @@ Performance::GetPerformanceTimingFromString(const nsAString& aProperty)
   }
 
   if (aProperty.EqualsLiteral("navigationStart")) {
-    return mWorkerPrivate->CreationTime();
+    return mWorkerPrivate->NowBaseTime();
   }
 
   MOZ_CRASH("IsPerformanceTimingAttribute and GetPerformanceTimingFromString are out of sync");
@@ -77,13 +77,13 @@ Performance::InsertUserEntry(PerformanceEntry* aEntry)
 TimeStamp
 Performance::CreationTimeStamp() const
 {
-  return mWorkerPrivate->CreationTimeStamp();
+  return mWorkerPrivate->NowBaseTimeStamp();
 }
 
 DOMHighResTimeStamp
 Performance::CreationTime() const
 {
-  return mWorkerPrivate->CreationTime();
+  return mWorkerPrivate->NowBaseTime();
 }
 
 void

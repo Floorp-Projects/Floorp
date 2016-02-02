@@ -38,6 +38,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "BlobParent.h"
 #include "nsCOMPtr.h"
@@ -2125,25 +2126,25 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
 {
   nsCOMPtr<nsIRemoteBrowser> remoteBrowser = do_QueryInterface(mFrameElement);
   if (remoteBrowser) {
-    nsAutoArrayPtr<const char*> enabledCommands, disabledCommands;
+    UniquePtr<const char*[]> enabledCommands, disabledCommands;
 
     if (aEnabledCommands.Length()) {
-      enabledCommands = new const char* [aEnabledCommands.Length()];
+      enabledCommands = MakeUnique<const char*[]>(aEnabledCommands.Length());
       for (uint32_t c = 0; c < aEnabledCommands.Length(); c++) {
         enabledCommands[c] = aEnabledCommands[c].get();
       }
     }
 
     if (aDisabledCommands.Length()) {
-      disabledCommands = new const char* [aDisabledCommands.Length()];
+      disabledCommands = MakeUnique<const char*[]>(aDisabledCommands.Length());
       for (uint32_t c = 0; c < aDisabledCommands.Length(); c++) {
         disabledCommands[c] = aDisabledCommands[c].get();
       }
     }
 
     remoteBrowser->EnableDisableCommands(aAction,
-                                         aEnabledCommands.Length(), enabledCommands,
-                                         aDisabledCommands.Length(), disabledCommands);
+                                         aEnabledCommands.Length(), enabledCommands.get(),
+                                         aDisabledCommands.Length(), disabledCommands.get());
   }
 
   return true;

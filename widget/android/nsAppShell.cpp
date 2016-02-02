@@ -265,6 +265,7 @@ nsAppShell::Init()
     if (obsServ) {
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
         obsServ->AddObserver(this, "profile-after-change", false);
+        obsServ->AddObserver(this, "chrome-document-loaded", false);
         obsServ->AddObserver(this, "quit-application-granted", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
@@ -329,8 +330,20 @@ nsAppShell::Observe(nsISupports* aSubject,
         }
         removeObserver = true;
 
+    } else if (!strcmp(aTopic, "chrome-document-loaded")) {
+        if (jni::IsAvailable()) {
+            // Our first window has loaded, assume any JS initialization has run.
+            widget::GeckoThread::CheckAndSetState(
+                    widget::GeckoThread::State::PROFILE_READY(),
+                    widget::GeckoThread::State::RUNNING());
+        }
+        removeObserver = true;
+
     } else if (!strcmp(aTopic, "quit-application-granted")) {
         if (jni::IsAvailable()) {
+            widget::GeckoThread::SetState(
+                    widget::GeckoThread::State::EXITING());
+
             // We are told explicitly to quit, perhaps due to
             // nsIAppStartup::Quit being called. We should release our hold on
             // nsIAppStartup and let it continue to quit.
@@ -341,6 +354,11 @@ nsAppShell::Observe(nsISupports* aSubject,
             }
         }
         removeObserver = true;
+
+    } else if (!strcmp(aTopic, "nsPref:changed")) {
+        if (jni::IsAvailable()) {
+            mozilla::PrefsHelper::OnPrefChange(aData);
+        }
     }
 
     if (removeObserver) {
@@ -717,15 +735,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::SIZE_CHANGED: {
-        // store the last resize event to dispatch it to new windows with a FORCED_RESIZE event
-        if (curEvent.get() != gLastSizeChange) {
-            gLastSizeChange = AndroidGeckoEvent::CopyResizeEvent(curEvent.get());
-        }
-        nsWindow::OnGlobalAndroidEvent(curEvent.get());
-        break;
-    }
-
     case AndroidGeckoEvent::VISITED: {
 #ifdef MOZ_ANDROID_HISTORY
         nsCOMPtr<IHistory> history = services::GetHistoryService();
@@ -932,13 +941,6 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
             queue.insertBack(this);
             break;
         }
-    }
-}
-
-void
-nsAppShell::ResendLastResizeEvent(nsWindow* aDest) {
-    if (gLastSizeChange) {
-        nsWindow::OnGlobalAndroidEvent(gLastSizeChange);
     }
 }
 

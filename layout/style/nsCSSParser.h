@@ -135,6 +135,15 @@ public:
                              nsIPrincipal*       aSheetPrincipal,
                              nsCSSValue&         aResult);
 
+  // Parse the value of a CSS transform property. Returns
+  // whether the value was successfully parsed. If
+  // aDisallowRelativeValues is true then this method will
+  // only successfully parse if all values are numbers or
+  // have non-relative dimensions.
+  bool ParseTransformProperty(const nsAString& aPropValue,
+                              bool             aDisallowRelativeValues,
+                              nsCSSValue&      aResult);
+
   // The same as ParseProperty but for a variable.
   void ParseVariable(const nsAString&    aVariableName,
                      const nsAString&    aPropValue,

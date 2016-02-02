@@ -336,7 +336,7 @@ PLDHashTable::Clear()
 // distinction is a bit grotty but this function is hot enough that these
 // differences are worthwhile.
 template <PLDHashTable::SearchReason Reason>
-PLDHashEntryHdr* PL_DHASH_FASTCALL
+PLDHashEntryHdr* NS_FASTCALL
 PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 {
   MOZ_ASSERT(mEntryStore.Get());
@@ -405,7 +405,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 //      structure.
 // Avoiding the need for |aKey| means we can avoid needing a way to map entries
 // to keys, which means callers can use complex key types more easily.
-PLDHashEntryHdr* PL_DHASH_FASTCALL
+MOZ_ALWAYS_INLINE PLDHashEntryHdr*
 PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
 {
   MOZ_ASSERT(mEntryStore.Get());

@@ -42,43 +42,36 @@ typedef RootedValueMap::Enum RootEnum;
 template <typename T>
 using TraceFunction = void (*)(JSTracer* trc, T* ref, const char* name);
 
-template <class T, TraceFunction<T> TraceFn = TraceNullableRoot, class Source>
+template <class T, TraceFunction<T> TraceFn = TraceNullableRoot>
 static inline void
-MarkExactStackRootList(JSTracer* trc, Source* s, const char* name)
+MarkExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* name)
 {
-    Rooted<T>* rooter = s->roots.template gcRooters<T>();
     while (rooter) {
-        T* addr = rooter->address();
+        T* addr = reinterpret_cast<JS::Rooted<T>*>(rooter)->address();
         TraceFn(trc, addr, name);
         rooter = rooter->previous();
     }
 }
 
-template<class T>
-static void
-MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
+void
+js::RootLists::traceStackRoots(JSTracer* trc)
 {
-    MarkExactStackRootList<JSObject*>(trc, context, "exact-object");
-    MarkExactStackRootList<Shape*>(trc, context, "exact-shape");
-    MarkExactStackRootList<BaseShape*>(trc, context, "exact-baseshape");
-    MarkExactStackRootList<ObjectGroup*>(trc, context, "exact-objectgroup");
-    MarkExactStackRootList<JSString*>(trc, context, "exact-string");
-    MarkExactStackRootList<JS::Symbol*>(trc, context, "exact-symbol");
-    MarkExactStackRootList<jit::JitCode*>(trc, context, "exact-jitcode");
-    MarkExactStackRootList<JSScript*>(trc, context, "exact-script");
-    MarkExactStackRootList<LazyScript*>(trc, context, "exact-lazy-script");
-    MarkExactStackRootList<jsid>(trc, context, "exact-id");
-    MarkExactStackRootList<Value>(trc, context, "exact-value");
+#define MARK_ROOTS(name, type, _) \
+    MarkExactStackRootList<type*>(trc, stackRoots_[JS::RootKind::name], "exact-" #name);
+JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
+#undef MARK_ROOTS
+    MarkExactStackRootList<jsid>(trc, stackRoots_[JS::RootKind::Id], "exact-id");
+    MarkExactStackRootList<Value>(trc, stackRoots_[JS::RootKind::Value], "exact-value");
     MarkExactStackRootList<JS::Traceable, js::DispatchWrapper<JS::Traceable>::TraceWrapped>(
-        trc, context, "Traceable");
+        trc, stackRoots_[JS::RootKind::Traceable], "Traceable");
 }
 
 static void
 MarkExactStackRoots(JSRuntime* rt, JSTracer* trc)
 {
     for (ContextIter cx(rt); !cx.done(); cx.next())
-        MarkExactStackRootsAcrossTypes<JSContext*>(cx.get(), trc);
-    MarkExactStackRootsAcrossTypes<PerThreadData*>(&rt->mainThread, trc);
+        cx->roots.traceStackRoots(trc);
+    rt->mainThread.roots.traceStackRoots(trc);
 }
 
 inline void
@@ -246,7 +239,7 @@ js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
     PersistentRootedMarker<JS::Traceable>::markChain<
         js::DispatchWrapper<JS::Traceable>::TraceWrapped>(trc,
             reinterpret_cast<mozilla::LinkedList<JS::PersistentRooted<JS::Traceable>>&>(
-                roots.heapRoots_[THING_ROOT_TRACEABLE]),
+                roots.heapRoots_[JS::RootKind::Traceable]),
             "PersistentRooted<Traceable>");
 }
 

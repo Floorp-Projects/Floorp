@@ -2273,8 +2273,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
 
       // ARGB is 32 bits / pixel
       size_t tmpLength = mWidth * mHeight * sizeof(uint32_t);
-      nsAutoArrayPtr<uint8_t> tmp;
-      tmp = new uint8_t[tmpLength];
+      UniquePtr<uint8_t[]> tmp = MakeUnique<uint8_t[]>(tmpLength);
 
       GrallocImage* nativeImage = static_cast<GrallocImage*>(mImage.get());
       android::sp<GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
@@ -2284,7 +2283,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
 
       uint32_t stride = mWidth * 4;
       int err = libyuv::ConvertToARGB(static_cast<uint8_t*>(graphicSrc),
-                                      srcLength, tmp, stride, 0, 0,
+                                      srcLength, tmp.get(), stride, 0, 0,
                                       mWidth, mHeight, mWidth, mHeight,
                                       libyuv::kRotate0, libyuv::FOURCC_NV21);
 
@@ -2307,7 +2306,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
       }
 
       nsString opt;
-      nsresult rv = encoder->InitFromData(tmp, tmpLength, mWidth,
+      nsresult rv = encoder->InitFromData(tmp.get(), tmpLength, mWidth,
                                           mHeight, stride,
                                           imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                           opt);

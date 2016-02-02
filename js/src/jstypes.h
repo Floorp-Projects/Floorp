@@ -70,18 +70,16 @@
 #if defined(STATIC_JS_API)
 #  define JS_PUBLIC_API(t)   t
 #  define JS_PUBLIC_DATA(t)  t
+#  define JS_FRIEND_API(t)   t
+#  define JS_FRIEND_DATA(t)  t
 #elif defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
 #  define JS_PUBLIC_API(t)   MOZ_EXPORT t
 #  define JS_PUBLIC_DATA(t)  MOZ_EXPORT t
-#else
-#  define JS_PUBLIC_API(t)   MOZ_IMPORT_API t
-#  define JS_PUBLIC_DATA(t)  MOZ_IMPORT_DATA t
-#endif
-
-#if defined(STATIC_JS_API) || defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
 #  define JS_FRIEND_API(t)    MOZ_EXPORT t
 #  define JS_FRIEND_DATA(t)   MOZ_EXPORT t
 #else
+#  define JS_PUBLIC_API(t)   MOZ_IMPORT_API t
+#  define JS_PUBLIC_DATA(t)  MOZ_IMPORT_DATA t
 #  define JS_FRIEND_API(t)   MOZ_IMPORT_API t
 #  define JS_FRIEND_DATA(t)  MOZ_IMPORT_DATA t
 #endif
