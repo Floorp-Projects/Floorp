@@ -73,7 +73,6 @@ config = {
         "PATH": "/tools/python27/bin:%(PATH)s",
         "B2G_UPDATE_CHANNEL": "default",
     },
-    "purge_minsize": 15,
     "clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
     "is_automation": True,
     "variant": "eng",

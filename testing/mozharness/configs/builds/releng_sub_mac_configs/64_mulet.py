@@ -39,6 +39,5 @@ config = {
         ##
     },
     'src_mozconfig': 'b2g/dev/config/mozconfigs/macosx64/mulet',
-    'purge_minsize': 10,
     #######################
 }

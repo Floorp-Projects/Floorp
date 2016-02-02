@@ -23,8 +23,6 @@ config = {
         "buildbot": "/tools/buildbot/bin/buildbot",
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
-    'purge_skip': ['info', 'rel-*:10d', 'tb-rel-*:10d'],
-    'purge_basedirs':  [],
     'enable_ccache': True,
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox',
@@ -72,7 +70,6 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/osx64/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'purge_minsize': 12,
     'src_mozconfig': 'b2g/config/mozconfigs/macosx64_gecko/nightly',
     'tooltool_manifest_src': 'b2g/config/tooltool-manifests/macosx64/releng.manifest',
     #########################################################################

@@ -49,8 +49,6 @@ config = {
         ],
     },
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
-    'purge_skip': ['info', 'rel-*:10d', 'tb-rel-*:10d'],
-    'purge_basedirs':  [],
     'enable_ccache': False,
     'vcs_share_base': 'C:\\builds\\hg-shared',
     'objdir': 'obj-firefox',
@@ -94,7 +92,6 @@ config = {
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
     'enable_pymake': True,
-    'purge_minsize': 12,
     'src_mozconfig': 'b2g/config/mozconfigs/win32_gecko/nightly',
     'tooltool_manifest_src': "b2g/config/tooltool-manifests/win32/releng.manifest",
     #########################################################################
