@@ -7843,13 +7843,21 @@ nsWindow::ComputeShouldAccelerate()
 }
 
 void
-nsWindow::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
+nsWindow::SetCandidateWindowForPlugin(const CandidateWindowPosition& aPosition)
 {
   CANDIDATEFORM form;
   form.dwIndex = 0;
-  form.dwStyle = CFS_CANDIDATEPOS;
-  form.ptCurrentPos.x = aX;
-  form.ptCurrentPos.y = aY;
+  if (aPosition.mExcludeRect) {
+    form.dwStyle = CFS_EXCLUDE;
+    form.rcArea.left = aPosition.mRect.x;
+    form.rcArea.top = aPosition.mRect.y;
+    form.rcArea.right = aPosition.mRect.x + aPosition.mRect.width;
+    form.rcArea.bottom = aPosition.mRect.y + aPosition.mRect.height;
+  } else {
+    form.dwStyle = CFS_CANDIDATEPOS;
+  }
+  form.ptCurrentPos.x = aPosition.mPoint.x;
+  form.ptCurrentPos.y = aPosition.mPoint.y;
 
   IMEHandler::SetCandidateWindow(this, &form);
 }

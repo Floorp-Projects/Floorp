@@ -2392,15 +2392,15 @@ TabParent::RecvSetPluginFocused(const bool& aFocused)
 }
 
  bool
-TabParent::RecvSetCandidateWindowForPlugin(const int32_t& aX,
-                                           const int32_t& aY)
+TabParent::RecvSetCandidateWindowForPlugin(
+             const CandidateWindowPosition& aPosition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     return true;
   }
 
-  widget->SetCandidateWindowForPlugin(aX, aY);
+  widget->SetCandidateWindowForPlugin(aPosition);
   return true;
 }
 

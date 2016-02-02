@@ -859,6 +859,18 @@ struct IMENotification final
   }
 };
 
+struct CandidateWindowPosition
+{
+  // Upper left corner of the candidate window if mExcludeRect is false.
+  // Otherwise, the position currently interested.  E.g., caret position.
+  LayoutDeviceIntPoint mPoint;
+  // Rect which shouldn't be overlapped with the candidate window.
+  // This is valid only when mExcludeRect is true.
+  LayoutDeviceIntRect mRect;
+  // See explanation of mPoint and mRect.
+  bool mExcludeRect;
+};
+
 } // namespace widget
 } // namespace mozilla
 
