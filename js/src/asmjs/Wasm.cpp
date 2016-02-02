@@ -320,29 +320,36 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::Block:
         return DecodeBlock(f, expected);
       case Expr::I32Clz:
-      case Expr::I32Ctz:
-      case Expr::I32Popcnt:
         return DecodeUnaryOperator(f, expected, ExprType::I32);
+      case Expr::I32Ctz:
+        return f.fail("NYI: ctz");
+      case Expr::I32Popcnt:
+        return f.fail("NYI: popcnt");
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-        return DecodeUnaryOperator(f, expected, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeUnaryOperator(f, expected, ExprType::I64);
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
       case Expr::F32Floor:
-      case Expr::F32Trunc:
-      case Expr::F32Nearest:
       case Expr::F32Sqrt:
         return DecodeUnaryOperator(f, expected, ExprType::F32);
+      case Expr::F32Trunc:
+        return f.fail("NYI: trunc");
+      case Expr::F32Nearest:
+        return f.fail("NYI: nearest");
       case Expr::F64Abs:
       case Expr::F64Neg:
       case Expr::F64Ceil:
       case Expr::F64Floor:
-      case Expr::F64Trunc:
-      case Expr::F64Nearest:
       case Expr::F64Sqrt:
         return DecodeUnaryOperator(f, expected, ExprType::F64);
+      case Expr::F64Trunc:
+        return f.fail("NYI: trunc");
+      case Expr::F64Nearest:
+        return f.fail("NYI: nearest");
       case Expr::I32Add:
       case Expr::I32Sub:
       case Expr::I32Mul:
@@ -370,23 +377,28 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I64Shl:
       case Expr::I64ShrS:
       case Expr::I64ShrU:
-        return DecodeBinaryOperator(f, expected, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeBinaryOperator(f, expected, ExprType::I64);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
       case Expr::F32Div:
+        return DecodeBinaryOperator(f, expected, ExprType::F32);
       case Expr::F32Min:
       case Expr::F32Max:
+        return f.fail("NYI: min/max");
       case Expr::F32CopySign:
-        return DecodeBinaryOperator(f, expected, ExprType::F32);
+        return f.fail("NYI: copysign");
       case Expr::F64Add:
       case Expr::F64Sub:
       case Expr::F64Mul:
       case Expr::F64Div:
+        return DecodeBinaryOperator(f, expected, ExprType::F64);
       case Expr::F64Min:
       case Expr::F64Max:
+        return f.fail("NYI: min/max");
       case Expr::F64CopySign:
-        return DecodeBinaryOperator(f, expected, ExprType::F64);
+        return f.fail("NYI: copysign");
       case Expr::I32Eq:
       case Expr::I32Ne:
       case Expr::I32LtS:
@@ -408,7 +420,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::I64GtU:
       case Expr::I64GeS:
       case Expr::I64GeU:
-        return DecodeComparisonOperator(f, expected, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeComparisonOperator(f, expected, ExprType::I64);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -424,31 +437,38 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, expected, ExprType::F64);
       case Expr::I32WrapI64:
-        return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::I32, ExprType::I64);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
-      case Expr::I32ReinterpretF32:
         return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F32);
+      case Expr::I32ReinterpretF32:
+        return f.fail("NYI: reinterpret");
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F64);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
-        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::I32);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::I64, ExprType::I32);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F32);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F32);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
       case Expr::I64ReinterpretF64:
-        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F64);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F64);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
-      case Expr::F32ReinterpretI32:
         return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I32);
+      case Expr::F32ReinterpretI32:
+        return f.fail("NYI: reinterpret");
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I64);
       case Expr::F32DemoteF64:
         return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::F64);
       case Expr::F64ConvertSI32:
@@ -457,7 +477,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
-        return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I64);
+        return f.fail("NYI: i64") &&
+               DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I64);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::F32);
       default:
