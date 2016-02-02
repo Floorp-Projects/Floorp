@@ -16,7 +16,7 @@ task:
           mozharness/configs/web_platform_tests/prod_config.py
           mozharness/configs/remove_executables.py
   metadata:
-          name: '[TC] Linux64 web-platform-tests-reftests-e10s'
+    name: '[TC] Linux64 web-platform-tests-reftests-e10s'
     description: Web platform reftest e10s test run
   extra:
     suite:
@@ -25,4 +25,4 @@ task:
     treeherder:
       groupName: Desktop web-platform-tests
       groupSymbol: tc-W-e10s
-      symbol: Wr
+      symbol: Wr-e10s
