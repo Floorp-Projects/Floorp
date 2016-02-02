@@ -38,7 +38,7 @@ public class TestDownloadContentCatalog {
     @Test
     public void testUntouchedCatalogHasNotChangedAndWillNotBePersisted() throws Exception {
         AtomicFile file = mock(AtomicFile.class);
-        doReturn("[]".getBytes("UTF-8")).when(file).readFully();
+        doReturn("{content:[]}".getBytes("UTF-8")).when(file).readFully();
 
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
         catalog.loadFromDisk();

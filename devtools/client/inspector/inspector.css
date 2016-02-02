@@ -26,3 +26,10 @@
 #searchbox-panel-listbox > richlistitem > .autocomplete-value {
   max-width: 150px;
 }
+
+.inspector-tabpanel {
+  /*
+   * Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css
+   */
+  -moz-user-focus: normal;
+}

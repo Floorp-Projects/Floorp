@@ -59,6 +59,7 @@ import zipfile
 import pylru
 import taskcluster
 
+import buildconfig
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -377,7 +378,7 @@ class WinArtifactJob(ArtifactJob):
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-api-11': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
+    'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
                                             None)),
     'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-i386\.apk',
                                          None)),
@@ -636,9 +637,9 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job, log=None, cache_dir='.', hg='hg'):
+    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg'):
         self._tree = tree
-        self._job = job
+        self._job = job or self._guess_artifact_job()
         self._log = log
         self._hg = hg
         self._cache_dir = cache_dir
@@ -666,6 +667,26 @@ class Artifacts(object):
     def log(self, *args, **kwargs):
         if self._log:
             self._log(*args, **kwargs)
+
+    def _guess_artifact_job(self):
+        if buildconfig.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
+            if buildconfig.substs['ANDROID_CPU_ARCH'] == 'x86':
+                return 'android-x86'
+            return 'android-api-15'
+
+        target_64bit = False
+        if buildconfig.substs['target_cpu'] == 'x86_64':
+            target_64bit = True
+
+        if buildconfig.defines.get('XP_LINUX', False):
+            return 'linux64' if target_64bit else 'linux'
+        if buildconfig.defines.get('XP_WIN', False):
+            return 'win64' if target_64bit else 'win32'
+        if buildconfig.defines.get('XP_MACOSX', False):
+            # We only produce unified builds in automation, so the target_cpu
+            # check is not relevant.
+            return 'macosx64'
+        raise Exception('Cannot determine default job for |mach artifact|!')
 
     def _find_pushheads(self, parent):
         # Return an ordered dict associating revisions that are pushheads with

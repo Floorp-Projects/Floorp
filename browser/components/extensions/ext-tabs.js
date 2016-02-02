@@ -466,6 +466,40 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         runSafe(context, callback, result);
       },
 
+      captureVisibleTab: function(windowId, options) {
+        if (!extension.hasPermission("<all_urls>")) {
+          throw new context.contentWindow.Error("The <all_urls> permission is required to use the captureVisibleTab API");
+        }
+
+        let window = windowId == null ?
+          WindowManager.topWindow :
+          WindowManager.getWindow(windowId);
+
+        let browser = window.gBrowser.selectedBrowser;
+        let recipient = {
+          innerWindowID: browser.innerWindowID,
+        };
+
+        if (!options) {
+          options = {};
+        }
+        if (options.format == null) {
+          options.format = "png";
+        }
+        if (options.quality == null) {
+          options.quality = 92;
+        }
+
+        let message = {
+          options,
+          width: browser.clientWidth,
+          height: browser.clientHeight,
+        };
+
+        return context.sendMessage(browser.messageManager, "Extension:Capture",
+                                   message, recipient);
+      },
+
       _execute: function(tabId, details, kind) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
@@ -507,18 +541,15 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = details.runAt;
         }
 
-        return context.sendMessage(mm, "Extension:Execute", { options }, recipient)
-                      .then(value => [value]);
+        return context.sendMessage(mm, "Extension:Execute", { options }, recipient);
       },
 
-      executeScript: function(tabId, details, callback) {
-        return context.wrapPromise(self.tabs._execute(tabId, details, "js"),
-                                   callback);
+      executeScript: function(tabId, details) {
+        return self.tabs._execute(tabId, details, "js");
       },
 
-      insertCSS: function(tabId, details, callback) {
-        return context.wrapPromise(self.tabs._execute(tabId, details, "css"),
-                                   callback);
+      insertCSS: function(tabId, details) {
+        return self.tabs._execute(tabId, details, "css");
       },
 
       connect: function(tabId, connectInfo) {

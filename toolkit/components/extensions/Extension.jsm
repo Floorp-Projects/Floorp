@@ -351,36 +351,73 @@ GlobalManager = {
 
   observe(contentWindow, topic, data) {
     let inject = (extension, context) => {
-      let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "browser"});
-      contentWindow.wrappedJSObject.chrome = contentWindow.wrappedJSObject.browser;
-      let api = Management.generateAPIs(extension, context, Management.apis);
-      injectAPI(api, chromeObj);
+      // We create two separate sets of bindings, one for the `chrome`
+      // global, and one for the `browser` global. The latter returns
+      // Promise objects if a callback is not passed, while the former
+      // does not.
+      let injectObject = (name, defaultCallback) => {
+        let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
 
-      let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
-      let schemaWrapper = {
-        callFunction(ns, name, args) {
-          return schemaApi[ns][name].apply(null, args);
-        },
+        let api = Management.generateAPIs(extension, context, Management.apis);
+        injectAPI(api, browserObj);
 
-        getProperty(ns, name) {
-          return schemaApi[ns][name];
-        },
+        let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
+        let schemaWrapper = {
+          callFunction(ns, name, args) {
+            return schemaApi[ns][name](...args);
+          },
 
-        setProperty(ns, name, value) {
-          schemaApi[ns][name] = value;
-        },
+          callAsyncFunction(ns, name, args, callback) {
+            // We pass an empty stub function as a default callback for
+            // the `chrome` API, so promise objects are not returned,
+            // and lastError values are reported immediately.
+            if (callback === null) {
+              callback = defaultCallback;
+            }
 
-        addListener(ns, name, listener, args) {
-          return schemaApi[ns][name].addListener.call(null, listener, ...args);
-        },
-        removeListener(ns, name, listener) {
-          return schemaApi[ns][name].removeListener.call(null, listener);
-        },
-        hasListener(ns, name, listener) {
-          return schemaApi[ns][name].hasListener.call(null, listener);
-        },
+            let promise;
+            try {
+              // TODO: Stop passing the callback once all APIs return
+              // promises.
+              promise = schemaApi[ns][name](...args, callback);
+            } catch (e) {
+              promise = Promise.reject(e);
+              // TODO: Certain tests are still expecting API methods to
+              // throw errors.
+              throw e;
+            }
+
+            // TODO: This check should no longer be necessary
+            // once all async methods return promises.
+            if (promise) {
+              return context.wrapPromise(promise, callback);
+            }
+            return undefined;
+          },
+
+          getProperty(ns, name) {
+            return schemaApi[ns][name];
+          },
+
+          setProperty(ns, name, value) {
+            schemaApi[ns][name] = value;
+          },
+
+          addListener(ns, name, listener, args) {
+            return schemaApi[ns][name].addListener.call(null, listener, ...args);
+          },
+          removeListener(ns, name, listener) {
+            return schemaApi[ns][name].removeListener.call(null, listener);
+          },
+          hasListener(ns, name, listener) {
+            return schemaApi[ns][name].hasListener.call(null, listener);
+          },
+        };
+        Schemas.inject(browserObj, schemaWrapper);
       };
-      Schemas.inject(chromeObj, schemaWrapper);
+
+      injectObject("browser", null);
+      injectObject("chrome", () => {});
     };
 
     let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
@@ -563,7 +600,7 @@ ExtensionData.prototype = {
       Management.lazyInit(),
     ]).then(([manifest]) => {
       let context = {
-        url: (this.baseURI || this.rootURI).spec,
+        url: this.baseURI && this.baseURI.spec,
 
         principal: this.principal,
       };
@@ -978,9 +1015,8 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
     let whitelist = [];
     for (let perm of permissions) {
-      if (/^\w+(\.\w+)*$/.test(perm)) {
-        this.permissions.add(perm);
-      } else {
+      this.permissions.add(perm);
+      if (!/^\w+(\.\w+)*$/.test(perm)) {
         whitelist.push(perm);
       }
     }

@@ -8,7 +8,6 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const STRINGS_URI = "chrome://devtools/locale/memory.properties"
 const L10N = exports.L10N = new ViewHelpers.L10N(STRINGS_URI);
 
-const { URL } = require("sdk/url");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
@@ -56,26 +55,31 @@ exports.getSnapshotTitle = function (snapshot) {
  * @return {Object{name, displayName}}
  */
 exports.getBreakdownDisplayData = function () {
-  return exports.getBreakdownNames().map(name => {
+  return exports.getBreakdownNames().map(({ name, tooltip }) => {
     // If it's a preset use the display name value
     let preset = breakdowns[name];
     let displayName = name;
     if (preset && preset.displayName) {
       displayName = preset.displayName;
     }
-    return { name, displayName };
+    return { name, tooltip, displayName };
   });
 };
 
 /**
- * Returns an array of the unique names for each breakdown in
+ * Returns an array of the unique names and tooltips for each breakdown in
  * presets and custom pref.
  *
- * @return {Array<Breakdown>}
+ * @return {Array<Object>}
  */
 exports.getBreakdownNames = function () {
   let custom = exports.getCustomBreakdowns();
-  return Object.keys(Object.assign({}, breakdowns, custom));
+  return Object.keys(Object.assign({}, breakdowns, custom))
+    .map(key => {
+      return breakdowns[key]
+        ? { name: key, tooltip: breakdowns[key].tooltip }
+        : { name: key };
+    });
 };
 
 /**
@@ -127,14 +131,14 @@ exports.breakdownNameToSpec = function (name) {
  * @return {Array<Object>}
  */
 exports.getDominatorTreeBreakdownDisplayData = function () {
-  return exports.getDominatorTreeBreakdownNames().map(name => {
+  return exports.getDominatorTreeBreakdownNames().map(({ name, tooltip }) => {
     // If it's a preset use the display name value
     let preset = dominatorTreeBreakdowns[name];
     let displayName = name;
     if (preset && preset.displayName) {
       displayName = preset.displayName;
     }
-    return { name, displayName };
+    return { name, tooltip, displayName };
   });
 };
 
@@ -146,7 +150,12 @@ exports.getDominatorTreeBreakdownDisplayData = function () {
  */
 exports.getDominatorTreeBreakdownNames = function () {
   let custom = exports.getCustomDominatorTreeBreakdowns();
-  return Object.keys(Object.assign({}, dominatorTreeBreakdowns, custom));
+  return Object.keys(Object.assign({}, dominatorTreeBreakdowns, custom))
+    .map(key => {
+      return dominatorTreeBreakdowns[key]
+        ? { name: key, tooltip: dominatorTreeBreakdowns[key].tooltip }
+        : { name: key };
+    });
 };
 
 /**
@@ -163,7 +172,7 @@ exports.getCustomDominatorTreeBreakdowns = function () {
       `String stored in "${CUSTOM_BREAKDOWN_PREF}" pref cannot be parsed by \`JSON.parse()\`.`);
   }
   return customBreakdowns;
-}
+};
 
 /**
  * Converts a dominator tree breakdown preset name, like "allocationStack", and

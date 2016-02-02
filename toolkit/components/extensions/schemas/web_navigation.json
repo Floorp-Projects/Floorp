@@ -39,6 +39,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves information about the given frame. A frame refers to an &lt;iframe&gt; or a &lt;frame&gt; of a web page and is identified by a tab ID and a frame ID.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -51,7 +52,9 @@
             }
           },
           {
-            "type": "function", "name": "callback", "parameters": [
+            "type": "function",
+            "name": "callback",
+            "parameters": [
               {
                 "type": "object",
                 "name": "details",
@@ -81,6 +84,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves information about all frames of a given tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -91,7 +95,9 @@
             }
           },
           {
-            "type": "function", "name": "callback", "parameters": [
+            "type": "function",
+            "name": "callback",
+            "parameters": [
               {
                 "name": "details",
                 "type": "array",

@@ -672,10 +672,6 @@
               <box id="notification-popup-box" hidden="true" align="center">
                 <image id="default-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.defaultNotificationAnchor.label;"/>
-                <!-- NB: the identity-notification-icon is used for persona-based auth and preffed
-                     off by default. It hasn't been updated for some time and liable to being
-                     removed.-->
-                <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="geo-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
                 <image id="addons-notification-icon" class="notification-anchor-icon" role="button"

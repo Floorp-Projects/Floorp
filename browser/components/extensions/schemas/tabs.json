@@ -747,6 +747,7 @@
         "name": "captureVisibleTab",
         "type": "function",
         "description": "Captures the visible area of the currently active tab in the specified window. You must have $(topic:declare_permissions)[&lt;all_urls&gt;] permission to use this method.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -771,6 +772,7 @@
         "name": "executeScript",
         "type": "function",
         "description": "Injects JavaScript code into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
+        "async": "callback",
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "optional": true, "description": "The ID of the tab in which to run the script; defaults to the active tab of the current window."},
           {
@@ -799,6 +801,7 @@
         "name": "insertCSS",
         "type": "function",
         "description": "Injects CSS into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
+        "async": "callback",
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "optional": true, "description": "The ID of the tab in which to insert the CSS; defaults to the active tab of the current window."},
           {

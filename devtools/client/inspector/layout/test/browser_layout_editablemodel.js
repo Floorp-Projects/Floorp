@@ -13,9 +13,11 @@ const TEST_URI = "<style>" +
   "#div2 { border-bottom: 1em solid black; }" +
   "#div3 { padding: 2em; }" +
   "#div4 { margin: 1px; }" +
+  "#div5 { margin: 1px; }" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div>" +
-  "<div id='div3'></div><div id='div4'></div>";
+  "<div id='div3'></div><div id='div4'></div>" +
+  "<div id='div5'></div>";
 
 function getStyle(node, property) {
   return node.style.getPropertyValue(property);
@@ -176,4 +178,26 @@ function*(inspector, view) {
   is(getStyle(node, "margin-top"), "2px",
     "Should be the right margin-top on the element.");
   is(span.textContent, 2, "Should have the right value in the box model.");
+});
+
+addTest("Test that clicking outside the editor blurs it",
+function*(inspector, view) {
+  let node = content.document.getElementById("div5");
+
+  yield selectNode("#div5", inspector);
+
+  let span = view.doc.querySelector(".layout-margin.layout-top > span");
+  is(span.textContent, 1, "Should have the right value in the box model.");
+
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
+  ok(editor, "Should have opened the editor.");
+
+  info("Click next to the opened editor input.");
+  let rect = editor.getBoundingClientRect();
+  EventUtils.synthesizeMouse(editor, rect.width + 10, rect.height / 2, {},
+    view.doc.defaultView);
+
+  is(view.doc.querySelector(".styleinspector-propertyeditor"), null,
+    "Inplace editor has been removed.");
 });
