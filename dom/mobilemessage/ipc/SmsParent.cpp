@@ -22,6 +22,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
+#include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
 #include "xpcpublic.h"
@@ -830,12 +831,12 @@ MobileMessageCursorParent::DoRequest(const CreateMessageCursorRequest& aRequest)
     const SmsFilterData& filter = aRequest.filter();
 
     const nsTArray<nsString>& numbers = filter.numbers();
-    nsAutoArrayPtr<const char16_t*> ptrNumbers;
+    UniquePtr<const char16_t*[]> ptrNumbers;
     uint32_t numbersCount = numbers.Length();
     if (numbersCount) {
       uint32_t index;
 
-      ptrNumbers = new const char16_t* [numbersCount];
+      ptrNumbers = MakeUnique<const char16_t*[]>(numbersCount);
       for (index = 0; index < numbersCount; index++) {
         ptrNumbers[index] = numbers[index].get();
       }
@@ -845,7 +846,7 @@ MobileMessageCursorParent::DoRequest(const CreateMessageCursorRequest& aRequest)
                                         filter.startDate(),
                                         filter.hasEndDate(),
                                         filter.endDate(),
-                                        ptrNumbers, numbersCount,
+                                        ptrNumbers.get(), numbersCount,
                                         filter.delivery(),
                                         filter.hasRead(),
                                         filter.read(),

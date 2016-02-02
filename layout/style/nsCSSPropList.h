@@ -3960,8 +3960,7 @@ CSS_PROP_SVG(
     fill,
     fill,
     Fill,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kContextPatternKTable,
@@ -4218,8 +4217,7 @@ CSS_PROP_SVG(
     stroke,
     stroke,
     Stroke,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kContextPatternKTable,

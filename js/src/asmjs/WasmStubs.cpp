@@ -236,7 +236,7 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
     // Call into the real function.
     masm.assertStackAlignment(AsmJSStackAlignment);
     Label target;
-    target.bind(mg.funcEntryOffsets()[mg.exportFuncIndex(exportIndex)]);
+    target.bind(mg.exportEntryOffset(exportIndex));
     masm.call(CallSiteDesc(CallSiteDesc::Relative), &target);
 
     // Recover the stack pointer value before dynamic alignment.

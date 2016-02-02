@@ -1787,7 +1787,14 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         }
 
-        return mg_.init(Move(genData), ModuleKind::AsmJS);
+        CacheableChars filename;
+        if (parser_.ss->filename()) {
+            filename = DuplicateString(parser_.ss->filename());
+            if (!filename)
+                return false;
+        }
+
+        return mg_.init(Move(genData), Move(filename), ModuleKind::AsmJS);
     }
 
     ExclusiveContext* cx() const             { return cx_; }
@@ -2223,18 +2230,8 @@ class MOZ_STACK_CLASS ModuleValidator
         return mg_.finishFuncDefs();
     }
     bool finish(MutableHandle<WasmModuleObject*> moduleObj, SlowFunctionVector* slowFuncs) {
-        HeapUsage heap = arrayViews_.empty()
-                              ? HeapUsage::None
-                              : atomicsPresent_
-                                ? HeapUsage::Shared
-                                : HeapUsage::Unshared;
-
-        CacheableChars filename;
-        if (parser_.ss->filename()) {
-            filename = DuplicateString(parser_.ss->filename());
-            if (!filename)
-                return false;
-        }
+        if (!arrayViews_.empty())
+            mg_.initHeapUsage(atomicsPresent_ ? HeapUsage::Shared : HeapUsage::Unshared);
 
         CacheableCharsVector funcNames;
         for (const Func* func : functions_) {
@@ -2253,7 +2250,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(heap, Move(filename), Move(funcNames), &base, &link, slowFuncs))
+        if (!mg_.finish(Move(funcNames), &base, &link, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));

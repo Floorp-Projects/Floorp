@@ -39,21 +39,6 @@ using mozilla::NumberIsInt32;
 
 static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
 
-bool
-js::IsSignedIntSimdType(SimdType type)
-{
-    switch (type) {
-      case SimdType::Int32x4:
-        return true;
-      case SimdType::Float32x4:
-      case SimdType::Bool32x4:
-        return false;
-      default:
-        break;
-   }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown SIMD type");
-}
-
 PropertyName*
 js::SimdTypeToName(JSContext* cx, SimdType type)
 {
@@ -140,7 +125,7 @@ static SimdTypeDescr*
 GetTypeDescr(JSContext* cx)
 {
     RootedGlobalObject global(cx, cx->global());
-    return GlobalObject::getOrCreateSimdTypeDescr<T>(cx, global);
+    return GlobalObject::getOrCreateSimdTypeDescr(cx, global, T::type);
 }
 
 template<typename V>
@@ -252,6 +237,10 @@ FLOAT32X4_FUNCTION_LIST(TDEFN)
 INT32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
 
+#define TDEFN(Name, Func, Operands) DEFN(Uint32x4, Name)
+UINT32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
 #define TDEFN(Name, Func, Operands) DEFN(Bool32x4, Name)
 BOOL32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
@@ -317,7 +306,7 @@ const JSFunctionSpec Uint16x8Defn::Methods[] = {
 
 const JSFunctionSpec Uint32x4Defn::Methods[] = {
 #define SIMD_UINT32X4_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_uint32x4_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_uint32x4_##Name, Operands, 0, SimdUint32x4_##Name),
     UINT32X4_FUNCTION_LIST(SIMD_UINT32X4_FUNCTION_ITEM)
 #undef SIMD_UINT32X4_FUNCTION_ITEM
     JS_FS_END
@@ -441,9 +430,9 @@ GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
     return true;
 }
 
-template<typename /* TypeDefn */ T>
 static bool
-CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName stringRepr)
+CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName stringRepr,
+               SimdType simdType, const JSFunctionSpec* methods)
 {
     RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
     if (!funcProto)
@@ -455,7 +444,6 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
     if (!typeDescr)
         return false;
 
-    const SimdType simdType = T::type;
     typeDescr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::Simd));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(SimdTypeDescr::alignment(simdType)));
@@ -491,7 +479,7 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
     MOZ_ASSERT(globalSimdObject);
 
     RootedValue typeValue(cx, ObjectValue(*typeDescr));
-    if (!JS_DefineFunctions(cx, typeDescr, T::Methods) ||
+    if (!JS_DefineFunctions(cx, typeDescr, methods) ||
         !DefineProperty(cx, globalSimdObject, stringRepr, typeValue, nullptr, nullptr,
                         JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_RESOLVING))
     {
@@ -505,18 +493,41 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
 }
 
 bool
-GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, uint32_t simdTypeDescrType)
+GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, SimdType simdType)
 {
 #define CREATE_(Type) \
-    case SimdType::Type: return CreateSimdType<Type##Defn>(cx, global, cx->names().Type);
+    case SimdType::Type: \
+      return CreateSimdType(cx, global, cx->names().Type, simdType, Type##Defn::Methods);
 
-    switch (SimdType(simdTypeDescrType)) {
+    switch (simdType) {
       FOR_EACH_SIMD(CREATE_)
       case SimdType::Count: break;
     }
     MOZ_CRASH("unexpected simd type");
 
 #undef CREATE_
+}
+
+SimdTypeDescr*
+GlobalObject::getOrCreateSimdTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
+                                       SimdType simdType)
+{
+    MOZ_ASSERT(unsigned(simdType) < unsigned(SimdType::Count), "Invalid SIMD type");
+
+    RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
+    if (!globalSimdObject)
+       return nullptr;
+
+    uint32_t typeSlotIndex = uint32_t(simdType);
+    if (globalSimdObject->as<NativeObject>().getReservedSlot(typeSlotIndex).isUndefined() &&
+        !GlobalObject::initSimdType(cx, global, simdType))
+    {
+        return nullptr;
+    }
+
+    const Value& slot = globalSimdObject->as<NativeObject>().getReservedSlot(typeSlotIndex);
+    MOZ_ASSERT(slot.isObject());
+    return &slot.toObject().as<SimdTypeDescr>();
 }
 
 bool
@@ -529,7 +540,8 @@ SimdObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* 
     Rooted<GlobalObject*> global(cx, cx->global());
 #define TRY_RESOLVE_(Type)                                                    \
     if (str == cx->names().Type) {                                            \
-        *resolved = CreateSimdType<Type##Defn>(cx, global, cx->names().Type); \
+        *resolved = CreateSimdType(cx, global, cx->names().Type,              \
+                                   SimdType::Type, Type##Defn::Methods);      \
         return *resolved;                                                     \
     }
     FOR_EACH_SIMD(TRY_RESOLVE_)

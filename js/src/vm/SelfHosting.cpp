@@ -781,6 +781,34 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_IsSpecificTypedArray(JSContext* cx, unsigned argc, Value* vp, Scalar::Type type)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    JSObject* obj = &args[0].toObject();
+
+    bool isArray = JS_GetArrayBufferViewType(obj) == type;
+
+    args.rval().setBoolean(isArray);
+    return true;
+}
+
+static bool
+intrinsic_IsUint8TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint8) ||
+           intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint8Clamped);
+}
+
+static bool
+intrinsic_IsInt8TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int8);
+}
+
+static bool
 intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1769,6 +1797,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ArrayBufferByteLength",   intrinsic_ArrayBufferByteLength,   1,0),
     JS_FN("ArrayBufferCopyData",     intrinsic_ArrayBufferCopyData,     4,0),
 
+    JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
+    JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,
                     IntrinsicIsTypedArray),
@@ -1815,18 +1845,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("TypedObjectTypeDescr",           js::TypedObjectTypeDescr, 1, 0),
     JS_FN("ClampToUint8",                   js::ClampToUint8, 1, 0),
     JS_FN("GetTypedObjectModule",           js::GetTypedObjectModule, 0, 0),
-    JS_FN("GetFloat32x4TypeDescr",          js::GetFloat32x4TypeDescr, 0, 0),
-    JS_FN("GetFloat64x2TypeDescr",          js::GetFloat64x2TypeDescr, 0, 0),
-    JS_FN("GetInt8x16TypeDescr",            js::GetInt8x16TypeDescr, 0, 0),
-    JS_FN("GetInt16x8TypeDescr",            js::GetInt16x8TypeDescr, 0, 0),
-    JS_FN("GetInt32x4TypeDescr",            js::GetInt32x4TypeDescr, 0, 0),
-    JS_FN("GetUint8x16TypeDescr",           js::GetUint8x16TypeDescr, 0, 0),
-    JS_FN("GetUint16x8TypeDescr",           js::GetUint16x8TypeDescr, 0, 0),
-    JS_FN("GetUint32x4TypeDescr",           js::GetUint32x4TypeDescr, 0, 0),
-    JS_FN("GetBool8x16TypeDescr",           js::GetBool8x16TypeDescr, 0, 0),
-    JS_FN("GetBool16x8TypeDescr",           js::GetBool16x8TypeDescr, 0, 0),
-    JS_FN("GetBool32x4TypeDescr",           js::GetBool32x4TypeDescr, 0, 0),
-    JS_FN("GetBool64x2TypeDescr",           js::GetBool64x2TypeDescr, 0, 0),
+    JS_FN("GetSimdTypeDescr",               js::GetSimdTypeDescr, 1, 0),
 
     JS_INLINABLE_FN("ObjectIsTypeDescr"    ,          js::ObjectIsTypeDescr, 1, 0,
                     IntrinsicObjectIsTypeDescr),

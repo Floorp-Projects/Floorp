@@ -11,7 +11,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsGlobalWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsILoadInfo.h"
 #include "nsIURI.h"
@@ -30,8 +29,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
-#include "SharedWorker.h"
-#include "ServiceWorker.h"
 #include "js/HeapAPI.h"
 #include "GeckoProfiler.h"
 #include "WorkerPrivate.h"
@@ -916,37 +913,6 @@ PerformanceBase::ClearResourceTimings()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mResourceEntries.Clear();
-}
-
-DOMHighResTimeStamp
-PerformanceBase::TranslateTime(DOMHighResTimeStamp aTime,
-                               const WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
-                               ErrorResult& aRv)
-{
-  TimeStamp otherCreationTimeStamp;
-
-  if (aTimeSource.IsWindow()) {
-    RefPtr<nsPerformance> performance = aTimeSource.GetAsWindow().GetPerformance();
-    if (NS_WARN_IF(!performance)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-    }
-    otherCreationTimeStamp = performance->CreationTimeStamp();
-  } else if (aTimeSource.IsWorker()) {
-    otherCreationTimeStamp = aTimeSource.GetAsWorker().CreationTimeStamp();
-  } else if (aTimeSource.IsSharedWorker()) {
-    SharedWorker& sharedWorker = aTimeSource.GetAsSharedWorker();
-    WorkerPrivate* workerPrivate = sharedWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
-  } else if (aTimeSource.IsServiceWorker()) {
-    ServiceWorker& serviceWorker = aTimeSource.GetAsServiceWorker();
-    WorkerPrivate* workerPrivate = serviceWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
-  } else {
-    MOZ_CRASH("This should not be possible.");
-  }
-
-  return RoundTime(
-    aTime + (otherCreationTimeStamp - CreationTimeStamp()).ToMilliseconds());
 }
 
 DOMHighResTimeStamp
