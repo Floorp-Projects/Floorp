@@ -81,12 +81,6 @@ var gSyncUI = {
     let broadcaster = document.getElementById("sync-status");
     broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncnow.label"));
 
-    // Initialize the Synced Tabs Sidebar
-    if (Services.prefs.getBoolPref("services.sync.syncedTabsUIRefresh")) {
-      let sidebarBroadcaster = document.getElementById("viewTabsSidebar");
-      sidebarBroadcaster.removeAttribute("hidden");
-    }
-
     this.updateUI();
   },
 
