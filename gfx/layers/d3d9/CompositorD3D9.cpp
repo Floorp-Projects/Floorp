@@ -73,6 +73,11 @@ CompositorD3D9::GetTextureFactoryIdentifier()
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentBackend = LayersBackend::LAYERS_D3D9;
   ident.mParentProcessId = XRE_GetProcessType();
+  for (uint8_t op = 0; op < uint8_t(gfx::CompositionOp::OP_COUNT); op++) {
+    if (BlendOpIsMixBlendMode(gfx::CompositionOp(op))) {
+      ident.mSupportedBlendModes += gfx::CompositionOp(op);
+    }
+  }
   return ident;
 }
 
@@ -128,10 +133,10 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
   return MakeAndAddRef<CompositingRenderTargetD3D9>(texture, aInit, aRect);
 }
 
-already_AddRefed<CompositingRenderTarget>
-CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                             const CompositingRenderTarget *aSource,
-                                             const gfx::IntPoint &aSourcePoint)
+already_AddRefed<IDirect3DTexture9>
+CompositorD3D9::CreateTexture(const gfx::IntRect& aRect,
+                              const CompositingRenderTarget* aSource,
+                              const gfx::IntPoint& aSourcePoint)
 {
   MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
 
@@ -188,6 +193,16 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
       }
     }
   }
+
+  return texture.forget();
+}
+
+already_AddRefed<CompositingRenderTarget>
+CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
+                                             const CompositingRenderTarget *aSource,
+                                             const gfx::IntPoint &aSourcePoint)
+{
+  RefPtr<IDirect3DTexture9> texture = CreateTexture(aRect, aSource, aSourcePoint);
 
   return MakeAndAddRef<CompositingRenderTargetD3D9>(texture,
                                                     INIT_MODE_NONE,
@@ -285,6 +300,40 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       maskType = MaskType::Mask2d;
     } else {
       maskType = MaskType::Mask3d;
+    }
+  }
+
+  gfx::Rect backdropDest;
+  gfx::IntRect backdropRect;
+  gfx::Matrix4x4 backdropTransform;
+  RefPtr<IDirect3DTexture9> backdropTexture;
+  gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
+
+  if (aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE]) {
+    EffectBlendMode *blendEffect =
+      static_cast<EffectBlendMode*>(aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE].get());
+    blendMode = blendEffect->mBlendMode;
+
+    // Pixel Shader Model 2.0 is too limited to perform blending in the same way
+    // as Direct3D 11 - there are too many instructions, and we don't have
+    // configurable shaders (as we do with OGL) that would avoid a huge shader
+    // matrix.
+    //
+    // Instead, we use a multi-step process for blending on D3D9:
+    //  (1) Capture the backdrop into a temporary surface.
+    //  (2) Render the effect chain onto the backdrop, with OP_SOURCE.
+    //  (3) Capture the backdrop again into another surface - these are our source pixels.
+    //  (4) Perform a final blend step using software.
+    //  (5) Blit the blended result back to the render target.
+    if (BlendOpIsMixBlendMode(blendMode)) {
+      backdropRect = ComputeBackdropCopyRect(
+        aRect, aClipRect, aTransform, &backdropTransform, &backdropDest);
+
+      // If this fails, don't set a blend op.
+      backdropTexture = CreateTexture(backdropRect, mCurrentRT, backdropRect.TopLeft());
+      if (!backdropTexture) {
+        blendMode = gfx::CompositionOp::OP_OVER;
+      }
     }
   }
 
@@ -474,14 +523,34 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
 
   SetMask(aEffectChain, maskTexture);
 
+  if (BlendOpIsMixBlendMode(blendMode)) {
+    // Use SOURCE instead of OVER to get the original source pixels without
+    // having to render to another intermediate target.
+    d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ZERO);
+  }
   if (!isPremultiplied) {
     d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
   }
 
   d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
+  // Restore defaults.
+  if (BlendOpIsMixBlendMode(blendMode)) {
+    d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+  }
   if (!isPremultiplied) {
     d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+  }
+
+  // Final pass - if mix-blending, do it now that we have the backdrop and
+  // source textures.
+  if (BlendOpIsMixBlendMode(blendMode)) {
+    FinishMixBlend(
+      backdropRect,
+      backdropDest,
+      backdropTransform,
+      backdropTexture,
+      blendMode);
   }
 }
 
@@ -775,6 +844,188 @@ CompositorD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
   NS_WARNING(msg.BeginReading());
 
   gfx::LogFailure(msg);
+}
+
+static inline already_AddRefed<IDirect3DSurface9>
+GetSurfaceOfTexture(IDirect3DTexture9* aTexture)
+{
+  RefPtr<IDirect3DSurface9> surface;
+  HRESULT hr = aTexture->GetSurfaceLevel(0, getter_AddRefs(surface));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to grab texture surface " << hexa(hr);
+    return nullptr;
+  }
+  return surface.forget();
+}
+
+static inline already_AddRefed<IDirect3DSurface9>
+CreateDataSurfaceForTexture(IDirect3DDevice9* aDevice,
+                            IDirect3DSurface9* aSource,
+                            const D3DSURFACE_DESC& aDesc)
+{
+  RefPtr<IDirect3DSurface9> dest;
+  HRESULT hr = aDevice->CreateOffscreenPlainSurface(
+    aDesc.Width, aDesc.Height,
+    aDesc.Format, D3DPOOL_SYSTEMMEM,
+    getter_AddRefs(dest), nullptr);
+  if (FAILED(hr) || !dest) {
+    gfxCriticalNote << "Failed to create offscreen plain surface " << hexa(hr);
+    return nullptr;
+  }
+
+  hr = aDevice->GetRenderTargetData(aSource, dest);
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to get render target data " << hexa(hr);
+    return nullptr;
+  }
+
+  return dest.forget();
+}
+
+class AutoSurfaceLock
+{
+ public:
+  AutoSurfaceLock(IDirect3DSurface9* aSurface, DWORD aFlags = 0) {
+    PodZero(&mRect);
+
+    HRESULT hr = aSurface->LockRect(&mRect, nullptr, aFlags);
+    if (FAILED(hr)) {
+      gfxCriticalNote << "Failed to lock surface rect " << hexa(hr);
+      return;
+    }
+    mSurface = aSurface;
+  }
+  ~AutoSurfaceLock() {
+    if (mSurface) {
+      mSurface->UnlockRect();
+    }
+  }
+
+  bool Okay() const {
+    return !!mSurface;
+  }
+  int Pitch() const {
+    MOZ_ASSERT(Okay());
+    return mRect.Pitch;
+  }
+  uint8_t* Bits() const {
+    MOZ_ASSERT(Okay());
+    return reinterpret_cast<uint8_t*>(mRect.pBits);
+  }
+
+ private:
+  RefPtr<IDirect3DSurface9> mSurface;
+  D3DLOCKED_RECT mRect;
+};
+
+void
+CompositorD3D9::FinishMixBlend(const gfx::IntRect& aBackdropRect,
+                               const gfx::Rect& aBackdropDest,
+                               const gfx::Matrix4x4& aBackdropTransform,
+                               RefPtr<IDirect3DTexture9> aBackdrop,
+                               gfx::CompositionOp aBlendMode)
+{
+  HRESULT hr;
+
+  RefPtr<IDirect3DTexture9> source =
+    CreateTexture(aBackdropRect, mCurrentRT, aBackdropRect.TopLeft());
+  if (!source) {
+    return;
+  }
+
+  // Slow path - do everything in software. Unfortunately this requires
+  // a lot of copying, since we have to readback the source and backdrop,
+  // then upload the blended result, then blit it back.
+
+  IDirect3DDevice9* d3d9Device = device();
+
+  // Query geometry/format of the two surfaces.
+  D3DSURFACE_DESC backdropDesc, sourceDesc;
+  if (FAILED(aBackdrop->GetLevelDesc(0, &backdropDesc)) ||
+      FAILED(source->GetLevelDesc(0, &sourceDesc)))
+  {
+    gfxCriticalNote << "Failed to query mix-blend texture descriptor";
+    return;
+  }
+
+  MOZ_ASSERT(backdropDesc.Format == D3DFMT_A8R8G8B8);
+  MOZ_ASSERT(sourceDesc.Format == D3DFMT_A8R8G8B8);
+
+  // Acquire a temporary data surface for the backdrop texture.
+  RefPtr<IDirect3DSurface9> backdropSurface = GetSurfaceOfTexture(aBackdrop);
+  if (!backdropSurface) {
+    return;
+  }
+  RefPtr<IDirect3DSurface9> tmpBackdrop =
+    CreateDataSurfaceForTexture(d3d9Device, backdropSurface, backdropDesc);
+  if (!tmpBackdrop) {
+    return;
+  }
+
+  // New scope for locks and temporary surfaces.
+  {
+    // Acquire a temporary data surface for the source texture.
+    RefPtr<IDirect3DSurface9> sourceSurface = GetSurfaceOfTexture(source);
+    if (!sourceSurface) {
+      return;
+    }
+    RefPtr<IDirect3DSurface9> tmpSource =
+      CreateDataSurfaceForTexture(d3d9Device, sourceSurface, sourceDesc);
+    if (!tmpSource) {
+      return;
+    }
+
+    // Perform the readback and blend in software.
+    AutoSurfaceLock backdropLock(tmpBackdrop);
+    AutoSurfaceLock sourceLock(tmpSource, D3DLOCK_READONLY);
+    if (!backdropLock.Okay() || !sourceLock.Okay()) {
+      return;
+    }
+
+    RefPtr<DataSourceSurface> source = Factory::CreateWrappingDataSourceSurface(
+      sourceLock.Bits(), sourceLock.Pitch(),
+      gfx::IntSize(sourceDesc.Width, sourceDesc.Height),
+      SurfaceFormat::B8G8R8A8);
+
+    RefPtr<DrawTarget> dest = Factory::CreateDrawTargetForData(
+      BackendType::CAIRO,
+      backdropLock.Bits(),
+      gfx::IntSize(backdropDesc.Width, backdropDesc.Height),
+      backdropLock.Pitch(),
+      SurfaceFormat::B8G8R8A8);
+
+    // The backdrop rect is rounded out - account for any difference between
+    // it and the actual destination.
+    gfx::Rect destRect(
+      aBackdropDest.x - aBackdropRect.x,
+      aBackdropDest.y - aBackdropRect.y,
+      aBackdropDest.width,
+      aBackdropDest.height);
+
+    dest->DrawSurface(
+      source, destRect, destRect,
+      gfx::DrawSurfaceOptions(),
+      gfx::DrawOptions(1.0f, aBlendMode));
+  }
+
+  // Upload the new blended surface to the backdrop texture.
+  d3d9Device->UpdateSurface(tmpBackdrop, nullptr, backdropSurface, nullptr);
+
+  // Finally, drop in the new backdrop. We don't need to do another
+  // DrawPrimitive() since the software blend will have included the
+  // final OP_OVER step for us.
+  RECT destRect = {
+    aBackdropRect.x, aBackdropRect.y,
+    aBackdropRect.XMost(), aBackdropRect.YMost()
+  };
+  hr = d3d9Device->StretchRect(backdropSurface,
+                               nullptr,
+                               mCurrentRT->GetD3D9Surface(),
+                               &destRect,
+                               D3DTEXF_NONE);
+  if (FAILED(hr)) {
+    gfxCriticalNote << "StretcRect with mix-blend failed " << hexa(hr);
+  }
 }
 
 }
