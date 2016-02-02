@@ -433,16 +433,22 @@ AC_DEFUN([MOZ_SET_WARNINGS_CFLAGS],
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
     # -Wignored-qualifiers - catches return types with qualifiers like const
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
+    # -Wsign-compare - catches comparing signed/unsigned ints
     # -Wtype-limits - catches overflow bugs, few false positives
+    # -Wunreachable-code - catches some dead code
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wempty-body"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wignored-qualifiers"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wpointer-arith"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wsign-compare"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wunreachable-code"
 
     # -Wclass-varargs - catches objects passed by value to variadic functions.
+    # -Wloop-analysis - catches issues around loops
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wsometimes-initialized - catches some uninitialized values
+    # -Wthread-safety - catches inconsistent use of mutexes
     # -Wunreachable-code-aggressive - catches lots of dead code
     #
     # XXX: at the time of writing, the version of clang used on the OS X test
@@ -453,11 +459,13 @@ AC_DEFUN([MOZ_SET_WARNINGS_CFLAGS],
     # --enable-warnings-as-errors is specified so that no unexpected fatal
     # warnings are produced.
     MOZ_C_SUPPORTS_WARNING(-W, class-varargs, ac_c_has_wclass_varargs)
+    MOZ_C_SUPPORTS_WARNING(-W, loop-analysis, ac_c_has_wloop_analysis)
 
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
     fi
     MOZ_C_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_c_has_sometimes_uninitialized)
+    MOZ_C_SUPPORTS_WARNING(-W, thread-safety, ac_c_has_wthread_safety)
     MOZ_C_SUPPORTS_WARNING(-W, unreachable-code-aggressive, ac_c_has_wunreachable_code_aggressive)
 
     # -Wcast-align - catches problems with cast alignment
@@ -500,22 +508,30 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     # https://gcc.gnu.org/onlinedocs/gcc-4.7.2/gcc/Warning-Options.html
 
     # -Wall - lots of useful warnings
+    # -Wc++1[14z]-compat[-pedantic] - catches C++ version forward-compat issues
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
     # -Wignored-qualifiers - catches return types with qualifiers like const
     # -Woverloaded-virtual - function declaration hides virtual function from base class
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
+    # -Wsign-compare - catches comparing signed/unsigned ints
     # -Wtype-limits - catches overflow bugs, few false positives
+    # -Wwrite-strings - catches treating string literals as non-const
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wc++11-compat"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wempty-body"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wignored-qualifiers"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wsign-compare"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wwrite-strings"
 
     # -Wclass-varargs - catches objects passed by value to variadic functions.
+    # -Wloop-analysis - catches issues around loops
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wrange-loop-analysis - catches copies during range-based for loops.
     # -Wsometimes-initialized - catches some uninitialized values
+    # -Wthread-safety - catches inconsistent use of mutexes
     # -Wunreachable-code - catches some dead code
     # -Wunreachable-code-return - catches dead code after return call
     #
@@ -526,13 +542,19 @@ AC_DEFUN([MOZ_SET_WARNINGS_CXXFLAGS],
     # -Werror=non-literal-null-conversion, but we only do that when
     # --enable-warnings-as-errors is specified so that no unexpected fatal
     # warnings are produced.
+    MOZ_CXX_SUPPORTS_WARNING(-W, c++11-compat-pedantic, ac_cxx_has_wcxx11_compat_pedantic)
+    MOZ_CXX_SUPPORTS_WARNING(-W, c++14-compat, ac_cxx_has_wcxx14_compat)
+    MOZ_CXX_SUPPORTS_WARNING(-W, c++14-compat-pedantic, ac_cxx_has_wcxx14_compat_pedantic)
+    MOZ_CXX_SUPPORTS_WARNING(-W, c++1z-compat, ac_cxx_has_wcxx1z_compat)
     MOZ_CXX_SUPPORTS_WARNING(-W, class-varargs, ac_cxx_has_wclass_varargs)
+    MOZ_CXX_SUPPORTS_WARNING(-W, loop-analysis, ac_cxx_has_wloop_analysis)
 
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_non_literal_null_conversion)
     fi
     MOZ_CXX_SUPPORTS_WARNING(-W, range-loop-analysis, ac_cxx_has_range_loop_analysis)
     MOZ_CXX_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_cxx_has_sometimes_uninitialized)
+    MOZ_CXX_SUPPORTS_WARNING(-W, thread-safety, ac_cxx_has_wthread_safety)
     MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code, ac_cxx_has_wunreachable_code)
     MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code-return, ac_cxx_has_wunreachable_code_return)
 
