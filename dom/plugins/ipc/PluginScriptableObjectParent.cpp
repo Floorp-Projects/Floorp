@@ -485,7 +485,7 @@ PluginScriptableObjectParent::ScriptableEnumerate(NPObject* aObject,
     return false;
   }
 
-  AutoInfallibleTArray<PluginIdentifier, 10> identifiers;
+  AutoTArray<PluginIdentifier, 10> identifiers;
   bool success;
   if (!actor->CallEnumerate(&identifiers, &success)) {
     NS_WARNING("Failed to send message!");

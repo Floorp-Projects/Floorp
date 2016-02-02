@@ -1497,9 +1497,9 @@ bool
 TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
                                         MaybeNativeKeyBinding* aBindings)
 {
-  AutoInfallibleTArray<mozilla::CommandInt, 4> singleLine;
-  AutoInfallibleTArray<mozilla::CommandInt, 4> multiLine;
-  AutoInfallibleTArray<mozilla::CommandInt, 4> richText;
+  AutoTArray<mozilla::CommandInt, 4> singleLine;
+  AutoTArray<mozilla::CommandInt, 4> multiLine;
+  AutoTArray<mozilla::CommandInt, 4> richText;
 
   *aBindings = mozilla::void_t();
 
@@ -1711,9 +1711,9 @@ bool TabParent::SendRealKeyEvent(WidgetKeyboardEvent& event)
   if (event.mMessage == eKeyPress) {
     nsCOMPtr<nsIWidget> widget = GetWidget();
 
-    AutoInfallibleTArray<mozilla::CommandInt, 4> singleLine;
-    AutoInfallibleTArray<mozilla::CommandInt, 4> multiLine;
-    AutoInfallibleTArray<mozilla::CommandInt, 4> richText;
+    AutoTArray<mozilla::CommandInt, 4> singleLine;
+    AutoTArray<mozilla::CommandInt, 4> multiLine;
+    AutoTArray<mozilla::CommandInt, 4> richText;
 
     widget->ExecuteNativeKeyBinding(nsIWidget::NativeKeyBindingsForSingleLineEditor,
                                     event, DoCommandCallback, &singleLine);
