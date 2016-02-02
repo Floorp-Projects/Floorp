@@ -571,9 +571,7 @@ protected:
   nsPIDOMWindowInner* GetInnerWindowForTarget();
   already_AddRefed<nsPIDOMWindowInner> GetTargetAsInnerWindow() const;
 
-  bool ListenerCanHandle(const Listener* aListener,
-                         const WidgetEvent* aEvent,
-                         EventMessage aEventMessage) const;
+  bool ListenerCanHandle(Listener* aListener, WidgetEvent* aEvent);
 
   // BE AWARE, a lot of instances of EventListenerManager will be created.
   // Therefor, we need to keep this class compact.  When you add integer
