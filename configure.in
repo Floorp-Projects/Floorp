@@ -530,7 +530,7 @@ case "$target" in
             MSVS_VERSION=2013
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
-        elif test "$_CC_MAJOR_VERSION" = "19"; then
+        elif test "$_CC_MAJOR_VERSION" = "19" -a "$_CC_BUILD_VERSION" -ge "23506"; then
             _CC_SUITE=14
             MSVS_VERSION=2015
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
@@ -557,7 +557,7 @@ case "$target" in
             CXXFLAGS="$CXXFLAGS -wd4091"
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
-You must install Visual C++ 2013 Update 3 or newer in order to build.
+You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, or newer in order to build.
 See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         AC_SUBST(MSVS_VERSION)
