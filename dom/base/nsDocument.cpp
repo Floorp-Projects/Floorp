@@ -8762,12 +8762,14 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     }
   }
 
-  #ifdef MOZ_WEBSPEECH
-  nsGlobalWindow* globalWindow = static_cast<nsGlobalWindow*>(win);
-  if (globalWindow->HasActiveSpeechSynthesis()) {
-    return false;
+#ifdef MOZ_WEBSPEECH
+  if (win) {
+    nsGlobalWindow* globalWindow = static_cast<nsGlobalWindow*>(win);
+    if (globalWindow->HasActiveSpeechSynthesis()) {
+      return false;
+    }
   }
-  #endif
+#endif
 
   return true;
 }
