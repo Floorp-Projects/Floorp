@@ -14,6 +14,8 @@ const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
 const DUMPEMIT_PREF = "devtools.dump.emit";
 const DEBUGGERLOG_PREF = "devtools.debugger.log";
+// Allows Cache API to be working on usage `http` test page
+const CACHES_ON_HTTP_PREF = "dom.caches.testing.enabled";
 const PATH = "browser/devtools/client/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
@@ -27,6 +29,7 @@ var gToolbox, gPanelWindow, gWindow, gUI;
 // Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
 
 Services.prefs.setBoolPref(STORAGE_PREF, true);
+Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gWindow = gUI = null;
@@ -34,6 +37,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
+  Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
   DevToolsUtils.testing = false;
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
