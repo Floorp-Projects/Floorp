@@ -175,11 +175,22 @@ public:
     , mRelativeToBoxTopLeft(aRelativeToBoxTopLeft)
     , mBoxType(aBoxType)
   {
+    if (mBoxType == CSSBoxType::Margin) {
+      // Don't include the caption margin when computing margins for a
+      // table
+      mIncludeCaptionBoxForTable = false;
+    }
   }
 
   virtual void AddBox(nsIFrame* aFrame) override
   {
     nsIFrame* f = aFrame;
+    if (mBoxType == CSSBoxType::Margin &&
+        f->GetType() == nsGkAtoms::tableFrame) {
+      // Margin boxes for table frames should be taken from the outer table
+      // frame, since that has the margin.
+      f = f->GetParent();
+    }
     nsRect box = GetBoxRectForFrame(&f, mBoxType);
     nsPoint appUnits[4] =
       { box.TopLeft(), box.TopRight(), box.BottomRight(), box.BottomLeft() };
