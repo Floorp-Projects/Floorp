@@ -2,102 +2,31 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-  <!-- Used for setup success. -->
-  <string name="brand_short_name">&brandShortName;</string>
+<!-- Used for setup success. -->
+<string name="brand_short_name">&brandShortName;</string>
 
-  <string name="sync_app_name">&sync.app.name.label;</string>
-  <string name="sync_title_connect">&sync.title.adddevice.label;</string>
-  <string name="sync_title_pair">&sync.title.pair.label;</string>
+<!-- Configure Engines -->
+<string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords2;</string>
+<string name="sync_configure_engines_title_history">&sync.configure.engines.title.history;</string>
+<string name="sync_configure_engines_title_tabs">&sync.configure.engines.title.tabs;</string>
 
-  <!-- J-PAKE PIN Screen -->
-  <string name="sync_subtitle_header">&sync.subtitle.header2.label;</string>
-  <string name="sync_subtitle_connect">&sync.subtitle.connectlocation2.label;</string>
-  <string name="sync_subtitle_pair">&sync.pair.connectlocation.label;</string>
-  <string name="sync_pin_default">&sync.pin.oneline.label;</string>
-  <string name="sync_link_show"><u>&sync.link.show.label;</u></string>
-  <string name="sync_link_advancedsetup"><u>&sync.link.advancedsetup.label;</u></string>
+<!-- Bookmark folder strings -->
+<string name="bookmarks_folder_menu">&bookmarks.folder.menu.label;</string>
+<string name="bookmarks_folder_places">&bookmarks.folder.places.label;</string>
+<string name="bookmarks_folder_tags">&bookmarks.folder.tags.label;</string>
+<string name="bookmarks_folder_toolbar">&bookmarks.folder.toolbar.label;</string>
+<string name="bookmarks_folder_unfiled">&bookmarks.folder.unfiled.label;</string>
+<string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
+<string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
+<string name="bookmarks_folder_reading_list">&bookmarks.folder.readinglist.label;</string>
+<string name="bookmarks_folder_pinned">&bookmarks.folder.pinned.label;</string>
 
-  <!-- J-PAKE Waiting Screen -->
-
-  <string name="sync_jpake_subtitle_waiting">&sync.jpake.subtitle.waiting.label;</string>
-
-  <!-- Account Login Screen -->
-  <string name="sync_subtitle_account">&sync.subtitle.account.label;</string>
-  <string name="sync_input_username">&sync.input.username.label;</string>
-  <string name="sync_input_password">&sync.input.password.label;</string>
-  <string name="sync_input_key">&sync.input.key.label;</string>
-  <string name="sync_checkbox_server">&sync.checkbox.server.label;</string>
-  <string name="sync_input_server">&sync.input.server.label;</string>
-
-  <!-- Setup Fail -->
-  <string name="sync_title_fail">&sync.title.fail.label;</string>
-  <string name="sync_subtitle_fail">&sync.subtitle.fail.label;</string>
-  <string name="sync_button_tryagain">&sync.button.tryagain.label;</string>
-  <string name="sync_button_manual">&sync.button.manual.label;</string>
-  <string name="sync_subtitle_nointernet">&sync.subtitle.nointernet.label;</string>
-  <string name="sync_subtitle_failaccount">&sync.subtitle.failaccount.label;</string>
-  <string name="sync_subtitle_failmultiple">&sync.subtitle.failmultiple.label;</string>
-
-  <!-- Setup Success -->
-  <string name="sync_title_success">&sync.title.success.label;</string>
-  <string name="sync_subtitle_success">&sync.subtitle.success.label1;</string>
-  <string name="sync_settings">&sync.settings.label;</string>
-  <string name="sync_subtitle_manage">&sync.subtitle.manage.label1;</string>
-
-  <!-- Pair Device -->
-  <string name="sync_pair_tryagain">&sync.pair.tryagain.label;</string>
-
-  <!-- Firefox SyncAdapter Settings Screen -->
-  <string name="sync_settings_options">&sync.settings.options.label;</string>
-  <string name="sync_settings_summary_pair">&sync.summary.pair.label;</string>
-
-  <!-- Configure Engines -->
-  <string name="sync_configure_engines_title">&sync.configure.engines.title.label;</string>
-  <string name="sync_configure_engines_sync_my_title">&sync.configure.engines.sync.my.title.label;</string>
-  <string name="sync_configure_engines_title_bookmarks">&sync.configure.engines.title.bookmarks;</string>
-  <string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords2;</string>
-  <string name="sync_configure_engines_title_history">&sync.configure.engines.title.history;</string>
-  <string name="sync_configure_engines_title_tabs">&sync.configure.engines.title.tabs;</string>
-
-  <!-- Common text -->
-  <string name="sync_button_cancel">&sync.button.cancel.label;</string>
-  <string name="sync_button_connect">&sync.button.connect.label;</string>
-  <string name="sync_button_ok">&sync.button.ok.label;</string>
-
-  <!-- Account strings -->
-  <string name="sync_account_label">&sync.account.label;</string>
-
-  <!-- Bookmark folder strings -->
-  <string name="bookmarks_folder_menu">&bookmarks.folder.menu.label;</string>
-  <string name="bookmarks_folder_places">&bookmarks.folder.places.label;</string>
-  <string name="bookmarks_folder_tags">&bookmarks.folder.tags.label;</string>
-  <string name="bookmarks_folder_toolbar">&bookmarks.folder.toolbar.label;</string>
-  <string name="bookmarks_folder_unfiled">&bookmarks.folder.unfiled.label;</string>
-  <string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
-  <string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
-  <string name="bookmarks_folder_reading_list">&bookmarks.folder.readinglist.label;</string>
-  <string name="bookmarks_folder_pinned">&bookmarks.folder.pinned.label;</string>
-
-  <!-- Notification strings -->
-  <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>
-  <string name="sync_notification_savedprefs">&sync.notification.configure.saved;</string>
-
-  <!-- Incorrect settings and changing credentials. -->
-  <string name="sync_invalidcreds_label">&sync.invalidcreds.label;</string>
-  <string name="sync_invalidserver_label">&sync.invalidserver.label;</string>
-  <string name="sync_verifying_label">&sync.verifying.label;</string>
-  <string name="sync_new_recoverykey_status_incorrect">&sync.new.recoverykey.status.incorrect;</string>
-
-  <!-- Send tab to device. -->
-  <string name="sync_new_tab">&new_tab;</string>
-  <string name="sync_title_send_tab">&sync.title.send.tab.label;</string>
-  <string name="sync_button_send">&sync.button.send.label;</string>
-  <string name="sync_button_set_up_sync">&sync.button.set.up.sync.label;</string>
-  <string name="sync_title_redirect_to_set_up_sync">&sync.title.redirect.to.set.up.sync.label;</string>
-  <string name="sync_text_redirect_to_set_up_sync">&sync.text.redirect.to.set.up.sync.label;</string>
-  <string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
-  <string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
-  <string name="sync_default_client_name">&sync.default.client.name;</string>
+<!-- Send tab to device. -->
+<string name="sync_title_redirect_to_set_up_sync">&sync.title.redirect.to.set.up.sync.label;</string>
+<string name="sync_text_redirect_to_set_up_sync">&sync.text.redirect.to.set.up.sync.label;</string>
+<string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
+<string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
+<string name="sync_default_client_name">&sync.default.client.name;</string>
 
 <string name="browser_intent_package">@ANDROID_PACKAGE_NAME@</string>
 <string name="browser_intent_class">@ANDROID_PACKAGE_NAME@.App</string>
