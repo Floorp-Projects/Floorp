@@ -2726,9 +2726,11 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
         return EmitMathMinMax(f, ExprType::I32, IsMax(true), def);
       case Expr::I32Not:
         return EmitUnary<MNot>(f, ExprType::I32, def);
-      case Expr::I32SConvertF32:
+      case Expr::I32TruncSF32:
+      case Expr::I32TruncUF32:
         return EmitUnary<MTruncateToInt32>(f, ExprType::F32, def);
-      case Expr::I32SConvertF64:
+      case Expr::I32TruncSF64:
+      case Expr::I32TruncUF64:
         return EmitUnary<MTruncateToInt32>(f, ExprType::F64, def);
       case Expr::I32Clz:
         return EmitUnary<MClz>(f, ExprType::I32, def);
@@ -2823,11 +2825,11 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::F32Ceil:
       case Expr::F32Floor:
         return EmitF32MathBuiltinCall(f, op, def);
-      case Expr::F32FromF64:
+      case Expr::F32DemoteF64:
         return EmitUnary<MToFloat32>(f, ExprType::F64, def);
-      case Expr::F32FromS32:
+      case Expr::F32ConvertSI32:
         return EmitUnary<MToFloat32>(f, ExprType::I32, def);
-      case Expr::F32FromU32:
+      case Expr::F32ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToFloat32>(f, ExprType::I32, def);
       case Expr::F32LoadMem:
         return EmitLoadArray(f, Scalar::Float32, def);
@@ -2871,11 +2873,11 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::F64Pow:
       case Expr::F64Atan2:
         return EmitF64MathBuiltinCall(f, op, def);
-      case Expr::F64FromF32:
+      case Expr::F64PromoteF32:
         return EmitUnary<MToDouble>(f, ExprType::F32, def);
-      case Expr::F64FromS32:
+      case Expr::F64ConvertSI32:
         return EmitUnary<MToDouble>(f, ExprType::I32, def);
-      case Expr::F64FromU32:
+      case Expr::F64ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToDouble>(f, ExprType::I32, def);
       case Expr::F64LoadMem:
         return EmitLoadArray(f, Scalar::Float64, def);
@@ -2920,16 +2922,22 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::I32UConvertF32:
-      case Expr::I32UConvertF64:
-      case Expr::I32ConvertI64:
+      case Expr::I32WrapI64:
       case Expr::I64Const:
-      case Expr::I64SConvertI32:
-      case Expr::I64UConvertI32:
-      case Expr::I64SConvertF32:
-      case Expr::I64SConvertF64:
-      case Expr::I64UConvertF32:
-      case Expr::I64UConvertF64:
+      case Expr::I64ExtendSI32:
+      case Expr::I64ExtendUI32:
+      case Expr::I64TruncSF32:
+      case Expr::I64TruncSF64:
+      case Expr::I64TruncUF32:
+      case Expr::I64TruncUF64:
+      case Expr::F32ConvertSI64:
+      case Expr::F32ConvertUI64:
+      case Expr::F64ConvertSI64:
+      case Expr::F64ConvertUI64:
+      case Expr::I64ReinterpretF64:
+      case Expr::F64ReinterpretI64:
+      case Expr::I32ReinterpretF32:
+      case Expr::F32ReinterpretI32:
       case Expr::I64LoadMem8S:
       case Expr::I64LoadMem16S:
       case Expr::I64LoadMem32S:

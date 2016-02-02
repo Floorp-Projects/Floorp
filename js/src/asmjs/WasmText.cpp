@@ -98,6 +98,7 @@ enum class WasmAstExprKind
     Call,
     ComparisonOperator,
     Const,
+    ConversionOperator,
     GetLocal,
     Nop,
     SetLocal,
@@ -366,6 +367,22 @@ class WasmAstComparisonOperator final : public WasmAstExpr
     WasmAstExpr* rhs() const { return rhs_; }
 };
 
+class WasmAstConversionOperator final : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* op_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::ConversionOperator;
+    explicit WasmAstConversionOperator(Expr expr, WasmAstExpr* op)
+      : WasmAstExpr(Kind),
+        expr_(expr), op_(op)
+    {}
+
+    Expr expr() const { return expr_; }
+    WasmAstExpr* op() const { return op_; }
+};
+
 /*****************************************************************************/
 // wasm text token stream
 
@@ -381,6 +398,7 @@ class WasmToken
         CloseParen,
         ComparisonOpcode,
         Const,
+        ConversionOpcode,
         EndOfFile,
         Error,
         Export,
@@ -442,7 +460,8 @@ class WasmToken
         end_(end)
     {
         MOZ_ASSERT(begin != end);
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode ||
+                   kind_ == ConversionOpcode);
         u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
@@ -475,7 +494,8 @@ class WasmToken
         return u.valueType_;
     }
     Expr expr() const {
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode ||
+                   kind_ == ConversionOpcode);
         return u.expr_;
     }
 };
@@ -626,10 +646,19 @@ class WasmTokenStream
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F32Ceil, begin, cur_);
                     if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
+                    if (consume(MOZ_UTF16("convert_s/i32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI32,
+                                         begin, cur_);
+                    if (consume(MOZ_UTF16("convert_u/i32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI32,
+                                         begin, cur_);
                     if (consume(MOZ_UTF16("copysign")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
                     break;
                   case 'd':
+                    if (consume(MOZ_UTF16("demote/f64")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F32DemoteF64,
+                                         begin, cur_);
                     if (consume(MOZ_UTF16("div")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
                     break;
@@ -669,6 +698,11 @@ class WasmTokenStream
                     if (consume(MOZ_UTF16("ne")))
                         return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ne, begin, cur_);
                     break;
+                  case 'r':
+                    if (consume(MOZ_UTF16("reinterpret/i32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F32ReinterpretI32,
+                                         begin, cur_);
+                    break;
                   case 's':
                     if (consume(MOZ_UTF16("sqrt")))
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F32Sqrt, begin, cur_);
@@ -698,6 +732,12 @@ class WasmTokenStream
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F64Ceil, begin, cur_);
                     if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
+                    if (consume(MOZ_UTF16("convert_s/i32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI32,
+                                         begin, cur_);
+                    if (consume(MOZ_UTF16("convert_u/i32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI32,
+                                         begin, cur_);
                     if (consume(MOZ_UTF16("copysign")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
                     break;
@@ -740,6 +780,11 @@ class WasmTokenStream
                         return WasmToken(WasmToken::UnaryOpcode, Expr::F64Neg, begin, cur_);
                     if (consume(MOZ_UTF16("ne")))
                         return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ne, begin, cur_);
+                    break;
+                  case 'p':
+                    if (consume(MOZ_UTF16("promote/f32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::F64PromoteF32,
+                                         begin, cur_);
                     break;
                   case 's':
                     if (consume(MOZ_UTF16("sqrt")))
@@ -822,15 +867,18 @@ class WasmTokenStream
                     if (consume(MOZ_UTF16("or")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Or, begin, cur_);
                     break;
+                  case 'p':
+                    if (consume(MOZ_UTF16("popcnt")))
+                        return WasmToken(WasmToken::UnaryOpcode, Expr::I32Popcnt, begin, cur_);
+                    break;
                   case 'r':
+                    if (consume(MOZ_UTF16("reinterpret/f32")))
+                        return WasmToken(WasmToken::UnaryOpcode, Expr::I32ReinterpretF32,
+                                         begin, cur_);
                     if (consume(MOZ_UTF16("rem_s")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
                     if (consume(MOZ_UTF16("rem_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
-                    break;
-                  case 'p':
-                    if (consume(MOZ_UTF16("popcnt")))
-                        return WasmToken(WasmToken::UnaryOpcode, Expr::I32Popcnt, begin, cur_);
                     break;
                   case 's':
                     if (consume(MOZ_UTF16("sub")))
@@ -841,6 +889,20 @@ class WasmTokenStream
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrS, begin, cur_);
                     if (consume(MOZ_UTF16("shr_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
+                    break;
+                  case 't':
+                    if (consume(MOZ_UTF16("trunc_s/f32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF32,
+                                         begin, cur_);
+                    if (consume(MOZ_UTF16("trunc_s/f64")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF64,
+                                         begin, cur_);
+                    if (consume(MOZ_UTF16("trunc_u/f32")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF32,
+                                         begin, cur_);
+                    if (consume(MOZ_UTF16("trunc_u/f64")))
+                        return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF64,
+                                         begin, cur_);
                     break;
                   case 'x':
                     if (consume(MOZ_UTF16("xor")))
@@ -1110,6 +1172,16 @@ ParseComparisonOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstComparisonOperator(expr, lhs, rhs);
 }
 
+static WasmAstConversionOperator*
+ParseConversionOperator(WasmParseContext& c, Expr expr)
+{
+    WasmAstExpr* op = ParseExpr(c);
+    if (!op)
+        return nullptr;
+
+    return new(c.lifo) WasmAstConversionOperator(expr, op);
+}
+
 static WasmAstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
@@ -1126,10 +1198,12 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
         return ParseCall(c, Expr::CallImport);
-      case WasmToken::Const:
-        return ParseConst(c, token);
       case WasmToken::ComparisonOpcode:
         return ParseComparisonOperator(c, token.expr());
+      case WasmToken::Const:
+        return ParseConst(c, token);
+      case WasmToken::ConversionOpcode:
+        return ParseConversionOperator(c, token.expr());
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::SetLocal:
@@ -1407,6 +1481,13 @@ EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
 }
 
 static bool
+EncodeConversionOperator(Encoder& e, WasmAstConversionOperator& b)
+{
+    return e.writeExpr(b.expr()) &&
+           EncodeExpr(e, *b.op());
+}
+
+static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
@@ -1422,6 +1503,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeComparisonOperator(e, expr.as<WasmAstComparisonOperator>());
       case WasmAstExprKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
+      case WasmAstExprKind::ConversionOperator:
+        return EncodeConversionOperator(e, expr.as<WasmAstConversionOperator>());
       case WasmAstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
       case WasmAstExprKind::SetLocal:

@@ -290,6 +290,14 @@ DecodeComparisonOperator(FunctionDecoder& f, ExprType expected, ExprType type)
 }
 
 static bool
+DecodeConversionOperator(FunctionDecoder& f, ExprType expected,
+                         ExprType dstType, ExprType srcType)
+{
+    return CheckType(f, dstType, expected) &&
+           DecodeExpr(f, srcType);
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -386,6 +394,24 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64Gt:
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, expected, ExprType::F64);
+      case Expr::I32TruncSF32:
+      case Expr::I32TruncUF32:
+      case Expr::I32ReinterpretF32:
+        return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F32);
+      case Expr::I32TruncSF64:
+      case Expr::I32TruncUF64:
+        return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F64);
+      case Expr::F32ConvertSI32:
+      case Expr::F32ConvertUI32:
+      case Expr::F32ReinterpretI32:
+        return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I32);
+      case Expr::F32DemoteF64:
+        return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::F64);
+      case Expr::F64ConvertSI32:
+      case Expr::F64ConvertUI32:
+        return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::I32);
+      case Expr::F64PromoteF32:
+        return DecodeConversionOperator(f, expected, ExprType::F64, ExprType::F32);
       default:
         break;
     }
