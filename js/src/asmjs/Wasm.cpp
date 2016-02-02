@@ -280,6 +280,14 @@ DecodeBinaryOperator(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
+DecodeComparisonOperator(FunctionDecoder& f, ExprType expected, ExprType type)
+{
+    return CheckType(f, ExprType::I32, expected) &&
+           DecodeExpr(f, type) &&
+           DecodeExpr(f, type);
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -347,6 +355,31 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64Max:
       case Expr::F64CopySign:
         return DecodeBinaryOperator(f, expected);
+      case Expr::I32Eq:
+      case Expr::I32Ne:
+      case Expr::I32LtS:
+      case Expr::I32LtU:
+      case Expr::I32LeS:
+      case Expr::I32LeU:
+      case Expr::I32GtS:
+      case Expr::I32GtU:
+      case Expr::I32GeS:
+      case Expr::I32GeU:
+        return DecodeComparisonOperator(f, expected, ExprType::I32);
+      case Expr::F32Eq:
+      case Expr::F32Ne:
+      case Expr::F32Lt:
+      case Expr::F32Le:
+      case Expr::F32Gt:
+      case Expr::F32Ge:
+        return DecodeComparisonOperator(f, expected, ExprType::F32);
+      case Expr::F64Eq:
+      case Expr::F64Ne:
+      case Expr::F64Lt:
+      case Expr::F64Le:
+      case Expr::F64Gt:
+      case Expr::F64Ge:
+        return DecodeComparisonOperator(f, expected, ExprType::F64);
       default:
         break;
     }
