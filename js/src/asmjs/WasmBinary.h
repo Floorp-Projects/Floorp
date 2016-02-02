@@ -71,7 +71,6 @@ enum class Expr : uint16_t
     CallImport,
 
     // Constants and calls
-    I8Const,
     I32Const,
     I64Const,
     F64Const,
