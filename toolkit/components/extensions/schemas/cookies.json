@@ -59,6 +59,7 @@
         "name": "get",
         "type": "function",
         "description": "Retrieves information about a single cookie. If more than one cookie of the same name exists for the given URL, the one with the longest path will be returned. For cookies with the same path length, the cookie with the earliest creation time will be returned.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -85,6 +86,7 @@
         "name": "getAll",
         "type": "function",
         "description": "Retrieves all cookies from a single cookie store that match the given information.  The cookies returned will be sorted, with those with the longest path first.  If multiple cookies have the same path length, those with the earliest creation time will be first.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -115,6 +117,7 @@
         "name": "set",
         "type": "function",
         "description": "Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -148,6 +151,7 @@
         "name": "remove",
         "type": "function",
         "description": "Deletes a cookie by name.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -183,6 +187,7 @@
         "name": "getAllCookieStores",
         "type": "function",
         "description": "Lists all existing cookie stores.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
