@@ -167,6 +167,7 @@ UNIFIED_SOURCES += [
     'ScrollbarActivity.cpp',
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',
+    'SummaryFrame.cpp',
     'TextOverflow.cpp',
 ]
 
