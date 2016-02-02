@@ -16,20 +16,45 @@ const CensusHeader = module.exports = createClass({
         className: "header"
       },
 
-      dom.span({ className: "heap-tree-item-bytes" },
-               L10N.getStr("heapview.field.bytes")),
+      dom.span(
+        {
+          className: "heap-tree-item-bytes",
+          title: L10N.getStr("heapview.field.bytes.tooltip"),
+        },
+        L10N.getStr("heapview.field.bytes")
+      ),
 
-      dom.span({ className: "heap-tree-item-count" },
-               L10N.getStr("heapview.field.count")),
+      dom.span(
+        {
+          className: "heap-tree-item-count",
+          title: L10N.getStr("heapview.field.count.tooltip"),
+        },
+        L10N.getStr("heapview.field.count")
+      ),
 
-      dom.span({ className: "heap-tree-item-total-bytes" },
-               L10N.getStr("heapview.field.totalbytes")),
+      dom.span(
+        {
+          className: "heap-tree-item-total-bytes",
+          title: L10N.getStr("heapview.field.totalbytes.tooltip"),
+        },
+        L10N.getStr("heapview.field.totalbytes")
+      ),
 
-      dom.span({ className: "heap-tree-item-total-count" },
-               L10N.getStr("heapview.field.totalcount")),
+      dom.span(
+        {
+          className: "heap-tree-item-total-count",
+          title: L10N.getStr("heapview.field.totalcount.tooltip"),
+        },
+        L10N.getStr("heapview.field.totalcount")
+      ),
 
-      dom.span({ className: "heap-tree-item-name" },
-               L10N.getStr("heapview.field.name"))
+      dom.span(
+        {
+          className: "heap-tree-item-name",
+          title: L10N.getStr("heapview.field.name.tooltip"),
+        },
+        L10N.getStr("heapview.field.name")
+      )
     );
   }
 });
