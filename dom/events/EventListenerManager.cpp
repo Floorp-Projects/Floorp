@@ -19,9 +19,7 @@
 #include "mozilla/HalSensor.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/JSEventHandler.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -96,46 +94,6 @@ MutationBitForEventType(EventMessage aEventType)
 }
 
 uint32_t EventListenerManager::sMainThreadCreatedCount = 0;
-
-static bool
-IsWebkitPrefixSupportEnabled()
-{
-  static bool sIsWebkitPrefixSupportEnabled;
-  static bool sIsPrefCached = false;
-
-  if (!sIsPrefCached) {
-    sIsPrefCached = true;
-    Preferences::AddBoolVarCache(&sIsWebkitPrefixSupportEnabled,
-                                 "layout.css.prefixes.webkit");
-  }
-
-  return sIsWebkitPrefixSupportEnabled;
-}
-
-// If the given EventMessage has a legacy version that we support, then this
-// function returns that legacy version. Otherwise, this function simply
-// returns the passed-in EventMessage.
-EventMessage
-GetLegacyEventMessage(EventMessage aEventMessage)
-{
-  if (IsWebkitPrefixSupportEnabled()) {
-    // webkit-prefixed legacy events:
-    if (aEventMessage == eTransitionEnd) {
-      return eWebkitTransitionEnd;
-    }
-    if (aEventMessage == eAnimationStart) {
-      return eWebkitAnimationStart;
-    }
-    if (aEventMessage == eAnimationEnd) {
-      return eWebkitAnimationEnd;
-    }
-    if (aEventMessage == eAnimationIteration) {
-      return eWebkitAnimationIteration;
-    }
-  }
-
-  return aEventMessage;
-}
 
 EventListenerManagerBase::EventListenerManagerBase()
   : mNoListenerForEvent(eVoidEvent)
@@ -645,15 +603,9 @@ EventListenerManager::RemoveEventListenerInternal(
 }
 
 bool
-EventListenerManager::ListenerCanHandle(const Listener* aListener,
-                                        const WidgetEvent* aEvent,
-                                        EventMessage aEventMessage) const
-
+EventListenerManager::ListenerCanHandle(Listener* aListener,
+                                        WidgetEvent* aEvent)
 {
-  MOZ_ASSERT(aEventMessage == aEvent->mMessage ||
-             aEventMessage == GetLegacyEventMessage(aEvent->mMessage),
-             "aEvent and aEventMessage should agree, modulo legacyness");
-
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->mMessage == eUnidentifiedEvent and
   // aListener=>mEventMessage != eUnidentifiedEvent as long as the atoms are
@@ -668,7 +620,7 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
     return aListener->mTypeString.Equals(aEvent->typeString);
   }
   MOZ_ASSERT(mIsMainThreadELM);
-  return aListener->mEventMessage == aEventMessage;
+  return aListener->mEventMessage == aEvent->mMessage;
 }
 
 void
@@ -1152,107 +1104,77 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     aEvent->mFlags.mDefaultPrevented = true;
   }
 
+  nsAutoTObserverArray<Listener, 2>::EndLimitedIterator iter(mListeners);
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
     popupStatePusher.emplace(Event::GetEventPopupControlState(aEvent, *aDOMEvent));
   }
 
   bool hasListener = false;
-  bool usingLegacyMessage = false;
-  EventMessage eventMessage = aEvent->mMessage;
-
-  while (true) {
-    nsAutoTObserverArray<Listener, 2>::EndLimitedIterator iter(mListeners);
-    Maybe<EventMessageAutoOverride> legacyAutoOverride;
-    while (iter.HasMore()) {
-      if (aEvent->mFlags.mImmediatePropagationStopped) {
-        break;
-      }
-      Listener* listener = &iter.GetNext();
-      // Check that the phase is same in event and event listener.
-      // Handle only trusted events, except when listener permits untrusted events.
-      if (ListenerCanHandle(listener, aEvent, eventMessage)) {
-        hasListener = true;
-        if (listener->IsListening(aEvent) &&
-            (aEvent->mFlags.mIsTrusted ||
-             listener->mFlags.mAllowUntrustedEvents)) {
-          if (!*aDOMEvent) {
-            // This is tiny bit slow, but happens only once per event.
-            nsCOMPtr<EventTarget> et =
-              do_QueryInterface(aEvent->originalTarget);
-            RefPtr<Event> event = EventDispatcher::CreateEvent(et, aPresContext,
+  while (iter.HasMore()) {
+    if (aEvent->mFlags.mImmediatePropagationStopped) {
+      break;
+    }
+    Listener* listener = &iter.GetNext();
+    // Check that the phase is same in event and event listener.
+    // Handle only trusted events, except when listener permits untrusted events.
+    if (ListenerCanHandle(listener, aEvent)) {
+      hasListener = true;
+      if (listener->IsListening(aEvent) &&
+          (aEvent->mFlags.mIsTrusted ||
+           listener->mFlags.mAllowUntrustedEvents)) {
+        if (!*aDOMEvent) {
+          // This is tiny bit slow, but happens only once per event.
+          nsCOMPtr<EventTarget> et =
+            do_QueryInterface(aEvent->originalTarget);
+          RefPtr<Event> event = EventDispatcher::CreateEvent(et, aPresContext,
                                                                aEvent,
                                                                EmptyString());
-            event.forget(aDOMEvent);
-          }
-          if (*aDOMEvent) {
+          event.forget(aDOMEvent);
+        }
+        if (*aDOMEvent) {
+          if (!aEvent->currentTarget) {
+            aEvent->currentTarget = aCurrentTarget->GetTargetForDOMEvent();
             if (!aEvent->currentTarget) {
-              aEvent->currentTarget = aCurrentTarget->GetTargetForDOMEvent();
-              if (!aEvent->currentTarget) {
-                break;
+              break;
+            }
+          }
+
+          // Maybe add a marker to the docshell's timeline, but only
+          // bother with all the logic if some docshell is recording.
+          nsDocShell* docShell;
+          RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+          bool needsEndEventMarker = false;
+
+          if (mIsMainThreadELM &&
+              listener->mListenerType != Listener::eNativeListener) {
+            nsCOMPtr<nsIDocShell> docShellComPtr = GetDocShellForTarget();
+            if (docShellComPtr) {
+              docShell = static_cast<nsDocShell*>(docShellComPtr.get());
+              if (timelines && timelines->HasConsumer(docShell)) {
+                needsEndEventMarker = true;
+                nsAutoString typeStr;
+                (*aDOMEvent)->GetType(typeStr);
+                uint16_t phase;
+                (*aDOMEvent)->GetEventPhase(&phase);
+                timelines->AddMarkerForDocShell(docShell, Move(
+                  MakeUnique<EventTimelineMarker>(
+                    typeStr, phase, MarkerTracingType::START)));
               }
             }
-            if (usingLegacyMessage && !legacyAutoOverride) {
-              // Override the aDOMEvent's event-message (its .type) until we
-              // finish traversing listeners (when legacyAutoOverride destructs)
-              legacyAutoOverride.emplace(*aDOMEvent, eventMessage);
-            }
+          }
 
-            // Maybe add a marker to the docshell's timeline, but only
-            // bother with all the logic if some docshell is recording.
-            nsDocShell* docShell;
-            RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-            bool needsEndEventMarker = false;
+          if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
+            aEvent->mFlags.mExceptionHasBeenRisen = true;
+          }
 
-            if (mIsMainThreadELM &&
-                listener->mListenerType != Listener::eNativeListener) {
-              nsCOMPtr<nsIDocShell> docShellComPtr = GetDocShellForTarget();
-              if (docShellComPtr) {
-                docShell = static_cast<nsDocShell*>(docShellComPtr.get());
-                if (timelines && timelines->HasConsumer(docShell)) {
-                  needsEndEventMarker = true;
-                  nsAutoString typeStr;
-                  (*aDOMEvent)->GetType(typeStr);
-                  uint16_t phase;
-                  (*aDOMEvent)->GetEventPhase(&phase);
-                  timelines->AddMarkerForDocShell(docShell, Move(
-                    MakeUnique<EventTimelineMarker>(
-                      typeStr, phase, MarkerTracingType::START)));
-                }
-              }
-            }
-
-            if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
-              aEvent->mFlags.mExceptionHasBeenRisen = true;
-            }
-
-            if (needsEndEventMarker) {
-              timelines->AddMarkerForDocShell(
-                docShell, "DOMEvent", MarkerTracingType::END);
-            }
+          if (needsEndEventMarker) {
+            timelines->AddMarkerForDocShell(
+              docShell, "DOMEvent", MarkerTracingType::END);
           }
         }
       }
     }
-
-    // If we didn't find any matching listeners, and our event has a legacy
-    // version, we'll now switch to looking for that legacy version and we'll
-    // recheck our listeners.
-    if (hasListener || usingLegacyMessage) {
-      // (No need to recheck listeners, because we already found a match, or we
-      // already rechecked them.)
-      break;
-    }
-    EventMessage legacyEventMessage = GetLegacyEventMessage(eventMessage);
-    if (legacyEventMessage == eventMessage) {
-      break; // There's no legacy version of our event; no need to recheck.
-    }
-    MOZ_ASSERT(GetLegacyEventMessage(legacyEventMessage) == legacyEventMessage,
-               "Legacy event messages should not themselves have legacy versions");
-
-    // Recheck our listeners, using the legacy event message we just looked up:
-    eventMessage = legacyEventMessage;
-    usingLegacyMessage = true;
   }
 
   aEvent->currentTarget = nullptr;
