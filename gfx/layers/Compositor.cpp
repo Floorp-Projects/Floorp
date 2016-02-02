@@ -358,7 +358,8 @@ gfx::IntRect
 Compositor::ComputeBackdropCopyRect(const gfx::Rect& aRect,
                                     const gfx::Rect& aClipRect,
                                     const gfx::Matrix4x4& aTransform,
-                                    gfx::Matrix4x4* aOutTransform)
+                                    gfx::Matrix4x4* aOutTransform,
+                                    gfx::Rect* aOutLayerQuad)
 {
   // Compute the clip.
   gfx::IntPoint rtOffset = GetCurrentRenderTarget()->GetOrigin();
@@ -376,6 +377,10 @@ Compositor::ComputeBackdropCopyRect(const gfx::Rect& aRect,
 
   // Ensure we don't round out to -1, which trips up Direct3D.
   dest.IntersectRect(dest, gfx::RectDouble(0, 0, rtSize.width, rtSize.height));
+
+  if (aOutLayerQuad) {
+    *aOutLayerQuad = gfx::Rect(dest.x, dest.y, dest.width, dest.height);
+  }
 
   // Round out to integer.
   gfx::IntRect result;
