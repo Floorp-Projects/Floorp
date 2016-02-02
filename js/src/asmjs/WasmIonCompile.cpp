@@ -2916,9 +2916,9 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
       case Expr::I32Popcnt:
       case Expr::F32CopySign:
       case Expr::F32Trunc:
-      case Expr::F32NearestInt:
+      case Expr::F32Nearest:
       case Expr::F64CopySign:
-      case Expr::F64NearestInt:
+      case Expr::F64Nearest:
       case Expr::F64Trunc:
       case Expr::I32UConvertF32:
       case Expr::I32UConvertF64:
