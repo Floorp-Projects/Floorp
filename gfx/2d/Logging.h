@@ -131,6 +131,7 @@ enum class LogReason : int {
   GlyphAllocFailedCG,
   InvalidRect,
   CannotDraw3D, // 20
+  IncompatibleBasicTexturedEffect,
   // End
   MustBeLessThanThis = 101,
 };
