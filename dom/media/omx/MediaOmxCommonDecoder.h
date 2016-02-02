@@ -26,7 +26,7 @@ public:
   void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                         MediaDecoderEventVisibility aEventVisibility) override;
   void ChangeState(PlayState aState) override;
-  void CallSeek(SeekTarget aTarget) override;
+  void CallSeek(const SeekTarget& aTarget) override;
   void SetVolume(double aVolume) override;
   int64_t CurrentPosition() override;
   MediaDecoderOwner::NextFrameStatus NextFrameStatus() override;

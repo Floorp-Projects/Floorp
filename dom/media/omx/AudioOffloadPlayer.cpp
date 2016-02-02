@@ -346,7 +346,7 @@ status_t AudioOffloadPlayer::DoSeek()
   CHECK(mAudioSink.get());
 
   AUDIO_OFFLOAD_LOG(LogLevel::Debug,
-                    "DoSeek ( %lld )", mSeekTarget.GetTime().ToMicroseconds());
+                    ("DoSeek ( %lld )", mSeekTarget.GetTime().ToMicroseconds()));
 
   mReachedEOS = false;
   mPositionTimeMediaUs = -1;
