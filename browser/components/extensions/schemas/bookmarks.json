@@ -109,6 +109,7 @@
         "name": "get",
         "type": "function",
         "description": "Retrieves the specified BookmarkTreeNode(s).",
+        "async": "callback",
         "parameters": [
           {
             "name": "idOrIdList",
@@ -143,6 +144,7 @@
         "name": "getChildren",
         "type": "function",
         "description": "Retrieves the children of the specified BookmarkTreeNode id.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -166,6 +168,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves the recently added bookmarks.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -190,6 +193,7 @@
         "name": "getTree",
         "type": "function",
         "description": "Retrieves the entire Bookmarks hierarchy.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -208,6 +212,7 @@
         "name": "getSubTree",
         "type": "function",
         "description": "Retrieves part of the Bookmarks hierarchy, starting at the specified node.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -232,6 +237,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Searches for BookmarkTreeNodes matching the given query. Queries specified with an object produce BookmarkTreeNodes matching all specified properties.",
+        "async": "callback",
         "parameters": [
           {
             "name": "query",
@@ -281,6 +287,7 @@
         "name": "create",
         "type": "function",
         "description": "Creates a bookmark or folder under the specified parentId.  If url is NULL or missing, it will be a folder.",
+        "async": "callback",
         "parameters": [
           {
             "$ref": "CreateDetails",
@@ -303,6 +310,7 @@
         "name": "move",
         "type": "function",
         "description": "Moves the specified BookmarkTreeNode to the provided location.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -340,6 +348,7 @@
         "name": "update",
         "type": "function",
         "description": "Updates the properties of a bookmark or folder. Specify only the properties that you want to change; unspecified properties will be left unchanged.  <b>Note:</b> Currently, only 'title' and 'url' are supported.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -376,6 +385,7 @@
         "name": "remove",
         "type": "function",
         "description": "Removes a bookmark or an empty bookmark folder.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -394,6 +404,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Recursively removes a bookmark folder.",
+        "async": "callback",
         "parameters": [
           {
             "type": "string",
@@ -412,6 +423,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Imports bookmarks from an html bookmark file",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -426,6 +438,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Exports bookmarks to an html bookmark file",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
