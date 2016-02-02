@@ -65,7 +65,7 @@ public class TestExtendedJSONObject {
     o.put("integer", Integer.valueOf(5));
     o.put("string",  "66");
     o.put("object",  new ExtendedJSONObject());
-    o.put("null",    null);
+    o.put("null", (JSONArray) null);
 
     assertEquals(Integer.valueOf(5),  o.getIntegerSafely("integer"));
     assertEquals(Integer.valueOf(66), o.getIntegerSafely("string"));
