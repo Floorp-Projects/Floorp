@@ -252,8 +252,7 @@ protected:
   static bool sSelectionBarEnabled;
 
   // Android specific visibility extensions correct compatibility issues
-  // with caret-drag, tapping into empty inputs, and ActionBar visiblity
-  // during page scroll.
+  // with caret-drag and ActionBar visibility during page scroll.
   static bool sCaretsExtendedVisibility;
 
   // By default, javascript content selection changes closes AccessibleCarets and
