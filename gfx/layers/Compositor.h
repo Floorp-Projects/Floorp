@@ -518,11 +518,16 @@ protected:
    * Given a layer rect, clip, and transform, compute the area of the backdrop that
    * needs to be copied for mix-blending. The output transform translates from 0..1
    * space into the backdrop rect space.
+   *
+   * The transformed layer quad is also optionally returned - this is the same as
+   * the result rect, before rounding.
    */
   gfx::IntRect ComputeBackdropCopyRect(
     const gfx::Rect& aRect,
     const gfx::Rect& aClipRect,
-    const gfx::Matrix4x4& aTransform);
+    const gfx::Matrix4x4& aTransform,
+    gfx::Matrix4x4* aOutTransform,
+    gfx::Rect* aOutLayerQuad = nullptr);
 
   /**
    * Render time for the current composition.
