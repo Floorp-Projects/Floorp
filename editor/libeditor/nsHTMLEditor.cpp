@@ -547,7 +547,7 @@ nsHTMLEditor::BeginningOfDocument()
   // Find first editable thingy
   bool done = false;
   nsCOMPtr<nsINode> curNode = rootElement.get(), selNode;
-  int32_t curOffset = 0, selOffset;
+  int32_t curOffset = 0, selOffset = 0;
   while (!done) {
     nsWSRunObject wsObj(this, curNode, curOffset);
     int32_t visOffset = 0;
