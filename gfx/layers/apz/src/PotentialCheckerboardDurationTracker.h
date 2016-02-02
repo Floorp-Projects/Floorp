@@ -39,15 +39,10 @@ public:
   void CheckerboardDone();
 
   /**
-   * This should be called when a transform is started. Calls to this must be
-   * interleaved with calls to TransformStopped().
+   * This should be called at composition time, to indicate if the APZC is in
+   * a transforming state or not.
    */
-  void TransformStarted();
-  /**
-   * This should be called when a transform is stopped. Calls to this must be
-   * interleaved with calls to TransformStarted().
-   */
-  void TransformStopped();
+  void InTransform(bool aInTransform);
 
 private:
   bool Tracking() const;
