@@ -145,6 +145,19 @@
       width: 100px;
     }
   }
+
+  .script-generated {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: black;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0, transparent 5px, #f06 5px, #f06 10px);
+    border: 5px solid #f06;
+    box-sizing: border-box;
+  }
 </style>
 <div class="not-animated"></div>
 <div class="simple-animation"></div>
@@ -157,11 +170,26 @@
 <div class="delayed-multiple-animations"></div>
 <div class="multiple-animations-2"></div>
 <div class="all-transitions"></div>
+<div class="script-generated"></div>
 <script type="text/javascript">
   // Get the transitions started when the page loads
   var players;
   addEventListener("load", function() {
     document.querySelector(".transition").classList.add("get-round");
     document.querySelector(".delayed-transition").classList.add("get-round");
+
+    // Create a script-generated animation.
+    var animation = document.querySelector(".script-generated").animate({
+      backgroundColor: ["black", "gold"]
+    }, {
+      duration: 500,
+      iterations: Infinity,
+      direction: "alternate"
+    });
+    animation.id = "custom-animation-name";
+
+    // Add a custom animation id to an existing css animation.
+    document.querySelector(".delayed-animation")
+            .getAnimations()[0].id = "cssanimation-custom-name";
   });
 </script>
