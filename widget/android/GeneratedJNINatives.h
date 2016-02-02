@@ -220,13 +220,21 @@ class PrefsHelper::Natives : public mozilla::jni::NativeImpl<PrefsHelper, Impl>
 public:
     static constexpr JNINativeMethod methods[] = {
 
-        mozilla::jni::MakeNativeMethod<PrefsHelper::GetPrefsById_t>(
-                mozilla::jni::NativeStub<PrefsHelper::GetPrefsById_t, Impl>
-                ::template Wrap<&Impl::GetPrefsById>),
+        mozilla::jni::MakeNativeMethod<PrefsHelper::AddObserver_t>(
+                mozilla::jni::NativeStub<PrefsHelper::AddObserver_t, Impl>
+                ::template Wrap<&Impl::AddObserver>),
 
-        mozilla::jni::MakeNativeMethod<PrefsHelper::RemovePrefsObserver_t>(
-                mozilla::jni::NativeStub<PrefsHelper::RemovePrefsObserver_t, Impl>
-                ::template Wrap<&Impl::RemovePrefsObserver>)
+        mozilla::jni::MakeNativeMethod<PrefsHelper::GetPrefs_t>(
+                mozilla::jni::NativeStub<PrefsHelper::GetPrefs_t, Impl>
+                ::template Wrap<&Impl::GetPrefs>),
+
+        mozilla::jni::MakeNativeMethod<PrefsHelper::RemoveObserver_t>(
+                mozilla::jni::NativeStub<PrefsHelper::RemoveObserver_t, Impl>
+                ::template Wrap<&Impl::RemoveObserver>),
+
+        mozilla::jni::MakeNativeMethod<PrefsHelper::SetPref_t>(
+                mozilla::jni::NativeStub<PrefsHelper::SetPref_t, Impl>
+                ::template Wrap<&Impl::SetPref>)
     };
 };
 
@@ -250,6 +258,10 @@ public:
         mozilla::jni::MakeNativeMethod<GLController::DisposeNative_t>(
                 mozilla::jni::NativeStub<GLController::DisposeNative_t, Impl>
                 ::template Wrap<&Impl::DisposeNative>),
+
+        mozilla::jni::MakeNativeMethod<GLController::OnSizeChanged_t>(
+                mozilla::jni::NativeStub<GLController::OnSizeChanged_t, Impl>
+                ::template Wrap<&Impl::OnSizeChanged>),
 
         mozilla::jni::MakeNativeMethod<GLController::PauseCompositor_t>(
                 mozilla::jni::NativeStub<GLController::PauseCompositor_t, Impl>

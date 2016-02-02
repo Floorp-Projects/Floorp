@@ -3149,6 +3149,7 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
   if (!mCheckerboardEvent && (recordTrace || forTelemetry)) {
     mCheckerboardEvent = MakeUnique<CheckerboardEvent>(recordTrace);
   }
+  mPotentialCheckerboardTracker.InTransform(IsTransformingState(mState));
   if (magnitude) {
     mPotentialCheckerboardTracker.CheckerboardSeen();
   }
@@ -3634,7 +3635,6 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
 
   if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
     if (!IsTransformingState(aOldState) && IsTransformingState(aNewState)) {
-      mPotentialCheckerboardTracker.TransformStarted();
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformBegin);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -3645,7 +3645,6 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
       }
 #endif
     } else if (IsTransformingState(aOldState) && !IsTransformingState(aNewState)) {
-      mPotentialCheckerboardTracker.TransformStopped();
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)

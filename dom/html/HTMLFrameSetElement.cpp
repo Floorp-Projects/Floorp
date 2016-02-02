@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLFrameSetElementBinding.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
@@ -81,7 +82,7 @@ HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
    */
   if (aAttribute == nsGkAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
     int32_t oldRows = mNumRows;
-    ParseRowCol(aValue, mNumRows, getter_Transfers(mRowSpecs));
+    ParseRowCol(aValue, mNumRows, &mRowSpecs);
     
     if (mNumRows != oldRows) {
       mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
@@ -89,7 +90,7 @@ HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
   } else if (aAttribute == nsGkAtoms::cols &&
              aNameSpaceID == kNameSpaceID_None) {
     int32_t oldCols = mNumCols;
-    ParseRowCol(aValue, mNumCols, getter_Transfers(mColSpecs));
+    ParseRowCol(aValue, mNumCols, &mColSpecs);
 
     if (mNumCols != oldCols) {
       mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
@@ -116,19 +117,19 @@ HTMLFrameSetElement::GetRowSpec(int32_t *aNumValues,
     const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows);
     if (value && value->Type() == nsAttrValue::eString) {
       nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows,
-                                getter_Transfers(mRowSpecs));
+                                &mRowSpecs);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
-      mRowSpecs = new nsFramesetSpec[1];
+      mRowSpecs = MakeUnique<nsFramesetSpec[]>(1);
       mNumRows = 1;
       mRowSpecs[0].mUnit  = eFramesetUnit_Relative;
       mRowSpecs[0].mValue = 1;
     }
   }
 
-  *aSpecs = mRowSpecs;
+  *aSpecs = mRowSpecs.get();
   *aNumValues = mNumRows;
   return NS_OK;
 }
@@ -146,19 +147,19 @@ HTMLFrameSetElement::GetColSpec(int32_t *aNumValues,
     const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols);
     if (value && value->Type() == nsAttrValue::eString) {
       nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols,
-                                getter_Transfers(mColSpecs));
+                                &mColSpecs);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (!mColSpecs) {  // we may not have had an attr or had an empty attr
-      mColSpecs = new nsFramesetSpec[1];
+      mColSpecs = MakeUnique<nsFramesetSpec[]>(1);
       mNumCols = 1;
       mColSpecs[0].mUnit  = eFramesetUnit_Relative;
       mColSpecs[0].mValue = 1;
     }
   }
 
-  *aSpecs = mColSpecs;
+  *aSpecs = mColSpecs.get();
   *aNumValues = mNumCols;
   return NS_OK;
 }
@@ -205,7 +206,7 @@ HTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 nsresult
 HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
                                  int32_t& aNumSpecs,
-                                 nsFramesetSpec** aSpecs) 
+                                 UniquePtr<nsFramesetSpec[]>* aSpecs)
 {
   if (aValue.IsEmpty()) {
     aNumSpecs = 0;
@@ -233,7 +234,7 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
     commaX = spec.FindChar(sComma, commaX + 1);
   }
 
-  nsFramesetSpec* specs = new (fallible) nsFramesetSpec[count];
+  auto specs = MakeUniqueFallible<nsFramesetSpec[]>(count);
   if (!specs) {
     *aSpecs = nullptr;
     aNumSpecs = 0;
@@ -327,8 +328,8 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
 
   aNumSpecs = count;
   // Transfer ownership to caller here
-  *aSpecs = specs;
-  
+  *aSpecs = Move(specs);
+
   return NS_OK;
 }
 

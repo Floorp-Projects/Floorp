@@ -88,40 +88,32 @@ class WasmAstSig : public WasmAstBase
     }
 };
 
-enum class WasmAstKind
+class WasmAstNode : public WasmAstBase
+{};
+
+enum class WasmAstExprKind
 {
     BinaryOperator,
     Block,
     Call,
     Const,
-    Export,
-    Func,
     GetLocal,
-    Import,
-    Module,
     Nop,
     SetLocal
 };
 
-class WasmAstNode : public WasmAstBase
-{
-    const WasmAstKind kind_;
-
-  public:
-    explicit WasmAstNode(WasmAstKind kind)
-      : kind_(kind)
-    {}
-    WasmAstKind kind() const { return kind_; }
-};
-
 class WasmAstExpr : public WasmAstNode
 {
+    const WasmAstExprKind kind_;
+
   protected:
-    explicit WasmAstExpr(WasmAstKind kind)
-      : WasmAstNode(kind)
+    explicit WasmAstExpr(WasmAstExprKind kind)
+      : kind_(kind)
     {}
 
   public:
+    WasmAstExprKind kind() const { return kind_; }
+
     template <class T>
     T& as() {
         MOZ_ASSERT(kind() == T::Kind);
@@ -132,7 +124,7 @@ class WasmAstExpr : public WasmAstNode
 struct WasmAstNop : WasmAstExpr
 {
     WasmAstNop()
-      : WasmAstExpr(WasmAstKind::Nop)
+      : WasmAstExpr(WasmAstExprKind::Nop)
     {}
 };
 
@@ -141,7 +133,7 @@ class WasmAstConst : public WasmAstExpr
     const Val val_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Const;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Const;
     explicit WasmAstConst(Val val)
       : WasmAstExpr(Kind),
         val_(val)
@@ -154,7 +146,7 @@ class WasmAstGetLocal : public WasmAstExpr
     uint32_t localIndex_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::GetLocal;
+    static const WasmAstExprKind Kind = WasmAstExprKind::GetLocal;
     explicit WasmAstGetLocal(uint32_t localIndex)
       : WasmAstExpr(Kind),
         localIndex_(localIndex)
@@ -170,7 +162,7 @@ class WasmAstSetLocal : public WasmAstExpr
     WasmAstExpr& value_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::SetLocal;
+    static const WasmAstExprKind Kind = WasmAstExprKind::SetLocal;
     WasmAstSetLocal(uint32_t localIndex, WasmAstExpr& value)
       : WasmAstExpr(Kind),
         localIndex_(localIndex),
@@ -189,7 +181,7 @@ class WasmAstBlock : public WasmAstExpr
     WasmAstExprVector exprs_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Block;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Block;
     explicit WasmAstBlock(WasmAstExprVector&& exprs)
       : WasmAstExpr(Kind),
         exprs_(Move(exprs))
@@ -205,7 +197,7 @@ class WasmAstCall : public WasmAstExpr
     WasmAstExprVector args_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::Call;
+    static const WasmAstExprKind Kind = WasmAstExprKind::Call;
     WasmAstCall(Expr expr, uint32_t index, WasmAstExprVector&& args)
       : WasmAstExpr(Kind), expr_(expr), index_(index), args_(Move(args))
     {}
@@ -223,8 +215,7 @@ class WasmAstFunc : public WasmAstNode
 
   public:
     WasmAstFunc(uint32_t sigIndex, WasmAstValTypeVector&& varTypes, WasmAstExpr* maybeBody)
-      : WasmAstNode(WasmAstKind::Func),
-        sigIndex_(sigIndex),
+      : sigIndex_(sigIndex),
         varTypes_(Move(varTypes)),
         maybeBody_(maybeBody)
     {}
@@ -241,7 +232,7 @@ class WasmAstImport : public WasmAstNode
 
   public:
     WasmAstImport(TwoByteChars module, TwoByteChars func, uint32_t sigIndex)
-      : WasmAstNode(WasmAstKind::Import), module_(module), func_(func), sigIndex_(sigIndex)
+      : module_(module), func_(func), sigIndex_(sigIndex)
     {}
     TwoByteChars module() const { return module_; }
     TwoByteChars func() const { return func_; }
@@ -255,7 +246,7 @@ class WasmAstExport : public WasmAstNode
 
   public:
     WasmAstExport(TwoByteChars name, uint32_t funcIndex)
-      : WasmAstNode(WasmAstKind::Export), name_(name), funcIndex_(funcIndex)
+      : name_(name), funcIndex_(funcIndex)
     {}
     TwoByteChars name() const { return name_; }
     size_t funcIndex() const { return funcIndex_; }
@@ -278,8 +269,7 @@ class WasmAstModule : public WasmAstNode
 
   public:
     explicit WasmAstModule(LifoAlloc& lifo)
-      : WasmAstNode(WasmAstKind::Module),
-        lifo_(lifo),
+      : lifo_(lifo),
         funcs_(lifo),
         imports_(lifo),
         exports_(lifo),
@@ -329,7 +319,7 @@ class WasmAstBinaryOperator final : public WasmAstExpr
     WasmAstExpr* rhs_;
 
   public:
-    static const WasmAstKind Kind = WasmAstKind::BinaryOperator;
+    static const WasmAstExprKind Kind = WasmAstExprKind::BinaryOperator;
     explicit WasmAstBinaryOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
       : WasmAstExpr(Kind),
         expr_(expr), lhs_(lhs), rhs_(rhs)
@@ -504,10 +494,10 @@ class WasmTokenStream
     uint32_t lookaheadDepth_;
     WasmToken lookahead_[LookaheadSize];
 
-    bool consume(const char16_t* end, const char16_t* match) {
+    bool consume(const char16_t* match) {
         const char16_t* p = cur_;
         for (; *match; p++, match++) {
-            if (p == end || *p != *match)
+            if (p == end_ || *p != *match)
                 return false;
         }
         cur_ = p;
@@ -561,90 +551,90 @@ class WasmTokenStream
           }
 
           case 'b':
-            if (consume(end_, MOZ_UTF16("lock")))
+            if (consume(MOZ_UTF16("lock")))
                 return WasmToken(WasmToken::Block, begin, cur_);
             break;
 
           case 'c':
-            if (consume(end_, MOZ_UTF16("all"))) {
-                if (consume(end_, MOZ_UTF16("_import")))
+            if (consume(MOZ_UTF16("all"))) {
+                if (consume(MOZ_UTF16("_import")))
                     return WasmToken(WasmToken::CallImport, begin, cur_);
                 return WasmToken(WasmToken::Call, begin, cur_);
             }
             break;
 
           case 'e':
-            if (consume(end_, MOZ_UTF16("xport")))
+            if (consume(MOZ_UTF16("xport")))
                 return WasmToken(WasmToken::Export, begin, cur_);
             break;
 
           case 'f':
-            if (consume(end_, MOZ_UTF16("unc")))
+            if (consume(MOZ_UTF16("unc")))
                 return WasmToken(WasmToken::Func, begin, cur_);
 
-            if (consume(end_, MOZ_UTF16("32"))) {
-                if (!consume(end_, MOZ_UTF16(".")))
+            if (consume(MOZ_UTF16("32"))) {
+                if (!consume(MOZ_UTF16(".")))
                     return WasmToken(WasmToken::ValueType, ValType::F32, begin, cur_);
 
                 switch (*cur_) {
                   case 'a':
-                    if (consume(end_, MOZ_UTF16("add")))
+                    if (consume(MOZ_UTF16("add")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Add, begin, cur_);
                     break;
                   case 'c':
-                    if (consume(end_, MOZ_UTF16("const")))
+                    if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("copysign")))
+                    if (consume(MOZ_UTF16("copysign")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
                     break;
                   case 'd':
-                    if (consume(end_, MOZ_UTF16("div")))
+                    if (consume(MOZ_UTF16("div")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
                     break;
                   case 'm':
-                    if (consume(end_, MOZ_UTF16("max")))
+                    if (consume(MOZ_UTF16("max")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Max, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("min")))
+                    if (consume(MOZ_UTF16("min")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Min, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("mul")))
+                    if (consume(MOZ_UTF16("mul")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Mul, begin, cur_);
                     break;
                   case 's':
-                    if (consume(end_, MOZ_UTF16("sub")))
+                    if (consume(MOZ_UTF16("sub")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F32Sub, begin, cur_);
                     break;
                 }
                 break;
             }
-            if (consume(end_, MOZ_UTF16("64"))) {
-                if (!consume(end_, MOZ_UTF16(".")))
+            if (consume(MOZ_UTF16("64"))) {
+                if (!consume(MOZ_UTF16(".")))
                     return WasmToken(WasmToken::ValueType, ValType::F64, begin, cur_);
 
                 switch (*cur_) {
                   case 'a':
-                    if (consume(end_, MOZ_UTF16("add")))
+                    if (consume(MOZ_UTF16("add")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Add, begin, cur_);
                     break;
                   case 'c':
-                    if (consume(end_, MOZ_UTF16("const")))
+                    if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("copysign")))
+                    if (consume(MOZ_UTF16("copysign")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
                     break;
                   case 'd':
-                    if (consume(end_, MOZ_UTF16("div")))
+                    if (consume(MOZ_UTF16("div")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Div, begin, cur_);
                     break;
                   case 'm':
-                    if (consume(end_, MOZ_UTF16("max")))
+                    if (consume(MOZ_UTF16("max")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Max, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("min")))
+                    if (consume(MOZ_UTF16("min")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Min, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("mul")))
+                    if (consume(MOZ_UTF16("mul")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Mul, begin, cur_);
                     break;
                   case 's':
-                    if (consume(end_, MOZ_UTF16("sub")))
+                    if (consume(MOZ_UTF16("sub")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::F64Sub, begin, cur_);
                     break;
                 }
@@ -652,106 +642,106 @@ class WasmTokenStream
             break;
 
           case 'g':
-            if (consume(end_, MOZ_UTF16("et_local")))
+            if (consume(MOZ_UTF16("et_local")))
                 return WasmToken(WasmToken::GetLocal, begin, cur_);
             break;
 
           case 'i':
-            if (consume(end_, MOZ_UTF16("32"))) {
-                if (!consume(end_, MOZ_UTF16(".")))
+            if (consume(MOZ_UTF16("32"))) {
+                if (!consume(MOZ_UTF16(".")))
                     return WasmToken(WasmToken::ValueType, ValType::I32, begin, cur_);
 
                 switch (*cur_) {
                   case 'a':
-                    if (consume(end_, MOZ_UTF16("add")))
+                    if (consume(MOZ_UTF16("add")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Add, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("and")))
+                    if (consume(MOZ_UTF16("and")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32And, begin, cur_);
                     break;
                   case 'c':
-                    if (consume(end_, MOZ_UTF16("const")))
+                    if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
                     break;
                   case 'd':
-                    if (consume(end_, MOZ_UTF16("div_s")))
+                    if (consume(MOZ_UTF16("div_s")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivS, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("div_u")))
+                    if (consume(MOZ_UTF16("div_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
                     break;
                   case 'm':
-                    if (consume(end_, MOZ_UTF16("mul")))
+                    if (consume(MOZ_UTF16("mul")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Mul, begin, cur_);
                     break;
                   case 'o':
-                    if (consume(end_, MOZ_UTF16("or")))
+                    if (consume(MOZ_UTF16("or")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Or, begin, cur_);
                     break;
                   case 'r':
-                    if (consume(end_, MOZ_UTF16("rem_s")))
+                    if (consume(MOZ_UTF16("rem_s")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("rem_u")))
+                    if (consume(MOZ_UTF16("rem_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
                     break;
                   case 's':
-                    if (consume(end_, MOZ_UTF16("sub")))
+                    if (consume(MOZ_UTF16("sub")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Sub, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("shl")))
+                    if (consume(MOZ_UTF16("shl")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Shl, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("shr_s")))
+                    if (consume(MOZ_UTF16("shr_s")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrS, begin, cur_);
-                    if (consume(end_, MOZ_UTF16("shr_u")))
+                    if (consume(MOZ_UTF16("shr_u")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
                     break;
                   case 'x':
-                    if (consume(end_, MOZ_UTF16("xor")))
+                    if (consume(MOZ_UTF16("xor")))
                         return WasmToken(WasmToken::BinaryOpcode, Expr::I32Xor, begin, cur_);
                     break;
                 }
                 break;
             }
-            if (consume(end_, MOZ_UTF16("64"))) {
-                if (!consume(end_, MOZ_UTF16(".")))
+            if (consume(MOZ_UTF16("64"))) {
+                if (!consume(MOZ_UTF16(".")))
                     return WasmToken(WasmToken::ValueType, ValType::I64, begin, cur_);
 
                 switch (*cur_) {
                   case 'c':
-                    if (consume(end_, MOZ_UTF16("const")))
+                    if (consume(MOZ_UTF16("const")))
                         return WasmToken(WasmToken::Const, ValType::I64, begin, cur_);
                     break;
                 }
                 break;
             }
-            if (consume(end_, MOZ_UTF16("mport")))
+            if (consume(MOZ_UTF16("mport")))
                 return WasmToken(WasmToken::Import, begin, cur_);
             break;
 
           case 'l':
-            if (consume(end_, MOZ_UTF16("ocal")))
+            if (consume(MOZ_UTF16("ocal")))
                 return WasmToken(WasmToken::Local, begin, cur_);
             break;
 
           case 'm':
-            if (consume(end_, MOZ_UTF16("odule")))
+            if (consume(MOZ_UTF16("odule")))
                 return WasmToken(WasmToken::Module, begin, cur_);
             break;
 
           case 'n':
-            if (consume(end_, MOZ_UTF16("op")))
+            if (consume(MOZ_UTF16("op")))
                 return WasmToken(WasmToken::Nop, begin, cur_);
             break;
 
           case 'p':
-            if (consume(end_, MOZ_UTF16("aram")))
+            if (consume(MOZ_UTF16("aram")))
                 return WasmToken(WasmToken::Param, begin, cur_);
             break;
 
           case 'r':
-            if (consume(end_, MOZ_UTF16("esult")))
+            if (consume(MOZ_UTF16("esult")))
                 return WasmToken(WasmToken::Result, begin, cur_);
             break;
 
           case 's':
-            if (consume(end_, MOZ_UTF16("et_local")))
+            if (consume(MOZ_UTF16("et_local")))
                 return WasmToken(WasmToken::SetLocal, begin, cur_);
             break;
 
@@ -1227,19 +1217,19 @@ static bool
 EncodeExpr(Encoder& e, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
-      case WasmAstKind::Nop:
+      case WasmAstExprKind::Nop:
         return e.writeExpr(Expr::Nop);
-      case WasmAstKind::BinaryOperator:
+      case WasmAstExprKind::BinaryOperator:
         return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
-      case WasmAstKind::Block:
+      case WasmAstExprKind::Block:
         return EncodeBlock(e, expr.as<WasmAstBlock>());
-      case WasmAstKind::Call:
+      case WasmAstExprKind::Call:
         return EncodeCall(e, expr.as<WasmAstCall>());
-      case WasmAstKind::Const:
+      case WasmAstExprKind::Const:
         return EncodeConst(e, expr.as<WasmAstConst>());
-      case WasmAstKind::GetLocal:
+      case WasmAstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
-      case WasmAstKind::SetLocal:
+      case WasmAstExprKind::SetLocal:
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       default:;
     }
@@ -1476,10 +1466,10 @@ AstToBinary(WasmAstModule& module)
     if (!EncodeSignatureSection(e, module))
         return nullptr;
 
-    if (!EncodeDeclarationSection(e, module))
+    if (!EncodeImportSection(e, module))
         return nullptr;
 
-    if (!EncodeImportSection(e, module))
+    if (!EncodeDeclarationSection(e, module))
         return nullptr;
 
     if (!EncodeExportSection(e, module))

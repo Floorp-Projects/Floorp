@@ -85,7 +85,7 @@ function handleRequest(request, response) {
       break;
     default:
       response.setStatusLine("1.1", 500, "Server error");
-      response.write("<html>succeed, nocert or error expected</html>");
+      response.write("<html>succeed, nocert or error expected (got " + request.queryString + ")</html>");
       break;
   }
 }

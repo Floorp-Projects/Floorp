@@ -120,7 +120,7 @@ OnSharedPreferenceChangeListener
 
     private static boolean sIsCharEncodingEnabled;
     private boolean mInitialized;
-    private int mPrefsRequestId;
+    private PrefsHelper.PrefHandler mPrefsRequest;
     private List<Header> mHeaders;
 
     // These match keys in resources/xml*/preferences*.xml
@@ -513,7 +513,7 @@ OnSharedPreferenceChangeListener
         mInitialized = true;
         if (Versions.preHC) {
             PreferenceScreen screen = getPreferenceScreen();
-            mPrefsRequestId = setupPreferences(screen);
+            mPrefsRequest = setupPreferences(screen);
         }
     }
 
@@ -537,8 +537,9 @@ OnSharedPreferenceChangeListener
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "Snackbar:Show");
 
-        if (mPrefsRequestId > 0) {
-            PrefsHelper.removeObserver(mPrefsRequestId);
+        if (mPrefsRequest != null) {
+            PrefsHelper.removeObserver(mPrefsRequest);
+            mPrefsRequest = null;
         }
 
         // The intent extras will be null if this is the top-level settings
@@ -674,7 +675,7 @@ OnSharedPreferenceChangeListener
       * @return The integer id for the PrefsHelper.PrefHandlerBase listener added
       *         to monitor changes to Gecko prefs.
       */
-    public int setupPreferences(PreferenceGroup prefs) {
+    public PrefsHelper.PrefHandler setupPreferences(PreferenceGroup prefs) {
         ArrayList<String> list = new ArrayList<String>();
         setupPreferences(prefs, list);
         return getGeckoPreferences(prefs, list);
@@ -1465,8 +1466,10 @@ OnSharedPreferenceChangeListener
     }
 
     // Initialize preferences by requesting the preference values from Gecko
-    private int getGeckoPreferences(final PreferenceGroup screen, ArrayList<String> prefs) {
-        return PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
+    private PrefsHelper.PrefHandler getGeckoPreferences(final PreferenceGroup screen,
+                                                        ArrayList<String> prefs) {
+
+        final PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
             private Preference getField(String prefName) {
                 return screen.findPreference(prefName);
             }
@@ -1548,11 +1551,6 @@ OnSharedPreferenceChangeListener
             }
 
             @Override
-            public boolean isObserver() {
-                return true;
-            }
-
-            @Override
             public void finish() {
                 // enable all preferences once we have them from gecko
                 ThreadUtils.postToUiThread(new Runnable() {
@@ -1562,7 +1560,10 @@ OnSharedPreferenceChangeListener
                     }
                 });
             }
-        });
+        };
+        final String[] prefNames = prefs.toArray(new String[prefs.size()]);
+        PrefsHelper.addObserver(prefNames, prefHandler);
+        return prefHandler;
     }
 
     @Override

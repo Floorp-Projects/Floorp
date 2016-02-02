@@ -308,4 +308,19 @@ test(function() {
   var m = new WebKitCSSMatrix("matrix(1,0,0,0,0,0)");
   assert_throws("NotSupportedError", function() { m.inverse(); }, "Inverting an invertible matrix should throw.")
 }, "Test that inverting an invertible matrix throws.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix("translate(10px, 10px)");
+  var m2 = new DOMMatrix();
+  m2.translateSelf(10, 10);
+  assert_true(RoughCompareMatrix(m1, m2), "translate in constructor should result in translated matrix");
+
+  assert_throws("SyntaxError", function() { new WebKitCSSMatrix("translate(10em, 10em)"); }, "Transform function may not contain relative units.")
+  assert_throws("SyntaxError", function() { new WebKitCSSMatrix("translate(10%, 10%)"); }, "Transform function may not contain percentage.")
+}, "Test constructor with translate");
+
+test(function() {
+  assert_throws("SyntaxError", function() { new WebKitCSSMatrix("initial"); }, "initial is not a valid constructor argument.")
+  assert_throws("SyntaxError", function() { new WebKitCSSMatrix("inherit"); }, "inherit is not a valid constructor arugment.")
+}, "Test invalid constructor arguments.");
 </script>

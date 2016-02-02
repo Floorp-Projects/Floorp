@@ -166,16 +166,18 @@ class MOZ_STACK_CLASS ModuleGenerator
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init(UniqueModuleGeneratorData shared, ModuleKind = ModuleKind::Wasm);
+    bool init(UniqueModuleGeneratorData shared, UniqueChars filename, ModuleKind = ModuleKind::Wasm);
 
     bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
-    const Uint32Vector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
     // asm.js global variables:
     bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
     const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
+
+    // Heap usage:
+    void initHeapUsage(HeapUsage heapUsage);
 
     // Signatures:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -197,6 +199,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool declareExport(uint32_t funcIndex, uint32_t* exportIndex);
     uint32_t numExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
+    uint32_t exportEntryOffset(uint32_t index) const;
     const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
 
@@ -220,9 +223,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of
     // functions that took a long time to compile.
-    bool finish(HeapUsage heapUsage,
-                CacheableChars filename,
-                CacheableCharsVector&& prettyFuncNames,
+    bool finish(CacheableCharsVector&& prettyFuncNames,
                 UniqueModuleData* module,
                 UniqueStaticLinkData* staticLinkData,
                 SlowFunctionVector* slowFuncs);

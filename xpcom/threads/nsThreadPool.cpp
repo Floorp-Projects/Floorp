@@ -122,7 +122,7 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>&& aEvent)
   if (killThread) {
     // We never dispatched any events to the thread, so we can shut it down
     // asynchronously without worrying about anything.
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->AsyncShutdown()));
+    ShutdownThread(thread);
   } else {
     thread->Dispatch(this, NS_DISPATCH_NORMAL);
   }
@@ -135,12 +135,18 @@ nsThreadPool::ShutdownThread(nsIThread* aThread)
 {
   LOG(("THRD-P(%p) shutdown async [%p]\n", this, aThread));
 
-  // This method is responsible for calling Shutdown on |aThread|.  This must be
-  // done from some other thread, so we use the main thread of the application.
-
-  MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
-
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread, &nsIThread::Shutdown);
+  // This is either called by a threadpool thread that is out of work, or
+  // a thread that attempted to create a threadpool thread and raced in
+  // such a way that the newly created thread is no longer necessary.
+  // In the first case, we must go to another thread to shut aThread down
+  // (because it is the current thread).  In the second case, we cannot
+  // synchronously shut down the current thread (because then Dispatch() would
+  // spin the event loop, and that could blow up the world), and asynchronous
+  // shutdown requires this thread have an event loop (and it may not, see bug
+  // 10204784).  The simplest way to cover all cases is to asynchronously
+  // shutdown aThread from the main thread.
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread,
+                                                 &nsIThread::AsyncShutdown);
   NS_DispatchToMainThread(r);
 }
 

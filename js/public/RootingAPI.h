@@ -509,23 +509,6 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 
 namespace js {
 
-/**
- * By default, things should use the inheritance hierarchy to find their
- * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
- * Rooted<T> may be used without the class definition being available.
- */
-template <typename T>
-struct RootKind
-{
-    static ThingRootKind rootKind() { return T::rootKind(); }
-};
-
-template <typename T>
-struct RootKind<T*>
-{
-    static ThingRootKind rootKind() { return T::rootKind(); }
-};
-
 template <typename T>
 struct BarrierMethods<T*>
 {
@@ -607,8 +590,6 @@ namespace JS {
 //     |static void trace(T*, JSTracer*)|
 class Traceable
 {
-  public:
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_TRACEABLE; }
 };
 
 } /* namespace JS */
@@ -694,8 +675,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
 
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
     void registerWithRootLists(js::RootLists& roots) {
-        js::ThingRootKind kind = js::RootKind<T>::rootKind();
-        this->stack = &roots.stackRoots_[kind];
+        this->stack = &roots.stackRoots_[JS::MapTypeToRootKind<T>::kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }
@@ -1012,16 +992,16 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void registerWithRootLists(js::RootLists& roots) {
         MOZ_ASSERT(!initialized());
-        js::ThingRootKind kind = js::RootKind<T>::rootKind();
+        JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
         roots.heapRoots_[kind].insertBack(reinterpret_cast<JS::PersistentRooted<void*>*>(this));
         // Until marking and destruction support the full set, we assert that
         // we don't try to add any unsupported types.
-        MOZ_ASSERT(kind == js::THING_ROOT_OBJECT ||
-                   kind == js::THING_ROOT_SCRIPT ||
-                   kind == js::THING_ROOT_STRING ||
-                   kind == js::THING_ROOT_ID ||
-                   kind == js::THING_ROOT_VALUE ||
-                   kind == js::THING_ROOT_TRACEABLE);
+        MOZ_ASSERT(kind == JS::RootKind::Object ||
+                   kind == JS::RootKind::Script ||
+                   kind == JS::RootKind::String ||
+                   kind == JS::RootKind::Id ||
+                   kind == JS::RootKind::Value ||
+                   kind == JS::RootKind::Traceable);
     }
 
   public:
