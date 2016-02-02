@@ -729,7 +729,7 @@ class Artifacts(object):
                 return urls
         return None
 
-    def install_from_file(self, filename, distdir, install_callback=None):
+    def install_from_file(self, filename, distdir):
         self.log(logging.INFO, 'artifact',
             {'filename': filename},
             'Installing from {filename}')
@@ -769,19 +769,17 @@ class Artifacts(object):
                     perms = info.external_attr >> 16 # See http://stackoverflow.com/a/434689.
                     perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH # u+w, a+r.
                     os.chmod(n, perms)
-                if install_callback:
-                    install_callback(info.filename, file_existed, file_updated)
         return 0
 
-    def install_from_url(self, url, distdir, install_callback=None):
+    def install_from_url(self, url, distdir):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
         with self._artifact_cache as artifact_cache:  # The with block handles persistence.
             filename = artifact_cache.fetch(url)
-        return self.install_from_file(filename, distdir, install_callback=install_callback)
+        return self.install_from_file(filename, distdir)
 
-    def install_from_hg(self, revset, distdir, install_callback=None):
+    def install_from_hg(self, revset, distdir):
         if not revset:
             revset = '.'
         rev_pushheads = self._find_pushheads(revset)
@@ -797,7 +795,7 @@ class Artifacts(object):
                                                     self._job, rev, trees)
                 if urls:
                     for url in urls:
-                        if self.install_from_url(url, distdir, install_callback=install_callback):
+                        if self.install_from_url(url, distdir):
                             return 1
                     return 0
         self.log(logging.ERROR, 'artifact',
@@ -805,21 +803,15 @@ class Artifacts(object):
                  'No built artifacts for {revset} found.')
         return 1
 
-    def install_from(self, source, distdir, install_callback=None):
+    def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
-
-        If ``callback`` is given, it is called once with arguments ``(path,
-        existed, updated)``, where ``path`` is the file path written relative
-        to ``distdir``; ``existed`` is a boolean indicating whether the file
-        existed; and ``updated`` is a boolean indicating whether the file was
-        updated.
         """
         if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir, install_callback=install_callback)
+            return self.install_from_file(source, distdir)
         elif source and urlparse.urlparse(source).scheme:
-            return self.install_from_url(source, distdir, install_callback=install_callback)
+            return self.install_from_url(source, distdir)
         else:
-            return self.install_from_hg(source, distdir, install_callback=install_callback)
+            return self.install_from_hg(source, distdir)
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',
