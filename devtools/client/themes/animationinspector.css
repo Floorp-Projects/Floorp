@@ -178,11 +178,15 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 4px) center;
+  padding-right: 1em;
 }
 
 #timeline-rate {
   position: relative;
-  width: 4em;
+  width: 4.5em;
 }
 
 /* Animation timeline component */
