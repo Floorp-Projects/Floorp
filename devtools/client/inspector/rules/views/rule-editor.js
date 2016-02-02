@@ -25,6 +25,8 @@ const {
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS
 } = require("devtools/client/shared/css-parsing-utils");
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() {
   return Services.strings.createBundle(
@@ -40,12 +42,20 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  *     for its TextProperties.
  *   Manages creation of new text properties.
  *
+ * One step of a RuleEditor's instantiation is figuring out what's the original
+ * source link to the parent stylesheet (in case of source maps). This step is
+ * asynchronous and is triggered as soon as the RuleEditor is instantiated (see
+ * updateSourceLink). If you need to know when the RuleEditor is done with this,
+ * you need to listen to the source-link-updated event.
+ *
  * @param {CssRuleView} ruleView
  *        The CssRuleView containg the document holding this rule editor.
  * @param {Rule} rule
  *        The Rule object we're editing.
  */
 function RuleEditor(ruleView, rule) {
+  EventEmitter.decorate(this);
+
   this.ruleView = ruleView;
   this.doc = this.ruleView.styleDocument;
   this.rule = rule;
@@ -235,10 +245,21 @@ RuleEditor.prototype = {
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     if (showOrig && !this.rule.isSystem &&
         this.rule.domRule.type !== ELEMENT_STYLE) {
+      // Only get the original source link if the right pref is set, if the rule
+      // isn't a system rule and if it isn't an inline rule.
       this.rule.getOriginalSourceStrings().then((strings) => {
         sourceLabel.setAttribute("value", strings.short);
         sourceLabel.setAttribute("tooltiptext", strings.full);
-      }, console.error);
+      }, e => console.error(e)).then(() => {
+        this.emit("source-link-updated");
+      });
+    } else {
+      // If we're not getting the original source link, then we can emit the
+      // event immediately (but still asynchronously to give consumers a chance
+      // to register it after having instantiated the RuleEditor).
+      promise.resolve().then(() => {
+        this.emit("source-link-updated");
+      });
     }
   },
 
