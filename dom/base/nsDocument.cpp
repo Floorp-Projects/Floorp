@@ -8807,9 +8807,11 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   }
 
 #ifdef MOZ_WEBSPEECH
-  auto* globalWindow = nsGlobalWindow::Cast(win);
-  if (globalWindow->HasActiveSpeechSynthesis()) {
-    return false;
+  if (win) {
+    auto* globalWindow = nsGlobalWindow::Cast(win);
+    if (globalWindow->HasActiveSpeechSynthesis()) {
+      return false;
+    }
   }
 #endif
 
