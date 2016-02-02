@@ -3397,6 +3397,22 @@
     "alert_emails": ["mobile-frontend@mozilla.com"],
     "bug_numbers": [1244704]
   },
+  "FENNEC_FAVICONS_COUNT": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "Number of favicons stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "FENNEC_THUMBNAILS_COUNT": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "Number of thumbnails stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
   "FENNEC_READING_LIST_COUNT": {
     "expires_in_version": "50",
     "kind": "exponential",
@@ -8142,6 +8158,13 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "If a master-password is enabled for this profile"
+  },
+  "FENNEC_TILES_CACHE_HIT": {
+    "expires_in_version": "40",
+    "kind": "linear",
+    "high": "13",
+    "n_buckets": 12,
+    "description": "Cache hits on the tile-info metadata database *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "DISPLAY_SCALING_OSX" : {
     "expires_in_version": "never",
