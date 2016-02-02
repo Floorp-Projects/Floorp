@@ -1887,6 +1887,7 @@ BrowserElementChild.prototype = {
           case Cr.NS_BINDING_ABORTED :
             // Ignoring NS_BINDING_ABORTED, which is set when loading page is
             // stopped.
+          case Cr.NS_ERROR_PARSED_DATA_CACHED:
             return;
 
           // TODO See nsDocShell::DisplayLoadError to see what extra
