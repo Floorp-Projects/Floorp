@@ -429,7 +429,7 @@ GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
 void
 GrallocTextureHostOGL::SetCropRect(nsIntRect aCropRect)
 {
-  MOZ_ASSERT(aCropRect.TopLeft() == IntPoint(0, 0));
+  MOZ_ASSERT(aCropRect.TopLeft() == gfx::IntPoint(0, 0));
   MOZ_ASSERT(!aCropRect.IsEmpty());
   MOZ_ASSERT(aCropRect.width <= mSize.width);
   MOZ_ASSERT(aCropRect.height <= mSize.height);
