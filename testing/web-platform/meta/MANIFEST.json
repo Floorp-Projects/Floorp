@@ -33713,7 +33713,16 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "cssom-view/negativeMargins.html": [
+          {
+            "path": "cssom-view/negativeMargins.html",
+            "url": "/cssom-view/negativeMargins.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {

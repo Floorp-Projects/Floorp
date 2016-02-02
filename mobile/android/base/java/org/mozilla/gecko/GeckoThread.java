@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -27,12 +26,13 @@ import android.util.Log;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class GeckoThread extends Thread implements GeckoEventListener {
+public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
 
     @WrapForJNI
@@ -49,7 +49,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         JNI_READY,
         // After initializing profile and prefs.
         PROFILE_READY,
-        // After initializing frontend JS (corresponding to "Gecko:Ready" event)
+        // After initializing frontend JS
         RUNNING,
         // After leaving Gecko event loop
         EXITING,
@@ -115,7 +115,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         mDebugging = debugging;
 
         setName("Gecko");
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Gecko:Ready");
     }
 
     public static boolean ensureInit(String args, String action) {
@@ -191,7 +190,16 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             method = cls.getDeclaredMethod(
                     methodName, argTypes.toArray(new Class<?>[argTypes.size()]));
         } catch (final NoSuchMethodException e) {
-            throw new UnsupportedOperationException("Cannot find method", e);
+            throw new IllegalArgumentException("Cannot find method", e);
+        }
+
+        if (!Modifier.isNative(method.getModifiers())) {
+            // As a precaution, we disallow queuing non-native methods. Queuing non-native
+            // methods is dangerous because the method could end up being called on either
+            // the original thread or the Gecko thread depending on timing. Native methods
+            // usually handle this by posting an event to the Gecko thread automatically,
+            // but there is no automatic mechanism for non-native methods.
+            throw new UnsupportedOperationException("Not allowed to queue non-native methods");
         }
 
         if (isStateAtLeast(state)) {
@@ -451,7 +459,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     public static void addPendingEvent(final GeckoEvent e) {
         synchronized (QUEUED_CALLS) {
-            if (QUEUED_CALLS.size() == 0 && isRunning()) {
+            if (isRunning()) {
                 // We may just have switched to running state.
                 GeckoAppShell.notifyGeckoOfEvent(e);
                 e.recycle();
@@ -477,15 +485,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
 
         return true;
-    }
-
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        if ("Gecko:Ready".equals(event)) {
-            EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
-            setState(State.RUNNING);
-            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Gecko ready");
-        }
     }
 
     /**
@@ -541,6 +540,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
     }
 
+    @WrapForJNI
     private static boolean checkAndSetState(final State currentState, final State newState) {
         synchronized (QUEUED_CALLS) {
             if (sState == currentState) {

@@ -4297,13 +4297,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                      init=ExprCall(p.lookupSharedMemory(), args=[ idvar ]))
         ])
 
-        failif = StmtIf(ExprNot(rawvar))
-        failif.addifstmt(StmtReturn(_Result.ValuError))
+        # Here we don't return an error if we failed to look the shmem up. This
+        # is because we don't have a way to know if it is because we failed to
+        # map the shmem or if the id is wrong. In the latter case it would be
+        # better to catch the error but the former case is legit...
+        lookupif = StmtIf(rawvar)
+        lookupif.addifstmt(StmtExpr(p.removeShmemId(idvar)))
+        lookupif.addifstmt(StmtExpr(_shmemDealloc(rawvar)))
 
         case.addstmts([
-            failif,
-            StmtExpr(p.removeShmemId(idvar)),
-            StmtExpr(_shmemDealloc(rawvar)),
+            lookupif,
             StmtReturn(_Result.Processed)
         ])
 
@@ -4669,7 +4672,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
                      init=_lookupShmem(idvar)),
             iffound,
-            StmtReturn.FALSE
+            # This is ugly: we failed to look the shmem up, most likely because
+            # we failed to map it the first time it was deserialized. we create
+            # an empty shmem and let the user of the shmem deal with it.
+            # if we returned false here we would crash.
+            StmtExpr(ExprAssn(ExprDeref(var), ExprCall(ExprVar('Shmem'), args=[]) )),
+            StmtReturn.TRUE
         ])
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])

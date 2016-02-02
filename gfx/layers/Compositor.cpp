@@ -357,23 +357,44 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
 gfx::IntRect
 Compositor::ComputeBackdropCopyRect(const gfx::Rect& aRect,
                                     const gfx::Rect& aClipRect,
-                                    const gfx::Matrix4x4& aTransform)
+                                    const gfx::Matrix4x4& aTransform,
+                                    gfx::Matrix4x4* aOutTransform,
+                                    gfx::Rect* aOutLayerQuad)
 {
-  gfx::Rect renderBounds = mRenderBounds;
-
   // Compute the clip.
-  gfx::IntPoint offset = GetCurrentRenderTarget()->GetOrigin();
+  gfx::IntPoint rtOffset = GetCurrentRenderTarget()->GetOrigin();
+  gfx::IntSize rtSize = GetCurrentRenderTarget()->GetSize();
+
+  gfx::Rect renderBounds(0, 0, rtSize.width, rtSize.height);
   renderBounds.IntersectRect(renderBounds, aClipRect);
-  renderBounds.MoveBy(offset);
+  renderBounds.MoveBy(rtOffset);
 
   // Apply the layer transform.
-  gfx::Rect dest = aTransform.TransformAndClipBounds(aRect, renderBounds);
-  dest -= offset;
+  gfx::RectDouble dest = aTransform.TransformAndClipBounds(
+    gfx::RectDouble(aRect.x, aRect.y, aRect.width, aRect.height),
+    gfx::RectDouble(renderBounds.x, renderBounds.y, renderBounds.width, renderBounds.height));
+  dest -= rtOffset;
+
+  // Ensure we don't round out to -1, which trips up Direct3D.
+  dest.IntersectRect(dest, gfx::RectDouble(0, 0, rtSize.width, rtSize.height));
+
+  if (aOutLayerQuad) {
+    *aOutLayerQuad = gfx::Rect(dest.x, dest.y, dest.width, dest.height);
+  }
 
   // Round out to integer.
   gfx::IntRect result;
   dest.RoundOut();
   dest.ToIntRect(&result);
+
+  // Create a transform from adjusted clip space to render target space,
+  // translate it for the backdrop rect, then transform it into the backdrop's
+  // uv-space.
+  gfx::Matrix4x4 transform;
+  transform.PostScale(rtSize.width, rtSize.height, 1.0);
+  transform.PostTranslate(-result.x, -result.y, 0.0);
+  transform.PostScale(1 / float(result.width), 1 / float(result.height), 1.0);
+  *aOutTransform = transform;
   return result;
 }
 

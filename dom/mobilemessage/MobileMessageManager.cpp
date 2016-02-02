@@ -24,6 +24,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIMmsService.h"
 #include "nsIMobileMessageCallback.h"
 #include "nsIMobileMessageDatabaseService.h"
@@ -424,7 +425,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
     endDate = aFilter.mEndDate.Value();
   }
 
-  nsAutoArrayPtr<const char16_t*> ptrNumbers;
+  UniquePtr<const char16_t*[]> ptrNumbers;
   uint32_t numbersCount = 0;
   if (!aFilter.mNumbers.IsNull() &&
       aFilter.mNumbers.Value().Length()) {
@@ -432,7 +433,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
     uint32_t index;
 
     numbersCount = numbers.Length();
-    ptrNumbers = new const char16_t* [numbersCount];
+    ptrNumbers = MakeUnique<const char16_t*[]>(numbersCount);
     for (index = 0; index < numbersCount; index++) {
       ptrNumbers[index] = numbers[index].get();
     }
@@ -464,7 +465,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
   nsCOMPtr<nsICursorContinueCallback> continueCallback;
   nsresult rv = dbService->CreateMessageCursor(hasStartDate, startDate,
                                                hasEndDate, endDate,
-                                               ptrNumbers, numbersCount,
+                                               ptrNumbers.get(), numbersCount,
                                                delivery,
                                                hasRead, read,
                                                hasThreadId, threadId,

@@ -8,5 +8,4 @@ specialpowers.jar:
   content/MockFilePicker.jsm (content/MockFilePicker.jsm)
   content/MockColorPicker.jsm (content/MockColorPicker.jsm)
   content/MockPermissionPrompt.jsm (content/MockPermissionPrompt.jsm)
-  content/MockPaymentsUIGlue.jsm (content/MockPaymentsUIGlue.jsm)
   content/Assert.jsm (../modules/Assert.jsm)

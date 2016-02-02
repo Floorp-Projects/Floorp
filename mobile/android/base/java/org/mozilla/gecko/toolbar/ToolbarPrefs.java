@@ -24,8 +24,6 @@ class ToolbarPrefs {
     private volatile boolean enableAutocomplete;
     private volatile boolean trimUrls;
 
-    private Integer prefObserverId;
-
     ToolbarPrefs() {
         // Skip autocompletion while Gecko is loading.
         // We will get the correct pref value once Gecko is loaded.
@@ -42,16 +40,11 @@ class ToolbarPrefs {
     }
 
     void open() {
-        if (prefObserverId == null) {
-            prefObserverId = PrefsHelper.getPrefs(PREFS, HANDLER);
-        }
+        PrefsHelper.addObserver(PREFS, HANDLER);
     }
 
     void close() {
-        if (prefObserverId != null) {
-             PrefsHelper.removeObserver(prefObserverId);
-             prefObserverId = null;
-        }
+        PrefsHelper.removeObserver(HANDLER);
     }
 
     private void triggerTitleChangeListener() {
@@ -80,13 +73,6 @@ class ToolbarPrefs {
                     triggerTitleChangeListener();
                 }
             }
-        }
-
-        @Override
-        public boolean isObserver() {
-            // We want to be notified of changes to be able to switch mode
-            // without restarting.
-            return true;
         }
     }
 }

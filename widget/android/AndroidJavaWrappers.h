@@ -428,7 +428,6 @@ private:
 
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
-    void Init(AndroidGeckoEvent *aResizeEvent);
 
 public:
     static void InitGeckoEventClass(JNIEnv *jEnv);
@@ -442,12 +441,6 @@ public:
     static AndroidGeckoEvent* MakeFromJavaObject(JNIEnv *jenv, jobject jobj) {
         AndroidGeckoEvent *event = new AndroidGeckoEvent();
         event->Init(jenv, jobj);
-        return event;
-    }
-
-    static AndroidGeckoEvent* CopyResizeEvent(AndroidGeckoEvent *aResizeEvent) {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(aResizeEvent);
         return event;
     }
 
@@ -643,12 +636,10 @@ public:
         MOTION_EVENT = 2,
         SENSOR_EVENT = 3,
         LOCATION_EVENT = 5,
-        SIZE_CHANGED = 8,
         APP_BACKGROUNDING = 9,
         APP_FOREGROUNDING = 10,
         LOAD_URI = 12,
         NOOP = 15,
-        FORCED_RESIZE = 16, // used internally in nsAppShell/nsWindow
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         BROADCAST = 19,
         VIEWPORT = 20,
