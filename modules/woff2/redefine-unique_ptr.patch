@@ -1,0 +1,28 @@
+diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
+--- a/modules/woff2/src/woff2_dec.cc
++++ b/modules/woff2/src/woff2_dec.cc
+@@ -20,16 +20,24 @@
+ #include <algorithm>
+ #include <complex>
+ #include <cstring>
+ #include <limits>
+ #include <string>
+ #include <vector>
+ #include <map>
+ #include <memory>
++#include "mozilla/UniquePtr.h"
++namespace std
++{
++  using mozilla::DefaultDelete;
++  using mozilla::UniquePtr;
++  #define default_delete DefaultDelete
++  #define unique_ptr UniquePtr
++}
+ 
+ #include "./buffer.h"
+ #include "./decode.h"
+ #include "./port.h"
+ #include "./round.h"
+ #include "./store_bytes.h"
+ #include "./table_tags.h"
+ #include "./variable_length.h"
