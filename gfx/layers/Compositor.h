@@ -552,8 +552,6 @@ protected:
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
-  gfx::Rect mRenderBounds;
-
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;
 #endif
