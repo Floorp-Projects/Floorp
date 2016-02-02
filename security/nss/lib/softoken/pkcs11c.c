@@ -36,6 +36,7 @@
 #include "secerr.h"
 
 #include "prprf.h"
+#include "prenv.h"
 
 #define __PASTE(x,y)    x##y
 
@@ -4770,7 +4771,7 @@ dhgn_done:
 	    break;
 	}
 
-	if (getenv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	if (PR_GetEnvSecure("NSS_USE_DECODED_CKA_EC_POINT")) {
 	    crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT, 
 				sftk_item_expand(&ecPriv->publicValue));
 	} else {
