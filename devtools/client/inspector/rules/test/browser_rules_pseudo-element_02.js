@@ -11,11 +11,8 @@ const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 add_task(function*() {
   yield addTab(TEST_URI);
   let {inspector} = yield openRuleView();
-  yield testTopLeft(inspector);
-});
 
-function* testTopLeft(inspector) {
-  let node = inspector.markup.walker.frontForRawNode(getNode("#topleft"));
+  let node = yield getNodeFront("#topleft", inspector);
   let children = yield inspector.markup.walker.children(node);
 
   is(children.nodes.length, 3, "Element has correct number of children");
@@ -29,5 +26,4 @@ function* testTopLeft(inspector) {
   is(afterElement.tagName, "_moz_generated_content_after",
     "tag name is correct");
   yield selectNode(afterElement, inspector);
-}
-
+});

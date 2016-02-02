@@ -962,12 +962,13 @@ CssRuleView.prototype = {
       }
 
       this._clearRules();
-      this._createEditors();
-
+      let onEditorsReady = this._createEditors();
       this.refreshPseudoClassPanel();
 
       // Notify anyone that cares that we refreshed.
-      this.emit("ruleview-refreshed");
+      return onEditorsReady.then(() => {
+        this.emit("ruleview-refreshed");
+      }, e => console.error(e));
     }).then(null, promiseWarn);
   },
 
@@ -1147,9 +1148,10 @@ CssRuleView.prototype = {
     let container = null;
 
     if (!this._elementStyle.rules) {
-      return;
+      return promise.resolve();
     }
 
+    let editorReadyPromises = [];
     for (let rule of this._elementStyle.rules) {
       if (rule.domRule.system) {
         continue;
@@ -1158,6 +1160,7 @@ CssRuleView.prototype = {
       // Initialize rule editor
       if (!rule.editor) {
         rule.editor = new RuleEditor(this, rule);
+        editorReadyPromises.push(rule.editor.once("source-link-updated"));
       }
 
       // Filter the rules and highlight any matches if there is a search input
@@ -1211,6 +1214,8 @@ CssRuleView.prototype = {
     } else {
       this.searchField.classList.remove("devtools-style-searchbox-no-match");
     }
+
+    return promise.all(editorReadyPromises);
   },
 
   /**
