@@ -553,6 +553,13 @@ case "$target" in
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
             CFLAGS="$CFLAGS -wd4091"
             CXXFLAGS="$CXXFLAGS -wd4091"
+
+            if test -n "$WIN_UCRT_REDIST_DIR"; then
+              if test ! -d "$WIN_UCRT_REDIST_DIR"; then
+                AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
+              fi
+              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd`
+            fi
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
 You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, or newer in order to build.
