@@ -455,3 +455,10 @@ EXPORTS ;-
 ;+      global:
 		PR_SyncMemMap;
 ;+} NSPR_4.9.2;
+;+# Function PR_DuplicateEnvironment had been added in NSPR 4.10.9,
+;+# but we neglected to add it to nspr.def until NSPR 4.12
+;+NSPR_4.12 {
+;+      global:
+		PR_DuplicateEnvironment;
+		PR_GetEnvSecure;
+;+} NSPR_4.10.3;
