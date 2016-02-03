@@ -458,7 +458,7 @@ this.PushService = {
         // Before completing the activation check prefs. This will first check
         // connection.enabled pref and then check offline state.
         this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"));
-      });
+      }).catch(Cu.reportError);
 
     } else {
       // This is only used for testing. Different tests require connecting to

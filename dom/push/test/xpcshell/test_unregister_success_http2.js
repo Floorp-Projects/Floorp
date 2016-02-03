@@ -4,6 +4,15 @@
 'use strict';
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/PromiseTestUtils.jsm");
+
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+// Instances of the rejection "record is undefined" may or may not appear.
+PromiseTestUtils.thisTestLeaksUncaughtRejectionsAndShouldBeFixed();
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 
