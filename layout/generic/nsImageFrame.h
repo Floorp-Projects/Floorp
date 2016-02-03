@@ -112,7 +112,8 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return ImageFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return ImageFrameSuper::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 
 #ifdef DEBUG_FRAME_DUMP
