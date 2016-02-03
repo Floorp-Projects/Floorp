@@ -9606,7 +9606,7 @@
     "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
   },
   "PERF_MONITORING_SLOW_ADDON_JANK_US": {
-    "expires_in_version": "48",
+    "expires_in_version": "never",
     "kind": "exponential",
     "low": 1,
     "high": 10000000,
@@ -9615,7 +9615,7 @@
     "description": "Contiguous time spent by an add-on blocking the main loop (microseconds, keyed by add-on ID)."
   },
   "PERF_MONITORING_SLOW_ADDON_CPOW_US": {
-    "expires_in_version": "48",
+    "expires_in_version": "70",
     "kind": "exponential",
     "low": 1,
     "high": 10000000,
