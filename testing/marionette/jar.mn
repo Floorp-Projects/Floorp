@@ -6,7 +6,7 @@ marionette.jar:
 % content marionette %content/
   content/server.js (server.js)
   content/driver.js (driver.js)
-  content/actions.js (actions.js)
+  content/action.js (action.js)
   content/interaction.js (interaction.js)
   content/accessibility.js (accessibility.js)
   content/listener.js (listener.js)
