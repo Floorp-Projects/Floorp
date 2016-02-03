@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/actions.js");
-Cu.import("chrome://marionette/content/atoms.js");
+Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/interactions.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/event.js");

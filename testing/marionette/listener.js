@@ -14,7 +14,7 @@ loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 
 Cu.import("chrome://marionette/content/actions.js");
-Cu.import("chrome://marionette/content/atoms.js");
+Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/elements.js");
