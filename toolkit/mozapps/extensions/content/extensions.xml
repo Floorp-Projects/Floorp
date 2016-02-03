@@ -1179,7 +1179,7 @@
           if (pending != AddonManager.PENDING_NONE) {
             this.removeAttribute("notification");
 
-            var pending = null;
+            pending = null;
             const PENDING_OPERATIONS = ["enable", "disable", "install",
                                         "uninstall", "upgrade"];
             for (let op of PENDING_OPERATIONS) {

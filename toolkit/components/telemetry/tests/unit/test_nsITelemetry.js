@@ -28,7 +28,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.newHistogram(name, "never", histogram_type, min, max, bucket_count);
   var r = h.snapshot().ranges;
   var sum = 0;
-  for(var i=0;i<r.length;i++) {
+  for(let i=0;i<r.length;i++) {
     var v = r[i];
     sum += v;
     h.add(v);
@@ -46,7 +46,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   }
 
   // there should be exactly one element per bucket
-  for (var i of s.counts) {
+  for (let i of s.counts) {
     do_check_eq(i, 1);
   }
   var hgrams = Telemetry.histogramSnapshots
@@ -59,13 +59,13 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   // Check that booleans work with nonboolean histograms
   h.add(false);
   h.add(true);
-  var s = h.snapshot().counts;
+  s = h.snapshot().counts;
   do_check_eq(s[0], 2)
   do_check_eq(s[1], 2)
 
   // Check that clearing works.
   h.clear();
-  var s = h.snapshot();
+  s = h.snapshot();
   for (var i of s.counts) {
     do_check_eq(i, 0);
   }

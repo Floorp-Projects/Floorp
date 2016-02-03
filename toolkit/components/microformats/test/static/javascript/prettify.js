@@ -321,7 +321,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
       ranges.sort(function (a, b) { return (a[0] - b[0]) || (b[1]  - a[1]); });
       var consolidatedRanges = [];
       var lastRange = [NaN, NaN];
-      for (var i = 0; i < ranges.length; ++i) {
+      for (i = 0; i < ranges.length; ++i) {
         var range = ranges[i];
         if (range[0] <= lastRange[1] + 1) {
           lastRange[1] = Math.max(lastRange[1], range[1]);
@@ -333,8 +333,8 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
       var out = ['['];
       if (inverse) { out.push('^'); }
       out.push.apply(out, groups);
-      for (var i = 0; i < consolidatedRanges.length; ++i) {
-        var range = consolidatedRanges[i];
+      for (i = 0; i < consolidatedRanges.length; ++i) {
+        range = consolidatedRanges[i];
         out.push(encodeEscape(range[0]));
         if (range[1] > range[0]) {
           if (range[1] + 1 > range[0]) { out.push('-'); }
@@ -386,20 +386,20 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
   
       // Renumber groups and reduce capturing groups to non-capturing groups
       // where possible.
-      for (var i = 1; i < capturedGroups.length; ++i) {
+      for (i = 1; i < capturedGroups.length; ++i) {
         if (-1 === capturedGroups[i]) {
           capturedGroups[i] = ++capturedGroupIndex;
         }
       }
-      for (var i = 0, groupIndex = 0; i < n; ++i) {
-        var p = parts[i];
+      for (i = 0, groupIndex = 0; i < n; ++i) {
+        p = parts[i];
         if (p === '(') {
           ++groupIndex;
           if (capturedGroups[groupIndex] === undefined) {
             parts[i] = '(?:';
           }
         } else if ('\\' === p.charAt(0)) {
-          var decimalValue = +p.substring(1);
+          decimalValue = +p.substring(1);
           if (decimalValue && decimalValue <= groupIndex) {
             parts[i] = '\\' + capturedGroups[groupIndex];
           }
@@ -408,15 +408,15 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
   
       // Remove any prefix anchors so that the output will match anywhere.
       // ^^ really does mean an anchored match though.
-      for (var i = 0, groupIndex = 0; i < n; ++i) {
+      for (i = 0, groupIndex = 0; i < n; ++i) {
         if ('^' === parts[i] && '^' !== parts[i + 1]) { parts[i] = ''; }
       }
   
       // Expand letters to groups to handle mixing of case-sensitive and
       // case-insensitive patterns if necessary.
       if (regex.ignoreCase && needToFoldCase) {
-        for (var i = 0; i < n; ++i) {
-          var p = parts[i];
+        for (i = 0; i < n; ++i) {
+          p = parts[i];
           var ch0 = p.charAt(0);
           if (p.length >= 2 && ch0 === '[') {
             parts[i] = caseFoldCharset(p);
@@ -436,8 +436,8 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     }
   
     var rewritten = [];
-    for (var i = 0, n = regexs.length; i < n; ++i) {
-      var regex = regexs[i];
+    for (i = 0, n = regexs.length; i < n; ++i) {
+      regex = regexs[i];
       if (regex.global || regex.multiline) { throw new Error('' + regex); }
       rewritten.push(
           '(?:' + allowAnywhereFoldCaseAndRenumberGroups(regex) + ')');
@@ -1031,7 +1031,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     var ol = document.createElement('OL');
     ol.className = 'linenums';
     var offset = Math.max(0, ((opt_startLineNum - 1 /* zero index */)) | 0) || 0;
-    for (var i = 0, n = listItems.length; i < n; ++i) {
+    for (i = 0, n = listItems.length; i < n; ++i) {
       li = listItems[i];
       // Stick a class on the LIs so that stylesheets can
       // color odd/even rows, or any other row pattern that
@@ -1116,7 +1116,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
       var decStart = decorations[decorationIndex];
       var decEnd = decorations[decorationIndex + 2] || sourceLength;
   
-      var end = Math.min(spanEnd, decEnd);
+      end = Math.min(spanEnd, decEnd);
   
       var textNode = spans[spanIndex + 1];
       var styledText;

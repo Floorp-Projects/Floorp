@@ -1240,7 +1240,7 @@ MockAddon.prototype = {
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
     }
     else if (newActive) {
-      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
+      let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
       this.pendingOperations |= AddonManager.PENDING_ENABLE;
       AddonManagerPrivate.callAddonListeners("onEnabling", this, needsRestart);
       if (!needsRestart) {
@@ -1250,7 +1250,7 @@ MockAddon.prototype = {
       }
     }
     else {
-      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
+      let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
       this.pendingOperations |= AddonManager.PENDING_DISABLE;
       AddonManagerPrivate.callAddonListeners("onDisabling", this, needsRestart);
       if (!needsRestart) {

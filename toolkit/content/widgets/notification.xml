@@ -327,7 +327,7 @@
               if (!canvas)
                 canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
               const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              var content = this.firstChild;
+              let content = this.firstChild;
               if (!content ||
                    content.namespaceURI != XULNS ||
                    content.localName != "browser")
@@ -361,7 +361,7 @@
             else if (canvas) {
               canvas.parentNode.removeChild(canvas);
               this._blockingCanvas = null;
-              var content = this.firstChild;
+              let content = this.firstChild;
               if (content)
                 content.collapsed = false;
             }

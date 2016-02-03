@@ -850,7 +850,7 @@
                 // The getParentIndex test above ensures that the children
                 // are already populated and ready.
                 if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
-                  var col = this._getNextColumn(c, false);
+                  let col = this._getNextColumn(c, false);
                   if (col) {
                     this.view.selection.currentColumn = col;
                   }
@@ -864,7 +864,7 @@
           }
 
           if (cellSelType) {
-            var col = this._getNextColumn(row, false);
+            let col = this._getNextColumn(row, false);
             if (col) {
               this.view.selection.currentColumn = col;
               this.treeBoxObject.ensureCellIsVisible(row, col);

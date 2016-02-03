@@ -155,7 +155,7 @@ var JsDiff = (function() {
               this.pushComponent(basePath.components, newString[basePath.newPos], true, undefined);
             }
 
-            var oldPos = this.extractCommon(basePath, newString, oldString, diagonalPath);
+            oldPos = this.extractCommon(basePath, newString, oldString, diagonalPath);
 
             if (basePath.newPos+1 >= newLen && oldPos+1 >= oldLen) {
               return basePath.components;
@@ -369,7 +369,7 @@ var JsDiff = (function() {
       }
 
       var str = oldStr.split('\n');
-      for (var i = diff.length - 1; i >= 0; i--) {
+      for (i = diff.length - 1; i >= 0; i--) {
         var d = diff[i];
         for (var j = 0; j < d.oldlength; j++) {
           if(str[d.start-1+j] !== d.oldlines[j]) {
@@ -872,8 +872,8 @@ Context.prototype.skip = function(){
 
 Context.prototype.inspect = function(){
   return JSON.stringify(this, function(key, val){
-    if ('_runnable' == key) return;
-    if ('test' == key) return;
+    if ('_runnable' == key) return undefined;
+    if ('test' == key) return undefined;
     return val;
   }, 2);
 };
@@ -926,7 +926,7 @@ Hook.prototype.constructor = Hook;
 
 Hook.prototype.error = function(err){
   if (0 == arguments.length) {
-    var err = this._error;
+    err = this._error;
     this._error = null;
     return err;
   }
@@ -1891,7 +1891,7 @@ module.exports = function(val, options){
 
 function parse(str) {
   var match = /^((?:\d+)?\.?\d+) *(ms|seconds?|s|minutes?|m|hours?|h|days?|d|years?|y)?$/i.exec(str);
-  if (!match) return;
+  if (!match) return undefined;
   var n = parseFloat(match[1]);
   var type = (match[2] || 'ms').toLowerCase();
   switch (type) {
@@ -1957,7 +1957,7 @@ function longFormat(ms) {
  */
 
 function plural(ms, n, name) {
-  if (ms < n) return;
+  if (ms < n) return undefined;
   if (ms < n * 1.5) return Math.floor(ms / n) + ' ' + name;
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
@@ -2780,9 +2780,9 @@ function HTML(runner) {
       var url = self.testURL(test);
       var el = fragment('<li class="test pass %e"><h2>%e<span class="duration">%ems</span> <a href="%s" class="replay">‣</a></h2></li>', test.speed, test.title, test.duration, url);
     } else if (test.pending) {
-      var el = fragment('<li class="test pass pending"><h2>%e</h2></li>', test.title);
+      el = fragment('<li class="test pass pending"><h2>%e</h2></li>', test.title);
     } else {
-      var el = fragment('<li class="test fail"><h2>%e <a href="%e" class="replay">‣</a></h2></li>', test.title, self.testURL(test));
+      el = fragment('<li class="test fail"><h2>%e <a href="%e" class="replay">‣</a></h2></li>', test.title, self.testURL(test));
       var str = test.err.stack || test.err.toString();
 
       // FF / Opera do not add the message
@@ -2978,8 +2978,8 @@ exports = module.exports = JSONCov;
  */
 
 function JSONCov(runner, output) {
-  var self = this
-    , output = 1 == arguments.length ? true : output;
+  var self = this;
+  output = 1 == arguments.length ? true : output;
 
   Base.call(this, runner);
 
@@ -3898,8 +3898,8 @@ Base.colors.progress = 90;
 function Progress(runner, options) {
   Base.call(this, runner);
 
+  options = options || {}
   var self = this
-    , options = options || {}
     , stats = this.stats
     , width = Base.window.width * .50 | 0
     , total = runner.total
@@ -4027,7 +4027,7 @@ function Spec(runner) {
       cursor.CR();
       console.log(fmt, test.title);
     } else {
-      var fmt = indent()
+      fmt = indent()
         + color('checkmark', '  ' + Base.symbols.ok)
         + color('pass', ' %s')
         + color(test.speed, ' (%dms)');
@@ -4442,7 +4442,7 @@ Runnable.prototype.clearTimeout = function(){
 
 Runnable.prototype.inspect = function(){
   return JSON.stringify(this, function(key, val){
-    if ('_' == key[0]) return;
+    if ('_' == key[0]) return undefined;
     if ('parent' == key) return '#<Suite>';
     if ('ctx' == key) return '#<Context>';
     return val;
@@ -4505,11 +4505,11 @@ Runnable.prototype.run = function(fn){
   // finished
   function done(err) {
     var ms = self.timeout();
-    if (self.timedOut) return;
+    if (self.timedOut) return undefined;
     if (finished) return multiple(err || self._trace);
 
     // Discard the resolution if this test has already failed asynchronously
-    if (self.state) return;
+    if (self.state) return undefined;
 
     self.clearTimeout();
     self.duration = new Date - start;
@@ -4540,7 +4540,7 @@ Runnable.prototype.run = function(fn){
     } catch (err) {
       done(utils.getError(err));
     }
-    return;
+    return undefined;
   }
 
   if (this.asyncOnly) {
@@ -6290,7 +6290,7 @@ exports.lookupFiles = function lookupFiles(path, extensions, recursive) {
     if (stat.isFile()) return path;
   }
   catch (ignored) {
-    return;
+    return undefined;
   }
 
   fs.readdirSync(path).forEach(function(file) {

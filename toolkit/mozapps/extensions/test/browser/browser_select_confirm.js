@@ -115,7 +115,7 @@ add_test(function disabling_test() {
     is(list.childNodes[1].id, "test2@tests.mozilla.org", "Should be the right add-on ID");
     is(list.childNodes[1].getAttribute("name"), "Test Add-on 2", "Should be the right add-on name");
 
-    var list = gWin.document.getElementById("enable-list");
+    list = gWin.document.getElementById("enable-list");
     ok(!list.hidden, "Enable list should be visible");
     is(list.childNodes.length, 2, "Should be one add-on getting disabled (plus the header)");
     is(list.childNodes[1].id, "test3@tests.mozilla.org", "Should be the right add-on ID");

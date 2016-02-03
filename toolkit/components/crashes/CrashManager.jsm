@@ -606,12 +606,12 @@ this.CrashManager.prototype = Object.freeze({
       try {
         yield it.forEach((entry, index, it) => {
           if (entry.isDir) {
-            return;
+            return undefined;
           }
 
           let match = re.exec(entry.name);
           if (!match) {
-            return;
+            return undefined;
           }
 
           return OS.File.stat(entry.path).then((info) => {

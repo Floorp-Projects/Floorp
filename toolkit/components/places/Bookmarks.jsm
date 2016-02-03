@@ -969,7 +969,7 @@ function reorderChildren(parent, orderedChildrenGuids) {
       // Select all of the direct children for the given parent.
       let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
       if (!children.length)
-        return;
+        return undefined;
 
       // Reorder the children array according to the specified order, provided
       // GUIDs come first, others are appended in somehow random order.

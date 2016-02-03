@@ -248,7 +248,7 @@ function callProviderAsync(aProvider, aMethod, ...aArgs) {
   let callback = aArgs[aArgs.length - 1];
   if (!(aMethod in aProvider)) {
     callback(undefined);
-    return;
+    return undefined;
   }
   try {
     return aProvider[aMethod].apply(aProvider, aArgs);
@@ -256,7 +256,7 @@ function callProviderAsync(aProvider, aMethod, ...aArgs) {
   catch (e) {
     reportProviderError(aProvider, aMethod, e);
     callback(undefined);
-    return;
+    return undefined;
   }
 }
 

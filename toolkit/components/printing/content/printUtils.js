@@ -377,7 +377,7 @@ var PrintUtils = {
     if (aMessage.name == "Printing:Error") {
       this.displayPrintingError(aMessage.data.nsresult,
                                 aMessage.data.isPrinting);
-      return;
+      return undefined;
     }
 
     // If we got here, then the message we've received must involve
@@ -385,7 +385,7 @@ var PrintUtils = {
     if (!this._webProgressPP.value) {
       // We somehow didn't get a nsIWebProgressListener to be updated...
       // I guess there's nothing to do.
-      return;
+      return undefined;
     }
 
     let listener = this._webProgressPP.value;
