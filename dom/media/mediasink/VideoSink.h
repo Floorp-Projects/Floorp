@@ -126,8 +126,6 @@ private:
   // in microseconds.
   int64_t mVideoFrameEndTime;
 
-  uint32_t mOldDroppedCount;
-
   // Event listeners for VideoQueue
   MediaEventListener mPushListener;
   MediaEventListener mFinishListener;
