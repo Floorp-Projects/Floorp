@@ -1,0 +1,36 @@
+# Many things aren't appropriate for a frontend-only build.
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_INSTALLER=0
+MOZ_AUTOMATION_L10N_CHECK=0
+MOZ_AUTOMATION_PACKAGE=0
+MOZ_AUTOMATION_PACKAGE_TESTS=0
+MOZ_AUTOMATION_SDK=0
+MOZ_AUTOMATION_UPDATE_PACKAGING=0
+MOZ_AUTOMATION_UPLOAD=0
+MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+ac_add_options --disable-compile-environment
+ac_add_options --disable-tests
+
+# From here on, like ../android-api-15/nightly.
+
+ac_add_options --enable-profiling
+
+# Android
+ac_add_options --with-android-min-sdk=15
+ac_add_options --target=arm-linux-androideabi
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling with eideticker. See bug 788680
+STRIP_FLAGS="--strip-debug"
+
+export MOZILLA_OFFICIAL=1
+export MOZ_TELEMETRY_REPORTING=1
+
+MOZ_ANDROID_GECKOLIBS_AAR=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
