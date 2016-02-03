@@ -4565,7 +4565,7 @@ Tab.prototype = {
     if (appOrigin) {
       let originHost = "";
       try {
-        let originHost = Services.io.newURI(appOrigin, null, null).host;
+        originHost = Services.io.newURI(appOrigin, null, null).host;
       } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
         // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host - in this case
         // we just act as if we have an empty host.
