@@ -28,8 +28,7 @@ def ReadLocalFile(include):
 
     return data
 
-kSimpleTestReplacement = '''
-
+kSimpleTestReplacement = '''\n
 <script>
 // SimpleTest.js replacement
 
@@ -53,12 +52,10 @@ function todo(val, text) {
 SimpleTest = {
   waitForExplicitFinish: function() {},
   finish: function() {},
-  requestFlakyTimeout: function() {},
 };
 </script>
 <div id='mochi-to-testcase-output'></div>
-
-'''
+\n'''
 
 fin = open(mochiPath, 'rb')
 fout = open(testPath, 'wb')
