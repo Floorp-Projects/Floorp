@@ -9,7 +9,7 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/elements.js");
+Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/event.js");
 
 this.EXPORTED_SYMBOLS = ["Interactions"];
