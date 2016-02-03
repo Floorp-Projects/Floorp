@@ -5,18 +5,18 @@
         PATH=$NSS/bin:$NSS/lib:$PATH ./generate.sh
         cd ../../../../../..
         make -C $OBJDIR/security/manager/ssl/tests
-    
-   $NSS is the path to NSS binaries and libraries built for the host platform. 
+
+   $NSS is the path to NSS binaries and libraries built for the host platform.
    If you get error messages about "CertUtil" on Windows, then it means that
    the Windows CertUtil.exe is ahead of the NSS certutil.exe in $PATH.
-    
+
    Check in the generated files. These steps are not done as part of the build
    because we do not want to add a build-time dependency on the OpenSSL or NSS
    tools or libraries built for the host platform.
 */
 
 // XXX from prio.h
-const PR_RDWR        = 0x04; 
+const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
 
@@ -68,7 +68,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
     } finally {
       reader.close();
     }
-    
+
     // Any leftover modification means that we were expecting to modify an entry
     // in the input file that wasn't there.
     for(var name in modifications) {
@@ -76,7 +76,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
         throw "input file was missing expected entries: " + name;
       }
     }
-    
+
     // Now, append any new entries to the end
     newEntries.forEach(function(newEntry) {
       var sis = Cc["@mozilla.org/io/string-input-stream;1"]

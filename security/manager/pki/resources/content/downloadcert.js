@@ -14,12 +14,12 @@ function onLoad()
   params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   cert = params.objects.queryElementAt(0, nsIX509Cert);
 
-  caName = cert.commonName; 
-
   var bundle = document.getElementById("pippki_bundle");
 
-  if (!caName.length)
+  caName = cert.commonName;
+  if (caName.length == 0) {
     caName = bundle.getString("unnamedCA");
+  }
 
   var message2 = bundle.getFormattedString("newCAMessage1", [caName]);
   setText("message2", message2);
