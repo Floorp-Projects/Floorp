@@ -4,6 +4,14 @@
 
 package org.mozilla.gecko.browserid;
 
+import android.annotation.SuppressLint;
+
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.PRNGFixes;
+
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -19,11 +27,9 @@ import java.security.spec.DSAPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
-import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.sync.Utils;
-
 public class DSACryptoImplementation {
+  private static final String LOG_TAG = DSACryptoImplementation.class.getSimpleName();
+
   public static final String SIGNATURE_ALGORITHM = "SHA1withDSA";
   public static final int SIGNATURE_LENGTH_BYTES = 40; // DSA signatures are always 40 bytes long.
 
@@ -120,12 +126,21 @@ public class DSACryptoImplementation {
       return o;
     }
 
+    @SuppressLint("TrulyRandom")
     @Override
     public byte[] signMessage(byte[] bytes)
         throws GeneralSecurityException {
       if (bytes == null) {
         throw new IllegalArgumentException("bytes must not be null");
       }
+
+      try {
+        PRNGFixes.apply();
+      } catch (Exception e) {
+        // Not much to be done here: it was weak before, and we couldn't patch it, so it's weak now.  Not worth aborting.
+        Logger.error(LOG_TAG, "Got exception applying PRNGFixes!  Cryptographic data produced on this device may be weak.  Ignoring.", e);
+      }
+
       final Signature signer = Signature.getInstance(SIGNATURE_ALGORITHM);
       signer.initSign(privateKey);
       signer.update(bytes);
