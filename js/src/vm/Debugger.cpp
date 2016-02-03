@@ -19,6 +19,7 @@
 #include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
@@ -4523,6 +4524,53 @@ Debugger::endTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
+Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args[0].isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NOT_EXPECTED_TYPE, "Debugger.isCompilableUnit",
+                             "string", InformalValueTypeName(args[0]));
+        return false;
+    }
+
+    JSString* str = args[0].toString();
+    size_t length = GetStringLength(str);
+
+    AutoStableStringChars chars(cx);
+    if (!chars.initTwoByte(cx, str))
+        return false;
+
+    bool result = true;
+
+    CompileOptions options(cx);
+    frontend::Parser<frontend::FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
+                                                        options, chars.twoByteChars(),
+                                                        length, /* foldConstants = */ true,
+                                                        nullptr, nullptr);
+    JSErrorReporter older = JS_SetErrorReporter(cx->runtime(), nullptr);
+    if (!parser.checkOptions() || !parser.parse()) {
+        // We ran into an error. If it was because we ran out of memory we report
+        // it in the usual way.
+        if (cx->isThrowingOutOfMemory()) {
+            JS_SetErrorReporter(cx->runtime(), older);
+            return false;
+        }
+
+        // If it was because we ran out of source, we return false so our caller
+        // knows to try to collect more [source].
+        if (parser.isUnexpectedEOF())
+            result = false;
+
+        cx->clearPendingException();
+    }
+    JS_SetErrorReporter(cx->runtime(), older);
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
 Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
@@ -4643,7 +4691,11 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FS_END
 };
 
-
+const JSFunctionSpec Debugger::static_methods[] {
+    JS_FN("isCompilableUnit", Debugger::isCompilableUnit, 1, 0),
+    JS_FS_END
+};
+
 /*** Debugger.Script *****************************************************************************/
 
 static inline JSScript*
@@ -8415,8 +8467,8 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
         return false;
     debugProto = InitClass(cx, obj,
                            objProto, &Debugger::jsclass, Debugger::construct,
-                           1, Debugger::properties, Debugger::methods, nullptr, nullptr,
-                           debugCtor.address());
+                           1, Debugger::properties, Debugger::methods, nullptr,
+                           Debugger::static_methods, debugCtor.address());
     if (!debugProto)
         return false;
 
