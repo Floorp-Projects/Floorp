@@ -48,15 +48,19 @@ function* checkCacheEnabled(tabX, expected) {
 
   yield reloadTab(tabX);
 
-  let doc = content.document;
-  let h1 = doc.querySelector("h1");
-  let oldGuid = h1.textContent;
+  let oldGuid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    let doc = content.document;
+    let h1 = doc.querySelector("h1");
+    return h1.textContent;
+  });
 
   yield reloadTab(tabX);
 
-  doc = content.document;
-  h1 = doc.querySelector("h1");
-  let guid = h1.textContent;
+  let guid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    let doc = content.document;
+    let h1 = doc.querySelector("h1");
+    return h1.textContent;
+  });
 
   if (expected) {
     is(guid, oldGuid, tabX.title + " cache is enabled");
@@ -71,14 +75,9 @@ function* setDisableCacheCheckboxChecked(tabX, state) {
   let panel = tabX.toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById("devtools-disable-cache");
 
-  cbx.scrollIntoView();
-
-  // After uising scrollIntoView() we need to wait for the browser to scroll.
-  yield waitForTick();
-
   if (cbx.checked !== state) {
     info("Setting disable cache checkbox to " + state + " for " + tabX.title);
-    EventUtils.synthesizeMouseAtCenter(cbx, {}, panel.panelWin);
+    cbx.click();
 
     // We need to wait for all checkboxes to be updated and the docshells to
     // apply the new cache settings.
