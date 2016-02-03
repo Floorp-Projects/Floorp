@@ -36,7 +36,7 @@ GetAllSpeechSynthActors(InfallibleTArray<mozilla::dom::SpeechSynthesisParent*>& 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActors.IsEmpty());
 
-  nsAutoTArray<mozilla::dom::ContentParent*, 20> contentActors;
+  AutoTArray<mozilla::dom::ContentParent*, 20> contentActors;
   mozilla::dom::ContentParent::GetAll(contentActors);
 
   for (uint32_t contentIndex = 0;
@@ -44,7 +44,7 @@ GetAllSpeechSynthActors(InfallibleTArray<mozilla::dom::SpeechSynthesisParent*>& 
        ++contentIndex) {
     MOZ_ASSERT(contentActors[contentIndex]);
 
-    AutoInfallibleTArray<mozilla::dom::PSpeechSynthesisParent*, 5> speechsynthActors;
+    AutoTArray<mozilla::dom::PSpeechSynthesisParent*, 5> speechsynthActors;
     contentActors[contentIndex]->ManagedPSpeechSynthesisParent(speechsynthActors);
 
     for (uint32_t speechsynthIndex = 0;

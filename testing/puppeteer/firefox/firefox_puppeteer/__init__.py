@@ -9,7 +9,7 @@ from marionette_driver.marionette import HTMLElement
 from decorators import use_class_as_property
 
 
-__version__ = '3.1.0'
+__version__ = '3.2.0'
 
 root = os.path.abspath(os.path.dirname(__file__))
 manifest = os.path.join(root, 'tests', 'manifest.ini')

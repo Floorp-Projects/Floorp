@@ -282,7 +282,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
       continue;
     }
 
-    nsAutoTArray<gfxFontEntry*,4> entries;
+    AutoTArray<gfxFontEntry*,4> entries;
     bool needsBold;
     family->FindAllFontsForStyle(style, entries, needsBold);
 

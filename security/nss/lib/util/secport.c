@@ -321,7 +321,7 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
     }
     if (!checkedEnv) {
 	/* no need for thread protection here */
-	doFreeArenaPool = (PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST") == NULL);
+	doFreeArenaPool = (PR_GetEnvSecure("NSS_DISABLE_ARENA_FREE_LIST") == NULL);
 	checkedEnv = PR_TRUE;
     }
     if (zero) {

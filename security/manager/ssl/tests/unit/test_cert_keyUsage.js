@@ -44,7 +44,7 @@ function run_test() {
   caList.forEach(function(ca) {
     addCertFromFile(certdb, "test_cert_keyUsage/" + ca + ".pem",
                     "CTu,CTu,CTu");
-    let caCert = certdb.findCertByNickname(null, ca);
+    let caCert = certdb.findCertByNickname(ca);
     let usages = {};
     caCert.getUsagesString(true, {}, usages); // true indicates local-only
     equal(usages.value, expectedUsagesMap[ca],

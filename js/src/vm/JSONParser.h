@@ -190,8 +190,7 @@ class MOZ_STACK_CLASS JSONParserBase
 };
 
 template <typename CharT>
-class MOZ_STACK_CLASS JSONParser : public JSONParserBase,
-                                   public JS::Traceable
+class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 {
   private:
     typedef mozilla::RangedPtr<const CharT> CharPtr;

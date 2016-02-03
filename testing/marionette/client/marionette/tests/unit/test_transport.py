@@ -4,11 +4,11 @@
 
 import json
 from marionette import MarionetteTestCase, skip_unless_protocol
-from marionette_transport import (
+from marionette_driver.transport import (
     Command,
     Proto2Command,
     Proto2Response,
-    Response
+    Response,
 )
 
 get_current_url = ("getCurrentUrl", None)

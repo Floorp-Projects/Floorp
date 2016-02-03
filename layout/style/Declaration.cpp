@@ -1442,7 +1442,7 @@ Declaration::ToString(nsAString& aString) const
 
   int32_t count = mOrder.Length();
   int32_t index;
-  nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
+  AutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = GetPropertyAt(index);
 

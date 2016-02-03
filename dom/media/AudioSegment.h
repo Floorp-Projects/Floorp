@@ -118,8 +118,8 @@ DownmixAndInterleave(const nsTArray<const SrcT*>& aChannelData,
     InterleaveAndConvertBuffer(aChannelData.Elements(),
                                aDuration, aVolume, aOutputChannels, aOutput);
   } else {
-    nsAutoTArray<SrcT*,GUESS_AUDIO_CHANNELS> outputChannelData;
-    nsAutoTArray<SrcT, SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS> outputBuffers;
+    AutoTArray<SrcT*,GUESS_AUDIO_CHANNELS> outputChannelData;
+    AutoTArray<SrcT, SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS> outputBuffers;
     outputChannelData.SetLength(aOutputChannels);
     outputBuffers.SetLength(aDuration * aOutputChannels);
     for (uint32_t i = 0; i < aOutputChannels; i++) {
@@ -254,8 +254,8 @@ public:
 #endif
 
     for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
-      nsAutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
-      nsAutoTArray<const T*, GUESS_AUDIO_CHANNELS> bufferPtrs;
+      AutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
+      AutoTArray<const T*, GUESS_AUDIO_CHANNELS> bufferPtrs;
       AudioChunk& c = *ci;
       // If this chunk is null, don't bother resampling, just alter its duration
       if (c.IsNull()) {
@@ -395,7 +395,7 @@ void WriteChunk(AudioChunk& aChunk,
                 uint32_t aOutputChannels,
                 AudioDataValue* aOutputBuffer)
 {
-  nsAutoTArray<const SrcT*,GUESS_AUDIO_CHANNELS> channelData;
+  AutoTArray<const SrcT*,GUESS_AUDIO_CHANNELS> channelData;
 
   channelData = aChunk.ChannelData<SrcT>();
 

@@ -112,7 +112,7 @@ PowerManagerService::Notify(const WakeLockInformation& aWakeLockInfo)
    * because the callbacks may install new listeners. We expect no
    * more than one listener per window, so it shouldn't be too long.
    */
-  nsAutoTArray<nsCOMPtr<nsIDOMMozWakeLockListener>, 2> listeners(mWakeLockListeners);
+  AutoTArray<nsCOMPtr<nsIDOMMozWakeLockListener>, 2> listeners(mWakeLockListeners);
 
   for (uint32_t i = 0; i < listeners.Length(); ++i) {
     listeners[i]->Callback(aWakeLockInfo.topic(), state);

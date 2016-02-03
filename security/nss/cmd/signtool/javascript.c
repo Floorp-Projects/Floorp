@@ -64,7 +64,7 @@ InlineJavaScript(char *dir, PRBool recurse)
 	PR_fprintf(outputFD, "\nGenerating inline signatures from HTML files in: %s\n",
 	     dir);
     }
-    if (PR_GetEnv("SIGNTOOL_DUMP_PARSE")) {
+    if (PR_GetEnvSecure("SIGNTOOL_DUMP_PARSE")) {
 	dumpParse = PR_TRUE;
     }
 

@@ -300,7 +300,7 @@ MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindowBase* aWidget,
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));
 
-  nsAutoTArray<KeyPair,10> keySequence;
+  AutoTArray<KeyPair,10> keySequence;
   WinUtils::SetupKeyModifiersSequence(&keySequence, aModifierFlags);
 
   for (uint32_t i = 0; i < keySequence.Length(); ++i) {

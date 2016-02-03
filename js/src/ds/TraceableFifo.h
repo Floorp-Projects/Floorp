@@ -31,9 +31,7 @@ namespace js {
 template <typename T,
           size_t MinInlineCapacity = 0,
           typename AllocPolicy = TempAllocPolicy>
-class TraceableFifo
-  : public js::Fifo<T, MinInlineCapacity, AllocPolicy>,
-    public JS::Traceable
+class TraceableFifo : public js::Fifo<T, MinInlineCapacity, AllocPolicy>
 {
     using Base = js::Fifo<T, MinInlineCapacity, AllocPolicy>;
 
@@ -46,11 +44,11 @@ class TraceableFifo
     TraceableFifo(const TraceableFifo&) = delete;
     TraceableFifo& operator=(const TraceableFifo&) = delete;
 
-    static void trace(TraceableFifo* tf, JSTracer* trc) {
-        for (size_t i = 0; i < tf->front_.length(); ++i)
-            GCPolicy<T>::trace(trc, &tf->front_[i], "fifo element");
-        for (size_t i = 0; i < tf->rear_.length(); ++i)
-            GCPolicy<T>::trace(trc, &tf->rear_[i], "fifo element");
+    void trace(JSTracer* trc) {
+        for (size_t i = 0; i < this->front_.length(); ++i)
+            GCPolicy<T>::trace(trc, &this->front_[i], "fifo element");
+        for (size_t i = 0; i < this->rear_.length(); ++i)
+            GCPolicy<T>::trace(trc, &this->rear_[i], "fifo element");
     }
 };
 

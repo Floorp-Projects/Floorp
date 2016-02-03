@@ -13,5 +13,7 @@ if CONFIG['ENABLE_TESTS'] and CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['OS_ARCH
         'minidumpwriter.cpp',
     ]
     USE_STATIC_LIBS = True
+    if CONFIG['GNU_CC']:
+        WIN32_EXE_LDFLAGS += ['-municode']
 
 NO_PGO = True

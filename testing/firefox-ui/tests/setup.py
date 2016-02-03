@@ -7,8 +7,8 @@ from setuptools import setup, find_packages
 PACKAGE_VERSION = '0.3.1'
 
 deps = [
-    'firefox-puppeteer >= 3.1.0, <4.0.0',
-    'firefox-ui-harness == 1.1.2',
+    'firefox-puppeteer >= 3.2.0, <4.0.0',
+    'firefox-ui-harness == 1.2.0',
 ]
 
 setup(name='firefox-ui-tests',

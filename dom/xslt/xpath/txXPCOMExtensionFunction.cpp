@@ -298,7 +298,7 @@ txXPCOMExtensionFunctionCall::GetParamType(const nsXPTParamInfo &aParam,
     }
 }
 
-class txParamArrayHolder : public JS::Traceable
+class txParamArrayHolder
 {
 public:
     txParamArrayHolder()
@@ -319,7 +319,6 @@ public:
       return mArray.get();
     }
 
-    static void trace(txParamArrayHolder* holder, JSTracer* trc) { holder->trace(trc); }
     void trace(JSTracer* trc) {
         for (uint8_t i = 0; i < mCount; ++i) {
             if (mArray[i].type == nsXPTType::T_JSVAL) {

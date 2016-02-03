@@ -15,12 +15,12 @@ from contextlib import contextmanager
 
 from decorators import do_crash_check
 from keys import Keys
-import marionette_transport as transport
 
 from mozrunner import B2GEmulatorRunner
 
 import geckoinstance
 import errors
+import transport
 
 WEBELEMENT_KEY = "ELEMENT"
 W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
