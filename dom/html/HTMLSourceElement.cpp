@@ -82,6 +82,20 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
   return pctx && mediaList->Matches(pctx, nullptr);
 }
 
+void
+HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
+{
+  mMediaList = nullptr;
+  nsString mediaStr;
+  if (!aValue || (mediaStr = aValue->GetStringValue()).IsEmpty()) {
+    return;
+  }
+
+  nsCSSParser cssParser;
+  mMediaList = new nsMediaList();
+  cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList, false);
+}
+
 nsresult
 HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify)
@@ -105,23 +119,17 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           img->PictureSourceSrcsetChanged(AsContent(), strVal, aNotify);
         } else if (aName == nsGkAtoms::sizes) {
           img->PictureSourceSizesChanged(AsContent(), strVal, aNotify);
-        } else if (aName == nsGkAtoms::media ||
-                   aName == nsGkAtoms::type) {
+        } else if (aName == nsGkAtoms::media) {
+          UpdateMediaList(aValue);
+          img->PictureSourceMediaOrTypeChanged(AsContent(), aNotify);
+        } else if (aName == nsGkAtoms::type) {
           img->PictureSourceMediaOrTypeChanged(AsContent(), aNotify);
         }
       }
     }
 
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::media) {
-    mMediaList = nullptr;
-    if (aValue) {
-      nsString mediaStr = aValue->GetStringValue();
-      if (!mediaStr.IsEmpty()) {
-        nsCSSParser cssParser;
-        mMediaList = new nsMediaList();
-        cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList, false);
-      }
-    }
+    UpdateMediaList(aValue);
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     mSrcMediaSource = nullptr;
     if (aValue) {
