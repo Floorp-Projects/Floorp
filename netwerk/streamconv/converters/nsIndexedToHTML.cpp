@@ -829,7 +829,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     PRTime t;
     aIndex->GetLastModified(&t);
 
-    if (t == -1) {
+    if (t == -1LL) {
         pushBuffer.AppendLiteral("></td>\n <td>");
     } else {
         pushBuffer.AppendLiteral(" sortable-data=\"");
