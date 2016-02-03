@@ -5218,3 +5218,6 @@ pref("dom.input.fallbackUploadDir", "");
 
 // Turn rewriting of youtube embeds on/off
 pref("plugins.rewrite_youtube_embeds", true);
+
+// Disable browser frames by default
+pref("dom.mozBrowserFramesEnabled", false);
