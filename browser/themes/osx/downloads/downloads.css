@@ -39,26 +39,6 @@ richlistitem[type="download"] {
   color: inherit;
 }
 
-#downloadsSummary {
-  padding: 8px 38px 8px 12px;
-  cursor: pointer;
-  -moz-user-focus: normal;
-}
-
-#downloadsSummary > .downloadTypeIcon {
-  list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #downloadsSummary > .downloadTypeIcon {
-    list-style-image: url("chrome://browser/skin/downloads/download-summary@2x.png");
-  }
-}
-
-#downloadsSummaryDescription {
-  color: -moz-nativehyperlinktext;
-}
-
 richlistitem[type="download"] {
   margin: 0;
   border-top: 1px solid hsla(0,0%,100%,.07);
