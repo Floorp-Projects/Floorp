@@ -110,6 +110,12 @@
 <!ENTITY performanceUI.showPlatformData             "Show Gecko Platform Data">
 <!ENTITY performanceUI.showPlatformData.tooltiptext "Showing platform data enables the JavaScript Profiler reports to include Gecko platform symbols.">
 
+<!-- LOCALIZATION NOTE (performanceUI.showJITOptimizations): This string
+  -  is displayed next to a checkbox determining whether or not JIT optimization data
+  -  should be displayed. -->
+<!ENTITY performanceUI.showJITOptimizations             "Show JIT Optimizations">
+<!ENTITY performanceUI.showJITOptimizations.tooltiptext "Show JIT optimization data sampled in each JavaScript frame.">
+
 <!-- LOCALIZATION NOTE (performanceUI.flattenTreeRecursion): This is the
   -  label for the checkbox that toggles the flattening of tree recursion in inspected
   -  functions in the profiler. -->
@@ -133,12 +139,6 @@
   -  is recorded. -->
 <!ENTITY performanceUI.enableFramerate             "Record Framerate">
 <!ENTITY performanceUI.enableFramerate.tooltiptext "Record framerate while profiling.">
-
-<!-- LOCALIZATION NOTE (performanceUI.enableJITOptimizations): This string
-  -  is displayed next to a checkbox determining whether or not JIT optimization data
-  -  should be recorded. -->
-<!ENTITY performanceUI.enableJITOptimizations             "Record JIT Optimizations">
-<!ENTITY performanceUI.enableJITOptimizations.tooltiptext "Record JIT optimization data sampled in each JavaScript frame.">
 
 <!-- LOCALIZATION NOTE (performanceUI.console.recordingNoticeStart/recordingNoticeEnd):
   -  This string is displayed when a recording is selected that started via console.profile.
