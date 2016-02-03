@@ -2925,8 +2925,8 @@ void
 nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus* aStatus) const
 {
-  if (AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
-      AvailableHeight() < aMetrics.Height() &&
+  if (AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+      AvailableBSize() < aMetrics.BSize(GetWritingMode()) &&
       !mFlags.mIsTopOfPage) {
     *aStatus |= NS_FRAME_TRUNCATED;
   } else {
