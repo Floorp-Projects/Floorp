@@ -112,8 +112,6 @@ public:
 
   virtual ~DataTextureSourceD3D9();
 
-  virtual const char* Name() const override { return "DataTextureSourceD3D9"; }
-
   // DataTextureSource
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
@@ -399,8 +397,6 @@ public:
                               SurfaceInitMode aInit,
                               const gfx::IntRect& aRect);
   virtual ~CompositingRenderTargetD3D9();
-
-  virtual const char* Name() const override { return "CompositingRenderTargetD3D9"; }
 
   virtual TextureSourceD3D9* AsSourceD3D9() override
   {

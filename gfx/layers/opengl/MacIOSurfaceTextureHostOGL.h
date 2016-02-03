@@ -28,8 +28,6 @@ public:
                                MacIOSurface* aSurface);
   virtual ~MacIOSurfaceTextureSourceOGL();
 
-  virtual const char* Name() const override { return "MacIOSurfaceTextureSourceOGL"; }
-
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
   virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
