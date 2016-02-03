@@ -538,7 +538,7 @@ inline void
 XPCWrappedNative::SweepTearOffs()
 {
     XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk.get()) {
         XPCWrappedNativeTearOff* to = &chunk->mTearOff;
         bool marked = to->IsMarked();
         to->Unmark();
