@@ -1,3 +1,28 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*** Panel and outer controls ***/
+
+#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#downloadsListBox {
+  background: transparent;
+  padding: 4px;
+  color: inherit;
+}
+
+#downloadsPanel:not([hasdownloads]) > #downloadsListBox {
+  display: none;
+}
+
+#downloadsPanel[hasdownloads] > #emptyDownloads {
+  display: none;
+}
+
+#emptyDownloads {
+  padding: 10px 20px;
+  max-width: 40ch;
+}

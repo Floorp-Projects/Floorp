@@ -6,29 +6,6 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
-#downloadsListBox {
-  background: transparent;
-  padding: 4px;
-  color: inherit;
-}
-
-#downloadsPanel:not([hasdownloads]) > #downloadsListBox {
-  display: none;
-}
-
-#downloadsPanel[hasdownloads] > #emptyDownloads {
-  display: none;
-}
-
-#emptyDownloads {
-  padding: 10px 20px;
-  max-width: 40ch;
-}
-
 #downloadsHistory {
   background: transparent;
   color: -moz-nativehyperlinktext;
