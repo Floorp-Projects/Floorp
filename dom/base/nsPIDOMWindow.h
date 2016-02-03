@@ -508,14 +508,6 @@ public:
   virtual bool DispatchCustomEvent(const nsAString& aEventName) = 0;
 
   /**
-   * Call when the document principal may have changed and the compartment
-   * principal needs to be updated.
-   *
-   * Inner windows only.
-   */
-  virtual void RefreshCompartmentPrincipal() = 0;
-
-  /**
    * Like nsIDOMWindow::Open, except that we don't navigate to the given URL.
    *
    * Outer windows only.
