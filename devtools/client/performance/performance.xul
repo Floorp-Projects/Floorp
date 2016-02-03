@@ -37,6 +37,12 @@
                 data-pref="show-platform-data"
                 label="&performanceUI.showPlatformData;"
                 tooltiptext="&performanceUI.showPlatformData.tooltiptext;"/>
+      <menuitem id="option-show-jit-optimizations"
+                class="experimental-option"
+                type="checkbox"
+                data-pref="show-jit-optimizations"
+                label="&performanceUI.showJITOptimizations;"
+                tooltiptext="&performanceUI.showJITOptimizations.tooltiptext;"/>
       <menuitem id="option-enable-memory"
                 class="experimental-option"
                 type="checkbox"
@@ -68,12 +74,6 @@
                 data-pref="flatten-tree-recursion"
                 label="&performanceUI.flattenTreeRecursion;"
                 tooltiptext="&performanceUI.flattenTreeRecursion.tooltiptext;"/>
-      <menuitem id="option-enable-jit-optimizations"
-                class="experimental-option"
-                type="checkbox"
-                data-pref="enable-jit-optimizations"
-                label="&performanceUI.enableJITOptimizations;"
-                tooltiptext="&performanceUI.enableJITOptimizations.tooltiptext;"/>
     </menupopup>
   </popupset>
 

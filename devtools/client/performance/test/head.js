@@ -45,7 +45,7 @@ const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
 const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
 const INVERT_FLAME_PREF = "devtools.performance.ui.invert-flame-graph";
 const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
-const JIT_PREF = "devtools.performance.ui.enable-jit-optimizations";
+const JIT_PREF = "devtools.performance.ui.show-jit-optimizations";
 const EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 
 // Keep in sync with FRAMERATE_GRAPH_HIGH_RES_INTERVAL in views/overview.js
@@ -66,7 +66,7 @@ var DEFAULT_PREFS = [
   "devtools.performance.ui.enable-memory",
   "devtools.performance.ui.enable-allocations",
   "devtools.performance.ui.enable-framerate",
-  "devtools.performance.ui.enable-jit-optimizations",
+  "devtools.performance.ui.show-jit-optimizations",
   "devtools.performance.memory.sample-probability",
   "devtools.performance.memory.max-log-length",
   "devtools.performance.profiler.buffer-size",

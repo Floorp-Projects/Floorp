@@ -13,7 +13,7 @@ const EVENT_MAP_FLAGS = new Map([
 ]);
 
 const RECORDING_FEATURES = [
-  "withMarkers", "withTicks", "withMemory", "withAllocations", "withJITOptimizations"
+  "withMarkers", "withTicks", "withMemory", "withAllocations"
 ];
 
 const SELECTED_VIEW_HISTOGRAM_NAME = "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS";
