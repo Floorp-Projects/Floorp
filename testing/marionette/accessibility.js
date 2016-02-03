@@ -124,6 +124,10 @@ Accessibility.prototype = {
         // If accessible object is found, return it. If it is not required,
         // also resolve.
         resolve(acc);
+      } else if (mustHaveAccessible && !this.strict) {
+        // If we must have an accessible but are not raising accessibility
+        // exceptions, reject now and avoid polling for an accessible object.
+        reject();
       } else {
         // If we require an accessible object, we need to poll for it because
         // accessible tree might be out of sync with DOM tree for a short time.
