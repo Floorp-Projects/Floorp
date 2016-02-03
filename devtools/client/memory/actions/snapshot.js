@@ -12,6 +12,7 @@ const {
   dominatorTreeIsComputed,
 } = require("../utils");
 const { actions, snapshotState: states, viewState, dominatorTreeState } = require("../constants");
+const telemetry = require("../telemetry");
 const view = require("./view");
 const refresh = require("./refresh");
 
@@ -67,6 +68,8 @@ const selectSnapshotAndRefresh = exports.selectSnapshotAndRefresh = function (he
  */
 const takeSnapshot = exports.takeSnapshot = function (front) {
   return function *(dispatch, getState) {
+    telemetry.countTakeSnapshot();
+
     if (getState().diffing) {
       dispatch(view.changeView(viewState.CENSUS));
     }
@@ -182,6 +185,8 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
       filter,
       report
     });
+
+    telemetry.countCensus({ inverted, filter, breakdown });
   };
 };
 
@@ -275,6 +280,7 @@ const fetchDominatorTree = exports.fetchDominatorTree = function (heapWorker, id
     while (!breakdownEquals(breakdown, getState().dominatorTreeBreakdown));
 
     dispatch({ type: actions.FETCH_DOMINATOR_TREE_END, id, root });
+    telemetry.countDominatorTree({ breakdown });
     return root;
   };
 };
