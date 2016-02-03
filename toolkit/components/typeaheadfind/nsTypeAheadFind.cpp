@@ -493,7 +493,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         if (fm) {
           nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
           nsresult rv = fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-          if (NS_SUCCEEDED(rv)) {
+          if (NS_SUCCEEDED(rv) && focusedWindow) {
             auto* fwPI = nsPIDOMWindowOuter::From(focusedWindow);
             nsCOMPtr<nsIDocShellTreeItem> fwTreeItem
               (do_QueryInterface(fwPI->GetDocShell(), &rv));
