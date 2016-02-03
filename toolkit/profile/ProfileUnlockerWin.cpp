@@ -156,8 +156,8 @@ ProfileUnlockerWin::Unlock(uint32_t aSeverity)
     return NS_ERROR_FAILURE;
   }
 
-  // Using a nsAutoTArray here because we expect the required size to be 1.
-  nsAutoTArray<RM_PROCESS_INFO, 1> info;
+  // Using a AutoTArray here because we expect the required size to be 1.
+  AutoTArray<RM_PROCESS_INFO, 1> info;
   UINT numEntries;
   UINT numEntriesNeeded = 1;
   error = ERROR_MORE_DATA;

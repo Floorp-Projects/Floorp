@@ -606,7 +606,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
 
   STREAM_LOG(LogLevel::Debug, ("Updating AudioOutputStreams for MediaStream %p", aStream));
 
-  nsAutoTArray<bool,2> audioOutputStreamsFound;
+  AutoTArray<bool,2> audioOutputStreamsFound;
   for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
     audioOutputStreamsFound.AppendElement(false);
   }
@@ -791,7 +791,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   TimeStamp currentTimeStamp = CurrentDriver()->GetCurrentTimeStamp();
 
   // Collect any new frames produced in this iteration.
-  nsAutoTArray<ImageContainer::NonOwningImage,4> newImages;
+  AutoTArray<ImageContainer::NonOwningImage,4> newImages;
   RefPtr<Image> blackImage;
 
   MOZ_ASSERT(mProcessedTime >= aStream->mBufferStartTime, "frame position before buffer?");
@@ -861,14 +861,14 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   if (!aStream->mLastPlayedVideoFrame.GetImage())
     return;
 
-  nsAutoTArray<ImageContainer::NonOwningImage,4> images;
+  AutoTArray<ImageContainer::NonOwningImage,4> images;
   bool haveMultipleImages = false;
 
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
     VideoFrameContainer* output = aStream->mVideoOutputs[i];
 
     // Find previous frames that may still be valid.
-    nsAutoTArray<ImageContainer::OwningImage,4> previousImages;
+    AutoTArray<ImageContainer::OwningImage,4> previousImages;
     output->GetImageContainer()->GetCurrentImages(&previousImages);
     uint32_t j = previousImages.Length();
     if (j) {

@@ -135,7 +135,7 @@ PowerManager::Callback(const nsAString &aTopic, const nsAString &aState)
    * because the callbacks may install new listeners. We expect no
    * more than one listener per window, so it shouldn't be too long.
    */
-  nsAutoTArray<nsCOMPtr<nsIDOMMozWakeLockListener>, 2> listeners(mListeners);
+  AutoTArray<nsCOMPtr<nsIDOMMozWakeLockListener>, 2> listeners(mListeners);
   for (uint32_t i = 0; i < listeners.Length(); ++i) {
     listeners[i]->Callback(aTopic, aState);
   }

@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BlendingHelpers.hlslh"
+#include "BlendShaderConstants.h"
+
 typedef float4 rect;
 
 float4x4 mLayerTransform : register(vs, c0);
@@ -11,19 +14,28 @@ float4 vRenderTargetOffset : register(vs, c8);
 rect vTextureCoords : register(vs, c9);
 rect vLayerQuad : register(vs, c10);
 rect vMaskQuad : register(vs, c11);
+float4x4 mBackdropTransform : register(vs, c12);
 
 float4 fLayerColor : register(ps, c0);
 float fLayerOpacity : register(ps, c1);
 
+// x = layer type
+// y = mask type
+// z = blend op
+// w = is premultiplied
+uint4 iBlendConfig : register(ps, c2);
+
 sampler sSampler : register(ps, s0);
 
-Texture2D tRGB;
-Texture2D tY;
-Texture2D tCb;
-Texture2D tCr;
-Texture2D tRGBWhite;
-// Always bind this to slot 3 since this is always available!
-Texture2D tMask : register(ps, t3);
+// The mix-blend mega shader uses all variables, so we have to make sure they
+// are assigned fixed slots.
+Texture2D tRGB : register(ps, t0);
+Texture2D tY : register(ps, t1);
+Texture2D tCb : register(ps, t2);
+Texture2D tCr : register(ps, t3);
+Texture2D tRGBWhite : register(ps, t4);
+Texture2D tMask : register(ps, t5);
+Texture2D tBackdrop : register(ps, t6);
 
 struct VS_INPUT {
   float2 vPosition : POSITION;
@@ -44,6 +56,14 @@ struct VS_MASK_3D_OUTPUT {
   float4 vPosition : SV_Position;
   float2 vTexCoords : TEXCOORD0;
   float3 vMaskCoords : TEXCOORD1;
+};
+
+// Combined struct for the mix-blend compatible vertex shaders.
+struct VS_BLEND_OUTPUT {
+  float4 vPosition : SV_Position;
+  float2 vTexCoords : TEXCOORD0;
+  float3 vMaskCoords : TEXCOORD1;
+  float2 vBackdropCoords : TEXCOORD2;
 };
 
 struct PS_OUTPUT {
@@ -100,6 +120,16 @@ float4 VertexPosition(float4 aTransformedPosition)
   result = mul(mProjection, result);
 
   return result;
+}
+
+float2 BackdropPosition(float4 aPosition)
+{
+  // Move the position from clip space (-1,1) into 0..1 space.
+  float2 pos;
+  pos.x = (aPosition.x + 1.0) / 2.0;
+  pos.y = 1.0 - (aPosition.y + 1.0) / 2.0;
+
+  return mul(mBackdropTransform, float4(pos.xy, 0, 1.0)).xy;
 }
 
 VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
@@ -163,25 +193,11 @@ float4 RGBAShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
 }
 
-float4 RGBAShaderMaskPremul(const VS_MASK_OUTPUT aVertex) : SV_Target
-{
-  float4 result = RGBAShaderMask(aVertex);
-  result.rgb *= result.a;
-  return result;
-}
-
 float4 RGBAShaderMask3D(const VS_MASK_3D_OUTPUT aVertex) : SV_Target
 {
   float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(LayerTextureSamplerLinear, maskCoords).r;
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
-}
-
-float4 RGBAShaderMask3DPremul(const VS_MASK_3D_OUTPUT aVertex) : SV_Target
-{
-  float4 result = RGBAShaderMask3D(aVertex);
-  result.rgb *= result.a;
-  return result;
 }
 
 float4 RGBShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
@@ -262,13 +278,6 @@ float4 RGBAShader(const VS_OUTPUT aVertex) : SV_Target
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity;
 }
 
-float4 RGBAShaderPremul(const VS_OUTPUT aVertex) : SV_Target
-{
-  float4 result = RGBAShader(aVertex);
-  result.rgb *= result.a;
-  return result;
-}
-
 float4 RGBShader(const VS_OUTPUT aVertex) : SV_Target
 {
   float4 result;
@@ -297,4 +306,155 @@ PS_OUTPUT ComponentAlphaShader(const VS_OUTPUT aVertex) : SV_Target
 float4 SolidColorShader(const VS_OUTPUT aVertex) : SV_Target
 {
   return fLayerColor;
+}
+
+// Mix-blend compatible vertex shaders.
+VS_BLEND_OUTPUT LayerQuadBlendVS(const VS_INPUT aVertex)
+{
+  VS_OUTPUT v = LayerQuadVS(aVertex);
+
+  VS_BLEND_OUTPUT o;
+  o.vPosition = v.vPosition;
+  o.vTexCoords = v.vTexCoords;
+  o.vMaskCoords = float3(0, 0, 0);
+  o.vBackdropCoords = BackdropPosition(v.vPosition);
+  return o;
+}
+
+VS_BLEND_OUTPUT LayerQuadBlendMaskVS(const VS_INPUT aVertex)
+{
+  VS_MASK_OUTPUT v = LayerQuadMaskVS(aVertex);
+
+  VS_BLEND_OUTPUT o;
+  o.vPosition = v.vPosition;
+  o.vTexCoords = v.vTexCoords;
+  o.vMaskCoords = float3(v.vMaskCoords, 0);
+  o.vBackdropCoords = BackdropPosition(v.vPosition);
+  return o;
+}
+
+VS_BLEND_OUTPUT LayerQuadBlendMask3DVS(const VS_INPUT aVertex)
+{
+  VS_MASK_3D_OUTPUT v = LayerQuadMask3DVS(aVertex);
+
+  VS_BLEND_OUTPUT o;
+  o.vPosition = v.vPosition;
+  o.vTexCoords = v.vTexCoords;
+  o.vMaskCoords = v.vMaskCoords;
+  o.vBackdropCoords = BackdropPosition(v.vPosition);
+  return o;
+}
+
+// The layer type and mask type are specified as constants. We use these to
+// call the correct pixel shader to determine the source color for blending.
+// Unfortunately this also requires some boilerplate to convert VS_BLEND_OUTPUT
+// to a compatible pixel shader input.
+float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
+{
+  if (iBlendConfig.y == PS_MASK_NONE) {
+    VS_OUTPUT tmp;
+    tmp.vPosition = aVertex.vPosition;
+    tmp.vTexCoords = aVertex.vTexCoords;
+    if (iBlendConfig.x == PS_LAYER_RGB) {
+      return RGBShader(tmp);
+    } else if (iBlendConfig.x == PS_LAYER_RGBA) {
+      return RGBAShader(tmp);
+    } else if (iBlendConfig.x == PS_LAYER_YCBCR) {
+      return YCbCrShader(tmp);
+    }
+    return SolidColorShader(tmp);
+  } else if (iBlendConfig.y == PS_MASK_2D) {
+    VS_MASK_OUTPUT tmp;
+    tmp.vPosition = aVertex.vPosition;
+    tmp.vTexCoords = aVertex.vTexCoords;
+    tmp.vMaskCoords = aVertex.vMaskCoords.xy;
+
+    if (iBlendConfig.x == PS_LAYER_RGB) {
+      return RGBShaderMask(tmp);
+    } else if (iBlendConfig.x == PS_LAYER_RGBA) {
+      return RGBAShaderMask(tmp);
+    } else if (iBlendConfig.x == PS_LAYER_YCBCR) {
+      return YCbCrShaderMask(tmp);
+    }
+    return SolidColorShaderMask(tmp);
+  } else if (iBlendConfig.y == PS_MASK_3D) {
+    // The only Mask 3D shader is RGBA.
+    VS_MASK_3D_OUTPUT tmp;
+    tmp.vPosition = aVertex.vPosition;
+    tmp.vTexCoords = aVertex.vTexCoords;
+    tmp.vMaskCoords = aVertex.vMaskCoords;
+    return RGBAShaderMask3D(tmp);
+  }
+
+  return float4(0.0, 0.0, 0.0, 1.0);
+}
+
+float3 ChooseBlendFunc(float3 dest, float3 src)
+{
+  [flatten] switch (iBlendConfig.z) {
+    case PS_BLEND_MULTIPLY:
+      return BlendMultiply(dest, src);
+    case PS_BLEND_SCREEN:
+      return BlendScreen(dest, src);
+    case PS_BLEND_OVERLAY:
+      return BlendOverlay(dest, src);
+    case PS_BLEND_DARKEN:
+      return BlendDarken(dest, src);
+    case PS_BLEND_LIGHTEN:
+      return BlendLighten(dest, src);
+    case PS_BLEND_COLOR_DODGE:
+      return BlendColorDodge(dest, src);
+    case PS_BLEND_COLOR_BURN:
+      return BlendColorBurn(dest, src);
+    case PS_BLEND_HARD_LIGHT:
+      return BlendHardLight(dest, src);
+    case PS_BLEND_SOFT_LIGHT:
+      return BlendSoftLight(dest, src);
+    case PS_BLEND_DIFFERENCE:
+      return BlendDifference(dest, src);
+    case PS_BLEND_EXCLUSION:
+      return BlendExclusion(dest, src);
+    case PS_BLEND_HUE:
+      return BlendHue(dest, src);
+    case PS_BLEND_SATURATION:
+      return BlendSaturation(dest, src);
+    case PS_BLEND_COLOR:
+      return BlendColor(dest, src);
+    case PS_BLEND_LUMINOSITY:
+      return BlendLuminosity(dest, src);
+    default:
+      return float3(0, 0, 0);
+  }
+}
+
+float4 BlendShader(const VS_BLEND_OUTPUT aVertex) : SV_Target
+{
+  float4 backdrop = tBackdrop.Sample(sSampler, aVertex.vBackdropCoords.xy);
+  float4 source = ComputeBlendSourceColor(aVertex);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return backdrop;
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop is always
+  // premultiplied, so undo the premultiply. If the source is premultiplied we
+  // must fix that as well.
+  backdrop.rgb /= backdrop.a;
+  if (iBlendConfig.w) {
+    source.rgb /= source.a;
+  }
+
+  float4 result;
+  result.rgb = ChooseBlendFunc(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
 }

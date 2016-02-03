@@ -1083,7 +1083,7 @@ _NSSUTIL_EvaluateConfigDir(const char *configdir,
 	configdir = configdir + sizeof(LEGACY) -1;
     } else {
 	/* look up the default from the environment */
-	char *defaultType = PR_GetEnv("NSS_DEFAULT_DB_TYPE");
+	char *defaultType = PR_GetEnvSecure("NSS_DEFAULT_DB_TYPE");
 	if (defaultType != NULL) {
 	    if (PORT_Strncmp(defaultType, SQLDB, sizeof(SQLDB)-2) == 0) {
 		dbType = NSS_DB_TYPE_SQL;

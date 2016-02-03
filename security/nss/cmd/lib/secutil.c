@@ -416,7 +416,7 @@ SECU_DefaultSSLDir(void)
     char *dir;
     static char sslDir[1000];
 
-    dir = PR_GetEnv("SSL_DIR");
+    dir = PR_GetEnvSecure("SSL_DIR");
     if (!dir)
 	return NULL;
 
@@ -455,7 +455,7 @@ SECU_ConfigDirectory(const char* base)
     
 
     if (base == NULL || *base == 0) {
-	home = PR_GetEnv("HOME");
+	home = PR_GetEnvSecure("HOME");
 	if (!home) home = "";
 
 	if (*home && home[strlen(home) - 1] == '/')

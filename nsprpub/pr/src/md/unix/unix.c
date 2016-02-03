@@ -3040,7 +3040,7 @@ PRIntervalTime _PR_UNIX_TicksPerSecond()
 }
 #endif
 
-#if defined(HAVE_CLOCK_MONOTONIC)
+#if defined(_PR_HAVE_CLOCK_MONOTONIC)
 PRIntervalTime _PR_UNIX_GetInterval2()
 {
     struct timespec time;

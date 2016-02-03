@@ -623,7 +623,7 @@ protected:
   void SkipUntilOneOf(const char16_t* aStopSymbolChars);
   // For each character in aStopSymbolChars from the end of the array
   // to the start, calls SkipUntil with that character.
-  typedef nsAutoTArray<char16_t, 16> StopSymbolCharStack;
+  typedef AutoTArray<char16_t, 16> StopSymbolCharStack;
   void SkipUntilAllOf(const StopSymbolCharStack& aStopSymbolChars);
   // returns true if the stop symbol or EOF is found, and false for an
   // unexpected ')', ']' or '}'; this not safe to call outside variable
@@ -2537,7 +2537,7 @@ CSSParserImpl::ResolveValueWithVariableReferencesRec(
   MOZ_ASSERT(aResult.IsEmpty());
 
   // Stack of closing characters for currently open constructs.
-  nsAutoTArray<char16_t, 16> stack;
+  AutoTArray<char16_t, 16> stack;
 
   // The resolved value for this ResolveValueWithVariableReferencesRec call.
   nsString value;
@@ -4173,7 +4173,7 @@ CSSParserImpl::ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule
   }
 
   // -- ident integer+ [, ident integer+]
-  nsAutoTArray<gfxFontFeatureValueSet::ValueList, 5> values;
+  AutoTArray<gfxFontFeatureValueSet::ValueList, 5> values;
 
   // list of font-feature-values-declaration's
   for (;;) {
@@ -4216,7 +4216,7 @@ CSSParserImpl::ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule
     }
 
     // value list
-    nsAutoTArray<uint32_t,4>   featureSelectors;
+    AutoTArray<uint32_t,4>   featureSelectors;
 
     nsCSSValue intValue;
     while (ParseNonNegativeInteger(intValue)) {
@@ -5055,7 +5055,7 @@ bool
 CSSParserImpl::SkipUntil(char16_t aStopSymbol)
 {
   nsCSSToken* tk = &mToken;
-  nsAutoTArray<char16_t, 16> stack;
+  AutoTArray<char16_t, 16> stack;
   stack.AppendElement(aStopSymbol);
   for (;;) {
     if (!GetToken(true)) {
@@ -5091,7 +5091,7 @@ bool
 CSSParserImpl::SkipBalancedContentUntil(char16_t aStopSymbol)
 {
   nsCSSToken* tk = &mToken;
-  nsAutoTArray<char16_t, 16> stack;
+  AutoTArray<char16_t, 16> stack;
   stack.AppendElement(aStopSymbol);
   for (;;) {
     if (!GetToken(true)) {
@@ -15162,7 +15162,7 @@ CSSParserImpl::ParseFunction(nsCSSKeyword aFunction,
    * functions.  The number 16 is coming from the number of arguments that
    * matrix3d() accepts.
    */
-  AutoInfallibleTArray<nsCSSValue, 16> foundValues;
+  AutoTArray<nsCSSValue, 16> foundValues;
   if (!ParseFunctionInternals(aAllowedTypes, aAllowedTypesAll, aMinElems,
                               aMaxElems, foundValues)) {
     return false;
@@ -16890,7 +16890,7 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   // Indexes into ')' characters in |stack| that correspond to "var(".  This
   // is used to stop parsing when we encounter a '!' or ';' at the top level
   // of a variable reference's fallback.
-  nsAutoTArray<uint32_t, 16> references;
+  AutoTArray<uint32_t, 16> references;
 
   if (!GetToken(false)) {
     // Variable value was empty since we reached EOF.

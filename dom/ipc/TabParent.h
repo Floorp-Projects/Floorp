@@ -238,8 +238,8 @@ public:
 
   virtual bool RecvSetPluginFocused(const bool& aFocused) override;
 
-  virtual bool RecvSetCandidateWindowForPlugin(const int32_t& aX,
-                                               const int32_t& aY) override;
+  virtual bool RecvSetCandidateWindowForPlugin(
+                 const widget::CandidateWindowPosition& aPosition) override;
 
   virtual bool
   RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) override;

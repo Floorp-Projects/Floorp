@@ -32,6 +32,9 @@
 
 #include "mtransport_test_utils.h"
 
+#include "FakeIPC.h"
+#include "FakeIPC.cpp"
+
 namespace mozilla {
 static std::string kAEqualsCandidate("a=candidate:");
 const static size_t kNumCandidatesPerComponent = 3;

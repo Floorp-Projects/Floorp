@@ -166,7 +166,7 @@ class YieldOffsetArray {
     }
 };
 
-class Binding : public JS::Traceable
+class Binding
 {
     // One JSScript stores one Binding per formal/variable so we use a
     // packed-word representation.
@@ -215,7 +215,7 @@ JS_STATIC_ASSERT(sizeof(Binding) == sizeof(uintptr_t));
  * both function and top-level scripts (the latter is needed to track names in
  * strict mode eval code, to give such code its own lexical environment).
  */
-class Bindings : public JS::Traceable
+class Bindings
 {
     friend class BindingIter;
     friend class AliasedFormalIter;

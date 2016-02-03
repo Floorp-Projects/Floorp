@@ -1196,9 +1196,9 @@ private:
   nsDisplayLayerEventRegions*    mLayerEventRegions;
   PLArenaPool                    mPool;
   nsCOMPtr<nsISelection>         mBoundingSelection;
-  nsAutoTArray<PresShellState,8> mPresShellStates;
-  nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
-  nsAutoTArray<ThemeGeometry,2>  mThemeGeometries;
+  AutoTArray<PresShellState,8> mPresShellStates;
+  AutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
+  AutoTArray<ThemeGeometry,2>  mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   DisplayListClipState           mClipState;
   // mCurrentFrame is the frame that we're currently calling (or about to call)
@@ -1360,7 +1360,7 @@ public:
 
     // Handling transform items for preserve 3D frames.
     bool mInPreserves3D;
-    nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+    AutoTArray<nsDisplayItem*, 100> mItemBuffer;
   };
 
   /**

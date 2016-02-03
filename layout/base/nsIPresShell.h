@@ -1783,7 +1783,7 @@ protected:
   // same update block we have already had other changes that require
   // the whole document to be restyled (i.e., mStylesHaveChanged is already
   // true), then we don't bother adding the scope root here.
-  nsAutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
+  AutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
 
   static nsIContent*        gKeyDownTarget;
 

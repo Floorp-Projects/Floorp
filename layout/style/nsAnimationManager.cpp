@@ -629,7 +629,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // the replacement on a per-property basis rather than a per-rule
     // basis, just like everything else in CSS.
 
-    AutoInfallibleTArray<KeyframeData, 16> sortedKeyframes;
+    AutoTArray<KeyframeData, 16> sortedKeyframes;
 
     for (uint32_t ruleIdx = 0, ruleEnd = rule->StyleRuleCount();
          ruleIdx != ruleEnd; ++ruleIdx) {
@@ -690,7 +690,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       // means we need every keyframe with the property in it, except
       // for those keyframes where a later keyframe with the *same key*
       // also has the property.
-      AutoInfallibleTArray<uint32_t, 16> keyframesWithProperty;
+      AutoTArray<uint32_t, 16> keyframesWithProperty;
       float lastKey = 100.0f; // an invalid key
       for (uint32_t kfIdx = 0, kfEnd = sortedKeyframes.Length();
            kfIdx != kfEnd; ++kfIdx) {

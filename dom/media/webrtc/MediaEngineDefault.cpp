@@ -510,7 +510,7 @@ MediaEngineDefaultAudioSource::AppendToSegment(AudioSegment& aSegment,
   int16_t* dest = static_cast<int16_t*>(buffer->Data());
 
   mSineGenerator->generate(dest, aSamples);
-  nsAutoTArray<const int16_t*,1> channels;
+  AutoTArray<const int16_t*,1> channels;
   channels.AppendElement(dest);
   aSegment.AppendFrames(buffer.forget(), channels, aSamples);
 }

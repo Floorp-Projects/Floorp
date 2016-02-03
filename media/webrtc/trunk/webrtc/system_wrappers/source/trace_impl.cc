@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include "base/singleton.h"
 
 #ifdef _WIN32
 #include "webrtc/system_wrappers/source/trace_win.h"
@@ -63,7 +64,12 @@ TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
     }
   }
   TraceImpl* impl =
-    GetStaticInstance<TraceImpl>(count_operation);
+#if defined(_WIN32)
+    GetStaticInstance<TraceWindows>(count_operation);
+#else
+    GetStaticInstance<TracePosix>(count_operation);
+#endif
+
   return impl;
 }
 

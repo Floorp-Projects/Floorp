@@ -49,8 +49,7 @@ template <typename Key,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
           typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
-class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
-                  public JS::Traceable
+class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>
 {
     using Base = HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
@@ -226,8 +225,7 @@ class HandleBase<GCHashMap<A,B,C,D,E>>
 template <typename T,
           typename HashPolicy = DefaultHasher<T>,
           typename AllocPolicy = TempAllocPolicy>
-class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
-                  public JS::Traceable
+class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>
 {
     using Base = HashSet<T, HashPolicy, AllocPolicy>;
 

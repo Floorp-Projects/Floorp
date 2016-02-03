@@ -1390,8 +1390,7 @@ ObjectGroup::newPlainObject(ExclusiveContext* cx, IdValuePair* properties, size_
 // ObjectGroupCompartment AllocationSiteTable
 /////////////////////////////////////////////////////////////////////
 
-struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<AllocationSiteKey>,
-                                                   public JS::Traceable {
+struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
     ReadBarrieredScript script;
 
     uint32_t offset : 24;
@@ -1433,9 +1432,9 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
                MovableCellHasher<JSObject*>::match(a.proto, b.proto);
     }
 
-    static void trace(AllocationSiteKey* key, JSTracer* trc) {
-        TraceRoot(trc, &key->script, "AllocationSiteKey script");
-        TraceNullableRoot(trc, &key->proto, "AllocationSiteKey proto");
+    void trace(JSTracer* trc) {
+        TraceRoot(trc, &script, "AllocationSiteKey script");
+        TraceNullableRoot(trc, &proto, "AllocationSiteKey proto");
     }
 
     bool needsSweep() {

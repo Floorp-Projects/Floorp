@@ -17,7 +17,7 @@ BEGIN_WORKERS_NAMESPACE
 template <typename T, int TCount>
 struct StorageWithTArray
 {
-  typedef nsAutoTArray<T, TCount> StorageType;
+  typedef AutoTArray<T, TCount> StorageType;
 
   static void Reverse(StorageType& aStorage)
   {
