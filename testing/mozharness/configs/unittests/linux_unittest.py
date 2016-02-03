@@ -9,12 +9,24 @@ XPCSHELL_NAME = "xpcshell"
 EXE_SUFFIX = ""
 DISABLE_SCREEN_SAVER = True
 ADJUST_MOUSE_AND_SCREEN = False
+
+# Note: keep these Valgrind .sup file names consistent with those
+# in testing/mochitest/mochitest_options.py.
+VALGRIND_SUPP_DIR = os.path.join(os.getcwd(), "build/tests/mochitest")
+VALGRIND_SUPP_CROSS_ARCH = os.path.join(VALGRIND_SUPP_DIR,
+                                        "cross-architecture.sup")
+VALGRIND_SUPP_ARCH = None
+
 if platform.architecture()[0] == "64bit":
     TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux64/releng.manifest"
     MINIDUMP_STACKWALK_PATH = "linux64-minidump_stackwalk"
+    VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR,
+                                      "x86_64-redhat-linux-gnu.sup")
 else:
     TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux32/releng.manifest"
     MINIDUMP_STACKWALK_PATH = "linux32-minidump_stackwalk"
+    VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR,
+                                      "i386-redhat-linux-gnu.sup")
 
 #####
 config = {
@@ -188,6 +200,9 @@ config = {
     },
     # local mochi suites
     "all_mochitest_suites": {
+        "valgrind-plain": ["--valgrind=/usr/bin/valgrind",
+                           "--valgrind-supp-files=" + VALGRIND_SUPP_ARCH +
+                               "," + VALGRIND_SUPP_CROSS_ARCH],
         "plain": [],
         "plain-chunked": ["--chunk-by-dir=4"],
         "mochitest-push": ["--subsuite=push"],
