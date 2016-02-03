@@ -1812,7 +1812,8 @@
               }, 0, this.tabContainer);
             }
 
-            // invalidate cache
+            // invalidate caches
+            this._browsers = null;
             this._visibleTabs = null;
 
             this.tabContainer.appendChild(t);
@@ -2337,6 +2338,10 @@
 
             var wasPinned = aTab.pinned;
 
+            // Invalidate browsers cache, as the tab is removed from the
+            // tab container.
+            this._browsers = null;
+
             // Remove the tab ...
             this.tabContainer.removeChild(aTab);
 
@@ -2814,32 +2819,15 @@
                 onget="return this.mCurrentBrowser;"
                 readonly="true"/>
 
-      <field name="browsers" readonly="true">
-        <![CDATA[
-          // This defines a proxy which allows us to access browsers by
-          // index without actually creating a full array of browsers.
-          new Proxy([], {
-            has: (target, name) => {
-              if (typeof name == "string" && Number.isInteger(parseInt(name))) {
-                return (name in this.tabs);
-              }
-              return false;
-            },
-            get: (target, name) => {
-              if (name == "length") {
-                return this.tabs.length;
-              }
-              if (typeof name == "string" && Number.isInteger(parseInt(name))) {
-                if (!(name in this.tabs)) {
-                  return undefined;
-                }
-                return this.tabs[name].linkedBrowser;
-              }
-              return target[name];
-            }
-          });
-        ]]>
-      </field>
+      <property name="browsers" readonly="true">
+       <getter>
+          <![CDATA[
+            return this._browsers ||
+                   (this._browsers = Array.map(this.tabs, tab => tab.linkedBrowser));
+          ]]>
+        </getter>
+      </property>
+      <field name="_browsers">null</field>
 
       <!-- Moves a tab to a new browser window, unless it's already the only tab
            in the current window, in which case this will do nothing. -->
@@ -2900,7 +2888,8 @@
           this.mCurrentTab._logicallySelected = false;
           this.mCurrentTab._visuallySelected = false;
 
-          // invalidate cache
+          // invalidate caches
+          this._browsers = null;
           this._visibleTabs = null;
 
           // use .item() instead of [] because dragging to the end of the strip goes out of
