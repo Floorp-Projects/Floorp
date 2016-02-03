@@ -38,7 +38,9 @@ public:
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsSubDocumentFrameSuper::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+      ~(nsIFrame::eReplaced |
+        nsIFrame::eReplacedSizing |
+        nsIFrame::eReplacedContainsBlock));
   }
 
   virtual void Init(nsIContent*       aContent,
