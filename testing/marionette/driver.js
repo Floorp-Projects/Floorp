@@ -23,7 +23,7 @@ this.DevToolsUtils = devtools.require("devtools/shared/DevToolsUtils");
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
-Cu.import("chrome://marionette/content/actions.js");
+Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/element.js");
@@ -133,7 +133,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.actions = new actions.Chain();
+  this.actions = new action.Chain();
 
   this.sessionCapabilities = {
     // mandated capabilities
