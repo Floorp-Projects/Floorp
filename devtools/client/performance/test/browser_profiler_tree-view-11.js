@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that if a recording set `withJITOptimizations` on, then an
+ * Tests that if `show-jit-optimizations` is true, then an
  * icon is next to the frame with optimizations
  */
 

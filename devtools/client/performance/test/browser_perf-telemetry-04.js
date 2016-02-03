@@ -29,7 +29,7 @@ function* spawnTest() {
   is(logs[DURATION].length, 1, `one entry for ${DURATION}`);
   ok(logs[DURATION].every(d => typeof d === "number"), `every ${DURATION} entry is a number`);
   is(logs[CONSOLE_COUNT].length, 1, `one entry for ${CONSOLE_COUNT}`);
-  is(logs[FEATURES].length, 5, `one recording worth of entries for ${FEATURES}`);
+  is(logs[FEATURES].length, 4, `one recording worth of entries for ${FEATURES}`);
 
   yield teardown(panel);
   finish();
