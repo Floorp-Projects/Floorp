@@ -39,12 +39,12 @@ class DaemonSocketPDU final : public UnixSocketIOBuffer
 {
 public:
   enum {
-    PDU_OFF_SERVICE = 0,
-    PDU_OFF_OPCODE = 1,
-    PDU_OFF_LENGTH = 2,
-    PDU_OFF_PAYLOAD = 4,
-    PDU_HEADER_SIZE = PDU_OFF_PAYLOAD,
-    PDU_MAX_PAYLOAD_LENGTH = 1 << 16
+    OFF_SERVICE = 0,
+    OFF_OPCODE = 1,
+    OFF_LENGTH = 2,
+    OFF_PAYLOAD = 4,
+    HEADER_SIZE = OFF_PAYLOAD,
+    MAX_PAYLOAD_LENGTH = 1 << 16
   };
 
   DaemonSocketPDU(uint8_t aService, uint8_t aOpcode, uint16_t aPayloadSize);
