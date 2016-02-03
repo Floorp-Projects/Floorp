@@ -971,7 +971,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
 
     // We leak mIdentity (see above).
 
-    // short circuit future finalization
+    // Short circuit future finalization.
     JS_SetPrivate(mFlatJSObject, nullptr);
     mFlatJSObject = nullptr;
     mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
@@ -987,8 +987,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
         delete mScriptableInfo;
     }
 
-    // cleanup the tearoffs...
-
+    // Cleanup the tearoffs.
     XPCWrappedNativeTearOffChunk* chunk;
     for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
         XPCWrappedNativeTearOff* to = &chunk->mTearOff;
@@ -1000,11 +999,6 @@ XPCWrappedNative::SystemIsBeingShutDown()
         // (for the same reason we leak mIdentity - see above).
         Unused << to->TakeNative().take();
         to->SetInterface(nullptr);
-    }
-
-    if (mFirstChunk.mNextChunk) {
-        delete mFirstChunk.mNextChunk;
-        mFirstChunk.mNextChunk = nullptr;
     }
 }
 
