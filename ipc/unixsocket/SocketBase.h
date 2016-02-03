@@ -73,26 +73,6 @@ public:
     return Read(&aValue, sizeof(aValue));
   }
 
-  nsresult Read(int64_t& aValue)
-  {
-    return Read(&aValue, sizeof(aValue));
-  }
-
-  nsresult Read(uint64_t& aValue)
-  {
-    return Read(&aValue, sizeof(aValue));
-  }
-
-  nsresult Read(float& aValue)
-  {
-    return Read(&aValue, sizeof(aValue));
-  }
-
-  nsresult Read(double& aValue)
-  {
-    return Read(&aValue, sizeof(aValue));
-  }
-
   uint8_t* Append(size_t aLen);
 
   nsresult Write(const void* aValue, size_t aLen);
@@ -123,26 +103,6 @@ public:
   }
 
   nsresult Write(uint32_t aValue)
-  {
-    return Write(&aValue, sizeof(aValue));
-  }
-
-  nsresult Write(int64_t aValue)
-  {
-    return Write(&aValue, sizeof(aValue));
-  }
-
-  nsresult Write(uint64_t aValue)
-  {
-    return Write(&aValue, sizeof(aValue));
-  }
-
-  nsresult Write(float aValue)
-  {
-    return Write(&aValue, sizeof(aValue));
-  }
-
-  nsresult Write(double aValue)
   {
     return Write(&aValue, sizeof(aValue));
   }
