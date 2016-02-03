@@ -64,6 +64,21 @@ add_test(function test_isWebDriverError() {
   run_next_test();
 });
 
+add_test(function test_wrap() {
+  equal(error.wrap(new WebDriverError()).name, "WebDriverError");
+  equal(error.wrap(new InvalidArgumentError()).name, "InvalidArgumentError");
+  equal(error.wrap(new Error()).name, "WebDriverError");
+  equal(error.wrap(new EvalError()).name, "WebDriverError");
+  equal(error.wrap(new InternalError()).name, "WebDriverError");
+  equal(error.wrap(new RangeError()).name, "WebDriverError");
+  equal(error.wrap(new ReferenceError()).name, "WebDriverError");
+  equal(error.wrap(new SyntaxError()).name, "WebDriverError");
+  equal(error.wrap(new TypeError()).name, "WebDriverError");
+  equal(error.wrap(new URIError()).name, "WebDriverError");
+
+  run_next_test();
+});
+
 add_test(function test_stringify() {
   equal("<unprintable error>", error.stringify());
   equal("<unprintable error>", error.stringify("foo"));
