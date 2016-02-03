@@ -24,97 +24,20 @@
   outline-offset: -5px;
 }
 
-/*** Downloads Summary and List items ***/
+/*** List items and similar elements in the summary ***/
 
-#downloadsSummary,
-richlistitem[type="download"] {
-  height: 6em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-richlistitem[type="download"] {
-  margin: 0;
-  border-top: 1px solid hsla(0,0%,100%,.2);
-  border-bottom: 1px solid hsla(0,0%,0%,.15);
-  background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
-}
-
-richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
-}
-
-#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
-}
-
-.downloadTypeIcon {
-  -moz-margin-end: 8px;
-  /* Prevent flickering when changing states. */
-  min-height: 32px;
-  min-width: 32px;
+:root {
+  --downloads-item-height: 6em;
+  --downloads-item-border-top-color: hsla(0,0%,100%,.2);
+  --downloads-item-border-bottom-color: hsla(0,0%,0%,.15);
+  --downloads-item-font-size-factor: 0.9;
+  --downloads-item-target-margin-bottom: 7px;
+  --downloads-item-details-margin-top: 1px;
+  --downloads-item-details-opacity: 0.6;
 }
 
 .blockedIcon {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
-}
-
-/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
-   a vbox with class .downloadContainer. We set the font-size of the entire
-   container to 90% because:
-
-   1) This is the size that we want .downloadDetails to be
-   2) The container's width is set by localizers by &downloadDetails.width;,
-      which is a ch unit. Since this is the value that should control the
-      panel width, we apply it to the outer container to constrain
-      .downloadTarget and .downloadProgress.
-
-   Finally, since we want .downloadTarget's font-size to be at 100% of the
-   font-size of .downloadContainer's parent, we use calc to go from the
-   smaller font-size back to the original font-size.
- */
-
-#downloadsSummaryDetails,
-.downloadContainer {
-  font-size: 90%;
-}
-
-#downloadsSummaryDescription,
-.downloadTarget {
-  margin-bottom: 7px;
-  cursor: inherit;
-}
-
-.downloadTarget {
-  font-size: calc(100%/0.9);
-}
-
-#downloadsSummaryDetails,
-.downloadDetails {
-  margin-top: 1px;
-  opacity: 0.6;
-  cursor: inherit;
-}
-
-.downloadButton {
-  -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
-  border: none;
-  background: transparent;
-  padding: 5px;
-  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
-}
-
-.downloadButton > .button-box {
-  padding: 0;
 }
 
 .downloadButton:focus > .button-box {
@@ -122,6 +45,11 @@ richlistitem[type="download"]:last-child {
 }
 
 /*** Highlighted list items ***/
+
+#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -1px;
+}
 
 #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
   border-radius: 3px;

@@ -68,21 +68,16 @@
   border: none;
 }
 
-/*** Downloads Summary and List items ***/
+/*** List items and similar elements in the summary ***/
 
-#downloadsSummary,
-richlistitem[type="download"] {
-  height: 7em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-richlistitem[type="download"] {
-  margin: 0;
-  border-top: 1px solid hsla(0,0%,100%,.3);
-  border-bottom: 1px solid hsla(220,18%,51%,.25);
-  background: transparent;
-  padding: 8px;
+:root {
+  --downloads-item-height: 7em;
+  --downloads-item-border-top-color: hsla(0,0%,100%,.3);
+  --downloads-item-border-bottom-color: hsla(220,18%,51%,.25);
+  --downloads-item-font-size-factor: 0.9;
+  --downloads-item-target-margin-bottom: 6px;
+  --downloads-item-details-margin-top: 0;
+  --downloads-item-details-opacity: 0.6;
 }
 
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
@@ -93,88 +88,20 @@ richlistitem[type="download"] {
   }
 }
 
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
+.downloadButton > .button-box {
+  border: 1px solid transparent;
 }
 
-@media (-moz-windows-default-theme) {
-  richlistitem[type="download"]:last-child {
-    border-bottom: 1px solid transparent;
-  }
+@keyfocus@ .downloadButton:focus > .button-box {
+  border: 1px dotted ThreeDDarkShadow;
 }
+
+/*** Highlighted list items ***/
 
 #downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }
-
-.downloadTypeIcon {
-  -moz-margin-end: 8px;
-  /* Prevent flickering when changing states. */
-  height: 32px;
-  width: 32px;
-}
-
-.blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
-}
-
-/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
-   a vbox with class .downloadContainer. We set the font-size of the entire
-   container to 90% because:
-
-   1) This is the size that we want .downloadDetails to be
-   2) The container's width is set by localizers by &downloadDetails.width;,
-      which is a ch unit. Since this is the value that should control the
-      panel width, we apply it to the outer container to constrain
-      .downloadTarget and .downloadProgress.
-
-   Finally, since we want .downloadTarget's font-size to be at 100% of the
-   font-size of .downloadContainer's parent, we use calc to go from the
-   smaller font-size back to the original font-size.
- */
-#downloadsSummaryDetails,
-.downloadContainer {
-  font-size: 90%;
-}
-
-#downloadsSummaryDescription,
-.downloadTarget {
-  margin-bottom: 6px;
-  cursor: inherit;
-}
-
-.downloadTarget {
-  font-size: calc(100%/0.9);
-}
-
-#downloadsSummaryDetails,
-.downloadDetails {
-  opacity: 0.6;
-  cursor: inherit;
-}
-
-.downloadButton {
-  -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
-  border: none;
-  background: transparent;
-  padding: 5px;
-  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
-}
-
-.downloadButton > .button-box {
-  border: 1px solid transparent;
-  padding: 0;
-}
-
-#downloadsPanel[keyfocus] .downloadButton:focus > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
-}
-
-/*** Highlighted list items ***/
 
 #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
   background-color: hsla(210,4%,10%,.08);
