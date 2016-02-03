@@ -13413,5 +13413,5 @@ nsIDocument::ReportHasScrollLinkedEffect()
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Async Pan/Zoom"),
                                   this, nsContentUtils::eLAYOUT_PROPERTIES,
-                                  "ScrollLinkedEffectFound");
+                                  "ScrollLinkedEffectFound2");
 }
