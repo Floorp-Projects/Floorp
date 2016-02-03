@@ -529,8 +529,6 @@ pref("privacy.sanitize.sanitizeOnShutdown", false);
 
 pref("privacy.sanitize.migrateFx3Prefs",    false);
 
-pref("privacy.sanitize.migrateClearSavedPwdsOnExit", false);
-
 pref("privacy.panicButton.enabled",         true);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
