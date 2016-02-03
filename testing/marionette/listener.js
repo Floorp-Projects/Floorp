@@ -17,7 +17,7 @@ Cu.import("chrome://marionette/content/actions.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
-Cu.import("chrome://marionette/content/elements.js");
+Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/proxy.js");

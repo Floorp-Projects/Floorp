@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/dispatcher.js");
 Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/elements.js");
+Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/simpletest.js");
 
 // Bug 1083711: Load transport.js as an SDK module instead of subscript

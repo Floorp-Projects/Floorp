@@ -10,7 +10,7 @@ marionette.jar:
   content/interactions.js (interactions.js)
   content/accessibility.js (accessibility.js)
   content/listener.js (listener.js)
-  content/elements.js (elements.js)
+  content/element.js (element.js)
   content/common.js (common.js)
   content/simpletest.js (simpletest.js)
   content/frame-manager.js (frame-manager.js)
