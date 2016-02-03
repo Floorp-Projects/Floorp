@@ -1304,7 +1304,8 @@ WebGLContext::ClearScreen()
 
     const bool changeDrawBuffers = (mDefaultFB_DrawBuffer0 != LOCAL_GL_BACK);
     if (changeDrawBuffers) {
-        gl->Screen()->SetDrawBuffer(LOCAL_GL_BACK);
+        const GLenum back = LOCAL_GL_BACK;
+        gl->fDrawBuffers(1, &back);
     }
 
     GLbitfield bufferBits = LOCAL_GL_COLOR_BUFFER_BIT;
@@ -1316,7 +1317,7 @@ WebGLContext::ClearScreen()
     ForceClearFramebufferWithDefaultValues(bufferBits, mNeedsFakeNoAlpha);
 
     if (changeDrawBuffers) {
-        gl->Screen()->SetDrawBuffer(mDefaultFB_DrawBuffer0);
+        gl->fDrawBuffers(1, &mDefaultFB_DrawBuffer0);
     }
 }
 
