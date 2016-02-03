@@ -234,8 +234,6 @@ enum class Expr : uint16_t
     F64StoreMem,
 
     // asm.js specific
-    Ternary,        // to be merged with IfElse
-
     While,          // all CFG ops to be deleted in favor of Loop/Br/BrIf
     DoWhile,
 
