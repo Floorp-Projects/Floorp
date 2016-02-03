@@ -54,6 +54,12 @@ public:
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel);
   virtual char16_t GetPasswordCharacterImpl();
+
+  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
+  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
+
+private:
+  int32_t mUseAccessibilityTheme;
 };
 
 #endif
