@@ -281,8 +281,8 @@ PRThreadPool *tp = (PRThreadPool *) arg;
 int pollfd_cnt, pollfds_used;
 int rv;
 PRCList *qp, *nextqp;
-PRPollDesc *pollfds;
-PRJob **polljobs;
+PRPollDesc *pollfds = NULL;
+PRJob **polljobs = NULL;
 int poll_timeout;
 PRIntervalTime now;
 

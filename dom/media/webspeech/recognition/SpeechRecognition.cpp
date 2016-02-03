@@ -932,7 +932,7 @@ SpeechRecognition::CreateAudioSegment(nsTArray<RefPtr<SharedBuffer>>& aChunks)
     RefPtr<SharedBuffer> buffer = aChunks[i];
     const int16_t* chunkData = static_cast<const int16_t*>(buffer->Data());
 
-    nsAutoTArray<const int16_t*, 1> channels;
+    AutoTArray<const int16_t*, 1> channels;
     channels.AppendElement(chunkData);
     segment->AppendFrames(buffer.forget(), channels, mAudioSamplesPerChunk);
   }
@@ -959,7 +959,7 @@ SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
 
   uint32_t samplesIndex = 0;
   const int16_t* samples = static_cast<int16_t*>(refSamples->Data());
-  nsAutoTArray<RefPtr<SharedBuffer>, 5> chunksToSend;
+  AutoTArray<RefPtr<SharedBuffer>, 5> chunksToSend;
 
   // fill up our buffer and make a chunk out of it, if possible
   if (mBufferedSamples > 0) {

@@ -1,4 +1,4 @@
-marionette-client >= 2.1.0
+marionette-client >= 2.2.0
 mozfile >= 1.2
 mozinfo >= 0.8
 mozinstall >= 1.12
@@ -8,7 +8,7 @@ mozinstall >= 1.12
 # to avoid installations of those packages from pypi.
 
 # Necessary because of the testcase classes
-# firefox-puppeteer == 3.1.0
+# firefox-puppeteer == 3.2.0
 
 # Necessary because of server-root, and manifest files
 # firefox-ui-tests

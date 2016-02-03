@@ -72,7 +72,6 @@ SEARCH_PATHS = [
     'testing/luciddream',
     'testing/marionette/client',
     'testing/marionette/client/marionette/runner/mixins/browsermob-proxy-py',
-    'testing/marionette/transport',
     'testing/marionette/driver',
     'testing/mozbase/mozcrash',
     'testing/mozbase/mozdebug',

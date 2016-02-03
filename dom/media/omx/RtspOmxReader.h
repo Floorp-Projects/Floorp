@@ -48,7 +48,7 @@ public:
   }
 
   // Implement a time-based seek instead of byte-based..
-  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) final override;
+  RefPtr<SeekPromise> Seek(SeekTarget aTarget, int64_t aEndTime) final override;
 
   // Override GetBuffered() to do nothing for below reasons:
   // 1. Because the Rtsp stream is a/v separated. The buffered data in a/v

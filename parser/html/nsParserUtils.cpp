@@ -160,7 +160,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
 
   // Wrap things in a div or body for parsing, but it won't show up in
   // the fragment.
-  nsAutoTArray<nsString, 2> tagStack;
+  AutoTArray<nsString, 2> tagStack;
   nsAutoCString base, spec;
   if (aIsXML) {
     // XHTML

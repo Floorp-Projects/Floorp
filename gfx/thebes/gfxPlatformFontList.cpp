@@ -391,7 +391,7 @@ gfxPlatformFontList::LookupInFaceNameLists(const nsAString& aFaceName)
 void
 gfxPlatformFontList::PreloadNamesList()
 {
-    nsAutoTArray<nsString, 10> preloadFonts;
+    AutoTArray<nsString, 10> preloadFonts;
     gfxFontUtils::GetPrefsFontList("font.preload-names-list", preloadFonts);
 
     uint32_t numFonts = preloadFonts.Length();
@@ -411,7 +411,7 @@ gfxPlatformFontList::PreloadNamesList()
 void
 gfxPlatformFontList::LoadBadUnderlineList()
 {
-    nsAutoTArray<nsString, 10> blacklist;
+    AutoTArray<nsString, 10> blacklist;
     gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
     uint32_t numFonts = blacklist.Length();
     for (uint32_t i = 0; i < numFonts; i++) {
@@ -568,7 +568,7 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
                                         const gfxFontStyle* aMatchStyle,
                                         gfxFontFamily** aMatchedFamily)
 {
-    nsAutoTArray<const char*,NUM_FALLBACK_FONTS> defaultFallbacks;
+    AutoTArray<const char*,NUM_FALLBACK_FONTS> defaultFallbacks;
     uint32_t i, numFallbacks;
 
     gfxPlatform::GetPlatform()->GetCommonFallbackFonts(aCh, aNextCh,
@@ -795,7 +795,7 @@ gfxPlatformFontList::ResolveGenericFontNames(
         return;
     }
 
-    nsAutoTArray<nsString,4> genericFamilies;
+    AutoTArray<nsString,4> genericFamilies;
 
     // load family for "font.name.generic.lang"
     nsAutoCString prefFontName("font.name.");

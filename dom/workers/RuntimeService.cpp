@@ -126,7 +126,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
   PR_BEGIN_MACRO                                                               \
     AssertIsOnMainThread();                                                    \
                                                                                \
-    nsAutoTArray<WorkerPrivate*, 100> workers;                                 \
+    AutoTArray<WorkerPrivate*, 100> workers;                                 \
     {                                                                          \
       MutexAutoLock lock(mMutex);                                              \
                                                                                \
@@ -1788,7 +1788,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
 
   TimeStamp nextExpiration;
 
-  nsAutoTArray<RefPtr<WorkerThread>, 20> expiredThreads;
+  AutoTArray<RefPtr<WorkerThread>, 20> expiredThreads;
   {
     MutexAutoLock lock(runtime->mMutex);
 
@@ -1992,7 +1992,7 @@ RuntimeService::Shutdown()
   {
     MutexAutoLock lock(mMutex);
 
-    nsAutoTArray<WorkerPrivate*, 100> workers;
+    AutoTArray<WorkerPrivate*, 100> workers;
     AddAllTopLevelWorkersToArray(workers);
 
     if (!workers.IsEmpty()) {
@@ -2033,7 +2033,7 @@ RuntimeService::Cleanup()
   {
     MutexAutoLock lock(mMutex);
 
-    nsAutoTArray<WorkerPrivate*, 100> workers;
+    AutoTArray<WorkerPrivate*, 100> workers;
     AddAllTopLevelWorkersToArray(workers);
 
     if (!workers.IsEmpty()) {
@@ -2042,7 +2042,7 @@ RuntimeService::Cleanup()
 
       // Shut down any idle threads.
       if (!mIdleThreadArray.IsEmpty()) {
-        nsAutoTArray<RefPtr<WorkerThread>, 20> idleThreads;
+        AutoTArray<RefPtr<WorkerThread>, 20> idleThreads;
 
         uint32_t idleThreadCount = mIdleThreadArray.Length();
         idleThreads.SetLength(idleThreadCount);
@@ -2197,7 +2197,7 @@ RuntimeService::CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
 
-  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
@@ -2225,7 +2225,7 @@ RuntimeService::FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
@@ -2249,7 +2249,7 @@ RuntimeService::ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
@@ -2273,7 +2273,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
@@ -2287,7 +2287,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {

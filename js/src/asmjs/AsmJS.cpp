@@ -4011,8 +4011,7 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
         return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
 
     size_t opcodeAt;
-    size_t numArgsAt;
-    if (!f.tempOp(&opcodeAt) || !f.tempU8(&numArgsAt))
+    if (!f.tempOp(&opcodeAt))
         return false;
 
     ParseNode* firstArg = CallArgList(callNode);
@@ -4020,28 +4019,31 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
     if (!CheckExpr(f, firstArg, &firstType))
         return false;
 
+    Expr expr;
     if (firstType.isMaybeDouble()) {
         *type = Type::Double;
         firstType = Type::MaybeDouble;
-        f.patchOp(opcodeAt, isMax ? Expr::F64Max : Expr::F64Min);
+        expr = isMax ? Expr::F64Max : Expr::F64Min;
     } else if (firstType.isMaybeFloat()) {
         *type = Type::Float;
         firstType = Type::MaybeFloat;
-        f.patchOp(opcodeAt, isMax ? Expr::F32Max : Expr::F32Min);
+        expr = isMax ? Expr::F32Max : Expr::F32Min;
     } else if (firstType.isSigned()) {
         *type = Type::Signed;
         firstType = Type::Signed;
-        f.patchOp(opcodeAt, isMax ? Expr::I32Max : Expr::I32Min);
+        expr = isMax ? Expr::I32Max : Expr::I32Min;
     } else {
         return f.failf(firstArg, "%s is not a subtype of double?, float? or signed",
                        firstType.toChars());
     }
+    f.patchOp(opcodeAt, expr);
 
     unsigned numArgs = CallArgListLength(callNode);
-    f.patchU8(numArgsAt, numArgs);
-
     ParseNode* nextArg = NextNode(firstArg);
     for (unsigned i = 1; i < numArgs; i++, nextArg = NextNode(nextArg)) {
+        if (i != numArgs - 1 && !f.writeOp(expr))
+            return false;
+
         Type nextType;
         if (!CheckExpr(f, nextArg, &nextType))
             return false;
@@ -4564,15 +4566,15 @@ CheckFloatCoercionArg(FunctionValidator& f, ParseNode* inputNode, Type inputType
                       size_t opcodeAt)
 {
     if (inputType.isMaybeDouble()) {
-        f.patchOp(opcodeAt, Expr::F32FromF64);
+        f.patchOp(opcodeAt, Expr::F32DemoteF64);
         return true;
     }
     if (inputType.isSigned()) {
-        f.patchOp(opcodeAt, Expr::F32FromS32);
+        f.patchOp(opcodeAt, Expr::F32ConvertSI32);
         return true;
     }
     if (inputType.isUnsigned()) {
-        f.patchOp(opcodeAt, Expr::F32FromU32);
+        f.patchOp(opcodeAt, Expr::F32ConvertUI32);
         return true;
     }
     if (inputType.isFloatish()) {
@@ -4820,7 +4822,7 @@ class CheckSimdScalarArgs
 
             // We emitted a double literal and actually want a float32.
             MOZ_ASSERT(patchAt != size_t(-1));
-            f.patchOp(patchAt, Expr::F32FromF64);
+            f.patchOp(patchAt, Expr::F32DemoteF64);
             return true;
         }
 
@@ -5411,11 +5413,11 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
         if (actual.isMaybeDouble())
             f.patchOp(patchAt, Expr::Id);
         else if (actual.isMaybeFloat())
-            f.patchOp(patchAt, Expr::F64FromF32);
+            f.patchOp(patchAt, Expr::F64PromoteF32);
         else if (actual.isSigned())
-            f.patchOp(patchAt, Expr::F64FromS32);
+            f.patchOp(patchAt, Expr::F64ConvertSI32);
         else if (actual.isUnsigned())
-            f.patchOp(patchAt, Expr::F64FromU32);
+            f.patchOp(patchAt, Expr::F64ConvertUI32);
         else
             return f.failf(expr, "%s is not a subtype of double?, float?, signed or unsigned", actual.toChars());
         break;
@@ -5631,7 +5633,7 @@ CheckCoerceToInt(FunctionValidator& f, ParseNode* expr, Type* type)
         return false;
 
     if (operandType.isMaybeDouble() || operandType.isMaybeFloat()) {
-        Expr opcode = operandType.isMaybeDouble() ? Expr::I32SConvertF64 : Expr::I32SConvertF32;
+        Expr opcode = operandType.isMaybeDouble() ? Expr::I32TruncSF64 : Expr::I32TruncSF32;
         f.patchOp(opcodeAt, opcode);
         *type = Type::Signed;
         return true;

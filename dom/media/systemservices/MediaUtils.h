@@ -321,7 +321,7 @@ private:
     static uint32_t counter = 0;
     return ++counter;
   };
-  nsAutoTArray<Element, 3> mElements;
+  AutoTArray<Element, 3> mElements;
 };
 
 /* media::Refcountable - Add threadsafe ref-counting to something that isn't.

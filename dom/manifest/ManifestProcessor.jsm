@@ -33,6 +33,7 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
   'landscape-secondary'
 ]);
 Cu.import('resource://gre/modules/Console.jsm');
+Cu.import("resource://gre/modules/Services.jsm");
 // ValueExtractor is used by the various processors to get values
 // from the manifest and to report errors.
 Cu.import('resource://gre/modules/ValueExtractor.jsm');
@@ -60,6 +61,8 @@ this.ManifestProcessor = { // jshint ignore:line
     manifestURL: aManifestURL,
     docURL: aDocURL
   }) {
+    const domBundle = Services.strings.createBundle("chrome://global/locale/dom/dom.properties");
+
     const console = new ConsoleAPI({
       prefix: 'Web Manifest'
     });
@@ -70,11 +73,10 @@ this.ManifestProcessor = { // jshint ignore:line
       rawManifest = JSON.parse(jsonText);
     } catch (e) {}
     if (typeof rawManifest !== 'object' || rawManifest === null) {
-      let msg = 'Manifest needs to be an object.';
-      console.warn(msg);
+      console.warn(domBundle.GetStringFromName('ManifestShouldBeObject'));
       rawManifest = {};
     }
-    const extractor = new ValueExtractor(console);
+    const extractor = new ValueExtractor(console, domBundle);
     const imgObjProcessor = new ImageObjectProcessor(console, extractor);
     const processedManifest = {
       'lang': processLangMember(),
@@ -165,21 +167,17 @@ this.ManifestProcessor = { // jshint ignore:line
       try {
         scopeURL = new URL(value, manifestURL);
       } catch (e) {
-        let msg = 'The URL of scope is invalid.';
-        console.warn(msg);
+        console.warn(domBundle.GetStringFromName('ManifestScopeURLInvalid'));
         return undefined;
       }
       if (scopeURL.origin !== docURL.origin) {
-        let msg = 'Scope needs to be same-origin as Document.';
-        console.warn(msg);
+        console.warn(domBundle.GetStringFromName('ManifestScopeNotSameOrigin'));
         return undefined;
       }
       // If start URL is not within scope of scope URL:
       let isSameOrigin = startURL && startURL.origin !== scopeURL.origin;
       if (isSameOrigin || !startURL.pathname.startsWith(scopeURL.pathname)) {
-        let msg =
-          'The start URL is outside the scope, so scope is invalid.';
-        console.warn(msg);
+        console.warn(domBundle.GetStringFromName('ManifestStartURLOutsideScope'));
         return undefined;
       }
       return scopeURL.href;
@@ -202,12 +200,11 @@ this.ManifestProcessor = { // jshint ignore:line
       try {
         potentialResult = new URL(value, manifestURL);
       } catch (e) {
-        console.warn('Invalid URL.');
+        console.warn(domBundle.GetStringFromName('ManifestStartURLInvalid'))
         return result;
       }
       if (potentialResult.origin !== docURL.origin) {
-        let msg = 'start_url must be same origin as document.';
-        console.warn(msg);
+        console.warn(domBundle.GetStringFromName('ManifestStartURLShouldBeSameOrigin'));
       } else {
         result = potentialResult.href;
       }

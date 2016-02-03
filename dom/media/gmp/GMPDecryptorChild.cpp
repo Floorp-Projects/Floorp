@@ -157,7 +157,7 @@ GMPDecryptorChild::KeyStatusChanged(const char* aSessionId,
                                     uint32_t aKeyIdLength,
                                     GMPMediaKeyStatus aStatus)
 {
-  nsAutoTArray<uint8_t, 16> kid;
+  AutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
   CALL_ON_GMP_THREAD(SendKeyStatusChanged,
                      nsCString(aSessionId, aSessionIdLength), kid,

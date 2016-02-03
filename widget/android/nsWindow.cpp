@@ -310,8 +310,8 @@ private:
 
     // GeckoEditable instance used by this nsWindow;
     mozilla::widget::GeckoEditable::GlobalRef mEditable;
-    nsAutoTArray<mozilla::UniquePtr<mozilla::WidgetEvent>, 8> mIMEKeyEvents;
-    nsAutoTArray<IMETextChange, 4> mIMETextChanges;
+    AutoTArray<mozilla::UniquePtr<mozilla::WidgetEvent>, 8> mIMEKeyEvents;
+    AutoTArray<IMETextChange, 4> mIMETextChanges;
     InputContext mInputContext;
     RefPtr<mozilla::TextRangeArray> mIMERanges;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
@@ -2610,7 +2610,7 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
         int32_t oldEnd;
         int32_t newEnd;
     };
-    nsAutoTArray<TextRecord, 4> textTransaction;
+    AutoTArray<TextRecord, 4> textTransaction;
     if (mIMETextChanges.Length() > textTransaction.Capacity()) {
         textTransaction.SetCapacity(mIMETextChanges.Length());
     }

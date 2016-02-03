@@ -617,7 +617,7 @@ public:
     // Used by eQuerySelectionAsTransferable
     nsCOMPtr<nsITransferable> mTransferable;
     // Used by eQueryTextContent with font ranges requested
-    nsAutoTArray<mozilla::FontRange, 1> mFontRanges;
+    AutoTArray<mozilla::FontRange, 1> mFontRanges;
     // true if selection is reversed (end < start)
     bool mReversed;
     // true if the selection exists
