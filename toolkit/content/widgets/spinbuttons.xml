@@ -60,7 +60,7 @@
             this.setAttribute("state", "down");
         ]]>
       </handler>
-      
+
       <handler event="mouseup">
         this.removeAttribute("state");
       </handler>
@@ -79,7 +79,7 @@
           var evt = document.createEvent("Events");
           evt.initEvent(eventname, true, true);
           var cancel = this.dispatchEvent(evt);
-          
+
           if (this.hasAttribute("on" + eventname)) {
             var fn = new Function("event", this.getAttribute("on" + eventname));
             if (fn.call(this, event) == false)

@@ -55,7 +55,7 @@ function* runTests() {
 
     info("Attempt to clear file");
     // Retry until the file is gone because Windows locks it sometimes.
-    yield promiseClearFile(file, URL);    
+    yield promiseClearFile(file, URL);
 
     info("Done");
   });

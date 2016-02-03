@@ -228,7 +228,7 @@ add_test(function test_separator()
   let id = PlacesUtils.bookmarks.insertSeparator(PlacesUtils.unfiledBookmarksFolderId,
                                                  PlacesUtils.bookmarks.DEFAULT_INDEX);
   PlacesUtils.annotations.setItemAnnotation(id, "random-anno",
-                                            "random-value", 0, 
+                                            "random-value", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
 });
 

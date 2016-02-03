@@ -99,7 +99,7 @@ registerPopupShownListener(popupShownListener);
 * This is a bit hacky, as many operations happen asynchronously.
 * Various mechanisms call runTests as a result of operations:
 *   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
-*   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it 
+*   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it
 */
 function runTest() {
     testNum++;
@@ -168,7 +168,7 @@ function runTest() {
         restoreForm();
         doKey("down");
         break;
-        
+
     case 6:
         //Delete the first entry (of 3)
         doKey("down");

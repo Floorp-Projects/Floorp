@@ -74,7 +74,7 @@ nsDefaultCLH.prototype = {
       dump(out + "\n");
       Components.utils.reportError(out);
     }
-    
+
     if (cmdLine.handleFlag("silent", false)) {
       cmdLine.preventDefault = true;
     }
@@ -101,7 +101,7 @@ nsDefaultCLH.prototype = {
     }
     catch (e) { }
 
-    // if the pref is missing, ignore the exception 
+    // if the pref is missing, ignore the exception
     try {
       var chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
 

@@ -12,40 +12,40 @@
 
 /**
  * Dummy nsIAutoCompleteInput source that returns
- * the given list of AutoCompleteSearch names. 
- * 
+ * the given list of AutoCompleteSearch names.
+ *
  * Implements only the methods needed for this test.
  */
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
-  
+  constructor: AutoCompleteInput,
+
   // Array of AutoCompleteSearch names
   searches: null,
-  
+
   minResultsForPopup: 0,
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
-  
+
   get searchCount() {
     return this.searches.length;
   },
-  
+
   getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
-  
+
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  
-  popupOpen: false,  
-  
-  popup: { 
+
+  popupOpen: false,
+
+  popup: {
     setSelectedIndex: function(aIndex) {},
     invalidate: function() {},
 
@@ -56,9 +56,9 @@ AutoCompleteInput.prototype = {
         return this;
 
       throw Components.results.NS_ERROR_NO_INTERFACE;
-    }    
+    }
   },
-    
+
   // nsISupports implementation
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
@@ -71,14 +71,14 @@ AutoCompleteInput.prototype = {
 
 
 
-/** 
+/**
  * nsIAutoCompleteResult implementation
  */
 function AutoCompleteResult(aValues, aComments, aStyles) {
   this._values = aValues;
   this._comments = aComments;
   this._styles = aStyles;
-  
+
   if (this._values.length > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
   } else {
@@ -87,15 +87,15 @@ function AutoCompleteResult(aValues, aComments, aStyles) {
 }
 AutoCompleteResult.prototype = {
   constructor: AutoCompleteResult,
-  
+
   // Arrays
   _values: null,
   _comments: null,
   _styles: null,
-  
+
   searchString: "",
   searchResult: null,
-  
+
   defaultIndex: 0,
 
   get matchCount() {
@@ -109,15 +109,15 @@ AutoCompleteResult.prototype = {
   getLabelAt: function(aIndex) {
     return this.getValueAt(aIndex);
   },
-  
+
   getCommentAt: function(aIndex) {
     return this._comments[aIndex];
   },
-  
+
   getStyleAt: function(aIndex) {
     return this._styles[aIndex];
   },
-  
+
   getImageAt: function(aIndex) {
     return "";
   },
@@ -135,12 +135,12 @@ AutoCompleteResult.prototype = {
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
-  }  
+  }
 }
 
 
 
-/** 
+/**
  * nsIAutoCompleteSearch implementation that always returns
  * the same result set.
  */
@@ -150,25 +150,25 @@ function AutoCompleteSearch(aName, aResult) {
 }
 AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
-  
+
   // Search name. Used by AutoCompleteController
   name: null,
 
   // AutoCompleteResult
   _result: null,
-  
-  
+
+
   /**
    * Return the same result set for every search
    */
-  startSearch: function(aSearchString, 
-                        aSearchParam, 
-                        aPreviousResult, 
-                        aListener) 
+  startSearch: function(aSearchString,
+                        aSearchParam,
+                        aPreviousResult,
+                        aListener)
   {
     aListener.onSearchResult(this, this._result);
   },
-  
+
   stopSearch: function() {},
 
   // nsISupports implementation
@@ -180,7 +180,7 @@ AutoCompleteSearch.prototype = {
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  
+
   // nsIFactory implementation
   createInstance: function(outer, iid) {
     return this.QueryInterface(iid);
@@ -189,7 +189,7 @@ AutoCompleteSearch.prototype = {
 
 
 
-/** 
+/**
  * Helper to register an AutoCompleteSearch with the given name.
  * Allows the AutoCompleteController to find the search.
  */
@@ -201,43 +201,43 @@ function registerAutoCompleteSearch(aSearch) {
   var cid = uuidGenerator.generateUUID();
 
   var desc = "Test AutoCompleteSearch";
-  
+
   var componentManager = Components.manager
                                    .QueryInterface(Ci.nsIComponentRegistrar);
   componentManager.registerFactory(cid, desc, name, aSearch);
 
   // Keep the id on the object so we can unregister later
-  aSearch.cid = cid; 
+  aSearch.cid = cid;
 }
 
 
 
-/** 
- * Helper to unregister an AutoCompleteSearch. 
+/**
+ * Helper to unregister an AutoCompleteSearch.
  */
 function unregisterAutoCompleteSearch(aSearch) {
   var componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);  
+                                   .QueryInterface(Ci.nsIComponentRegistrar);
   componentManager.unregisterFactory(aSearch.cid, aSearch);
 }
 
 
 
-/** 
+/**
  * Test AutoComplete with a search that returns a null result
  */
 function run_test() {
-  
+
   // Make an AutoCompleteSearch that always returns nothing
-  var emptySearch = new AutoCompleteSearch("test-empty-search", 
+  var emptySearch = new AutoCompleteSearch("test-empty-search",
                              new AutoCompleteResult([], [], []));
-  
+
   // Register search so AutoCompleteController can find them
   registerAutoCompleteSearch(emptySearch);
-    
+
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);  
-  
+                   getService(Components.interfaces.nsIAutoCompleteController);
+
   // Make an AutoCompleteInput that uses our search
   // and confirms results on search complete
   var input = new AutoCompleteInput([emptySearch.name]);
@@ -252,7 +252,7 @@ function run_test() {
 
     do_check_eq(numSearchesStarted, 1);
 
-    do_check_eq(controller.searchStatus, 
+    do_check_eq(controller.searchStatus,
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
     do_check_eq(controller.matchCount, 0);
 
@@ -266,7 +266,7 @@ function run_test() {
 
   // Search is asynchronous, so don't let the test finish immediately
   do_test_pending();
-  
+
   controller.startSearch("test");
 }
 

@@ -438,7 +438,7 @@ add_task(function* test_history_sidebar()
   yield task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
 
   // The remaining views are
-  //   RESULTS_AS_URI + SORT_BY_VISITCOUNT_DESCENDING 
+  //   RESULTS_AS_URI + SORT_BY_VISITCOUNT_DESCENDING
   //   ->  test_399266.js
   //   RESULTS_AS_URI + SORT_BY_DATE_DESCENDING
   //   ->  test_385397.js

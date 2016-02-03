@@ -806,7 +806,7 @@ function test_hCard() {
 
   is(hcard.tel[0].type[0], "home", "21-tel.2 - type");
   is(hcard.tel[0].value, "+1.415.555.1212", "21-tel.2 - tel");
-  
+
   hcard = new hCard(document.getElementById("21-tel.3"));
 
   is(hcard.tel[0].type[0], "home", "21-tel.3 - type (home)");
@@ -884,7 +884,7 @@ function test_hCard() {
   is(hcard.fn, "Paradise", "25-geo-abbr - fn");
   is(hcard.geo.latitude, 30.267991, "25-geo-abbr - geo.latitude");
   is(hcard.geo.longitude, -97.739568, "25-geo-abbr - geo.longitude");
-  
+
   hcard = new hCard(document.getElementById("26-ancestors"));
 
   is(hcard.fn, "John Doe", "26-ancestors - fn");
@@ -945,7 +945,7 @@ function test_hCard() {
 
 
   hcard = new hCard(document.getElementById("30-fn-org.2"));
-  
+
   is(hcard.fn, "Dan Connolly", "30-fn-org.2  - fn");
   is(hcard.n["given-name"][0], "Dan", "30-fn-org.2  - given-name");
   is(hcard.n["family-name"][0], "Connolly", "30-fn-org.2  - family-name");
@@ -1030,21 +1030,21 @@ function test_hCard() {
   is(String(hcard.url), "http://example.com/", "33-area.2 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.2 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.2 - organization-name");
-  
+
   hcard = new hCard(document.getElementById("33-area.3"));
 
   is(hcard.fn, "Joe Public", "33-area.3 - fn");
   is(String(hcard.url), "http://example.com/", "33-area.3 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.3 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.3 - organization-name");
-  
+
   hcard = new hCard(document.getElementById("33-area.4"));
 
   is(hcard.fn, "Joe Public", "33-area.4 - fn");
   is(String(hcard.url), "http://example.com/", "33-area.4 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.4 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.4 - organization-name");
-  
+
   hcard = new hCard(document.getElementById("33-area.5"));
 
   is(hcard.fn, "Joe Public", "33-area.5 - fn");

@@ -74,7 +74,7 @@ function addDownload(aName) {
     dmFile.append(aName || ("dm-test-file-" + randomString()));
     if (dmFile.exists())
       throw "Download file already exists";
-  
+
     let dl = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                             createURI("http://example.com/httpd.js"),
                             createURI(dmFile), null, null,

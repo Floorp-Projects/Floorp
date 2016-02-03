@@ -92,7 +92,7 @@ var PluginHost = {
     if (iid.equals(Components.interfaces.nsIPluginHost)
      || iid.equals(Components.interfaces.nsISupports))
       return this;
-  
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 }

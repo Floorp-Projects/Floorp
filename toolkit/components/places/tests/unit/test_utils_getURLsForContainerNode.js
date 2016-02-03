@@ -148,7 +148,7 @@ function() {
 ];
 
 /**
- * Executes a query and checks number of uri nodes in the first container in 
+ * Executes a query and checks number of uri nodes in the first container in
  * query's results.  To correctly test a container ensure that the query will
  * return only your container in the first level.
  *

@@ -14,7 +14,7 @@
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
   </binding>
-  
+
   <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <implementation>
       <field name="palette">
@@ -24,7 +24,7 @@
       <field name="toolbarset">
         null
       </field>
-      
+
       <field name="customToolbarCount">
         0
       </field>
@@ -53,7 +53,7 @@
           this.toolbarset = this.firstChild;
           while (this.toolbarset && this.toolbarset.localName != "toolbarset")
             this.toolbarset = toolbarset.nextSibling;
-          
+
           if (this.toolbarset) {
             // Create each toolbar described by the toolbarset.
             var index = 0;
@@ -65,12 +65,12 @@
           }
         ]]>
       </constructor>
-      
+
       <method name="appendCustomToolbar">
         <parameter name="aName"/>
         <parameter name="aCurrentSet"/>
         <body>
-          <![CDATA[            
+          <![CDATA[
             if (!this.toolbarset)
               return null;
             var toolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -84,7 +84,7 @@
             toolbar.setAttribute("iconsize", this.getAttribute("iconsize"));
             toolbar.setAttribute("context", this.toolbarset.getAttribute("context"));
             toolbar.setAttribute("class", "chromeclass-toolbar");
-            
+
             this.insertBefore(toolbar, this.toolbarset);
             return toolbar;
           ]]>
@@ -92,7 +92,7 @@
       </method>
     </implementation>
   </binding>
-  
+
   <binding id="toolbar" role="xul:toolbar"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <implementation>
@@ -164,7 +164,7 @@
                 break;
               node = node.nextSibling;
             }
-            
+
             if (!node)
               return;
 
@@ -323,8 +323,8 @@
                 // look for an item with the same id, as the item may be
                 // in a different toolbar.
                 var item = document.getElementById(aId);
-                if (item && item.parentNode && 
-                    item.parentNode.localName == "toolbar" && 
+                if (item && item.parentNode &&
+                    item.parentNode.localName == "toolbar" &&
                     item.parentNode.toolbox == toolbox) {
                   newItem = item;
                   break;
@@ -363,19 +363,19 @@
             var insertItem = newItem;
             // make sure added items are removable
             newItem.setAttribute("removable", "true");
-            
+
             // Wrap the item in another node if so inclined.
             if (aWrapper) {
               aWrapper.appendChild(newItem);
               insertItem = aWrapper;
             }
-            
+
             // Insert the palette item into the toolbar.
             if (aBeforeElt)
               this.insertBefore(insertItem, aBeforeElt);
             else
               this.appendChild(insertItem);
-               
+
             return newItem;
           ]]>
         </body>
@@ -516,7 +516,7 @@
     </implementation>
   </binding>
 
-  <binding id="menubar" role="xul:menubar" 
+  <binding id="menubar" role="xul:menubar"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
     <implementation>
        <field name="_active">false</field>
@@ -571,7 +571,7 @@
       </xul:hbox>
     </content>
   </binding>
-    
+
   <binding id="toolbarpaletteitem-palette" extends="chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" xbl:inherits="type,place">
@@ -581,5 +581,5 @@
     </content>
   </binding>
 
-</bindings>          
+</bindings>
 

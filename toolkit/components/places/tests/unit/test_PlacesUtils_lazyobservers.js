@@ -3,7 +3,7 @@
 
 function run_test() {
   do_test_pending();
-  
+
   const TEST_URI = NetUtil.newURI("http://moz.org/")
   let observer = {
     QueryInterface: XPCOMUtils.generateQI([

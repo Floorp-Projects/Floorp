@@ -53,11 +53,11 @@
             this.setAttribute("checked", "true");
           else
             this.removeAttribute("checked");
-          
+
           return val;
         ]]></setter>
       </property>
-      
+
       <property name="checkState">
         <getter><![CDATA[
           var state = this.getAttribute("checkState");
@@ -71,7 +71,7 @@
           return val;
         ]]></setter>
       </property>
-      
+
       <property name="autoCheck"
                 onget="return this.getAttribute('autoCheck') == 'true';"
                 onset="this.setAttribute('autoCheck', val); return val;"/>
@@ -102,12 +102,12 @@
         <parameter name="aAccessKeyLower"/>
         <body>
         <![CDATA[
-          var iterator = aSubtree.ownerDocument.createTreeWalker(aSubtree, 
-                                                                 NodeFilter.SHOW_ELEMENT, 
+          var iterator = aSubtree.ownerDocument.createTreeWalker(aSubtree,
+                                                                 NodeFilter.SHOW_ELEMENT,
                                                                  this.filterButtons);
           while (iterator.nextNode()) {
             var test = iterator.currentNode;
-            if (test.accessKey.toLowerCase() == aAccessKeyLower && 
+            if (test.accessKey.toLowerCase() == aAccessKeyLower &&
                 !test.disabled && !test.collapsed && !test.hidden) {
               test.focus();
               test.click();
@@ -175,7 +175,7 @@
           }
         }
 
-        if (event.keyCode || event.charCode <= 32 || event.altKey || 
+        if (event.keyCode || event.charCode <= 32 || event.altKey ||
             event.ctrlKey || event.metaKey)
           return;  // No printable char pressed, not a potential accesskey
 
@@ -191,7 +191,7 @@
         // Search for accesskey in the list of buttons for this doc and each subdoc
         // Get the buttons for the main document and all sub-frames
         for (var frameCount = -1; frameCount < window.top.frames.length; frameCount++) {
-          var doc = (frameCount == -1)? window.top.document: 
+          var doc = (frameCount == -1)? window.top.document:
             window.top.frames[frameCount].document
           if (this.fireAccessKeyButton(doc.documentElement, charPressedLower))
             return;
@@ -255,16 +255,16 @@
       <constructor>
         this.init();
       </constructor>
-      
+
       <method name="init">
         <body>
         <![CDATA[
           var btn = document.getAnonymousElementByAttribute(this, "anonid", "button");
           if (!btn)
             throw "XBL binding for <button type=\"menu-button\"/> binding must contain an element with anonid=\"button\"";
-          
+
           var menubuttonParent = this;
-          btn.addEventListener("mouseover", function() { 
+          btn.addEventListener("mouseover", function() {
             if (!this.disabled)
               menubuttonParent.buttonover = true;
           }, true);
@@ -280,15 +280,15 @@
         ]]>
         </body>
       </method>
-      
+
       <property name="buttonover" onget="return this.getAttribute('buttonover');">
         <setter>
         <![CDATA[
           var v = val || val == "true";
-          if (!v && this.buttondown) { 
+          if (!v && this.buttondown) {
             this.buttondown = false;
             this._pendingActive = true;
-          } 
+          }
           else {
             if (this._pendingActive) {
               this.buttondown = true;
@@ -304,7 +304,7 @@
         ]]>
         </setter>
       </property>
-      
+
       <property name="buttondown" onget="return this.getAttribute('buttondown') == 'true';">
         <setter>
         <![CDATA[
@@ -316,7 +316,7 @@
         ]]>
         </setter>
       </property>
-      
+
       <field name="_pendingActive">false</field>
 
       <method name="handleEvent">
@@ -361,7 +361,7 @@
       <xul:dropmarker class="button-menubutton-dropmarker" xbl:inherits="open,disabled,label"/>
     </content>
   </binding>
-  
+
   <binding id="button-image" display="xul:button"
            extends="chrome://global/content/bindings/button.xml#button">
     <content>
@@ -371,5 +371,5 @@
 
   <binding id="button-repeat" display="xul:autorepeatbutton"
            extends="chrome://global/content/bindings/button.xml#button"/>
-  
+
 </bindings>

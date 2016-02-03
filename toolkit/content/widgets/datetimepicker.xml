@@ -463,7 +463,7 @@
           <![CDATA[
             // aNoWrap is true when the user entered a value, so just
             // constrain within limits. If false, the value is being
-            // incremented or decremented, so wrap around values 
+            // incremented or decremented, so wrap around values
             var max = (aField == this.hourField) ? 24 : 60;
             if (aValue < 0)
               return aNoWrap ? 0 : max + aValue;

@@ -124,7 +124,7 @@ add_task(function* test_execute()
   result.root.containerOpen = true;
   do_check_eq(result.root.childCount, 2);
   result.root.containerOpen = false;
-  
+
   // test annotation-based queries
   var annos = Cc["@mozilla.org/browser/annotation-service;1"].
               getService(Ci.nsIAnnotationService);

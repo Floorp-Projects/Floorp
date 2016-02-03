@@ -60,7 +60,7 @@ function frameScript() {
     });
   } catch (ex) {
     Cu.reportError("Error in content (setup): " + ex);
-    Cu.reportError(ex.stack);    
+    Cu.reportError(ex.stack);
   }
 }
 

@@ -515,7 +515,7 @@ this.PlacesBackups = {
    *         * index: the position in the parent
    *         * dateAdded: microseconds from the epoch
    *         * lastModified: microseconds from the epoch
-   *         * type: type of the originating node as defined in PlacesUtils 
+   *         * type: type of the originating node as defined in PlacesUtils
    *         The following properties exist only for a subset of bookmarks:
    *         * annos: array of annotations
    *         * uri: url

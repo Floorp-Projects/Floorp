@@ -130,7 +130,7 @@ var handleContentContextMenu = function (event) {
     disableSetDesktopBg = disableSetDesktopBackground(event.target);
 
     try {
-      let imageCache = 
+      let imageCache =
         Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                         .getImgCacheForDocument(doc);
       let props =

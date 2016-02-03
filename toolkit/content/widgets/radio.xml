@@ -164,9 +164,9 @@
 
           return val;
         ]]>
-        </setter>        
+        </setter>
       </property>
-      
+
       <property name="focusedItem">
         <getter>
         <![CDATA[
@@ -181,7 +181,7 @@
         <setter>
         <![CDATA[
           if (val) val.setAttribute("focused", "true");
-          
+
           // unfocus all other group nodes
           var children = this._getRadioChildren();
           for (var i = 0; i < children.length; ++i) {
@@ -192,7 +192,7 @@
         ]]>
         </setter>
       </property>
-      
+
       <method name="checkAdjacentElement">
         <parameter name="aNextFlag"/>
         <body>
@@ -201,7 +201,7 @@
           var i;
           var children = this._getRadioChildren();
           for (i = 0; i < children.length; ++i ) {
-            if (children[i] == currentElement) 
+            if (children[i] == currentElement)
               break;
           }
           var index = i;
@@ -219,7 +219,7 @@
             this.selectedItem = children[i];
             children[i].doCommand();
           }
-          else {              
+          else {
             do {
               if (i == 0)
                 i = children.length;
@@ -319,7 +319,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="insertItemAt">
         <parameter name="index"/>
         <parameter name="label"/>
@@ -355,13 +355,13 @@
         </body>
       </method>
     </implementation>
-    
+
     <handlers>
       <handler event="mousedown">
         if (this.disabled)
           event.preventDefault();
        </handler>
-     
+
       <!-- keyboard navigation -->
       <!-- Here's how keyboard navigation works in radio groups on Windows:
            The group takes 'focus'

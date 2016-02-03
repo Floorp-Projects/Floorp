@@ -1,14 +1,14 @@
 /*
    Utilities
-   
+
    Copyright (C) 2010 - 2015 Glenn Jones. All Rights Reserved.
    MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt
 */
 
 var Modules = (function (modules) {
-	
+
 	modules.utils = {
-		
+
 		/**
 		 * is the object a string
 		 *
@@ -18,7 +18,7 @@ var Modules = (function (modules) {
 		isString: function( obj ) {
 			return typeof( obj ) === 'string';
 		},
-		
+
 		/**
 		 * is the object a number
 		 *
@@ -28,8 +28,8 @@ var Modules = (function (modules) {
 		isNumber: function( obj ) {
 			return !isNaN(parseFloat( obj )) && isFinite( obj );
 		},
-		
-		
+
+
 		/**
 		 * is the object an array
 		 *
@@ -39,8 +39,8 @@ var Modules = (function (modules) {
 		isArray: function( obj ) {
 			return obj && !( obj.propertyIsEnumerable( 'length' ) ) && typeof obj === 'object' && typeof obj.length === 'number';
 		},
-		
-		
+
+
 		/**
 		 * is the object a function
 		 *
@@ -50,8 +50,8 @@ var Modules = (function (modules) {
 		isFunction: function(obj) {
 			return !!(obj && obj.constructor && obj.call && obj.apply);
 		},
-	
-	
+
+
 		/**
 		 * does the text start with a test string
 		 *
@@ -62,8 +62,8 @@ var Modules = (function (modules) {
 		startWith: function( text, test ) {
 			return(text.indexOf(test) === 0);
 		},
-	
-		
+
+
 		/**
 		 * removes spaces at front and back of text
 		 *
@@ -77,8 +77,8 @@ var Modules = (function (modules) {
 				return '';
 			}
 		},
-		
-		
+
+
 		/**
 		 * replaces a character in text
 		 *
@@ -89,13 +89,13 @@ var Modules = (function (modules) {
 		 */
 		replaceCharAt: function( text, index, character ) {
 			if(text && text.length > index){
-			   return text.substr(0, index) + character + text.substr(index+character.length); 
+			   return text.substr(0, index) + character + text.substr(index+character.length);
 			}else{
 				return text;
 			}
 		},
-		
-		
+
+
 		/**
 		 * removes whitespace, tabs and returns from start and end of text
 		 *
@@ -106,7 +106,7 @@ var Modules = (function (modules) {
 			if(text && text.length){
 				var i = text.length,
 					x = 0;
-				
+
 				// turn all whitespace chars at end into spaces
 				while (i--) {
 					if(this.isOnlyWhiteSpace(text[i])){
@@ -115,7 +115,7 @@ var Modules = (function (modules) {
 						break;
 					}
 				}
-				
+
 				// turn all whitespace chars at start into spaces
 				i = text.length;
 				while (x < i) {
@@ -129,8 +129,8 @@ var Modules = (function (modules) {
 			}
 			return this.trim(text);
 		},
-	
-	
+
+
 		/**
 		 * does text only contain whitespace characters
 		 *
@@ -140,8 +140,8 @@ var Modules = (function (modules) {
 		isOnlyWhiteSpace: function( text ){
 			return !(/[^\t\n\r ]/.test( text ));
 		},
-		
-		
+
+
 		/**
 		 * removes whitespace from text (leaves a single space)
 		 *
@@ -151,14 +151,14 @@ var Modules = (function (modules) {
 		collapseWhiteSpace: function( text ){
 			return text.replace(/[\t\n\r ]+/g, ' ');
 		},
-	
-	
+
+
 		/**
 		 * does an object have any of its own properties
 		 *
 		 * @param  {Object} obj
 		 * @return {Boolean}
-		 */ 
+		 */
 		hasProperties: function( obj ) {
 			var key;
 			for(key in obj) {
@@ -168,15 +168,15 @@ var Modules = (function (modules) {
 			}
 			return false;
 		},
-		
-		
+
+
 		/**
 		 * a sort function - to sort objects in an array by a given property
 		 *
 		 * @param  {String} property
 		 * @param  {Boolean} reverse
 		 * @return {Int}
-		 */ 
+		 */
 		sortObjects: function(property, reverse) {
 			reverse = (reverse) ? -1 : 1;
 			return function (a, b) {
@@ -191,9 +191,9 @@ var Modules = (function (modules) {
 				return 0;
 			};
 		}
-		
+
 	};
-	
+
 	return modules;
 
 } (Modules || {}));

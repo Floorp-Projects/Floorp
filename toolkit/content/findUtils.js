@@ -37,7 +37,7 @@ nsFindInstData.prototype =
     var findInFrames = findInst.QueryInterface(Components.interfaces.nsIWebBrowserFindInFrames);
     findInFrames.rootSearchFrame = this.rootSearchWindow;
     findInFrames.currentSearchFrame = this.currentSearchWindow;
-  
+
     // always search in frames for now. We could add a checkbox to the dialog for this.
     findInst.searchFrames = true;
   },
@@ -98,7 +98,7 @@ function findAgainInPage(findInstData, reverse)
     }
 
     // Reset to normal value, otherwise setting can get changed in find dialog
-    findInst.findBackwards = findService.findBackwards; 
+    findInst.findBackwards = findService.findBackwards;
   }
 }
 

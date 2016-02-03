@@ -12,7 +12,7 @@ var doButton3Function = 0;
 function doSetOKCancel(okFunc, cancelFunc, button2Func, button3Func )
 {
 	//dump("top.window.navigator.platform: " + top.window.navigator.platform + "\n");
-	
+
 	doOKFunction = okFunc;
 	doCancelFunction = cancelFunc;
 	doButton2Function = button2Func;
@@ -22,10 +22,10 @@ function doSetOKCancel(okFunc, cancelFunc, button2Func, button3Func )
 function doOKButton()
 {
 	var close = true;
-	
+
 	if ( doOKFunction )
 		close = doOKFunction();
-	
+
 	if (close && top)
 		top.window.close();
 }
@@ -33,10 +33,10 @@ function doOKButton()
 function doCancelButton()
 {
 	var close = true;
-	
+
 	if ( doCancelFunction )
 		close = doCancelFunction();
-	
+
 	if (close && top)
 		top.window.close();
 }
@@ -44,10 +44,10 @@ function doCancelButton()
 function doButton2()
 {
 	var close = true;
-	
+
 	if ( doButton2Function )
 		close = doButton2Function();
-	
+
 	if (close && top)
 		top.window.close();
 }
@@ -55,10 +55,10 @@ function doButton2()
 function doButton3()
 {
 	var close = true;
-	
+
 	if ( doButton3Function )
 		close = doButton3Function();
-	
+
 	if (close && top)
 		top.window.close();
 }
@@ -100,7 +100,7 @@ function centerWindowOnScreen()
 {
 	var xOffset = screen.availWidth/2 - window.outerWidth/2;
 	var yOffset = screen.availHeight/2 - window.outerHeight/2; //(opener.outerHeight *2)/10;
-	
+
 	xOffset = ( xOffset > 0 ) ? xOffset : 0;
   yOffset = ( yOffset > 0 ) ? yOffset : 0;
 	window.moveTo( xOffset, yOffset);
