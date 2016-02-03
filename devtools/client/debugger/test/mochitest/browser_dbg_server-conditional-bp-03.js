@@ -41,7 +41,7 @@ function test() {
       const textbox = gDebugger.document.getElementById("conditional-breakpoint-panel-textbox");
       is(textbox.value, "hello", "The expression is correct (2).")
 
-      resumeDebuggerThenCloseAndFinish(gPanel);
+      yield resumeDebuggerThenCloseAndFinish(gPanel);
     });
 
     callInTab(gTab, "ermahgerd");

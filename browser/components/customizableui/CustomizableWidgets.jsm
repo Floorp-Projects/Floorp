@@ -484,7 +484,7 @@ const CustomizableWidgets = [
       // First sort and filter the list of tabs for each client. Note that the
       // SyncedTabs module promises that the objects it returns are never
       // shared, so we are free to mutate those objects directly.
-      const maxTabs = 15;
+      const maxTabs = 50;
       for (let client of clients) {
         let tabs = client.tabs;
         tabs.sort((a, b) => b.lastUsed - a.lastUsed);

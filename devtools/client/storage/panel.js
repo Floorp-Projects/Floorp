@@ -57,7 +57,10 @@ StoragePanel.prototype = {
       this.emit("ready");
 
       return this;
-    }).catch(this.destroy);
+    }).catch(e => {
+      console.log("error while opening storage panel", e);
+      this.destroy();
+    });
   },
 
   /**

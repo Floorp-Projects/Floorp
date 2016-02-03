@@ -888,7 +888,6 @@ var TPS = {
     // that complete.
     if (this.fxaccounts_enabled) {
       this._triggeredSync = true;
-      this.waitForEvent("weave:service:sync:start");
       this.waitForSyncFinished();
     }
   },
@@ -919,6 +918,7 @@ var TPS = {
     this._triggeredSync = true;
     this.StartAsyncOperation();
     Weave.Service.sync();
+    Logger.logInfo("Sync is complete");
   },
 
   WipeServer: function TPS__WipeServer() {

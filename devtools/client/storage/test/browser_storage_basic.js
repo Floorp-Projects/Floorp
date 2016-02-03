@@ -61,6 +61,9 @@ const testCases = [
    [6, 7]],
   [["indexedDB", "https://sectest1.example.org", "idb-s2", "obj-s2"],
    [16]],
+  [["Cache", "http://test1.example.org", "plop"],
+   [MAIN_DOMAIN + "404_cached_file.js", MAIN_DOMAIN + "browser_storage_basic.js"]],
+
 ];
 
 /**

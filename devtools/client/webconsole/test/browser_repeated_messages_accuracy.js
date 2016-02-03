@@ -29,6 +29,7 @@ add_task(function* () {
   yield testCSSRepeats(hud);
   yield testCSSRepeatsAfterReload(hud);
   yield testConsoleRepeats(hud);
+  yield testConsoleFalsyValues(hud);
 
   Services.prefs.clearUserPref(PREF);
 });
@@ -120,6 +121,55 @@ function testConsoleRepeats(hud) {
         text: "undefined",
         category: CATEGORY_WEBDEV,
         repeats: 1,
+      },
+    ],
+  });
+}
+
+function testConsoleFalsyValues(hud) {
+  hud.jsterm.clearOutput(true);
+  hud.jsterm.execute("testConsoleFalsyValues()");
+
+  info("wait for repeats of falsy values with the console API");
+
+  return waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        name: "console.log 'NaN' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'undefined' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'null' repeated once",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 1,
+      },
+      {
+        name: "console.log 'NaN' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
+      },
+      {
+        name: "console.log 'undefined' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
+      },
+      {
+        name: "console.log 'null' repeated twice",
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+        repeats: 2,
       },
     ],
   });

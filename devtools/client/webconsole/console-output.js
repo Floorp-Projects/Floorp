@@ -1089,7 +1089,7 @@ Messages.Extended = function(messagePieces, options = {})
   }
 
   this._repeatID.quoteStrings = this._quoteStrings;
-  this._repeatID.messagePieces = messagePieces + "";
+  this._repeatID.messagePieces = JSON.stringify(messagePieces);
   this._repeatID.actors = new Set(); // using a set to avoid duplicates
 };
 
