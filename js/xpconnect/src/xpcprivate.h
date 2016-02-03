@@ -85,6 +85,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -1992,13 +1993,13 @@ private:
 class XPCWrappedNativeTearOffChunk
 {
 friend class XPCWrappedNative;
-private:
-    XPCWrappedNativeTearOffChunk() : mNextChunk(nullptr) {}
-    ~XPCWrappedNativeTearOffChunk() {delete mNextChunk;}
+public:
+    XPCWrappedNativeTearOffChunk() {}
+    ~XPCWrappedNativeTearOffChunk() {}
 
 private:
     XPCWrappedNativeTearOff mTearOff;
-    XPCWrappedNativeTearOffChunk* mNextChunk;
+    mozilla::UniquePtr<XPCWrappedNativeTearOffChunk> mNextChunk;
 };
 
 /***************************************************************************/
