@@ -31,10 +31,8 @@ add_task(function* test_ws_retry() {
   });
 
   let alarmDelays = [];
-  let setAlarm = PushService.setAlarm;
-  PushService.setAlarm = function(delay) {
+  PushServiceWebSocket._reconnectTestCallback = function(delay) {
     alarmDelays.push(delay);
-    setAlarm.apply(this, arguments);
   };
 
   let handshakeDone;
@@ -46,7 +44,6 @@ add_task(function* test_ws_retry() {
       return new MockWebSocket(uri, {
         onHello(request) {
           if (alarmDelays.length == 10) {
-            PushService.setAlarm = setAlarm;
             this.serverSendMsg(JSON.stringify({
               messageType: 'hello',
               status: 200,
@@ -66,6 +63,8 @@ add_task(function* test_ws_retry() {
     45000,
     'Timed out waiting for successful handshake'
   );
-  deepEqual(alarmDelays, [25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 10000],
-    'Wrong reconnect alarm delays');
+  [25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 10000].forEach(function(minDelay, index) {
+    ok(alarmDelays[index] >= minDelay, `Should wait at least ${
+      minDelay}ms before attempt ${index + 1}`);
+  });
 });
