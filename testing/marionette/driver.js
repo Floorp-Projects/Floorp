@@ -28,7 +28,7 @@ Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/event.js");
-Cu.import("chrome://marionette/content/frame-manager.js");
+Cu.import("chrome://marionette/content/frame.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
