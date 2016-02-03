@@ -74,6 +74,17 @@ error.isWebDriverError = function(obj) {
 };
 
 /**
+ * Wraps an Error prototype in a WebDriverError.  If the given error is
+ * already a WebDriverError, this is effectively a no-op.
+ */
+error.wrap = function(err) {
+  if (error.isWebDriverError(err)) {
+    return err;
+  }
+  return new WebDriverError(`${err.name}: ${err.message}`, err.stack);
+};
+
+/**
  * Unhandled error reporter.  Dumps the error and its stacktrace to console,
  * and reports error to the Browser Console.
  */
@@ -151,11 +162,12 @@ error.fromJson = function(json) {
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
  */
-this.WebDriverError = function(msg) {
+this.WebDriverError = function(msg, stack = undefined) {
   Error.call(this, msg);
   this.name = "WebDriverError";
   this.message = msg;
   this.status = "webdriver error";
+  this.stack = stack;
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
