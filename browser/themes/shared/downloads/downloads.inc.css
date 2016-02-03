@@ -31,6 +31,28 @@
   max-width: 40ch;
 }
 
+#downloadsSummary {
+  padding: 8px 38px 8px 12px;
+  cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+#downloadsSummary > .downloadTypeIcon {
+  list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
+}
+
+%ifdef XP_MACOSX
+@media (min-resolution: 2dppx) {
+  #downloadsSummary > .downloadTypeIcon {
+    list-style-image: url("chrome://browser/skin/downloads/download-summary@2x.png");
+  }
+}
+%endif
+
+#downloadsSummaryDescription {
+  color: -moz-nativehyperlinktext;
+}
+
 #downloadsHistory {
   background: transparent;
   cursor: pointer;
