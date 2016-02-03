@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1243125 testcase</title>
+  <meta charset="utf-8">
+  <style type="text/css">
+  div {
+    overflow: hidden;
+    height: 20px;
+    width: 300px;
+    background: red;
+    margin: 8px 0;
+  }
+  .h-tb { writing-mode: horizontal-tb; }
+  .v-lr { writing-mode: vertical-lr; }
+  .v-rl { writing-mode: vertical-rl; }
+  span {
+    float: left;
+    height: 21px;
+    width: 301px;
+    background: green;
+  }
+  </style>
+</head>
+<body>
+  <p>There should be 9 green bars</p>
+
+  <div class="h-tb"><span class="h-tb"></span></div>
+  <div class="h-tb"><span class="v-lr"></span></div>
+  <div class="h-tb"><span class="v-rl"></span></div>
+
+  <div class="v-lr"><span class="h-tb"></span></div>
+  <div class="v-lr"><span class="v-lr"></span></div>
+  <div class="v-lr"><span class="v-rl"></span></div>
+
+  <div class="v-rl"><span class="h-tb"></span></div>
+  <div class="v-rl"><span class="v-lr"></span></div>
+  <div class="v-rl"><span class="v-rl"></span></div>
+</body>
+</html>
