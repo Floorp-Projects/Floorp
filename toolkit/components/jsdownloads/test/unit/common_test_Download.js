@@ -32,7 +32,7 @@ function promiseStartDownload(aSourceUrl) {
   }
 
   return promiseNewDownload(aSourceUrl).then(download => {
-    download.start();
+    download.start().catch(() => {});
     return download;
   });
 }
@@ -64,7 +64,7 @@ function promiseStartDownload_tryToKeepPartialData() {
                   partFilePath: targetFilePath + ".part" },
       });
       download.tryToKeepPartialData = true;
-      download.start();
+      download.start().catch(() => {});
     } else {
       // Start a download using nsIExternalHelperAppService, that is configured
       // to keep partially downloaded data by default.
@@ -435,7 +435,7 @@ add_task(function* test_empty_progress_tryToKeepPartialData()
                 partFilePath: targetFilePath + ".part" },
     });
     download.tryToKeepPartialData = true;
-    download.start();
+    download.start().catch(() => {});
   } else {
     // Start a download using nsIExternalHelperAppService, that is configured
     // to keep partially downloaded data by default.
@@ -491,7 +491,7 @@ add_task(function* test_empty_noprogress()
       }
     };
 
-    download.start();
+    download.start().catch(() => {});
   } else {
     // When testing DownloadLegacySaver, the download is already started when it
     // is created, and it may have already made all needed property change
@@ -856,7 +856,7 @@ add_task(function* test_cancel_midway_restart_tryToKeepPartialData_false()
 
   // Restart the download from the beginning.
   mustInterruptResponses();
-  download.start();
+  download.start().catch(() => {});
 
   yield promiseDownloadMidway(download);
   yield promisePartFileReady(download);
@@ -1143,7 +1143,7 @@ add_task(function* test_whenSucceeded_after_restart()
     // we can verify getting a reference before the first download attempt.
     download = yield promiseNewDownload(httpUrl("interruptible.txt"));
     promiseSucceeded = download.whenSucceeded();
-    download.start();
+    download.start().catch(() => {});
   } else {
     // When testing DownloadLegacySaver, the download is already started when it
     // is created, thus we cannot get the reference before the first attempt.
@@ -1156,7 +1156,7 @@ add_task(function* test_whenSucceeded_after_restart()
 
   // The second request is allowed to complete.
   continueResponses();
-  download.start();
+  download.start().catch(() => {});
 
   // Wait for the download to finish by waiting on the whenSucceeded promise.
   yield promiseSucceeded;
@@ -1343,7 +1343,7 @@ add_task(function* test_error_restart()
         source: httpUrl("source.txt"),
         target: targetFile,
       });
-      download.start();
+      download.start().catch(() => {});
     } else {
       download = yield promiseStartLegacyDownload(null,
                                                   { targetFile: targetFile });
@@ -2186,7 +2186,7 @@ add_task(function* test_platform_integration()
         source: httpUrl("source.txt"),
         target: targetFile,
       });
-      download.start();
+      download.start().catch(() => {});
     }
 
     // Wait for the whenSucceeded promise to be resolved first.
