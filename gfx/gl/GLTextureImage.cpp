@@ -173,7 +173,6 @@ BasicTextureImage::EndUpdate()
     RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     bool relative = FinishedSurfaceUpdate();
-    bool needInit = mTextureState == Created;
     size_t uploadSize;
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
@@ -181,7 +180,7 @@ BasicTextureImage::EndUpdate()
                                mUpdateRegion,
                                mTexture,
                                &uploadSize,
-                               needInit,
+                               mTextureState == Created,
                                mUpdateOffset,
                                relative);
     FinishedSurfaceUpload();
@@ -231,14 +230,13 @@ BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
     }
 
     size_t uploadSize;
-    bool needInit = mTextureState == Created;
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
                                aSurf,
                                region,
                                mTexture,
                                &uploadSize,
-                               needInit,
+                               mTextureState == Created,
                                bounds.TopLeft() + IntPoint(aFrom.x, aFrom.y),
                                false);
     if (uploadSize > 0) {
