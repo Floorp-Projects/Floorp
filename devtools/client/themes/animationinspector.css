@@ -42,6 +42,11 @@
   --timeline-background-color: var(--theme-highlight-blue);
 }
 
+.animation.scriptanimation {
+  --timeline-border-color: var(--theme-highlight-green);
+  --timeline-background-color: var(--theme-graphs-green);
+}
+
 html {
   height: 100%;
 }
@@ -527,6 +532,10 @@ body {
 
 .keyframes.csstransition {
   background-color: var(--theme-highlight-blue);
+}
+
+.keyframes.scriptanimation {
+  background-color: var(--theme-graphs-green);
 }
 
 .keyframes .frame {
