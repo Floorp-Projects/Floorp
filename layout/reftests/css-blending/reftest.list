@@ -6,7 +6,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html b
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-color.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) fuzzy-if(d3d11,1,4200) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 fuzzy-if(azureSkiaGL,2,7174) fuzzy-if(azureQuartz,2,7174) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
 fuzzy-if(azureQuartz,2,10000) fuzzy-if(azureSkia||d2d||gtkWidget,1,10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-png.html background-blending-image-color-ref.html
@@ -38,10 +38,10 @@ fuzzy-if(azureQuartz,1,1600) fuzzy-if(d2d||azureSkia||gtkWidget,10,4800) pref(la
 fuzzy-if(azureQuartz,2,40000) fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
-fuzzy(64,37) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
+fuzzy(64,53) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
-pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
 fuzzy(1,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
