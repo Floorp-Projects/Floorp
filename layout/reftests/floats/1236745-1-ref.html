@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<title>Reftest, bug 1236745</title>
+<style>
+
+div.contain {
+  border: medium solid blue;
+  width: 100px;
+  height: 200px;
+}
+
+.float1 {
+  float: left;
+  background: yellow;
+  width: 10px;
+  height: 60px;
+}
+
+.float2 {
+  float: left; clear: left;
+  background: aqua;
+  width: 50px;
+  height: 50px;
+}
+
+.bfc {
+  float: right;
+  background: #00137f;
+  width: 50px;
+  height: 50px;
+}
+
+</style>
+
+
+<div class="contain">
+  <div class="float1"></div>
+  <div class="bfc"></div>
+  <div class="float2"></div>
+</div>
