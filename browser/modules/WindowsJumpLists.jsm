@@ -146,7 +146,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Startup, shutdown, and update
-   */ 
+   */
 
   startup: function WTBJL_startup() {
     // exit if this isn't win7 or higher.
@@ -155,7 +155,7 @@ this.WinTaskbarJumpList =
 
     // Win shell shortcut maintenance. If we've gone through an update,
     // this will update any pinned taskbar shortcuts. Not specific to
-    // jump lists, but this was a convienent place to call it. 
+    // jump lists, but this was a convienent place to call it.
     try {
       // dev builds may not have helper.exe, ignore failures.
       this._shortcutMaintenance();
@@ -253,13 +253,13 @@ this.WinTaskbarJumpList =
 
   /**
    * Taskbar api wrappers
-   */ 
+   */
 
   _startBuild: function WTBJL__startBuild() {
     var removedItems = Cc["@mozilla.org/array;1"].
                        createInstance(Ci.nsIMutableArray);
     this._builder.abortListBuild();
-    if (this._builder.initListBuild(removedItems)) { 
+    if (this._builder.initListBuild(removedItems)) {
       // Prior to building, delete removed items from history.
       this._clearHistory(removedItems);
       return true;
@@ -283,7 +283,7 @@ this.WinTaskbarJumpList =
                                          task.args, task.iconIndex, null);
       items.appendElement(item, false);
     }, this);
-    
+
     if (items.length > 0)
       this._builder.addListToBuild(this._builder.JUMPLIST_CATEGORY_TASKS, items);
   },
@@ -324,7 +324,7 @@ this.WinTaskbarJumpList =
 
         let title = aResult.title || aResult.uri;
         let faviconPageUri = Services.io.newURI(aResult.uri, null, null);
-        let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1, 
+        let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
                                                faviconPageUri);
         items.appendElement(shortcut, false);
         this._frequentHashList.push(aResult.uri);
@@ -386,8 +386,8 @@ this.WinTaskbarJumpList =
    * Jump list item creation helpers
    */
 
-  _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description, 
-                                                        args, iconIndex, 
+  _getHandlerAppItem: function WTBJL__getHandlerAppItem(name, description,
+                                                        args, iconIndex,
                                                         faviconPageUri) {
     var file = Services.dirsvc.get("XREExeF", Ci.nsILocalFile);
 
@@ -469,7 +469,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Prefs utilities
-   */ 
+   */
 
   _refreshPrefs: function WTBJL__refreshPrefs() {
     this._enabled = _prefs.getBoolPref(PREF_TASKBAR_ENABLED);
@@ -481,7 +481,7 @@ this.WinTaskbarJumpList =
 
   /**
    * Init and shutdown utilities
-   */ 
+   */
 
   _initTaskbar: function WTBJL__initTaskbar() {
     this._builder = _taskbarService.createJumpListBuilder();
@@ -499,7 +499,7 @@ this.WinTaskbarJumpList =
     Services.obs.addObserver(this, "browser:purge-session-history", false);
     _prefs.addObserver("", this, false);
   },
- 
+
   _freeObs: function WTBJL__freeObs() {
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");

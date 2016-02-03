@@ -3,7 +3,7 @@
    microformat-shiv - v1.3.3
    Built: 2015-12-31 01:12 - http://microformat-shiv.com
    Copyright (c) 2015 Glenn Jones
-   Licensed MIT 
+   Licensed MIT
 */
 
 
@@ -18,9 +18,9 @@ var Microformats; // jshint ignore:line
         root.Microformats = factory();
   }
 }(this, function () {
-    
+
     var modules = {};
-    
+
 
 	modules.version = '1.3.3';
 	modules.livingStandard = '2015-09-25T12:26:04Z';
@@ -1463,9 +1463,9 @@ var Microformats; // jshint ignore:line
 
 	// check parser module is loaded
 	if(modules.Parser){
-	
+
 		/**
-		 * applies "implied rules" microformat output structure i.e. feed-title, name, photo, url and date 
+		 * applies "implied rules" microformat output structure i.e. feed-title, name, photo, url and date
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf (microformat output structure)
@@ -1475,40 +1475,40 @@ var Microformats; // jshint ignore:line
 		 */
 		 modules.Parser.prototype.impliedRules = function(node, uf, parentClasses) {
 			var typeVersion = (uf.typeVersion)? uf.typeVersion: 'v2';
-			
+
 			// TEMP: override to allow v1 implied properties while spec changes
 			if(this.options.impliedPropertiesByVersion === false){
 				typeVersion = 'v2';
 			}
-			
+
 			if(node && uf && uf.properties) {
-				uf = this.impliedBackwardComp( node, uf, parentClasses );  
+				uf = this.impliedBackwardComp( node, uf, parentClasses );
 				if(typeVersion === 'v2'){
 					uf = this.impliedhFeedTitle( uf );
-					uf = this.impliedName( node, uf ); 
-					uf = this.impliedPhoto( node, uf ); 	
+					uf = this.impliedName( node, uf );
+					uf = this.impliedPhoto( node, uf );
 					uf = this.impliedUrl( node, uf );
 				}
 				uf = this.impliedValue( node, uf, parentClasses );
 				uf = this.impliedDate( uf );
-				
+
 				// TEMP: flagged while spec changes are put forward
 				if(this.options.parseLatLonGeo === true){
 					uf = this.impliedGeo( uf );
-				}  
+				}
 			}
 
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * apply implied name rule
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */		
+		 */
 		modules.Parser.prototype.impliedName = function(node, uf) {
 			// implied name rule
 			/*
@@ -1526,7 +1526,7 @@ var Microformats; // jshint ignore:line
 			*/
 			var name,
 				value;
-					
+
 			if(!uf.properties.name) {
 				value = this.getImpliedProperty(node, ['img', 'area', 'abbr'], this.getNameAttr);
 				var textFormat = this.options.textFormat;
@@ -1540,27 +1540,27 @@ var Microformats; // jshint ignore:line
 					uf.properties.name = name;
 				}
 			}
-			
+
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * apply implied photo rule
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */		
+		 */
 		modules.Parser.prototype.impliedPhoto = function(node, uf) {
 			// implied photo rule
 			/*
 				img.h-x[src] 												<img class="h-card" alt="Jane Doe" src="jane.jpeg"/>
 				object.h-x[data] 											<object class="h-card" data="jane.jpeg"/>Jane Doe</object>
-				.h-x>img[src]:only-of-type:not[.h-*]						<div class="h-card"><img alt="Jane Doe" src="jane.jpeg"/></div> 
-				.h-x>object[data]:only-of-type:not[.h-*] 					<div class="h-card"><object data="jane.jpeg"/>Jane Doe</object></div> 
-				.h-x>:only-child>img[src]:only-of-type:not[.h-*] 			<div class="h-card"><span><img alt="Jane Doe" src="jane.jpeg"/></span></div> 
-				.h-x>:only-child>object[data]:only-of-type:not[.h-*] 		<div class="h-card"><span><object data="jane.jpeg"/>Jane Doe</object></span></div> 
+				.h-x>img[src]:only-of-type:not[.h-*]						<div class="h-card"><img alt="Jane Doe" src="jane.jpeg"/></div>
+				.h-x>object[data]:only-of-type:not[.h-*] 					<div class="h-card"><object data="jane.jpeg"/>Jane Doe</object></div>
+				.h-x>:only-child>img[src]:only-of-type:not[.h-*] 			<div class="h-card"><span><img alt="Jane Doe" src="jane.jpeg"/></span></div>
+				.h-x>:only-child>object[data]:only-of-type:not[.h-*] 		<div class="h-card"><span><object data="jane.jpeg"/>Jane Doe</object></span></div>
 			*/
 			var value;
 			if(!uf.properties.photo) {
@@ -1572,24 +1572,24 @@ var Microformats; // jshint ignore:line
 					}
 					uf.properties.photo = [modules.utils.trim(value)];
 				}
-			}		
+			}
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * apply implied URL rule
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */		
+		 */
 		modules.Parser.prototype.impliedUrl = function(node, uf) {
 			// implied URL rule
 			/*
 				a.h-x[href]  							<a class="h-card" href="glenn.html">Glenn</a>
 				area.h-x[href]  						<area class="h-card" href="glenn.html">Glenn</area>
-				.h-x>a[href]:only-of-type:not[.h-*]  	<div class="h-card" ><a href="glenn.html">Glenn</a><p>...</p></div> 
+				.h-x>a[href]:only-of-type:not[.h-*]  	<div class="h-card" ><a href="glenn.html">Glenn</a><p>...</p></div>
 				.h-x>area[href]:only-of-type:not[.h-*]  <div class="h-card" ><area href="glenn.html">Glenn</area><p>...</p></div>
 			*/
 			var value;
@@ -1602,18 +1602,18 @@ var Microformats; // jshint ignore:line
 					}
 					uf.properties.url = [modules.utils.trim(value)];
 				}
-			}	
+			}
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * apply implied date rule - if there is a time only property try to concat it with any date property
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */		
+		 */
 		modules.Parser.prototype.impliedDate = function(uf) {
 			// implied date rule
 			// http://microformats.org/wiki/value-class-pattern#microformats2_parsers
@@ -1628,8 +1628,8 @@ var Microformats; // jshint ignore:line
 			delete uf.dates;
 			return uf;
 		};
-			
-			
+
+
 		/**
 		 * get an implied property value from pre-defined tag/attriubte combinations
 		 *
@@ -1640,10 +1640,10 @@ var Microformats; // jshint ignore:line
 		 */
 		modules.Parser.prototype.getImpliedProperty = function(node, tagList, getAttrFunction) {
 			// i.e. img.h-card
-			var value = getAttrFunction(node), 
+			var value = getAttrFunction(node),
 				descendant,
 				child;
-					
+
 			if(!value) {
 				// i.e. .h-card>img:only-of-type:not(.h-card)
 				descendant = modules.domUtils.getSingleDescendantOfType( node, tagList);
@@ -1661,17 +1661,17 @@ var Microformats; // jshint ignore:line
 					}
 				}
 			}
-					
+
 			return value;
 		};
-			
-			
+
+
 		/**
 		 * get an implied name value from a node
 		 *
 		 * @param  {DOM Node} node
 		 * @return {String || null}
-		 */		
+		 */
 		modules.Parser.prototype.getNameAttr = function(node) {
 			var value = modules.domUtils.getAttrValFromTagList(node, ['img','area'], 'alt');
 			if(!value) {
@@ -1679,14 +1679,14 @@ var Microformats; // jshint ignore:line
 			}
 			return value;
 		};
-	
-	
+
+
 		/**
 		 * get an implied photo value from a node
 		 *
 		 * @param  {DOM Node} node
 		 * @return {String || null}
-		 */	
+		 */
 		modules.Parser.prototype.getPhotoAttr = function(node) {
 			var value = modules.domUtils.getAttrValFromTagList(node, ['img'], 'src');
 			if(!value && modules.domUtils.hasAttributeValue(node, 'class', 'include') === false) {
@@ -1694,62 +1694,62 @@ var Microformats; // jshint ignore:line
 			}
 			return value;
 		};
-			
-			
+
+
 		/**
 		 * get an implied photo value from a node
 		 *
 		 * @param  {DOM Node} node
 		 * @return {String || null}
-		 */		
+		 */
 		modules.Parser.prototype.getURLAttr = function(node) {
 			var value = null;
 			if(modules.domUtils.hasAttributeValue(node, 'class', 'include') === false){
-				
+
 				value = modules.domUtils.getAttrValFromTagList(node, ['a'], 'href');
 				if(!value) {
 					value = modules.domUtils.getAttrValFromTagList(node, ['area'], 'href');
 				}
-				
+
 			}
 			return value;
 		};
-		
-		
+
+
 		/**
-		 * 
+		 *
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */	
+		 */
 		modules.Parser.prototype.impliedValue = function(node, uf, parentClasses){
-			
+
 			// intersection of implied name and implied value rules
-			if(uf.properties.name) {	
+			if(uf.properties.name) {
 				if(uf.value && parentClasses.root.length > 0 && parentClasses.properties.length === 1){
 					uf = this.getAltValue(uf, parentClasses.properties[0][0], 'p-name', uf.properties.name[0]);
 				}
 			}
-			
+
 			// intersection of implied URL and implied value rules
 			if(uf.properties.url) {
 				if(parentClasses && parentClasses.root.length === 1 && parentClasses.properties.length === 1){
 					uf = this.getAltValue(uf, parentClasses.properties[0][0], 'u-url', uf.properties.url[0]);
 				}
-			}	
-			
+			}
+
 			// apply alt value
 			if(uf.altValue !== null){
 				uf.value = uf.altValue.value;
 			}
 			delete uf.altValue;
-	
-	
+
+
 			return uf;
 		};
-			
-		
+
+
 		/**
 		 * get alt value based on rules about parent property prefix
 		 *
@@ -1758,7 +1758,7 @@ var Microformats; // jshint ignore:line
 		 * @param  {String} propertyName
 		 * @param  {String} value
 		 * @return {Object}
-		 */	
+		 */
 		modules.Parser.prototype.getAltValue = function(uf, parentPropertyName, propertyName, value){
 			if(uf.value && !uf.altValue){
 				// first p-name of the h-* child
@@ -1776,14 +1776,14 @@ var Microformats; // jshint ignore:line
 			}
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * if a h-feed does not have a title use the title tag of a page
 		 *
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */	
+		 */
 		modules.Parser.prototype.impliedhFeedTitle = function( uf ){
 			if(uf.type && uf.type.indexOf('h-feed') > -1){
 				// has no name property
@@ -1797,80 +1797,80 @@ var Microformats; // jshint ignore:line
 			}
 			return uf;
 		};
-		
-		
-		
+
+
+
 	    /**
 		 * implied Geo from pattern <abbr class="p-geo" title="37.386013;-122.082932">
 		 *
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */	
+		 */
 		modules.Parser.prototype.impliedGeo = function( uf ){
 			var geoPair,
 				parts,
 				longitude,
 				latitude,
 				valid = true;
-			
+
 			if(uf.type && uf.type.indexOf('h-geo') > -1){
-				
+
 				// has no latitude or longitude property
 				if(uf.properties.latitude === undefined || uf.properties.longitude === undefined ){
 
 					geoPair = (uf.properties.name)? uf.properties.name[0] : null;
 					geoPair = (!geoPair && uf.properties.value)? uf.properties.value : geoPair;
-					
+
 					if(geoPair){
 						// allow for the use of a ';' as in microformats and also ',' as in Geo URL
 						geoPair = geoPair.replace(';',',');
-						
+
 						// has sep char
 						if(geoPair.indexOf(',') > -1 ){
 							parts = geoPair.split(',');
-							
+
 							// only correct if we have two or more parts
 							if(parts.length > 1){
 
-								// latitude no value outside the range -90 or 90 
+								// latitude no value outside the range -90 or 90
 								latitude = parseFloat( parts[0] );
 								if(modules.utils.isNumber(latitude) && latitude > 90 || latitude < -90){
 									valid = false;
 								}
-								
+
 								// longitude no value outside the range -180 to 180
 								longitude = parseFloat( parts[1] );
 								if(modules.utils.isNumber(longitude) && longitude > 180 || longitude < -180){
 									valid = false;
 								}
-								
+
 								if(valid){
 									uf.properties.latitude = [latitude];
 									uf.properties.longitude  = [longitude];
 								}
 							}
-							
+
 						}
 					}
 				}
 			}
 			return uf;
 		};
-		
-		
+
+
 		/**
 		 * if a backwards compat built structure has no properties add name through this.impliedName
 		 *
 		 * @param  {Object} uf
 		 * @return {Object}
-		 */	
+		 */
 		modules.Parser.prototype.impliedBackwardComp = function(node, uf, parentClasses){
-			
+
 			// look for pattern in parent classes like "p-geo h-geo"
 			// these are structures built from backwards compat parsing of geo
 			if(parentClasses.root.length === 1 && parentClasses.properties.length === 1) {
 				if(parentClasses.root[0].replace('h-','') === this.removePropPrefix(parentClasses.properties[0][0])) {
-					
+
 					// if microformat has no properties apply the impliedName rule to get value from containing node
 					// this will get value from html such as <abbr class="geo" title="30.267991;-97.739568">Brighton</abbr>
 					if( modules.utils.hasProperties(uf.properties) === false ){
@@ -1878,31 +1878,31 @@ var Microformats; // jshint ignore:line
 					}
 				}
 			}
-			
+
 			return uf;
 		};
-		
-		
-	
+
+
+
 	}
 
 
 	// check parser module is loaded
 	if(modules.Parser){
-	
-		
+
+
 		/**
 		 * appends clones of include Nodes into the DOM structure
 		 *
 		 * @param  {DOM node} rootNode
-		 */	
+		 */
 		modules.Parser.prototype.addIncludes = function(rootNode) {
 			this.addAttributeIncludes(rootNode, 'itemref');
 			this.addAttributeIncludes(rootNode, 'headers');
 			this.addClassIncludes(rootNode);
 		};
-	
-		
+
+
 		/**
 		 * appends clones of include Nodes into the DOM structure for attribute based includes
 		 *
@@ -1916,7 +1916,7 @@ var Microformats; // jshint ignore:line
 				x,
 				z,
 				y;
-	
+
 			arr = modules.domUtils.getNodesByAttribute(rootNode, attributeName);
 			x = 0;
 			i = arr.length;
@@ -1933,8 +1933,8 @@ var Microformats; // jshint ignore:line
 				x++;
 			}
 		};
-	
-		
+
+
 		/**
 		 * appends clones of include Nodes into the DOM structure for class based includes
 		 *
@@ -1945,7 +1945,7 @@ var Microformats; // jshint ignore:line
 				arr,
 				x = 0,
 				i;
-	
+
 			arr = modules.domUtils.getNodesByAttributeValue(rootNode, 'class', 'include');
 			i = arr.length;
 			while(x < i) {
@@ -1957,8 +1957,8 @@ var Microformats; // jshint ignore:line
 				x++;
 			}
 		};
-	
-	
+
+
 		/**
 		 * appends a clone of an include into another Node using Id
 		 *
@@ -1968,7 +1968,7 @@ var Microformats; // jshint ignore:line
 		modules.Parser.prototype.apppendInclude = function(node, id){
 			var include,
 				clone;
-	
+
 			id = modules.utils.trim(id.replace('#', ''));
 			include = modules.domUtils.getElementById(this.document, id);
 			if(include) {
@@ -1977,18 +1977,18 @@ var Microformats; // jshint ignore:line
 				modules.domUtils.appendChild(node, clone);
 			}
 		};
-	
-		
+
+
 		/**
-		 * adds an attribute marker to all the child microformat roots 
+		 * adds an attribute marker to all the child microformat roots
 		 *
 		 * @param  {DOM node} rootNode
-		 */ 
+		 */
 		modules.Parser.prototype.markIncludeChildren = function(rootNode) {
 			var arr,
 				x,
 				i;
-	
+
 			// loop the array and add the attribute
 			arr = this.findRootNodes(rootNode);
 			x = 0;
@@ -2000,17 +2000,17 @@ var Microformats; // jshint ignore:line
 				x++;
 			}
 		};
-		
-		
+
+
 		/**
-		 * removes all appended include clones from DOM 
+		 * removes all appended include clones from DOM
 		 *
 		 * @param  {DOM node} rootNode
-		 */ 
+		 */
 		modules.Parser.prototype.removeIncludes = function(rootNode){
 			var arr,
 				i;
-	
+
 			// remove all the items that were added as includes
 			arr = modules.domUtils.getNodesByAttribute(rootNode, 'data-include');
 			i = arr.length;
@@ -2018,14 +2018,14 @@ var Microformats; // jshint ignore:line
 				modules.domUtils.removeChild(rootNode,arr[i]);
 			}
 		};
-	
-		
+
+
 	}
 
 
 	// check parser module is loaded
 	if(modules.Parser){
-	
+
 		/**
 		 * finds rel=* structures
 		 *
@@ -2047,36 +2047,36 @@ var Microformats; // jshint ignore:line
 				item,
 				value,
 				arr;
-	
+
 			arr = modules.domUtils.getNodesByAttribute(rootNode, 'rel');
 			x = 0;
 			i = arr.length;
 			while(x < i) {
 				relList = modules.domUtils.getAttribute(arr[x], 'rel');
-	
+
 				if(relList) {
 					items = relList.split(' ');
-					
-					
+
+
 					// add rels
 					z = 0;
 					y = items.length;
 					while(z < y) {
 						item = modules.utils.trim(items[z]);
-	
+
 						// get rel value
 						value = modules.domUtils.getAttrValFromTagList(arr[x], ['a', 'area'], 'href');
 						if(!value) {
 							value = modules.domUtils.getAttrValFromTagList(arr[x], ['link'], 'href');
 						}
-	
+
 						// create the key
 						if(!out.rels[item]) {
 							out.rels[item] = [];
 						}
-	
+
 						if(typeof this.options.baseUrl === 'string' && typeof value === 'string') {
-					
+
 							var resolved = modules.url.resolve(value, this.options.baseUrl);
 							// do not add duplicate rels - based on resolved URLs
 							if(out.rels[item].indexOf(resolved) === -1){
@@ -2085,8 +2085,8 @@ var Microformats; // jshint ignore:line
 						}
 						z++;
 					}
-					
-					
+
+
 					var url = null;
 					if(modules.domUtils.hasAttribute(arr[x], 'href')){
 						url = modules.domUtils.getAttribute(arr[x], 'href');
@@ -2094,8 +2094,8 @@ var Microformats; // jshint ignore:line
 							url = modules.url.resolve(url, this.options.baseUrl );
 						}
 					}
-	
-					
+
+
 					// add to rel-urls
 					var relUrl = this.getRelProperties(arr[x]);
 					relUrl.rels = items;
@@ -2103,15 +2103,15 @@ var Microformats; // jshint ignore:line
 					if(url && out['rel-urls'][url] === undefined){
 						out['rel-urls'][url] = relUrl;
 					}
-	
-			
+
+
 				}
 				x++;
 			}
 			return out;
 		};
-		
-		
+
+
 		/**
 		 * gets the properties of a rel=*
 		 *
@@ -2120,7 +2120,7 @@ var Microformats; // jshint ignore:line
 		 */
 		modules.Parser.prototype.getRelProperties = function(node){
 			var obj = {};
-			
+
 			if(modules.domUtils.hasAttribute(node, 'media')){
 				obj.media = modules.domUtils.getAttribute(node, 'media');
 			}
@@ -2135,12 +2135,12 @@ var Microformats; // jshint ignore:line
 			}
 			if(modules.utils.trim(this.getPValue(node, false)) !== ''){
 				obj.text = this.getPValue(node, false);
-			}	
-			
+			}
+
 			return obj;
 		};
-		
-		
+
+
 		/**
 		 * finds any alt rel=* mappings for a given node/microformat
 		 *
@@ -2152,7 +2152,7 @@ var Microformats; // jshint ignore:line
 			var out,
 				map,
 				i;
-	
+
 			map = this.getMapping(ufName);
 			if(map) {
 				for(var key in map.properties) {
@@ -2160,8 +2160,8 @@ var Microformats; // jshint ignore:line
 						var prop = map.properties[key],
 							propName = (prop.map) ? prop.map : 'p-' + key,
 							relCount = 0;
-		
-						// is property an alt rel=* mapping 
+
+						// is property an alt rel=* mapping
 						if(prop.relAlt && modules.domUtils.hasAttribute(node, 'rel')) {
 							i = prop.relAlt.length;
 							while(i--) {
@@ -2178,8 +2178,8 @@ var Microformats; // jshint ignore:line
 			}
 			return out;
 		};
-		
-		
+
+
 		/**
 		 * returns whether a node or its children has rel=* microformat
 		 *
@@ -2189,8 +2189,8 @@ var Microformats; // jshint ignore:line
 		modules.Parser.prototype.hasRel = function(node) {
 			return (this.countRels(node) > 0);
 		};
-		
-		
+
+
 		/**
 		 * returns the number of rel=* microformats
 		 *
@@ -2203,14 +2203,14 @@ var Microformats; // jshint ignore:line
 			}
 			return 0;
 		};
-	
-	
-		
+
+
+
 	}
 
 
 	modules.utils = {
-		
+
 		/**
 		 * is the object a string
 		 *
@@ -2220,7 +2220,7 @@ var Microformats; // jshint ignore:line
 		isString: function( obj ) {
 			return typeof( obj ) === 'string';
 		},
-		
+
 		/**
 		 * is the object a number
 		 *
@@ -2230,8 +2230,8 @@ var Microformats; // jshint ignore:line
 		isNumber: function( obj ) {
 			return !isNaN(parseFloat( obj )) && isFinite( obj );
 		},
-		
-		
+
+
 		/**
 		 * is the object an array
 		 *
@@ -2241,8 +2241,8 @@ var Microformats; // jshint ignore:line
 		isArray: function( obj ) {
 			return obj && !( obj.propertyIsEnumerable( 'length' ) ) && typeof obj === 'object' && typeof obj.length === 'number';
 		},
-		
-		
+
+
 		/**
 		 * is the object a function
 		 *
@@ -2252,8 +2252,8 @@ var Microformats; // jshint ignore:line
 		isFunction: function(obj) {
 			return !!(obj && obj.constructor && obj.call && obj.apply);
 		},
-	
-	
+
+
 		/**
 		 * does the text start with a test string
 		 *
@@ -2264,8 +2264,8 @@ var Microformats; // jshint ignore:line
 		startWith: function( text, test ) {
 			return(text.indexOf(test) === 0);
 		},
-	
-		
+
+
 		/**
 		 * removes spaces at front and back of text
 		 *
@@ -2279,8 +2279,8 @@ var Microformats; // jshint ignore:line
 				return '';
 			}
 		},
-		
-		
+
+
 		/**
 		 * replaces a character in text
 		 *
@@ -2291,13 +2291,13 @@ var Microformats; // jshint ignore:line
 		 */
 		replaceCharAt: function( text, index, character ) {
 			if(text && text.length > index){
-			   return text.substr(0, index) + character + text.substr(index+character.length); 
+			   return text.substr(0, index) + character + text.substr(index+character.length);
 			}else{
 				return text;
 			}
 		},
-		
-		
+
+
 		/**
 		 * removes whitespace, tabs and returns from start and end of text
 		 *
@@ -2308,7 +2308,7 @@ var Microformats; // jshint ignore:line
 			if(text && text.length){
 				var i = text.length,
 					x = 0;
-				
+
 				// turn all whitespace chars at end into spaces
 				while (i--) {
 					if(this.isOnlyWhiteSpace(text[i])){
@@ -2317,7 +2317,7 @@ var Microformats; // jshint ignore:line
 						break;
 					}
 				}
-				
+
 				// turn all whitespace chars at start into spaces
 				i = text.length;
 				while (x < i) {
@@ -2331,8 +2331,8 @@ var Microformats; // jshint ignore:line
 			}
 			return this.trim(text);
 		},
-	
-	
+
+
 		/**
 		 * does text only contain whitespace characters
 		 *
@@ -2342,8 +2342,8 @@ var Microformats; // jshint ignore:line
 		isOnlyWhiteSpace: function( text ){
 			return !(/[^\t\n\r ]/.test( text ));
 		},
-		
-		
+
+
 		/**
 		 * removes whitespace from text (leaves a single space)
 		 *
@@ -2353,14 +2353,14 @@ var Microformats; // jshint ignore:line
 		collapseWhiteSpace: function( text ){
 			return text.replace(/[\t\n\r ]+/g, ' ');
 		},
-	
-	
+
+
 		/**
 		 * does an object have any of its own properties
 		 *
 		 * @param  {Object} obj
 		 * @return {Boolean}
-		 */ 
+		 */
 		hasProperties: function( obj ) {
 			var key;
 			for(key in obj) {
@@ -2370,15 +2370,15 @@ var Microformats; // jshint ignore:line
 			}
 			return false;
 		},
-		
-		
+
+
 		/**
 		 * a sort function - to sort objects in an array by a given property
 		 *
 		 * @param  {String} property
 		 * @param  {Boolean} reverse
 		 * @return {Int}
-		 */ 
+		 */
 		sortObjects: function(property, reverse) {
 			reverse = (reverse) ? -1 : 1;
 			return function (a, b) {
@@ -2393,7 +2393,7 @@ var Microformats; // jshint ignore:line
 				return 0;
 			};
 		}
-		
+
 	};
 
 
@@ -3058,75 +3058,75 @@ var Microformats; // jshint ignore:line
 	 * @param  {String} dateString
 	 * @param  {String} format
 	 * @return {String}
-	 */ 
+	 */
 	modules.ISODate = function ( dateString, format ) {
 		this.clear();
-	
+
 		this.format = (format)? format : 'auto'; // auto or W3C or RFC3339 or HTML5
 		this.setFormatSep();
-	
-		// optional should be full iso date/time string 
+
+		// optional should be full iso date/time string
 		if(arguments[0]) {
 			this.parse(dateString, format);
 		}
 	};
-	
+
 
 	modules.ISODate.prototype = {
-		
-		
+
+
 		/**
 		 * clear all states
 		 *
-		 */ 
+		 */
 		clear: function(){
 			this.clearDate();
 			this.clearTime();
 			this.clearTimeZone();
 			this.setAutoProfileState();
 		},
-		
-		
+
+
 		/**
 		 * clear date states
 		 *
-		 */ 
+		 */
 		clearDate: function(){
 			this.dY = -1;
 			this.dM = -1;
 			this.dD = -1;
 			this.dDDD = -1;
 		},
-		
-		
+
+
 		/**
 		 * clear time states
 		 *
-		 */ 
+		 */
 		clearTime: function(){
 			this.tH = -1;
 			this.tM = -1;
 			this.tS = -1;
 			this.tD = -1;
 		},
-		
-		
+
+
 		/**
 		 * clear timezone states
 		 *
-		 */ 
+		 */
 		clearTimeZone: function(){
 			this.tzH = -1;
 			this.tzM = -1;
 			this.tzPN = '+';
 			this.z = false;
 		},
-		
-		
+
+
 		/**
 		 * resets the auto profile state
 		 *
-		 */ 
+		 */
 		setAutoProfileState: function(){
 			this.autoProfile = {
 			   sep: 'T',
@@ -3136,31 +3136,31 @@ var Microformats; // jshint ignore:line
 			   tzZulu: 'Z'
 			};
 		},
-		
-	  
+
+
 		/**
 		 * parses text to find ISO date/time string i.e. 2008-05-01T15:45:19Z
 		 *
 		 * @param  {String} dateString
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		parse: function( dateString, format ) {
 			this.clear();
-			
+
 			var parts = [],
 				tzArray = [],
 				position = 0,
 				datePart = '',
 				timePart = '',
 				timeZonePart = '';
-				
+
 			if(format){
 				this.format = format;
 			}
-			
-	
-			
+
+
+
 			// discover date time separtor for auto profile
 			// Set to 'T' by default
 			if(dateString.indexOf('t') > -1) {
@@ -3174,47 +3174,47 @@ var Microformats; // jshint ignore:line
 			}
 			if(dateString.toUpperCase().indexOf('T') === -1) {
 				this.autoProfile.sep = ' ';
-			}     
-	
-	
+			}
+
+
 			dateString = dateString.toUpperCase().replace(' ','T');
-	
+
 			// break on 'T' divider or space
 			if(dateString.indexOf('T') > -1) {
 				parts = dateString.split('T');
 				datePart = parts[0];
 				timePart = parts[1];
-	
-				// zulu UTC                 
+
+				// zulu UTC
 				if(timePart.indexOf( 'Z' ) > -1) {
 					this.z = true;
 				}
-	
+
 				// timezone
 				if(timePart.indexOf( '+' ) > -1 || timePart.indexOf( '-' ) > -1) {
 					tzArray = timePart.split( 'Z' ); // incase of incorrect use of Z
 					timePart = tzArray[0];
 					timeZonePart = tzArray[1];
-	
+
 					// timezone
 					if(timePart.indexOf( '+' ) > -1 || timePart.indexOf( '-' ) > -1) {
 						position = 0;
-	
+
 						if(timePart.indexOf( '+' ) > -1) {
 							position = timePart.indexOf( '+' );
 						} else {
 							position = timePart.indexOf( '-' );
 						}
-	
+
 						timeZonePart = timePart.substring( position, timePart.length );
 						timePart = timePart.substring( 0, position );
 					}
 				}
-	
+
 			} else {
 				datePart = dateString;
 			}
-	
+
 			if(datePart !== '') {
 				this.parseDate( datePart );
 				if(timePart !== '') {
@@ -3226,25 +3226,25 @@ var Microformats; // jshint ignore:line
 			}
 			return this.toString( format );
 		},
-	
-		
+
+
 		/**
 		 * parses text to find just the date element of an ISO date/time string i.e. 2008-05-01
 		 *
 		 * @param  {String} dateString
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		parseDate: function( dateString, format ) {
 			this.clearDate();
-			
+
 			var parts = [];
-				
+
 			// discover timezone separtor for auto profile // default is ':'
 			if(dateString.indexOf('-') === -1) {
 				this.autoProfile.tsep = '';
-			}  
-	
+			}
+
 			// YYYY-DDD
 			parts = dateString.match( /(\d\d\d\d)-(\d\d\d)/ );
 			if(parts) {
@@ -3255,7 +3255,7 @@ var Microformats; // jshint ignore:line
 					this.dDDD = parts[2];
 				}
 			}
-	
+
 			if(this.dDDD === -1) {
 				// YYYY-MM-DD ie 2008-05-01 and YYYYMMDD ie 20080501
 				parts = dateString.match( /(\d\d\d\d)?-?(\d\d)?-?(\d\d)?/ );
@@ -3271,24 +3271,24 @@ var Microformats; // jshint ignore:line
 			}
 			return this.toString(format);
 		},
-	
-	
+
+
 		/**
 		 * parses text to find just the time element of an ISO date/time string i.e. 13:30:45
 		 *
 		 * @param  {String} timeString
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		parseTime: function( timeString, format ) {
 			this.clearTime();
 			var parts = [];
-				
+
 			// discover date separtor for auto profile // default is ':'
 			if(timeString.indexOf(':') === -1) {
 				this.autoProfile.tsep = '';
-			}      
-	
+			}
+
 			// finds timezone HH:MM:SS and HHMMSS  ie 13:30:45, 133045 and 13:30:45.0135
 			parts = timeString.match( /(\d\d)?:?(\d\d)?:?(\d\d)?.?([0-9]+)?/ );
 			if(parts[1]) {
@@ -3305,30 +3305,30 @@ var Microformats; // jshint ignore:line
 			}
 			return this.toTimeString(format);
 		},
-	
-		
+
+
 		/**
 		 * parses text to find just the time element of an ISO date/time string i.e. +08:00
 		 *
 		 * @param  {String} timeString
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		parseTimeZone: function( timeString, format ) {
 			this.clearTimeZone();
 			var parts = [];
-			
+
 			if(timeString.toLowerCase() === 'z'){
 				this.z = true;
 				// set case for z
 				this.autoProfile.tzZulu = (timeString === 'z')? 'z' : 'Z';
 			}else{
-				
+
 				// discover timezone separtor for auto profile // default is ':'
 				if(timeString.indexOf(':') === -1) {
 					this.autoProfile.tzsep = '';
-				}   
-			   
+				}
+
 				// finds timezone +HH:MM and +HHMM  ie +13:30 and +1330
 				parts = timeString.match( /([\-\+]{1})?(\d\d)?:?(\d\d)?/ );
 				if(parts[1]) {
@@ -3339,29 +3339,29 @@ var Microformats; // jshint ignore:line
 				}
 				if(parts[3]) {
 					this.tzM = parts[3];
-				} 
-				
-	  
+				}
+
+
 			}
-			this.tzZulu = 'z';    
+			this.tzZulu = 'z';
 			return this.toTimeString( format );
 		},
-		
-		
+
+
 		/**
 		 * returns ISO date/time string in W3C Note, RFC 3339, HTML5, or auto profile
 		 *
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		toString: function( format ) {
 			var output = '';
-	
+
 			if(format){
 				this.format = format;
 			}
 			this.setFormatSep();
-	
+
 			if(this.dY  > -1) {
 				output = this.dY;
 				if(this.dM > 0 && this.dM < 13) {
@@ -3379,26 +3379,26 @@ var Microformats; // jshint ignore:line
 			} else if(this.tH > -1) {
 				output += this.toTimeString( format );
 			}
-	
+
 			return output;
 		},
-	
-	
+
+
 		/**
 		 * returns just the time string element of an ISO date/time
 		 * in W3C Note, RFC 3339, HTML5, or auto profile
 		 *
 		 * @param  {String} format
 		 * @return {String}
-		 */ 
+		 */
 		toTimeString: function( format ) {
 			var out = '';
-	
+
 			if(format){
 				this.format = format;
 			}
 			this.setFormatSep();
-			
+
 			// time can only be created with a full date
 			if(this.tH) {
 				if(this.tH > -1 && this.tH < 25) {
@@ -3412,10 +3412,10 @@ var Microformats; // jshint ignore:line
 							}
 						}
 					}
-					
-					
-			  
-					// time zone offset 
+
+
+
+					// time zone offset
 					if(this.z) {
 						out += this.tzZulu;
 					} else {
@@ -3430,12 +3430,12 @@ var Microformats; // jshint ignore:line
 			}
 			return out;
 		},
-	
-	
+
+
 		/**
 		 * set the current profile to W3C Note, RFC 3339, HTML5, or auto profile
 		 *
-		 */ 
+		 */
 		setFormatSep: function() {
 			switch( this.format.toLowerCase() ) {
 				case 'rfc3339':
@@ -3468,54 +3468,54 @@ var Microformats; // jshint ignore:line
 					this.tzZulu = this.autoProfile.tzZulu;
 			}
 		},
-	
-	
+
+
 		/**
 		 * does current data contain a full date i.e. 2015-03-23
 		 *
 		 * @return {Boolean}
-		 */ 
+		 */
 		hasFullDate: function() {
 			return(this.dY !== -1 && this.dM !== -1 && this.dD !== -1);
 		},
-	
-	
+
+
 		/**
 		 * does current data contain a minimum date which is just a year number i.e. 2015
 		 *
 		 * @return {Boolean}
-		 */ 
+		 */
 		hasDate: function() {
 			return(this.dY !== -1);
 		},
-	
-	
+
+
 		/**
 		 * does current data contain a minimum time which is just a hour number i.e. 13
 		 *
 		 * @return {Boolean}
-		 */     
+		 */
 		hasTime: function() {
 			return(this.tH !== -1);
 		},
-	
+
 		/**
 		 * does current data contain a minimum timezone i.e. -1 || +1 || z
 		 *
 		 * @return {Boolean}
-		 */    
+		 */
 		hasTimeZone: function() {
 			return(this.tzH !== -1);
 		}
-	
+
 	};
-	
+
 	modules.ISODate.prototype.constructor = modules.ISODate;
 
 
 	modules.dates = {
 
-		
+
 		/**
 		 * does text contain am
 		 *
@@ -3526,8 +3526,8 @@ var Microformats; // jshint ignore:line
 			text = text.toLowerCase();
 			return(text.indexOf('am') > -1 || text.indexOf('a.m.') > -1);
 		},
-	
-	
+
+
 		/**
 		 * does text contain pm
 		 *
@@ -3538,8 +3538,8 @@ var Microformats; // jshint ignore:line
 			text = text.toLowerCase();
 			return(text.indexOf('pm') > -1 || text.indexOf('p.m.') > -1);
 		},
-	
-	
+
+
 		/**
 		 * remove am and pm from text and return it
 		 *
@@ -3549,8 +3549,8 @@ var Microformats; // jshint ignore:line
 		removeAMPM: function( text ) {
 			return text.replace('pm', '').replace('p.m.', '').replace('am', '').replace('a.m.', '');
 		},
-	
-	   
+
+
 	   /**
 		 * simple test of whether ISO date string is a duration  i.e.  PY17M or PW12
 		 *
@@ -3566,15 +3566,15 @@ var Microformats; // jshint ignore:line
 			}
 			return false;
 		},
-	
-	
+
+
 	   /**
 		 * is text a time or timezone
 		 * i.e. HH-MM-SS or z+-HH-MM-SS 08:43 | 15:23:00:0567 | 10:34pm | 10:34 p.m. | +01:00:00 | -02:00 | z15:00 | 0843
 		 *
 		 * @param  {String} text
 		 * @return {Boolean}
-		 */ 
+		 */
 		isTime: function( text ) {
 			if(modules.utils.isString(text)){
 				text = text.toLowerCase();
@@ -3584,7 +3584,7 @@ var Microformats; // jshint ignore:line
 					return true;
 				}
 				// has ante meridiem or post meridiem
-				if( text.match(/^[0-9]/) && 
+				if( text.match(/^[0-9]/) &&
 					( this.hasAM(text) || this.hasPM(text) )) {
 					return true;
 				}
@@ -3592,7 +3592,7 @@ var Microformats; // jshint ignore:line
 				if( text.match(':') && !text.match(/t|\s/) ) {
 					return true;
 				}
-				
+
 				// if it's a number of 2, 4 or 6 chars
 				if(modules.utils.isNumber(text)){
 					if(text.length === 2 || text.length === 4 || text.length === 6){
@@ -3602,7 +3602,7 @@ var Microformats; // jshint ignore:line
 			}
 			return false;
 		},
-	
+
 
 		/**
 		 * parses a time from text and returns 24hr time string
@@ -3610,18 +3610,18 @@ var Microformats; // jshint ignore:line
 		 *
 		 * @param  {String} text
 		 * @return {String}
-		 */ 
+		 */
 		parseAmPmTime: function( text ) {
 			var out = text,
 				times = [];
-	
+
 			// if the string has a text : or am or pm
 			if(modules.utils.isString(out)) {
 				//text = text.toLowerCase();
 				text = text.replace(/[ ]+/g, '');
-	
+
 				if(text.match(':') || this.hasAM(text) || this.hasPM(text)) {
-	
+
 					if(text.match(':')) {
 						times = text.split(':');
 					} else {
@@ -3629,31 +3629,31 @@ var Microformats; // jshint ignore:line
 						times[0] = text;
 						times[0] = this.removeAMPM(times[0]);
 					}
-					
+
 					// change pm hours to 24hr number
 					if(this.hasPM(text)) {
 						if(times[0] < 12) {
 							times[0] = parseInt(times[0], 10) + 12;
 						}
 					}
-	
+
 					// add leading zero's where needed
 					if(times[0] && times[0].length === 1) {
 						times[0] = '0' + times[0];
 					}
-					
+
 					// rejoin text elements together
 					if(times[0]) {
 						text = times.join(':');
 					}
 				}
 			}
-			
+
 			// remove am/pm strings
 			return this.removeAMPM(text);
 		},
-	
-	
+
+
 	   /**
 		 * overlays a time on a date to return the union of the two
 		 *
@@ -3661,11 +3661,11 @@ var Microformats; // jshint ignore:line
 		 * @param  {String} time
 		 * @param  {String} format ( Modules.ISODate profile format )
 		 * @return {Object} Modules.ISODate
-		 */ 
+		 */
 		dateTimeUnion: function(date, time, format) {
 			var isodate = new modules.ISODate(date, format),
 				isotime = new modules.ISODate();
-	
+
 			isotime.parseTime(this.parseAmPmTime(time), format);
 			if(isodate.hasFullDate() && isotime.hasTime()) {
 				isodate.tH = isotime.tH;
@@ -3680,8 +3680,8 @@ var Microformats; // jshint ignore:line
 				return new modules.ISODate();
 			}
 		},
-	
-	
+
+
 	   /**
 		 * concatenate an array of date and time text fragments to create an ISODate object
 		 * used for microformat value and value-title rules
@@ -3689,65 +3689,65 @@ var Microformats; // jshint ignore:line
 		 * @param  {Array} arr ( Array of Strings )
 		 * @param  {String} format ( Modules.ISODate profile format )
 		 * @return {Object} Modules.ISODate
-		 */ 
+		 */
 		concatFragments: function (arr, format) {
 			var out = new modules.ISODate(),
 				i = 0,
 				value = '';
-			
-			// if the fragment already contains a full date just return it once 
+
+			// if the fragment already contains a full date just return it once
 			if(arr[0].toUpperCase().match('T')) {
 				return new modules.ISODate(arr[0], format);
 			}else{
 				for(i = 0; i < arr.length; i++) {
 				value = arr[i];
-	  
+
 				// date pattern
 				if( value.charAt(4) === '-' && out.hasFullDate() === false ){
 					out.parseDate(value);
 				}
-				
+
 				// time pattern
 				if( (value.indexOf(':') > -1 || modules.utils.isNumber( this.parseAmPmTime(value) )) && out.hasTime() === false ) {
 					// split time and timezone
 					var items = this.splitTimeAndZone(value);
 					value = items[0];
-					
+
 					// parse any use of am/pm
 					value = this.parseAmPmTime(value);
 					out.parseTime(value);
-					
-					// parse any timezone 
+
+					// parse any timezone
 					if(items.length > 1){
 						 out.parseTimeZone(items[1], format);
 					}
 				}
-				
+
 				// timezone pattern
 				if(value.charAt(0) === '-' || value.charAt(0) === '+' || value.toUpperCase() === 'Z') {
 					if( out.hasTimeZone() === false ){
 						out.parseTimeZone(value);
 					}
 				}
-	
+
 			}
 			return out;
-				
+
 			}
 		},
-		
-		
+
+
 	   /**
 		 * parses text by splitting it into an array of time and timezone strings
 		 *
 		 * @param  {String} text
 		 * @return {Array} Modules.ISODate
-		 */ 
+		 */
 		splitTimeAndZone: function ( text ){
 		   var out = [text],
 			   chars = ['-','+','z','Z'],
 			   i = chars.length;
-			   
+
 			while (i--) {
 			  if(text.indexOf(chars[i]) > -1){
 				  out[0] = text.slice( 0, text.indexOf(chars[i]) );
@@ -3757,28 +3757,28 @@ var Microformats; // jshint ignore:line
 			}
 		   return out;
 		}
-		
+
 	};
 
 
 	modules.text = {
-		
+
 		// normalised or whitespace or whitespacetrimmed
-		textFormat: 'whitespacetrimmed', 
-		
+		textFormat: 'whitespacetrimmed',
+
 		// block level tags, used to add line returns
 		blockLevelTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'hr', 'pre', 'table',
-			'address', 'article', 'aside', 'blockquote', 'caption', 'col', 'colgroup', 'dd', 'div', 
-			'dt', 'dir', 'fieldset', 'figcaption', 'figure', 'footer', 'form',  'header', 'hgroup', 'hr', 
-			'li', 'map', 'menu', 'nav', 'optgroup', 'option', 'section', 'tbody', 'testarea', 
+			'address', 'article', 'aside', 'blockquote', 'caption', 'col', 'colgroup', 'dd', 'div',
+			'dt', 'dir', 'fieldset', 'figcaption', 'figure', 'footer', 'form',  'header', 'hgroup', 'hr',
+			'li', 'map', 'menu', 'nav', 'optgroup', 'option', 'section', 'tbody', 'testarea',
 			'tfoot', 'th', 'thead', 'tr', 'td', 'ul', 'ol', 'dl', 'details'],
 
-		// tags to exclude 
+		// tags to exclude
 		excludeTags: ['noframe', 'noscript', 'template', 'script', 'style', 'frames', 'frameset'],
- 
-	
+
+
 		/**
-		 * parses the text from the DOM Node 
+		 * parses the text from the DOM Node
 		 *
 		 * @param  {DOM Node} node
 		 * @param  {String} textFormat
@@ -3798,54 +3798,54 @@ var Microformats; // jshint ignore:line
 			   return this.formatText( doc, modules.domUtils.textContent(node), this.textFormat );
 			}
 		},
-		
-		
+
+
 		/**
-		 * parses the text from a html string 
+		 * parses the text from a html string
 		 *
 		 * @param  {DOM Document} doc
 		 * @param  {String} text
 		 * @param  {String} textFormat
 		 * @return {String}
-		 */  
+		 */
 		parseText: function( doc, text, textFormat ){
 		   var node = modules.domUtils.createNodeWithText( 'div', text );
 		   return this.parse( doc, node, textFormat );
 		},
-		
-		
+
+
 		/**
 		 * parses the text from a html string - only for whitespace or whitespacetrimmed formats
 		 *
 		 * @param  {String} text
 		 * @param  {String} textFormat
 		 * @return {String}
-		 */  
+		 */
 		formatText: function( doc, text, textFormat ){
 		   this.textFormat = (textFormat)? textFormat : this.textFormat;
 		   if(text){
 			  var out = '',
 				  regex = /(<([^>]+)>)/ig;
-				
-			  out = text.replace(regex, '');   
-			  if(this.textFormat === 'whitespacetrimmed') {    
+
+			  out = text.replace(regex, '');
+			  if(this.textFormat === 'whitespacetrimmed') {
 				 out = modules.utils.trimWhitespace( out );
 			  }
-			  
+
 			  //return entities.decode( out, 2 );
 			  return modules.domUtils.decodeEntities( doc, out );
 		   }else{
-			  return ''; 
+			  return '';
 		   }
 		},
-		
-		
+
+
 		/**
-		 * normalises whitespace in given text 
+		 * normalises whitespace in given text
 		 *
 		 * @param  {String} text
 		 * @return {String}
-		 */ 
+		 */
 		normalise: function( doc, text ){
 			text = text.replace( /&nbsp;/g, ' ') ;    // exchanges html entity for space into space char
 			text = modules.utils.collapseWhiteSpace( text );     // removes linefeeds, tabs and addtional spaces
@@ -3853,27 +3853,27 @@ var Microformats; // jshint ignore:line
 			text = text.replace( '–', '-' );          // correct dash decoding
 			return modules.utils.trim( text );
 		},
-		
-	 
+
+
 		/**
 		 * walks DOM tree parsing the text from DOM Nodes
 		 *
 		 * @param  {DOM Node} node
 		 * @return {String}
-		 */ 
+		 */
 		walkTreeForText: function( node ) {
 			var out = '',
 				j = 0;
-	
+
 			if(node.tagName && this.excludeTags.indexOf( node.tagName.toLowerCase() ) > -1){
 				return out;
 			}
-	
+
 			// if node is a text node get its text
 			if(node.nodeType && node.nodeType === 3){
-				out += modules.domUtils.getElementText( node ); 
+				out += modules.domUtils.getElementText( node );
 			}
-	
+
 			// get the text of the child nodes
 			if(node.childNodes && node.childNodes.length > 0){
 				for (j = 0; j < node.childNodes.length; j++) {
@@ -3883,34 +3883,34 @@ var Microformats; // jshint ignore:line
 					}
 				}
 			}
-	
+
 			// if it's a block level tag add an additional space at the end
 			if(node.tagName && this.blockLevelTags.indexOf( node.tagName.toLowerCase() ) !== -1){
 				out += ' ';
-			} 
-			
+			}
+
 			return (out === '')? undefined : out ;
 		}
-		
+
 	};
 
 
 	modules.html = {
-		
+
 		// elements which are self-closing
 		selfClosingElt: ['area', 'base', 'br', 'col', 'hr', 'img', 'input', 'link', 'meta', 'param', 'command', 'keygen', 'source'],
-	
+
 
 		/**
 		 * parse the html string from DOM Node
 		 *
 		 * @param  {DOM Node} node
 		 * @return {String}
-		 */ 
+		 */
 		parse: function( node ){
 			var out = '',
 				j = 0;
-	
+
 			// we do not want the outer container
 			if(node.childNodes && node.childNodes.length > 0){
 				for (j = 0; j < node.childNodes.length; j++) {
@@ -3920,47 +3920,47 @@ var Microformats; // jshint ignore:line
 					}
 				}
 			}
-	
+
 			return out;
 		},
-	
-  
+
+
 		/**
 		 * walks the DOM tree parsing the html string from the nodes
 		 *
 		 * @param  {DOM Document} doc
 		 * @param  {DOM Node} node
 		 * @return {String}
-		 */ 
+		 */
 		walkTreeForHtml: function( node ) {
 			var out = '',
 				j = 0;
-	
+
 			// if node is a text node get its text
 			if(node.nodeType && node.nodeType === 3){
-				out += modules.domUtils.getElementText( node ); 
+				out += modules.domUtils.getElementText( node );
 			}
-	
-		
-			// exclude text which has been added with include pattern  - 
+
+
+			// exclude text which has been added with include pattern  -
 			if(node.nodeType && node.nodeType === 1 && modules.domUtils.hasAttribute(node, 'data-include') === false){
-	
+
 				// begin tag
-				out += '<' + node.tagName.toLowerCase();  
-	
+				out += '<' + node.tagName.toLowerCase();
+
 				// add attributes
 				var attrs = modules.domUtils.getOrderedAttributes(node);
 				for (j = 0; j < attrs.length; j++) {
 					out += ' ' + attrs[j].name +  '=' + '"' + attrs[j].value + '"';
 				}
-	
+
 				if(this.selfClosingElt.indexOf(node.tagName.toLowerCase()) === -1){
 					out += '>';
 				}
-	
+
 				// get the text of the child nodes
 				if(node.childNodes && node.childNodes.length > 0){
-					
+
 					for (j = 0; j < node.childNodes.length; j++) {
 						var text = this.walkTreeForHtml( node.childNodes[j] );
 						if(text !== undefined){
@@ -3968,19 +3968,19 @@ var Microformats; // jshint ignore:line
 						}
 					}
 				}
-	
+
 				// end tag
 				if(this.selfClosingElt.indexOf(node.tagName.toLowerCase()) > -1){
-					out += ' />'; 
+					out += ' />';
 				}else{
-					out += '</' + node.tagName.toLowerCase() + '>'; 
+					out += '</' + node.tagName.toLowerCase() + '>';
 				}
-			} 
-			
+			}
+
 			return (out === '')? undefined : out;
-		}    
-	
-	
+		}
+
+
 	};
 
 
@@ -4025,7 +4025,7 @@ var Microformats; // jshint ignore:line
 				'map': 'u-email'
 			},
 			'geo': {
-				'map': 'p-geo', 
+				'map': 'p-geo',
 				'uf': ['h-geo']
 			},
 			'key': {
@@ -4092,7 +4092,7 @@ var Microformats; // jshint ignore:line
 			'updated': {
 				'map': 'dt-updated'
 			},
-			'author': { 
+			'author': {
 				'uf': ['h-card']
 			},
 			'category': {
@@ -4100,7 +4100,7 @@ var Microformats; // jshint ignore:line
 				'relAlt': ['tag']
 			},
 			'geo': {
-				'map': 'p-geo', 
+				'map': 'p-geo',
 				'uf': ['h-geo']
 			},
 			'latitude': {},
@@ -4113,7 +4113,7 @@ var Microformats; // jshint ignore:line
 	};
 
 
-	modules.maps['h-event'] = {  
+	modules.maps['h-event'] = {
 		root: 'vevent',
 		name: 'h-event',
 		properties: {
@@ -4159,7 +4159,7 @@ var Microformats; // jshint ignore:line
 				'map': 'u-attach'
 			},
 			'status': {},
-			'rdate': {}, 
+			'rdate': {},
 			'rrule': {}
 		}
 	};
@@ -4176,7 +4176,7 @@ var Microformats; // jshint ignore:line
 			'summary': {
 				'map': 'p-summary'
 			},
-			'author': { 
+			'author': {
 				'uf': ['h-card']
 			},
 			'url': {
@@ -4269,7 +4269,7 @@ var Microformats; // jshint ignore:line
 					'map': 'u-item-license'
 				},
 				'principles': {
-					'map': 'u-principles', 
+					'map': 'u-principles',
 					'relAlt': ['principles']
 				}
 			}
@@ -4396,7 +4396,7 @@ var Microformats; // jshint ignore:line
 			'rating': {},
 			'average': {},
 			'best': {},
-			'worst': {},       
+			'worst': {},
 			'count': {},
 			'votes': {},
 			'category': {
@@ -4448,26 +4448,26 @@ var Microformats; // jshint ignore:line
 
 	modules.rels = {
 		// xfn
-		'friend': [ 'yes','external'], 
-		'acquaintance': [ 'yes','external'],  
-		'contact': [ 'yes','external'], 
-		'met': [ 'yes','external'], 
-		'co-worker': [ 'yes','external'],  
-		'colleague': [ 'yes','external'], 
-		'co-resident': [ 'yes','external'],  
-		'neighbor': [ 'yes','external'], 
-		'child': [ 'yes','external'],  
-		'parent': [ 'yes','external'],  
-		'sibling': [ 'yes','external'],  
-		'spouse': [ 'yes','external'],  
-		'kin': [ 'yes','external'], 
-		'muse': [ 'yes','external'],  
-		'crush': [ 'yes','external'],  
-		'date': [ 'yes','external'],  
-		'sweetheart': [ 'yes','external'], 
-		'me': [ 'yes','external'], 
-	
-		// other rel=* 
+		'friend': [ 'yes','external'],
+		'acquaintance': [ 'yes','external'],
+		'contact': [ 'yes','external'],
+		'met': [ 'yes','external'],
+		'co-worker': [ 'yes','external'],
+		'colleague': [ 'yes','external'],
+		'co-resident': [ 'yes','external'],
+		'neighbor': [ 'yes','external'],
+		'child': [ 'yes','external'],
+		'parent': [ 'yes','external'],
+		'sibling': [ 'yes','external'],
+		'spouse': [ 'yes','external'],
+		'kin': [ 'yes','external'],
+		'muse': [ 'yes','external'],
+		'crush': [ 'yes','external'],
+		'date': [ 'yes','external'],
+		'sweetheart': [ 'yes','external'],
+		'me': [ 'yes','external'],
+
+		// other rel=*
 		'license': [ 'yes','yes'],
 		'nofollow': [ 'no','external'],
 		'tag': [ 'no','yes'],
@@ -4480,7 +4480,7 @@ var Microformats; // jshint ignore:line
 		'pronunciation': [ 'no','external'],
 		'payment': [ 'no','external'],
 		'principles': [ 'no','external']
-	
+
 	};
 
 
@@ -4489,43 +4489,43 @@ var Microformats; // jshint ignore:line
         version: modules.version,
         livingStandard: modules.livingStandard
     };
-    
-    
+
+
     External.get = function(options){
     	var parser = new modules.Parser();
         addV1(parser, options);
     	return parser.get( options );
     };
-    
-    
+
+
     External.getParent = function(node, options){
     	var parser = new modules.Parser();
         addV1(parser, options);
     	return parser.getParent( node, options );
     };
-    
-    
+
+
     External.count = function(options){
     	var parser = new modules.Parser();
         addV1(parser, options);
     	return parser.count( options );
     };
-    
-    
+
+
     External.isMicroformat = function( node, options ){
     	var parser = new modules.Parser();
         addV1(parser, options);
     	return parser.isMicroformat( node, options );
     };
-    
-    
+
+
     External.hasMicroformats = function( node, options ){
     	var parser = new modules.Parser();
         addV1(parser, options);
     	return parser.hasMicroformats( node, options );
     };
-    
-    
+
+
     function addV1(parser, options){
 		if(options && options.maps){
 			if(Array.isArray(options.maps)){
@@ -4535,11 +4535,11 @@ var Microformats; // jshint ignore:line
 			}
 		}
     }
-    
-    
+
+
     return External;
-    
-    
+
+
 }));
 try {
     // mozilla jsm support

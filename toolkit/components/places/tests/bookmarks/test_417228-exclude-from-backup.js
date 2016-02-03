@@ -52,7 +52,7 @@ var test = {
                                               EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
 
-    // create a root to be exclude 
+    // create a root to be exclude
     this._excludeRootTitle = "exclude root";
     this._excludeRootId = PlacesUtils.bookmarks
                                      .createFolder(PlacesUtils.placesRootId,

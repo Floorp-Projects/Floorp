@@ -46,7 +46,7 @@ var ContentPrefTest = {
 
   //**************************************************************************//
   // nsISupports
-  
+
   interfaces: [Ci.nsIDirectoryServiceProvider, Ci.nsISupports],
 
   QueryInterface: function ContentPrefTest_QueryInterface(iid) {

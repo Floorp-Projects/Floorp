@@ -123,7 +123,7 @@ function run_test_1() {
     do_check_eq(uri.spec, rootUri);
     uri = a1.getResourceURI("install.rdf");
     do_check_eq(uri.spec, rootUri + "install.rdf");
-    
+
     // Check that upgrade is disabled for addons installed by file-pointers.
     do_check_eq(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
     run_test_2();
@@ -395,7 +395,7 @@ function run_test_10() {
     do_check_eq(uri.spec, rootUri);
     uri = a1.getResourceURI("install.rdf");
     do_check_eq(uri.spec, rootUri + "install.rdf");
-    
+
     // Check that upgrade is disabled for addons installed by file-pointers.
     do_check_eq(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
     end_test();

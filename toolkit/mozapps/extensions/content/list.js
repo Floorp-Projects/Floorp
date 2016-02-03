@@ -16,11 +16,11 @@ const kDialog = "dialog";
  * caller can inspect the user action after the dialog closes by inspecting the
  * value of the |result| parameter on this object which is set to the dlgtype
  * of the button used to close the dialog.
- * 
+ *
  * window.arguments[0] is an array of strings to display in the tree. If the
  * array is empty the tree will not be displayed.
  * window.arguments[1] a JS Object with the following properties:
- * 
+ *
  * title:    A title string, to be displayed in the title bar of the dialog.
  * message1: A message string, displayed above the addon list
  * message2: A message string, displayed below the addon list
@@ -39,7 +39,7 @@ const kDialog = "dialog";
  *  ...
  * },
  *
- * result:  The dlgtype of button that was used to dismiss the dialog. 
+ * result:  The dlgtype of button that was used to dismiss the dialog.
  */
 
 "use strict";
@@ -113,7 +113,7 @@ function init() {
       message.appendChild(document.createTextNode(params[messageEntry]));
     }
   }
-  
+
   document.getElementById("infoIcon").className =
     params["iconClass"] ? "spaced " + params["iconClass"] : "spaced alert-icon";
 

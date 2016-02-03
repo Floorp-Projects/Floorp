@@ -8,7 +8,7 @@
 var dialog;
 
 // the printProgress is a nsIPrintProgress object
-var printProgress = null; 
+var printProgress = null;
 
 // random global variables...
 var targetFile;
@@ -47,10 +47,10 @@ var progressListener = {
         // dialog.progress.setAttribute( "value", 0 );
         dialog.progress.setAttribute( "mode", "undetermined" );
       }
-      
+
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        // we are done printing 
+        // we are done printing
         // Indicate completion in title area.
         var msg = getString( "printComplete" );
         dialog.title.setAttribute("value", msg);
@@ -84,10 +84,10 @@ var progressListener = {
         window.close();
       }
     },
-    
+
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
-      if (switchUI) 
+      if (switchUI)
       {
         dialog.tempLabel.setAttribute("hidden", "true");
         dialog.progress.setAttribute("hidden", "false");
@@ -118,14 +118,14 @@ var progressListener = {
 
       // Calculate percentage.
       var percent;
-      if ( aMaxTotalProgress > 0 ) 
+      if ( aMaxTotalProgress > 0 )
       {
         percent = Math.round( (aCurTotalProgress*100)/aMaxTotalProgress );
         if ( percent > 100 )
           percent = 100;
-        
+
         dialog.progress.removeAttribute( "mode");
-        
+
         // Advance progress meter.
         dialog.progress.setAttribute( "value", percent );
 
@@ -133,8 +133,8 @@ var progressListener = {
         var percentPrint = getString( "progressText" );
         percentPrint = replaceInsert( percentPrint, 1, percent );
         dialog.progressText.setAttribute("value", percentPrint);
-      } 
-      else 
+      }
+      else
       {
         // Progress meter should be barber-pole in this case.
         dialog.progress.setAttribute( "mode", "undetermined" );
@@ -163,7 +163,7 @@ var progressListener = {
     {
      if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
       return this;
-     
+
      throw Components.results.NS_NOINTERFACE;
     }
 };
@@ -191,7 +191,7 @@ function getString( stringId ) {
    return dialog.strings[ stringId ];
 }
 
-function loadDialog() 
+function loadDialog()
 {
 }
 
@@ -257,35 +257,35 @@ function onLoad() {
     window.setTimeout(doneIniting, 500);
 }
 
-function onUnload() 
+function onUnload()
 {
   if (printProgress)
   {
-   try 
+   try
    {
      printProgress.unregisterListener(progressListener);
      printProgress = null;
    }
-    
+
    catch( exception ) {}
   }
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...
-function onCancel () 
+function onCancel ()
 {
   // Cancel app launcher.
-   try 
+   try
    {
      printProgress.processCanceledByUser = true;
    }
    catch( exception ) {return true;}
-    
+
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;
 }
 
-function doneIniting() 
+function doneIniting()
 {
   printProgress.doneIniting();
 }

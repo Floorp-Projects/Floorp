@@ -58,7 +58,7 @@ function copyDirToTempProfile(path, subdirname) {
   if (subdirname === undefined) {
     subdirname = "mochikit-tmp";
   }
-  
+
   let tmpdir = gDirSvc.get("ProfD", Ci.nsIFile);
   tmpdir.append(subdirname);
   tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
@@ -98,7 +98,7 @@ function chromeURIToFile(chromeURI)
 
   return convertChromeURI(chromeURI).
     QueryInterface(Ci.nsIFileURL).file;
-}  
+}
 
 // Register a chrome manifest temporarily and return a function which un-does
 // the registrarion when no longer needed.
@@ -154,7 +154,7 @@ function registerManifestTemporarily(manifestURI)
 function registerManifestPermanently(manifestURI)
 {
   var chromepath = chromeURIToFile(manifestURI);
-  
+
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
     autoRegister(chromepath);
   return chromepath;

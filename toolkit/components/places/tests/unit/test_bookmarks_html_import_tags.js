@@ -28,7 +28,7 @@ add_task(function* test_import_tags() {
   // Adds bookmarks and tags to the database.
   let bookmarkList = new Set();
   for (let { uri, title, tags } of bookmarkData) {
-    bookmarkList.add(yield PlacesUtils.bookmarks.insert({ 
+    bookmarkList.add(yield PlacesUtils.bookmarks.insert({
                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                 url: uri,
                                 title }));

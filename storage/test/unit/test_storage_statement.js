@@ -168,7 +168,7 @@ function test_failed_execute()
 function test_bind_undefined()
 {
   var stmt = createStatement("INSERT INTO test (name) VALUES ('foo')");
-  
+
   expectError(Cr.NS_ERROR_ILLEGAL_VALUE,
               () => stmt.bindParameters(undefined));
 

@@ -2,7 +2,7 @@
 PKT_SAVED_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
-var PKT_SAVED_OVERLAY = function (options) 
+var PKT_SAVED_OVERLAY = function (options)
 {
     var myself = this;
     this.inited = false;
@@ -49,7 +49,7 @@ var PKT_SAVED_OVERLAY = function (options)
     };
     this.fillSuggestedTags = function()
     {
-        if (!$('.pkt_ext_suggestedtag_detail').length) 
+        if (!$('.pkt_ext_suggestedtag_detail').length)
         {
             myself.suggestedTagsLoaded = true;
             myself.startCloseTimer();
@@ -59,16 +59,16 @@ var PKT_SAVED_OVERLAY = function (options)
         thePKT_SAVED.sendMessage("getSuggestedTags",
         {
             url: myself.savedUrl
-        }, function(resp) 
+        }, function(resp)
         {
             $('.pkt_ext_suggestedtag_detail').removeClass('pkt_ext_suggestedtag_detail_loading');
-            if (resp.status == 'success') 
+            if (resp.status == 'success')
             {
                 var newtags = [];
                 for (var i = 0; i < resp.value.suggestedTags.length; i++)
                 {
                     newtags.push(resp.value.suggestedTags[i].tag);
-                }                        
+                }
                 myself.suggestedTagsLoaded = true;
                 if (!myself.mouseInside) {
                     myself.startCloseTimer();
@@ -99,25 +99,25 @@ var PKT_SAVED_OVERLAY = function (options)
             myself.closeValid = false;
         });
     };
-    this.startCloseTimer = function(manualtime) 
+    this.startCloseTimer = function(manualtime)
     {
         var settime = manualtime ? manualtime : myself.autocloseTiming;
-        if (typeof myself.autocloseTimer == 'number') 
+        if (typeof myself.autocloseTimer == 'number')
         {
             clearTimeout(myself.autocloseTimer);
         }
-        myself.autocloseTimer = setTimeout(function() 
+        myself.autocloseTimer = setTimeout(function()
         {
-            if (myself.closeValid || myself.preventCloseTimerCancel) 
+            if (myself.closeValid || myself.preventCloseTimerCancel)
             {
                 myself.preventCloseTimerCancel = false;
                 myself.closePopup();
             }
         }, settime);
     };
-    this.stopCloseTimer = function() 
+    this.stopCloseTimer = function()
     {
-        if (myself.preventCloseTimerCancel) 
+        if (myself.preventCloseTimerCancel)
         {
             return;
         }
@@ -183,7 +183,7 @@ var PKT_SAVED_OVERLAY = function (options)
                         if (r.test(myself.userTags[i]) && limit > 0) {
                             returnlist.push({name:myself.userTags[i]});
                             limit--;
-                        }   
+                        }
                     }
                 }
                 if (!$('.token-input-dropdown-tag').data('init')) {
@@ -206,7 +206,7 @@ var PKT_SAVED_OVERLAY = function (options)
                 else {
                     myself.hideTagsError();
                     return {name:myself.sanitizeText(text.toLowerCase())};
-                }                       
+                }
             },
             onReady: function() {
                 $('.token-input-dropdown').addClass('token-input-dropdown-tag');
@@ -317,11 +317,11 @@ var PKT_SAVED_OVERLAY = function (options)
                 tags: originaltags
             }, function(resp)
             {
-                if (resp.status == 'success') 
+                if (resp.status == 'success')
                 {
                     myself.showStateFinalMsg(myself.dictJSON.tagssaved);
                 }
-                else if (resp.status == 'error') 
+                else if (resp.status == 'error')
                 {
                     $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error.message);
                 }
@@ -381,7 +381,7 @@ var PKT_SAVED_OVERLAY = function (options)
         $('.token-input-token').each(function(index, element) {
             activetokenstext += $(element).find('p').text() + '|';
         });
-        
+
         var inactivetags = $('.pkt_ext_suggestedtag_detail').find('.token_tag_inactive');
         inactivetags.each(function(index,element) {
             if (activetokenstext.indexOf('|' + $(element).text() + '|') == -1) {
@@ -465,7 +465,7 @@ var PKT_SAVED_OVERLAY = function (options)
 };
 
 PKT_SAVED_OVERLAY.prototype = {
-    create : function() 
+    create : function()
     {
         if (this.active)
         {
@@ -580,11 +580,11 @@ PKT_SAVED.prototype = {
                     {
                         myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,resp.error.message);
                     }
-                }       
+                }
                 else
                 {
                     myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,myself.overlay.dictJSON.errorgeneric);
-                }         
+                }
                 return;
             }
 

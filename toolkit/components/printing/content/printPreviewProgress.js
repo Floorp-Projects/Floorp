@@ -8,7 +8,7 @@
 var dialog;
 
 // the printProgress is a nsIPrintProgress object
-var printProgress = null; 
+var printProgress = null;
 
 // random global variables...
 var targetFile;
@@ -28,7 +28,7 @@ function ellipseString(aStr, doFront)
 
   if (doFront)
     return "..." + aStr.substr(aStr.length-fixedLen, fixedLen);
-  
+
   return aStr.substr(0, fixedLen) + "...";
 }
 
@@ -40,7 +40,7 @@ var progressListener = {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       window.close();
   },
-  
+
   onProgressChange: function (aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
     if (!progressParams)
@@ -70,7 +70,7 @@ var progressListener = {
   QueryInterface: function (iid)
   {
     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
-      return this;   
+      return this;
     throw Components.results.NS_NOINTERFACE;
   }
 }
@@ -107,7 +107,7 @@ function onLoad() {
   window.setTimeout(doneIniting, 100);
 }
 
-function onUnload() 
+function onUnload()
 {
   if (!printProgress)
     return;
@@ -136,19 +136,19 @@ function getString (stringId) {
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...
-function onCancel () 
+function onCancel ()
 {
   // Cancel app launcher.
   try {
     printProgress.processCanceledByUser = true;
   }
   catch(e) {return true;}
-    
+
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;
 }
 
-function doneIniting() 
+function doneIniting()
 {
   // called by function timeout in onLoad
   printProgress.doneIniting();

@@ -274,7 +274,7 @@ add_task(function* test_remove_many() {
 
 add_task(function* cleanup() {
   yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();  
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 // Test the various error cases

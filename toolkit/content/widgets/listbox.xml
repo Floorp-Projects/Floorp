@@ -663,7 +663,7 @@
         <children includes="listhead"/>
         <xul:listboxbody xbl:inherits="rows,size,minheight">
           <children includes="listitem"/>
-        </xul:listboxbody> 
+        </xul:listboxbody>
       </xul:listrows>
     </content>
 
@@ -789,7 +789,7 @@
 
       <method name="scrollOnePage">
         <parameter name="direction"/>  <!-- Must be -1 or 1 -->
-        <body>      
+        <body>
           <![CDATA[
             var pageOffset = this.getNumberOfVisibleRows() * direction;
             // skip over invisible elements - the user won't care about them
@@ -812,12 +812,12 @@
             if (newTop < 0)
               newTop = 0;
             this.scrollToIndex(newTop);
-            return pageOffset;          
+            return pageOffset;
           ]]>
         </body>
       </method>
     </implementation>
-    
+
     <handlers>
       <handler event="keypress" key=" " phase="target">
         <![CDATA[
@@ -848,7 +848,7 @@
           }
         ]]>
       </handler>
-    </handlers>    
+    </handlers>
   </binding>
 
   <binding id="listrows">
@@ -887,7 +887,7 @@
       </handler>
     </handlers>
   </binding>
-  
+
   <binding id="listitem" role="xul:listitem"
            extends="chrome://global/content/bindings/general.xml#basetext">
     <resources>
@@ -918,12 +918,12 @@
       </property>
 
       <!-- ///////////////// nsIDOMXULSelectControlItemElement ///////////////// -->
-                
+
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
       <property name="label" onget="return this.getAttribute('label');"
                              onset="this.setAttribute('label', val); return val;"/>
-      
+
       <property name="selected" onget="return this.getAttribute('selected') == 'true';">
         <setter><![CDATA[
           if (val)
@@ -1021,7 +1021,7 @@
       </children>
     </content>
   </binding>
-  
+
   <binding id="listitem-checkbox"
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
@@ -1046,7 +1046,7 @@
       </property>
     </implementation>
 
-    <handlers> 
+    <handlers>
       <handler event="mousedown" button="0">
       <![CDATA[
         if (!this.disabled && !this.control.disabled) {
@@ -1057,7 +1057,7 @@
       </handler>
     </handlers>
   </binding>
-  
+
   <binding id="listitem-checkbox-iconic"
            extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
     <content>
@@ -1066,7 +1066,7 @@
       </children>
     </content>
   </binding>
-  
+
   <binding id="listcell" role="xul:listcell"
            extends="chrome://global/content/bindings/general.xml#basecontrol">
 

@@ -127,7 +127,7 @@ var security = {
     // No mapping required
     return name;
   },
-  
+
   /**
    * Open the cookie manager window
    */
@@ -183,7 +183,7 @@ function securityOnLoad(uri, windowInfo) {
 
   /* Set Identity section text */
   setText("security-identity-domain-value", info.hostName);
-  
+
   var owner, verifier;
   if (info.cert && !info.isBroken) {
     // Try to pull out meaningful values.  Technically these fields are optional
@@ -231,7 +231,7 @@ function securityOnLoad(uri, windowInfo) {
           hostHasCookies(uri) ? yesStr : noStr);
   setText("security-privacy-passwords-value",
           realmHasPasswords(uri) ? yesStr : noStr);
-  
+
   var visitCount = previousVisitCount(info.hostName);
   if(visitCount > 1) {
     setText("security-privacy-history-value",
@@ -242,7 +242,7 @@ function securityOnLoad(uri, windowInfo) {
             pageInfoBundle.getString("securityOneVisit"));
   }
   else {
-    setText("security-privacy-history-value", noStr);        
+    setText("security-privacy-history-value", noStr);
   }
 
   /* Set the Technical Detail section messages */
@@ -283,7 +283,7 @@ function securityOnLoad(uri, windowInfo) {
   }
   setText("security-technical-shortform", hdr);
   setText("security-technical-longform1", msg1);
-  setText("security-technical-longform2", msg2); 
+  setText("security-technical-longform2", msg2);
 }
 
 function setText(id, value)
@@ -338,13 +338,13 @@ function realmHasPasswords(uri) {
 function previousVisitCount(host, endTimeReference) {
   if (!host)
     return false;
-  
+
   var historyService = Components.classes["@mozilla.org/browser/nav-history-service;1"]
                                  .getService(Components.interfaces.nsINavHistoryService);
-    
+
   var options = historyService.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_VISIT;
-  
+
   // Search for visits to this host before today
   var query = historyService.getNewQuery();
   query.endTimeReference = query.TIME_RELATIVE_TODAY;

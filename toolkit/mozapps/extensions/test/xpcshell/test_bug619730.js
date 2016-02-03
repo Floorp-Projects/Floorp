@@ -20,7 +20,7 @@ function load_blocklist(file, aCallback) {
 
     do_execute_soon(aCallback);
   }, "blocklist-updated", false);
-  
+
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + file);
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].

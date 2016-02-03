@@ -16,7 +16,7 @@ this.Microformats = {
   },
   /**
    * Retrieves microformats objects of the given type from a document
-   * 
+   *
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
    * @param  options       Literal object with the following options:
@@ -28,7 +28,7 @@ this.Microformats = {
    *                       debug - Whether or not we are in debug mode (optional
    *                       - defaults to false)
    * @param  targetArray  An array of microformat objects to which is added the results (optional)
-   * @return A new array of microformat objects or the passed in microformat 
+   * @return A new array of microformat objects or the passed in microformat
    *         object array with the new objects added
    */
   get: function(name, rootElement, options, targetArray) {
@@ -74,7 +74,7 @@ this.Microformats = {
       if ((microformatNodes.length == 0) && Microformats[name].alternateClassName) {
         var altClass = Microformats.getElementsByClassName(rootElement, Microformats[name].alternateClassName);
         if (altClass.length > 0) {
-          microformatNodes.push(rootElement); 
+          microformatNodes.push(rootElement);
         }
       }
     } else if (Microformats[name].attributeValues) {
@@ -82,9 +82,9 @@ this.Microformats = {
         Microformats.getElementsByAttribute(rootElement,
                                             Microformats[name].attributeName,
                                             Microformats[name].attributeValues);
-      
+
     }
-    
+
 
     function isVisible(node, checkChildren) {
       if (node.getBoundingClientRect) {
@@ -109,7 +109,7 @@ this.Microformats = {
       }
       return true;
     }
-    
+
     /* Create objects for the microformat nodes and put them into the microformats */
     /* array */
     for (let i = 0; i < microformatNodes.length; i++) {
@@ -138,7 +138,7 @@ this.Microformats = {
   },
   /**
    * Counts microformats objects of the given type from a document
-   * 
+   *
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
    * @param  options       Literal object with the following options:
@@ -226,7 +226,7 @@ this.Microformats = {
     return null;
   },
   /**
-   * If the passed in node is a microformat, this function returns a space 
+   * If the passed in node is a microformat, this function returns a space
    * separated list of the microformat names that correspond to this node
    *
    * @param  node          DOM node to check
@@ -276,7 +276,7 @@ this.Microformats = {
       }
       var toreturn = "";
       var testArray = [];
-      
+
       for (let i in item)
       {
         if (testArray[i]) {
@@ -354,9 +354,9 @@ this.Microformats = {
         outstring = outstring.replace(/\s+$/, '');
         return outstring;
       }
-      
-      
-      if (((((propnode.localName.toLowerCase() == "abbr") || (propnode.localName.toLowerCase() == "html:abbr")) && !propnode.namespaceURI) || 
+
+
+      if (((((propnode.localName.toLowerCase() == "abbr") || (propnode.localName.toLowerCase() == "html:abbr")) && !propnode.namespaceURI) ||
          ((propnode.localName.toLowerCase() == "abbr") && (propnode.namespaceURI == "http://www.w3.org/1999/xhtml"))) && (propnode.hasAttribute("title"))) {
         return propnode.getAttribute("title");
       } else if ((propnode.nodeName.toLowerCase() == "img") && (propnode.hasAttribute("alt"))) {
@@ -441,7 +441,7 @@ this.Microformats = {
      * Basically this is to handle the face that telephone numbers use value
      * as the name as one of their subproperties, but value is also used for
      * value excerpting (http://microformats.org/wiki/hcard#Value_excerpting)
-     
+
      * @param  propnode   The DOMNode to check
      * @param  parentnode The parent node of the property. If it is a subproperty,
      *                    this is the parent property node. If it is not, this is the
@@ -668,11 +668,11 @@ this.Microformats = {
       for (let i in Microformats[microformat].properties) {
         object.__defineGetter__(i, Microformats.parser.getMicroformatPropertyGenerator(node, microformat, i, object));
       }
-      
+
       /* The node in the object should be the original node */
       object.node = in_node;
       /* we also store the node that has been "resolved" */
-      object.resolvedNode = node; 
+      object.resolvedNode = node;
       object.semanticType = microformat;
       if (validate) {
         Microformats.parser.validate(node, microformat);
@@ -683,7 +683,7 @@ this.Microformats = {
       return function() {
         var result = Microformats.parser.getMicroformatProperty(node, name, property);
 //        delete microformat[property];
-//        microformat[property] = result; 
+//        microformat[property] = result;
         return result;
       };
     },
@@ -915,7 +915,7 @@ this.Microformats = {
     normalizeISO8601: function normalizeISO8601(string)
     {
       var dateArray = string.match(/(\d\d\d\d)(?:-?(\d\d)(?:-?(\d\d)(?:[T ](\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(?:([-+Z])(?:(\d\d)(?::?(\d\d))?)?)?)?)?)?/);
-  
+
       var dateString;
       var tzOffset = 0;
       if (!dateArray) {
@@ -965,13 +965,13 @@ this.Microformats = {
    * offset and Z if present to convert the date to local time
    * NOTE: I'm using an extra parameter on the date object for this function.
    * I set date.time to true if there is a date, otherwise date.time is false.
-   * 
+   *
    * @param  string ISO8601 formatted date
-   * @return JavaScript date object that represents the ISO date. 
+   * @return JavaScript date object that represents the ISO date.
    */
   dateFromISO8601: function dateFromISO8601(string) {
     var dateArray = string.match(/(\d\d\d\d)(?:-?(\d\d)(?:-?(\d\d)(?:[T ](\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(?:([-+Z])(?:(\d\d)(?::?(\d\d))?)?)?)?)?)?/);
-  
+
     var date = new Date(dateArray[1], 0, 1);
     date.time = false;
 
@@ -1011,9 +1011,9 @@ this.Microformats = {
       if (dateArray[8]) {
         var tzOffset = date.getTimezoneOffset();
         if (tzOffset < 0) {
-          date.setMinutes(date.getMinutes() + tzOffset); 
+          date.setMinutes(date.getMinutes() + tzOffset);
         } else if (tzOffset > 0) {
-          date.setMinutes(date.getMinutes() - tzOffset); 
+          date.setMinutes(date.getMinutes() - tzOffset);
         }
       }
     }
@@ -1023,10 +1023,10 @@ this.Microformats = {
    * Converts a Javascript date object into an ISO 8601 formatted date
    * NOTE: I'm using an extra parameter on the date object for this function.
    * If date.time is NOT true, this function only outputs the date.
-   * 
+   *
    * @param  date        Javascript Date object
    * @param  punctuation true if the date should have -/:
-   * @return string with the ISO date. 
+   * @return string with the ISO date.
    */
   iso8601FromDate: function iso8601FromDate(date, punctuation) {
     var string = date.getFullYear().toString();
@@ -1077,7 +1077,7 @@ this.Microformats = {
    *
    * Retrieve elements matching all classes listed in a space-separated string.
    * I had to implement my own because I need an Array, not an nsIDomNodeList
-   * 
+   *
    * @param  rootElement      The DOM element at which to start searching (optional)
    * @param  className        A space separated list of classenames
    * @return microformatNodes An array of DOM Nodes, each representing a
@@ -1119,7 +1119,7 @@ this.Microformats = {
    * Not intended for external consumption. Microformat implementations might use it.
    *
    * Retrieve elements matching an attribute and an attribute list in a space-separated string.
-   * 
+   *
    * @param  rootElement      The DOM element at which to start searching (optional)
    * @param  atributeName     The attribute name to match against
    * @param  attributeValues  A space separated list of attribute values
@@ -1142,7 +1142,7 @@ this.Microformats = {
         }
         xpathExpression += "contains(concat(' ', @" + attributeName + ", ' '), ' " + attributeList[i] + " ')";
       }
-      xpathExpression += "]"; 
+      xpathExpression += "]";
 
       var xpathResult = (rootNode.ownerDocument || rootNode).evaluate(xpathExpression, rootNode, null, 0, null);
 
@@ -1314,7 +1314,7 @@ var hCard_definition = {
           virtual: true
         }
       },
-      plural: true   
+      plural: true
     },
     "fn" : {
       required: true

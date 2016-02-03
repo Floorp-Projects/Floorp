@@ -53,10 +53,10 @@ var test = {
 
     // create test folders each with a bookmark
     for (var i = 0; i < this._count; i++) {
-      var folderId = 
+      var folderId =
         PlacesUtils.bookmarks.createFolder(this._testRootId, "folder" + i, DEFAULT_INDEX);
       this._folderIds.push(folderId)
-      
+
       var bookmarkURI = uri("http://" + i);
       PlacesUtils.bookmarks.insertBookmark(folderId, bookmarkURI,
                                            DEFAULT_INDEX, "bookmark" + i);

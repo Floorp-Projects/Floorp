@@ -8,7 +8,7 @@ assert = chai.assert;
 describe('experimental', function() {
 
    it('h-geo - geo data writen as lat;lon', function(){
-       
+
         var expected = {
 				'items': [{
 					'type': ['h-geo'],
@@ -20,7 +20,7 @@ describe('experimental', function() {
 				}],
 				'rels': {},
 				'rel-urls': {}
-			},   
+			},
 			options = {
 				'html': '<div class="h-geo">30.267991;-97.739568</div>',
 				'baseUrl': 'http://example.com',
@@ -30,8 +30,8 @@ describe('experimental', function() {
 
         var result = Microformats.get(options);
         assert.deepEqual( result, expected );
-        
+
    });
-   
-  
+
+
 });

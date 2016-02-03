@@ -64,7 +64,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="fireChangedEvent">
         <parameter name="aPreference"/>
         <body>
@@ -81,7 +81,7 @@
         ]]>
         </body>
       </method>
-      
+
       <field name="service">
         Components.classes["@mozilla.org/preferences-service;1"]
                   .getService(Components.interfaces.nsIPrefService);
@@ -131,11 +131,11 @@
             .addObserver(this.name, this.preferences, false);
         // In non-instant apply mode, we must try and use the last saved state
         // from any previous opens of a child dialog instead of the value from
-        // preferences, to pick up any edits a user may have made. 
+        // preferences, to pick up any edits a user may have made.
 
         var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                     .getService(Components.interfaces.nsIScriptSecurityManager);
-        if (this.preferences.type == "child" && 
+        if (this.preferences.type == "child" &&
             !this.instantApply && window.opener &&
             secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
           var pdoc = window.opener.document;
@@ -176,13 +176,13 @@
         <setter>
           if (val == this.name)
             return val;
-            
+
           this.preferences.rootBranchInternal
               .removeObserver(this.name, this.preferences);
           this.setAttribute('name', val);
           this.preferences.rootBranchInternal
               .addObserver(val, this.preferences, false);
-              
+
           return val;
         </setter>
       </property>
@@ -209,20 +209,20 @@
         </body>
       </method>
       <property name="value" onget="return this._value" onset="return this._setValue(val);"/>
-      
+
       <property name="locked">
         <getter>
           return this.preferences.rootBranch.prefIsLocked(this.name);
         </getter>
       </property>
-      
+
       <property name="disabled">
         <getter>
           return this.getAttribute("disabled") == "true";
         </getter>
         <setter>
         <![CDATA[
-          if (val) 
+          if (val)
             this.setAttribute("disabled", "true");
           else
             this.removeAttribute("disabled");
@@ -233,24 +233,24 @@
           var elements = document.getElementsByAttribute("preference", this.id);
           for (var i = 0; i < elements.length; ++i) {
             elements[i].disabled = val;
-            
+
             var labels = document.getElementsByAttribute("control", elements[i].id);
             for (var j = 0; j < labels.length; ++j)
               labels[j].disabled = val;
           }
-            
+
           return val;
         ]]>
         </setter>
       </property>
-      
+
       <property name="tabIndex">
         <getter>
           return parseInt(this.getAttribute("tabindex"));
         </getter>
         <setter>
         <![CDATA[
-          if (val) 
+          if (val)
             this.setAttribute("tabindex", val);
           else
             this.removeAttribute("tabindex");
@@ -261,12 +261,12 @@
           var elements = document.getElementsByAttribute("preference", this.id);
           for (var i = 0; i < elements.length; ++i) {
             elements[i].tabIndex = val;
-            
+
             var labels = document.getElementsByAttribute("control", elements[i].id);
             for (var j = 0; j < labels.length; ++j)
               labels[j].tabIndex = val;
           }
-            
+
           return val;
         ]]>
         </setter>
@@ -280,7 +280,7 @@
         ]]>
         </getter>
       </property>
-      
+
       <method name="reset">
         <body>
           // defer reset until preference update
@@ -288,7 +288,7 @@
         </body>
       </method>
 
-      <field name="_useDefault">false</field>      
+      <field name="_useDefault">false</field>
       <property name="defaultValue">
         <getter>
         <![CDATA[
@@ -299,27 +299,27 @@
         ]]>
         </getter>
       </property>
-      
+
       <property name="_branch">
         <getter>
           return this._useDefault ? this.preferences.defaultBranch : this.preferences.rootBranch;
         </getter>
       </property>
-      
+
       <field name="batching">false</field>
-      
+
       <method name="_reportUnknownType">
         <body>
         <![CDATA[
           var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
                                          .getService(Components.interfaces.nsIConsoleService);
-          var msg = "<preference> with id='" + this.id + "' and name='" + 
+          var msg = "<preference> with id='" + this.id + "' and name='" +
                     this.name + "' has unknown type '" + this.type + "'.";
           consoleService.logStringMessage(msg);
         ]]>
         </body>
       </method>
-      
+
       <property name="valueFromPreferences">
         <getter>
         <![CDATA[
@@ -404,7 +404,7 @@
               if (!lf.exists())
                 lf.initWithPath(val);
             }
-            else 
+            else
               lf = val.QueryInterface(Components.interfaces.nsILocalFile);
             this.preferences.rootBranch
                 .setComplexValue(this.name, Components.interfaces.nsILocalFile, lf);
@@ -418,7 +418,7 @@
         ]]>
         </setter>
       </property>
-      
+
       <method name="setElementValue">
         <parameter name="aElement"/>
         <body>
@@ -435,7 +435,7 @@
             try {
               var event = document.createEvent("Events");
               event.initEvent("syncfrompreference", true, true);
-              var f = new Function ("event", 
+              var f = new Function ("event",
                                     aElement.getAttribute("onsyncfrompreference"));
               rv = f.call(aElement, event);
             }
@@ -449,14 +449,14 @@
             val = this.defaultValue;
 
           /**
-           * Initialize a UI element property with a value. Handles the case 
+           * Initialize a UI element property with a value. Handles the case
            * where an element has not yet had a XBL binding attached for it and
            * the property setter does not yet exist by setting the same attribute
-           * on the XUL element using DOM apis and assuming the element's 
-           * constructor or property getters appropriately handle this state. 
+           * on the XUL element using DOM apis and assuming the element's
+           * constructor or property getters appropriately handle this state.
            */
           function setValue(element, attribute, value) {
-            if (attribute in element) 
+            if (attribute in element)
               element[attribute] = value;
             else
               element.setAttribute(attribute, value);
@@ -488,19 +488,19 @@
             try {
               var event = document.createEvent("Events");
               event.initEvent("synctopreference", true, true);
-              var f = new Function ("event", 
+              var f = new Function ("event",
                                     aElement.getAttribute("onsynctopreference"));
               var rv = f.call(aElement, event);
-              if (rv !== undefined) 
+              if (rv !== undefined)
                 return rv;
             }
             catch (e) {
               Components.utils.reportError(e);
             }
           }
-          
+
           /**
-           * Read the value of an attribute from an element, assuming the 
+           * Read the value of an attribute from an element, assuming the
            * attribute is a property on the element's node API. If the property
            * is not present in the API, then assume its value is contained in
            * an attribute, as is the case before a binding has been attached.
@@ -528,7 +528,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="isElementEditable">
         <parameter name="aElement"/>
         <body>
@@ -544,26 +544,26 @@
             return true;
           }
           return aElement.getAttribute("preference-editable") == "true";
-        ]]> 
+        ]]>
         </body>
       </method>
-      
+
       <method name="updateElements">
         <body>
         <![CDATA[
           if (!this.id)
             return;
 
-          // This "change" event handler tracks changes made to preferences by 
-          // sources other than the user in this window. 
+          // This "change" event handler tracks changes made to preferences by
+          // sources other than the user in this window.
           var elements = document.getElementsByAttribute("preference", this.id);
-          for (var i = 0; i < elements.length; ++i) 
+          for (var i = 0; i < elements.length; ++i)
             this.setElementValue(elements[i]);
         ]]>
         </body>
       </method>
     </implementation>
-    
+
     <handlers>
       <handler event="change">
         this.updateElements();
@@ -638,7 +638,7 @@
               // no buttons on Mac except Help
               cancelButton.hidden = true;
               // Move Help button to the end
-              document.getAnonymousElementByAttribute(this, "anonid", "spacer").hidden = true;         
+              document.getAnonymousElementByAttribute(this, "anonid", "spacer").hidden = true;
               // Also, don't fire onDialogAccept on enter
               acceptButton.disabled = true;
             } else {
@@ -715,26 +715,26 @@
                 onget="return document.getAnonymousElementByAttribute(this, 'class', 'paneDeckContainer');"/>
       <property name="_selector"
                 onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'selector');"/>
-      <property name="lastSelected" 
+      <property name="lastSelected"
                 onget="return this.getAttribute('lastSelected');">
         <setter>
-          this.setAttribute("lastSelected", val); 
+          this.setAttribute("lastSelected", val);
           document.persist(this.id, "lastSelected");
           return val;
-        </setter>          
+        </setter>
       </property>
       <property name="currentPane"
                 onset="return this._currentPane = val;">
         <getter>
           if (!this._currentPane)
             this._currentPane = this.preferencePanes[0];
-          
+
           return this._currentPane;
-        </getter> 
+        </getter>
       </property>
       <field name="_currentPane">null</field>
-      
-      
+
+
       <method name="_makePaneButton">
         <parameter name="aPaneElement"/>
         <body>
@@ -766,16 +766,16 @@
             {
               this._pane = aPane;
             }
-            OverlayLoadObserver.prototype = { 
+            OverlayLoadObserver.prototype = {
               _outer: this,
-              observe: function (aSubject, aTopic, aData) 
+              observe: function (aSubject, aTopic, aData)
               {
                 this._pane.loaded = true;
                 this._outer._fireEvent("paneload", this._pane);
                 this._outer._selectPane(this._pane);
               }
             };
-            
+
             var obs = new OverlayLoadObserver(aPaneElement);
             document.loadOverlay(aPaneElement.src, obs);
           }
@@ -784,13 +784,13 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="_fireEvent">
         <parameter name="aEventName"/>
         <parameter name="aTarget"/>
         <body>
         <![CDATA[
-          // Panel loaded, synthesize a load event. 
+          // Panel loaded, synthesize a load event.
           try {
             var event = document.createEvent("Events");
             event.initEvent(aEventName, true, true);
@@ -801,16 +801,16 @@
               if (rv == false)
                 cancel = true;
             }
-            return !cancel;  
+            return !cancel;
           }
-          catch (e) { 
+          catch (e) {
             Components.utils.reportError(e);
           }
           return false;
         ]]>
         </body>
       </method>
-      
+
       <field name="_initialized">false</field>
       <method name="_selectPane">
         <parameter name="aPaneElement"/>
@@ -829,13 +829,13 @@
           else
             helpButton.hidden = true;
 
-          // Find this pane's index in the deck and set the deck's 
+          // Find this pane's index in the deck and set the deck's
           // selectedIndex to that value to switch to it.
           var prefpanes = this.preferencePanes;
           for (var i = 0; i < prefpanes.length; ++i) {
             if (prefpanes[i] == aPaneElement) {
               this._paneDeck.selectedIndex = i;
-              
+
               if (this.type != "child") {
                 if (aPaneElement.hasAttribute("flex") && this._shouldAnimate &&
                     prefpanes.length > 1)
@@ -888,7 +888,7 @@
         ]]>
         </body>
       </method>
-      
+
       <property name="_shouldAnimate">
         <getter>
         <![CDATA[
@@ -905,7 +905,7 @@
         ]]>
         </getter>
       </property>
-      
+
       <method name="animate">
         <parameter name="aOldPane"/>
         <parameter name="aNewPane"/>
@@ -913,7 +913,7 @@
         <![CDATA[
           // if we are already resizing, use currentHeight
           var oldHeight = this._currentHeight ? this._currentHeight : aOldPane.contentHeight;
-          
+
           this._multiplier = aNewPane.contentHeight > oldHeight ? 1 : -1;
           var sizeDelta = Math.abs(oldHeight - aNewPane.contentHeight);
           this._animateRemainder = sizeDelta % this._animateIncrement;
@@ -922,7 +922,7 @@
         ]]>
         </body>
       </method>
-      
+
       <property name="_sizeIncrement">
         <getter>
         <![CDATA[
@@ -932,7 +932,7 @@
           if ((this._multiplier > 0 && this._currentHeight >= lastSelectedPane.contentHeight) ||
               (this._multiplier < 0 && this._currentHeight <= lastSelectedPane.contentHeight))
             return 0;
-          
+
           if ((this._multiplier > 0 && newHeight > lastSelectedPane.contentHeight) ||
               (this._multiplier < 0 && newHeight < lastSelectedPane.contentHeight))
             increment = this._animateRemainder * this._multiplier;
@@ -940,14 +940,14 @@
         ]]>
         </getter>
       </property>
-      
+
       <method name="notify">
         <parameter name="aTimer"/>
         <body>
         <![CDATA[
           if (!document)
             aTimer.cancel();
-          
+
           if (aTimer == this._animateTimer) {
             var increment = this._sizeIncrement;
             if (increment != 0) {
@@ -971,39 +971,39 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="_setUpAnimationTimer">
         <parameter name="aStartHeight"/>
         <body>
         <![CDATA[
-          if (!this._animateTimer) 
+          if (!this._animateTimer)
             this._animateTimer = Components.classes["@mozilla.org/timer;1"]
                                            .createInstance(Components.interfaces.nsITimer);
           else
             this._animateTimer.cancel();
           this._currentHeight = aStartHeight;
-          
-          this._animateTimer.initWithCallback(this, this._animateDelay, 
+
+          this._animateTimer.initWithCallback(this, this._animateDelay,
                                               Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
         ]]>
         </body>
       </method>
-      
+
       <method name="_setUpFadeTimer">
         <body>
         <![CDATA[
-          if (!this._fadeTimer) 
+          if (!this._fadeTimer)
             this._fadeTimer = Components.classes["@mozilla.org/timer;1"]
                                         .createInstance(Components.interfaces.nsITimer);
           else
             this._fadeTimer.cancel();
-          
-          this._fadeTimer.initWithCallback(this, this._fadeDelay, 
+
+          this._fadeTimer.initWithCallback(this, this._fadeDelay,
                                            Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
         ]]>
         </body>
       </method>
-      
+
       <field name="_animateTimer">null</field>
       <field name="_fadeTimer">null</field>
       <field name="_animateDelay">15</field>
@@ -1019,13 +1019,13 @@
         <body>
         <![CDATA[
           this.appendChild(aPaneElement);
-          
+
           // Set up pane button
           this._makePaneButton(aPaneElement);
         ]]>
         </body>
       </method>
-      
+
       <method name="openSubDialog">
         <parameter name="aURL"/>
         <parameter name="aFeatures"/>
@@ -1034,7 +1034,7 @@
           return openDialog(aURL, "", "modal,centerscreen,resizable=no" + (aFeatures != "" ? ("," + aFeatures) : ""), aParams);
         </body>
       </method>
-      
+
       <method name="openWindow">
         <parameter name="aWindowType"/>
         <parameter name="aURL"/>
@@ -1081,7 +1081,7 @@
           }
           else {
             // Clone all the preferences elements from the child document and
-            // insert them into the pane collection of the parent. 
+            // insert them into the pane collection of the parent.
             var pdoc = window.opener.document;
             if (pdoc.documentElement.localName == "prefwindow") {
               var currentPane = pdoc.documentElement.currentPane;
@@ -1170,7 +1170,7 @@
       </handler>
     </handlers>
   </binding>
-  
+
   <binding id="prefpane">
     <resources>
       <stylesheet src="chrome://global/skin/preferences.css"/>
@@ -1205,20 +1205,20 @@
         ]]>
         </body>
       </method>
-      
-      <property name="src" 
+
+      <property name="src"
                 onget="return this.getAttribute('src');"
                 onset="this.setAttribute('src', val); return val;"/>
-      <property name="selected" 
+      <property name="selected"
                 onget="return this.getAttribute('selected') == 'true';"
                 onset="this.setAttribute('selected', val); return val;"/>
-      <property name="image" 
+      <property name="image"
                 onget="return this.getAttribute('image');"
                 onset="this.setAttribute('image', val); return val;"/>
-      <property name="label" 
+      <property name="label"
                 onget="return this.getAttribute('label');"
                 onset="this.setAttribute('label', val); return val;"/>
-      
+
       <property name="preferenceElements"
                 onget="return this.getElementsByAttribute('preference', '*');"/>
       <property name="preferences"
@@ -1242,30 +1242,30 @@
       </property>
 
       <field name="_loaded">false</field>
-      <property name="loaded" 
+      <property name="loaded"
                 onget="return !this.src ? true : this._loaded;"
                 onset="this._loaded = val; return val;"/>
-      
+
       <method name="preferenceForElement">
         <parameter name="aElement"/>
         <body>
           return document.getElementById(aElement.getAttribute("preference"));
         </body>
       </method>
-      
+
       <method name="getPreferenceElement">
         <parameter name="aStartElement"/>
         <body>
         <![CDATA[
           var temp = aStartElement;
-          while (temp && temp.nodeType == Node.ELEMENT_NODE && 
+          while (temp && temp.nodeType == Node.ELEMENT_NODE &&
                  !temp.hasAttribute("preference"))
             temp = temp.parentNode;
           return temp.nodeType == Node.ELEMENT_NODE ? temp : aStartElement;
         ]]>
         </body>
       </method>
-      
+
       <field name="DeferredTask" readonly="true">
         let targetObj = {};
         Components.utils.import("resource://gre/modules/DeferredTask.jsm", targetObj);
@@ -1321,7 +1321,7 @@
         ]]>
         </body>
       </method>
-      
+
       <property name="contentHeight">
         <getter>
           var targetHeight = parseInt(window.getComputedStyle(this._content, "").height);
@@ -1336,25 +1336,25 @@
     </implementation>
     <handlers>
       <handler event="command">
-        // This "command" event handler tracks changes made to preferences by 
+        // This "command" event handler tracks changes made to preferences by
         // the user in this window.
         if (event.sourceEvent)
           event = event.sourceEvent;
         this.userChangedValue(event.target);
       </handler>
       <handler event="select">
-        // This "select" event handler tracks changes made to colorpicker 
+        // This "select" event handler tracks changes made to colorpicker
         // preferences by the user in this window.
-        if (event.target.localName == "colorpicker") 
+        if (event.target.localName == "colorpicker")
           this.userChangedValue(event.target);
       </handler>
       <handler event="change">
-        // This "change" event handler tracks changes made to preferences by 
-        // the user in this window. 
+        // This "change" event handler tracks changes made to preferences by
+        // the user in this window.
         this.userChangedValue(event.target);
       </handler>
       <handler event="input">
-        // This "input" event handler tracks changes made to preferences by 
+        // This "input" event handler tracks changes made to preferences by
         // the user in this window.
         this.userChangedValue(event.target);
       </handler>
@@ -1371,11 +1371,11 @@
             dump("*** No preference found for " + elements[i].getAttribute("preference") + "\n");
           }
         }
-      ]]>      
+      ]]>
       </handler>
     </handlers>
   </binding>
-          
+
   <binding id="panebutton" role="xul:listitem"
            extends="chrome://global/content/bindings/radio.xml#radio">
     <resources>

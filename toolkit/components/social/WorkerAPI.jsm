@@ -145,7 +145,7 @@ WorkerAPI.prototype = {
                                                     // action was provided.
                                           null,
                                           listener,
-                                          type); 
+                                          type);
     },
   }
 }

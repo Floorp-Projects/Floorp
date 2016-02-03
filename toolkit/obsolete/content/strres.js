@@ -11,8 +11,8 @@ function srGetStrBundle(path)
   if (!strBundleService) {
       try {
           strBundleService =
-              Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
-          strBundleService = 
+              Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
+          strBundleService =
               strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
       } catch (ex) {
           dump("\n--** strBundleService failed: " + ex + "\n");
@@ -20,7 +20,7 @@ function srGetStrBundle(path)
       }
   }
 
-  strBundle = strBundleService.createBundle(path); 
+  strBundle = strBundleService.createBundle(path);
   if (!strBundle) {
 	dump("\n--** strBundle createInstance failed **--\n");
   }

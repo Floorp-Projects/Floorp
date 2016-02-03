@@ -174,7 +174,7 @@
         <body><![CDATA[
           this.setActionMessage();
           let installingUpdate = this._install &&
-                                 (AddonManager.shouldAutoUpdate(this._addon) || 
+                                 (AddonManager.shouldAutoUpdate(this._addon) ||
                                   this._update.checked);
 
           if (this._keep.checked && (!this._addon.appDisabled || installingUpdate))

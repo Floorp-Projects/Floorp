@@ -71,7 +71,7 @@ function filepickerLoad() {
     textInputLabel.value = gFilePickerBundle.getString("dirTextInputLabel");
     textInputLabel.accessKey = gFilePickerBundle.getString("dirTextInputAccesskey");
   }
-  
+
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
       (filePickerMode == nsIFilePicker.modeOpenMultiple) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
@@ -297,7 +297,7 @@ function selectOnOK()
           var message =
             gFilePickerBundle.getFormattedString("confirmFileReplacing",
                                                  [file.path]);
-          
+
           promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
           var rv = promptService.confirm(window, confirmTitle, message);
           if (rv) {
@@ -360,7 +360,7 @@ function selectOnOK()
 
   retvals.files = gFilesEnumerator;
   retvals.buttonStatus = ret;
-  
+
   return (ret != nsIFilePicker.returnCancel);
 }
 
@@ -420,7 +420,7 @@ function onClick(e) {
 
 function convertColumnIDtoSortType(columnID) {
   var sortKey;
-  
+
   switch (columnID) {
   case "FilenameColumn":
     sortKey = nsIFileView.sortName;
@@ -436,7 +436,7 @@ function convertColumnIDtoSortType(columnID) {
     sortKey = 0;
     break;
   }
-  
+
   return sortKey;
 }
 
@@ -444,7 +444,7 @@ function handleColumnClick(columnID) {
   var sortType = convertColumnIDtoSortType(columnID);
   var sortOrder = (treeView.sortType == sortType) ? !treeView.reverseSort : false;
   treeView.sort(sortType, sortOrder);
-  
+
   // set the sort indicator on the column we are sorted by
   var sortedColumn = document.getElementById(columnID);
   if (treeView.reverseSort) {
@@ -452,7 +452,7 @@ function handleColumnClick(columnID) {
   } else {
     sortedColumn.setAttribute("sortDirection", "ascending");
   }
-  
+
   // remove the sort indicator from the rest of the columns
   var currCol = sortedColumn.parentNode.firstChild;
   while (currCol) {
@@ -597,7 +597,7 @@ function populateAncestorList(directory) {
   while (menu.hasChildNodes()) {
     menu.removeChild(menu.firstChild);
   }
-  
+
   var menuItem = document.createElement("menuitem");
   menuItem.setAttribute("label", directory.path);
   menuItem.setAttribute("crop", "start");
@@ -613,7 +613,7 @@ function populateAncestorList(directory) {
     directory = parent;
     parent = directory.parent;
   }
-  
+
   var menuList = document.getElementById("lookInMenuList");
   menuList.selectedIndex = 0;
 }
@@ -650,7 +650,7 @@ function newDir() {
                       file);
       return false;
     }
-    
+
     file = file[0].QueryInterface(nsIFile);
     if (file.exists()) {
       showErrorDialog("errorNewDirDoesExistTitle",
@@ -681,7 +681,7 @@ function newDir() {
     }
 
     try {
-      file.create(nsIFile.DIRECTORY_TYPE, 0755); 
+      file.create(nsIFile.DIRECTORY_TYPE, 0755);
     } catch (e) {
       showErrorDialog("errorCreateNewDirTitle",
                       "errorCreateNewDirMessage",
@@ -693,7 +693,7 @@ function newDir() {
     // we remember and reshow a dirname if something goes wrong
     // so that errors can be corrected more easily. If all went well,
     // reset the default value to blank
-    gNewDirName = { value: "" }; 
+    gNewDirName = { value: "" };
   }
   return true;
 }
@@ -750,7 +750,7 @@ function processPath(path)
         nextQuote = path.indexOf('"', quoteSearchStart);
         quoteSearchStart = nextQuote + 1;
       } while (nextQuote != -1 && path[nextQuote - 1] == '\\');
-      
+
       if (nextQuote == -1) {
         // we have a filename with no trailing quote.
         // just assume that the filename ends at the end of the string.
@@ -807,7 +807,7 @@ function processPathEntry(path, fileArray)
 
   // Unescape quotes
   filePath = filePath.replace(/\\\"/g, "\"");
-  
+
   if (filePath[0] == '/')   /* an absolute path was entered */
     file.initWithPath(filePath);
   else if ((filePath.indexOf("/../") > 0) ||

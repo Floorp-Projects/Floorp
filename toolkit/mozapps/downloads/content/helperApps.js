@@ -7,7 +7,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-var gRDF;    
+var gRDF;
 
 const CLASS_MIMEINFO        = "mimetype";
 const CLASS_PROTOCOLINFO    = "scheme";
@@ -74,12 +74,12 @@ ArrayEnumerator.prototype = {
 
 function HelperApps()
 {
-  if (!gRDF) 
+  if (!gRDF)
     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-  
+
   const mimeTypes = "UMimTyp";
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-  
+
   var file = fileLocator.get(mimeTypes, Components.interfaces.nsIFile);
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
@@ -107,7 +107,7 @@ HelperApps.prototype = {
     return this._inner.HasAssertion(mimeSource, valueProperty, mimeLiteral, true);
   },
 
-  updateTypeInfo: function (aMIMEInfo) 
+  updateTypeInfo: function (aMIMEInfo)
   {
     var mimeType = aMIMEInfo.MIMEType;
     var isNewMIMEType = this.mimeHandlerExists(mimeType);
@@ -115,7 +115,7 @@ HelperApps.prototype = {
     entry.mimeType    = mimeType;
     entry.isEditable  = true;
     entry.alwaysAsk = aMIMEInfo.alwaysAskBeforeHandling;
-    
+
     // If not updating (i.e., a newly encountered mime type),
     // then update extension list and description.
     if (!isNewMIMEType) {
@@ -126,7 +126,7 @@ HelperApps.prototype = {
       entry.description = aMIMEInfo.description;
       entry.appDisplayName = "";
     }
-    
+
     const nsIMIMEInfo = Components.interfaces.nsIMIMEInfo;
     if (aMIMEInfo.preferredAction == nsIMIMEInfo.saveToDisk) {
       entry.saveToDisk = true;
@@ -134,7 +134,7 @@ HelperApps.prototype = {
         // Creating a new entry, set path.
         entry.appPath = "";
       }
-    } 
+    }
     else if (aMIMEInfo.preferredAction == nsIMIMEInfo.useSystemDefault ||
              aMIMEInfo.preferredApplicationHandler == null) {
       entry.useSystemDefault = true;
@@ -142,7 +142,7 @@ HelperApps.prototype = {
         // Creating a new entry, set path.
         entry.appPath = "";
       }
-    } 
+    }
     else if (aMIMEInfo.preferredApplicationHandler instanceof Components.interfaces.nsILocalHandlerApp) {
       entry.saveToDisk       = false;
       entry.useSystemDefault = false;
@@ -150,7 +150,7 @@ HelperApps.prototype = {
       entry.appPath = aMIMEInfo.preferredApplicationHandler.executable.path;
       entry.appDisplayName = aMIMEInfo.preferredApplicationHandler.name;
     }
-    
+
     // Do RDF magic.
     entry.buildLinks();
     this.flush();
@@ -172,20 +172,20 @@ HelperApps.prototype = {
   get URI() {
     return this._inner.URI;
   },
-  
+
   GetSource: function (aProperty, aTarget, aTruthValue) {
     return this._inner.GetSource(aProperty, aTarget, aTruthValue);
   },
   GetSources: function (aProperty, aTarget, aTruthValue) {
     return this._inner.GetSources(aProperty, aTarget, aTruthValue);
-  },         
-  
+  },
+
   _isRootTypeResource: function (aResource) {
-    aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);  
+    aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
     const kRootTypePrefix = "urn:mimetype:";
     return (aResource.Value.substr(0, kRootTypePrefix.length) == kRootTypePrefix);
   },
-  
+
   getMIMEInfo: function (aResource) {
     var types = this._inner.GetTarget(aResource, this._valueArc, true);
     if (types) {
@@ -195,10 +195,10 @@ HelperApps.prototype = {
       mimeSvc = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
       return mimeSvc.getFromTypeAndExtension(types[0], null);
     }
-    
+
     return null;
   },
-   
+
   GetTarget: function (aSource, aProperty, aTruthValue) {
     if (this._isRootTypeResource(aSource)) {
       var typeInfo = this.getMIMEInfo(aSource);
@@ -217,9 +217,9 @@ HelperApps.prototype = {
               var literal = bundle.getFormattedString("fileEnding", [typeInfo.primaryExtension.toUpperCase()]);
               return gRDF.GetLiteral(literal);
             }
-            catch (e) { 
+            catch (e) {
               // Wow, this sucks, just show the MIME type as a last ditch effort to display
-              // the type of file that this is. 
+              // the type of file that this is.
               return gRDF.GetLiteral(typeInfo.MIMEType);
             }
           }
@@ -241,8 +241,8 @@ HelperApps.prototype = {
                 return gRDF.GetLiteral(openWith);
               }
             }
-          }     
-          
+          }
+
           var openWith2 = bundle.getFormattedString("openWith", [typeInfo.defaultDescription]);
           return gRDF.GetLiteral(openWith2);
         }
@@ -263,12 +263,12 @@ HelperApps.prototype = {
         }
         else if (aProperty.EqualsNode(this._fileExtensionsArc)) {
           var extns = typeInfo.getFileExtensions();
-          
+
           // Prevent duplicates.
           var hash = { };
           while (extns.hasMore())
             hash[extns.getNext().toUpperCase()] = 0;
-          
+
           var str = "";
           for (var extn in hash)
             str += extn + ",";
@@ -280,15 +280,15 @@ HelperApps.prototype = {
     }
 
     return this._inner.GetTarget(aSource, aProperty, aTruthValue);
-  },      
-  
+  },
+
   GetTargets: function (aSource, aProperty, aTruthValue) {
-    if (this._isRootTypeResource(aSource)) { 
+    if (this._isRootTypeResource(aSource)) {
       return new ArrayEnumerator([this.GetTarget(aSource, aProperty, aTruthValue)]);
     }
-    
+
     return this._inner.GetTargets(aSource, aProperty, aTruthValue);
-  }, 
+  },
   Assert: function (aSource, aProperty, aTarget, aTruthValue) {
     return this._inner.Assert(aSource, aProperty, aTarget, aTruthValue);
   },
@@ -310,7 +310,7 @@ HelperApps.prototype = {
     if (this._isRootTypeResource(aSource)) {
       // Don't show entries in the list for types that we DO NOT handle
       // automatically. i.e. this list is a means of editing and removing
-      // automatic overrides only. 
+      // automatic overrides only.
       if (aProperty.EqualsNode(this._handleAutoArc)) {
         var handler = this.GetTarget(aSource, this._handlerPropArc, true);
         if (handler) {
@@ -336,12 +336,12 @@ HelperApps.prototype = {
   hasArcOut: function (aNode, aArc) {
     return this._inner.hasArcOut(aNode, aArc);
   },
-  
+
   _observers: [],
   AddObserver: function (aObserver) {
     this._observers.push(aObserver);
   },
-  
+
   RemoveObserver: function (aObserver) {
     for (var i = 0; i < this._observers.length; ++i) {
       if (this._observers[i] == aObserver) {
@@ -350,7 +350,7 @@ HelperApps.prototype = {
       }
     }
   },
-  
+
   onAssert: function (aDataSource, aSource, aProperty, aTarget) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onAssert(aDataSource, aSource, aProperty, aTarget);
@@ -362,37 +362,37 @@ HelperApps.prototype = {
       this._observers[i].onUnassert(aDataSource, aSource, aProperty, aTarget);
     }
   },
-  
+
   onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onChange(aDataSource, aSource, aProperty, aOldTarget, aNewTarget);
     }
   },
-  
+
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onMove(aDataSource, aOldSource, aNewSource, aProperty, aTarget);
     }
   },
-  
+
   onBeginUpdateBatch: function (aDataSource) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onBeginUpdateBatch(aDataSource);
     }
   },
-  
+
   onEndUpdateBatch: function (aDataSource) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].onEndUpdateBatch(aDataSource);
     }
   },
-  
+
   beginUpdateBatch: function (aDataSource) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].beginUpdateBatch(aDataSource);
     }
   },
-  
+
   endUpdateBatch: function (aDataSource) {
     for (var i = 0; i < this._observers.length; ++i) {
       this._observers[i].endUpdateBatch(aDataSource);
@@ -401,10 +401,10 @@ HelperApps.prototype = {
 
   flush: function () {
     var rds = this._inner.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    if (rds) 
+    if (rds)
       rds.Flush();
   },
-  
+
   destroy: function () {
     this._inner.RemoveObserver(this);
   }
@@ -425,29 +425,29 @@ HandlerOverride.prototype = {
   {
     return this.getLiteralForContentType(this.URI, "value");
   },
-  
+
   set mimeType(aMIMETypeString)
   {
     this.changeMIMEStuff(MIME_URI(aMIMETypeString), "value", aMIMETypeString.toLowerCase());
     return aMIMETypeString;
   },
-  
+
   get description()
   {
     return this.getLiteralForContentType(this.URI, "description");
-  },  
-  
+  },
+
   set description(aDescriptionString)
   {
     this.changeMIMEStuff(MIME_URI(this.mimeType), "description", aDescriptionString);
     return aDescriptionString;
   },
-  
+
   get isEditable()
   {
     return this.getLiteralForContentType(this.URI, "editable");
   },
-  
+
   set isEditable(aIsEditableString)
   {
     this.changeMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
@@ -474,12 +474,12 @@ HandlerOverride.prototype = {
     }
     return extString;
   },
-  
+
   addExtension: function (aExtensionString)
   {
     this.assertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString.toLowerCase());
   },
-  
+
   removeExtension: function (aExtensionString)
   {
     this.unassertMIMEStuff(MIME_URI(this.mimeType), "fileExtensions", aExtensionString.toLowerCase());
@@ -492,13 +492,13 @@ HandlerOverride.prototype = {
       this.removeExtension(extArray[i]);
     }
   },
-  
+
   // content handling
   get saveToDisk()
   {
     return this.getHandlerInfoForType(this.URI, "saveToDisk");
   },
-  
+
   set saveToDisk(aSavedToDisk)
   {
     this.changeMIMEStuff(HANDLER_URI(this.mimeType), "saveToDisk", aSavedToDisk);
@@ -519,12 +519,12 @@ HandlerOverride.prototype = {
     this.setHandlerProcedure("saveToDisk", "false");
     return aUseSystemDefault;
   },
-  
+
   get handleInternal()
   {
     return this.getHandlerInfoForType(this.URI, "handleInternal");
   },
-  
+
   set handleInternal(aHandledInternally)
   {
     this.changeMIMEStuff(HANDLER_URI(this.mimeType), "handleInternal", aHandledInternally);
@@ -545,24 +545,24 @@ HandlerOverride.prototype = {
       this._DS.Change(handlerSource, handlerProperty, trueLiteral, falseLiteral);
     }
   },
-  
+
   get alwaysAsk()
   {
     return this.getHandlerInfoForType(this.URI, "alwaysAsk");
   },
-  
+
   set alwaysAsk(aAlwaysAsk)
   {
     this.changeMIMEStuff(HANDLER_URI(this.mimeType), "alwaysAsk", aAlwaysAsk);
     return aAlwaysAsk;
   },
-  
+
   // helper application
   get appDisplayName()
   {
     return getHelperAppInfoForType(this.URI, "prettyName");
   },
-  
+
   set appDisplayName(aDisplayName)
   {
     if (aDisplayName)
@@ -574,12 +574,12 @@ HandlerOverride.prototype = {
 
     return aDisplayName;
   },
-  
+
   get appPath()
   {
     return this.getHelperAppInfoForType(this.URI, "path");
   },
-  
+
   set appPath(aAppPath)
   {
     if (aAppPath)
@@ -614,10 +614,10 @@ HandlerOverride.prototype = {
     var element = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
     if (container.IndexOf(element) == -1)
       container.AppendElement(element);
-  }, 
-  
+  },
+
   // Implementation helper methods
-  
+
   getLiteralForContentType: function (aURI, aProperty)
   {
     var contentTypeResource = gRDF.GetUnicodeResource(aURI);
@@ -676,7 +676,7 @@ HandlerOverride.prototype = {
       this._DS.Change(mimeSource, valueProperty, currentValue, mimeLiteral);
     } else {
       this._DS.Assert(mimeSource, valueProperty, mimeLiteral, true);
-    } 
+    }
   },
 
   unassertMIMEStuff: function(aMIMEString, aPropertyString, aValueString)
@@ -691,10 +691,10 @@ HandlerOverride.prototype = {
    * Get the list of types for the given class, creating the list if it doesn't
    * already exist. The class can be either CLASS_MIMEINFO or CLASS_PROTOCOLINFO
    * (i.e. the result of a call to _getClass).
-   * 
+   *
    * |urn:<class>s|
    * |urn:<class>s:root|
-   * 
+   *
    * @param aClass {string} the class for which to retrieve a list of types
    *
    * @returns {nsIRDFContainer} the list of types

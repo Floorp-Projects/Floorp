@@ -255,5 +255,5 @@ function run_test_1() {
 function run_test_2() {
   do_print("Run test 2");
   restartManager();
-  check_compat_status(end_test);  
+  check_compat_status(end_test);
 }

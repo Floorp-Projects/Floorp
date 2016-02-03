@@ -137,7 +137,7 @@
     // "no-spaced-func": 2,
 
     // No trailing whitespace
-    // "no-trailing-spaces": 2,
+    "no-trailing-spaces": 2,
 
     // No using undeclared variables
     // "no-undef": 2,

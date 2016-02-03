@@ -100,7 +100,7 @@ function test()
 
     finish();
   }
-  
+
   waitForExplicitFinish();
   window.setTimeout(finishUp, 1000);
 }
