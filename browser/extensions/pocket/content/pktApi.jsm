@@ -15,10 +15,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -96,7 +96,7 @@ var pktApi = (function() {
 
             // Handle non-exception-throwing cases:
             // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-            // but... JSON.parse(null) returns 'null', and typeof null === "object", 
+            // but... JSON.parse(null) returns 'null', and typeof null === "object",
             // so we must check for that, too.
             if (o && typeof o === "object" && o !== null) {
                 return o;
@@ -121,10 +121,10 @@ var pktApi = (function() {
      function getSetting(key) {
      	// TODO : Move this to sqlite or a local file so it's not editable (and is safer)
      	// https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
-     	
+
 		if (!prefBranch.prefHasUserValue(key))
 			return undefined;
-		
+
 		return prefBranch.getComplexValue(key, Components.interfaces.nsISupportsString).data;
      }
 
@@ -138,7 +138,7 @@ var pktApi = (function() {
     function setSetting(key, value) {
      	// TODO : Move this to sqlite or a local file so it's not editable (and is safer)
      	// https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
-     	
+
      	if (!value)
      		prefBranch.clearUserPref(key);
      	else
@@ -159,7 +159,7 @@ var pktApi = (function() {
      *  The return format: { cookieName:cookieValue, cookieName:cookieValue, ... }
     */
     function getCookiesFromPocket() {
-    
+
         var cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
         var pocketCookies = cookieManager.getCookiesFromHost(pocketSiteHost);
         var cookies = {};

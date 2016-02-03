@@ -164,7 +164,7 @@
         ]]>
         </getter>
       </property>
-      
+
       <method name="enableKeyboardNavigator">
         <parameter name="aEnableKeyboardNavigator"/>
         <body>
@@ -173,7 +173,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="enableRollup">
         <parameter name="aEnableRollup"/>
         <body>
@@ -182,7 +182,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="sizeTo">
         <parameter name="aWidth"/>
         <parameter name="aHeight"/>
@@ -192,7 +192,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="moveTo">
         <parameter name="aLeft"/>
         <parameter name="aTop"/>
@@ -223,13 +223,13 @@
         ]]>
         </body>
       </method>
-    </implementation>     
+    </implementation>
 
   </binding>
 
   <binding id="popup" role="xul:menupopup"
            extends="chrome://global/content/bindings/popup.xml#popup-base">
-    
+
     <content>
       <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
                           smoothscroll="false">
@@ -280,7 +280,7 @@
       ]]>
       </constructor>
     </implementation>
-    
+
     <handlers>
       <handler event="popupshowing"><![CDATA[
         // Capture the previous focus before has a chance to get set inside the panel
@@ -503,11 +503,11 @@
         <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>
       </children>
     </content>
-    
+
     <implementation>
       <field name="_mouseOutCount">0</field>
       <field name="_isMouseOver">false</field>
-      
+
       <property name="label"
                 onget="return this.getAttribute('label');"
                 onset="this.setAttribute('label', val); return val;"/>
@@ -524,7 +524,7 @@
            Note that DefaultTooltipTextProvider::GetNodeText() from nsDocShellTreeOwner.cpp
            also performs the same function, but for embedded clients that don't use a XUL/JS
            layer. These two should be kept synchronized.
-        --> 
+        -->
       <method name="fillInPageTooltip">
         <parameter name="tipElement"/>
         <body>
@@ -667,7 +667,7 @@
         //dump("ENTERING " + (rel ? rel.localName : "null") + "\n");
         if (!rel)
           return;
-          
+
         // find out if the node we entered from is one of our anonymous children
         while (rel) {
           if (rel == this)
@@ -687,7 +687,7 @@
         // relatedTarget is null when the titletip is first shown: a mouseout event fires
         // because the mouse is exiting the main window and entering the titletip "window".
         // relatedTarget is also null when the mouse exits the main window completely,
-        // so count how many times relatedTarget was null after titletip is first shown 
+        // so count how many times relatedTarget was null after titletip is first shown
         // and hide popup the 2nd time
         if (!rel) {
           ++this._mouseOutCount;
@@ -695,18 +695,18 @@
             this.hidePopup();
           return;
         }
-          
+
         // find out if the node we are entering is one of our anonymous children
         while (rel) {
           if (rel == this)
             break;
           rel = rel.parentNode;
         }
-        
+
         // if the entered node is not a descendant of ours, hide the tooltip
         if (rel != this && this._isMouseOver) {
           this.hidePopup();
-        }        
+        }
       ]]></handler>
 
       <handler event="popupshowing"><![CDATA[

@@ -1591,7 +1591,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></destructor>
 
       <field name="progressmeter" readonly="true">
-        document.getElementById("addon-progress-notification-progressmeter"); 
+        document.getElementById("addon-progress-notification-progressmeter");
       </field>
       <field name="progresstext" readonly="true">
         document.getElementById("addon-progress-notification-progresstext");

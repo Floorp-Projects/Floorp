@@ -784,7 +784,7 @@ add_task(function*() {
 add_task(function*() {
   info("Enabling lightweight theme");
   LightweightThemeManager.currentTheme = gLWTheme;
-  
+
   gManagerWindow.loadView("addons://list/theme");
   yield new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 

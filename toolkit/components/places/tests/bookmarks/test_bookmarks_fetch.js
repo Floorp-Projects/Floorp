@@ -177,7 +177,7 @@ add_task(function* fetch_separator() {
   Assert.ok(!("url" in bm2));
   Assert.ok(!("title" in bm2));
 
-  yield PlacesUtils.bookmarks.remove(bm1.guid);  
+  yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
 
 add_task(function* fetch_byposition_nonexisting_parentGuid() {

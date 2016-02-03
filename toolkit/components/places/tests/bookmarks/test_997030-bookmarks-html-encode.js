@@ -5,7 +5,7 @@
 /**
  * Checks that we don't encodeURI twice when creating bookmarks.html.
  */
- 
+
 function run_test() {
   run_next_test();
 }

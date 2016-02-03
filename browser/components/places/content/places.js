@@ -774,7 +774,7 @@ var PlacesSearchBox = {
   get searchFilter() {
     return document.getElementById("searchFilter");
   },
-   
+
   /**
    * Folders to include when searching.
    */
@@ -894,7 +894,7 @@ var PlacesSearchBox = {
         title = PlacesUIUtils.getString("searchDownloads");
         break;
       default:
-        title = PlacesUIUtils.getString("searchBookmarks");                                    
+        title = PlacesUIUtils.getString("searchBookmarks");
     }
     this.searchFilter.placeholder = title;
   },

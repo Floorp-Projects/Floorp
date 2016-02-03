@@ -80,7 +80,7 @@ add_test(function before_rebuild() {
   });
 });
 
-// now shut down, remove the JSON database, 
+// now shut down, remove the JSON database,
 // start up again, and make sure the data didn't migrate this time
 add_test(function rebuild_again() {
   shutdownManager();

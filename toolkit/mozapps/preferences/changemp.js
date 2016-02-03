@@ -20,7 +20,7 @@ var pw1;
 function init()
 {
   pw1 = document.getElementById("pw1");
-	 	 
+
   process();
 }
 
@@ -40,9 +40,9 @@ function process()
      var status = slot.status;
      if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
          || status == nsIPKCS11Slot.SLOT_READY) {
-      
+
        oldpwbox.setAttribute("hidden", "true");
-       msgBox.setAttribute("value", bundle.getString("password_not_set")); 
+       msgBox.setAttribute("value", bundle.getString("password_not_set"));
        msgBox.setAttribute("hidden", "false");
 
        if (status == nsIPKCS11Slot.SLOT_READY) {
@@ -50,10 +50,10 @@ function process()
        } else {
          oldpwbox.setAttribute("inited", "true");
        }
-      
+
        // Select first password field
        document.getElementById('pw1').focus();
-    
+
      } else {
        // Select old password field
        oldpwbox.setAttribute("hidden", "false");
@@ -67,7 +67,7 @@ function process()
     // Return value 0 means "canceled"
     params.SetInt(1, 0);
   }
-  
+
   checkPasswords();
 }
 
@@ -82,24 +82,24 @@ function setPassword()
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
   var bundle = document.getElementById("bundlePreferences");
-  
+
   var success = false;
-  
+
   if (initpw == "false" || initpw == "empty") {
     try {
       var oldpw = "";
       var passok = 0;
-      
+
       if (initpw == "empty") {
         passok = 1;
       } else {
         oldpw = oldpwbox.value;
         passok = token.checkPassword(oldpw);
       }
-      
+
       if (passok) {
         if (initpw == "empty" && pw1.value == "") {
-          // This makes no sense that we arrive here, 
+          // This makes no sense that we arrive here,
           // we reached a case that should have been prevented by checkPasswords.
         } else {
           if (pw1.value == "") {
@@ -117,7 +117,7 @@ function setPassword()
             if (pw1.value == "") {
               promptService.alert(window,
                                   bundle.getString("pw_change_success_title"),
-                                  bundle.getString("pw_erased_ok") 
+                                  bundle.getString("pw_erased_ok")
                                   + " " + bundle.getString("pw_empty_warning"));
             } else {
               promptService.alert(window,
@@ -196,7 +196,7 @@ function setPasswordStrength()
   if ( pwstrength < 0 ) {
     pwstrength = 0;
   }
-  
+
   if ( pwstrength > 100 ) {
     pwstrength = 100;
   }

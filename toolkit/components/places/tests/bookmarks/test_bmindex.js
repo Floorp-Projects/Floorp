@@ -107,7 +107,7 @@ function run_test() {
       if (newIndex >= -1)
         do_throw("Moving an item to a valid index should not throw\n");
     }
-    
+
   }
   check_contiguous_indexes(bookmarks);
 

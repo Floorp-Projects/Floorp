@@ -16,7 +16,7 @@ pref("app.update.promptWaitTime", 86400);
 // attempts fail.
 pref("app.update.url.manual", "https://nightly.mozilla.org");
 // A default value for the "More information about this update" link
-// supplied in the "An update is available" page of the update wizard. 
+// supplied in the "An update is available" page of the update wizard.
 pref("app.update.url.details", "https://nightly.mozilla.org");
 
 // The number of days a binary is permitted to be old

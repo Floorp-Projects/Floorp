@@ -128,7 +128,7 @@ function* testToolbarBookmarks() {
 
   // child count (add 2 for pre-existing items)
   Assert.equal(root.childCount, bookmarkData.length + 2);
-  
+
   let livemarkNode = root.getChild(1);
   Assert.equal("Latest Headlines", livemarkNode.title);
 

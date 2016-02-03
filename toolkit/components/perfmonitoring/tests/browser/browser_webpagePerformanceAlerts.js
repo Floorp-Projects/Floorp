@@ -54,7 +54,7 @@ add_task(function* test_open_window_then_watch_it() {
   yield BrowserTestUtils.browserLoaded(otherTab.linkedBrowser);
   info(`Check that burning CPU triggers the real listener, but not the fake listener`);
   let fakeListener = new WebpageListener(otherTab.linkedBrowser.outerWindowID, group => group.windowId == burner.windowId); // This listener should never be triggered.
-  let universalListener = new WebpageListener(0, alerts => 
+  let universalListener = new WebpageListener(0, alerts =>
     alerts.find(alert => alert.source.windowId == burner.windowId)
   );
 

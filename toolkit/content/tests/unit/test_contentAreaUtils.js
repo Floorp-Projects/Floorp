@@ -44,7 +44,7 @@ function test_urlSecurityCheck() {
     urlSecurityCheck(CHROME_URI, nullPrincipal,
                      DISALLOW_INHERIT_PRINCIPAL);
   }
-  catch(ex) { 
+  catch(ex) {
     shouldThrow = false;
   }
   if (shouldThrow)

@@ -208,7 +208,7 @@ var SEARCH_RESULTS = [{
   repositoryStatus:       8,
   size:                   5555,
   updateDate:             new Date(1265033045000),
-  
+
 }, {
   id:                     "purchase1@tests.mozilla.org",
   type:                   "extension",

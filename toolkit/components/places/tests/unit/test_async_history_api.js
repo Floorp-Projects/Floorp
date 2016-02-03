@@ -108,7 +108,7 @@ VisitObserver.prototype = {
   {
     do_print("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
              ", " + aSessionId + ", " + aReferringId + ", " +
-             aTransitionType + ", " + aGUID + ")"); 
+             aTransitionType + ", " + aGUID + ")");
     if (!this.uri.equals(aURI) || this.guid != aGUID) {
       return;
     }

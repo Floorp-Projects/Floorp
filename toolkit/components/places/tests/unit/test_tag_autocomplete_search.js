@@ -10,31 +10,31 @@ function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
+  constructor: AutoCompleteInput,
 
   searches: null,
-  
+
   minResultsForPopup: 0,
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
-  
+
   get searchCount() {
     return this.searches.length;
   },
-  
+
   getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
-  
+
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  
-  popupOpen: false,  
-  
-  popup: { 
+
+  popupOpen: false,
+
+  popup: {
     setSelectedIndex: function(aIndex) {},
     invalidate: function() {},
 
@@ -45,9 +45,9 @@ AutoCompleteInput.prototype = {
         return this;
 
       throw Components.results.NS_ERROR_NO_INTERFACE;
-    }    
+    }
   },
-    
+
   // nsISupports implementation
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
@@ -69,8 +69,8 @@ try {
 function ensure_tag_results(results, searchTerm)
 {
   var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
-  
+                   getService(Ci.nsIAutoCompleteController);
+
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
   var input = new AutoCompleteInput(["places-tag-autocomplete"]);
@@ -86,10 +86,10 @@ function ensure_tag_results(results, searchTerm)
   input.onSearchComplete = function input_onSearchComplete() {
     do_check_eq(numSearchesStarted, 1);
     if (results.length)
-      do_check_eq(controller.searchStatus, 
+      do_check_eq(controller.searchStatus,
                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
     else
-      do_check_eq(controller.searchStatus, 
+      do_check_eq(controller.searchStatus,
                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
 
     do_check_eq(controller.matchCount, results.length);
@@ -111,20 +111,20 @@ function ensure_tag_results(results, searchTerm)
 }
 
 var uri1 = uri("http://site.tld/1");
-  
+
 var tests = [
   function test1() { ensure_tag_results(["bar", "Baz", "boo"], "b"); },
   function test2() { ensure_tag_results(["bar", "Baz"], "ba"); },
   function test3() { ensure_tag_results(["bar", "Baz"], "Ba"); },
   function test4() { ensure_tag_results(["bar"], "bar"); },
-  function test5() { ensure_tag_results(["Baz"], "Baz"); }, 
-  function test6() { ensure_tag_results([], "barb"); }, 
+  function test5() { ensure_tag_results(["Baz"], "Baz"); },
+  function test6() { ensure_tag_results([], "barb"); },
   function test7() { ensure_tag_results([], "foo"); },
   function test8() { ensure_tag_results(["first tag, bar", "first tag, Baz"], "first tag, ba"); },
   function test9() { ensure_tag_results(["first tag;  bar", "first tag;  Baz"], "first tag;  ba"); }
 ];
 
-/** 
+/**
  * Test tag autocomplete
  */
 function run_test() {

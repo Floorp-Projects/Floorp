@@ -252,7 +252,7 @@ TimerManager.prototype = {
       if (skippedFirings)
         timer.delay = this._timerMinimumDelay;
       else
-        timer.delay = Math.max(nextDelay * 1000, this._timerMinimumDelay);  
+        timer.delay = Math.max(nextDelay * 1000, this._timerMinimumDelay);
       this.lastTimerReset = Date.now();
     } else {
       this._cancelTimer();
@@ -272,7 +272,7 @@ TimerManager.prototype = {
                                    Ci.nsITimer.TYPE_REPEATING_SLACK);
       this.lastTimerReset = Date.now();
     } else {
-      if (Date.now() + interval < this.lastTimerReset + this._timer.delay) 
+      if (Date.now() + interval < this.lastTimerReset + this._timer.delay)
         this._timer.delay = Math.max(this.lastTimerReset + interval - Date.now(), 0);
     }
   },

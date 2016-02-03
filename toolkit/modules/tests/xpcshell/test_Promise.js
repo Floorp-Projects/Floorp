@@ -909,7 +909,7 @@ tests.push(
 //   do some work that will asynchronously signal done
 //   start an event loop waiting for the done signal
 // }
-// where the async work uses resolution of a second promise to 
+// where the async work uses resolution of a second promise to
 // trigger the "done" signal. While this would likely work in a
 // naive implementation, our constant-stack implementation needs
 // a special case to avoid deadlock. Note that this test is

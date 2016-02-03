@@ -80,7 +80,7 @@ add_task(function* test_execute()
   root.containerOpen = true;
   cc = root.childCount;
   // 2 * TOTAL_SITES because we count the TYPED and LINK, but not EMBED or FRAMED
-  do_check_eq(cc, 2 * TOTAL_SITES); 
+  do_check_eq(cc, 2 * TOTAL_SITES);
   for (let i=0; i < TOTAL_SITES; i++) {
     let index = i * 2;
     let node = root.getChild(index);

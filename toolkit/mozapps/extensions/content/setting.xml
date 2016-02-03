@@ -28,7 +28,7 @@
         this.addEventListener("keypress", function(event) {
           event.stopPropagation();
         }, false);
-        
+
         if (this.usePref)
           Services.prefs.addObserver(this.pref, this._observer, true);
       ]]></constructor>
