@@ -7,6 +7,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
+Cu.import("chrome://marionette/content/event.js");
+
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
 
@@ -19,7 +21,7 @@ this.actions = {};
 /**
  * Functionality for (single finger) action chains.
  */
-actions.Chain = function(utils, checkForInterrupted) {
+actions.Chain = function(checkForInterrupted) {
   // for assigning unique ids to all touches
   this.nextTouchId = 1000;
   // keep track of active Touches
@@ -43,9 +45,6 @@ actions.Chain = function(utils, checkForInterrupted) {
 
   // determines if we create touch events
   this.inputSource = null;
-
-  // test utilities providing some event synthesis code
-  this.utils = utils;
 };
 
 actions.Chain.prototype.dispatchActions = function(
@@ -127,7 +126,7 @@ actions.Chain.prototype.emitMouseEvent = function(
 
     let mods;
     if (typeof modifiers != "undefined") {
-      mods = this.utils._parseModifiers(modifiers);
+      mods = event.parseModifiers_(modifiers);
     } else {
       mods = 0;
     }
@@ -187,12 +186,12 @@ actions.Chain.prototype.actions = function(chain, touchId, i, keyModifiers) {
 
   switch(command) {
     case "keyDown":
-      this.utils.sendKeyDown(pack[1], keyModifiers, this.container.frame);
+      event.sendKeyDown(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
     case "keyUp":
-      this.utils.sendKeyUp(pack[1], keyModifiers, this.container.frame);
+      event.sendKeyUp(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
