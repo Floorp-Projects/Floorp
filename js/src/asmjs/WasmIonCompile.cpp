@@ -2579,7 +2579,7 @@ EmitRet(FunctionCompiler& f)
         return true;
     }
 
-    MDefinition *def = nullptr;
+    MDefinition* def;
     if (!EmitExpr(f, ret, &def))
         return false;
     f.returnExpr(def);
@@ -2992,12 +2992,20 @@ wasm::IonCompileFunction(IonCompileTask* task)
             return false;
 
         MDefinition* last = nullptr;
-        while (!f.done()) {
-            if (!EmitExprStmt(f, &last))
+        if (func.isAsmJS()) {
+            while (!f.done()) {
+                if (!EmitExprStmt(f, &last))
+                    return false;
+            }
+        } else {
+            if (!EmitExpr(f, f.sig().ret(), &last))
                 return false;
+            MOZ_ASSERT(f.done());
         }
 
-        if (IsVoid(f.sig().ret()) || !last)
+        MOZ_ASSERT(IsVoid(f.sig().ret()) || f.inDeadCode() || last);
+
+        if (IsVoid(f.sig().ret()))
             f.returnVoid();
         else
             f.returnExpr(last);
