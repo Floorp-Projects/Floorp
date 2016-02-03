@@ -183,8 +183,6 @@ struct BytecodeEmitter
     CGConstList     constList;      /* constants to be included with the script */
 
     CGObjectList    objectList;     /* list of emitted objects */
-    CGObjectList    regexpList;     /* list of emitted regexp that will be
-                                       cloned during execution */
     CGTryNoteList   tryNoteList;    /* list of emitted try notes */
     CGBlockScopeList blockScopeList;/* list of emitted block scope notes */
 
