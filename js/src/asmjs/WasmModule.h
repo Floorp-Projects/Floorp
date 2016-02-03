@@ -348,14 +348,6 @@ UsesHeap(HeapUsage heapUsage)
     return bool(heapUsage);
 }
 
-// A Module can either be asm.js or wasm.
-
-enum ModuleKind
-{
-    Wasm,
-    AsmJS
-};
-
 // ModuleCacheablePod holds the trivially-memcpy()able serializable portion of
 // ModuleData.
 
