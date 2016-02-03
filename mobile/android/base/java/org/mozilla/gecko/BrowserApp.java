@@ -4000,13 +4000,16 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected StartupAction getStartupAction(final String passedURL) {
+    protected StartupAction getStartupAction(final String passedURL, final String action) {
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
         if (inGuestMode) {
             return StartupAction.GUEST;
         }
         if (Restrictions.isRestrictedProfile(this)) {
             return StartupAction.RESTRICTED;
+        }
+        if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
+            return StartupAction.SHORTCUT;
         }
         return (passedURL == null ? StartupAction.NORMAL : StartupAction.URL);
     }
