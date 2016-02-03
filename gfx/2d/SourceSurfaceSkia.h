@@ -39,6 +39,8 @@ public:
                       SurfaceFormat aFormat,
                       DrawTargetSkia* aOwner);
 
+  void InitFromBitmap(const SkBitmap& aBitmap);
+
 #ifdef USE_SKIA_GPU
   /**
    * NOTE: While wrapping a Texture for SkiaGL, the texture *must* be created
