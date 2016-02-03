@@ -5,19 +5,21 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 var uuidGen = Cc["@mozilla.org/uuid-generator;1"]
-                .getService(Ci.nsIUUIDGenerator);
+    .getService(Ci.nsIUUIDGenerator);
 
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-               .getService(Ci.mozIJSSubScriptLoader);
+    .getService(Ci.mozIJSSubScriptLoader);
 
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 
 Cu.import("chrome://marionette/content/actions.js");
+Cu.import("chrome://marionette/content/atoms.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/interactions.js");
 
@@ -25,13 +27,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-var utils = {};
-utils.window = content;
-// Load Event/ChromeUtils for use with JS scripts:
-loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
-loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
-loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
-loader.loadSubScript("chrome://marionette/content/sendkeys.js", utils);
 
 var marionetteLogObj = new MarionetteLogObj();
 
@@ -48,9 +43,9 @@ var elementManager = new ElementManager([]);
 
 // Holds session capabilities.
 var capabilities = {};
-var interactions = new Interactions(utils, () => capabilities);
+var interactions = new Interactions(() => capabilities);
 
-var actions = new actions.Chain(utils, checkForInterrupted);
+var actions = new actions.Chain(checkForInterrupted);
 var importedScripts = null;
 
 // Contains the last file input element that was the target of
@@ -529,7 +524,6 @@ function createExecuteContentSandbox(win, timeout) {
   sandbox.window = win;
   sandbox.document = sandbox.window.document;
   sandbox.navigator = sandbox.window.navigator;
-  sandbox.testUtils = utils;
   sandbox.asyncTestCommandId = asyncTestCommandId;
   sandbox.marionette = mn;
 
@@ -893,67 +887,13 @@ function coordinates(target, x, y) {
   return coords;
 }
 
-
-/**
- * This function returns true if the given coordinates are in the viewport.
- * @param 'x', and 'y' are the coordinates relative to the target.
- *        If they are not specified, then the center of the target is used.
- */
-function elementInViewport(el, x, y) {
-  let c = coordinates(el, x, y);
-  let curFrame = curContainer.frame;
-  let viewPort = {top: curFrame.pageYOffset,
-                  left: curFrame.pageXOffset,
-                  bottom: (curFrame.pageYOffset + curFrame.innerHeight),
-                  right:(curFrame.pageXOffset + curFrame.innerWidth)};
-  return (viewPort.left <= c.x + curFrame.pageXOffset &&
-          c.x + curFrame.pageXOffset <= viewPort.right &&
-          viewPort.top <= c.y + curFrame.pageYOffset &&
-          c.y + curFrame.pageYOffset <= viewPort.bottom);
-}
-
-/**
- * This function throws the visibility of the element error if the element is
- * not displayed or the given coordinates are not within the viewport.
- * @param 'x', and 'y' are the coordinates relative to the target.
- *        If they are not specified, then the center of the target is used.
- */
-function checkVisible(el, x, y) {
-  // Bug 1094246 - Webdriver's isShown doesn't work with content xul
-  if (utils.getElementAttribute(el, "namespaceURI").indexOf("there.is.only.xul") == -1) {
-    //check if the element is visible
-    let visible = utils.isElementDisplayed(el);
-    if (!visible) {
-      return false;
-    }
-  }
-
-  if (el.tagName.toLowerCase() === 'body') {
-    return true;
-  }
-  if (!elementInViewport(el, x, y)) {
-    //check if scroll function exist. If so, call it.
-    if (el.scrollIntoView) {
-      el.scrollIntoView(false);
-      if (!elementInViewport(el)) {
-        return false;
-      }
-    }
-    else {
-      return false;
-    }
-  }
-  return true;
-}
-
-
 /**
  * Function that perform a single tap
  */
 function singleTap(id, corx, cory) {
   let el = elementManager.getKnownElement(id, curContainer);
   // after this block, the element will be scrolled into view
-  let visible = checkVisible(el, corx, cory);
+  let visible = elements.checkVisible(el, curContainer.frame, corx, cory);
   if (!visible) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
@@ -1393,7 +1333,7 @@ function clickElement(id) {
  */
 function getElementAttribute(id, name) {
   let el = elementManager.getKnownElement(id, curContainer);
-  return utils.getElementAttribute(el, name);
+  return atom.getElementAttribute(el, name, curContainer.frame);
 }
 
 /**
@@ -1407,7 +1347,7 @@ function getElementAttribute(id, name) {
  */
 function getElementText(id) {
   let el = elementManager.getKnownElement(id, curContainer);
-  return utils.getElementText(el);
+  return atom.getElementText(el, curContainer.frame);
 }
 
 /**
@@ -1511,11 +1451,11 @@ function sendKeysToElement(msg) {
         // so pass the filename to driver.js, which in turn passes them back
         // to this frame script in receiveFiles.
         sendSyncMessage("Marionette:getFiles",
-                        {value: p, command_id: command_id});
+            {value: p, command_id: command_id});
   } else {
     interactions.sendKeysToElement(curContainer, elementManager, id, val)
-      .then(() => sendOk(command_id))
-      .catch(e => sendError(e, command_id));
+        .then(() => sendOk(command_id))
+        .catch(e => sendError(e, command_id));
   }
 }
 
@@ -1528,7 +1468,7 @@ function clearElement(id) {
     if (el.type == "file") {
       el.value = null;
     } else {
-      utils.clearElement(el);
+      atom.clearElement(el, curContainer.frame);
     }
   } catch (e) {
     // Bug 964738: Newer atoms contain status codes which makes wrapping
