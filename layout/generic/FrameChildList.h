@@ -93,7 +93,7 @@ class MOZ_STACK_CLASS FrameChildListIterator
   explicit FrameChildListIterator(const nsIFrame* aFrame);
 
 protected:
-  nsAutoTArray<FrameChildList,4> mLists;
+  AutoTArray<FrameChildList,4> mLists;
 };
 
 inline mozilla::layout::FrameChildListIDs

@@ -71,7 +71,7 @@ function run_test() {
     addCertFromFile(certdb, `test_getchain/${cert}.pem`, ",,");
   }
 
-  let ee_cert = certdb.findCertByNickname(null, 'ee');
+  let ee_cert = certdb.findCertByNickname('ee');
   notEqual(ee_cert, null, "EE cert should be in the cert DB");
 
   let ca = get_ca_array();

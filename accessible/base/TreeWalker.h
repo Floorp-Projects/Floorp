@@ -87,7 +87,7 @@ private:
   DocAccessible* mDoc;
   Accessible* mContext;
   nsIContent* mAnchorNode;
-  nsAutoTArray<ChildrenIterator, 20> mStateStack;
+  AutoTArray<ChildrenIterator, 20> mStateStack;
   int32_t mChildFilter;
   uint32_t mFlags;
 };

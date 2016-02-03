@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Form History Autocomplete</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form History test: form field autocomplete
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+
+  <!-- normal, basic form -->
+  <form id="form1" onsubmit="return false;">
+    <input list="suggest" type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+
+  <datalist id="suggest">
+    <option value="First"></option>
+    <option value="Second"></option>
+    <option value="Secomundo"></option>
+  </datalist>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var input = $_(1, "field1");
+
+function setupFormHistory(aCallback) {
+  updateFormHistory([
+    { op : "remove" },
+    { op : "add", fieldname : "field1", value : "Sec" },
+  ], () => {
+    spawn_task(aCallback);
+  });
+}
+
+function setForm(value) {
+  input.value = value;
+  input.focus();
+}
+
+// Restore the form to the default state.
+function restoreForm() {
+  setForm("");
+}
+
+// Check for expected form data.
+function checkForm(expectedValue) {
+  var formID = input.parentNode.id;
+  is(input.value, expectedValue, "Checking " + formID + " input");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var expectingPopup = null;
+
+function expectPopup() {
+  info("expecting a popup");
+  return new Promise(resolve => {
+    expectingPopup = resolve;
+  });
+}
+
+var testNum = 0;
+
+function popupShownListener() {
+  info("popup shown for test " + testNum);
+  if (expectingPopup) {
+    expectingPopup();
+    expectingPopup = null;
+  }
+  else {
+    ok(false, "Autocomplete popup not expected during test " + testNum);
+  }
+}
+
+function waitForMenuChange(expectedCount) {
+  return new Promise(resolve => {
+    notifyMenuChanged(expectedCount, null, resolve);
+  });
+}
+
+registerPopupShownListener(popupShownListener);
+
+function checkMenuEntries(expectedValues) {
+  var actualValues = getMenuEntries();
+  is(actualValues.length, expectedValues.length, testNum + " Checking length of expected menu");
+  for (var i = 0; i < expectedValues.length; i++)
+    is(actualValues[i], expectedValues[i], testNum + " Checking menu entry #"+i);
+}
+
+function* runTests() {
+  testNum++;
+  restoreForm();
+  doKey("down");
+  yield expectPopup();
+
+  checkMenuEntries(["Sec", "First", "Second", "Secomundo"]);
+  doKey("down");
+  doKey("return");
+  checkForm("Sec");
+
+  testNum++;
+  restoreForm();
+  sendString("Sec");
+  doKey("down");
+  yield expectPopup();
+
+  testNum++;
+  checkMenuEntries(["Sec", "Second", "Secomundo"]);
+  sendString("o");
+  yield waitForMenuChange(2);
+
+  testNum++;
+  checkMenuEntries(["Second", "Secomundo"]);
+  doKey("down");
+  doKey("return");
+  checkForm("Second");
+  SimpleTest.finish();
+}
+
+function startTest() {
+  setupFormHistory(runTests);
+}
+
+window.onload = startTest;
+
+</script>
+</pre>
+</body>
+</html>

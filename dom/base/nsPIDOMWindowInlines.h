@@ -125,7 +125,7 @@ nsIContent*
 nsPIDOMWindow<T>::GetFocusedNode() const
 {
   if (IsOuterWindow()) {
-    return mInnerWindow->GetFocusedNode();
+    return mInnerWindow ? mInnerWindow->GetFocusedNode() : nullptr;
   }
 
   return mFocusedNode;

@@ -712,7 +712,7 @@ protected:
 
   nsIFrame* GetFirstBodyRowGroupFrame();
 public:
-  typedef nsAutoTArray<nsTableRowGroupFrame*, 8> RowGroupArray;
+  typedef AutoTArray<nsTableRowGroupFrame*, 8> RowGroupArray;
   /**
    * Push all our child frames from the aRowGroups array, in order, starting
    * from the frame at aPushFrom to the end of the array. The frames are put on
@@ -857,7 +857,7 @@ protected:
   void DumpRowGroup(nsIFrame* aChildFrame);
 #endif
   // DATA MEMBERS
-  nsAutoTArray<nsTableColFrame*, 8> mColFrames;
+  AutoTArray<nsTableColFrame*, 8> mColFrames;
 
   struct TableBits {
     uint32_t mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow

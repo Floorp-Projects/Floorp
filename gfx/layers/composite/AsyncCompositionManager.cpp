@@ -1406,7 +1406,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
       }
 #endif
     } else {
-      nsAutoTArray<Layer*,1> scrollableLayers;
+      AutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
       mLayerManager->GetRootScrollableLayers(scrollableLayers);
 #else

@@ -173,7 +173,7 @@ HTMLAllCollection::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames
 
   // XXXbz this is very similar to nsContentList::GetSupportedNames,
   // but has to check IsAllNamedElement for the name case.
-  nsAutoTArray<nsIAtom*, 8> atoms;
+  AutoTArray<nsIAtom*, 8> atoms;
   for (uint32_t i = 0; i < Length(); ++i) {
     nsIContent *content = Item(i);
     if (content->HasID()) {

@@ -287,7 +287,7 @@ HTMLOptionsCollection::GetSupportedNames(unsigned aFlags,
     return;
   }
 
-  nsAutoTArray<nsIAtom*, 8> atoms;
+  AutoTArray<nsIAtom*, 8> atoms;
   for (uint32_t i = 0; i < mElements.Length(); ++i) {
     HTMLOptionElement* content = mElements.ElementAt(i);
     if (content) {

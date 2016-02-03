@@ -903,7 +903,7 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
         *aLength = aDist->Length();
         return true;
       }
-      nsAutoTArray<uint32_t, 16> clauses;
+      AutoTArray<uint32_t, 16> clauses;
       clauses.AppendElement(0);
       for (TextRange& range : *ranges) {
         if (!range.IsClause()) {
@@ -941,7 +941,8 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
 }
 
 bool
-nsPluginInstanceOwner::SetCandidateWindow(int32_t aX, int32_t aY)
+nsPluginInstanceOwner::SetCandidateWindow(
+    const widget::CandidateWindowPosition& aPosition)
 {
   if (NS_WARN_IF(!mPluginFrame)) {
     return false;
@@ -955,7 +956,7 @@ nsPluginInstanceOwner::SetCandidateWindow(int32_t aX, int32_t aY)
     }
   }
 
-  widget->SetCandidateWindowForPlugin(aX, aY);
+  widget->SetCandidateWindowForPlugin(aPosition);
   return true;
 }
 

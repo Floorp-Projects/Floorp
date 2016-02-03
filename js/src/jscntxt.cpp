@@ -152,7 +152,7 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
         MOZ_CRASH("Attempted to destroy a context while it is in a request.");
 
     cx->roots.checkNoGCRooters();
-    FinishPersistentRootedChains(cx->roots);
+    cx->roots.finishPersistentRoots();
 
     if (mode != DCM_NEW_FAILED) {
         if (JSContextCallback cxCallback = rt->cxCallback) {

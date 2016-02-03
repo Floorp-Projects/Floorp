@@ -535,8 +535,6 @@ case "$target" in
             MSVS_VERSION=2015
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
-            MSVC_APPCRT_DLL=appcrt140.dll
-            MSVC_DESKTOPCRT_DLL=desktopcrt140.dll
 
             # -Wv:18 disables all warnings introduced after VS2013
             # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
@@ -555,6 +553,13 @@ case "$target" in
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
             CFLAGS="$CFLAGS -wd4091"
             CXXFLAGS="$CXXFLAGS -wd4091"
+
+            if test -n "$WIN_UCRT_REDIST_DIR"; then
+              if test ! -d "$WIN_UCRT_REDIST_DIR"; then
+                AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
+              fi
+              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd`
+            fi
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
 You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, or newer in order to build.
@@ -563,8 +568,6 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
-        AC_SUBST(MSVC_APPCRT_DLL)
-        AC_SUBST(MSVC_DESKTOPCRT_DLL)
 
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then
@@ -1634,7 +1637,6 @@ dnl ========================================================
 if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
   AC_MSG_CHECKING([if we're targeting 32-bit])
   if test -z "$HAVE_64BIT_BUILD"; then
-    RUSTC="$RUSTC --target=i686-apple-darwin"
     AC_MSG_RESULT([using $RUSTC])
   else
     AC_MSG_RESULT([no])
@@ -2216,6 +2218,8 @@ ia64*-hpux*)
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
+        SSE_FLAGS="-arch:SSE"
+        SSE2_FLAGS="-arch:SSE2"
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
         if test "$CPU_ARCH" = "x86"; then
@@ -7216,14 +7220,16 @@ else
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
-    WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-    dnl Look for a broken crtdll.obj
-    WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
-    lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
-    if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_CRT=1
+    if test "$MSVS_VERSION" != "2015"; then
+        WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
+        dnl Look for a broken crtdll.obj
+        WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+        lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+        if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+          MOZ_CRT=1
+        fi
+        rm crtdll.obj
     fi
-    rm crtdll.obj
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -8799,6 +8805,19 @@ AC_SUBST(MOZ_NATIVE_NSPR)
 
 AC_SUBST(MOZ_NATIVE_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
+
+HOST_CMFLAGS=-fobjc-exceptions
+HOST_CMMFLAGS=-fobjc-exceptions
+OS_COMPILE_CMFLAGS=-fobjc-exceptions
+OS_COMPILE_CMMFLAGS=-fobjc-exceptions
+if test "$MOZ_WIDGET_TOOLKIT" = uikit; then
+  OS_COMPILE_CMFLAGS="$OS_COMPILE_CMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+  OS_COMPILE_CMMFLAGS="$OS_COMPILE_CMMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+fi
+AC_SUBST(HOST_CMFLAGS)
+AC_SUBST(HOST_CMMFLAGS)
+AC_SUBST(OS_COMPILE_CMFLAGS)
+AC_SUBST(OS_COMPILE_CMMFLAGS)
 
 OS_CFLAGS="$CFLAGS"
 OS_CXXFLAGS="$CXXFLAGS"

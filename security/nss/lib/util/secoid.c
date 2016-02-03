@@ -1990,7 +1990,7 @@ SECOID_Init(void)
 	return SECSuccess; /* already initialized */
     }
 
-    if (!PR_GetEnv("NSS_ALLOW_WEAK_SIGNATURE_ALG")) {
+    if (!PR_GetEnvSecure("NSS_ALLOW_WEAK_SIGNATURE_ALG")) {
 	/* initialize any policy flags that are disabled by default */
 	xOids[SEC_OID_MD2                           ].notPolicyFlags = ~0;
 	xOids[SEC_OID_MD4                           ].notPolicyFlags = ~0;
@@ -2005,7 +2005,7 @@ SECOID_Init(void)
     /* turn off NSS_USE_POLICY_IN_SSL by default */
     xOids[SEC_OID_APPLY_SSL_POLICY].notPolicyFlags = NSS_USE_POLICY_IN_SSL;
 
-    envVal = PR_GetEnv("NSS_HASH_ALG_SUPPORT");
+    envVal = PR_GetEnvSecure("NSS_HASH_ALG_SUPPORT");
     if (envVal)
     	handleHashAlgSupport(envVal);
 

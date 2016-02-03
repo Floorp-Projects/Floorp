@@ -1124,10 +1124,11 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   }
 
   if (BlendOpIsMixBlendMode(blendMode)) {
-    gfx::Matrix4x4 transform;
-    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &transform);
+    gfx::Matrix4x4 backdropTransform;
+    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
+
     mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
-    program->SetBackdropTransform(transform);
+    program->SetBackdropTransform(backdropTransform);
   }
 
   program->SetRenderOffset(offset.x, offset.y);

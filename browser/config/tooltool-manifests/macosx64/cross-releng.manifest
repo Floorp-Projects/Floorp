@@ -47,5 +47,21 @@
 "algorithm": "sha512", 
 "unpack": true,
 "filename": "genisoimage.tar.xz"
+},
+{
+"size": 60778437,
+"visibility": "public",
+"digest": "2d5d300dd0d829012953ca0dd70b0abfda4e848ff03450326cf0c10eac2a71e37275b824597641f0f536b97b754bc81b10f9dbbb73ff725412858a7c2b9df6a7",
+"algorithm": "sha512",
+"filename": "rust-std-lib.tar.bz2",
+"unpack": true
+},
+{
+"size": 36038146,
+"visibility": "public",
+"digest": "b967ba81cb08ce4c3a18e3f8411365ee775861df1ba7f60bcaccd03f940732ee9c4c622cd3163198abb36b2124cde550c61b5d153f1ae8a9107b382ddf660895",
+"algorithm": "sha512",
+"filename": "rustc-linux64.tar.bz2",
+"unpack": true
 }
 ]

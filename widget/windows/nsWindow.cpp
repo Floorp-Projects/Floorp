@@ -6624,7 +6624,7 @@ static HRGN
 CreateHRGNFromArray(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
   int32_t size = sizeof(RGNDATAHEADER) + sizeof(RECT)*aRects.Length();
-  nsAutoTArray<uint8_t,100> buf;
+  AutoTArray<uint8_t,100> buf;
   buf.SetLength(size);
   RGNDATA* data = reinterpret_cast<RGNDATA*>(buf.Elements());
   RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
@@ -7406,7 +7406,7 @@ nsWindow::GetPopupsToRollup(nsIRollupListener* aRollupListener,
   // to rollup some of them if the click is in a parent menu of the current
   // submenu.
   *aPopupsToRollup = UINT32_MAX;
-  nsAutoTArray<nsIWidget*, 5> widgetChain;
+  AutoTArray<nsIWidget*, 5> widgetChain;
   uint32_t sameTypeCount =
     aRollupListener->GetSubmenuWidgetChain(&widgetChain);
   for (uint32_t i = 0; i < widgetChain.Length(); ++i) {
@@ -7843,13 +7843,21 @@ nsWindow::ComputeShouldAccelerate()
 }
 
 void
-nsWindow::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
+nsWindow::SetCandidateWindowForPlugin(const CandidateWindowPosition& aPosition)
 {
   CANDIDATEFORM form;
   form.dwIndex = 0;
-  form.dwStyle = CFS_CANDIDATEPOS;
-  form.ptCurrentPos.x = aX;
-  form.ptCurrentPos.y = aY;
+  if (aPosition.mExcludeRect) {
+    form.dwStyle = CFS_EXCLUDE;
+    form.rcArea.left = aPosition.mRect.x;
+    form.rcArea.top = aPosition.mRect.y;
+    form.rcArea.right = aPosition.mRect.x + aPosition.mRect.width;
+    form.rcArea.bottom = aPosition.mRect.y + aPosition.mRect.height;
+  } else {
+    form.dwStyle = CFS_CANDIDATEPOS;
+  }
+  form.ptCurrentPos.x = aPosition.mPoint.x;
+  form.ptCurrentPos.y = aPosition.mPoint.y;
 
   IMEHandler::SetCandidateWindow(this, &form);
 }

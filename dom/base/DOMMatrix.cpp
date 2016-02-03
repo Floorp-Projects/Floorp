@@ -267,7 +267,7 @@ template <typename T> void GetDataFromMatrix(const DOMMatrixReadOnly* aMatrix, T
 void
 DOMMatrixReadOnly::ToFloat32Array(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv) const
 {
-  nsAutoTArray<float, 16> arr;
+  AutoTArray<float, 16> arr;
   arr.SetLength(16);
   GetDataFromMatrix(this, arr.Elements());
   JS::Rooted<JS::Value> value(aCx);
@@ -281,7 +281,7 @@ DOMMatrixReadOnly::ToFloat32Array(JSContext* aCx, JS::MutableHandle<JSObject*> a
 void
 DOMMatrixReadOnly::ToFloat64Array(JSContext* aCx, JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv) const
 {
-  nsAutoTArray<double, 16> arr;
+  AutoTArray<double, 16> arr;
   arr.SetLength(16);
   GetDataFromMatrix(this, arr.Elements());
   JS::Rooted<JS::Value> value(aCx);
