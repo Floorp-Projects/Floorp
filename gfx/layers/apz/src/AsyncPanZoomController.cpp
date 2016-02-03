@@ -214,11 +214,6 @@ using mozilla::gfx::PointTyped;
  * value of this pref, and (t1 - t0) is the amount of time, in milliseconds,
  * that has elapsed between the two samples.
  *
- * \li\b apz.fling_repaint_interval
- * Maximum amount of time flinging before sending a viewport change. This will
- * asynchronously repaint the page.\n
- * Units: milliseconds
- *
  * \li\b apz.fling_stop_on_tap_threshold
  * When flinging, if the velocity is above this number, then a tap on the
  * screen will stop the fling without dispatching a tap to content. If the
@@ -282,17 +277,8 @@ using mozilla::gfx::PointTyped;
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
- * \li\b apz.pan_repaint_interval
- * Maximum amount of time while panning before sending a viewport change. This
- * will asynchronously repaint the page. It is also forced when panning stops.
- *
  * \li\b apz.record_checkerboarding
  * Whether or not to record detailed info on checkerboarding events.
- *
- * \li\b apz.smooth_scroll_repaint_interval
- * Maximum amount of time doing a smooth scroll before sending a viewport
- * change. This will asynchronously repaint the page.\n
- * Units: milliseconds
  *
  * \li\b apz.test.logging_enabled
  * Enable logging of APZ test data (see bug 961289).
