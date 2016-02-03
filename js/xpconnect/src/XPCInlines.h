@@ -537,9 +537,7 @@ XPCWrappedNative::HasInterfaceNoQI(const nsIID& iid)
 inline void
 XPCWrappedNative::SweepTearOffs()
 {
-    XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk.get()) {
-        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+    for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {
         bool marked = to->IsMarked();
         to->Unmark();
         if (marked)

@@ -1972,6 +1972,15 @@ public:
     void Unmark()     {mJSObject.unsetFlags(1);}
     bool IsMarked() const {return mJSObject.hasFlag(1);}
 
+    XPCWrappedNativeTearOff* AddTearOff()
+    {
+        MOZ_ASSERT(!mNextTearOff);
+        mNextTearOff = mozilla::MakeUnique<XPCWrappedNativeTearOff>();
+        return mNextTearOff.get();
+    }
+
+    XPCWrappedNativeTearOff* GetNextTearOff() {return mNextTearOff.get();}
+
 private:
     XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r) = delete;
     XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r) = delete;
@@ -1982,25 +1991,9 @@ private:
     // nsISupports pointer.
     RefPtr<nsISupports> mNative;
     JS::TenuredHeap<JSObject*> mJSObject;
+    mozilla::UniquePtr<XPCWrappedNativeTearOff> mNextTearOff;
 };
 
-/***********************************************/
-// XPCWrappedNativeTearOffChunk is a linked list of XPCWrappedNativeTearOff
-// objects. It lets us allocate a set of XPCWrappedNativeTearOff objects and
-// link the sets - rather than only having the option of linking single
-// XPCWrappedNativeTearOff objects.
-
-class XPCWrappedNativeTearOffChunk
-{
-friend class XPCWrappedNative;
-public:
-    XPCWrappedNativeTearOffChunk() {}
-    ~XPCWrappedNativeTearOffChunk() {}
-
-private:
-    XPCWrappedNativeTearOff mTearOff;
-    mozilla::UniquePtr<XPCWrappedNativeTearOffChunk> mNextChunk;
-};
 
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
@@ -2275,7 +2268,7 @@ private:
     XPCNativeSet* mSet;
     JS::TenuredHeap<JSObject*> mFlatJSObject;
     XPCNativeScriptableInfo* mScriptableInfo;
-    XPCWrappedNativeTearOffChunk mFirstChunk;
+    XPCWrappedNativeTearOff mFirstTearOff;
 };
 
 /***************************************************************************
