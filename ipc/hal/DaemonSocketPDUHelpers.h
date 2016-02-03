@@ -1142,6 +1142,136 @@ public:
     WarnAboutTrailingData();
     return NS_OK;
   }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6, typename T7>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5, T6& aArg6, T7& aArg7) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg7);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6, typename T7, typename T8>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5, T6& aArg6, T7& aArg7, T8& aArg8) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg7);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg8);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6, typename T7, typename T8, typename T9>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5, T6& aArg6, T7& aArg7, T8& aArg8,
+                        T9& aArg9) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg7);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg8);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg9);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
 };
 
 } // namespace DaemonSocketPDUHelpers
