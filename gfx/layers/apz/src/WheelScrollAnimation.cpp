@@ -14,8 +14,7 @@ namespace mozilla {
 namespace layers {
 
 WheelScrollAnimation::WheelScrollAnimation(AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition)
-  : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZSmoothScrollRepaintInterval()))
-  , AsyncScrollBase(aInitialPosition)
+  : AsyncScrollBase(aInitialPosition)
   , mApzc(aApzc)
   , mFinalDestination(aInitialPosition)
 {
