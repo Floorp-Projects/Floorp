@@ -227,8 +227,34 @@ function EdgeBookmarksMigrator() {
 EdgeBookmarksMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
+  get TABLE_NAME() { return "Favorites" },
+
   get exists() {
-    return !!gEdgeDatabase;
+    if ("_exists" in this) {
+      return this._exists;
+    }
+    return this._exists = (!!gEdgeDatabase && this._checkTableExists());
+  },
+
+  _checkTableExists() {
+    let database;
+    let rv;
+    try {
+      let logFile = gEdgeDatabase.parent;
+      logFile.append("LogFiles");
+      database = ESEDBReader.openDB(gEdgeDatabase.parent, gEdgeDatabase, logFile);
+
+      rv = database.tableExists(this.TABLE_NAME);
+    } catch (ex) {
+      Cu.reportError("Failed to check for table " + tableName + " in Edge database at " +
+                     gEdgeDatabase.path + " due to the following error: " + ex);
+      return false;
+    } finally {
+      if (database) {
+        ESEDBReader.closeDB(database);
+      }
+    }
+    return rv;
   },
 
   migrate(callback) {
@@ -322,7 +348,7 @@ EdgeBookmarksMigrator.prototype = {
       }
       return true;
     }
-    let bookmarks = readTableFromEdgeDB("Favorites", columns, filterFn);
+    let bookmarks = readTableFromEdgeDB(this.TABLE_NAME, columns, filterFn);
     return {bookmarks, folderMap};
   },
 
@@ -367,8 +393,12 @@ function EdgeProfileMigrator() {
 EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 EdgeProfileMigrator.prototype.getResources = function() {
+  let bookmarksMigrator = new EdgeBookmarksMigrator();
+  if (!bookmarksMigrator.exists) {
+    bookmarksMigrator = MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE);
+  }
   let resources = [
-    new EdgeBookmarksMigrator(),
+    bookmarksMigrator,
     MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
     new EdgeTypedURLMigrator(),
     new EdgeReadingListMigrator(),
