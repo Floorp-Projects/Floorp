@@ -27,6 +27,7 @@
 #include "HwcComposer2D.h"
 #include "VsyncSource.h"
 #include "nsWindow.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/ProcessPriorityManager.h"
@@ -760,19 +761,33 @@ nsScreenManagerGonk::~nsScreenManagerGonk()
 {
 }
 
+static StaticRefPtr<nsScreenManagerGonk> sScreenManagerGonk;
+
 /* static */ already_AddRefed<nsScreenManagerGonk>
 nsScreenManagerGonk::GetInstance()
 {
-    nsCOMPtr<nsIScreenManager> manager;
-    manager = do_GetService("@mozilla.org/gfx/screenmanager;1");
-    MOZ_ASSERT(manager);
-    return already_AddRefed<nsScreenManagerGonk>(
-        static_cast<nsScreenManagerGonk*>(manager.forget().take()));
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Avoid creating nsScreenManagerGonk from content process.
+    if (!XRE_IsParentProcess()) {
+        MOZ_CRASH("Non-chrome processes should not get here.");
+    }
+
+    // Avoid creating multiple nsScreenManagerGonk instance inside main process.
+    if (!sScreenManagerGonk) {
+      sScreenManagerGonk = new nsScreenManagerGonk();
+      ClearOnShutdown(&sScreenManagerGonk);
+    }
+
+    RefPtr<nsScreenManagerGonk> screenMgr = sScreenManagerGonk.get();
+    return screenMgr.forget();
 }
 
 /* static */ already_AddRefed< nsScreenGonk>
 nsScreenManagerGonk::GetPrimaryScreen()
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     RefPtr<nsScreenManagerGonk> manager = nsScreenManagerGonk::GetInstance();
     nsCOMPtr<nsIScreen> screen;
     manager->GetPrimaryScreen(getter_AddRefs(screen));
