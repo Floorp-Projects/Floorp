@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>NPAPI NPNVcontentsScaleFactor Test</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="plugin-utils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+     function checkZoomFactor(expectedValue) {
+       var pluginElement = document.getElementById("plugin");
+       var getValueZoomFactor;
+       var setValueZoomFactor;
+
+       try {
+         getValueZoomFactor = pluginElement.queryCSSZoomFactorGetValue();
+       } catch (e) {
+         ok(false, "Exception should not be thrown getting CSS zoom factor via NPP_GetValue.");
+       }
+       is(isNaN(getValueZoomFactor), false, "Return should be valid when getting CSS zoom factor");
+       ok(expectedValue - getValueZoomFactor < 0.00001, "Expected CSS Zoom Factor of ~" + expectedValue + ", got " + getValueZoomFactor);
+
+       try {
+         setValueZoomFactor = pluginElement.queryCSSZoomFactorGetValue();
+       } catch (e) {
+         ok(false, "Exception should not be thrown getting CSS zoom factor.");
+       }
+       is(isNaN(setValueZoomFactor), false, "Return should be valid when getting CSS zoom factor via value from NPP_SetValue");
+       ok(expectedValue - setValueZoomFactor < 0.00001, "Expected CSS Zoom Factor of ~" + expectedValue + ", got " + setValueZoomFactor);
+     }
+
+     function testZoom() {
+       checkZoomFactor(2.0);
+       // set back to 1 when we're done otherwise later tests can fail
+       SpecialPowers.setFullZoom(window, 1.0);
+       SimpleTest.finish();
+     }
+
+     function runTests() {
+       checkZoomFactor(1.0);
+       SpecialPowers.setFullZoom(window, 2.0);
+       // Check for new zoom value sometime after we've spun event loop to repaint.
+       setTimeout(testZoom, 0);
+     }
+    </script>
+
+    <embed id="plugin" type="application/x-test" width="400" height="400"></embed>
+  </body>
+</html>
