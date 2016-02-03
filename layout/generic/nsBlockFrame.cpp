@@ -913,21 +913,44 @@ nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
   return NS_OK;
 }
 
+/**
+ * Return whether aNewAvailableSpace is smaller *on either side*
+ * (inline-start or inline-end) than aOldAvailableSpace, so that we know
+ * if we need to redo layout on an line, replaced block, or block
+ * formatting context, because its height (which we used to compute
+ * aNewAvailableSpace) caused it to intersect additional floats.
+ */
 static bool
 AvailableSpaceShrunk(WritingMode aWM,
                      const LogicalRect& aOldAvailableSpace,
-                     const LogicalRect& aNewAvailableSpace)
+                     const LogicalRect& aNewAvailableSpace,
+                     bool aCanGrow /* debug-only */)
 {
   if (aNewAvailableSpace.ISize(aWM) == 0) {
     // Positions are not significant if the inline size is zero.
     return aOldAvailableSpace.ISize(aWM) != 0;
   }
-  NS_ASSERTION(aOldAvailableSpace.IStart(aWM) <=
-               aNewAvailableSpace.IStart(aWM) &&
-               aOldAvailableSpace.IEnd(aWM) >=
-               aNewAvailableSpace.IEnd(aWM),
-               "available space should never grow");
-  return aOldAvailableSpace.ISize(aWM) != aNewAvailableSpace.ISize(aWM);
+  if (aCanGrow) {
+    NS_ASSERTION(aNewAvailableSpace.IStart(aWM) <=
+                   aOldAvailableSpace.IStart(aWM) ||
+                 aNewAvailableSpace.IEnd(aWM) <= aOldAvailableSpace.IEnd(aWM),
+                 "available space should not shrink on the start side and "
+                 "grow on the end side");
+    NS_ASSERTION(aNewAvailableSpace.IStart(aWM) >=
+                   aOldAvailableSpace.IStart(aWM) ||
+                 aNewAvailableSpace.IEnd(aWM) >= aOldAvailableSpace.IEnd(aWM),
+                 "available space should not grow on the start side and "
+                 "shrink on the end side");
+  } else {
+    NS_ASSERTION(aOldAvailableSpace.IStart(aWM) <=
+                 aNewAvailableSpace.IStart(aWM) &&
+                 aOldAvailableSpace.IEnd(aWM) >=
+                 aNewAvailableSpace.IEnd(aWM),
+                 "available space should never grow");
+  }
+  // Have we shrunk on either side?
+  return aNewAvailableSpace.IStart(aWM) > aOldAvailableSpace.IStart(aWM) ||
+         aNewAvailableSpace.IEnd(aWM) < aOldAvailableSpace.IEnd(aWM);
 }
 
 static LogicalSize
@@ -3384,8 +3407,18 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // Restore the height to the position of the next band.
       floatAvailableSpace.mRect.BSize(wm) =
         oldFloatAvailableSpaceRect.BSize(wm);
+      // Determine whether the available space shrunk on either side,
+      // because (the first time round) we now know the block's height,
+      // and it may intersect additional floats, or (on later
+      // iterations) because narrowing the width relative to the
+      // previous time may cause the block to become taller.  Note that
+      // since we're reflowing the block, narrowing the width might also
+      // make it shorter, so we must pass aCanGrow as true.
       if (!AvailableSpaceShrunk(wm, oldFloatAvailableSpaceRect,
-                                floatAvailableSpace.mRect)) {
+                                floatAvailableSpace.mRect, true)) {
+        // The size and position we chose before are fine (i.e., they
+        // don't cause intersecting with floats that requires a change
+        // in size or position), so we're done.
         break;
       }
 
@@ -4423,8 +4456,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   aFloatAvailableSpace.BSize(wm) = oldFloatAvailableSpace.BSize(wm);
   // If the available space between the floats is smaller now that we
   // know the height, return false (and cause another pass with
-  // LINE_REFLOW_REDO_MORE_FLOATS).
-  if (AvailableSpaceShrunk(wm, oldFloatAvailableSpace, aFloatAvailableSpace)) {
+  // LINE_REFLOW_REDO_MORE_FLOATS).  We ensure aAvailableSpaceHeight
+  // never decreases, which means that we can't reduce the set of floats
+  // we intersect, which means that the available space cannot grow.
+  if (AvailableSpaceShrunk(wm, oldFloatAvailableSpace, aFloatAvailableSpace,
+                           false)) {
     return false;
   }
 
