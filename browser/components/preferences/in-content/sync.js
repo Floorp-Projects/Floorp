@@ -425,19 +425,6 @@ var gSyncPane = {
     }
   },
 
-  // Called whenever one of the sync engine preferences is changed.
-  onPreferenceChanged: function() {
-    let prefElts = document.querySelectorAll("#syncEnginePrefs > preference");
-    let syncEnabled = false;
-    for (let elt of prefElts) {
-      if (elt.name.startsWith("services.sync.") && elt.value) {
-        syncEnabled = true;
-        break;
-      }
-    }
-    Services.prefs.setBoolPref("services.sync.enabled", syncEnabled);
-  },
-
   startOver: function (showDialog) {
     if (showDialog) {
       let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +

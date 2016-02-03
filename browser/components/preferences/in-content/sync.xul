@@ -4,8 +4,7 @@
 
 <!-- Sync panel -->
 
-<preferences id="syncEnginePrefs" hidden="true" data-category="paneSync"
-             onchange="gSyncPane.onPreferenceChanged();">
+<preferences id="syncEnginePrefs" hidden="true" data-category="paneSync">
   <preference id="engine.addons"
               name="services.sync.engine.addons"
               type="bool"/>
