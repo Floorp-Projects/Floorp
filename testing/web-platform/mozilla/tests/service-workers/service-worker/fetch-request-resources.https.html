@@ -109,12 +109,12 @@ async_test(function(t) {
       .then(function(f) {
         frame = f;
 
-        // TODO: Disable 'no-cors' tests for image and stylesheet until
+        // TODO: Disable 'no-cors' tests for image until
         //       AsyncOpen2 and cookie policy is supported.
         // image_test(f, LOCAL_URL, '', 'no-cors', 'include');
         // image_test(f, REMOTE_URL, '', 'no-cors', 'include');
-        // css_test(f, LOCAL_URL, '', 'no-cors', 'include');
-        // css_test(f, REMOTE_URL, '', 'no-cors', 'include');
+        css_test(f, LOCAL_URL, '', 'no-cors', 'include');
+        css_test(f, REMOTE_URL, '', 'no-cors', 'include');
 
         image_test(f, LOCAL_URL, 'anonymous', 'cors', 'same-origin');
         image_test(f, LOCAL_URL, 'use-credentials', 'cors', 'include');
@@ -130,7 +130,7 @@ async_test(function(t) {
 
         css_test(f, LOCAL_URL, 'anonymous', 'cors', 'same-origin');
         css_test(f, LOCAL_URL, 'use-credentials', 'cors', 'include');
-        css_test(f, REMOTE_URL, 'anonymous', 'cors', 'omit');
+        css_test(f, REMOTE_URL, 'anonymous', 'cors', 'same-origin');
         css_test(f, REMOTE_URL, 'use-credentials', 'cors', 'include');
 
         font_face_test(f, LOCAL_URL, 'cors', 'same-origin');
