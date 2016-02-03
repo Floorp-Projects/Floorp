@@ -21,7 +21,7 @@ Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/proxy.js");
-Cu.import("chrome://marionette/content/interactions.js");
+Cu.import("chrome://marionette/content/interaction.js");
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
