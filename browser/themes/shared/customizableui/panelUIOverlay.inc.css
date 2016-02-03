@@ -686,7 +686,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 .PanelUI-remotetabs-prefs-button {
   -moz-appearance: none;
   background-color: #0096dd;
-  color: white;
+  /* !important for the color as an OSX specific rule when a lightweight theme
+     is used for buttons in the toolbox overrides. See bug 1238531 for details */
+  color: white !important;
   border-radius: 2px;
   margin-top: 10px;
   margin-bottom: 10px;
