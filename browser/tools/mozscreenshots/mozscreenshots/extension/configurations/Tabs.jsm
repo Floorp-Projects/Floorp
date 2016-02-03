@@ -15,6 +15,7 @@ const DEFAULT_FAVICON_TAB = `data:text/html,<meta charset="utf-8">
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 this.Tabs = {
   init(libDir) {},
@@ -25,6 +26,9 @@ this.Tabs = {
         fiveTabsHelper();
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         hoverTab(browserWindow.gBrowser.tabs[3]);
+        yield new Promise((resolve, reject) => {
+          setTimeout(resolve, 3000);
+        });
       }),
     },
 
@@ -48,6 +52,9 @@ this.Tabs = {
         hoverTab(newTabButton);
         browserWindow.gBrowser.tabs[browserWindow.gBrowser.tabs.length - 1].
                       setAttribute("beforehovered", true);
+        yield new Promise((resolve, reject) => {
+          setTimeout(resolve, 3000);
+        });
       }),
     },
 
@@ -92,6 +99,9 @@ this.Tabs = {
         browserWindow.gBrowser.pinTab(tab);
         browserWindow.gBrowser.selectTabAtIndex(4);
         hoverTab(browserWindow.gBrowser.tabs[6]);
+        yield new Promise((resolve, reject) => {
+          setTimeout(resolve, 3000);
+        });
       }),
     },
   },
