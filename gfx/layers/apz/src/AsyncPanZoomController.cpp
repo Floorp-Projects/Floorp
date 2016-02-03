@@ -443,8 +443,7 @@ public:
                  const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                  bool aApplyAcceleration,
                  const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
-    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
-    , mApzc(aApzc)
+    : mApzc(aApzc)
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
     , mScrolledApzc(aScrolledApzc)
   {
@@ -611,8 +610,7 @@ class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
   ZoomAnimation(CSSPoint aStartOffset, CSSToParentLayerScale2D aStartZoom,
                 CSSPoint aEndOffset, CSSToParentLayerScale2D aEndZoom)
-    : AsyncPanZoomAnimation(TimeDuration::Forever())
-    , mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
+    : mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
     , mStartOffset(aStartOffset)
     , mStartZoom(aStartZoom)
     , mEndOffset(aEndOffset)
@@ -670,8 +668,7 @@ private:
 class OverscrollAnimation: public AsyncPanZoomAnimation {
 public:
   explicit OverscrollAnimation(AsyncPanZoomController& aApzc, const ParentLayerPoint& aVelocity)
-    : AsyncPanZoomAnimation(TimeDuration::Forever())
-    , mApzc(aApzc)
+    : mApzc(aApzc)
   {
     mApzc.mX.StartOverscrollAnimation(aVelocity.x);
     mApzc.mY.StartOverscrollAnimation(aVelocity.y);
@@ -713,9 +710,7 @@ public:
                         const nsPoint &aInitialVelocity,
                         const nsPoint& aDestination, double aSpringConstant,
                         double aDampingRatio)
-   : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(
-                           gfxPrefs::APZSmoothScrollRepaintInterval()))
-   , mApzc(aApzc)
+   : mApzc(aApzc)
    , mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
                  aSpringConstant, aDampingRatio)
    , mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
