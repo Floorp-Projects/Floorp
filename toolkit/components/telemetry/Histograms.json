@@ -5155,7 +5155,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, WebApp, Guest, Restricted)",
+    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, WebApp, Guest, Restricted, Shortcut)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_RESTRICTED_PROFILE_RESTRICTIONS": {
