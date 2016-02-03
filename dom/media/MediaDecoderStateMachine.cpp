@@ -2099,11 +2099,9 @@ MediaDecoderStateMachine::SeekCompleted()
     // seekTime is bounded in suitable duration. See Bug 1112438.
     int64_t audioStart = audio ? audio->mTime : seekTime;
     // We only pin the seek time to the video start time if the video frame
-    // contains the seek time. We also perform this operation if there's no
-    // video in order to get around bug 1244639.
-    if (!video || (video->mTime <= seekTime && video->GetEndTime() > seekTime)) {
-      int64_t videoStart = video ? video->mTime : seekTime;
-      newCurrentTime = std::min(audioStart, videoStart);
+    // contains the seek time.
+    if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
+      newCurrentTime = std::min(audioStart, video->mTime);
     } else {
       newCurrentTime = audioStart;
     }
