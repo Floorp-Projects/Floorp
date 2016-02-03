@@ -312,7 +312,7 @@ ESEDB.prototype = {
 
   checkForColumn(tableName, columnName) {
     if (!this._opened) {
-      throw "The database was closed!";
+      throw new Error("The database was closed!");
     }
 
     let columnInfo;
@@ -324,9 +324,33 @@ ESEDB.prototype = {
     return columnInfo[0];
   },
 
+  tableExists(tableName) {
+    if (!this._opened) {
+      throw new Error("The database was closed!");
+    }
+
+    let tableId = new ESE.JET_TABLEID();
+    let rv = ESE.ManualOpenTableW(this._sessionId, this._dbId, tableName, null,
+                                  0, 4 /* JET_bitTableReadOnly */,
+                                  tableId.address());
+    if (rv == -1305 /* JET_errObjectNotFound */) {
+      return false;
+    }
+    if (rv < 0) {
+      log.error("Got error " + rv + " calling OpenTableW");
+      throw new Error(convertESEError(rv));
+    }
+
+    if (rv > 0) {
+      log.error("Got warning " + rv + " calling OpenTableW");
+    }
+    ESE.FailSafeCloseTable(this._sessionId, tableId);
+    return true;
+  },
+
   tableItems: function*(tableName, columns) {
     if (!this._opened) {
-      throw "The database was closed!";
+      throw new Error("The database was closed!");
     }
 
     let tableOpened = false;
@@ -391,7 +415,7 @@ ESEDB.prototype = {
       let byteArray = ctypes.ArrayType(ctypes.uint8_t);
       buffer = new byteArray(column.dbSize);
     } else {
-      throw "Unknown type " + column.type;
+      throw new Error("Unknown type " + column.type);
     }
     return [buffer, buffer.constructor.size];
   },
@@ -403,7 +427,7 @@ ESEDB.prototype = {
         buffer = null;
       } else {
         Cu.reportError("Unexpected JET error: " + err + ";" + " retrieving value for column " + column.name);
-        throw this.convertError(err);
+        throw new Error(convertESEError(err));
       }
     }
     if (column.type == "string") {
