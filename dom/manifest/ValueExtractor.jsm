@@ -12,8 +12,9 @@ const {
   interfaces: Ci
 } = Components;
 
-function ValueExtractor(aConsole) {
+function ValueExtractor(aConsole, aBundle) {
   this.console = aConsole;
+  this.domBundle = aBundle;
 }
 
 ValueExtractor.prototype = {
@@ -32,9 +33,9 @@ ValueExtractor.prototype = {
     const type = (isArray) ? 'array' : typeof value;
     if (type !== expectedType) {
       if (type !== 'undefined') {
-        let msg = `Expected the ${objectName}'s ${property} `;
-        msg += `member to be a ${expectedType}.`;
-        this.console.log(msg);
+        this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidType",
+                                                              [objectName, property, expectedType],
+                                                              3));
       }
       return undefined;
     }
@@ -53,8 +54,9 @@ ValueExtractor.prototype = {
     if (DOMUtils.isValidCSSColor(value)) {
       color = value;
     } else if (value) {
-      const msg = `${spec.property}: ${value} is not a valid CSS color.`;
-      this.console.warn(msg);
+      this.console.warn(this.domBundle.formatStringFromName("ManifestInvalidCSSColor",
+                                                            [spec.property, value],
+                                                            2));
     }
     return color;
   }
