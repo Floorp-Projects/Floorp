@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/atoms.js");
+Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/error.js");
 
 /**
