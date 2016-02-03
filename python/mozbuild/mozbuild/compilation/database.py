@@ -118,17 +118,17 @@ class CompileDBBackend(CommonBackend):
     def _build_db_line(self, objdir, cenv, filename, canonical_suffix, flags, ishost):
         # Distinguish between host and target files.
         prefix = 'HOST_' if ishost else ''
-        if canonical_suffix == '.c':
+        if canonical_suffix in ('.c', '.m'):
             compiler = cenv.substs[prefix + 'CC']
             cflags = list(flags['COMPILE_CFLAGS'])
             # Add the Objective-C flags if needed.
-            if filename.endswith('.m'):
+            if canonical_suffix == '.m':
                 cflags.extend(flags['COMPILE_CMFLAGS'])
-        elif canonical_suffix == '.cpp':
+        elif canonical_suffix in ('.cpp', '.mm'):
             compiler = cenv.substs[prefix + 'CXX']
             cflags = list(flags['COMPILE_CXXFLAGS'])
             # Add the Objective-C++ flags if needed.
-            if filename.endswith('.mm'):
+            if canonical_suffix == '.mm':
                 cflags.extend(flags['COMPILE_CMMFLAGS'])
         else:
             return

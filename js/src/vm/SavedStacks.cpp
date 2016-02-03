@@ -65,13 +65,13 @@ LiveSavedFrameCache::getFramePtr(FrameIter& iter)
     return Nothing();
 }
 
-/* static */ void
-LiveSavedFrameCache::trace(LiveSavedFrameCache* cache, JSTracer* trc)
+void
+LiveSavedFrameCache::trace(JSTracer* trc)
 {
-    if (!cache->initialized())
+    if (!initialized())
         return;
 
-    for (auto* entry = cache->frames->begin(); entry < cache->frames->end(); entry++) {
+    for (auto* entry = frames->begin(); entry < frames->end(); entry++) {
         TraceEdge(trc,
                   &entry->savedFrame,
                   "LiveSavedFrameCache::frames SavedFrame");

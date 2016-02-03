@@ -1835,7 +1835,8 @@ public:
     /**
      * Set IME candidate window position by windowless plugin.
      */
-    virtual void SetCandidateWindowForPlugin(int32_t aX, int32_t aY) = 0;
+    virtual void SetCandidateWindowForPlugin(
+      const mozilla::widget::CandidateWindowPosition& aPosition) = 0;
 
     /**
      * Handle default action when PluginEvent isn't handled

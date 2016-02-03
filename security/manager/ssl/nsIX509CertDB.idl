@@ -46,7 +46,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(a36c45fb-f7b5-423e-a0f7-ea1eb4fd60b5)]
+[scriptable, uuid(5c16cd9b-5a73-47f1-ab0f-11ede7495cce)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -59,19 +59,15 @@ interface nsIX509CertDB : nsISupports {
   const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
   /**
-   *  Given a nickname and optionally a token,
+   *  Given a nickname,
    *  locate the matching certificate.
    *
-   *  @param aToken Optionally limits the scope of
-   *                this function to a token device.
-   *                Can be null to mean any token.
    *  @param aNickname The nickname to be used as the key
    *                   to find a certificate.
    *
    *  @return The matching certificate if found.
    */
-  nsIX509Cert findCertByNickname(in nsISupports aToken,
-                                 in AString aNickname);
+  nsIX509Cert findCertByNickname(in AString aNickname);
 
   /**
    *  Will find a certificate based on its dbkey
@@ -80,11 +76,8 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aDBkey Database internal key, as obtained using
    *                attribute dbkey in nsIX509Cert.
-   *  @param aToken Optionally limits the scope of
-   *                this function to a token device.
-   *                Can be null to mean any token.
    */
-  nsIX509Cert findCertByDBKey(in string aDBkey, in nsISupports aToken);
+  nsIX509Cert findCertByDBKey(in string aDBkey);
 
   /**
    *  Obtain a list of certificate nicknames from the database.
@@ -92,16 +85,12 @@ interface nsIX509CertDB : nsISupports {
    *    user, ca, or server cert - the nickname
    *    email cert - the email address
    *
-   *  @param aToken Optionally limits the scope of
-   *                this function to a token device.
-   *                Can be null to mean any token.
    *  @param aType Type of certificate to obtain
    *               See certificate type constants in nsIX509Cert.
    *  @param count The number of nicknames in the returned array
    *  @param certNameList The returned array of certificate nicknames.
    */
-  void findCertNicknames(in nsISupports aToken,
-                         in unsigned long aType,
+  void findCertNicknames(in unsigned long aType,
                          out unsigned long count,
                          [array, size_is(count)] out wstring certNameList);
 
@@ -128,16 +117,12 @@ interface nsIX509CertDB : nsISupports {
   /**
    *  Find a certificate by email address.
    *
-   *  @param aToken Optionally limits the scope of
-   *                this function to a token device.
-   *                Can be null to mean any token.
    *  @param aEmailAddress The email address to be used as the key
    *                       to find the certificate.
    *
    *  @return The matching certificate if found.
    */
-  nsIX509Cert findCertByEmailAddress(in nsISupports aToken,
-                                     in string aEmailAddress);
+  nsIX509Cert findCertByEmailAddress(in string aEmailAddress);
 
   /**
    *  Use this to import a stream sent down as a mime type into
@@ -229,23 +214,19 @@ interface nsIX509CertDB : nsISupports {
    *  @return Returns true if the certificate is trusted for the given use.
    */
   boolean isCertTrusted(in nsIX509Cert cert,
-                       in unsigned long certType,
-                       in unsigned long trustType);
+                        in unsigned long certType,
+                        in unsigned long trustType);
 
   /**
    *  Import certificate(s) from file
    *
-   *  @param aToken Optionally limits the scope of
-   *                this function to a token device.
-   *                Can be null to mean any token.
    *  @param aFile Identifies a file that contains the certificate
    *               to be imported.
    *  @param aType Describes the type of certificate that is going to
    *               be imported. See type constants in nsIX509Cert.
    */
-  void importCertsFromFile(in nsISupports aToken,
-                         in nsIFile aFile,
-                         in unsigned long aType);
+  void importCertsFromFile(in nsIFile aFile,
+                           in unsigned long aType);
 
   /**
    *  Import a PKCS#12 file containing cert(s) and key(s) into the database.

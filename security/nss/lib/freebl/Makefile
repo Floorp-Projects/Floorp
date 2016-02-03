@@ -166,6 +166,9 @@ else
 	DEFINES += -DUSE_HW_AES -DINTEL_GCM
 	ASFILES += intel-aes-x64-masm.asm intel-gcm-x64-masm.asm
 	EXTRA_SRCS += intel-gcm-wrap.c
+	ifeq ($(CLANG_CL),1)
+	    INTEL_GCM_CLANG_CL = 1
+	endif
     endif
     MPI_SRCS += mpi_amd64.c
 endif

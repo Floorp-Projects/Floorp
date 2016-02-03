@@ -272,7 +272,7 @@ class TypeSet
     // Information about a single concrete type. We pack this into one word,
     // where small values are particular primitive or other singleton types and
     // larger values are either specific JS objects or object groups.
-    class Type : public JS::Traceable
+    class Type
     {
         friend class TypeSet;
 
@@ -350,8 +350,8 @@ class TypeSet
         inline ObjectGroup* group() const;
         inline ObjectGroup* groupNoBarrier() const;
 
-        static void trace(Type* v, JSTracer* trc) {
-            MarkTypeUnbarriered(trc, v, "TypeSet::Type");
+        void trace(JSTracer* trc) {
+            MarkTypeUnbarriered(trc, this, "TypeSet::Type");
         }
 
         bool operator == (Type o) const { return data == o.data; }

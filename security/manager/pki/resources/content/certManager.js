@@ -506,7 +506,7 @@ function addCACerts()
                   gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.CA_CERT);
+    certdb.importCertsFromFile(fp.file, nsIX509Cert.CA_CERT);
     caTreeView.loadCerts(nsIX509Cert.CA_CERT);
     caTreeView.selection.clearSelection();
   }
@@ -540,7 +540,7 @@ function addEmailCert()
                   gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.EMAIL_CERT);
+    certdb.importCertsFromFile(fp.file, nsIX509Cert.EMAIL_CERT);
     var certcache = certdb.getCerts();
     emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
     emailTreeView.selection.clearSelection();
@@ -560,7 +560,7 @@ function addWebSiteCert()
                   gCertFileTypes);
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
-    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.SERVER_CERT);
+    certdb.importCertsFromFile(fp.file, nsIX509Cert.SERVER_CERT);
 
     var certcache = certdb.getCerts();
     serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);

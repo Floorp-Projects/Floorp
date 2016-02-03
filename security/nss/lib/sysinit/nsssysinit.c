@@ -5,6 +5,7 @@
 #include "prio.h"
 #include "prprf.h"
 #include "plhash.h"
+#include "prenv.h"
 
 /*
  * The following provides a default example for operating systems to set up
@@ -41,7 +42,7 @@ testdir(char *dir)
 static char *
 getUserDB(void)
 {
-   char *userdir = getenv("HOME");
+   char *userdir = PR_GetEnvSecure("HOME");
    char *nssdir = NULL;
 
    if (userdir == NULL) {
@@ -133,7 +134,7 @@ userCanModifySystemDB()
 static PRBool 
 getFIPSEnv(void)
 {
-    char *fipsEnv = getenv("NSS_FIPS");
+    char *fipsEnv = PR_GetEnvSecure("NSS_FIPS");
     if (!fipsEnv) {
 	return PR_FALSE;
     }

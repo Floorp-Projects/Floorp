@@ -773,7 +773,7 @@ class ByFilename : public CountType {
     CountTypePtr noFilenameType;
 
   public:
-    ByFilename(CountTypePtr& thenType, CountTypePtr& noFilenameType)
+    ByFilename(CountTypePtr&& thenType, CountTypePtr&& noFilenameType)
         : CountType(),
           thenType(Move(thenType)),
           noFilenameType(Move(noFilenameType))
@@ -1037,7 +1037,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
         if (!noFilenameType)
             return nullptr;
 
-        return CountTypePtr(js_new<ByFilename>(thenType, noFilenameType));
+        return CountTypePtr(js_new<ByFilename>(Move(thenType), Move(noFilenameType)));
     }
 
     // We didn't recognize the breakdown type; complain.

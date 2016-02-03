@@ -1456,8 +1456,8 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     // the AudioConduit gives us, considering it gives us packets of 10ms and we
     // know the rate.
     uint32_t channelCount = samples_length / (track_rate_ / 100);
-    nsAutoTArray<int16_t*,2> channels;
-    nsAutoTArray<const int16_t*,2> outputChannels;
+    AutoTArray<int16_t*,2> channels;
+    AutoTArray<const int16_t*,2> outputChannels;
     size_t frames = samples_length / channelCount;
 
     channels.SetLength(channelCount);

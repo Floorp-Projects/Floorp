@@ -1137,7 +1137,7 @@ cert_VerifyCertChainPkix(
     fnStackNameArr[0] = "cert_VerifyCertChainPkix";
     fnStackInvCountArr[0] = 0;
     PKIX_Boolean abortOnLeak =
-        (PR_GetEnv("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
+        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
                                                                    PKIX_FALSE
                                                                    : PKIX_TRUE;
     runningLeakTest = PKIX_TRUE;
@@ -2019,7 +2019,7 @@ CERT_PKIXVerifyCert(
     fnStackNameArr[0] = "CERT_PKIXVerifyCert";
     fnStackInvCountArr[0] = 0;
     PKIX_Boolean abortOnLeak =
-        (PR_GetEnv("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
+        (PR_GetEnvSecure("PKIX_OBJECT_LEAK_TEST_ABORT_ON_LEAK") == NULL) ?
                                                                    PKIX_FALSE
                                                                    : PKIX_TRUE;
     runningLeakTest = PKIX_TRUE;

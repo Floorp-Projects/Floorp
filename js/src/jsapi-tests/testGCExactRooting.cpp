@@ -44,17 +44,17 @@ BEGIN_TEST(testGCSuppressions)
 }
 END_TEST(testGCSuppressions)
 
-struct MyContainer : public JS::Traceable
+struct MyContainer
 {
     RelocatablePtrObject obj;
     RelocatablePtrString str;
 
     MyContainer() : obj(nullptr), str(nullptr) {}
-    static void trace(MyContainer* self, JSTracer* trc) {
-        if (self->obj)
-            js::TraceEdge(trc, &self->obj, "test container");
-        if (self->str)
-            js::TraceEdge(trc, &self->str, "test container");
+    void trace(JSTracer* trc) {
+        if (obj)
+            js::TraceEdge(trc, &obj, "test container");
+        if (str)
+            js::TraceEdge(trc, &str, "test container");
     }
 };
 

@@ -1,4 +1,3 @@
-marionette_transport.pth:testing/marionette/transport
 marionette_driver.pth:testing/marionette/driver
 browsermobproxy.pth:testing/marionette/client/marionette/runner/mixins/browsermob-proxy-py
 wptserve.pth:testing/web-platform/tests/tools/wptserve

@@ -31,6 +31,7 @@ using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using nsIntRect from "nsRect.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
+using struct mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 
 namespace mozilla {
 namespace plugins {
@@ -264,9 +265,8 @@ parent:
                             returns (uint8_t[] aDist, int32_t aLength);
   // Set candidate window position.
   //
-  // @param aX  x position of candidate window
-  // @param aY  y position of candidate window
-  async SetCandidateWindow(int32_t aX, int32_t aY);
+  // @param aPosition  position information of candidate window
+  async SetCandidateWindow(CandidateWindowPosition aPosition);
   async RequestCommitOrCancel(bool aCommitted);
 
 both:

@@ -1414,13 +1414,14 @@ PuppetWidget::GetCurrentWidgetListener()
 }
 
 void
-PuppetWidget::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
+PuppetWidget::SetCandidateWindowForPlugin(
+                const CandidateWindowPosition& aPosition)
 {
   if (!mTabChild) {
     return;
   }
 
-  mTabChild->SendSetCandidateWindowForPlugin(aX, aY);
+  mTabChild->SendSetCandidateWindowForPlugin(aPosition);
 }
 
 void

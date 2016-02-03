@@ -1,4 +1,5 @@
 #include "nspr.h"
+#include "prenv.h"
 #include "nss.h"
 #include "ssl.h"
 
@@ -16,7 +17,7 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   g_working_dir_path = ".";
 
-  char* workdir = getenv("NSS_GTEST_WORKDIR");
+  char* workdir = PR_GetEnvSecure("NSS_GTEST_WORKDIR");
   if (workdir)
     g_working_dir_path = workdir;
 

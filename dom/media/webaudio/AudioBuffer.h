@@ -119,7 +119,7 @@ protected:
 
   nsWeakPtr mOwnerWindow;
   // Float32Arrays
-  nsAutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
+  AutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels' buffers are detached.
