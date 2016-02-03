@@ -4,8 +4,6 @@
 
 "use strict";
 
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-
 add_task(function* capture() {
   if (!shouldCapture()) {
     return;

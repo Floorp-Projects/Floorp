@@ -5,6 +5,7 @@
 "use strict";
 
 const {AddonWatcher} = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
+const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 function setup() {
   requestLongerTimeout(10);
@@ -23,7 +24,8 @@ function shouldCapture() {
   // Automation isn't able to schedule test jobs to only run on nightlies so we handle it here
   // (see also: bug 1116275). Try pushes and local builds should also capture.
   let capture = AppConstants.MOZ_UPDATE_CHANNEL == "nightly" ||
-                AppConstants.SOURCE_REVISION_URL.includes("/try/rev/") ||
+                (AppConstants.SOURCE_REVISION_URL.includes("/try/rev/") &&
+                 env.get("MOZSCREENSHOTS_SETS")) ||
                 AppConstants.SOURCE_REVISION_URL == "";
   if (!capture) {
     ok(true, "Capturing is disabled for this MOZ_UPDATE_CHANNEL or REPO");
