@@ -15,7 +15,6 @@ marionette.jar:
   content/simpletest.js (simpletest.js)
   content/frame-manager.js (frame-manager.js)
   content/event.js  (event.js)
-  content/ChromeUtils.js  (ChromeUtils.js)
   content/error.js (error.js)
   content/message.js (message.js)
   content/dispatcher.js (dispatcher.js)
