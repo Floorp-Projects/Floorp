@@ -1015,6 +1015,32 @@ Loader::ObsoleteSheet(nsIURI* aURI)
   return NS_OK;
 }
 
+nsresult
+Loader::CheckContentPolicy(nsIPrincipal* aSourcePrincipal,
+                          nsIURI* aTargetURI,
+                          nsISupports* aContext,
+                          bool aIsPreload)
+{
+  nsContentPolicyType contentPolicyType =
+    aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+               : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
+                                          aTargetURI,
+                                          aSourcePrincipal,
+                                          aContext,
+                                          NS_LITERAL_CSTRING("text/css"),
+                                          nullptr,  //extra param
+                                          &shouldLoad,
+                                          nsContentUtils::GetContentPolicy(),
+                                          nsContentUtils::GetSecurityManager());
+   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+     return NS_ERROR_CONTENT_BLOCKED;
+   }
+   return NS_OK;
+}
+
 /**
  * CreateSheet() creates a CSSStyleSheet object for the given URI,
  * if any.  If there is no URI given, we just create a new style sheet
@@ -1993,12 +2019,15 @@ Loader::LoadStyleLink(nsIContent* aElement,
     context = mDocument;
   }
 
+  nsresult rv = CheckContentPolicy(principal, aURL, context, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   StyleSheetState state;
   RefPtr<CSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(aURL, aElement, principal, aCORSMode,
-                            aReferrerPolicy, aIntegrity, false,
-                            aHasAlternateRel, aTitle, state, aIsAlternate,
-                            getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, aElement, principal, aCORSMode,
+                   aReferrerPolicy, aIntegrity, false,
+                   aHasAlternateRel, aTitle, state, aIsAlternate,
+                   getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
@@ -2122,6 +2151,10 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
     context = mDocument;
   }
 
+  nsIPrincipal* principal = aParentSheet->Principal();
+  nsresult rv = CheckContentPolicy(principal, aURL, context, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   SheetLoadData* parentData = nullptr;
   nsCOMPtr<nsICSSLoaderObserver> observer;
 
@@ -2148,9 +2181,7 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
 
   // Now that we know it's safe to load this (passes security check and not a
   // loop) do so.
-  nsIPrincipal* principal = aParentSheet->Principal();
   RefPtr<CSSStyleSheet> sheet;
-  nsresult rv;
   StyleSheetState state;
   if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
     aParentRule->SetSheet(sheet);
@@ -2274,12 +2305,14 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult rv = CheckContentPolicy(aOriginPrincipal, aURL, mDocument, aIsPreload);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   StyleSheetState state;
   bool isAlternate;
   RefPtr<CSSStyleSheet> sheet;
   bool syncLoad = (aObserver == nullptr);
   const nsSubstring& empty = EmptyString();
-  nsresult rv;
 
   rv = CreateSheet(aURL, nullptr, aOriginPrincipal, aCORSMode,
                    aReferrerPolicy, aIntegrity, syncLoad, false,
