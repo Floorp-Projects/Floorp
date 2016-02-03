@@ -6,29 +6,6 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsHistory {
-  background: transparent;
-  cursor: pointer;
-}
-
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-  #downloadsHistory {
-    color: -moz-nativehyperlinktext;
-  }
-}
-
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
-}
-
-#downloadsHistory > .button-box {
-  border: none;
-  margin: 1em;
-}
-
 #downloadsFooter {
   background-color: hsla(210,4%,10%,.04);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
@@ -48,6 +25,10 @@
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
+  #downloadsHistory {
+    color: -moz-nativehyperlinktext;
+  }
+
   @media (-moz-windows-default-theme) {
     #downloadsFooter {
       border-bottom-left-radius: 3px;
@@ -72,6 +53,21 @@
   }
 }
 
+@keyfocus@ #downloadsSummary:focus,
+@keyfocus@ #downloadsHistory:focus {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -1px;
+}
+
+@keyfocus@ #downloadsSummary:focus {
+  outline-offset: -5px;
+}
+
+#downloadsHistory > .button-box {
+  /* Hide the border so we don't display an inner focus ring. */
+  border: none;
+}
+
 /*** Downloads Summary and List items ***/
 
 #downloadsSummary,
@@ -85,11 +81,6 @@ richlistitem[type="download"] {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
   -moz-user-focus: normal;
-}
-
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsSummary:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {
