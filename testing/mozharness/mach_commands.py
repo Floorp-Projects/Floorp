@@ -53,6 +53,11 @@ class MozharnessRunner(MozbuildObject):
                            "--test-packages-url", self.test_packages_url]
             },
 
+            "mochitest-valgrind": {
+                "script": "desktop_unittest.py",
+                "config": desktop_unittest_config + [
+                    "--mochitest-suite", "valgrind-plain"]
+            },
             "mochitest": {
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config + [
