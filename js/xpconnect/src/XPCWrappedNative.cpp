@@ -114,7 +114,7 @@ XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb)
     // then the tearoff is only reachable through the XPCWrappedNative, so we
     // record an edge here.
     XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk.get()) {
         XPCWrappedNativeTearOff* to = &chunk->mTearOff;
         JSObject* jso = to->GetJSObjectPreserveColor();
         if (!jso) {
@@ -899,7 +899,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
     // JSObjects are about to be finalized too.
 
     XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk.get()) {
         XPCWrappedNativeTearOff* to = &chunk->mTearOff;
         JSObject* jso = to->GetJSObjectPreserveColor();
         if (jso) {
@@ -989,7 +989,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
 
     // Cleanup the tearoffs.
     XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
+    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk.get()) {
         XPCWrappedNativeTearOff* to = &chunk->mTearOff;
         if (JSObject* jso = to->GetJSObjectPreserveColor()) {
             JS_SetPrivate(jso, nullptr);
@@ -1056,7 +1056,7 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     XPCWrappedNativeTearOffChunk* chunk;
     for (lastChunk = chunk = &mFirstChunk;
          chunk;
-         lastChunk = chunk, chunk = chunk->mNextChunk) {
+         lastChunk = chunk, chunk = chunk->mNextChunk.get()) {
         to = &chunk->mTearOff;
         if (to->GetInterface() == aInterface) {
             if (needJSObject && !to->GetJSObjectPreserveColor()) {
@@ -1083,9 +1083,8 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     to = firstAvailable;
 
     if (!to) {
-        auto newChunk = new XPCWrappedNativeTearOffChunk();
-        lastChunk->mNextChunk = newChunk;
-        to = &newChunk->mTearOff;
+        lastChunk->mNextChunk = MakeUnique<XPCWrappedNativeTearOffChunk>();
+        to = &lastChunk->mNextChunk->mTearOff;
     }
 
     {
