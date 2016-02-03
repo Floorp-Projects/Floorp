@@ -160,7 +160,7 @@ event.sendKey = function(key, window = undefined) {
   event.synthesizeKey(keyName, {shiftKey: false}, window);
 };
 
-// TODO(ato): Unexpose this when actions.Chain#emitMouseEvent
+// TODO(ato): Unexpose this when action.Chain#emitMouseEvent
 // no longer emits its own events
 event.parseModifiers_ = function(event) {
   let mval = 0;
