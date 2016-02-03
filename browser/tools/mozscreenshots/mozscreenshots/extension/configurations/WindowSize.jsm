@@ -30,16 +30,19 @@ this.WindowSize = {
           setTimeout(function waitToLeaveFS() {
             browserWindow.maximize();
             resolve();
-          }, Services.appinfo.OS == "Darwin" ? 1500 : 0);
+          }, 5000);
         });
       }),
     },
 
     normal: {
-      applyConfig: Task.async(() => {
+      applyConfig: Task.async(function*() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.fullScreen = false;
         browserWindow.restore();
+        yield new Promise((resolve, reject) => {
+          setTimeout(resolve, 5000);
+        });
       }),
     },
 
@@ -49,9 +52,7 @@ this.WindowSize = {
         browserWindow.fullScreen = true;
         // OS X Lion fullscreen transition takes a while
         yield new Promise((resolve, reject) => {
-          setTimeout(function waitAfterEnteringFS() {
-            resolve();
-          }, Services.appinfo.OS == "Darwin" ? 1500 : 0);
+          setTimeout(resolve, 5000);
         });
       }),
     },
