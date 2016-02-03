@@ -124,18 +124,3 @@ add_task(function* test_execute()
     do_check_true(snapshot.counts.reduce((a, b) => a + b) > 0);
   }
 });
-
-add_test(function test_healthreport_callback() {
-  Services.prefs.clearUserPref("places.database.lastMaintenance");
-  PlacesDBUtils.telemetry(null, function onResult(data) {
-    do_check_neq(data, null);
-
-    do_check_eq(Object.keys(data).length, 2);
-    do_check_eq(data.PLACES_PAGES_COUNT, 1);
-    do_check_eq(data.PLACES_BOOKMARKS_COUNT, 1);
-
-    do_check_true(!Services.prefs.prefHasUserValue("places.database.lastMaintenance"));
-    run_next_test();
-  });
-});
-
