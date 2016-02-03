@@ -304,6 +304,22 @@ public class DateTimePicker extends FrameLayout {
             mTempDate.setTimeInMillis(System.currentTimeMillis());
         }
 
+        if (mMaxDate.before(mMinDate)) {
+            // If the input date range is illogical/garbage, we should not restrict the input range (i.e. allow the
+            // user to select any date). If we try to make any assumptions based on the illogical min/max date we could
+            // potentially prevent the user from selecting dates that are in the developers intended range, so it's best
+            // to allow anything.
+            mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+            mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+        }
+
+        // mTempDate will either be a site-supplied value, or today's date otherwise. CalendarView implementations can
+        // crash if they're supplied an invalid date (i.e. a date not in the specified range), hence we need to set
+        // a sensible default date here.
+        if (mTempDate.before(mMinDate) || mTempDate.after(mMaxDate)) {
+            mTempDate.setTimeInMillis(mMinDate.getTimeInMillis());
+        }
+
         // If we're displaying a date, the screen is wide enough
         // (and if we're using an SDK where the calendar view exists)
         // then display a calendar.
