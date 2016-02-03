@@ -6,8 +6,6 @@ Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 function AppPicker() {};
 
-var g_dialog = null;
-
 AppPicker.prototype = 
 {
     // Class members

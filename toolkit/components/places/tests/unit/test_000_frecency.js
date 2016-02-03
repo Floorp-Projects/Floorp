@@ -77,7 +77,7 @@ function* task_initializeBucket(bucket) {
     // unvisited (only for first cutoff date bucket)
     if (bonusName == "unvisitedBookmarkBonus" || bonusName == "unvisitedTypedBonus") {
       if (cutoffName == "firstBucketCutoff") {
-        var points = Math.ceil(bonusValue / parseFloat(100.0) * weight);
+        let points = Math.ceil(bonusValue / parseFloat(100.0) * weight);
         var visitCount = 1; //bonusName == "unvisitedBookmarkBonus" ? 1 : 0;
         frecency = Math.ceil(visitCount * points);
         calculatedURI = uri("http://" + searchTerm + ".com/" +
@@ -105,7 +105,7 @@ function* task_initializeBucket(bucket) {
       if (visitType == Ci.nsINavHistoryService.TRANSITION_BOOKMARK)
         bonusValue = bonusValue * 2;
 
-      var points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
+      let points = Math.ceil(1 * ((bonusValue / parseFloat(100.000000)).toFixed(6) * weight) / 1);
       if (!points) {
         if (visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
             visitType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||

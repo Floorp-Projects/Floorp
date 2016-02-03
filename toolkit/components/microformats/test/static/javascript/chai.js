@@ -5,8 +5,8 @@
  * MIT Licensed
  */
 
-var used = []
-  , exports = module.exports = {};
+var used = [];
+exports = module.exports = {};
 
 /*!
  * Chai version
@@ -198,8 +198,8 @@ module.exports = function (_chai, util) {
     if (true !== config.showDiff) showDiff = false;
 
     if (!ok) {
-      var msg = util.getMessage(this, arguments)
-        , actual = util.getActual(this, arguments);
+      msg = util.getMessage(this, arguments)
+      var actual = util.getActual(this, arguments);
       throw new AssertionError(msg, {
           actual: actual
         , expected: expected
@@ -497,7 +497,7 @@ module.exports = function (chai, _) {
         return;
       }
       var subset = {};
-      for (var k in val) subset[k] = obj[k];
+      for (k in val) subset[k] = obj[k];
       expected = _.eql(subset, val);
     } else {
       expected = obj && ~obj.indexOf(val);
@@ -3943,7 +3943,7 @@ module.exports = function hasProperty(name, obj) {
  * Main exports
  */
 
-var exports = module.exports = {};
+exports = module.exports = {};
 
 /*!
  * test utility
@@ -4193,8 +4193,8 @@ function formatValue(ctx, value, recurseTimes) {
 
   // Make functions say that they are functions
   if (typeof value === 'function') {
-    var name = getName(value);
-    var nameSuffix = name ? ': ' + name : '';
+    name = getName(value);
+    nameSuffix = name ? ': ' + name : '';
     base = ' [Function' + nameSuffix + ']';
   }
 
@@ -5074,7 +5074,7 @@ module.exports = require('./lib/type');
  * Primary Exports
  */
 
-var exports = module.exports = getType;
+exports = module.exports = getType;
 
 /*!
  * Detectable javascript natives
@@ -5220,7 +5220,7 @@ arguments[4][31][0].apply(exports,arguments)
  * Primary Exports
  */
 
-var exports = module.exports = getType;
+exports = module.exports = getType;
 
 /**
  * ### typeOf (obj)

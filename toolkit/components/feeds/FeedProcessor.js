@@ -50,7 +50,7 @@ const RSS090NS = "http://my.netscape.com/rdf/simple/0.9/";
 
 /***** Some general utils *****/
 function strToURI(link, base) {
-  var base = base || null;
+  base = base || null;
   if (!gIoService)
     gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
   try {
@@ -870,7 +870,7 @@ XHTMLHandler.prototype = {
   },
   endDocument: function XH_endDocument() {
   },
-  startElement: function XH_startElement(uri, localName, qName, attributes) {
+  startElement: function XH_startElement(namespace, localName, qName, attributes) {
     ++this._depth;
     this._inScopeNS.push([]);
 
@@ -881,7 +881,7 @@ XHTMLHandler.prototype = {
       return;
 
     // If it's an XHTML element, record it. Otherwise, it's ignored.
-    if (uri == XHTML_NS) {
+    if (namespace == XHTML_NS) {
       this._buf += "<" + localName;
       var uri;
       for (var i=0; i < attributes.length; ++i) {
@@ -1669,7 +1669,7 @@ FeedProcessor.prototype = {
         else
           return; // don't know about this interface
 
-        var propName = localName;
+        let propName = localName;
         var prefix = gNamespaces[uri];
 
         // synonyms

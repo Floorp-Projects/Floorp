@@ -357,7 +357,7 @@
               var suppressSelect = this._suppressOnSelect;
               this._suppressOnSelect = true;
               this.clearSelection();
-              for (var i = 1; i < ids.length; i++) {
+              for (let i = 1; i < ids.length; i++) {
                 var selectedItem = document.getElementById(ids[i]);
                 if (selectedItem)
                   this.addItemToSelection(selectedItem);
@@ -394,12 +394,12 @@
             // (applies after a template rebuild, if last-selected was not set)
             if (this.selectedItems) {
               let itemIds = [];
-              for (i = this.selectedCount - 1; i >= 0; i--) {
+              for (let i = this.selectedCount - 1; i >= 0; i--) {
                 let selectedItem = this.selectedItems[i];
                 itemIds.push(selectedItem.id);
                 this.selectedItems.remove(selectedItem);
               }
-              for (i = 0; i < itemIds.length; i++) {
+              for (let i = 0; i < itemIds.length; i++) {
                 let selectedItem = document.getElementById(itemIds[i]);
                 if (selectedItem) {
                   this.selectedItems.append(selectedItem);
@@ -419,7 +419,7 @@
               // cf. listbox constructor:
               // select items according to their attributes
               var children = this.children;
-              for (var i = 0; i < children.length; ++i) {
+              for (let i = 0; i < children.length; ++i) {
                 if (children[i].getAttribute("selected") == "true")
                   this.selectedItems.append(children[i]);
               }

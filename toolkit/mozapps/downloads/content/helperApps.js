@@ -205,7 +205,7 @@ HelperApps.prototype = {
       if (typeInfo) {
         var bundle = document.getElementById("strings");
         if (aProperty.EqualsNode(this._handleAutoArc)) {
-          var handler = this.GetTarget(aSource, this._handlerPropArc, true);
+          let handler = this.GetTarget(aSource, this._handlerPropArc, true);
           if (handler) {
             handler = handler.QueryInterface(Components.interfaces.nsIRDFResource);
             return gRDF.GetLiteral(!(this.getLiteralValue(handler.Value, "alwaysAsk") == "true"));
@@ -226,7 +226,7 @@ HelperApps.prototype = {
           return gRDF.GetLiteral(typeInfo.description);
         }
         else if (aProperty.EqualsNode(this._fileHandlerArc)) {
-          var handler = this.GetTarget(aSource, this._handlerPropArc, true);
+          let handler = this.GetTarget(aSource, this._handlerPropArc, true);
           if (handler) {
             handler = handler.QueryInterface(Components.interfaces.nsIRDFResource);
             if (this.getLiteralValue(handler.Value, "saveToDisk") == "true") {

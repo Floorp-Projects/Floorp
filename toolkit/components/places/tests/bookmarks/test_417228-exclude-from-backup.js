@@ -90,7 +90,7 @@ var test = {
     else {
       // exclude root should not exist anymore
       do_check_eq(rootNode.childCount, PLACES_ROOTS_COUNT + 1);
-      var restoreRootIndex = PLACES_ROOTS_COUNT;
+      restoreRootIndex = PLACES_ROOTS_COUNT;
     }
 
     var restoreRootNode = rootNode.getChild(restoreRootIndex);

@@ -45,10 +45,11 @@ function search(aRemoteSearch, aCallback) {
     EventUtils.synthesizeKey("VK_RETURN", { }, gManagerWindow);
 
     wait_for_view_load(gManagerWindow, function() {
+      let filter;
       if (aRemoteSearch)
-        var filter = gManagerWindow.document.getElementById("search-filter-remote");
+        filter = gManagerWindow.document.getElementById("search-filter-remote");
       else
-        var filter = gManagerWindow.document.getElementById("search-filter-local");
+        filter = gManagerWindow.document.getElementById("search-filter-local");
       EventUtils.synthesizeMouseAtCenter(filter, { }, gManagerWindow);
 
       executeSoon(aCallback);

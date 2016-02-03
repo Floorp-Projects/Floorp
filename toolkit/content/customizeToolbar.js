@@ -729,7 +729,7 @@ function onToolbarDrop(aEvent)
     // The wrapper has been dragged from the toolbar.
     // Get the wrapper from the toolbar document and make sure that
     // it isn't being dropped on itself.
-    var wrapper = gToolboxDocument.getElementById("wrapper-"+draggedItemId);
+    let wrapper = gToolboxDocument.getElementById("wrapper-"+draggedItemId);
     if (wrapper == gCurrentDragOverItem)
        return;
 
@@ -756,7 +756,7 @@ function onToolbarDrop(aEvent)
     // The item has been dragged from the palette
 
     // Create a new wrapper for the item. We don't know the id yet.
-    var wrapper = createWrapper("", gToolboxDocument);
+    let wrapper = createWrapper("", gToolboxDocument);
 
     // Ask the toolbar to clone the item's template, place it inside the wrapper, and insert it in the toolbar.
     var newItem = toolbar.insertItem(draggedItemId, gCurrentDragOverItem == toolbar ? null : gCurrentDragOverItem, wrapper);

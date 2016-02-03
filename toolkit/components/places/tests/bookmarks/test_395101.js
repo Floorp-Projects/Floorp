@@ -61,16 +61,16 @@ function run_test() {
 
   // partial matches are okay
   query.searchTerms = "wal";
-  var result = histsvc.executeQuery(query, options);
-  var rootNode = result.root;
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
   rootNode.containerOpen = true;
   do_check_eq(rootNode.childCount, 1);
   rootNode.containerOpen = false;
 
   // case insensitive search term
   query.searchTerms = "WALRUS";
-  var result = histsvc.executeQuery(query, options);
-  var rootNode = result.root;
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
   rootNode.containerOpen = true;
   do_check_eq(rootNode.childCount, 1);
   do_check_eq(rootNode.getChild(0).itemId, b1);
@@ -78,8 +78,8 @@ function run_test() {
 
   // case insensitive tag
   query.searchTerms = "baboon";
-  var result = histsvc.executeQuery(query, options);
-  var rootNode = result.root;
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
   rootNode.containerOpen = true;
   do_check_eq(rootNode.childCount, 1);
   do_check_eq(rootNode.getChild(0).itemId, b1);

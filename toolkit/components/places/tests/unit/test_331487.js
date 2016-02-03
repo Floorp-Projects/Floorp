@@ -73,13 +73,13 @@ function run_test() {
 
   // bookmark query that should result in a flat list
   // because we specified max results
-  var options = histsvc.getNewQueryOptions();
+  options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 10;
-  var query = histsvc.getNewQuery();
+  query = histsvc.getNewQuery();
   query.setFolders([folder], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  result = histsvc.executeQuery(query, options);
+  root = result.root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 3);
   do_check_eq(root.getChild(0).itemId, b1);

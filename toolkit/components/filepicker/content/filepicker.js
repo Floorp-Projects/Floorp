@@ -206,7 +206,7 @@ function selectOnOK()
     try {
       var ios = Components.classes[NS_IOSERVICE_CONTRACTID].getService(Components.interfaces.nsIIOService);
       retvals.fileURL = ios.newURI(textInput.value, null, null);
-      var fileList = [];
+      let fileList = [];
       if (retvals.fileURL instanceof Components.interfaces.nsIFileURL)
         fileList.push(retvals.fileURL.file);
       gFilesEnumerator.mFiles = fileList;

@@ -392,8 +392,8 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
 
   // do this three times, one for each state of pageUpOrDownMovesSelection,
   // and then once with the accel key pressed
-  for (var t = 0; t < 3; t++) {
-    var testidmod = (t == 2) ? " with accel" : (t == 1) ? " rev" : "";
+  for (let t = 0; t < 3; t++) {
+    let testidmod = (t == 2) ? " with accel" : (t == 1) ? " rev" : "";
     var keymod = (t == 2) ? { accelKey: true } : { };
 
     var moveselection = tree.pageUpOrDownMovesSelection;
@@ -486,8 +486,8 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
   // when selecting with the shift key, pageUpOrDownMovesSelection is ignored
   // and the selection always changes
   var lastidx = tree.view.rowCount - 1;
-  for (var t = 0; t < 2; t++) {
-    var testidmod = (t == 0) ? "" : " rev";
+  for (let t = 0; t < 2; t++) {
+    let testidmod = (t == 0) ? "" : " rev";
 
     // If the top or bottom visible row is the current row, pressing shift and
     // page down / page up selects one page up or one page down. Otherwise, the
@@ -780,7 +780,7 @@ function testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo)
     tree.treeBoxObject.scrollToRow(1);
     selection.select(1);
     selection.currentIndex = 1;
-    var expectedrow = tree.pageUpOrDownMovesSelection ? 4 : 1;
+    expectedrow = tree.pageUpOrDownMovesSelection ? 4 : 1;
     synthesizeKeyExpectEvent("VK_PAGE_DOWN", {}, tree, "!select", "key page down");
     testtag_tree_TreeSelection_State(tree, testid + "key page down" + testidmod,
                                      expectedrow, [expectedrow],
@@ -1104,42 +1104,42 @@ function testtag_tree_column_reorder()
   }
 
   // Drag the first column to each position
-  for (var i = 0; i < numColumns - 1; i++) {
+  for (let i = 0; i < numColumns - 1; i++) {
     synthesizeColumnDrag(tree, i, i + 1, true);
     arrayMove(reference, i, i + 1, true);
     checkColumns(tree, reference, "drag first column right");
   }
 
   // And back
-  for (var i = numColumns - 1; i >= 1; i--) {
+  for (let i = numColumns - 1; i >= 1; i--) {
     synthesizeColumnDrag(tree, i, i - 1, false);
     arrayMove(reference, i, i - 1, false);
     checkColumns(tree, reference, "drag last column left");
   }
 
   // Drag each column one column left
-  for (var i = 1; i < numColumns; i++) {
+  for (let i = 1; i < numColumns; i++) {
     synthesizeColumnDrag(tree, i, i - 1, false);
     arrayMove(reference, i, i - 1, false);
     checkColumns(tree, reference, "drag each column left");
   }
 
   // And back
-  for (var i = numColumns - 2; i >= 0; i--) {
+  for (let i = numColumns - 2; i >= 0; i--) {
     synthesizeColumnDrag(tree, i, i + 1, true);
     arrayMove(reference, i, i + 1, true);
     checkColumns(tree, reference, "drag each column right");
   }
 
   // Drag each column 5 to the right
-  for (var i = 0; i < numColumns - 5; i++) {
+  for (let i = 0; i < numColumns - 5; i++) {
     synthesizeColumnDrag(tree, i, i + 5, true);
     arrayMove(reference, i, i + 5, true);
     checkColumns(tree, reference, "drag each column 5 to the right");
   }
 
   // And to the left
-  for (var i = numColumns - 6; i >= 5; i--) {
+  for (let i = numColumns - 6; i >= 5; i--) {
     synthesizeColumnDrag(tree, i, i - 5, false);
     arrayMove(reference, i, i - 5, false);
     checkColumns(tree, reference, "drag each column 5 to the left");
@@ -1235,14 +1235,14 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
   }
 
   if (aMouseUpColumnNumber > aMouseDownColumnNumber) {
-    for (var i = aMouseDownColumnNumber; i <= aMouseUpColumnNumber; i++) {
-      var move = columns[i].element;
+    for (let i = aMouseDownColumnNumber; i <= aMouseUpColumnNumber; i++) {
+      let move = columns[i].element;
       synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
     }
   }
   else {
-    for (var i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
-      var move = columns[i].element;
+    for (let i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
+      let move = columns[i].element;
       synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
     }
   }

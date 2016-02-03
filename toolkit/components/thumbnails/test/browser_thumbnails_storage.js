@@ -63,7 +63,7 @@ function* runTests() {
 
 var promiseClearFile = Task.async(function*(aFile, aURL) {
   if (!aFile.exists()) {
-    return;
+    return undefined;
   }
   // Re-add our URL to the history so that history observer's onDeleteURI()
   // is called again.

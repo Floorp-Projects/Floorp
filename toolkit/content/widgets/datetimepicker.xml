@@ -673,7 +673,7 @@
         <body>
           <![CDATA[
             if (aField == this.yearField) {
-              var oldDate = this.date;
+              let oldDate = this.date;
               this._dateValue.setFullYear(aValue);
               if (oldDate != this.date) {
                 this._dateValue.setDate(0);
@@ -681,7 +681,7 @@
               }
             }
             else if (aField == this.monthField) {
-              var oldDate = this.date;
+              let oldDate = this.date;
               this._dateValue.setMonth(aValue);
               if (oldDate != this.date) {
                 this._dateValue.setDate(0);
