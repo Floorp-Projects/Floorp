@@ -661,6 +661,31 @@ protected:
           // not support yet!
           return;
         }
+      } else if (origBytes[nBytes] == 0x66) {
+        // operand override prefix
+        nBytes += 1;
+        // This is the same as the x86 version
+        if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
+          // various MOVs
+          unsigned char b = origBytes[nBytes + 1];
+          if (((b & 0xc0) == 0xc0) ||
+              (((b & 0xc0) == 0x00) &&
+               ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05))) {
+            // REG=r, R/M=r or REG=r, R/M=[r]
+            nBytes += 2;
+          } else if ((b & 0xc0) == 0x40) {
+            if ((b & 0x07) == 0x04) {
+              // REG=r, R/M=[SIB + disp8]
+              nBytes += 4;
+            } else {
+              // REG=r, R/M=[r + disp8]
+              nBytes += 3;
+            }
+          } else {
+            // complex MOV, bail
+            return;
+          }
+        }
       } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
         nBytes++;
@@ -670,6 +695,9 @@ protected:
       } else if (origBytes[nBytes] == 0xb8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
         nBytes += 5;
+      } else if (origBytes[nBytes] == 0x33) {
+        // xor r32, r/m32
+        nBytes += 2;
       } else if (origBytes[nBytes] == 0xc3) {
         // ret
         nBytes++;
@@ -724,25 +752,21 @@ protected:
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump
     if (pJmp32 >= 0) {
-      // mov r11, address
-      tramp[pJmp32]   = 0x49;
-      tramp[pJmp32 + 1] = 0xbb;
-      *((intptr_t*)(tramp + pJmp32 + 2)) = (intptr_t)directJmpAddr;
-
-      // jmp r11
-      tramp[pJmp32 + 10] = 0x41;
-      tramp[pJmp32 + 11] = 0xff;
-      tramp[pJmp32 + 12] = 0xe3;
+      // jmp near absolute indirect
+      tramp[pJmp32] = 0xFF;
+      tramp[pJmp32 + 1] = 0x25;
+      // disp = 0 means that address at RIP specifies target address
+      *((uint32_t*)(tramp + pJmp32 + 2)) = 0;
+      // target address
+      *((uintptr_t*)(tramp + pJmp32 + 6)) = (uintptr_t)directJmpAddr;
     } else {
-      // mov r11, address
-      tramp[nBytes] = 0x49;
-      tramp[nBytes + 1] = 0xbb;
-      *((intptr_t*)(tramp + nBytes + 2)) = (intptr_t)trampDest;
-
-      // jmp r11
-      tramp[nBytes + 10] = 0x41;
-      tramp[nBytes + 11] = 0xff;
-      tramp[nBytes + 12] = 0xe3;
+      // jmp near absolute indirect
+      tramp[nBytes] = 0xFF;
+      tramp[nBytes + 1] = 0x25;
+      // disp = 0 means that address at RIP specifies target address
+      *((uint32_t*)(tramp + nBytes + 2)) = 0;
+      // target address
+      *((uintptr_t*)(tramp + nBytes + 6)) = (uintptr_t)trampDest;
     }
 #endif
 
