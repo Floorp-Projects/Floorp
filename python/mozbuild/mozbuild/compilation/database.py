@@ -46,14 +46,14 @@ class CompileDBBackend(CommonBackend):
         if consumed:
             return True
 
-        if isinstance(obj, Sources) or isinstance(obj, HostSources) or \
-           isinstance(obj, GeneratedSources):
+        # We ignore host compilations for now, the code doesn't handle them
+        # properly.
+        if isinstance(obj, (Sources, GeneratedSources)):
             # For other sources, include each source file.
             for f in obj.files:
                 flags = self._get_dir_flags(obj.objdir)
                 self._build_db_line(obj.objdir, self.environment, f,
-                                    obj.canonical_suffix, flags,
-                                    isinstance(obj, HostSources))
+                                    obj.canonical_suffix, flags)
 
         return True
 
@@ -72,7 +72,7 @@ class CompileDBBackend(CommonBackend):
         for f in obj.unified_source_mapping:
             flags = self._get_dir_flags(obj.objdir)
             self._build_db_line(obj.objdir, self.environment, f[0],
-                                obj.canonical_suffix, flags, False)
+                                obj.canonical_suffix, flags)
 
     def _handle_idl_manager(self, idl_manager):
         pass
@@ -82,7 +82,7 @@ class CompileDBBackend(CommonBackend):
         flags = self._get_dir_flags(ipdl_dir)
         for f in unified_ipdl_cppsrcs_mapping:
             self._build_db_line(ipdl_dir, self.environment, f[0],
-                                '.cpp', flags, False)
+                                '.cpp', flags)
 
     def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
                              webidls, expected_build_output_files,
@@ -90,7 +90,7 @@ class CompileDBBackend(CommonBackend):
         flags = self._get_dir_flags(bindings_dir)
         for f in unified_source_mapping:
             self._build_db_line(bindings_dir, self.environment, f[0],
-                                '.cpp', flags, False)
+                                '.cpp', flags)
 
     def _get_dir_flags(self, directory):
         if directory in self._flags:
@@ -115,17 +115,15 @@ class CompileDBBackend(CommonBackend):
         self._flags[directory] = build_vars
         return self._flags[directory]
 
-    def _build_db_line(self, objdir, cenv, filename, canonical_suffix, flags, ishost):
-        # Distinguish between host and target files.
-        prefix = 'HOST_' if ishost else ''
+    def _build_db_line(self, objdir, cenv, filename, canonical_suffix, flags):
         if canonical_suffix in ('.c', '.m'):
-            compiler = cenv.substs[prefix + 'CC']
+            compiler = cenv.substs['CC']
             cflags = list(flags['COMPILE_CFLAGS'])
             # Add the Objective-C flags if needed.
             if canonical_suffix == '.m':
                 cflags.extend(flags['COMPILE_CMFLAGS'])
         elif canonical_suffix in ('.cpp', '.mm'):
-            compiler = cenv.substs[prefix + 'CXX']
+            compiler = cenv.substs['CXX']
             cflags = list(flags['COMPILE_CXXFLAGS'])
             # Add the Objective-C++ flags if needed.
             if canonical_suffix == '.mm':
