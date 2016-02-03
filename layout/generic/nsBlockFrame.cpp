@@ -12,6 +12,7 @@
 #include "nsBlockFrame.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -3319,10 +3320,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
 
     // construct the html reflow state for the block. ReflowBlock
-    // will initialize it
-    nsHTMLReflowState
-      blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
-                  availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
+    // will initialize it.
+    Maybe<nsHTMLReflowState> blockHtmlRS;
+    blockHtmlRS.emplace(
+      aState.mPresContext, aState.mReflowState, frame,
+      availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
 
     nsFloatManager::SavedState floatManagerState;
     nsReflowStatus frameReflowStatus;
@@ -3347,16 +3349,16 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
 
       if (mayNeedRetry) {
-        blockHtmlRS.mDiscoveredClearance = &clearanceFrame;
+        blockHtmlRS->mDiscoveredClearance = &clearanceFrame;
       } else if (!applyBStartMargin) {
-        blockHtmlRS.mDiscoveredClearance =
+        blockHtmlRS->mDiscoveredClearance =
           aState.mReflowState.mDiscoveredClearance;
       }
 
       frameReflowStatus = NS_FRAME_COMPLETE;
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
                       clearance, aState.IsAdjacentWithTop(),
-                      aLine.get(), blockHtmlRS, frameReflowStatus, aState);
+                      aLine.get(), *blockHtmlRS, frameReflowStatus, aState);
 
       // Now the block has a height.  Using that height, get the
       // available space again and call ComputeBlockAvailSpace again.
@@ -3433,11 +3435,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         clearance = 0;
       }
 
-      blockHtmlRS.~nsHTMLReflowState();
-      new (&blockHtmlRS) nsHTMLReflowState(aState.mPresContext,
-                           aState.mReflowState, frame,
-                           availSpace.Size(wm).ConvertTo(
-                             frame->GetWritingMode(), wm));
+      blockHtmlRS.reset();
+      blockHtmlRS.emplace(
+        aState.mPresContext, aState.mReflowState, frame,
+        availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
     } while (true);
 
     if (mayNeedRetry && clearanceFrame) {
@@ -3449,7 +3450,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
     aState.mPrevChild = frame;
 
-    if (blockHtmlRS.WillReflowAgainForClearance()) {
+    if (blockHtmlRS->WillReflowAgainForClearance()) {
       // If an ancestor of ours is going to reflow for clearance, we
       // need to avoid calling PlaceBlock, because it unsets dirty bits
       // on the child block (both itself, and through its call to
@@ -3487,7 +3488,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         !floatAvailableSpace.mHasFloats;
       nsCollapsingMargin collapsedBEndMargin;
       nsOverflowAreas overflowAreas;
-      *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
+      *aKeepReflowGoing = brc.PlaceBlock(*blockHtmlRS, forceFit, aLine.get(),
                                          collapsedBEndMargin,
                                          overflowAreas,
                                          frameReflowStatus);
