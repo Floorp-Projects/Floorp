@@ -2,54 +2,67 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+"use strict";
 
-this.EXPORTED_SYMBOLS = ["FrameManager"];
-
-var FRAME_SCRIPT = "chrome://marionette/content/listener.js";
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-               .getService(Ci.mozIJSSubScriptLoader);
+this.EXPORTED_SYMBOLS = ["frame"];
 
-//list of OOP frames that has the frame script loaded
+this.frame = {};
+
+const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
+
+// list of OOP frames that has the frame script loaded
 var remoteFrames = [];
 
 /**
  * An object representing a frame that Marionette has loaded a
  * frame script in.
  */
-function MarionetteRemoteFrame(windowId, frameId) {
-  this.windowId = windowId; //outerWindowId relative to main process
-  this.frameId = frameId; //actual frame relative to windowId's frames list
-  this.targetFrameId = this.frameId; //assigned FrameId, used for messaging
+frame.RemoteFrame = function(windowId, frameId) {
+  // outerWindowId relative to main process
+  this.windowId = windowId;
+  // actual frame relative to the windowId's frames list
+  this.frameId = frameId;
+  // assigned frame ID, used for messaging
+  this.targetFrameId = this.frameId;
+  // list of OOP frames that has the frame script loaded
+  this.remoteFrames = [];
 };
 
 /**
- * The FrameManager will maintain the list of Out Of Process (OOP) frames and will handle
- * frame switching between them.
- * It handles explicit frame switching (switchToFrame), and implicit frame switching, which
- * occurs when a modal dialog is triggered in B2G.
+ * The FrameManager will maintain the list of Out Of Process (OOP)
+ * frames and will handle frame switching between them.
  *
+ * It handles explicit frame switching (switchToFrame), and implicit
+ * frame switching, which occurs when a modal dialog is triggered in B2G.
  */
-this.FrameManager = function FrameManager(server) {
-  //messageManager maintains the messageManager for the current process' chrome frame or the global message manager
-  this.currentRemoteFrame = null; //holds a member of remoteFrames (for an OOP frame) or null (for the main process)
-  this.previousRemoteFrame = null; //frame we'll need to restore once interrupt is gone
-  this.handledModal = false; //set to true when we have been interrupted by a modal
-  this.server = server; // a reference to the marionette server
+frame.Manager = function(server) {
+  // messageManager maintains the messageManager
+  // for the current process' chrome frame or the global message manager
+
+  // holds a member of the remoteFrames (for an OOP frame)
+  // or null (for the main process)
+  this.currentRemoteFrame = null;
+  // frame we'll need to restore once interrupt is gone
+  this.previousRemoteFrame = null;
+  // set to true when we have been interrupted by a modal
+  this.handledModal = false;
+  // a reference to the Marionette server
+  this.server = server;
 };
 
-FrameManager.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
-                                         Ci.nsISupportsWeakReference]),
+frame.Manager.prototype = {
+  QueryInterface: XPCOMUtils.generateQI(
+      [Ci.nsIMessageListener, Ci.nsISupportsWeakReference]),
 
   /**
-   * Receives all messages from content messageManager
+   * Receives all messages from content messageManager.
    */
-  receiveMessage: function FM_receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "MarionetteFrame:getInterruptedState":
         // This will return true if the calling frame was interrupted by a modal dialog
@@ -68,6 +81,7 @@ FrameManager.prototype = {
           return {value: this.handledModal};
         }
         return {value: false};
+
       case "MarionetteFrame:handleModal":
         /*
          * handleModal is called when we need to switch frames to the main process due to a modal dialog interrupt.
@@ -89,6 +103,7 @@ FrameManager.prototype = {
         this.handledModal = true;
         this.server.sendOk(this.server.command_id);
         return {value: isLocal};
+
       case "MarionetteFrame:getCurrentFrameId":
         if (this.currentRemoteFrame != null) {
           return this.currentRemoteFrame.frameId;
@@ -96,7 +111,7 @@ FrameManager.prototype = {
     }
   },
 
-  getOopFrame: function FM_getOopFrame(winId, frameId) {
+  getOopFrame: function(winId, frameId) {
     // get original frame window
     let outerWin = Services.wm.getOuterWindowWithId(winId);
     // find the OOP frame
@@ -104,7 +119,7 @@ FrameManager.prototype = {
     return f;
   },
 
-  getFrameMM: function FM_getFrameMM(winId, frameId) {
+  getFrameMM: function(winId, frameId) {
     let oopFrame = this.getOopFrame(winId, frameId);
     let mm = oopFrame.QueryInterface(Ci.nsIFrameLoaderOwner)
         .frameLoader.messageManager;
@@ -112,10 +127,10 @@ FrameManager.prototype = {
   },
 
   /**
-   * Switch to OOP frame.  We're handling this here
-   * so we can maintain a list of remote frames.
+   * Switch to OOP frame.  We're handling this here so we can maintain
+   * a list of remote frames.
    */
-  switchToFrame: function FM_switchToFrame(winId, frameId) {
+  switchToFrame: function(winId, frameId) {
     let oopFrame = this.getOopFrame(winId, frameId);
     let mm = this.getFrameMM(winId, frameId);
 
@@ -145,7 +160,7 @@ FrameManager.prototype = {
     // and set the frame's ChromeMessageSender as the active message manager
     // the server will listen to.
     this.addMessageManagerListeners(mm);
-    let aFrame = new MarionetteRemoteFrame(winId, frameId);
+    let aFrame = new frame.RemoteFrame(winId, frameId);
     aFrame.messageManager = Cu.getWeakReference(mm);
     remoteFrames.push(aFrame);
     this.currentRemoteFrame = aFrame;
@@ -159,7 +174,7 @@ FrameManager.prototype = {
    * This function handles switching back to the frame that was interrupted by the modal dialog.
    * This function gets called by the interrupted frame once the dialog is dismissed and the frame resumes its process
    */
-  switchToModalOrigin: function FM_switchToModalOrigin() {
+  switchToModalOrigin: function() {
     //only handle this if we indeed switched out of the modal's originating frame
     if (this.previousRemoteFrame != null) {
       this.currentRemoteFrame = this.previousRemoteFrame;
@@ -179,7 +194,7 @@ FrameManager.prototype = {
    *     The message manager object, typically
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
-  addMessageManagerListeners: function FM_addMessageManagerListeners(mm) {
+  addMessageManagerListeners: function(mm) {
     mm.addWeakMessageListener("Marionette:ok", this.server);
     mm.addWeakMessageListener("Marionette:done", this.server);
     mm.addWeakMessageListener("Marionette:error", this.server);
@@ -211,7 +226,7 @@ FrameManager.prototype = {
    *     The message manager object, typically
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
-  removeMessageManagerListeners: function FM_removeMessageManagerListeners(mm) {
+  removeMessageManagerListeners: function(mm) {
     mm.removeWeakMessageListener("Marionette:ok", this.server);
     mm.removeWeakMessageListener("Marionette:done", this.server);
     mm.removeWeakMessageListener("Marionette:error", this.server);
