@@ -41,6 +41,16 @@ class CompileDBBackend(CommonBackend):
 
 
     def consume_object(self, obj):
+        # Those are difficult directories, that will be handled later.
+        if obj.relativedir in (
+                'build/unix/elfhack',
+                'build/unix/elfhack/inject',
+                'build/clang-plugin',
+                'build/clang-plugin/tests',
+                'security/sandbox/win/wow_helper',
+                'toolkit/crashreporter/google-breakpad/src/common'):
+            return True
+
         consumed = CommonBackend.consume_object(self, obj)
 
         if consumed:
