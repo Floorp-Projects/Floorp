@@ -31,7 +31,6 @@ CppUnitTests([
     'TestPair',
     'TestRefPtr',
     'TestRollingMean',
-    'TestSaturate',
     'TestScopeExit',
     'TestSegmentedVector',
     'TestSHA1',
