@@ -6,23 +6,22 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsHistory {
-  background: transparent;
-  color: -moz-nativehyperlinktext;
-  cursor: pointer;
-}
-
 #downloadsFooter {
   border-top: 1px solid ThreeDShadow;
   background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
 
-#downloadsHistory > .button-box {
-  margin: 1em;
+#downloadsHistory {
+  color: -moz-nativehyperlinktext;
 }
 
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus > .button-box {
+@keyfocus@ #downloadsSummary:focus,
+@keyfocus@ #downloadsHistory:focus > .button-box {
   outline: 1px -moz-dialogtext dotted;
+}
+
+@keyfocus@ #downloadsSummary:focus {
+  outline-offset: -5px;
 }
 
 /*** Downloads Summary and List items ***/
@@ -38,11 +37,6 @@ richlistitem[type="download"] {
   padding: 8px 38px 8px 12px;
   cursor: pointer;
   -moz-user-focus: normal;
-}
-
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsSummary:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -5px;
 }
 
 #downloadsSummary > .downloadTypeIcon {
