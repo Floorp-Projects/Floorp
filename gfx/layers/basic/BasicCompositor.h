@@ -23,8 +23,6 @@ public:
     , mSize(aRect.Size())
   { }
 
-  virtual const char* Name() const override { return "BasicCompositingRenderTarget"; }
-
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
   void BindRenderTarget();

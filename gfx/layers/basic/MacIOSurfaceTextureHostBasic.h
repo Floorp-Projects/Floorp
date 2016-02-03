@@ -31,8 +31,6 @@ public:
                                  MacIOSurface* aSurface);
   virtual ~MacIOSurfaceTextureSourceBasic();
 
-  virtual const char* Name() const override { return "MacIOSurfaceTextureSourceBasic"; }
-
   virtual TextureSourceBasic* AsSourceBasic() override { return this; }
 
   virtual gfx::IntSize GetSize() const override;

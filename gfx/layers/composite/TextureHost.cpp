@@ -374,13 +374,6 @@ TextureSource::~TextureSource()
     MOZ_COUNT_DTOR(TextureSource);
 }
 
-const char*
-TextureSource::Name() const
-{
-  MOZ_CRASH("TextureSource without class name");
-  return "TextureSource";
-}
-  
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
 : TextureHost(aFlags)

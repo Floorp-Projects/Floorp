@@ -34,7 +34,6 @@ class DataTextureSourceBasic : public DataTextureSource
                              , public TextureSourceBasic
 {
 public:
-  virtual const char* Name() const override { return "DataTextureSourceBasic"; }
 
   virtual TextureSourceBasic* AsSourceBasic() override { return this; }
 
@@ -452,7 +451,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
       } else {
-        gfxDevCrash(LogReason::IncompatibleBasicTexturedEffect) << "Bad for basic with " << texturedEffect->mTexture->Name();
+        gfxDevCrash(LogReason::IncompatibleBasicTexturedEffect) << "Bad for basic";
       }
 
       break;
