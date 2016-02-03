@@ -269,6 +269,41 @@ public class DateTimePicker extends FrameLayout {
             Log.d(LOGTAG, "screen width: " + mScreenWidth + " screen height: " + mScreenHeight);
         }
 
+        // Set the min / max attribute.
+        try {
+            if (minDateValue != null && !minDateValue.equals("")) {
+                mMinDate.setTime(new SimpleDateFormat(dateFormat).parse(minDateValue));
+            } else {
+                mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format sting: " + ex);
+            mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
+        }
+
+        try {
+            if (maxDateValue != null && !maxDateValue.equals("")) {
+                mMaxDate.setTime(new SimpleDateFormat(dateFormat).parse(maxDateValue));
+            } else {
+                mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format string: " + ex);
+            mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
+        }
+
+        // Find the initial date from the constructor arguments.
+        try {
+            if (!dateTimeValue.equals("")) {
+                mTempDate.setTime(new SimpleDateFormat(dateFormat).parse(dateTimeValue));
+            } else {
+                mTempDate.setTimeInMillis(System.currentTimeMillis());
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "Error parsing format string: " + ex);
+            mTempDate.setTimeInMillis(System.currentTimeMillis());
+        }
+
         // If we're displaying a date, the screen is wide enough
         // (and if we're using an SDK where the calendar view exists)
         // then display a calendar.
@@ -311,41 +346,6 @@ public class DateTimePicker extends FrameLayout {
             }
             mCalendar = null;
         }
-
-        // Find the initial date from the constructor arguments.
-        try {
-            if (!dateTimeValue.equals("")) {
-                mTempDate.setTime(new SimpleDateFormat(dateFormat).parse(dateTimeValue));
-            } else {
-                mTempDate.setTimeInMillis(System.currentTimeMillis());
-            }
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Error parsing format string: " + ex);
-            mTempDate.setTimeInMillis(System.currentTimeMillis());
-        }
-
-	// Set the min / max attribute.
-	try {
-	    if (minDateValue != null && !minDateValue.equals("")) {
-		mMinDate.setTime(new SimpleDateFormat(dateFormat).parse(minDateValue));
-	    } else {
-		mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
-	    }
-	} catch (Exception ex) {
-	    Log.e(LOGTAG, "Error parsing format sting: " + ex);
-	    mMinDate.set(DEFAULT_START_YEAR, Calendar.JANUARY, 1);
-	}
-
-	try {
-	    if (maxDateValue != null && !maxDateValue.equals("")) {
-		mMaxDate.setTime(new SimpleDateFormat(dateFormat).parse(maxDateValue));
-	    } else {
-		mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
-	    }
-	} catch (Exception ex) {
-	    Log.e(LOGTAG, "Error parsing format string: " + ex);
-	    mMaxDate.set(DEFAULT_END_YEAR, Calendar.DECEMBER, 31);
-	}
 
         // Initialize all spinners.
         mDaySpinner = setupSpinner(R.id.day, 1,
