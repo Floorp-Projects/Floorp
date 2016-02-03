@@ -142,7 +142,8 @@ DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_
         return false;
 
     if (!script->hasIonScript() || script->ionScript()->osrPc() != pc ||
-        script->ionScript()->bailoutExpected())
+        script->ionScript()->bailoutExpected() ||
+        frame->isDebuggee())
     {
         return true;
     }
