@@ -2272,7 +2272,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
   // Refresh the principal on the compartment.
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
-    win->RefreshCompartmentPrincipal();
+    nsGlobalWindow::Cast(win)->RefreshCompartmentPrincipal();
   }
 }
 
