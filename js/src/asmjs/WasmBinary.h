@@ -71,7 +71,6 @@ enum class Expr : uint16_t
     CallImport,
 
     // Constants and calls
-    I8Const,
     I32Const,
     I64Const,
     F64Const,
@@ -109,6 +108,34 @@ enum class Expr : uint16_t
     I32Ctz,
     I32Popcnt,
 
+    // I64 opcodes
+    I64Add,
+    I64Sub,
+    I64Mul,
+    I64DivS,
+    I64DivU,
+    I64RemS,
+    I64RemU,
+    I64Or,
+    I64And,
+    I64Xor,
+    I64Shl,
+    I64ShrU,
+    I64ShrS,
+    I64Eq,
+    I64Ne,
+    I64LtS,
+    I64LeS,
+    I64LtU,
+    I64LeU,
+    I64GtS,
+    I64GeS,
+    I64GtU,
+    I64GeU,
+    I64Clz,
+    I64Ctz,
+    I64Popcnt,
+
     // F32 opcodes
     F32Add,
     F32Sub,
@@ -122,7 +149,7 @@ enum class Expr : uint16_t
     F32Ceil,
     F32Floor,
     F32Trunc,
-    F32NearestInt,
+    F32Nearest,
     F32Sqrt,
     F32Eq,
     F32Ne,
@@ -144,7 +171,7 @@ enum class Expr : uint16_t
     F64Ceil,
     F64Floor,
     F64Trunc,
-    F64NearestInt,
+    F64Nearest,
     F64Sqrt,
     F64Eq,
     F64Ne,
@@ -154,17 +181,31 @@ enum class Expr : uint16_t
     F64Ge,
 
     // Conversions
-    I32SConvertF32,
-    I32SConvertF64,
-    I32UConvertF32,
-    I32UConvertF64,
-    I32ConvertI64,
-    I64SConvertF32,
-    I64SConvertF64,
-    I64UConvertF32,
-    I64UConvertF64,
-    I64SConvertI32,
-    I64UConvertI32,
+    I32WrapI64,
+    I64ExtendSI32,
+    I64ExtendUI32,
+    I32TruncSF32,
+    I32TruncSF64,
+    I32TruncUF32,
+    I32TruncUF64,
+    I64TruncSF32,
+    I64TruncSF64,
+    I64TruncUF32,
+    I64TruncUF64,
+    F32ConvertSI32,
+    F32ConvertUI32,
+    F64ConvertSI32,
+    F64ConvertUI32,
+    F32ConvertSI64,
+    F32ConvertUI64,
+    F64ConvertSI64,
+    F64ConvertUI64,
+    F32DemoteF64,
+    F64PromoteF32,
+    I32ReinterpretF32,
+    F32ReinterpretI32,
+    I64ReinterpretF64,
+    F64ReinterpretI64,
 
     // Load/store operations
     I32LoadMem8S,
@@ -251,10 +292,6 @@ enum class Expr : uint16_t
     I32Abs,
 
     // F32 asm.js opcodes
-    F32FromF64,
-    F32FromS32,
-    F32FromU32,
-
     F32StoreMemF64,
 
     // F64 asm.js opcodes
@@ -270,10 +307,6 @@ enum class Expr : uint16_t
     F64Log,
     F64Pow,
     F64Atan2,
-
-    F64FromF32,
-    F64FromS32,
-    F64FromU32,
 
     F64StoreMemF32,
 

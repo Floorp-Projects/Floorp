@@ -3558,7 +3558,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     /* RegExps */
 
     AutoObjectVector regexps(cx);
-    for (unsigned i = 0; i < nregexps; i++) {
+    if (nregexps != 0) {
         HeapPtrObject* vector = src->regexps()->vector;
         for (unsigned i = 0; i < nregexps; i++) {
             JSObject* clone = CloneScriptRegExpObject(cx, vector[i]->as<RegExpObject>());

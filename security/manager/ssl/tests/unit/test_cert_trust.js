@@ -191,11 +191,11 @@ function run_test() {
     load_cert(certList[i], ',,');
   }
 
-  let ca_cert = certdb.findCertByNickname(null, 'ca');
+  let ca_cert = certdb.findCertByNickname('ca');
   notEqual(ca_cert, null, "CA cert should be in the cert DB");
-  let int_cert = certdb.findCertByNickname(null, 'int');
+  let int_cert = certdb.findCertByNickname('int');
   notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
-  let ee_cert = certdb.findCertByNickname(null, 'ee');
+  let ee_cert = certdb.findCertByNickname('ee');
   notEqual(ee_cert, null, "EE cert should be in the cert DB");
 
   setup_basic_trusts(ca_cert, int_cert);

@@ -1528,7 +1528,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     ssl_sid_uncache = ServerSessionIDUncache;
 
     if (!envString) {
-    	envString  = getenv(envVarName);
+    	envString  = PR_GetEnvSecure(envVarName);
 	if (!envString) {
 	    SET_ERROR_CODE
 	    return SECFailure;
@@ -1747,7 +1747,7 @@ LaunchLockPoller(cacheDesc *cache)
     PRThread *   pollerThread;
 
     cache->mutexTimeout = SID_LOCK_EXPIRATION_TIMEOUT;
-    timeoutString       = getenv("NSS_SSL_SERVER_CACHE_MUTEX_TIMEOUT");
+    timeoutString       = PR_GetEnvSecure("NSS_SSL_SERVER_CACHE_MUTEX_TIMEOUT");
     if (timeoutString) {
 	long newTime = strtol(timeoutString, 0, 0);
 	if (newTime == 0) 

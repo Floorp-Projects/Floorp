@@ -774,7 +774,7 @@ nsJISx4051LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
   }
 
   int32_t ret;
-  nsAutoTArray<uint8_t, 2000> breakState;
+  AutoTArray<uint8_t, 2000> breakState;
   if (!textNeedsJISx4051 || !breakState.AppendElements(end - begin)) {
     // No complex text character, do not try to do complex line break.
     // (This is required for serializers. See Bug #344816.)

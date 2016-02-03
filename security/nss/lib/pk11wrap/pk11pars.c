@@ -1086,7 +1086,7 @@ secmod_configIsDBM(char *configDir)
 	|| (strncmp(configDir, "extern:", 7) == 0)) {
 	return PR_FALSE;
     }
-    env = PR_GetEnv("NSS_DEFAULT_DB_TYPE");
+    env = PR_GetEnvSecure("NSS_DEFAULT_DB_TYPE");
     /* implicit dbm open */
     if ((env == NULL) || (strcmp(env,"dbm") == 0)) {
 	return PR_TRUE;

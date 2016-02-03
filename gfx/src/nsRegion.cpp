@@ -305,7 +305,7 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
   pixman_box32_t *topRects = boxes;
 
   // we need some temporary storage for merging both rows of rectangles
-  nsAutoTArray<pixman_box32_t, 10> tmpStorage;
+  AutoTArray<pixman_box32_t, 10> tmpStorage;
   tmpStorage.SetCapacity(n);
   pixman_box32_t *tmpRect = tmpStorage.Elements();
 

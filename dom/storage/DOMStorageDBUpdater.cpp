@@ -336,7 +336,17 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
     aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("REVERSESTRING"));
 
     // Update the scoping to match the new implememntation: split to oa suffix and origin key
-    // First rename the old table, we want to remove some columns no longer needed.
+    // First rename the old table, we want to remove some columns no longer needed,
+    // but even before that drop all indexes from it (CREATE IF NOT EXISTS for index on the
+    // new table would falsely find the index!)
+    rv = aWorkerConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "DROP INDEX IF EXISTS webappsstore2.origin_key_index"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aWorkerConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "DROP INDEX IF EXISTS webappsstore2.scope_key_index"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = aWorkerConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE webappsstore2 RENAME TO webappsstore2_old"));
     NS_ENSURE_SUCCESS(rv, rv);

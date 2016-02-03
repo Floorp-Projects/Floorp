@@ -371,7 +371,7 @@ ia2AccessibleTable::get_selectedChildren(long aMaxChildren, long** aChildren,
   if (!mTable)
     return CO_E_OBJNOTCONNECTED;
 
-  nsAutoTArray<uint32_t, 30> cellIndices;
+  AutoTArray<uint32_t, 30> cellIndices;
   mTable->SelectedCellIndices(&cellIndices);
 
   uint32_t maxCells = cellIndices.Length();
@@ -663,7 +663,7 @@ ia2AccessibleTable::get_selectedCells(IUnknown*** aCells, long* aNSelectedCells)
   if (!mTable)
     return CO_E_OBJNOTCONNECTED;
 
-  nsAutoTArray<Accessible*, 30> cells;
+  AutoTArray<Accessible*, 30> cells;
   mTable->SelectedCells(&cells);
   if (cells.IsEmpty())
     return S_FALSE;
@@ -699,7 +699,7 @@ ia2AccessibleTable::get_selectedColumns(long** aColumns, long* aNColumns)
   if (!mTable)
     return CO_E_OBJNOTCONNECTED;
 
-  nsAutoTArray<uint32_t, 30> colIndices;
+  AutoTArray<uint32_t, 30> colIndices;
   mTable->SelectedColIndices(&colIndices);
 
   uint32_t maxCols = colIndices.Length();
@@ -729,7 +729,7 @@ ia2AccessibleTable::get_selectedRows(long** aRows, long* aNRows)
   if (!mTable)
     return CO_E_OBJNOTCONNECTED;
 
-  nsAutoTArray<uint32_t, 30> rowIndices;
+  AutoTArray<uint32_t, 30> rowIndices;
   mTable->SelectedRowIndices(&rowIndices);
 
   uint32_t maxRows = rowIndices.Length();

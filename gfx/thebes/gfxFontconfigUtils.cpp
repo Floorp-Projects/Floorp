@@ -985,7 +985,7 @@ gfxFontconfigUtils::GetLangSupportEntry(const FcChar8 *aLang, bool aWithFonts)
 #endif
     };
 
-    nsAutoTArray<FcPattern*,100> fonts;
+    AutoTArray<FcPattern*,100> fonts;
 
     for (unsigned fs = 0; fs < ArrayLength(fontSets); ++fs) {
         FcFontSet *fontSet = fontSets[fs];

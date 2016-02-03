@@ -239,7 +239,6 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
     }
   }
   if (gObserverTable) {
-    n += aMallocSizeOf(gObserverTable);
     n += gObserverTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
     for (auto iter = gObserverTable->Iter(); !iter.Done(); iter.Next()) {
       n += iter.Key()->mPrefName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);

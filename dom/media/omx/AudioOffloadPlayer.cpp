@@ -345,11 +345,12 @@ status_t AudioOffloadPlayer::DoSeek()
   MOZ_ASSERT(mSeekTarget.IsValid());
   CHECK(mAudioSink.get());
 
-  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("DoSeek ( %lld )", mSeekTarget.mTime));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug,
+                    ("DoSeek ( %lld )", mSeekTarget.GetTime().ToMicroseconds()));
 
   mReachedEOS = false;
   mPositionTimeMediaUs = -1;
-  mStartPosUs = mSeekTarget.mTime;
+  mStartPosUs = mSeekTarget.GetTime().ToMicroseconds();
 
   if (!mSeekPromise.IsEmpty()) {
     nsCOMPtr<nsIRunnable> nsEvent =
@@ -387,7 +388,7 @@ int64_t AudioOffloadPlayer::GetMediaTimeUs()
 
   int64_t playPosition = 0;
   if (mSeekTarget.IsValid()) {
-    return mSeekTarget.mTime;
+    return mSeekTarget.GetTime().ToMicroseconds();
   }
   if (!mStarted) {
     return mPositionTimeMediaUs;
@@ -505,7 +506,7 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
       android::Mutex::Autolock autoLock(mLock);
 
       if (mSeekTarget.IsValid()) {
-        seekTimeUs = mSeekTarget.mTime;
+        seekTimeUs = mSeekTarget.GetTime().ToMicroseconds();
         options.setSeekTo(seekTimeUs);
         refreshSeekTime = true;
 
@@ -557,7 +558,8 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
             kKeyTime, &mPositionTimeMediaUs));
       }
 
-      if (mSeekTarget.IsValid() && seekTimeUs == mSeekTarget.mTime) {
+      if (mSeekTarget.IsValid() &&
+          seekTimeUs == mSeekTarget.GetTime().ToMicroseconds()) {
         MOZ_ASSERT(mSeekTarget.IsValid());
         mSeekTarget.Reset();
         if (!mSeekPromise.IsEmpty()) {
