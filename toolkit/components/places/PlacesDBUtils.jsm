@@ -854,26 +854,14 @@ this.PlacesDBUtils = {
   },
 
   /**
-   * Collects telemetry data.
-   *
-   * There are essentially two modes of collection and the mode is
-   * determined by the presence of aHealthReportCallback. If
-   * aHealthReportCallback is not defined (the default) then we are in
-   * "Telemetry" mode. Results will be reported to Telemetry. If we are
-   * in "Health Report" mode only the probes with a true healthreport
-   * flag will be collected and the results will be reported to the
-   * aHealthReportCallback.
+   * Collects telemetry data and reports it to Telemetry.
    *
    * @param [optional] aTasks
    *        Tasks object to execute.
-   * @param [optional] aHealthReportCallback
-   *        Function to receive data relevant for Firefox Health Report.
    */
-  telemetry: function PDBU_telemetry(aTasks, aHealthReportCallback=null)
+  telemetry: function PDBU_telemetry(aTasks)
   {
     let tasks = new Tasks(aTasks);
-
-    let isTelemetry = !aHealthReportCallback;
 
     // This will be populated with one integer property for each probe result,
     // using the histogram name as key.
@@ -891,19 +879,15 @@ this.PlacesDBUtils = {
     //             histogram. If a query is also present, its result is passed
     //             as the first argument of the function.  If the function
     //             raises an exception, no data is added to the histogram.
-    //  healthreport: Boolean indicating whether this probe is relevant
-    //                to Firefox Health Report.
     //
     // Since all queries are executed in order by the database backend, the
     // callbacks can also use the result of previous queries stored in the
     // probeValues object.
     let probes = [
       { histogram: "PLACES_PAGES_COUNT",
-        healthreport: true,
         query:     "SELECT count(*) FROM moz_places" },
 
       { histogram: "PLACES_BOOKMARKS_COUNT",
-        healthreport: true,
         query:     `SELECT count(*) FROM moz_bookmarks b
                     JOIN moz_bookmarks t ON t.id = b.parent
                     AND t.parent <> :tags_folder
@@ -989,14 +973,8 @@ this.PlacesDBUtils = {
       places_root: PlacesUtils.placesRootId
     };
 
-    let outstandingProbes = [];
-
     for (let i = 0; i < probes.length; i++) {
       let probe = probes[i];
-
-      if (!isTelemetry && !probe.healthreport) {
-        continue;
-      }
 
       let promiseDone = new Promise((resolve, reject) => {
         if (!("query" in probe)) {
@@ -1027,7 +1005,7 @@ this.PlacesDBUtils = {
 
       // Report the result of the probe through Telemetry.
       // The resulting promise cannot reject.
-      promiseDone = promiseDone.then(
+      promiseDone.then(
         // On success
         ([aProbe, aValue]) => {
           let value = aValue;
@@ -1045,14 +1023,6 @@ this.PlacesDBUtils = {
         },
         // On failure
         this._handleError);
-
-      outstandingProbes.push(promiseDone);
-    }
-
-    if (aHealthReportCallback) {
-      Promise.all(outstandingProbes).then(() =>
-        aHealthReportCallback(probeValues)
-      );
     }
 
     PlacesDBUtils._executeTasks(tasks);
