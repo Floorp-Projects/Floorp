@@ -430,14 +430,14 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();
 
-      if (source && texturedEffect->mPremultiplied) {
+      if (texturedEffect->mPremultiplied) {
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        source->GetSurface(dest),
                                        texturedEffect->mTextureCoords,
                                        texturedEffect->mFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
-      } else if (source) {
+      } else {
           RefPtr<DataSourceSurface> srcData = source->GetSurface(dest)->GetDataSurface();
 
           // Yes, we re-create the premultiplied data every time.
@@ -450,10 +450,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                        texturedEffect->mFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
-      } else {
-        gfxDevCrash(LogReason::IncompatibleBasicTexturedEffect) << "Bad for basic";
       }
-
       break;
     }
     case EffectTypes::YCBCR: {
