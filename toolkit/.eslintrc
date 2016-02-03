@@ -24,7 +24,7 @@
     // "computed-property-spacing": [2, "never"],
 
     // Functions must always return something or nothing
-    // "consistent-return": 2,
+    "consistent-return": 2,
 
     // Require braces around blocks that start a new line
     // Note that this rule is likely to be overridden on a per-directory basis
@@ -122,7 +122,7 @@
     // "no-octal": 2,
 
     // No redeclaring variables
-    // "no-redeclare": 2,
+    "no-redeclare": 2,
 
     // No unnecessary comparisons
     // "no-self-compare": 2,

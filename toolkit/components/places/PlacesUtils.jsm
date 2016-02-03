@@ -698,16 +698,16 @@ this.PlacesUtils = {
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
         nodes = JSON.parse("[" + blob + "]");
         break;
-      case this.TYPE_X_MOZ_URL:
-        var parts = blob.split("\n");
+      case this.TYPE_X_MOZ_URL: {
+        let parts = blob.split("\n");
         // data in this type has 2 parts per entry, so if there are fewer
         // than 2 parts left, the blob is malformed and we should stop
         // but drag and drop of files from the shell has parts.length = 1
         if (parts.length != 1 && parts.length % 2)
           break;
-        for (var i = 0; i < parts.length; i=i+2) {
-          var uriString = parts[i];
-          var titleString = "";
+        for (let i = 0; i < parts.length; i=i+2) {
+          let uriString = parts[i];
+          let titleString = "";
           if (parts.length > i+1)
             titleString = parts[i+1];
           else {
@@ -726,10 +726,11 @@ this.PlacesUtils = {
           }
         }
         break;
-      case this.TYPE_UNICODE:
-        var parts = blob.split("\n");
-        for (var i = 0; i < parts.length; i++) {
-          var uriString = parts[i];
+      }
+      case this.TYPE_UNICODE: {
+        let parts = blob.split("\n");
+        for (let i = 0; i < parts.length; i++) {
+          let uriString = parts[i];
           // text/uri-list is converted to TYPE_UNICODE but it could contain
           // comments line prepended by #, we should skip them
           if (uriString.substr(0, 1) == '\x23')
@@ -741,6 +742,7 @@ this.PlacesUtils = {
                          type: this.TYPE_X_MOZ_URL });
         }
         break;
+      }
       default:
         throw Cr.NS_ERROR_INVALID_ARG;
     }

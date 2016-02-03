@@ -357,10 +357,10 @@ function run_test() {
       }
     };
 
-    var uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
-    var uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
-    var uri3 = ContentPrefTest.getURI("http://domain1.com/");
-    var uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
+    let uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
+    let uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
+    let uri3 = ContentPrefTest.getURI("http://domain1.com/");
+    let uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
 
     cps.setPref(uri1, "test.byname.1", 1);
     cps.setPref(uri1, "test.byname.2", 2);

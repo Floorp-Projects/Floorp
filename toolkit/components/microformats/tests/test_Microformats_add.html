@@ -225,7 +225,7 @@
     ok(mf.length, 1, "Check that test1 is a valid microformat");
 
     // Verify that the version 2 microformat is now also considered valid
-    var mf2 = Microformats.get("hTest", document.getElementById("test2"), {});
+    mf2 = Microformats.get("hTest", document.getElementById("test2"), {});
 
     ok(mf2.length, 1, "Check that the mfTest microformat version 2 is now valid");
     doTest3_4_and5(true);

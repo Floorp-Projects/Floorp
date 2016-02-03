@@ -175,7 +175,7 @@ function get_actual_results() {
         continue;
       }
 
-      var result = sourceURI.match(/^http:\/\/example\.com\/(.+)\.xpi$/);
+      let result = sourceURI.match(/^http:\/\/example\.com\/(.+)\.xpi$/);
       if (result != null) {
         is(item.mInstall.name.indexOf("PASS"), 0, "Install name should start with PASS");
         results.push({name: result[1], item: item});
@@ -183,7 +183,7 @@ function get_actual_results() {
       }
     }
     else if (item.mAddon) {
-      var result = item.mAddon.id.match(/^(.+)@tests\.mozilla\.org$/);
+      let result = item.mAddon.id.match(/^(.+)@tests\.mozilla\.org$/);
       if (result != null) {
         is(item.mAddon.name.indexOf("PASS"), 0, "Addon name should start with PASS");
         results.push({name: result[1], item: item});
@@ -627,7 +627,7 @@ add_test(function() {
       is_element_visible(item, "Incompatible addon should be visible");
       isnot(item.getAttribute("notification"), "warning", "Compatibility warning should not be shown");
   
-      var item = get_addon_item("remote6");
+      item = get_addon_item("remote6");
       is(item, null, "Addon incompatible with the product should not be visible");
   
       Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);

@@ -1071,12 +1071,12 @@
                     .getService(Components.interfaces.nsIScriptSecurityManager);
         if (this.type == "child" && window.opener &&
             secMan.isSystemPrincipal(window.opener.document.nodePrincipal)) {
-          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+          let psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
           var pdocEl = window.opener.document.documentElement;
           if (pdocEl.instantApply) {
-            var panes = this.preferencePanes;
-            for (var i = 0; i < panes.length; ++i)
+            let panes = this.preferencePanes;
+            for (let i = 0; i < panes.length; ++i)
               panes[i].writePreferences(true);
           }
           else {
@@ -1088,12 +1088,12 @@
               var id = window.location.href + "#childprefs";
               var childPrefs = pdoc.getElementById(id);
               if (!childPrefs) {
-                var childPrefs = pdoc.createElement("preferences");
+                childPrefs = pdoc.createElement("preferences");
                 currentPane.appendChild(childPrefs);
                 childPrefs.id = id;
               }
-              var panes = this.preferencePanes;
-              for (var i = 0; i < panes.length; ++i) {
+              let panes = this.preferencePanes;
+              for (let i = 0; i < panes.length; ++i) {
                 var preferences = panes[i].preferences;
                 for (var j = 0; j < preferences.length; ++j) {
                   // Try to find a preference element for the same preference.
@@ -1124,11 +1124,11 @@
           }
         }
         else {
-          var panes = this.preferencePanes;
+          let panes = this.preferencePanes;
           for (var i = 0; i < panes.length; ++i)
             panes[i].writePreferences(false);
 
-          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+          let psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefService);
           psvc.savePrefFile(null);
         }

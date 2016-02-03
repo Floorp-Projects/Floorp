@@ -1005,7 +1005,7 @@ nsPlacesExpiration.prototype = {
     if (this._timer)
       this._timer.cancel();
     if (this._shuttingDown)
-      return;
+      return undefined;
     let interval = this.status != STATUS.DIRTY ?
       this._interval * EXPIRE_AGGRESSIVITY_MULTIPLIER : this._interval;
 

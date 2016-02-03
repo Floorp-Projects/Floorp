@@ -44,7 +44,7 @@ this.Microformats = {
       return false;
     }
     if (!Microformats[name] || !rootElement) {
-      return;
+      return undefined;
     }
     targetArray = targetArray || [];
 
@@ -90,7 +90,7 @@ this.Microformats = {
       if (node.getBoundingClientRect) {
         var box = node.getBoundingClientRect();
       } else {
-        var box = node.ownerDocument.getBoxObjectFor(node);
+        box = node.ownerDocument.getBoxObjectFor(node);
       }
       /* If the parent has is an empty box, double check the children */
       if ((box.height == 0) || (box.width == 0)) {
@@ -639,7 +639,7 @@ this.Microformats = {
           }
         }
         if (!validType) {
-          return;
+          return undefined;
         }
       }
       return result;
@@ -760,7 +760,7 @@ this.Microformats = {
         propobj = Microformats[mfname].properties[propname];
       } else {
         /* If we didn't get a property, bail */
-        return;
+        return undefined;
       }
       /* Query the correct set of nodes (rel or class) based on the setting */
       /* in the property */
@@ -839,7 +839,7 @@ this.Microformats = {
                                                          propobj, propname);
         }
       }
-      return;
+      return undefined;
     },
     /**
      * Internal parser API used to resolve includes and headers. Includes are
@@ -919,7 +919,7 @@ this.Microformats = {
       var dateString;
       var tzOffset = 0;
       if (!dateArray) {
-        return;
+        return undefined;
       }
       if (dateArray[1]) {
         dateString = dateArray[1];
@@ -1399,7 +1399,7 @@ var hCard_definition = {
             return [fns[0]];
           }
         }
-        return;
+        return undefined;
       }
     },
     "note" : {
@@ -1486,7 +1486,7 @@ hCalendar.prototype.toString = function() {
   if (this.dtstart) {
     return this.summary;
   }
-  return;
+  return undefined;
 }
 
 var hCalendar_definition = {
@@ -1652,12 +1652,12 @@ this.geo = function geo(node, validate) {
 geo.prototype.toString = function() {
   if (this.latitude != undefined) {
     if (!isFinite(this.latitude) || (this.latitude > 360) || (this.latitude < -360)) {
-      return;
+      return undefined;
     }
   }
   if (this.longitude != undefined) {
     if (!isFinite(this.longitude) || (this.longitude > 360) || (this.longitude < -360)) {
-      return;
+      return undefined;
     }
   }
 

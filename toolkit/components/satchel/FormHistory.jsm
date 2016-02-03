@@ -334,7 +334,7 @@ function makeMoveToDeletedStatement(aGuid, aNow, aData, aBindingArrays) {
       // TODO: Add these items to the deleted items table once we've sorted
       //       out the issues from bug 756701
       if (!queryTerms)
-        return;
+        return undefined;
 
       query += " SELECT guid, :timeDeleted FROM moz_formhistory WHERE " + queryTerms;
     }

@@ -8,10 +8,11 @@ function test() {
                      .getService(Components.interfaces.nsIChromeRegistry);
   
   var chromeroot = getChromeRoot(gTestPath);              
+  var xpipath = chromeroot + "unsigned.xpi";
   try {
-    var xpipath = cr.convertChromeURL(makeURI(chromeroot + "unsigned.xpi")).spec;
+    xpipath = cr.convertChromeURL(makeURI(chromeroot + "unsigned.xpi")).spec;
   } catch (ex) {
-    var xpipath = chromeroot + "unsigned.xpi"; //scenario where we are running from a .jar and already extracted
+    //scenario where we are running from a .jar and already extracted
   }
   
   var triggers = encodeURIComponent(JSON.stringify({

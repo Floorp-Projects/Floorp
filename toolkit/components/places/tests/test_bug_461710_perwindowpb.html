@@ -127,15 +127,15 @@ function checkTest() {
 
     case 3:
       // run inside of private mode, link should appear as not visited
-      var doc = gIframe.contentDocument;
-      var win = doc.defaultView;
+      doc = gIframe.contentDocument;
+      win = doc.defaultView;
       is(getColor(doc, win, "link"), kBlue, "Visited link coloring should not work inside of private mode");
       break;
 
     case 4:
       // run outside of private mode, link should appear as visited
-      var doc = gIframe.contentDocument;
-      var win = doc.defaultView;
+      doc = gIframe.contentDocument;
+      win = doc.defaultView;
       is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
       break;
 

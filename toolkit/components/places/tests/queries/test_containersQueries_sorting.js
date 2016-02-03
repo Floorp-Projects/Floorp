@@ -312,7 +312,7 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
 function check_children_sorting(aRootNode, aExpectedSortingMode) {
   var results = [];
   print("Found children:");
-  for (var i = 0; i < aRootNode.childCount; i++) {
+  for (let i = 0; i < aRootNode.childCount; i++) {
     results[i] = aRootNode.getChild(i);
     print(i + " " + results[i].title);
   }
@@ -373,7 +373,7 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   var sortedResults = results.slice();
   sortedResults.sort(comparator);
   // Actually compare returned children with our sorted array.
-  for (var i = 0; i < sortedResults.length; i++) {
+  for (let i = 0; i < sortedResults.length; i++) {
     if (sortedResults[i].title != results[i].title)
       print(i + " index wrong, expected " + sortedResults[i].title +
             " found " + results[i].title);
