@@ -41,6 +41,14 @@ using mozilla::Move;
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
 
+// A Module can either be asm.js or wasm.
+
+enum ModuleKind
+{
+    Wasm,
+    AsmJS
+};
+
 // The ValType enum represents the WebAssembly "value type", which are used to
 // specify the type of locals and parameters.
 
