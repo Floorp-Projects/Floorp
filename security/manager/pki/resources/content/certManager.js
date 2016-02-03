@@ -301,8 +301,8 @@ function backupCerts()
   fp.appendFilters(nsIFilePicker.filterAll);
   var rv = fp.show();
   if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-    certdb.exportPKCS12File(null, fp.file, 
-                            selected_certs.length, selected_certs);
+    certdb.exportPKCS12File(null, fp.file, selected_certs.length,
+                            selected_certs);
   }
 }
 
@@ -404,52 +404,35 @@ function deleteCerts()
 
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
-  var t;
 
-  params.SetNumberStrings(numcerts+1);
+  params.SetNumberStrings(numcerts + 1);
 
-  if (selTabID == 'mine_tab') 
-  {
-    params.SetString(0, selTabID);
-  } 
-  else if (selTabID == "websites_tab") 
-  {
-    params.SetString(0, selTabID);
-  } 
-  else if (selTabID == "ca_tab") 
-  {
-    params.SetString(0, selTabID);
-  }
-  else if (selTabID == "others_tab") 
-  {
-    params.SetString(0, selTabID);
-  }
-  else if (selTabID == "orphan_tab") 
-  {
-    params.SetString(0, selTabID);
-  }
-  else
-  {
-    return;
+  switch (selTabID) {
+    case "mine_tab":
+    case "websites_tab":
+    case "ca_tab":
+    case "others_tab":
+    case "orphan_tab":
+      params.SetString(0, selTabID);
+      break;
+    default:
+      return;
   }
 
-  params.SetInt(0,numcerts);
-  for (t=0; t<numcerts; t++) 
-  {
-    var tree_item = selected_tree_items[t];
-    var c = tree_item.cert;
-    if (!c) {
-      params.SetString(t+1, tree_item.hostPort);
+  params.SetInt(0, numcerts);
+  for (let t = 0; t < numcerts; t++) {
+    let treeItem = selected_tree_items[t];
+    let cert = treeItem.cert;
+    if (!cert) {
+      params.SetString(t + 1, treeItem.hostPort);
+    } else {
+      params.SetString(t + 1, cert.commonName);
     }
-    else {
-      params.SetString(t+1, c.commonName);
-    }
-
   }
 
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                     'chrome,centerscreen,modal', params);
- 
+
   if (params.GetInt(1) == 1) {
     // user closed dialog with OK
     var treeView = null;
@@ -469,8 +452,7 @@ function deleteCerts()
       treeView = orphanTreeView;
     }
 
-    for (t=numcerts-1; t>=0; t--)
-    {
+    for (let t = numcerts - 1; t >= 0; t--) {
       treeView.deleteEntryObject(selected_index[t]);
     }
 
