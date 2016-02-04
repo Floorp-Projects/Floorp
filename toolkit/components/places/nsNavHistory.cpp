@@ -2988,7 +2988,7 @@ NS_IMETHODIMP
 nsNavHistory::GetShutdownClient(nsIAsyncShutdownClient **_shutdownClient)
 {
   NS_ENSURE_ARG_POINTER(_shutdownClient);
-  RefPtr<nsIAsyncShutdownClient> client = mDB->GetConnectionShutdown();
+  RefPtr<nsIAsyncShutdownClient> client = mDB->GetClientsShutdown();
   MOZ_ASSERT(client);
   client.forget(_shutdownClient);
 
@@ -3100,8 +3100,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   if (strcmp(aTopic, TOPIC_PROFILE_TEARDOWN) == 0 ||
       strcmp(aTopic, TOPIC_PROFILE_CHANGE) == 0 ||
-      strcmp(aTopic, TOPIC_SIMULATE_PLACES_MUST_CLOSE_1) == 0 ||
-      strcmp(aTopic, TOPIC_SIMULATE_PLACES_MUST_CLOSE_2) == 0) {
+      strcmp(aTopic, TOPIC_SIMULATE_PLACES_SHUTDOWN) == 0) {
     // These notifications are used by tests to simulate a Places shutdown.
     // They should just be forwarded to the Database handle.
     mDB->Observe(aSubject, aTopic, aData);
