@@ -474,7 +474,7 @@ load 718516.html
 load 723108.html
 load 724235.html
 load 724978.xhtml
-load 730559.html
+skip-if(Android&&isDebugBuild) load 730559.html # bug 1245634 - slow
 load 734777.html
 load 737313-1.html
 load 737313-2.html
