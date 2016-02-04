@@ -12,7 +12,8 @@ describe("loop.panel", function() {
   var sandbox, notifications, requestStubs;
   var fakeXHR, fakeWindow, fakeEvent;
   var requests = [];
-  var roomData, roomData2, roomList, roomName;
+  var roomData, roomData2, roomData3, roomData4, roomData5, roomData6;
+  var roomList, roomName;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
@@ -91,6 +92,9 @@ describe("loop.panel", function() {
     };
 
     roomName = "First Room Name";
+    // XXX Multiple rooms needed for some tests, could clean up this code to
+    // utilize a function that generates a given number of rooms for use in
+    // those tests
     roomData = {
       roomToken: "QzBbvGmIZWU",
       roomUrl: "http://sample/QzBbvGmIZWU",
@@ -127,6 +131,78 @@ describe("loop.panel", function() {
           displayName: "Bob",
             roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
         }],
+      ctime: 1405517417
+    };
+
+    roomData3 = {
+      roomToken: "QzBbvlmIZWV",
+      roomUrl: "http://sample/QzBbvlmIZWV",
+      decryptedContext: {
+        roomName: "Second Room Name"
+      },
+      maxSize: 2,
+      participants: [{
+        displayName: "Bill",
+        account: "bill@example.com",
+        roomConnectionId: "2a1737a6-4a73-43b5-ae3e-906ec1e763cc"
+      }, {
+        displayName: "Bob",
+        roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
+      }],
+      ctime: 1405517417
+    };
+
+    roomData4 = {
+      roomToken: "QzBbvlmIZWW",
+      roomUrl: "http://sample/QzBbvlmIZWW",
+      decryptedContext: {
+        roomName: "Second Room Name"
+      },
+      maxSize: 2,
+      participants: [{
+        displayName: "Bill",
+        account: "bill@example.com",
+        roomConnectionId: "2a1737a6-4a73-43b5-ae3e-906ec1e763cc"
+      }, {
+        displayName: "Bob",
+        roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
+      }],
+      ctime: 1405517417
+    };
+
+    roomData5 = {
+      roomToken: "QzBbvlmIZWX",
+      roomUrl: "http://sample/QzBbvlmIZWX",
+      decryptedContext: {
+        roomName: "Second Room Name"
+      },
+      maxSize: 2,
+      participants: [{
+        displayName: "Bill",
+        account: "bill@example.com",
+        roomConnectionId: "2a1737a6-4a73-43b5-ae3e-906ec1e763cc"
+      }, {
+        displayName: "Bob",
+        roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
+      }],
+      ctime: 1405517417
+    };
+
+    roomData6 = {
+      roomToken: "QzBbvlmIZWY",
+      roomUrl: "http://sample/QzBbvlmIZWY",
+      decryptedContext: {
+        roomName: "Second Room Name"
+      },
+      maxSize: 2,
+      participants: [{
+        displayName: "Bill",
+        account: "bill@example.com",
+        roomConnectionId: "2a1737a6-4a73-43b5-ae3e-906ec1e763cc"
+      }, {
+        displayName: "Bob",
+        roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
+      }],
       ctime: 1405517417
     };
 
@@ -966,9 +1042,10 @@ describe("loop.panel", function() {
       sinon.assert.calledOnce(fakeWindow.close);
     });
 
-    it("should not render the room list view when no rooms available", function() {
+    it("should have room-list-empty element and not room-list element when no rooms", function() {
       var view = createTestComponent();
       var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-list-empty").length).to.eql(1);
       expect(node.querySelectorAll(".room-list").length).to.eql(0);
     });
 
@@ -987,6 +1064,52 @@ describe("loop.panel", function() {
       var node = view.getDOMNode();
       expect(node.querySelectorAll(".room-opened").length).to.eql(0);
       expect(node.querySelectorAll(".room-entry").length).to.eql(2);
+    });
+
+    it("should show gradient when more than 5 rooms in list", function() {
+      var sixRoomList = [
+        new loop.store.Room(roomData),
+        new loop.store.Room(roomData2),
+        new loop.store.Room(roomData3),
+        new loop.store.Room(roomData4),
+        new loop.store.Room(roomData5),
+        new loop.store.Room(roomData6)
+      ];
+      roomStore.setStoreState({ rooms: sixRoomList });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-entry").length).to.eql(6);
+      expect(node.querySelectorAll(".room-list-blur").length).to.eql(1);
+    });
+
+    it("should not show gradient when 5 or less rooms in list", function() {
+      var fiveRoomList = [
+        new loop.store.Room(roomData),
+        new loop.store.Room(roomData2),
+        new loop.store.Room(roomData3),
+        new loop.store.Room(roomData4),
+        new loop.store.Room(roomData5)
+      ];
+      roomStore.setStoreState({ rooms: fiveRoomList });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-entry").length).to.eql(5);
+      expect(node.querySelectorAll(".room-list-blur").length).to.eql(0);
+    });
+
+    it("should not show gradient when no rooms in list", function() {
+      var zeroRoomList = [];
+      roomStore.setStoreState({ rooms: zeroRoomList });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-entry").length).to.eql(0);
+      expect(node.querySelectorAll(".room-list-blur").length).to.eql(0);
     });
 
     it("should only show the opened room you're in when you're in a room", function() {

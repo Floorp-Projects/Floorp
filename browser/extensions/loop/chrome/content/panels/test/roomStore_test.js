@@ -43,10 +43,6 @@ describe("loop.store.RoomStore", function() {
           ROOM_DELETE: {
             DELETE_SUCCESS: 0,
             DELETE_FAIL: 1
-          },
-          ROOM_CONTEXT_ADD: {
-            ADD_FROM_PANEL: 0,
-            ADD_FROM_CONVERSATION: 1
           }
         };
       },
@@ -240,20 +236,6 @@ describe("loop.store.RoomStore", function() {
         sinon.assert.calledOnce(fakeNotifications.remove);
         sinon.assert.calledWithExactly(fakeNotifications.remove,
           "create-room-error");
-      });
-
-      it("should log a telemetry event when the operation with context is successful", function() {
-        fakeRoomCreationData.urls = [{
-          location: "http://invalid.com",
-          description: "fakeSite",
-          thumbnail: "fakeimage.png"
-        }];
-
-        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
-
-        sinon.assert.calledTwice(requestStubs.TelemetryAddValue);
-        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
-          "LOOP_ROOM_CONTEXT_ADD", 0);
       });
 
       it("should request creation of a new room", function() {
