@@ -2349,7 +2349,10 @@ RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
 
   if (helper->IsAlwaysActive() || helper->mIsScrollParent) {
     // If this is a scroll parent for some other scrollable frame, don't
-    // expire the displayport because it would break scroll handoff.
+    // expire the displayport because it would break scroll handoff. Once the
+    // descendant scrollframes have their displayports expired, they will
+    // trigger the displayport expiration on this scrollframe as well, and
+    // mIsScrollParent will presumably be false when that kicks in.
     return;
   }
 
@@ -2366,6 +2369,7 @@ RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
   // different position that's ok; this scrollframe hasn't been scrolled
   // recently and so the reset should be correct.
   nsLayoutUtils::RemoveDisplayPort(helper->mOuter->GetContent());
+  nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(helper->mOuter);
   helper->mOuter->SchedulePaint();
 }
 
