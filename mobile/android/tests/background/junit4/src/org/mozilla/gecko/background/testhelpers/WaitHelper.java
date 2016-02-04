@@ -7,6 +7,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -167,5 +168,15 @@ public class WaitHelper {
 
   public boolean isIdle() {
     return queue.isEmpty();
+  }
+
+  public static Executor newSynchronousExecutor() {
+    return new Executor() {
+
+      @Override
+      public void execute(Runnable runnable) {
+        runnable.run();
+      }
+    };
   }
 }
