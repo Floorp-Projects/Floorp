@@ -51,6 +51,12 @@ namespace JS {
     _(SetElem_Arguments)                                \
     _(SetElem_InlineCache)                              \
                                                         \
+    _(BinaryArith_Concat)                               \
+    _(BinaryArith_SpecializedTypes)                     \
+    _(BinaryArith_SpecializedOnBaselineTypes)           \
+    _(BinaryArith_SharedCache)                          \
+    _(BinaryArith_Call)                                 \
+                                                        \
     _(InlineCache_OptimizedStub)                        \
                                                         \
     _(Call_Inline)
@@ -95,6 +101,9 @@ namespace JS {
     _(AccessNotTypedObject)                                             \
     _(AccessNotTypedArray)                                              \
     _(AccessNotString)                                                  \
+    _(OperandNotString)                                                 \
+    _(OperandNotNumber)                                                 \
+    _(OperandNotSimpleArith)                                            \
     _(StaticTypedArrayUint32)                                           \
     _(StaticTypedArrayCantComputeMask)                                  \
     _(OutOfBounds)                                                      \
@@ -181,6 +190,7 @@ namespace JS {
 
 #define TRACKED_TYPESITE_LIST(_)                \
     _(Receiver)                                 \
+    _(Operand)                                  \
     _(Index)                                    \
     _(Value)                                    \
     _(Call_Target)                              \
