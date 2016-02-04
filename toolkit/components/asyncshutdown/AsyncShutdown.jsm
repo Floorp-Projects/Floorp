@@ -178,7 +178,7 @@ PromiseSet.prototype = {
     if (!key || typeof key != "object") {
       throw new Error("Expected an object");
     }
-    if ((!"then" in key) || typeof key.then != "function") {
+    if ((!("then" in key)) || typeof key.then != "function") {
       throw new Error("Expected a Promise");
     }
   },
