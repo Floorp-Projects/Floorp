@@ -32,6 +32,7 @@ const HeapAnalysesClient = module.exports = function () {
  */
 HeapAnalysesClient.prototype.destroy = function () {
   this._worker.destroy();
+  this._worker = null;
 };
 
 /**
