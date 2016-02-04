@@ -118,6 +118,10 @@ panelview:not([mainview]):not([current]) {
   visibility: collapse;
 }
 
+browser[frameType="social"][remote="true"] {
+  -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
+}
+
 tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
 }
