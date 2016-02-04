@@ -1,7 +1,7 @@
 var singleUrl = './test_cache_add.js';
 var urlList = [
-  './helloworld.txt',
-  './foobar.txt',
+  './empty.html',
+  './frame.html',
   './test_cache.js'
 ];
 var cache;
