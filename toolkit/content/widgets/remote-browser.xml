@@ -390,7 +390,12 @@
             return;
           this.mDestroyed = true;
 
-          this.controllers.removeController(this._controller);
+          try {
+            this.controllers.removeController(this._controller);
+          } catch (ex) {
+            // This can fail when this browser element is not attached to a
+            // BrowserDOMWindow.
+          }
 
           if (!this.hasAttribute("disablehistory")) {
             try {
