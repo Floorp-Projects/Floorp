@@ -3628,7 +3628,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
     // Note that we use Push, not push, so that callJit will align the stack
     // properly on ARM.
     masm.Push(R0);
-    EmitBaselineCreateStubFrameDescriptor(masm, scratch);
+    EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
     masm.Push(Imm32(0));  // ActualArgc is 0
     masm.Push(callee);
     masm.Push(scratch);
