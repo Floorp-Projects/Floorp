@@ -6,10 +6,6 @@
 
 /* exported run_test */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Chat",
-                                  "resource:///modules/Chat.jsm");
-var openChatOrig = Chat.open;
-
 add_test(function test_get_do_not_disturb() {
   Services.prefs.setBoolPref("loop.do_not_disturb", false);
 
@@ -50,9 +46,6 @@ function run_test() {
   });
 
   do_register_cleanup(function() {
-    // Revert original Chat.open implementation
-    Chat.open = openChatOrig;
-
     // clear test pref
     Services.prefs.clearUserPref("loop.do_not_disturb");
   });
