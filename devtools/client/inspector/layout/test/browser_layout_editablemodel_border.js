@@ -20,7 +20,7 @@ function getStyle(node, property) {
 
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
 
   let node = content.document.getElementById("div1");
   is(getStyle(node, "border-top-width"), "", "Should have the right border");

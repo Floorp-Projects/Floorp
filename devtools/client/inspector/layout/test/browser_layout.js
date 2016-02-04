@@ -136,11 +136,12 @@ add_task(function*() {
   let {inspector, view, testActor} = yield openLayoutView();
   yield selectNode("div", inspector);
 
-  yield runTests(inspector, view, testActor);
+  yield testInitialValues(inspector, view);
+  yield testChangingValues(inspector, view, testActor);
 });
 
-addTest("Test that the initial values of the box model are correct",
-function*(inspector, view) {
+function* testInitialValues(inspector, view) {
+  info("Test that the initial values of the box model are correct");
   let viewdoc = view.doc;
 
   for (let i = 0; i < res1.length; i++) {
@@ -148,10 +149,10 @@ function*(inspector, view) {
     is(elt.textContent, res1[i].value,
        res1[i].selector + " has the right value.");
   }
-});
+}
 
-addTest("Test that changing the document updates the box model",
-function*(inspector, view, testActor) {
+function* testChangingValues(inspector, view, testActor) {
+  info("Test that changing the document updates the box model");
   let viewdoc = view.doc;
 
   let onUpdated = waitForUpdate(inspector);
@@ -164,4 +165,4 @@ function*(inspector, view, testActor) {
     is(elt.textContent, res2[i].value,
        res2[i].selector + " has the right value after style update.");
   }
-});
+}

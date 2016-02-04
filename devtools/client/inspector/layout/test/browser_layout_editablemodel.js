@@ -25,13 +25,20 @@ function getStyle(node, property) {
 
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
 
-  yield runTests(inspector, view);
+  yield testEditingMargins(inspector, view);
+  yield testKeyBindings(inspector, view);
+  yield testEscapeToUndo(inspector, view);
+  yield testDeletingValue(inspector, view);
+  yield testRefocusingOnClick(inspector, view);
+  yield testBluringOnClick(inspector, view);
 });
 
-addTest("Test that editing margin dynamically updates the document, pressing escape cancels the changes",
-function*(inspector, view) {
+function* testEditingMargins(inspector, view) {
+  info("Test that editing margin dynamically updates the document, pressing " +
+       "escape cancels the changes");
+
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-top"), "", "Should be no margin-top on the element.")
   yield selectNode("#div1", inspector);
@@ -54,10 +61,12 @@ function*(inspector, view) {
 
   is(getStyle(node, "margin-top"), "", "Should be no margin-top on the element.")
   is(span.textContent, 5, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that arrow keys work correctly and pressing enter commits the changes",
-function*(inspector, view) {
+function* testKeyBindings(inspector, view) {
+  info("Test that arrow keys work correctly and pressing enter commits the " +
+       "changes");
+
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-left"), "", "Should be no margin-top on the element.")
   yield selectNode("#div1", inspector);
@@ -91,10 +100,12 @@ function*(inspector, view) {
 
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
   is(span.textContent, 20, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that deleting the value removes the property but escape undoes that",
-function*(inspector, view) {
+function* testEscapeToUndo(inspector, view) {
+  info("Test that deleting the value removes the property but escape undoes " +
+       "that");
+
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
   yield selectNode("#div1", inspector);
@@ -118,10 +129,11 @@ function*(inspector, view) {
 
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
   is(span.textContent, 20, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that deleting the value removes the property",
-function*(inspector, view) {
+function* testDeletingValue(inspector, view) {
+  info("Test that deleting the value removes the property");
+
   let node = content.document.getElementById("div1");
 
   node.style.marginRight = "15px";
@@ -147,10 +159,11 @@ function*(inspector, view) {
 
   is(getStyle(node, "margin-right"), "", "Should be the right margin-top on the element.")
   is(span.textContent, 10, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that clicking in the editor input does not remove focus",
-function*(inspector, view) {
+function* testRefocusingOnClick(inspector, view) {
+  info("Test that clicking in the editor input does not remove focus");
+
   let node = content.document.getElementById("div4");
 
   yield selectNode("#div4", inspector);
@@ -178,10 +191,11 @@ function*(inspector, view) {
   is(getStyle(node, "margin-top"), "2px",
     "Should be the right margin-top on the element.");
   is(span.textContent, 2, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that clicking outside the editor blurs it",
-function*(inspector, view) {
+function* testBluringOnClick(inspector, view) {
+  info("Test that clicking outside the editor blurs it");
+
   let node = content.document.getElementById("div5");
 
   yield selectNode("#div5", inspector);
@@ -200,4 +214,4 @@ function*(inspector, view) {
 
   is(view.doc.querySelector(".styleinspector-propertyeditor"), null,
     "Inplace editor has been removed.");
-});
+}
