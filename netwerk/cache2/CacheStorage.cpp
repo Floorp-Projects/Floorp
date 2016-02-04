@@ -48,12 +48,14 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   if (!CacheStorageService::Self())
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (MOZ_UNLIKELY(!CacheObserver::UseDiskCache()) && mWriteToDisk) {
+  if (MOZ_UNLIKELY(!CacheObserver::UseDiskCache()) && mWriteToDisk &&
+                   !(aFlags & OPEN_INTERCEPTED)) {
     aCallback->OnCacheEntryAvailable(nullptr, false, nullptr, NS_ERROR_NOT_AVAILABLE);
     return NS_OK;
   }
 
-  if (MOZ_UNLIKELY(!CacheObserver::UseMemoryCache()) && !mWriteToDisk) {
+  if (MOZ_UNLIKELY(!CacheObserver::UseMemoryCache()) && !mWriteToDisk &&
+                   !(aFlags & OPEN_INTERCEPTED)) {
     aCallback->OnCacheEntryAvailable(nullptr, false, nullptr, NS_ERROR_NOT_AVAILABLE);
     return NS_OK;
   }
