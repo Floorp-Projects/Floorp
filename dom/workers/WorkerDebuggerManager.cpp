@@ -8,22 +8,23 @@
 
 #include "nsISimpleEnumerator.h"
 
+#include "mozilla/ClearOnShutdown.h"
+
 #include "WorkerPrivate.h"
 
 USING_WORKERS_NAMESPACE
 
+namespace {
+
 class RegisterDebuggerMainThreadRunnable final : public nsRunnable
 {
-  RefPtr<WorkerDebuggerManager> mManager;
   WorkerPrivate* mWorkerPrivate;
   bool mNotifyListeners;
 
 public:
-  RegisterDebuggerMainThreadRunnable(WorkerDebuggerManager* aManager,
-                                     WorkerPrivate* aWorkerPrivate,
+  RegisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
                                      bool aNotifyListeners)
-  : mManager(aManager),
-    mWorkerPrivate(aWorkerPrivate),
+  : mWorkerPrivate(aWorkerPrivate),
     mNotifyListeners(aNotifyListeners)
   { }
 
@@ -34,21 +35,21 @@ private:
   NS_IMETHOD
   Run() override
   {
-    mManager->RegisterDebuggerMainThread(mWorkerPrivate, mNotifyListeners);
+    WorkerDebuggerManager* manager = WorkerDebuggerManager::Get();
+    MOZ_ASSERT(manager);
 
+    manager->RegisterDebuggerMainThread(mWorkerPrivate, mNotifyListeners);
     return NS_OK;
   }
 };
 
 class UnregisterDebuggerMainThreadRunnable final : public nsRunnable
 {
-  RefPtr<WorkerDebuggerManager> mManager;
   WorkerPrivate* mWorkerPrivate;
 
 public:
-  UnregisterDebuggerMainThreadRunnable(WorkerDebuggerManager* aManager,
-                                       WorkerPrivate* aWorkerPrivate)
-  : mManager(aManager), mWorkerPrivate(aWorkerPrivate)
+  UnregisterDebuggerMainThreadRunnable(WorkerPrivate* aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
   { }
 
 private:
@@ -58,11 +59,18 @@ private:
   NS_IMETHOD
   Run() override
   {
-    mManager->UnregisterDebuggerMainThread(mWorkerPrivate);
+    WorkerDebuggerManager* manager = WorkerDebuggerManager::Get();
+    MOZ_ASSERT(manager);
 
+    manager->UnregisterDebuggerMainThread(mWorkerPrivate);
     return NS_OK;
   }
 };
+
+// Does not hold an owning reference.
+static WorkerDebuggerManager* gWorkerDebuggerManager;
+
+} /* anonymous namespace */
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -116,7 +124,54 @@ WorkerDebuggerManager::~WorkerDebuggerManager()
   AssertIsOnMainThread();
 }
 
-NS_IMPL_ISUPPORTS(WorkerDebuggerManager, nsIWorkerDebuggerManager);
+// static
+already_AddRefed<WorkerDebuggerManager>
+WorkerDebuggerManager::GetInstance()
+{
+  RefPtr<WorkerDebuggerManager> manager = WorkerDebuggerManager::GetOrCreate();
+  return manager.forget();
+}
+
+// static
+WorkerDebuggerManager*
+WorkerDebuggerManager::GetOrCreate()
+{
+  AssertIsOnMainThread();
+
+  if (!gWorkerDebuggerManager) {
+    // The observer service now owns us until shutdown.
+    gWorkerDebuggerManager = new WorkerDebuggerManager();
+    if (NS_FAILED(gWorkerDebuggerManager->Init())) {
+      NS_WARNING("Failed to initialize worker debugger manager!");
+      gWorkerDebuggerManager = nullptr;
+      return nullptr;
+    }
+  }
+
+  return gWorkerDebuggerManager;
+}
+
+WorkerDebuggerManager*
+WorkerDebuggerManager::Get()
+{
+  MOZ_ASSERT(gWorkerDebuggerManager);
+  return gWorkerDebuggerManager;
+}
+
+NS_IMPL_ISUPPORTS(WorkerDebuggerManager, nsIObserver, nsIWorkerDebuggerManager);
+
+NS_IMETHODIMP
+WorkerDebuggerManager::Observe(nsISupports* aSubject, const char* aTopic,
+                               const char16_t* aData)
+{
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
+    return NS_OK;
+  }
+
+  NS_NOTREACHED("Unknown observer topic!");
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 WorkerDebuggerManager::GetWorkerDebuggerEnumerator(
@@ -161,8 +216,20 @@ WorkerDebuggerManager::RemoveListener(
   return NS_OK;
 }
 
+nsresult
+WorkerDebuggerManager::Init()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+
+  nsresult rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 void
-WorkerDebuggerManager::ClearListeners()
+WorkerDebuggerManager::Shutdown()
 {
   AssertIsOnMainThread();
 
@@ -205,8 +272,7 @@ WorkerDebuggerManager::RegisterDebugger(WorkerPrivate* aWorkerPrivate)
     }
 
     nsCOMPtr<nsIRunnable> runnable =
-      new RegisterDebuggerMainThreadRunnable(this, aWorkerPrivate,
-                                             hasListeners);
+      new RegisterDebuggerMainThreadRunnable(aWorkerPrivate, hasListeners);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL)));
 
@@ -225,7 +291,7 @@ WorkerDebuggerManager::UnregisterDebugger(WorkerPrivate* aWorkerPrivate)
     UnregisterDebuggerMainThread(aWorkerPrivate);
   } else {
     nsCOMPtr<nsIRunnable> runnable =
-      new UnregisterDebuggerMainThreadRunnable(this, aWorkerPrivate);
+      new UnregisterDebuggerMainThreadRunnable(aWorkerPrivate);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL)));
 
