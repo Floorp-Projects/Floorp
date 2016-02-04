@@ -15,6 +15,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Atomics.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
@@ -220,8 +221,9 @@ private:
   // Flag that is initially false.  When the cache is about to work with
   // the database (i.e. it is persistent) this flags is set to true after
   // all keys and coresponding values are loaded from the database.
-  // This flag never goes from true back to false.
-  bool mLoaded;
+  // This flag never goes from true back to false.  Since this flag is
+  // critical for mData hashtable synchronization, it's made atomic.
+  Atomic<bool, ReleaseAcquire> mLoaded;
 
   // Result of load from the database.  Valid after mLoaded flag has been set.
   nsresult mLoadResult;

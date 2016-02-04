@@ -525,14 +525,6 @@ class FilterTypeSetPolicy final : public TypePolicy
     virtual bool adjustInputs(TempAllocator& alloc, MInstruction* ins) override;
 };
 
-static inline bool
-CoercesToDouble(MIRType type)
-{
-    if (type == MIRType_Undefined || IsFloatingPointType(type))
-        return true;
-    return false;
-}
-
 #undef SPECIALIZATION_DATA_
 #undef INHERIT_DATA_
 #undef EMPTY_DATA_

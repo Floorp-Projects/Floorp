@@ -86,6 +86,7 @@ public:
     : mModulesLock("logmodules")
     , mModules(kInitialModuleCount)
     , mOutFile(nullptr)
+    , mMainThread(PR_GetCurrentThread())
     , mAddTimestamp(false)
     , mIsSync(false)
   {
@@ -176,20 +177,31 @@ public:
     //
     // Additionally we prefix the output with the abbreviated log level
     // and the module name.
+    PRThread *currentThread = PR_GetCurrentThread();
+    const char *currentThreadName = (mMainThread == currentThread)
+      ? "Main Thread"
+      : PR_GetThreadName(currentThread);
+
+    char noNameThread[40];
+    if (!currentThreadName) {
+      snprintf_literal(noNameThread, "Unnamed thread %p", currentThread);
+      currentThreadName = noNameThread;
+    }
+
     if (!mAddTimestamp) {
       fprintf_stderr(out,
-                     "[%p]: %s/%s %s%s",
-                     PR_GetCurrentThread(), ToLogStr(aLevel),
+                     "[%s]: %s/%s %s%s",
+                     currentThreadName, ToLogStr(aLevel),
                      aName, buffToWrite, newline);
     } else {
       PRExplodedTime now;
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
       fprintf_stderr(
           out,
-          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%p]: %s/%s %s%s",
+          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s]: %s/%s %s%s",
           now.tm_year, now.tm_month + 1, now.tm_mday,
           now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
-          PR_GetCurrentThread(), ToLogStr(aLevel),
+          currentThreadName, ToLogStr(aLevel),
           aName, buffToWrite, newline);
     }
 
@@ -206,6 +218,7 @@ private:
   OffTheBooksMutex mModulesLock;
   nsClassHashtable<nsCharPtrHashKey, LogModule> mModules;
   ScopedCloseFile mOutFile;
+  PRThread *mMainThread;
   bool mAddTimestamp;
   bool mIsSync;
 };

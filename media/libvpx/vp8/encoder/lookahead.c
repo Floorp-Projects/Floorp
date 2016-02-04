@@ -181,6 +181,7 @@ vp8_lookahead_pop(struct lookahead_ctx *ctx,
 {
     struct lookahead_entry* buf = NULL;
 
+    assert(ctx != NULL);
     if(ctx->sz && (drain || ctx->sz == ctx->max_sz - 1))
     {
         buf = pop(ctx, &ctx->read_idx);

@@ -83,6 +83,10 @@ nrappkit copyright:
 #ifndef test_nr_socket__
 #define test_nr_socket__
 
+extern "C" {
+#include "transport_addr.h"
+}
+
 #include "nr_socket_prsock.h"
 
 extern "C" {
@@ -93,6 +97,7 @@ extern "C" {
 #include <vector>
 #include <map>
 #include <list>
+#include <string>
 
 #include "mozilla/UniquePtr.h"
 #include "prinrval.h"
@@ -151,6 +156,8 @@ class TestNat {
     }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestNat);
+
+    static NatBehavior ToNatBehavior(const std::string& type);
 
     bool enabled_;
     TestNat::NatBehavior filtering_type_;

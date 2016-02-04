@@ -213,6 +213,8 @@ static const JSFunctionSpec SimdTypedObjectMethods[] = {
 namespace js {
 namespace jit {
 
+static_assert(uint64_t(SimdOperation::Last) <= UINT16_MAX, "SimdOperation must fit in uint16_t");
+
 // See also JitInfo_* in MCallOptimize.cpp. We provide a JSJitInfo for all the
 // named functions here. The default JitInfo_SimdInt32x4 etc structs represent the
 // SimdOperation::Constructor.

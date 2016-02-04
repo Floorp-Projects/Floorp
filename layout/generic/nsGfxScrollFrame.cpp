@@ -1861,6 +1861,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mHasBeenScrolledRecently(false)
   , mCollapsedResizer(false)
   , mWillBuildScrollableLayer(false)
+  , mIsScrollParent(false)
   , mIsScrollableLayerInRootContainer(false)
   , mHasBeenScrolled(false)
   , mIgnoreMomentumScroll(false)
@@ -1907,6 +1908,10 @@ ScrollFrameHelper::~ScrollFrameHelper()
   if (mScrollActivityTimer) {
     mScrollActivityTimer->Cancel();
     mScrollActivityTimer = nullptr;
+  }
+  if (mDisplayPortExpiryTimer) {
+    mDisplayPortExpiryTimer->Cancel();
+    mDisplayPortExpiryTimer = nullptr;
   }
 }
 
@@ -2331,6 +2336,43 @@ bool ScrollFrameHelper::IsAlwaysActive() const
           styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
 }
 
+/*static*/ void
+RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
+{
+  ScrollFrameHelper* helper = static_cast<ScrollFrameHelper*>(aClosure);
+
+  // This function only ever gets called from the expiry timer, so it must
+  // be non-null here. Set it to null here so that we don't keep resetting
+  // it unnecessarily in MarkRecentlyScrolled().
+  MOZ_ASSERT(helper->mDisplayPortExpiryTimer);
+  helper->mDisplayPortExpiryTimer = nullptr;
+
+  if (helper->IsAlwaysActive() || helper->mIsScrollParent) {
+    // If this is a scroll parent for some other scrollable frame, don't
+    // expire the displayport because it would break scroll handoff. Once the
+    // descendant scrollframes have their displayports expired, they will
+    // trigger the displayport expiration on this scrollframe as well, and
+    // mIsScrollParent will presumably be false when that kicks in.
+    return;
+  }
+
+  // Remove the displayport from this scrollframe if it's been a while
+  // since it's scrolled, except if it needs to be always active. Note that
+  // there is one scrollframe that doesn't fall under this general rule, and
+  // that is the one that nsLayoutUtils::MaybeCreateDisplayPort decides to put
+  // a displayport on (i.e. the first scrollframe that WantAsyncScroll()s).
+  // If that scrollframe is this one, we remove the displayport anyway, and
+  // as part of the next paint MaybeCreateDisplayPort will put another
+  // displayport back on it. Although the displayport will "flicker" off and
+  // back on, the layer itself should never disappear, because this all
+  // happens between actual painting. If the displayport is reset to a
+  // different position that's ok; this scrollframe hasn't been scrolled
+  // recently and so the reset should be correct.
+  nsLayoutUtils::RemoveDisplayPort(helper->mOuter->GetContent());
+  nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(helper->mOuter);
+  helper->mOuter->SchedulePaint();
+}
+
 void ScrollFrameHelper::MarkNotRecentlyScrolled()
 {
   if (!mHasBeenScrolledRecently)
@@ -2354,6 +2396,36 @@ void ScrollFrameHelper::MarkRecentlyScrolled()
     }
     gScrollFrameActivityTracker->AddObject(this);
   }
+
+  // If we just scrolled and there's a displayport expiry timer in place,
+  // reset the timer.
+  ResetDisplayPortExpiryTimer();
+}
+
+void ScrollFrameHelper::ResetDisplayPortExpiryTimer()
+{
+  if (mDisplayPortExpiryTimer) {
+    mDisplayPortExpiryTimer->InitWithFuncCallback(
+      RemoveDisplayPortCallback, this,
+      gfxPrefs::APZDisplayPortExpiryTime(), nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+void ScrollFrameHelper::TriggerDisplayPortExpiration()
+{
+  if (IsAlwaysActive()) {
+    return;
+  }
+
+  if (!gfxPrefs::APZDisplayPortExpiryTime()) {
+    // a zero time disables the expiry
+    return;
+  }
+
+  if (!mDisplayPortExpiryTimer) {
+    mDisplayPortExpiryTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+  ResetDisplayPortExpiryTimer();
 }
 
 void ScrollFrameHelper::ScrollVisual()
@@ -3179,6 +3251,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                            clipNonCaret, scrollClipNonCaret);
     }
 
+    if (aBuilder->IsPaintingToWindow()) {
+      mIsScrollParent = idSetter.ShouldForceLayerForScrollParent();
+    }
     if (idSetter.ShouldForceLayerForScrollParent() &&
         !gfxPrefs::LayoutUseContainersForRootFrames())
     {
@@ -3209,7 +3284,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  if (mWillBuildScrollableLayer && !gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (mWillBuildScrollableLayer) {
     aBuilder->ForceLayerForScrollParent();
   }
 

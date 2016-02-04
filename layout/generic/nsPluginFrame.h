@@ -91,7 +91,8 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsPluginFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsPluginFrameSuper::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 
   virtual bool NeedsView() override { return true; }

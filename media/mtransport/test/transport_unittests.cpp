@@ -91,8 +91,6 @@ class TransportLayerDummy : public TransportLayer {
   bool *destroyed_;
 };
 
-class TransportLayerLossy;
-
 class Inspector {
  public:
   virtual ~Inspector() {}
@@ -440,7 +438,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
  public:
   TransportTestPeer(nsCOMPtr<nsIEventTarget> target, std::string name)
       : name_(name), target_(target),
-        received_(0), flow_(new TransportFlow(name)),
+        received_packets_(0),received_bytes_(0),flow_(new TransportFlow(name)),
         loopback_(new TransportLayerLoopback()),
         logging_(new TransportLayerLogging()),
         lossy_(new TransportLayerLossy()),
@@ -724,11 +722,16 @@ class TransportTestPeer : public sigslot::has_slots<> {
   void PacketReceived(TransportFlow * flow, const unsigned char* data,
                       size_t len) {
     std::cerr << "Received " << len << " bytes" << std::endl;
-    ++received_;
+    ++received_packets_;
+    received_bytes_ += len;
   }
 
   void SetLoss(uint32_t loss) {
     lossy_->SetLoss(loss);
+  }
+
+  void SetCombinePackets(bool combine) {
+    loopback_->CombinePackets(combine);
   }
 
   void SetInspector(UniquePtr<Inspector> inspector) {
@@ -768,7 +771,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
     return state() == TransportLayer::TS_ERROR;
   }
 
-  size_t received() { return received_; }
+  size_t receivedPackets() { return received_packets_; }
+
+  size_t receivedBytes() { return received_bytes_; }
 
   uint16_t cipherSuite() const {
     nsresult rv;
@@ -798,7 +803,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
  private:
   std::string name_;
   nsCOMPtr<nsIEventTarget> target_;
-  size_t received_;
+  size_t received_packets_;
+  size_t received_bytes_;
     RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
   TransportLayerLogging *logging_;
@@ -919,8 +925,8 @@ class TransportTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(p2_->connected(), 10000);
   }
 
-  void TransferTest(size_t count) {
-    unsigned char buf[1000];
+  void TransferTest(size_t count, size_t bytes = 1024) {
+    unsigned char buf[bytes];
 
     for (size_t i= 0; i<count; ++i) {
       memset(buf, count & 0xff, sizeof(buf));
@@ -928,8 +934,9 @@ class TransportTest : public ::testing::Test {
       ASSERT_TRUE(rv > 0);
     }
 
-    std::cerr << "Received == " << p2_->received() << std::endl;
-    ASSERT_TRUE_WAIT(count == p2_->received(), 10000);
+    std::cerr << "Received == " << p2_->receivedPackets() << " packets" << std::endl;
+    ASSERT_TRUE_WAIT(count == p2_->receivedPackets(), 10000);
+    ASSERT_TRUE((count * sizeof(buf)) == p2_->receivedBytes());
   }
 
  protected:
@@ -1143,6 +1150,28 @@ TEST_F(TransportTest, TestTransfer) {
   TransferTest(1);
 }
 
+TEST_F(TransportTest, TestTransferMaxSize) {
+  SetDtlsPeer();
+  ConnectSocket();
+  /* transportlayerdtls uses a 9216 bytes buffer - as this test uses the
+   * loopback implementation it does not have to take into account the extra
+   * bytes added by the DTLS layer below. */
+  TransferTest(1, 9216);
+}
+
+TEST_F(TransportTest, TestTransferMultiple) {
+  SetDtlsPeer();
+  ConnectSocket();
+  TransferTest(3);
+}
+
+TEST_F(TransportTest, TestTransferCombinedPackets) {
+  SetDtlsPeer();
+  ConnectSocket();
+  p2_->SetCombinePackets(true);
+  TransferTest(3);
+}
+
 TEST_F(TransportTest, TestConnectLoseFirst) {
   SetDtlsPeer();
   p1_->SetLoss(0);
@@ -1155,10 +1184,32 @@ TEST_F(TransportTest, TestConnectIce) {
   ConnectIce();
 }
 
-TEST_F(TransportTest, TestTransferIce) {
+TEST_F(TransportTest, TestTransferIceMaxSize) {
   SetDtlsPeer();
   ConnectIce();
-  TransferTest(1);
+  /* nICEr and transportlayerdtls both use 9216 bytes buffers. But the DTLS
+   * layer add extra bytes to the packet, which size depends on chosen cipher
+   * etc. Sending more then 9216 bytes works, but on the receiving side the call
+   * to PR_recvfrom() will truncate any packet bigger then nICEr's buffer size
+   * of 9216 bytes, which then results in the DTLS layer discarding the packet.
+   * Therefore we leave some headroom (according to
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1214269#c29 256 bytes should
+   * be save choice) here for the DTLS bytes to make it safely into the 
+   * receiving buffer in nICEr. */
+  TransferTest(1, 8960);
+}
+
+TEST_F(TransportTest, TestTransferIceMultiple) {
+  SetDtlsPeer();
+  ConnectIce();
+  TransferTest(3);
+}
+
+TEST_F(TransportTest, TestTransferIceCombinedPackets) {
+  SetDtlsPeer();
+  ConnectIce();
+  p2_->SetCombinePackets(true);
+  TransferTest(3);
 }
 
 // test the default configuration against a peer that supports only

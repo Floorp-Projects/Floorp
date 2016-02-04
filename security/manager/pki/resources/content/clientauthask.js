@@ -32,10 +32,9 @@ function onLoad()
     if (pref) {
       pref = pref.getBranch(null);
       try {
-	rememberSetting = 
+	rememberSetting =
 	  pref.getBoolPref("security.remember_cert_checkbox_default_setting");
-      }
-      catch(e) {
+      } catch (e) {
 	// pref is missing
       }
     }

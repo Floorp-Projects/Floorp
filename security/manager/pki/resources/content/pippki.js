@@ -54,14 +54,14 @@ function getPKCS7String(cert, chainMode)
 function getPEMString(cert)
 {
   var derb64 = btoa(getDERString(cert));
-  // Wrap the Base64 string into lines of 64 characters, 
-  // with CRLF line breaks (as specified in RFC 1421).
+  // Wrap the Base64 string into lines of 64 characters with CRLF line breaks
+  // (as specified in RFC 1421).
   var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
   return "-----BEGIN CERTIFICATE-----\r\n"
          + wrapped
          + "\r\n-----END CERTIFICATE-----\r\n";
 }
- 
+
 function alertPromptService(title, message)
 {
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
