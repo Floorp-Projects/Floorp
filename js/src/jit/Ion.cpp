@@ -773,6 +773,15 @@ JitCompartment::toggleBarriers(bool enabled)
     }
 }
 
+size_t
+JitCompartment::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+    if (stubCodes_)
+        n += stubCodes_->sizeOfIncludingThis(mallocSizeOf);
+    return n;
+}
+
 JitCode*
 JitRuntime::getBailoutTable(const FrameSizeClass& frameClass) const
 {
