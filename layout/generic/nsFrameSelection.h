@@ -361,6 +361,7 @@ public:
    * at some point after the method returns.
    * SCROLL_FIRST_ANCESTOR_ONLY: if set, only the first ancestor will be scrolled
    * into view.
+   *
    */
   /*unsafe*/
   nsresult ScrollSelectionIntoView(SelectionType aType,
