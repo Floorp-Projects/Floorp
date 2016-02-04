@@ -3177,6 +3177,37 @@ nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(nsIFrame* aFra
   }
 }
 
+void
+nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
+    if (!frame) {
+      break;
+    }
+    nsIScrollableFrame* scrollAncestor = GetAsyncScrollableAncestorFrame(frame);
+    if (!scrollAncestor) {
+      break;
+    }
+    frame = do_QueryFrame(scrollAncestor);
+    MOZ_ASSERT(frame);
+    MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
+      frame->PresContext()->PresShell()->GetRootScrollFrame() == frame);
+    if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
+        nsLayoutUtils::HasDisplayPort(frame->GetContent())) {
+      scrollAncestor->TriggerDisplayPortExpiration();
+      // Stop after the first trigger. If it failed, there's no point in
+      // continuing because all the rest of the frames we encounter are going
+      // to be ancestors of |scrollAncestor| which will keep its displayport.
+      // If the trigger succeeded, we stop because when the trigger executes
+      // it will call this function again to trigger the next ancestor up the
+      // chain.
+      break;
+    }
+  }
+}
+
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,

@@ -2691,6 +2691,12 @@ public:
    */
   static void SetZeroMarginDisplayPortOnAsyncScrollableAncestors(nsIFrame* aFrame,
                                                                  RepaintMode aRepaintMode);
+  /**
+   * Finds the closest ancestor async scrollable frame from aFrame that has a
+   * displayport and attempts to trigger the displayport expiry on that
+   * ancestor.
+   */
+  static void ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame);
 
   static bool IsOutlineStyleAutoEnabled();
 
