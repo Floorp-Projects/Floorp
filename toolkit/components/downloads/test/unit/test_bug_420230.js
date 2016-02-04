@@ -30,7 +30,7 @@ function run_test()
     file.append("policychecktest.png");
     if (file.exists())
       file.remove(false);
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
     gDownloadCount++;
 

@@ -29,7 +29,7 @@ function createFavicon(fileName) {
 
   let stream = Cc["@mozilla.org/network/file-output-stream;1"]
     .createInstance(Ci.nsIFileOutputStream);
-  stream.init(outfile, 0x02 | 0x08 | 0x10, 0600, 0);
+  stream.init(outfile, 0x02 | 0x08 | 0x10, 0o600, 0);
 
   // append some data that sniffers/encoders will ignore that will distinguish
   // the different favicons we'll create

@@ -64,7 +64,7 @@ function run_test() {
     // Create a corrupted database.
     let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
                    createInstance(Ci.nsIFileOutputStream);
-    foStream.init(dbFile, 0x02 | 0x08 | 0x20, 0666, 0);
+    foStream.init(dbFile, 0x02 | 0x08 | 0x20, 0o666, 0);
     let garbageData = "garbage that makes SQLite think the file is corrupted";
     foStream.write(garbageData, garbageData.length);
     foStream.close();

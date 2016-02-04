@@ -31,7 +31,7 @@ function run_test()
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   file.append("retry");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   stmt.bindByIndex(1, Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService).newFileURI(file).spec);
 

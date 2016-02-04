@@ -21,7 +21,7 @@ function copyToTemporaryFile(f)
   let tmpd = gDirSvc.get("ProfD", Ci.nsIFile);
   tmpf = tmpd.clone();
   tmpf.append("temp.manifest");
-  tmpf.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+  tmpf.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
   tmpf.remove(false);
   f.copyTo(tmpd, tmpf.leafName);
   return tmpf;
@@ -61,7 +61,7 @@ function copyDirToTempProfile(path, subdirname) {
 
   let tmpdir = gDirSvc.get("ProfD", Ci.nsIFile);
   tmpdir.append(subdirname);
-  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
+  tmpdir.createUnique(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);
 
   let rootDir = getParent(path);
   if (rootDir == "") {
@@ -111,7 +111,7 @@ function createManifestTemporarily(tempDir, manifestText)
   let foStream = Cc["@mozilla.org/network/file-output-stream;1"]
                    .createInstance(Ci.nsIFileOutputStream);
   foStream.init(tempDir,
-                0x02 | 0x08 | 0x20, 0664, 0); // write, create, truncate
+                0x02 | 0x08 | 0x20, 0o664, 0); // write, create, truncate
   foStream.write(manifestText, manifestText.length);
   foStream.close();
   let tempfile = copyToTemporaryFile(tempDir);

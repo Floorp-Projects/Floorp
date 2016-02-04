@@ -64,10 +64,10 @@ function test() {
 
   let file1 = submitdir.clone();
   file1.append("bp-nontxt");
-  file1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let file2 = submitdir.clone();
   file2.append("nonbp-file.txt");
-  file2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  file2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   add_fake_crashes(crD, 5);
 
   // Add crashes to pending dir
@@ -81,16 +81,16 @@ function test() {
   // Add crashes to reports dir
   let report1 = crD.clone();
   report1.append("NotInstallTime777");
-  report1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  report1.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let report2 = crD.clone();
   report2.append("InstallTime" + Services.appinfo.appBuildID);
-  report2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  report2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let report3 = crD.clone();
   report3.append("InstallTimeNew");
-  report3.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  report3.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let report4 = crD.clone();
   report4.append("InstallTimeOld");
-  report4.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  report4.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   report4.lastModifiedTime = Date.now() - 63172000000;
 
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
