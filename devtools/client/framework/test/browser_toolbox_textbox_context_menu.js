@@ -4,7 +4,8 @@
 const URL = "data:text/html;charset=utf8,test for textbox context menu";
 
 add_task(function*() {
-  let toolbox = yield openNewTabAndToolbox(URL, "inspector");
+  let tab = yield addTab(URL);
+  let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
   let textboxContextMenu = toolbox.textboxContextMenuPopup;
 
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
