@@ -1448,7 +1448,7 @@ TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                      PRenderFrameChild* aRenderFrame, const ShowInfo& aShowInfo)
 {
   RecvShow(ScreenIntSize(0, 0), aShowInfo, aTextureFactoryIdentifier,
-           aLayersId, aRenderFrame, mParentIsActive);
+           aLayersId, aRenderFrame, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;
 }
 
@@ -1560,10 +1560,12 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
                    const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                    const uint64_t& aLayersId,
                    PRenderFrameChild* aRenderFrame,
-                   const bool& aParentIsActive)
+                   const bool& aParentIsActive,
+                   const nsSizeMode& aSizeMode)
 {
     MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
 
+    mPuppetWidget->SetSizeMode(aSizeMode);
     if (mDidFakeShow) {
         ApplyShowInfo(aInfo);
         RecvParentActivated(aParentIsActive);
@@ -1599,7 +1601,6 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 
 bool
 TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
-                               const nsSizeMode& sizeMode,
                                const ScreenOrientationInternal& orientation,
                                const LayoutDeviceIntPoint& chromeDisp)
 {
@@ -1626,12 +1627,27 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 true);
 
-    mPuppetWidget->SetSizeMode(sizeMode);
     mPuppetWidget->Resize(screenRect.x + chromeDisp.x,
                           screenRect.y + chromeDisp.y,
                           screenSize.width, screenSize.height, true);
 
     return true;
+}
+
+bool
+TabChild::RecvSizeModeChanged(const nsSizeMode& aSizeMode)
+{
+  mPuppetWidget->SetSizeMode(aSizeMode);
+  nsCOMPtr<nsIDocument> document(GetDocument());
+  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
+  if (presShell) {
+    nsPresContext* presContext = presShell->GetPresContext();
+    if (presContext) {
+      presContext->MediaFeatureValuesChangedAllDocuments(eRestyle_Subtree,
+                                                         NS_STYLE_HINT_REFLOW);
+    }
+  }
+  return true;
 }
 
 bool
