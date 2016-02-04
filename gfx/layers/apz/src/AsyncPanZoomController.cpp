@@ -155,6 +155,14 @@ using mozilla::gfx::PointTyped;
  * pixels would make us drop to low-res at y=490...990.\n
  * This value is in layer pixels.
  *
+ * \li\b apz.displayport_expiry_ms
+ * While a scrollable frame is scrolling async, we set a displayport on it
+ * to make sure it is layerized. However this takes up memory, so once the
+ * scrolling stops we want to remove the displayport. This pref controls how
+ * long after scrolling stops the displayport is removed. A value of 0 will
+ * disable the expiry behavior entirely.
+ * Units: milliseconds
+ *
  * \li\b apz.enlarge_displayport_when_clipped
  * Pref that enables enlarging of the displayport along one axis when the
  * generated displayport's size is beyond that of the scrollable rect on the
@@ -2887,6 +2895,7 @@ AsyncPanZoomController::RequestContentRepaint(const FrameMetrics& aFrameMetrics,
             aFrameMetrics.GetScrollOffset().x) < EPSILON &&
       fabsf(mLastPaintRequestMetrics.GetScrollOffset().y -
             aFrameMetrics.GetScrollOffset().y) < EPSILON &&
+      aFrameMetrics.GetPresShellResolution() == mLastPaintRequestMetrics.GetPresShellResolution() &&
       aFrameMetrics.GetZoom() == mLastPaintRequestMetrics.GetZoom() &&
       fabsf(aFrameMetrics.GetViewport().width -
             mLastPaintRequestMetrics.GetViewport().width) < EPSILON &&
@@ -3315,6 +3324,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
                                     / mFrameMetrics.GetCumulativeResolution();
       float presShellResolutionChange = aLayerMetrics.GetPresShellResolution()
                                       / mFrameMetrics.GetPresShellResolution();
+      if (presShellResolutionChange != 1.0f) {
+        needContentRepaint = true;
+      }
       mFrameMetrics.ZoomBy(totalResolutionChange / presShellResolutionChange);
     } else {
       // Take the new zoom as either device scale or composition width or

@@ -405,9 +405,9 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
         return nullptr;
 
     RootedFunction curr(cx, iter.callee(cx));
-    for (StaticScopeIter<NoGC> i(curr); !i.done(); i++) {
+    for (StaticScopeIter<NoGC> i(curr->nonLazyScript()->staticScope()); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::Function)
-            curr = &i.fun();
+            curr = &i.fun().function();
     }
     return curr;
 }

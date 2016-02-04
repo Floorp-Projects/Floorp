@@ -17,7 +17,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/layers/APZUtils.h"    // for HitTestResult
 #include "mozilla/layers/TouchCounter.h"// for TouchCounter
-#include "mozilla/Monitor.h"            // for Monitor
+#include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/TimeStamp.h"          // for mozilla::TimeStamp
 #include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -534,7 +534,7 @@ private:
    * is considered part of the APZC tree management state.
    * Finally, the lock needs to be held when accessing mZoomConstraints.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
-  mutable mozilla::Monitor mTreeLock;
+  mutable mozilla::Mutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */

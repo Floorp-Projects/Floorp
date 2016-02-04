@@ -15,15 +15,13 @@
   function runTest()
   {
     isSecurityState("secure");
-    
-    window.setTimeout(function() 
-    {
+
+    window.setTimeout(function () {
       document.getElementById("buddy").innerHTML =
         "<img id='image1' src='http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg' />";
     }, 1);
 
-    waitForSecurityState("broken", function() 
-    {
+    waitForSecurityState("broken", function () {
       isSecurityState("broken", "innerHTML loading insecure changed to broken");
       finish();
     });
@@ -33,7 +31,7 @@
   {
     is(document.getElementById("buddy").innerHTML, "", "innerHTML back to previous");
     isSecurityState("secure");
-    finish();    
+    finish();
   }
 
   </script>

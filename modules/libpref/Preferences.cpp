@@ -245,8 +245,12 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
       n += iter.Data()->mClosures.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
   }
-  // We don't measure sRootBranch and sDefaultRootBranch here because
-  // DMD indicates they are not significant.
+  if (sRootBranch) {
+    n += reinterpret_cast<nsPrefBranch*>(sRootBranch)->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (sDefaultRootBranch) {
+    n += reinterpret_cast<nsPrefBranch*>(sDefaultRootBranch)->SizeOfIncludingThis(aMallocSizeOf);
+  }
   n += pref_SizeOfPrivateData(aMallocSizeOf);
   return n;
 }

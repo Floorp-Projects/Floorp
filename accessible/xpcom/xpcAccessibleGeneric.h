@@ -39,7 +39,7 @@ public:
   }
 
   xpcAccessibleGeneric(ProxyAccessible* aProxy, uint32_t aInterfaces) :
-    mIntl(aProxy)
+    mIntl(aProxy), mSupportedIfaces(0)
   {
     if (aInterfaces & Interfaces::SELECTION) {
       mSupportedIfaces |= eSelectable;

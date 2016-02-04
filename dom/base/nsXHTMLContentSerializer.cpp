@@ -511,7 +511,7 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
 }
 
 bool
-nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
+nsXHTMLContentSerializer::CheckElementEnd(mozilla::dom::Element* aElement,
                                           bool& aForceFormat,
                                           nsAString& aStr)
 {

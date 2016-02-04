@@ -3,7 +3,7 @@ body {
 }
 
 .inner-frame {
-  margin-top: 25%;
+  margin-top: 50px; /* this should be at least 30px */
   height: 200%;
   width: 75%;
   overflow: scroll;
