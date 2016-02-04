@@ -13,6 +13,8 @@ Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
 Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.importGlobalProperties(["Blob"]);
 
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
+                                        "resource:///modules/NewTabURL.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
                                         "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -130,7 +132,6 @@ var gOriginalPageListeners = null;
 var gSocialProviders = null;
 var gStringBundle = null;
 var gStubbedMessageHandlers = null;
-var gOriginalPanelHeight = null;
 const kBatchMessage = "Batch";
 const kMaxLoopCount = 10;
 const kMessageName = "Loop:Message";
@@ -174,6 +175,9 @@ const kMessageHandlers = {
     let [windowId] = message.data;
 
     win.LoopUI.startBrowserSharing();
+
+    // Point new tab to load about:home to avoid accidentally sharing top sites.
+    NewTabURL.override("about:home");
 
     gBrowserSharingWindows.add(Cu.getWeakReference(win));
     gBrowserSharingListeners.add(windowId);
@@ -361,11 +365,9 @@ const kMessageHandlers = {
   GetAllConstants: function(message, reply) {
     reply({
       LOOP_SESSION_TYPE: LOOP_SESSION_TYPE,
-      ROOM_CONTEXT_ADD: ROOM_CONTEXT_ADD,
       ROOM_CREATE: ROOM_CREATE,
       ROOM_DELETE: ROOM_DELETE,
       SHARING_ROOM_URL: SHARING_ROOM_URL,
-      SHARING_STATE_CHANGE: SHARING_STATE_CHANGE,
       TWO_WAY_MEDIA_CONN_LENGTH: TWO_WAY_MEDIA_CONN_LENGTH
     });
   },
@@ -873,6 +875,8 @@ const kMessageHandlers = {
       win.LoopUI.stopBrowserSharing();
     }
 
+    NewTabURL.reset();
+
     gBrowserSharingWindows.clear();
     reply();
   },
@@ -918,29 +922,6 @@ const kMessageHandlers = {
   SetLoopPref: function(message, reply) {
     let [prefName, value, prefType] = message.data;
     MozLoopService.setLoopPref(prefName, value, prefType);
-    reply();
-  },
-
-  /**
-   * Set panel height
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following parameters in its `data` property:
-   *                           [
-   *                             {Number} height The pixel height value.
-   *                           ]
-   * @param {Function} reply   Callback function, invoked with the result of this
-   *                           message handler. The result will be sent back to
-   *                           the senders' channel.
-   */
-  SetPanelHeight: function(message, reply) {
-    let [height] = message.data;
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let node = win.LoopUI.browser;
-    if (!gOriginalPanelHeight) {
-      gOriginalPanelHeight = parseInt(win.getComputedStyle(node, null).height, 10);
-    }
-    node.style.height = (height || gOriginalPanelHeight) + "px";
     reply();
   },
 

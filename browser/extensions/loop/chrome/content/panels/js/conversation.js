@@ -67,6 +67,7 @@ loop.conversation = function (mozL10n) {
             return React.createElement(DesktopRoomConversationView, {
               chatWindowDetached: this.state.chatWindowDetached,
               dispatcher: this.props.dispatcher,
+              facebookEnabled: this.state.facebookEnabled,
               onCallTerminated: this.handleCallTerminated,
               roomStore: this.props.roomStore });
           }
@@ -99,7 +100,7 @@ loop.conversation = function (mozL10n) {
       windowId = hash[1];
     }
 
-    var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetLoopPref", "ot.guid"], ["GetLoopPref", "textChat.enabled"], ["GetLoopPref", "feedback.periodSec"], ["GetLoopPref", "feedback.dateLastSeenSec"]];
+    var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetLoopPref", "ot.guid"], ["GetLoopPref", "feedback.periodSec"], ["GetLoopPref", "feedback.dateLastSeenSec"], ["GetLoopPref", "facebook.enabled"]];
     var prefetch = [["GetConversationWindowData", windowId]];
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
@@ -139,14 +140,11 @@ loop.conversation = function (mozL10n) {
         }
       });
 
-      // We want data channels only if the text chat preference is enabled.
-      var useDataChannels = results[++requestIdx];
-
       var dispatcher = new loop.Dispatcher();
       var sdkDriver = new loop.OTSdkDriver({
         constants: constants,
         isDesktop: true,
-        useDataChannels: useDataChannels,
+        useDataChannels: true,
         dispatcher: dispatcher,
         sdk: OT
       });
@@ -163,7 +161,8 @@ loop.conversation = function (mozL10n) {
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
         feedbackPeriod: results[++requestIdx],
-        feedbackTimestamp: results[++requestIdx]
+        feedbackTimestamp: results[++requestIdx],
+        facebookEnabled: results[++requestIdx]
       });
 
       prefetch.forEach(function (req) {
@@ -178,9 +177,13 @@ loop.conversation = function (mozL10n) {
       var textChatStore = new loop.store.TextChatStore(dispatcher, {
         sdkDriver: sdkDriver
       });
+      var remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
+        sdkDriver: sdkDriver
+      });
 
       loop.store.StoreMixin.register({
         conversationAppStore: conversationAppStore,
+        remoteCursorStore: remoteCursorStore,
         textChatStore: textChatStore
       });
 
