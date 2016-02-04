@@ -20,13 +20,17 @@ function getStyle(node, property) {
 
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
 
-  yield runTests(inspector, view);
+  yield testEditing(inspector, view);
+  yield testEditingAndCanceling(inspector, view);
+  yield testDeleting(inspector, view);
+  yield testDeletingAndCanceling(inspector, view);
 });
 
-addTest("When all properties are set on the node editing one should work",
-function*(inspector, view) {
+function* testEditing(inspector, view) {
+  info("When all properties are set on the node editing one should work");
+
   let node = content.document.getElementById("div1");
 
   node.style.padding = "5px";
@@ -52,10 +56,12 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-bottom"), "7px", "Should be the right padding.")
   is(span.textContent, 7, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node editing one should work",
-function*(inspector, view) {
+function* testEditingAndCanceling(inspector, view) {
+  info("When all properties are set on the node editing one and then " +
+       "cancelling with ESCAPE should work");
+
   let node = content.document.getElementById("div1");
 
   node.style.padding = "5px";
@@ -82,10 +88,11 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-left"), "5px", "Should be the right padding.")
   is(span.textContent, 5, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node deleting one should work",
-function*(inspector, view) {
+function* testDeleting(inspector, view) {
+  info("When all properties are set on the node deleting one should work");
+
   let node = content.document.getElementById("div1");
 
   node.style.padding = "5px";
@@ -110,10 +117,12 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-left"), "", "Should be the right padding.")
   is(span.textContent, 3, "Should have the right value in the box model.");
-});
+}
 
-addTest("When all properties are set on the node deleting one then cancelling should work",
-function*(inspector, view) {
+function* testDeletingAndCanceling(inspector, view) {
+  info("When all properties are set on the node deleting one then cancelling " +
+       "should work");
+
   let node = content.document.getElementById("div1");
 
   node.style.padding = "5px";
@@ -140,4 +149,4 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-left"), "5px", "Should be the right padding.")
   is(span.textContent, 5, "Should have the right value in the box model.");
-});
+}

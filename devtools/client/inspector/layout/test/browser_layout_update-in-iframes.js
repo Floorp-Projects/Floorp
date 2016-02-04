@@ -11,12 +11,14 @@ add_task(function*() {
   yield addTab(URL_ROOT + "doc_layout_iframe1.html");
   let iframe2 = getNode("iframe").contentDocument.querySelector("iframe");
 
-  let {toolbox, inspector, view} = yield openLayoutView();
-  yield runTests(inspector, view, iframe2);
+  let {inspector, view} = yield openLayoutView();
+  yield testResizingInIframe(inspector, view, iframe2);
+  yield testReflowsAfterIframeDeletion(inspector, view, iframe2);
 });
 
-addTest("Test that resizing an element in an iframe updates its box model",
-function*(inspector, view, iframe2) {
+function* testResizingInIframe(inspector, view, iframe2) {
+  info("Test that resizing an element in an iframe updates its box model");
+
   info("Selecting the nested test node");
   let node = iframe2.contentDocument.querySelector("div");
   yield selectNodeInIframe2("div", inspector);
@@ -33,10 +35,12 @@ function*(inspector, view, iframe2) {
 
   info("Checking that the layout-view shows the right value after update");
   is(sizeElt.textContent, "200\u00D7200");
-});
+}
 
-addTest("Test reflows are still sent to the layout-view after deleting an iframe",
-function*(inspector, view, iframe2) {
+function* testReflowsAfterIframeDeletion(inspector, view, iframe2) {
+  info("Test reflows are still sent to the layout-view after deleting an " +
+       "iframe");
+
   info("Deleting the iframe2");
   iframe2.remove();
   yield inspector.once("inspector-updated");
@@ -57,7 +61,7 @@ function*(inspector, view, iframe2) {
 
   info("Checking that the layout-view shows the right value after update");
   is(sizeElt.textContent, "200\u00D7100");
-});
+}
 
 function* selectNodeInIframe1(selector, inspector) {
   let iframe1 = yield getNodeFront("iframe", inspector);
