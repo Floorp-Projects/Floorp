@@ -4738,11 +4738,11 @@ IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDef
     // The none-string input (if present) should be atleast a numerical type.
     // Which we can easily coerce to string.
     if (right->type() != MIRType_String && !IsNumberType(right->type())) {
-        trackOptimizationOutcome(TrackedOutcome::OperandNotString);
+        trackOptimizationOutcome(TrackedOutcome::OperandNotStringOrNumber);
         return true;
     }
     if (left->type() != MIRType_String && !IsNumberType(left->type())) {
-        trackOptimizationOutcome(TrackedOutcome::OperandNotString);
+        trackOptimizationOutcome(TrackedOutcome::OperandNotStringOrNumber);
         return true;
     }
 
