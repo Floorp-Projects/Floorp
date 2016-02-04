@@ -119,13 +119,13 @@
     "no-obj-calls": 2,
 
     // No octal literals
-    // "no-octal": 2,
+    "no-octal": 2,
 
     // No redeclaring variables
     "no-redeclare": 2,
 
     // No unnecessary comparisons
-    // "no-self-compare": 2,
+    "no-self-compare": 2,
 
     // No declaring variables from an outer scope
     // "no-shadow": 2,
@@ -143,7 +143,7 @@
     // "no-undef": 2,
 
     // Error on newline where a semicolon is needed
-    // "no-unexpected-multiline": 2,
+    "no-unexpected-multiline": 2,
 
     // No unreachable statements
     // "no-unreachable": 2,
@@ -188,7 +188,7 @@
     // "space-unary-ops": [2, { "words": true, "nonwords": false }],
 
     // No comparisons to NaN
-    // "use-isnan": 2,
+    "use-isnan": 2,
 
     // Only check typeof against valid results
     "valid-typeof": 2,

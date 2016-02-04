@@ -64,7 +64,7 @@ function do_crash(setup, callback, canReturnZero)
   let crashD = do_get_tempdir();
   crashD.append("crash-events");
   if (!crashD.exists()) {
-    crashD.create(crashD.DIRECTORY_TYPE, 0700);
+    crashD.create(crashD.DIRECTORY_TYPE, 0o700);
   }
 
   env.set("CRASHES_EVENTS_DIR", crashD.path);

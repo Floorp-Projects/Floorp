@@ -681,7 +681,7 @@ function newDir() {
     }
 
     try {
-      file.create(nsIFile.DIRECTORY_TYPE, 0755);
+      file.create(nsIFile.DIRECTORY_TYPE, 0o755);
     } catch (e) {
       showErrorDialog("errorCreateNewDirTitle",
                       "errorCreateNewDirMessage",
