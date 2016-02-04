@@ -163,13 +163,31 @@ this.TabCrashHandler = {
       URL,
     } = message.data;
 
+    let extraExtraKeyVals = {
+      "Comments": comments,
+      "Email": email,
+      "URL": URL,
+    };
+
+    // For the entries in extraExtraKeyVals, we only want to submit the
+    // extra data values where they are not the empty string.
+    for (let key in extraExtraKeyVals) {
+      let val = extraExtraKeyVals[key].trim();
+      if (!val) {
+        delete extraExtraKeyVals[key];
+      }
+    }
+
+    // URL is special, since it's already been written to extra data by
+    // default. In order to make sure we don't send it, we overwrite it
+    // with the empty string.
+    if (!includeURL) {
+      extraExtraKeyVals["URL"] = "";
+    }
+
     CrashSubmit.submit(dumpID, {
       recordSubmission: true,
-      extraExtraKeyVals: {
-        Comments: comments,
-        Email: email,
-        URL: URL,
-      },
+      extraExtraKeyVals,
     }).then(null, Cu.reportError);
 
     this.prefs.setBoolPref("sendReport", true);
