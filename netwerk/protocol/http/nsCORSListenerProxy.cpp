@@ -456,7 +456,7 @@ nsCORSListenerProxy::Init(nsIChannel* aChannel, DataURIHandling aAllowDataURI)
   aChannel->GetNotificationCallbacks(getter_AddRefs(mOuterNotificationCallbacks));
   aChannel->SetNotificationCallbacks(this);
 
-  nsresult rv = UpdateChannel(aChannel, aAllowDataURI);
+  nsresult rv = UpdateChannel(aChannel, aAllowDataURI, UpdateType::Default);
   if (NS_FAILED(rv)) {
     mOuterListener = nullptr;
     mRequestingPrincipal = nullptr;
@@ -649,8 +649,22 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIAsyncVerifyRedirectCallback *aCb)
 {
   nsresult rv;
-  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) &&
-      !NS_IsHSTSUpgradeRedirect(aOldChannel, aNewChannel, aFlags)) {
+  if (NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) ||
+      NS_IsHSTSUpgradeRedirect(aOldChannel, aNewChannel, aFlags)) {
+    // Internal redirects still need to be updated in order to maintain
+    // the correct headers.  We use DataURIHandling::Allow, since unallowed
+    // data URIs should have been blocked before we got to the internal
+    // redirect.
+    rv = UpdateChannel(aNewChannel, DataURIHandling::Allow,
+                       UpdateType::InternalOrHSTSRedirect);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsCORSListenerProxy::AsyncOnChannelRedirect: "
+                   "internal redirect UpdateChannel() returned failure");
+      aOldChannel->Cancel(rv);
+      return rv;
+    }
+  } else {
+    // A real, external redirect.  Perform CORS checking on new URL.
     rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
       nsCOMPtr<nsIURI> oldURI;
@@ -711,7 +725,8 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
       }
     }
 
-    rv = UpdateChannel(aNewChannel, DataURIHandling::Disallow);
+    rv = UpdateChannel(aNewChannel, DataURIHandling::Disallow,
+                       UpdateType::Default);
     if (NS_FAILED(rv)) {
         NS_WARNING("nsCORSListenerProxy::AsyncOnChannelRedirect: "
                    "UpdateChannel() returned failure");
@@ -813,7 +828,8 @@ CheckUpgradeInsecureRequestsPreventsCORS(nsIPrincipal* aRequestingPrincipal,
 
 nsresult
 nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
-                                   DataURIHandling aAllowDataURI)
+                                   DataURIHandling aAllowDataURI,
+                                   UpdateType aUpdateType)
 {
   nsCOMPtr<nsIURI> uri, originalURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
@@ -883,7 +899,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 
   // Check if we need to do a preflight, and if so set one up. This must be
   // called once we know that the request is going, or has gone, cross-origin.
-  rv = CheckPreflightNeeded(aChannel);
+  rv = CheckPreflightNeeded(aChannel, aUpdateType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // It's a cross site load
@@ -922,7 +938,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 }
 
 nsresult
-nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel)
+nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel, UpdateType aUpdateType)
 {
   // If this caller isn't using AsyncOpen2, or if this *is* a preflight channel,
   // then we shouldn't initiate preflight for this channel.
@@ -975,7 +991,9 @@ nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel)
   // A preflight is needed. But if we've already been cross-site, then
   // we already did a preflight when that happened, and so we're not allowed
   // to do another preflight again.
-  NS_ENSURE_FALSE(mHasBeenCrossSite, NS_ERROR_DOM_BAD_URI);
+  if (aUpdateType != UpdateType::InternalOrHSTSRedirect) {
+    NS_ENSURE_FALSE(mHasBeenCrossSite, NS_ERROR_DOM_BAD_URI);
+  }
 
   nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(http);
   NS_ENSURE_TRUE(internal, NS_ERROR_DOM_BAD_URI);
