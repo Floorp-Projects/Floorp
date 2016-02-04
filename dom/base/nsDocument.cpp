@@ -2272,7 +2272,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
   // Refresh the principal on the compartment.
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
-    win->RefreshCompartmentPrincipal();
+    nsGlobalWindow::Cast(win)->RefreshCompartmentPrincipal();
   }
 }
 
@@ -13413,5 +13413,5 @@ nsIDocument::ReportHasScrollLinkedEffect()
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Async Pan/Zoom"),
                                   this, nsContentUtils::eLAYOUT_PROPERTIES,
-                                  "ScrollLinkedEffectFound");
+                                  "ScrollLinkedEffectFound2");
 }

@@ -13584,6 +13584,10 @@
         "url": "/cssom-view/elementsFromPoint.html"
       },
       {
+        "path": "cssom-view/negativeMargins.html",
+        "url": "/cssom-view/negativeMargins.html"
+      },
+      {
         "path": "cssom-view/scrollingElement.html",
         "url": "/cssom-view/scrollingElement.html"
       },
@@ -15626,6 +15630,18 @@
       {
         "path": "html/browsers/browsing-the-web/history-traversal/hashchange_event.html",
         "url": "/html/browsers/browsing-the-web/history-traversal/hashchange_event.html"
+      },
+      {
+        "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-basic.html",
+        "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-basic.html"
+      },
+      {
+        "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-fragment-scrolling-samedoc.html",
+        "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-fragment-scrolling-samedoc.html"
+      },
+      {
+        "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-navigation-samedoc.html",
+        "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-navigation-samedoc.html"
       },
       {
         "path": "html/browsers/browsing-the-web/history-traversal/popstate_event.html",
@@ -19514,6 +19530,10 @@
       {
         "path": "html/webappapis/scripting/events/event-handler-javascript.html",
         "url": "/html/webappapis/scripting/events/event-handler-javascript.html"
+      },
+      {
+        "path": "html/webappapis/scripting/events/event-handler-onresize.html",
+        "url": "/html/webappapis/scripting/events/event-handler-onresize.html"
       },
       {
         "path": "html/webappapis/scripting/events/event-handler-spec-example.html",
@@ -31964,12 +31984,12 @@
         "url": "/workers/interfaces/WorkerUtils/WindowTimers/004.html"
       },
       {
-        "path": "workers/interfaces/WorkerUtils/importScripts/001.html",
-        "url": "/workers/interfaces/WorkerUtils/importScripts/001.html"
+        "path": "workers/interfaces/WorkerUtils/importScripts/001.worker.js",
+        "url": "/workers/interfaces/WorkerUtils/importScripts/001.worker"
       },
       {
-        "path": "workers/interfaces/WorkerUtils/importScripts/002.html",
-        "url": "/workers/interfaces/WorkerUtils/importScripts/002.html"
+        "path": "workers/interfaces/WorkerUtils/importScripts/002.worker.js",
+        "url": "/workers/interfaces/WorkerUtils/importScripts/002.worker"
       },
       {
         "path": "workers/interfaces/WorkerUtils/importScripts/003.html",
@@ -32497,6 +32517,16 @@
         "path": "eventsource/shared-worker/eventsource-constructor-non-same-origin.htm",
         "timeout": "long",
         "url": "/eventsource/shared-worker/eventsource-constructor-non-same-origin.htm"
+      },
+      {
+        "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-fragment-scrolling-cross-origin.html",
+        "timeout": "long",
+        "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-fragment-scrolling-cross-origin.html"
+      },
+      {
+        "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-navigation-cross-origin.html",
+        "timeout": "long",
+        "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-navigation-cross-origin.html"
       },
       {
         "path": "html/browsers/browsing-the-web/scroll-to-fragid/007.html",
@@ -33429,6 +33459,11 @@
         "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
       },
       {
+        "path": "service-workers/cache-storage/serviceworker/cache-matchAll.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/serviceworker/cache-matchAll.https.html"
+      },
+      {
         "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
         "timeout": "long",
         "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
@@ -33462,6 +33497,11 @@
         "path": "service-workers/cache-storage/window/cache-match.https.html",
         "timeout": "long",
         "url": "/service-workers/cache-storage/window/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-matchAll.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/window/cache-matchAll.https.html"
       },
       {
         "path": "service-workers/cache-storage/window/cache-put.https.html",
@@ -33502,6 +33542,11 @@
         "path": "service-workers/cache-storage/worker/cache-match.https.html",
         "timeout": "long",
         "url": "/service-workers/cache-storage/worker/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-matchAll.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/worker/cache-matchAll.https.html"
       },
       {
         "path": "service-workers/cache-storage/worker/cache-put.https.html",
@@ -33713,16 +33758,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "cssom-view/negativeMargins.html": [
-          {
-            "path": "cssom-view/negativeMargins.html",
-            "url": "/cssom-view/negativeMargins.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -39835,7 +39871,7 @@
       }
     ]
   },
-  "rev": "f3f87e1a2cc3845819038a8a6fe435bb6092e213",
+  "rev": "af65262f5f3400024279c526117489f1f11d3233",
   "url_base": "/",
   "version": 2
 }

@@ -2584,12 +2584,15 @@ SimdToExpr(SimdType type, SimdOperation op)
     switch (type) {
       case SimdType::Int32x4: {
         ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32CASE)
+        break;
       }
       case SimdType::Float32x4: {
         ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32CASE)
+        break;
       }
       case SimdType::Bool32x4: {
         ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32CASE)
+        break;
       }
       default: break;
     }

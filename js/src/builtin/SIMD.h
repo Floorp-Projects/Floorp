@@ -878,7 +878,11 @@ GetBooleanSimdType(SimdType t)
 //
 // C++ defines keywords and/or/xor/not, so prepend Fn_ to all named functions to
 // avoid clashes.
-enum class SimdOperation : uint8_t {
+//
+// Note: because of a gcc < v4.8's compiler bug, uint8_t can't be used as the
+// storage class here. See bug 1243810. See also
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64037 .
+enum class SimdOperation {
     // The constructor call. No Fn_ prefix here.
     Constructor,
 
@@ -901,6 +905,8 @@ enum class SimdOperation : uint8_t {
     Fn_fromUint32x4Bits,
     Fn_fromFloat32x4Bits,
     Fn_fromFloat64x2Bits,
+
+    Last = Fn_fromFloat64x2Bits
 };
 
 class SimdObject : public JSObject

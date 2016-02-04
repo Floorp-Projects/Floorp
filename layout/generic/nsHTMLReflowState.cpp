@@ -2925,9 +2925,14 @@ void
 nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus* aStatus) const
 {
-  if (AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
-      AvailableHeight() < aMetrics.Height() &&
-      !mFlags.mIsTopOfPage) {
+  const WritingMode containerWM = aMetrics.GetWritingMode();
+  if (GetWritingMode().IsOrthogonalTo(containerWM)) {
+    // Orthogonal flows are always reflowed with an unconstrained dimension,
+    // so should never end up truncated (see nsHTMLReflowState::Init()).
+    *aStatus &= ~NS_FRAME_TRUNCATED;
+  } else if (AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+             AvailableBSize() < aMetrics.BSize(containerWM) &&
+             !mFlags.mIsTopOfPage) {
     *aStatus |= NS_FRAME_TRUNCATED;
   } else {
     *aStatus &= ~NS_FRAME_TRUNCATED;

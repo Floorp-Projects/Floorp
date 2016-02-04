@@ -11,6 +11,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} =
   require("devtools/shared/webconsole/utils");
 const promise = require("promise");
+const Debugger = require("Debugger");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -198,6 +199,7 @@ const MIN_FONT_SIZE = 10;
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
+const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
 const PREF_INPUT_HISTORY_COUNT = "devtools.webconsole.inputHistoryCount";
 
 /**
@@ -3880,11 +3882,13 @@ JSTerm.prototype = {
           break;
       }
       return;
-    } else if (event.shiftKey &&
-        event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
-      // shift return
-      // TODO: expand the inputNode height by one line
-      return;
+    } else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
+      let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
+      if (event.shiftKey ||
+          (!Debugger.isCompilableUnit(inputNode.value) && autoMultiline)) {
+        // shift return or incomplete statement
+        return;
+      }
     }
 
     switch (event.keyCode) {

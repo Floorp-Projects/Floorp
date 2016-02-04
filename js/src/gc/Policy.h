@@ -100,6 +100,8 @@ class JitCode;
     D(js::ScriptSourceObject*) \
     D(js::Shape*) \
     D(js::SharedArrayBufferObject*) \
+    D(js::StaticFunctionScope*) \
+    D(js::StaticScope*) \
     D(js::StructTypeDescr*) \
     D(js::UnownedBaseShape*) \
     D(js::jit::JitCode*)

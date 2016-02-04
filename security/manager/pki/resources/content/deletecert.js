@@ -13,15 +13,15 @@ var gParams;
 function setWindowName()
 {
   gParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-  
+
   var typeFlag = gParams.GetString(0);
   var numberOfCerts = gParams.GetInt(0);
-  
+
   var bundle = document.getElementById("pippki_bundle");
   var title;
   var confirm;
   var impact;
-  
+
   if(typeFlag == "mine_tab")
   {
      title = bundle.getString("deleteUserCertTitle");

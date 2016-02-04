@@ -189,19 +189,12 @@ OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
 # XXX: What does this? Bug 482434 filed for better explanation.
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-ifdef MOZ_DEBUG
-ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
-OS_CFLAGS += -FR
-OS_CXXFLAGS += -FR
-endif
-else # ! MOZ_DEBUG
+ifndef MOZ_DEBUG
 
 # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
 # Used for generating an optimized build with debugging symbols.
 # Used in the Windows nightlies to generate symbols for crash reporting.
 ifdef MOZ_DEBUG_SYMBOLS
-OS_CXXFLAGS += -UDEBUG -DNDEBUG
-OS_CFLAGS += -UDEBUG -DNDEBUG
 ifdef HAVE_64BIT_BUILD
 OS_LDFLAGS += -DEBUG -OPT:REF,ICF
 else
@@ -211,10 +204,8 @@ endif
 
 #
 # Handle DMD in optimized builds.
-# No opt to give sane callstacks.
 #
 ifdef MOZ_DMD
-MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
 ifdef HAVE_64BIT_BUILD
 OS_LDFLAGS = -DEBUG -OPT:REF,ICF
 else

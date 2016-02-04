@@ -207,7 +207,7 @@ struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
                                           int drain) {
   struct lookahead_entry *buf = NULL;
 
-  if (ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
+  if (ctx && ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
     buf = pop(ctx, &ctx->read_idx);
     ctx->sz--;
   }

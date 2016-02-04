@@ -72,7 +72,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser();
-    bool createScript(HandleObject staticScope, bool savedCallerFun = false);
+    bool createScript(Handle<StaticScope*> staticScope, bool savedCallerFun = false);
     bool createEmitter(SharedContext* sharedContext, HandleScript evalCaller = nullptr,
                        bool insideNonGlobalEval = false);
     bool isEvalCompilationUnit();
@@ -255,7 +255,7 @@ BytecodeCompiler::createSourceAndParser()
 }
 
 bool
-BytecodeCompiler::createScript(HandleObject staticScope, bool savedCallerFun)
+BytecodeCompiler::createScript(Handle<StaticScope*> staticScope, bool savedCallerFun)
 {
     script = JSScript::Create(cx, staticScope, savedCallerFun, options,
                               sourceObject, /* sourceStart = */ 0, sourceBuffer.length());
@@ -284,11 +284,8 @@ BytecodeCompiler::isEvalCompilationUnit()
 bool
 BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 {
-    if (!isEvalCompilationUnit())
-        return false;
-    StaticEvalScope& eval = enclosingStaticScope->as<StaticEvalScope>();
-    JSObject* enclosing = eval.enclosingScopeForStaticScopeIter();
-    return !IsStaticGlobalLexicalScope(enclosing);
+    return isEvalCompilationUnit() &&
+           !IsStaticGlobalLexicalScope(enclosingStaticScope->enclosingScope());
 }
 
 bool
@@ -562,7 +559,8 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     return script;
 }
 
-ModuleObject* BytecodeCompiler::compileModule()
+ModuleObject*
+BytecodeCompiler::compileModule()
 {
     if (!createSourceAndParser())
         return nullptr;
@@ -571,7 +569,8 @@ ModuleObject* BytecodeCompiler::compileModule()
     if (!module)
         return nullptr;
 
-    if (!createScript(module))
+    Rooted<StaticModuleScope*> moduleScope(cx, module->staticScope());
+    if (!createScript(moduleScope))
         return nullptr;
 
     module->init(script);
@@ -651,7 +650,8 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        if (!createScript(enclosingStaticScope))
+        Rooted<StaticScope*> scope(cx, fn->pn_funbox->staticScope());
+        if (!createScript(scope))
             return false;
 
         script->bindings = fn->pn_funbox->bindings;
@@ -803,11 +803,12 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     if (!NameFunctions(cx, pn))
         return false;
 
-    RootedObject enclosingScope(cx, lazy->enclosingScope());
+    Rooted<StaticScope*> staticScope(cx, pn->pn_funbox->staticScope());
+    MOZ_ASSERT(staticScope);
     RootedScriptSource sourceObject(cx, lazy->sourceObject());
     MOZ_ASSERT(sourceObject);
 
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, staticScope, false, options,
                                                   sourceObject, lazy->begin(), lazy->end()));
     if (!script)
         return false;

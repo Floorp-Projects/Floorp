@@ -87,6 +87,9 @@
     // No spaces between function name and parentheses
     "no-spaced-func": 2,
 
+    // No trailing whitespace
+    "no-trailing-spaces": 2,
+
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": 2,
 

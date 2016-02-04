@@ -52,29 +52,7 @@ nsFont::Init()
   variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
 }
 
-nsFont::nsFont(const nsFont& aOther)
-  : fontlist(aOther.fontlist)
-{
-  style = aOther.style;
-  systemFont = aOther.systemFont;
-  weight = aOther.weight;
-  stretch = aOther.stretch;
-  smoothing = aOther.smoothing;
-  size = aOther.size;
-  sizeAdjust = aOther.sizeAdjust;
-  kerning = aOther.kerning;
-  synthesis = aOther.synthesis;
-  fontFeatureSettings = aOther.fontFeatureSettings;
-  languageOverride = aOther.languageOverride;
-  variantAlternates = aOther.variantAlternates;
-  variantCaps = aOther.variantCaps;
-  variantEastAsian = aOther.variantEastAsian;
-  variantLigatures = aOther.variantLigatures;
-  variantNumeric = aOther.variantNumeric;
-  variantPosition = aOther.variantPosition;
-  alternateValues = aOther.alternateValues;
-  featureValueLookup = aOther.featureValueLookup;
-}
+nsFont::nsFont(const nsFont& aOther) = default;
 
 nsFont::nsFont()
 {
@@ -111,30 +89,7 @@ bool nsFont::Equals(const nsFont& aOther) const
   return false;
 }
 
-nsFont& nsFont::operator=(const nsFont& aOther)
-{
-  fontlist = aOther.fontlist;
-  style = aOther.style;
-  systemFont = aOther.systemFont;
-  weight = aOther.weight;
-  stretch = aOther.stretch;
-  smoothing = aOther.smoothing;
-  size = aOther.size;
-  sizeAdjust = aOther.sizeAdjust;
-  kerning = aOther.kerning;
-  synthesis = aOther.synthesis;
-  fontFeatureSettings = aOther.fontFeatureSettings;
-  languageOverride = aOther.languageOverride;
-  variantAlternates = aOther.variantAlternates;
-  variantCaps = aOther.variantCaps;
-  variantEastAsian = aOther.variantEastAsian;
-  variantLigatures = aOther.variantLigatures;
-  variantNumeric = aOther.variantNumeric;
-  variantPosition = aOther.variantPosition;
-  alternateValues = aOther.alternateValues;
-  featureValueLookup = aOther.featureValueLookup;
-  return *this;
-}
+nsFont& nsFont::operator=(const nsFont& aOther) = default;
 
 void
 nsFont::CopyAlternates(const nsFont& aOther)

@@ -48,13 +48,13 @@ public:
     // Response codes from the 200, 400, and 500 series all indicated that
     // the command has completed.
 
-    return (mResponseCode >= ResponseCode::CommandOkay)
-        && (mResponseCode < ResponseCode::UnsolicitedInformational);
+    return (mResponseCode >= ::ResponseCode::CommandOkay)
+        && (mResponseCode < ::ResponseCode::UnsolicitedInformational);
   }
 
   bool WasSuccessful() const
   {
-    return mResponseCode == ResponseCode::CommandOkay;
+    return mResponseCode == ::ResponseCode::CommandOkay;
   }
 
   bool              IsPending() const     { return mPending; }
@@ -79,7 +79,7 @@ private:
 #else
     mResponseStr = aResponseStr;
 #endif
-    if (mResponseCode >= ResponseCode::CommandOkay) {
+    if (mResponseCode >= ::ResponseCode::CommandOkay) {
       // This is a final response.
       mPending = false;
     }

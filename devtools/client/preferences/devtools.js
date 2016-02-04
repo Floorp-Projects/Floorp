@@ -294,6 +294,10 @@ pref("devtools.webconsole.persistlog", false);
 // any timestamps.
 pref("devtools.webconsole.timestampMessages", false);
 
+// Web Console automatic multiline mode: |true| if you want incomplete statements
+// to automatically trigger multiline editing (equivalent to shift + enter).
+pref("devtools.webconsole.autoMultiline", true);
+
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories. These defaults should be kept in sync
 // with DEFAULT_LOG_LIMIT in the webconsole frontend.
