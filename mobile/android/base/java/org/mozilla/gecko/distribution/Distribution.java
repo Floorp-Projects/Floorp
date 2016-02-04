@@ -643,7 +643,7 @@ public class Distribution {
     private boolean copyAndCheckAPKDistribution() {
         try {
             // First, try copying distribution files out of the APK.
-            if (copyFilesFromPackagedAssets()) {
+            if (copyFiles()) {
                 // We always copy to the data dir, and we only copy files from
                 // a 'distribution' subdirectory. Now determine our actual distribution directory.
                 return checkDataDistribution();
@@ -718,15 +718,12 @@ public class Distribution {
     }
 
     /**
-     * Copies the /assets/distribution folder out of the APK and into the app's data directory.
+     * Copies the /distribution folder out of the APK and into the app's data directory.
      * Returns true if distribution files were found and copied.
      */
-    private boolean copyFilesFromPackagedAssets() throws IOException {
+    private boolean copyFiles() throws IOException {
         final File applicationPackage = new File(packagePath);
         final ZipFile zip = new ZipFile(applicationPackage);
-
-        final String assetsPrefix = "assets/";
-        final String fullPrefix = assetsPrefix + DISTRIBUTION_PATH;
 
         boolean distributionSet = false;
         try {
@@ -742,14 +739,11 @@ public class Distribution {
                     continue;
                 }
 
-                // Read from "assets/distribution/**".
-                if (!name.startsWith(fullPrefix)) {
+                if (!name.startsWith(DISTRIBUTION_PATH)) {
                     continue;
                 }
 
-                // Write to "distribution/**".
-                final String nameWithoutPrefix = name.substring(assetsPrefix.length());
-                final File outFile = getDataFile(nameWithoutPrefix);
+                final File outFile = getDataFile(name);
                 if (outFile == null) {
                     continue;
                 }
