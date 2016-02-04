@@ -1304,6 +1304,7 @@ QtSparql/qsparqlresult.h
 pixman.h
 #endif
 #if MOZ_NATIVE_LIBVPX==1
+vpx/svc_context.h
 vpx/vpx_codec.h
 vpx/vpx_decoder.h
 vpx/vpx_encoder.h
