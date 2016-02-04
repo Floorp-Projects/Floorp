@@ -134,17 +134,6 @@ TransformReferenceBox::Init(const nsSize& aDimensions)
   mIsCached = true;
 }
 
-/* Force small values to zero.  We do this to avoid having sin(360deg)
- * evaluate to a tiny but nonzero value.
- */
-static double FlushToZero(double aVal)
-{
-  if (-FLT_EPSILON < aVal && aVal < FLT_EPSILON)
-    return 0.0f;
-  else
-    return aVal;
-}
-
 float
 ProcessTranslatePart(const nsCSSValue& aValue,
                      nsStyleContext* aContext,
@@ -543,50 +532,13 @@ ProcessRotate3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
   NS_PRECONDITION(aData->Count() == 5, "Invalid array!");
 
-  /* We want our matrix to look like this:
-   * |       1 + (1-cos(angle))*(x*x-1)   -z*sin(angle)+(1-cos(angle))*x*y   y*sin(angle)+(1-cos(angle))*x*z   0 |
-   * |  z*sin(angle)+(1-cos(angle))*x*y         1 + (1-cos(angle))*(y*y-1)  -x*sin(angle)+(1-cos(angle))*y*z   0 |
-   * | -y*sin(angle)+(1-cos(angle))*x*z    x*sin(angle)+(1-cos(angle))*y*z        1 + (1-cos(angle))*(z*z-1)   0 |
-   * |                                0                                  0                                 0   1 |
-   * (see http://www.w3.org/TR/css3-3d-transforms/#transform-functions)
-   */
-
-  /* The current spec specifies a matrix that rotates in the wrong direction. For now we just negate
-   * the angle provided to get the correct rotation direction until the spec is updated.
-   * See bug 704468.
-   */
-  double theta = -aData->Item(4).GetAngleValueInRadians();
-  float cosTheta = FlushToZero(cos(theta));
-  float sinTheta = FlushToZero(sin(theta));
-
-  Point3D vector(aData->Item(1).GetFloatValue(),
-                 aData->Item(2).GetFloatValue(),
-                 aData->Item(3).GetFloatValue());
-
-  if (!vector.Length()) {
-    return;
-  }
-  vector.Normalize();
+  double theta = aData->Item(4).GetAngleValueInRadians();
+  float x = aData->Item(1).GetFloatValue();
+  float y = aData->Item(2).GetFloatValue();
+  float z = aData->Item(3).GetFloatValue();
 
   Matrix4x4 temp;
-
-  /* Create our matrix */
-  temp._11 = 1 + (1 - cosTheta) * (vector.x * vector.x - 1);
-  temp._12 = -vector.z * sinTheta + (1 - cosTheta) * vector.x * vector.y;
-  temp._13 = vector.y * sinTheta + (1 - cosTheta) * vector.x * vector.z;
-  temp._14 = 0.0f;
-  temp._21 = vector.z * sinTheta + (1 - cosTheta) * vector.x * vector.y;
-  temp._22 = 1 + (1 - cosTheta) * (vector.y * vector.y - 1);
-  temp._23 = -vector.x * sinTheta + (1 - cosTheta) * vector.y * vector.z;
-  temp._24 = 0.0f;
-  temp._31 = -vector.y * sinTheta + (1 - cosTheta) * vector.x * vector.z;
-  temp._32 = vector.x * sinTheta + (1 - cosTheta) * vector.y * vector.z;
-  temp._33 = 1 + (1 - cosTheta) * (vector.z * vector.z - 1);
-  temp._34 = 0.0f;
-  temp._41 = 0.0f;
-  temp._42 = 0.0f;
-  temp._43 = 0.0f;
-  temp._44 = 1.0f;
+  temp.SetRotateAxisAngle(x, y, z, theta);
 
   aMatrix = temp * aMatrix;
 }
