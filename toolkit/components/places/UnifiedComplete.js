@@ -1751,16 +1751,21 @@ Search.prototype = {
     let typed = Prefs.autofillTyped || this.hasBehavior("typed");
     let bookmarked = this.hasBehavior("bookmark") && !this.hasBehavior("history");
 
-    return [
-      bookmarked ? typed ? SQL_BOOKMARKED_TYPED_HOST_QUERY
-                         : SQL_BOOKMARKED_HOST_QUERY
-                 : typed ? SQL_TYPED_HOST_QUERY
-                         : SQL_HOST_QUERY,
-      {
-        query_type: QUERYTYPE_AUTOFILL_HOST,
-        searchString: this._searchString.toLowerCase()
-      }
-    ];
+    let query = [];
+    if (bookmarked) {
+      query.push(typed ? SQL_BOOKMARKED_TYPED_HOST_QUERY
+                       : SQL_BOOKMARKED_HOST_QUERY);
+    } else {
+      query.push(typed ? SQL_TYPED_HOST_QUERY
+                       : SQL_HOST_QUERY);
+    }
+
+    query.push({
+      query_type: QUERYTYPE_AUTOFILL_HOST,
+      searchString: this._searchString.toLowerCase()
+    });
+
+    return query;
   },
 
   /**
@@ -1780,17 +1785,22 @@ Search.prototype = {
     let typed = Prefs.autofillTyped || this.hasBehavior("typed");
     let bookmarked = this.hasBehavior("bookmark") && !this.hasBehavior("history");
 
-    return [
-      bookmarked ? typed ? SQL_BOOKMARKED_TYPED_URL_QUERY
-                         : SQL_BOOKMARKED_URL_QUERY
-                 : typed ? SQL_TYPED_URL_QUERY
-                         : SQL_URL_QUERY,
-      {
-        query_type: QUERYTYPE_AUTOFILL_URL,
-        searchString: this._autofillUrlSearchString,
-        revHost
-      }
-    ];
+    let query = [];
+    if (bookmarked) {
+      query.push(typed ? SQL_BOOKMARKED_TYPED_URL_QUERY
+                       : SQL_BOOKMARKED_URL_QUERY);
+    } else {
+      query.push(typed ? SQL_TYPED_URL_QUERY
+                       : SQL_URL_QUERY);
+    }
+
+    query.push({
+      query_type: QUERYTYPE_AUTOFILL_URL,
+      searchString: this._autofillUrlSearchString,
+      revHost
+    });
+
+    return query;
   },
 
  /**
