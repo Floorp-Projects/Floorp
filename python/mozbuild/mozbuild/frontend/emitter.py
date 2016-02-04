@@ -371,6 +371,15 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
+    def _handle_linkables(self, context, passthru):
+        for obj in self._process_sources(context, passthru):
+            yield obj
+
+        self._handle_programs(context)
+
+        for obj in self._handle_libraries(context):
+            yield obj
+
     def _handle_libraries(self, context):
         host_libname = context.get('HOST_LIBRARY_NAME')
         libname = context.get('LIBRARY_NAME')
@@ -625,9 +634,6 @@ class TreeMetadataEmitter(LoggingMixin):
         elif dist_install is False:
             passthru.variables['NO_DIST_INSTALL'] = True
 
-        for obj in self._process_sources(context, passthru):
-            yield obj
-
         generated_files = set()
         for obj in self._process_generated_files(context):
             generated_files.add(obj.output)
@@ -643,8 +649,6 @@ class TreeMetadataEmitter(LoggingMixin):
         host_defines = context.get('HOST_DEFINES')
         if host_defines:
             yield HostDefines(context, host_defines)
-
-        self._handle_programs(context)
 
         simple_lists = [
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
@@ -745,7 +749,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                           Manifest('components',
                                                    mozpath.basename(c)))
 
-        for obj in self._handle_libraries(context):
+        for obj in self._handle_linkables(context, passthru):
             yield obj
 
         for obj in self._process_test_manifests(context):
