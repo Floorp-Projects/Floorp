@@ -14,5 +14,7 @@
 }
 
 .newtab-title {
-  font-family: Segoe UI;
+  font: message-box;
+  font-size: 13px;
+  line-height: 30px;
 }
