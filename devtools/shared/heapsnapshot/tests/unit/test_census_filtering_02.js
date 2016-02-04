@@ -48,16 +48,16 @@ function run_test() {
       {
         name: stack1.parent.parent,
         bytes: 0,
-        totalBytes: 180,
+        totalBytes: 60,
         count: 0,
-        totalCount: 18,
+        totalCount: 6,
         children: [
           {
             name: stack2.parent,
             bytes: 0,
-            totalBytes: 100,
+            totalBytes: 50,
             count: 0,
-            totalCount: 10,
+            totalCount: 5,
             children: [
               {
                 name: stack3,
