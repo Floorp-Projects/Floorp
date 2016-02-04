@@ -188,6 +188,30 @@ PackPDU(uint32_t aIn, DaemonSocketPDU& aPDU)
   return aPDU.Write(aIn);
 }
 
+inline nsresult
+PackPDU(int64_t aIn, DaemonSocketPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
+inline nsresult
+PackPDU(uint64_t aIn, DaemonSocketPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
+inline nsresult
+PackPDU(float aIn, DaemonSocketPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
+inline nsresult
+PackPDU(double aIn, DaemonSocketPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
 nsresult
 PackPDU(const DaemonSocketPDUHeader& aIn, DaemonSocketPDU& aPDU);
 
@@ -642,6 +666,30 @@ UnpackPDU(DaemonSocketPDU& aPDU, int32_t& aOut)
 
 inline nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, uint32_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, int64_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, uint64_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, float& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, double& aOut)
 {
   return aPDU.Read(aOut);
 }
