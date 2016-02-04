@@ -44,7 +44,7 @@
     // "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
 
     // Unix linebreaks
-    // "linebreak-style": [2, "unix"],
+    "linebreak-style": [2, "unix"],
 
     // Always require parenthesis for new calls
     // "new-parens": 2,
