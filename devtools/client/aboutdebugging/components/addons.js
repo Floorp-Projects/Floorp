@@ -10,6 +10,10 @@ loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
 loader.lazyRequireGetter(this, "TargetListComponent",
   "devtools/client/aboutdebugging/components/target-list", true);
+loader.lazyRequireGetter(this, "TabHeaderComponent",
+  "devtools/client/aboutdebugging/components/tab-header", true);
+loader.lazyRequireGetter(this, "AddonsControlsComponent",
+  "devtools/client/aboutdebugging/components/addons-controls", true);
 loader.lazyRequireGetter(this, "Services");
 
 loader.lazyImporter(this, "AddonManager",
@@ -24,31 +28,50 @@ exports.AddonsComponent = React.createClass({
 
   getInitialState() {
     return {
-      extensions: []
+      extensions: [],
+      debugDisabled: false,
     };
   },
 
   componentDidMount() {
     AddonManager.addAddonListener(this);
-    this.update();
+    Services.prefs.addObserver("devtools.chrome.enabled",
+      this.updateDebugStatus, false);
+    this.updateDebugStatus();
+    this.updateAddonsList();
   },
 
   componentWillUnmount() {
     AddonManager.removeAddonListener(this);
+    Services.prefs.removeObserver("devtools.chrome.enabled",
+      this.updateDebugStatus);
   },
 
   render() {
-    let client = this.props.client;
-    let targets = this.state.extensions;
+    let { client } = this.props;
+    let { debugDisabled, extensions: targets } = this.state;
     let name = Strings.GetStringFromName("extensions");
-    let debugDisabled = !Services.prefs.getBoolPref("devtools.chrome.enabled");
-    return React.createElement("div", null,
-      React.createElement(TargetListComponent,
-        { name, targets, client, debugDisabled })
+
+    return React.createElement(
+      "div", null,
+        React.createElement(TabHeaderComponent, {
+          id: "addons-header", name: Strings.GetStringFromName("addons")}),
+        React.createElement(AddonsControlsComponent, { debugDisabled }),
+        React.createElement(
+          "div", { id: "addons", className: "inverted-icons" },
+          React.createElement(TargetListComponent,
+            { name, targets, client, debugDisabled })
+      )
     );
   },
 
-  update() {
+  updateDebugStatus() {
+    this.setState({
+      debugDisabled: !Services.prefs.getBoolPref("devtools.chrome.enabled")
+    });
+  },
+
+  updateAddonsList() {
     AddonManager.getAllAddons(addons => {
       let extensions = addons.filter(addon => addon.isDebuggable).map(addon => {
         return {
@@ -62,19 +85,31 @@ exports.AddonsComponent = React.createClass({
     });
   },
 
+  /**
+   * Mandatory callback as AddonManager listener.
+   */
   onInstalled() {
-    this.update();
+    this.updateAddonsList();
   },
 
+  /**
+   * Mandatory callback as AddonManager listener.
+   */
   onUninstalled() {
-    this.update();
+    this.updateAddonsList();
   },
 
+  /**
+   * Mandatory callback as AddonManager listener.
+   */
   onEnabled() {
-    this.update();
+    this.updateAddonsList();
   },
 
+  /**
+   * Mandatory callback as AddonManager listener.
+   */
   onDisabled() {
-    this.update();
+    this.updateAddonsList();
   },
 });

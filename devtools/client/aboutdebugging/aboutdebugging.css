@@ -82,11 +82,11 @@ label {
   flex: 1;
 }
 
-.addon-controls {
+.addons-controls {
   display: flex;
   flex-direction: row;
 }
 
-.addon-options {
+.addons-options {
   flex: 1;
 }

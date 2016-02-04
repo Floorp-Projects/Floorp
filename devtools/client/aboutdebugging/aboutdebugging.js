@@ -8,7 +8,6 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci } = Components;
 const { loader } = Components.utils.import(
   "resource://devtools/shared/Loader.jsm", {});
 
@@ -22,20 +21,8 @@ loader.lazyRequireGetter(this, "Telemetry",
   "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WorkersComponent",
   "devtools/client/aboutdebugging/components/workers", true);
-loader.lazyRequireGetter(this, "Services");
-
-loader.lazyImporter(this, "AddonManager",
-  "resource://gre/modules/AddonManager.jsm");
-
-const Strings = Services.strings.createBundle(
-  "chrome://devtools/locale/aboutdebugging.properties");
 
 var AboutDebugging = {
-  _prefListeners: [],
-
-  // Pointer to the current React component.
-  _component: null,
-
   _categories: null,
   get categories() {
     // If needed, initialize the list of available categories.
@@ -68,44 +55,19 @@ var AboutDebugging = {
       .setAttribute("selected", "true");
     location.hash = "#" + category;
 
+    let client = this.client;
     if (category == "addons") {
-      this._component = React.render(React.createElement(AddonsComponent,
-        {client: this.client}), document.querySelector("#addons"));
+      React.render(React.createElement(AddonsComponent, { client }),
+        document.querySelector("#tab-addons"));
     } else if (category == "workers") {
-      this._component = React.render(React.createElement(WorkersComponent,
-        {client: this.client}), document.querySelector("#workers"));
+      React.render(React.createElement(WorkersComponent, { client }),
+        document.querySelector("#tab-workers"));
     }
   },
 
   init() {
     let telemetry = this._telemetry = new Telemetry();
     telemetry.toolOpened("aboutdebugging");
-
-    // Link checkboxes to prefs.
-    let elements = document.querySelectorAll("input[type=checkbox][data-pref]");
-    Array.map(elements, element => {
-      let pref = element.dataset.pref;
-
-      let updatePref = () => {
-        Services.prefs.setBoolPref(pref, element.checked);
-      };
-      element.addEventListener("change", updatePref, false);
-
-      let onPreferenceChanged = () => {
-        element.checked = Services.prefs.getBoolPref(pref);
-        this.update();
-      };
-
-      Services.prefs.addObserver(pref, onPreferenceChanged, false);
-      this._prefListeners.push([pref, onPreferenceChanged]);
-
-      // Initialize the current checkbox element.
-      element.checked = Services.prefs.getBoolPref(pref);
-    });
-
-    // Link buttons to their associated actions.
-    let loadAddonButton = document.getElementById("load-addon-from-file");
-    loadAddonButton.addEventListener("click", this.loadAddonFromFile);
 
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
@@ -121,47 +83,13 @@ var AboutDebugging = {
     });
   },
 
-  update() {
-    if (this._component) {
-      this._component.setState({});
-    }
-  },
-
-  loadAddonFromFile() {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window,
-      Strings.GetStringFromName("selectAddonFromFile"),
-      Ci.nsIFilePicker.modeOpen);
-    let res = fp.show();
-    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
-      return;
-    }
-    let file = fp.file;
-    // AddonManager.installTemporaryAddon accepts either
-    // addon directory or final xpi file.
-    if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
-      file = file.parent;
-    }
-    try {
-      AddonManager.installTemporaryAddon(file);
-    } catch (e) {
-      alert("Error while installing the addon:\n" + e.message + "\n");
-      throw e;
-    }
-  },
-
   destroy() {
     let telemetry = this._telemetry;
     telemetry.toolClosed("aboutdebugging");
     telemetry.destroy();
 
-    this._prefListeners.forEach(([pref, listener]) => {
-      Services.prefs.removeObserver(pref, listener);
-    });
-    this._prefListeners = [];
-
-    React.unmountComponentAtNode(document.querySelector("#addons"));
-    React.unmountComponentAtNode(document.querySelector("#workers"));
+    React.unmountComponentAtNode(document.querySelector("#tab-addons"));
+    React.unmountComponentAtNode(document.querySelector("#tab-workers"));
 
     this.client.close();
     this.client = null;
