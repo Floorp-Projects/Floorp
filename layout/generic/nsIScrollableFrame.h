@@ -453,6 +453,13 @@ public:
    * false otherwise, and doesn't touch aDisplayPort.
    */
   virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) = 0;
+
+  /**
+   * This is called when a descendant scrollframe's has its displayport expired.
+   * This function will check to see if this scrollframe may safely expire its
+   * own displayport and schedule a timer to do that if it is safe.
+   */
+  virtual void TriggerDisplayPortExpiration() = 0;
 };
 
 #endif

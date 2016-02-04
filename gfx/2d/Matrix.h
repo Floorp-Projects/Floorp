@@ -298,8 +298,8 @@ public:
   */
   bool HasNonIntegerTranslation() const {
     return HasNonTranslation() ||
-      !FuzzyEqual(_31, floor(_31 + 0.5)) ||
-      !FuzzyEqual(_32, floor(_32 + 0.5));
+      !FuzzyEqual(_31, floor(_31 + Float(0.5))) ||
+      !FuzzyEqual(_32, floor(_32 + Float(0.5)));
   }
 
   /**

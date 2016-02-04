@@ -2309,8 +2309,11 @@ interface BarProp {
            attribute boolean visible;
 };
 
+enum ScrollRestoration { "auto", "manual" };
 interface History {
+
   readonly attribute long length;
+  attribute ScrollRestoration scrollRestoration;
   readonly attribute any state;
   void go(optional long delta);
   void back();

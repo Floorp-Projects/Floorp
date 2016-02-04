@@ -16,22 +16,23 @@ function onLoad()
   itemCount = dialogParams.GetInt(0);
 
   var selIndex = dialogParams.GetInt(1);
-  if (selIndex < 0)
+  if (selIndex < 0) {
     selIndex = 0;
-  
-  for (var i=0; i < itemCount; i++) {
-      var menuItemNode = document.createElement("menuitem");
-      var nick = dialogParams.GetString(i);
-      menuItemNode.setAttribute("value", i);
-      menuItemNode.setAttribute("label", nick); // this is displayed
-      selectElement.firstChild.appendChild(menuItemNode);
-      
-      if (selIndex == i) {
-        selectElement.selectedItem = menuItemNode;
-      }
   }
 
-  dialogParams.SetInt(0,0); // set cancel return value
+  for (let i = 0; i < itemCount; i++) {
+    let menuItemNode = document.createElement("menuitem");
+    let nick = dialogParams.GetString(i);
+    menuItemNode.setAttribute("value", i);
+    menuItemNode.setAttribute("label", nick); // This is displayed.
+    selectElement.firstChild.appendChild(menuItemNode);
+
+    if (selIndex == i) {
+      selectElement.selectedItem = menuItemNode;
+    }
+  }
+
+  dialogParams.SetInt(0, 0); // Set cancel return value.
   setDetails();
 }
 

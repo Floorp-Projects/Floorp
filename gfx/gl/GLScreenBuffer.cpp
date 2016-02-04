@@ -846,7 +846,8 @@ DrawBuffer::Create(GLContext* const gl,
 
 DrawBuffer::~DrawBuffer()
 {
-    mGL->MakeCurrent();
+    if (!mGL->MakeCurrent())
+        return;
 
     GLuint fb = mFB;
     GLuint rbs[] = {
@@ -923,7 +924,8 @@ ReadBuffer::Create(GLContext* gl,
 
 ReadBuffer::~ReadBuffer()
 {
-    mGL->MakeCurrent();
+    if (!mGL->MakeCurrent())
+        return;
 
     GLuint fb = mFB;
     GLuint rbs[] = {

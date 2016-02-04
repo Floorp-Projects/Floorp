@@ -31,14 +31,6 @@ const UNSUPPORTED_PERMISSIONS = [
   'midi'
 ];
 
-function setup() {
-  return new Promise((resolve, reject) => {
-    SpecialPowers.pushPrefEnv({'set': [
-      ['dom.permissions.enabled', true],
-    ]}, resolve);
-  });
-}
-
 function setPermissions(action) {
   let permissions = PERMISSIONS.map(x => {
     return { 'type': x.perm, 'allow': action, 'context': document };
@@ -111,8 +103,7 @@ function testInvalidQuery() {
 }
 
 function runTests() {
-  setup()
-    .then(checkUnsupportedPermissions)
+  checkUnsupportedPermissions()
     .then(checkUserVisiblePushPermission)
     .then(() => setPermissions(UNKNOWN_ACTION))
     .then(() => checkPermissions('prompt'))

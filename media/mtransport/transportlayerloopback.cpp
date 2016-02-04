@@ -78,13 +78,23 @@ TransportLayerLoopback::SendPacket(const unsigned char *data, size_t len) {
 
 nsresult TransportLayerLoopback::QueuePacket(const unsigned char *data,
                                          size_t len) {
-  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing packet of length " << len);
   MOZ_ASSERT(packets_lock_);
 
   PR_Lock(packets_lock_);
 
-  packets_.push(new QueuedPacket());
-  packets_.back()->Assign(data, len);
+  if (combinePackets_ && !packets_.empty()) {
+    QueuedPacket *packet = packets_.front();
+    packets_.pop();
+
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing combined packets of length " << packet->len() << " and " << len);
+    packets_.push(new QueuedPacket());
+    packets_.back()->Assign(packet->data(), packet->len(),
+                            data, len);
+  } else {
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing packet of length " << len);
+    packets_.push(new QueuedPacket());
+    packets_.back()->Assign(data, len);
+  }
 
   PRStatus r = PR_Unlock(packets_lock_);
   MOZ_ASSERT(r == PR_SUCCESS);
