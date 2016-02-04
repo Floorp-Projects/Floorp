@@ -18,7 +18,7 @@
 
   #loop-button {
     list-style-image: url(chrome://loop/skin/toolbar.png);
-    -moz-image-region: rect(0, 18px, 18px, 0);
+    -moz-image-region: rect(1px, 17px, 17px, 1px);
   }
 
   toolbar[brighttext] #loop-button {
@@ -27,33 +27,33 @@
 
   #loop-button[state="disabled"],
   #loop-button[disabled="true"] {
-    -moz-image-region: rect(0, 36px, 18px, 18px);
+    -moz-image-region: rect(1px, 35px, 17px, 19px);
   }
 
   #loop-button:not([disabled="true"])[state="error"] {
-    -moz-image-region: rect(0, 54px, 18px, 36px);
+    -moz-image-region: rect(1px, 53px, 17px, 37px);
   }
 
   #loop-button:not([disabled="true"])[state="action"] {
-    -moz-image-region: rect(0, 72px, 18px, 54px);
+    -moz-image-region: rect(1px, 71px, 17px, 55px);
   }
 
   #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(0, 90px, 18px, 72px);
+    -moz-image-region: rect(1px, 89px, 17px, 73px);
   }
 
   #loop-button:not([disabled="true"])[state="active"] {
-    -moz-image-region: rect(0, 108px, 18px, 90px);
+    -moz-image-region: rect(1px, 107px, 17px, 91px);
   }
 
   #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(0, 126px, 18px, 108px);
+    -moz-image-region: rect(1px, 125px, 17px, 109px);
   }
 
   @media (min-resolution: 1.1dppx) {
     #loop-button {
       list-style-image: url("chrome://loop/skin/toolbar@2x.png");
-      -moz-image-region: rect(0, 36px, 36px, 0);
+      -moz-image-region: rect(2px, 34px, 34px, 2px);
     }
 
     toolbar[brighttext] #loop-button {
@@ -62,27 +62,27 @@
 
     #loop-button[state="disabled"],
     #loop-button[disabled="true"] {
-      -moz-image-region: rect(0, 72px, 36px, 36px);
+      -moz-image-region: rect(2px, 70px, 34px, 38px);
     }
 
     #loop-button:not([disabled="true"])[state="error"] {
-      -moz-image-region: rect(0, 108px, 36px, 72px);
+      -moz-image-region: rect(2px, 106px, 34px, 74px);
     }
 
     #loop-button:not([disabled="true"])[state="action"] {
-      -moz-image-region: rect(0, 144px, 36px, 108px);
+      -moz-image-region: rect(2px, 142px, 34px, 110px);
     }
 
     #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-      -moz-image-region: rect(0, 180px, 36px, 144px);
+      -moz-image-region: rect(2px, 178px, 34px, 146px);
     }
 
     #loop-button:not([disabled="true"])[state="active"] {
-      -moz-image-region: rect(0, 216px, 36px, 180px);
+      -moz-image-region: rect(2px, 214px, 34px, 182px);
     }
 
     #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-      -moz-image-region: rect(0, 252px, 36px, 216px);
+      -moz-image-region: rect(2px, 250px, 34px, 216px);
     }
 
     #loop-button[cui-areatype="menu-panel"],
@@ -180,21 +180,21 @@
     color: #00a9dc;
   }
 
+  notification[value="loop-sharing-notification"] .notification-inner description {
+    padding-top: .2rem;
+    padding-bottom: .4rem;
+  }
+
   notification[value="loop-sharing-notification"] .notification-button {
     -moz-appearance: none;
     background-color: #fff;
     border: 0;
-    width: 100px;
+    padding: .2rem 1rem .4rem;
     height: 40px;
     margin: 0;
     list-style-image: url(chrome://loop/content/shared/img/pause-12x12.svg);
     box-shadow: 0 -1px 1px rgba(0,0,0,.5) inset;
     text-shadow: none;
-  }
-
-  /* Hide Pause/Resume button until the functionality is complete */
-  notification[value="loop-sharing-notification"] .notification-button[type="pause"] {
-    display:none;
   }
 
   notification[value="loop-sharing-notification"].paused .notification-button {
@@ -231,6 +231,7 @@
   notification[value="loop-sharing-notification"] .messageImage {
     list-style-image: url(chrome://loop/content/shared/img/icons-16x16.svg#loop-icon-white);
     margin-inline-start: 14px;
+    margin-bottom: .2rem;
   }
 
   notification[value="loop-sharing-notification"].paused .messageImage {
