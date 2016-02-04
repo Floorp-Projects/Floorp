@@ -71,10 +71,10 @@
     // "no-empty": 2,
 
     // No empty character classes in regex
-    // "no-empty-character-class": 2,
+    "no-empty-character-class": 2,
 
     // Disallow empty destructuring
-    // "no-empty-pattern": 2,
+    "no-empty-pattern": 2,
 
     // No assiging to exception variable
     // "no-ex-assign": 2,
@@ -89,7 +89,7 @@
     // "no-func-assign": 2,
 
     // No invalid regular expresions
-    // "no-invalid-regexp": 2,
+    "no-invalid-regexp": 2,
 
     // No odd whitespace characters
     // "no-irregular-whitespace": 2,
@@ -191,6 +191,6 @@
     // "use-isnan": 2,
 
     // Only check typeof against valid results
-    // "valid-typeof": 2,
+    "valid-typeof": 2,
   }
 }
