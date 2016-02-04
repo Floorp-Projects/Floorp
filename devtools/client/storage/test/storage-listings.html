@@ -97,10 +97,15 @@ function deleteDB(dbName) {
   });
 }
 
+function fetchPut(cache, url) {
+  let response = yield fetch(url);
+  yield cache.put(url, response);
+}
+
 let cacheGenerator = function*() {
   let cache = yield caches.open("plop");
-  yield cache.add("404_cached_file.js");
-  yield cache.add("browser_storage_basic.js");
+  yield fetchPut(cache, "404_cached_file.js");
+  yield fetchPut(cache, "browser_storage_basic.js");
 };
 
 window.setup = function*() {
