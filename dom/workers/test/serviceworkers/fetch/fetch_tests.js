@@ -165,6 +165,15 @@ fetchXHR(corsServerURL + '?status=200&allowOrigin=*', function(xhr) {
   finish();
 });
 
+// Verify origin header is sent properly even when we have a no-intercept SW.
+var uriOrigin = encodeURIComponent(origin);
+fetchXHR('http://example.org' + corsServerPath + '?ignore&status=200&origin=' + uriOrigin +
+         '&allowOrigin=' + uriOrigin, function(xhr) {
+  my_ok(xhr.status == 200, "cross origin load with correct headers should be successful");
+  my_ok(xhr.getResponseHeader("access-control-allow-origin") == null, "cors headers should be filtered out");
+  finish();
+});
+
 // Verify that XHR is considered CORS tainted even when original URL is same-origin
 // redirected to cross-origin.
 fetchXHR(redirectURL([{ server: origin },
