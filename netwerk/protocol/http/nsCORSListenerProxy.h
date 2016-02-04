@@ -37,6 +37,12 @@ enum class DataURIHandling
   Disallow
 };
 
+enum class UpdateType
+{
+  Default,
+  InternalOrHSTSRedirect
+};
+
 class nsCORSListenerProxy final : public nsIStreamListener,
                                   public nsIInterfaceRequestor,
                                   public nsIChannelEventSink,
@@ -78,9 +84,10 @@ private:
 
   ~nsCORSListenerProxy();
 
-  nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI);
+  nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI,
+                         UpdateType aUpdateType);
   nsresult CheckRequestApproved(nsIRequest* aRequest);
-  nsresult CheckPreflightNeeded(nsIChannel* aChannel);
+  nsresult CheckPreflightNeeded(nsIChannel* aChannel, UpdateType aUpdateType);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   // The principal that originally kicked off the request
