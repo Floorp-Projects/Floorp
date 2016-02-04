@@ -727,6 +727,10 @@ WorkerTarget.prototype = {
   destroy: function() {},
 
   hasActor: function (name) {
+    // console is the only one actor implemented by WorkerActor
+    if (name == "console") {
+      return true;
+    }
     return false;
   },
 
