@@ -290,6 +290,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_push.yml
+  mochitest-media:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_media.yml
+  mochitest-media-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_media_e10s.yml
   mochitest-webgl:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

@@ -170,6 +170,7 @@ config = {
         "plain": [],
         "plain-chunked": ["--chunk-by-dir=4"],
         "mochitest-push": ["--subsuite=push"],
+        "mochitest-media": ["--subsuite=media"],
         "chrome": ["--chrome"],
         "chrome-chunked": ["--chrome", "--chunk-by-dir=4"],
         "browser-chrome": ["--browser-chrome"],
