@@ -72,6 +72,7 @@ Guidelines for Adult Content
 ============================
 
 Generally the Adult category includes sites whose dominant theme is either:
+
 * To appeal to the prurient interest in sex without any serious literary, artistic, political, or
   scientific value
 * The depiction or description of nudity, including sexual or excretory activities or organs in a
