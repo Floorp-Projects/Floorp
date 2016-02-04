@@ -89,6 +89,26 @@ Test that we show the "hey you're not recording allocation stacks" message at th
 
              ok(!container.querySelector(".no-allocation-stacks"),
                 "When there are allocation stacks, we should not show the message");
+
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 census: immutableUpdate(TEST_HEAP_PROPS.snapshot.census, {
+                   report: {
+                     bytes: 1,
+                     totalBytes: 1,
+                     count: 1,
+                     totalCount: 1,
+                     id: 1,
+                     parent: undefined,
+                     children: undefined
+                   },
+                   breakdown: breakdowns.allocationStack.breakdown,
+                 }),
+               }),
+             })), container);
+
+             ok(!container.querySelector(".no-allocation-stacks"),
+                "When there isn't census data, we should not show the message");
            } catch(e) {
              ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
            } finally {
