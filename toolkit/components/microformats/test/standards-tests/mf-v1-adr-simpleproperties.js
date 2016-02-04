@@ -16,10 +16,10 @@ describe('adr', function() {
        dom = new DOMParser();
        doc = dom.parseFromString( htmlFragment, 'text/html' );
        options ={
-       		'document': doc,
-       		'node': doc,
-       		'baseUrl': 'http://example.com',
-       		'dateFormat': 'html5'
+           'document': doc,
+           'node': doc,
+           'baseUrl': 'http://example.com',
+           'dateFormat': 'html5'
        };
        found = Microformats.get( options );
        assert.deepEqual(found, expected);

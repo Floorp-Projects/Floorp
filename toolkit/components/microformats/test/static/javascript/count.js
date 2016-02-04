@@ -1,8 +1,8 @@
 /*!
-	parse
-	Used by http://localhost:3000/
-	Copyright (C) 2010 - 2015 Glenn Jones. All Rights Reserved.
-	MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt
+    parse
+    Used by http://localhost:3000/
+    Copyright (C) 2010 - 2015 Glenn Jones. All Rights Reserved.
+    MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt
 */
 
 window.onload = function() {
@@ -25,10 +25,10 @@ window.onload = function() {
         parserJSONElt = document.querySelector('#parser-json pre code')
 
         // createHTMLDocument is not well support below ie9
-    	doc = document.implementation.createHTMLDocument("New Document");
-    	node =  document.createElement('div');
-    	node.innerHTML = html;
-    	doc.body.appendChild(node);
+        doc = document.implementation.createHTMLDocument("New Document");
+        node =  document.createElement('div');
+        node.innerHTML = html;
+        doc.body.appendChild(node);
 
         options ={
             'node': node

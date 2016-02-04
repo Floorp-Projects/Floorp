@@ -253,10 +253,10 @@ var PKT_SAVED_OVERLAY = function (options)
                 myself.checkPlaceholderStatus();
             },
             onShowDropdown: function() {
-            	thePKT_SAVED.sendMessage("expandSavePanel");
+                thePKT_SAVED.sendMessage("expandSavePanel");
             },
             onHideDropdown: function() {
-            	thePKT_SAVED.sendMessage("collapseSavePanel");
+                thePKT_SAVED.sendMessage("collapseSavePanel");
             }
         });
         $('body').on('keydown',function(e) {
@@ -531,11 +531,11 @@ PKT_SAVED.prototype = {
     },
 
     addMessageListener: function(messageId, callback) {
-    	pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
+        pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
     },
 
     sendMessage: function(messageId, payload, callback) {
-    	pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
+        pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
     },
 
     create: function() {

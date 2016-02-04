@@ -414,7 +414,7 @@ var PlacesCommandHook = {
         charset = aBrowser.characterSet;
       }
       catch (e) {
-      	Components.utils.reportError(e);
+        Components.utils.reportError(e);
       }
 
       if (aShowEditUI) {
@@ -433,7 +433,7 @@ var PlacesCommandHook = {
 
       // Set the character-set
       if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
-      	 PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
+         PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
     }
 
     // Revert the contents of the location bar
