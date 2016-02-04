@@ -254,7 +254,6 @@ this.DevToolsLoader = function DevToolsLoader() {
   this.lazyImporter = XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils);
   this.lazyServiceGetter = XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils);
   this.lazyRequireGetter = this.lazyRequireGetter.bind(this);
-  this.main = this.main.bind(this);
 };
 
 DevToolsLoader.prototype = {
@@ -391,8 +390,7 @@ DevToolsLoader.prototype = {
         lazyImporter: this.lazyImporter,
         lazyServiceGetter: this.lazyServiceGetter,
         lazyRequireGetter: this.lazyRequireGetter,
-        id: this.id,
-        main: this.main
+        id: this.id
       },
     };
     // Lazy define console in order to load Console.jsm only when it is used
