@@ -1,6 +1,10 @@
 var seenIndex = false;
 
 onfetch = function(ev) {
+  if (ev.request.url.includes("ignore")) {
+    return;
+  }
+
   if (ev.request.url.includes("bare-synthesized.txt")) {
     ev.respondWith(Promise.resolve(
       new Response("synthesized response body", {})
@@ -62,9 +66,6 @@ onfetch = function(ev) {
       Response.redirect("synthesized-redirect-synthesized.txt")
      ));
    }
-
-  else if (ev.request.url.includes("ignored.txt")) {
-  }
 
   else if (ev.request.url.includes("rejected.txt")) {
     ev.respondWith(Promise.reject());
