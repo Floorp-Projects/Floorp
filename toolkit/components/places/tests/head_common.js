@@ -385,10 +385,10 @@ var shutdownPlaces = function() {
     Services.obs.addObserver(resolve, "places-connection-closed", false);
   });
   let hs = PlacesUtils.history.QueryInterface(Ci.nsIObserver);
-  hs.observe(null, "test-simulate-places-shutdown-phase-1", null);
-  do_print("shutdownPlaces: sent test-simulate-places-shutdown-phase-1");
-  hs.observe(null, "test-simulate-places-shutdown-phase-2", null);
-  do_print("shutdownPlaces: sent test-simulate-places-shutdown-phase-2");
+  hs.observe(null, "profile-change-teardown", null);
+  do_print("shutdownPlaces: sent profile-change-teardown");
+  hs.observe(null, "test-simulate-places-shutdown", null);
+  do_print("shutdownPlaces: sent test-simulate-places-shutdown");
   return promise.then(() => {
     do_print("shutdownPlaces: complete");
   });
