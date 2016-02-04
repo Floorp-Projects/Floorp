@@ -56,7 +56,7 @@ var pktApi = (function() {
      */
 
     // Base url for all api calls
-    var pocketAPIhost = Services.prefs.getCharPref("extensions.pocket.api"); 	// api.getpocket.com
+    var pocketAPIhost = Services.prefs.getCharPref("extensions.pocket.api");    // api.getpocket.com
     var pocketSiteHost = Services.prefs.getCharPref("extensions.pocket.site"); // getpocket.com
     var baseAPIUrl = "https://" + pocketAPIhost + "/v3";
 
@@ -66,10 +66,10 @@ var pktApi = (function() {
      */
     var oAuthConsumerKey = Services.prefs.getCharPref("extensions.pocket.oAuthConsumerKey");
 
-	/**
-	 *
-	 */
-	var prefBranch = Services.prefs.getBranch("extensions.pocket.settings.");
+    /**
+     *
+     */
+    var prefBranch = Services.prefs.getBranch("extensions.pocket.settings.");
 
     /**
      * Helper
@@ -119,13 +119,13 @@ var pktApi = (function() {
      *                  does not exist, null is returned
      */
      function getSetting(key) {
-     	// TODO : Move this to sqlite or a local file so it's not editable (and is safer)
-     	// https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
+        // TODO : Move this to sqlite or a local file so it's not editable (and is safer)
+        // https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
 
-		if (!prefBranch.prefHasUserValue(key))
-			return undefined;
+        if (!prefBranch.prefHasUserValue(key))
+            return undefined;
 
-		return prefBranch.getComplexValue(key, Components.interfaces.nsISupportsString).data;
+        return prefBranch.getComplexValue(key, Components.interfaces.nsISupportsString).data;
      }
 
      /**
@@ -136,18 +136,18 @@ var pktApi = (function() {
       *                         the key you are creating/updating.
       */
     function setSetting(key, value) {
-     	// TODO : Move this to sqlite or a local file so it's not editable (and is safer)
-     	// https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
+        // TODO : Move this to sqlite or a local file so it's not editable (and is safer)
+        // https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
 
-     	if (!value)
-     		prefBranch.clearUserPref(key);
-     	else
-     	{
-     		// We use complexValue as tags can have utf-8 characters in them
-     		var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
-			str.data = value;
-     		prefBranch.setComplexValue(key, Components.interfaces.nsISupportsString, str);
-     	}
+        if (!value)
+            prefBranch.clearUserPref(key);
+        else
+        {
+            // We use complexValue as tags can have utf-8 characters in them
+            var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+            str.data = value;
+            prefBranch.setComplexValue(key, Components.interfaces.nsISupportsString, str);
+        }
     }
 
     /**
@@ -261,9 +261,9 @@ var pktApi = (function() {
 
         var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
         request.open("POST", url, true);
-		request.onreadystatechange = function(e){
-			if (request.readyState == 4) {
-				if (request.status === 200) {
+        request.onreadystatechange = function(e){
+            if (request.readyState == 4) {
+                if (request.status === 200) {
                     // There could still be an error if the response is no valid json
                     // or does not have status = 1
                     var response = parseJSON(request.response);
@@ -290,22 +290,22 @@ var pktApi = (function() {
                     var error = {message: errorMessage};
                     options.error(error, request);
                 }
-			}
-		};
+            }
+        };
 
-		// Set headers
-		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-		request.setRequestHeader('X-Accept',' application/json');
+        // Set headers
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        request.setRequestHeader('X-Accept',' application/json');
 
         // Serialize and Fire off the request
-		var str = [];
-		for(var p in data) {
-			if (data.hasOwnProperty(p)) {
-				str.push(encodeURIComponent(p) + "=" + encodeURIComponent(data[p]));
-			}
-		}
+        var str = [];
+        for(var p in data) {
+            if (data.hasOwnProperty(p)) {
+                str.push(encodeURIComponent(p) + "=" + encodeURIComponent(data[p]));
+            }
+        }
 
-		request.send(str.join("&"));
+        request.send(str.join("&"));
 
         return true;
     }
@@ -611,17 +611,17 @@ var pktApi = (function() {
      * Helper function to get current signup AB group the user is in
      */
     function getSignupAB() {
-    	var setting = getSetting('signupAB');
+        var setting = getSetting('signupAB');
         if (!setting || setting.contains('hero'))
         {
             var rand = (Math.floor(Math.random()*100+1));
             if (rand > 90)
             {
-            	setting = 'storyboard_nlm';
+                setting = 'storyboard_nlm';
             }
             else
             {
-            	setting = 'storyboard_lm';
+                setting = 'storyboard_lm';
             }
             setSetting('signupAB',setting);
         }

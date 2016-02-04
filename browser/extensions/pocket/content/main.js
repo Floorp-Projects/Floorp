@@ -51,41 +51,41 @@ XPCOMUtils.defineLazyModuleGetter(this, "pktApi",
 
 var pktUI = (function() {
 
-	// -- Initialization (on startup and new windows) -- //
-	var inited = false;
-	var _currentPanelDidShow;
+    // -- Initialization (on startup and new windows) -- //
+    var inited = false;
+    var _currentPanelDidShow;
     var _currentPanelDidHide;
-	var _isHidden = false;
-	var _notificationTimeout;
+    var _isHidden = false;
+    var _notificationTimeout;
 
     // Init panel id at 0. The first actual panel id will have the number 1 so
     // in case at some point any panel has the id 0 we know there is something
     // wrong
     var _panelId = 0;
 
-	var prefBranch = Services.prefs.getBranch("extensions.pocket.settings.");
+    var prefBranch = Services.prefs.getBranch("extensions.pocket.settings.");
 
-	var overflowMenuWidth = 230;
-	var overflowMenuHeight = 475;
-	var savePanelWidth = 350;
-	var savePanelHeights = {collapsed: 153, expanded: 272};
+    var overflowMenuWidth = 230;
+    var overflowMenuHeight = 475;
+    var savePanelWidth = 350;
+    var savePanelHeights = {collapsed: 153, expanded: 272};
 
-	// -- Event Handling -- //
+    // -- Event Handling -- //
 
     /**
      * Event handler when Pocket toolbar button is pressed
      */
 
     function pocketPanelDidShow(event) {
-    	if (_currentPanelDidShow) {
-    		_currentPanelDidShow(event);
+        if (_currentPanelDidShow) {
+            _currentPanelDidShow(event);
         }
 
     }
 
     function pocketPanelDidHide(event) {
-    	if (_currentPanelDidHide) {
-    		_currentPanelDidHide(event);
+        if (_currentPanelDidHide) {
+            _currentPanelDidHide(event);
         }
 
         // clear the panel
@@ -105,20 +105,20 @@ var pktUI = (function() {
     /**
      * Either save or attempt to log the user in
      */
-	function tryToSaveCurrentPage() {
-		tryToSaveUrl(getCurrentUrl(), getCurrentTitle());
-	}
+    function tryToSaveCurrentPage() {
+        tryToSaveUrl(getCurrentUrl(), getCurrentTitle());
+    }
 
     function tryToSaveUrl(url, title) {
 
-    	// If the user is logged in, go ahead and save the current page
-    	if (pktApi.isUserLoggedIn()) {
-    		saveAndShowConfirmation(url, title);
+        // If the user is logged in, go ahead and save the current page
+        if (pktApi.isUserLoggedIn()) {
+            saveAndShowConfirmation(url, title);
             return;
-    	}
+        }
 
-    	// If the user is not logged in, show the logged-out state to prompt them to authenticate
-    	showSignUp();
+        // If the user is not logged in, show the logged-out state to prompt them to authenticate
+        showSignUp();
     }
 
 
@@ -136,7 +136,7 @@ var pktUI = (function() {
 
             if (inOverflowMenu)
             {
-            	startheight = overflowMenuHeight;
+                startheight = overflowMenuHeight;
             }
             else if (pktApi.getSignupAB().indexOf('storyboard') > -1)
             {
@@ -163,12 +163,12 @@ var pktUI = (function() {
                 variant = pktApi.getSignupAB();
             }
             var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
-            		onShow: function() {
+                    onShow: function() {
                     },
-        			onHide: panelDidHide,
-            		width: inOverflowMenu ? overflowMenuWidth : 300,
-            		height: startheight
-            	});
+                    onHide: panelDidHide,
+                    width: inOverflowMenu ? overflowMenuWidth : 300,
+                    height: startheight
+                });
             });
     }
 
@@ -187,11 +187,11 @@ var pktUI = (function() {
         var inOverflowMenu = isInOverflowMenu();
         var startheight = pktApi.isPremiumUser() && isValidURL ? savePanelHeights.expanded : savePanelHeights.collapsed;
         if (inOverflowMenu) {
-        	startheight = overflowMenuHeight;
+            startheight = overflowMenuHeight;
         }
 
-    	var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0') + '&inoverflowmenu='+inOverflowMenu + "&locale=" + getUILocale(), {
-    		onShow: function() {
+        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0') + '&inoverflowmenu='+inOverflowMenu + "&locale=" + getUILocale(), {
+            onShow: function() {
                 var saveLinkMessageId = 'saveLink';
 
                 // Send error message for invalid url
@@ -248,12 +248,12 @@ var pktUI = (function() {
                 }
 
                 // Send the link
-				pktApi.addLink(url, options);
-			},
-			onHide: panelDidHide,
-    		width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
-    		height: startheight
-    	});
+                pktApi.addLink(url, options);
+            },
+            onHide: panelDidHide,
+            width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
+            height: startheight
+        });
     }
 
     /**
@@ -268,37 +268,37 @@ var pktUI = (function() {
         // We don't have to hide and show the panel again if it's already shown
         // as if the user tries to click again on the toolbar button the overlay
         // will close instead of the button will be clicked
-    	var iframe = getPanelFrame();
+        var iframe = getPanelFrame();
 
-		// Register event handlers
-		registerEventMessages();
+        // Register event handlers
+        registerEventMessages();
 
-    	// Load the iframe
-    	iframe.setAttribute('src', url);
+        // Load the iframe
+        iframe.setAttribute('src', url);
 
-    	// Uncomment to leave panel open -- for debugging
-    	// panel.setAttribute('noautohide', true);
-    	// panel.setAttribute('consumeoutsideclicks', false);
-    	//
+        // Uncomment to leave panel open -- for debugging
+        // panel.setAttribute('noautohide', true);
+        // panel.setAttribute('consumeoutsideclicks', false);
+        //
 
-    	// For some reason setting onpopupshown and onpopuphidden on the panel directly didn't work, so
-    	// do it this hacky way for now
-    	_currentPanelDidShow = options.onShow;
-    	_currentPanelDidHide = options.onHide;
+        // For some reason setting onpopupshown and onpopuphidden on the panel directly didn't work, so
+        // do it this hacky way for now
+        _currentPanelDidShow = options.onShow;
+        _currentPanelDidHide = options.onHide;
 
-    	resizePanel({
-    		width: options.width,
-    		height: options.height
-    	});
+        resizePanel({
+            width: options.width,
+            height: options.height
+        });
         return _panelId;
     }
 
     /**
      * Resize the panel
      * options = {
-     * 	width: ,
-     *	height: ,
-     * 	animate [default false]
+     *  width: ,
+     *  height: ,
+     *  animate [default false]
      * }
      */
     function resizePanel(options) {
@@ -327,25 +327,25 @@ var pktUI = (function() {
      * Register all of the messages needed for the panels
      */
     function registerEventMessages() {
-    	var iframe = getPanelFrame();
+        var iframe = getPanelFrame();
 
-    	// Only register the messages once
+        // Only register the messages once
         var didInitAttributeKey = 'did_init';
         var didInitMessageListener = iframe.getAttribute(didInitAttributeKey);
-    	if (typeof didInitMessageListener !== "undefined" && didInitMessageListener == 1) {
+        if (typeof didInitMessageListener !== "undefined" && didInitMessageListener == 1) {
             return;
         }
-    	iframe.setAttribute(didInitAttributeKey, 1);
+        iframe.setAttribute(didInitAttributeKey, 1);
 
-		// When the panel is displayed it generated an event called
-		// "show": we will listen for that event and when it happens,
-		// send our own "show" event to the panel's script, so the
-		// script can prepare the panel for display.
+        // When the panel is displayed it generated an event called
+        // "show": we will listen for that event and when it happens,
+        // send our own "show" event to the panel's script, so the
+        // script can prepare the panel for display.
         var _showMessageId = "show";
-		pktUIMessaging.addMessageListener(_showMessageId, function(panelId, data) {
-			// Let panel know that it is ready
-			pktUIMessaging.sendMessageToPanel(panelId, _showMessageId);
-		});
+        pktUIMessaging.addMessageListener(_showMessageId, function(panelId, data) {
+            // Let panel know that it is ready
+            pktUIMessaging.sendMessageToPanel(panelId, _showMessageId);
+        });
 
         // Open a new tab with a given url and activate if
         var _openTabWithUrlMessageId = "openTabWithUrl";
@@ -362,96 +362,96 @@ var pktUI = (function() {
             pktUIMessaging.sendResponseMessageToPanel(panelId, _openTabWithUrlMessageId, url);
         });
 
-		// Close the panel
+        // Close the panel
         var _closeMessageId = "close";
-		pktUIMessaging.addMessageListener(_closeMessageId, function(panelId, data) {
-			getPanel().hidePopup();
-		});
-
-		// Send the current url to the panel
-        var _getCurrentURLMessageId = "getCurrentURL";
-		pktUIMessaging.addMessageListener(_getCurrentURLMessageId, function(panelId, data) {
-            pktUIMessaging.sendResponseMessageToPanel(panelId, _getCurrentURLMessageId, getCurrentUrl());
-		});
-
-        var _resizePanelMessageId = "resizePanel";
-		pktUIMessaging.addMessageListener(_resizePanelMessageId, function(panelId, data) {
-			resizePanel(data);
+        pktUIMessaging.addMessageListener(_closeMessageId, function(panelId, data) {
+            getPanel().hidePopup();
         });
 
-		// Callback post initialization to tell background script that panel is "ready" for communication.
-		pktUIMessaging.addMessageListener("listenerReady", function(panelId, data) {
+        // Send the current url to the panel
+        var _getCurrentURLMessageId = "getCurrentURL";
+        pktUIMessaging.addMessageListener(_getCurrentURLMessageId, function(panelId, data) {
+            pktUIMessaging.sendResponseMessageToPanel(panelId, _getCurrentURLMessageId, getCurrentUrl());
+        });
 
-		});
+        var _resizePanelMessageId = "resizePanel";
+        pktUIMessaging.addMessageListener(_resizePanelMessageId, function(panelId, data) {
+            resizePanel(data);
+        });
 
-		pktUIMessaging.addMessageListener("collapseSavePanel", function(panelId, data) {
-			if (!pktApi.isPremiumUser() && !isInOverflowMenu())
-				resizePanel({width:savePanelWidth, height:savePanelHeights.collapsed});
-		});
+        // Callback post initialization to tell background script that panel is "ready" for communication.
+        pktUIMessaging.addMessageListener("listenerReady", function(panelId, data) {
 
-		pktUIMessaging.addMessageListener("expandSavePanel", function(panelId, data) {
-			if (!isInOverflowMenu())
-				resizePanel({width:savePanelWidth, height:savePanelHeights.expanded});
-		});
+        });
 
-		// Ask for recently accessed/used tags for auto complete
-		var _getTagsMessageId = "getTags";
+        pktUIMessaging.addMessageListener("collapseSavePanel", function(panelId, data) {
+            if (!pktApi.isPremiumUser() && !isInOverflowMenu())
+                resizePanel({width:savePanelWidth, height:savePanelHeights.collapsed});
+        });
+
+        pktUIMessaging.addMessageListener("expandSavePanel", function(panelId, data) {
+            if (!isInOverflowMenu())
+                resizePanel({width:savePanelWidth, height:savePanelHeights.expanded});
+        });
+
+        // Ask for recently accessed/used tags for auto complete
+        var _getTagsMessageId = "getTags";
         pktUIMessaging.addMessageListener(_getTagsMessageId, function(panelId, data) {
-			pktApi.getTags(function(tags, usedTags) {
+            pktApi.getTags(function(tags, usedTags) {
                 pktUIMessaging.sendResponseMessageToPanel(panelId, _getTagsMessageId, {
                     tags: tags,
                     usedTags: usedTags
                 });
-			});
-		});
+            });
+        });
 
-		// Ask for suggested tags based on passed url
+        // Ask for suggested tags based on passed url
         var _getSuggestedTagsMessageId = "getSuggestedTags";
-		pktUIMessaging.addMessageListener(_getSuggestedTagsMessageId, function(panelId, data) {
-			pktApi.getSuggestedTagsForURL(data.url, {
-				success: function(data, response) {
-					var suggestedTags = data.suggested_tags;
-					var successResponse = {
-						status: "success",
-						value: {
-							suggestedTags: suggestedTags
-						}
-					}
+        pktUIMessaging.addMessageListener(_getSuggestedTagsMessageId, function(panelId, data) {
+            pktApi.getSuggestedTagsForURL(data.url, {
+                success: function(data, response) {
+                    var suggestedTags = data.suggested_tags;
+                    var successResponse = {
+                        status: "success",
+                        value: {
+                            suggestedTags: suggestedTags
+                        }
+                    }
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, successResponse);
-				},
-				error: function(error, response) {
+                },
+                error: function(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, error);
-				}
-			})
-		});
+                }
+            })
+        });
 
-		// Pass url and array list of tags, add to existing save item accordingly
+        // Pass url and array list of tags, add to existing save item accordingly
         var _addTagsMessageId = "addTags";
-		pktUIMessaging.addMessageListener(_addTagsMessageId, function(panelId, data) {
-			pktApi.addTagsToURL(data.url, data.tags, {
-				success: function(data, response) {
-				    var successResponse = {status: "success"};
+        pktUIMessaging.addMessageListener(_addTagsMessageId, function(panelId, data) {
+            pktApi.addTagsToURL(data.url, data.tags, {
+                success: function(data, response) {
+                    var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _addTagsMessageId, successResponse);
-				},
-				error: function(error, response) {
+                },
+                error: function(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _addTagsMessageId, error);
-				}
-			});
-		});
+                }
+            });
+        });
 
-		// Based on clicking "remove page" CTA, and passed unique item id, remove the item
+        // Based on clicking "remove page" CTA, and passed unique item id, remove the item
         var _deleteItemMessageId = "deleteItem";
-		pktUIMessaging.addMessageListener(_deleteItemMessageId, function(panelId, data) {
-			pktApi.deleteItem(data.itemId, {
-				success: function(data, response) {
-				    var successResponse = {status: "success"};
+        pktUIMessaging.addMessageListener(_deleteItemMessageId, function(panelId, data) {
+            pktApi.deleteItem(data.itemId, {
+                success: function(data, response) {
+                    var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
-				},
-				error: function(error, response) {
-				    pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
-				}
-			})
-		});
+                },
+                error: function(error, response) {
+                    pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
+                }
+            })
+        });
 
         var _initL10NMessageId = "initL10N";
         pktUIMessaging.addMessageListener(_initL10NMessageId, function(panelId, data) {
@@ -465,15 +465,15 @@ var pktUI = (function() {
             pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, { strings: strings });
         });
 
-	}
+    }
 
-	// -- Browser Navigation -- //
+    // -- Browser Navigation -- //
 
-	/**
+    /**
      * Open a new tab with a given url and notify the iframe panel that it was opened
      */
 
-	function openTabWithUrl(url) {
+    function openTabWithUrl(url) {
         let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (!recentWindow) {
           Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
@@ -500,13 +500,13 @@ var pktUI = (function() {
 
         // If there were no non-private windows opened already.
         recentWindow.openUILinkIn(url, "window");
-	}
+    }
 
 
     // -- Helper Functions -- //
 
     function getCurrentUrl() {
-    	return getBrowser().currentURI.spec;
+        return getBrowser().currentURI.spec;
     }
 
     function getCurrentTitle() {
@@ -519,7 +519,7 @@ var pktUI = (function() {
         while (panel && panel.localName != "panel") {
             panel = panel.parentNode;
         }
-    	return panel;
+        return panel;
     }
 
     function getPanelFrame() {
@@ -547,41 +547,41 @@ var pktUI = (function() {
     }
 
     function hasLegacyExtension() {
-    	return !!document.getElementById('RIL_urlbar_add');
+        return !!document.getElementById('RIL_urlbar_add');
     }
 
     function isHidden() {
-    	return _isHidden;
+        return _isHidden;
     }
 
     function getFirefoxAccountSignedInUser(callback) {
-	    fxAccounts.getSignedInUser().then(userData => {
-    		callback(userData);
-    	}).then(null, error => {
-      		callback();
-	    });
+        fxAccounts.getSignedInUser().then(userData => {
+            callback(userData);
+        }).then(null, error => {
+            callback();
+        });
     }
 
     function getUILocale() {
-    	var locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
+        var locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
              getService(Ci.nsIXULChromeRegistry).
              getSelectedLocale("browser");
         return locale;
     }
 
-	/**
+    /**
      * Public functions
      */
     return {
-    	getPanelFrame: getPanelFrame,
+        getPanelFrame: getPanelFrame,
 
         openTabWithUrl: openTabWithUrl,
 
-    	pocketPanelDidShow: pocketPanelDidShow,
-    	pocketPanelDidHide: pocketPanelDidHide,
+        pocketPanelDidShow: pocketPanelDidShow,
+        pocketPanelDidHide: pocketPanelDidHide,
 
-    	tryToSaveUrl: tryToSaveUrl,
-    	tryToSaveCurrentPage: tryToSaveCurrentPage
+        tryToSaveUrl: tryToSaveUrl,
+        tryToSaveCurrentPage: tryToSaveCurrentPage
     };
 }());
 

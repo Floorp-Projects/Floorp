@@ -547,12 +547,12 @@ describe('Microformat.get', function() {
                 'rel-urls': {}
             };
         var v1Definition = {
-        		root: 'hpayment',
-        		name: 'h-payment',
-        		properties: {
-        			'amount': {}
-        		}
-        	};
+                root: 'hpayment',
+                name: 'h-payment',
+                properties: {
+                    'amount': {}
+                }
+            };
 
 
         doc = document.implementation.createHTMLDocument('New Document');
