@@ -19,12 +19,34 @@ const STRINGS = Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 
 add_task(function*() {
-  let tab = yield addTab("data:text/html;charset=utf-8," + CONTENT);
+  yield addTab("data:text/html;charset=utf-8," + CONTENT);
 
-  let testActor = yield getTestActorWithoutToolbox(tab);
-  let inspector = yield clickOnInspectMenuItem(testActor, "span");
+  info("Getting the test element");
+  let element = getNode("span");
 
-  checkRuleViewContent(inspector.ruleview.view);
+  info("Opening the inspector using the content context-menu");
+  let onInspectorReady = gDevTools.once("inspector-ready");
+
+  document.popupNode = element;
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let contextMenu = new nsContextMenu(contentAreaContextMenu);
+  yield contextMenu.inspectNode();
+
+  // Clean up context menu:
+  contextMenu.hiding();
+
+  yield onInspectorReady;
+
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = gDevTools.getToolbox(target);
+
+  info("Getting the inspector and making sure it is fully updated");
+  let inspector = toolbox.getPanel("inspector");
+  yield inspector.once("inspector-updated");
+
+  let view = inspector.ruleview.view;
+
+  checkRuleViewContent(view);
 });
 
 function checkRuleViewContent({styleDocument}) {
@@ -59,4 +81,3 @@ function checkRuleViewContent({styleDocument}) {
     is(propertyValues.length, 1, "There's only one property value, as expected");
   }
 }
-
