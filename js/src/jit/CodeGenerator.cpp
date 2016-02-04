@@ -3133,16 +3133,16 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier*
     masm.jump(ool->rejoin());
 }
 
+template <class LPostBarrierType>
 void
-CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO* lir)
+CodeGenerator::visitPostWriteBarrierCommonO(LPostBarrierType* lir, OutOfLineCode* ool)
 {
-    OutOfLineCallPostWriteBarrier* ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
     addOutOfLineCode(ool, lir->mir());
 
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
-        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteBarrier.
+        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteElementBarrier.
         MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
@@ -3154,26 +3154,120 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO* lir)
     masm.bind(ool->rejoin());
 }
 
+template <class LPostBarrierType>
 void
-CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV* lir)
+CodeGenerator::visitPostWriteBarrierCommonV(LPostBarrierType* lir, OutOfLineCode* ool)
 {
-    OutOfLineCallPostWriteBarrier* ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
     addOutOfLineCode(ool, lir->mir());
 
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
-        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteBarrier.
+        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteElementBarrier.
         MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
                                      ool->rejoin());
     }
 
-    ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
+    ValueOperand value = ToValue(lir, LPostBarrierType::Input);
     masm.branchValueIsNurseryObject(Assembler::Equal, value, temp, ool->entry());
 
     masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO* lir)
+{
+    auto ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
+    visitPostWriteBarrierCommonO(lir, ool);
+}
+
+void
+CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV* lir)
+{
+    auto ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
+    visitPostWriteBarrierCommonV(lir, ool);
+}
+
+// Out-of-line path to update the store buffer.
+class OutOfLineCallPostWriteElementBarrier : public OutOfLineCodeBase<CodeGenerator>
+{
+    LInstruction* lir_;
+    const LAllocation* object_;
+    const LAllocation* index_;
+
+  public:
+    OutOfLineCallPostWriteElementBarrier(LInstruction* lir, const LAllocation* object,
+                                         const LAllocation* index)
+      : lir_(lir),
+        object_(object),
+        index_(index)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineCallPostWriteElementBarrier(this);
+    }
+
+    LInstruction* lir() const {
+        return lir_;
+    }
+
+    const LAllocation* object() const {
+        return object_;
+    }
+
+    const LAllocation* index() const {
+        return index_;
+    }
+};
+
+void
+CodeGenerator::visitOutOfLineCallPostWriteElementBarrier(OutOfLineCallPostWriteElementBarrier* ool)
+{
+    saveLiveVolatile(ool->lir());
+
+    const LAllocation* obj = ool->object();
+    const LAllocation* index = ool->index();
+
+    Register objreg = obj->isConstant() ? InvalidReg : ToRegister(obj);
+    Register indexreg = ToRegister(index);
+
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+    regs.takeUnchecked(indexreg);
+
+    if (obj->isConstant()) {
+        objreg = regs.takeAny();
+        masm.movePtr(ImmGCPtr(&obj->toConstant()->toObject()), objreg);
+    } else {
+        regs.takeUnchecked(objreg);
+    }
+
+    Register runtimereg = regs.takeAny();
+    masm.setupUnalignedABICall(runtimereg);
+    masm.mov(ImmPtr(GetJitContext()->runtime), runtimereg);
+    masm.passABIArg(runtimereg);
+    masm.passABIArg(objreg);
+    masm.passABIArg(indexreg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteElementBarrier));
+
+    restoreLiveVolatile(ool->lir());
+
+    masm.jump(ool->rejoin());
+}
+
+void
+CodeGenerator::visitPostWriteElementBarrierO(LPostWriteElementBarrierO* lir)
+{
+    auto ool = new(alloc()) OutOfLineCallPostWriteElementBarrier(lir, lir->object(), lir->index());
+    visitPostWriteBarrierCommonO(lir, ool);
+}
+
+void
+CodeGenerator::visitPostWriteElementBarrierV(LPostWriteElementBarrierV* lir)
+{
+    auto ool = new(alloc()) OutOfLineCallPostWriteElementBarrier(lir, lir->object(), lir->index());
+    visitPostWriteBarrierCommonV(lir, ool);
 }
 
 void
