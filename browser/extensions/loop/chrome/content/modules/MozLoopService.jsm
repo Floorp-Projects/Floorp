@@ -66,9 +66,8 @@ const kChatboxHangupButton = {
   id: "loop-hangup",
   visibleWhenUndocked: false,
   onCommand: function(e, chatbox) {
-    let window = chatbox.content.contentWindow;
-    let event = new window.CustomEvent("LoopHangupNow");
-    window.dispatchEvent(event);
+    let mm = chatbox.content.messageManager;
+    mm.sendAsyncMessage("Social:CustomEvent", { name: "LoopHangupNow" });
   }
 };
 
@@ -770,13 +769,18 @@ var MozLoopServiceInternal = {
   /**
    * Saves loop logs to the saved-telemetry-pings folder.
    *
-   * @param {Object} pc The peerConnection in question.
+   * @param {nsIDOMWindow} window The window object which can be communicated with
+   * @param {Object}        The peerConnection in question.
    */
-  stageForTelemetryUpload: function(window, pc) {
-    window.WebrtcGlobalInformation.getAllStats(allStats => {
-      let internalFormat = allStats.reports[0]; // filtered on pc.id
-      window.WebrtcGlobalInformation.getLogging("", logs => {
-        let report = convertToRTCStatsReport(internalFormat);
+  stageForTelemetryUpload: function(window, details) {
+    let mm = window.messageManager;
+    mm.addMessageListener("Loop:GetAllWebrtcStats", function getAllStats(message) {
+      mm.removeMessageListener("Loop:GetAllWebrtcStats", getAllStats);
+
+      let { allStats, logs } = message.data;
+      let internalFormat = allStats.reports[0]; // filtered on peerConnectionID
+
+      let report = convertToRTCStatsReport(internalFormat);
         let logStr = "";
         logs.forEach(s => { logStr += s + "\n"; });
 
@@ -810,7 +814,7 @@ var MozLoopServiceInternal = {
                 version: Services.sysinfo.getProperty("version")
               },
               report: "ice failure",
-              connectionstate: pc.iceConnectionState,
+              connectionstate: details.iceConnectionState,
               stats: report,
               localSdp: internalFormat.localSdp,
               remoteSdp: internalFormat.remoteSdp,
@@ -829,8 +833,11 @@ var MozLoopServiceInternal = {
             ("Failed to stage loop report. Error: " + e.data.fail));
         };
         worker.postMessage(job);
-      });
-    }, pc.id);
+    });
+
+    mm.sendAsyncMessage("Loop:GetAllWebrtcStats", {
+      peerConnectionID: details.peerConnectionID
+    });
   },
 
   /**
@@ -856,8 +863,8 @@ var MozLoopServiceInternal = {
    */
   hangupAllChatWindows() {
     for (let chatbox of this.getChatWindows()) {
-      let window = chatbox.content.contentWindow;
-      window.dispatchEvent(new window.CustomEvent("LoopHangupNow"));
+      let mm = chatbox.content.messageManager;
+      mm.sendAsyncMessage("Social:CustomEvent", { name: "LoopHangupNow" });
     }
   },
 
@@ -866,10 +873,11 @@ var MozLoopServiceInternal = {
    */
   toggleBrowserSharing(on = true) {
     for (let chatbox of this.getChatWindows()) {
-      let window = chatbox.content.contentWindow;
-      window.dispatchEvent(new window.CustomEvent("ToggleBrowserSharing", {
+      let mm = chatbox.content.messageManager;
+      mm.sendAsyncMessage("Social:CustomEvent", {
+        name: "ToggleBrowserSharing",
         detail: on
-      }));
+      });
     }
   },
 
@@ -911,58 +919,25 @@ var MozLoopServiceInternal = {
     Chat.registerButton(kChatboxHangupButton);
 
     let callback = chatbox => {
-      // We need to use DOMContentLoaded as otherwise the injection will happen
-      // in about:blank and then get lost.
-      // Sadly we can't use chatbox.promiseChatLoaded() as promise chaining
-      // involves event loop spins, which means it might be too late.
-      // Have we already done it?
-      if (chatbox.contentWindow.navigator.mozLoop) {
-        return;
-      }
+      let mm = chatbox.content.messageManager;
 
-      let loaded = event => {
-        if (event.target != chatbox.contentDocument) {
-          return;
-        }
-        chatbox.removeEventListener("DOMContentLoaded", loaded, true);
+      let loaded = () => {
+        mm.removeMessageListener("DOMContentLoaded", loaded);
+        mm.sendAsyncMessage("Social:ListenForEvents", {
+          eventNames: ["LoopChatEnabled", "LoopChatMessageAppended",
+            "LoopChatDisabledMessageAppended", "socialFrameAttached",
+            "socialFrameDetached", "socialFrameHide", "socialFrameShow"]
+        });
 
         let chatbar = chatbox.parentNode;
-        let window = chatbox.contentWindow;
 
-        function socialFrameChanged(eventName) {
-          // `clearAvailableTargetsCache` is new in Firefox 46. The else branch
-          // supports Firefox 45.
-          if ("clearAvailableTargetsCache" in UITour) {
-            UITour.clearAvailableTargetsCache();
-          } else {
-            UITour.availableTargetsCache.clear();
-          }
-          UITour.notify(eventName);
-
-          if (eventName == "Loop:ChatWindowDetached" || eventName == "Loop:ChatWindowAttached") {
-            // After detach, re-attach of the chatbox, refresh its reference so
-            // we can keep using it here.
-            let ref = chatbar.chatboxForURL.get(chatbox.src);
-            chatbox = ref && ref.get() || chatbox;
-          } else if (eventName == "Loop:ChatWindowClosed") {
-            windowCloseCallback();
-            if (conversationWindowData.type == "room") {
-              // NOTE: if you add something here, please also consider if something
-              //       needs to be done on the content side as well (e.g.
-              //       activeRoomStore#windowUnload).
-              LoopAPI.sendMessageToHandler({
-                name: "HangupNow",
-                data: [conversationWindowData.roomToken, windowId]
-              });
-            }
-          }
-        }
-
-        window.addEventListener("socialFrameHide", socialFrameChanged.bind(null, "Loop:ChatWindowHidden"));
-        window.addEventListener("socialFrameShow", socialFrameChanged.bind(null, "Loop:ChatWindowShown"));
-        window.addEventListener("socialFrameDetached", socialFrameChanged.bind(null, "Loop:ChatWindowDetached"));
-        window.addEventListener("socialFrameAttached", socialFrameChanged.bind(null, "Loop:ChatWindowAttached"));
-        window.addEventListener("unload", socialFrameChanged.bind(null, "Loop:ChatWindowClosed"));
+        const kEventNamesMap = {
+          socialFrameAttached: "Loop:ChatWindowAttached",
+          socialFrameDetached: "Loop:ChatWindowDetached",
+          socialFrameHide: "Loop:ChatWindowHidden",
+          socialFrameShow: "Loop:ChatWindowShown",
+          unload: "Loop:ChatWindowClosed"
+        };
 
         const kSizeMap = {
           LoopChatEnabled: "loopChatEnabled",
@@ -970,72 +945,105 @@ var MozLoopServiceInternal = {
           LoopChatMessageAppended: "loopChatMessageAppended"
         };
 
-        function onChatEvent(ev) {
-          // When the chat box or messages are shown, resize the panel or window
-          // to be slightly higher to accomodate them.
-          let customSize = kSizeMap[ev.type];
-          let currSize = chatbox.getAttribute("customSize");
-          // If the size is already at the requested one or at the maximum size
-          // already, don't do anything. Especially don't make it shrink.
-          if (customSize && currSize != customSize && currSize != "loopChatMessageAppended") {
-            chatbox.setAttribute("customSize", customSize);
-            chatbox.parentNode.setAttribute("customSize", customSize);
-          }
-        }
+        let listeners = {};
 
-        window.addEventListener("LoopChatEnabled", onChatEvent);
-        window.addEventListener("LoopChatMessageAppended", onChatEvent);
-        window.addEventListener("LoopChatDisabledMessageAppended", onChatEvent);
+        let messageName = "Social:CustomEvent";
+        mm.addMessageListener(messageName, listeners[messageName] = message => {
+          let eventName = message.data.name;
+          if (kEventNamesMap[eventName]) {
+            eventName = kEventNamesMap[eventName];
+
+            UITour.clearAvailableTargetsCache();
+            UITour.notify(eventName);
+
+            if (eventName == "Loop:ChatWindowDetached" || eventName == "Loop:ChatWindowAttached") {
+              // After detach, re-attach of the chatbox, refresh its reference so
+              // we can keep using it here.
+              let ref = chatbar.chatboxForURL.get(chatbox.src);
+              chatbox = ref && ref.get() || chatbox;
+            }
+          } else {
+            // When the chat box or messages are shown, resize the panel or window
+            // to be slightly higher to accomodate them.
+            let customSize = kSizeMap[eventName];
+            let currSize = chatbox.getAttribute("customSize");
+            // If the size is already at the requested one or at the maximum size
+            // already, don't do anything. Especially don't make it shrink.
+            if (customSize && currSize != customSize && currSize != "loopChatMessageAppended") {
+              chatbox.setAttribute("customSize", customSize);
+              chatbox.parentNode.setAttribute("customSize", customSize);
+            }
+          }
+        });
 
         // Handle window.close correctly on the chatbox.
-        hookWindowCloseForPanelClose(window);
-
-        let ourID = window.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-
-        let onPCLifecycleChange = (pc, winID, type) => {
-          if (winID != ourID) {
-            return;
+        hookWindowCloseForPanelClose(chatbox.content);
+        messageName = "DOMWindowClose";
+        mm.addMessageListener(messageName, listeners[messageName] = () => {
+          // Remove message listeners.
+          for (let name of Object.getOwnPropertyNames(listeners)) {
+            mm.removeMessageListener(name, listeners[name]);
           }
+          listeners = {};
 
+          windowCloseCallback();
+
+          if (conversationWindowData.type == "room") {
+            // NOTE: if you add something here, please also consider if something
+            //       needs to be done on the content side as well (e.g.
+            //       activeRoomStore#windowUnload).
+            LoopAPI.sendMessageToHandler({
+              name: "HangupNow",
+              data: [conversationWindowData.roomToken, windowId]
+            });
+          }
+        });
+
+        mm.sendAsyncMessage("Loop:MonitorPeerConnectionLifecycle");
+        messageName = "Loop:PeerConnectionLifecycleChange";
+        mm.addMessageListener(messageName, listeners[messageName] = message => {
           // Chat Window Id, this is different that the internal winId
-          let chatWindowId = window.location.hash.slice(1);
+          let chatWindowId = message.data.locationHash.slice(1);
           var context = this.conversationContexts.get(chatWindowId);
-          var exists = pc.id.match(/session=(\S+)/);
+          var peerConnectionID = message.data.peerConnectionID;
+          var exists = peerConnectionID.match(/session=(\S+)/);
           if (context && !exists) {
             // Not ideal but insert our data amidst existing data like this:
             // - 000 (id=00 url=http)
             // + 000 (session=000 call=000 id=00 url=http)
-            var pair = pc.id.split("(");
+            var pair = peerConnectionID.split("(");
             if (pair.length == 2) {
-              pc.id = pair[0] + "(session=" + context.sessionId +
+              peerConnectionID = pair[0] + "(session=" + context.sessionId +
                   (context.callId ? " call=" + context.callId : "") + " " + pair[1];
             }
           }
 
-          if (type == "iceconnectionstatechange") {
-            switch (pc.iceConnectionState) {
+          if (message.data.type == "iceconnectionstatechange") {
+            switch (message.data.iceConnectionState) {
               case "failed":
               case "disconnected":
                 if (Services.telemetry.canRecordExtended) {
-                  this.stageForTelemetryUpload(window, pc);
+                  this.stageForTelemetryUpload(chatbox.content, message.data);
                 }
                 break;
             }
           }
-        };
-
-        let pc_static = new window.RTCPeerConnectionStatic();
-        pc_static.registerPeerConnectionLifecycleCallback(onPCLifecycleChange);
+        });
 
         UITour.notify("Loop:ChatWindowOpened");
       };
-      chatbox.addEventListener("DOMContentLoaded", loaded, true);
+
+      mm.sendAsyncMessage("WaitForDOMContentLoaded");
+      mm.addMessageListener("DOMContentLoaded", loaded);
     };
 
     LoopAPI.initialize();
-    let chatboxInstance = Chat.open(null, origin, "", url, undefined, undefined,
-                                    callback);
+    let chatboxInstance = Chat.open(null, {
+      origin: origin,
+      title: "",
+      url: url,
+      remote: MozLoopService.getLoopPref("remote.autostart")
+    }, callback);
     if (!chatboxInstance) {
       return null;
     // It's common for unit tests to overload Chat.open.
