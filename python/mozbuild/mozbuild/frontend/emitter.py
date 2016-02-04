@@ -372,15 +372,8 @@ class TreeMetadataEmitter(LoggingMixin):
             return ExternalSharedLibrary(context, name)
 
     def _handle_linkables(self, context, passthru):
-        for obj in self._process_sources(context, passthru):
-            yield obj
+        has_linkables = False
 
-        self._handle_programs(context)
-
-        for obj in self._handle_libraries(context):
-            yield obj
-
-    def _handle_programs(self, context):
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
             if program:
@@ -392,6 +385,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._binaries[program] = cls(context, program)
                 self._linkage.append((context, self._binaries[program],
                     kind.replace('PROGRAM', 'USE_LIBS')))
+                has_linkables = True
 
         for kind, cls in [
                 ('SIMPLE_PROGRAMS', SimpleProgram),
@@ -408,8 +402,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._linkage.append((context, self._binaries[program],
                     'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
                     else 'USE_LIBS'))
+                has_linkables = True
 
-    def _handle_libraries(self, context):
         host_libname = context.get('HOST_LIBRARY_NAME')
         libname = context.get('LIBRARY_NAME')
 
@@ -420,6 +414,7 @@ class TreeMetadataEmitter(LoggingMixin):
             lib = HostLibrary(context, host_libname)
             self._libs[host_libname].append(lib)
             self._linkage.append((context, lib, 'HOST_USE_LIBS'))
+            has_linkables = True
 
         final_lib = context.get('FINAL_LIBRARY')
         if not libname and final_lib:
@@ -566,6 +561,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = SharedLibrary(context, libname, **shared_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+                has_linkables = True
                 if is_component and not context['NO_COMPONENTS_MANIFEST']:
                     yield ChromeManifestEntry(context,
                         'components/components.manifest',
@@ -581,6 +577,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+                has_linkables = True
 
             if lib_defines:
                 if not libname:
@@ -588,7 +585,12 @@ class TreeMetadataEmitter(LoggingMixin):
                         'LIBRARY_NAME to take effect', context)
                 lib.lib_defines.update(lib_defines)
 
-    def _process_sources(self, context, passthru):
+        # Only emit sources if we have linkables defined in the same context.
+        # Note the linkables are not emitted in this function, but much later,
+        # after aggregation (because of e.g. USE_LIBS processing).
+        if not has_linkables:
+            return
+
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
         all_flags = {}
