@@ -370,6 +370,9 @@ public:
   void NotifyImageVisibilityUpdate();
   bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort);
 
+  void TriggerDisplayPortExpiration();
+  void ResetDisplayPortExpiryTimer();
+
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
 
@@ -467,6 +470,9 @@ public:
   nsRect mPrevScrolledRect;
 
   FrameMetrics::ViewID mScrollParentID;
+
+  // Timer to remove the displayport some time after scrolling has stopped
+  nsCOMPtr<nsITimer> mDisplayPortExpiryTimer;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
@@ -863,6 +869,9 @@ public:
   }
   virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) override {
     return mHelper.GetDisplayPortAtLastImageVisibilityUpdate(aDisplayPort);
+  }
+  void TriggerDisplayPortExpiration() override {
+    mHelper.TriggerDisplayPortExpiration();
   }
 
   // nsIStatefulFrame
@@ -1336,6 +1345,9 @@ public:
   }
   virtual bool GetDisplayPortAtLastImageVisibilityUpdate(nsRect* aDisplayPort) override {
     return mHelper.GetDisplayPortAtLastImageVisibilityUpdate(aDisplayPort);
+  }
+  void TriggerDisplayPortExpiration() override {
+    mHelper.TriggerDisplayPortExpiration();
   }
 
 #ifdef DEBUG_FRAME_DUMP

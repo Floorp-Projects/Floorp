@@ -155,6 +155,14 @@ using mozilla::gfx::PointTyped;
  * pixels would make us drop to low-res at y=490...990.\n
  * This value is in layer pixels.
  *
+ * \li\b apz.displayport_expiry_ms
+ * While a scrollable frame is scrolling async, we set a displayport on it
+ * to make sure it is layerized. However this takes up memory, so once the
+ * scrolling stops we want to remove the displayport. This pref controls how
+ * long after scrolling stops the displayport is removed. A value of 0 will
+ * disable the expiry behavior entirely.
+ * Units: milliseconds
+ *
  * \li\b apz.enlarge_displayport_when_clipped
  * Pref that enables enlarging of the displayport along one axis when the
  * generated displayport's size is beyond that of the scrollable rect on the
