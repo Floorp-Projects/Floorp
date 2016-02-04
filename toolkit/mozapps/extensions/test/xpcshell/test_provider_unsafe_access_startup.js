@@ -17,7 +17,7 @@ function mockAddonProvider(name) {
     },
     getAddonByID(id, callback) {
       if (!this.hasStarted) {
-        unsafeAccess = true;
+        this.unsafeAccess = true;
       }
       callback(null);
     },
