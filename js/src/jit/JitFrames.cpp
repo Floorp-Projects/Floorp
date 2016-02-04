@@ -251,53 +251,10 @@ JitFrameIterator::actualArgs() const
     return jsFrame()->argv() + 1;
 }
 
-static inline size_t
-SizeOfFramePrefix(FrameType type)
-{
-    switch (type) {
-      case JitFrame_Entry:
-        return EntryFrameLayout::Size();
-      case JitFrame_BaselineJS:
-      case JitFrame_IonJS:
-      case JitFrame_Bailout:
-      case JitFrame_Unwound_BaselineJS:
-      case JitFrame_Unwound_IonJS:
-        return JitFrameLayout::Size();
-      case JitFrame_BaselineStub:
-      case JitFrame_Unwound_BaselineStub:
-        return BaselineStubFrameLayout::Size();
-      case JitFrame_IonStub:
-      case JitFrame_Unwound_IonStub:
-        return JitStubFrameLayout::Size();
-      case JitFrame_Rectifier:
-        return RectifierFrameLayout::Size();
-      case JitFrame_Unwound_Rectifier:
-        return IonUnwoundRectifierFrameLayout::Size();
-      case JitFrame_Exit:
-      case JitFrame_LazyLink:
-        return ExitFrameLayout::Size();
-      case JitFrame_IonAccessorIC:
-      case JitFrame_Unwound_IonAccessorIC:
-        return IonAccessorICFrameLayout::Size();
-    }
-
-    MOZ_CRASH("unknown frame type");
-}
-
 uint8_t*
 JitFrameIterator::prevFp() const
 {
-    size_t currentSize = SizeOfFramePrefix(type_);
-    // This quick fix must be removed as soon as bug 717297 land.  This is
-    // needed because the descriptor size of JS-to-JS frame which is just after
-    // a Rectifier frame should not change. (cf EnsureExitFrame function)
-    if (isFakeExitFrame()) {
-        MOZ_ASSERT(SizeOfFramePrefix(JitFrame_BaselineJS) ==
-                   SizeOfFramePrefix(JitFrame_IonJS));
-        currentSize = SizeOfFramePrefix(JitFrame_IonJS);
-    }
-    currentSize += current()->prevFrameLocalSize();
-    return current_ + currentSize;
+    return current_ + current()->prevFrameLocalSize() + current()->headerSize();
 }
 
 JitFrameIterator&

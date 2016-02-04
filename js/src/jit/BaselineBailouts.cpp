@@ -1171,7 +1171,8 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
 
     // Write out descriptor of BaselineJS frame.
     size_t baselineFrameDescr = MakeFrameDescriptor((uint32_t) builder.framePushed(),
-                                                    JitFrame_BaselineJS);
+                                                    JitFrame_BaselineJS,
+                                                    BaselineStubFrameLayout::Size());
     if (!builder.writeWord(baselineFrameDescr, "Descriptor"))
         return false;
 
@@ -1274,7 +1275,8 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     // Calculate frame size for descriptor.
     size_t baselineStubFrameSize = builder.framePushed() - startOfBaselineStubFrame;
     size_t baselineStubFrameDescr = MakeFrameDescriptor((uint32_t) baselineStubFrameSize,
-                                                        JitFrame_BaselineStub);
+                                                        JitFrame_BaselineStub,
+                                                        JitFrameLayout::Size());
 
     // Push actual argc
     if (!builder.writeWord(actualArgc, "ActualArgc"))
@@ -1388,7 +1390,8 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     // Calculate frame size for descriptor.
     size_t rectifierFrameSize = builder.framePushed() - startOfRectifierFrame;
     size_t rectifierFrameDescr = MakeFrameDescriptor((uint32_t) rectifierFrameSize,
-                                                     JitFrame_Rectifier);
+                                                     JitFrame_Rectifier,
+                                                     JitFrameLayout::Size());
 
     // Push actualArgc
     if (!builder.writeWord(actualArgc, "ActualArgc"))
