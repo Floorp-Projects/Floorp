@@ -21,6 +21,12 @@ for [name, prop, id, flags, pref, proptype] in propList:
     extendedAttrs = ["Throws", "TreatNullAs=EmptyString"]
     if pref is not "":
         extendedAttrs.append('Pref="%s"' % pref)
+
+    # webkit properties get a capitalized "WebkitFoo" accessor (added here)
+    # as well as a camelcase "webkitFoo" accessor (added next).
+    if (prop.startswith("Webkit")):
+        props += generateLine(prop, extendedAttrs)
+
     # Generate a line with camelCase spelling of property-name (or capitalized,
     # for Moz-prefixed properties):
     if not prop.startswith("Moz"):
