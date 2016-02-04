@@ -431,7 +431,13 @@ WebMDemuxer::ReadMetadata()
 bool
 WebMDemuxer::IsSeekable() const
 {
-  return mContext;
+  return mContext && nestegg_has_cues(mContext);
+}
+
+bool
+WebMDemuxer::IsSeekableOnlyInBufferedRanges() const
+{
+  return mContext && !nestegg_has_cues(mContext);
 }
 
 void

@@ -98,6 +98,8 @@ public:
 
   bool IsSeekable() const override;
 
+  bool IsSeekableOnlyInBufferedRanges() const override;
+
   UniquePtr<EncryptionInfo> GetCrypto() override;
 
   bool GetOffsetForTime(uint64_t aTime, int64_t* aOffset);

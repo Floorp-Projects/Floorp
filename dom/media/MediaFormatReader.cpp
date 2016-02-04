@@ -337,6 +337,8 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   }
 
   mInfo.mMediaSeekable = mDemuxer->IsSeekable();
+  mInfo.mMediaSeekableOnlyInBufferedRanges =
+    mDemuxer->IsSeekableOnlyInBufferedRanges();
 
   if (!videoActive && !audioActive) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
@@ -1428,7 +1430,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
   MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
 
-  if (!mInfo.mMediaSeekable) {
+  if (!mInfo.mMediaSeekable && !mInfo.mMediaSeekableOnlyInBufferedRanges) {
     LOG("Seek() END (Unseekable)");
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
