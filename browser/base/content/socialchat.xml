@@ -27,33 +27,51 @@
         <xul:toolbarbutton anonid="close" class="chat-close-button chat-toolbarbutton"
                            oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
+      <xul:browser anonid="remote-content" class="chat-frame" flex="1"
+                   context="contentAreaContextMenu"
+                   disableglobalhistory="true"
+                   frameType="social"
+                   message="true"
+                   messagemanagergroup="social"
+                   tooltip="aHTMLTooltip"
+                   remote="true"
+                   xbl:inherits="src,origin"
+                   type="content"/>
+
       <xul:browser anonid="content" class="chat-frame" flex="1"
-                  context="contentAreaContextMenu"
-                  disableglobalhistory="true"
-                  message="true"
-                  messagemanagergroup="social"
-                  tooltip="aHTMLTooltip"
-                  xbl:inherits="src,origin" type="content"/>
+                   context="contentAreaContextMenu"
+                   disableglobalhistory="true"
+                   message="true"
+                   messagemanagergroup="social"
+                   tooltip="aHTMLTooltip"
+                   xbl:inherits="src,origin"
+                   type="content"/>
     </content>
 
-    <implementation implements="nsIDOMEventListener">
+    <implementation implements="nsIDOMEventListener, nsIMessageListener">
       <constructor><![CDATA[
         const kAnchorMap = new Map([
           ["", "notification-"],
           ["webRTC-shareScreen-", ""],
           ["webRTC-sharingScreen-", ""]
         ]);
-        for (let [getterPrefix, idPrefix] of kAnchorMap) {
-          let getter = getterPrefix + "popupnotificationanchor";
-          let anonid = (idPrefix || getterPrefix) + "icon";
-          this.content.__defineGetter__(getter, () => {
-            delete this.content[getter];
-            return this.content[getter] = document.getAnonymousElementByAttribute(
-              this, "anonid", anonid);
-          });
+        const kBrowsers = [
+          document.getAnonymousElementByAttribute(this, "anonid", "content"),
+          document.getAnonymousElementByAttribute(this, "anonid", "remote-content")
+        ];
+        for (let content of kBrowsers) {
+          for (let [getterPrefix, idPrefix] of kAnchorMap) {
+            let getter = getterPrefix + "popupnotificationanchor";
+            let anonid = (idPrefix || getterPrefix) + "icon";
+            content.__defineGetter__(getter, () => {
+              delete content[getter];
+              return content[getter] = document.getAnonymousElementByAttribute(
+                this, "anonid", anonid);
+            });
+          }
         }
 
-        let contentWindow = this.contentWindow;
+        let mm = this.content.messageManager;
         // process this._callbacks, then set to null so the chatbox creator
         // knows to make new callbacks immediately.
         if (this._callbacks) {
@@ -62,17 +80,18 @@
           }
           this._callbacks = null;
         }
-        this.addEventListener("DOMContentLoaded", function DOMContentLoaded(event) {
-          if (event.target != this.contentDocument)
-            return;
-          this.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
+
+        mm.addMessageListener("DOMTitleChanged", this);
+
+        mm.sendAsyncMessage("WaitForDOMContentLoaded");
+        mm.addMessageListener("DOMContentLoaded", function DOMContentLoaded(event) {
+          mm.removeMessageListener("DOMContentLoaded", DOMContentLoaded);
           this.isActive = !this.minimized;
           this._chat.loadButtonSet(this, this.getAttribute("buttonSet"));
           this._deferredChatLoaded.resolve(this);
-        }, true);
+        }.bind(this));
 
-        if (this.src)
-          this.setAttribute("src", this.src);
+        this.setActiveBrowser();
       ]]></constructor>
 
       <field name="_deferredChatLoaded" readonly="true">
@@ -85,25 +104,16 @@
         </getter>
       </property>
 
-      <field name="content" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "content");
-      </field>
+      <property name="content">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid",
+            (this.remote ? "remote-" : "") + "content");
+        </getter>
+      </property>
 
       <field name="_chat" readonly="true">
         Cu.import("resource:///modules/Chat.jsm", {}).Chat;
       </field>
-
-      <property name="contentWindow">
-        <getter>
-          return this.content.contentWindow;
-        </getter>
-      </property>
-
-      <property name="contentDocument">
-        <getter>
-          return this.content.contentDocument;
-        </getter>
-      </property>
 
       <property name="minimized">
         <getter>
@@ -143,11 +153,40 @@
           this.content.docShellIsActive = !!val;
 
           // let the chat frame know if it is being shown or hidden
-          let evt = this.contentDocument.createEvent("CustomEvent");
-          evt.initCustomEvent(val ? "socialFrameShow" : "socialFrameHide", true, true, {});
-          this.contentDocument.documentElement.dispatchEvent(evt);
+          this.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
+            name: val ? "socialFrameShow" : "socialFrameHide"
+          });
         </setter>
       </property>
+
+      <field name="_remote">false</field>
+      <property name="remote" onget="return this._remote;">
+        <setter><![CDATA[
+          this._remote = !!val;
+
+          this.setActiveBrowser();
+        ]]></setter>
+      </property>
+
+      <method name="setActiveBrowser">
+        <body><![CDATA[
+          // Make sure we only show one browser element at a time.
+          let content = document.getAnonymousElementByAttribute(this, "anonid", "content");
+          let remoteContent = document.getAnonymousElementByAttribute(this, "anonid", "remote-content");
+          remoteContent.setAttribute("hidden", !this.remote);
+          content.setAttribute("hidden", this.remote);
+          remoteContent.removeAttribute("src");
+          content.removeAttribute("src");
+
+          if (this.src) {
+            this.setAttribute("src", this.src);
+
+            // Stop loading of the document - that is set before this method was
+            // called - in the now hidden browser.
+            (this.remote ? content : remoteContent).setAttribute("src", "about:blank");
+          }
+        ]]></body>
+      </method>
 
       <method name="showNotifications">
         <parameter name="aAnchor"/>
@@ -160,12 +199,14 @@
       <method name="swapDocShells">
         <parameter name="aTarget"/>
         <body><![CDATA[
-          aTarget.setAttribute("label", this.contentDocument.title);
+          aTarget.setAttribute("label", this.content.contentTitle);
 
+          aTarget.remote = this.remote;
           aTarget.src = this.src;
-          aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
-          aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
-          aTarget.content.swapDocShells(this.content);
+          let content = aTarget.content;
+          content.setAttribute("origin", this.content.getAttribute("origin"));
+          content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
+          content.swapDocShells(this.content);
         ]]></body>
       </method>
 
@@ -209,7 +250,9 @@
         if (this.chatbar) {
           this.chatbar.detachChatbox(this, { "centerscreen": "yes" }).then(
             chatbox => {
-              chatbox.contentWindow.document.title = title;
+              chatbox.content.messageManager.sendAsyncMessage("Social:SetDocumentTitle", {
+                title: title
+              });
               deferred.resolve(chatbox);
             }
           );
@@ -219,11 +262,16 @@
           let win = Chat.findChromeWindowForChats();
           let chatbar = win.document.getElementById("pinnedchats");
           let origin = this.content.getAttribute("origin");
-          let cb = chatbar.openChat(origin, title, "about:blank");
-          this.setDecorationAttributes(cb);
+          let cb = chatbar.openChat({
+            origin: origin,
+            title: title,
+            url: "about:blank"
+          });
 
           cb.promiseChatLoaded.then(
             () => {
+              this.setDecorationAttributes(cb);
+
               this.swapDocShells(cb);
 
               chatbar.focus();
@@ -236,11 +284,9 @@
               chatbar.chatboxForURL.delete("about:blank");
               chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
 
-              let attachEvent = new cb.contentWindow.CustomEvent("socialFrameAttached", {
-                bubbles: true,
-                cancelable: true,
+              cb.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
+                name: "socialFrameAttached"
               });
-              cb.contentDocument.dispatchEvent(attachEvent);
 
               deferred.resolve(cb);
             }
@@ -255,6 +301,27 @@
           this.minimized = !this.minimized;
         ]]></body>
       </method>
+
+      <method name="setTitle">
+        <body><![CDATA[
+          try {
+            this.setAttribute("label", this.content.contentTitle);
+          } catch (ex) {}
+          if (this.chatbar)
+            this.chatbar.updateTitlebar(this);
+        ]]></body>
+      </method>
+
+      <method name="receiveMessage">
+        <parameter name="aMessage" />
+        <body><![CDATA[
+          switch (aMessage.name) {
+            case "DOMTitleChanged":
+              this.setTitle();
+              break;
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -262,14 +329,13 @@
         if (this.chatbar)
           this.chatbar.selectedChat = this;
       </handler>
-      <handler event="DOMTitleChanged"><![CDATA[
-        this.setAttribute('label', this.contentDocument.title);
-        if (this.chatbar)
-          this.chatbar.updateTitlebar(this);
-      ]]></handler>
+      <handler event="DOMTitleChanged">
+        this.setTitle();
+      </handler>
       <handler event="DOMLinkAdded"><![CDATA[
-        // much of this logic is from DOMLinkHandler in browser.js
-        // this sets the presence icon for a chat user, we simply use favicon style updating
+        // Much of this logic is from DOMLinkHandler in browser.js.
+        // This sets the presence icon for a chat user, we simply use favicon
+        // style updating.
         let link = event.originalTarget;
         let rel = link.rel && link.rel.toLowerCase();
         if (!link || !link.ownerDocument || !rel || !link.href)
@@ -277,15 +343,17 @@
         if (link.rel.indexOf("icon") < 0)
           return;
 
-        let ContentLinkHandler = Cu.import("resource:///modules/ContentLinkHandler.jsm", {}).ContentLinkHandler;
+        let ContentLinkHandler = Cu.import("resource:///modules/ContentLinkHandler.jsm", {})
+          .ContentLinkHandler;
         let uri = ContentLinkHandler.getLinkIconURI(link);
         if (!uri)
           return;
 
-        // we made it this far, use it
-        this.setAttribute('image', uri.spec);
+        // We made it this far, use it.
+        this.setAttribute("image", uri.spec);
         if (this.chatbar)
           this.chatbar.updateTitlebar(this);
+        break;
       ]]></handler>
       <handler event="transitionend">
         if (this.isActive == this.minimized)
@@ -328,7 +396,7 @@
         <body><![CDATA[
           if (!this.selectedChat)
             return;
-          Services.focus.focusedWindow = this.selectedChat.contentWindow;
+          this.selectedChat.content.messageManager.sendAsyncMessage("Social:EnsureFocus");
         ]]></body>
       </method>
 
@@ -499,7 +567,7 @@
           aChatbox.isActive = false;
           let menu = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
           menu.setAttribute("class", "menuitem-iconic");
-          menu.setAttribute("label", aChatbox.contentDocument.title);
+          menu.setAttribute("label", aChatbox.content.contentTitle);
           menu.setAttribute("image", aChatbox.getAttribute("image"));
           menu.chat = aChatbox;
           this.menuitemMap.set(aChatbox, menu);
@@ -568,18 +636,16 @@
       </method>
 
       <method name="openChat">
-        <parameter name="aOrigin"/>
-        <parameter name="aTitle"/>
-        <parameter name="aURL"/>
-        <parameter name="aMode"/>
+        <parameter name="aOptions"/>
         <parameter name="aCallback"/>
         <body><![CDATA[
-          let cb = this.chatboxForURL.get(aURL);
+          let {origin, title, url, mode} = aOptions;
+          let cb = this.chatboxForURL.get(url);
           if (cb && (cb = cb.get())) {
             // A chatbox is still alive to us when it's parented and still has
             // content.
-            if (cb.parentNode && cb.contentWindow) {
-              this.showChat(cb, aMode);
+            if (cb.parentNode) {
+              this.showChat(cb, mode);
               if (aCallback) {
                 if (cb._callbacks == null) {
                   // Chatbox has already been created, so callback now.
@@ -591,7 +657,7 @@
               }
               return cb;
             }
-            this.chatboxForURL.delete(aURL);
+            this.chatboxForURL.delete(url);
           }
           cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
           cb._callbacks = [];
@@ -600,15 +666,17 @@
             // must exist before the (possibly delayed) bindings are created.
             cb._callbacks.push(aCallback);
           }
+
+          cb.remote = !!aOptions.remote;
           // src also a javascript property; the src attribute is set in the ctor.
-          cb.src = aURL;
-          if (aMode == "minimized")
+          cb.src = url;
+          if (mode == "minimized")
             cb.setAttribute("minimized", "true");
-          cb.setAttribute("origin", aOrigin);
-          cb.setAttribute("label", aTitle);
+          cb.setAttribute("origin", origin);
+          cb.setAttribute("label", title);
           this.insertBefore(cb, this.firstChild);
           this.selectedChat = cb;
-          this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
+          this.chatboxForURL.set(url, Cu.getWeakReference(cb));
           this.resize();
           return cb;
         ]]></body>
@@ -714,21 +782,18 @@
                 setAttribute("customSize", aChatbox.getAttribute("customSize"));
             }
 
-            let document = aChatbox.contentDocument;
-            let detachEvent = new aChatbox.contentWindow.CustomEvent("socialFrameDetached", {
-              bubbles: true,
-              cancelable: true,
-            });
-
             otherWin.removeEventListener("load", _chatLoad, true);
             let otherChatbox = otherWin.document.getElementById("chatter");
             aChatbox.setDecorationAttributes(otherChatbox);
             aChatbox.swapDocShells(otherChatbox);
+
             aChatbox.close();
             chatbar.chatboxForURL.set(aChatbox.src, Cu.getWeakReference(otherChatbox));
 
             // All processing is done, now we can fire the event.
-            document.dispatchEvent(detachEvent);
+            otherChatbox.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
+              name: "socialFrameDetached"
+            });
 
             deferred.resolve(otherChatbox);
           }, true);
