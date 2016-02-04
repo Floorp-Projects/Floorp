@@ -83,8 +83,12 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     { id: "with-sources-fail", pass: false, text: "video with no mp4 extension source child" },
     { id: "with-sources-mimetype-mp4", source: "http://mochi.test:8888/simple-video-mp4", text: "video with mp4 mimetype source child" },
     { id: "with-sources-mimetype-webm", source: "http://mochi.test:8888/simple-video-webm", text: "video with webm mimetype source child" },
+    { id: "simple-fetch-pass", source: "http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_discovery.sjs?type=video/mp4", text: "simple video with mp4 mimetype fetched from server" },
+    { id: "simple-fetch-fail", pass: false, text: "simple video with non-video mimetype fetched from server" },
     { id: "video-overlay", source: "http://mochi.test:8888/simple.mp4", text: "div overlay covering a simple video with mp4 src" }
   ];
+
+  let expectedTests = videoDiscoveryTests.length;
 
   function execute_video_test(test) {
     let element = browser.contentDocument.getElementById(test.id);
@@ -92,17 +96,24 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       let [x, y] = middle(element);
       dump("Starting to getVideo");
       chromeWin.CastingApps.getVideo(element, x, y, (video) => {
-        dump("got a Video");
+        dump("Completed getVideo");
         if (video) {
+          dump("video source: " + video.source);
+
           let matchPoster = (test.poster == video.poster);
           let matchSource = (test.source == video.source);
           ok(matchPoster && matchSource && test.pass, test.text);
         } else {
           ok(!test.pass, test.text);
         }
+        expectedTests--;
+        if (expectedTests == 0) {
+          SimpleTest.finish();
+        }
       });
     } else {
       ok(false, "test element not found: [" + test.id + "]");
+      SimpleTest.finish();
     }
   }
 
@@ -117,14 +128,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       }
       execute_video_test(videoTest);
     }
-    SimpleTest.finish();
   }
 
   SimpleTest.waitForExplicitFinish();
-  // On debug runs, 6 assertions typically observed; 3 each of:
+
+  // On debug runs, 10 assertions typically observed; 5 each of:
   //  - ASSERTION: cancel with non-failure status code: 'NS_FAILED(status)'
   //  - ASSERTION: OnDataAvailable implementation consumed no data: 'Error'
-  SimpleTest.expectAssertions(0,6);
+  SimpleTest.expectAssertions(0,10);
   setup_browser();
 
   </script>
