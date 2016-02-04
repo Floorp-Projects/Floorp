@@ -415,7 +415,13 @@ var JsDiff = (function() {
       var ret = [], change;
       for ( var i = 0; i < changes.length; i++) {
         change = changes[i];
-        ret.push([(change.added ? 1 : change.removed ? -1 : 0), change.value]);
+        var order = 0;
+        if (change.added) {
+          order = 1;
+        } else if (change.removed) {
+          order = -1;
+        }
+        ret.push([order, change.value]);
       }
       return ret;
     }
@@ -2097,12 +2103,13 @@ var color = exports.color = function(type, str) {
  */
 
 exports.window = {
-  width: isatty
-    ? process.stdout.getWindowSize
-      ? process.stdout.getWindowSize(1)[0]
-      : tty.getWindowSize()[1]
-    : 75
+  width: 75
 };
+if (isatty) {
+  exports.window.width = process.stdout.getWindowSize
+                       ? process.stdout.getWindowSize(1)[0]
+                       : tty.getWindowSize()[1];
+}
 
 /**
  * Expose some basic cursor interactions
@@ -2240,11 +2247,13 @@ function Base(runner) {
     stats.passes = stats.passes || 0;
 
     var medium = test.slow() / 2;
-    test.speed = test.duration > test.slow()
-      ? 'slow'
-      : test.duration > medium
-        ? 'medium'
-        : 'fast';
+    if (test.duration > test.slow()) {
+      test.speed = 'slow';
+    } else if (test.duration > medium) {
+      test.speed = 'medium';
+    } else {
+      test.speed = 'fast';
+    }
 
     stats.passes++;
   });
