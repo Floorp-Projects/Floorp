@@ -417,6 +417,9 @@ public:
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable = true;
 
+  // True if the media is only seekable within its buffered ranges.
+  bool mMediaSeekableOnlyInBufferedRanges = false;
+
   EncryptionInfo mCrypto;
 };
 

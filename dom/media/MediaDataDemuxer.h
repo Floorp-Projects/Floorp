@@ -70,6 +70,10 @@ public:
   // Returns true if the underlying resource allows seeking.
   virtual bool IsSeekable() const = 0;
 
+  // Returns true if the underlying resource can only seek within buffered
+  // ranges.
+  virtual bool IsSeekableOnlyInBufferedRanges() const { return false; }
+
   // Returns the media's crypto information, or nullptr if media isn't
   // encrypted.
   virtual UniquePtr<EncryptionInfo> GetCrypto()
