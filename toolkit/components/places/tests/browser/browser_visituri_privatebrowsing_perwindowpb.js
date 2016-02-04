@@ -51,7 +51,7 @@ function test() {
       // call whenNewWindowLoaded() instead of testOnWindow() on your test.
       executeSoon(() => aCallback(aWin));
     });
-  };
+  }
 
    // This function is called after calling finish() on the test.
   registerCleanupFunction(function() {

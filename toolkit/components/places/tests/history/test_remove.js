@@ -144,7 +144,7 @@ add_task(function* test_remove_many() {
   yield PlacesUtils.bookmarks.eraseEverything();
 
   do_print("Adding a witness page");
-  let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());;
+  let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
   yield PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI), "Witness page added");
 

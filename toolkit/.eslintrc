@@ -83,7 +83,7 @@
     // "no-extra-boolean-cast": 2,
 
     // No double semicolon
-    // "no-extra-semi": 2,
+    "no-extra-semi": 2,
 
     // No overwriting defined functions
     // "no-func-assign": 2,

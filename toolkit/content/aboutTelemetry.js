@@ -1417,7 +1417,7 @@ function RenderObject(aObject) {
     output += ", \"" + keys[i] + "\":\u00A0" + JSON.stringify(aObject[keys[i]]);
   }
   return output + "}";
-};
+}
 
 var KeyValueTable = {
   /**

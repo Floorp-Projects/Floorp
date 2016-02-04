@@ -185,7 +185,7 @@ function testOnWindow(aIsPrivate, callback) {
                          .getInterface(Ci.nsIDOMWindow);
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
   whenDelayedStartupFinished(win, function() { callback(win); });
-};
+}
 
 const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
 var observer = {

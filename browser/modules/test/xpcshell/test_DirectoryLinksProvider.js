@@ -1547,7 +1547,7 @@ add_task(function* test_DirectoryLinksProvider_ClickRemoval() {
         resolve();
       };
     });
-  };
+  }
 
   let testObserver = new UrlDeletionTester();
   DirectoryLinksProvider.addObserver(testObserver);
@@ -1665,7 +1665,7 @@ add_task(function* test_inadjecentSites() {
     let dataURI = 'data:application/json,' + JSON.stringify(theList);
     DirectoryLinksProvider._inadjacentSitesUrl = dataURI;
     return DirectoryLinksProvider._loadInadjacentSites();
-  };
+  }
 
   // setup gLinks loader
   let gLinks = NewTabUtils.links;

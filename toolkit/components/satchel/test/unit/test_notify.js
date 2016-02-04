@@ -157,4 +157,4 @@ do_test_finished();
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
 }
-};
+}

@@ -776,7 +776,7 @@ function onToolbarDrop(aEvent)
   gCurrentDragOverItem = null;
 
   toolboxChanged();
-};
+}
 
 function onPaletteDragOver(aEvent)
 {

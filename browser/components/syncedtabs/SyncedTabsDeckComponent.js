@@ -51,7 +51,7 @@ function SyncedTabsDeckComponent({
     View: TabListView,
     SyncedTabs: SyncedTabs
   });
-};
+}
 
 SyncedTabsDeckComponent.prototype = {
   PANELS: {

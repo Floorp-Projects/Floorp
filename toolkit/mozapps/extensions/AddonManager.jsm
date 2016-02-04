@@ -981,7 +981,7 @@ var AddonManagerInternal = {
             AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
             logger.error("Exception loading default provider \"" + url + "\"", e);
           }
-        };
+        }
       }
 
       // Load any providers registered in the category manager

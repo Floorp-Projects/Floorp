@@ -20,7 +20,7 @@ function test() {
       windowsToClose.push(aWin);
       executeSoon(() => aCallback(aWin));
     });
-  };
+  }
 
   // This function is called after calling finish() on the test.
   registerCleanupFunction(function() {

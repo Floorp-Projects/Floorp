@@ -281,7 +281,7 @@ function CreateSocialStatusWidget(aId, aProvider) {
       return node;
     }
   });
-};
+}
 
 function CreateSocialMarkWidget(aId, aProvider) {
   if (!aProvider.markURL)
@@ -316,7 +316,7 @@ function CreateSocialMarkWidget(aId, aProvider) {
       return node;
     }
   });
-};
+}
 
 
 function sizeSocialPanelToContent(panel, iframe, requestedSize) {

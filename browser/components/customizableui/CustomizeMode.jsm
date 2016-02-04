@@ -82,7 +82,7 @@ function CustomizeMode(aWindow) {
     Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
   }
   this.window.addEventListener("unload", this);
-};
+}
 
 CustomizeMode.prototype = {
   _changed: false,

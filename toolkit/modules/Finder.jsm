@@ -381,7 +381,7 @@ Finder.prototype = {
         aStats.total = -1;
         break;
       }
-    };
+    }
 
     return aStats;
   },

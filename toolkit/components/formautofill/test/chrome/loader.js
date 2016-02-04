@@ -61,12 +61,12 @@ function add_task(taskFn) {
 function add_task_in_parent_process(taskFn, taskIdOverride) {
   let taskId = taskIdOverride || getTaskId(Components.stack.caller);
   gTestTasks.push([taskFn, "parent", taskId]);
-};
+}
 function add_task_in_both_processes(taskFn) {
   // We need to define a task ID based on our direct caller.
   add_task_in_parent_process(taskFn, getTaskId(Components.stack.caller));
   add_task(taskFn);
-};
+}
 var add_task_in_child_process = add_task;
 
 window.addEventListener("load", function onLoad() {
