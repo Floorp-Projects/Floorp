@@ -38,6 +38,7 @@
 #include "nsPrintfCString.h"
 
 #if defined(XP_WIN)
+#include "mozilla/WindowsVersion.h"
 #include "nsNativeConnectionHelper.h"
 #include "ShutdownLayer.h"
 #endif
@@ -1682,6 +1683,21 @@ nsSocketTransport::OnSocketConnected()
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         SetSocketName(mFD);
         mFDconnected = true;
+
+#ifdef XP_WIN
+        if (!mozilla::IsWin2003OrLater()) { // windows xp
+            PRSocketOptionData opt;
+            opt.option = PR_SockOpt_RecvBufferSize;
+            if (PR_GetSocketOption(mFD, &opt) == PR_SUCCESS) {
+                SOCKET_LOG(("%p checking rwin on xp originally=%u\n",
+                            this, opt.value.recv_buffer_size));
+                if (opt.value.recv_buffer_size < 65535) {
+                    opt.value.recv_buffer_size = 65535;
+                    PR_SetSocketOption(mFD, &opt);
+                }
+            }
+        }
+#endif
     }
 
     // Ensure keepalive is configured correctly if previously enabled.
