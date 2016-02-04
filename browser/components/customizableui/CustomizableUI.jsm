@@ -4162,7 +4162,7 @@ OverflowableToolbar.prototype = {
         this._toolbar.setAttribute("overflowing", "true");
       }
       child = prevChild;
-    };
+    }
 
     let win = this._target.ownerDocument.defaultView;
     win.UpdateUrlbarSearchSplitterState();

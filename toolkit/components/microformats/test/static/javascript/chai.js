@@ -1036,7 +1036,7 @@ module.exports = function (chai, _) {
       , 'expected #{this} to be an instance of ' + name
       , 'expected #{this} to not be an instance of ' + name
     );
-  };
+  }
 
   Assertion.addMethod('instanceof', assertInstanceOf);
   Assertion.addMethod('instanceOf', assertInstanceOf);
@@ -1613,7 +1613,7 @@ module.exports = function (chai, _) {
     );
 
     flag(this, 'object', thrownError);
-  };
+  }
 
   Assertion.addMethod('throw', assertThrows);
   Assertion.addMethod('throws', assertThrows);
@@ -3313,7 +3313,7 @@ module.exports = function (chai, util) {
     should.not['throw'] = should.not['Throw'];
 
     return should;
-  };
+  }
 
   chai.should = loadShould;
   chai.Should = loadShould;
@@ -4720,7 +4720,7 @@ function exclude () {
 
     return res;
   };
-};
+}
 
 /*!
  * Primary Exports

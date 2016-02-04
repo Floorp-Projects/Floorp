@@ -289,7 +289,7 @@ function promisePanelElementShown(win, aPanel) {
     aPanel.removeEventListener("popupshown", onPanelOpen);
     win.clearTimeout(timeoutId);
     deferred.resolve();
-  };
+  }
   aPanel.addEventListener("popupshown", onPanelOpen);
   return deferred.promise;
 }
@@ -332,7 +332,7 @@ function subviewShown(aSubview) {
     aSubview.removeEventListener("ViewShowing", onViewShowing);
     win.clearTimeout(timeoutId);
     deferred.resolve();
-  };
+  }
   aSubview.addEventListener("ViewShowing", onViewShowing);
   return deferred.promise;
 }
@@ -347,7 +347,7 @@ function subviewHidden(aSubview) {
     aSubview.removeEventListener("ViewHiding", onViewHiding);
     win.clearTimeout(timeoutId);
     deferred.resolve();
-  };
+  }
   aSubview.addEventListener("ViewHiding", onViewHiding);
   return deferred.promise;
 }
@@ -505,7 +505,7 @@ function promisePopupEvent(aPopup, aEventSuffix) {
   function onPopupEvent(e) {
     aPopup.removeEventListener(eventType, onPopupEvent);
     deferred.resolve();
-  };
+  }
 
   aPopup.addEventListener(eventType, onPopupEvent);
   return deferred.promise;

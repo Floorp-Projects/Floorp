@@ -57,7 +57,7 @@ function run_test() {
   // check that the favicon loaded correctly
   do_check_eq(originalFavicon.data.length, 286);
   run_next_test();
-};
+}
 
 add_task(function* test_replaceFaviconData_validHistoryURI() {
   do_print("test replaceFaviconData for valid history uri");

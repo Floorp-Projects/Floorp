@@ -1005,7 +1005,7 @@ add_task(function* test_title_change_notifies() {
             PlacesUtils.history.removeObserver(observer);
             resolve();
             break;
-        };
+        }
       });
 
       PlacesUtils.history.addObserver(observer, false);

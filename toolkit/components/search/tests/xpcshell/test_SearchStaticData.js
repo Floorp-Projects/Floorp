@@ -21,7 +21,7 @@ function run_test() {
   // Test that methods from SearchStaticData module can be overwritten,
   // needed for hotfixing.
   let backup = SearchStaticData.getAlternateDomains;
-  SearchStaticData.getAlternateDomains = () => ["www.bing.fr"];;
+  SearchStaticData.getAlternateDomains = () => ["www.bing.fr"];
   do_check_matches(SearchStaticData.getAlternateDomains("www.bing.com"), ["www.bing.fr"]);
   SearchStaticData.getAlternateDomains = backup;
 }

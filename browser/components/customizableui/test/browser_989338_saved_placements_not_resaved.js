@@ -38,7 +38,7 @@ function test() {
     placementArraysEqual(CustomizableUI.AREA_NAVBAR, newSavedState.placements[CustomizableUI.AREA_NAVBAR],
                          CustomizableUI.getWidgetIdsInArea(CustomizableUI.AREA_NAVBAR));
   }
-};
+}
 
 registerCleanupFunction(function() {
   let backstagePass = Cu.import("resource:///modules/CustomizableUI.jsm", {});

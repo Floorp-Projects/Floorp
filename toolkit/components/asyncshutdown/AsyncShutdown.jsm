@@ -466,7 +466,7 @@ function getPhase(topic) {
   });
   gPhases.set(topic, phase);
   return phase;
-};
+}
 
 /**
  * Utility class used to spin the event loop until all blockers for a

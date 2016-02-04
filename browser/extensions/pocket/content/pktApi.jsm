@@ -344,7 +344,7 @@ var pktApi = (function() {
         var title = options.title;
         if (title !== "undefined") {
             sendData.title = title;
-        };
+        }
 
         return apiRequest({
             path: "/firefox/save",

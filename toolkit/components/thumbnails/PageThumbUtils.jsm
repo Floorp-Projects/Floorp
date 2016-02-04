@@ -91,7 +91,7 @@ this.PageThumbUtils = {
       prefWidth *= scale;
       prefHeight *= scale;
 
-      this._thumbnailWidth = Math.max(Math.round(screenWidth.value / divisor), prefWidth);;
+      this._thumbnailWidth = Math.max(Math.round(screenWidth.value / divisor), prefWidth);
       this._thumbnailHeight = Math.max(Math.round(screenHeight.value / divisor), prefHeight);
     }
 

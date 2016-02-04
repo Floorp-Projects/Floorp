@@ -66,7 +66,7 @@ this.EnableDelayHelper = function({enableDialog, disableDialog, focusTarget}) {
     this.disableDialog = makeSafe(disableDialog);
     this.focusTarget = focusTarget;
 
-    this.disableDialog();;
+    this.disableDialog();
 
     this.focusTarget.addEventListener("blur", this, false);
     this.focusTarget.addEventListener("focus", this, false);

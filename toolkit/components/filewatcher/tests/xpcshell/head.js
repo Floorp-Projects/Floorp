@@ -14,7 +14,7 @@ function makeWatcher() {
     Cc['@mozilla.org/toolkit/filewatcher/native-file-watcher;1']
       .getService(Ci.nsINativeFileWatcherService);
   return watcher;
-};
+}
 
 function promiseAddPath(watcher, resource, onChange=null, onError=null) {
   return new Promise(resolve =>
