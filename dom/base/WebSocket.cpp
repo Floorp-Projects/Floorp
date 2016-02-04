@@ -158,9 +158,6 @@ public:
   // 2nd half of ScheduleConnectionCloseEvents, sometimes run in its own event.
   void DispatchConnectionCloseEvents();
 
-  // Dispatch a runnable to the right thread.
-  nsresult DispatchRunnable(nsIRunnable* aRunnable);
-
   nsresult UpdateURI();
 
   void AddRefObject();
