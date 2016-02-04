@@ -37,6 +37,15 @@ function check_consistency(sproperty, valFromGetPropertyValue, messagePrefix)
   is(valFromGetPropertyValue, gDeclaration[sinfo.domProp],
      `(${messagePrefix}) consistency between ` +
      `decl.getPropertyValue(${sproperty}) and decl.${sinfo.domProp}`);
+
+  if (sinfo.domProp.startsWith("webkit")) {
+    // For webkit-prefixed DOM accessors, test with lowercase and uppercase
+    // first letter.
+    var uppercaseDomProp = "W" + sinfo.domProp.substring(1);
+    is(valFromGetPropertyValue, gDeclaration[uppercaseDomProp],
+       `(${messagePrefix}) consistency between ` +
+       `decl.getPropertyValue(${sproperty}) and decl.${uppercaseDomProp}`);
+  }
 }
 
 function test_property(property)
