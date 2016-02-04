@@ -92,7 +92,6 @@ devtools/client/framework/**
 # included in the ignore list.
 devtools/client/inspector/computed/**
 devtools/client/inspector/fonts/**
-devtools/client/inspector/layout/**
 devtools/client/inspector/markup/test/**
 devtools/client/inspector/rules/**
 devtools/client/inspector/shared/test/**
