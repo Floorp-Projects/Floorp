@@ -353,7 +353,6 @@
         this.setAttribute("image", uri.spec);
         if (this.chatbar)
           this.chatbar.updateTitlebar(this);
-        break;
       ]]></handler>
       <handler event="transitionend">
         if (this.isActive == this.minimized)
