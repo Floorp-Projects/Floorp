@@ -7,7 +7,7 @@
 // It uses an explicitly passed object for the strings/locale functionality,
 // and does not automatically translate on DOMContentLoaded, but requires
 // initialize to be called. This improves testability and helps to avoid race
-// conditions.
+// conditions. It has also been updated to be closer to the gaia l10n.js api.
 (function(window) {
   var gL10nDetails;
   var gLanguage = '';

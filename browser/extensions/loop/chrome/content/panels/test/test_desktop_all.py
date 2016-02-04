@@ -10,6 +10,8 @@ class TestDesktopUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestDesktopUnits, self).setUp()
+        # Set the server prefix to the top of the src directory for the mozilla-central
+        # repository.
         self.set_server_prefix("../../../../")
 
     def test_units(self):
