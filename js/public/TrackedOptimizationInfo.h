@@ -103,6 +103,7 @@ namespace JS {
     _(AccessNotString)                                                  \
     _(OperandNotString)                                                 \
     _(OperandNotNumber)                                                 \
+    _(OperandNotStringOrNumber)                                         \
     _(OperandNotSimpleArith)                                            \
     _(StaticTypedArrayUint32)                                           \
     _(StaticTypedArrayCantComputeMask)                                  \
