@@ -563,8 +563,6 @@ NetworkResponseListener.prototype = {
       this.httpActivity.discardResponseBody
     );
 
-    this.httpActivity.channel = null;
-    this.httpActivity.owner = null;
     this.httpActivity = null;
     this.sink = null;
     this.inputStream = null;
@@ -679,6 +677,13 @@ NetworkMonitor.prototype = {
     0x804b000a: "STATUS_WAITING_FOR",
     0x804b0006: "STATUS_RECEIVING_FROM"
   },
+
+  httpDownloadActivities: [
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+    gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+  ],
 
   // Network response bodies are piped through a buffer of the given size (in
   // bytes).
@@ -865,6 +870,44 @@ NetworkMonitor.prototype = {
   },
 
   /**
+   * A helper function for observeActivity.  This does whatever work
+   * is required by a particular http activity event.  Arguments are
+   * the same as for observeActivity.
+   */
+  _dispatchActivity: function (httpActivity, channel, activityType,
+                               activitySubtype, timestamp, extraSizeData,
+                               extraStringData) {
+    let transCodes = this.httpTransactionCodes;
+
+    // Store the time information for this activity subtype.
+    if (activitySubtype in transCodes) {
+      let stage = transCodes[activitySubtype];
+      if (stage in httpActivity.timings) {
+        httpActivity.timings[stage].last = timestamp;
+      } else {
+        httpActivity.timings[stage] = {
+          first: timestamp,
+          last: timestamp,
+        };
+      }
+    }
+
+    switch (activitySubtype) {
+      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
+        this._onRequestBodySent(httpActivity);
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
+        this._onResponseHeader(httpActivity, extraStringData);
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
+        this._onTransactionClose(httpActivity);
+        break;
+      default:
+        break;
+    }
+  },
+
+  /**
    * Begin observing HTTP traffic that originates inside the current tab.
    *
    * @see https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIHttpActivityObserver
@@ -913,33 +956,20 @@ NetworkMonitor.prototype = {
       return;
     }
 
-    let transCodes = this.httpTransactionCodes;
-
-    // Store the time information for this activity subtype.
-    if (activitySubtype in transCodes) {
-      let stage = transCodes[activitySubtype];
-      if (stage in httpActivity.timings) {
-        httpActivity.timings[stage].last = timestamp;
-      } else {
-        httpActivity.timings[stage] = {
-          first: timestamp,
-          last: timestamp,
-        };
-      }
-    }
-
-    switch (activitySubtype) {
-      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
-        this._onRequestBodySent(httpActivity);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
-        this._onResponseHeader(httpActivity, extraStringData);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
-        this._onTransactionClose(httpActivity);
-        break;
-      default:
-        break;
+    // If we're throttling, we must not report events as they arrive
+    // from platform, but instead let the throttler emit the events
+    // after some time has elapsed.
+    if (httpActivity.downloadThrottle &&
+        this.httpDownloadActivities.indexOf(activitySubtype) >= 0) {
+      let callback = this._dispatchActivity.bind(this);
+      httpActivity.downloadThrottle
+        .addActivityCallback(callback, httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
+    } else {
+      this._dispatchActivity(httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
     }
   }),
 
@@ -1297,12 +1327,10 @@ NetworkMonitor.prototype = {
       harTimings.connect = -1;
     }
 
-    if ((timings.STATUS_WAITING_FOR || timings.STATUS_RECEIVING_FROM) &&
-        (timings.STATUS_CONNECTED_TO || timings.STATUS_SENDING_TO)) {
-      harTimings.send = (timings.STATUS_WAITING_FOR ||
-                         timings.STATUS_RECEIVING_FROM).first -
-                        (timings.STATUS_CONNECTED_TO ||
-                         timings.STATUS_SENDING_TO).last;
+    if (timings.STATUS_SENDING_TO) {
+      harTimings.send = timings.STATUS_SENDING_TO.last - timings.STATUS_SENDING_TO.first;
+    } else if (timings.REQUEST_HEADER && timings.REQUEST_BODY_SENT) {
+      harTimings.send = timings.REQUEST_BODY_SENT.last - timings.REQUEST_HEADER.first;
     } else {
       harTimings.send = -1;
     }
