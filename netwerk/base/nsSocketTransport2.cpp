@@ -39,6 +39,7 @@
 
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
+#include "ShutdownLayer.h"
 #endif
 
 /* Following inclusions required for keepalive config not supported by NSPR. */
@@ -1356,6 +1357,20 @@ nsSocketTransport::InitiateSocket()
         opt.value.tos = mQoSBits;
         PR_SetSocketOption(fd, &opt);
     }
+
+#if defined(XP_WIN)
+    // The linger is turned off by default. This is not a hard close, but
+    // closesocket should return immediately and operating system tries to send
+    // remaining data for certain, implementation specific, amount of time.
+    // https://msdn.microsoft.com/en-us/library/ms739165.aspx
+    //
+    // Turn the linger option on an set the interval to 0. This will cause hard
+    // close of the socket.
+    opt.option =  PR_SockOpt_Linger;
+    opt.value.linger.polarity = 1;
+    opt.value.linger.linger = 0;
+    PR_SetSocketOption(fd, &opt);
+#endif
 
     // inform socket transport about this newly created socket...
     rv = mSocketTransportService->AttachSocket(fd, this);
@@ -3062,7 +3077,11 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
 }
 
 void
-nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled) {
+nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled)
+{
+#if defined(XP_WIN)
+    mozilla::net::AttachShutdownLayer(aFd);
+#endif
 
     // We use PRIntervalTime here because we need
     // nsIOService::LastOfflineStateChange time and
