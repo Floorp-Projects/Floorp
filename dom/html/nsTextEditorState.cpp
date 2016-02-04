@@ -539,8 +539,10 @@ nsTextInputSelectionImpl::PageMove(bool aForward, bool aExtend)
   }
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION,
-                                 nsISelectionController::SCROLL_SYNCHRONOUS);
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                 nsISelectionController::SELECTION_FOCUS_REGION,
+                                 nsISelectionController::SCROLL_SYNCHRONOUS |
+                                 nsISelectionController::SCROLL_FOR_CARET_MOVE);
 }
 
 NS_IMETHODIMP
