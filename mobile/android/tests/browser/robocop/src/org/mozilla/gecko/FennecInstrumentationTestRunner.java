@@ -4,12 +4,21 @@
 
 package org.mozilla.gecko;
 
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.test.InstrumentationTestRunner;
 import android.util.Log;
 
+import static android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP;
+import static android.os.PowerManager.FULL_WAKE_LOCK;
+import static android.os.PowerManager.ON_AFTER_RELEASE;
+
 public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
     private static Bundle sArguments;
+    private PowerManager.WakeLock wakeLock;
+    private KeyguardManager.KeyguardLock keyguardLock;
 
     @Override
     public void onCreate(Bundle arguments) {
@@ -27,5 +36,33 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
             Log.e("Robocop", "FennecInstrumentationTestCase.getFennecArguments returns null bundle");
         }
         return sArguments;
+    }
+
+    @Override
+    public void onStart() {
+        final Context app = getTargetContext().getApplicationContext();
+
+        final String name = FennecInstrumentationTestRunner.class.getSimpleName();
+        // Unlock the device so that the tests can input keystrokes.
+        final KeyguardManager keyguard = (KeyguardManager) app.getSystemService(Context.KEYGUARD_SERVICE);
+        // Deprecated in favour of window flags, which aren't appropriate here.
+        keyguardLock = keyguard.newKeyguardLock(name);
+        keyguardLock.disableKeyguard();
+
+        // Wake up the screen.
+        final PowerManager power = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
+        wakeLock = power.newWakeLock(FULL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE, name);
+        wakeLock.acquire();
+
+        super.onStart();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        wakeLock.release();
+        // Deprecated in favour of window flags, which aren't appropriate here.
+        keyguardLock.reenableKeyguard();
     }
 }
