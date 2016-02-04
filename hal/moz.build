@@ -52,6 +52,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gonk/GonkFMRadio.cpp',
         'gonk/GonkSensor.cpp',
         'gonk/GonkSensorsHelpers.cpp',
+        'gonk/GonkSensorsRegistryInterface.cpp',
         'gonk/GonkSwitch.cpp',
         'gonk/SystemService.cpp',
         'gonk/UeventPoller.cpp',
