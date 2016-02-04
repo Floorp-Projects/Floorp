@@ -619,10 +619,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // The frame descriptor is the second field of all Jit frames, pushed before
     // calling the Jit function.  It is a composite value defined in JitFrames.h
-    inline void makeFrameDescriptor(Register frameSizeReg, FrameType type);
+    inline void makeFrameDescriptor(Register frameSizeReg, FrameType type, uint32_t headerSize);
 
     // Push the frame descriptor, based on the statically known framePushed.
-    inline void pushStaticFrameDescriptor(FrameType type);
+    inline void pushStaticFrameDescriptor(FrameType type, uint32_t headerSize);
 
     // Push the callee token of a JSFunction which pointer is stored in the
     // |callee| register. The callee token is packed with a |constructing| flag
