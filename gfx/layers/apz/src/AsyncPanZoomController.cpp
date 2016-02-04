@@ -54,6 +54,7 @@
 #include "mozilla/layers/CompositorParent.h" // for CompositorParent
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
+#include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"             // for unused
 #include "mozilla/FloatingPoint.h"      // for FuzzyEquals*
@@ -1035,6 +1036,9 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+      (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
+
   ReentrantMonitorAutoEnter lock(mMonitor);
   CSSPoint scrollFramePoint = aEvent.mLocalOrigin / GetFrameMetrics().GetZoom();
   // The scrollbar can be transformed with the frame but the pres shell
@@ -1732,6 +1736,25 @@ AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const
   return result;
 }
 
+static ScrollInputMethod
+ScrollInputMethodForWheelDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
+{
+  switch (aDeltaType) {
+    case ScrollWheelInput::SCROLLDELTA_LINE: {
+      return ScrollInputMethod::ApzWheelLine;
+    }
+    case ScrollWheelInput::SCROLLDELTA_PAGE: {
+      return ScrollInputMethod::ApzWheelPage;
+    }
+    case ScrollWheelInput::SCROLLDELTA_PIXEL: {
+      return ScrollInputMethod::ApzWheelPixel;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
+      return ScrollInputMethod::ApzWheelLine;
+  }
+}
+
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
 {
   ParentLayerPoint delta = GetScrollWheelDelta(aEvent);
@@ -1754,6 +1777,9 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
     // Avoid spurious state changes and unnecessary work
     return nsEventStatus_eIgnore;
   }
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+      (uint32_t) ScrollInputMethodForWheelDeltaType(aEvent.mDeltaType));
 
   switch (aEvent.mScrollMode) {
     case ScrollWheelInput::SCROLLMODE_INSTANT: {
@@ -1911,6 +1937,9 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.y, aEvent.mLocalPanDisplacement.y, aEvent.mTime);
 
   HandlePanningUpdate(aEvent.mPanDisplacement);
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+      (uint32_t) ScrollInputMethod::ApzPanGesture);
 
   ScreenPoint panDistance(fabs(aEvent.mPanDisplacement.x), fabs(aEvent.mPanDisplacement.y));
   OverscrollHandoffState handoffState(
@@ -2570,6 +2599,8 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   UpdateWithTouchAtDevicePoint(aEvent);
 
   if (prevTouchPoint != touchPoint) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+        (uint32_t) ScrollInputMethod::ApzTouch);
     OverscrollHandoffState handoffState(
         *CurrentTouchBlock()->GetOverscrollHandoffChain(),
         panDistance,
