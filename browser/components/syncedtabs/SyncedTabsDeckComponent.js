@@ -82,7 +82,7 @@ SyncedTabsDeckComponent.prototype = {
 
     this._deckStore.on("change", state => this._deckView.render(state));
     // Trigger the initial rendering of the deck view
-    this._deckStore.setPanels(Object.values(this.PANELS));
+    this._deckStore.setPanels([for (kv of Iterator(this.PANELS)) kv[1]]); // Object.values only in nightly
     // Set the initial panel to display
     this.updatePanel();
   },
