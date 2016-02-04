@@ -81,28 +81,3 @@ function openLayoutView() {
 function waitForUpdate(inspector) {
   return inspector.once("layoutview-updated");
 }
-
-/**
- * The addTest/runTests function couple provides a simple way to define
- * subsequent test cases in a test file. Example:
- *
- * addTest("what this test does", function*() {
- *   ... actual code for the test ...
- * });
- * addTest("what this second test does", function*() {
- *   ... actual code for the second test ...
- * });
- * runTests().then(...);
- */
-var TESTS = [];
-
-function addTest(message, func) {
-  TESTS.push([message, Task.async(func)]);
-}
-
-var runTests = Task.async(function*(...args) {
-  for (let [message, test] of TESTS) {
-    info("Running new test case: " + message);
-    yield test.apply(null, args);
-  }
-});

@@ -21,13 +21,16 @@ function getStyle(node, property) {
 
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openLayoutView();
+  let {inspector, view} = yield openLayoutView();
 
-  yield runTests(inspector, view);
+  yield testUnits(inspector, view);
+  yield testValueComesFromStyleRule(inspector, view);
+  yield testShorthandsAreParsed(inspector, view);
 });
 
-addTest("Test that entering units works",
-function*(inspector, view) {
+function* testUnits(inspector, view) {
+  info("Test that entering units works");
+
   let node = content.document.getElementById("div1");
   is(getStyle(node, "padding-top"), "", "Should have the right padding");
   yield selectNode("#div1", inspector);
@@ -57,12 +60,14 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-top"), "1em", "Should be the right padding.")
   is(span.textContent, 16, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that we pick up the value from a higher style rule",
-function*(inspector, view) {
+function* testValueComesFromStyleRule(inspector, view) {
+  info("Test that we pick up the value from a higher style rule");
+
   let node = content.document.getElementById("div2");
-  is(getStyle(node, "border-bottom-width"), "", "Should have the right border-bottom-width");
+  is(getStyle(node, "border-bottom-width"), "",
+     "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
   let span = view.doc.querySelector(".layout-border.layout-bottom > span");
@@ -77,16 +82,19 @@ function*(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "0", "Should have the right value in the editor.");
-  is(getStyle(node, "border-bottom-width"), "0px", "Should have updated the border.");
+  is(getStyle(node, "border-bottom-width"), "0px",
+     "Should have updated the border.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "border-bottom-width"), "0px", "Should be the right border-bottom-width.")
+  is(getStyle(node, "border-bottom-width"), "0px",
+     "Should be the right border-bottom-width.");
   is(span.textContent, 0, "Should have the right value in the box model.");
-});
+}
 
-addTest("Test that shorthand properties are parsed correctly",
-function*(inspector, view) {
+function* testShorthandsAreParsed(inspector, view) {
+  info("Test that shorthand properties are parsed correctly");
+
   let node = content.document.getElementById("div3");
   is(getStyle(node, "padding-right"), "", "Should have the right padding");
   yield selectNode("#div3", inspector);
@@ -103,4 +111,4 @@ function*(inspector, view) {
 
   is(getStyle(node, "padding-right"), "", "Should be the right padding.")
   is(span.textContent, 32, "Should have the right value in the box model.");
-});
+}
