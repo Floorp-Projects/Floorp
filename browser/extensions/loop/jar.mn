@@ -12,6 +12,7 @@
 % override chrome://loop/skin/menuPanel@2x.png    chrome://loop/skin/menuPanel-yosemite@2x.png    os=Darwin osversion>=10.10
 % override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-yosemite.png         os=Darwin osversion>=10.10
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-yosemite@2x.png      os=Darwin osversion>=10.10
+# Windows 10+ uses the default toolbar.png
 % override chrome://loop/skin/menuPanel.png       chrome://loop/skin/menuPanel-aero.png           os=WINNT osversion=6
 % override chrome://loop/skin/menuPanel.png       chrome://loop/skin/menuPanel-aero.png           os=WINNT osversion=6.1
 % override chrome://loop/skin/menuPanel@2x.png    chrome://loop/skin/menuPanel-aero@2x.png        os=WINNT osversion=6
@@ -19,13 +20,13 @@
 % override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-XP.png               os=WINNT osversion<6
 % override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-aero.png             os=WINNT osversion=6
 % override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-aero.png             os=WINNT osversion=6.1
-% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win10.png            os=WINNT osversion=6.2
-% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win10.png            os=WINNT osversion=6.3
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win8.png            os=WINNT osversion=6.2
+% override chrome://loop/skin/toolbar.png         chrome://loop/skin/toolbar-win8.png            os=WINNT osversion=6.3
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-XP@2x.png            os=WINNT osversion<6
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-aero@2x.png          os=WINNT osversion=6
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-aero@2x.png          os=WINNT osversion=6.1
-% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win10@2x.png         os=WINNT osversion=6.2
-% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win10@2x.png         os=WINNT osversion=6.3
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win8@2x.png         os=WINNT osversion=6.2
+% override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win8@2x.png         os=WINNT osversion=6.3
   skin/                          (chrome/skin/*)
   content/modules/               (chrome/content/modules/*)
 # We don't package the test/ directory for panels, so do these separately.
