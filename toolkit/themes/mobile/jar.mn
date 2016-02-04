@@ -38,6 +38,10 @@ toolkit.jar:
    skin/classic/global/media/error.png                     (global/media/error.png)
    skin/classic/global/media/throbber.png                  (global/media/throbber.png)
    skin/classic/global/media/videoClickToPlayButton.svg    (global/media/videoClickToPlayButton.svg)
+   skin/classic/global/media/TopLevelImageDocument.css     (global/media/TopLevelImageDocument.css)
+   skin/classic/global/media/TopLevelVideoDocument.css     (global/media/TopLevelVideoDocument.css)
+   skin/classic/global/media/imagedoc-lightnoise.png       (global/media/imagedoc-lightnoise.png)
+   skin/classic/global/media/imagedoc-darknoise.png        (global/media/imagedoc-darknoise.png)
 
    skin/classic/global/icons/Error.png                     (global/icons/Error.png)
 
