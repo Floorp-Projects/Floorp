@@ -1062,7 +1062,11 @@ GetPropertyValuesPairs(JSContext* aCx,
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           nsCSSProps::eEnabledForAllContent);
     if (property != eCSSProperty_UNKNOWN &&
-        nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None) {
+        (nsCSSProps::IsShorthand(property) ||
+         nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None)) {
+      // Only need to check for longhands being animatable, as the
+      // StyleAnimationValue::ComputeValues calls later on will check for
+      // a shorthand's components being animatable.
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
