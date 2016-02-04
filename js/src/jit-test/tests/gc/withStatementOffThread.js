@@ -1,4 +1,4 @@
-if (helperThreadCount() != 0)
+if (helperThreadCount() == 0)
    quit();
 
 var code = `
