@@ -1209,7 +1209,7 @@ const char* gc::ZealModeHelpText =
     "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
     "   10: Incremental GC in multiple slices\n"
     "   11: Verify incremental marking\n"
-    "   12: unused\n"
+    "   12: Always use the individual element post-write barrier, regardless of elements size\n"
     "   13: Check internal hashtables on minor GC\n"
     "   14: Perform a shrinking collection every N allocations\n";
 
