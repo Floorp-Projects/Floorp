@@ -34,11 +34,13 @@ MemoryPanel.prototype = {
     this.panelWin.gHeapAnalysesClient = new HeapAnalysesClient();
 
     yield this.panelWin.gFront.attach();
-    return this._opening = this.panelWin.initialize().then(() => {
+
+    this._opening = this.panelWin.initialize().then(() => {
       this.isReady = true;
       this.emit("ready");
       return this;
     });
+
     return this._opening;
   }),
 
@@ -55,14 +57,18 @@ MemoryPanel.prototype = {
     }
 
     yield this.panelWin.gFront.detach();
-    return this._destroyer = this.panelWin.destroy().then(() => {
+
+    this._destroyer = this.panelWin.destroy().then(() => {
       // Destroy front to ensure packet handler is removed from client
       this.panelWin.gFront.destroy();
       this.panelWin.gHeapAnalysesClient.destroy();
       this.panelWin = null;
+      this._opening = null;
+      this.isReady = false;
       this.emit("destroyed");
-      return this;
     });
+
+    return this._destroyer;
   })
 };
 
