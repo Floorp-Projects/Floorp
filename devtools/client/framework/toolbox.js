@@ -1773,6 +1773,16 @@ Toolbox.prototype = {
   },
 
   /**
+   * Return if the tool is available as a tab (i.e. if it's checked
+   * in the options panel). This is different from Toolbox.getPanel -
+   * a tool could be registered but not yet opened in which case
+   * isToolRegistered would return true but getPanel would return false.
+   */
+  isToolRegistered: function(toolId) {
+    return gDevTools.getToolDefinitionMap().has(toolId);
+  },
+
+  /**
    * Handler for the tool-registered event.
    * @param  {string} event
    *         Name of the event ("tool-registered")
@@ -1782,6 +1792,9 @@ Toolbox.prototype = {
   _toolRegistered: function(event, toolId) {
     let tool = gDevTools.getToolDefinition(toolId);
     this._buildTabForTool(tool);
+    // Emit the event so tools can listen to it from the toolbox level
+    // instead of gDevTools
+    this.emit("tool-registered", toolId);
   },
 
   /**
@@ -1833,6 +1846,9 @@ Toolbox.prototype = {
         key.parentNode.removeChild(key);
       }
     }
+    // Emit the event so tools can listen to it from the toolbox level
+    // instead of gDevTools
+    this.emit("tool-unregistered", toolId);
   },
 
   /**
