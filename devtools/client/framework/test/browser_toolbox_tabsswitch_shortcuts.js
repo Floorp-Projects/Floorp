@@ -5,60 +5,85 @@ requestLongerTimeout(2);
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function*() {
-  let tab = yield addTab("about:blank");
-  let target = TargetFactory.forTab(tab);
-  yield target.makeRemote();
+var toolbox, toolIDs, idIndex, secondTime = false,
+    reverse = false, nextKey = null, prevKey = null;
 
-  let toolIDs = gDevTools.getToolDefinitionArray()
-                         .filter(def => def.isTargetSupported(target))
-                         .map(def => def.id);
+function test() {
+  addTab("about:blank").then(function() {
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    idIndex = 0;
 
-  let toolbox = yield gDevTools.showToolbox(target, toolIDs[0],
-                                            Toolbox.HostType.BOTTOM);
-  let nextKey = toolbox.doc.getElementById("toolbox-next-tool-key")
-                           .getAttribute("key");
-  let prevKey = toolbox.doc.getElementById("toolbox-previous-tool-key")
-                           .getAttribute("key");
+    target.makeRemote().then(() => {
+      toolIDs = gDevTools.getToolDefinitionArray()
+                  .filter(def => def.isTargetSupported(target))
+                  .map(def => def.id);
+      gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
+               .then(testShortcuts);
+    });
+  });
+}
 
-  // Iterate over all tools, starting from options to netmonitor, in normal
-  // order.
-  for (let i = 1; i < toolIDs.length; i++) {
-    yield testShortcuts(toolbox, i, nextKey, toolIDs);
+function testShortcuts(aToolbox, aIndex) {
+  if (aIndex === undefined) {
+    aIndex = 1;
+  } else if (aIndex == toolIDs.length) {
+    aIndex = 0;
+    if (secondTime) {
+      secondTime = false;
+      reverse = true;
+      aIndex = toolIDs.length - 2;
+    }
+    else {
+      secondTime = true;
+    }
+  }
+  else if (aIndex == -1) {
+    aIndex = toolIDs.length - 1;
+    if (secondTime) {
+      tidyUp();
+      return;
+    }
+    secondTime = true;
   }
 
-  // Iterate again, in the same order, starting from netmonitor (so next one is
-  // 0: options).
-  for (let i = 0; i < toolIDs.length; i++) {
-    yield testShortcuts(toolbox, i, nextKey, toolIDs);
+  toolbox = aToolbox;
+  if (!nextKey) {
+    nextKey = toolbox.doc.getElementById("toolbox-next-tool-key")
+                     .getAttribute("key");
+    prevKey = toolbox.doc.getElementById("toolbox-previous-tool-key")
+                     .getAttribute("key");
   }
+  info("Toolbox fired a `ready` event");
 
-  // Iterate over all tools in reverse order, starting from netmonitor to
-  // options.
-  for (let i = toolIDs.length - 2; i >= 0; i--) {
-    yield testShortcuts(toolbox, i, prevKey, toolIDs);
-  }
+  toolbox.once("select", onSelect);
 
-  // Iterate again, in reverse order again, starting from options (so next one
-  // is length-1: netmonitor).
-  for (let i = toolIDs.length - 1; i >= 0; i--) {
-    yield testShortcuts(toolbox, i, prevKey, toolIDs);
-  }
-
-  yield toolbox.destroy();
-  gBrowser.removeCurrentTab();
-});
-
-function* testShortcuts(toolbox, index, key, toolIDs) {
-  info("Testing shortcut to switch to tool " + index + ":" + toolIDs[index] +
+  let key = (reverse ? prevKey: nextKey);
+  let modifiers = {
+    accelKey: true
+  };
+  idIndex = aIndex;
+  info("Testing shortcut to switch to tool " + aIndex + ":" + toolIDs[aIndex] +
        " using key " + key);
+  EventUtils.synthesizeKey(key, modifiers, toolbox.doc.defaultView);
+}
 
-  let onToolSelected = toolbox.once("select");
-  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.doc.defaultView);
-  let id = yield onToolSelected;
-
+function onSelect(event, id) {
   info("toolbox-select event from " + id);
 
-  is(toolIDs.indexOf(id), index,
+  is(toolIDs.indexOf(id), idIndex,
      "Correct tool is selected on pressing the shortcut for " + id);
+  // Execute soon to reset the stack trace.
+  executeSoon(() => {
+    testShortcuts(toolbox, idIndex + (reverse ? -1: 1));
+  });
+}
+
+function tidyUp() {
+  toolbox.destroy().then(function() {
+    gBrowser.removeCurrentTab();
+
+    toolbox = toolIDs = idIndex = Toolbox = secondTime = reverse = nextKey =
+      prevKey = null;
+    finish();
+  });
 }
