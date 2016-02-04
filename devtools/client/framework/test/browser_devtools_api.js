@@ -39,11 +39,11 @@ function runTests1(aTab) {
   };
 
   ok(gDevTools, "gDevTools exists");
-  is(gDevTools.getToolDefinitionMap().has(toolId1), false,
+  ok(!gDevTools.getToolDefinitionMap().has(toolId1),
     "The tool is not registered");
 
   gDevTools.registerTool(toolDefinition);
-  is(gDevTools.getToolDefinitionMap().has(toolId1), true,
+  ok(gDevTools.getToolDefinitionMap().has(toolId1),
     "The tool is registered");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -98,11 +98,11 @@ function runTests2() {
     },
   };
 
-  is(gDevTools.getToolDefinitionMap().has(toolId2), false,
+  ok(!gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is not registered");
 
   gDevTools.registerTool(toolDefinition);
-  is(gDevTools.getToolDefinitionMap().has(toolId2), true,
+  ok(gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is registered");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -149,7 +149,7 @@ function runTests2() {
   });
 }
 
-function continueTests(toolbox, panel) {
+var continueTests = Task.async(function*(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
@@ -160,24 +160,42 @@ function continueTests(toolbox, panel) {
     "The builtin tool tabs do have the invertable attribute");
 
   let toolDefinitions = gDevTools.getToolDefinitionMap();
-  is(toolDefinitions.has(toolId2), true, "The tool is in gDevTools");
+  ok(toolDefinitions.has(toolId2), "The tool is in gDevTools");
 
   let toolDefinition = toolDefinitions.get(toolId2);
   is(toolDefinition.id, toolId2, "toolDefinition id is correct");
 
-  gDevTools.unregisterTool(toolId2);
-  is(gDevTools.getToolDefinitionMap().has(toolId2), false,
+  info("Testing toolbox tool-unregistered event");
+  let toolSelected = toolbox.once("select");
+  let unregisteredTool = yield new Promise(resolve => {
+    toolbox.once("tool-unregistered", (e,id) => resolve(id));
+    gDevTools.unregisterTool(toolId2);
+  });
+  yield toolSelected;
+
+  is(unregisteredTool, toolId2, "Event returns correct id");
+  ok(!toolbox.isToolRegistered(toolId2),
+    "Toolbox: The tool is not registered");
+  ok(!gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is no longer registered");
 
-  // Wait for unregisterTool to select the next tool before
-  // attempting to destroy.
-  toolbox.on("select", function selectListener (_, id) {
-    if (id !== "test-tool") {
-      toolbox.off("select", selectListener);
-      destroyToolbox(toolbox);
-    }
+  info("Testing toolbox tool-registered event");
+  let registeredTool = yield new Promise(resolve => {
+    toolbox.once("tool-registered", (e,id) => resolve(id));
+    gDevTools.registerTool(toolDefinition);
   });
-}
+
+  is(registeredTool, toolId2, "Event returns correct id");
+  ok(toolbox.isToolRegistered(toolId2),
+    "Toolbox: The tool is registered");
+  ok(gDevTools.getToolDefinitionMap().has(toolId2),
+    "The tool is registered");
+
+  info("Unregistering tool")
+  gDevTools.unregisterTool(toolId2);
+
+  destroyToolbox(toolbox);
+});
 
 function destroyToolbox(toolbox) {
   toolbox.destroy().then(function() {

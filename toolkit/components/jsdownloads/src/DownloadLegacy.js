@@ -243,7 +243,7 @@ DownloadLegacyTransfer.prototype = {
       }
 
       // Start the download before allowing it to be controlled.  Ignore errors.
-      aDownload.start().then(null, () => {});
+      aDownload.start().catch(() => {});
 
       // Start processing all the other events received through nsITransfer.
       this._deferDownload.resolve(aDownload);

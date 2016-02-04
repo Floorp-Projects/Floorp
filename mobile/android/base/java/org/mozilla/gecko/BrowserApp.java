@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import android.Manifest;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -682,6 +683,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -1163,7 +1165,12 @@ public class BrowserApp extends GeckoApp
                     final String title = tab.getDisplayTitle();
 
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url);
+                        ThreadUtils.postToBackgroundThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                GeckoAppShell.createShortcut(title, url);
+                            }
+                        });
                     }
                 }
             }
@@ -1299,13 +1306,13 @@ public class BrowserApp extends GeckoApp
                 return true;
             }
 
-            new AsyncTask<Void, Void, Void>() {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
-                protected Void doInBackground(Void... voids) {
+                public void run() {
                     GeckoAppShell.createShortcut(title, url);
-                    return null;
+
                 }
-            }.execute();
+            });
 
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
                 getResources().getResourceEntryName(itemId));
@@ -1377,6 +1384,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -1659,6 +1667,10 @@ public class BrowserApp extends GeckoApp
                 }
             });
 
+        } else if ("Experiments:GetActive".equals(event)) {
+            final List<String> experiments = SwitchBoard.getActiveExperiments(this);
+            final JSONArray json = new JSONArray(experiments);
+            callback.sendSuccess(json.toString());
         } else if ("Favicon:CacheLoad".equals(event)) {
             final String url = message.getString("url");
             getFaviconFromCache(callback, url);
@@ -3924,7 +3936,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void uploadTelemetry(final GeckoProfile profile) {
-        if (!TelemetryConstants.UPLOAD_ENABLED || profile.inGuestMode()) {
+        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(this, profile)) {
             return;
         }
 

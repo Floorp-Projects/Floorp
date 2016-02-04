@@ -4,6 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'optimizations-item.js',
-    'optimizations.js',
+    'jit-optimizations-item.js',
+    'jit-optimizations.js',
 )
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
