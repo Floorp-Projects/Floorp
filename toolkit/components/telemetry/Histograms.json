@@ -6868,6 +6868,13 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Scratchpad been opened via the toolbox button?"
   },
+  "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_BOOLEAN": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Scratchpad standalone window been opened?",
+    "bug_numbers": [1214352]
+  },
   "DEVTOOLS_RESPONSIVE_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -7043,6 +7050,13 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Scratchpad been opened via the toolbox button?"
+  },
+  "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_PER_USER_FLAG": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Scratchpad standalone window been opened?",
+    "bug_numbers": [1214352]
   },
   "DEVTOOLS_RESPONSIVE_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -7265,6 +7279,15 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has Scratchpad been active (seconds)"
+  },
+  "DEVTOOLS_SCRATCHPAD_WINDOW_TIME_ACTIVE_SECONDS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has Scratchpad standalone window been active (seconds)",
+    "bug_numbers": [1214352]
   },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
