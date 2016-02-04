@@ -368,7 +368,8 @@ var gSyncUI = {
       try {
         let lastSync = new Date(Services.prefs.getCharPref("services.sync.lastSync"));
         // Show the day-of-week and time (HH:MM) of last sync
-        let lastSyncDateString = lastSync.toLocaleFormat("%a %H:%M");
+        let lastSyncDateString = lastSync.toLocaleDateString(undefined,
+          {weekday: 'long', hour: 'numeric', minute: 'numeric'});
         tooltiptext = this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
       }
       catch (e) {
