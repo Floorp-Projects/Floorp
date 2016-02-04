@@ -242,12 +242,12 @@
 
             var children = this.childNodes;
 
-            iter:
             // iterate over the ids to use on the toolbar
             for (let i = 0; i < ids.length; i++) {
-              let  id = ids[i];
+              let id = ids[i];
               // iterate over the existing nodes on the toolbar. nodeidx is the
               // spot where we want to insert items.
+              let found = false;
               for (let c = nodeidx; c < children.length; c++) {
                 let curNode = children[c];
                 if (this._idFromNode(curNode) == id) {
@@ -260,8 +260,13 @@
 
                   added[curNode.id] = true;
                   nodeidx++;
-                  continue iter; // move on to the next id
+                  found = true;
+                  break;
                 }
+              }
+              if (found) {
+                // move on to the next id
+                continue;
               }
 
               // the node isn't already on the toolbar, so add a new one.
