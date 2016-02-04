@@ -350,12 +350,18 @@ var CastingApps = {
   },
 
   _getContentTypeForURI: function(aURI, aElement, aCallback) {
-    let channel = Services.io.newChannelFromURI2(aURI,
-                                                 aElement,
-                                                 null, // aLoadingPrincipal
-                                                 null, // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+    let channel;
+    try {
+     channel = Services.io.newChannelFromURI2(aURI,
+                                              aElement,
+                                              null, // aLoadingPrincipal
+                                              null, // aTriggeringPrincipal
+                                              Ci.nsILoadInfo.SEC_NORMAL,
+                                              Ci.nsIContentPolicy.TYPE_OTHER);
+     } catch(e) {
+      aCallback(null);
+      return;
+     }
 
     let listener = {
       onStartRequest: function(request, context) {
@@ -376,7 +382,12 @@ var CastingApps = {
       onStopRequest: function(request, context, statusCode)  {},
       onDataAvailable: function(request, context, stream, offset, count) {}
     };
-    channel.asyncOpen(listener, null)
+
+    if (channel) {
+      channel.asyncOpen(listener, null);
+    } else {
+      aCallback(null);
+    }
   },
 
   // Because this method uses a callback, make sure we return ASAP if we know
@@ -441,22 +452,30 @@ var CastingApps = {
       asyncURIs.push(sourceURI);
     }
 
-    // If we didn't find a good URI directly, let's look using async methods
+    // Helper method that walks the array of possible URIs, fetching the mimetype as we go.
     // As soon as we find a good sourceURL, avoid firing the callback any further
-    aCallback.fired = false;
-    for (let sourceURI of asyncURIs) {
+    var _getContentTypeForURIs = (aURIs) => {
       // Do an async fetch to figure out the mimetype of the source video
+      let sourceURI = aURIs.pop();
       this._getContentTypeForURI(sourceURI, aElement, (aType) => {
-        if (!aCallback.fired && this.allowableMimeType(aType, aTypes)) {
-          aCallback.fired = true;
+        if (this.allowableMimeType(aType, aTypes)) {
+          // We found a supported mimetype.
           aCallback({ element: aElement, source: sourceURI.spec, poster: posterURL, sourceURI: sourceURI, type: aType });
+        } else {
+          // This URI was not a supported mimetype, so let's try the next, if we have more.
+          if (aURIs.length > 0) {
+            _getContentTypeForURIs(aURIs);
+          } else {
+            // We were not able to find a supported mimetype.
+            aCallback(null);
+          }
         }
       });
     }
 
-    // If we didn't find any castable source, let's send back a signal
-    if (!aCallback.fired) {
-      aCallback(null);
+    // If we didn't find a good URI directly, let's look using async methods.
+    if (asyncURIs.length > 0) {
+      _getContentTypeForURIs(asyncURIs);
     }
   },
 

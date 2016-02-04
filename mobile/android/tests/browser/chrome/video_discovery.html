@@ -60,6 +60,12 @@
       <source src="/simple-video-mp4" type="video/mp4; codecs='avc1.42E01E, mp4a.40.2'">
     </video>
 
+    <!-- PASS: src uses a mp4 mimetype from the server -->
+    <video id="simple-fetch-pass" src="http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_discovery.sjs?type=video/mp4"></video>
+
+    <!-- FAIL: src uses a non-video mimetype from the server -->
+    <video id="simple-fetch-fail" src="http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_discovery.sjs?type=image/png"></video>
+
     <!-- PASS: div overlay covers a video with mp4 src -->
     <div id="video-box">
       <div id="video-overlay"></div>
