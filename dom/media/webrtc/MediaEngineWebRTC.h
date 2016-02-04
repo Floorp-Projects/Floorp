@@ -140,8 +140,8 @@ public:
   virtual int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
                                      char aStrGuidUTF8[128]) = 0;
   virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
-  virtual void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
-  virtual void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) = 0;
+  virtual void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) = 0;
+  virtual void StopRecording(SourceMediaStream *aStream) = 0;
   virtual int SetRecordingDevice(int aIndex) = 0;
 
 protected:
@@ -155,7 +155,7 @@ class AudioInputCubeb final : public AudioInput
 {
 public:
   explicit AudioInputCubeb(webrtc::VoiceEngine* aVoiceEngine, int aIndex = 0) :
-    AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUse(false)
+    AudioInput(aVoiceEngine), mSelectedDevice(aIndex), mInUseCount(0)
   {
     if (!mDeviceIndexes) {
       mDeviceIndexes = new nsTArray<int>;
@@ -216,25 +216,29 @@ public:
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener)
   {
     MOZ_ASSERT(mDevices);
 
-    ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
-    ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
-    if (ptrVoERender) {
-      ptrVoERender->SetExternalRecordingStatus(true);
+    if (mInUseCount == 0) {
+      ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
+      ptrVoERender = webrtc::VoEExternalMedia::GetInterface(mVoiceEngine);
+      if (ptrVoERender) {
+        ptrVoERender->SetExternalRecordingStatus(true);
+      }
+      mAnyInUse = true;
     }
-    aGraph->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
-    mInUse = true;
-    mAnyInUse = true;
+    mInUseCount++;
+    // Always tell the stream we're using it for input
+    aStream->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
   }
 
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener)
+  void StopRecording(SourceMediaStream *aStream)
   {
-    aGraph->CloseAudioInput(aListener);
-    mInUse = false;
-    mAnyInUse = false;
+    aStream->CloseAudioInput();
+    if (--mInUseCount == 0) {
+      mAnyInUse = false;
+    }
   }
 
   int SetRecordingDevice(int aIndex)
@@ -249,7 +253,7 @@ public:
 
 protected:
   ~AudioInputCubeb() {
-    MOZ_RELEASE_ASSERT(!mInUse);
+    MOZ_RELEASE_ASSERT(mInUseCount == 0);
   }
 
 private:
@@ -306,7 +310,7 @@ private:
   // for this - and be careful of threading access.  The mappings need to
   // updated on each re-enumeration.
   int mSelectedDevice;
-  bool mInUse; // for assertions about listener lifetime
+  uint32_t mInUseCount;
 
   // pointers to avoid static constructors
   static nsTArray<int>* mDeviceIndexes;
@@ -353,8 +357,8 @@ public:
     return 0;
   }
 
-  void StartRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
-  void StopRecording(MediaStreamGraph *aGraph, AudioDataListener *aListener) {}
+  void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) {}
+  void StopRecording(SourceMediaStream *aStream) {}
 
   int SetRecordingDevice(int aIndex)
   {
