@@ -43,7 +43,7 @@ function TabListView(window, props) {
   this.container = this._doc.createElement("div");
 
   this._setupContextMenu();
-};
+}
 
 TabListView.prototype = {
   render(state) {

@@ -14,7 +14,7 @@ var gGetBoolPref = Services.prefs.getBoolPref;
 
 function run_test() {
   run_next_test();
-};
+}
 
 do_register_cleanup(cleanup);
 
@@ -25,7 +25,7 @@ function cleanup() {
   }
   Services.prefs.clearUserPref("browser.migration.version");
   Services.prefs.clearUserPref(AUTOCOMPLETE_PREF);
-};
+}
 
 function setupBehaviorAndMigrate(aDefaultBehavior, aAutocompleteEnabled = true) {
   cleanup();
@@ -35,7 +35,7 @@ function setupBehaviorAndMigrate(aDefaultBehavior, aAutocompleteEnabled = true) 
   Services.prefs.setBoolPref(AUTOCOMPLETE_PREF, aAutocompleteEnabled);
   // Simulate a migration.
   gBrowserGlue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_BROWSERGLUE_TEST);
-};
+}
 
 add_task(function*() {
   do_print("Migrate default.behavior = 0");

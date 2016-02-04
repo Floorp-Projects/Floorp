@@ -2630,7 +2630,7 @@ function run_single_closure_tests(library, abi, suffix)
     if (fail)
       throw "Just following orders, sir!";
     return bignum1;
-  };
+  }
   var closure64 = fn_64_t(closure_fn_64, null, bignum2);
   do_check_eq(ctypes.UInt64.compare(closure64(false), bignum1), 0);
   do_check_eq(ctypes.UInt64.compare(closure64(true), bignum2), 0);

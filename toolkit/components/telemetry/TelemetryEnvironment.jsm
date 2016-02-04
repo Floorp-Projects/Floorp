@@ -894,7 +894,7 @@ EnvironmentCache.prototype = {
     Services.obs.removeObserver(this, COMPOSITOR_CREATED_TOPIC);
     try {
       Services.obs.removeObserver(this, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
-    } catch(ex) {};
+    } catch(ex) {}
   },
 
   observe: function (aSubject, aTopic, aData) {

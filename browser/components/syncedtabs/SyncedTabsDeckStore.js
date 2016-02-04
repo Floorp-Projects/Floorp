@@ -24,7 +24,7 @@ this.EXPORTED_SYMBOLS = [
 function SyncedTabsDeckStore() {
   EventEmitter.call(this);
   this._panels = [];
-};
+}
 
 Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
   _change(isUpdatable = false) {

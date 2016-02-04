@@ -335,6 +335,6 @@ function run_test_2() {
 
         do_test_finished();
       }));
-    };
+    }
   });
 }

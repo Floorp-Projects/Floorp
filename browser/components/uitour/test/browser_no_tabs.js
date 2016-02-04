@@ -44,7 +44,7 @@ function destroyHiddenBrowser(aFrame, aBrowser) {
 
   // Take care of the frame holding our invisible browser.
   aFrame.destroy();
-};
+}
 
 /**
  * Test that UITour works when called when no tabs are available (e.g., when using windowless

@@ -159,7 +159,7 @@ function hasClass(node, className) {
     } else {
         return false;
     }
-};
+}
 
 
 // Add a class to an node
@@ -167,7 +167,7 @@ function addClass(node, className) {
     if (!hasClass(node, className)) {
         node.className += " " + className;
     }
-};
+}
 
 
 // Removes a class from an node
@@ -176,4 +176,4 @@ function removeClass(node, className) {
         var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
         node.className = node.className.replace(reg, ' ');
     }
-};
+}

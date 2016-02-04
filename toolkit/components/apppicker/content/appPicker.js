@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
-function AppPicker() {};
+function AppPicker() {}
 
 AppPicker.prototype =
 {

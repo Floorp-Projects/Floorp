@@ -631,7 +631,7 @@ var pktUIMessaging = (function() {
      */
     function sendMessageToPanel(panelId, messageId, payload) {
 
-        if (!isPanelIdValid(panelId)) { return; };
+        if (!isPanelIdValid(panelId)) { return; }
 
         var panelFrame = pktUI.getPanelFrame();
         if (!isPocketPanelFrameValid(panelFrame)) { return; }

@@ -27,7 +27,7 @@ function setup_crash() {
   while(true) {
     Services.tm.currentThread.processNextEvent(true);
   }
-};
+}
 
 
 function after_crash(mdump, extra) {

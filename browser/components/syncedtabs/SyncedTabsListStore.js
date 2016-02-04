@@ -27,7 +27,7 @@ function SyncedTabsListStore(SyncedTabs) {
   this._selectedRow = [-1, -1];
   this.filter = "";
   this.inputFocused = false;
-};
+}
 
 Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
   // This internal method triggers the "change" event that views
