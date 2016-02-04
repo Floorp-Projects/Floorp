@@ -243,6 +243,11 @@ public:
   static bool HasCriticalDisplayPort(nsIContent* aContent);
 
   /**
+   * Remove the displayport for the given element.
+   */
+  static void RemoveDisplayPort(nsIContent* aContent);
+
+  /**
    * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */
