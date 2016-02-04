@@ -14,6 +14,22 @@
 using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE
 
+#define ENSURE_HID_DEV_IS_CONNECTED                                           \
+  do {                                                                        \
+    if(!IsConnected()) {                                                      \
+      BT_LOGR("Device is not connected");                                     \
+      return;                                                                 \
+    }                                                                         \
+  } while(0)                                                                  \
+
+#define ENSURE_HID_INTF_IS_EXISTED                                            \
+  do {                                                                        \
+    if(!sBluetoothHidInterface) {                                             \
+      BT_LOGR("sBluetoothHidInterface is null");                              \
+      return;                                                                 \
+    }                                                                         \
+  } while(0)                                                                  \
+
 namespace {
   StaticRefPtr<BluetoothHidManager> sBluetoothHidManager;
   static BluetoothHidInterface* sBluetoothHidInterface = nullptr;
@@ -521,6 +537,98 @@ BluetoothHidManager::OnDisconnect(const nsAString& aErrorStr)
 
   mController->NotifyCompletion(aErrorStr);
   Reset();
+}
+
+class BluetoothHidManager::VirtualUnplugResultHandler final
+  : public BluetoothHidResultHandler
+{
+public:
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothHidInterface::VirtualUnplug failed: %d", (int)aStatus);
+  }
+};
+
+void
+BluetoothHidManager::VirtualUnplug()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_HID_DEV_IS_CONNECTED;
+  MOZ_ASSERT(!mDeviceAddress.IsCleared());
+  ENSURE_HID_INTF_IS_EXISTED;
+
+  sBluetoothHidInterface->VirtualUnplug(
+    mDeviceAddress, new VirtualUnplugResultHandler());
+}
+
+class BluetoothHidManager::GetReportResultHandler final
+  : public BluetoothHidResultHandler
+{
+public:
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothHidInterface::GetReport failed: %d", (int)aStatus);
+  }
+};
+
+void
+BluetoothHidManager::GetReport(const BluetoothHidReportType& aReportType,
+                               const uint8_t aReportId,
+                               const uint16_t aBufSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_HID_DEV_IS_CONNECTED;
+  MOZ_ASSERT(!mDeviceAddress.IsCleared());
+  ENSURE_HID_INTF_IS_EXISTED;
+
+  sBluetoothHidInterface->GetReport(
+    mDeviceAddress, aReportType, aReportId, aBufSize,
+    new GetReportResultHandler());
+}
+
+class BluetoothHidManager::SetReportResultHandler final
+  : public BluetoothHidResultHandler
+{
+public:
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothHidInterface::SetReport failed: %d", (int)aStatus);
+  }
+};
+
+void
+BluetoothHidManager::SetReport(const BluetoothHidReportType& aReportType,
+                               const BluetoothHidReport& aReport)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_HID_DEV_IS_CONNECTED;
+  MOZ_ASSERT(!mDeviceAddress.IsCleared());
+  ENSURE_HID_INTF_IS_EXISTED;
+
+  sBluetoothHidInterface->SetReport(
+    mDeviceAddress, aReportType, aReport, new SetReportResultHandler());
+}
+
+class BluetoothHidManager::SendDataResultHandler final
+  : public BluetoothHidResultHandler
+{
+public:
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothHidInterface::SendData failed: %d", (int)aStatus);
+  }
+};
+
+void
+BluetoothHidManager::SendData(const uint16_t aDataLen, const uint8_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ENSURE_HID_DEV_IS_CONNECTED;
+  MOZ_ASSERT(!mDeviceAddress.IsCleared());
+  ENSURE_HID_INTF_IS_EXISTED;
+
+  sBluetoothHidInterface->SendData(
+    mDeviceAddress, aDataLen, aData, new SendDataResultHandler());
 }
 
 void
