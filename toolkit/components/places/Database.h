@@ -14,6 +14,7 @@
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/Attributes.h"
 #include "nsIEventTarget.h"
+#include "Shutdown.h"
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
@@ -41,11 +42,7 @@
 
 // Simulate profile-before-change. This topic may only be used by
 // calling `observe` directly on the database. Used for testing only.
-#define TOPIC_SIMULATE_PLACES_MUST_CLOSE_1 "test-simulate-places-shutdown-phase-1"
-
-// Simulate profile-before-change. This topic may only be used by
-// calling `observe` directly on the database. Used for testing only.
-#define TOPIC_SIMULATE_PLACES_MUST_CLOSE_2 "test-simulate-places-shutdown-phase-2"
+#define TOPIC_SIMULATE_PLACES_SHUTDOWN "test-simulate-places-shutdown"
 
 class nsIRunnable;
 
@@ -64,7 +61,8 @@ enum JournalMode {
 , JOURNAL_WAL
 };
 
-class DatabaseShutdown;
+class ClientsShutdownBlocker;
+class ConnectionShutdownBlocker;
 
 class Database final : public nsIObserver
                      , public nsSupportsWeakReference
@@ -87,7 +85,7 @@ public:
   /**
    * The AsyncShutdown client used by clients of this API to be informed of shutdown.
    */
-  already_AddRefed<nsIAsyncShutdownClient> GetConnectionShutdown();
+  already_AddRefed<nsIAsyncShutdownClient> GetClientsShutdown();
 
   /**
    * Getter to use when instantiating the class.
@@ -269,7 +267,7 @@ protected:
 
   nsresult UpdateBookmarkRootTitles();
 
-  friend class DatabaseShutdown;
+  friend class ConnectionShutdownBlocker;
 
 private:
   ~Database();
@@ -292,19 +290,21 @@ private:
   bool mClosed;
 
   /**
-   * Determine at which shutdown phase we need to start shutting down
-   * the Database.
+   * Phases for shutting down the Database.
+   * See Shutdown.h for further details about the shutdown procedure.
    */
-  already_AddRefed<nsIAsyncShutdownClient> GetShutdownPhase();
+  already_AddRefed<nsIAsyncShutdownClient> GetProfileChangeTeardownPhase();
+  already_AddRefed<nsIAsyncShutdownClient> GetProfileBeforeChangePhase();
 
   /**
-   * A companion object in charge of shutting down the mozStorage
-   * connection once all clients have disconnected.
+   * Blockers in charge of waiting for the Places clients and then shutting
+   * down the mozStorage connection.
+   * See Shutdown.h for further details about the shutdown procedure.
    *
-   * Cycles between `this` and `mConnectionShutdown` are broken
-   * in `Shutdown()`.
+   * Cycles with these are broken in `Shutdown()`.
    */
-  RefPtr<DatabaseShutdown> mConnectionShutdown;
+  RefPtr<ClientsShutdownBlocker> mClientsShutdown;
+  RefPtr<ConnectionShutdownBlocker> mConnectionShutdown;
 };
 
 } // namespace places
