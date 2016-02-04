@@ -311,7 +311,7 @@ function would return true for |Actor[]|."""
 
 def _abortIfFalse(cond, msg):
     return StmtExpr(ExprCall(
-        ExprVar('MOZ_ASSERT'),
+        ExprVar('MOZ_DIAGNOSTIC_ASSERT'),
         [ cond, ExprLiteral.String(msg) ]))
 
 def _runtimeAbort(msg):
