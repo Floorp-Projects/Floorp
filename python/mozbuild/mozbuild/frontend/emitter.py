@@ -380,6 +380,35 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._handle_libraries(context):
             yield obj
 
+    def _handle_programs(self, context):
+        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
+            program = context.get(kind)
+            if program:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" as %s name, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program)
+                self._linkage.append((context, self._binaries[program],
+                    kind.replace('PROGRAM', 'USE_LIBS')))
+
+        for kind, cls in [
+                ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('CPP_UNIT_TESTS', SimpleProgram),
+                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
+            for program in context[kind]:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" in %s, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program,
+                    is_unit_test=kind == 'CPP_UNIT_TESTS')
+                self._linkage.append((context, self._binaries[program],
+                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
+                    else 'USE_LIBS'))
+
     def _handle_libraries(self, context):
         host_libname = context.get('HOST_LIBRARY_NAME')
         libname = context.get('LIBRARY_NAME')
@@ -558,6 +587,110 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError('LIBRARY_DEFINES needs a '
                         'LIBRARY_NAME to take effect', context)
                 lib.lib_defines.update(lib_defines)
+
+    def _process_sources(self, context, passthru):
+        sources = defaultdict(list)
+        gen_sources = defaultdict(list)
+        all_flags = {}
+        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
+            srcs = sources[symbol]
+            gen_srcs = gen_sources[symbol]
+            context_srcs = context.get(symbol, [])
+            for f in context_srcs:
+                full_path = f.full_path
+                if isinstance(f, SourcePath):
+                    srcs.append(full_path)
+                else:
+                    assert isinstance(f, Path)
+                    gen_srcs.append(full_path)
+                if symbol == 'SOURCES':
+                    flags = context_srcs[f]
+                    if flags:
+                        all_flags[full_path] = flags
+
+                if isinstance(f, SourcePath) and not os.path.exists(full_path):
+                    raise SandboxValidationError('File listed in %s does not '
+                        'exist: \'%s\'' % (symbol, full_path), context)
+
+        # HOST_SOURCES and UNIFIED_SOURCES only take SourcePaths, so
+        # there should be no generated source in here
+        assert not gen_sources['HOST_SOURCES']
+        assert not gen_sources['UNIFIED_SOURCES']
+
+        no_pgo = context.get('NO_PGO')
+        no_pgo_sources = [f for f, flags in all_flags.iteritems()
+                          if flags.no_pgo]
+        if no_pgo:
+            if no_pgo_sources:
+                raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo '
+                    'cannot be set at the same time', context)
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo
+        if no_pgo_sources:
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo_sources
+
+        # A map from "canonical suffixes" for a particular source file
+        # language to the range of suffixes associated with that language.
+        #
+        # We deliberately don't list the canonical suffix in the suffix list
+        # in the definition; we'll add it in programmatically after defining
+        # things.
+        suffix_map = {
+            '.s': set(['.asm']),
+            '.c': set(),
+            '.m': set(),
+            '.mm': set(),
+            '.cpp': set(['.cc', '.cxx']),
+            '.rs': set(),
+            '.S': set(),
+        }
+
+        # The inverse of the above, mapping suffixes to their canonical suffix.
+        canonicalized_suffix_map = {}
+        for suffix, alternatives in suffix_map.iteritems():
+            alternatives.add(suffix)
+            for a in alternatives:
+                canonicalized_suffix_map[a] = suffix
+
+        def canonical_suffix_for_file(f):
+            return canonicalized_suffix_map[mozpath.splitext(f)[1]]
+
+        # A map from moz.build variables to the canonical suffixes of file
+        # kinds that can be listed therein.
+        all_suffixes = list(suffix_map.keys())
+        varmap = dict(
+            SOURCES=(Sources, GeneratedSources, all_suffixes),
+            HOST_SOURCES=(HostSources, None, ['.c', '.mm', '.cpp']),
+            UNIFIED_SOURCES=(UnifiedSources, None, ['.c', '.mm', '.cpp']),
+        )
+
+        for variable, (klass, gen_klass, suffixes) in varmap.items():
+            allowed_suffixes = set().union(*[suffix_map[s] for s in suffixes])
+
+            # First ensure that we haven't been given filetypes that we don't
+            # recognize.
+            for f in itertools.chain(sources[variable], gen_sources[variable]):
+                ext = mozpath.splitext(f)[1]
+                if ext not in allowed_suffixes:
+                    raise SandboxValidationError(
+                        '%s has an unknown file type.' % f, context)
+
+            for srcs, cls in ((sources[variable], klass),
+                              (gen_sources[variable], gen_klass)):
+                # Now sort the files to let groupby work.
+                sorted_files = sorted(srcs, key=canonical_suffix_for_file)
+                for canonical_suffix, files in itertools.groupby(
+                        sorted_files, canonical_suffix_for_file):
+                    arglist = [context, list(files), canonical_suffix]
+                    if (variable.startswith('UNIFIED_') and
+                            'FILES_PER_UNIFIED_FILE' in context):
+                        arglist.append(context['FILES_PER_UNIFIED_FILE'])
+                    yield cls(*arglist)
+
+        for f, flags in all_flags.iteritems():
+            if flags.flags:
+                ext = mozpath.splitext(f)[1]
+                yield PerSourceFlag(context, f, flags.flags)
+
 
     def emit_from_context(self, context):
         """Convert a Context to tree metadata objects.
@@ -793,109 +926,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         return sub
 
-    def _process_sources(self, context, passthru):
-        sources = defaultdict(list)
-        gen_sources = defaultdict(list)
-        all_flags = {}
-        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
-            srcs = sources[symbol]
-            gen_srcs = gen_sources[symbol]
-            context_srcs = context.get(symbol, [])
-            for f in context_srcs:
-                full_path = f.full_path
-                if isinstance(f, SourcePath):
-                    srcs.append(full_path)
-                else:
-                    assert isinstance(f, Path)
-                    gen_srcs.append(full_path)
-                if symbol == 'SOURCES':
-                    flags = context_srcs[f]
-                    if flags:
-                        all_flags[full_path] = flags
-
-                if isinstance(f, SourcePath) and not os.path.exists(full_path):
-                    raise SandboxValidationError('File listed in %s does not '
-                        'exist: \'%s\'' % (symbol, full_path), context)
-
-        # HOST_SOURCES and UNIFIED_SOURCES only take SourcePaths, so
-        # there should be no generated source in here
-        assert not gen_sources['HOST_SOURCES']
-        assert not gen_sources['UNIFIED_SOURCES']
-
-        no_pgo = context.get('NO_PGO')
-        no_pgo_sources = [f for f, flags in all_flags.iteritems()
-                          if flags.no_pgo]
-        if no_pgo:
-            if no_pgo_sources:
-                raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo '
-                    'cannot be set at the same time', context)
-            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo
-        if no_pgo_sources:
-            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo_sources
-
-        # A map from "canonical suffixes" for a particular source file
-        # language to the range of suffixes associated with that language.
-        #
-        # We deliberately don't list the canonical suffix in the suffix list
-        # in the definition; we'll add it in programmatically after defining
-        # things.
-        suffix_map = {
-            '.s': set(['.asm']),
-            '.c': set(),
-            '.m': set(),
-            '.mm': set(),
-            '.cpp': set(['.cc', '.cxx']),
-            '.rs': set(),
-            '.S': set(),
-        }
-
-        # The inverse of the above, mapping suffixes to their canonical suffix.
-        canonicalized_suffix_map = {}
-        for suffix, alternatives in suffix_map.iteritems():
-            alternatives.add(suffix)
-            for a in alternatives:
-                canonicalized_suffix_map[a] = suffix
-
-        def canonical_suffix_for_file(f):
-            return canonicalized_suffix_map[mozpath.splitext(f)[1]]
-
-        # A map from moz.build variables to the canonical suffixes of file
-        # kinds that can be listed therein.
-        all_suffixes = list(suffix_map.keys())
-        varmap = dict(
-            SOURCES=(Sources, GeneratedSources, all_suffixes),
-            HOST_SOURCES=(HostSources, None, ['.c', '.mm', '.cpp']),
-            UNIFIED_SOURCES=(UnifiedSources, None, ['.c', '.mm', '.cpp']),
-        )
-
-        for variable, (klass, gen_klass, suffixes) in varmap.items():
-            allowed_suffixes = set().union(*[suffix_map[s] for s in suffixes])
-
-            # First ensure that we haven't been given filetypes that we don't
-            # recognize.
-            for f in itertools.chain(sources[variable], gen_sources[variable]):
-                ext = mozpath.splitext(f)[1]
-                if ext not in allowed_suffixes:
-                    raise SandboxValidationError(
-                        '%s has an unknown file type.' % f, context)
-
-            for srcs, cls in ((sources[variable], klass),
-                              (gen_sources[variable], gen_klass)):
-                # Now sort the files to let groupby work.
-                sorted_files = sorted(srcs, key=canonical_suffix_for_file)
-                for canonical_suffix, files in itertools.groupby(
-                        sorted_files, canonical_suffix_for_file):
-                    arglist = [context, list(files), canonical_suffix]
-                    if (variable.startswith('UNIFIED_') and
-                            'FILES_PER_UNIFIED_FILE' in context):
-                        arglist.append(context['FILES_PER_UNIFIED_FILE'])
-                    yield cls(*arglist)
-
-        for f, flags in all_flags.iteritems():
-            if flags.flags:
-                ext = mozpath.splitext(f)[1]
-                yield PerSourceFlag(context, f, flags.flags)
-
     def _process_xpidl(self, context):
         # XPIDL source files get processed and turned into .h and .xpt files.
         # If there are multiple XPIDL files in a directory, they get linked
@@ -1007,35 +1037,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         yield TestHarnessFiles(context, srcdir_files,
                                srcdir_pattern_files, objdir_files)
-
-    def _handle_programs(self, context):
-        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
-            program = context.get(kind)
-            if program:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" as %s name, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program)
-                self._linkage.append((context, self._binaries[program],
-                    kind.replace('PROGRAM', 'USE_LIBS')))
-
-        for kind, cls in [
-                ('SIMPLE_PROGRAMS', SimpleProgram),
-                ('CPP_UNIT_TESTS', SimpleProgram),
-                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
-            for program in context[kind]:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" in %s, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program,
-                    is_unit_test=kind == 'CPP_UNIT_TESTS')
-                self._linkage.append((context, self._binaries[program],
-                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
-                    else 'USE_LIBS'))
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():
