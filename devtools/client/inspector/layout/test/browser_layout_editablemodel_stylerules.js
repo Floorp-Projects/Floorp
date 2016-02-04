@@ -15,24 +15,20 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-function getStyle(node, property) {
-  return node.style.getPropertyValue(property);
-}
-
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openLayoutView();
 
-  yield testUnits(inspector, view);
-  yield testValueComesFromStyleRule(inspector, view);
-  yield testShorthandsAreParsed(inspector, view);
+  yield testUnits(inspector, view, testActor);
+  yield testValueComesFromStyleRule(inspector, view, testActor);
+  yield testShorthandsAreParsed(inspector, view, testActor);
 });
 
-function* testUnits(inspector, view) {
+function* testUnits(inspector, view, testActor) {
   info("Test that entering units works");
 
-  let node = content.document.getElementById("div1");
-  is(getStyle(node, "padding-top"), "", "Should have the right padding");
+  is((yield getStyle(testActor, "#div1", "padding-top")), "",
+     "Should have the right padding");
   yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".layout-padding.layout-top > span");
@@ -48,25 +44,27 @@ function* testUnits(inspector, view) {
   EventUtils.synthesizeKey("e", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
-  is(getStyle(node, "padding-top"), "", "An invalid value is handled cleanly");
+  is((yield getStyle(testActor, "#div1", "padding-top")), "",
+     "An invalid value is handled cleanly");
 
   EventUtils.synthesizeKey("m", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "1em", "Should have the right value in the editor.");
-  is(getStyle(node, "padding-top"), "1em", "Should have updated the padding.");
+  is((yield getStyle(testActor, "#div1", "padding-top")),
+     "1em", "Should have updated the padding.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "padding-top"), "1em", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div1", "padding-top")), "1em",
+     "Should be the right padding.");
   is(span.textContent, 16, "Should have the right value in the box model.");
 }
 
-function* testValueComesFromStyleRule(inspector, view) {
+function* testValueComesFromStyleRule(inspector, view, testActor) {
   info("Test that we pick up the value from a higher style rule");
 
-  let node = content.document.getElementById("div2");
-  is(getStyle(node, "border-bottom-width"), "",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "",
      "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
@@ -82,21 +80,21 @@ function* testValueComesFromStyleRule(inspector, view) {
   yield waitForUpdate(inspector);
 
   is(editor.value, "0", "Should have the right value in the editor.");
-  is(getStyle(node, "border-bottom-width"), "0px",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should have updated the border.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "border-bottom-width"), "0px",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should be the right border-bottom-width.");
   is(span.textContent, 0, "Should have the right value in the box model.");
 }
 
-function* testShorthandsAreParsed(inspector, view) {
+function* testShorthandsAreParsed(inspector, view, testActor) {
   info("Test that shorthand properties are parsed correctly");
 
-  let node = content.document.getElementById("div3");
-  is(getStyle(node, "padding-right"), "", "Should have the right padding");
+  is((yield getStyle(testActor, "#div3", "padding-right")), "",
+     "Should have the right padding");
   yield selectNode("#div3", inspector);
 
   let span = view.doc.querySelector(".layout-padding.layout-right > span");
@@ -109,6 +107,7 @@ function* testShorthandsAreParsed(inspector, view) {
 
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-  is(getStyle(node, "padding-right"), "", "Should be the right padding.")
+  is((yield getStyle(testActor, "#div3", "padding-right")), "",
+     "Should be the right padding.");
   is(span.textContent, 32, "Should have the right value in the box model.");
 }

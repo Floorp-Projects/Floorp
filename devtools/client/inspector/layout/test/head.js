@@ -1,6 +1,9 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../../framework/test/shared-head.js */
+/* import-globals-from ../../test/head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -56,7 +59,7 @@ function openLayoutView() {
     // The actual highligher show/hide methods are mocked in layoutview tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
-      highlighter.showBoxModel = function(nodeFront) {
+      highlighter.showBoxModel = function() {
         return promise.resolve();
       };
       highlighter.hideBoxModel = function() {
@@ -80,4 +83,18 @@ function openLayoutView() {
  */
 function waitForUpdate(inspector) {
   return inspector.once("layoutview-updated");
+}
+
+function getStyle(testActor, selector, propertyName) {
+  return testActor.eval(`
+    content.document.querySelector("${selector}")
+                    .style.getPropertyValue("${propertyName}");
+  `);
+}
+
+function setStyle(testActor, selector, propertyName, value) {
+  return testActor.eval(`
+    content.document.querySelector("${selector}")
+                    .style.${propertyName} = "${value}";
+  `);
 }

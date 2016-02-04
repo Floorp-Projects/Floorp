@@ -14,17 +14,14 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-function getStyle(node, property) {
-  return node.style.getPropertyValue(property);
-}
-
 add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openLayoutView();
+  let {inspector, view, testActor} = yield openLayoutView();
 
-  let node = content.document.getElementById("div1");
-  is(getStyle(node, "border-top-width"), "", "Should have the right border");
-  is(getStyle(node, "border-top-style"), "", "Should have the right border");
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "",
+     "Should have the right border");
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "",
+     "Should have the right border");
   yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".layout-border.layout-top > span");
@@ -39,13 +36,17 @@ add_task(function*() {
   yield waitForUpdate(inspector);
 
   is(editor.value, "1", "Should have the right value in the editor.");
-  is(getStyle(node, "border-top-width"), "1px", "Should have the right border");
-  is(getStyle(node, "border-top-style"), "solid", "Should have the right border");
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "1px",
+     "Should have the right border");
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "solid",
+     "Should have the right border");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
-  is(getStyle(node, "border-top-width"), "", "Should be the right padding.")
-  is(getStyle(node, "border-top-style"), "", "Should have the right border");
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "",
+     "Should be the right padding.");
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "",
+     "Should have the right border");
   is(span.textContent, 0, "Should have the right value in the box model.");
 });
