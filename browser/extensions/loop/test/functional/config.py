@@ -19,5 +19,14 @@ FIREFOX_PREFERENCES = {
     # this dialog is fragile, and likely to introduce intermittent failures
     "media.navigator.permission.disabled": True,
     # Use fake streams only
-    "media.navigator.streams.fake": True
+    "media.navigator.streams.fake": True,
+
+    # attempts to work around Ubuntu wanting to install add-ons
+    "extensions.enabledScopes": 5,
+    "extensions.autoDisableScopes": 0,
+    "extensions.update.enabled": False,
+    "extensions.installDistroAddons": False,
+    "extensions.blocklist.enabled": False,
+    "extensions.update.notifyUser": False,
+    "xpinstall.signatures.required": False,
 }

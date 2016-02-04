@@ -1,12 +1,10 @@
 pref("loop.enabled", true);
-pref("loop.textChat.enabled", true);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.linkClicker.url", "https://hello.firefox.com/");
 pref("loop.gettingStarted.latestFTUVersion", 1);
 pref("loop.facebook.shareUrl", "https://www.facebook.com/sharer/sharer.php?u=%ROOM_URL%");
 pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start/");
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
-pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");
 pref("loop.legal.ToS_url", "https://www.mozilla.org/about/legal/terms/firefox-hello/");
 pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/firefox-hello/");
 pref("loop.do_not_disturb", false);
@@ -30,4 +28,8 @@ pref("loop.CSP", "default-src 'self' about: file: chrome:; img-src * data:; font
 pref("loop.fxa_oauth.tokendata", "");
 pref("loop.fxa_oauth.profile", "");
 pref("loop.support_url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cobrowsing");
-pref("loop.browserSharing.showInfoBar", true);
+#ifdef LOOP_BETA
+pref("loop.facebook.enabled", true);
+#else
+pref("loop.facebook.enabled", false);
+#endif
