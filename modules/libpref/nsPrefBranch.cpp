@@ -687,6 +687,15 @@ void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
                     NS_ConvertASCIItoUTF16(suffix).get());
 }
 
+size_t
+nsPrefBranch::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  n += mPrefRoot.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
 void nsPrefBranch::freeObserverList(void)
 {
   // We need to prevent anyone from modifying mObservers while we're iterating

@@ -46,7 +46,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     int r;
     nr_ice_stun_ctx *sc1,*sc2;
     nr_ice_socket *sock=cb_arg;
-    UCHAR buf[8192];
+    UCHAR buf[9216];
     char string[256];
     nr_transport_addr addr;
     int len;
@@ -61,8 +61,10 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Socket ready to read",sock->ctx->label);
 
     /* Re-arm first! */
-    if (sock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP)
+    if (sock->type != NR_ICE_SOCKET_TYPE_STREAM_TCP) {
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): rearming",sock->ctx->label);
       NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
+    }
 
     if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
       if (r != R_WOULDBLOCK && (sock->type != NR_ICE_SOCKET_TYPE_DGRAM)) {

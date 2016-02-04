@@ -2754,7 +2754,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   nsCOMPtr<nsIDOMNode> startParent, endParent;
   int32_t startOffset, endOffset;
   int32_t rangeCount, tableCount, i;
-  int32_t e1s1, e1s2, e2s1, e2s2;
+  int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
 
   OffsetEntry *eStart, *eEnd;
   int32_t eStartOffset, eEndOffset;

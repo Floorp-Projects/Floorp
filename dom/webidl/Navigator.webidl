@@ -100,7 +100,7 @@ interface NavigatorFeatures {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.permissions.enabled"]
+  [Throws]
   readonly attribute Permissions permissions;
 };
 

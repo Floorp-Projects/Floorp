@@ -35,11 +35,10 @@ function onLoad()
       // previously trying to assign unicode to the window's name.
       // I checked all the places where we get a password prompt and
       // all of them pass an argument as part of this patch.
-      tokenName="";
+      tokenName = "";
   }
-      
 
-  if(tokenName=="") {
+  if (tokenName == "") {
      var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
      var tokenList = sectokdb.listTokens();
      var enumElement;
@@ -97,7 +96,7 @@ function process()
      var status = slot.status;
      if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
          || status == nsIPKCS11Slot.SLOT_READY) {
-      
+
        oldpwbox.setAttribute("hidden", "true");
        msgBox.setAttribute("value", bundle.getString("password_not_set"));
        msgBox.setAttribute("hidden", "false");
@@ -107,10 +106,9 @@ function process()
        } else {
          oldpwbox.setAttribute("inited", "true");
        }
-      
+
        // Select first password field
        document.getElementById('pw1').focus();
-    
      } else {
        // Select old password field
        oldpwbox.setAttribute("hidden", "false");
@@ -124,7 +122,7 @@ function process()
     // Return value 0 means "canceled"
     params.SetInt(1, 0);
   }
-  
+
   checkPasswords();
 }
 
@@ -147,23 +145,22 @@ function setPassword()
   var bundle = document.getElementById("pippki_bundle");
 
   var success = false;
-  
+
   if (initpw == "false" || initpw == "empty") {
     try {
       var oldpw = "";
       var passok = 0;
-      
+
       if (initpw == "empty") {
         passok = 1;
       } else {
         oldpw = oldpwbox.value;
         passok = token.checkPassword(oldpw);
       }
-      
+
       if (passok) {
         if (initpw == "empty" && pw1.value == "") {
-          // This makes no sense that we arrive here, 
-          // we reached a case that should have been prevented by checkPasswords.
+          // checkPasswords() should have prevented this path from being reached.
         } else {
           if (pw1.value == "") {
             var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
@@ -196,9 +193,8 @@ function setPassword()
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      doPrompt(bundle.getString("pw_not_wanted")
-            + " " 
-            + bundle.getString("pw_empty_warning"));
+      doPrompt(bundle.getString("pw_not_wanted") + " " +
+               bundle.getString("pw_empty_warning"));
     }
     success = true;
   }
