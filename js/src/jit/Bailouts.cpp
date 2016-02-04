@@ -6,6 +6,8 @@
 
 #include "jit/Bailouts.h"
 
+#include "mozilla/ScopeExit.h"
+
 #include "jscntxt.h"
 
 #include "jit/BaselineJIT.h"
@@ -61,8 +63,6 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
         JSScript* script = iter.script();
         probes::ExitScript(cx, script, script->functionNonDelazifying(),
                            /* popSPSFrame = */ false);
-
-        EnsureExitFrame(iter.jsFrame());
     }
 
     // This condition was wrong when we entered this bailout function, but it
@@ -157,11 +157,8 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
         JitSpew(JitSpew_IonInvalidate, "   orig ra %p", (void*) frame->returnAddress());
 
         frame->replaceCalleeToken(nullptr);
-        EnsureExitFrame(frame);
 
         JitSpew(JitSpew_IonInvalidate, "   new  calleeToken %p", (void*) frame->calleeToken());
-        JitSpew(JitSpew_IonInvalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
-        JitSpew(JitSpew_IonInvalidate, "   new  ra %p", (void*) frame->returnAddress());
     }
 
     iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
@@ -197,7 +194,10 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
     // operation callback like a timeout handler.
     MOZ_ASSERT_IF(!excInfo.propagatingIonExceptionForDebugMode(), cx->isExceptionPending());
 
+    uint8_t* prevJitTop = cx->runtime()->jitTop;
+    auto restoreJitTop = mozilla::MakeScopeExit([&]() { cx->runtime()->jitTop = prevJitTop; });
     cx->runtime()->jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
+
     gc::AutoSuppressGC suppress(cx);
 
     JitActivationIterator jitActivations(cx->runtime());
