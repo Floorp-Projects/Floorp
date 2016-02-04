@@ -359,6 +359,8 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
 
   if (mState == kStarted) {
     MOZ_ASSERT(aID == mTrackID);
+    // Make sure we're associated with this stream
+    mAudioInput->StartRecording(aStream, mListener);
     return NS_OK;
   }
   mState = kStarted;
@@ -377,7 +379,7 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   }
 
   // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
-  mAudioInput->StartRecording(aStream->Graph(), mListener);
+  mAudioInput->StartRecording(aStream, mListener);
 
   if (mVoEBase->StartSend(mChannel)) {
     return NS_ERROR_FAILURE;
@@ -404,6 +406,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
     aSource->EndTrack(aID);
 
     if (!mSources.IsEmpty()) {
+      mAudioInput->StopRecording(aSource);
       return NS_OK;
     }
     if (mState != kStarted) {
@@ -416,7 +419,7 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
     mState = kStopped;
   }
 
-  mAudioInput->StopRecording(aSource->Graph(), mListener);
+  mAudioInput->StopRecording(aSource);
 
   mVoERender->DeRegisterExternalMediaProcessing(mChannel, webrtc::kRecordingPerChannel);
 
