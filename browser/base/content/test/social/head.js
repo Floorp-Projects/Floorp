@@ -497,12 +497,17 @@ function makeChat(mode, uniqueid, cb) {
   }
   // Note that we use promiseChatLoaded instead of the callback to ensure the
   // content has started loading.
-  let chatbox = getChatBar().openChat(provider.origin, provider.name,
-                                      chatUrl + "?id=" + uniqueid, mode);
+  let chatbox = getChatBar().openChat({
+    origin: provider.origin,
+    title: provider.name,url: chatUrl + "?id=" + uniqueid,
+    mode: mode
+  });
   chatbox.promiseChatLoaded.then(
     () => {
     info("chat window has opened");
-    chatbox.contentDocument.title = uniqueid;
+    chatbox.content.messageManager.sendAsyncMessage("Social:SetDocumentTitle", {
+      title: uniqueid
+    });
     cb();
   });
 }

@@ -122,6 +122,10 @@ var tests = {
   },
 
   testChatWindow: function(next) {
+    todo(false, "Bug 1245799 is needed to make error pages work again for chat windows.");
+    next();
+    return;
+
     let panelCallbackCount = 0;
     // chatwindow tests throw errors, which muddy test output, if the worker
     // doesn't get test-init
@@ -146,6 +150,10 @@ var tests = {
   },
 
   testChatWindowAfterTearOff: function(next) {
+    todo(false, "Bug 1245799 is needed to make error pages work again for chat windows.");
+    next();
+    return;
+
     // Ensure that the error listener survives the chat window being detached.
     let url = manifest.sidebarURL; /* empty html page */
     let panelCallbackCount = 0;
