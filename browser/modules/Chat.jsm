@@ -92,27 +92,35 @@ var Chat = {
    *
    * @param contentWindow [optional]
    *        The content window that requested this chat.  May be null.
-   * @param origin
+   * @param options
+   *        Object that may contain the following properties:
+   *         - origin
    *        The origin for the chat.  This is primarily used as an identifier
    *        to help identify all chats from the same provider.
-   * @param title
+   *         - title
    *        The title to be used if a new chat window is created.
-   * @param url
+   *         - url
    *        The URL for the that.  Should be under the origin.  If an existing
    *        chatbox exists with the same URL, it will be reused and returned.
-   * @param mode [optional]
+   *         - mode [optional]
    *        May be undefined or 'minimized'
-   * @param focus [optional]
+   *         - focus [optional]
    *        Indicates if the chatbox should be focused.  If undefined the chat
    *        will be focused if the window is currently handling user input (ie,
    *        if the chat is being opened as a direct result of user input)
-
+   *         - remote [optional]
+   *         Indicates if the chatbox browser should use the remote bindings
+   *         to run in the content process when TRUE.
+   * @param callback
+   *        Function to be invoked once the chat constructed. The chatbox binding
+   *        is passed as the first argument.
+   *
    * @return A chatbox binding.  This binding has a number of promises which
    *         can be used to determine when the chatbox is being created and
    *         has loaded.  Will return null if no chat can be created (Which
    *         should only happen in edge-cases)
    */
-  open: function(contentWindow, origin, title, url, mode, focus, callback) {
+  open: function(contentWindow, options, callback) {
     let chromeWindow = this.findChromeWindowForChats(contentWindow);
     if (!chromeWindow) {
       Cu.reportError("Failed to open a chat window - no host window could be found.");
@@ -121,18 +129,25 @@ var Chat = {
 
     let chatbar = chromeWindow.document.getElementById("pinnedchats");
     chatbar.hidden = false;
-    let chatbox = chatbar.openChat(origin, title, url, mode, callback);
+    if (options.remote) {
+      // Double check that current window can handle remote browser elements.
+      let browser = chromeWindow.gBrowser && chromeWindow.gBrowser.selectedBrowser;
+      if (!browser || browser.getAttribute("remote") != "true") {
+        options.remote = false;
+      }
+    }
+    let chatbox = chatbar.openChat(options, callback);
     // getAttention is ignored if the target window is already foreground, so
     // we can call it unconditionally.
     chromeWindow.getAttention();
     // If focus is undefined we want automatic focus handling, and only focus
     // if a direct result of user action.
-    if (focus === undefined) {
+    if (!("focus" in options)) {
       let dwu = chromeWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindowUtils);
-      focus = dwu.isHandlingUserInput;
+      options.focus = dwu.isHandlingUserInput;
     }
-    if (focus) {
+    if (options.focus) {
       chatbar.focus();
     }
     return chatbox;
