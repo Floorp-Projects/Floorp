@@ -27,6 +27,18 @@ var gDeclaration = document.getElementById("testnode").style;
 
 var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
 
+/**
+ * Checks that the passed-in property-value (returned by getPropertyValue) is
+ * consistent with the DOM accessors that we know about for the given sproperty.
+ */
+function check_consistency(sproperty, valFromGetPropertyValue, messagePrefix)
+{
+  var sinfo = gCSSProperties[sproperty];
+  is(valFromGetPropertyValue, gDeclaration[sinfo.domProp],
+     `(${messagePrefix}) consistency between ` +
+     `decl.getPropertyValue(${sproperty}) and decl.${sinfo.domProp}`);
+}
+
 function test_property(property)
 {
   var info = gCSSProperties[property];
@@ -37,12 +49,9 @@ function test_property(property)
 
   keywords.forEach(function(keyword) {
     function check_initial(sproperty) {
-      var sinfo = gCSSProperties[sproperty];
       var val = gDeclaration.getPropertyValue(sproperty);
       is(val, "", "value of '" + sproperty + "' before we do anything");
-      is(val, gDeclaration[sinfo.domProp],
-         "(initial) consistency between decl.getPropertyValue('" + sproperty +
-         "') and decl." + sinfo.domProp);
+      check_consistency(sproperty, val, "initial");
     }
     check_initial(property);
     if ("subproperties" in info)
@@ -52,13 +61,10 @@ function test_property(property)
     gDeclaration.setProperty(property, keyword, "");
 
     function check_set(sproperty) {
-      var sinfo = gCSSProperties[sproperty];
       val = gDeclaration.getPropertyValue(sproperty);
       is(val, keyword,
          keyword + " reported back for property '" + sproperty + "'");
-      is(val, gDeclaration[sinfo.domProp],
-         "(set) consistency between decl.getPropertyValue('" + sproperty +
-         "') and decl." + sinfo.domProp);
+      check_consistency(sproperty, val, "set");
     }
     check_set(property);
     if ("subproperties" in info)
@@ -78,12 +84,9 @@ function test_property(property)
     gDeclaration.removeProperty(property);
 
     function check_final(sproperty) {
-      var sinfo = gCSSProperties[sproperty];
       var val = gDeclaration.getPropertyValue(sproperty);
       is(val, "", "value of '" + sproperty + "' after removal of value");
-      is(val, gDeclaration[sinfo.domProp],
-         "(final) consistency between decl.getPropertyValue('" + sproperty +
-         "') and decl." + sinfo.domProp);
+      check_consistency(sproperty, val, "final");
     }
     check_final(property);
     if ("subproperties" in info)
