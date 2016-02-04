@@ -163,9 +163,10 @@ const kMessageHandlers = {
       reply(cloneableError(err));
       return;
     }
-    if (browser.getAttribute("remote") == "true") {
-      // Tab sharing is not supported yet for e10s-enabled browsers. This will
-      // be fixed in bug 1137634.
+
+    let autoStart = MozLoopService.getLoopPref("remote.autostart");
+    if (!autoStart && browser.getAttribute("remote") == "true") {
+      // Tab sharing might not be supported yet for e10s-enabled browsers.
       let err = new Error("Tab sharing is not supported for e10s-enabled browsers");
       MozLoopService.log.error(err);
       reply(cloneableError(err));
@@ -706,7 +707,7 @@ const kMessageHandlers = {
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
    */
-  IsMultiProcessEnabled: function(message, reply) {
+  IsMultiProcessActive: function(message, reply) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = win && win.gBrowser.selectedBrowser;
     reply(!!(browser && browser.getAttribute("remote") == "true"));
