@@ -99,10 +99,12 @@ SocialErrorListener = {
         break;
       case "Social:EnsureFocus":
         Services.focus.focusedWindow = content;
+        sendAsyncMessage("Social:FocusEnsured");
         break;
       case "Social:EnsureFocusElement":
         let fm = Services.focus;
         fm.moveFocus(document.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
+        sendAsyncMessage("Social:FocusEnsured");
         break;
       case "Social:HookWindowCloseForPanelClose":
         // We allow window.close() to close the panel, so add an event handler for
