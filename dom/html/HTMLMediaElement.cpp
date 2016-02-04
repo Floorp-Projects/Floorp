@@ -4193,14 +4193,53 @@ HTMLMediaElement::PrincipalChanged(DOMMediaStream* aStream)
                         "%p. Waiting for it to reach VideoFrameContainer before "
                         "setting.", this, aStream->GetVideoPrincipal()));
   if (mVideoFrameContainer) {
-    UpdateSrcStreamVideoPrincipal(aStream->GetVideoPrincipal());
+    UpdateSrcStreamVideoPrincipal(mVideoFrameContainer->GetLastPrincipalHandle());
   }
 }
 
 void
-HTMLMediaElement::UpdateSrcStreamVideoPrincipal(nsIPrincipal* aPrincipal)
+HTMLMediaElement::UpdateSrcStreamVideoPrincipal(const PrincipalHandle& aPrincipalHandle)
 {
-  mSrcStreamVideoPrincipal = aPrincipal;
+  nsTArray<RefPtr<VideoStreamTrack>> videoTracks;
+  mSrcStream->GetVideoTracks(videoTracks);
+
+  PrincipalHandle handle(aPrincipalHandle);
+  bool matchesTrackPrincipal = false;
+  for (const RefPtr<VideoStreamTrack>& track : videoTracks) {
+    if (PrincipalHandleMatches(handle,
+                               track->GetPrincipal()) &&
+        !track->Ended()) {
+      // When the PrincipalHandle for the VideoFrameContainer changes to that of
+      // a track in mSrcStream we know that a removed track was displayed but
+      // is no longer so.
+      matchesTrackPrincipal = true;
+      LOG(LogLevel::Debug, ("HTMLMediaElement %p VideoFrameContainer's "
+                            "PrincipalHandle matches track %p. That's all we "
+                            "need.", this, track.get()));
+      break;
+    }
+  }
+
+  if (matchesTrackPrincipal) {
+    mSrcStreamVideoPrincipal = mSrcStream->GetVideoPrincipal();
+  }
+}
+
+void
+HTMLMediaElement::PrincipalHandleChangedForVideoFrameContainer(VideoFrameContainer* aContainer,
+                                                               const PrincipalHandle& aNewPrincipalHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mSrcStream) {
+    return;
+  }
+
+  LOG(LogLevel::Debug, ("HTMLMediaElement %p PrincipalHandle changed in "
+                        "VideoFrameContainer.",
+                        this));
+
+  UpdateSrcStreamVideoPrincipal(aNewPrincipalHandle);
 }
 
 nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)

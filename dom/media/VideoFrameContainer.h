@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "ImageContainer.h"
+#include "MediaSegment.h"
 
 namespace mozilla {
 
@@ -42,6 +43,13 @@ public:
                       already_AddRefed<ImageContainer> aContainer);
 
   // Call on any thread
+  // Returns the last principalHandle we notified mElement about.
+  PrincipalHandle GetLastPrincipalHandle();
+  // We will notify mElement that aPrincipalHandle has been applied when all
+  // FrameIDs prior to aFrameID have been flushed out.
+  // aFrameID is ignored if aPrincipalHandle already is our pending principalHandle.
+  void UpdatePrincipalHandleForFrameID(const PrincipalHandle& aPrincipalHandle,
+                                       const ImageContainer::FrameID& aFrameID);
   B2G_ACL_EXPORT void SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage,
                        const TimeStamp& aTargetTime);
   void SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
@@ -111,6 +119,13 @@ protected:
   // frame is fully invalidated instead of just invalidating for the image change
   // in the ImageLayer.
   bool mImageSizeChanged;
+  // The last PrincipalHandle we notified mElement about.
+  PrincipalHandle mLastPrincipalHandle;
+  // The PrincipalHandle the client has notified us is changing with FrameID
+  // mFrameIDForPendingPrincipalHandle.
+  PrincipalHandle mPendingPrincipalHandle;
+  // The FrameID for which mPendingPrincipal is first valid.
+  ImageContainer::FrameID mFrameIDForPendingPrincipalHandle;
 };
 
 } // namespace mozilla
