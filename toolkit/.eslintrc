@@ -110,7 +110,7 @@
     "no-negated-in-lhs": 2,
 
     // Nested ternary statements are confusing
-    // "no-nested-ternary": 2,
+    "no-nested-ternary": 2,
 
     // Use {} instead of new Object()
     // "no-new-object": 2,

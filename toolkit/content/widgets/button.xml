@@ -63,8 +63,11 @@
           var state = this.getAttribute("checkState");
           if (state == "")
             return this.checked ? 1 : 0;
-          else
-            return state == "0" ? 0 : (state == "2" ? 2 : 1);
+          if (state == "0")
+            return 0;
+          if (state == "2")
+            return 2;
+          return 1;
         ]]></getter>
         <setter><![CDATA[
           this.setAttribute("checkState", val);
