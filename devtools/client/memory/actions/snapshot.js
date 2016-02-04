@@ -136,7 +136,7 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
     assert([states.READ, states.SAVED_CENSUS].includes(snapshot.state),
       `Can only take census of snapshots in READ or SAVED_CENSUS state, found ${snapshot.state}`);
 
-    let report;
+    let report, parentMap;
     let inverted = getState().inverted;
     let breakdown = getState().breakdown;
     let filter = getState().filter;
