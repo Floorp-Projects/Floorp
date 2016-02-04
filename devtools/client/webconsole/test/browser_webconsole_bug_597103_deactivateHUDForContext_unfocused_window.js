@@ -90,7 +90,7 @@ function tab2Loaded(aEvent) {
     });
   }
 
-  waitForFocus(openConsoles, tab2.linkedBrowser.contentWindow);
+  openConsoles();
 }
 
 function test() {
