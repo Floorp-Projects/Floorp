@@ -39,14 +39,14 @@ add_task(function* () {
 
   ok(true, "Should have read both heap snapshot files");
 
-  const delta = yield client.takeCensusDiff(firstSnapshotFilePath,
-                                            secondSnapshotFilePath,
-                                            { breakdown: BREAKDOWN });
+  const { delta } = yield client.takeCensusDiff(firstSnapshotFilePath,
+                                                secondSnapshotFilePath,
+                                                { breakdown: BREAKDOWN });
 
-  const deltaTreeNode = yield client.takeCensusDiff(firstSnapshotFilePath,
-                                                    secondSnapshotFilePath,
-                                                    { breakdown: BREAKDOWN },
-                                                    { asInvertedTreeNode: true });
+  const { delta: deltaTreeNode } = yield client.takeCensusDiff(firstSnapshotFilePath,
+                                                               secondSnapshotFilePath,
+                                                               { breakdown: BREAKDOWN },
+                                                               { asInvertedTreeNode: true });
 
   // Have to manually set these because symbol properties aren't structured
   // cloned.

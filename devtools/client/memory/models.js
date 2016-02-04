@@ -56,6 +56,8 @@ let breakdownModel = exports.breakdown = PropTypes.shape({
 let censusModel = exports.censusModel = PropTypes.shape({
   // The current census report data.
   report: PropTypes.object,
+  // The parent map for the report.
+  parentMap: PropTypes.object,
   // The breakdown used to generate the current census
   breakdown: breakdownModel,
   // Whether the currently cached report tree is inverted or not.
