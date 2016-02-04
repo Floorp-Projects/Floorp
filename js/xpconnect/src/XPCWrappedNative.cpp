@@ -113,9 +113,7 @@ XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb)
     // (see nsXPConnect::Traverse), but if their JS object has been finalized
     // then the tearoff is only reachable through the XPCWrappedNative, so we
     // record an edge here.
-    XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+    for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {
         JSObject* jso = to->GetJSObjectPreserveColor();
         if (!jso) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "tearoff's mNative");
@@ -898,9 +896,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
     // dying tearoff object. We can safely assume that those remaining
     // JSObjects are about to be finalized too.
 
-    XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+    for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {
         JSObject* jso = to->GetJSObjectPreserveColor();
         if (jso) {
             JS_SetPrivate(jso, nullptr);
@@ -971,7 +967,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
 
     // We leak mIdentity (see above).
 
-    // short circuit future finalization
+    // Short circuit future finalization.
     JS_SetPrivate(mFlatJSObject, nullptr);
     mFlatJSObject = nullptr;
     mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
@@ -987,11 +983,8 @@ XPCWrappedNative::SystemIsBeingShutDown()
         delete mScriptableInfo;
     }
 
-    // cleanup the tearoffs...
-
-    XPCWrappedNativeTearOffChunk* chunk;
-    for (chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* to = &chunk->mTearOff;
+    // Cleanup the tearoffs.
+    for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {
         if (JSObject* jso = to->GetJSObjectPreserveColor()) {
             JS_SetPrivate(jso, nullptr);
             to->SetJSObject(nullptr);
@@ -1000,11 +993,6 @@ XPCWrappedNative::SystemIsBeingShutDown()
         // (for the same reason we leak mIdentity - see above).
         Unused << to->TakeNative().take();
         to->SetInterface(nullptr);
-    }
-
-    if (mFirstChunk.mNextChunk) {
-        delete mFirstChunk.mNextChunk;
-        mFirstChunk.mNextChunk = nullptr;
     }
 }
 
@@ -1058,12 +1046,10 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     XPCWrappedNativeTearOff* to;
     XPCWrappedNativeTearOff* firstAvailable = nullptr;
 
-    XPCWrappedNativeTearOffChunk* lastChunk;
-    XPCWrappedNativeTearOffChunk* chunk;
-    for (lastChunk = chunk = &mFirstChunk;
-         chunk;
-         lastChunk = chunk, chunk = chunk->mNextChunk) {
-        to = &chunk->mTearOff;
+    XPCWrappedNativeTearOff* lastTearOff;
+    for (lastTearOff = to = &mFirstTearOff;
+         to;
+         lastTearOff = to, to = to->GetNextTearOff()) {
         if (to->GetInterface() == aInterface) {
             if (needJSObject && !to->GetJSObjectPreserveColor()) {
                 AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
@@ -1089,9 +1075,7 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
     to = firstAvailable;
 
     if (!to) {
-        auto newChunk = new XPCWrappedNativeTearOffChunk();
-        lastChunk->mNextChunk = newChunk;
-        to = &newChunk->mTearOff;
+        to = lastTearOff->AddTearOff();
     }
 
     {

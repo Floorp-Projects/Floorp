@@ -13,8 +13,7 @@ enum PermissionState {
   "prompt"
 };
 
-[Exposed=(Window),
- Pref="dom.permissions.enabled"]
+[Exposed=(Window)]
 interface PermissionStatus : EventTarget {
   readonly attribute PermissionState state;
   attribute EventHandler onchange;

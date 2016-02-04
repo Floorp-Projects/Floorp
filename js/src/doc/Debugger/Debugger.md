@@ -536,3 +536,13 @@ other kinds of objects.
     `TypeError`. Determine which global is designated by <i>global</i>
     using the same rules as [`Debugger.prototype.addDebuggee`][add].
 
+## Static methods of the Debugger Object
+
+The functions described below are not called with a `this` value.
+
+<code id="isCompilableUnit">isCompilableUnit(<i>source</i>)</code>
+:   Given a string of source code, designated by <i>source</i>, return false if
+    the string might become a valid JavaScript statement with the addition of
+    more lines. Otherwise return true. The intent is to support interactive
+    compilation - accumulate lines in a buffer until isCompilableUnit is true,
+    then pass it to the compiler.

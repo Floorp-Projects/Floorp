@@ -118,6 +118,9 @@ include text-overflow/reftest.list
 # css selectors
 include css-selectors/reftest.list
 
+# css sizing
+include css-sizing/reftest.list
+
 # css transitions
 include css-transitions/reftest.list
 

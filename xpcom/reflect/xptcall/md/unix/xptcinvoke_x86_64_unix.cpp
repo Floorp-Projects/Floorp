@@ -47,9 +47,9 @@ static void
 invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
                      uint64_t * gpregs, double * fpregs)
 {
-    uint32_t nr_gpr = 1; // skip one GP register for 'that'
-    uint32_t nr_fpr = 0;
-    uint64_t value;
+    uint32_t nr_gpr = 1u; // skip one GP register for 'that'
+    uint32_t nr_fpr = 0u;
+    uint64_t value = 0u;
 
     for (uint32_t i = 0; i < paramCount; i++, s++) {
         if (s->IsPtrData())

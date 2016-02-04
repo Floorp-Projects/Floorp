@@ -927,9 +927,8 @@ js::TypeOfValue(const Value& v)
  */
 bool
 js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
-                       HandleObject staticWith)
+                       Handle<StaticWithScope*> staticWith)
 {
-    MOZ_ASSERT(staticWith->is<StaticWithScope>());
     RootedObject obj(cx);
     if (val.isObject()) {
         obj = &val.toObject();
@@ -1039,8 +1038,8 @@ SettleOnTryNote(JSContext* cx, JSTryNote* tn, ScopeIter& si, InterpreterRegs& re
     // Unwind the scope to the beginning of the JSOP_TRY.
     UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
 
-    // Set pc to the first bytecode after the the try note to point
-    // to the beginning of catch or finally.
+    // Set pc to the first bytecode after the span of the try note, the
+    // beginning of the first catch or finally block.
     regs.pc = regs.fp()->script()->main() + tn->start + tn->length;
     regs.sp = regs.spForStackDepth(tn->stackDepth);
 }
@@ -1494,6 +1493,9 @@ class ReservedRooted : public ReservedRootedBase<T>
     operator Rooted<T>&() { return *savedRoot; }
     MutableHandle<T> operator&() { return &*savedRoot; }
 
+    template <typename U>
+    Handle<U*> as() { return savedRoot->template as<U>(); }
+
     DECLARE_NONPOINTER_ACCESSOR_METHODS(savedRoot->get())
     DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(savedRoot->get())
     DECLARE_POINTER_CONSTREF_OPS(T)
@@ -1873,7 +1875,7 @@ CASE(JSOP_ENTERWITH)
     REGS.sp--;
     ReservedRooted<JSObject*> staticWith(&rootObject0, script->getObject(REGS.pc));
 
-    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith))
+    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith.as<StaticWithScope>()))
         goto error;
 }
 END_CASE(JSOP_ENTERWITH)

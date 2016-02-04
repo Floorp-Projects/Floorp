@@ -170,19 +170,6 @@ testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, uint32_t numEntries) {
   }
 }
 
-PLDHashOperator
-nsDEnum(const uint32_t& aKey, const char*& aData, void* userArg) {
-  printf("  enumerated %u = \"%s\"\n", aKey, aData);
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsCEnum(const nsACString& aKey, nsAutoPtr<TestUniChar>& aData, void* userArg) {
-    printf("  enumerated \"%s\" = %c\n", 
-           PromiseFlatCString(aKey).get(), aData->GetChar());
-  return PL_DHASH_NEXT;
-}
-
 //
 // all this nsIFoo stuff was copied wholesale from TestCOMPtr.cpp
 //
@@ -326,25 +313,6 @@ CreateIFoo( IFoo** result )
     return NS_OK;
   }
 
-PLDHashOperator
-nsIEnum(const uint32_t& aKey, nsCOMPtr<IFoo>& aData, void* userArg) {
-  nsAutoCString str;
-  aData->GetString(str);
-
-  printf("  enumerated %u = \"%s\"\n", aKey, str.get());
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsIEnum2(nsISupports* aKey, uint32_t& aData, void* userArg) {
-  nsAutoCString str;
-  nsCOMPtr<IFoo> foo = do_QueryInterface(aKey);
-  foo->GetString(str);
-
-  printf("  enumerated \"%s\" = %u\n", str.get(), aData);
-  return PL_DHASH_NEXT;
-}
-
 } // namespace TestHashtables
 
 using namespace TestHashtables;
@@ -369,7 +337,7 @@ main(void) {
 
   printf("Check enumeration...");
   count = nsTIterPrint(EntityToUnicode);
-  if (count) {
+  if (count != 0) {
     printf("entries remain in table!\n");
     exit (8);
   }
@@ -384,7 +352,7 @@ main(void) {
 
   printf("Check enumeration...");
   count = nsTIterPrint(EntityToUnicode);
-  if (count) {
+  if (count != 0) {
     printf("entries remain in table!\n");
     exit (9);
   }
@@ -445,8 +413,12 @@ main(void) {
   printf("OK\n");
 
   printf("Checking count...");
-  count = UniToEntity.Enumerate(nsDEnum, nullptr);
-  if (count) {
+  count = 0;
+  for (auto iter = UniToEntity.Iter(); !iter.Done(); iter.Next()) {
+    printf("  enumerated %u = \"%s\"\n", iter.Key(), iter.Data());
+    count++;
+  }
+  if (count != 0) {
     printf("  Clear did not remove all entries.\n");
     exit (15);
   }
@@ -510,8 +482,13 @@ main(void) {
   printf("  Clearing OK\n");
 
   printf("Checking count...");
-  count = EntToUniClass.Enumerate(nsCEnum, nullptr);
-  if (count) {
+  count = 0;
+  for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
+    printf("  enumerated \"%s\" = %c\n",
+           PromiseFlatCString(iter.Key()).get(), iter.Data()->GetChar());
+    count++;
+  }
+  if (count != 0) {
     printf("  Clear did not remove all entries.\n");
     exit (21);
   }
@@ -584,8 +561,15 @@ main(void) {
   printf("  Clearing OK\n");
 
   printf("Checking count...");
-  count = EntToUniClass2.Enumerate(nsIEnum2, nullptr);
-  if (count) {
+  count = 0;
+  for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString s;
+    nsCOMPtr<IFoo> foo = do_QueryInterface(iter.Key());
+    foo->GetString(s);
+    printf("  enumerated \"%s\" = %u\n", s.get(), iter.Data());
+    count++;
+  }
+  if (count != 0) {
     printf("  Clear did not remove all entries.\n");
     exit (27);
   }
@@ -656,8 +640,14 @@ main(void) {
   printf("  Clearing OK\n");
 
   printf("Checking count...");
-  count = UniToEntClass2.Enumerate(nsIEnum, nullptr);
-  if (count) {
+  count = 0;
+  for (auto iter = UniToEntClass2.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString s;
+    iter.Data()->GetString(s);
+    printf("  enumerated %u = \"%s\"\n", iter.Key(), s.get());
+    count++;
+  }
+  if (count != 0) {
     printf("  Clear did not remove all entries.\n");
     exit (33);
   }

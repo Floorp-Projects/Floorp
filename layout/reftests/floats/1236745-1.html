@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<title>Reftest, bug 1236745</title>
+<style>
+
+div.contain {
+  border: medium solid blue;
+  width: 100px;
+  height: 200px;
+}
+
+.float1 {
+  float: left;
+  background: yellow;
+  width: 10px;
+  height: 60px;
+}
+
+.float2 {
+  float: left; clear: left;
+  background: aqua;
+  width: 50px;
+  height: 50px;
+}
+
+.bfc {
+  overflow: hidden;
+  background: fuchsia;
+  /*
+   * Will be 90px wide (and thus 90px high) if placed based on only its
+   * top or based on a 50px height, but 50px wide (and thus 50px high)
+   * if placed based on a 90px height.
+   */
+}
+
+img {
+  width: 100%;
+  display: block;
+}
+
+</style>
+
+
+<div class="contain">
+  <div class="float1"></div>
+  <div class="float2"></div>
+  <div class="bfc">
+    <img src="../bugs/solidblue.png"> <!-- 16x16 blue image -->
+  </div>
+</div>
