@@ -53,6 +53,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransportService2.h"
+#include "nsIOService.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -2059,6 +2060,11 @@ nsHttpHandler::Observe(nsISupports *subject,
         mPrivateAuthCache.ClearAll();
         if (mWifiTickler)
             mWifiTickler->Cancel();
+
+        // Inform nsIOService that network is tearing down.
+        gIOService->SetHttpHandlerAlreadyShutingDown();
+
+        ShutdownConnectionManager();
 
         // need to reset the session start time since cache validation may
         // depend on this value.
