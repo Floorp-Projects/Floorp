@@ -47,6 +47,7 @@ if CONFIG['MOZ_PLACES']:
         'nsNavHistoryResult.cpp',
         'nsPlacesModule.cpp',
         'PlaceInfo.cpp',
+        'Shutdown.cpp',
         'SQLFunctions.cpp',
         'VisitInfo.cpp',
     ]
