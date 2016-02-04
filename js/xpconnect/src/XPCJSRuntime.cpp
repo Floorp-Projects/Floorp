@@ -2374,6 +2374,10 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         cStats.nonSyntacticLexicalScopesTable,
         "The non-syntactic lexical scopes table.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jit-compartment"),
+        cStats.jitCompartment,
+        "The JIT compartment.");
+
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),

@@ -1113,7 +1113,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t* crossCompartmentWrappersArg,
                                       size_t* regexpCompartment,
                                       size_t* savedStacksSet,
-                                      size_t* nonSyntacticLexicalScopesArg)
+                                      size_t* nonSyntacticLexicalScopesArg,
+                                      size_t* jitCompartment)
 {
     *compartmentObject += mallocSizeOf(this);
     objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
@@ -1131,6 +1132,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
     if (nonSyntacticLexicalScopes_)
         *nonSyntacticLexicalScopesArg += nonSyntacticLexicalScopes_->sizeOfIncludingThis(mallocSizeOf);
+    if (jitCompartment_)
+        *jitCompartment += jitCompartment_->sizeOfIncludingThis(mallocSizeOf);
 }
 
 void
