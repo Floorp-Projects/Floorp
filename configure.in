@@ -4008,22 +4008,6 @@ if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
 fi
 AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
 
-# Optional Firefox for Android partner distribution directory.
-MOZ_ARG_WITH_STRING(android-distribution-directory,
-[  --with-android-distribution-directory=dir
-                          Optional Firefox for Android partner distribution directory.],
-  MOZ_ANDROID_DISTRIBUTION_DIRECTORY=$withval)
-
-if test -n "$MOZ_ANDROID_DISTRIBUTION_DIRECTORY"; then
-  # A distribution directory must have an assets/distribution directory.
-  # See https://wiki.mozilla.org/Mobile/Distribution_Files.
-  if test ! -d "$MOZ_ANDROID_DISTRIBUTION_DIRECTORY/assets/distribution" ; then
-    AC_MSG_ERROR([--with-android-distribution-directory does not contain assets/distribution;
-                  (looked for ${MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets/distribution).])
-  fi
-fi
-AC_SUBST(MOZ_ANDROID_DISTRIBUTION_DIRECTORY)
-
 dnl ========================================================
 dnl = Trademarked Branding
 dnl ========================================================

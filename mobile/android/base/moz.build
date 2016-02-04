@@ -885,11 +885,6 @@ ANDROID_ASSETS_DIRS += [
     '/mobile/android/app/assets',
 ]
 
-if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
-    ANDROID_ASSETS_DIRS += [
-        '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
-    ]
-
 # We do not expose MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN here because that
 # would leak the value to build logs.  Instead we expose the token quietly where
 # appropriate in Makefile.in.
