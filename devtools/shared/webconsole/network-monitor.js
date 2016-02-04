@@ -557,8 +557,6 @@ NetworkResponseListener.prototype = {
       this.httpActivity.discardResponseBody
     );
 
-    this.httpActivity.channel = null;
-    this.httpActivity.owner = null;
     this.httpActivity = null;
     this.sink = null;
     this.inputStream = null;
@@ -672,6 +670,13 @@ NetworkMonitor.prototype = {
     0x804b000a: "STATUS_WAITING_FOR",
     0x804b0006: "STATUS_RECEIVING_FROM"
   },
+
+  httpDownloadActivities: [
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+    gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+  ],
 
   // Network response bodies are piped through a buffer of the given size (in
   // bytes).
@@ -852,8 +857,53 @@ NetworkMonitor.prototype = {
     if (throttler) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       if (matchRequest(channel, this.filters)) {
+        // Read any request body here, before it is throttled.
+        let httpActivity = this.createOrGetActivityObject(channel);
+        this._onRequestBodySent(httpActivity);
         throttler.manageUpload(channel);
       }
+    }
+  },
+
+  /**
+   * A helper function for observeActivity.  This does whatever work
+   * is required by a particular http activity event.  Arguments are
+   * the same as for observeActivity.
+   */
+  _dispatchActivity: function (httpActivity, channel, activityType,
+                               activitySubtype, timestamp, extraSizeData,
+                               extraStringData) {
+    let transCodes = this.httpTransactionCodes;
+
+    // Store the time information for this activity subtype.
+    if (activitySubtype in transCodes) {
+      let stage = transCodes[activitySubtype];
+      if (stage in httpActivity.timings) {
+        httpActivity.timings[stage].last = timestamp;
+      } else {
+        httpActivity.timings[stage] = {
+          first: timestamp,
+          last: timestamp,
+        };
+      }
+    }
+
+    switch (activitySubtype) {
+      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
+        this._onRequestBodySent(httpActivity);
+        if (httpActivity.sentBody !== null) {
+          httpActivity.owner.addRequestPostData({ text: httpActivity.sentBody });
+          httpActivity.sentBody = null;
+        }
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
+        this._onResponseHeader(httpActivity, extraStringData);
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
+        this._onTransactionClose(httpActivity);
+        break;
+      default:
+        break;
     }
   },
 
@@ -893,46 +943,25 @@ NetworkMonitor.prototype = {
 
     // Iterate over all currently ongoing requests. If channel can't
     // be found within them, then exit this function.
-    let httpActivity = null;
-    for (let id in this.openRequests) {
-      let item = this.openRequests[id];
-      if (item.channel === channel) {
-        httpActivity = item;
-        break;
-      }
-    }
-
+    let httpActivity = this._findActivityObject(channel);
     if (!httpActivity) {
       return;
     }
 
-    let transCodes = this.httpTransactionCodes;
-
-    // Store the time information for this activity subtype.
-    if (activitySubtype in transCodes) {
-      let stage = transCodes[activitySubtype];
-      if (stage in httpActivity.timings) {
-        httpActivity.timings[stage].last = timestamp;
-      } else {
-        httpActivity.timings[stage] = {
-          first: timestamp,
-          last: timestamp,
-        };
-      }
-    }
-
-    switch (activitySubtype) {
-      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
-        this._onRequestBodySent(httpActivity);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
-        this._onResponseHeader(httpActivity, extraStringData);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
-        this._onTransactionClose(httpActivity);
-        break;
-      default:
-        break;
+    // If we're throttling, we must not report events as they arrive
+    // from platform, but instead let the throttler emit the events
+    // after some time has elapsed.
+    if (httpActivity.downloadThrottle &&
+        this.httpDownloadActivities.indexOf(activitySubtype) >= 0) {
+      let callback = this._dispatchActivity.bind(this);
+      httpActivity.downloadThrottle
+        .addActivityCallback(callback, httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
+    } else {
+      this._dispatchActivity(httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
     }
   }),
 
@@ -941,11 +970,7 @@ NetworkMonitor.prototype = {
    */
   _createNetworkEvent: function (channel, { timestamp, extraStringData,
                                            fromCache, fromServiceWorker }) {
-    let win = NetworkHelper.getWindowForRequest(channel);
-    let httpActivity = this.createActivityObject(channel);
-
-    // see _onRequestBodySent()
-    httpActivity.charset = win ? win.document.characterSet : null;
+    let httpActivity = this.createOrGetActivityObject(channel);
 
     channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
     httpActivity.private = channel.isChannelPrivate;
@@ -1032,7 +1057,6 @@ NetworkMonitor.prototype = {
     httpActivity.owner.addRequestHeaders(headers, extraStringData);
     httpActivity.owner.addRequestCookies(cookies);
 
-    this.openRequests[httpActivity.id] = httpActivity;
     return httpActivity;
   },
 
@@ -1057,8 +1081,27 @@ NetworkMonitor.prototype = {
   },
 
   /**
-   * Create the empty HTTP activity object. This object is used for storing all
-   * the request and response information.
+   * Find an HTTP activity object for the channel.
+   *
+   * @param nsIHttpChannel channel
+   *        The HTTP channel whose activity object we want to find.
+   * @return object
+   *        The HTTP activity object, or null if it is not found.
+   */
+  _findActivityObject: function (channel) {
+    for (let id in this.openRequests) {
+      let item = this.openRequests[id];
+      if (item.channel === channel) {
+        return item;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Find an existing HTTP activity object, or create a new one. This
+   * object is used for storing all the request and response
+   * information.
    *
    * This is a HAR-like object. Conformance to the spec is not guaranteed at
    * this point.
@@ -1069,24 +1112,35 @@ NetworkMonitor.prototype = {
    * @return object
    *         The new HTTP activity object.
    */
-  createActivityObject: function (channel) {
-    return {
-      id: gSequenceId(),
-      channel: channel,
-      // see _onRequestHeader()
-      charset: null,
-      url: channel.URI.spec,
-      // needed for host specific security info
-      hostname: channel.URI.host,
-      discardRequestBody: !this.saveRequestAndResponseBodies,
-      discardResponseBody: !this.saveRequestAndResponseBodies,
-      // internal timing information, see observeActivity()
-      timings: {},
-      // see _onResponseHeader()
-      responseStatus: null,
-      // the activity owner which is notified when changes happen
-      owner: null,
-    };
+  createOrGetActivityObject: function (channel) {
+    let httpActivity = this._findActivityObject(channel);
+    if (!httpActivity) {
+      let win = NetworkHelper.getWindowForRequest(channel);
+      let charset = win ? win.document.characterSet : null;
+
+      httpActivity = {
+        id: gSequenceId(),
+        channel: channel,
+        // see _onRequestBodySent()
+        charset: charset,
+        sentBody: null,
+        url: channel.URI.spec,
+        // needed for host specific security info
+        hostname: channel.URI.host,
+        discardRequestBody: !this.saveRequestAndResponseBodies,
+        discardResponseBody: !this.saveRequestAndResponseBodies,
+        // internal timing information, see observeActivity()
+        timings: {},
+        // see _onResponseHeader()
+        responseStatus: null,
+        // the activity owner which is notified when changes happen
+        owner: null,
+      };
+
+      this.openRequests[httpActivity.id] = httpActivity;
+    }
+
+    return httpActivity;
   },
 
   /**
@@ -1142,14 +1196,16 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object we are working with.
    */
   _onRequestBodySent: function (httpActivity) {
-    if (httpActivity.discardRequestBody) {
+    // Return early if we don't need the request body, or if we've
+    // already found it.
+    if (httpActivity.discardRequestBody || httpActivity.sentBody !== null) {
       return;
     }
 
     let sentBody = NetworkHelper.readPostTextFromRequest(httpActivity.channel,
                                                          httpActivity.charset);
 
-    if (!sentBody && this.window &&
+    if (sentBody !== null && this.window &&
         httpActivity.url == this.window.location.href) {
       // If the request URL is the same as the current page URL, then
       // we can try to get the posted text from the page directly.
@@ -1164,8 +1220,8 @@ NetworkMonitor.prototype = {
                  .readPostTextFromPageViaWebNav(webNav, httpActivity.charset);
     }
 
-    if (sentBody) {
-      httpActivity.owner.addRequestPostData({ text: sentBody });
+    if (sentBody !== null) {
+      httpActivity.sentBody = sentBody;
     }
   },
 
@@ -1290,12 +1346,10 @@ NetworkMonitor.prototype = {
       harTimings.connect = -1;
     }
 
-    if ((timings.STATUS_WAITING_FOR || timings.STATUS_RECEIVING_FROM) &&
-        (timings.STATUS_CONNECTED_TO || timings.STATUS_SENDING_TO)) {
-      harTimings.send = (timings.STATUS_WAITING_FOR ||
-                         timings.STATUS_RECEIVING_FROM).first -
-                        (timings.STATUS_CONNECTED_TO ||
-                         timings.STATUS_SENDING_TO).last;
+    if (timings.STATUS_SENDING_TO) {
+      harTimings.send = timings.STATUS_SENDING_TO.last - timings.STATUS_SENDING_TO.first;
+    } else if (timings.REQUEST_HEADER && timings.REQUEST_BODY_SENT) {
+      harTimings.send = timings.REQUEST_BODY_SENT.last - timings.REQUEST_HEADER.first;
     } else {
       harTimings.send = -1;
     }
