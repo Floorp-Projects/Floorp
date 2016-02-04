@@ -32,6 +32,15 @@ function simdBox_i4(i) {
     return 0;
 }
 
+var uceFault_simdBox_u4 = eval(uneval(uceFault).replace('uceFault', 'uceFault_simdBox_u4'));
+function simdBox_u4(i) {
+    var a = SIMD.Uint32x4(i, 98 - i, i + 0x7ffffff0, i + 0xffffff00);
+    if (uceFault_simdBox_u4(i) || uceFault_simdBox_u4(i))
+        assertEqX4(a, [i, 98 - i, i + 0x7ffffff0, i + 0xffffff00].map(x => x >>> 0));
+    assertRecoveredOnBailout(a, true);
+    return 0;
+}
+
 var uceFault_simdBox_f4 = eval(uneval(uceFault).replace('uceFault', 'uceFault_simdBox_f4'));
 function simdBox_f4(i) {
     var a = SIMD.Float32x4(i, i + 0.1, i + 0.2, i + 0.3);
@@ -55,6 +64,7 @@ function simdBox_b4(i) {
 
 for (var i = 0; i < 100; i++) {
     simdBox_i4(i);
+    simdBox_u4(i);
     simdBox_f4(i);
     simdBox_b4(i);
 }
