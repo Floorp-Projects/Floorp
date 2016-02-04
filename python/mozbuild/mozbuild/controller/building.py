@@ -414,16 +414,26 @@ class BuildMonitor(MozbuildObject):
         # TODO: it would be nice to collect data on the storage device as well
         o['system'] = dict(
             architecture=list(platform.architecture()),
-            logical_cpu_count=psutil.cpu_count(),
             machine=platform.machine(),
-            physical_cpu_count=psutil.cpu_count(logical=False),
             python_version=platform.python_version(),
             release=platform.release(),
             system=platform.system(),
-            swap_total=psutil.swap_memory()[0],
             version=platform.version(),
-            vmem_total=psutil.virtual_memory()[0],
         )
+
+        # If the imports for this file ran before the in-tree virtualenv
+        # was bootstrapped (for instance, for a clobber build in automation),
+        # psutil might not be available.
+        #
+        # Treat psutil as optional to avoid an outright failure to log resources
+        # in this case.
+        if psutil:
+            o['system'].update(dict(
+                logical_cpu_count=psutil.cpu_count(),
+                physical_cpu_count=psutil.cpu_count(logical=False),
+                swap_total=psutil.swap_memory()[0],
+                vmem_total=psutil.virtual_memory()[0],
+            ))
 
         if platform.system() == 'Linux':
             dist = list(platform.linux_distribution())
