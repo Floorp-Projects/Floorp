@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+var { classes: Cc, interfaces: Ci } = Components;
+
 // Test whether the blacklist succesfully adds and removes the prefs that store
 // its decisions when the remote blacklist is changed.
 // Uses test_gfxBlacklist.xml and test_gfxBlacklist2.xml

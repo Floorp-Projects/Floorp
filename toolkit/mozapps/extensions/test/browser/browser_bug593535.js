@@ -10,6 +10,7 @@ const SEARCH_URL = TESTROOT + "browser_bug593535.xml";
 const QUERY = "NOTFOUND";
 
 var gProvider;
+var gManagerWindow;
 
 function test() {
   waitForExplicitFinish();

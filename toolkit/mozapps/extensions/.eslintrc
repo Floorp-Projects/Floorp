@@ -1,0 +1,6 @@
+{
+  "rules": {
+    // No using undeclared variables
+    "no-undef": 2,
+  }
+}
