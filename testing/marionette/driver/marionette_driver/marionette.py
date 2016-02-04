@@ -1149,11 +1149,8 @@ class Marionette(object):
             self.host,
             self.port,
             self.socket_timeout)
-
-        # Call wait_for_port() before attempting to connect in
-        # the event gecko hasn't started yet.
-        self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
+        self.wait_for_port(timeout=timeout)
 
         body = {"capabilities": desired_capabilities, "sessionId": session_id}
         resp = self._send_message("newSession", body)
