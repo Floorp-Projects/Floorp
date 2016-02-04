@@ -12,6 +12,8 @@ loader.lazyRequireGetter(this, "React",
   "devtools/client/shared/vendor/react");
 loader.lazyRequireGetter(this, "TargetListComponent",
   "devtools/client/aboutdebugging/components/target-list", true);
+loader.lazyRequireGetter(this, "TabHeaderComponent",
+  "devtools/client/aboutdebugging/components/tab-header", true);
 loader.lazyRequireGetter(this, "Services");
 
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
@@ -47,22 +49,28 @@ exports.WorkersComponent = React.createClass({
   },
 
   render() {
-    let client = this.props.client;
-    let workers = this.state.workers;
-    return React.createElement("div", { className: "inverted-icons" },
-      React.createElement(TargetListComponent, {
-        id: "service-workers",
-        name: Strings.GetStringFromName("serviceWorkers"),
-        targets: workers.service, client }),
-      React.createElement(TargetListComponent, {
-        id: "shared-workers",
-        name: Strings.GetStringFromName("sharedWorkers"),
-        targets: workers.shared, client }),
-      React.createElement(TargetListComponent, {
-        id: "other-workers",
-        name: Strings.GetStringFromName("otherWorkers"),
-        targets: workers.other, client })
-    );
+    let { client } = this.props;
+    let { workers } = this.state;
+
+    return React.createElement(
+      "div", null,
+        React.createElement(TabHeaderComponent, {
+          id: "workers-header", name: Strings.GetStringFromName("workers")}),
+        React.createElement(
+          "div", { id: "workers", className: "inverted-icons" },
+          React.createElement(TargetListComponent, {
+            id: "service-workers",
+            name: Strings.GetStringFromName("serviceWorkers"),
+            targets: workers.service, client }),
+          React.createElement(TargetListComponent, {
+            id: "shared-workers",
+            name: Strings.GetStringFromName("sharedWorkers"),
+            targets: workers.shared, client }),
+          React.createElement(TargetListComponent, {
+            id: "other-workers",
+            name: Strings.GetStringFromName("otherWorkers"),
+            targets: workers.other, client }))
+      );
   },
 
   update() {

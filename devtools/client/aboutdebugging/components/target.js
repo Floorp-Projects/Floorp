@@ -27,8 +27,7 @@ exports.TargetComponent = React.createClass({
   displayName: "TargetComponent",
 
   debug() {
-    let client = this.props.client;
-    let target = this.props.target;
+    let { client, target } = this.props;
     switch (target.type) {
       case "extension":
         BrowserToolboxProcess.init({ addonID: target.addonID });
@@ -53,9 +52,7 @@ exports.TargetComponent = React.createClass({
   },
 
   render() {
-    let target = this.props.target;
-    let debugDisabled = this.props.debugDisabled;
-
+    let { target, debugDisabled } = this.props;
     return React.createElement("div", { className: "target" },
       React.createElement("img", {
         className: "target-icon",
