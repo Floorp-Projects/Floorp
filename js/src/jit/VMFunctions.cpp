@@ -614,6 +614,21 @@ PostWriteBarrier(JSRuntime* rt, JSObject* obj)
     rt->gc.storeBuffer.putWholeCell(obj);
 }
 
+static const size_t MAX_WHOLE_CELL_BUFFER_SIZE = 4096;
+
+void
+PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, size_t index)
+{
+    MOZ_ASSERT(!IsInsideNursery(obj));
+    if (obj->is<NativeObject>() &&
+        obj->as<NativeObject>().getDenseInitializedLength() > MAX_WHOLE_CELL_BUFFER_SIZE)
+    {
+        rt->gc.storeBuffer.putSlot(&obj->as<NativeObject>(), HeapSlot::Element, index, 1);
+    } else {
+        rt->gc.storeBuffer.putWholeCell(obj);
+    }
+}
+
 void
 PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj)
 {
