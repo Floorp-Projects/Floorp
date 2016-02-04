@@ -68,7 +68,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", { suppressTarget: true });
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com" rel="noreferrer">http://example.com</a></p>');
+              '<p><a href="http://example.com/" rel="noreferrer">http://example.com/</a></p>');
           });
 
         it("should make links with target=_blank if suppressTarget is not given",
@@ -76,7 +76,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", {});
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com" target="_blank" rel="noreferrer">http://example.com</a></p>');
+              '<p><a href="http://example.com/" target="_blank" rel="noreferrer">http://example.com/</a></p>');
           });
       });
 
@@ -86,7 +86,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", { sendReferrer: true });
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com" target="_blank">http://example.com</a></p>');
+              '<p><a href="http://example.com/" target="_blank">http://example.com/</a></p>');
           });
 
         it("should make links with rel=noreferrer if sendReferrer is not given",
@@ -94,7 +94,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", {});
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com" target="_blank" rel="noreferrer">http://example.com</a></p>');
+              '<p><a href="http://example.com/" target="_blank" rel="noreferrer">http://example.com/</a></p>');
           });
       });
 
@@ -127,7 +127,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             });
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com">http://example.com</a></p>');
+              '<p><a href="http://example.com/">http://example.com/</a></p>');
           });
 
         describe("#_handleClickEvent", function() {
@@ -192,29 +192,34 @@ describe("loop.shared.views.LinkifiedTextView", function() {
           markup: "<p>This is a test.</p>"
         },
         {
-          desc: "should linkify a string containing only a URL",
+          desc: "should linkify a string containing only a URL with a trailing slash",
           rawText: "http://example.com/",
+          markup: '<p><a href="http://example.com/">http://example.com/</a></p>'
+        },
+        {
+          desc: "should linkify a string containing only a URL with no trailing slash",
+          rawText: "http://example.com",
           markup: '<p><a href="http://example.com/">http://example.com/</a></p>'
         },
         {
           desc: "should linkify a URL with text preceding it",
           rawText: "This is a link to http://example.com",
-          markup: '<p>This is a link to <a href="http://example.com">http://example.com</a></p>'
+          markup: '<p>This is a link to <a href="http://example.com/">http://example.com/</a></p>'
         },
         {
           desc: "should linkify a URL with text before and after",
           rawText: "Look at http://example.com near the bottom",
-          markup: '<p>Look at <a href="http://example.com">http://example.com</a> near the bottom</p>'
+          markup: '<p>Look at <a href="http://example.com/">http://example.com/</a> near the bottom</p>'
         },
         {
           desc: "should linkify an http URL",
           rawText: "This is an http://example.com test",
-          markup: '<p>This is an <a href="http://example.com">http://example.com</a> test</p>'
+          markup: '<p>This is an <a href="http://example.com/">http://example.com/</a> test</p>'
         },
         {
           desc: "should linkify an https URL",
           rawText: "This is an https://example.com test",
-          markup: '<p>This is an <a href="https://example.com">https://example.com</a> test</p>'
+          markup: '<p>This is an <a href="https://example.com/">https://example.com/</a> test</p>'
         },
         {
           desc: "should not linkify a data URL",
@@ -222,9 +227,9 @@ describe("loop.shared.views.LinkifiedTextView", function() {
           markup: "<p>This is an data:image/png;base64,iVBORw0KGgoAAA test</p>"
         },
         {
-          desc: "should linkify URLs with a port number",
+          desc: "should linkify URLs with a port number and no trailing slash",
           rawText: "Joe went to http://example.com:8000 today.",
-          markup: '<p>Joe went to <a href="http://example.com:8000">http://example.com:8000</a> today.</p>'
+          markup: '<p>Joe went to <a href="http://example.com:8000/">http://example.com:8000/</a> today.</p>'
         },
         {
           desc: "should linkify URLs with a port number and a trailing slash",
@@ -239,12 +244,12 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should linkify URLs with a port number and a query string",
           rawText: "Joe went to http://example.com:8000?page=index today.",
-          markup: '<p>Joe went to <a href="http://example.com:8000?page=index">http://example.com:8000?page=index</a> today.</p>'
+          markup: '<p>Joe went to <a href="http://example.com:8000/?page=index">http://example.com:8000/?page=index</a> today.</p>'
         },
         {
           desc: "should linkify a URL with a port number and a hash string",
           rawText: "Joe went to http://example.com:8000#page=index today.",
-          markup: '<p>Joe went to <a href="http://example.com:8000#page=index">http://example.com:8000#page=index</a> today.</p>'
+          markup: '<p>Joe went to <a href="http://example.com:8000/#page=index">http://example.com:8000/#page=index</a> today.</p>'
         },
         {
           desc: "should NOT include preceding ':' intros without a space",
@@ -279,7 +284,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should linkify an ftp URL",
           rawText: "This is an ftp://example.com test",
-          markup: '<p>This is an <a href="ftp://example.com">ftp://example.com</a> test</p>'
+          markup: '<p>This is an <a href="ftp://example.com/">ftp://example.com/</a> test</p>'
         },
 
         // We don't want to include trailing dots in URLs, even though those
@@ -291,19 +296,24 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should linkify 'http://example.com.', w/o a trailing dot",
           rawText: "Joe went to http://example.com.",
-          markup: '<p>Joe went to <a href="http://example.com">http://example.com</a>.</p>'
+          markup: '<p>Joe went to <a href="http://example.com/">http://example.com/</a>.</p>'
         },
         // XXX several more tests like this we could port from Autolinkify.js
         // see https://bugzilla.mozilla.org/show_bug.cgi?id=1186254
         {
           desc: "should exclude invalid chars after domain part",
           rawText: "Joe went to http://www.example.com's today",
-          markup: '<p>Joe went to <a href="http://www.example.com">http://www.example.com</a>&#x27;s today</p>'
+          markup: '<p>Joe went to <a href="http://www.example.com/">http://www.example.com/</a>&#x27;s today</p>'
         },
         {
           desc: "should not linkify protocol-relative URLs",
           rawText: "//C/Programs",
           markup: "<p>//C/Programs</p>"
+        },
+        {
+          desc: "should not linkify malformed URI sequences",
+          rawText: "http://www.example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%",
+          markup: "<p>http://www.example.com/DNA/pizza/menu/lots-of-different-kinds-of-pizza/%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%8D%E0%B8%88%E0%B8%A1%E0%B8%A3%E0%</p>"
         },
         // do a few tests to convince ourselves that, when our code is handled
         // HTML in the input box, the integration of our code with React should
@@ -312,13 +322,18 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should linkify simple HTML include an href properly escaped",
           rawText: '<p>Joe went to <a href="http://www.example.com">example</a></p>',
-          markup: '<p>&lt;p&gt;Joe went to &lt;a href=&quot;<a href="http://www.example.com">http://www.example.com</a>&quot;&gt;example&lt;/a&gt;&lt;/p&gt;</p>'
+          markup: '<p>&lt;p&gt;Joe went to &lt;a href=&quot;<a href="http://www.example.com/">http://www.example.com/</a>&quot;&gt;example&lt;/a&gt;&lt;/p&gt;</p>'
         },
         {
           desc: "should linkify HTML with nested tags and resource path properly escaped",
           rawText: '<a href="http://example.com"><img src="http://example.com" /></a>',
-          markup: '<p>&lt;a href=&quot;<a href="http://example.com">http://example.com</a>&quot;&gt;&lt;img src=&quot;<a href="http://example.com">http://example.com</a>&quot; /&gt;&lt;/a&gt;</p>'
-         }
+          markup: '<p>&lt;a href=&quot;<a href="http://example.com/">http://example.com/</a>&quot;&gt;&lt;img src=&quot;<a href="http://example.com/">http://example.com/</a>&quot; /&gt;&lt;/a&gt;</p>'
+         },
+        {
+          desc: "should linkify and decode a string containing a Homographic attack URL with no trailing slash",
+          rawText: "http://ebаy.com",
+          markup: '<p><a href="http://xn--eby-7cd.com/">http://xn--eby-7cd.com/</a></p>'
+        }
       ];
 
       var skippedTests = [
@@ -335,7 +350,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should not include a ? if at the end of a URL",
           rawText: "Did Joe go to http://example.com?",
-          markup: '<p>Did Joe go to <a href="http://example.com">http://example.com</a>?</p>'
+          markup: '<p>Did Joe go to <a href="http://example.com/">http://example.com/</a>?</p>'
         },
         {
           desc: "should linkify 'check out http://example.com/monkey.', w/o trailing dots",
@@ -349,7 +364,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
         {
           desc: "should linkify HTML with nested tags and a resource path properly escaped",
           rawText: '<a href="http://example.com"><img src="http://example.com/someImage.jpg" /></a>',
-          markup: '<p>&lt;a href=&quot;<a href="http://example.com">http://example.com</a>&quot;&gt;&lt;img src=&quot;<a href="http://example.com/someImage.jpg&quot;">http://example.com/someImage.jpg&quot;</a> /&gt;&lt;/a&gt;</p>'
+          markup: '<p>&lt;a href=&quot;<a href="http://example.com/">http://example.com/</a>&quot;&gt;&lt;img src=&quot;<a href="http://example.com/someImage.jpg&quot;">http://example.com/someImage.jpg&quot;</a> /&gt;&lt;/a&gt;</p>'
         },
         // XXX handle domains without schemes (bug 1186245)
         // see https://bugzilla.mozilla.org/show_bug.cgi?id=1186254
