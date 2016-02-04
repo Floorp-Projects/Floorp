@@ -103,7 +103,9 @@ var openInspector = Task.async(function*() {
   inspector = toolbox.getPanel("inspector");
 
   info("Waiting for the inspector to update");
-  yield inspector.once("inspector-updated");
+  if (inspector._updateProgress) {
+    yield inspector.once("inspector-updated");
+  }
 
   return {
     toolbox: toolbox,
