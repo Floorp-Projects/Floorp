@@ -5,15 +5,11 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>mochikit@mozilla.org</em:id>
     <em:version>1.0</em:version>
-#ifdef MOCHITEST_BOOTSTRAP
-    <em:bootstrap>true</em:bootstrap>
-#endif
     <em:targetApplication>
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
 #expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
-               <!-- Set to * so toolkit/mozapps/update/chrome tests pass. -->
-               <em:maxVersion>*</em:maxVersion>
+#expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
       </Description>
     </em:targetApplication>
     <!-- Front End MetaData -->
