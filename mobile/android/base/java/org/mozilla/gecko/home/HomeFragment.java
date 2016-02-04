@@ -394,6 +394,7 @@ public abstract class HomeFragment extends Fragment {
 
             switch(mType) {
                 case BOOKMARKS:
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
                     mDB.removeBookmarksWithURL(cr, mUrl);
                     break;
 
@@ -402,6 +403,7 @@ public abstract class HomeFragment extends Fragment {
                     break;
 
                 case READING_LIST:
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "reading_list");
                     mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
                     break;
