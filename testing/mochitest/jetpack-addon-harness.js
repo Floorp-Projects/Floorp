@@ -16,7 +16,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
-setTimeout(testInit, 0);
+// Start the tests after the window has been displayed
+window.addEventListener("load", function testOnLoad() {
+  window.removeEventListener("load", testOnLoad);
+  window.addEventListener("MozAfterPaint", function testOnMozAfterPaint() {
+    window.removeEventListener("MozAfterPaint", testOnMozAfterPaint);
+    setTimeout(testInit, 0);
+  });
+});
 
 var sdkpath = null;
 
