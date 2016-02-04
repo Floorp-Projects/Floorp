@@ -282,10 +282,9 @@ struct ResumeFromException
 
 void HandleException(ResumeFromException* rfe);
 
-void EnsureExitFrame(CommonFrameLayout* frame);
+void EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame);
 
 void MarkJitActivations(JSRuntime* rt, JSTracer* trc);
-void MarkIonCompilerRoots(JSTracer* trc);
 
 JSCompartment*
 TopmostIonActivationCompartment(JSRuntime* rt);
@@ -468,18 +467,6 @@ class IonAccessorICFrameLayout : public CommonFrameLayout
     }
     static size_t Size() {
         return sizeof(IonAccessorICFrameLayout);
-    }
-};
-
-// The callee token is now dead.
-class IonUnwoundRectifierFrameLayout : public RectifierFrameLayout
-{
-  public:
-    static inline size_t Size() {
-        // It is not necessary to accout for an extra callee token here because
-        // sizeof(ExitFrameLayout) == sizeof(RectifierFrameLayout) due to
-        // extra padding.
-        return sizeof(IonUnwoundRectifierFrameLayout);
     }
 };
 
