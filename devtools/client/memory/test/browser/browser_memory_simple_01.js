@@ -28,7 +28,9 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   ok(!snapshotEls[0].classList.contains("selected"), "First snapshot no longer has `selected` class");
   ok(snapshotEls[1].classList.contains("selected"), "Second snapshot has `selected` class");
 
-  yield waitUntilSnapshotState(gStore, [states.SAVED_CENSUS, states.SAVED_CENSUS]);
+  yield waitUntilState(gStore, state =>
+    state.snapshots[0].state === states.SAVED_CENSUS &&
+    state.snapshots[1].state === states.SAVED_CENSUS);
 
   ok(document.querySelector(".heap-tree-item-name"),
     "Should have rendered some tree items");
