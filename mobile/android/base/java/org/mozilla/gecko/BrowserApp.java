@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -180,6 +179,7 @@ public class BrowserApp extends GeckoApp
 
     private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
     public static final String GUEST_BROWSING_ARG = "--guest";
+    public static final String INTENT_KEY_SWITCHBOARD_UUID = "switchboard-uuid";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
 
@@ -589,12 +589,15 @@ public class BrowserApp extends GeckoApp
             // Initializes the default URLs the first time.
             SwitchBoard.initDefaultServerUrls("https://switchboard.services.mozilla.com/urls", "https://switchboard.services.mozilla.com/v1", true);
 
+            final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
+            SwitchBoard.setUUIDFromExtra(switchboardUUID);
+
             // Looks at the server if there are changes in the server URL that should be used in the future
-            new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
+            new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER, switchboardUUID).execute();
 
             // Loads the actual config. This can be done on app start or on app onResume() depending
             // how often you want to update the config.
-            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
+            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER, switchboardUUID).execute();
         }
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
