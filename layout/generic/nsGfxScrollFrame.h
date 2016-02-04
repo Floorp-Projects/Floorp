@@ -509,6 +509,11 @@ public:
   // a scrollable layer. Used for asynchronous scrolling.
   bool mWillBuildScrollableLayer:1;
 
+  // If true, the scroll frame is an ancestor of other scrolling frames, so
+  // we shouldn't expire the displayport on this scrollframe unless those
+  // descendant scrollframes also have their displayports removed.
+  bool mIsScrollParent:1;
+
   // Whether we are the root scroll frame that is used for containerful
   // scrolling with a display port. If true, the scrollable frame
   // shouldn't attach frame metrics to its layers because the container
