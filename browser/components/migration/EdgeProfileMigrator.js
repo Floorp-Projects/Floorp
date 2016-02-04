@@ -221,6 +221,12 @@ EdgeProfileMigrator.prototype.__defineGetter__("sourceProfiles", function() {
   return isWin10OrHigher ? null : [];
 });
 
+EdgeProfileMigrator.prototype.__defineGetter__("sourceLocked", function() {
+    // There is an exclusive lock on some databases. Assume they are locked for now.
+    return true;
+});
+
+
 EdgeProfileMigrator.prototype.classDescription = "Edge Profile Migrator";
 EdgeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=edge";
 EdgeProfileMigrator.prototype.classID = Components.ID("{62e8834b-2d17-49f5-96ff-56344903a2ae}");

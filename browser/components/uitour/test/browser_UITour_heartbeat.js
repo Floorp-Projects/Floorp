@@ -10,6 +10,9 @@ var gContentWindow;
 function test() {
   UITourTest();
   requestLongerTimeout(2);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.uitour.surveyDuration");
+  });
 }
 
 function getHeartbeatNotification(aId, aChromeWindow = window) {
@@ -66,6 +69,39 @@ function cleanUpNotification(aId, aChromeWindow = window) {
   notification.close();
 }
 
+/**
+ * Check telemetry payload for proper format and expected content.
+ *
+ * @param aPayload
+ *        The Telemetry payload to verify
+ * @param aFlowId
+ *        Expected value of the flowId field.
+ * @param aExpectedFields
+ *        Array of expected fields. No other fields are allowed.
+ */
+function checkTelemetry(aPayload, aFlowId, aExpectedFields) {
+  // Basic payload format
+  is(aPayload.version, 1, "Telemetry ping must have heartbeat version=1");
+  is(aPayload.flowId, aFlowId, "Flow ID in the Telemetry ping must match");
+
+  // Check for superfluous fields
+  let extraKeys = new Set(Object.keys(aPayload));
+  extraKeys.delete("version");
+  extraKeys.delete("flowId");
+
+  // Check for expected fields
+  for (let field of aExpectedFields) {
+    ok(field in aPayload, "The payload should have the field '" + field + "'");
+    if (field.endsWith("TS")) {
+      let ts = aPayload[field];
+      ok(Number.isInteger(ts) && ts > 0, "Timestamp '" + field + "' must be a natural number");
+    }
+    extraKeys.delete(field);
+  }
+
+  is(extraKeys.size, 0, "No unexpected fields in the Telemetry payload");
+}
+
 var tests = [
   /**
    * Check that the "stars" heartbeat UI correctly shows and closes.
@@ -86,6 +122,11 @@ var tests = [
           info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           done();
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received");
+          checkTelemetry(aData, flowId, ["offeredTS", "closedTS"]);
           break;
         }
         default:
@@ -123,6 +164,12 @@ var tests = [
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           is(gBrowser.tabs.length, originalTabCount, "No engagement tab should be opened.");
           done();
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "votedTS", "closedTS", "score"]);
+          is(aData.score, 2, "Checking Telemetry payload.score");
           break;
         }
         default:
@@ -163,6 +210,12 @@ var tests = [
           done();
           break;
         }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "votedTS", "closedTS", "score"]);
+          is(aData.score, 2, "Checking Telemetry payload.score");
+          break;
+        }
         default:
           // We are not expecting other states for this test.
           ok(false, "Unexpected notification received: " + aEventName);
@@ -198,6 +251,12 @@ var tests = [
           info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           done();
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "votedTS", "closedTS", "score"]);
+          is(aData.score, expectedScore, "Checking Telemetry payload.score");
           break;
         }
         default:
@@ -241,6 +300,12 @@ var tests = [
           is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
           gBrowser.removeCurrentTab();
           done();
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "votedTS", "closedTS", "score"]);
+          is(aData.score, 1, "Checking Telemetry payload.score");
           break;
         }
         default:
@@ -290,6 +355,11 @@ var tests = [
           executeSoon(done);
           break;
         }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "engagedTS", "closedTS"]);
+          break;
+        }
         default: {
           // We are not expecting other states for this test.
           ok(false, "Unexpected notification received: " + aEventName);
@@ -333,6 +403,11 @@ var tests = [
           is(gBrowser.tabs.length, expectedTabCount, "Learn more URL should open in a new tab.");
           gBrowser.removeCurrentTab();
           done();
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received.");
+          checkTelemetry(aData, flowId, ["offeredTS", "learnMoreTS", "closedTS"]);
           break;
         }
         default:
@@ -456,4 +531,90 @@ var tests = [
 
     yield BrowserTestUtils.closeWindow(privateWin);
   }),
+
+  /**
+   * Test that the survey closes itself after a while and submits Telemetry
+   */
+  taskify(function* test_telemetry_surveyExpired() {
+    let flowId = "survey-expired-" + Math.random();
+    let engagementURL = "http://example.com";
+    let surveyDuration = 1; // 1 second (pref is in seconds)
+    Services.prefs.setIntPref("browser.uitour.surveyDuration", surveyDuration);
+
+    let telemetryPromise = new Promise((resolve, reject) => {
+        gContentAPI.observe(function (aEventName, aData) {
+          switch (aEventName) {
+            case "Heartbeat:NotificationOffered":
+              info("'Heartbeat:NotificationOffered' notification received");
+              break;
+            case "Heartbeat:SurveyExpired":
+              info("'Heartbeat:SurveyExpired' notification received");
+              ok(true, "Survey should end on its own after a time out");
+            case "Heartbeat:NotificationClosed":
+              info("'Heartbeat:NotificationClosed' notification received");
+              break;
+            case "Heartbeat:TelemetrySent": {
+              info("'Heartbeat:TelemetrySent' notification received");
+              checkTelemetry(aData, flowId, ["offeredTS", "expiredTS", "closedTS"]);
+              resolve();
+              break;
+            }
+            default:
+              // not expecting other states for this test
+              ok(false, "Unexpected notification received: " + aEventName);
+              reject();
+          }
+        });
+    });
+
+    gContentAPI.showHeartbeat("How would you rate Firefox?", "Thank you!", flowId, engagementURL);
+    yield telemetryPromise;
+    Services.prefs.clearUserPref("browser.uitour.surveyDuration");
+  }),
+
+  /**
+   * Check that certain whitelisted experiment parameters get reflected in the
+   * Telemetry ping
+   */
+  function test_telemetry_params(done) {
+    let flowId = "telemetry-params-" + Math.random();
+    let engagementURL = "http://example.com";
+    let extraParams = {
+      "surveyId": "foo",
+      "surveyVersion": 1.5,
+      "testing": true,
+      "notWhitelisted": 123,
+    };
+    let expectedFields = ["surveyId", "surveyVersion", "testing"];
+
+    gContentAPI.observe(function (aEventName, aData) {
+      switch (aEventName) {
+        case "Heartbeat:NotificationOffered": {
+          info("'Heartbeat:Offered' notification received (timestamp " + aData.timestamp.toString() + ").");
+          cleanUpNotification(flowId);
+          break;
+        }
+        case "Heartbeat:NotificationClosed": {
+          info("'Heartbeat:NotificationClosed' notification received (timestamp " + aData.timestamp.toString() + ").");
+          break;
+        }
+        case "Heartbeat:TelemetrySent": {
+          info("'Heartbeat:TelemetrySent' notification received");
+          checkTelemetry(aData, flowId, ["offeredTS", "closedTS"].concat(expectedFields));
+          for (let param of expectedFields) {
+            is(aData[param], extraParams[param],
+               "Whitelisted experiment configs should be copied into Telemetry pings");
+          }
+          done();
+          break;
+        }
+        default:
+          // We are not expecting other states for this test.
+          ok(false, "Unexpected notification received: " + aEventName);
+      }
+    });
+
+    gContentAPI.showHeartbeat("How would you rate Firefox?", "Thank you!",
+                              flowId, engagementURL, null, null, extraParams);
+  },
 ];

@@ -2294,9 +2294,7 @@ notification[value="translation"] {
 
 /* Bookmarks roots menu-items */
 #subscribeToPageMenuitem:not([disabled]),
-#subscribeToPageMenupopup,
-#BMB_subscribeToPageMenuitem:not([disabled]),
-#BMB_subscribeToPageMenupopup {
+#subscribeToPageMenupopup {
   list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
 }
 

@@ -23,5 +23,6 @@ Client-side, this consists of:
    deletion-ping
    crash-ping
    uitour-ping
+   heartbeat-ping
    preferences
    crashes

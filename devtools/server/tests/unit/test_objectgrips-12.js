@@ -3,6 +3,8 @@
 
 // Test getDisplayString.
 
+Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+
 var gDebuggee;
 var gClient;
 var gThreadClient;
@@ -125,6 +127,7 @@ function test_display_string()
       output: "Promise (fulfilled: 5)"
     },
     {
+      // This rejection is left uncaught, see expectUncaughtRejection below.
       input: "Promise.reject(new Error())",
       output: "Promise (rejected: Error)"
     },
@@ -133,6 +136,8 @@ function test_display_string()
       output: "Promise (pending)"
     }
   ];
+
+  PromiseTestUtils.expectUncaughtRejection(/Error/);
 
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
     const args = aPacket.frame.arguments;
