@@ -18,10 +18,14 @@
 #include <stdio.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Saturate.h"
 
 #include "base/basictypes.h"
 #include "base/thread.h"
 
+#include "GonkSensorsInterface.h"
+#include "GonkSensorsPollInterface.h"
+#include "GonkSensorsRegistryInterface.h"
 #include "Hal.h"
 #include "HalLog.h"
 #include "HalSensor.h"
@@ -31,6 +35,10 @@
 using namespace mozilla::hal;
 
 namespace mozilla {
+
+//
+// Internal implementation
+//
 
 // The value from SensorDevice.h (Android)
 #define DEFAULT_DEVICE_POLL_RATE 200000000 /*200ms*/
@@ -285,8 +293,8 @@ SetSensorState(SensorType aSensor, bool activate)
   }
 }
 
-void
-EnableSensorNotifications(SensorType aSensor)
+static void
+EnableSensorNotificationsInternal(SensorType aSensor)
 {
   if (!sSensorModule) {
     hw_get_module(SENSORS_HARDWARE_MODULE_ID,
@@ -322,13 +330,530 @@ EnableSensorNotifications(SensorType aSensor)
   SetSensorState(aSensor, true);
 }
 
-void
-DisableSensorNotifications(SensorType aSensor)
+static void
+DisableSensorNotificationsInternal(SensorType aSensor)
 {
   if (!sSensorModule) {
     return;
   }
   SetSensorState(aSensor, false);
+}
+
+//
+// Daemon
+//
+
+typedef detail::SaturateOp<uint32_t> SaturateOpUint32;
+
+/**
+ * The poll notification handler receives all events about sensors and
+ * sensor events.
+ */
+class SensorsPollNotificationHandler final
+  : public GonkSensorsPollNotificationHandler
+{
+public:
+  SensorsPollNotificationHandler(GonkSensorsPollInterface* aPollInterface)
+    : mPollInterface(aPollInterface)
+  {
+    MOZ_ASSERT(mPollInterface);
+
+    mPollInterface->SetNotificationHandler(this);
+  }
+
+  void EnableSensorsByType(SensorsType aType)
+  {
+    if (SaturateOpUint32(mClasses[aType].mActivated)++) {
+      return;
+    }
+
+    SensorsDeliveryMode deliveryMode = DefaultSensorsDeliveryMode(aType);
+
+    // Old ref-count for the sensor type was 0, so we
+    // activate all sensors of the type.
+    for (size_t i = 0; i < mSensors.Length(); ++i) {
+      if (mSensors[i].mType == aType &&
+          mSensors[i].mDeliveryMode == deliveryMode) {
+        mPollInterface->EnableSensor(mSensors[i].mId, nullptr);
+        mPollInterface->SetPeriod(mSensors[i].mId, DefaultSensorPeriod(aType),
+                                  nullptr);
+      }
+    }
+  }
+
+  void DisableSensorsByType(SensorsType aType)
+  {
+    if (SaturateOpUint32(mClasses[aType].mActivated)-- != 1) {
+      return;
+    }
+
+    SensorsDeliveryMode deliveryMode = DefaultSensorsDeliveryMode(aType);
+
+    // Old ref-count for the sensor type was 1, so we
+    // deactivate all sensors of the type.
+    for (size_t i = 0; i < mSensors.Length(); ++i) {
+      if (mSensors[i].mType == aType &&
+          mSensors[i].mDeliveryMode == deliveryMode) {
+        mPollInterface->DisableSensor(mSensors[i].mId, nullptr);
+      }
+    }
+  }
+
+  void ClearSensorClasses()
+  {
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(mClasses); ++i) {
+      mClasses[i] = SensorsSensorClass();
+    }
+  }
+
+  void ClearSensors()
+  {
+    mSensors.Clear();
+  }
+
+  // Methods for SensorsPollNotificationHandler
+  //
+
+  void ErrorNotification(SensorsError aError) override
+  {
+    // XXX: Bug 1206056: Try to repair some of the errors or restart cleanly.
+  }
+
+  void SensorDetectedNotification(int32_t aId, SensorsType aType,
+                                  float aRange, float aResolution,
+                                  float aPower, int32_t aMinPeriod,
+                                  int32_t aMaxPeriod,
+                                  SensorsTriggerMode aTriggerMode,
+                                  SensorsDeliveryMode aDeliveryMode) override
+  {
+    auto i = FindSensorIndexById(aId);
+    if (i == -1) {
+      // Add a new sensor...
+      i = mSensors.Length();
+      mSensors.AppendElement(SensorsSensor(aId, aType, aRange, aResolution,
+                                           aPower, aMinPeriod, aMaxPeriod,
+                                           aTriggerMode, aDeliveryMode));
+    } else {
+      // ...or update an existing one.
+      mSensors[i] = SensorsSensor(aId, aType, aRange, aResolution, aPower,
+                                  aMinPeriod, aMaxPeriod, aTriggerMode,
+                                  aDeliveryMode);
+    }
+
+    mClasses[aType].UpdateFromSensor(mSensors[i]);
+
+    if (mClasses[aType].mActivated &&
+        mSensors[i].mDeliveryMode == DefaultSensorsDeliveryMode(aType)) {
+      // The new sensor's type is enabled, so enable sensor.
+      mPollInterface->EnableSensor(aId, nullptr);
+      mPollInterface->SetPeriod(mSensors[i].mId, DefaultSensorPeriod(aType),
+                                nullptr);
+    }
+  }
+
+  void SensorLostNotification(int32_t aId) override
+  {
+    auto i = FindSensorIndexById(aId);
+    if (i != -1) {
+      mSensors.RemoveElementAt(i);
+    }
+  }
+
+  void EventNotification(int32_t aId, const SensorsEvent& aEvent) override
+  {
+    auto i = FindSensorIndexById(aId);
+    if (i == -1) {
+      HAL_ERR("Sensor %d not registered", aId);
+      return;
+    }
+
+    SensorData sensorData;
+    auto rv = CreateSensorData(aEvent, mClasses[mSensors[i].mType],
+                               sensorData);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    NotifySensorChange(sensorData);
+  }
+
+private:
+  ssize_t FindSensorIndexById(int32_t aId) const
+  {
+    for (size_t i = 0; i < mSensors.Length(); ++i) {
+      if (mSensors[i].mId == aId) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  uint64_t DefaultSensorPeriod(SensorsType aType) const
+  {
+    return aType == SENSORS_TYPE_ACCELEROMETER ? ACCELEROMETER_POLL_RATE
+                                               : DEFAULT_DEVICE_POLL_RATE;
+  }
+
+  SensorsDeliveryMode DefaultSensorsDeliveryMode(SensorsType aType) const
+  {
+    if (aType == SENSORS_TYPE_PROXIMITY ||
+        aType == SENSORS_TYPE_SIGNIFICANT_MOTION) {
+      return SENSORS_DELIVERY_MODE_IMMEDIATE;
+    }
+    return SENSORS_DELIVERY_MODE_BEST_EFFORT;
+  }
+
+  SensorType HardwareSensorToHalSensor(SensorsType aType) const
+  {
+    // FIXME: bug 802004, add proper support for the magnetic-field sensor.
+    switch (aType) {
+      case SENSORS_TYPE_ORIENTATION:
+        return SENSOR_ORIENTATION;
+      case SENSORS_TYPE_ACCELEROMETER:
+        return SENSOR_ACCELERATION;
+      case SENSORS_TYPE_PROXIMITY:
+        return SENSOR_PROXIMITY;
+      case SENSORS_TYPE_LIGHT:
+        return SENSOR_LIGHT;
+      case SENSORS_TYPE_GYROSCOPE:
+        return SENSOR_GYROSCOPE;
+      case SENSORS_TYPE_LINEAR_ACCELERATION:
+        return SENSOR_LINEAR_ACCELERATION;
+      case SENSORS_TYPE_ROTATION_VECTOR:
+        return SENSOR_ROTATION_VECTOR;
+      case SENSORS_TYPE_GAME_ROTATION_VECTOR:
+        return SENSOR_GAME_ROTATION_VECTOR;
+      default:
+        NS_NOTREACHED("Invalid sensors type");
+    }
+    return SENSOR_UNKNOWN;
+  }
+
+  SensorAccuracyType HardwareStatusToHalAccuracy(SensorsStatus aStatus) const
+  {
+    return static_cast<SensorAccuracyType>(aStatus - 1);
+  }
+
+  nsresult CreateSensorData(const SensorsEvent& aEvent,
+                            const SensorsSensorClass& aSensorClass,
+                            SensorData& aSensorData) const
+  {
+    AutoTArray<float, 4> sensorValues;
+
+    auto sensor = HardwareSensorToHalSensor(aEvent.mType);
+
+    if (sensor == SENSOR_UNKNOWN) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    aSensorData.sensor() = sensor;
+    aSensorData.accuracy() = HardwareStatusToHalAccuracy(aEvent.mStatus);
+    aSensorData.timestamp() = aEvent.mTimestamp;
+
+    if (aSensorData.sensor() == SENSOR_ORIENTATION) {
+      // Bug 938035: transfer HAL data for orientation sensor to meet W3C spec
+      // ex: HAL report alpha=90 means East but alpha=90 means West in W3C spec
+      sensorValues.AppendElement(360.0 - radToDeg(aEvent.mData.mFloat[0]));
+      sensorValues.AppendElement(-radToDeg(aEvent.mData.mFloat[1]));
+      sensorValues.AppendElement(-radToDeg(aEvent.mData.mFloat[2]));
+    } else if (aSensorData.sensor() == SENSOR_ACCELERATION) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[1]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[2]);
+    } else if (aSensorData.sensor() == SENSOR_PROXIMITY) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+      sensorValues.AppendElement(aSensorClass.mMinValue);
+      sensorValues.AppendElement(aSensorClass.mMaxValue);
+    } else if (aSensorData.sensor() == SENSOR_LINEAR_ACCELERATION) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[1]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[2]);
+    } else if (aSensorData.sensor() == SENSOR_GYROSCOPE) {
+      sensorValues.AppendElement(radToDeg(aEvent.mData.mFloat[0]));
+      sensorValues.AppendElement(radToDeg(aEvent.mData.mFloat[1]));
+      sensorValues.AppendElement(radToDeg(aEvent.mData.mFloat[2]));
+    } else if (aSensorData.sensor() == SENSOR_LIGHT) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+    } else if (aSensorData.sensor() == SENSOR_ROTATION_VECTOR) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[1]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[2]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[3]);
+    } else if (aSensorData.sensor() == SENSOR_GAME_ROTATION_VECTOR) {
+      sensorValues.AppendElement(aEvent.mData.mFloat[0]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[1]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[2]);
+      sensorValues.AppendElement(aEvent.mData.mFloat[3]);
+    }
+
+    aSensorData.values() = sensorValues;
+
+    return NS_OK;
+  }
+
+  GonkSensorsPollInterface* mPollInterface;
+  nsTArray<SensorsSensor> mSensors;
+  SensorsSensorClass mClasses[SENSORS_NUM_TYPES];
+};
+
+static StaticAutoPtr<SensorsPollNotificationHandler> sPollNotificationHandler;
+
+/**
+ * This is the notifiaction handler for the Sensors interface. If the backend
+ * crashes, we can restart it from here.
+ */
+class SensorsNotificationHandler final : public GonkSensorsNotificationHandler
+{
+public:
+  SensorsNotificationHandler(GonkSensorsInterface* aInterface)
+    : mInterface(aInterface)
+  {
+    MOZ_ASSERT(mInterface);
+
+    mInterface->SetNotificationHandler(this);
+  }
+
+  void BackendErrorNotification(bool aCrashed) override
+  {
+    // XXX: Bug 1206056: restart sensorsd
+  }
+
+private:
+  GonkSensorsInterface* mInterface;
+};
+
+static StaticAutoPtr<SensorsNotificationHandler> sNotificationHandler;
+
+/**
+ * |SensorsRegisterModuleResultHandler| implements the result-handler
+ * callback for registering the Poll service and activating the first
+ * sensors. If an error occures during the process, the result handler
+ * disconnects and closes the backend.
+ */
+class SensorsRegisterModuleResultHandler final
+  : public GonkSensorsRegistryResultHandler
+{
+public:
+  SensorsRegisterModuleResultHandler(
+    uint32_t* aSensorsTypeActivated,
+    GonkSensorsInterface* aInterface)
+    : mSensorsTypeActivated(aSensorsTypeActivated)
+    , mInterface(aInterface)
+  {
+    MOZ_ASSERT(mSensorsTypeActivated);
+    MOZ_ASSERT(mInterface);
+  }
+  void OnError(SensorsError aError) override
+  {
+    GonkSensorsRegistryResultHandler::OnError(aError); // print error message
+    Disconnect(); // Registering failed, so close the connection completely
+  }
+  void RegisterModule(uint32_t aProtocolVersion) override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!sPollNotificationHandler);
+
+    // Init, step 3: set notification handler for poll service and vice versa
+    auto pollInterface = mInterface->GetSensorsPollInterface();
+    if (!pollInterface) {
+      Disconnect();
+      return;
+    }
+    if (NS_FAILED(pollInterface->SetProtocolVersion(aProtocolVersion))) {
+      Disconnect();
+      return;
+    }
+
+    sPollNotificationHandler =
+      new SensorsPollNotificationHandler(pollInterface);
+
+    // Init, step 4: activate sensors
+    for (int i = 0; i < SENSORS_NUM_TYPES; ++i) {
+      while (mSensorsTypeActivated[i]) {
+        sPollNotificationHandler->EnableSensorsByType(
+          static_cast<SensorsType>(i));
+        --mSensorsTypeActivated[i];
+      }
+    }
+  }
+public:
+  void Disconnect()
+  {
+    class DisconnectResultHandler final : public GonkSensorsResultHandler
+    {
+    public:
+      void OnError(SensorsError aError)
+      {
+        GonkSensorsResultHandler::OnError(aError); // print error message
+        sNotificationHandler = nullptr;
+      }
+      void Disconnect() override
+      {
+        sNotificationHandler = nullptr;
+      }
+    };
+    mInterface->Disconnect(new DisconnectResultHandler());
+  }
+private:
+  uint32_t* mSensorsTypeActivated;
+  GonkSensorsInterface* mInterface;
+};
+
+/**
+ * |SensorsConnectResultHandler| implements the result-handler
+ * callback for starting the Sensors backend.
+ */
+class SensorsConnectResultHandler final : public GonkSensorsResultHandler
+{
+public:
+  SensorsConnectResultHandler(
+    uint32_t* aSensorsTypeActivated,
+    GonkSensorsInterface* aInterface)
+    : mSensorsTypeActivated(aSensorsTypeActivated)
+    , mInterface(aInterface)
+  {
+    MOZ_ASSERT(mSensorsTypeActivated);
+    MOZ_ASSERT(mInterface);
+  }
+  void OnError(SensorsError aError) override
+  {
+    GonkSensorsResultHandler::OnError(aError); // print error message
+    sNotificationHandler = nullptr;
+  }
+  void Connect() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Init, step 2: register poll service
+    auto registryInterface = mInterface->GetSensorsRegistryInterface();
+    if (!registryInterface) {
+      return;
+    }
+    registryInterface->RegisterModule(
+      GonkSensorsPollModule::SERVICE_ID,
+      new SensorsRegisterModuleResultHandler(mSensorsTypeActivated,
+                                             mInterface));
+  }
+private:
+  uint32_t* mSensorsTypeActivated;
+  GonkSensorsInterface* mInterface;
+};
+
+static uint32_t sSensorsTypeActivated[SENSORS_NUM_TYPES];
+
+static const SensorsType sSensorsType[] = {
+  [SENSOR_ORIENTATION] = SENSORS_TYPE_ORIENTATION,
+  [SENSOR_ACCELERATION] = SENSORS_TYPE_ACCELEROMETER,
+  [SENSOR_PROXIMITY] = SENSORS_TYPE_PROXIMITY,
+  [SENSOR_LINEAR_ACCELERATION] = SENSORS_TYPE_LINEAR_ACCELERATION,
+  [SENSOR_GYROSCOPE] = SENSORS_TYPE_GYROSCOPE,
+  [SENSOR_LIGHT] = SENSORS_TYPE_LIGHT,
+  [SENSOR_ROTATION_VECTOR] = SENSORS_TYPE_ROTATION_VECTOR,
+  [SENSOR_GAME_ROTATION_VECTOR] = SENSORS_TYPE_GAME_ROTATION_VECTOR
+};
+
+void
+EnableSensorNotificationsDaemon(SensorType aSensor)
+{
+  if ((aSensor < 0) ||
+      (aSensor > static_cast<ssize_t>(MOZ_ARRAY_LENGTH(sSensorsType)))) {
+    HAL_ERR("Sensor type %d not known", aSensor);
+    return; // Unsupported sensor type
+  }
+
+  auto interface = GonkSensorsInterface::GetInstance();
+  if (!interface) {
+    return;
+  }
+
+  if (sPollNotificationHandler) {
+    // Everythings already up and running; enable sensor type.
+    sPollNotificationHandler->EnableSensorsByType(sSensorsType[aSensor]);
+    return;
+  }
+
+  ++SaturateOpUint32(sSensorsTypeActivated[sSensorsType[aSensor]]);
+
+  if (sNotificationHandler) {
+    // We are in the middle of a pending start up; nothing else to do.
+    return;
+  }
+
+  // Start up
+
+  MOZ_ASSERT(!sPollNotificationHandler);
+  MOZ_ASSERT(!sNotificationHandler);
+
+  sNotificationHandler = new SensorsNotificationHandler(interface);
+
+  // Init, step 1: connect to Sensors backend
+  interface->Connect(
+    sNotificationHandler,
+    new SensorsConnectResultHandler(sSensorsTypeActivated, interface));
+}
+
+void
+DisableSensorNotificationsDaemon(SensorType aSensor)
+{
+  if ((aSensor < 0) ||
+      (aSensor > static_cast<ssize_t>(MOZ_ARRAY_LENGTH(sSensorsType)))) {
+    HAL_ERR("Sensor type %d not known", aSensor);
+    return; // Unsupported sensor type
+  }
+
+  if (sPollNotificationHandler) {
+    // Everthings up and running; disable sensors type
+    sPollNotificationHandler->DisableSensorsByType(sSensorsType[aSensor]);
+    return;
+  }
+
+  // We might be in the middle of a startup; decrement type's ref-counter.
+  --SaturateOpUint32(sSensorsTypeActivated[sSensorsType[aSensor]]);
+
+  // TODO: stop sensorsd if all sensors are disabled
+}
+
+//
+// Public interface
+//
+
+// TODO: Remove in-Gecko sensors code. Until all devices' base
+// images come with sensorsd installed, we have to support the
+// in-Gecko implementation as well. So we test for the existance
+// of the binary. If it's there, we use it. Otherwise we run the
+// old code.
+static bool
+HasDaemon()
+{
+  static bool tested;
+  static bool hasDaemon;
+
+  if (MOZ_UNLIKELY(!tested)) {
+    hasDaemon = !access("/system/bin/sensorsd", X_OK);
+    tested = true;
+  }
+
+  return hasDaemon;
+}
+
+void
+EnableSensorNotifications(SensorType aSensor)
+{
+  if (HasDaemon()) {
+    EnableSensorNotificationsDaemon(aSensor);
+  } else {
+    EnableSensorNotificationsInternal(aSensor);
+  }
+}
+
+void
+DisableSensorNotifications(SensorType aSensor)
+{
+  if (HasDaemon()) {
+    DisableSensorNotificationsDaemon(aSensor);
+  } else {
+    DisableSensorNotificationsInternal(aSensor);
+  }
 }
 
 } // hal_impl
