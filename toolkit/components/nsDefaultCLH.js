@@ -95,8 +95,8 @@ nsDefaultCLH.prototype = {
       var win = windowMediator.getMostRecentWindow(singletonWindowType);
       if (win) {
         win.focus();
-    	cmdLine.preventDefault = true;
-	  return;
+        cmdLine.preventDefault = true;
+        return;
       }
     }
     catch (e) { }

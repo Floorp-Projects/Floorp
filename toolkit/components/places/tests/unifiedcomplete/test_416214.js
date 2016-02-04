@@ -33,7 +33,7 @@ add_task(function* test_tag_match_url() {
   yield check_autocomplete({
     search: "superTag",
     matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] },
-     		   { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
+               { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
   });
   yield cleanup();
 });
