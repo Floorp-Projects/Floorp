@@ -15,7 +15,7 @@ interface nsICacheStorageVisitor;
  * in-mem+on-disk, in-mem+on-disk+app-cache or just a specific
  * app-cache storage.
  */
-[scriptable, uuid(35d104a6-d252-4fd4-8a56-3c14657cad3b)]
+[scriptable, uuid(ae0a673b-d0c3-49fa-a94d-d9debe8ab393)]
 interface nsICacheStorage : nsISupports
 {
   /**
@@ -55,6 +55,12 @@ interface nsICacheStorage : nsISupports
    * Don't automatically update any 'last used' metadata of the entry.
    */
   const uint32_t OPEN_SECRETLY = 1 << 5;
+
+  /**
+   * Entry is being opened as part of a service worker interception.  Do not
+   * allow the cache to be disabled in this case.
+   */
+  const uint32_t OPEN_INTERCEPTED = 1 << 6;
 
   /**
    * Asynchronously opens a cache entry for the specified URI.
