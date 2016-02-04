@@ -283,5 +283,16 @@ describe("loop.store.ConversationAppStore", function() {
         expect(store.getStoreState().chatWindowDetached).to.eql(true);
       });
     });
+
+    describe("#ToggleBrowserSharingHandler", function() {
+      it("should dispatch the correct action", function() {
+        store.ToggleBrowserSharingHandler({ detail: false });
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.ToggleBrowserSharing({
+          enabled: true
+        }));
+      });
+    });
   });
 });
