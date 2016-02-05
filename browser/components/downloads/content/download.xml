@@ -69,10 +69,6 @@
 
   <binding id="download-full-ui"
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <resources>
-      <stylesheet src="chrome://browser/content/downloads/download.css"/>
-    </resources>
-
     <content orient="horizontal" align="center">
       <xul:image class="downloadTypeIcon"
                  validate="always"
@@ -92,23 +88,24 @@
                          crop="end"
                          xbl:inherits="value=status,tooltiptext=statusTip"/>
       </xul:vbox>
-
-      <xul:button class="downloadButton downloadCancel"
-                  tooltiptext="&cmd.cancel.label;"
-                  oncommand="goDoCommand('downloadsCmd_cancel')"/>
-      <xul:button class="downloadButton downloadRetry"
-                  tooltiptext="&cmd.retry.label;"
-                  oncommand="goDoCommand('downloadsCmd_retry')"/>
-      <xul:button class="downloadButton downloadShow"
+      <xul:stack>
+        <xul:button class="downloadButton downloadCancel"
+                    tooltiptext="&cmd.cancel.label;"
+                    oncommand="goDoCommand('downloadsCmd_cancel')"/>
+        <xul:button class="downloadButton downloadRetry"
+                    tooltiptext="&cmd.retry.label;"
+                    oncommand="goDoCommand('downloadsCmd_retry')"/>
+        <xul:button class="downloadButton downloadShow"
 #ifdef XP_MACOSX
-                  tooltiptext="&cmd.showMac.label;"
+                    tooltiptext="&cmd.showMac.label;"
 #else
-                  tooltiptext="&cmd.show.label;"
+                    tooltiptext="&cmd.show.label;"
 #endif
-                  oncommand="goDoCommand('downloadsCmd_show')"/>
-      <xul:button class="downloadButton downloadConfirmBlock"
-                  tooltiptext="&cmd.removeFile.label;"
-                  oncommand="goDoCommand('downloadsCmd_confirmBlock');"/>
+                    oncommand="goDoCommand('downloadsCmd_show')"/>
+        <xul:button class="downloadButton downloadConfirmBlock"
+                    tooltiptext="&cmd.removeFile.label;"
+                    oncommand="goDoCommand('downloadsCmd_confirmBlock');"/>
+      </xul:stack>
     </content>
   </binding>
 
