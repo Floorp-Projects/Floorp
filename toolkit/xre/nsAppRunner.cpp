@@ -4683,16 +4683,6 @@ mozilla::BrowserTabsRemoteAutostart()
     status = kE10sDisabledByUser;
   }
 
-#ifdef E10S_TESTING_ONLY
-  bool e10sAllowed = true;
-#else
-  // When running tests with 'layers.offmainthreadcomposition.testing.enabled', e10s must be
-  // allowed because these tests must be allowed to run remotely.
-  // We are also allowing e10s to be enabled on Beta (which doesn't have E10S_TESTING_ONLY defined.
-  bool e10sAllowed = !Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("release") ||
-                     gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
-#endif
-
   bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
   bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
 
@@ -4702,7 +4692,7 @@ mozilla::BrowserTabsRemoteAutostart()
                                                       : NS_LITERAL_CSTRING("0"));
 #endif
 
-  if (e10sAllowed && prefEnabled) {
+  if (prefEnabled) {
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
     } else if (disabledForBidi) {
