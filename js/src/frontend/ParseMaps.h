@@ -250,6 +250,14 @@ class DefinitionList
         return (Node*) (u.bits & ~0x1);
     }
 
+    Node* lastNode() const {
+        MOZ_ASSERT(isMultiple());
+        Node* node = firstNode();
+        while (node->next)
+            node = node->next;
+        return node;
+    }
+
     static Node*
     allocNode(ExclusiveContext* cx, LifoAlloc& alloc, uintptr_t bits, Node* tail);
 
@@ -358,6 +366,26 @@ class DefinitionList
         if (!node)
             return false;
         *this = DefinitionList(node);
+        return true;
+    }
+
+    template <typename ParseHandler>
+    bool appendBack(ExclusiveContext* cx, LifoAlloc& alloc,
+                    typename ParseHandler::DefinitionNode defn)
+    {
+        Node* last = allocNode(cx, alloc, ParseHandler::definitionToBits(defn), nullptr);
+        if (!last)
+            return false;
+
+        if (isMultiple()) {
+            lastNode()->next = last;
+        } else {
+            Node* oldLast = allocNode(cx, alloc, u.bits, last);
+            if (!oldLast)
+                return false;
+            *this = DefinitionList(oldLast);
+        }
+
         return true;
     }
 
@@ -473,6 +501,7 @@ class AtomDecls
     }
 
     bool addShadow(JSAtom* atom, DefinitionNode defn);
+    bool addShadowedForAnnexB(JSAtom* atom, DefinitionNode defn);
 
     /* Updating the definition for an entry that is known to exist is infallible. */
     void updateFirst(JSAtom* atom, DefinitionNode defn) {
