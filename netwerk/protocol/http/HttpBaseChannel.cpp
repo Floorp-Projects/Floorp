@@ -1778,14 +1778,15 @@ HttpBaseChannel::GetRequestSucceeded(bool *aValue)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::RedirectTo(nsIURI *newURI)
+HttpBaseChannel::RedirectTo(nsIURI *targetURI)
 {
-  // We can only redirect unopened channels
-  ENSURE_CALLED_BEFORE_CONNECT();
+  // We cannot redirect after OnStartRequest of the listener
+  // has been called, since to redirect we have to switch channels
+  // and the dance with OnStartRequest et al has to start over.
+  // This would break the nsIStreamListener contract.
+  NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
 
-  // The redirect is stored internally for use in AsyncOpen
-  mAPIRedirectToURI = newURI;
-
+  mAPIRedirectToURI = targetURI;
   return NS_OK;
 }
 
