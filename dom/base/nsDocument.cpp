@@ -10655,7 +10655,7 @@ nsIDocument::CreateTouch(nsGlobalWindow* aView,
                          float aRotationAngle,
                          float aForce)
 {
-  MOZ_ASSERT(aView->IsInnerWindow());
+  MOZ_ASSERT_IF(aView, aView->IsInnerWindow());
   RefPtr<Touch> touch = new Touch(aTarget,
                                   aIdentifier,
                                   aPageX, aPageY,
