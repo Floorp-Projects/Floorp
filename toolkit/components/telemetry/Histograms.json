@@ -8719,19 +8719,6 @@
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize the open windows list (ms)"
   },
-  "PWMGR_ABOUT_LOGINS_GET_ALL_LOGINS_MS": {
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 30,
-    "description": "How long getAllLogins() on about:logins takes for mobile users"
-  },
-  "PWMGR_ABOUT_LOGINS_USAGE": {
-    "expires_in_version": "55",
-    "kind": "enumerated",
-    "n_values": 12,
-    "description": "Usage of about:logins 0= list of logins viewed, 1=a login's specifics page was viewed, 2=user edited login credentials 3=user toggled the show/hide button"
-  },
   "PWMGR_BLOCKLIST_NUM_SITES": {
     "expires_in_version": "never",
     "kind": "exponential",
