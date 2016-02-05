@@ -1477,19 +1477,6 @@ describe("loop.OTSdkDriver", function() {
         }
       };
 
-      it("should not dispatch a VideoDimensionsChanged action for other properties", function() {
-        session.trigger("streamPropertyChanged", {
-          stream: stream,
-          changedProperty: STREAM_PROPERTIES.HAS_AUDIO
-        });
-        session.trigger("streamPropertyChanged", {
-          stream: stream,
-          changedProperty: STREAM_PROPERTIES.HAS_VIDEO
-        });
-
-        sinon.assert.notCalled(dispatcher.dispatch);
-      });
-
       it("should dispatch a VideoDimensionsChanged action", function() {
         session.connection = {
           id: "localUser"
@@ -1502,6 +1489,22 @@ describe("loop.OTSdkDriver", function() {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "videoDimensionsChanged"));
+      });
+
+      it("should dispatch a VideoScreenShareChanged action", function() {
+        session.connection = {
+          id: "localUser"
+        };
+        session.trigger("streamPropertyChanged", {
+          stream: stream,
+          oldValue: false,
+          newValue: true,
+          changedProperty: STREAM_PROPERTIES.HAS_VIDEO
+        });
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "videoScreenStreamChanged"));
       });
     });
 

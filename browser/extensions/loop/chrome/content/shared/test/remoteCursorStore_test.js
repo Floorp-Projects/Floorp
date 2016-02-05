@@ -117,4 +117,37 @@ describe("loop.store.RemoteCursorStore", function() {
       expect(store.getStoreState().realVideoSize).eql(null);
     });
   });
+
+  describe("#videoScreenStreamChanged", function() {
+    beforeEach(function() {
+      store.setStoreState({
+        remoteCursorPosition: {
+          ratioX: 1,
+          ratioY: 1
+        }
+      });
+    });
+
+    it("should remove cursor position if screen stream has no video", function() {
+      store.videoScreenStreamChanged(new sharedActions.VideoScreenStreamChanged({
+        hasVideo: false
+      }));
+
+      expect(store.getStoreState().remoteCursorPosition).eql(null);
+    });
+
+    it("should not remove cursor position if screen stream has video", function() {
+      sandbox.stub(store, "setStoreState");
+
+      store.videoScreenStreamChanged(new sharedActions.VideoScreenStreamChanged({
+        hasVideo: true
+      }));
+
+      sinon.assert.notCalled(store.setStoreState);
+      expect(store.getStoreState().remoteCursorPosition).eql({
+        ratioX: 1,
+        ratioY: 1
+      });
+    });
+  });
 });
