@@ -7,9 +7,6 @@ var gTestBrowser = null;
 var config = {};
 
 add_task(function* () {
-  Services.prefs.setIntPref("media.gmp.log.level", 0);
-  Services.prefs.setBoolPref("extensions.logging.enabled", true);
-
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables plugin
   // crash reports.  This test needs them enabled.  The test also needs a mock
   // report server, and fortunately one is already set up by toolkit/
@@ -29,8 +26,6 @@ add_task(function* () {
   Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", 0);
 
   registerCleanupFunction(Task.async(function*() {
-    Services.prefs.clearUserPref("extensions.logging.enabled");
-    Services.prefs.clearUserPref("media.gmp.log.level");
     Services.prefs.clearUserPref("dom.ipc.plugins.timeoutSecs");
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverUrl);
