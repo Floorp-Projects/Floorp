@@ -21,15 +21,18 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
   DOMString                   spacing = "distribute";
 };
 
-// For the constructor we use Element? for the first argument since we
-// don't support Animatable for pseudo-elements yet.
+// Bug 1241783: For the constructor we use (Element or CSSPseudoElement)? for
+// the first argument since we cannot convert a mixin into a union type
+// automatically.
 [HeaderFile="mozilla/dom/KeyframeEffect.h",
  Func="nsDocument::IsWebAnimationsEnabled",
- Constructor(Element? target,
+ Constructor((Element or CSSPseudoElement)? target,
              object? frames,
              optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
-  readonly attribute Element?  target;
+  // Bug 1241783: As with the constructor, we use (Element or CSSPseudoElement)?
+  // for the type of |target| instead of Animatable?
+  readonly attribute (Element or CSSPseudoElement)?  target;
   readonly attribute IterationCompositeOperation iterationComposite;
   readonly attribute CompositeOperation          composite;
   readonly attribute DOMString                   spacing;
