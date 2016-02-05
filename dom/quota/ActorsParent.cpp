@@ -1355,7 +1355,7 @@ class MOZ_STACK_CLASS OriginParser final
 
   SchemaType mSchemaType;
   State mState;
-  bool mInMozBrowser;
+  bool mInIsolatedMozBrowser;
   bool mMaybeDriveLetter;
   bool mError;
 
@@ -1367,7 +1367,7 @@ public:
     , mPort()
     , mSchemaType(eNone)
     , mState(eExpectingAppIdOrSchema)
-    , mInMozBrowser(false)
+    , mInIsolatedMozBrowser(false)
     , mMaybeDriveLetter(false)
     , mError(false)
   { }
@@ -5713,7 +5713,7 @@ OriginClearOp::DoInitOnMainThread()
     mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
 
   nsAutoCString pattern;
-  QuotaManager::GetOriginPatternString(attrs.mAppId, attrs.mInBrowser, origin,
+  QuotaManager::GetOriginPatternString(attrs.mAppId, attrs.mInIsolatedMozBrowser, origin,
                                        pattern);
 
   mOriginScope.SetFromPattern(pattern);
@@ -6266,7 +6266,7 @@ OriginParser::Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs)
 
   MOZ_ASSERT(mState == eComplete || mState == eHandledTrailingSeparator);
 
-  *aAttrs = PrincipalOriginAttributes(mAppId, mInMozBrowser);
+  *aAttrs = PrincipalOriginAttributes(mAppId, mInIsolatedMozBrowser);
 
   nsAutoCString spec(mSchema);
 
@@ -6391,9 +6391,9 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
       }
 
       if (aToken.First() == 't') {
-        mInMozBrowser = true;
+        mInIsolatedMozBrowser = true;
       } else if (aToken.First() == 'f') {
-        mInMozBrowser = false;
+        mInIsolatedMozBrowser = false;
       } else {
         QM_WARNING("'%s' is not a valid value for the inMozBrowser flag!",
                    nsCString(aToken).get());

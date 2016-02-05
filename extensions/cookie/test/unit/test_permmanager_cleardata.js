@@ -54,7 +54,7 @@ function run_test()
 
   let entries = [
     { origin: 'http://example.com', originAttributes: { appId: 1 } },
-    { origin: 'http://example.com', originAttributes: { appId: 1, inBrowser: true } },
+    { origin: 'http://example.com', originAttributes: { appId: 1, inIsolatedMozBrowser: true } },
     { origin: 'http://example.com', originAttributes: {} },
     { origin: 'http://example.com', originAttributes: { appId: 2 } },
   ];
@@ -64,5 +64,5 @@ function run_test()
 
   // In that case, only the permissions of app 1 related to a browserElement should be removed.
   // All the other permissions should stay.
-  test(entries, getData({appId: 1, inBrowser: true}), [ pm.ALLOW_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
+  test(entries, getData({appId: 1, inIsolatedMozBrowser: true}), [ pm.ALLOW_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
 }

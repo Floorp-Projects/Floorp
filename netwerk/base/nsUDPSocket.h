@@ -65,7 +65,7 @@ private:
   PRFileDesc                           *mFD;
   mozilla::net::NetAddr                mAddr;
   uint32_t                             mAppId;
-  bool                                 mIsInBrowserElement;
+  bool                                 mIsInIsolatedMozBrowserElement;
   nsCOMPtr<nsIUDPSocketListener>       mListener;
   nsCOMPtr<nsIEventTarget>             mListenerTarget;
   bool                                 mAttached;

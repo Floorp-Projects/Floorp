@@ -3066,7 +3066,7 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
   DocShellOriginAttributes attrs;
-  attrs.mInBrowser = OwnerIsBrowserFrame();
+  attrs.mInIsolatedMozBrowser = OwnerIsBrowserFrame();
 
   nsCString signedPkgOrigin;
   if (!aPackageId.IsEmpty()) {

@@ -53,7 +53,7 @@ function run_test() {
   let uri4_1000_n = secMan.createCodebasePrincipal(uri4, attrs);
   let uri5_1000_n = secMan.createCodebasePrincipal(uri5, attrs);
 
-  attrs = {appId: 1000, inBrowser: true};
+  attrs = {appId: 1000, inIsolatedMozBrowser: true};
   let uri0_1000_y = secMan.createCodebasePrincipal(uri0, attrs);
   let uri1_1000_y = secMan.createCodebasePrincipal(uri1, attrs);
   let uri2_1000_y = secMan.createCodebasePrincipal(uri2, attrs);
@@ -69,7 +69,7 @@ function run_test() {
   let uri4_2000_n = secMan.createCodebasePrincipal(uri4, attrs);
   let uri5_2000_n = secMan.createCodebasePrincipal(uri5, attrs);
 
-  attrs = {appId: 2000, inBrowser: true};
+  attrs = {appId: 2000, inIsolatedMozBrowser: true};
   let uri0_2000_y = secMan.createCodebasePrincipal(uri0, attrs);
   let uri1_2000_y = secMan.createCodebasePrincipal(uri1, attrs);
   let uri2_2000_y = secMan.createCodebasePrincipal(uri2, attrs);

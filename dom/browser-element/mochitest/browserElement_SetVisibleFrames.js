@@ -21,7 +21,7 @@ function runTest() {
   SpecialPowers.addPermission("browser", true, {url: SpecialPowers.wrap(principal.URI).spec,
                                                 originAttributes: {
                                                   appId: principal.appId,
-                                                  inBrowser: true
+                                                  inIsolatedMozBrowser: true
                                                 }});
 
   iframe = document.createElement('iframe');
@@ -80,7 +80,7 @@ function finish() {
   SpecialPowers.removePermission("browser", {url: SpecialPowers.wrap(principal.URI).spec,
                                              originAttributes: {
                                                appId: principal.appId,
-                                               inBrowser: true
+                                               inIsolatedMozBrowser: true
                                              }});
   SimpleTest.finish();
 }

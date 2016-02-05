@@ -952,11 +952,11 @@ protected:
 class InitIndexEntryEvent : public nsRunnable {
 public:
   InitIndexEntryEvent(CacheFileHandle *aHandle, uint32_t aAppId,
-                      bool aAnonymous, bool aInBrowser, bool aPinning)
+                      bool aAnonymous, bool aInIsolatedMozBrowser, bool aPinning)
     : mHandle(aHandle)
     , mAppId(aAppId)
     , mAnonymous(aAnonymous)
-    , mInBrowser(aInBrowser)
+    , mInIsolatedMozBrowser(aInIsolatedMozBrowser)
     , mPinning(aPinning)
   {
     MOZ_COUNT_CTOR(InitIndexEntryEvent);
@@ -975,7 +975,7 @@ public:
       return NS_OK;
     }
 
-    CacheIndex::InitEntry(mHandle->Hash(), mAppId, mAnonymous, mInBrowser, mPinning);
+    CacheIndex::InitEntry(mHandle->Hash(), mAppId, mAnonymous, mInIsolatedMozBrowser, mPinning);
 
     // We cannot set the filesize before we init the entry. If we're opening
     // an existing entry file, frecency and expiration time will be set after
@@ -991,7 +991,7 @@ protected:
   RefPtr<CacheFileHandle> mHandle;
   uint32_t                  mAppId;
   bool                      mAnonymous;
-  bool                      mInBrowser;
+  bool                      mInIsolatedMozBrowser;
   bool                      mPinning;
 };
 
@@ -1253,8 +1253,8 @@ CacheFileIOManager::ShutdownInternal()
   }
 
   // Assert the table is empty. When we are here, no new handles can be added
-  // and handles will no longer remove them self from this table and we don't 
-  // want to keep invalid handles here. Also, there is no lookup after this 
+  // and handles will no longer remove them self from this table and we don't
+  // want to keep invalid handles here. Also, there is no lookup after this
   // point to happen.
   MOZ_ASSERT(mHandles.HandleCount() == 0);
 
@@ -3423,11 +3423,12 @@ nsresult
 CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
                                    uint32_t         aAppId,
                                    bool             aAnonymous,
-                                   bool             aInBrowser,
+                                   bool             aInIsolatedMozBrowser,
                                    bool             aPinning)
 {
   LOG(("CacheFileIOManager::InitIndexEntry() [handle=%p, appId=%u, anonymous=%d"
-       ", inBrowser=%d, pinned=%d]", aHandle, aAppId, aAnonymous, aInBrowser, aPinning));
+       ", inIsolatedMozBrowser=%d, pinned=%d]", aHandle, aAppId, aAnonymous,
+       aInIsolatedMozBrowser, aPinning));
 
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3441,7 +3442,7 @@ CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
   }
 
   RefPtr<InitIndexEntryEvent> ev =
-    new InitIndexEntryEvent(aHandle, aAppId, aAnonymous, aInBrowser, aPinning);
+    new InitIndexEntryEvent(aHandle, aAppId, aAnonymous, aInIsolatedMozBrowser, aPinning);
   rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
   NS_ENSURE_SUCCESS(rv, rv);
 
