@@ -22,6 +22,7 @@
 
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmText.h"
+#include "vm/ArrayBufferObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -698,6 +699,42 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
     return true;
 }
 
+static bool
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
+                    MutableHandle<ArrayBufferObject*> heap)
+{
+    if (!d.readCStringIf(MemorySection))
+        return true;
+
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected memory section byte size");
+
+    if (!d.readCStringIf(FieldInitial))
+        return Fail(cx, d, "expected memory section initial field");
+
+    uint32_t initialHeapSize;
+    if (!d.readVarU32(&initialHeapSize))
+        return Fail(cx, d, "expected initial memory size");
+
+    if (initialHeapSize < PageSize || initialHeapSize % PageSize != 0)
+        return Fail(cx, d, "initial memory size not a multiple of 0x10000");
+
+    if (initialHeapSize > INT32_MAX)
+        return Fail(cx, d, "initial memory size too big");
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "memory section byte size mismatch");
+
+    bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
+    heap.set(ArrayBufferObject::createForWasm(cx, initialHeapSize, signalsForOOB));
+    if (!heap)
+        return false;
+
+    mg.initHeapUsage(HeapUsage::Unshared);
+    return true;
+}
+
 typedef HashSet<const char*, CStringHasher> CStringSet;
 
 static bool
@@ -870,9 +907,9 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
 }
 
 static bool
-DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t length,
+DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t length,
              ImportNameVector* importNames, UniqueExportMap* exportMap,
-             MutableHandle<WasmModuleObject*> moduleObj)
+             MutableHandle<ArrayBufferObject*> heap, MutableHandle<WasmModuleObject*> moduleObj)
 {
     Decoder d(bytes, bytes + length);
 
@@ -897,7 +934,10 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
         return false;
 
     ModuleGenerator mg(cx);
-    if (!mg.init(Move(init), Move(filename)))
+    if (!mg.init(Move(init), Move(file)))
+        return false;
+
+    if (!DecodeMemorySection(cx, d, mg, heap))
         return false;
 
     if (!DecodeExportsSection(cx, d, mg))
@@ -1050,31 +1090,26 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         importObj = &args[1].toObject();
     }
 
-    UniqueChars filename;
-    if (!DescribeScriptedCaller(cx, &filename))
+    UniqueChars file;
+    if (!DescribeScriptedCaller(cx, &file))
         return false;
 
     ImportNameVector importNames;
     UniqueExportMap exportMap;
+    Rooted<ArrayBufferObject*> heap(cx);
     Rooted<WasmModuleObject*> moduleObj(cx);
-    if (!DecodeModule(cx, Move(filename), bytes, length, &importNames, &exportMap, &moduleObj)) {
+    if (!DecodeModule(cx, Move(file), bytes, length, &importNames, &exportMap, &heap, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
     }
-
-    Module& module = moduleObj->module();
-
-    Rooted<ArrayBufferObject*> heap(cx);
-    if (module.usesHeap())
-        return Fail(cx, "Heap not implemented yet");
 
     Rooted<FunctionVector> imports(cx, FunctionVector(cx));
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
     RootedObject exportObj(cx);
-    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);
