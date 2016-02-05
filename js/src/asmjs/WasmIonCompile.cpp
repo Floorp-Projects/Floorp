@@ -2519,7 +2519,7 @@ EmitIfElse(FunctionCompiler& f, bool hasElse, ExprType expected, MDefinition** d
     if (expected != ExprType::Void)
         *def = f.popPhiOutput();
 
-    MOZ_ASSERT((expected != ExprType::Void) == !!*def);
+    MOZ_ASSERT_IF(!f.inDeadCode(), (expected != ExprType::Void) == !!*def);
     return true;
 }
 
