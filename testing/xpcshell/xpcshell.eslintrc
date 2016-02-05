@@ -24,12 +24,14 @@
     "do_parse_document": false,
     "do_print": false,
     "do_register_cleanup": false,
+    "do_report_unexpected_exception": false,
     "do_test_finished": false,
     "do_test_pending": false,
     "do_throw": false,
     "do_timeout": false,
     "equal": false,
     "load": false,
+    "mozinfo": false,
     "notDeepEqual": false,
     "notEqual": false,
     "notStrictEqual": false,
@@ -37,5 +39,8 @@
     "run_next_test": false,
     "run_test": false,
     "strictEqual": false,
+    "todo": false,
+    "todo_check_false": false,
+    "todo_check_true": false,
   }
 }
