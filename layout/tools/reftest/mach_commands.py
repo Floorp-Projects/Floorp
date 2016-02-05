@@ -203,8 +203,6 @@ class ReftestRunner(MozbuildObject):
         if not kwargs["runTestsInParallel"]:
             kwargs["logFile"] = "%s.log" % kwargs["suite"]
 
-        # Remove the stdout handler from the internal logger and let mach deal with it
-        runreftest.log.removeHandler(runreftest.log.handlers[0])
         self.log_manager.enable_unstructured()
         try:
             rv = runreftest.run(**kwargs)
