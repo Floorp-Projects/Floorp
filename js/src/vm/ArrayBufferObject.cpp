@@ -34,7 +34,7 @@
 #endif
 #include "jswrapper.h"
 
-#include "asmjs/AsmJS.h"
+#include "asmjs/Wasm.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
@@ -408,17 +408,17 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
     // Get the entire reserved region (with all pages inaccessible).
     void* data;
 # ifdef XP_WIN
-    data = VirtualAlloc(nullptr, AsmJSMappedSize, MEM_RESERVE, PAGE_NOACCESS);
+    data = VirtualAlloc(nullptr, wasm::MappedSize, MEM_RESERVE, PAGE_NOACCESS);
     if (!data)
         return false;
 # else
-    data = MozTaggedAnonymousMmap(nullptr, AsmJSMappedSize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0, "asm-js-reserved");
+    data = MozTaggedAnonymousMmap(nullptr, wasm::MappedSize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0, "asm-js-reserved");
     if (data == MAP_FAILED)
         return false;
 # endif
 
     // Enable access to the valid region.
-    MOZ_ASSERT(buffer->byteLength() % AsmJSPageSize == 0);
+    MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
 # ifdef XP_WIN
     if (!VirtualAlloc(data, buffer->byteLength(), MEM_COMMIT, PAGE_READWRITE)) {
         VirtualFree(data, 0, MEM_RELEASE);
@@ -428,14 +428,14 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
 # else
     size_t validLength = buffer->byteLength();
     if (mprotect(data, validLength, PROT_READ | PROT_WRITE)) {
-        munmap(data, AsmJSMappedSize);
+        munmap(data, wasm::MappedSize);
         MemProfiler::RemoveNative(data);
         return false;
     }
 #   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
     // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
     VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)data + validLength,
-                                                   AsmJSMappedSize-validLength);
+                                                   wasm::MappedSize - validLength);
 #   endif
 # endif
 
@@ -491,17 +491,14 @@ ArrayBufferObject::dataPointerShared() const
 static void
 ReleaseAsmJSMappedData(void* base)
 {
-    MOZ_ASSERT(uintptr_t(base) % AsmJSPageSize == 0);
 #  ifdef XP_WIN
     VirtualFree(base, 0, MEM_RELEASE);
 #  else
-    munmap(base, AsmJSMappedSize);
+    munmap(base, wasm::MappedSize);
 #   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
     // Tell Valgrind/Memcheck to recommence reporting accesses in the
     // previously-inaccessible region.
-    if (AsmJSMappedSize > 0) {
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, AsmJSMappedSize);
-    }
+    VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, wasm::MappedSize);
 #   endif
 #  endif
     MemProfiler::RemoveNative(base);

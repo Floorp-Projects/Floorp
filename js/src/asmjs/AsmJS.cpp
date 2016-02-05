@@ -29,14 +29,12 @@
 
 #include "jswrapper.h"
 
+#include "asmjs/Wasm.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
-#include "jit/AtomicOperations.h"
-#include "jit/MIR.h"
-#include "js/Class.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
@@ -8091,15 +8089,8 @@ Warn(AsmJSParser& parser, int errorNumber, const char* str)
 static bool
 EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
 {
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of a JIT compiler");
-#endif
-
-    if (!cx->jitSupportsFloatingPoint())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
-
-    if (cx->gcSystemPageSize() != AsmJSPageSize)
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
+    if (!HasCompilerSupport(cx))
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of compiler support");
 
     switch (parser.options().asmJSOption) {
       case AsmJSOption::Disabled:
@@ -8198,7 +8189,6 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!EstablishPreconditions(cx, parser))
         return NoExceptionPending(cx);
 
-
     // Before spending any time parsing the module, try to look it up in the
     // embedding's cache using the chars about to be parsed as the key.
     Rooted<WasmModuleObject*> moduleObj(cx);
@@ -8280,13 +8270,7 @@ js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // See EstablishPreconditions.
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    bool available = false;
-#else
-    bool available = cx->jitSupportsFloatingPoint() &&
-                     cx->gcSystemPageSize() == AsmJSPageSize &&
-                     cx->runtime()->options().asmJS();
-#endif
+    bool available = HasCompilerSupport(cx) && cx->runtime()->options().asmJS();
 
     args.rval().set(BooleanValue(available));
     return true;
@@ -8512,31 +8496,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 /*****************************************************************************/
 // asm.js heap
 
-static const size_t MinHeapLength = 64 * 1024;
-static_assert(MinHeapLength % AsmJSPageSize == 0, "Invalid page size");
-
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-
-// Targets define AsmJSImmediateRange to be the size of an address immediate,
-// and AsmJSCheckedImmediateRange, to be the size of an address immediate that
-// can be supported by signal-handler OOB handling.
-static_assert(AsmJSCheckedImmediateRange <= AsmJSImmediateRange,
-              "AsmJSImmediateRange should be the size of an unconstrained "
-              "address immediate");
-
-// To support the use of signal handlers for catching Out Of Bounds accesses,
-// the internal ArrayBuffer data array is inflated to 4GiB (only the
-// byteLength portion of which is accessible) so that out-of-bounds accesses
-// (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-// Then, an additional extent is added to permit folding of immediate
-// values into addresses. And finally, unaligned accesses and mask optimizations
-// might also try to access a few bytes after this limit, so just inflate it by
-// AsmJSPageSize.
-const size_t js::AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
-                                   AsmJSImmediateRange +
-                                   AsmJSPageSize;
-
-#endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+static const size_t MinHeapLength = PageSize;
 
 // From the asm.js spec Linking section:
 //  the heap object's byteLength must be either
@@ -8551,7 +8511,7 @@ js::IsValidAsmJSHeapLength(uint32_t length)
                  (IsPowerOfTwo(length) ||
                   (length & 0x00ffffff) == 0);
 
-    MOZ_ASSERT_IF(valid, length % AsmJSPageSize == 0);
+    MOZ_ASSERT_IF(valid, length % PageSize == 0);
     MOZ_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
 
     return valid;

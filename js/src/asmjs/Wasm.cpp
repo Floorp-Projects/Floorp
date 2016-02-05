@@ -20,7 +20,6 @@
 
 #include "jsprf.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmText.h"
 
@@ -956,7 +955,41 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
 }
 
 /*****************************************************************************/
-// JS entry points
+// Top-level functions
+
+bool
+wasm::HasCompilerSupport(ExclusiveContext* cx)
+{
+    if (!cx->jitSupportsFloatingPoint())
+        return false;
+
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
+    return false;
+#else
+    return true;
+#endif
+}
+
+static bool
+WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(HasCompilerSupport(cx));
+    return true;
+}
+
+static bool
+CheckCompilerSupport(JSContext* cx)
+{
+    if (!HasCompilerSupport(cx)) {
+#ifdef JS_MORE_DETERMINISTIC
+        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
+#endif
+        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
+        return false;
+    }
+    return true;
+}
 
 static bool
 GetProperty(JSContext* cx, HandleObject obj, const char* utf8Chars, MutableHandleValue v)
@@ -1001,46 +1034,9 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
 }
 
 static bool
-SupportsWasm(JSContext* cx)
-{
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return false;
-#endif
-
-    if (!cx->jitSupportsFloatingPoint())
-        return false;
-
-    if (cx->gcSystemPageSize() != AsmJSPageSize)
-        return false;
-
-    return true;
-}
-
-static bool
-CheckWasmSupport(JSContext* cx)
-{
-    if (!SupportsWasm(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif // JS_MORE_DETERMINISTIC
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-    return true;
-}
-
-static bool
-WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(SupportsWasm(cx));
-    return true;
-}
-
-static bool
 WasmEval(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!CheckWasmSupport(cx))
+    if (!CheckCompilerSupport(cx))
         return false;
 
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1127,7 +1123,7 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    wasm::UniqueBytecode bytes = wasm::TextToBinary(twoByteChars.twoByteChars(), &error);
+    UniqueBytecode bytes = TextToBinary(twoByteChars.twoByteChars(), &error);
     if (!bytes) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              error.get() ? error.get() : "out of memory");

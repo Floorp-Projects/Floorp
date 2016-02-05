@@ -18,7 +18,6 @@
 
 #include "asmjs/WasmGenerator.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -640,11 +639,11 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     // Start global data on a new page so JIT code may be given independent
     // protection flags. Note assumption that global data starts right after
     // code below.
-    module_->codeBytes = AlignBytes(masm_.bytesNeeded(), AsmJSPageSize);
+    module_->codeBytes = AlignBytes(masm_.bytesNeeded(), gc::SystemPageSize());
 
     // Inflate the global bytes up to page size so that the total bytes are a
     // page size (as required by the allocator functions).
-    module_->globalBytes = AlignBytes(module_->globalBytes, AsmJSPageSize);
+    module_->globalBytes = AlignBytes(module_->globalBytes, gc::SystemPageSize());
 
     // Allocate the code (guarded by a UniquePtr until it is given to the Module).
     module_->code = AllocateCode(cx_, module_->totalBytes());
