@@ -127,7 +127,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     TabContext tabContext = contextArray[i];
     uint32_t appId = tabContext.OwnOrContainingAppId();
     bool inBrowserElement = aSerialized.IsNotNull() ?
-                              aSerialized.mOriginAttributes.mInBrowser :
+                              aSerialized.mOriginAttributes.mInIsolatedMozBrowser :
                               tabContext.IsBrowserElement();
 
     if (appId == NECKO_UNKNOWN_APP_ID) {
@@ -156,7 +156,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     }
     aAttrs = DocShellOriginAttributes();
     aAttrs.mAppId = appId;
-    aAttrs.mInBrowser = inBrowserElement;
+    aAttrs.mInIsolatedMozBrowser = inBrowserElement;
     aAttrs.mSignedPkg = aSerialized.mOriginAttributes.mSignedPkg;
     aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
 

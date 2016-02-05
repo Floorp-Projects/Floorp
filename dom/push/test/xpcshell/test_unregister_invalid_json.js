@@ -75,7 +75,7 @@ add_task(function* test_unregister_invalid_json() {
   yield PushService.unregister({
     scope: 'https://example.net/page/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
   record = yield db.getByKeyID(
     '057caa8f-9b99-47ff-891c-adad18ce603e');

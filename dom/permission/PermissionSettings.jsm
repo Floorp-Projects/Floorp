@@ -82,7 +82,7 @@ this.PermissionSettingsModule = {
       principal =
         Services.scriptSecurityManager.createCodebasePrincipal(uri,
                                                                {appId: app.localId,
-                                                                inBrowser: aData.browserFlag});
+                                                                inIsolatedMozBrowser: aData.browserFlag});
     }
 
     let action;
@@ -131,7 +131,7 @@ this.PermissionSettingsModule = {
       principal =
         Services.scriptSecurityManager.createCodebasePrincipal(uri,
                                                                {appId: appID,
-                                                                inBrowser: aBrowserFlag});
+                                                                inIsolatedMozBrowser: aBrowserFlag});
     }
     let result = Services.perms.testExactPermissionFromPrincipal(principal, aPermName);
     switch (result)

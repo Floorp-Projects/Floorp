@@ -3539,7 +3539,7 @@ this.DOMApplicationRegistry = {
       isInBrowserElement: aOldApp.installerIsBrowser,
       originAttributes: {
         appId: aOldApp.installerAppId,
-        inBrowser: aOldApp.installerIsBrowser
+        inIsolatedMozBrowser: aOldApp.installerIsBrowser
       },
       usePrivateBrowsing: false,
       isContent: false,
@@ -4902,7 +4902,7 @@ this.DOMApplicationRegistry = {
   _clearOriginData: function(appId, browserOnly) {
     let attributes = {appId: appId};
     if (browserOnly) {
-      attributes.inBrowser = true;
+      attributes.inIsolatedMozBrowser = true;
     }
     this._notifyCategoryAndObservers(null, "clear-origin-data", JSON.stringify(attributes));
   }

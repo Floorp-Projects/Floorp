@@ -6,15 +6,15 @@ function inChildProcess() {
            .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
-function makeChan(url, appId, inBrowser) {
+function makeChan(url, appId, inIsolatedMozBrowser) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
-    isInBrowserElement: inBrowser,
+    isInBrowserElement: inIsolatedMozBrowser,
     originAttributes: {
       appId: appId,
-      inBrowser: inBrowser,
+      inIsolatedMozBrowser: inIsolatedMozBrowser,
     },
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsILoadContext))

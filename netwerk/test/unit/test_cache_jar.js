@@ -19,15 +19,15 @@ function cached_handler(metadata, response) {
   handlers_called++;
 }
 
-function makeChan(url, appId, inBrowser) {
+function makeChan(url, appId, inIsolatedMozBrowser) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
-    isInBrowserElement: inBrowser,
+    isInBrowserElement: inIsolatedMozBrowser,
     originAttributes: {
       appId: appId,
-      inBrowser: inBrowser,
+      inIsolatedMozBrowser: inIsolatedMozBrowser,
     },
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsILoadContext))
@@ -57,7 +57,7 @@ function run_all_tests() {
   if (procType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
     return;
 
-  let attrs_inBrowser = JSON.stringify({ appId:1, inBrowser:true });
+  let attrs_inBrowser = JSON.stringify({ appId:1, inIsolatedMozBrowser:true });
   let attrs_notInBrowser = JSON.stringify({ appId:1 });
 
   Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);

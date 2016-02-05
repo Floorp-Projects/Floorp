@@ -2404,7 +2404,7 @@ nsOfflineCacheDevice::Evict(nsILoadContextInfo *aInfo)
 
   mozilla::OriginAttributes const *oa = aInfo->OriginAttributesPtr();
 
-  if (oa->mAppId == NECKO_NO_APP_ID && oa->mInBrowser == false) {
+  if (oa->mAppId == NECKO_NO_APP_ID && oa->mInIsolatedMozBrowser == false) {
     nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

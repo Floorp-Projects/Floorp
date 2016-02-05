@@ -332,7 +332,7 @@ SystemMessageManager.prototype = {
                                "SystemMessageManager:GetPendingMessages:Return"]);
 
     let principal = aWindow.document.nodePrincipal;
-    this._isInBrowserElement = principal.isInBrowserElement;
+    this._isInBrowserElement = principal.isInIsolatedMozBrowserElement;
     this._pageURL = principal.URI.spec;
 
     let appsService = Cc["@mozilla.org/AppsService;1"]

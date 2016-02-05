@@ -14001,7 +14001,7 @@ nsDocShell::GetOriginAttributes()
   attrs.mUserContextId = mUserContextId;
 
   if (mFrameType == eFrameTypeBrowser) {
-    attrs.mInBrowser = true;
+    attrs.mInIsolatedMozBrowser = true;
   }
 
   return attrs;

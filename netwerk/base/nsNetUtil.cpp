@@ -566,14 +566,14 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
     NS_ENSURE_SUCCESS(rv, false);
 
     uint32_t principalAppId;
-    bool principalInBrowserElement;
+    bool principalInIsolatedBrowser;
     rv = aPrincipal->GetAppId(&principalAppId);
     NS_ENSURE_SUCCESS(rv, false);
-    rv = aPrincipal->GetIsInBrowserElement(&principalInBrowserElement);
+    rv = aPrincipal->GetIsInIsolatedMozBrowserElement(&principalInIsolatedBrowser);
     NS_ENSURE_SUCCESS(rv, false);
 
     return contextAppId == principalAppId &&
-           contextInBrowserElement == principalInBrowserElement;
+           contextInBrowserElement == principalInIsolatedBrowser;
 }
 
 nsresult
