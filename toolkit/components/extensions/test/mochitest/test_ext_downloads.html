@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_downloads_api_namespace_and_permissions() {
+  function backgroundScript() {
+    browser.test.assertTrue(!!chrome.downloads, "`downloads` API is present.");
+    browser.test.assertTrue(!!chrome.downloads.FilenameConflictAction,
+                            "`downloads.FilenameConflictAction` enum is present.");
+    browser.test.assertTrue(!!chrome.downloads.InterruptReason,
+                            "`downloads.InterruptReason` enum is present.");
+    browser.test.assertTrue(!!chrome.downloads.DangerType,
+                            "`downloads.DangerType` enum is present.");
+    browser.test.assertTrue(!!chrome.downloads.State,
+                            "`downloads.State` enum is present.");
+    browser.test.notifyPass("downloads tests");
+  }
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {
+      permissions: ["downloads", "downloads.open", "downloads.shelf"],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("downloads tests");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>
