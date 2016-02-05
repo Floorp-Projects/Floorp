@@ -253,14 +253,6 @@ function run() {
     expression_should_not_be_parseable("max-" + feature);
   }
 
-  var mediatypes = ["browser", "minimal-ui", "standalone", "fullscreen"];
-
-  mediatypes.forEach(function(type) {
-    expression_should_be_parseable("display-mode: " + type);
-  });
-
-  expression_should_not_be_parseable("display-mode: invalid")
-
   var content_div = document.getElementById("content");
   content_div.style.font = "initial";
   var em_size =

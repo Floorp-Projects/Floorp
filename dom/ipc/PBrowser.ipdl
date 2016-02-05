@@ -564,8 +564,7 @@ child:
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId,
                nullable PRenderFrame renderFrame,
-               bool parentIsActive,
-               nsSizeMode sizeMode);
+               bool parentIsActive);
 
     async LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
@@ -573,13 +572,11 @@ child:
 
     async CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    async UpdateDimensions(CSSRect rect, CSSSize size,
+    async UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
                            ScreenOrientationInternal orientation,
                            LayoutDeviceIntPoint chromeDisp) compressall;
 
     async UpdateFrame(FrameMetrics frame);
-
-    async SizeModeChanged(nsSizeMode sizeMode);
 
     // The following methods correspond to functions on the GeckoContentController
     // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
