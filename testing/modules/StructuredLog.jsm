@@ -87,17 +87,35 @@ StructuredLogger.prototype = {
     this._logData("test_end", data);
   },
 
-  suiteStart: function (tests, runinfo=null) {
+  suiteStart: function (tests, runinfo=null, versioninfo=null, deviceinfo=null, extra=null) {
     var data = {tests: tests};
     if (runinfo !== null) {
       data.runinfo = runinfo;
     }
 
+    if (versioninfo !== null) {
+      data.versioninfo = versioninfo;
+    }
+
+    if (deviceinfo !== null) {
+      data.deviceinfo = deviceinfo;
+    }
+
+    if (extra !== null) {
+      data.extra = extra;
+    }
+
     this._logData("suite_start", data);
   },
 
-  suiteEnd: function () {
-    this._logData("suite_end");
+  suiteEnd: function (extra=null) {
+    var data = {};
+
+    if (extra !== null) {
+      data.extra = extra;
+    }
+
+    this._logData("suite_end", data);
   },
 
 
@@ -141,6 +159,14 @@ StructuredLogger.prototype = {
   critical: function (message, extra=null) {
     this.log("CRITICAL", message, extra);
   },
+
+  processOutput: function(thread, message) {
+    this._logData('process_output', {
+      message: message,
+      thread: thread,
+    });
+  },
+
 
   _logData: function (action, data={}) {
     var allData = {

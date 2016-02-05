@@ -20,10 +20,9 @@ import mozinfo
 import mozlog
 
 from runreftest import RefTest
+from output import OutputHandler
 import reftestcommandline
 
-
-log = mozlog.unstructured.getLogger('REFTEST')
 
 class MuletReftest(RefTest):
     build_type = "mulet"
@@ -59,7 +58,11 @@ class MuletReftest(RefTest):
         self.profile = self.create_profile(options, manifests,
                                            profile_to_clone=options.profile)
         env = self.buildBrowserEnv(options, self.profile.profile)
-        kp_kwargs = { 'processOutputLine': [self._on_output],
+
+        self._populate_logger(options)
+        outputHandler = OutputHandler(self.log, options.utilityPath, symbolsPath=options.symbolsPath)
+
+        kp_kwargs = { 'processOutputLine': [outputHandler],
                       'onTimeout': [self._on_timeout],
                       'kill_on_timeout': False }
 
@@ -71,7 +74,7 @@ class MuletReftest(RefTest):
                     options.timeout = 300
             self.timeout = options.timeout + 30.0
 
-        log.info("%s | Running tests: start.", os.path.basename(__file__))
+        self.log.info("%s | Running tests: start." % os.path.basename(__file__))
         cmd, args = self.build_command_line(options.app,
                             ignore_window_size=options.ignoreWindowSize,
                             browser_arg=options.browser_arg)
@@ -86,9 +89,9 @@ class MuletReftest(RefTest):
         status = 0
         try:
             self.runner.start(outputTimeout=self.timeout)
-            log.info("%s | Application pid: %d",
+            self.log.info("%s | Application pid: %d" % (
                      os.path.basename(__file__),
-                     self.runner.process_handler.pid)
+                     self.runner.process_handler.pid))
 
             # kick starts the reftest harness
             self.run_marionette_script()
@@ -98,13 +101,13 @@ class MuletReftest(RefTest):
             self.runner.cleanup()
 
         if status > 0:
-            log.testFail("%s | application terminated with exit code %s",
-                         self.last_test, status)
+            self.log.testFail("%s | application terminated with exit code %s" % (
+                         self.last_test, status))
         elif status < 0:
-            log.info("%s | application killed with signal %s",
-                         self.last_test, -status)
+            self.log.info("%s | application killed with signal %s" % (
+                         self.last_test, -status))
 
-        log.info("%s | Running tests: end.", os.path.basename(__file__))
+        self.log.info("%s | Running tests: end." % os.path.basename(__file__))
         return status
 
     def create_profile(self, options, manifests, profile_to_clone=None):
@@ -159,21 +162,12 @@ class MuletReftest(RefTest):
             args += ['-chrome', 'chrome://b2g/content/shell.html']
         return cmd, args
 
-    def _on_output(self, line):
-        sys.stdout.write("%s\n" % line)
-        sys.stdout.flush()
-
-        # TODO use structured logging
-        if "TEST-START" in line and "|" in line:
-            self.last_test = line.split("|")[1].strip()
-
     def _on_timeout(self):
         msg = "%s | application timed out after %s seconds with no output"
-        log.testFail(msg % (self.last_test, self.timeout))
+        self.log.testFail(msg % (self.last_test, self.timeout))
 
         # kill process to get a stack
         self.runner.stop(sig=signal.SIGABRT)
-
 
     def _unlockScreen(self):
         self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
@@ -183,9 +177,10 @@ class MuletReftest(RefTest):
         self.marionette.execute_async_script('GaiaLockScreen.unlock()')
 
     def _wait_for_homescreen(self, timeout):
-        log.info("Waiting for home screen to load")
+        self.log.info("Waiting for home screen to load")
         Wait(self.marionette, timeout).until(expected.element_present(
             By.CSS_SELECTOR, '#homescreen[loading-state=false]'))
+
 
 def run_test_harness(parser, options):
     marionette_args = {}
