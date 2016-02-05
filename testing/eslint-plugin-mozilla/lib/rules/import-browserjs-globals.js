@@ -15,6 +15,7 @@
 var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
+var globals = require("../globals");
 
 const SCRIPTS = [
   "toolkit/components/printing/content/printUtils.js",
@@ -60,10 +61,9 @@ module.exports = function(context) {
       for (let script of SCRIPTS) {
         let fileName = path.join(root, script);
         try {
-          let globals = helpers.getGlobalsForFile(fileName);
-          helpers.addGlobals(globals, context);
-        }
-        catch (e) {
+          let newGlobals = globals.getGlobalsForFile(fileName);
+          helpers.addGlobals(newGlobals, context.getScope());
+        } catch (e) {
           context.report(
             node,
             "Could not load globals from file {{filePath}}: {{error}}",

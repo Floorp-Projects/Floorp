@@ -29,8 +29,6 @@
   "rules": {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": 2,
-    "mozilla/components-imports": 1,
-    "mozilla/import-headjs-globals": 1,
     "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 1,

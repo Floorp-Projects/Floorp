@@ -16,6 +16,7 @@
 var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
+var globals = require("../globals");
 
 module.exports = function(context) {
 
@@ -36,13 +37,8 @@ module.exports = function(context) {
         return;
       }
 
-      let globals = helpers.getGlobalsForFile(fullHeadjsPath);
-      helpers.addGlobals(globals, context);
-
-      // Also add any globals from import-globals-from comments
-      var content = fs.readFileSync(fullHeadjsPath, "utf8");
-      var comments = helpers.getAST(content).comments;
-      helpers.addGlobalsFromComments(fullHeadjsPath, comments, node, context);
+      let newGlobals = globals.getGlobalsForFile(fullHeadjsPath);
+      helpers.addGlobals(newGlobals, context.getScope());
     }
   };
 };
