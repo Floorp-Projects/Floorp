@@ -1410,7 +1410,8 @@ JSStructuredCloneWriter::write(HandleValue v)
                 }
             }
         } else {
-            out.writePair(SCTAG_END_OF_KEYS, 0);
+            if (!out.writePair(SCTAG_END_OF_KEYS, 0))
+                return false;
             objs.popBack();
             counts.popBack();
         }
