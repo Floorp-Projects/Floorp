@@ -1995,7 +1995,7 @@ void
 Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
                          PromiseCallback* aRejectCallback)
 {
-  if (mGlobal->IsDying()) {
+  if (!mGlobal || mGlobal->IsDying()) {
     return;
   }
 
