@@ -272,8 +272,7 @@ private:
     void     SetupTransactionSchedulingContext();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
-    nsresult ContinueProcessResponse1(nsresult);
-    nsresult ContinueProcessResponse2(nsresult);
+    nsresult ContinueProcessResponse(nsresult);
     nsresult ProcessNormal();
     nsresult ContinueProcessNormal(nsresult);
     void     ProcessAltService();
