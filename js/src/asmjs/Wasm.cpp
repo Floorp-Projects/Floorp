@@ -30,8 +30,6 @@
 using namespace js;
 using namespace js::wasm;
 
-using mozilla::PodCopy;
-
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
 
@@ -515,7 +513,7 @@ DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator
     if (!fg.bytecode().resize(bodyLength))
         return false;
 
-    PodCopy(fg.bytecode().begin(), bodyBegin, bodyLength);
+    memcpy(fg.bytecode().begin(), bodyBegin, bodyLength);
     return true;
 }
 
@@ -903,6 +901,56 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
+DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+{
+    if (!d.readCStringIf(DataSection))
+        return true;
+
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected data section byte size");
+
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return Fail(cx, d, "expected number of data segments");
+
+    uint8_t* const heapBase = heap->dataPointer();
+    uint32_t const heapLength = heap->byteLength();
+    uint32_t prevEnd = 0;
+
+    for (uint32_t i = 0; i < numSegments; i++) {
+        if (!d.readCStringIf(SegmentSubsection))
+            return Fail(cx, d, "expected segment tag");
+
+        uint32_t dstOffset;
+        if (!d.readVarU32(&dstOffset))
+            return Fail(cx, d, "expected segment destination offset");
+
+        if (dstOffset < prevEnd)
+            return Fail(cx, d, "data segments must be disjoint and ordered");
+
+        uint32_t numBytes;
+        if (!d.readVarU32(&numBytes))
+            return Fail(cx, d, "expected segment size");
+
+        if (dstOffset > heapLength || heapLength - dstOffset < numBytes)
+            return Fail(cx, d, "data segment does not fit in memory");
+
+        const uint8_t* src;
+        if (!d.readData(numBytes, &src))
+            return Fail(cx, d, "data segment shorter than declared");
+
+        memcpy(heapBase + dstOffset, src, numBytes);
+        prevEnd = dstOffset + numBytes;
+    }
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "data section byte size mismatch");
+
+    return true;
+}
+
+static bool
 DecodeUnknownSection(JSContext* cx, Decoder& d)
 {
     UniqueChars sectionName = d.readCString();
@@ -913,7 +961,8 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
         !strcmp(sectionName.get(), ImportSection) ||
         !strcmp(sectionName.get(), DeclSection) ||
         !strcmp(sectionName.get(), ExportSection) ||
-        !strcmp(sectionName.get(), CodeSection))
+        !strcmp(sectionName.get(), CodeSection) ||
+        !strcmp(sectionName.get(), DataSection))
     {
         return Fail(cx, d, "known section out of order");
     }
@@ -962,6 +1011,9 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
         return false;
 
     if (!DecodeCodeSection(cx, d, mg))
+        return false;
+
+    if (!DecodeDataSection(cx, d, heap))
         return false;
 
     CacheableCharsVector funcNames;
