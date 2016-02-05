@@ -325,13 +325,34 @@ const CustomizableWidgets = [
       let formatArgs = ["android", "ios"].map(os => {
         let link = doc.createElement("label");
         link.textContent = bundle.getString(`appMenuRemoteTabs.mobilePromo.${os}`)
-        link.setAttribute("href", Services.prefs.getCharPref(`identity.mobilepromo.${os}`) + "synced-tabs");
+        link.setAttribute("mobile-promo-os", os);
         link.className = "text-link remotetabs-promo-link";
         return link.outerHTML;
       });
       // Put it all together...
       let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo", formatArgs);
-      doc.getElementById("PanelUI-remotetabs-mobile-promo").innerHTML = contents;
+      let promoParentElt = doc.getElementById("PanelUI-remotetabs-mobile-promo");
+      promoParentElt.innerHTML = contents;
+      // We manually manage the "click" event to open the promo links because
+      // allowing the "text-link" widget handle it has 2 problems: (1) it only
+      // supports button 0 and (2) it's tricky to intercept when it does the
+      // open and auto-close the panel. (1) can probably be fixed, but (2) is
+      // trickier without hard-coding here the knowledge of exactly what buttons
+      // it does support.
+      // So we allow left and middle clicks to open the link in a new tab and
+      // close the panel; not setting a "href" attribute prevents the text-link
+      // widget handling it, and we build the final URL in the click handler to
+      // make testing easier (ie, so tests can change the pref after the links
+      // were created and have the new pref value used.)
+      promoParentElt.addEventListener("click", e => {
+        let os = e.target.getAttribute("mobile-promo-os");
+        if (!os || e.button > 1) {
+          return;
+        }
+        let link = Services.prefs.getCharPref(`identity.mobilepromo.${os}`) + "synced-tabs";
+        doc.defaultView.openUILinkIn(link, "tab");
+        CustomizableUI.hidePanelForNode(e.target);
+      });
     },
     onViewShowing(aEvent) {
       let doc = aEvent.target.ownerDocument;
