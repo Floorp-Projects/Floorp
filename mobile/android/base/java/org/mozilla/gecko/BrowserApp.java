@@ -587,7 +587,7 @@ public class BrowserApp extends GeckoApp
 
         if (AppConstants.MOZ_SWITCHBOARD) {
             // Initializes the default URLs the first time.
-            SwitchBoard.initDefaultServerUrls("https://switchboard-server.dev.mozaws.net/urls", "https://switchboard-server.dev.mozaws.net/v1", true);
+            SwitchBoard.initDefaultServerUrls("https://switchboard.services.mozilla.com/urls", "https://switchboard.services.mozilla.com/v1", true);
 
             // Looks at the server if there are changes in the server URL that should be used in the future
             new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
