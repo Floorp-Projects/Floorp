@@ -4050,7 +4050,7 @@ Tab.prototype = {
     }
   },
 
-  makeOpenSearchMessage: function(eventTarget) {
+  sendOpenSearchMessage: function(eventTarget) {
     let type = eventTarget.type && eventTarget.type.toLowerCase();
     // Replace all starting or trailing spaces or spaces before "*;" globally w/ "".
     type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
@@ -4096,11 +4096,11 @@ Tab.prototype = {
           return null;
 
         // Broadcast message that this tab contains search engines that should be visible.
-        return {
+        Messaging.sendRequest({
           type: "Link:OpenSearch",
           tabID: this.id,
           visible: true
-        };
+        });
       });
     }
   },
@@ -4221,7 +4221,7 @@ Tab.prototype = {
 
           jsonMessage = this.makeFeedMessage(target, type);
         } else if (list.indexOf("[search]" != -1) && aEvent.type == "DOMLinkAdded") {
-          jsonMessage = this.makeOpenSearchMessage(target);
+          this.sendOpenSearchMessage(target);
         }
         if (!jsonMessage)
          return;
