@@ -10,8 +10,7 @@ NS_IMPL_ISUPPORTS(nsDirIndex,
 
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
                            mSize(UINT64_MAX),
-                           mLastModified(-1LL)
-{
+                           mLastModified(-1) {
 }
 
 nsDirIndex::~nsDirIndex() {}
@@ -19,7 +18,9 @@ nsDirIndex::~nsDirIndex() {}
 NS_IMETHODIMP
 nsDirIndex::GetType(uint32_t* aType)
 {
-  NS_ENSURE_ARG_POINTER(aType);
+  if (!aType) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aType = mType;
   return NS_OK;
@@ -33,10 +34,7 @@ nsDirIndex::SetType(uint32_t aType)
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetContentType(char* *aContentType)
-{
-  NS_ENSURE_ARG_POINTER(aContentType);
-
+nsDirIndex::GetContentType(char* *aContentType) {
   *aContentType = ToNewCString(mContentType);
   if (!*aContentType)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -45,17 +43,13 @@ nsDirIndex::GetContentType(char* *aContentType)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetContentType(const char* aContentType)
-{
+nsDirIndex::SetContentType(const char* aContentType) {
   mContentType = aContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetLocation(char* *aLocation)
-{
-  NS_ENSURE_ARG_POINTER(aLocation);
-
+nsDirIndex::GetLocation(char* *aLocation) {
   *aLocation = ToNewCString(mLocation);
   if (!*aLocation)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -64,17 +58,13 @@ nsDirIndex::GetLocation(char* *aLocation)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetLocation(const char* aLocation)
-{
+nsDirIndex::SetLocation(const char* aLocation) {
   mLocation = aLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetDescription(char16_t* *aDescription)
-{
-  NS_ENSURE_ARG_POINTER(aDescription);
-
+nsDirIndex::GetDescription(char16_t* *aDescription) {
   *aDescription = ToNewUnicode(mDescription);
   if (!*aDescription)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -83,8 +73,7 @@ nsDirIndex::GetDescription(char16_t* *aDescription)
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetDescription(const char16_t* aDescription)
-{
+nsDirIndex::SetDescription(const char16_t* aDescription) {
   mDescription.Assign(aDescription);
   return NS_OK;
 }
@@ -92,7 +81,9 @@ nsDirIndex::SetDescription(const char16_t* aDescription)
 NS_IMETHODIMP
 nsDirIndex::GetSize(int64_t* aSize)
 {
-  NS_ENSURE_ARG_POINTER(aSize);
+  if (!aSize) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aSize = mSize;
   return NS_OK;
@@ -108,7 +99,9 @@ nsDirIndex::SetSize(int64_t aSize)
 NS_IMETHODIMP
 nsDirIndex::GetLastModified(PRTime* aLastModified)
 {
-  NS_ENSURE_ARG_POINTER(aLastModified);
+  if (!aLastModified) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   *aLastModified = mLastModified;
   return NS_OK;
