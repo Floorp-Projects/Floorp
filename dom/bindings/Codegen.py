@@ -1663,57 +1663,31 @@ class CGClassConstructor(CGAbstractStaticMethod):
 
 
 # Encapsulate the constructor in a helper method to share genConstructorBody with CGJSImplMethod.
-class CGConstructNavigatorObjectHelper(CGAbstractStaticMethod):
+class CGConstructNavigatorObject(CGAbstractMethod):
     """
     Construct a new JS-implemented WebIDL DOM object, for use on navigator.
     """
     def __init__(self, descriptor):
-        name = "ConstructNavigatorObjectHelper"
         args = [Argument('JSContext*', 'cx'),
-                Argument('GlobalObject&', 'global'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('ErrorResult&', 'aRv')]
         rtype = 'already_AddRefed<%s>' % descriptor.name
-        CGAbstractStaticMethod.__init__(self, descriptor, name, rtype, args)
-
-    def definition_body(self):
-        return genConstructorBody(self.descriptor)
-
-
-class CGConstructNavigatorObject(CGAbstractMethod):
-    """
-    Wrap a JS-implemented WebIDL object into a JS value, for use on navigator.
-    """
-    def __init__(self, descriptor):
-        name = 'ConstructNavigatorObject'
-        args = [Argument('JSContext*', 'aCx'), Argument('JS::Handle<JSObject*>', 'aObj')]
-        CGAbstractMethod.__init__(self, descriptor, name, 'JSObject*', args)
+        CGAbstractMethod.__init__(self, descriptor, "ConstructNavigatorObject",
+                                  rtype, args)
 
     def definition_body(self):
         if not self.descriptor.interface.isJSImplemented():
             raise TypeError("Only JS-implemented classes are currently supported "
                             "on navigator. See bug 856820.")
-        return fill(
+
+        return dedent(
             """
-            GlobalObject global(aCx, aObj);
+            GlobalObject global(cx, obj);
             if (global.Failed()) {
+              aRv.Throw(NS_ERROR_FAILURE);
               return nullptr;
             }
-            ErrorResult rv;
-            JS::Rooted<JS::Value> v(aCx);
-            {  // Scope to make sure |result| goes out of scope while |v| is rooted
-              RefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
-              if (rv.MaybeSetPendingException(aCx)) {
-                return nullptr;
-              }
-              if (!GetOrCreateDOMReflector(aCx, result, &v)) {
-                //XXX Assertion disabled for now, see bug 991271.
-                MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
-                return nullptr;
-              }
-            }
-            return &v.toObject();
-            """,
-            descriptorName=self.descriptor.name)
+            """) + genConstructorBody(self.descriptor)
 
 
 class CGClassConstructHookHolder(CGGeneric):
@@ -2501,6 +2475,9 @@ def IsCrossOriginWritable(attr, descriptor):
             len(crossOriginWritable) == 1)
     return crossOriginWritable[0] == descriptor.interface.identifier.name
 
+def isNonExposedNavigatorObjectGetter(attr, descriptor):
+    return (attr.navigatorObjectGetter and
+            not descriptor.getDescriptor(attr.type.inner.identifier.name).register)
 
 class AttrDefiner(PropertyDefiner):
     def __init__(self, descriptor, name, static, unforgeable=False):
@@ -2512,7 +2489,8 @@ class AttrDefiner(PropertyDefiner):
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
                           MemberIsUnforgeable(m, descriptor) == unforgeable and
-                          isMaybeExposedIn(m, descriptor)]
+                          isMaybeExposedIn(m, descriptor) and
+                          not isNonExposedNavigatorObjectGetter(m, descriptor)]
         else:
             attributes = []
         self.chrome = [m for m in attributes if isChromeOnly(m)]
@@ -7123,7 +7101,9 @@ class CGPerSignatureCall(CGThing):
        IDLType if there's an IDL type involved (including |void|).
     2) An argument list, which is allowed to be empty.
     3) A name of a native method to call.
-    4) Whether or not this method is static.
+    4) Whether or not this method is static. Note that this only controls how
+       the method is called (|self->nativeMethodName(...)| vs
+       |nativeMethodName(...)|).
 
     We also need to know whether this is a method or a getter/setter
     to do error reporting correctly.
@@ -7175,7 +7155,7 @@ class CGPerSignatureCall(CGThing):
                     """)))
 
         deprecated = (idlNode.getExtendedAttribute("Deprecated") or
-                      (static and descriptor.interface.getExtendedAttribute("Deprecated")))
+                      (idlNode.isStatic() and descriptor.interface.getExtendedAttribute("Deprecated")))
         if deprecated:
             cgThings.append(CGGeneric(dedent(
                 """
@@ -7191,12 +7171,7 @@ class CGPerSignatureCall(CGThing):
                                     "return true;\n")
 
         argsPre = []
-        if static:
-            nativeType = descriptor.nativeType
-            staticTypeOverride = PropertyDefiner.getStringAttr(idlNode, "StaticClassOverride")
-            if (staticTypeOverride):
-                nativeType = staticTypeOverride
-            nativeMethodName = "%s::%s" % (nativeType, nativeMethodName)
+        if idlNode.isStatic():
             # If we're a constructor, "obj" may not be a function, so calling
             # XrayAwareCalleeGlobal() on it is not safe.  Of course in the
             # constructor case either "obj" is an Xray or we're already in the
@@ -7227,7 +7202,7 @@ class CGPerSignatureCall(CGThing):
             argsPre.append("cx")
 
         # Hack for making Promise.prototype.then work well over Xrays.
-        if (not static and
+        if (not idlNode.isStatic() and
             descriptor.name == "Promise" and
             idlNode.isMethod() and
             idlNode.identifier.name == "then"):
@@ -7290,7 +7265,7 @@ class CGPerSignatureCall(CGThing):
             needsUnwrappedVar = True
             argsPre.append("unwrappedObj ? *unwrappedObj : obj")
 
-        if static and not isConstructor and descriptor.name == "Promise":
+        if idlNode.isStatic() and not isConstructor and descriptor.name == "Promise":
             # Hack for Promise for now: pass in the "this" value to
             # Promise static methods.
             argsPre.append("args.thisv()")
@@ -7394,7 +7369,8 @@ class CGPerSignatureCall(CGThing):
             cgThings.append(CGCallGenerator(
                 self.isFallible(),
                 self.getArguments(), argsPre, returnType,
-                self.extendedAttributes, descriptor, nativeMethodName,
+                self.extendedAttributes, descriptor,
+                nativeMethodName,
                 static, argsPost=argsPost, resultVar=resultVar))
 
         if useCounterName:
@@ -7567,6 +7543,13 @@ class CGMethodCall(CGThing):
             useCounterName = methodName.replace(".", "_")
         else:
             useCounterName = None
+
+        if method.isStatic():
+            nativeType = descriptor.nativeType
+            staticTypeOverride = PropertyDefiner.getStringAttr(method, "StaticClassOverride")
+            if (staticTypeOverride):
+                nativeType = staticTypeOverride
+            nativeMethodName = "%s::%s" % (nativeType, nativeMethodName)
 
         def requiredArgCount(signature):
             arguments = signature[1]
@@ -7993,9 +7976,25 @@ class CGGetterCall(CGPerSignatureCall):
                                                attr.identifier.name)
         else:
             useCounterName = None
+        if attr.isStatic():
+            nativeMethodName = "%s::%s" % (descriptor.nativeType, nativeMethodName)
         CGPerSignatureCall.__init__(self, returnType, [], nativeMethodName,
                                     attr.isStatic(), descriptor, attr,
                                     getter=True, useCounterName=useCounterName)
+
+
+class CGNavigatorGetterCall(CGPerSignatureCall):
+    """
+    A class to generate a native object getter call for an IDL getter for a
+    property generated by NavigatorProperty.
+    """
+    def __init__(self, returnType, _, descriptor, attr):
+        nativeMethodName = "%s::ConstructNavigatorObject" % (toBindingNamespace(returnType.inner.identifier.name))
+        CGPerSignatureCall.__init__(self, returnType, [], nativeMethodName,
+                                    True, descriptor, attr, getter=True)
+
+    def getArguments(self):
+        return [(FakeArgument(BuiltinTypes[IDLBuiltinType.Types.object], self.idlNode), "reflector")]
 
 
 class FakeIdentifier():
@@ -8047,6 +8046,8 @@ class CGSetterCall(CGPerSignatureCall):
                                                attr.identifier.name)
         else:
             useCounterName = None
+        if attr.isStatic():
+            nativeMethodName = "%s::%s" % (descriptor.nativeType, nativeMethodName)
         CGPerSignatureCall.__init__(self, None,
                                     [FakeArgument(argType, attr, allowTreatNonCallableAsNull=True)],
                                     nativeMethodName, attr.isStatic(),
@@ -8632,8 +8633,12 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         else:
             prefix = ""
 
+        if self.attr.navigatorObjectGetter:
+            cgGetterCall = CGNavigatorGetterCall
+        else:
+            cgGetterCall = CGGetterCall
         return (prefix +
-                CGGetterCall(self.attr.type, nativeName,
+                cgGetterCall(self.attr.type, nativeName,
                              self.descriptor, self.attr).define())
 
     @staticmethod
@@ -11893,6 +11898,8 @@ class CGDescriptor(CGThing):
                     assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticGetter(descriptor, m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
+                    if isNonExposedNavigatorObjectGetter(m, descriptor):
+                        continue
                     cgThings.append(CGSpecializedGetter(descriptor, m))
                     if props.isCrossOriginGetter:
                         crossOriginGetters.add(m.identifier.name)
@@ -11948,8 +11955,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGGenericSetter(descriptor,
                                             allowCrossOriginThis=True))
 
-        if descriptor.interface.getNavigatorProperty():
-            cgThings.append(CGConstructNavigatorObjectHelper(descriptor))
+        if descriptor.interface.isNavigatorProperty():
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
         if descriptor.concrete and not descriptor.proxy:
@@ -12020,7 +12026,7 @@ class CGDescriptor(CGThing):
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
 
-        if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
+        if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.isNavigatorProperty()) and
             not descriptor.interface.isExternal() and
             descriptor.isExposedConditionally()):
             cgThings.append(CGConstructorEnabled(descriptor))
@@ -13029,15 +13035,12 @@ class CGRegisterProtos(CGAbstractMethod):
               aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_class), _dom_class##Binding::DefineDOMInterface, _ctor_check);
             #define REGISTER_CONSTRUCTOR(_dom_constructor, _dom_class, _ctor_check) \\
               aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _ctor_check);
-            #define REGISTER_NAVIGATOR_CONSTRUCTOR(_prop, _dom_class, _ctor_check) \\
-              aNameSpaceManager->RegisterNavigatorDOMConstructor(MOZ_UTF16(_prop), _dom_class##Binding::ConstructNavigatorObject, _ctor_check);
             """)
 
     def _undefineMacro(self):
         return dedent("""
             #undef REGISTER_CONSTRUCTOR
             #undef REGISTER_PROTO
-            #undef REGISTER_NAVIGATOR_CONSTRUCTOR
             """)
 
     def _registerProtos(self):
@@ -13054,10 +13057,6 @@ class CGRegisterProtos(CGAbstractMethod):
             lines.append("REGISTER_PROTO(%s, %s);\n" % (desc.name, getCheck(desc)))
             lines.extend("REGISTER_CONSTRUCTOR(%s, %s, %s);\n" % (n.identifier.name, desc.name, getCheck(desc))
                          for n in desc.interface.namedConstructors)
-        for desc in self.config.getDescriptors(isNavigatorProperty=True, register=True):
-            propName = desc.interface.getNavigatorProperty()
-            assert propName
-            lines.append('REGISTER_NAVIGATOR_CONSTRUCTOR("%s", %s, %s);\n' % (propName, desc.name, getCheck(desc)))
         return ''.join(lines)
 
     def indent_body(self, body):

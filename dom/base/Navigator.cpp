@@ -183,7 +183,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Navigator)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Navigator)
   tmp->Invalidate();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedResolveResults)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -220,7 +219,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedResolveResults)
 #ifdef MOZ_EME
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
 #endif
@@ -1668,11 +1666,6 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
       return p.forget();
     }
 
-    if (featureName.EqualsLiteral("Navigator.mozContacts")) {
-      p->MaybeResolve(true);
-      return p.forget();
-    }
-
     if (featureName.EqualsLiteral("Navigator.getDeviceStorage")) {
       p->MaybeResolve(Preferences::GetBool("device.storage.enabled"));
       return p.forget();
@@ -2255,206 +2248,6 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
   return mAudioChannelManager;
 }
 #endif
-
-bool
-Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                     JS::Handle<jsid> aId,
-                     JS::MutableHandle<JS::PropertyDescriptor> aDesc)
-{
-  // Note: Keep this in sync with MayResolve.
-  if (!JSID_IS_STRING(aId)) {
-    return true;
-  }
-
-  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
-  if (!nameSpaceManager) {
-    return Throw(aCx, NS_ERROR_NOT_INITIALIZED);
-  }
-
-  nsAutoJSString name;
-  if (!name.init(aCx, JSID_TO_STRING(aId))) {
-    return false;
-  }
-
-  const nsGlobalNameStruct* name_struct =
-    nameSpaceManager->LookupNavigatorName(name);
-  if (!name_struct) {
-    return true;
-  }
-
-  JS::Rooted<JSObject*> naviObj(aCx,
-                                js::CheckedUnwrap(aObject,
-                                                  /* stopAtWindowProxy = */ false));
-  if (!naviObj) {
-    return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
-    ConstructNavigatorProperty construct = name_struct->mConstructNavigatorProperty;
-    MOZ_ASSERT(construct);
-
-    JS::Rooted<JSObject*> domObject(aCx);
-    {
-      // Make sure to do the creation of our object in the compartment
-      // of naviObj, especially since we plan to cache that object.
-      JSAutoCompartment ac(aCx, naviObj);
-
-      // Check whether our constructor is enabled after we unwrap Xrays, since
-      // we don't want to define an interface on the Xray if it's disabled in
-      // the target global, even if it's enabled in the Xray's global.
-      if (name_struct->mConstructorEnabled &&
-          !(*name_struct->mConstructorEnabled)(aCx, naviObj)) {
-        return true;
-      }
-
-      if (name.EqualsLiteral("mozSettings")) {
-        bool hasPermission = CheckPermission("settings-api-read") ||
-          CheckPermission("settings-api-write");
-        if (!hasPermission) {
-          FillPropertyDescriptor(aDesc, aObject, JS::NullValue(), false);
-          return true;
-        }
-      }
-
-      if (name.EqualsLiteral("mozDownloadManager")) {
-        if (!CheckPermission("downloads")) {
-          FillPropertyDescriptor(aDesc, aObject, JS::NullValue(), false);
-          return true;
-        }
-      }
-
-      nsISupports* existingObject = mCachedResolveResults.GetWeak(name);
-      if (existingObject) {
-        // We know all of our WebIDL objects here are wrappercached, so just go
-        // ahead and WrapObject() them.  We can't use GetOrCreateDOMReflector,
-        // because we don't have the concrete type.
-        JS::Rooted<JS::Value> wrapped(aCx);
-        if (!dom::WrapObject(aCx, existingObject, &wrapped)) {
-          return false;
-        }
-        domObject = &wrapped.toObject();
-      } else {
-        domObject = construct(aCx, naviObj);
-        if (!domObject) {
-          return Throw(aCx, NS_ERROR_FAILURE);
-        }
-
-        // Store the value in our cache
-        nsISupports* native = UnwrapDOMObjectToISupports(domObject);
-        MOZ_ASSERT(native);
-        mCachedResolveResults.Put(name, native);
-      }
-    }
-
-    if (!JS_WrapObject(aCx, &domObject)) {
-      return false;
-    }
-
-    FillPropertyDescriptor(aDesc, aObject, JS::ObjectValue(*domObject), false);
-    return true;
-  }
-
-  NS_ASSERTION(name_struct->mType == nsGlobalNameStruct::eTypeNavigatorProperty,
-               "unexpected type");
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsISupports> native;
-  bool hadCachedNative = mCachedResolveResults.Get(name, getter_AddRefs(native));
-  bool okToUseNative;
-  JS::Rooted<JS::Value> prop_val(aCx);
-  if (hadCachedNative) {
-    okToUseNative = true;
-  } else {
-    native = do_CreateInstance(name_struct->mCID, &rv);
-    if (NS_FAILED(rv)) {
-      return Throw(aCx, rv);
-    }
-
-    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-
-    if (gpi) {
-      if (!mWindow) {
-        return Throw(aCx, NS_ERROR_UNEXPECTED);
-      }
-
-      rv = gpi->Init(mWindow, &prop_val);
-      if (NS_FAILED(rv)) {
-        return Throw(aCx, rv);
-      }
-    }
-
-    okToUseNative = !prop_val.isObjectOrNull();
-  }
-
-  if (okToUseNative) {
-    // Make sure to do the creation of our object in the compartment
-    // of naviObj, especially since we plan to cache that object.
-    JSAutoCompartment ac(aCx, naviObj);
-
-    rv = nsContentUtils::WrapNative(aCx, native, &prop_val);
-
-    if (NS_FAILED(rv)) {
-      return Throw(aCx, rv);
-    }
-
-    // Now that we know we managed to wrap this thing properly, go ahead and
-    // cache it as needed.
-    if (!hadCachedNative) {
-      mCachedResolveResults.Put(name, native);
-    }
-  }
-
-  if (!JS_WrapValue(aCx, &prop_val)) {
-    return Throw(aCx, NS_ERROR_UNEXPECTED);
-  }
-
-  FillPropertyDescriptor(aDesc, aObject, prop_val, false);
-  return true;
-}
-
-/* static */
-bool
-Navigator::MayResolve(jsid aId)
-{
-  // Note: This function does not fail and may not have any side-effects.
-  // Note: Keep this in sync with DoResolve.
-  if (!JSID_IS_STRING(aId)) {
-    return false;
-  }
-
-  nsScriptNameSpaceManager *nameSpaceManager = PeekNameSpaceManager();
-  if (!nameSpaceManager) {
-    // Really shouldn't happen here.  Fail safe.
-    return true;
-  }
-
-  nsAutoString name;
-  AssignJSFlatString(name, JSID_TO_FLAT_STRING(aId));
-
-  return nameSpaceManager->LookupNavigatorName(name);
-}
-
-void
-Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
-                               ErrorResult& aRv)
-{
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  if (!nameSpaceManager) {
-    NS_ERROR("Can't get namespace manager.");
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
-  for (auto i = nameSpaceManager->NavigatorNameIter(); !i.Done(); i.Next()) {
-    const GlobalNameMapEntry* entry = i.Get();
-    if (!entry->mGlobalName.mConstructorEnabled ||
-        entry->mGlobalName.mConstructorEnabled(aCx, wrapper)) {
-      aNames.AppendElement(entry->mKey);
-    }
-  }
-}
 
 JSObject*
 Navigator::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)

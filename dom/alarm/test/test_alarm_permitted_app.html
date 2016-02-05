@@ -20,7 +20,6 @@ SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function()
 
   // mozAlarms is installed on all platforms except Android for the moment.
   if (navigator.appVersion.indexOf("Android") != -1) {
-    ok('AlarmsManager' in window, "Interface AlarmsManager should exist");
     try {
       todo('mozAlarms' in navigator,
            "mozAlarms is not allowed on Android for now. TODO Bug 863557.");
@@ -30,6 +29,7 @@ SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function()
                "Caught exception: " + e);
     }
   } else {
+    ok('AlarmsManager' in window, "Interface AlarmsManager should exist");
     ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
     ok(navigator.mozAlarms instanceof AlarmsManager,
        "navigator.mozAlarms should be an instance of AlarmsManager");
