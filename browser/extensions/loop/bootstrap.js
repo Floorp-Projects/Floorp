@@ -134,6 +134,10 @@ var WindowListener = {
         return new Promise((resolve) => {
           let callback = iframe => {
             let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+            if (!("messageManager" in iframe)) {
+              iframe.messageManager = mm;
+            }
+            this.hookWindowCloseForPanelClose(iframe);
 
             mm.sendAsyncMessage("Social:WaitForDocumentVisible");
             mm.addMessageListener("Social:DocumentVisible", () => resolve(mm));
@@ -625,6 +629,11 @@ var WindowListener = {
        * through the sdk.
        */
       handleMousemove: function(event) {
+        // We want to stop sending events if sharing is paused.
+        if (this._browserSharePaused) {
+          return;
+        }
+
         // Only update every so often.
         let now = Date.now();
         if (now - this.lastCursorTime < MIN_CURSOR_INTERVAL) {
