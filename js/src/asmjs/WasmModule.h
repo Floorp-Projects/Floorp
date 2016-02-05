@@ -304,12 +304,21 @@ typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
 // The ExportMap describes how Exports are mapped to the fields of the export
 // object. This allows a single Export to be used in multiple fields.
+// The 'fieldNames' vector provides the list of names of the module's exports.
+// For each field in fieldNames, 'fieldsToExports' provides either:
+//  - the sentinel value MemoryExport indicating an export of linear memory; or
+//  - the index of an export (both into the module's ExportVector and the
+//    ExportMap's exportFuncIndices vector).
+// Lastly, the 'exportFuncIndices' vector provides, for each exported function,
+// the internal index of the function.
 
 struct ExportMap
 {
-    Uint32Vector exportFuncIndices;
+    static const uint32_t MemoryExport = UINT32_MAX;
+
     CacheableCharsVector fieldNames;
     Uint32Vector fieldsToExports;
+    Uint32Vector exportFuncIndices;
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };

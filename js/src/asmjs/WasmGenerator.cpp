@@ -280,6 +280,12 @@ ModuleGenerator::initHeapUsage(HeapUsage heapUsage)
     module_->heapUsage = heapUsage;
 }
 
+bool
+ModuleGenerator::usesHeap() const
+{
+    return UsesHeap(module_->heapUsage);
+}
+
 void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
@@ -373,6 +379,8 @@ ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32
     }
 
     uint32_t newExportIndex = module_->exports.length();
+    MOZ_ASSERT(newExportIndex < MaxExports);
+
     if (exportIndex)
         *exportIndex = newExportIndex;
 
@@ -415,6 +423,13 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 {
     module_->exports[index].initStubOffset(offsets.begin);
     return module_->codeRanges.emplaceBack(CodeRange::Entry, offsets);
+}
+
+bool
+ModuleGenerator::addMemoryExport(UniqueChars fieldName)
+{
+    return exportMap_->fieldNames.append(Move(fieldName)) &&
+           exportMap_->fieldsToExports.append(ExportMap::MemoryExport);
 }
 
 bool

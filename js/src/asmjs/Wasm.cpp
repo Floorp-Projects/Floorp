@@ -649,24 +649,16 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
     if (!init->imports.emplaceBack(sig))
         return false;
 
-    const char* moduleStr;
-    if (!d.readCString(&moduleStr))
+    UniqueChars moduleName = d.readCString();
+    if (!moduleName)
         return Fail(cx, d, "expected import module name");
 
-    if (!*moduleStr)
+    if (!*moduleName.get())
         return Fail(cx, d, "module name cannot be empty");
 
-    UniqueChars moduleName = DuplicateString(moduleStr);
-    if (!moduleName)
-        return false;
-
-    const char* funcStr;
-    if (!d.readCString(&funcStr))
-        return Fail(cx, d, "expected import func name");
-
-    UniqueChars funcName = DuplicateString(funcStr);
+    UniqueChars funcName = d.readCString();
     if (!funcName)
-        return false;
+        return Fail(cx, d, "expected import func name");
 
     return importNames->emplaceBack(Move(moduleName), Move(funcName));
 }
@@ -737,6 +729,27 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
 
 typedef HashSet<const char*, CStringHasher> CStringSet;
 
+static UniqueChars
+DecodeFieldName(JSContext* cx, Decoder& d, CStringSet* dupSet)
+{
+    UniqueChars fieldName = d.readCString();
+    if (!fieldName) {
+        Fail(cx, d, "expected export external name string");
+        return nullptr;
+    }
+
+    CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
+    if (p) {
+        Fail(cx, d, "duplicate export");
+        return nullptr;
+    }
+
+    if (!dupSet->add(p, fieldName.get()))
+        return nullptr;
+
+    return Move(fieldName);
+}
+
 static bool
 DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
 {
@@ -747,22 +760,24 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
     if (funcIndex >= mg.numFuncSigs())
         return Fail(cx, d, "export function index out of range");
 
-    const char* chars;
-    if (!d.readCString(&chars))
-        return Fail(cx, d, "expected export external name string");
-
-    UniqueChars fieldName = DuplicateString(chars);
+    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
     if (!fieldName)
         return false;
 
-    CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
-    if (p)
-        return Fail(cx, d, "duplicate export");
+    return mg.declareExport(Move(fieldName), funcIndex);
+}
 
-    if (!dupSet->add(p, fieldName.get()))
+static bool
+DecodeMemoryExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
+{
+    if (!mg.usesHeap())
+        return Fail(cx, d, "cannot export memory with no memory section");
+
+    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
+    if (!fieldName)
         return false;
 
-    return mg.declareExport(Move(fieldName), funcIndex);
+    return mg.addMemoryExport(Move(fieldName));
 }
 
 static bool
@@ -789,6 +804,9 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
     for (uint32_t i = 0; i < numExports; i++) {
         if (d.readCStringIf(FuncSubsection)) {
             if (!DecodeFunctionExport(cx, d, mg, &dupSet))
+                return false;
+        } else if (d.readCStringIf(MemorySubsection)) {
+            if (!DecodeMemoryExport(cx, d, mg, &dupSet))
                 return false;
         } else {
             return Fail(cx, d, "unknown export type");
@@ -887,15 +905,15 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 static bool
 DecodeUnknownSection(JSContext* cx, Decoder& d)
 {
-    const char* sectionName;
-    if (!d.readCString(&sectionName))
+    UniqueChars sectionName = d.readCString();
+    if (!sectionName)
         return Fail(cx, d, "failed to read section name");
 
-    if (!strcmp(sectionName, SigSection) ||
-        !strcmp(sectionName, ImportSection) ||
-        !strcmp(sectionName, DeclSection) ||
-        !strcmp(sectionName, ExportSection) ||
-        !strcmp(sectionName, CodeSection))
+    if (!strcmp(sectionName.get(), SigSection) ||
+        !strcmp(sectionName.get(), ImportSection) ||
+        !strcmp(sectionName.get(), DeclSection) ||
+        !strcmp(sectionName.get(), ExportSection) ||
+        !strcmp(sectionName.get(), CodeSection))
     {
         return Fail(cx, d, "known section out of order");
     }
