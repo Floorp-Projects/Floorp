@@ -143,6 +143,9 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     DeclVector      vars_;              /* var/const definitions */
     DeclVector      bodyLevelLexicals_; /* lexical definitions at body-level */
 
+    typedef HashSet<JSAtom*, DefaultHasher<JSAtom*>, LifoAllocPolicy<Fallible>> DeclaredNameSet;
+    DeclaredNameSet bodyLevelLexicallyDeclaredNames_;
+
     bool checkLocalsOverflow(TokenStream& ts);
 
   public:
@@ -181,7 +184,8 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
      *    'pn' if they are in the scope of 'pn'.
      *  + Pre-existing placeholders in the scope of 'pn' have been removed.
      */
-    bool define(TokenStream& ts, HandlePropertyName name, Node pn, Definition::Kind);
+    bool define(TokenStream& ts, HandlePropertyName name, Node pn, Definition::Kind kind,
+                bool declaringVarInCatchBody = false);
 
     /*
      * Let definitions may shadow same-named definitions in enclosing scopes.
@@ -254,7 +258,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     // The comments atop checkDestructuring explain the distinction between
     // assignment-like and declaration-like destructuring patterns, and why
     // they need to be treated differently.
-    bool            inDeclDestructuring:1;
+    bool inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
                  Node maybeFunction, SharedContext* sc, Directives* newDirectives)
@@ -269,6 +273,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         args_(prs->context),
         vars_(prs->context),
         bodyLevelLexicals_(prs->context),
+        bodyLevelLexicallyDeclaredNames_(prs->alloc),
         parserPC(&prs->pc),
         oldpc(prs->pc),
         lexdeps(prs->context),
@@ -294,6 +299,16 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         if (StmtInfoPC* stmt = innermostScopeStmt())
             return stmt->staticScope;
         return sc->staticScope();
+    }
+
+    bool isBodyLevelLexicallyDeclaredName(HandleAtom name) {
+        return bodyLevelLexicallyDeclaredNames_.has(name);
+    }
+
+    bool addBodyLevelLexicallyDeclaredName(TokenStream& ts, HandleAtom name) {
+        if (!bodyLevelLexicallyDeclaredNames_.put(name))
+            return ts.reportError(JSMSG_OUT_OF_MEMORY);
+        return true;
     }
 
     // True if we are at the topmost level of a entire script or function body.
@@ -658,7 +673,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
     Node statements(YieldHandling yieldHandling);
 
-    Node blockStatement(YieldHandling yieldHandling);
+    Node blockStatement(YieldHandling yieldHandling,
+                        unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
     Node ifStatement(YieldHandling yieldHandling);
     Node doWhileStatement(YieldHandling yieldHandling);
     Node whileStatement(YieldHandling yieldHandling);
