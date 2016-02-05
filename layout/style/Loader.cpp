@@ -1021,6 +1021,12 @@ Loader::CheckContentPolicy(nsIPrincipal* aSourcePrincipal,
                           nsISupports* aContext,
                           bool aIsPreload)
 {
+  // When performing a system load (e.g. aUseSystemPrincipal = true)
+  // then aSourcePrincipal == null; don't consult content policies.
+  if (!aSourcePrincipal) {
+    return NS_OK;
+  }
+
   nsContentPolicyType contentPolicyType =
     aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
                : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
@@ -1412,11 +1418,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     return NS_BINDING_ABORTED;
   }
 
-  nsIPrincipal* triggeringPrincipal = aLoadData->mLoaderPrincipal;
-  if (!triggeringPrincipal) {
-    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
-  }
-
   SRIMetadata sriMetadata = aLoadData->mSheet->GetIntegrity();
 
   if (aLoadData->mSyncLoad) {
@@ -1457,23 +1458,22 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     // This is because of a case where the node is the document being styled and
     // the principal is the stylesheet (perhaps from a different origin) that is
     // applying the styles.
-    if (aLoadData->mRequestingNode) {
+    if (aLoadData->mRequestingNode && aLoadData->mLoaderPrincipal) {
       rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
                                                 aLoadData->mURI,
                                                 aLoadData->mRequestingNode,
-                                                triggeringPrincipal,
+                                                aLoadData->mLoaderPrincipal,
                                                 securityFlags,
                                                 contentPolicyType);
     }
     else {
       // either we are loading something inside a document, in which case
       // we should always have a requestingNode, or we are loading something
-      // outside a document, in which case the triggeringPrincipal
-      // should always be the systemPrincipal.
-      MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+      // outside a document, in which case the loadingPrincipal and the
+      // triggeringPrincipal should always be the systemPrincipal.
       rv = NS_NewChannel(getter_AddRefs(channel),
                          aLoadData->mURI,
-                         triggeringPrincipal,
+                         nsContentUtils::GetSystemPrincipal(),
                          securityFlags,
                          contentPolicyType);
     }
@@ -1584,11 +1584,11 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
   // and a principal. This is because of a case where the node is the document
   // being styled and the principal is the stylesheet (perhaps from a different
   // origin)  that is applying the styles.
-  if (aLoadData->mRequestingNode) {
+  if (aLoadData->mRequestingNode && aLoadData->mLoaderPrincipal) {
     rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
                                               aLoadData->mURI,
                                               aLoadData->mRequestingNode,
-                                              triggeringPrincipal,
+                                              aLoadData->mLoaderPrincipal,
                                               securityFlags,
                                               contentPolicyType,
                                               loadGroup,
@@ -1599,12 +1599,11 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
   else {
     // either we are loading something inside a document, in which case
     // we should always have a requestingNode, or we are loading something
-    // outside a document, in which case the triggeringPrincipal
-    // should always be the systemPrincipal.
-    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+    // outside a document, in which case the loadingPrincipal and the
+    // triggeringPrincipal should always be the systemPrincipal.
     rv = NS_NewChannel(getter_AddRefs(channel),
                        aLoadData->mURI,
-                       triggeringPrincipal,
+                       nsContentUtils::GetSystemPrincipal(),
                        securityFlags,
                        contentPolicyType,
                        loadGroup,
