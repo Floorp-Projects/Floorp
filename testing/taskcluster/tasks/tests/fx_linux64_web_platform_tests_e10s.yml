@@ -2,6 +2,7 @@
 $inherits:
   from: 'tasks/tests/fx_desktop_generic.yml'
 task:
+  workerType: desktop-test-xlarge
   payload:
     maxRunTime: 7200
     command:
