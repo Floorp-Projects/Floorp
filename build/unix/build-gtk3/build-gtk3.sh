@@ -118,18 +118,20 @@ cat <<EOF > $root_dir/gtk3/setup.sh
 #!/bin/sh
 
 cd \$(dirname \$0)
+HERE=\$(pwd)
 
 # pango expects absolute paths in pango.modules, and TOOLTOOL_DIR may vary...
-LD_LIBRARY_PATH=./usr/local/lib \
-PANGO_SYSCONFDIR=./usr/local/etc \
-PANGO_LIBDIR=./usr/local/lib \
-./usr/local/bin/pango-querymodules > ./usr/local/etc/pango/pango.modules
+LD_LIBRARY_PATH=\$HERE/usr/local/lib \
+PANGO_SYSCONFDIR=\$HERE/usr/local/etc \
+PANGO_LIBDIR=\$HERE/usr/local/lib \
+\$HERE/usr/local/bin/pango-querymodules > \$HERE/usr/local/etc/pango/pango.modules
 
 # same with gdb-pixbuf and loaders.cache
-LD_LIBRARY_PATH=./usr/local/lib \
-GDK_PIXBUF_MODULE_FILE=./usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache \
-GDK_PIXBUF_MODULEDIR=./usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders \
-./usr/local/bin/gdk-pixbuf-query-loaders > ./usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+LD_LIBRARY_PATH=\$HERE/usr/local/lib \
+GDK_PIXBUF_MODULE_FILE=\$HERE/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache \
+GDK_PIXBUF_MODULEDIR=\$HERE/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders \
+\$HERE/usr/local/bin/gdk-pixbuf-query-loaders > \
+\$HERE/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
 
 # The fontconfig version in the tooltool package has known uses of
 # uninitialized memory when creating its cache, and while most users
@@ -137,7 +139,9 @@ GDK_PIXBUF_MODULEDIR=./usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders \
 # will create it. Combined with valgrind, this generates irrelevant
 # errors.
 # So create the fontconfig cache beforehand.
-./usr/local/bin/fc-cache
+FONTCONFIG_PATH=\$HERE/usr/local/etc/fonts \
+LD_LIBRARY_PATH=\$HERE/usr/local/lib \
+\$HERE/usr/local/bin/fc-cache
 EOF
 
 chmod +x $root_dir/gtk3/setup.sh
