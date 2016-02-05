@@ -600,7 +600,7 @@ void
 Module::specializeToHeap(ArrayBufferObjectMaybeShared* heap)
 {
     MOZ_ASSERT(usesHeap());
-    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(), heap->as<ArrayBufferObject>().isAsmJS());
+    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(), heap->as<ArrayBufferObject>().isWasm());
     MOZ_ASSERT(!heap_);
     MOZ_ASSERT(!rawHeapPtr());
 

@@ -254,7 +254,7 @@ NoteViewBufferWasDetached(ArrayBufferViewObject* view,
 ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
-    if (buffer->isAsmJS()) {
+    if (buffer->isWasm()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
         return false;
     }
@@ -362,9 +362,145 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents)
         changeViewContents(cx, firstView(), oldDataPointer, newContents);
 }
 
-/* static */ bool
-ArrayBufferObject::prepareForAsmJSNoSignals(JSContext* cx, Handle<ArrayBufferObject*> buffer)
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+# ifdef XP_WIN
+static void*
+AllocateWasmMappedMemory(uint32_t numBytes)
 {
+    MOZ_ASSERT(numBytes % wasm::PageSize == 0);
+
+    void* data = VirtualAlloc(nullptr, wasm::MappedSize, MEM_RESERVE, PAGE_NOACCESS);
+    if (!data)
+        return nullptr;
+
+    if (!VirtualAlloc(data, numBytes, MEM_COMMIT, PAGE_READWRITE)) {
+        VirtualFree(data, 0, MEM_RELEASE);
+        return nullptr;
+    }
+
+    MemProfiler::SampleNative(data, numBytes);
+
+    return data;
+}
+
+static void
+ReleaseWasmMappedMemory(void* base)
+{
+    VirtualFree(base, 0, MEM_RELEASE);
+    MemProfiler::RemoveNative(base);
+}
+# else  // XP_WIN
+static void*
+AllocateWasmMappedMemory(uint32_t numBytes)
+{
+    void* data = MozTaggedAnonymousMmap(nullptr, wasm::MappedSize, PROT_NONE,
+                                        MAP_PRIVATE | MAP_ANON, -1, 0, "wasm-reserved");
+    if (data == MAP_FAILED)
+        return nullptr;
+
+    if (mprotect(data, numBytes, PROT_READ | PROT_WRITE)) {
+        munmap(data, wasm::MappedSize);
+        return nullptr;
+    }
+
+    MemProfiler::SampleNative(data, numBytes);
+
+#  if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)data + numBytes,
+                                                   wasm::MappedSize - numBytes);
+#  endif
+
+    return data;
+}
+
+static void
+ReleaseWasmMappedMemory(void* base)
+{
+    munmap(base, wasm::MappedSize);
+    MemProfiler::RemoveNative(base);
+
+#  if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, wasm::MappedSize);
+#  endif
+}
+# endif  // !XP_WIN
+#endif  // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+
+/* static */ ArrayBufferObject*
+ArrayBufferObject::createForWasm(JSContext* cx, uint32_t numBytes, bool signalsForOOB)
+{
+    MOZ_ASSERT(numBytes % wasm::PageSize == 0);
+
+    if (signalsForOOB) {
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+        void* data = AllocateWasmMappedMemory(numBytes);
+        if (!data) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+
+        BufferContents contents = BufferContents::create<WASM_MAPPED>(data);
+        ArrayBufferObject* buffer = ArrayBufferObject::create(cx, numBytes, contents);
+        if (!buffer) {
+            ReleaseWasmMappedMemory(data);
+            return nullptr;
+        }
+
+        return buffer;
+#else
+        MOZ_CRASH("shouldn't be using signal handlers for out-of-bounds");
+#endif
+    }
+
+    auto buffer = ArrayBufferObject::create(cx, numBytes);
+    if (!buffer)
+        return nullptr;
+
+    buffer->setIsWasmMalloced();
+    return buffer;
+}
+
+/* static */ bool
+ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool signalsForOOB)
+{
+    MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
+
+    if (signalsForOOB) {
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+        if (buffer->isWasmMapped())
+            return true;
+
+        // This can't happen except via the shell toggling signals.enabled.
+        if (buffer->isWasmMalloced()) {
+            JS_ReportError(cx, "can't access same buffer with and without signals enabled");
+            return false;
+        }
+
+        if (buffer->forInlineTypedObject()) {
+            JS_ReportError(cx, "ArrayBuffer can't be used by asm.js");
+            return false;
+        }
+
+        void* data = AllocateWasmMappedMemory(buffer->byteLength());
+        if (!data) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        // Copy over the current contents of the typed array.
+        memcpy(data, buffer->dataPointer(), buffer->byteLength());
+
+        // Swap the new elements into the ArrayBufferObject. Mark the
+        // ArrayBufferObject so we don't do this again.
+        BufferContents newContents = BufferContents::create<WASM_MAPPED>(data);
+        buffer->changeContents(cx, newContents);
+        MOZ_ASSERT(data == buffer->dataPointer());
+        return true;
+#else
+        MOZ_CRASH("shouldn't be using signal handlers for out-of-bounds");
+#endif  // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+    }
+
     if (buffer->forInlineTypedObject()) {
         JS_ReportError(cx, "ArrayBuffer can't be used by asm.js");
         return false;
@@ -378,88 +514,9 @@ ArrayBufferObject::prepareForAsmJSNoSignals(JSContext* cx, Handle<ArrayBufferObj
         buffer->changeContents(cx, contents);
     }
 
-    buffer->setIsAsmJSMalloced();
+    buffer->setIsWasmMalloced();
     return true;
 }
-
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-/* static */ bool
-ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                                   bool usesSignalHandlers)
-{
-    // If we can't use signal handlers, just do it like on other platforms.
-    if (!usesSignalHandlers)
-        return prepareForAsmJSNoSignals(cx, buffer);
-
-    if (buffer->isAsmJSMapped())
-        return true;
-
-    // This can't happen except via the shell toggling signals.enabled.
-    if (buffer->isAsmJSMalloced()) {
-        JS_ReportError(cx, "can't access same buffer with and without signals enabled");
-        return false;
-    }
-
-    if (buffer->forInlineTypedObject()) {
-        JS_ReportError(cx, "ArrayBuffer can't be used by asm.js");
-        return false;
-    }
-
-    // Get the entire reserved region (with all pages inaccessible).
-    void* data;
-# ifdef XP_WIN
-    data = VirtualAlloc(nullptr, wasm::MappedSize, MEM_RESERVE, PAGE_NOACCESS);
-    if (!data)
-        return false;
-# else
-    data = MozTaggedAnonymousMmap(nullptr, wasm::MappedSize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0, "asm-js-reserved");
-    if (data == MAP_FAILED)
-        return false;
-# endif
-
-    // Enable access to the valid region.
-    MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
-# ifdef XP_WIN
-    if (!VirtualAlloc(data, buffer->byteLength(), MEM_COMMIT, PAGE_READWRITE)) {
-        VirtualFree(data, 0, MEM_RELEASE);
-        MemProfiler::RemoveNative(data);
-        return false;
-    }
-# else
-    size_t validLength = buffer->byteLength();
-    if (mprotect(data, validLength, PROT_READ | PROT_WRITE)) {
-        munmap(data, wasm::MappedSize);
-        MemProfiler::RemoveNative(data);
-        return false;
-    }
-#   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-    // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
-    VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)data + validLength,
-                                                   wasm::MappedSize - validLength);
-#   endif
-# endif
-
-    // Copy over the current contents of the typed array.
-    memcpy(data, buffer->dataPointer(), buffer->byteLength());
-
-    // Swap the new elements into the ArrayBufferObject. Mark the
-    // ArrayBufferObject so we don't do this again.
-    BufferContents newContents = BufferContents::create<ASMJS_MAPPED>(data);
-    buffer->changeContents(cx, newContents);
-    MOZ_ASSERT(data == buffer->dataPointer());
-
-    return true;
-}
-#else // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
-bool
-ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                                   bool usesSignalHandlers)
-{
-    // Just use the variant with no signals.
-    MOZ_ASSERT(!usesSignalHandlers);
-    return prepareForAsmJSNoSignals(cx, buffer);
-}
-#endif
 
 ArrayBufferObject::BufferContents
 ArrayBufferObject::createMappedContents(int fd, size_t offset, size_t length)
@@ -487,30 +544,6 @@ ArrayBufferObject::dataPointerShared() const
     return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
 }
 
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-static void
-ReleaseAsmJSMappedData(void* base)
-{
-#  ifdef XP_WIN
-    VirtualFree(base, 0, MEM_RELEASE);
-#  else
-    munmap(base, wasm::MappedSize);
-#   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-    // Tell Valgrind/Memcheck to recommence reporting accesses in the
-    // previously-inaccessible region.
-    VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, wasm::MappedSize);
-#   endif
-#  endif
-    MemProfiler::RemoveNative(base);
-}
-#else
-static void
-ReleaseAsmJSMappedData(void* base)
-{
-    MOZ_CRASH("asm.js only uses mapped buffers when using signal-handler OOB checking");
-}
-#endif
-
 void
 ArrayBufferObject::releaseData(FreeOp* fop)
 {
@@ -518,15 +551,19 @@ ArrayBufferObject::releaseData(FreeOp* fop)
 
     switch (bufferKind()) {
       case PLAIN:
-      case ASMJS_MALLOCED:
+      case WASM_MALLOCED:
         fop->free_(dataPointer());
         break;
       case MAPPED:
         MemProfiler::RemoveNative(dataPointer());
         DeallocateMappedContent(dataPointer(), byteLength());
         break;
-      case ASMJS_MAPPED:
-        ReleaseAsmJSMappedData(dataPointer());
+      case WASM_MAPPED:
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+        ReleaseWasmMappedMemory(dataPointer());
+#else
+        MOZ_CRASH("shouldn't have wasm mapped ArrayBuffer");
+#endif
         break;
     }
 }
@@ -722,10 +759,10 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf m
       case MAPPED:
         info->objectsNonHeapElementsMapped += buffer.byteLength();
         break;
-      case ASMJS_MALLOCED:
+      case WASM_MALLOCED:
         info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
         break;
-      case ASMJS_MAPPED:
+      case WASM_MAPPED:
         info->objectsNonHeapElementsAsmJS += buffer.byteLength();
         break;
     }
