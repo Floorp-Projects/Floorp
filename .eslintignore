@@ -187,7 +187,6 @@ toolkit/components/osfile/**
 toolkit/components/passwordmgr/**
 
 # Uses preprocessing
-toolkit/content/contentAreaUtils.js
 toolkit/content/widgets/videocontrols.xml
 toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
