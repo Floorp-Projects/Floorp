@@ -1043,12 +1043,21 @@ loop.OTSdkDriver = (function() {
      * Handles publishing of property changes to a stream.
      */
     _onStreamPropertyChanged: function(event) {
-      if (event.changedProperty === STREAM_PROPERTIES.VIDEO_DIMENSIONS) {
-        this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
-          isLocal: event.stream.connection.id === this.session.connection.id,
-          videoType: event.stream.videoType,
-          dimensions: event.stream[STREAM_PROPERTIES.VIDEO_DIMENSIONS]
-        }));
+      switch (event.changedProperty) {
+        case STREAM_PROPERTIES.VIDEO_DIMENSIONS:
+          this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
+            isLocal: event.stream.connection.id === this.session.connection.id,
+            videoType: event.stream.videoType,
+            dimensions: event.stream[STREAM_PROPERTIES.VIDEO_DIMENSIONS]
+          }));
+          break;
+        case STREAM_PROPERTIES.HAS_VIDEO:
+          if (event.stream.videoType === "screen") {
+            this.dispatcher.dispatch(new sharedActions.VideoScreenStreamChanged({
+              hasVideo: event.newValue
+            }));
+          }
+          break;
       }
     },
 
