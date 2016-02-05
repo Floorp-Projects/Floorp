@@ -1905,8 +1905,9 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
       // Reload entry if the JS_NewObject call caused a GC and reallocated
       // the table (see bug 445229). This is guaranteed to succeed.
 
-      NS_ASSERTION(sNPObjWrappers->Search(npobj),
-                   "Hashtable didn't find what we just added?");
+      entry =
+         static_cast<NPObjWrapperHashEntry*>(sNPObjWrappers->Search(npobj));
+      NS_ASSERTION(entry, "Hashtable didn't find what we just added?");
   }
 
   if (!obj) {
