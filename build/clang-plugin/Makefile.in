@@ -9,10 +9,14 @@ include $(topsrcdir)/config/config.mk
 
 # In the current moz.build world, we need to override essentially every
 # variable to limit ourselves to what we need to build the clang plugin.
+ifeq ($(HOST_OS_ARCH),WINNT)
+OS_CXXFLAGS := $(LLVM_CXXFLAGS) -GR- -EHsc
+else
 OS_CXXFLAGS := $(LLVM_CXXFLAGS) -fno-rtti -fno-exceptions
+DSO_LDOPTS := -shared
+endif
 OS_COMPILE_CXXFLAGS :=
 OS_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
-DSO_LDOPTS := -shared
 
 ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
 # Use the host compiler instead of the target compiler.
