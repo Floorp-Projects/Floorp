@@ -50,7 +50,7 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
     assert(snapshotIsDiffable(second),
            `Second snapshot must be in a diffable state, found ${second.state}`);
 
-    let report, parentMap;
+    let report;
     let inverted = getState().inverted;
     let breakdown = getState().breakdown;
     let filter = getState().filter;
