@@ -3,7 +3,7 @@
 
 function test() {
   const Cu = Components.utils;
-  let {ToolSidebar} = require("devtools/client/framework/sidebar");
+  let {ToolSidebar,DEFAULT_WIDTH} = require("devtools/client/framework/sidebar");
 
   const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
                   "<?xml-stylesheet href='chrome://devtools/skin/common.css' type='text/css'?>" +
@@ -148,6 +148,7 @@ function test() {
 
   function testWidth(panel) {
     let tabbox = panel.panelDoc.getElementById("sidebar");
+    is(tabbox.width, DEFAULT_WIDTH, "Default width was specified");
     tabbox.width = 420;
     panel.sidebar.destroy().then(function() {
       tabbox.width = 0;
