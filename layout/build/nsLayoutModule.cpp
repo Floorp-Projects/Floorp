@@ -322,8 +322,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManagerService,
                                          QuotaManagerService::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ServiceWorkerManager,
                                          ServiceWorkerManager::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WorkerDebuggerManager,
-                                         WorkerDebuggerManager::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(WorkerDebuggerManager)
 
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
