@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*** Download items ***/
+/*** Downloads Panel ***/
 
 richlistitem[type="download"] {
   -moz-binding: url('chrome://browser/content/downloads/download.xml#download');
@@ -10,6 +10,45 @@ richlistitem[type="download"] {
 
 richlistitem[type="download"]:not([selected]) button {
   /* Only focus buttons in the selected item. */
+  -moz-user-focus: none;
+}
+
+richlistitem[type="download"].download-state[state="1"]:not([exists]) .downloadShow {
+  display: none;
+}
+
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
+#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
+#downloadsFooter[showingsummary] > #downloadsHistory,
+#downloadsFooter:not([showingsummary]) > #downloadsSummary {
+  display: none;
+}
+
+/*** Downloads View ***/
+
+/**
+ * The downloads richlistbox may list thousands of items, and it turns out
+ * XBL binding attachment, and even more so detachment, is a performance hog.
+ * This hack makes sure we don't apply any binding to inactive items (inactive
+ * items are history downloads that haven't been in the visible area).
+ * We can do this because the richlistbox implementation does not interact
+ * much with the richlistitem binding.  However, this may turn out to have
+ * some side effects (see bug 828111 for the details).
+ *
+ * We might be able to do away with this workaround once bug 653881 is fixed.
+ */
+richlistitem.download {
+  -moz-binding: none;
+}
+
+richlistitem.download[active] {
+  -moz-binding: url("chrome://browser/content/downloads/download.xml#download-full-ui");
+}
+
+richlistitem.download button {
+  /* These buttons should never get focus, as that would "disable"
+     the downloads view controller (it's only used when the richlistbox
+     is focused). */
   -moz-user-focus: none;
 }
 
@@ -94,17 +133,4 @@ richlistitem[type="download"]:not([selected]) button {
 
 {
   visibility: hidden;
-}
-
-.download-state[state="1"]:not([exists]) .downloadShow
-{
-  display: none;
-}
-
-#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
-#downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
-#downloadsFooter[showingsummary] > #downloadsHistory,
-#downloadsFooter:not([showingsummary]) > #downloadsSummary
-{
-  display: none;
 }
