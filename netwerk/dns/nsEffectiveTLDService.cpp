@@ -90,7 +90,7 @@ nsEffectiveTLDService::Init()
 #endif
     nsDomainEntry *entry = mHash.PutEntry(domain);
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-    entry->SetData(&entries[i]);
+    entry->SetData(entries[i]);
   }
 
   MOZ_ASSERT(!gService);
