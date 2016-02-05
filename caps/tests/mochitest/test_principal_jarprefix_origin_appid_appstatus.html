@@ -238,7 +238,7 @@ var gData = [
     child: {
       src: "http://example.org/chrome/",
       isapp: false,
-      inBrowser: true,
+      inIsolatedMozBrowser: true,
     },
     test: [ "child-has-same-eo" ],
   },
@@ -297,8 +297,8 @@ function checkIFrame(aFrame, data) {
        "extended origin should be the same as the last inserted one");
   }
 
-  is(principal.isInBrowserElement, !!data.browser,
-     "check principal.isInBrowserElement");
+  is(principal.isInIsolatedMozBrowserElement, !!data.browser,
+     "check principal.isInIsolatedMozBrowserElement");
 
   if (data.child) {
     let childPrincipal = aFrame.contentWindow.frames[0].document.nodePrincipal;
@@ -308,8 +308,8 @@ function checkIFrame(aFrame, data) {
          "child should be an installed app");
     }
 
-    is(childPrincipal.isInBrowserElement, !!data.child.browser || !!data.child.inBrowser,
-       "check childPrincipal.isInBrowserElement");
+    is(childPrincipal.isInIsolatedMozBrowserElement, !!data.child.browser || !!data.child.inIsolatedMozBrowser,
+       "check childPrincipal.isInIsolatedMozBrowserElement");
 
     if (data.test.indexOf("child-has-same-eo") != -1) {
       is(childPrincipal.jarPrefix + childPrincipal.origin,

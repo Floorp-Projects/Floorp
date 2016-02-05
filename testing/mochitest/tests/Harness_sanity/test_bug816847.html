@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816847
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=816847">Mozilla Bug 816847</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -33,7 +33,7 @@ const allow = Ci.nsIPermissionManager.ALLOW_ACTION;
 const unknown = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 const perms = ['network-events', 'geolocation', 'camera', 'alarms']
 
-function createPrincipal(aURI, aIsApp, aIsInBrowserElement) {
+function createPrincipal(aURI, aIsApp, aIsInIsolatedMozBrowserElement) {
   if (aIsApp) {
     var app = appsSvc.getAppByManifestURL(aURI);
     return app.principal;
@@ -47,9 +47,9 @@ function createPrincipal(aURI, aIsApp, aIsInBrowserElement) {
 // test addPermission and removePermission
 function starttest(){
   var app = appsSvc.getAppByManifestURL(manifest);
-  ok(app != null, "Got an app "); 
+  ok(app != null, "Got an app ");
 
-  var origin = app.origin 
+  var origin = app.origin
   var nodePrincipal = SpecialPowers.wrap(document).nodePrincipal;
   var appPrincipal = createPrincipal(manifest, true);
   var noappPrincipal = createPrincipal(origin, false);
@@ -91,4 +91,3 @@ function starttest(){
 </pre>
 </body>
 </html>
-

@@ -78,7 +78,7 @@ function display(info, pushService) {
 
   if (info.principal.appId) {
     let b2gtitle = document.createElement('h3');
-    let trueFalse = bundle.GetStringFromName(info.principal.isInBrowserElement ? 'true' : 'false');
+    let trueFalse = bundle.GetStringFromName(info.principal.isInIsolatedMozBrowserElement ? 'true' : 'false');
 
     let b2gtitleStr =
       bundle.formatStringFromName('b2gtitle', [ brandBundle.getString("brandShortName"),

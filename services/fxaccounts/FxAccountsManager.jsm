@@ -552,7 +552,8 @@ this.FxAccountsManager = {
 
     let principal = aPrincipal;
     log.debug("FxAccountsManager.getAssertion() aPrincipal: ",
-              principal.origin, principal.appId, principal.isInBrowserElement);
+              principal.origin, principal.appId,
+              principal.isInIsolatedMozBrowserElement);
 
     return this.getAccount().then(
       user => {

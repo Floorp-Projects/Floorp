@@ -38,8 +38,8 @@
         sendAsyncMessage("test:result", "principal.origin: " +
                          ("origin" in message.data ? "OK" : "KO"));
 
-        sendAsyncMessage("test:result", "principal.isInBrowserElement: " +
-                         ("isInBrowserElement" in message.data ? "OK" : "KO"));
+        sendAsyncMessage("test:result", "principal.isInIsolatedMozBrowserElement: " +
+                         ("isInIsolatedMozBrowserElement" in message.data ? "OK" : "KO"));
       });
 
       addMessageListener("test:system", function(message) {

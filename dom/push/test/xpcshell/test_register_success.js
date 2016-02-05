@@ -56,7 +56,7 @@ add_task(function* test_register_success() {
   let newRecord = yield PushService.register({
     scope: 'https://example.org/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
   equal(newRecord.endpoint, 'https://example.com/update/1',
     'Wrong push endpoint in registration record');

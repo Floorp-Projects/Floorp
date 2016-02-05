@@ -108,7 +108,7 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
 {
   return aA.mAddonId == aB.mAddonId &&
          aA.mAppId == aB.mAppId &&
-         aA.mInBrowser == aB.mInBrowser &&
+         aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
          aA.mSignedPkg == aB.mSignedPkg &&
          aA.mUserContextId == aB.mUserContextId;
 }

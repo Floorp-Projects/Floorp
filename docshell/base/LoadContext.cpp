@@ -178,7 +178,7 @@ LoadContext::GetIsInBrowserElement(bool* aIsInBrowserElement)
 
   NS_ENSURE_ARG_POINTER(aIsInBrowserElement);
 
-  *aIsInBrowserElement = mOriginAttributes.mInBrowser;
+  *aIsInBrowserElement = mOriginAttributes.mInIsolatedMozBrowser;
   return NS_OK;
 }
 
