@@ -463,13 +463,11 @@ public class Distribution {
             return true;
         }
 
-        // We try to find the install intent, then the APK, then the system directory, and finally
-        // an already copied distribution.  Already copied might originate from the bouncer APK.
+        // We try the install intent, then the APK, then the system directory.
         final boolean distributionSet =
                 checkIntentDistribution(referrer) ||
                 copyAndCheckAPKDistribution() ||
-                checkSystemDistribution() ||
-                checkDataDistribution();
+                checkSystemDistribution();
 
         // If this is our first run -- and thus we weren't already in STATE_NONE or STATE_SET above --
         // and we didn't find a distribution already, then we should hold on to callbacks in case we
