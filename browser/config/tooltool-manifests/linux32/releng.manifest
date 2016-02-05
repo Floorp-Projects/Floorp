@@ -7,8 +7,8 @@
 "unpack": true
 },
 {
-"size": 11179576,
-"digest": "91567ce8e2bb8ab0ebc60c31e90731d88a1ea889fb71bcf55c735746a60fa7610b7e040ea3d8f727b6f692ae3ee703d6f3b30cdbd76fdf5617f77d9c38aa20ed",
+"size": 11189216,
+"digest": "18bc52b0599b1308b667e282abb45f47597bfc98a5140cfcab8da71dacf89dd76d0dee22a04ce26fe7ad1f04e2d6596991f9e5b01fd2aaaab5542965f596b0e6",
 "algorithm": "sha512",
 "filename": "gtk3.tar.xz",
 "setup": "setup.sh",
