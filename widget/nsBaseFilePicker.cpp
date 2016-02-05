@@ -347,7 +347,9 @@ nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
     return NS_OK;
   }
 
-  RefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
+  auto* innerParent = mParent ? mParent->GetCurrentInnerWindow() : nullptr;
+
+  RefPtr<File> domFile = File::CreateFromFile(innerParent, localFile);
   domFile->Impl()->SetIsDirectory(mMode == nsIFilePicker::modeGetFolder);
   nsCOMPtr<nsIDOMBlob>(domFile).forget(aValue);
   return NS_OK;
