@@ -9,6 +9,7 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnlyBinding.h"
+#include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 
 namespace mozilla {
@@ -60,13 +61,22 @@ TimingParamsFromOptionsUnion(
   if (aOptions.IsUnrestrictedDouble()) {
     return TimingParams(aOptions.GetAsUnrestrictedDouble());
   } else {
-    // FIXME: Bug 1241784: Implement CSSPsuedoElement::Animate() and let
-    // this function handle CSSPseudoElement properly.
-    MOZ_ASSERT(aTarget.IsNull() ||
-               (!aTarget.IsNull() && aTarget.Value().IsElement()),
-               "CSSPseudoElement is not supported here");
-    return TimingParams(GetTimingProperties(aOptions),
-                        &aTarget.Value().GetAsElement());
+    // If aTarget is a pseudo element, we pass its parent element because
+    // TimingParams only needs its owner doc to parse easing and both pseudo
+    // element and its parent element should have the same owner doc.
+    // Bug 1246320: Avoid passing the element for parsing the timing function
+    RefPtr<dom::Element> targetElement;
+    if (!aTarget.IsNull()) {
+      const dom::ElementOrCSSPseudoElement& target = aTarget.Value();
+      MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
+                 "Uninitialized target");
+      if (target.IsElement()) {
+        targetElement = &target.GetAsElement();
+      } else {
+        targetElement = target.GetAsCSSPseudoElement().ParentElement();
+      }
+    }
+    return TimingParams(GetTimingProperties(aOptions), targetElement);
   }
 }
 
