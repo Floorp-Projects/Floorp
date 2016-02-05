@@ -577,7 +577,7 @@ protected:
           msidAttr += " ";
           msidAttr += pairs[i].mReceiving->GetTrackId();
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
-            << "Did not find " << msidAttr << " in offer";
+            << "Did not find " << msidAttr << " in answer";
         }
       }
     }
@@ -2405,6 +2405,73 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
     CheckEndOfCandidates(false, remoteAnswer->GetMediaSection(i),
         "Remote reanswer after trickle should not have an end-of-candidates.");
   }
+}
+
+TEST_P(JsepSessionTest, RenegotiationAnswererSendonly)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+  OfferAnswer();
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+
+  UniquePtr<Sdp> parsedAnswer(Parse(answer));
+  for (size_t i = 0; i < parsedAnswer->GetMediaSectionCount(); ++i) {
+    SdpMediaSection& msection = parsedAnswer->GetMediaSection(i);
+    if (msection.GetMediaType() != SdpMediaSection::kApplication) {
+      msection.SetReceiving(false);
+    }
+  }
+
+  answer = parsedAnswer->ToString();
+
+  SetRemoteAnswer(answer);
+
+  for (const RefPtr<JsepTrack>& track : mSessionOff.GetLocalTracks()) {
+    if (track->GetMediaType() != SdpMediaSection::kApplication) {
+      ASSERT_FALSE(track->GetActive());
+    }
+  }
+
+  ASSERT_EQ(types.size(), mSessionOff.GetNegotiatedTrackPairs().size());
+}
+
+TEST_P(JsepSessionTest, RenegotiationAnswererInactive)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+  OfferAnswer();
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+
+  UniquePtr<Sdp> parsedAnswer(Parse(answer));
+  for (size_t i = 0; i < parsedAnswer->GetMediaSectionCount(); ++i) {
+    SdpMediaSection& msection = parsedAnswer->GetMediaSection(i);
+    if (msection.GetMediaType() != SdpMediaSection::kApplication) {
+      msection.SetReceiving(false);
+      msection.SetSending(false);
+    }
+  }
+
+  answer = parsedAnswer->ToString();
+
+  SetRemoteAnswer(answer, CHECK_SUCCESS); // Won't have answerer tracks
+
+  for (const RefPtr<JsepTrack>& track : mSessionOff.GetLocalTracks()) {
+    if (track->GetMediaType() != SdpMediaSection::kApplication) {
+      ASSERT_FALSE(track->GetActive());
+    }
+  }
+
+  ASSERT_EQ(types.size(), mSessionOff.GetNegotiatedTrackPairs().size());
 }
 
 

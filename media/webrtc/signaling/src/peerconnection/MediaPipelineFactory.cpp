@@ -460,6 +460,14 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     return NS_OK;
   }
 
+  if (aTrack.GetActive()) {
+    auto error = conduit->StartTransmitting();
+    if (error) {
+      MOZ_MTLOG(ML_ERROR, "StartTransmitting failed: " << error);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   RefPtr<MediaPipeline> pipeline =
     stream->GetPipelineByTrackId_m(aTrack.GetTrackId());
 
@@ -786,6 +794,15 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
   }
 
   if (receiving) {
+    if (!aTrackPair.mSending) {
+      // No send track, but we still need to configure an SSRC for receiver
+      // reports.
+      if (!conduit->SetLocalSSRC(aTrackPair.mRecvonlySsrc)) {
+        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
+        return NS_ERROR_FAILURE;
+      }
+    }
+
     // Prune out stuff we cannot actually do. We should work to eliminate the
     // need for this.
     bool configuredH264 = false;
@@ -815,15 +832,6 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
-    }
-
-    if (!aTrackPair.mSending) {
-      // No send track, but we still need to configure an SSRC for receiver
-      // reports.
-      if (!conduit->SetLocalSSRC(aTrackPair.mRecvonlySsrc)) {
-        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
-        return NS_ERROR_FAILURE;
-      }
     }
   } else {
     // For now we only expect to have one ssrc per local track.

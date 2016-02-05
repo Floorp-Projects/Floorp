@@ -1333,13 +1333,6 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
         transport);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!answer.GetMediaSection(i).IsSending() &&
-        !answer.GetMediaSection(i).IsReceiving()) {
-      MOZ_MTLOG(ML_DEBUG, "Inactive m-section, skipping creation of negotiated "
-                          "track pair.");
-      continue;
-    }
-
     JsepTrackPair trackPair;
     rv = MakeNegotiatedTrackPair(remote->GetMediaSection(i),
                                  local->GetMediaSection(i),
@@ -1402,41 +1395,38 @@ JsepSessionImpl::MakeNegotiatedTrackPair(const SdpMediaSection& remote,
     trackPairOut->mBundleLevel = Some(transportLevel);
   }
 
-  if (sending) {
-    auto sendTrack = FindTrackByLevel(mLocalTracks, local.GetLevel());
-    if (sendTrack == mLocalTracks.end()) {
-      JSEP_SET_ERROR("Failed to find local track for level " <<
-                     local.GetLevel()
-                     << " in local SDP. This should never happen.");
-      NS_ASSERTION(false, "Failed to find local track for level");
-      return NS_ERROR_FAILURE;
-    }
-
+  auto sendTrack = FindTrackByLevel(mLocalTracks, local.GetLevel());
+  if (sendTrack != mLocalTracks.end()) {
     sendTrack->mTrack->Negotiate(answer, remote);
-
+    sendTrack->mTrack->SetActive(sending);
     trackPairOut->mSending = sendTrack->mTrack;
+  } else if (sending) {
+    JSEP_SET_ERROR("Failed to find local track for level " <<
+                   local.GetLevel()
+                   << " in local SDP. This should never happen.");
+    NS_ASSERTION(false, "Failed to find local track for level");
+    return NS_ERROR_FAILURE;
   }
 
-  if (receiving) {
-    auto recvTrack = FindTrackByLevel(mRemoteTracks, local.GetLevel());
-    if (recvTrack == mRemoteTracks.end()) {
-      JSEP_SET_ERROR("Failed to find remote track for level "
-                     << local.GetLevel()
-                     << " in remote SDP. This should never happen.");
-      NS_ASSERTION(false, "Failed to find remote track for level");
-      return NS_ERROR_FAILURE;
-    }
-
+  auto recvTrack = FindTrackByLevel(mRemoteTracks, local.GetLevel());
+  if (recvTrack != mRemoteTracks.end()) {
     recvTrack->mTrack->Negotiate(answer, remote);
+    recvTrack->mTrack->SetActive(receiving);
+    trackPairOut->mReceiving = recvTrack->mTrack;
 
-    if (trackPairOut->mBundleLevel.isSome() &&
+    if (receiving &&
+        trackPairOut->mBundleLevel.isSome() &&
         recvTrack->mTrack->GetSsrcs().empty() &&
         recvTrack->mTrack->GetMediaType() != SdpMediaSection::kApplication) {
       MOZ_MTLOG(ML_ERROR, "Bundled m-section has no ssrc attributes. "
                           "This may cause media packets to be dropped.");
     }
-
-    trackPairOut->mReceiving = recvTrack->mTrack;
+  } else if (receiving) {
+    JSEP_SET_ERROR("Failed to find remote track for level "
+                   << local.GetLevel()
+                   << " in remote SDP. This should never happen.");
+    NS_ASSERTION(false, "Failed to find remote track for level");
+    return NS_ERROR_FAILURE;
   }
 
   trackPairOut->mRtpTransport = transport;
