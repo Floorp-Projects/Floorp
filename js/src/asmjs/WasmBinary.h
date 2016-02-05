@@ -48,11 +48,13 @@ static const char DeclSection[]       = "decl";
 static const char MemorySection[]     = "memory";
 static const char ExportSection[]     = "export";
 static const char CodeSection[]       = "code";
+static const char DataSection[]       = "data";
 static const char EndSection[]        = "";
 
 // Subsection names:
 static const char FuncSubsection[]    = "func";
 static const char MemorySubsection[]  = "memory";
+static const char SegmentSubsection[] = "segment";
 
 // Field names:
 static const char FieldInitial[]      = "initial";
@@ -439,6 +441,11 @@ class Encoder
         return bytecode_.append(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr) + 1);
     }
 
+    MOZ_WARN_UNUSED_RESULT bool writeData(const uint8_t* bytes, uint32_t numBytes) {
+        MOZ_ASSERT(bytes);
+        return bytecode_.append(bytes, numBytes);
+    }
+
     MOZ_WARN_UNUSED_RESULT bool startSection(size_t* offset) {
         if (!writeU32(BadSectionLength))
             return false;
@@ -485,10 +492,14 @@ class Decoder
     const uint8_t* const end_;
     const uint8_t* cur_;
 
+    uintptr_t bytesRemain() const {
+        MOZ_ASSERT(end_ >= cur_);
+        return uintptr_t(end_ - cur_);
+    }
+
     template <class T>
-    MOZ_WARN_UNUSED_RESULT bool
-    read(T* out) {
-        if (uintptr_t(end_ - cur_) < sizeof(T))
+    MOZ_WARN_UNUSED_RESULT bool read(T* out) {
+        if (bytesRemain() < sizeof(T))
             return false;
         if (out)
             memcpy((void*)out, cur_, sizeof(T));
@@ -497,8 +508,7 @@ class Decoder
     }
 
     template <class IntT, class T>
-    MOZ_WARN_UNUSED_RESULT bool
-    readEnum(T* out) {
+    MOZ_WARN_UNUSED_RESULT bool readEnum(T* out) {
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         // See Encoder::writeEnum.
         IntT i;
@@ -511,7 +521,7 @@ class Decoder
 
     template <class T>
     T uncheckedPeek() const {
-        MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
+        MOZ_ASSERT(bytesRemain() >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
         return ret;
@@ -652,6 +662,15 @@ class Decoder
         return false;
     }
 
+    MOZ_WARN_UNUSED_RESULT bool readData(uint32_t numBytes, const uint8_t** bytes = nullptr) {
+        if (bytes)
+            *bytes = cur_;
+        if (bytesRemain() < numBytes)
+            return false;
+        cur_ += numBytes;
+        return true;
+    }
+
     MOZ_WARN_UNUSED_RESULT bool startSection(uint32_t* offset) {
         uint32_t unused;
         if (!readU32(&unused))
@@ -669,7 +688,7 @@ class Decoder
         uint32_t numBytes;
         if (!readU32(&numBytes))
             return false;
-        if (uintptr_t(end_ - cur_) < numBytes)
+        if (bytesRemain() < numBytes)
             return false;
         cur_ += numBytes;
         return true;
