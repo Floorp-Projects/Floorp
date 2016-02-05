@@ -564,7 +564,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 NS_IMETHODIMP
 nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme)
 {
-    return net_ExtractURLScheme(inURI, nullptr, nullptr, &scheme);
+    return net_ExtractURLScheme(inURI, scheme);
 }
 
 NS_IMETHODIMP 
