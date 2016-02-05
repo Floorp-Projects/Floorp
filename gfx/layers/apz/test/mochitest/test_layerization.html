@@ -178,12 +178,11 @@ function* runTest() {
 
   // Scroll on inner3. inner3 isn't layerized, and this will cause it to
   // get layerized, but it will also trigger displayport expiration for inner3
-  // which will eventually trigger displayport expiration on outer3.
+  // which will eventually trigger displayport expiration on inner3 and outer3.
   yield scrollWheelOver(document.getElementById('outer3').contentDocument.getElementById('inner3'));
   yield waitForAllPaints(function() {
     flushApzRepaints(driveTest);
   });
-  ok(isLayerized('inner3'), "inner3 becomes layerized after scroll");
   yield setTimeout(driveTest, DISPLAYPORT_EXPIRY);
   yield waitForAllPaints(callDriveTestAsync);
   ok(!isLayerized('inner3'), "inner3 becomes unlayerized after expiry");
