@@ -52,7 +52,8 @@ add_task(function* testInitUninit() {
 
   Assert.ok(deckStore.on.calledOnce, "listener is added to store");
   Assert.equal(deckStore.on.args[0][0], "change");
-  let values = [for (kv of Iterator(component.PANELS)) kv[1]]; // Object.values only in nightly
+  // Object.values only in nightly
+  let values = Object.keys(component.PANELS).map(k => component.PANELS[k]);
   Assert.ok(deckStore.setPanels.calledWith(values),
     "panels are set on deck store");
 
