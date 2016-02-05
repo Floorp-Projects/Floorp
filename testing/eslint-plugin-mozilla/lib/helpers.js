@@ -304,6 +304,22 @@ module.exports = {
   },
 
   /**
+   * Check whether we might be in a test head file.
+   *
+   * @param  {RuleContext} scope
+   *         You should pass this from within a rule
+   *         e.g. helpers.getIsBrowserMochitest(this)
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsHeadFile: function(scope) {
+    var pathAndFilename = scope.getFilename();
+
+    return /.*[\\/]head(_.+)?\.js$/.test(pathAndFilename);
+  },
+
+  /**
    * Check whether we are in a browser mochitest.
    *
    * @param  {RuleContext} scope
