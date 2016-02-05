@@ -821,6 +821,7 @@ public class GeckoAppShell
     // This is the entry point from nsIShellService.
     @WrapForJNI
     public static void createShortcut(final String aTitle, final String aURI) {
+        ThreadUtils.assertOnBackgroundThread();
         final BrowserDB db = GeckoProfile.get(getApplicationContext()).getDB();
 
         final ContentResolver cr = getContext().getContentResolver();
