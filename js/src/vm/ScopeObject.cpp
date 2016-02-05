@@ -691,8 +691,20 @@ ModuleEnvironmentObject::setProperty(JSContext* cx, HandleObject obj, HandleId i
 ModuleEnvironmentObject::getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                                                   MutableHandle<PropertyDescriptor> desc)
 {
-    // We never call this hook on scope objects.
-    MOZ_CRASH();
+    const IndirectBindingMap& bindings = obj->as<ModuleEnvironmentObject>().importBindings();
+    Shape* shape;
+    ModuleEnvironmentObject* env;
+    if (bindings.lookup(id, &env, &shape)) {
+        desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
+        desc.object().set(obj);
+        RootedValue value(cx, env->getSlot(shape->slot()));
+        desc.setValue(value);
+        desc.assertComplete();
+        return true;
+    }
+
+    RootedNativeObject self(cx, &obj->as<NativeObject>());
+    return NativeGetOwnPropertyDescriptor(cx, self, id, desc);
 }
 
 /* static */ bool
