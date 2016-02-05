@@ -1632,6 +1632,12 @@ KeyframeEffectReadOnly::Constructor(
     return nullptr;
   }
 
+  if (!aTarget->GetCurrentDoc()) {
+    // Bug 1245748: We don't support targets that are not in a document yet.
+    aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
+    return nullptr;
+  }
+
   InfallibleTArray<AnimationProperty> animationProperties;
   BuildAnimationPropertyList(aGlobal.Context(), aTarget, aFrames,
                              animationProperties, aRv);
