@@ -291,7 +291,10 @@ void
 DecodedAudioDataSink::Drained()
 {
   SINK_LOG("Drained");
-  mEndPromise.Resolve(true, __func__);
+  // FIXME : In OSX, the audio backend could trigger Drained() twice, then it
+  // cause the crash because the promise had already been resolve and free.
+  // You can fix it on the bug 1246108.
+  mEndPromise.ResolveIfExists(true, __func__);
 }
 
 } // namespace media
