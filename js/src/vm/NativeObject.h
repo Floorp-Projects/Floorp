@@ -1340,6 +1340,10 @@ extern bool
 NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id, bool* foundp);
 
 extern bool
+NativeGetOwnPropertyDescriptor(JSContext* cx, HandleNativeObject obj, HandleId id,
+                               MutableHandle<PropertyDescriptor> desc);
+
+extern bool
 NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleValue receiver, HandleId id,
                   MutableHandleValue vp);
 

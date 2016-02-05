@@ -2570,61 +2570,7 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
         return ok;
     }
 
-    RootedNativeObject nobj(cx, obj.as<NativeObject>());
-    RootedShape shape(cx);
-    if (!NativeLookupOwnProperty<CanGC>(cx, nobj, id, &shape))
-        return false;
-    if (!shape) {
-        desc.object().set(nullptr);
-        return true;
-    }
-
-    desc.setAttributes(GetShapeAttributes(obj, shape));
-    if (desc.isAccessorDescriptor()) {
-        MOZ_ASSERT(desc.isShared());
-
-        // The result of GetOwnPropertyDescriptor() must be either undefined or
-        // a complete property descriptor (per ES6 draft rev 32 (2015 Feb 2)
-        // 6.1.7.3, Invariants of the Essential Internal Methods).
-        //
-        // It is an unfortunate fact that in SM, properties can exist that have
-        // JSPROP_GETTER or JSPROP_SETTER but not both. In these cases, rather
-        // than return true with desc incomplete, we fill out the missing
-        // getter or setter with a null, following CompletePropertyDescriptor.
-        if (desc.hasGetterObject()) {
-            desc.setGetterObject(shape->getterObject());
-        } else {
-            desc.setGetterObject(nullptr);
-            desc.attributesRef() |= JSPROP_GETTER;
-        }
-        if (desc.hasSetterObject()) {
-            desc.setSetterObject(shape->setterObject());
-        } else {
-            desc.setSetterObject(nullptr);
-            desc.attributesRef() |= JSPROP_SETTER;
-        }
-
-        desc.value().setUndefined();
-    } else {
-        // This is either a straight-up data property or (rarely) a
-        // property with a JSGetterOp/JSSetterOp. The latter must be
-        // reported to the caller as a plain data property, so clear
-        // desc.getter/setter, and mask away the SHARED bit.
-        desc.setGetter(nullptr);
-        desc.setSetter(nullptr);
-        desc.attributesRef() &= ~JSPROP_SHARED;
-
-        if (IsImplicitDenseOrTypedArrayElement(shape)) {
-            desc.value().set(nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-        } else {
-            if (!NativeGetExistingProperty(cx, nobj, nobj, shape, desc.value()))
-                return false;
-        }
-    }
-
-    desc.object().set(nobj);
-    desc.assertComplete();
-    return true;
+    return NativeGetOwnPropertyDescriptor(cx, obj.as<NativeObject>(), id, desc);
 }
 
 bool
