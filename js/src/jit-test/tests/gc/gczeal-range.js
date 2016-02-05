@@ -1,2 +1,5 @@
-// |jit-test| error:out of range
-gczeal(123);
+try {
+    gczeal(123);
+} catch(e) {
+    assertEq(e.toString().includes("out of range"), true);
+}
