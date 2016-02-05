@@ -121,6 +121,10 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
     if (!link_)
         return false;
 
+    exportMap_ = MakeUnique<ExportMap>();
+    if (!exportMap_)
+        return false;
+
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
     // and will be initialized in a linear order via init* functions as the
     // module is generated. For wasm, the Vectors are correctly-sized and
@@ -356,34 +360,42 @@ ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, Profi
 }
 
 bool
-ModuleGenerator::declareExport(uint32_t funcIndex, uint32_t* exportIndex)
+ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex)
 {
+    if (!exportMap_->fieldNames.append(Move(fieldName)))
+        return false;
+
     FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
     if (p) {
-        *exportIndex = p->value();
-        return true;
+        if (exportIndex)
+            *exportIndex = p->value();
+        return exportMap_->fieldsToExports.append(p->value());
     }
+
+    uint32_t newExportIndex = module_->exports.length();
+    if (exportIndex)
+        *exportIndex = newExportIndex;
 
     Sig copy;
     if (!copy.clone(funcSig(funcIndex)))
         return false;
 
-    *exportIndex = module_->exports.length();
-    return funcIndexToExport_.add(p, funcIndex, *exportIndex) &&
-           module_->exports.append(Move(copy)) &&
-           exportFuncIndices_.append(funcIndex);
+    return module_->exports.append(Move(copy)) &&
+           funcIndexToExport_.add(p, funcIndex, newExportIndex) &&
+           exportMap_->fieldsToExports.append(newExportIndex) &&
+           exportMap_->exportFuncIndices.append(funcIndex);
 }
 
 uint32_t
 ModuleGenerator::exportFuncIndex(uint32_t index) const
 {
-    return exportFuncIndices_[index];
+    return exportMap_->exportFuncIndices[index];
 }
 
 uint32_t
 ModuleGenerator::exportEntryOffset(uint32_t index) const
 {
-    return funcEntryOffsets_[exportFuncIndices_[index]];
+    return funcEntryOffsets_[exportMap_->exportFuncIndices[index]];
 }
 
 const Sig&
@@ -622,6 +634,7 @@ bool
 ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
+                        UniqueExportMap* exportMap,
                         SlowFunctionVector* slowFuncs)
 {
     MOZ_ASSERT(!activeFunc_);
@@ -732,6 +745,7 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
 
     *module = Move(module_);
     *linkData = Move(link_);
+    *exportMap = Move(exportMap_);
     *slowFuncs = Move(slowFuncs_);
     return true;
 }

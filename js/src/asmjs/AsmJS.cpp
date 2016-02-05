@@ -313,7 +313,6 @@ struct AsmJSModuleData : AsmJSModuleCacheablePod
     AsmJSGlobalVector       globals;
     AsmJSImportVector       imports;
     AsmJSExportVector       exports;
-    ExportMap               exportMap;
     PropertyName*           globalArgumentName;
     PropertyName*           importArgumentName;
     PropertyName*           bufferArgumentName;
@@ -362,15 +361,18 @@ class js::AsmJSModule final : public Module
     typedef UniquePtr<const AsmJSModuleData> UniqueConstAsmJSModuleData;
     typedef UniquePtr<const StaticLinkData> UniqueConstStaticLinkData;
 
-    const UniqueConstStaticLinkData link_;
+    const UniqueConstStaticLinkData  link_;
+    const UniqueExportMap            exportMap_;
     const UniqueConstAsmJSModuleData module_;
 
   public:
     AsmJSModule(UniqueModuleData base,
                 UniqueStaticLinkData link,
+                UniqueExportMap exportMap,
                 UniqueAsmJSModuleData module)
       : Module(Move(base)),
         link_(Move(link)),
+        exportMap_(Move(exportMap)),
         module_(Move(module))
     {}
 
@@ -381,6 +383,7 @@ class js::AsmJSModule final : public Module
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data) override {
         Module::addSizeOfMisc(mallocSizeOf, code, data);
         *data += mallocSizeOf(link_.get()) + link_->sizeOfExcludingThis(mallocSizeOf);
+        *data += mallocSizeOf(exportMap_.get()) + exportMap_->sizeOfExcludingThis(mallocSizeOf);
         *data += mallocSizeOf(module_.get()) + module_->sizeOfExcludingThis(mallocSizeOf);
     }
     virtual bool mutedErrors() const override {
@@ -397,7 +400,6 @@ class js::AsmJSModule final : public Module
     const AsmJSGlobalVector& asmJSGlobals() const { return module_->globals; }
     const AsmJSImportVector& asmJSImports() const { return module_->imports; }
     const AsmJSExportVector& asmJSExports() const { return module_->exports; }
-    const ExportMap& exportMap() const { return module_->exportMap; }
     PropertyName* globalArgumentName() const { return module_->globalArgumentName; }
     PropertyName* importArgumentName() const { return module_->importArgumentName; }
     PropertyName* bufferArgumentName() const { return module_->bufferArgumentName; }
@@ -425,6 +427,13 @@ class js::AsmJSModule final : public Module
 
     bool staticallyLink(ExclusiveContext* cx) {
         return Module::staticallyLink(cx, *link_);
+    }
+    bool dynamicallyLink(JSContext* cx,
+                         Handle<WasmModuleObject*> moduleObj,
+                         Handle<ArrayBufferObjectMaybeShared*> heap,
+                         Handle<FunctionVector> imports,
+                         MutableHandleObject exportObj) {
+        return Module::dynamicallyLink(cx, moduleObj, heap, imports, *exportMap_, exportObj);
     }
 
     // Clone this AsmJSModule into a new AsmJSModule that isn't statically or
@@ -2000,29 +2009,19 @@ class MOZ_STACK_CLASS ModuleValidator
             fieldName = StringToNewUTF8CharsZ(cx_, *maybeFieldName);
         else
             fieldName = DuplicateString("");
-        if (!fieldName || !module_->exportMap.fieldNames.append(Move(fieldName)))
+        if (!fieldName)
             return false;
 
         // Declare which function is exported which gives us an index into the
         // module ExportVector.
         uint32_t exportIndex;
-        if (!mg_.declareExport(func.index(), &exportIndex))
-            return false;
-
-        // Add a mapping from the given field to the Export's index.
-        if (!module_->exportMap.fieldsToExports.append(exportIndex))
+        if (!mg_.declareExport(Move(fieldName), func.index(), &exportIndex))
             return false;
 
         // The exported function might have already been exported in which case
         // the index will refer into the range of AsmJSExports.
         MOZ_ASSERT(exportIndex <= module_->exports.length());
-        if (exportIndex < module_->exports.length())
-            return true;
-
-        // If this is a new export, record the src info for later toString.
-        CacheableChars exportName = StringToNewUTF8CharsZ(cx_, *func.name());
-        return exportName &&
-               module_->exportMap.exportNames.emplaceBack(Move(exportName)) &&
+        return exportIndex < module_->exports.length() ||
                module_->exports.emplaceBack(func.srcBegin() - module_->srcStart,
                                             func.srcEnd() - module_->srcStart);
     }
@@ -2248,14 +2247,15 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(Move(funcNames), &base, &link, slowFuncs))
+        UniqueExportMap exportMap;
+        if (!mg_.finish(Move(funcNames), &base, &link, &exportMap, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));
         if (!moduleObj)
             return false;
 
-        return moduleObj->init(cx_->new_<AsmJSModule>(Move(base), Move(link), Move(module_)));
+        return moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module_)));
     }
 };
 
@@ -7452,7 +7452,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, Handle<WasmModuleObje
             return false;
     }
 
-    return module.dynamicallyLink(cx, moduleObj, buffer, imports, module.exportMap(), exportObj);
+    return module.dynamicallyLink(cx, moduleObj, buffer, imports, exportObj);
 }
 
 static bool
@@ -7634,7 +7634,6 @@ AsmJSModuleData::serializedSize() const
            SerializedVectorSize(globals) +
            SerializedPodVectorSize(imports) +
            SerializedPodVectorSize(exports) +
-           exportMap.serializedSize() +
            SerializedNameSize(globalArgumentName) +
            SerializedNameSize(importArgumentName) +
            SerializedNameSize(bufferArgumentName);
@@ -7647,7 +7646,6 @@ AsmJSModuleData::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, globals);
     cursor = SerializePodVector(cursor, imports);
     cursor = SerializePodVector(cursor, exports);
-    cursor = exportMap.serialize(cursor);
     cursor = SerializeName(cursor, globalArgumentName);
     cursor = SerializeName(cursor, importArgumentName);
     cursor = SerializeName(cursor, bufferArgumentName);
@@ -7661,7 +7659,6 @@ AsmJSModuleData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializeVector(cx, cursor, &globals)) &&
     (cursor = DeserializePodVector(cx, cursor, &imports)) &&
     (cursor = DeserializePodVector(cx, cursor, &exports)) &&
-    (cursor = exportMap.deserialize(cx, cursor)) &&
     (cursor = DeserializeName(cx, cursor, &globalArgumentName)) &&
     (cursor = DeserializeName(cx, cursor, &importArgumentName)) &&
     (cursor = DeserializeName(cx, cursor, &bufferArgumentName));
@@ -7681,8 +7678,7 @@ AsmJSModuleData::clone(JSContext* cx, AsmJSModuleData* out) const
     out->scriptSource.reset(scriptSource.get());
     return CloneVector(cx, globals, &out->globals) &&
            ClonePodVector(cx, imports, &out->imports) &&
-           ClonePodVector(cx, exports, &out->exports) &&
-           exportMap.clone(cx, &out->exportMap);
+           ClonePodVector(cx, exports, &out->exports);
 }
 
 size_t
@@ -7690,8 +7686,7 @@ AsmJSModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return globals.sizeOfExcludingThis(mallocSizeOf) +
            imports.sizeOfExcludingThis(mallocSizeOf) +
-           exports.sizeOfExcludingThis(mallocSizeOf) +
-           exportMap.sizeOfExcludingThis(mallocSizeOf);
+           exports.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -7699,6 +7694,7 @@ AsmJSModule::serializedSize() const
 {
     return base().serializedSize() +
            link_->serializedSize() +
+           exportMap_->serializedSize() +
            module_->serializedSize();
 }
 
@@ -7707,6 +7703,7 @@ AsmJSModule::serialize(uint8_t* cursor) const
 {
     cursor = base().serialize(cursor);
     cursor = link_->serialize(cursor);
+    cursor = exportMap_->serialize(cursor);
     cursor = module_->serialize(cursor);
     return cursor;
 }
@@ -7740,6 +7737,13 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
     if (!cursor)
         return nullptr;
 
+    UniqueExportMap exportMap = cx->make_unique<ExportMap>();
+    if (!exportMap)
+        return nullptr;
+    cursor = exportMap->deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
     UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
     if (!module)
         return nullptr;
@@ -7753,7 +7757,7 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
     module->strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
     module->scriptSource.reset(parser.ss);
 
-    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+    if (!moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module))))
         return nullptr;
 
     return cursor;
@@ -7777,11 +7781,15 @@ AsmJSModule::clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) co
     if (!link || !link_->clone(cx, link.get()))
         return false;
 
+    UniqueExportMap exportMap = cx->make_unique<ExportMap>();
+    if (!exportMap || !exportMap_->clone(cx, exportMap.get()))
+        return false;
+
     UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
     if (!module || !module_->clone(cx, module.get()))
         return false;
 
-    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+    if (!moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module))))
         return false;
 
     return Module::clone(cx, *link_, &moduleObj->module());
