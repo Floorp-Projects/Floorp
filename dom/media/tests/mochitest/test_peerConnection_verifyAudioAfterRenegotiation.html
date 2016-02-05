@@ -14,20 +14,7 @@
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
-
-    var checkAudio = (analyser, fun) => {
-      analyser.enableDebugCanvas();
-      return analyser.waitForAnalysisSuccess(fun)
-        .then(() => analyser.disableDebugCanvas());
-    };
-    var checkAudioEnabled = (analyser, freq) =>
-      checkAudio(analyser, array => array[freq] > 200);
-    var checkAudioDisabled = (analyser, freq) =>
-      checkAudio(analyser, array => array[freq] < 50);
-
-    var ac = new AudioContext();
-    var local1Analyser;
-    var remote1Analyser;
+    var helper = new AudioStreamHelper();
 
     test.chain.append([
       function CHECK_ASSUMPTIONS() {
@@ -41,23 +28,18 @@
            "pcRemote should have one stream");
       },
       function CHECK_AUDIO() {
-        local1Analyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[0]);
-        remote1Analyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
-
-        freq = local1Analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
-
         return Promise.resolve()
           .then(() => info("Checking local audio enabled"))
-          .then(() => checkAudioEnabled(local1Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[0]))
           .then(() => info("Checking remote audio enabled"))
-          .then(() => checkAudioEnabled(remote1Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
 
           .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false)
 
           .then(() => info("Checking local audio disabled"))
-          .then(() => checkAudioDisabled(local1Analyser, freq))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[0]))
           .then(() => info("Checking remote audio disabled"))
-          .then(() => checkAudioDisabled(remote1Analyser, freq))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
       }
     ]);
 
@@ -83,34 +65,29 @@
            "pcRemote should have two streams");
       },
       function RE_CHECK_AUDIO() {
-        local2Analyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[1]);
-        remote2Analyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[1]);
-
-        freq = local2Analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
-
         return Promise.resolve()
-          .then(() => info("Checking local audio disabled"))
-          .then(() => checkAudioDisabled(local1Analyser, freq))
-          .then(() => info("Checking remote audio disabled"))
-          .then(() => checkAudioDisabled(remote1Analyser, freq))
+          .then(() => info("Checking local audio enabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[0]))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
 
           .then(() => info("Checking local2 audio enabled"))
-          .then(() => checkAudioEnabled(local2Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[1]))
           .then(() => info("Checking remote2 audio enabled"))
-          .then(() => checkAudioEnabled(remote2Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[1]))
 
           .then(() => test.pcLocal._pc.getLocalStreams()[1].getAudioTracks()[0].enabled = false)
           .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = true)
 
           .then(() => info("Checking local2 audio disabled"))
-          .then(() => checkAudioDisabled(local2Analyser, freq))
+          .then(() => helper.checkAudioNotFlowing(test.pcLocal._pc.getLocalStreams()[1]))
           .then(() => info("Checking remote2 audio disabled"))
-          .then(() => checkAudioDisabled(remote2Analyser, freq))
+          .then(() => helper.checkAudioNotFlowing(test.pcRemote._pc.getRemoteStreams()[1]))
 
           .then(() => info("Checking local audio enabled"))
-          .then(() => checkAudioEnabled(local1Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcLocal._pc.getLocalStreams()[0]))
           .then(() => info("Checking remote audio enabled"))
-          .then(() => checkAudioEnabled(remote1Analyser, freq))
+          .then(() => helper.checkAudioFlowing(test.pcRemote._pc.getRemoteStreams()[0]))
       }
     ]);
 

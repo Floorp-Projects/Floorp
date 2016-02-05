@@ -16,20 +16,6 @@
   var test;
   var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
 
-  function alternateRedAndGreen(helper, canvas, stream) {
-    var i = 0;
-    setInterval(function() {
-      try {
-        helper.drawColor(canvas, i ? helper.green : helper.red);
-        i = 1 - i;
-        stream.requestFrame();
-      } catch (e) {
-        // ignore; stream might have shut down, and we don't bother clearing
-        // the setInterval.
-      }
-    }, 500);
-  }
-
   function selectRecvSsrc(pc, index) {
     var receivers = pc._pc.getReceivers();
     is(receivers.length, 1, "We have exactly one RTP receiver");
@@ -38,38 +24,19 @@
     SpecialPowers.wrap(pc._pc).mozSelectSsrc(receiver, index);
   }
 
-  var waitForColorChange = (helper, canvas) =>
-    Promise.all([
-        helper.waitForPixelColor(canvas, helper.green, 128,
-                                 canvas.id + " should become green"),
-        helper.waitForPixelColor(canvas, helper.red, 128,
-                                 canvas.id + " should become red")
-    ]);
-
-  var ensureNoColorChange = (helper, canvas) => Promise.race([
-      waitForColorChange(helper, canvas).then(() => ok(false, "Color should not change")),
-      wait(2000).then(() => ok(true, "No color change"))
-  ]);
-
   runNetworkTest(() =>
     pushPrefs(['media.peerconnection.simulcast', true],
               ['media.peerconnection.video.min_bitrate_estimate', 100*1000]).then(() => {
       SimpleTest.requestCompleteLog();
-      var stream;
-      var helper = new CaptureStreamTestHelper2D(50,50);
-      var canvas = helper.createAndAppendElement('canvas', 'source_canvas');
-      helper.drawColor(canvas, helper.green); // Make sure this is initted
+      var helper;
 
       test = new PeerConnectionTest({bundle: false});
       test.setMediaConstraints([{video: true}], []);
 
       test.chain.replace("PC_LOCAL_GUM", [
         function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
-          stream = canvas.captureStream(10);
-          test.pcLocal.attachLocalStream(stream);
-        },
-        function PC_LOCAL_CANVAS_ALTERNATE_COLOR(test) {
-          alternateRedAndGreen(helper, canvas, stream);
+          helper = new VideoStreamHelper();
+          test.pcLocal.attachLocalStream(helper.stream());
         }
       ]);
 
@@ -106,10 +73,10 @@
       ]);
 
       test.chain.append([
-        function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_1() {
+        function PC_REMOTE_WAIT_FOR_FRAMES() {
           var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
-          return waitForColorChange(helper, vremote);
+          return helper.waitForFrames(vremote);
         },
         function PC_REMOTE_CHECK_SIZE_1() {
           var vlocal = test.pcLocal.localMediaElements[0];
@@ -129,10 +96,10 @@
         function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
           return test.pcRemote.waitForMediaFlow();
         },
-        function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_2() {
+        function PC_REMOTE_WAIT_FOR_FRAMES_2() {
           var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
-          return waitForColorChange(helper, vremote);
+          return helper.waitForFrames(vremote);
         },
         function PC_REMOTE_CHECK_SIZE_2() {
           var vlocal = test.pcLocal.localMediaElements[0];
@@ -149,10 +116,10 @@
           // selectRecvSsrc is working.
           selectRecvSsrc(test.pcRemote, 2);
         },
-        function PC_REMOTE_ENSURE_NO_COLOR_CHANGE() {
+        function PC_REMOTE_ENSURE_NO_FRAMES() {
           var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
-          return ensureNoColorChange(helper, vremote);
+          return helper.verifyNoFrames(vremote);
         },
       ]);
 
