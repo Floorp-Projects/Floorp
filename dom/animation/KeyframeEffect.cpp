@@ -1625,25 +1625,26 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
 /* static */ already_AddRefed<KeyframeEffectReadOnly>
 KeyframeEffectReadOnly::Constructor(
     const GlobalObject& aGlobal,
-    Element* aTarget,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
     JS::Handle<JSObject*> aFrames,
     const TimingParams& aTiming,
     ErrorResult& aRv)
 {
-  if (!aTarget) {
-    // We don't support null targets yet.
+  if (aTarget.IsNull() || aTarget.Value().IsCSSPseudoElement()) {
+    // We don't support null or CSSPseudoElement targets yet.
     aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
     return nullptr;
   }
 
-  if (!aTarget->GetCurrentDoc()) {
+  Element& targetElement = aTarget.Value().GetAsElement();
+  if (!targetElement.GetCurrentDoc()) {
     // Bug 1245748: We don't support targets that are not in a document yet.
     aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
     return nullptr;
   }
 
   InfallibleTArray<AnimationProperty> animationProperties;
-  BuildAnimationPropertyList(aGlobal.Context(), aTarget, aFrames,
+  BuildAnimationPropertyList(aGlobal.Context(), &targetElement, aFrames,
                              animationProperties, aRv);
 
   if (aRv.Failed()) {
@@ -1651,11 +1652,24 @@ KeyframeEffectReadOnly::Constructor(
   }
 
   RefPtr<KeyframeEffectReadOnly> effect =
-    new KeyframeEffectReadOnly(aTarget->OwnerDoc(), aTarget,
+    new KeyframeEffectReadOnly(targetElement.OwnerDoc(), &targetElement,
                                nsCSSPseudoElements::ePseudo_NotPseudoElement,
                                aTiming);
   effect->mProperties = Move(animationProperties);
   return effect.forget();
+}
+
+void
+KeyframeEffectReadOnly::GetTarget(
+    Nullable<OwningElementOrCSSPseudoElement>& aRv) const
+{
+  // Currently we never return animations from the API whose effect
+  // targets a pseudo-element so this should never be called when
+  // mPseudoType is not 'none' (see bug 1174575).
+  MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+             "Requesting the target of a KeyframeEffect that targets a"
+             " pseudo-element is not yet supported.");
+  aRv.Value().SetAsElement() = mTarget;
 }
 
 void
