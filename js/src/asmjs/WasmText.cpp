@@ -281,6 +281,17 @@ class WasmAstExport : public WasmAstNode
     size_t funcIndex() const { return funcIndex_; }
 };
 
+class WasmAstMemory : public WasmAstNode
+{
+    uint32_t initialSize_;
+
+  public:
+    explicit WasmAstMemory(uint32_t initialSize)
+      : initialSize_(initialSize)
+    {}
+    uint32_t initialSize() const { return initialSize_; }
+};
+
 class WasmAstModule : public WasmAstNode
 {
     typedef WasmAstVector<WasmAstFunc*> FuncVector;
@@ -290,23 +301,34 @@ class WasmAstModule : public WasmAstNode
     typedef WasmAstHashMap<WasmAstSig*, uint32_t, WasmAstSig> SigMap;
 
     LifoAlloc& lifo_;
-    FuncVector funcs_;
-    ImportVector imports_;
-    ExportVector exports_;
+    WasmAstMemory* memory_;
     SigVector sigs_;
     SigMap sigMap_;
+    ImportVector imports_;
+    ExportVector exports_;
+    FuncVector funcs_;
 
   public:
     explicit WasmAstModule(LifoAlloc& lifo)
       : lifo_(lifo),
-        funcs_(lifo),
+        memory_(nullptr),
+        sigs_(lifo),
+        sigMap_(lifo),
         imports_(lifo),
         exports_(lifo),
-        sigs_(lifo),
-        sigMap_(lifo)
+        funcs_(lifo)
     {}
     bool init() {
         return sigMap_.init();
+    }
+    bool setMemory(WasmAstMemory* memory) {
+        if (memory_)
+            return false;
+        memory_ = memory;
+        return true;
+    }
+    WasmAstMemory* maybeMemory() const {
+        return memory_;
     }
     bool declare(WasmAstSig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);
@@ -434,6 +456,7 @@ class WasmToken
         IfElse,
         Import,
         Integer,
+        Memory,
         Local,
         Module,
         Name,
@@ -1077,6 +1100,8 @@ class WasmTokenStream
           case 'm':
             if (consume(MOZ_UTF16("module")))
                 return WasmToken(WasmToken::Module, begin, cur_);
+            if (consume(MOZ_UTF16("memory")))
+                return WasmToken(WasmToken::Memory, begin, cur_);
             break;
 
           case 'n':
@@ -1448,6 +1473,16 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
     return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), maybeBody);
 }
 
+static WasmAstMemory*
+ParseMemory(WasmParseContext& c)
+{
+    WasmToken initialSize;
+    if (!c.ts.match(WasmToken::Integer, &initialSize, c.error))
+        return nullptr;
+
+    return new(c.lifo) WasmAstMemory(initialSize.integer());
+}
+
 static WasmAstImport*
 ParseImport(WasmParseContext& c, WasmAstModule* module)
 {
@@ -1520,6 +1555,16 @@ TextToAst(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
         WasmToken section = c.ts.get();
 
         switch (section.kind()) {
+          case WasmToken::Memory: {
+            WasmAstMemory* memory = ParseMemory(c);
+            if (!memory)
+                return nullptr;
+            if (!module->setMemory(memory)) {
+                c.ts.generateError(section, c.error);
+                return nullptr;
+            }
+            break;
+          }
           case WasmToken::Import: {
             WasmAstImport* imp = ParseImport(c, module);
             if (!imp || !module->append(imp))
@@ -1807,6 +1852,31 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
+EncodeMemorySection(Encoder& e, WasmAstModule& module)
+{
+    if (!module.maybeMemory())
+        return true;
+
+    if (!e.writeCString(MemorySection))
+        return false;
+
+    size_t offset;
+    if (!e.startSection(&offset))
+        return false;
+
+    WasmAstMemory& memory = *module.maybeMemory();
+
+    if (!e.writeCString(FieldInitial))
+        return false;
+
+    if (!e.writeVarU32(memory.initialSize()))
+        return false;
+
+    e.finishSection(offset);
+    return true;
+}
+
+static bool
 EncodeExport(Encoder& e, WasmAstExport& exp)
 {
     if (!e.writeCString(FuncSubsection))
@@ -1928,6 +1998,9 @@ AstToBinary(WasmAstModule& module)
         return nullptr;
 
     if (!EncodeDeclarationSection(e, module))
+        return nullptr;
+
+    if (!EncodeMemorySection(e, module))
         return nullptr;
 
     if (!EncodeExportSection(e, module))
