@@ -23,9 +23,11 @@ LOOPDIR=browser/extensions/loop
 # prompting is in browser_devices_get_user_media_about_urls.js. It's possible
 # to mess this up with CSP handling, and probably other changes, too.
 
+# Currently disabled due to Bug 1225832 - New Loop architecture is not compatible with test.
+#  browser/components/uitour/test/browser_UITour_loop.js
+
 TESTS="
   ${LOOPDIR}/chrome/test/mochitest
-  browser/components/uitour/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
   browser/base/content/test/general/browser_parsable_css.js
 "
