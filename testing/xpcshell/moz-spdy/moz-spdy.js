@@ -155,6 +155,8 @@ function handleRequest(req, res) {
     hash.update(content);
     var md5 = hash.digest('hex');
     res.setHeader("X-Expected-MD5", md5);
+  } else if (u.pathname == "/huge") {
+    content = getHugeContent(800 * 1024);
   } else if (u.pathname == "/post") {
     if (req.method != "POST") {
       res.writeHead(405);
