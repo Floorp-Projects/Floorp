@@ -47,7 +47,7 @@ exports.lookup = function(name) {
  * <code>l10n:l10n.propertyLookup</code> in the template data and use it
  * like <code>${l10n.BLAH}</code>
  */
-exports.propertyLookup = Proxy.create({
+exports.propertyLookup = new Proxy({}, {
   get: function(rcvr, name) {
     return exports.lookup(name);
   }
