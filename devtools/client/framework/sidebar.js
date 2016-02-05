@@ -14,7 +14,6 @@ var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const DEFAULT_WIDTH = exports.DEFAULT_WIDTH = 300;
 
 /**
  * ToolSidebar provides methods to register tabs in the sidebar.
@@ -73,9 +72,7 @@ function ToolSidebar(tabbox, panel, uid, options={}) {
 
   try {
     this._width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid);
-  } catch(e) {
-    this._width = DEFAULT_WIDTH;
-  }
+  } catch(e) {}
 
   if (!options.disableTelemetry) {
     this._telemetry = new Telemetry();
