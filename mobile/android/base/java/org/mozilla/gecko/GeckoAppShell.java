@@ -840,7 +840,7 @@ public class GeckoAppShell
         OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
             @Override
             public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                createShortcutWithBitmap(aTitle, url, favicon);
+                doCreateShortcut(aTitle, url, favicon);
             }
         };
 
@@ -853,18 +853,6 @@ public class GeckoAppShell
         Favicons.getPreferredSizeFaviconForPage(getApplicationContext(), aURI, touchIconURL, listener);
     }
 
-    private static void createShortcutWithBitmap(final String aTitle, final String aURI, final Bitmap aBitmap) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                doCreateShortcut(aTitle, aURI, aBitmap);
-            }
-        });
-    }
-
-    /**
-     * Call this method only on the background thread.
-     */
     private static void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
         // The intent to be launched by the shortcut.
         Intent shortcutIntent = new Intent();
