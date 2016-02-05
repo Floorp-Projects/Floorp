@@ -404,10 +404,20 @@ this.PushDB.prototype = {
                 aKeyID, newRecord);
               return;
             }
-            aStore.put(newRecord).onsuccess = aEvent => {
-              console.debug("update: Update successful", aKeyID, newRecord);
-              aTxn.result = newRecord;
-            };
+            function putRecord() {
+              let req = aStore.put(newRecord);
+              req.onsuccess = aEvent => {
+                console.debug("update: Update successful", aKeyID, newRecord);
+                aTxn.result = newRecord;
+              };
+            }
+            if (aKeyID === newRecord.keyID) {
+              putRecord();
+            } else {
+              // If we changed the primary key, delete the old record to avoid
+              // unique constraint errors.
+              aStore.delete(aKeyID).onsuccess = putRecord;
+            }
           };
         },
         resolve,
