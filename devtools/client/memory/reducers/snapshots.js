@@ -67,15 +67,9 @@ handlers[actions.TAKE_CENSUS_START] = function (snapshots, { id, breakdown, inve
   });
 };
 
-handlers[actions.TAKE_CENSUS_END] = function (snapshots, { id,
-                                                           report,
-                                                           parentMap,
-                                                           breakdown,
-                                                           inverted,
-                                                           filter }) {
+handlers[actions.TAKE_CENSUS_END] = function (snapshots, { id, report, breakdown, inverted, filter }) {
   const census = {
     report,
-    parentMap,
     expanded: new Set(),
     breakdown,
     inverted,

@@ -20,11 +20,11 @@ add_task(function* () {
   yield client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  const { report } = yield client.takeCensus(snapshotFilePath, {
+  const report = yield client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   });
 
-  const { report: treeNode } = yield client.takeCensus(snapshotFilePath, {
+  const treeNode = yield client.takeCensus(snapshotFilePath, {
     breakdown: BREAKDOWN
   }, {
     asTreeNode: true

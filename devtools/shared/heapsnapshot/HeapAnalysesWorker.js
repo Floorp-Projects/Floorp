@@ -58,19 +58,17 @@ workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, 
     throw new Error(`No known heap snapshot for '${snapshotFilePath}'`);
   }
 
-  let report = snapshots[snapshotFilePath].takeCensus(censusOptions);
-  let parentMap;
+  const report = snapshots[snapshotFilePath].takeCensus(censusOptions);
 
   if (requestOptions.asTreeNode || requestOptions.asInvertedTreeNode) {
     const opts = { filter: requestOptions.filter || null };
     if (requestOptions.asInvertedTreeNode) {
       opts.invert = true;
     }
-    report = censusReportToCensusTreeNode(censusOptions.breakdown, report, opts);
-    parentMap = CensusUtils.createParentMap(report);
+    return censusReportToCensusTreeNode(censusOptions.breakdown, report, opts);
   }
 
-  return { report, parentMap };
+  return report;
 });
 
 /**
@@ -94,19 +92,17 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
 
   const first = snapshots[firstSnapshotFilePath].takeCensus(censusOptions);
   const second = snapshots[secondSnapshotFilePath].takeCensus(censusOptions);
-  let delta = CensusUtils.diff(censusOptions.breakdown, first, second);
-  let parentMap;
+  const delta = CensusUtils.diff(censusOptions.breakdown, first, second);
 
   if (requestOptions.asTreeNode || requestOptions.asInvertedTreeNode) {
     const opts = { filter: requestOptions.filter || null };
     if (requestOptions.asInvertedTreeNode) {
       opts.invert = true;
     }
-    delta = censusReportToCensusTreeNode(censusOptions.breakdown, delta, opts);
-    parentMap = CensusUtils.createParentMap(delta);
+    return censusReportToCensusTreeNode(censusOptions.breakdown, delta, opts);
   }
 
-  return { delta, parentMap };
+  return delta;
 });
 
 /**
