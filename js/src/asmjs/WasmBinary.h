@@ -716,8 +716,6 @@ class Decoder
     }
 };
 
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
-
 // The FuncBytecode class contains the intermediate representation of a
 // parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
 // lives only until it is fully compiled.

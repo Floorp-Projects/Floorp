@@ -536,14 +536,6 @@ struct ImportName
 
 typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
 
-struct DynamicLinkData
-{
-    ImportNameVector importNames;
-    ExportMap exportMap;
-};
-
-typedef UniquePtr<DynamicLinkData> UniqueDynamicLinkData;
-
 /*****************************************************************************/
 // wasm decoding and generation
 
@@ -644,7 +636,7 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
+DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     if (!d.readCStringIf(FuncSubsection))
         return Fail(cx, d, "expected 'func' tag");
@@ -675,11 +667,11 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkDa
     if (!funcName)
         return false;
 
-    return link->importNames.emplaceBack(Move(moduleName), Move(funcName));
+    return importNames->emplaceBack(Move(moduleName), Move(funcName));
 }
 
 static bool
-DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
+DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     if (!d.readCStringIf(ImportSection))
         return true;
@@ -696,7 +688,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Dynami
         return Fail(cx, d, "too many imports");
 
     for (uint32_t i = 0; i < numImports; i++) {
-        if (!DecodeImport(cx, d, init, link))
+        if (!DecodeImport(cx, d, init, importNames))
             return false;
     }
 
@@ -706,12 +698,11 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Dynami
     return true;
 }
 
-static bool
-DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
-{
-    if (!d.readCStringIf(FuncSubsection))
-        return Fail(cx, d, "expected 'func' tag");
+typedef HashSet<const char*, CStringHasher> CStringSet;
 
+static bool
+DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
+{
     uint32_t funcIndex;
     if (!d.readVarU32(&funcIndex))
         return Fail(cx, d, "expected export internal index");
@@ -719,33 +710,26 @@ DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* li
     if (funcIndex >= mg.numFuncSigs())
         return Fail(cx, d, "export function index out of range");
 
-    uint32_t exportIndex;
-    if (!mg.declareExport(funcIndex, &exportIndex))
-        return false;
-
-    ExportMap& exportMap = link->exportMap;
-
-    MOZ_ASSERT(exportIndex <= exportMap.exportNames.length());
-    if (exportIndex == exportMap.exportNames.length()) {
-        UniqueChars funcName(JS_smprintf("%u", unsigned(funcIndex)));
-        if (!funcName || !exportMap.exportNames.emplaceBack(Move(funcName)))
-            return false;
-    }
-
-    if (!exportMap.fieldsToExports.append(exportIndex))
-        return false;
-
     const char* chars;
     if (!d.readCString(&chars))
         return Fail(cx, d, "expected export external name string");
 
-    return exportMap.fieldNames.emplaceBack(DuplicateString(chars));
+    UniqueChars fieldName = DuplicateString(chars);
+    if (!fieldName)
+        return false;
+
+    CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
+    if (p)
+        return Fail(cx, d, "duplicate export");
+
+    if (!dupSet->add(p, fieldName.get()))
+        return false;
+
+    return mg.declareExport(Move(fieldName), funcIndex);
 }
 
-typedef HashSet<const char*, CStringHasher> CStringSet;
-
 static bool
-DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
+DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     if (!d.readCStringIf(ExportSection))
         return true;
@@ -761,24 +745,21 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLink
     if (numExports > MaxExports)
         return Fail(cx, d, "too many exports");
 
+    CStringSet dupSet(cx);
+    if (!dupSet.init(numExports))
+        return false;
+
     for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeExport(cx, d, mg, link))
-            return false;
+        if (d.readCStringIf(FuncSubsection)) {
+            if (!DecodeFunctionExport(cx, d, mg, &dupSet))
+                return false;
+        } else {
+            return Fail(cx, d, "unknown export type");
+        }
     }
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "export section byte size mismatch");
-
-    CStringSet dupSet(cx);
-    if (!dupSet.init())
-        return false;
-    for (const UniqueChars& prevName : link->exportMap.fieldNames) {
-        CStringSet::AddPtr p = dupSet.lookupForAdd(prevName.get());
-        if (p)
-            return Fail(cx, d, "duplicate export");
-        if (!dupSet.add(p, prevName.get()))
-            return false;
-    }
 
     return true;
 }
@@ -890,7 +871,8 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
 
 static bool
 DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t length,
-             UniqueDynamicLinkData* dynamicLink, MutableHandle<WasmModuleObject*> moduleObj)
+             ImportNameVector* importNames, UniqueExportMap* exportMap,
+             MutableHandle<WasmModuleObject*> moduleObj)
 {
     Decoder d(bytes, bytes + length);
 
@@ -908,11 +890,7 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!DecodeSignatureSection(cx, d, init.get()))
         return false;
 
-    *dynamicLink = MakeUnique<DynamicLinkData>();
-    if (!*dynamicLink)
-        return false;
-
-    if (!DecodeImportSection(cx, d, init.get(), dynamicLink->get()))
+    if (!DecodeImportSection(cx, d, init.get(), importNames))
         return false;
 
     if (!DecodeDeclarationSection(cx, d, init.get()))
@@ -922,7 +900,7 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!mg.init(Move(init), Move(filename)))
         return false;
 
-    if (!DecodeExportsSection(cx, d, mg, dynamicLink->get()))
+    if (!DecodeExportsSection(cx, d, mg))
         return false;
 
     if (!DecodeCodeSection(cx, d, mg))
@@ -941,7 +919,7 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     UniqueModuleData module;
     UniqueStaticLinkData staticLink;
     SlowFunctionVector slowFuncs(cx);
-    if (!mg.finish(Move(funcNames), &module, &staticLink, &slowFuncs))
+    if (!mg.finish(Move(funcNames), &module, &staticLink, exportMap, &slowFuncs))
         return false;
 
     moduleObj.set(WasmModuleObject::create(cx));
@@ -1076,9 +1054,10 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
     if (!DescribeScriptedCaller(cx, &filename))
         return false;
 
-    UniqueDynamicLinkData link;
+    ImportNameVector importNames;
+    UniqueExportMap exportMap;
     Rooted<WasmModuleObject*> moduleObj(cx);
-    if (!DecodeModule(cx, Move(filename), bytes, length, &link, &moduleObj)) {
+    if (!DecodeModule(cx, Move(filename), bytes, length, &importNames, &exportMap, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
@@ -1091,11 +1070,11 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         return Fail(cx, "Heap not implemented yet");
 
     Rooted<FunctionVector> imports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, link->importNames, &imports))
+    if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
     RootedObject exportObj(cx);
-    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, link->exportMap, &exportObj))
+    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);

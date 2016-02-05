@@ -41,13 +41,7 @@ using mozilla::Move;
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
 
-// A Module can either be asm.js or wasm.
-
-enum ModuleKind
-{
-    Wasm,
-    AsmJS
-};
+typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 // The ValType enum represents the WebAssembly "value type", which are used to
 // specify the type of locals and parameters.
@@ -575,6 +569,14 @@ struct CompileArgs
     explicit CompileArgs(ExclusiveContext* cx);
     bool operator==(CompileArgs rhs) const;
     bool operator!=(CompileArgs rhs) const { return !(*this == rhs); }
+};
+
+// A Module can either be asm.js or wasm.
+
+enum ModuleKind
+{
+    Wasm,
+    AsmJS
 };
 
 // Constants:
