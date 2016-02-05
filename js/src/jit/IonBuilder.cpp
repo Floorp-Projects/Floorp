@@ -2458,7 +2458,7 @@ IonBuilder::finishLoop(CFGState& state, MBasicBlock* successor)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::restartLoop(CFGState state)
+IonBuilder::restartLoop(const CFGState& state)
 {
     spew("New types at loop header, restarting loop body");
 

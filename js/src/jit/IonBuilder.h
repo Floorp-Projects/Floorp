@@ -317,7 +317,7 @@ class IonBuilder
 
     // Restarts processing of a loop if the type information at its header was
     // incomplete.
-    ControlStatus restartLoop(CFGState state);
+    ControlStatus restartLoop(const CFGState& state);
 
     void assertValidLoopHeadOp(jsbytecode* pc);
 
