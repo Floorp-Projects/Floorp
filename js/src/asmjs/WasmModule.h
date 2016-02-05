@@ -307,14 +307,14 @@ typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
 struct ExportMap
 {
-    typedef Vector<uint32_t, 0, SystemAllocPolicy> FieldToExportVector;
-
-    CacheableCharsVector exportNames;
+    Uint32Vector exportFuncIndices;
     CacheableCharsVector fieldNames;
-    FieldToExportVector fieldsToExports;
+    Uint32Vector fieldsToExports;
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
+
+typedef UniquePtr<ExportMap> UniqueExportMap;
 
 // A UniqueCodePtr owns allocated executable code. Code passed to the Module
 // constructor must be allocated via AllocateCode.
@@ -567,6 +567,7 @@ class Module
 
     const char* prettyFuncName(uint32_t funcIndex) const;
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no

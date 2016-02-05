@@ -457,7 +457,7 @@ CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 ExportMap::serializedSize() const
 {
-    return SerializedVectorSize(exportNames) +
+    return SerializedPodVectorSize(exportFuncIndices) +
            SerializedVectorSize(fieldNames) +
            SerializedPodVectorSize(fieldsToExports);
 }
@@ -465,7 +465,7 @@ ExportMap::serializedSize() const
 uint8_t*
 ExportMap::serialize(uint8_t* cursor) const
 {
-    cursor = SerializeVector(cursor, exportNames);
+    cursor = SerializePodVector(cursor, exportFuncIndices);
     cursor = SerializeVector(cursor, fieldNames);
     cursor = SerializePodVector(cursor, fieldsToExports);
     return cursor;
@@ -474,7 +474,7 @@ ExportMap::serialize(uint8_t* cursor) const
 const uint8_t*
 ExportMap::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    (cursor = DeserializeVector(cx, cursor, &exportNames)) &&
+    (cursor = DeserializePodVector(cx, cursor, &exportFuncIndices)) &&
     (cursor = DeserializeVector(cx, cursor, &fieldNames)) &&
     (cursor = DeserializePodVector(cx, cursor, &fieldsToExports));
     return cursor;
@@ -483,7 +483,7 @@ ExportMap::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 bool
 ExportMap::clone(JSContext* cx, ExportMap* map) const
 {
-    return CloneVector(cx, exportNames, &map->exportNames) &&
+    return ClonePodVector(cx, exportFuncIndices, &map->exportFuncIndices) &&
            CloneVector(cx, fieldNames, &map->fieldNames) &&
            ClonePodVector(cx, fieldsToExports, &map->fieldsToExports);
 }
@@ -491,7 +491,7 @@ ExportMap::clone(JSContext* cx, ExportMap* map) const
 size_t
 ExportMap::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfVectorExcludingThis(exportNames, mallocSizeOf) &&
+    return exportFuncIndices.sizeOfExcludingThis(mallocSizeOf) &&
            SizeOfVectorExcludingThis(fieldNames, mallocSizeOf) &&
            fieldsToExports.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -1079,10 +1079,10 @@ static JSFunction*
 NewExportedFunction(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const ExportMap& exportMap,
                     uint32_t exportIndex)
 {
-    unsigned numArgs = moduleObj->module().exports()[exportIndex].sig().args().length();
+    Module& module = moduleObj->module();
+    unsigned numArgs = module.exports()[exportIndex].sig().args().length();
 
-    const char* chars = exportMap.exportNames[exportIndex].get();
-    RootedAtom name(cx, AtomizeUTF8Chars(cx, chars, strlen(chars)));
+    RootedAtom name(cx, module.getFuncAtom(cx, exportMap.exportFuncIndices[exportIndex]));
     if (!name)
         return nullptr;
 
@@ -1101,7 +1101,7 @@ static bool
 CreateExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const ExportMap& exportMap,
                    const ExportVector& exports, MutableHandleObject exportObj)
 {
-    MOZ_ASSERT(exportMap.exportNames.length() == exports.length());
+    MOZ_ASSERT(exportMap.exportFuncIndices.length() == exports.length());
     MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
 
     for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
@@ -1454,6 +1454,21 @@ Module::getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const
 
     owner->reset(chars);
     return chars;
+}
+
+JSAtom*
+Module::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+{
+    UniqueChars owner;
+    const char* chars = getFuncName(cx, funcIndex, &owner);
+    if (!chars)
+        return nullptr;
+
+    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
+    if (!atom)
+        return nullptr;
+
+    return atom;
 }
 
 const char*
