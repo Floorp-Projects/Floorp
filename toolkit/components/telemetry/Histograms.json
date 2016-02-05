@@ -9018,10 +9018,18 @@
   },
   "FENNEC_READER_VIEW_BUTTON" : {
     "expires_in_version": "50",
-    "alert_emails": ["mleibovic@mozilla.com"],
+    "alert_emails": ["mobile-frontend@mozilla.com"],
     "kind": "enumerated",
     "n_values": 10,
     "description": "Bug 1219240: Measures user interaction with the reader view button (0=Button hidden, 1=Button shown, 2=Tap to enter reader view, 3=Tap to exit reader view, 4=Long tap)"
+  },
+  "FENNEC_LOAD_SAVED_PAGE": {
+    "expires_in_version": "50",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "How often users load saved items when online/offline (0=RL online, 1=RL offline, 2=BM online, 3=BM offline)",
+    "bug_numbers": [1243387]
   },
   "PERMISSIONS_SQL_CORRUPTED": {
     "expires_in_version": "never",
