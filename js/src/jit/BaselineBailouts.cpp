@@ -1847,12 +1847,14 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     if (act->hasRematerializedFrame(outerFp)) {
         JitFrameIterator iter(cx);
         size_t inlineDepth = numFrames;
+        bool ok = true;
         while (inlineDepth > 0) {
-            if (iter.isBaselineJS() &&
-                !CopyFromRematerializedFrame(cx, act, outerFp, --inlineDepth,
-                                             iter.baselineFrame()))
-            {
-                return false;
+            if (iter.isBaselineJS()) {
+                // We must attempt to copy all rematerialized frames over,
+                // even if earlier ones failed, to invoke the proper frame
+                // cleanup in the Debugger.
+                ok = CopyFromRematerializedFrame(cx, act, outerFp, --inlineDepth,
+                                                 iter.baselineFrame());
             }
             ++iter;
         }
@@ -1860,6 +1862,9 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
         // After copying from all the rematerialized frames, remove them from
         // the table to keep the table up to date.
         act->removeRematerializedFrame(outerFp);
+
+        if (!ok)
+            return false;
     }
 
     JitSpew(JitSpew_BaselineBailouts,
