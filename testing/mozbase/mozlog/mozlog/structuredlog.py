@@ -238,8 +238,7 @@ class StructuredLogger(object):
     @log_action(List("tests", Unicode),
                 Dict("run_info", default=None, optional=True),
                 Dict("version_info", default=None, optional=True),
-                Dict("device_info", default=None, optional=True),
-                Dict("extra", default=None, optional=True))
+                Dict("device_info", default=None, optional=True))
     def suite_start(self, data):
         """Log a suite_start message
 
@@ -253,7 +252,7 @@ class StructuredLogger(object):
 
         self._log_data("suite_start", data)
 
-    @log_action(Dict("extra", default=None, optional=True))
+    @log_action()
     def suite_end(self, data):
         """Log a suite_end message"""
         if not self._ensure_suite_state('suite_end', data):

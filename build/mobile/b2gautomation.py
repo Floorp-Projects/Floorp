@@ -209,31 +209,23 @@ class B2GRemoteAutomation(Automation):
         return app, args
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime,
-                      debuggerInfo, symbolsPath, outputHandler=None):
+                      debuggerInfo, symbolsPath):
         """ Wait for tests to finish (as evidenced by a signature string
             in logcat), or for a given amount of time to elapse with no
             output.
         """
         timeout = timeout or 120
         while True:
-            lines = proc.getStdoutLines(timeout)
-            if lines:
-                currentlog = '\n'.join(lines)
-
-                if outputHandler:
-                    for line in lines:
-                        outputHandler(line)
-                else:
-                    print(currentlog)
-
+            currentlog = proc.getStdoutLines(timeout)
+            if currentlog:
+                print currentlog
                 # Match the test filepath from the last TEST-START line found in the new
                 # log content. These lines are in the form:
                 # ... INFO TEST-START | /filepath/we/wish/to/capture.html\n
                 testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", currentlog)
                 if testStartFilenames:
                     self.lastTestSeen = testStartFilenames[-1]
-                if (outputHandler and outputHandler.suite_finished) or (
-                        hasattr(self, 'logFinish') and self.logFinish in currentlog):
+                if hasattr(self, 'logFinish') and self.logFinish in currentlog:
                     return 0
             else:
                 self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed "
@@ -442,12 +434,11 @@ class B2GRemoteAutomation(Automation):
                     break
 
             # wait 'timeout' for any additional lines
-            if not lines:
-                try:
-                    lines.append(self.queue.get(True, timeout))
-                except Queue.Empty:
-                    pass
-            return lines
+            try:
+                lines.append(self.queue.get(True, timeout))
+            except Queue.Empty:
+                pass
+            return '\n'.join(lines)
 
         def wait(self, timeout=None):
             # this should never happen

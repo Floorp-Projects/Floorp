@@ -396,7 +396,7 @@ class Automation(object):
     self.log.info("Can't trigger Breakpad, just killing process")
     self.killPid(processPID)
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, outputHandler=None):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerFunction = None
     didTimeout = False
@@ -436,12 +436,7 @@ class Automation(object):
       while line != "" and not didTimeout:
         if stackFixerFunction:
           line = stackFixerFunction(line)
-
-        if outputHandler is None:
-            self.log.info(line.rstrip().decode("UTF-8", "ignore"))
-        else:
-            outputHandler(line)
-
+        self.log.info(line.rstrip().decode("UTF-8", "ignore"))
         if "TEST-START" in line and "|" in line:
           self.lastTestSeen = line.split("|")[1].strip()
         if not debuggerInfo and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
@@ -535,7 +530,7 @@ class Automation(object):
              debuggerInfo = None, symbolsPath = None,
              timeout = -1, maxTime = None, onLaunch = None,
              detectShutdownLeaks = False, screenshotOnFail=False, testPath=None, bisectChunk=None,
-             valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None, outputHandler=None):
+             valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -584,8 +579,7 @@ class Automation(object):
       # app is launched.
       onLaunch()
 
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath,
-                                outputHandler=outputHandler)
+    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.

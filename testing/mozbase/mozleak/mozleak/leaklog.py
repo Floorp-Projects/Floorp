@@ -10,15 +10,9 @@ import sys
 import mozinfo
 import mozrunner.utils
 
-
-def _get_default_logger():
-    from mozlog import get_default_logger
-    log = get_default_logger(component='mozleak')
-
-    if not log:
-        import logging
-        log = logging.getLogger(__name__)
-    return log
+def _raw_log():
+    import logging
+    return logging.getLogger(__name__)
 
 
 # Do not add anything to this list, unless one of the existing leaks below
@@ -136,7 +130,7 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                         r"\s*-?\d+\s+(?P<numLeaked>-?\d+)")
     # The class name can contain spaces. We remove trailing whitespace later.
 
-    log = log or _get_default_logger()
+    log = log or _raw_log()
 
     processString = "%s process:" % processType
     expectedLeaks = expectedTabProcessLeakCounts() if processType == 'tab' else {}
@@ -282,7 +276,7 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
     in the list ignore_missing_leaks.
     """
 
-    log = log or _get_default_logger()
+    log = log or _raw_log()
 
     leakLogFile = leak_log_file
     if not os.path.exists(leakLogFile):
