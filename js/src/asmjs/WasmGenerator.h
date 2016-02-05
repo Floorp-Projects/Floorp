@@ -178,6 +178,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Heap usage:
     void initHeapUsage(HeapUsage heapUsage);
+    bool usesHeap() const;
 
     // Signatures:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -202,6 +203,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t exportEntryOffset(uint32_t index) const;
     const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
+    bool addMemoryExport(UniqueChars fieldName);
 
     // Function definitions:
     bool startFuncDefs();
