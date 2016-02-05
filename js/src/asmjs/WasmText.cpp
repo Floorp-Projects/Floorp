@@ -268,17 +268,28 @@ class WasmAstImport : public WasmAstNode
     uint32_t sigIndex() const { return sigIndex_; }
 };
 
+enum class WasmAstExportKind { Func, Memory };
+
 class WasmAstExport : public WasmAstNode
 {
     TwoByteChars name_;
-    uint32_t funcIndex_;
+    WasmAstExportKind kind_;
+    union {
+        uint32_t funcIndex_;
+    } u;
 
   public:
     WasmAstExport(TwoByteChars name, uint32_t funcIndex)
-      : name_(name), funcIndex_(funcIndex)
+      : name_(name), kind_(WasmAstExportKind::Func)
+    {
+        u.funcIndex_ = funcIndex;
+    }
+    explicit WasmAstExport(TwoByteChars name)
+      : name_(name), kind_(WasmAstExportKind::Memory)
     {}
     TwoByteChars name() const { return name_; }
-    size_t funcIndex() const { return funcIndex_; }
+    WasmAstExportKind kind() const { return kind_; }
+    size_t funcIndex() const { MOZ_ASSERT(kind_ == WasmAstExportKind::Func); return u.funcIndex_; }
 };
 
 class WasmAstMemory : public WasmAstNode
@@ -1530,11 +1541,19 @@ ParseExport(WasmParseContext& c)
     if (!c.ts.match(WasmToken::Text, &name, c.error))
         return nullptr;
 
-    WasmToken funcIndex;
-    if (!c.ts.match(WasmToken::Integer, &funcIndex, c.error))
-        return nullptr;
+    WasmToken exportee = c.ts.get();
+    switch (exportee.kind()) {
+      case WasmToken::Integer:
+        return new(c.lifo) WasmAstExport(name.text(), exportee.integer());
+      case WasmToken::Memory:
+        return new(c.lifo) WasmAstExport(name.text());
+      default:
+        break;
+    }
 
-    return new(c.lifo) WasmAstExport(name.text(), funcIndex.integer());
+    c.ts.generateError(exportee, c.error);
+    return nullptr;
+
 }
 
 static WasmAstModule*
@@ -1801,6 +1820,13 @@ EncodeDeclarationSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
+EncodeCString(Encoder& e, TwoByteChars twoByteChars)
+{
+    UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, twoByteChars).c_str());
+    return utf8 && e.writeCString(utf8.get());
+}
+
+static bool
 EncodeImport(Encoder& e, WasmAstImport& imp)
 {
     if (!e.writeCString(FuncSubsection))
@@ -1809,18 +1835,10 @@ EncodeImport(Encoder& e, WasmAstImport& imp)
     if (!e.writeVarU32(imp.sigIndex()))
         return false;
 
-    UniqueChars moduleChars(JS::CharsToNewUTF8CharsZ(nullptr, imp.module()).c_str());
-    if (!moduleChars)
+    if (!EncodeCString(e, imp.module()))
         return false;
 
-    if (!e.writeCString(moduleChars.get()))
-        return false;
-
-    UniqueChars funcChars(JS::CharsToNewUTF8CharsZ(nullptr, imp.func()).c_str());
-    if (!funcChars)
-        return false;
-
-    if (!e.writeCString(funcChars.get()))
+    if (!EncodeCString(e, imp.func()))
         return false;
 
     return true;
@@ -1877,7 +1895,7 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeExport(Encoder& e, WasmAstExport& exp)
+EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 {
     if (!e.writeCString(FuncSubsection))
         return false;
@@ -1885,11 +1903,19 @@ EncodeExport(Encoder& e, WasmAstExport& exp)
     if (!e.writeVarU32(exp.funcIndex()))
         return false;
 
-    UniqueChars utf8Name(JS::CharsToNewUTF8CharsZ(nullptr, exp.name()).c_str());
-    if (!utf8Name)
+    if (!EncodeCString(e, exp.name()))
         return false;
 
-    if (!e.writeCString(utf8Name.get()))
+    return true;
+}
+
+static bool
+EncodeMemoryExport(Encoder& e, WasmAstExport& exp)
+{
+    if (!e.writeCString(MemorySubsection))
+        return false;
+
+    if (!EncodeCString(e, exp.name()))
         return false;
 
     return true;
@@ -1912,8 +1938,16 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
         return false;
 
     for (WasmAstExport* exp : module.exports()) {
-        if (!EncodeExport(e, *exp))
-            return false;
+        switch (exp->kind()) {
+          case WasmAstExportKind::Func:
+            if (!EncodeFunctionExport(e, *exp))
+                return false;
+            break;
+          case WasmAstExportKind::Memory:
+            if (!EncodeMemoryExport(e, *exp))
+                return false;
+            break;
+        }
     }
 
     e.finishSection(offset);

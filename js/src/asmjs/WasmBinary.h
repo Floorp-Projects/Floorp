@@ -19,6 +19,8 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
+#include "jsstr.h"
+
 #include "asmjs/WasmTypes.h"
 #include "builtin/SIMD.h"
 
@@ -50,6 +52,7 @@ static const char EndSection[]        = "";
 
 // Subsection names:
 static const char FuncSubsection[]    = "func";
+static const char MemorySubsection[]  = "memory";
 
 // Field names:
 static const char FieldInitial[]      = "initial";
@@ -627,16 +630,15 @@ class Decoder
         return readEnum<uint8_t>(type);
     }
 
-    MOZ_WARN_UNUSED_RESULT bool readCString(const char** cstr = nullptr) {
-        if (cstr)
-            *cstr = reinterpret_cast<const char*>(cur_);
+    MOZ_WARN_UNUSED_RESULT UniqueChars readCString() {
+        const char* begin = reinterpret_cast<const char*>(cur_);
         for (; cur_ != end_; cur_++) {
             if (!*cur_) {
                 cur_++;
-                return true;
+                return UniqueChars(DuplicateString(begin));
             }
         }
-        return false;
+        return nullptr;
     }
     MOZ_WARN_UNUSED_RESULT bool readCStringIf(const char* tag) {
         for (const uint8_t* p = cur_; p != end_; p++, tag++) {
