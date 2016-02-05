@@ -624,9 +624,8 @@ class MessageChannel : HasResultCodes
            if (!aMessage.is_sync())
                return;
 
-           MOZ_DIAGNOSTIC_ASSERT(
-               !(mChan->mSide == ParentSide && mOldTransaction != aMessage.transaction_id()) ||
-               !mOldTransaction || aMessage.priority() > mChan->AwaitingSyncReplyPriority());
+           MOZ_ASSERT_IF(mChan->mSide == ParentSide && mOldTransaction != aMessage.transaction_id(),
+                         !mOldTransaction || aMessage.priority() > mChan->AwaitingSyncReplyPriority());
            mChan->mCurrentTransaction = aMessage.transaction_id();
        }
        ~AutoEnterTransaction() {
@@ -777,7 +776,7 @@ class MessageChannel : HasResultCodes
     // safely.  This is necessary to be able to cancel notification if we are
     // closed at the same time.
     RefPtr<RefCountedTask> mOnChannelConnectedTask;
-    bool mPeerPidSet;
+    DebugOnly<bool> mPeerPidSet;
     int32_t mPeerPid;
 };
 
