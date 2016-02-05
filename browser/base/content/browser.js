@@ -83,6 +83,7 @@ if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }
 
+/*globals gBrowser, gNavToolbox, gURLBar, gNavigatorBundle*/
 [
   ["gBrowser",            "content"],
   ["gNavToolbox",         "navigator-toolbox"],
