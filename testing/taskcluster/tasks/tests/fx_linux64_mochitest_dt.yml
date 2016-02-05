@@ -9,6 +9,8 @@ task:
     name: '[TC] Linux64 mochitest-devtools-chrome M(dt{{chunk}})'
     description: Mochitest devtools-chrome run {{chunk}}
   payload:
+    # these tests take longer than most to complete
+    maxRunTime: 5400
     capabilities:
       devices:
         loopbackVideo: true
