@@ -49,7 +49,7 @@ add_task(function* test() {
   // Run a census broken down by class name -> allocation stack so we can grab
   // only the AllocationMarker objects we have complete control over.
 
-  const report = yield client.takeCensus(snapshotFilePath, {
+  const { report } = yield client.takeCensus(snapshotFilePath, {
     breakdown: { by: 'objectClass',
                  then: { by: 'allocationStack',
                          then: { by: 'count',
