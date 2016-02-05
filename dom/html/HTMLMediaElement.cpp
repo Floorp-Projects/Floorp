@@ -1431,6 +1431,8 @@ NS_IMETHODIMP HTMLMediaElement::GetCurrentTime(double* aCurrentTime)
 void
 HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
 {
+  LOG(LogLevel::Debug, ("Reporting telemetry VIDEO_FASTSEEK_USED"));
+  Telemetry::Accumulate(Telemetry::VIDEO_FASTSEEK_USED, 1);
   Seek(aTime, SeekTarget::PrevSyncPoint, aRv);
 }
 
