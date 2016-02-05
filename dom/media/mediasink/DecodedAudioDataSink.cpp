@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsPrintfCString.h"
 #include "MediaQueue.h"
 #include "DecodedAudioDataSink.h"
 #include "VideoUtils.h"
@@ -208,8 +209,19 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
       return MakeUnique<Chunk>();
     }
 
+    AudioData* a = AudioQueue().PeekFront()->As<AudioData>();
+
     // Ignore the element with 0 frames and try next.
-    if (AudioQueue().PeekFront()->mFrames == 0) {
+    if (a->mFrames == 0) {
+      RefPtr<MediaData> releaseMe = AudioQueue().PopFront();
+      continue;
+    }
+
+    // Ignore invalid samples.
+    if (a->mRate != mInfo.mRate || a->mChannels != mInfo.mChannels) {
+      NS_WARNING(nsPrintfCString(
+        "mismatched sample format, data=%p rate=%u channels=%u frames=%u",
+        a->mAudioData.get(), a->mRate, a->mChannels, a->mFrames).get());
       RefPtr<MediaData> releaseMe = AudioQueue().PopFront();
       continue;
     }
