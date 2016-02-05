@@ -308,7 +308,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsBrowserMochitest(this)
+   *         e.g. helpers.getIsHeadFile(this)
    *
    * @return {Boolean}
    *         True or false
@@ -317,6 +317,22 @@ module.exports = {
     var pathAndFilename = scope.getFilename();
 
     return /.*[\\/]head(_.+)?\.js$/.test(pathAndFilename);
+  },
+
+  /**
+   * Check whether we might be in an xpcshell test.
+   *
+   * @param  {RuleContext} scope
+   *         You should pass this from within a rule
+   *         e.g. helpers.getIsXpcshellTest(this)
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsXpcshellTest: function(scope) {
+    var pathAndFilename = scope.getFilename();
+
+    return /.*[\\/]test_.+\.js$/.test(pathAndFilename);
   },
 
   /**
@@ -348,7 +364,7 @@ module.exports = {
   getIsTest: function(scope) {
     var pathAndFilename = scope.getFilename();
 
-    if (/.*[\\/]test_.+\.js$/.test(pathAndFilename)) {
+    if (this.getIsXpcshellTest(scope)) {
       return true;
     }
 
