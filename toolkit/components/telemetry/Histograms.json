@@ -5156,6 +5156,13 @@
     "description": "Time for the home screen Top Sites query to return with no filter set (ms)",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_HOMEPANELS_CUSTOM": {
+    "expires_in_version": "54",
+    "kind": "boolean",
+    "bug_numbers": [1245368],
+    "description": "Whether the user has customized their homepanels",
+    "cpp_guard": "ANDROID"
+  },
   "FENNEC_WAS_KILLED": {
     "expires_in_version": "never",
     "kind": "flag",
