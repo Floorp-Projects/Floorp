@@ -148,6 +148,7 @@
 #endif
 #include "mozilla/dom/CustomEvent.h"
 #include "nsIJARChannel.h"
+#include "nsIScreenManager.h"
 
 #include "xpcprivate.h"
 
@@ -5045,30 +5046,54 @@ nsGlobalWindow::SetOuterHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             aValue, "outerHeight", aError);
 }
 
-DesktopIntPoint
+CSSIntPoint
 nsGlobalWindow::GetScreenXY(ErrorResult& aError)
 {
   MOZ_ASSERT(IsOuterWindow());
 
   // When resisting fingerprinting, always return (0,0)
   if (nsContentUtils::ShouldResistFingerprinting(mDocShell)) {
-    return DesktopIntPoint(0, 0);
+    return CSSIntPoint(0, 0);
   }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
     aError.Throw(NS_ERROR_FAILURE);
-    return DesktopIntPoint(0, 0);
+    return CSSIntPoint(0, 0);
   }
 
   int32_t x = 0, y = 0;
-  aError = treeOwnerAsWin->GetPosition(&x, &y);
+  aError = treeOwnerAsWin->GetPosition(&x, &y); // LayoutDevice px values
+
+  RefPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext) {
+    return CSSIntPoint(x, y);
+  }
+
+  // Find the global desktop coordinate of the top-left of the screen.
+  // We'll use this as a "fake origin" when converting to CSS px units,
+  // to avoid overlapping coordinates in cases such as a hi-dpi screen
+  // placed to the right of a lo-dpi screen on Windows. (Instead, there
+  // may be "gaps" in the resulting CSS px coordinates in some cases.)
+  nsDeviceContext *dc = presContext->DeviceContext();
+  nsRect screenRect;
+  dc->GetRect(screenRect);
+  LayoutDeviceRect screenRectDev =
+    LayoutDevicePixel::FromAppUnits(screenRect, dc->AppUnitsPerDevPixel());
 
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
   DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
                                             : DesktopToLayoutDeviceScale(1.0);
-  DesktopPoint pt = LayoutDeviceIntPoint(x, y) / scale;
-  return DesktopIntPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
+  DesktopRect screenRectDesk = screenRectDev / scale;
+
+  CSSPoint cssPt =
+    LayoutDevicePoint(x - screenRectDev.x, y - screenRectDev.y) /
+    presContext->CSSToDevPixelScale();
+  cssPt.x += screenRectDesk.x;
+  cssPt.y += screenRectDesk.y;
+
+  return CSSIntPoint(NSToIntRound(cssPt.x), NSToIntRound(cssPt.y));
 }
 
 int32_t
@@ -7028,13 +7053,37 @@ nsGlobalWindow::MoveToOuter(int32_t aXPos, int32_t aYPos, ErrorResult& aError, b
     return;
   }
 
-  DesktopIntPoint pt(aXPos, aYPos);
-  CheckSecurityLeftAndTop(&pt.x, &pt.y, aCallerIsChrome);
+  nsCOMPtr<nsIScreenManager> screenMgr =
+    do_GetService("@mozilla.org/gfx/screenmanager;1");
+  nsCOMPtr<nsIScreen> screen;
+  if (screenMgr) {
+    CSSIntSize size;
+    GetInnerSize(size);
+    screenMgr->ScreenForRect(aXPos, aYPos, size.width, size.height,
+                             getter_AddRefs(screen));
+  }
 
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-  DesktopToLayoutDeviceScale scale = widget ? widget->GetDesktopToDeviceScale()
-                                            : DesktopToLayoutDeviceScale(1.0);
-  LayoutDevicePoint devPos = pt * scale;
+  LayoutDevicePoint devPos;
+  if (screen) {
+    int32_t screenLeftDeskPx, screenTopDeskPx, w, h;
+    screen->GetRectDisplayPix(&screenLeftDeskPx, &screenTopDeskPx, &w, &h);
+    CSSIntPoint cssPos(aXPos - screenLeftDeskPx, aYPos - screenTopDeskPx);
+    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerIsChrome);
+
+    double scale;
+    screen->GetDefaultCSSScaleFactor(&scale);
+    devPos = cssPos * CSSToLayoutDeviceScale(scale);
+
+    int32_t screenLeftDevPx, screenTopDevPx;
+    screen->GetRect(&screenLeftDevPx, &screenTopDevPx, &w, &h);
+    devPos.x += screenLeftDevPx;
+    devPos.y += screenTopDevPx;
+  } else {
+    // We couldn't find a screen? Just assume a 1:1 mapping.
+    CSSIntPoint cssPos(aXPos, aXPos);
+    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerIsChrome);
+    devPos = cssPos * CSSToLayoutDeviceScale(1.0);
+  }
 
   aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
 }
