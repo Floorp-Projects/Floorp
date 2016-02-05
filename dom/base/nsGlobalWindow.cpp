@@ -8543,9 +8543,9 @@ public:
     }
 #endif
 
-    nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
+    nsCOMPtr<nsISupports> window = do_QueryReferent(mWindow);
     if (!skipNukeCrossCompartment && window) {
-      nsGlobalWindow* win = static_cast<nsGlobalWindow*>(window.get());
+      nsGlobalWindow* win = nsGlobalWindow::FromSupports(window);
       nsGlobalWindow* currentInner = win->IsInnerWindow() ? win : win->GetCurrentInnerWindowInternal();
       NS_ENSURE_TRUE(currentInner, NS_OK);
 
