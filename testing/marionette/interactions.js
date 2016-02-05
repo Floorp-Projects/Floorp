@@ -2,17 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+/* global Components, Accessibility, ElementNotVisibleError,
+   InvalidElementStateError, Interactions */
 
-const {utils: Cu} = Components;
+var {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/event.js");
+this.EXPORTED_SYMBOLS = ['Interactions'];
 
-this.EXPORTED_SYMBOLS = ["Interactions"];
+Cu.import('chrome://marionette/content/accessibility.js');
+Cu.import('chrome://marionette/content/error.js');
 
 /**
  * XUL elements that support disabled attribtue.
@@ -75,10 +73,31 @@ const SELECTED_PROPERTY_SUPPORTED_XUL = new Set([
 ]);
 
 /**
+ * This function generates a pair of coordinates relative to the viewport given
+ * a target element and coordinates relative to that element's top-left corner.
+ * @param 'x', and 'y' are the relative to the target.
+ *        If they are not specified, then the center of the target is used.
+ */
+function coordinates(target, x, y) {
+  let box = target.getBoundingClientRect();
+  if (typeof x === 'undefined') {
+    x = box.width / 2;
+  }
+  if (typeof y === 'undefined') {
+    y = box.height / 2;
+  }
+  return {
+    x: box.left + x,
+    y: box.top + y
+  };
+}
+
+/**
  * A collection of interactions available in marionette.
  * @type {Object}
  */
-this.Interactions = function(getCapabilies) {
+this.Interactions = function(utils, getCapabilies) {
+  this.utils = utils;
   this.accessibility = new Accessibility(getCapabilies);
 };
 
@@ -96,25 +115,22 @@ Interactions.prototype = {
    */
   clickElement(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
-    let visible = elements.checkVisible(el, container.frame);
+    let visible = this.checkVisible(container, el);
     if (!visible) {
       throw new ElementNotVisibleError('Element is not visible');
     }
     return this.accessibility.getAccessibleObject(el, true).then(acc => {
       this.accessibility.checkVisible(acc, el, visible);
-      if (atom.isElementEnabled(el)) {
+      if (this.utils.isElementEnabled(el)) {
         this.accessibility.checkEnabled(acc, el, true, container);
         this.accessibility.checkActionable(acc, el);
-        if (elements.isXULElement(el)) {
+        if (this.isXULElement(el)) {
           el.click();
         } else {
           let rects = el.getClientRects();
-          let win = el.ownerDocument.defaultView;
-          event.synthesizeMouseAtPoint(
-              rects[0].left + rects[0].width / 2,
-              rects[0].top + rects[0].height / 2,
-              {} /* opts */,
-              win);
+          this.utils.synthesizeMouseAtPoint(rects[0].left + rects[0].width/2,
+                                            rects[0].top + rects[0].height/2,
+                                            {}, el.ownerDocument.defaultView);
         }
       } else {
         throw new InvalidElementStateError('Element is not enabled');
@@ -143,8 +159,8 @@ Interactions.prototype = {
     let el = elementManager.getKnownElement(id, container);
     return this.accessibility.getAccessibleObject(el, true).then(acc => {
       this.accessibility.checkActionable(acc, el);
-      event.sendKeysToElement(
-          value, el, {ignoreVisibility: false}, container.frame);
+      this.utils.sendKeysToElement(
+        container.frame, el, value, ignoreVisibility);
     });
   },
 
@@ -164,7 +180,7 @@ Interactions.prototype = {
    */
   isElementDisplayed(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
-    let displayed = atom.isElementDisplayed(el, container.frame);
+    let displayed = this.utils.isElementDisplayed(el);
     return this.accessibility.getAccessibleObject(el).then(acc => {
       this.accessibility.checkVisible(acc, el, displayed);
       return displayed;
@@ -188,16 +204,16 @@ Interactions.prototype = {
   isElementEnabled(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
     let enabled = true;
-    if (elements.isXULElement(el)) {
+    if (this.isXULElement(el)) {
       // Check if XUL element supports disabled attribute
       if (DISABLED_ATTRIBUTE_SUPPORTED_XUL.has(el.tagName.toUpperCase())) {
-        let disabled = atom.getElementAttribute(el, 'disabled', container.frame);
+        let disabled = this.utils.getElementAttribute(el, 'disabled');
         if (disabled && disabled === 'true') {
           enabled = false;
         }
       }
     } else {
-      enabled = atom.isElementEnabled(el, container.frame);
+      enabled = this.utils.isElementEnabled(el);
     }
     return this.accessibility.getAccessibleObject(el).then(acc => {
       this.accessibility.checkEnabled(acc, el, enabled, container);
@@ -222,7 +238,7 @@ Interactions.prototype = {
   isElementSelected(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
     let selected = true;
-    if (elements.isXULElement(el)) {
+    if (this.isXULElement(el)) {
       let tagName = el.tagName.toUpperCase();
       if (CHECKED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
         selected = el.checked;
@@ -231,11 +247,71 @@ Interactions.prototype = {
         selected = el.selected;
       }
     } else {
-      selected = atom.isElementSelected(el, container.frame);
+      selected = this.utils.isElementSelected(el);
     }
     return this.accessibility.getAccessibleObject(el).then(acc => {
       this.accessibility.checkSelected(acc, el, selected);
       return selected;
     });
   },
+
+  /**
+   * This function throws the visibility of the element error if the element is
+   * not displayed or the given coordinates are not within the viewport.
+   *
+   * @param 'x', and 'y' are the coordinates relative to the target.
+   *        If they are not specified, then the center of the target is used.
+   */
+  checkVisible(container, el, x, y) {
+    // Bug 1094246 - Webdriver's isShown doesn't work with content xul
+    if (!this.isXULElement(el)) {
+      //check if the element is visible
+      let visible = this.utils.isElementDisplayed(el);
+      if (!visible) {
+        return false;
+      }
+    }
+
+    if (el.tagName.toLowerCase() === 'body') {
+      return true;
+    }
+    if (!this.elementInViewport(container, el, x, y)) {
+      //check if scroll function exist. If so, call it.
+      if (el.scrollIntoView) {
+        el.scrollIntoView(false);
+        if (!this.elementInViewport(container, el)) {
+          return false;
+        }
+      }
+      else {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  isXULElement(el) {
+    return this.utils.getElementAttribute(el, 'namespaceURI').indexOf(
+      'there.is.only.xul') >= 0;
+  },
+
+  /**
+   * This function returns true if the given coordinates are in the viewport.
+   * @param 'x', and 'y' are the coordinates relative to the target.
+   *        If they are not specified, then the center of the target is used.
+   */
+  elementInViewport(container, el, x, y) {
+    let c = coordinates(el, x, y);
+    let win = container.frame;
+    let viewPort = {
+      top: win.pageYOffset,
+      left: win.pageXOffset,
+      bottom: win.pageYOffset + win.innerHeight,
+      right: win.pageXOffset + win.innerWidth
+    };
+    return (viewPort.left <= c.x + win.pageXOffset &&
+            c.x + win.pageXOffset <= viewPort.right &&
+            viewPort.top <= c.y + win.pageYOffset &&
+            c.y + win.pageYOffset <= viewPort.bottom);
+  }
 };
