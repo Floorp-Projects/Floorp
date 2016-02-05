@@ -24,7 +24,6 @@
 
 #include "jsprf.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -64,11 +63,9 @@ wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
     unsigned permissions =
         ExecutableAllocator::initialProtectionFlags(ExecutableAllocator::Writable);
 
-    void* p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", AsmJSPageSize);
+    void* p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", gc::SystemPageSize());
     if (!p)
         ReportOutOfMemory(cx);
-
-    MOZ_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
 
     return UniqueCodePtr((uint8_t*)p, CodeDeleter(bytes));
 }
@@ -77,7 +74,7 @@ void
 CodeDeleter::operator()(uint8_t* p)
 {
     MOZ_ASSERT(bytes_ != 0);
-    DeallocateExecutableMemory(p, bytes_, AsmJSPageSize);
+    DeallocateExecutableMemory(p, bytes_, gc::SystemPageSize());
 }
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
