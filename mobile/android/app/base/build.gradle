@@ -1,0 +1,142 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/base"
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        targetSdkVersion 23
+        minSdkVersion 15
+        // Used by Robolectric based tests; see TestRunner.
+        buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\""
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile "${topsrcdir}/mobile/android/base/AndroidManifest.xml"
+
+            java {
+                srcDir "${topsrcdir}/mobile/android/base/java"
+                srcDir "${topsrcdir}/mobile/android/search/java"
+                srcDir "${topsrcdir}/mobile/android/javaaddons/java"
+                srcDir "${topsrcdir}/mobile/android/services/src/main/java"
+
+                if (mozconfig.substs.MOZ_ANDROID_MLS_STUMBLER) {
+                    srcDir "${topsrcdir}/mobile/android/stumbler/java"
+                }
+
+                if (!mozconfig.substs.MOZ_CRASHREPORTER) {
+                    exclude 'org/mozilla/gecko/CrashReporter.java'
+                }
+
+                if (!mozconfig.substs.MOZ_NATIVE_DEVICES) {
+                    exclude 'org/mozilla/gecko/ChromeCast.java'
+                    exclude 'org/mozilla/gecko/GeckoMediaPlayer.java'
+                    exclude 'org/mozilla/gecko/MediaPlayerManager.java'
+                }
+
+                if (mozconfig.substs.MOZ_WEBRTC) {
+                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src"
+                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src"
+                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_render/android/java/src"
+                }
+
+                if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
+                    exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
+                } else {
+                    exclude 'org/mozilla/gecko/adjust/AdjustHelper.java'
+                }
+
+                srcDir "${project.buildDir}/generated/source/preprocessed_code" // See syncPreprocessedCode.
+            }
+
+            res {
+                srcDir "${topsrcdir}/${mozconfig.substs.MOZ_BRANDING_DIRECTORY}/res"
+                srcDir "${project.buildDir}/generated/source/preprocessed_resources" // See syncPreprocessedResources.
+                srcDir "${topsrcdir}/mobile/android/base/resources"
+                srcDir "${topsrcdir}/mobile/android/services/src/main/res"
+                if (mozconfig.substs.MOZ_CRASHREPORTER) {
+                    srcDir "${topsrcdir}/mobile/android/base/crashreporter/res"
+                }
+            }
+
+            assets {
+                srcDir "${topsrcdir}/mobile/android/app/assets"
+            }
+        }
+
+        test {
+            java {
+                srcDir "${topsrcdir}/mobile/android/tests/background/junit4/src"
+            }
+
+            resources {
+                srcDir "${topsrcdir}/mobile/android/tests/background/junit4/resources"
+            }
+        }
+    }
+}
+
+task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_code")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed")
+}
+
+task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_resources")
+    from("${topobjdir}/mobile/android/base/res")
+}
+
+android.libraryVariants.all { variant ->
+    variant.preBuild.dependsOn syncPreprocessedCode
+    variant.preBuild.dependsOn syncPreprocessedResources
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:23.0.1'
+    compile 'com.android.support:appcompat-v7:23.0.1'
+    compile 'com.android.support:recyclerview-v7:23.0.1'
+    compile 'com.android.support:design:23.0.1'
+
+    if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
+        compile 'com.android.support:mediarouter-v7:23.0.1'
+        compile 'com.google.android.gms:play-services-basement:8.1.0'
+        compile 'com.google.android.gms:play-services-base:8.1.0'
+        compile 'com.google.android.gms:play-services-cast:8.1.0'
+    }
+
+    if (mozconfig.substs.MOZ_ANDROID_GCM) {
+        compile 'com.google.android.gms:play-services-basement:8.1.0'
+        compile 'com.google.android.gms:play-services-base:8.1.0'
+        compile 'com.google.android.gms:play-services-gcm:8.1.0'
+    }
+
+    // Gradle based builds include LeakCanary. Mach based builds only include the no-op version of
+    // this library.
+    compile 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+
+    compile project(':thirdparty')
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'org.simpleframework:simple-http:6.0.1'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+    }
+}
