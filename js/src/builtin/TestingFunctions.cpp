@@ -588,6 +588,11 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
     if (!ToUint32(cx, args.get(0), &zeal))
         return false;
 
+    if (zeal > uint32_t(gc::ZealMode::Limit)) {
+        JS_ReportError(cx, "gczeal argument out of range");
+        return false;
+    }
+
     uint32_t frequency = JS_DEFAULT_ZEAL_FREQ;
     if (args.length() >= 2) {
         if (!ToUint32(cx, args.get(1), &frequency))
