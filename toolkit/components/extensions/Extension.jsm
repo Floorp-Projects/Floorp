@@ -60,6 +60,7 @@ Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-alarms.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-backgroundPage.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-cookies.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-downloads.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-notifications.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-i18n.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-idle.js");
@@ -73,6 +74,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/downloads.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
