@@ -1,0 +1,73 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1213773",
+    title: "Renegotiation: answerer uses a=inactive for video"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    var helper;
+
+    test = new PeerConnectionTest(options);
+
+    test.chain.replace("PC_LOCAL_GUM", [
+      function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+        helper = new VideoStreamHelper();
+        test.pcLocal.attachLocalStream(helper.stream());
+      }
+    ]);
+
+    test.chain.append([
+      function PC_REMOTE_WAIT_FOR_FRAMES() {
+        var vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        return helper.waitForFrames(vremote);
+      }
+    ]);
+
+    addRenegotiation(test.chain, []);
+
+    test.chain.insertAfter("PC_LOCAL_GET_ANSWER", [
+        function PC_LOCAL_REWRITE_REMOTE_SDP_INACTIVE(test) {
+          test._remote_answer.sdp =
+            sdputils.setAllMsectionsInactive(test._remote_answer.sdp);
+        }
+    ], false, 1);
+
+    test.chain.append([
+      function PC_REMOTE_ENSURE_NO_FRAMES() {
+        var vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        return helper.verifyNoFrames(vremote);
+      },
+    ]);
+
+    test.chain.remove("PC_REMOTE_CHECK_STATS", 1);
+    test.chain.remove("PC_LOCAL_CHECK_STATS", 1);
+
+    addRenegotiation(test.chain, []);
+
+    test.chain.append([
+      function PC_REMOTE_WAIT_FOR_FRAMES_2() {
+        var vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        return helper.waitForFrames(vremote);
+      }
+    ]);
+
+    test.setMediaConstraints([{video: true}], []);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

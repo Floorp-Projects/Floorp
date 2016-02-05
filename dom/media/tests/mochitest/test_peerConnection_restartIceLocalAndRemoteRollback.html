@@ -14,7 +14,6 @@
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
-    var firstNegotiationSize = test.chain.commands.length;
 
     addRenegotiation(test.chain,
       [
@@ -82,7 +81,7 @@
           test.pcRemote.iceCheckingRestartExpected = true;
         }
       ],
-      firstNegotiationSize // Replaces after second PC_REMOTE_CREATE_ANSWER
+      1 // Replaces after second PC_REMOTE_CREATE_ANSWER
     );
     test.chain.append(commandsPeerConnectionOfferAnswer);
 
