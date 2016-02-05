@@ -53,6 +53,10 @@ removeAllRtpMaps: function(sdp) {
   return sdp.replace(/a=rtpmap:.*\r\n/g, "");
 },
 
+reduceAudioMLineToDynamicPtAndOpus: function(sdp) {
+  return sdp.replace(/m=audio .*\r\n/g, "m=audio 9 UDP/TLS/RTP/SAVPF 101 109\r\n");
+},
+
 transferSimulcastProperties: function(offer_sdp, answer_sdp) {
   if (!offer_sdp.includes("a=simulcast:")) {
     return answer_sdp;
