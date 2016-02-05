@@ -19,7 +19,7 @@ function promiseNewWindowLoaded() {
       domwindow.addEventListener("load", function _load(event) {
         let doc = domwindow.document;
         if (event.target != doc)
-            return;
+          return;
         domwindow.removeEventListener("load", _load);
         deferred.resolve(domwindow);
       });
@@ -32,17 +32,20 @@ add_chat_task(function* testTearoffChat() {
   let chatbox = yield promiseOpenChat("http://example.com");
   Assert.equal(numChatsInWindow(window), 1, "should be 1 chat open");
 
-  let chatDoc = chatbox.contentDocument;
-  let chatTitle = chatDoc.title;
+  let chatTitle = yield ContentTask.spawn(chatbox.content, null, function* () {
+    let chatDoc = content.document;
+
+    // Mutate the chat document a bit before we tear it off.
+    let div = chatDoc.createElement("div");
+    div.setAttribute("id", "testdiv");
+    div.setAttribute("test", "1");
+    chatDoc.body.appendChild(div);
+
+    return chatDoc.title;
+  });
 
   Assert.equal(chatbox.getAttribute("label"), chatTitle,
                "the new chatbox should show the title of the chat window");
-
-  // mutate the chat document a bit before we tear it off.
-  let div = chatDoc.createElement("div");
-  div.setAttribute("id", "testdiv");
-  div.setAttribute("test", "1");
-  chatDoc.body.appendChild(div);
 
   // chatbox is open, lets detach. The new chat window will be caught in
   // the window watcher below
@@ -61,9 +64,11 @@ add_chat_task(function* testTearoffChat() {
   chatbox = domwindow.document.getElementById("chatter")
   Assert.equal(chatbox.getAttribute("label"), chatTitle, "window should have same title as chat");
 
-  div = chatbox.contentDocument.getElementById("testdiv");
-  Assert.equal(div.getAttribute("test"), "1", "docshell should have been swapped");
-  div.setAttribute("test", "2");
+  yield ContentTask.spawn(chatbox.content, null, function* () {
+    div = content.document.getElementById("testdiv");
+    is(div.getAttribute("test"), "1", "docshell should have been swapped");
+    div.setAttribute("test", "2");
+  });
 
   // swap the window back to the chatbar
   promise = promiseOneEvent(domwindow, "unload");
@@ -77,8 +82,10 @@ add_chat_task(function* testTearoffChat() {
   Assert.equal(chatbox.getAttribute("label"), chatTitle,
                "the new chatbox should show the title of the chat window again");
 
-  div = chatbox.contentDocument.getElementById("testdiv");
-  Assert.equal(div.getAttribute("test"), "2", "docshell should have been swapped");
+  yield ContentTask.spawn(chatbox.content, null, function* () {
+    let div = content.document.getElementById("testdiv");
+    is(div.getAttribute("test"), "2", "docshell should have been swapped");
+  });
 });
 
 // Similar test but with 2 chats.

@@ -57,7 +57,7 @@ XMLParser.prototype = {
       attributes: {},
       children: [],
       textContent: "",
-      textStart: this.parser.line,
+      textStart: { line: this.parser.line, column: this.parser.column },
     }
 
     for (let attr of Object.keys(tag.attributes)) {
@@ -74,27 +74,51 @@ XMLParser.prototype = {
     this._currentNode = this._currentNode.parentNode;
   },
 
+  addText: function(text) {
+    this._currentNode.textContent += text;
+  },
+
   onText: function(text) {
     // Replace entities with some valid JS token.
-    this.onCDATA(text.replace(entityRegex, "null"));
+    this.addText(text.replace(entityRegex, "null"));
   },
 
   onCDATA: function(text) {
-    this._currentNode.textContent += text;
+    // Turn the CDATA opening tag into whitespace for indent alignment
+    this.addText(" ".repeat("<![CDATA[".length));
+    this.addText(text);
   }
 }
 
 // Strips the indentation from lines of text and adds a fixed two spaces indent
-function reindent(text) {
+function buildCodeBlock(tag, prefix, suffix, indent) {
+  prefix = prefix === undefined ? "" : prefix;
+  suffix = suffix === undefined ? "\n}" : suffix;
+  indent = indent === undefined ? 2 : indent;
+
+  let text = tag.textContent;
+  let line = tag.textStart.line;
+  let column = tag.textStart.column;
+
   let lines = text.split("\n");
 
-  // The last line is likely indentation for the XML closing tag.
-  if (lines[lines.length - 1].trim() == "") {
+  // Strip off any preceeding whitespace only lines. These are often used to
+  // format the XML and CDATA blocks.
+  while (lines.length && lines[0].trim() == "") {
+    column = 0;
+    line++;
+    lines.shift();
+  }
+
+  // Strip off any whitespace lines at the end. These are often used to line
+  // up the closing tags
+  while (lines.length && lines[lines.length - 1].trim() == "") {
     lines.pop();
   }
 
-  if (!lines.length) {
-    return "";
+  // Indent the first line with the starting position of the text block
+  if (lines.length && column) {
+    lines[0] = " ".repeat(column) + lines[0];
   }
 
   // Find the preceeding whitespace for all lines that aren't entirely whitespace
@@ -105,8 +129,15 @@ function reindent(text) {
 
   // Strip off the found indent level and prepend the new indent level, but only
   // if the string isn't already empty.
-  lines = lines.map(s => s.length > 0 ? "  " + s.substring(minIndent) : s);
-  return lines.join("\n") + "\n";
+  let indentstr = " ".repeat(indent);
+  lines = lines.map(s => s.length ? indentstr + s.substring(minIndent) : s);
+
+  let block = {
+    script: prefix + lines.join("\n") + suffix + "\n",
+    line: line - prefix.split("\n").length,
+    indent: minIndent - indent
+  };
+  return block;
 }
 
 // -----------------------------------------------------------------------------
@@ -116,13 +147,13 @@ function reindent(text) {
 // Stores any XML parse error
 let xmlParseError = null;
 
-// Stores the starting line for each script block generated
-let blockLines = [];
+// Stores the code blocks
+let blocks = [];
 
 module.exports = {
   preprocess: function(text, filename) {
     xmlParseError = null;
-    blockLines = [];
+    blocks = [];
 
     // Non-strict allows us to ignore many errors from entities and
     // preprocessing at the expense of failing to report some XML errors.
@@ -174,21 +205,18 @@ module.exports = {
           switch (item.local) {
             case "field": {
               // Fields get converted into variable declarations
-              let def = item.textContent.trimRight();
+
               // Ignore empty fields
-              if (def.trim().length == 0) {
+              if (item.textContent.trim().length == 0) {
                 continue;
               }
-              blockLines.push(item.textStart);
-              scripts.push(`${def}\n`);
+              blocks.push(buildCodeBlock(item, "", "", 0));
               break;
             }
             case "constructor":
             case "destructor": {
               // Constructors and destructors become function declarations
-              blockLines.push(item.textStart);
-              let content = reindent(item.textContent);
-              scripts.push(`function ${item.local}() {${content}}\n`);
+              blocks.push(buildCodeBlock(item, `function ${item.local}() {\n`));
               break;
             }
             case "method": {
@@ -197,9 +225,7 @@ module.exports = {
                                         .map(n => n.attributes.name)
                                         .join(", ");
               let body = item.children.filter(n => n.local == "body" && n.namespace == NS_XBL)[0];
-              blockLines.push(body.textStart);
-              body = reindent(body.textContent);
-              scripts.push(`function ${item.attributes.name}(${params}) {${body}}\n`)
+              blocks.push(buildCodeBlock(body, `function ${item.attributes.name}(${params}) {\n`));
               break;
             }
             case "property": {
@@ -209,18 +235,14 @@ module.exports = {
                   continue;
                 }
 
-                blockLines.push(propdef.textStart);
-                let content = reindent(propdef.textContent);
                 let params = propdef.local == "setter" ? "val" : "";
-                scripts.push(`function ${item.attributes.name}_${propdef.local}(${params}) {${content}}\n`);
+                blocks.push(buildCodeBlock(propdef, `function ${item.attributes.name}_${propdef.local}(${params}) {\n`));
               }
               break;
             }
             case "handler": {
               // Handlers become a function declaration with an `event` parameter
-              blockLines.push(item.textStart);
-              let content = reindent(item.textContent);
-              scripts.push(`function onevent(event) {${content}}\n`);
+              blocks.push(buildCodeBlock(item, `function onevent(event) {\n`));
               break;
             }
             default:
@@ -230,7 +252,7 @@ module.exports = {
       }
     }
 
-    return scripts;
+    return blocks.map(b => b.script);
   },
 
   postprocess: function(messages, filename) {
@@ -243,10 +265,11 @@ module.exports = {
     // correct place.
     let errors = [];
     for (let i = 0; i < messages.length; i++) {
-      let line = blockLines[i];
+      let block = blocks[i];
 
       for (let message of messages[i]) {
-        message.line += line;
+        message.line += block.line + 1;
+        message.column += block.indent;
         errors.push(message);
       }
     }

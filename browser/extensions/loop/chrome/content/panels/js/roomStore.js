@@ -272,15 +272,6 @@ loop.store = loop.store || {};
           roomToken: result.roomToken
         }));
         loop.request("TelemetryAddValue", "LOOP_ROOM_CREATE", buckets.CREATE_SUCCESS);
-
-        // Since creating a room with context is only possible from the panel,
-        // we can record that as the action here.
-        var URLs = roomCreationData.decryptedContext.urls;
-        if (URLs && URLs.length) {
-          buckets = this._constants.ROOM_CONTEXT_ADD;
-          loop.request("TelemetryAddValue", "LOOP_ROOM_CONTEXT_ADD",
-            buckets.ADD_FROM_PANEL);
-        }
       }.bind(this));
     },
 
@@ -558,8 +549,6 @@ loop.store = loop.store || {};
           return;
         }
 
-        var hadContextBefore = !!oldRoomURL;
-
         this.setStoreState({ error: null });
         loop.request("Rooms:Update", actionData.roomToken, roomData).then(function(result2) {
           var isError = (result2 && result2.isError);
@@ -567,15 +556,6 @@ loop.store = loop.store || {};
             new sharedActions.UpdateRoomContextError({ error: result2 }) :
             new sharedActions.UpdateRoomContextDone();
           this.dispatchAction(action);
-
-          if (!isError && !hadContextBefore) {
-            // Since updating the room context data is only possible from the
-            // conversation window, we can assume that any newly added URL was
-            // done from there.
-            var buckets = this._constants.ROOM_CONTEXT_ADD;
-            loop.request("TelemetryAddValue", "LOOP_ROOM_CONTEXT_ADD",
-              buckets.ADD_FROM_CONVERSATION);
-          }
         }.bind(this));
       }.bind(this));
     },
