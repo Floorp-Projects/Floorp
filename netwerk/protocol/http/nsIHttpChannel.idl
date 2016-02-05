@@ -370,33 +370,15 @@ interface nsIHttpChannel : nsIChannel
 
     /**
      * Instructs the channel to immediately redirect to a new destination.
-     * Can only be called on channels that have not yet called their
-     * listener's OnStartRequest(). Generally that means the latest time
-     * this can be used is one of:
-     *    "http-on-examine-response"
-     *    "http-on-examine-merged-response"
-     *    "http-on-examine-cached-response"
-     *
-     * When non-null URL is set before AsyncOpen:
-     *  we attempt to redirect to the targetURI before we even start building
-     *  and sending the request to the cache or the origin server.
-     *  If the redirect is vetoed, we fail the channel.
-     *
-     * When set between AsyncOpen and first call to OnStartRequest being called:
-     *  we attempt to redirect before we start delivery of network or cached
-     *  response to the listener.  If vetoed, we continue with delivery of
-     *  the original content to the channel listener.
-     *
-     * When passed aTargetURI is null the channel behaves normally (can be
-     * rewritten).
+     * Can only be called on channels not yet opened.
      *
      * This method provides no explicit conflict resolution. The last
      * caller to call it wins.
      *
-     * @throws NS_ERROR_NOT_AVAILABLE if called after the channel has already
-     *         started to deliver the content to its listener.
+     * @throws NS_ERROR_ALREADY_OPENED if called after the channel
+     *         has been opened.
      */
-    void redirectTo(in nsIURI aTargetURI);
+    void redirectTo(in nsIURI aNewURI);
 
     /**
      * Identifies the scheduling context for this load.
