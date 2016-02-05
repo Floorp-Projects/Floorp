@@ -233,7 +233,7 @@ struct Zone : public JS::shadow::Zone,
     bool compileBarriers() const { return compileBarriers(needsIncrementalBarrier()); }
     bool compileBarriers(bool needsIncrementalBarrier) const {
         return needsIncrementalBarrier ||
-               runtimeFromMainThread()->gcZeal() == js::gc::ZealVerifierPreValue;
+               runtimeFromMainThread()->hasZealMode(js::gc::ZealMode::VerifierPre);
     }
 
     enum ShouldUpdateJit { DontUpdateJit, UpdateJit };
