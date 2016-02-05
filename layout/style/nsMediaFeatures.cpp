@@ -17,7 +17,6 @@
 #endif
 #include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
-#include "nsIBaseWindow.h"
 #include "nsIDocument.h"
 
 using namespace mozilla;
@@ -32,14 +31,6 @@ static const nsCSSProps::KTableEntry kScanKeywords[] = {
   { eCSSKeyword_progressive,              NS_STYLE_SCAN_PROGRESSIVE },
   { eCSSKeyword_interlace,                NS_STYLE_SCAN_INTERLACE },
   { eCSSKeyword_UNKNOWN,                  -1 }
-};
-
-static const nsCSSProps::KTableEntry kDisplayModeKeywords[] = {
-  { eCSSKeyword_browser,                 NS_STYLE_DISPLAY_MODE_BROWSER },
-  { eCSSKeyword_minimal_ui,              NS_STYLE_DISPLAY_MODE_MINIMAL_UI },
-  { eCSSKeyword_standalone,              NS_STYLE_DISPLAY_MODE_STANDALONE },
-  { eCSSKeyword_fullscreen,              NS_STYLE_DISPLAY_MODE_FULLSCREEN },
-  { eCSSKeyword_UNKNOWN,                 -1 }
 };
 
 #ifdef XP_WIN
@@ -311,34 +302,6 @@ GetScan(nsPresContext* aPresContext, const nsMediaFeature*,
 }
 
 static nsresult
-GetDisplayMode(nsPresContext* aPresContext, const nsMediaFeature*,
-               nsCSSValue& aResult)
-{
-  nsCOMPtr<nsISupports> container = aPresContext->GetRootPresContext()->
-    Document()->GetContainer();
-  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
-  if (!baseWindow) {
-    aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_BROWSER, eCSSUnit_Enumerated);
-    return NS_OK;
-  }
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  int32_t displayMode;
-  nsSizeMode mode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
-  switch (mode) {
-    case nsSizeMode_Fullscreen:
-      displayMode = NS_STYLE_DISPLAY_MODE_FULLSCREEN;
-      break;
-    default:
-      displayMode = NS_STYLE_DISPLAY_MODE_BROWSER;
-      break;
-  }
-
-  aResult.SetIntValue(displayMode, eCSSUnit_Enumerated);
-  return NS_OK;
-}
-
-static nsresult
 GetGrid(nsPresContext* aPresContext, const nsMediaFeature*,
         nsCSSValue& aResult)
 {
@@ -566,14 +529,6 @@ nsMediaFeatures::features[] = {
     nsMediaFeature::eNoRequirements,
     { nullptr },
     GetGrid
-  },
-  {
-    &nsGkAtoms::displayMode,
-    nsMediaFeature::eMinMaxNotAllowed,
-    nsMediaFeature::eEnumerated,
-    nsMediaFeature::eNoRequirements,
-    { kDisplayModeKeywords },
-    GetDisplayMode
   },
 
   // Webkit extensions that we support for de-facto web compatibility

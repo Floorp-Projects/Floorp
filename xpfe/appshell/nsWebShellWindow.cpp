@@ -365,11 +365,6 @@ nsWebShellWindow::SizeModeChanged(nsSizeMode sizeMode)
     ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("sizemodechange"));
   }
 
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
-    presShell->GetPresContext()->SizeModeChanged(sizeMode);
-  }
-
   // Note the current implementation of SetSizeMode just stores
   // the new state; it doesn't actually resize. So here we store
   // the state and pass the event on to the OS. The day is coming

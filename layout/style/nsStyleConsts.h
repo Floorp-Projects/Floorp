@@ -1205,12 +1205,6 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_SCAN_PROGRESSIVE               0
 #define NS_STYLE_SCAN_INTERLACE                 1
 
-// display-mode
-#define NS_STYLE_DISPLAY_MODE_BROWSER           0
-#define NS_STYLE_DISPLAY_MODE_MINIMAL_UI        1
-#define NS_STYLE_DISPLAY_MODE_STANDALONE        2
-#define NS_STYLE_DISPLAY_MODE_FULLSCREEN        3
-
 } // namespace mozilla
 
 #endif /* nsStyleConsts_h___ */
