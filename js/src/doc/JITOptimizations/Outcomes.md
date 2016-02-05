@@ -172,6 +172,22 @@ that it is a TypedArray.
 The observed type of the target of the property access doesn't guarantee
 that it is a String.
 
+### OperandNotString
+
+Optimization failed because of failing to speculate the operand is a string.
+
+### OperandNotNumber
+
+Optimization failed because of failing to speculate the operand is a number.
+
+### OperandNotStringOrNumber
+
+Optimization failed because of failing to speculate the operand is a string or a number.
+
+### OperandNotSimpleArith
+
+Optimization failed because of failing to speculate the operand is a simple arithmetic type. I.e. definitely not an object, string, symbol or internal magic type.
+
 ### StaticTypedArrayUint32
 
 Typed Arrays of uint32 values are not yet fully optimized.

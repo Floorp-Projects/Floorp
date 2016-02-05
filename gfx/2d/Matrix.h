@@ -1433,6 +1433,48 @@ public:
     _24 = -sinTheta * temp + cosTheta * _24;
   }
 
+  // Sets this matrix to a rotation matrix about a
+  // vector [x,y,z] by angle theta. The vector is normalized
+  // to a unit vector.
+  // https://www.w3.org/TR/css3-3d-transforms/#Rotate3dDefined
+  void SetRotateAxisAngle(double aX, double aY, double aZ, double aTheta)
+  {
+    Point3D vector(aX, aY, aZ);
+    if (!vector.Length()) {
+      return;
+    }
+    vector.Normalize();
+
+    double x = vector.x;
+    double y = vector.y;
+    double z = vector.z;
+
+    double cosTheta = FlushToZero(cos(aTheta));
+    double sinTheta = FlushToZero(sin(aTheta));
+
+    // sin(aTheta / 2) * cos(aTheta / 2)
+    double sc = sinTheta / 2;
+    // pow(sin(aTheta / 2), 2)
+    double sq = (1 - cosTheta) / 2;
+
+    _11 = 1 - 2 * (y * y + z * z) * sq;
+    _12 = 2 * (x * y * sq + z * sc);
+    _13 = 2 * (x * z * sq - y * sc);
+    _14 = 0.0f;
+    _21 = 2 * (x * y * sq - z * sc);
+    _22 = 1 - 2 * (x * x + z * z) * sq;
+    _23 = 2 * (y * z * sq + x * sc);
+    _24 = 0.0f;
+    _31 = 2 * (x * z * sq + y * sc);
+    _32 = 2 * (y * z * sq - x * sc);
+    _33 = 1 - 2 * (x * x + y * y) * sq;
+    _34 = 0.0f;
+    _41 = 0.0f;
+    _42 = 0.0f;
+    _43 = 0.0f;
+    _44 = 1.0f;
+  }
+
   void Perspective(float aDepth)
   {
     MOZ_ASSERT(aDepth > 0.0f, "Perspective must be positive!");

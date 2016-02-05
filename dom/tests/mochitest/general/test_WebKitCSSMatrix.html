@@ -323,4 +323,14 @@ test(function() {
   assert_throws("SyntaxError", function() { new WebKitCSSMatrix("initial"); }, "initial is not a valid constructor argument.")
   assert_throws("SyntaxError", function() { new WebKitCSSMatrix("inherit"); }, "inherit is not a valid constructor arugment.")
 }, "Test invalid constructor arguments.");
+
+test(function() {
+  var m1 = new WebKitCSSMatrix();
+  m1 = m1.rotateAxisAngle(0, 0, 1, 45);
+
+  var m2 = new WebKitCSSMatrix();
+  m2 = m2.rotateAxisAngle(0, 0, 3, 45);
+
+  assert_true(RoughCompareMatrix(m1, m2), "rotateAxisAngle should normalize vector to unit vector.");
+}, "Test normalization of vector for rotateAxisAngle");
 </script>

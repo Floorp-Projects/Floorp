@@ -4,7 +4,6 @@
 
 #include "vhea.h"
 
-#include "gsub.h"
 #include "head.h"
 #include "maxp.h"
 
@@ -37,10 +36,7 @@ bool ots_vhea_parse(Font *font, const uint8_t *data, size_t length) {
 
 bool ots_vhea_should_serialise(Font *font) {
   // vhea should'nt serialise when vmtx doesn't exist.
-  // Firefox developer pointed out that vhea/vmtx should serialise iff GSUB is
-  // preserved. See http://crbug.com/77386
-  return font->vhea != NULL && font->vmtx != NULL &&
-      ots_gsub_should_serialise(font);
+  return font->vhea != NULL && font->vmtx != NULL;
 }
 
 bool ots_vhea_serialise(OTSStream *out, Font *font) {

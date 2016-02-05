@@ -4682,7 +4682,8 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
       nsWeakFrame currentTarget = mCurrentTarget;
       ret = presShell->HandleEventWithTarget(&event, currentTarget,
                                              mouseContent, aStatus);
-      if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
+      if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2 &&
+          mouseContent->IsInComposedDoc()) {
         //fire double click
         WidgetMouseEvent event2(aEvent->mFlags.mIsTrusted, eMouseDoubleClick,
                                 aEvent->widget, WidgetMouseEvent::eReal);

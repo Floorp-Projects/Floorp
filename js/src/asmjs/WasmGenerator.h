@@ -133,6 +133,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Data handed back to the caller in finish()
     UniqueModuleData                module_;
     UniqueStaticLinkData            link_;
+    UniqueExportMap                 exportMap_;
     SlowFunctionVector              slowFuncs_;
 
     // Data scoped to the ModuleGenerator's lifetime
@@ -142,7 +143,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator              alloc_;
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcEntryOffsets_;
-    Uint32Vector                    exportFuncIndices_;
     FuncIndexMap                    funcIndexToExport_;
 
     // Parallel compilation
@@ -178,6 +178,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Heap usage:
     void initHeapUsage(HeapUsage heapUsage);
+    bool usesHeap() const;
 
     // Signatures:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -196,12 +197,13 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
 
     // Exports:
-    bool declareExport(uint32_t funcIndex, uint32_t* exportIndex);
+    bool declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex = nullptr);
     uint32_t numExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
     uint32_t exportEntryOffset(uint32_t index) const;
     const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
+    bool addMemoryExport(UniqueChars fieldName);
 
     // Function definitions:
     bool startFuncDefs();
@@ -226,6 +228,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finish(CacheableCharsVector&& prettyFuncNames,
                 UniqueModuleData* module,
                 UniqueStaticLinkData* staticLinkData,
+                UniqueExportMap* exportMap,
                 SlowFunctionVector* slowFuncs);
 };
 

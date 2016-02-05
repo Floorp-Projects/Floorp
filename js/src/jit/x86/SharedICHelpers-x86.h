@@ -86,7 +86,7 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
     masm.store32(ebx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(eax, JitFrame_BaselineJS, ExitFrameLayout::Size());
     masm.push(eax);
     masm.push(ICTailCallReg);
     masm.jmp(target);
@@ -105,14 +105,14 @@ EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
     masm.addl(Imm32(stackSize + JitStubFrameLayout::Size() - sizeof(intptr_t)), eax);
 
     // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, JitFrame_IonJS);
+    masm.makeFrameDescriptor(eax, JitFrame_IonJS, ExitFrameLayout::Size());
     masm.push(eax);
     masm.push(ICTailCallReg);
     masm.jmp(target);
 }
 
 inline void
-EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
+EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     // Compute stub frame size. We have to add two pointers: the stub reg and previous
     // frame pointer pushed by EmitEnterStubFrame.
@@ -120,13 +120,13 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
     masm.addl(Imm32(sizeof(void*) * 2), reg);
     masm.subl(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub);
+    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
 }
 
 inline void
 EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
 {
-    EmitBaselineCreateStubFrameDescriptor(masm, eax);
+    EmitBaselineCreateStubFrameDescriptor(masm, eax, ExitFrameLayout::Size());
     masm.push(eax);
     masm.call(target);
 }
@@ -140,7 +140,8 @@ EmitIonCallVM(JitCode* target, size_t stackSlots, MacroAssembler& masm)
     // fix it here, by subtracting it. Else it would be counted twice.
     uint32_t framePushed = masm.framePushed() - sizeof(void*);
 
-    uint32_t descriptor = MakeFrameDescriptor(framePushed, JitFrame_IonStub);
+    uint32_t descriptor = MakeFrameDescriptor(framePushed, JitFrame_IonStub,
+                                              ExitFrameLayout::Size());
     masm.Push(Imm32(descriptor));
     masm.call(target);
 
@@ -174,7 +175,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     // if needed.
 
     // Push frame descriptor and return address.
-    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, BaselineStubFrameLayout::Size());
     masm.Push(scratch);
     masm.Push(ICTailCallReg);
 

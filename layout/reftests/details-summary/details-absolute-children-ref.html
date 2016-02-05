@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  div#details {
+    background-color: orange;
+    width: 500px;
+    height: 200px;
+  }
+  div#summary {
+    background-color: green;
+    width: 50%;
+  }
+  div#in_summary {
+    position: absolute;
+    background-color: green;
+    top: 60px;
+    left: 100px;
+    width: 150px;
+    height: 100px;
+  }
+  div#before_summary {
+    position: absolute;
+    background-color: cyan;
+    top: 50px;
+    left: 50px;
+    width: 150px;
+    height: 100px;
+    z-index: 1;
+  }
+  </style>
+  <body>
+    <div id="details">
+      <div id="before_summary">div before summary</div>
+      <div id="summary">Summary<div id="in_summary">div in summary</div></div>
+    </div>
+  </body>
+</html>

@@ -1,13 +1,5 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
-function mismatchError(actual, expect) {
-    var str = "type mismatch: expression has type " + actual + " but expected " + expect;
-    return RegExp(str);
-}
-
 // ----------------------------------------------------------------------------
 // exports
 
@@ -19,7 +11,7 @@ assertEq(Object.getOwnPropertyNames(o).length, 0);
 
 var o = wasmEvalText('(module (func) (export "" 0))');
 assertEq(typeof o, "function");
-assertEq(o.name, "0");
+assertEq(o.name, "wasm-function[0]");
 assertEq(o.length, 0);
 assertEq(o(), undefined);
 
@@ -29,7 +21,7 @@ assertEq(names.length, 1);
 assertEq(names[0], 'a');
 var desc = Object.getOwnPropertyDescriptor(o, 'a');
 assertEq(typeof desc.value, "function");
-assertEq(desc.value.name, "0");
+assertEq(desc.value.name, "wasm-function[0]");
 assertEq(desc.value.length, 0);
 assertEq(desc.value(), undefined);
 assertEq(desc.writable, true);
@@ -39,12 +31,12 @@ assertEq(desc.value(), undefined);
 
 var o = wasmEvalText('(module (func) (func) (export "" 0) (export "a" 1))');
 assertEq(typeof o, "function");
-assertEq(o.name, "0");
+assertEq(o.name, "wasm-function[0]");
 assertEq(o.length, 0);
 assertEq(o(), undefined);
 var desc = Object.getOwnPropertyDescriptor(o, 'a');
 assertEq(typeof desc.value, "function");
-assertEq(desc.value.name, "1");
+assertEq(desc.value.name, "wasm-function[1]");
 assertEq(desc.value.length, 0);
 assertEq(desc.value(), undefined);
 assertEq(desc.writable, true);
@@ -59,14 +51,14 @@ assertErrorMessage(() => wasmEvalText('(module (func) (func) (export "a" 2))'), 
 
 var o = wasmEvalText('(module (func) (export "a" 0) (export "b" 0))');
 assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
-assertEq(o.a.name, "0");
-assertEq(o.b.name, "0");
+assertEq(o.a.name, "wasm-function[0]");
+assertEq(o.b.name, "wasm-function[0]");
 assertEq(o.a === o.b, true);
 
 var o = wasmEvalText('(module (func) (func) (export "a" 0) (export "b" 1))');
 assertEq(Object.getOwnPropertyNames(o).sort().toString(), "a,b");
-assertEq(o.a.name, "0");
-assertEq(o.b.name, "1");
+assertEq(o.a.name, "wasm-function[0]");
+assertEq(o.b.name, "wasm-function[1]");
 assertEq(o.a === o.b, false);
 
 var o = wasmEvalText('(module (func (result i32) (i32.const 1)) (func (result i32) (i32.const 2)) (export "a" 0) (export "b" 1))');
@@ -125,6 +117,73 @@ wasmEvalText(code, {a:()=>{}});
 var code = '(module (import "a" "") (import "b" "c") (import "c" ""))';
 assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), TypeError, notFunction);
 wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:()=>{}});
+
+// ----------------------------------------------------------------------------
+// memory
+
+wasmEvalText('(module (memory 65536))');
+wasmEvalText('(module (memory 131072))');
+assertErrorMessage(() => wasmEvalText('(module (memory 0))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 1))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65535))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 131071))'), TypeError, /not a multiple of 0x10000/);
+assertErrorMessage(() => wasmEvalText('(module (memory 2147483648))'), TypeError, /initial memory size too big/);
+
+// May OOM, but must not crash:
+try {
+    wasmEvalText('(module (memory 2147418112))');
+} catch (e) {
+    assertEq(String(e).indexOf("out of memory") != -1, true);
+}
+
+assertErrorMessage(() => wasmEvalText('(module (export "" memory))'), TypeError, /no memory section/);
+
+var buf = wasmEvalText('(module (memory 65536) (export "" memory))');
+assertEq(buf instanceof ArrayBuffer, true);
+assertEq(buf.byteLength, 65536);
+
+assertErrorMessage(() => wasmEvalText('(module (memory 65536) (export "a" memory) (export "a" memory))'), TypeError, /duplicate export/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65536) (func) (export "a" memory) (export "a" 0))'), TypeError, /duplicate export/);
+var {a, b} = wasmEvalText('(module (memory 65536) (export "a" memory) (export "b" memory))');
+assertEq(a instanceof ArrayBuffer, true);
+assertEq(a, b);
+
+var obj = wasmEvalText('(module (memory 65536) (func (result i32) (i32.const 42)) (func (nop)) (export "a" memory) (export "b" 0) (export "c" 1))');
+assertEq(obj.a instanceof ArrayBuffer, true);
+assertEq(obj.b instanceof Function, true);
+assertEq(obj.c instanceof Function, true);
+assertEq(obj.a.byteLength, 65536);
+assertEq(obj.b(), 42);
+assertEq(obj.c(), undefined);
+
+var obj = wasmEvalText('(module (memory 65536) (func (result i32) (i32.const 42)) (export "" memory) (export "a" 0) (export "b" 0))');
+assertEq(obj instanceof ArrayBuffer, true);
+assertEq(obj.a instanceof Function, true);
+assertEq(obj.b instanceof Function, true);
+assertEq(obj.a, obj.b);
+assertEq(obj.byteLength, 65536);
+assertEq(obj.a(), 42);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65536 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a") (segment 2 "b")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+assertEq(new Uint8Array(buf)[1], 0);
+assertEq(new Uint8Array(buf)[2], 'b'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65535 "c")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
+
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65536 "a")) (export "" memory))'), TypeError, /data segment does not fit/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65535 "ab")) (export "" memory))'), TypeError, /data segment does not fit/);
 
 // ----------------------------------------------------------------------------
 // locals

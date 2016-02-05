@@ -14,7 +14,7 @@
 #include <map>
 #include <vector>
 
-#include "woff2.h"
+#include "woff2_dec.h"
 
 // The OpenType Font File
 // http://www.microsoft.com/typography/otspec/cmap.htm
@@ -464,9 +464,11 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
 }
 
 bool ProcessWOFF2(ots::OpenTypeFile *header,
-                  ots::Font *font,
-                  ots::OTSStream *output, const uint8_t *data, size_t length) {
-  size_t decompressed_size = ots::ComputeWOFF2FinalSize(data, length);
+                  ots::OTSStream *output,
+                  const uint8_t *data,
+                  size_t length,
+                  uint32_t index) {
+  size_t decompressed_size = woff2::ComputeWOFF2FinalSize(data, length);
 
   if (decompressed_size == 0) {
     return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 is set to 0");
@@ -477,11 +479,17 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
   }
 
   std::vector<uint8_t> decompressed_buffer(decompressed_size);
-  if (!ots::ConvertWOFF2ToSFNT(font, &decompressed_buffer[0], decompressed_size,
-                               data, length)) {
+  if (!woff2::ConvertWOFF2ToTTF(&decompressed_buffer[0], decompressed_size,
+                                data, length)) {
     return OTS_FAILURE_MSG_HDR("Failed to convert WOFF 2.0 font to SFNT");
   }
-  return ProcessTTF(header, font, output, &decompressed_buffer[0], decompressed_size);
+
+  if (data[4] == 't' && data[5] == 't' && data[6] == 'c' && data[7] == 'f') {
+    return ProcessTTC(header, output, &decompressed_buffer[0], decompressed_size, index);
+  } else {
+    ots::Font font(header);
+    return ProcessTTF(header, &font, output, &decompressed_buffer[0], decompressed_size);
+  }
 }
 
 ots::TableAction GetTableAction(ots::OpenTypeFile *header, uint32_t tag) {
@@ -885,7 +893,7 @@ bool OTSContext::Process(OTSStream *output,
   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {
     result = ProcessWOFF(&header, &font, output, data, length);
   } else if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == '2') {
-    result = ProcessWOFF2(&header, &font, output, data, length);
+    result = ProcessWOFF2(&header, output, data, length, index);
   } else if (data[0] == 't' && data[1] == 't' && data[2] == 'c' && data[3] == 'f') {
     result = ProcessTTC(&header, output, data, length, index);
   } else {

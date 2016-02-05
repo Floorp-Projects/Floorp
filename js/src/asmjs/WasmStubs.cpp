@@ -466,7 +466,8 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
 
     // 1. Descriptor
     size_t argOffset = 0;
-    uint32_t descriptor = MakeFrameDescriptor(jitFramePushed, JitFrame_Entry);
+    uint32_t descriptor = MakeFrameDescriptor(jitFramePushed, JitFrame_Entry,
+                                              JitFrameLayout::Size());
     masm.storePtr(ImmWord(uintptr_t(descriptor)), Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 

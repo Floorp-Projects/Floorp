@@ -163,7 +163,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.subStackPtrFrom(r19);
 
     // Push the frameDescriptor.
-    masm.makeFrameDescriptor(r19, JitFrame_Entry);
+    masm.makeFrameDescriptor(r19, JitFrame_Entry, JitFrameLayout::Size());
     masm.Push(r19);
 
     Label osrReturnPoint;
@@ -186,7 +186,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
         // Enter exit frame.
         masm.addPtr(Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), r19);
-        masm.makeFrameDescriptor(r19, JitFrame_BaselineJS);
+        masm.makeFrameDescriptor(r19, JitFrame_BaselineJS, ExitFrameLayout::Size());
         masm.asVIXL().Push(x19, xzr); // Push xzr for a fake return address.
         // No GC things to mark: push a bare token.
         masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
@@ -396,7 +396,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.Lsl(x6, x6, 3);
 
     // Make that into a frame descriptor.
-    masm.makeFrameDescriptor(r6, JitFrame_Rectifier);
+    masm.makeFrameDescriptor(r6, JitFrame_Rectifier, JitFrameLayout::Size());
 
     masm.push(r0,  // Number of actual arguments.
               r1,  // Callee token.
@@ -948,7 +948,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     // Going into the conditionals, we will have:
     //      FrameDescriptor.size in scratch1
     //      FrameDescriptor.type in scratch2
-    masm.and32(Imm32((1 << FRAMESIZE_SHIFT) - 1), scratch1, scratch2);
+    masm.and32(Imm32((1 << FRAMETYPE_BITS) - 1), scratch1, scratch2);
     masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), scratch1);
 
     // Handling of each case is dependent on FrameDescriptor.type
