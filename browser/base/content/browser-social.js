@@ -370,7 +370,7 @@ SocialFlyout = {
     // the xbl bindings for the iframe probably don't exist yet, so we can't
     // access iframe.messageManager directly - but can get at it with this dance.
     let mm = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
-    mm.sendAsyncMessage("Social:SetErrorURL", null,
+    mm.sendAsyncMessage("Social:SetErrorURL",
                         { template: "about:socialerror?mode=compactInfo&origin=%{origin}" });
   },
 
@@ -512,7 +512,7 @@ SocialShare = {
     iframe.setAttribute("messagemanagergroup", "social");
     panel.lastChild.appendChild(iframe);
     let mm = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
-    mm.sendAsyncMessage("Social:SetErrorURL", null,
+    mm.sendAsyncMessage("Social:SetErrorURL",
                         { template: "about:socialerror?mode=compactInfo&origin=%{origin}&url=%{url}" });
 
     this.populateProviderMenu();

@@ -12,10 +12,20 @@ var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { Tools } = require("devtools/client/main");
 var { isTargetSupported } = Tools.scratchpad;
 
-Tools.scratchpad.isTargetSupported = () => true;
+function pushPrefEnv() {
+  let deferred = promise.defer();
+  let options = {"set":
+      [["devtools.scratchpad.enabled", true]
+  ]};
+  SpecialPowers.pushPrefEnv(options, deferred.resolve);
+  return deferred.promise;
+}
 
 add_task(function*() {
   waitForExplicitFinish();
+
+  yield pushPrefEnv();
+
   yield loadTab(TEST_URI);
 
   info("Opening toolbox with Scratchpad panel");

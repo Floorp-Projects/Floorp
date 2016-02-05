@@ -386,7 +386,7 @@ Tools.scratchpad = {
   commands: "devtools/client/scratchpad/scratchpad-commands",
 
   isTargetSupported: function(target) {
-    return target.isRemote;
+    return target.hasActor("console");
   },
 
   build: function(iframeWindow, toolbox) {

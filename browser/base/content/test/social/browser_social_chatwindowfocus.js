@@ -40,13 +40,12 @@ function openChatViaWorkerMessage(port, data, callback) {
                       // so the child has been added, but we don't know if it
                       // has been intialized - re-request it and the callback
                       // means it's done.  Minimized, same as the worker.
-                      chatbar.openChat(SocialSidebar.provider.origin,
-                                       SocialSidebar.provider.name,
-                                       data,
-                                       "minimized",
-                                       function() {
-                                          callback();
-                                       });
+                      chatbar.openChat({
+                        origin: SocialSidebar.provider.origin,
+                        title: SocialSidebar.provider.name,
+                        url: data,
+                        mode: "minimized"
+                      }, function() { callback(); });
                    },
                    "No new chat appeared");
 }

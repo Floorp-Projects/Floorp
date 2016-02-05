@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@media not print {
+  /* N.B.: Remember to update ImageDocument.css in the tree or reftests may fail! */
+
+  body {
+    color: #eee;
+    background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
+  }
+
+  img.transparent {
+    background: hsl(0,0%,90%) url("chrome://global/skin/media/imagedoc-lightnoise.png");
+    color: #222;
+  }
+}
