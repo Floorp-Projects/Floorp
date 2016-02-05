@@ -116,7 +116,14 @@ public:
 #ifdef USE_SKIA_GPU
   bool InitWithGrContext(GrContext* aGrContext,
                          const IntSize &aSize,
-                         SurfaceFormat aFormat) override;
+                         SurfaceFormat aFormat,
+                         bool aCached);
+  virtual bool
+    InitWithGrContext(GrContext* aGrContext,
+                      const IntSize &aSize,
+                      SurfaceFormat aFormat) override {
+    return InitWithGrContext(aGrContext, aSize, aFormat, false);
+  }
 #endif
 
   // Skia assumes that texture sizes fit in 16-bit signed integers.

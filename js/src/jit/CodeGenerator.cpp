@@ -2027,7 +2027,8 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
 #endif
 
     // Create descriptor signifying end of Ion frame.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+                                              JitStubFrameLayout::Size());
     masm.Push(Imm32(descriptor));
 
     // Call into the stubcode.
@@ -2605,6 +2606,8 @@ CodeGenerator::visitMoveGroup(LMoveGroup* group)
     }
 
     masm.propagateOOM(resolver.resolve());
+    if (masm.oom())
+        return;
 
     MoveEmitter emitter(masm);
 
@@ -3442,7 +3445,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+                                              JitFrameLayout::Size());
     masm.Push(Imm32(call->numActualArgs()));
     masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
     masm.Push(Imm32(descriptor));
@@ -3556,7 +3560,8 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+                                              JitFrameLayout::Size());
     masm.Push(Imm32(call->numActualArgs()));
     masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
     masm.Push(Imm32(descriptor));
@@ -3854,7 +3859,7 @@ CodeGenerator::emitApplyGeneric(T* apply)
         unsigned pushed = masm.framePushed();
         Register stackSpace = extraStackSpace;
         masm.addPtr(Imm32(pushed), stackSpace);
-        masm.makeFrameDescriptor(stackSpace, JitFrame_IonJS);
+        masm.makeFrameDescriptor(stackSpace, JitFrame_IonJS, JitFrameLayout::Size());
 
         masm.Push(argcreg);
         masm.Push(calleereg);
@@ -6754,13 +6759,6 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
     Register temp0 = regs.takeAny();
 
-    // The caller did not push an exit frame on the stack, it pushed a
-    // JitFrameLayout.  We modify the descriptor to be a valid exit frame and
-    // restore it once the lazy link is complete.
-    Address descriptor(masm.getStackPointer(), CommonFrameLayout::offsetOfDescriptor());
-    size_t convertToExitFrame = JitFrameLayout::Size() - ExitFrameLayout::Size();
-    masm.addPtr(Imm32(convertToExitFrame << FRAMESIZE_SHIFT), descriptor);
-
     masm.enterFakeExitFrame(LazyLinkExitFrameLayoutToken);
     masm.PushStubCode();
 
@@ -6770,8 +6768,6 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, LazyLinkTopActivation));
 
     masm.leaveExitFrame(/* stub code */ sizeof(JitCode*));
-
-    masm.addPtr(Imm32(- (convertToExitFrame << FRAMESIZE_SHIFT)), descriptor);
 
 #ifdef JS_USE_LINK_REGISTER
     // Restore the return address such that the emitPrologue function of the

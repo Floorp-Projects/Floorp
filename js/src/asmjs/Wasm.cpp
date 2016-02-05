@@ -20,17 +20,15 @@
 
 #include "jsprf.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmText.h"
+#include "vm/ArrayBufferObject.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::wasm;
-
-using mozilla::PodCopy;
 
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
@@ -298,6 +296,16 @@ DecodeConversionOperator(FunctionDecoder& f, ExprType expected,
 }
 
 static bool
+DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType expected)
+{
+    return DecodeExpr(f, ExprType::I32) &&
+           DecodeExpr(f, expected) &&
+           (hasElse
+            ? DecodeExpr(f, expected)
+            : CheckType(f, ExprType::Void, expected));
+}
+
+static bool
 DecodeExpr(FunctionDecoder& f, ExprType expected)
 {
     Expr expr;
@@ -319,6 +327,10 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeSetLocal(f, expected);
       case Expr::Block:
         return DecodeBlock(f, expected);
+      case Expr::If:
+        return DecodeIfElse(f, /* hasElse */ false, expected);
+      case Expr::IfElse:
+        return DecodeIfElse(f, /* hasElse */ true, expected);
       case Expr::I32Clz:
         return DecodeUnaryOperator(f, expected, ExprType::I32);
       case Expr::I32Ctz:
@@ -501,7 +513,7 @@ DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator
     if (!fg.bytecode().resize(bodyLength))
         return false;
 
-    PodCopy(fg.bytecode().begin(), bodyBegin, bodyLength);
+    memcpy(fg.bytecode().begin(), bodyBegin, bodyLength);
     return true;
 }
 
@@ -522,14 +534,6 @@ struct ImportName
 };
 
 typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
-
-struct DynamicLinkData
-{
-    ImportNameVector importNames;
-    ExportMap exportMap;
-};
-
-typedef UniquePtr<DynamicLinkData> UniqueDynamicLinkData;
 
 /*****************************************************************************/
 // wasm decoding and generation
@@ -631,7 +635,7 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
+DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     if (!d.readCStringIf(FuncSubsection))
         return Fail(cx, d, "expected 'func' tag");
@@ -643,30 +647,22 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkDa
     if (!init->imports.emplaceBack(sig))
         return false;
 
-    const char* moduleStr;
-    if (!d.readCString(&moduleStr))
+    UniqueChars moduleName = d.readCString();
+    if (!moduleName)
         return Fail(cx, d, "expected import module name");
 
-    if (!*moduleStr)
+    if (!*moduleName.get())
         return Fail(cx, d, "module name cannot be empty");
 
-    UniqueChars moduleName = DuplicateString(moduleStr);
-    if (!moduleName)
-        return false;
-
-    const char* funcStr;
-    if (!d.readCString(&funcStr))
+    UniqueChars funcName = d.readCString();
+    if (!funcName)
         return Fail(cx, d, "expected import func name");
 
-    UniqueChars funcName = DuplicateString(funcStr);
-    if (!funcName)
-        return false;
-
-    return link->importNames.emplaceBack(Move(moduleName), Move(funcName));
+    return importNames->emplaceBack(Move(moduleName), Move(funcName));
 }
 
 static bool
-DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, DynamicLinkData* link)
+DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     if (!d.readCStringIf(ImportSection))
         return true;
@@ -683,7 +679,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Dynami
         return Fail(cx, d, "too many imports");
 
     for (uint32_t i = 0; i < numImports; i++) {
-        if (!DecodeImport(cx, d, init, link))
+        if (!DecodeImport(cx, d, init, importNames))
             return false;
     }
 
@@ -694,11 +690,67 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Dynami
 }
 
 static bool
-DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
+                    MutableHandle<ArrayBufferObject*> heap)
 {
-    if (!d.readCStringIf(FuncSubsection))
-        return Fail(cx, d, "expected 'func' tag");
+    if (!d.readCStringIf(MemorySection))
+        return true;
 
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected memory section byte size");
+
+    if (!d.readCStringIf(FieldInitial))
+        return Fail(cx, d, "expected memory section initial field");
+
+    uint32_t initialHeapSize;
+    if (!d.readVarU32(&initialHeapSize))
+        return Fail(cx, d, "expected initial memory size");
+
+    if (initialHeapSize < PageSize || initialHeapSize % PageSize != 0)
+        return Fail(cx, d, "initial memory size not a multiple of 0x10000");
+
+    if (initialHeapSize > INT32_MAX)
+        return Fail(cx, d, "initial memory size too big");
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "memory section byte size mismatch");
+
+    bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
+    heap.set(ArrayBufferObject::createForWasm(cx, initialHeapSize, signalsForOOB));
+    if (!heap)
+        return false;
+
+    mg.initHeapUsage(HeapUsage::Unshared);
+    return true;
+}
+
+typedef HashSet<const char*, CStringHasher> CStringSet;
+
+static UniqueChars
+DecodeFieldName(JSContext* cx, Decoder& d, CStringSet* dupSet)
+{
+    UniqueChars fieldName = d.readCString();
+    if (!fieldName) {
+        Fail(cx, d, "expected export external name string");
+        return nullptr;
+    }
+
+    CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
+    if (p) {
+        Fail(cx, d, "duplicate export");
+        return nullptr;
+    }
+
+    if (!dupSet->add(p, fieldName.get()))
+        return nullptr;
+
+    return Move(fieldName);
+}
+
+static bool
+DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
+{
     uint32_t funcIndex;
     if (!d.readVarU32(&funcIndex))
         return Fail(cx, d, "expected export internal index");
@@ -706,33 +758,28 @@ DecodeExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* li
     if (funcIndex >= mg.numFuncSigs())
         return Fail(cx, d, "export function index out of range");
 
-    uint32_t exportIndex;
-    if (!mg.declareExport(funcIndex, &exportIndex))
+    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
+    if (!fieldName)
         return false;
 
-    ExportMap& exportMap = link->exportMap;
-
-    MOZ_ASSERT(exportIndex <= exportMap.exportNames.length());
-    if (exportIndex == exportMap.exportNames.length()) {
-        UniqueChars funcName(JS_smprintf("%u", unsigned(funcIndex)));
-        if (!funcName || !exportMap.exportNames.emplaceBack(Move(funcName)))
-            return false;
-    }
-
-    if (!exportMap.fieldsToExports.append(exportIndex))
-        return false;
-
-    const char* chars;
-    if (!d.readCString(&chars))
-        return Fail(cx, d, "expected export external name string");
-
-    return exportMap.fieldNames.emplaceBack(DuplicateString(chars));
+    return mg.declareExport(Move(fieldName), funcIndex);
 }
 
-typedef HashSet<const char*, CStringHasher> CStringSet;
+static bool
+DecodeMemoryExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
+{
+    if (!mg.usesHeap())
+        return Fail(cx, d, "cannot export memory with no memory section");
+
+    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
+    if (!fieldName)
+        return false;
+
+    return mg.addMemoryExport(Move(fieldName));
+}
 
 static bool
-DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLinkData* link)
+DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     if (!d.readCStringIf(ExportSection))
         return true;
@@ -748,24 +795,24 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, DynamicLink
     if (numExports > MaxExports)
         return Fail(cx, d, "too many exports");
 
+    CStringSet dupSet(cx);
+    if (!dupSet.init(numExports))
+        return false;
+
     for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeExport(cx, d, mg, link))
-            return false;
+        if (d.readCStringIf(FuncSubsection)) {
+            if (!DecodeFunctionExport(cx, d, mg, &dupSet))
+                return false;
+        } else if (d.readCStringIf(MemorySubsection)) {
+            if (!DecodeMemoryExport(cx, d, mg, &dupSet))
+                return false;
+        } else {
+            return Fail(cx, d, "unknown export type");
+        }
     }
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "export section byte size mismatch");
-
-    CStringSet dupSet(cx);
-    if (!dupSet.init())
-        return false;
-    for (const UniqueChars& prevName : link->exportMap.fieldNames) {
-        CStringSet::AddPtr p = dupSet.lookupForAdd(prevName.get());
-        if (p)
-            return Fail(cx, d, "duplicate export");
-        if (!dupSet.add(p, prevName.get()))
-            return false;
-    }
 
     return true;
 }
@@ -854,17 +901,68 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
+DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+{
+    if (!d.readCStringIf(DataSection))
+        return true;
+
+    uint32_t sectionStart;
+    if (!d.startSection(&sectionStart))
+        return Fail(cx, d, "expected data section byte size");
+
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return Fail(cx, d, "expected number of data segments");
+
+    uint8_t* const heapBase = heap->dataPointer();
+    uint32_t const heapLength = heap->byteLength();
+    uint32_t prevEnd = 0;
+
+    for (uint32_t i = 0; i < numSegments; i++) {
+        if (!d.readCStringIf(SegmentSubsection))
+            return Fail(cx, d, "expected segment tag");
+
+        uint32_t dstOffset;
+        if (!d.readVarU32(&dstOffset))
+            return Fail(cx, d, "expected segment destination offset");
+
+        if (dstOffset < prevEnd)
+            return Fail(cx, d, "data segments must be disjoint and ordered");
+
+        uint32_t numBytes;
+        if (!d.readVarU32(&numBytes))
+            return Fail(cx, d, "expected segment size");
+
+        if (dstOffset > heapLength || heapLength - dstOffset < numBytes)
+            return Fail(cx, d, "data segment does not fit in memory");
+
+        const uint8_t* src;
+        if (!d.readData(numBytes, &src))
+            return Fail(cx, d, "data segment shorter than declared");
+
+        memcpy(heapBase + dstOffset, src, numBytes);
+        prevEnd = dstOffset + numBytes;
+    }
+
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "data section byte size mismatch");
+
+    return true;
+}
+
+static bool
 DecodeUnknownSection(JSContext* cx, Decoder& d)
 {
-    const char* sectionName;
-    if (!d.readCString(&sectionName))
+    UniqueChars sectionName = d.readCString();
+    if (!sectionName)
         return Fail(cx, d, "failed to read section name");
 
-    if (!strcmp(sectionName, SigSection) ||
-        !strcmp(sectionName, ImportSection) ||
-        !strcmp(sectionName, DeclSection) ||
-        !strcmp(sectionName, ExportSection) ||
-        !strcmp(sectionName, CodeSection))
+    if (!strcmp(sectionName.get(), SigSection) ||
+        !strcmp(sectionName.get(), ImportSection) ||
+        !strcmp(sectionName.get(), DeclSection) ||
+        !strcmp(sectionName.get(), ExportSection) ||
+        !strcmp(sectionName.get(), CodeSection) ||
+        !strcmp(sectionName.get(), DataSection))
     {
         return Fail(cx, d, "known section out of order");
     }
@@ -876,8 +974,9 @@ DecodeUnknownSection(JSContext* cx, Decoder& d)
 }
 
 static bool
-DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t length,
-             UniqueDynamicLinkData* dynamicLink, MutableHandle<WasmModuleObject*> moduleObj)
+DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t length,
+             ImportNameVector* importNames, UniqueExportMap* exportMap,
+             MutableHandle<ArrayBufferObject*> heap, MutableHandle<WasmModuleObject*> moduleObj)
 {
     Decoder d(bytes, bytes + length);
 
@@ -895,24 +994,26 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     if (!DecodeSignatureSection(cx, d, init.get()))
         return false;
 
-    *dynamicLink = MakeUnique<DynamicLinkData>();
-    if (!*dynamicLink)
-        return false;
-
-    if (!DecodeImportSection(cx, d, init.get(), dynamicLink->get()))
+    if (!DecodeImportSection(cx, d, init.get(), importNames))
         return false;
 
     if (!DecodeDeclarationSection(cx, d, init.get()))
         return false;
 
     ModuleGenerator mg(cx);
-    if (!mg.init(Move(init), Move(filename)))
+    if (!mg.init(Move(init), Move(file)))
         return false;
 
-    if (!DecodeExportsSection(cx, d, mg, dynamicLink->get()))
+    if (!DecodeMemorySection(cx, d, mg, heap))
+        return false;
+
+    if (!DecodeExportsSection(cx, d, mg))
         return false;
 
     if (!DecodeCodeSection(cx, d, mg))
+        return false;
+
+    if (!DecodeDataSection(cx, d, heap))
         return false;
 
     CacheableCharsVector funcNames;
@@ -928,7 +1029,7 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
     UniqueModuleData module;
     UniqueStaticLinkData staticLink;
     SlowFunctionVector slowFuncs(cx);
-    if (!mg.finish(Move(funcNames), &module, &staticLink, &slowFuncs))
+    if (!mg.finish(Move(funcNames), &module, &staticLink, exportMap, &slowFuncs))
         return false;
 
     moduleObj.set(WasmModuleObject::create(cx));
@@ -942,7 +1043,41 @@ DecodeModule(JSContext* cx, UniqueChars filename, const uint8_t* bytes, uint32_t
 }
 
 /*****************************************************************************/
-// JS entry points
+// Top-level functions
+
+bool
+wasm::HasCompilerSupport(ExclusiveContext* cx)
+{
+    if (!cx->jitSupportsFloatingPoint())
+        return false;
+
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
+    return false;
+#else
+    return true;
+#endif
+}
+
+static bool
+WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(HasCompilerSupport(cx));
+    return true;
+}
+
+static bool
+CheckCompilerSupport(JSContext* cx)
+{
+    if (!HasCompilerSupport(cx)) {
+#ifdef JS_MORE_DETERMINISTIC
+        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
+#endif
+        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
+        return false;
+    }
+    return true;
+}
 
 static bool
 GetProperty(JSContext* cx, HandleObject obj, const char* utf8Chars, MutableHandleValue v)
@@ -987,46 +1122,9 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
 }
 
 static bool
-SupportsWasm(JSContext* cx)
-{
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return false;
-#endif
-
-    if (!cx->jitSupportsFloatingPoint())
-        return false;
-
-    if (cx->gcSystemPageSize() != AsmJSPageSize)
-        return false;
-
-    return true;
-}
-
-static bool
-CheckWasmSupport(JSContext* cx)
-{
-    if (!SupportsWasm(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif // JS_MORE_DETERMINISTIC
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-    return true;
-}
-
-static bool
-WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(SupportsWasm(cx));
-    return true;
-}
-
-static bool
 WasmEval(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!CheckWasmSupport(cx))
+    if (!CheckCompilerSupport(cx))
         return false;
 
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1062,30 +1160,26 @@ WasmEval(JSContext* cx, unsigned argc, Value* vp)
         importObj = &args[1].toObject();
     }
 
-    UniqueChars filename;
-    if (!DescribeScriptedCaller(cx, &filename))
+    UniqueChars file;
+    if (!DescribeScriptedCaller(cx, &file))
         return false;
 
-    UniqueDynamicLinkData link;
+    ImportNameVector importNames;
+    UniqueExportMap exportMap;
+    Rooted<ArrayBufferObject*> heap(cx);
     Rooted<WasmModuleObject*> moduleObj(cx);
-    if (!DecodeModule(cx, Move(filename), bytes, length, &link, &moduleObj)) {
+    if (!DecodeModule(cx, Move(file), bytes, length, &importNames, &exportMap, &heap, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
     }
 
-    Module& module = moduleObj->module();
-
-    Rooted<ArrayBufferObject*> heap(cx);
-    if (module.usesHeap())
-        return Fail(cx, "Heap not implemented yet");
-
     Rooted<FunctionVector> imports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, link->importNames, &imports))
+    if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
     RootedObject exportObj(cx);
-    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, link->exportMap, &exportObj))
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
         return false;
 
     args.rval().setObject(*exportObj);
@@ -1113,7 +1207,7 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    wasm::UniqueBytecode bytes = wasm::TextToBinary(twoByteChars.twoByteChars(), &error);
+    UniqueBytecode bytes = TextToBinary(twoByteChars.twoByteChars(), &error);
     if (!bytes) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              error.get() ? error.get() : "out of memory");

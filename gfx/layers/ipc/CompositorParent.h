@@ -529,6 +529,9 @@ protected:
   // indicates if plugin window visibility and metric updates are currently
   // being defered due to a scroll operation.
   bool mDeferPluginWindows;
+  // indicates if the plugin windows were hidden, and need to be made
+  // visible again even if their geometry has not changed.
+  bool mPluginWindowsHidden;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);

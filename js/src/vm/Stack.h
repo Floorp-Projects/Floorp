@@ -1581,9 +1581,6 @@ class JitActivationIterator : public ActivationIterator
         settle();
         return *this;
     }
-
-    // Returns the bottom and top addresses of the current JitActivation.
-    void jitStackRange(uintptr_t*& min, uintptr_t*& end);
 };
 
 } // namespace jit

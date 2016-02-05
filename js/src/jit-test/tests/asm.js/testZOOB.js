@@ -220,7 +220,7 @@ function test(tester, ctor, shift) {
     for (var i = 0; i < arr.length; i++)
         arr[i] = Math.imul(i, Math.imul((i & 1), 2) - 1);
     for (scale of [0,1,2,3]) {
-        for (disp of [0,1,2,8,Math.pow(2,31)-1,Math.pow(2,31),Math.pow(2,32)-1])
+        for (disp of [0,1,2,8,Math.pow(2,30),Math.pow(2,31)-1,Math.pow(2,31),Math.pow(2,32)-1])
             tester(ctor, shift, scale, disp);
     }
     for (var i = 0; i < arr.length; i++) {

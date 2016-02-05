@@ -997,7 +997,11 @@ GetPropertyValuesPairs(JSContext* aCx,
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           nsCSSProps::eEnabledForAllContent);
     if (property != eCSSProperty_UNKNOWN &&
-        nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None) {
+        (nsCSSProps::IsShorthand(property) ||
+         nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None)) {
+      // Only need to check for longhands being animatable, as the
+      // StyleAnimationValue::ComputeValues calls later on will check for
+      // a shorthand's components being animatable.
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
@@ -1629,6 +1633,12 @@ KeyframeEffectReadOnly::Constructor(
   if (!aTarget) {
     // We don't support null targets yet.
     aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
+    return nullptr;
+  }
+
+  if (!aTarget->GetCurrentDoc()) {
+    // Bug 1245748: We don't support targets that are not in a document yet.
+    aRv.Throw(NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR);
     return nullptr;
   }
 

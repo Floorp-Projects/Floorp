@@ -371,7 +371,39 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
-    def _handle_libraries(self, context):
+    def _handle_linkables(self, context, passthru):
+        has_linkables = False
+
+        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
+            program = context.get(kind)
+            if program:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" as %s name, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program)
+                self._linkage.append((context, self._binaries[program],
+                    kind.replace('PROGRAM', 'USE_LIBS')))
+                has_linkables = True
+
+        for kind, cls in [
+                ('SIMPLE_PROGRAMS', SimpleProgram),
+                ('CPP_UNIT_TESTS', SimpleProgram),
+                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
+            for program in context[kind]:
+                if program in self._binaries:
+                    raise SandboxValidationError(
+                        'Cannot use "%s" in %s, '
+                        'because it is already used in %s' % (program, kind,
+                        self._binaries[program].relativedir), context)
+                self._binaries[program] = cls(context, program,
+                    is_unit_test=kind == 'CPP_UNIT_TESTS')
+                self._linkage.append((context, self._binaries[program],
+                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
+                    else 'USE_LIBS'))
+                has_linkables = True
+
         host_libname = context.get('HOST_LIBRARY_NAME')
         libname = context.get('LIBRARY_NAME')
 
@@ -382,6 +414,7 @@ class TreeMetadataEmitter(LoggingMixin):
             lib = HostLibrary(context, host_libname)
             self._libs[host_libname].append(lib)
             self._linkage.append((context, lib, 'HOST_USE_LIBS'))
+            has_linkables = True
 
         final_lib = context.get('FINAL_LIBRARY')
         if not libname and final_lib:
@@ -528,6 +561,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = SharedLibrary(context, libname, **shared_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+                has_linkables = True
                 if is_component and not context['NO_COMPONENTS_MANIFEST']:
                     yield ChromeManifestEntry(context,
                         'components/components.manifest',
@@ -543,6 +577,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+                has_linkables = True
 
             if lib_defines:
                 if not libname:
@@ -550,246 +585,12 @@ class TreeMetadataEmitter(LoggingMixin):
                         'LIBRARY_NAME to take effect', context)
                 lib.lib_defines.update(lib_defines)
 
-    def emit_from_context(self, context):
-        """Convert a Context to tree metadata objects.
+        # Only emit sources if we have linkables defined in the same context.
+        # Note the linkables are not emitted in this function, but much later,
+        # after aggregation (because of e.g. USE_LIBS processing).
+        if not has_linkables:
+            return
 
-        This is a generator of mozbuild.frontend.data.ContextDerived instances.
-        """
-
-        # We only want to emit an InstallationTarget if one of the consulted
-        # variables is defined. Later on, we look up FINAL_TARGET, which has
-        # the side-effect of populating it. So, we need to do this lookup
-        # early.
-        if any(k in context for k in ('FINAL_TARGET', 'XPI_NAME', 'DIST_SUBDIR')):
-            yield InstallationTarget(context)
-
-        # We always emit a directory traversal descriptor. This is needed by
-        # the recursive make backend.
-        for o in self._emit_directory_traversal_from_context(context): yield o
-
-        for path in context['CONFIGURE_SUBST_FILES']:
-            yield self._create_substitution(ConfigFileSubstitution, context,
-                path)
-
-        for obj in self._process_xpidl(context):
-            yield obj
-
-        # Proxy some variables as-is until we have richer classes to represent
-        # them. We should aim to keep this set small because it violates the
-        # desired abstraction of the build definition away from makefiles.
-        passthru = VariablePassthru(context)
-        varlist = [
-            'ALLOW_COMPILER_WARNINGS',
-            'ANDROID_APK_NAME',
-            'ANDROID_APK_PACKAGE',
-            'ANDROID_GENERATED_RESFILES',
-            'DISABLE_STL_WRAPPING',
-            'EXTRA_DSO_LDOPTS',
-            'USE_STATIC_LIBS',
-            'PYTHON_UNIT_TESTS',
-            'RCFILE',
-            'RESFILE',
-            'RCINCLUDE',
-            'DEFFILE',
-            'WIN32_EXE_LDFLAGS',
-            'LD_VERSION_SCRIPT',
-            'USE_EXTENSION_MANIFEST',
-            'NO_JS_MANIFEST',
-            'HAS_MISC_RULE',
-        ]
-        for v in varlist:
-            if v in context and context[v]:
-                passthru.variables[v] = context[v]
-
-        if context.config.substs.get('OS_TARGET') == 'WINNT' and \
-                context['DELAYLOAD_DLLS']:
-            context['LDFLAGS'].extend([('-DELAYLOAD:%s' % dll)
-                for dll in context['DELAYLOAD_DLLS']])
-            context['OS_LIBS'].append('delayimp')
-
-        for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'ASFLAGS',
-                  'LDFLAGS', 'HOST_CFLAGS', 'HOST_CXXFLAGS']:
-            if v in context and context[v]:
-                passthru.variables['MOZBUILD_' + v] = context[v]
-
-        # NO_VISIBILITY_FLAGS is slightly different
-        if context['NO_VISIBILITY_FLAGS']:
-            passthru.variables['VISIBILITY_FLAGS'] = ''
-
-        if isinstance(context, TemplateContext) and context.template == 'Gyp':
-            passthru.variables['IS_GYP_DIR'] = True
-
-        dist_install = context['DIST_INSTALL']
-        if dist_install is True:
-            passthru.variables['DIST_INSTALL'] = True
-        elif dist_install is False:
-            passthru.variables['NO_DIST_INSTALL'] = True
-
-        for obj in self._process_sources(context, passthru):
-            yield obj
-
-        generated_files = set()
-        for obj in self._process_generated_files(context):
-            generated_files.add(obj.output)
-            yield obj
-
-        for obj in self._process_test_harness_files(context):
-            yield obj
-
-        defines = context.get('DEFINES')
-        if defines:
-            yield Defines(context, defines)
-
-        host_defines = context.get('HOST_DEFINES')
-        if host_defines:
-            yield HostDefines(context, host_defines)
-
-        self._handle_programs(context)
-
-        simple_lists = [
-            ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
-            ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
-            ('IPDL_SOURCES', IPDLFile),
-            ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
-            ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
-            ('TEST_WEBIDL_FILES', TestWebIDLFile),
-            ('WEBIDL_FILES', WebIDLFile),
-            ('WEBIDL_EXAMPLE_INTERFACES', ExampleWebIDLInterface),
-        ]
-        for context_var, klass in simple_lists:
-            for name in context.get(context_var, []):
-                yield klass(context, name)
-
-        for local_include in context.get('LOCAL_INCLUDES', []):
-            if (not isinstance(local_include, ObjDirPath) and
-                    not os.path.exists(local_include.full_path)):
-                raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                    'does not exist: %s (resolved to %s)' % (local_include,
-                    local_include.full_path), context)
-            yield LocalInclude(context, local_include)
-
-        components = []
-        for var, cls in (
-            ('BRANDING_FILES', BrandingFiles),
-            ('EXPORTS', Exports),
-            ('FINAL_TARGET_FILES', FinalTargetFiles),
-            ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
-            ('TESTING_FILES', TestingFiles),
-        ):
-            all_files = context.get(var)
-            if not all_files:
-                continue
-            if dist_install is False and var != 'TESTING_FILES':
-                raise SandboxValidationError(
-                    '%s cannot be used with DIST_INSTALL = False' % var,
-                    context)
-            has_prefs = False
-            has_resources = False
-            for base, files in all_files.walk():
-                if base == 'components':
-                    components.extend(files)
-                if base == 'defaults/pref':
-                    has_prefs = True
-                if mozpath.split(base)[0] == 'res':
-                    has_resources = True
-                for f in files:
-                    if (var == 'FINAL_TARGET_PP_FILES' and
-                        not isinstance(f, SourcePath)):
-                        raise SandboxValidationError(
-                                ('Only source directory paths allowed in ' +
-                                'FINAL_TARGET_PP_FILES: %s')
-                                % (f,), context)
-                    if not isinstance(f, ObjDirPath):
-                        path = f.full_path
-                        if not os.path.exists(path):
-                            raise SandboxValidationError(
-                                'File listed in %s does not exist: %s'
-                                % (var, path), context)
-                    else:
-                        if f.target_basename not in generated_files:
-                            raise SandboxValidationError(
-                                ('Objdir file listed in %s not in ' +
-                                 'GENERATED_FILES: %s') % (var, f), context)
-
-            # Addons (when XPI_NAME is defined) and Applications (when
-            # DIST_SUBDIR is defined) use a different preferences directory
-            # (default/preferences) from the one the GRE uses (defaults/pref).
-            # Hence, we move the files from the latter to the former in that
-            # case.
-            if has_prefs and (context.get('XPI_NAME') or
-                              context.get('DIST_SUBDIR')):
-                all_files.defaults.preferences += all_files.defaults.pref
-                del all_files.defaults._children['pref']
-
-            if has_resources and (context.get('DIST_SUBDIR') or
-                                  context.get('XPI_NAME')):
-                raise SandboxValidationError(
-                    'RESOURCES_FILES cannot be used with DIST_SUBDIR or '
-                    'XPI_NAME.', context)
-
-            yield cls(context, all_files)
-
-        # Check for manifest declarations in EXTRA_{PP_,}COMPONENTS.
-        if any(e.endswith('.js') for e in components) and \
-                not any(e.endswith('.manifest') for e in components) and \
-                not context.get('NO_JS_MANIFEST', False):
-            raise SandboxValidationError('A .js component was specified in EXTRA_COMPONENTS '
-                                         'or EXTRA_PP_COMPONENTS without a matching '
-                                         '.manifest file.  See '
-                                         'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
-                                         context);
-
-        for c in components:
-            if c.endswith('.manifest'):
-                yield ChromeManifestEntry(context, 'chrome.manifest',
-                                          Manifest('components',
-                                                   mozpath.basename(c)))
-
-        for obj in self._handle_libraries(context):
-            yield obj
-
-        for obj in self._process_test_manifests(context):
-            yield obj
-
-        for obj in self._process_jar_manifests(context):
-            yield obj
-
-        for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
-            yield ContextWrapped(context, jar)
-
-        for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
-            yield ContextWrapped(context, data)
-
-        for (symbol, cls) in [
-                ('ANDROID_RES_DIRS', AndroidResDirs),
-                ('ANDROID_EXTRA_RES_DIRS', AndroidExtraResDirs),
-                ('ANDROID_ASSETS_DIRS', AndroidAssetsDirs)]:
-            paths = context.get(symbol)
-            if not paths:
-                continue
-            for p in paths:
-                if isinstance(p, SourcePath) and not os.path.isdir(p.full_path):
-                    raise SandboxValidationError('Directory listed in '
-                        '%s is not a directory: \'%s\'' %
-                            (symbol, p.full_path), context)
-            yield cls(context, paths)
-
-        android_extra_packages = context.get('ANDROID_EXTRA_PACKAGES')
-        if android_extra_packages:
-            yield AndroidExtraPackages(context, android_extra_packages)
-
-        if passthru.variables:
-            yield passthru
-
-    def _create_substitution(self, cls, context, path):
-        sub = cls(context)
-        sub.input_path = '%s.in' % path.full_path
-        sub.output_path = path.translated
-        sub.relpath = path
-
-        return sub
-
-    def _process_sources(self, context, passthru):
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
         all_flags = {}
@@ -891,6 +692,241 @@ class TreeMetadataEmitter(LoggingMixin):
             if flags.flags:
                 ext = mozpath.splitext(f)[1]
                 yield PerSourceFlag(context, f, flags.flags)
+
+
+    def emit_from_context(self, context):
+        """Convert a Context to tree metadata objects.
+
+        This is a generator of mozbuild.frontend.data.ContextDerived instances.
+        """
+
+        # We only want to emit an InstallationTarget if one of the consulted
+        # variables is defined. Later on, we look up FINAL_TARGET, which has
+        # the side-effect of populating it. So, we need to do this lookup
+        # early.
+        if any(k in context for k in ('FINAL_TARGET', 'XPI_NAME', 'DIST_SUBDIR')):
+            yield InstallationTarget(context)
+
+        # We always emit a directory traversal descriptor. This is needed by
+        # the recursive make backend.
+        for o in self._emit_directory_traversal_from_context(context): yield o
+
+        for path in context['CONFIGURE_SUBST_FILES']:
+            yield self._create_substitution(ConfigFileSubstitution, context,
+                path)
+
+        for obj in self._process_xpidl(context):
+            yield obj
+
+        # Proxy some variables as-is until we have richer classes to represent
+        # them. We should aim to keep this set small because it violates the
+        # desired abstraction of the build definition away from makefiles.
+        passthru = VariablePassthru(context)
+        varlist = [
+            'ALLOW_COMPILER_WARNINGS',
+            'ANDROID_APK_NAME',
+            'ANDROID_APK_PACKAGE',
+            'ANDROID_GENERATED_RESFILES',
+            'DISABLE_STL_WRAPPING',
+            'EXTRA_DSO_LDOPTS',
+            'USE_STATIC_LIBS',
+            'PYTHON_UNIT_TESTS',
+            'RCFILE',
+            'RESFILE',
+            'RCINCLUDE',
+            'DEFFILE',
+            'WIN32_EXE_LDFLAGS',
+            'LD_VERSION_SCRIPT',
+            'USE_EXTENSION_MANIFEST',
+            'NO_JS_MANIFEST',
+            'HAS_MISC_RULE',
+        ]
+        for v in varlist:
+            if v in context and context[v]:
+                passthru.variables[v] = context[v]
+
+        if context.config.substs.get('OS_TARGET') == 'WINNT' and \
+                context['DELAYLOAD_DLLS']:
+            context['LDFLAGS'].extend([('-DELAYLOAD:%s' % dll)
+                for dll in context['DELAYLOAD_DLLS']])
+            context['OS_LIBS'].append('delayimp')
+
+        for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'ASFLAGS',
+                  'LDFLAGS', 'HOST_CFLAGS', 'HOST_CXXFLAGS']:
+            if v in context and context[v]:
+                passthru.variables['MOZBUILD_' + v] = context[v]
+
+        # NO_VISIBILITY_FLAGS is slightly different
+        if context['NO_VISIBILITY_FLAGS']:
+            passthru.variables['VISIBILITY_FLAGS'] = ''
+
+        if isinstance(context, TemplateContext) and context.template == 'Gyp':
+            passthru.variables['IS_GYP_DIR'] = True
+
+        dist_install = context['DIST_INSTALL']
+        if dist_install is True:
+            passthru.variables['DIST_INSTALL'] = True
+        elif dist_install is False:
+            passthru.variables['NO_DIST_INSTALL'] = True
+
+        generated_files = set()
+        for obj in self._process_generated_files(context):
+            generated_files.add(obj.output)
+            yield obj
+
+        for obj in self._process_test_harness_files(context):
+            yield obj
+
+        defines = context.get('DEFINES')
+        if defines:
+            yield Defines(context, defines)
+
+        host_defines = context.get('HOST_DEFINES')
+        if host_defines:
+            yield HostDefines(context, host_defines)
+
+        simple_lists = [
+            ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
+            ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
+            ('IPDL_SOURCES', IPDLFile),
+            ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
+            ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
+            ('TEST_WEBIDL_FILES', TestWebIDLFile),
+            ('WEBIDL_FILES', WebIDLFile),
+            ('WEBIDL_EXAMPLE_INTERFACES', ExampleWebIDLInterface),
+        ]
+        for context_var, klass in simple_lists:
+            for name in context.get(context_var, []):
+                yield klass(context, name)
+
+        for local_include in context.get('LOCAL_INCLUDES', []):
+            if (not isinstance(local_include, ObjDirPath) and
+                    not os.path.exists(local_include.full_path)):
+                raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
+                    'does not exist: %s (resolved to %s)' % (local_include,
+                    local_include.full_path), context)
+            yield LocalInclude(context, local_include)
+
+        components = []
+        for var, cls in (
+            ('BRANDING_FILES', BrandingFiles),
+            ('EXPORTS', Exports),
+            ('FINAL_TARGET_FILES', FinalTargetFiles),
+            ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
+            ('TESTING_FILES', TestingFiles),
+        ):
+            all_files = context.get(var)
+            if not all_files:
+                continue
+            if dist_install is False and var != 'TESTING_FILES':
+                raise SandboxValidationError(
+                    '%s cannot be used with DIST_INSTALL = False' % var,
+                    context)
+            has_prefs = False
+            has_resources = False
+            for base, files in all_files.walk():
+                if base == 'components':
+                    components.extend(files)
+                if base == 'defaults/pref':
+                    has_prefs = True
+                if mozpath.split(base)[0] == 'res':
+                    has_resources = True
+                for f in files:
+                    if (var == 'FINAL_TARGET_PP_FILES' and
+                        not isinstance(f, SourcePath)):
+                        raise SandboxValidationError(
+                                ('Only source directory paths allowed in ' +
+                                'FINAL_TARGET_PP_FILES: %s')
+                                % (f,), context)
+                    if not isinstance(f, ObjDirPath):
+                        path = f.full_path
+                        if not os.path.exists(path):
+                            raise SandboxValidationError(
+                                'File listed in %s does not exist: %s'
+                                % (var, path), context)
+                    else:
+                        if f.target_basename not in generated_files:
+                            raise SandboxValidationError(
+                                ('Objdir file listed in %s not in ' +
+                                 'GENERATED_FILES: %s') % (var, f), context)
+
+            # Addons (when XPI_NAME is defined) and Applications (when
+            # DIST_SUBDIR is defined) use a different preferences directory
+            # (default/preferences) from the one the GRE uses (defaults/pref).
+            # Hence, we move the files from the latter to the former in that
+            # case.
+            if has_prefs and (context.get('XPI_NAME') or
+                              context.get('DIST_SUBDIR')):
+                all_files.defaults.preferences += all_files.defaults.pref
+                del all_files.defaults._children['pref']
+
+            if has_resources and (context.get('DIST_SUBDIR') or
+                                  context.get('XPI_NAME')):
+                raise SandboxValidationError(
+                    'RESOURCES_FILES cannot be used with DIST_SUBDIR or '
+                    'XPI_NAME.', context)
+
+            yield cls(context, all_files)
+
+        # Check for manifest declarations in EXTRA_{PP_,}COMPONENTS.
+        if any(e.endswith('.js') for e in components) and \
+                not any(e.endswith('.manifest') for e in components) and \
+                not context.get('NO_JS_MANIFEST', False):
+            raise SandboxValidationError('A .js component was specified in EXTRA_COMPONENTS '
+                                         'or EXTRA_PP_COMPONENTS without a matching '
+                                         '.manifest file.  See '
+                                         'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
+                                         context);
+
+        for c in components:
+            if c.endswith('.manifest'):
+                yield ChromeManifestEntry(context, 'chrome.manifest',
+                                          Manifest('components',
+                                                   mozpath.basename(c)))
+
+        for obj in self._handle_linkables(context, passthru):
+            yield obj
+
+        for obj in self._process_test_manifests(context):
+            yield obj
+
+        for obj in self._process_jar_manifests(context):
+            yield obj
+
+        for name, jar in context.get('JAVA_JAR_TARGETS', {}).items():
+            yield ContextWrapped(context, jar)
+
+        for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
+            yield ContextWrapped(context, data)
+
+        for (symbol, cls) in [
+                ('ANDROID_RES_DIRS', AndroidResDirs),
+                ('ANDROID_EXTRA_RES_DIRS', AndroidExtraResDirs),
+                ('ANDROID_ASSETS_DIRS', AndroidAssetsDirs)]:
+            paths = context.get(symbol)
+            if not paths:
+                continue
+            for p in paths:
+                if isinstance(p, SourcePath) and not os.path.isdir(p.full_path):
+                    raise SandboxValidationError('Directory listed in '
+                        '%s is not a directory: \'%s\'' %
+                            (symbol, p.full_path), context)
+            yield cls(context, paths)
+
+        android_extra_packages = context.get('ANDROID_EXTRA_PACKAGES')
+        if android_extra_packages:
+            yield AndroidExtraPackages(context, android_extra_packages)
+
+        if passthru.variables:
+            yield passthru
+
+    def _create_substitution(self, cls, context, path):
+        sub = cls(context)
+        sub.input_path = '%s.in' % path.full_path
+        sub.output_path = path.translated
+        sub.relpath = path
+
+        return sub
 
     def _process_xpidl(self, context):
         # XPIDL source files get processed and turned into .h and .xpt files.
@@ -1003,35 +1039,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         yield TestHarnessFiles(context, srcdir_files,
                                srcdir_pattern_files, objdir_files)
-
-    def _handle_programs(self, context):
-        for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
-            program = context.get(kind)
-            if program:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" as %s name, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program)
-                self._linkage.append((context, self._binaries[program],
-                    kind.replace('PROGRAM', 'USE_LIBS')))
-
-        for kind, cls in [
-                ('SIMPLE_PROGRAMS', SimpleProgram),
-                ('CPP_UNIT_TESTS', SimpleProgram),
-                ('HOST_SIMPLE_PROGRAMS', HostSimpleProgram)]:
-            for program in context[kind]:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" in %s, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
-                self._binaries[program] = cls(context, program,
-                    is_unit_test=kind == 'CPP_UNIT_TESTS')
-                self._linkage.append((context, self._binaries[program],
-                    'HOST_USE_LIBS' if kind == 'HOST_SIMPLE_PROGRAMS'
-                    else 'USE_LIBS'))
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

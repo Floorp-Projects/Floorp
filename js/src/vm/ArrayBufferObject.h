@@ -123,8 +123,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     enum BufferKind {
         PLAIN               = 0, // malloced or inline data
-        ASMJS_MALLOCED      = 1,
-        ASMJS_MAPPED        = 2,
+        WASM_MALLOCED       = 1,
+        WASM_MAPPED         = 2,
         MAPPED              = 3,
 
         KIND_MASK           = 0x3
@@ -255,7 +255,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // Return whether the buffer is allocated by js_malloc and should be freed
     // with js_free.
     bool hasMallocedContents() const {
-        return (ownsData() && isPlain()) || isAsmJSMalloced();
+        return (ownsData() && isPlain()) || isWasmMalloced();
     }
 
     static void addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf mallocSizeOf,
@@ -308,15 +308,14 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     BufferKind bufferKind() const { return BufferKind(flags() & BUFFER_KIND_MASK); }
     bool isPlain() const { return bufferKind() == PLAIN; }
-    bool isAsmJSMapped() const { return bufferKind() == ASMJS_MAPPED; }
-    bool isAsmJSMalloced() const { return bufferKind() == ASMJS_MALLOCED; }
-    bool isAsmJS() const { return isAsmJSMapped() || isAsmJSMalloced(); }
+    bool isWasmMapped() const { return bufferKind() == WASM_MAPPED; }
+    bool isWasmMalloced() const { return bufferKind() == WASM_MALLOCED; }
+    bool isWasm() const { return isWasmMapped() || isWasmMalloced(); }
     bool isMapped() const { return bufferKind() == MAPPED; }
     bool isDetached() const { return flags() & DETACHED; }
 
-    static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                                bool usesSignalHandlers);
-    static bool prepareForAsmJSNoSignals(JSContext* cx, Handle<ArrayBufferObject*> buffer);
+    static ArrayBufferObject* createForWasm(JSContext* cx, uint32_t numBytes, bool signalsForOOB);
+    static bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool signalsForOOB);
 
     static void finalize(FreeOp* fop, JSObject* obj);
 
@@ -352,7 +351,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
-    void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }
+    void setIsWasmMalloced() { setFlags((flags() & ~KIND_MASK) | WASM_MALLOCED); }
     void setIsDetached() { setFlags(flags() | DETACHED); }
 
     void initialize(size_t byteLength, BufferContents contents, OwnsState ownsState) {

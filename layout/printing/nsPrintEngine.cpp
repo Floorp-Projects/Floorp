@@ -1522,6 +1522,10 @@ void
 nsPrintEngine::FirePrintingErrorEvent(nsresult aPrintError)
 {
   nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
+  if (NS_WARN_IF(!cv)) {
+    return;
+  }
+
   nsCOMPtr<nsIDocument> doc = cv->GetDocument();
   RefPtr<CustomEvent> event =
     NS_NewDOMCustomEvent(doc, nullptr, nullptr);

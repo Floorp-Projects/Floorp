@@ -56,11 +56,7 @@ public:
   {
     return mPanningModel;
   }
-  void SetPanningModel(PanningModelType aPanningModel)
-  {
-    mPanningModel = aPanningModel;
-    SendInt32ParameterToStream(PANNING_MODEL, int32_t(mPanningModel));
-  }
+  void SetPanningModel(PanningModelType aPanningModel);
 
   DistanceModelType DistanceModel() const
   {

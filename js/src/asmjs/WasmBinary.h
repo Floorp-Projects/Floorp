@@ -19,6 +19,8 @@
 #ifndef wasm_binary_h
 #define wasm_binary_h
 
+#include "jsstr.h"
+
 #include "asmjs/WasmTypes.h"
 #include "builtin/SIMD.h"
 
@@ -29,26 +31,33 @@ class PropertyName;
 namespace wasm {
 
 // Module generator limits
-static const unsigned MaxSigs        =   4 * 1024;
-static const unsigned MaxFuncs       = 512 * 1024;
-static const unsigned MaxImports     =   4 * 1024;
-static const unsigned MaxExports     =   4 * 1024;
-static const unsigned MaxArgsPerFunc =   4 * 1024;
+static const unsigned MaxSigs         =   4 * 1024;
+static const unsigned MaxFuncs        = 512 * 1024;
+static const unsigned MaxImports      =   4 * 1024;
+static const unsigned MaxExports      =   4 * 1024;
+static const unsigned MaxArgsPerFunc  =   4 * 1024;
 
 // Module header constants
-static const uint32_t MagicNumber = 0x6d736100; // "\0asm"
+static const uint32_t MagicNumber     = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion = -1;     // experimental
 
 // Module section names:
-static const char SigSection[] =     "sig";
-static const char ImportSection[] =  "import";
-static const char DeclSection[] =    "decl";
-static const char ExportSection[] =  "export";
-static const char CodeSection[] =    "code";
-static const char EndSection[] =     "";
+static const char SigSection[]        = "sig";
+static const char ImportSection[]     = "import";
+static const char DeclSection[]       = "decl";
+static const char MemorySection[]     = "memory";
+static const char ExportSection[]     = "export";
+static const char CodeSection[]       = "code";
+static const char DataSection[]       = "data";
+static const char EndSection[]        = "";
 
 // Subsection names:
-static const char FuncSubsection[] = "func";
+static const char FuncSubsection[]    = "func";
+static const char MemorySubsection[]  = "memory";
+static const char SegmentSubsection[] = "segment";
+
+// Field names:
+static const char FieldInitial[]      = "initial";
 
 enum class Expr : uint16_t
 {
@@ -234,8 +243,6 @@ enum class Expr : uint16_t
     F64StoreMem,
 
     // asm.js specific
-    Ternary,        // to be merged with IfElse
-
     While,          // all CFG ops to be deleted in favor of Loop/Br/BrIf
     DoWhile,
 
@@ -434,6 +441,11 @@ class Encoder
         return bytecode_.append(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr) + 1);
     }
 
+    MOZ_WARN_UNUSED_RESULT bool writeData(const uint8_t* bytes, uint32_t numBytes) {
+        MOZ_ASSERT(bytes);
+        return bytecode_.append(bytes, numBytes);
+    }
+
     MOZ_WARN_UNUSED_RESULT bool startSection(size_t* offset) {
         if (!writeU32(BadSectionLength))
             return false;
@@ -480,10 +492,14 @@ class Decoder
     const uint8_t* const end_;
     const uint8_t* cur_;
 
+    uintptr_t bytesRemain() const {
+        MOZ_ASSERT(end_ >= cur_);
+        return uintptr_t(end_ - cur_);
+    }
+
     template <class T>
-    MOZ_WARN_UNUSED_RESULT bool
-    read(T* out) {
-        if (uintptr_t(end_ - cur_) < sizeof(T))
+    MOZ_WARN_UNUSED_RESULT bool read(T* out) {
+        if (bytesRemain() < sizeof(T))
             return false;
         if (out)
             memcpy((void*)out, cur_, sizeof(T));
@@ -492,8 +508,7 @@ class Decoder
     }
 
     template <class IntT, class T>
-    MOZ_WARN_UNUSED_RESULT bool
-    readEnum(T* out) {
+    MOZ_WARN_UNUSED_RESULT bool readEnum(T* out) {
         static_assert(mozilla::IsEnum<T>::value, "is an enum");
         // See Encoder::writeEnum.
         IntT i;
@@ -506,7 +521,7 @@ class Decoder
 
     template <class T>
     T uncheckedPeek() const {
-        MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
+        MOZ_ASSERT(bytesRemain() >= sizeof(T));
         T ret;
         memcpy(&ret, cur_, sizeof(T));
         return ret;
@@ -625,16 +640,15 @@ class Decoder
         return readEnum<uint8_t>(type);
     }
 
-    MOZ_WARN_UNUSED_RESULT bool readCString(const char** cstr = nullptr) {
-        if (cstr)
-            *cstr = reinterpret_cast<const char*>(cur_);
+    MOZ_WARN_UNUSED_RESULT UniqueChars readCString() {
+        const char* begin = reinterpret_cast<const char*>(cur_);
         for (; cur_ != end_; cur_++) {
             if (!*cur_) {
                 cur_++;
-                return true;
+                return UniqueChars(DuplicateString(begin));
             }
         }
-        return false;
+        return nullptr;
     }
     MOZ_WARN_UNUSED_RESULT bool readCStringIf(const char* tag) {
         for (const uint8_t* p = cur_; p != end_; p++, tag++) {
@@ -646,6 +660,15 @@ class Decoder
             }
         }
         return false;
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool readData(uint32_t numBytes, const uint8_t** bytes = nullptr) {
+        if (bytes)
+            *bytes = cur_;
+        if (bytesRemain() < numBytes)
+            return false;
+        cur_ += numBytes;
+        return true;
     }
 
     MOZ_WARN_UNUSED_RESULT bool startSection(uint32_t* offset) {
@@ -665,7 +688,7 @@ class Decoder
         uint32_t numBytes;
         if (!readU32(&numBytes))
             return false;
-        if (uintptr_t(end_ - cur_) < numBytes)
+        if (bytesRemain() < numBytes)
             return false;
         cur_ += numBytes;
         return true;
@@ -718,14 +741,13 @@ class Decoder
     }
 };
 
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
-
 // The FuncBytecode class contains the intermediate representation of a
 // parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
 // lives only until it is fully compiled.
 class FuncBytecode
 {
     // Function metadata
+    ModuleKind kind_;
     const DeclaredSig& sig_;
     ValTypeVector locals_;
     uint32_t lineOrBytecode_;
@@ -744,8 +766,10 @@ class FuncBytecode
                  ValTypeVector&& locals,
                  uint32_t lineOrBytecode,
                  Uint32Vector&& callSiteLineNums,
-                 unsigned generateTime)
-      : sig_(sig),
+                 unsigned generateTime,
+                 ModuleKind kind)
+      : kind_(kind),
+        sig_(sig),
         locals_(Move(locals)),
         lineOrBytecode_(lineOrBytecode),
         callSiteLineNums_(Move(callSiteLineNums)),
@@ -766,6 +790,7 @@ class FuncBytecode
     ValType localType(size_t i) const { return locals_[i]; }
 
     unsigned generateTime() const { return generateTime_; }
+    bool isAsmJS() const { return kind_ == ModuleKind::AsmJS; }
 };
 
 typedef UniquePtr<FuncBytecode> UniqueFuncBytecode;

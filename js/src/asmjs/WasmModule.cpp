@@ -24,7 +24,6 @@
 
 #include "jsprf.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -55,6 +54,8 @@ using mozilla::PodZero;
 using mozilla::Swap;
 using JS::GenericNaN;
 
+const uint32_t ExportMap::MemoryExport;
+
 UniqueCodePtr
 wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
 {
@@ -64,11 +65,9 @@ wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
     unsigned permissions =
         ExecutableAllocator::initialProtectionFlags(ExecutableAllocator::Writable);
 
-    void* p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", AsmJSPageSize);
+    void* p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", gc::SystemPageSize());
     if (!p)
         ReportOutOfMemory(cx);
-
-    MOZ_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
 
     return UniqueCodePtr((uint8_t*)p, CodeDeleter(bytes));
 }
@@ -77,7 +76,7 @@ void
 CodeDeleter::operator()(uint8_t* p)
 {
     MOZ_ASSERT(bytes_ != 0);
-    DeallocateExecutableMemory(p, bytes_, AsmJSPageSize);
+    DeallocateExecutableMemory(p, bytes_, gc::SystemPageSize());
 }
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
@@ -460,43 +459,43 @@ CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 ExportMap::serializedSize() const
 {
-    return SerializedVectorSize(exportNames) +
-           SerializedVectorSize(fieldNames) +
-           SerializedPodVectorSize(fieldsToExports);
+    return SerializedVectorSize(fieldNames) +
+           SerializedPodVectorSize(fieldsToExports) +
+           SerializedPodVectorSize(exportFuncIndices);
 }
 
 uint8_t*
 ExportMap::serialize(uint8_t* cursor) const
 {
-    cursor = SerializeVector(cursor, exportNames);
     cursor = SerializeVector(cursor, fieldNames);
     cursor = SerializePodVector(cursor, fieldsToExports);
+    cursor = SerializePodVector(cursor, exportFuncIndices);
     return cursor;
 }
 
 const uint8_t*
 ExportMap::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    (cursor = DeserializeVector(cx, cursor, &exportNames)) &&
     (cursor = DeserializeVector(cx, cursor, &fieldNames)) &&
-    (cursor = DeserializePodVector(cx, cursor, &fieldsToExports));
+    (cursor = DeserializePodVector(cx, cursor, &fieldsToExports)) &&
+    (cursor = DeserializePodVector(cx, cursor, &exportFuncIndices));
     return cursor;
 }
 
 bool
 ExportMap::clone(JSContext* cx, ExportMap* map) const
 {
-    return CloneVector(cx, exportNames, &map->exportNames) &&
-           CloneVector(cx, fieldNames, &map->fieldNames) &&
-           ClonePodVector(cx, fieldsToExports, &map->fieldsToExports);
+    return CloneVector(cx, fieldNames, &map->fieldNames) &&
+           ClonePodVector(cx, fieldsToExports, &map->fieldsToExports) &&
+           ClonePodVector(cx, exportFuncIndices, &map->exportFuncIndices);
 }
 
 size_t
 ExportMap::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfVectorExcludingThis(exportNames, mallocSizeOf) &&
-           SizeOfVectorExcludingThis(fieldNames, mallocSizeOf) &&
-           fieldsToExports.sizeOfExcludingThis(mallocSizeOf);
+    return SizeOfVectorExcludingThis(fieldNames, mallocSizeOf) &&
+           fieldsToExports.sizeOfExcludingThis(mallocSizeOf) &&
+           exportFuncIndices.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -603,7 +602,7 @@ void
 Module::specializeToHeap(ArrayBufferObjectMaybeShared* heap)
 {
     MOZ_ASSERT(usesHeap());
-    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(), heap->as<ArrayBufferObject>().isAsmJS());
+    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(), heap->as<ArrayBufferObject>().isWasm());
     MOZ_ASSERT(!heap_);
     MOZ_ASSERT(!rawHeapPtr());
 
@@ -1082,10 +1081,10 @@ static JSFunction*
 NewExportedFunction(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const ExportMap& exportMap,
                     uint32_t exportIndex)
 {
-    unsigned numArgs = moduleObj->module().exports()[exportIndex].sig().args().length();
+    Module& module = moduleObj->module();
+    unsigned numArgs = module.exports()[exportIndex].sig().args().length();
 
-    const char* chars = exportMap.exportNames[exportIndex].get();
-    RootedAtom name(cx, AtomizeUTF8Chars(cx, chars, strlen(chars)));
+    RootedAtom name(cx, module.getFuncAtom(cx, exportMap.exportFuncIndices[exportIndex]));
     if (!name)
         return nullptr;
 
@@ -1101,10 +1100,14 @@ NewExportedFunction(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const Ex
 }
 
 static bool
-CreateExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const ExportMap& exportMap,
-                   const ExportVector& exports, MutableHandleObject exportObj)
+CreateExportObject(JSContext* cx,
+                   Handle<WasmModuleObject*> moduleObj,
+                   Handle<ArrayBufferObjectMaybeShared*> heap,
+                   const ExportMap& exportMap,
+                   const ExportVector& exports,
+                   MutableHandleObject exportObj)
 {
-    MOZ_ASSERT(exportMap.exportNames.length() == exports.length());
+    MOZ_ASSERT(exportMap.exportFuncIndices.length() == exports.length());
     MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
 
     for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
@@ -1112,9 +1115,14 @@ CreateExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const Exp
         if (!*fieldName) {
             MOZ_ASSERT(!exportObj);
             uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-            exportObj.set(NewExportedFunction(cx, moduleObj, exportMap, exportIndex));
-            if (!exportObj)
-                return false;
+            if (exportIndex == ExportMap::MemoryExport) {
+                MOZ_ASSERT(heap);
+                exportObj.set(heap);
+            } else {
+                exportObj.set(NewExportedFunction(cx, moduleObj, exportMap, exportIndex));
+                if (!exportObj)
+                    return false;
+            }
             break;
         }
     }
@@ -1142,7 +1150,13 @@ CreateExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj, const Exp
             return false;
 
         RootedId id(cx, AtomToId(atom));
-        HandleValue val = vals[exportMap.fieldsToExports[fieldIndex]];
+        RootedValue val(cx);
+        uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
+        if (exportIndex == ExportMap::MemoryExport)
+            val = ObjectValue(*heap);
+        else
+            val = vals[exportIndex];
+
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
             return false;
     }
@@ -1193,7 +1207,7 @@ Module::dynamicallyLink(JSContext* cx,
     if (!sendCodeRangesToProfiler(cx))
         return false;
 
-    return CreateExportObject(cx, moduleObj, exportMap, exports(), exportObj);
+    return CreateExportObject(cx, moduleObj, heap, exportMap, exports(), exportObj);
 }
 
 SharedMem<uint8_t*>
@@ -1457,6 +1471,21 @@ Module::getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const
 
     owner->reset(chars);
     return chars;
+}
+
+JSAtom*
+Module::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+{
+    UniqueChars owner;
+    const char* chars = getFuncName(cx, funcIndex, &owner);
+    if (!chars)
+        return nullptr;
+
+    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
+    if (!atom)
+        return nullptr;
+
+    return atom;
 }
 
 const char*

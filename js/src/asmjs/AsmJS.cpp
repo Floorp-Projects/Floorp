@@ -29,14 +29,12 @@
 
 #include "jswrapper.h"
 
+#include "asmjs/Wasm.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
-#include "jit/AtomicOperations.h"
-#include "jit/MIR.h"
-#include "js/Class.h"
 #include "js/MemoryMetrics.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
@@ -315,7 +313,6 @@ struct AsmJSModuleData : AsmJSModuleCacheablePod
     AsmJSGlobalVector       globals;
     AsmJSImportVector       imports;
     AsmJSExportVector       exports;
-    ExportMap               exportMap;
     PropertyName*           globalArgumentName;
     PropertyName*           importArgumentName;
     PropertyName*           bufferArgumentName;
@@ -364,15 +361,18 @@ class js::AsmJSModule final : public Module
     typedef UniquePtr<const AsmJSModuleData> UniqueConstAsmJSModuleData;
     typedef UniquePtr<const StaticLinkData> UniqueConstStaticLinkData;
 
-    const UniqueConstStaticLinkData link_;
+    const UniqueConstStaticLinkData  link_;
+    const UniqueExportMap            exportMap_;
     const UniqueConstAsmJSModuleData module_;
 
   public:
     AsmJSModule(UniqueModuleData base,
                 UniqueStaticLinkData link,
+                UniqueExportMap exportMap,
                 UniqueAsmJSModuleData module)
       : Module(Move(base)),
         link_(Move(link)),
+        exportMap_(Move(exportMap)),
         module_(Move(module))
     {}
 
@@ -383,6 +383,7 @@ class js::AsmJSModule final : public Module
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data) override {
         Module::addSizeOfMisc(mallocSizeOf, code, data);
         *data += mallocSizeOf(link_.get()) + link_->sizeOfExcludingThis(mallocSizeOf);
+        *data += mallocSizeOf(exportMap_.get()) + exportMap_->sizeOfExcludingThis(mallocSizeOf);
         *data += mallocSizeOf(module_.get()) + module_->sizeOfExcludingThis(mallocSizeOf);
     }
     virtual bool mutedErrors() const override {
@@ -399,7 +400,6 @@ class js::AsmJSModule final : public Module
     const AsmJSGlobalVector& asmJSGlobals() const { return module_->globals; }
     const AsmJSImportVector& asmJSImports() const { return module_->imports; }
     const AsmJSExportVector& asmJSExports() const { return module_->exports; }
-    const ExportMap& exportMap() const { return module_->exportMap; }
     PropertyName* globalArgumentName() const { return module_->globalArgumentName; }
     PropertyName* importArgumentName() const { return module_->importArgumentName; }
     PropertyName* bufferArgumentName() const { return module_->bufferArgumentName; }
@@ -427,6 +427,13 @@ class js::AsmJSModule final : public Module
 
     bool staticallyLink(ExclusiveContext* cx) {
         return Module::staticallyLink(cx, *link_);
+    }
+    bool dynamicallyLink(JSContext* cx,
+                         Handle<WasmModuleObject*> moduleObj,
+                         Handle<ArrayBufferObjectMaybeShared*> heap,
+                         Handle<FunctionVector> imports,
+                         MutableHandleObject exportObj) {
+        return Module::dynamicallyLink(cx, moduleObj, heap, imports, *exportMap_, exportObj);
     }
 
     // Clone this AsmJSModule into a new AsmJSModule that isn't statically or
@@ -2002,29 +2009,19 @@ class MOZ_STACK_CLASS ModuleValidator
             fieldName = StringToNewUTF8CharsZ(cx_, *maybeFieldName);
         else
             fieldName = DuplicateString("");
-        if (!fieldName || !module_->exportMap.fieldNames.append(Move(fieldName)))
+        if (!fieldName)
             return false;
 
         // Declare which function is exported which gives us an index into the
         // module ExportVector.
         uint32_t exportIndex;
-        if (!mg_.declareExport(func.index(), &exportIndex))
-            return false;
-
-        // Add a mapping from the given field to the Export's index.
-        if (!module_->exportMap.fieldsToExports.append(exportIndex))
+        if (!mg_.declareExport(Move(fieldName), func.index(), &exportIndex))
             return false;
 
         // The exported function might have already been exported in which case
         // the index will refer into the range of AsmJSExports.
         MOZ_ASSERT(exportIndex <= module_->exports.length());
-        if (exportIndex < module_->exports.length())
-            return true;
-
-        // If this is a new export, record the src info for later toString.
-        CacheableChars exportName = StringToNewUTF8CharsZ(cx_, *func.name());
-        return exportName &&
-               module_->exportMap.exportNames.emplaceBack(Move(exportName)) &&
+        return exportIndex < module_->exports.length() ||
                module_->exports.emplaceBack(func.srcBegin() - module_->srcStart,
                                             func.srcEnd() - module_->srcStart);
     }
@@ -2250,14 +2247,15 @@ class MOZ_STACK_CLASS ModuleValidator
 
         UniqueModuleData base;
         UniqueStaticLinkData link;
-        if (!mg_.finish(Move(funcNames), &base, &link, slowFuncs))
+        UniqueExportMap exportMap;
+        if (!mg_.finish(Move(funcNames), &base, &link, &exportMap, slowFuncs))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));
         if (!moduleObj)
             return false;
 
-        return moduleObj->init(cx_->new_<AsmJSModule>(Move(base), Move(link), Move(module_)));
+        return moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module_)));
     }
 };
 
@@ -5699,7 +5697,7 @@ CheckConditional(FunctionValidator& f, ParseNode* ternary, Type* type)
 {
     MOZ_ASSERT(ternary->isKind(PNK_CONDITIONAL));
 
-    if (!f.writeOp(Expr::Ternary))
+    if (!f.writeOp(Expr::IfElse))
         return false;
 
     ParseNode* cond = TernaryKid1(ternary);
@@ -7454,7 +7452,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, Handle<WasmModuleObje
             return false;
     }
 
-    return module.dynamicallyLink(cx, moduleObj, buffer, imports, module.exportMap(), exportObj);
+    return module.dynamicallyLink(cx, moduleObj, buffer, imports, exportObj);
 }
 
 static bool
@@ -7636,7 +7634,6 @@ AsmJSModuleData::serializedSize() const
            SerializedVectorSize(globals) +
            SerializedPodVectorSize(imports) +
            SerializedPodVectorSize(exports) +
-           exportMap.serializedSize() +
            SerializedNameSize(globalArgumentName) +
            SerializedNameSize(importArgumentName) +
            SerializedNameSize(bufferArgumentName);
@@ -7649,7 +7646,6 @@ AsmJSModuleData::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, globals);
     cursor = SerializePodVector(cursor, imports);
     cursor = SerializePodVector(cursor, exports);
-    cursor = exportMap.serialize(cursor);
     cursor = SerializeName(cursor, globalArgumentName);
     cursor = SerializeName(cursor, importArgumentName);
     cursor = SerializeName(cursor, bufferArgumentName);
@@ -7663,7 +7659,6 @@ AsmJSModuleData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializeVector(cx, cursor, &globals)) &&
     (cursor = DeserializePodVector(cx, cursor, &imports)) &&
     (cursor = DeserializePodVector(cx, cursor, &exports)) &&
-    (cursor = exportMap.deserialize(cx, cursor)) &&
     (cursor = DeserializeName(cx, cursor, &globalArgumentName)) &&
     (cursor = DeserializeName(cx, cursor, &importArgumentName)) &&
     (cursor = DeserializeName(cx, cursor, &bufferArgumentName));
@@ -7683,8 +7678,7 @@ AsmJSModuleData::clone(JSContext* cx, AsmJSModuleData* out) const
     out->scriptSource.reset(scriptSource.get());
     return CloneVector(cx, globals, &out->globals) &&
            ClonePodVector(cx, imports, &out->imports) &&
-           ClonePodVector(cx, exports, &out->exports) &&
-           exportMap.clone(cx, &out->exportMap);
+           ClonePodVector(cx, exports, &out->exports);
 }
 
 size_t
@@ -7692,8 +7686,7 @@ AsmJSModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return globals.sizeOfExcludingThis(mallocSizeOf) +
            imports.sizeOfExcludingThis(mallocSizeOf) +
-           exports.sizeOfExcludingThis(mallocSizeOf) +
-           exportMap.sizeOfExcludingThis(mallocSizeOf);
+           exports.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -7701,6 +7694,7 @@ AsmJSModule::serializedSize() const
 {
     return base().serializedSize() +
            link_->serializedSize() +
+           exportMap_->serializedSize() +
            module_->serializedSize();
 }
 
@@ -7709,6 +7703,7 @@ AsmJSModule::serialize(uint8_t* cursor) const
 {
     cursor = base().serialize(cursor);
     cursor = link_->serialize(cursor);
+    cursor = exportMap_->serialize(cursor);
     cursor = module_->serialize(cursor);
     return cursor;
 }
@@ -7742,6 +7737,13 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
     if (!cursor)
         return nullptr;
 
+    UniqueExportMap exportMap = cx->make_unique<ExportMap>();
+    if (!exportMap)
+        return nullptr;
+    cursor = exportMap->deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
     UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
     if (!module)
         return nullptr;
@@ -7755,7 +7757,7 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
     module->strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
     module->scriptSource.reset(parser.ss);
 
-    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+    if (!moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module))))
         return nullptr;
 
     return cursor;
@@ -7779,11 +7781,15 @@ AsmJSModule::clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) co
     if (!link || !link_->clone(cx, link.get()))
         return false;
 
+    UniqueExportMap exportMap = cx->make_unique<ExportMap>();
+    if (!exportMap || !exportMap_->clone(cx, exportMap.get()))
+        return false;
+
     UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
     if (!module || !module_->clone(cx, module.get()))
         return false;
 
-    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+    if (!moduleObj->init(js_new<AsmJSModule>(Move(base), Move(link), Move(exportMap), Move(module))))
         return false;
 
     return Module::clone(cx, *link_, &moduleObj->module());
@@ -8091,15 +8097,8 @@ Warn(AsmJSParser& parser, int errorNumber, const char* str)
 static bool
 EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
 {
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of a JIT compiler");
-#endif
-
-    if (!cx->jitSupportsFloatingPoint())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
-
-    if (cx->gcSystemPageSize() != AsmJSPageSize)
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
+    if (!HasCompilerSupport(cx))
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of compiler support");
 
     switch (parser.options().asmJSOption) {
       case AsmJSOption::Disabled:
@@ -8198,7 +8197,6 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!EstablishPreconditions(cx, parser))
         return NoExceptionPending(cx);
 
-
     // Before spending any time parsing the module, try to look it up in the
     // embedding's cache using the chars about to be parsed as the key.
     Rooted<WasmModuleObject*> moduleObj(cx);
@@ -8280,13 +8278,7 @@ js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // See EstablishPreconditions.
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    bool available = false;
-#else
-    bool available = cx->jitSupportsFloatingPoint() &&
-                     cx->gcSystemPageSize() == AsmJSPageSize &&
-                     cx->runtime()->options().asmJS();
-#endif
+    bool available = HasCompilerSupport(cx) && cx->runtime()->options().asmJS();
 
     args.rval().set(BooleanValue(available));
     return true;
@@ -8512,31 +8504,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 /*****************************************************************************/
 // asm.js heap
 
-static const size_t MinHeapLength = 64 * 1024;
-static_assert(MinHeapLength % AsmJSPageSize == 0, "Invalid page size");
-
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-
-// Targets define AsmJSImmediateRange to be the size of an address immediate,
-// and AsmJSCheckedImmediateRange, to be the size of an address immediate that
-// can be supported by signal-handler OOB handling.
-static_assert(AsmJSCheckedImmediateRange <= AsmJSImmediateRange,
-              "AsmJSImmediateRange should be the size of an unconstrained "
-              "address immediate");
-
-// To support the use of signal handlers for catching Out Of Bounds accesses,
-// the internal ArrayBuffer data array is inflated to 4GiB (only the
-// byteLength portion of which is accessible) so that out-of-bounds accesses
-// (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-// Then, an additional extent is added to permit folding of immediate
-// values into addresses. And finally, unaligned accesses and mask optimizations
-// might also try to access a few bytes after this limit, so just inflate it by
-// AsmJSPageSize.
-const size_t js::AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
-                                   AsmJSImmediateRange +
-                                   AsmJSPageSize;
-
-#endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+static const size_t MinHeapLength = PageSize;
 
 // From the asm.js spec Linking section:
 //  the heap object's byteLength must be either
@@ -8551,7 +8519,7 @@ js::IsValidAsmJSHeapLength(uint32_t length)
                  (IsPowerOfTwo(length) ||
                   (length & 0x00ffffff) == 0);
 
-    MOZ_ASSERT_IF(valid, length % AsmJSPageSize == 0);
+    MOZ_ASSERT_IF(valid, length % PageSize == 0);
     MOZ_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
 
     return valid;

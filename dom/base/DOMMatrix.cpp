@@ -552,22 +552,10 @@ DOMMatrix::RotateAxisAngleSelf(double aX, double aY,
   }
 
   aAngle *= radPerDegree;
-  // sin(aAngle / 2) * cos(aAngle / 2)
-  double sc = sin(aAngle) / 2;
-  // pow(sin(aAngle / 2), 2)
-  double sq = (1 - cos(aAngle)) / 2;
 
   Ensure3DMatrix();
   gfx::Matrix4x4 m;
-  m._11 = 1 - 2 * (aY * aY + aZ * aZ) * sq;
-  m._12 = 2 * (aX * aY * sq + aZ * sc);
-  m._13 = 2 * (aX * aZ * sq - aY * sc);
-  m._21 = 2 * (aX * aY * sq - aZ * sc);
-  m._22 = 1 - 2 * (aX * aX + aZ * aZ) * sq;
-  m._23 = 2 * (aY * aZ * sq + aX * sc);
-  m._31 = 2 * (aX * aZ * sq + aY * sc);
-  m._32 = 2 * (aY * aZ * sq - aX * sc);
-  m._33 = 1 - 2 * (aX * aX + aY * aY) * sq;
+  m.SetRotateAxisAngle(aX, aY, aZ, aAngle);
 
   *mMatrix3D = m * *mMatrix3D;
 
