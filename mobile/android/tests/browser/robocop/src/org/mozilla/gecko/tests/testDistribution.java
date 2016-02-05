@@ -137,6 +137,8 @@ public class testDistribution extends ContentProviderTest {
 
         // Pre-clear distribution pref, run basic preferences and en-US localized preferences Tests
         clearDistributionPref();
+        clearDistributionFromDataData();
+
         setTestLocale("en-US");
         try {
             initDistribution(mockPackagePath);
@@ -154,6 +156,7 @@ public class testDistribution extends ContentProviderTest {
 
         // Pre-clear distribution pref, and run es-MX localized preferences Test
         clearDistributionPref();
+        clearDistributionFromDataData();
         setTestLocale("es-MX");
         initDistribution(mockPackagePath);
         checkLocalizedPreferences("es-MX");
@@ -161,9 +164,11 @@ public class testDistribution extends ContentProviderTest {
         // Test the (stubbed) download interaction.
         setTestLocale("en-US");
         clearDistributionPref();
+        clearDistributionFromDataData();
         doTestValidReferrerIntent();
 
         clearDistributionPref();
+        clearDistributionFromDataData();
         doTestInvalidReferrerIntent();
     }
 
@@ -504,6 +509,22 @@ public class testDistribution extends ContentProviderTest {
         TestableDistribution.clearReferrerDescriptorForTesting();
     }
 
+    /**
+     * Clears any distribution found in /data/data.
+     */
+    private void clearDistributionFromDataData() throws Exception {
+        File dataDir = new File(mActivity.getApplicationInfo().dataDir);
+
+        // Recursively delete distribution files that Distribution.init copied to data directory.
+        File distDir = new File(dataDir, "distribution");
+        if (distDir.exists()) {
+            mAsserter.dumpLog("Clearing distribution from " + distDir.getAbsolutePath());
+            delete(distDir);
+        } else {
+            mAsserter.dumpLog("No distribution to clear from " + distDir.getAbsolutePath());
+        }
+    }
+
     @Override
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
@@ -528,10 +549,7 @@ public class testDistribution extends ContentProviderTest {
         File mockPackage = new File(dataDir, MOCK_PACKAGE);
         mAsserter.ok(mockPackage.delete(), "clean up mock package", "deleted " + mockPackage.getPath());
 
-        // Recursively delete distribution files that Distribution.init copied to data directory.
-        File distDir = new File(dataDir, "distribution");
-        delete(distDir);
-
+        clearDistributionFromDataData();
         clearDistributionPref();
 
         super.tearDown();
