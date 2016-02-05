@@ -625,7 +625,7 @@ PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, size_t index)
     if (obj->is<NativeObject>() &&
         (obj->as<NativeObject>().getDenseInitializedLength() > MAX_WHOLE_CELL_BUFFER_SIZE
 #ifdef JS_GC_ZEAL
-         || rt->gcZeal() == gc::ZealElementsBarrier
+         || rt->hasZealMode(gc::ZealMode::ElementsBarrier)
 #endif
             ))
     {

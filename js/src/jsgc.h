@@ -1251,21 +1251,23 @@ CheckValueAfterMovingGC(const JS::Value& value)
 
 #endif // JSGC_HASH_TABLE_CHECKS
 
-const int ZealPokeValue = 1;
-const int ZealAllocValue = 2;
-const int ZealFrameGCValue = 3;
-const int ZealVerifierPreValue = 4;
-const int ZealFrameVerifierPreValue = 5;
-const int ZealStackRootingValue = 6;
-const int ZealGenerationalGCValue = 7;
-const int ZealIncrementalRootsThenFinish = 8;
-const int ZealIncrementalMarkAllThenFinish = 9;
-const int ZealIncrementalMultipleSlices = 10;
-const int ZealIncrementalMarkingValidator = 11;
-const int ZealElementsBarrier = 12;
-const int ZealCheckHashTablesOnMinorGC = 13;
-const int ZealCompactValue = 14;
-const int ZealLimit = 14;
+enum class ZealMode {
+    Poke = 1,
+    Alloc = 2,
+    FrameGC = 3,
+    VerifierPre = 4,
+    FrameVerifierPre = 5,
+    StackRooting = 6,
+    GenerationalGC = 7,
+    IncrementalRootsThenFinish = 8,
+    IncrementalMarkAllThenFinish = 9,
+    IncrementalMultipleSlices = 10,
+    IncrementalMarkingValidator = 11,
+    ElementsBarrier = 12,
+    CheckHashTablesOnMinorGC = 13,
+    Compact = 14,
+    Limit = 14
+};
 
 enum VerifierType {
     PreBarrierVerifier
