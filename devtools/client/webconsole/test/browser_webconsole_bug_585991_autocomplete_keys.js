@@ -260,11 +260,13 @@ function testReturnKey() {
   return deferred.promise;
 }
 
-function dontShowArrayNumbers() {
+function* dontShowArrayNumbers() {
   let deferred = promise.defer();
 
   info("dontShowArrayNumbers");
-  content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
+  });
 
   jsterm = HUD.jsterm;
   popup = jsterm.autocompletePopup;

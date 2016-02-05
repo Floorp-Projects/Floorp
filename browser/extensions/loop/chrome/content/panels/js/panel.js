@@ -20,16 +20,11 @@ loop.panel = function (_, mozL10n) {
     mixins: [sharedMixins.WindowCloseMixin],
 
     handleButtonClick: function () {
-      loop.requestMulti(["OpenGettingStartedTour", "getting-started"], ["SetLoopPref", "gettingStarted.latestFTUVersion", FTU_VERSION], ["SetPanelHeight"]).then(function () {
+      loop.requestMulti(["OpenGettingStartedTour", "getting-started"], ["SetLoopPref", "gettingStarted.latestFTUVersion", FTU_VERSION]).then(function () {
         var event = new CustomEvent("GettingStartedSeen");
         window.dispatchEvent(event);
       }.bind(this));
       this.closeWindow();
-    },
-
-    componentWillMount: function () {
-      // Set 553 pixel height to show the full FTU panel content.
-      loop.request("SetPanelHeight", 553);
     },
 
     render: function () {
@@ -745,14 +740,20 @@ loop.panel = function (_, mozL10n) {
      * @returns {Object} React render
      */
     _renderLoadingRoomsView: function () {
+      /* XXX should refactor and separate "rooms" amd perhaps room-list so that
+      we arent duplicating those elements all over */
       return React.createElement(
         "div",
-        { className: "room-list" },
+        { className: "rooms" },
         this._renderNewRoomButton(),
         React.createElement(
           "div",
-          { className: "room-list-loading" },
-          React.createElement("img", { src: "shared/img/animated-spinner.svg" })
+          { className: "room-list" },
+          React.createElement(
+            "div",
+            { className: "room-list-loading" },
+            React.createElement("img", { src: "shared/img/animated-spinner.svg" })
+          )
         )
       );
     },
@@ -763,7 +764,20 @@ loop.panel = function (_, mozL10n) {
         pendingOperation: this.state.pendingCreation || this.state.pendingInitialRetrieval });
     },
 
+    _addListGradientIfNeeded: function () {
+      if (this.state.rooms.length > 5) {
+        return React.createElement("div", { className: "room-list-blur" });
+      }
+    },
+
     render: function () {
+      var roomListClasses = classNames({
+        "room-list": true,
+        // add extra space to last item so when scrolling to bottom,
+        // last item is not covered by the gradient
+        "room-list-add-space": this.state.rooms.length && this.state.rooms.length > 5
+      });
+
       if (this.state.error) {
         // XXX Better end user reporting of errors.
         console.error("RoomList error", this.state.error);
@@ -782,9 +796,9 @@ loop.panel = function (_, mozL10n) {
           null,
           mozL10n.get(this.state.openedRoom === null ? "rooms_list_recently_browsed2" : "rooms_list_currently_browsing2")
         ),
-        !this.state.rooms.length ? null : React.createElement(
+        !this.state.rooms.length ? React.createElement("div", { className: "room-list-empty" }) : React.createElement(
           "div",
-          { className: "room-list" },
+          { className: roomListClasses },
           this.state.rooms.map(function (room) {
             if (this.state.openedRoom !== null && room.roomToken !== this.state.openedRoom) {
               return null;
@@ -796,7 +810,8 @@ loop.panel = function (_, mozL10n) {
               key: room.roomToken,
               room: room });
           }, this)
-        )
+        ),
+        this._addListGradientIfNeeded()
       );
     }
   });
@@ -871,7 +886,7 @@ loop.panel = function (_, mozL10n) {
           { className: "btn btn-info stop-sharing-button",
             disabled: this.props.pendingOperation,
             onClick: this.handleStopSharingButtonClick },
-          mozL10n.get("panel_stop_sharing_tabs_button")
+          mozL10n.get("panel_disconnect_button")
         ) : React.createElement(
           "button",
           { className: "btn btn-info new-room-button",
@@ -891,6 +906,10 @@ loop.panel = function (_, mozL10n) {
 
     propTypes: {
       onClick: React.PropTypes.func.isRequired
+    },
+
+    componentWillMount: function () {
+      loop.request("SetPanelHeight", 262);
     },
 
     render: function () {
@@ -944,7 +963,8 @@ loop.panel = function (_, mozL10n) {
         hasEncryptionKey: loop.getStoredRequest(["GetHasEncryptionKey"]),
         userProfile: loop.getStoredRequest(["GetUserProfile"]),
         gettingStartedSeen: loop.getStoredRequest(["GetLoopPref", "gettingStarted.latestFTUVersion"]) >= FTU_VERSION,
-        multiProcessEnabled: loop.getStoredRequest(["IsMultiProcessEnabled"])
+        multiProcessActive: loop.getStoredRequest(["IsMultiProcessActive"]),
+        remoteAutoStart: loop.getStoredRequest(["GetLoopPref", "remote.autostart"])
       };
     },
 
@@ -1033,7 +1053,7 @@ loop.panel = function (_, mozL10n) {
     render: function () {
       var NotificationListView = sharedViews.NotificationListView;
 
-      if (this.state.multiProcessEnabled) {
+      if (this.state.multiProcessActive && !this.state.remoteAutoStart) {
         return React.createElement(E10sNotSupported, { onClick: this.launchNonE10sWindow });
       }
 
@@ -1083,7 +1103,7 @@ loop.panel = function (_, mozL10n) {
    */
   function init() {
     var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetPluralRule"]];
-    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessEnabled"]];
+    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetLoopPref", "remote.autostart"], ["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessActive"]];
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
       // `requestIdx` is keyed off the order of the `requests` and `prefetch`

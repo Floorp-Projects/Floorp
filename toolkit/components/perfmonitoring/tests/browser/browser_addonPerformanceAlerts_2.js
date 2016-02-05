@@ -4,10 +4,6 @@
  * Tests for PerformanceWatcher watching slow addons.
  */
 
-add_task(function* init() {
-  AddonWatcher.uninit();
-});
-
 add_task(function* test_watch_addon_then_install_it() {
   for (let topic of ["burnCPU", "promiseBurnContentCPU", "promiseBurnCPOW"]) {
     let addonId = "addon:test_watch_addons_before_installing" + Math.random();
