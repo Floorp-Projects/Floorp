@@ -309,14 +309,6 @@ public:
 
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
 
-  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                 JS::Handle<jsid> aId,
-                 JS::MutableHandle<JS::PropertyDescriptor> aDesc);
-  // The return value is whether DoResolve might end up resolving the given id.
-  // If in doubt, return true.
-  static bool MayResolve(jsid aId);
-  void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
-                           ErrorResult& aRv);
   void GetLanguages(nsTArray<nsString>& aLanguages);
 
   bool MozE10sEnabled();
@@ -421,13 +413,6 @@ private:
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
   RefPtr<Presentation> mPresentation;
-
-  // Hashtable for saving cached objects DoResolve created, so we don't create
-  // the object twice if asked for it twice, whether due to use of "delete" or
-  // due to Xrays.  We could probably use a nsJSThingHashtable here, but then
-  // we'd need to figure out exactly how to trace that, and that seems to be
-  // rocket science.  :(
-  nsInterfaceHashtable<nsStringHashKey, nsISupports> mCachedResolveResults;
 
   nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
 };

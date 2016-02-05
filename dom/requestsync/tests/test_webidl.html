@@ -9,34 +9,48 @@
 <body>
   <script type="application/javascript;version=1.7">
 
+  function makeIframe() {
+    var iframe = document.createElement('iframe');
+    return document.body.appendChild(iframe);
+  }
+  function destroyIframe(iframe) {
+    iframe.remove();
+  }
+
   function test_no_interface() {
-    ok(!("sync" in navigator), "navigator.sync should not exist without permissions");
-    ok(!("syncManager" in navigator), "navigator.syncManager should not exist without permissions");
+    var iframe = makeIframe();
+    ok(!("sync" in iframe.contentWindow.navigator), "navigator.sync should not exist without permissions");
+    ok(!("syncManager" in iframe.contentWindow.navigator), "navigator.syncManager should not exist without permissions");
+    destroyIframe(iframe);
     runTests();
   }
 
-  function test_sync() {
-    ok("register" in navigator.sync, "navigator.sync.register exists");
-    ok("unregister" in navigator.sync, "navigator.sync.unregister exists");
-    ok("registrations" in navigator.sync, "navigator.sync.registrations exists");
-    ok("registration" in navigator.sync, "navigator.sync.registration exists");
+  function test_sync(win) {
+    ok("register" in win.navigator.sync, "navigator.sync.register exists");
+    ok("unregister" in win.navigator.sync, "navigator.sync.unregister exists");
+    ok("registrations" in win.navigator.sync, "navigator.sync.registrations exists");
+    ok("registration" in win.navigator.sync, "navigator.sync.registration exists");
   }
 
   function test_sync_interface() {
-    ok("sync" in navigator, "navigator.sync should exist with permissions");
-    ok(!("syncManager" in navigator), "navigator.syncManager should not exist without permissions");
+    var iframe = makeIframe();
+    ok("sync" in iframe.contentWindow.navigator, "navigator.sync should exist with permissions");
+    ok(!("syncManager" in iframe.contentWindow.navigator), "navigator.syncManager should not exist without permissions");
 
-    test_sync();
+    test_sync(iframe.contentWindow);
+    destroyIframe(iframe);
     runTests();
   }
 
   function test_sync_manager_interface() {
-    ok("sync" in navigator, "navigator.sync should exist with permissions");
-    ok("syncManager" in navigator, "navigator.syncManager should exist with permissions");
+    var iframe = makeIframe();
+    ok("sync" in iframe.contentWindow.navigator, "navigator.sync should exist with permissions");
+    ok("syncManager" in iframe.contentWindow.navigator, "navigator.syncManager should exist with permissions");
 
-    test_sync();
+    test_sync(iframe.contentWindow);
 
-    ok("registrations" in navigator.syncManager, "navigator.syncManager.registrations exists");
+    ok("registrations" in iframe.contentWindow.navigator.syncManager, "navigator.syncManager.registrations exists");
+    destroyIframe(iframe);
     runTests();
   }
 

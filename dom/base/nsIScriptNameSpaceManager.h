@@ -17,7 +17,4 @@
 #define JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY \
   "JavaScript-global-privileged-property"
 
-#define JAVASCRIPT_NAVIGATOR_PROPERTY_CATEGORY \
-  "JavaScript-navigator-property"
-
 #endif /* nsIScriptNameSpaceManager_h__ */
