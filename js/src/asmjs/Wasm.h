@@ -28,6 +28,22 @@ namespace wasm {
 bool
 DefineTestingFunctions(JSContext* cx, JS::HandleObject globalObj);
 
+// Return whether WebAssembly can be compiled on this platform.
+bool
+HasCompilerSupport(ExclusiveContext* cx);
+
+// The WebAssembly spec hard-codes the virtual page size to be 64KiB and limits
+// forces the linear memory to always be a multiple of 64KiB.
+static const unsigned PageSize = 64 * 1024;
+
+// When signal handling is used for bounds checking, MappedSize bytes are
+// reserved and the subrange [0, memory_size) is given readwrite permission.
+// See also static asserts in MIRGenerator::foldableOffsetRange.
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
+static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
+#endif
+
 }  // namespace wasm
 }  // namespace js
 
