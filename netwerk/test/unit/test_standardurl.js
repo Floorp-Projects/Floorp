@@ -300,3 +300,9 @@ add_test(function test_hugeStringThrows()
 
   run_next_test();
 });
+
+add_test(function test_filterWhitespace()
+{
+  var url = stringToURL(" \r\n\th\nt\rt\tp://ex\r\n\tample.com/path\r\n\t/\r\n\tto the/fil\r\n\te.e\r\n\txt?que\r\n\try#ha\r\n\tsh \r\n\t ");
+  do_check_eq(url.spec, "http://example.com/path/to%20the/file.ext?query#hash");
+});
