@@ -932,11 +932,12 @@ WebConsoleActor.prototype =
     // This is the case of the paused debugger
     if (frameActorId) {
       let frameActor = this.conn.getActor(frameActorId);
-      if (frameActor) {
+      try {
+        // Need to try/catch since accessing frame.environment
+        // can throw "Debugger.Frame is not live"
         let frame = frameActor.frame;
         environment = frame.environment;
-      }
-      else {
+      } catch(e) {
         DevToolsUtils.reportException("onAutocomplete",
           Error("The frame actor was not found: " + frameActorId));
       }
