@@ -3271,7 +3271,8 @@ static inline
 bool SimdTypeToMIRType(SimdType type, MIRType* mirType)
 {
     switch (type) {
-      case SimdType::Int32x4:     *mirType = MIRType_Int32x4;   return true;
+      case SimdType::Int32x4:
+      case SimdType::Uint32x4:    *mirType = MIRType_Int32x4;   return true;
       case SimdType::Float32x4:   *mirType = MIRType_Float32x4; return true;
       case SimdType::Bool32x4:    *mirType = MIRType_Bool32x4;  return true;
       default:                    return false;

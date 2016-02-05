@@ -210,7 +210,7 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI,
 {
     MOZ_ASSERT(aScriptObject, "Need a non-NULL script");
 
-#ifdef DEBUG
+#ifdef DEBUG_BUG_392650
     if (mScriptTable.Get(aURI)) {
         nsAutoCString scriptName;
         aURI->GetSpec(scriptName);

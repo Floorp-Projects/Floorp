@@ -1,8 +1,5 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
 // MagicNumber = 0x4d534100
 const magic0 = 0;
 const magic1 = 97;  // 'a'
@@ -168,7 +165,6 @@ assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([trivialSigSection, i
 wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([])])));
 wasmEval(toBuf(moduleWithSections([trivialSigSection, importSection([{sigIndex:0, module:"a", func:""}])])), {a:()=>{}});
 
-Math.sin();
 wasmEval(toBuf(moduleWithSections([
     trivialSigSection,
     importSection([{sigIndex:0, module:"a", func:""}]),

@@ -304,17 +304,26 @@ typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
 // The ExportMap describes how Exports are mapped to the fields of the export
 // object. This allows a single Export to be used in multiple fields.
+// The 'fieldNames' vector provides the list of names of the module's exports.
+// For each field in fieldNames, 'fieldsToExports' provides either:
+//  - the sentinel value MemoryExport indicating an export of linear memory; or
+//  - the index of an export (both into the module's ExportVector and the
+//    ExportMap's exportFuncIndices vector).
+// Lastly, the 'exportFuncIndices' vector provides, for each exported function,
+// the internal index of the function.
 
 struct ExportMap
 {
-    typedef Vector<uint32_t, 0, SystemAllocPolicy> FieldToExportVector;
+    static const uint32_t MemoryExport = UINT32_MAX;
 
-    CacheableCharsVector exportNames;
     CacheableCharsVector fieldNames;
-    FieldToExportVector fieldsToExports;
+    Uint32Vector fieldsToExports;
+    Uint32Vector exportFuncIndices;
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
+
+typedef UniquePtr<ExportMap> UniqueExportMap;
 
 // A UniqueCodePtr owns allocated executable code. Code passed to the Module
 // constructor must be allocated via AllocateCode.
@@ -347,14 +356,6 @@ UsesHeap(HeapUsage heapUsage)
 {
     return bool(heapUsage);
 }
-
-// A Module can either be asm.js or wasm.
-
-enum ModuleKind
-{
-    Wasm,
-    AsmJS
-};
 
 // ModuleCacheablePod holds the trivially-memcpy()able serializable portion of
 // ModuleData.
@@ -575,6 +576,7 @@ class Module
 
     const char* prettyFuncName(uint32_t funcIndex) const;
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no

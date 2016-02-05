@@ -119,6 +119,7 @@ DOM4_MSG_DEF(BtAuthRejectedError, "Authentication rejected",  NS_ERROR_DOM_BLUET
 
 DOM4_MSG_DEF(NotSupportedError, "Animation to or from an underlying value is not yet supported.", NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR)
 DOM4_MSG_DEF(NotSupportedError, "Animation with no target is not yet supported.", NS_ERROR_DOM_ANIM_NO_TARGET_ERR)
+DOM4_MSG_DEF(NotSupportedError, "Animation with a target not bound to a document is not yet supported.", NS_ERROR_DOM_ANIM_TARGET_NOT_IN_DOC_ERR)
 
 /* common global codes (from nsError.h) */
 

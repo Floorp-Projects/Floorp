@@ -214,11 +214,6 @@ using mozilla::gfx::PointTyped;
  * value of this pref, and (t1 - t0) is the amount of time, in milliseconds,
  * that has elapsed between the two samples.
  *
- * \li\b apz.fling_repaint_interval
- * Maximum amount of time flinging before sending a viewport change. This will
- * asynchronously repaint the page.\n
- * Units: milliseconds
- *
  * \li\b apz.fling_stop_on_tap_threshold
  * When flinging, if the velocity is above this number, then a tap on the
  * screen will stop the fling without dispatching a tap to content. If the
@@ -282,17 +277,8 @@ using mozilla::gfx::PointTyped;
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
- * \li\b apz.pan_repaint_interval
- * Maximum amount of time while panning before sending a viewport change. This
- * will asynchronously repaint the page. It is also forced when panning stops.
- *
  * \li\b apz.record_checkerboarding
  * Whether or not to record detailed info on checkerboarding events.
- *
- * \li\b apz.smooth_scroll_repaint_interval
- * Maximum amount of time doing a smooth scroll before sending a viewport
- * change. This will asynchronously repaint the page.\n
- * Units: milliseconds
  *
  * \li\b apz.test.logging_enabled
  * Enable logging of APZ test data (see bug 961289).
@@ -443,8 +429,7 @@ public:
                  const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                  bool aApplyAcceleration,
                  const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
-    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
-    , mApzc(aApzc)
+    : mApzc(aApzc)
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
     , mScrolledApzc(aScrolledApzc)
   {
@@ -611,8 +596,7 @@ class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
   ZoomAnimation(CSSPoint aStartOffset, CSSToParentLayerScale2D aStartZoom,
                 CSSPoint aEndOffset, CSSToParentLayerScale2D aEndZoom)
-    : AsyncPanZoomAnimation(TimeDuration::Forever())
-    , mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
+    : mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
     , mStartOffset(aStartOffset)
     , mStartZoom(aStartZoom)
     , mEndOffset(aEndOffset)
@@ -649,6 +633,11 @@ public:
     return true;
   }
 
+  virtual bool WantsRepaints() override
+  {
+    return false;
+  }
+
 private:
   TimeDuration mDuration;
   const TimeDuration mTotalDuration;
@@ -670,8 +659,7 @@ private:
 class OverscrollAnimation: public AsyncPanZoomAnimation {
 public:
   explicit OverscrollAnimation(AsyncPanZoomController& aApzc, const ParentLayerPoint& aVelocity)
-    : AsyncPanZoomAnimation(TimeDuration::Forever())
-    , mApzc(aApzc)
+    : mApzc(aApzc)
   {
     mApzc.mX.StartOverscrollAnimation(aVelocity.x);
     mApzc.mY.StartOverscrollAnimation(aVelocity.y);
@@ -701,6 +689,12 @@ public:
     }
     return true;
   }
+
+  virtual bool WantsRepaints() override
+  {
+    return false;
+  }
+
 private:
   AsyncPanZoomController& mApzc;
 };
@@ -713,9 +707,7 @@ public:
                         const nsPoint &aInitialVelocity,
                         const nsPoint& aDestination, double aSpringConstant,
                         double aDampingRatio)
-   : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(
-                           gfxPrefs::APZSmoothScrollRepaintInterval()))
-   , mApzc(aApzc)
+   : mApzc(aApzc)
    , mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
                  aSpringConstant, aDampingRatio)
    , mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
@@ -2945,12 +2937,15 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 
   if (mAnimation) {
     bool continueAnimation = mAnimation->Sample(mFrameMetrics, sampleTimeDelta);
+    bool wantsRepaints = mAnimation->WantsRepaints();
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (!continueAnimation) {
       mAnimation = nullptr;
       SetState(NOTHING);
     }
-    RequestContentRepaint();
+    if (wantsRepaints) {
+      RequestContentRepaint();
+    }
     UpdateSharedCompositorFrameMetrics();
     return true;
   }

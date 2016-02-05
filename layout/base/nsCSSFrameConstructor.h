@@ -1297,6 +1297,14 @@ private:
                                    const nsStyleDisplay*    aStyleDisplay,
                                    nsFrameItems&            aFrameItems);
 
+  // ConstructDetailsFrame puts the new frame in aFrameItems and
+  // handles the kids of the details.
+  nsIFrame* ConstructDetailsFrame(nsFrameConstructorState& aState,
+                                  FrameConstructionItem& aItem,
+                                  nsContainerFrame* aParentFrame,
+                                  const nsStyleDisplay* aStyleDisplay,
+                                  nsFrameItems& aFrameItems);
+
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
   static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);

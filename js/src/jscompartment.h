@@ -411,7 +411,8 @@ struct JSCompartment
                                 size_t* crossCompartmentWrappers,
                                 size_t* regexpCompartment,
                                 size_t* savedStacksSet,
-                                size_t* nonSyntacticLexicalScopes);
+                                size_t* nonSyntacticLexicalScopes,
+                                size_t* jitCompartment);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.

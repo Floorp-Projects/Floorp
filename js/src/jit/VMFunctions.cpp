@@ -710,8 +710,7 @@ DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool ok)
         // code will start at the previous frame.
 
         JitFrameLayout* prefix = frame->framePrefix();
-        EnsureExitFrame(prefix);
-        cx->runtime()->jitTop = (uint8_t*)prefix;
+        EnsureBareExitFrame(cx, prefix);
         return false;
     }
 

@@ -18,7 +18,6 @@
 
 #include "asmjs/WasmGenerator.h"
 
-#include "asmjs/AsmJS.h"
 #include "asmjs/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -120,6 +119,10 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename, Mo
 
     link_ = MakeUnique<StaticLinkData>();
     if (!link_)
+        return false;
+
+    exportMap_ = MakeUnique<ExportMap>();
+    if (!exportMap_)
         return false;
 
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
@@ -277,6 +280,12 @@ ModuleGenerator::initHeapUsage(HeapUsage heapUsage)
     module_->heapUsage = heapUsage;
 }
 
+bool
+ModuleGenerator::usesHeap() const
+{
+    return UsesHeap(module_->heapUsage);
+}
+
 void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
@@ -357,34 +366,44 @@ ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, Profi
 }
 
 bool
-ModuleGenerator::declareExport(uint32_t funcIndex, uint32_t* exportIndex)
+ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex)
 {
+    if (!exportMap_->fieldNames.append(Move(fieldName)))
+        return false;
+
     FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
     if (p) {
-        *exportIndex = p->value();
-        return true;
+        if (exportIndex)
+            *exportIndex = p->value();
+        return exportMap_->fieldsToExports.append(p->value());
     }
+
+    uint32_t newExportIndex = module_->exports.length();
+    MOZ_ASSERT(newExportIndex < MaxExports);
+
+    if (exportIndex)
+        *exportIndex = newExportIndex;
 
     Sig copy;
     if (!copy.clone(funcSig(funcIndex)))
         return false;
 
-    *exportIndex = module_->exports.length();
-    return funcIndexToExport_.add(p, funcIndex, *exportIndex) &&
-           module_->exports.append(Move(copy)) &&
-           exportFuncIndices_.append(funcIndex);
+    return module_->exports.append(Move(copy)) &&
+           funcIndexToExport_.add(p, funcIndex, newExportIndex) &&
+           exportMap_->fieldsToExports.append(newExportIndex) &&
+           exportMap_->exportFuncIndices.append(funcIndex);
 }
 
 uint32_t
 ModuleGenerator::exportFuncIndex(uint32_t index) const
 {
-    return exportFuncIndices_[index];
+    return exportMap_->exportFuncIndices[index];
 }
 
 uint32_t
 ModuleGenerator::exportEntryOffset(uint32_t index) const
 {
-    return funcEntryOffsets_[exportFuncIndices_[index]];
+    return funcEntryOffsets_[exportMap_->exportFuncIndices[index]];
 }
 
 const Sig&
@@ -404,6 +423,13 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 {
     module_->exports[index].initStubOffset(offsets.begin);
     return module_->codeRanges.emplaceBack(CodeRange::Entry, offsets);
+}
+
+bool
+ModuleGenerator::addMemoryExport(UniqueChars fieldName)
+{
+    return exportMap_->fieldNames.append(Move(fieldName)) &&
+           exportMap_->fieldsToExports.append(ExportMap::MemoryExport);
 }
 
 bool
@@ -488,7 +514,8 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
                                      Move(fg->locals_),
                                      fg->lineOrBytecode_,
                                      Move(fg->callSiteLineNums_),
-                                     generateTime);
+                                     generateTime,
+                                     module_->kind);
     if (!func)
         return false;
 
@@ -622,6 +649,7 @@ bool
 ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
                         UniqueModuleData* module,
                         UniqueStaticLinkData* linkData,
+                        UniqueExportMap* exportMap,
                         SlowFunctionVector* slowFuncs)
 {
     MOZ_ASSERT(!activeFunc_);
@@ -639,11 +667,11 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
     // Start global data on a new page so JIT code may be given independent
     // protection flags. Note assumption that global data starts right after
     // code below.
-    module_->codeBytes = AlignBytes(masm_.bytesNeeded(), AsmJSPageSize);
+    module_->codeBytes = AlignBytes(masm_.bytesNeeded(), gc::SystemPageSize());
 
     // Inflate the global bytes up to page size so that the total bytes are a
     // page size (as required by the allocator functions).
-    module_->globalBytes = AlignBytes(module_->globalBytes, AsmJSPageSize);
+    module_->globalBytes = AlignBytes(module_->globalBytes, gc::SystemPageSize());
 
     // Allocate the code (guarded by a UniquePtr until it is given to the Module).
     module_->code = AllocateCode(cx_, module_->totalBytes());
@@ -732,6 +760,7 @@ ModuleGenerator::finish(CacheableCharsVector&& prettyFuncNames,
 
     *module = Move(module_);
     *linkData = Move(link_);
+    *exportMap = Move(exportMap_);
     *slowFuncs = Move(slowFuncs_);
     return true;
 }

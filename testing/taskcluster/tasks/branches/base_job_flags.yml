@@ -63,6 +63,7 @@ flags:
     web-platform-tests: /web-platform-tests.*/
     web-platform-tests-e10s: /web-platform-tests-e10s.*/
     web-platform-tests-reftests: /web-platform-tests-reftests.*/
+    web-platform-tests-reftests-e10s: /web-platform-tests-reftests-e10s.*/
     xpcshell: /xpcshell.*/
 
   builds:
@@ -152,5 +153,6 @@ flags:
     - web-platform-tests
     - web-platform-tests-e10s
     - web-platform-tests-reftests
+    - web-platform-tests-reftests-e10s
     - xpcshell
 

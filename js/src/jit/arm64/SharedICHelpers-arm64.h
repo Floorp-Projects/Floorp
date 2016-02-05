@@ -100,7 +100,7 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
 
     // Push frame descriptor (minus the return address) and perform the tail call.
     MOZ_ASSERT(ICTailCallReg == lr);
-    masm.makeFrameDescriptor(r0, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(r0, JitFrame_BaselineJS, ExitFrameLayout::Size());
     masm.push(r0);
 
     // The return address will be pushed by the VM wrapper, for compatibility
@@ -118,7 +118,7 @@ EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
 }
 
 inline void
-EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
+EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     ARMRegister reg64(reg, 64);
 
@@ -126,13 +126,13 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
     masm.Sub(reg64, masm.GetStackPointer64(), Operand(sizeof(void*) * 2));
     masm.Sub(reg64, BaselineFrameReg64, reg64);
 
-    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub);
+    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
 }
 
 inline void
 EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
 {
-    EmitBaselineCreateStubFrameDescriptor(masm, r0);
+    EmitBaselineCreateStubFrameDescriptor(masm, r0, ExitFrameLayout::Size());
     masm.push(r0);
     masm.call(target);
 }
@@ -162,7 +162,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
 
     // Push frame descriptor and return address.
     // Save old frame pointer, stack pointer, and stub reg.
-    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, BaselineStubFrameLayout::Size());
     masm.Push(scratch, ICTailCallReg, ICStubReg, BaselineFrameReg);
 
     // Update the frame register.

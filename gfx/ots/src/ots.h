@@ -158,6 +158,7 @@ class Buffer {
   const uint8_t *buffer() const { return buffer_; }
   size_t offset() const { return offset_; }
   size_t length() const { return length_; }
+  size_t remaining() const { return length_ - offset_; }
 
   void set_offset(size_t newoffset) { offset_ = newoffset; }
 

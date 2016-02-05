@@ -100,6 +100,7 @@ textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: -moz-plaintext; }
 
 article,
 aside,
+details,
 div,
 dt,
 figcaption,
@@ -110,7 +111,8 @@ hgroup,
 html,
 main,
 nav,
-section {
+section,
+summary {
   display: block;
 }
 
@@ -765,6 +767,18 @@ audio:not([controls]) {
 video > .caption-box {
   position: relative;
   overflow: hidden;
+}
+
+/* details & summary */
+
+details > summary::-moz-list-bullet {
+  list-style-type: disclosure-closed;
+  /* Prevent elements in summary being selected when clicking on the triangle. */
+  -moz-user-select: none;
+}
+
+details[open] > summary::-moz-list-bullet {
+  list-style-type: disclosure-open;
 }
 
 /* emulation of non-standard HTML <marquee> tag */
