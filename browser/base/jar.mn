@@ -89,6 +89,7 @@ browser.jar:
         content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
         content/browser/browser-places.js             (content/browser-places.js)
         content/browser/browser-plugins.js            (content/browser-plugins.js)
+        content/browser/browser-refreshblocker.js     (content/browser-refreshblocker.js)
 #ifdef MOZ_SAFE_BROWSING
         content/browser/browser-safebrowsing.js       (content/browser-safebrowsing.js)
 #endif
