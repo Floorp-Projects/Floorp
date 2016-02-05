@@ -323,16 +323,14 @@ public:
            const TextureFactoryIdentifier& aTextureFactoryIdentifier,
            const uint64_t& aLayersId,
            PRenderFrameChild* aRenderFrame,
-           const bool& aParentIsActive,
-           const nsSizeMode& aSizeMode) override;
+           const bool& aParentIsActive) override;
 
   virtual bool
   RecvUpdateDimensions(const CSSRect& aRect,
                        const CSSSize& aSize,
+                       const nsSizeMode& aSizeMode,
                        const ScreenOrientationInternal& aOrientation,
                        const LayoutDeviceIntPoint& aChromeDisp) override;
-  virtual bool
-  RecvSizeModeChanged(const nsSizeMode& aSizeMode) override;
 
   virtual bool
   RecvUpdateFrame(const layers::FrameMetrics& aFrameMetrics) override;

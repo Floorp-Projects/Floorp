@@ -21,7 +21,6 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCRT.h"
-#include "nsIWidgetListener.h"
 #include "FramePropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
@@ -279,27 +278,12 @@ public:
    */
   void MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
                                  nsChangeHint aChangeHint = nsChangeHint(0));
-  /**
-   * Calls MediaFeatureValuesChanged for this pres context and all descendant
-   * subdocuments that have a pres context. This should be used for media
-   * features that must be updated in all subdocuments e.g. display-mode.
-   */
-  void MediaFeatureValuesChangedAllDocuments(nsRestyleHint aRestyleHint,
-                                             nsChangeHint aChangeHint = nsChangeHint(0));
-
   void PostMediaFeatureValuesChangedEvent();
   void HandleMediaFeatureValuesChangedEvent();
   void FlushPendingMediaFeatureValuesChanged() {
     if (mPendingMediaFeatureValuesChanged)
       MediaFeatureValuesChanged(nsRestyleHint(0));
   }
-
-  /**
-   * Updates the size mode on all remote children and recursively notifies this
-   * document and all subdocuments (including remote children) that a media
-   * feature value has changed.
-   */
-  void SizeModeChanged(nsSizeMode aSizeMode);
 
   /**
    * Access compatibility mode for this context.  This is the same as
