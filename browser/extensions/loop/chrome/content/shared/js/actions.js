@@ -177,6 +177,13 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used for notifying that the hasVideo property of the screen stream, has changed.
+     */
+    VideoScreenStreamChanged: Action.define("videoScreenStreamChanged", {
+      hasVideo: Boolean
+    }),
+
+    /**
      * A stream from local or remote media has been created.
      */
     MediaStreamCreated: Action.define("mediaStreamCreated", {
