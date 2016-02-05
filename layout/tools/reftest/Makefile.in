@@ -12,7 +12,6 @@ _HARNESS_FILES = \
   $(srcdir)/runreftestb2g.py \
   $(srcdir)/runreftestmulet.py \
   $(srcdir)/gaia_lock_screen.js \
-  $(srcdir)/output.py \
   automation.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \
