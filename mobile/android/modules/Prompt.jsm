@@ -188,9 +188,6 @@ Prompt.prototype = {
 
       obj.label = item.label;
 
-      if (item.icon)
-        obj.icon = item.icon;
-
       if (item.disabled)
         obj.disabled = true;
 
