@@ -164,6 +164,27 @@ assertEq(obj.a, obj.b);
 assertEq(obj.byteLength, 65536);
 assertEq(obj.a(), 42);
 
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65536 "")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 0 "a") (segment 2 "b")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
+assertEq(new Uint8Array(buf)[1], 0);
+assertEq(new Uint8Array(buf)[2], 'b'.charCodeAt(0));
+
+var buf = wasmEvalText('(module (memory 65536 (segment 65535 "c")) (export "" memory))');
+assertEq(new Uint8Array(buf)[0], 0);
+assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
+
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65536 "a")) (export "" memory))'), TypeError, /data segment does not fit/);
+assertErrorMessage(() => wasmEvalText('(module (memory 65536 (segment 65535 "ab")) (export "" memory))'), TypeError, /data segment does not fit/);
+
 // ----------------------------------------------------------------------------
 // locals
 

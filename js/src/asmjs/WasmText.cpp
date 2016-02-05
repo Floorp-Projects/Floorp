@@ -292,15 +292,33 @@ class WasmAstExport : public WasmAstNode
     size_t funcIndex() const { MOZ_ASSERT(kind_ == WasmAstExportKind::Func); return u.funcIndex_; }
 };
 
+class WasmAstSegment : public WasmAstNode
+{
+    uint32_t offset_;
+    TwoByteChars text_;
+
+  public:
+    WasmAstSegment(uint32_t offset, TwoByteChars text)
+      : offset_(offset), text_(text)
+    {}
+    uint32_t offset() const { return offset_; }
+    TwoByteChars text() const { return text_; }
+};
+
+typedef WasmAstVector<WasmAstSegment*> WasmAstSegmentVector;
+
 class WasmAstMemory : public WasmAstNode
 {
     uint32_t initialSize_;
+    WasmAstSegmentVector segments_;
 
   public:
-    explicit WasmAstMemory(uint32_t initialSize)
-      : initialSize_(initialSize)
+    explicit WasmAstMemory(uint32_t initialSize, WasmAstSegmentVector&& segments)
+      : initialSize_(initialSize),
+        segments_(Move(segments))
     {}
     uint32_t initialSize() const { return initialSize_; }
+    const WasmAstSegmentVector& segments() const { return segments_; }
 };
 
 class WasmAstModule : public WasmAstNode
@@ -475,6 +493,7 @@ class WasmToken
         OpenParen,
         Param,
         Result,
+        Segment,
         SetLocal,
         Text,
         UnaryOpcode,
@@ -602,6 +621,73 @@ IsNameAfterDollar(char16_t c)
     return c == '_' || IsWasmDigit(c) || IsWasmLetter(c);
 }
 
+static bool
+IsHexDigit(char c, uint8_t* value)
+{
+    if (c >= '0' && c <= '9') {
+        *value = c - '0';
+        return true;
+    }
+
+    if (c >= 'a' && c <= 'f') {
+        *value = 10 + (c - 'a');
+        return true;
+    }
+
+    if (c >= 'A' && c <= 'F') {
+        *value = 10 + (c - 'A');
+        return true;
+    }
+
+    return false;
+}
+
+static bool
+ConsumeTextByte(const char16_t** curp, const char16_t* end, uint8_t *byte = nullptr)
+{
+    const char16_t*& cur = *curp;
+    MOZ_ASSERT(cur != end);
+
+    if (*cur != '\\') {
+        if (byte)
+            *byte = *cur;
+        cur++;
+        return true;
+    }
+
+    if (++cur == end)
+        return false;
+
+    uint8_t u8;
+    switch (*cur) {
+      case 'n': u8 = '\n'; break;
+      case 't': u8 = '\t'; break;
+      case '\\': u8 = '\\'; break;
+      case '\"': u8 = '\"'; break;
+      case '\'': u8 = '\''; break;
+      default: {
+        uint8_t lowNibble;
+        if (!IsHexDigit(*cur, &lowNibble))
+            return false;
+
+        if (++cur == end)
+            return false;
+
+        uint8_t highNibble;
+        if (!IsHexDigit(*cur, &highNibble))
+            return false;
+
+        u8 = lowNibble | (highNibble << 4);
+        break;
+      }
+    }
+
+    if (byte)
+        *byte = u8;
+    cur++;
+    return true;
+}
+
 class WasmTokenStream
 {
     static const uint32_t LookaheadSize = 2;
@@ -641,10 +727,15 @@ class WasmTokenStream
         switch (*begin) {
           case '"':
             cur_++;
-            do {
+            while (true) {
                 if (cur_ == end_)
                     return fail(begin);
-            } while (*cur_++ != '"');
+                if (*cur_ == '"')
+                    break;
+                if (!ConsumeTextByte(&cur_, end_))
+                    return fail(begin);
+            }
+            cur_++;
             return WasmToken(WasmToken::Text, begin, cur_);
 
           case '$':
@@ -1133,6 +1224,8 @@ class WasmTokenStream
           case 's':
             if (consume(MOZ_UTF16("set_local")))
                 return WasmToken(WasmToken::SetLocal, begin, cur_);
+            if (consume(MOZ_UTF16("segment")))
+                return WasmToken(WasmToken::Segment, begin, cur_);
             break;
 
           default:
@@ -1484,6 +1577,23 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
     return new(c.lifo) WasmAstFunc(sigIndex, Move(vars), maybeBody);
 }
 
+static WasmAstSegment*
+ParseSegment(WasmParseContext& c)
+{
+    if (!c.ts.match(WasmToken::Segment, c.error))
+        return nullptr;
+
+    WasmToken dstOffset;
+    if (!c.ts.match(WasmToken::Integer, &dstOffset, c.error))
+        return nullptr;
+
+    WasmToken text;
+    if (!c.ts.match(WasmToken::Text, &text, c.error))
+        return nullptr;
+
+    return new(c.lifo) WasmAstSegment(dstOffset.integer(), text.text());
+}
+
 static WasmAstMemory*
 ParseMemory(WasmParseContext& c)
 {
@@ -1491,7 +1601,16 @@ ParseMemory(WasmParseContext& c)
     if (!c.ts.match(WasmToken::Integer, &initialSize, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstMemory(initialSize.integer());
+    WasmAstSegmentVector segments(c.lifo);
+    while (c.ts.getIf(WasmToken::OpenParen)) {
+        WasmAstSegment* segment = ParseSegment(c);
+        if (!segment || !segments.append(segment))
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstMemory(initialSize.integer(), Move(segments));
 }
 
 static WasmAstImport*
@@ -1557,7 +1676,7 @@ ParseExport(WasmParseContext& c)
 }
 
 static WasmAstModule*
-TextToAst(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
+ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
 {
     WasmParseContext c(text, lifo, error);
 
@@ -2010,8 +2129,67 @@ EncodeCodeSection(Encoder& e, WasmAstModule& module)
     return true;
 }
 
+static bool
+EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
+{
+    if (!e.writeCString(SegmentSubsection))
+        return false;
+
+    if (!e.writeVarU32(segment.offset()))
+        return false;
+
+    TwoByteChars text = segment.text();
+
+    Vector<uint8_t, 0, SystemAllocPolicy> bytes;
+    if (!bytes.reserve(text.length()))
+        return false;
+
+    const char16_t* cur = text.start().get();
+    const char16_t* end = text.end().get();
+    while (cur != end) {
+        uint8_t byte;
+        MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
+        bytes.infallibleAppend(byte);
+    }
+
+    if (!e.writeVarU32(bytes.length()))
+        return false;
+
+    if (!e.writeData(bytes.begin(), bytes.length()))
+        return false;
+
+    return true;
+}
+
+static bool
+EncodeDataSection(Encoder& e, WasmAstModule& module)
+{
+    if (!module.maybeMemory() || module.maybeMemory()->segments().empty())
+        return true;
+
+    const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
+
+    if (!e.writeCString(DataSection))
+        return false;
+
+    size_t offset;
+    if (!e.startSection(&offset))
+        return false;
+
+    if (!e.writeVarU32(segments.length()))
+        return false;
+
+    for (WasmAstSegment* segment : segments) {
+        if (!EncodeDataSegment(e, *segment))
+            return false;
+    }
+
+    e.finishSection(offset);
+    return true;
+}
+
 static UniqueBytecode
-AstToBinary(WasmAstModule& module)
+EncodeModule(WasmAstModule& module)
 {
     UniqueBytecode bytecode = MakeUnique<Bytecode>();
     if (!bytecode)
@@ -2043,6 +2221,9 @@ AstToBinary(WasmAstModule& module)
     if (!EncodeCodeSection(e, module))
         return nullptr;
 
+    if (!EncodeDataSection(e, module))
+        return nullptr;
+
     if (!e.writeCString(EndSection))
         return nullptr;
 
@@ -2055,9 +2236,9 @@ UniqueBytecode
 wasm::TextToBinary(const char16_t* text, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
-    WasmAstModule* module = TextToAst(text, lifo, error);
+    WasmAstModule* module = ParseModule(text, lifo, error);
     if (!module)
         return nullptr;
 
-    return AstToBinary(*module);
+    return EncodeModule(*module);
 }
