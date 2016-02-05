@@ -745,6 +745,16 @@
         ]]></body>
       </method>
 
+      <method name="typeHasFlag">
+        <parameter name="aFlag"/>
+        <body><![CDATA[
+          let flag = AddonManager["TYPE_" + aFlag];
+          let type = AddonManager.addonTypes[this.mAddon.type];
+
+          return !!(type.flags & flag);
+        ]]></body>
+      </method>
+
       <method name="onUninstalled">
         <body><![CDATA[
           this.parentNode.removeChild(this);
@@ -1306,8 +1316,7 @@
           this._preferencesBtn.hidden = (!this.mAddon.optionsURL) ||
                                         this.mAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_INFO;
 
-          let addonType = AddonManager.addonTypes[this.mAddon.type];
-          if (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE) {
+          if (this.typeHasFlag("SUPPORTS_ASK_TO_ACTIVATE")) {
             this._enableBtn.disabled = true;
             this._disableBtn.disabled = true;
             this._askToActivateMenuitem.disabled = !this.hasPermission("ask_to_activate");
@@ -1525,9 +1534,11 @@
 
       <method name="uninstall">
         <body><![CDATA[
-          // If uninstalling does not require a restart then just disable it
-          // and show the undo UI.
-          if (!this.opRequiresRestart("uninstall")) {
+          // If uninstalling does not require a restart and the type doesn't
+          // support undoing of restartless uninstalls, then we fake it by
+          // just disabling it it, and doing the real uninstall later.
+          if (!this.opRequiresRestart("uninstall") &&
+              !this.typeHasFlag("SUPPORTS_UNDO_RESTARTLESS_UNINSTALL")) {
             this.setAttribute("wasDisabled", this.mAddon.userDisabled);
 
             // We must set userDisabled to true first, this will call
@@ -1537,7 +1548,7 @@
             // This won't update any other add-on manager views (bug 582002)
             this.setAttribute("pending", "uninstall");
           } else {
-            this.mAddon.uninstall();
+            this.mAddon.uninstall(true);
           }
         ]]></body>
       </method>
@@ -1773,7 +1784,7 @@
                                                                      [this.mAddon.name],
                                                                      1);
 
-        if (!this.isPending("uninstall"))
+        if (!this.opRequiresRestart("uninstall"))
           this._restartBtn.setAttribute("hidden", true);
 
         gEventManager.registerAddonListener(this, this.mAddon.id);
