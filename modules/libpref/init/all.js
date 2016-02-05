@@ -498,7 +498,7 @@ pref("media.mediasource.webm.enabled", false);
 #else
 pref("media.mediasource.webm.enabled", true);
 #endif
-pref("media.mediasource.webm.audio.enabled", true);
+pref("media.mediasource.webm.audio.enabled", false);
 
 // Enable new MediaFormatReader architecture for plain webm.
 pref("media.format-reader.webm", true);
