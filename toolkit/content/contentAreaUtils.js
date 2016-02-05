@@ -110,7 +110,7 @@ const nsISupportsCString = Components.interfaces.nsISupportsCString;
  *        The suggested filename for the saved file.
  * @param aFilePickerTitleKey (string, optional)
  *        Localized string key for an alternate title for the file
- *        picker. If set to null
+ *        picker. If set to null, this will default to something sensible.
  * @param aShouldBypassCache (bool)
  *        If true, the image will always be retrieved from the server instead
  *        of the network or image caches.
@@ -138,23 +138,21 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 {
   forbidCPOW(aURL, "saveImageURL", "aURL");
   forbidCPOW(aReferrer, "saveImageURL", "aReferrer");
-  // Allow aSourceDocument to be a CPOW, but warn about it. Add-ons that are not
-  // marked multi-process compatible can pass a document CPOW, but in-browser
-  // consumers and multi-process compatible add-ons cannot when e10s is enabled.
-  if (aDoc && Components.utils.isCrossProcessWrapper(aDoc)) {
-    Deprecated.warning("saveImageURL should not be passed document CPOWs. " +
-                       "The caller should pass in the content type and " +
-                       "disposition themselves",
-                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1243643");
-    if (aIsContentWindowPrivate == undefined) {
-      // This will definitely not work for in-browser code or multi-process compatible
-      // add-ons due to bug 1233497, which makes unsafe CPOW usage throw by default.
-      Deprecated.warning("saveImageURL should be passed the private state of " +
-                         "the containing window.",
+
+  if (aDoc && aIsContentWindowPrivate == undefined) {
+    if (Components.utils.isCrossProcessWrapper(aDoc)) {
+      Deprecated.warning("saveImageURL should not be passed document CPOWs. " +
+                         "The caller should pass in the content type and " +
+                         "disposition themselves",
                          "https://bugzilla.mozilla.org/show_bug.cgi?id=1243643");
-      aIsContentWindowPrivate =
-        PrivateBrowsingUtils.isContentWindowPrivate(aDoc.defaultView);
     }
+    // This will definitely not work for in-browser code or multi-process compatible
+    // add-ons due to bug 1233497, which makes unsafe CPOW usage throw by default.
+    Deprecated.warning("saveImageURL should be passed the private state of " +
+                       "the containing window.",
+                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1243643");
+    aIsContentWindowPrivate =
+      PrivateBrowsingUtils.isContentWindowPrivate(aDoc.defaultView);
   }
 
   // We'd better have the private state by now.
