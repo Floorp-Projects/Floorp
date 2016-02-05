@@ -113,7 +113,7 @@ nsEffectiveTLDService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize)
 {
   return MOZ_COLLECT_REPORT(
-    "explicit/xpcom/effective-TLD-service", KIND_HEAP, UNITS_BYTES,
+    "explicit/network/effective-TLD-service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(EffectiveTLDServiceMallocSizeOf),
     "Memory used by the effective TLD service.");
 }
