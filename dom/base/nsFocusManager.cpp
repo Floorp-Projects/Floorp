@@ -969,9 +969,11 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow)
   // to the toplevel window. But if the window isn't being destroyed, we are
   // likely just loading a new document in it, so we want to maintain the
   // focused window so that the new document gets properly focused.
-  bool beingDestroyed;
   nsCOMPtr<nsIDocShell> docShellBeingHidden = window->GetDocShell();
-  docShellBeingHidden->IsBeingDestroyed(&beingDestroyed);
+  bool beingDestroyed = !docShellBeingHidden;
+  if (docShellBeingHidden) {
+    docShellBeingHidden->IsBeingDestroyed(&beingDestroyed);
+  }
   if (beingDestroyed) {
     // There is usually no need to do anything if a toplevel window is going
     // away, as we assume that WindowLowered will be called. However, this may
