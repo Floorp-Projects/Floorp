@@ -78,6 +78,17 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
   if (aStream->mFinished)
     return;
   STREAM_LOG(LogLevel::Debug, ("MediaStream %p will finish", aStream));
+#ifdef DEBUG
+  for (StreamBuffer::TrackIter track(aStream->mBuffer);
+         !track.IsEnded(); track.Next()) {
+    if (!track->IsEnded()) {
+      STREAM_LOG(LogLevel::Error,
+                 ("MediaStream %p will finish, but track %d has not ended.",
+                  aStream, track->GetID()));
+      NS_ASSERTION(false, "Finished stream cannot contain live track");
+    }
+  }
+#endif
   aStream->mFinished = true;
   aStream->mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
