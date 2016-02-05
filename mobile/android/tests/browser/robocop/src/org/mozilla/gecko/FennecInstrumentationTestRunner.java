@@ -40,19 +40,22 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
 
     @Override
     public void onStart() {
-        final Context app = getTargetContext().getApplicationContext();
+        final Context app = getTargetContext();
+        if (app != null) {
+            final String name = FennecInstrumentationTestRunner.class.getSimpleName();
+            // Unlock the device so that the tests can input keystrokes.
+            final KeyguardManager keyguard = (KeyguardManager) app.getSystemService(Context.KEYGUARD_SERVICE);
+            // Deprecated in favour of window flags, which aren't appropriate here.
+            keyguardLock = keyguard.newKeyguardLock(name);
+            keyguardLock.disableKeyguard();
 
-        final String name = FennecInstrumentationTestRunner.class.getSimpleName();
-        // Unlock the device so that the tests can input keystrokes.
-        final KeyguardManager keyguard = (KeyguardManager) app.getSystemService(Context.KEYGUARD_SERVICE);
-        // Deprecated in favour of window flags, which aren't appropriate here.
-        keyguardLock = keyguard.newKeyguardLock(name);
-        keyguardLock.disableKeyguard();
-
-        // Wake up the screen.
-        final PowerManager power = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
-        wakeLock = power.newWakeLock(FULL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE, name);
-        wakeLock.acquire();
+            // Wake up the screen.
+            final PowerManager power = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
+            wakeLock = power.newWakeLock(FULL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP | ON_AFTER_RELEASE, name);
+            wakeLock.acquire();
+        } else {
+            Log.e("GeckoInstTestRunner", "Application target context is null: not disabling keyguard and not taking wakelock.");
+        }
 
         super.onStart();
     }
@@ -61,8 +64,12 @@ public class FennecInstrumentationTestRunner extends InstrumentationTestRunner {
     public void onDestroy() {
         super.onDestroy();
 
-        wakeLock.release();
-        // Deprecated in favour of window flags, which aren't appropriate here.
-        keyguardLock.reenableKeyguard();
+        if (wakeLock != null) {
+            wakeLock.release();
+        }
+        if (keyguardLock != null) {
+            // Deprecated in favour of window flags, which aren't appropriate here.
+            keyguardLock.reenableKeyguard();
+        }
     }
 }
