@@ -8,20 +8,18 @@ import time
 import tempfile
 import traceback
 
+# We need to know our current directory so that we can serve our test files from it.
+SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
+
+from runreftest import RefTest, ReftestResolver
+from automation import Automation
 import devicemanager
 import droid
 import mozinfo
 import moznetwork
-from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
-from output import OutputHandler
-from runreftest import RefTest, ReftestResolver
 import reftestcommandline
-
-# We need to know our current directory so that we can serve our test files from it.
-SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
-
 
 class RemoteReftestResolver(ReftestResolver):
     def absManifestPath(self, path):
@@ -147,13 +145,6 @@ class RemoteReftest(RefTest):
             self.SERVER_STARTUP_TIMEOUT = 90
         self.automation.deleteANRs()
         self.automation.deleteTombstones()
-
-        self._populate_logger(options)
-        outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
-        # RemoteAutomation.py's 'messageLogger' is also used by mochitest. Mimic a mochitest
-        # MessageLogger object to re-use this code path.
-        outputHandler.write = outputHandler.__call__
-        self.automation._processArgs['messageLogger'] = outputHandler
 
     def findPath(self, paths, filename = None):
         for path in paths:
@@ -454,3 +445,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

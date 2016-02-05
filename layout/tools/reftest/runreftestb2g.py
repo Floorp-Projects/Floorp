@@ -16,7 +16,6 @@ if here not in sys.path:
 from automation import Automation
 from b2gautomation import B2GRemoteAutomation
 from runreftestmulet import run_test_harness as run_mulet_reftests
-from output import OutputHandler
 from remotereftest import RemoteReftestResolver, ReftestServer
 from runreftest import RefTest
 import reftestcommandline
@@ -312,8 +311,6 @@ class B2GRemoteReftest(RefTest):
                timeout=None, debuggerInfo=None,
                symbolsPath=None, options=None,
                valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
-
-        outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
         status = self.automation.runApp(None, env,
                                         binary,
                                         profile.profile,
@@ -322,8 +319,7 @@ class B2GRemoteReftest(RefTest):
                                         xrePath=options.xrePath,
                                         debuggerInfo=debuggerInfo,
                                         symbolsPath=symbolsPath,
-                                        timeout=timeout,
-                                        outputHandler=outputHandler)
+                                        timeout=timeout)
         return status
 
 
@@ -384,6 +380,7 @@ def run_remote_reftests(parser, options):
     auto.setProduct("b2g")
     auto.test_script = os.path.join(here, 'b2g_start_script.js')
     auto.test_script_args = [options.remoteWebServer, options.httpPort]
+    auto.logFinish = "REFTEST TEST-START | Shutdown"
 
     reftest = B2GRemoteReftest(auto, dm, options, here)
     parser.validate(options, reftest)
