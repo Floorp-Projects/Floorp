@@ -9,7 +9,7 @@
 */
 
 @media not print {
-  .overflowing {
+  .overflowingVertical, .overflowingHorizontalOnly {
     cursor: zoom-out;
   }
 
