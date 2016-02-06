@@ -148,7 +148,10 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
     resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
     resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
     resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
-    resources.MaxDrawBuffers = mGLMaxDrawBuffers;
+
+    const bool hasMRTs = (IsWebGL2() ||
+                          IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers));
+    resources.MaxDrawBuffers = (hasMRTs ? mGLMaxDrawBuffers : 1);
 
     if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
         resources.EXT_frag_depth = 1;
