@@ -46,11 +46,32 @@ class TryToolsMixin(TransferMixin):
     harness_extra_args = None
     try_test_paths = {}
     known_try_arguments = {
-        '--tag': {
+        '--tag': ({
             'action': 'append',
             'dest': 'tags',
             'default': None,
-        },
+        }, (
+            'browser-chrome',
+            'chrome',
+            'devtools-chrome',
+            'marionette',
+            'mochitest',
+            'web-plaftform-tests',
+            'xpcshell',
+        )),
+        '--setenv': ({
+            'action': 'append',
+            'dest': 'setenv',
+            'default': [],
+            'metavar': 'NAME=VALUE',
+        }, (
+            'browser-chrome',
+            'chrome',
+            'crashtest',
+            'devtools-chrome',
+            'mochitest',
+            'reftest',
+        )),
     }
 
     def _extract_try_message(self):
@@ -124,7 +145,7 @@ class TryToolsMixin(TransferMixin):
                 return label_dict[val]
             return '--%s' % val.replace('_', '-')
 
-        for label, opts in self.known_try_arguments.iteritems():
+        for label, (opts, _) in self.known_try_arguments.iteritems():
             if 'action' in opts and opts['action'] not in ('append', 'store',
                                                            'store_true', 'store_false'):
                 self.fatal('Try syntax does not support passing custom or store_const '
@@ -139,22 +160,25 @@ class TryToolsMixin(TransferMixin):
         self.try_test_paths = self._group_test_paths(args.try_test_paths)
         del args.try_test_paths
 
-        out_args = []
+        out_args = defaultdict(list)
         # This is a pretty hacky way to echo arguments down to the harness.
         # Hopefully this can be improved once we have a configuration system
         # in tree for harnesses that relies less on a command line.
-        for (arg, value) in vars(args).iteritems():
+        for arg, value in vars(args).iteritems():
             if value:
                 label = label_from_val(arg)
-                if isinstance(value, bool):
-                    # A store_true or store_false argument.
-                    out_args.append(label)
-                elif isinstance(value, list):
-                    out_args.extend(['%s=%s' % (label, el) for el in value])
-                else:
-                    out_args.append('%s=%s' % (label, value))
+                _, flavors = self.known_try_arguments[label]
 
-        self.harness_extra_args = out_args
+                for f in flavors:
+                    if isinstance(value, bool):
+                        # A store_true or store_false argument.
+                        out_args[f].append(label)
+                    elif isinstance(value, list):
+                        out_args[f].extend(['%s=%s' % (label, el) for el in value])
+                    else:
+                        out_args[f].append('%s=%s' % (label, value))
+
+        self.harness_extra_args = dict(out_args)
 
     def _group_test_paths(self, args):
         rv = defaultdict(list)
@@ -169,8 +193,9 @@ class TryToolsMixin(TransferMixin):
 
     def try_args(self, flavor):
         """Get arguments, test_list derived from try syntax to apply to a command"""
-        # TODO: Detect and reject incompatible arguments
-        args = self.harness_extra_args[:] if self.harness_extra_args else []
+        args = []
+        if self.harness_extra_args:
+            args = self.harness_extra_args.get(flavor, [])[:]
 
         if self.try_test_paths.get(flavor):
             self.info('TinderboxPrint: Tests will be run from the following '
