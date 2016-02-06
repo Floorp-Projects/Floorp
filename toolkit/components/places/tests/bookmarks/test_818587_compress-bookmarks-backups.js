@@ -12,7 +12,7 @@ add_task(function* compress_bookmark_backups_test() {
   let backupFolder = yield PlacesBackups.getBackupFolder();
 
   // Check for jsonlz4 extension
-  let todayFilename = PlacesBackups.getFilenameForDate(new Date(2014, 04, 15), true);
+  let todayFilename = PlacesBackups.getFilenameForDate(new Date(2014, 4, 15), true);
   do_check_eq(todayFilename, "bookmarks-2014-05-15.jsonlz4");
 
   yield PlacesBackups.create();

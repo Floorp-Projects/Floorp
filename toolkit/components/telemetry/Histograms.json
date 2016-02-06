@@ -9283,6 +9283,62 @@
     "high": "40000000",
     "n_buckets": 20
   },
+  "DEVTOOLS_MEMORY_TAKE_SNAPSHOT_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "description": "The number of heap snapshots taken by a user"
+  },
+  "DEVTOOLS_MEMORY_IMPORT_SNAPSHOT_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "description": "The number of heap snapshots imported by a user"
+  },
+  "DEVTOOLS_MEMORY_EXPORT_SNAPSHOT_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "description": "The number of heap snapshots exported by a user"
+  },
+  "DEVTOOLS_MEMORY_FILTER_CENSUS": {
+    "expires_in_version": "56",
+    "kind": "boolean",
+    "bug_numbers": [1221619],
+    "description": "Whether a census tree was filtered or not"
+  },
+  "DEVTOOLS_MEMORY_DIFF_CENSUS": {
+    "expires_in_version": "56",
+    "kind": "boolean",
+    "bug_numbers": [1221619],
+    "description": "Whether a census was the result of diffing or not"
+  },
+  "DEVTOOLS_MEMORY_INVERTED_CENSUS": {
+    "expires_in_version": "56",
+    "kind": "boolean",
+    "bug_numbers": [1221619],
+    "description": "Whether a census tree was inverted or not"
+  },
+  "DEVTOOLS_MEMORY_BREAKDOWN_CENSUS_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "keyed": true,
+    "description": "The number of times a given type of breakdown was used for a census"
+  },
+  "DEVTOOLS_MEMORY_DOMINATOR_TREE_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "description": "The number of times a user requested a dominator tree be computed"
+  },
+  "DEVTOOLS_MEMORY_BREAKDOWN_DOMINATOR_TREE_COUNT": {
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1221619],
+    "keyed": true,
+    "description": "The number of times a given type of breakdown was used for a dominator tree"
+  },
   "GRAPHICS_SANITY_TEST_REASON": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "43",

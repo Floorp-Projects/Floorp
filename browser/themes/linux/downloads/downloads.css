@@ -1,161 +1,43 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/downloads/downloads.inc.css
 
 /*** Panel and outer controls ***/
-
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
-#downloadsListBox {
-  background: transparent;
-  padding: 4px;
-  color: inherit;
-}
-
-#downloadsPanel:not([hasdownloads]) > #downloadsListBox {
-  display: none;
-}
-
-#downloadsPanel[hasdownloads] > #emptyDownloads {
-  display: none;
-}
-
-#emptyDownloads {
-  padding: 10px 20px;
-  max-width: 40ch;
-}
-
-#downloadsHistory {
-  background: transparent;
-  color: -moz-nativehyperlinktext;
-  cursor: pointer;
-}
 
 #downloadsFooter {
   border-top: 1px solid ThreeDShadow;
   background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
 
-#downloadsHistory > .button-box {
-  margin: 1em;
-}
-
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus > .button-box {
-  outline: 1px -moz-dialogtext dotted;
-}
-
-/*** Downloads Summary and List items ***/
-
-#downloadsSummary,
-richlistitem[type="download"] {
-  height: 6em;
-  -moz-padding-end: 0;
-  color: inherit;
-}
-
-#downloadsSummary {
-  padding: 8px 38px 8px 12px;
-  cursor: pointer;
-  -moz-user-focus: normal;
-}
-
-#downloadsPanel[keyfocus] > #downloadsFooter > #downloadsSummary:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -5px;
-}
-
-#downloadsSummary > .downloadTypeIcon {
-  list-style-image: url("chrome://browser/skin/downloads/download-summary.png");
-}
-
-#downloadsSummaryDescription {
+#downloadsHistory {
   color: -moz-nativehyperlinktext;
 }
 
-richlistitem[type="download"] {
-  margin: 0;
-  border-top: 1px solid hsla(0,0%,100%,.2);
-  border-bottom: 1px solid hsla(0,0%,0%,.15);
-  background: transparent;
-  padding: 8px;
-}
-
-richlistitem[type="download"]:first-child {
-  border-top: 1px solid transparent;
-}
-
-richlistitem[type="download"]:last-child {
-  border-bottom: 1px solid transparent;
-}
-
-#downloadsPanel[keyfocus] > #downloadsListBox:focus > richlistitem[type="download"][selected] {
+@keyfocus@ #downloadsSummary:focus,
+@keyfocus@ #downloadsHistory:focus > .button-box {
   outline: 1px -moz-dialogtext dotted;
-  outline-offset: -1px;
 }
 
-.downloadTypeIcon {
-  -moz-margin-end: 8px;
-  /* Prevent flickering when changing states. */
-  min-height: 32px;
-  min-width: 32px;
+@keyfocus@ #downloadsSummary:focus {
+  outline-offset: -5px;
+}
+
+/*** List items and similar elements in the summary ***/
+
+:root {
+  --downloads-item-height: 6em;
+  --downloads-item-border-top-color: hsla(0,0%,100%,.2);
+  --downloads-item-border-bottom-color: hsla(0,0%,0%,.15);
+  --downloads-item-font-size-factor: 0.9;
+  --downloads-item-target-margin-bottom: 7px;
+  --downloads-item-details-margin-top: 1px;
+  --downloads-item-details-opacity: 0.6;
 }
 
 .blockedIcon {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
-}
-
-/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
-   a vbox with class .downloadContainer. We set the font-size of the entire
-   container to 90% because:
-
-   1) This is the size that we want .downloadDetails to be
-   2) The container's width is set by localizers by &downloadDetails.width;,
-      which is a ch unit. Since this is the value that should control the
-      panel width, we apply it to the outer container to constrain
-      .downloadTarget and .downloadProgress.
-
-   Finally, since we want .downloadTarget's font-size to be at 100% of the
-   font-size of .downloadContainer's parent, we use calc to go from the
-   smaller font-size back to the original font-size.
- */
-
-#downloadsSummaryDetails,
-.downloadContainer {
-  font-size: 90%;
-}
-
-#downloadsSummaryDescription,
-.downloadTarget {
-  margin-bottom: 7px;
-  cursor: inherit;
-}
-
-.downloadTarget {
-  font-size: calc(100%/0.9);
-}
-
-#downloadsSummaryDetails,
-.downloadDetails {
-  margin-top: 1px;
-  opacity: 0.6;
-  cursor: inherit;
-}
-
-.downloadButton {
-  -moz-appearance: none;
-  min-width: 0;
-  min-height: 0;
-  margin: 3px;
-  border: none;
-  background: transparent;
-  padding: 5px;
-  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
-}
-
-.downloadButton > .button-box {
-  padding: 0;
 }
 
 .downloadButton:focus > .button-box {
@@ -164,7 +46,12 @@ richlistitem[type="download"]:last-child {
 
 /*** Highlighted list items ***/
 
-#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
+@keyfocus@ @itemFocused@ {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -1px;
+}
+
+@notKeyfocus@ @itemFinished@[exists]:hover {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
@@ -180,41 +67,41 @@ richlistitem[type="download"]:last-child {
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock,
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel {
+@item@:hover .downloadButton.downloadConfirmBlock,
+@item@:hover .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:hover,
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:hover {
+@item@:hover .downloadButton.downloadConfirmBlock:hover,
+@item@:hover .downloadButton.downloadCancel:hover {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadConfirmBlock:active,
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadCancel:active {
+@item@:hover .downloadButton.downloadConfirmBlock:active,
+@item@:hover .downloadButton.downloadCancel:active {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow {
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 96px, 32px, 80px);
 }
-#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:hover {
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadShow:hover {
   -moz-image-region: rect(16px, 112px, 32px, 96px);
 }
-#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"]:hover > stack > .downloadButton.downloadShow:active {
+@notKeyfocus@ @itemFinished@:hover .downloadButton.downloadShow:active {
   -moz-image-region: rect(16px, 128px, 32px, 112px);
 }
 
 .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry {
+@item@:hover .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 32px, 48px, 16px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:hover {
+@item@:hover .downloadButton.downloadRetry:hover {
   -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
-richlistitem[type="download"]:hover > stack > .downloadButton.downloadRetry:active {
+@item@:hover .downloadButton.downloadRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
 }

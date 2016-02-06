@@ -120,7 +120,7 @@ this.webrtcUI = {
     for (let stream of this._streams) {
       if (stream.browser == aOldBrowser)
         stream.browser = aNewBrowser;
-    };
+    }
   },
 
   showSharingDoorhanger: function(aActiveStream, aType) {
@@ -251,7 +251,7 @@ function getHost(uri, href) {
       uri = Services.io.newURI(href, null, null);
     }
     host = uri.host;
-  } catch (ex) {};
+  } catch (ex) {}
   if (!host) {
     if (uri && uri.scheme.toLowerCase() == "about") {
       // Special case-ing Loop/ Hello gUM requests.

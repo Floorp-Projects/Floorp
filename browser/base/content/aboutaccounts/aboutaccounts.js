@@ -27,11 +27,11 @@ const OBSERVER_TOPICS = [
 
 function log(msg) {
   //dump("FXA: " + msg + "\n");
-};
+}
 
 function error(msg) {
   console.log("Firefox Account Error: " + msg + "\n");
-};
+}
 
 function getPreviousAccountNameHash() {
   try {

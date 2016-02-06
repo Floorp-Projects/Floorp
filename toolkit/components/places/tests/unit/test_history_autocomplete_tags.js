@@ -10,31 +10,31 @@ function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
+  constructor: AutoCompleteInput,
 
   searches: null,
-  
+
   minResultsForPopup: 0,
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
-  
+
   get searchCount() {
     return this.searches.length;
   },
-  
+
   getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
-  
+
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  
-  popupOpen: false,  
-  
-  popup: { 
+
+  popupOpen: false,
+
+  popup: {
     setSelectedIndex: function(aIndex) {},
     invalidate: function() {},
 
@@ -45,9 +45,9 @@ AutoCompleteInput.prototype = {
         return this;
 
       throw Components.results.NS_ERROR_NO_INTERFACE;
-    }    
+    }
   },
-    
+
   // nsISupports implementation
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
@@ -70,8 +70,8 @@ function ensure_tag_results(uris, searchTerm)
 {
   print("Searching for '" + searchTerm + "'");
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                   getService(Components.interfaces.nsIAutoCompleteController);  
-  
+                   getService(Components.interfaces.nsIAutoCompleteController);
+
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
   var input = new AutoCompleteInput(["history"]);
@@ -89,7 +89,7 @@ function ensure_tag_results(uris, searchTerm)
 
   input.onSearchComplete = function() {
     do_check_eq(numSearchesStarted, 1);
-    do_check_eq(controller.searchStatus, 
+    do_check_eq(controller.searchStatus,
                 uris.length ?
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
@@ -102,7 +102,7 @@ function ensure_tag_results(uris, searchTerm)
     }
     // Sort the results then check if we have the right items
     vals.sort().forEach((val, i) => do_check_eq(val, uris[i].spec))
-   
+
     if (current_test < (tests.length - 1)) {
       current_test++;
       tests[current_test]();
@@ -120,7 +120,7 @@ var uri3 = uri("http://site.tld/3/aaa");
 var uri4 = uri("http://site.tld/4/bbb");
 var uri5 = uri("http://site.tld/5/aaa");
 var uri6 = uri("http://site.tld/6/bbb");
-  
+
 var tests = [
   () => ensure_tag_results([uri1, uri4, uri6], "foo"),
   () => ensure_tag_results([uri1], "foo aaa"),
@@ -164,7 +164,7 @@ function tagURI(aURI, aTags) {
   tagssvc.tagURI(aURI, aTags);
 }
 
-/** 
+/**
  * Test history autocomplete
  */
 function run_test() {

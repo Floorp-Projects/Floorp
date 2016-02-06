@@ -52,7 +52,6 @@ var PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
       withGCEvents: true,
       withDocLoadingEvents: true,
       withAllocations: true,
-      withJITOptimizations: true,
     },
   },
 

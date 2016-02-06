@@ -305,7 +305,6 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    * Begins a recording session
    *
    * @param boolean options.withMarkers
-   * @param boolean options.withJITOptimizations
    * @param boolean options.withTicks
    * @param boolean options.withMemory
    * @param boolean options.withAllocations
@@ -483,7 +482,6 @@ function getPerformanceRecordingPrefs () {
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
     withTicks: Services.prefs.getBoolPref("devtools.performance.ui.enable-framerate"),
     withAllocations: Services.prefs.getBoolPref("devtools.performance.ui.enable-allocations"),
-    withJITOptimizations: Services.prefs.getBoolPref("devtools.performance.ui.enable-jit-optimizations"),
     allocationsSampleProbability: +Services.prefs.getCharPref("devtools.performance.memory.sample-probability"),
     allocationsMaxLogLength: Services.prefs.getIntPref("devtools.performance.memory.max-log-length")
   };

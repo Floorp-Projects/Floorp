@@ -397,7 +397,7 @@ this.AddonRepository_SQLiteMigrator = {
 
     for (let prop of PROP_SINGLE) {
       addon[prop] = aRow.getResultByName(prop)
-    };
+    }
 
     return addon;
   },

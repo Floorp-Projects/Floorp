@@ -86,7 +86,7 @@ function promiseSetEngine() {
           resolve();
           break;
       }
-    };
+    }
 
     Services.obs.addObserver(observer, "browser-search-engine-modified", false);
     ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
@@ -103,7 +103,7 @@ function promiseRemoveEngine() {
         Services.obs.removeObserver(observer, "browser-search-engine-modified");
         resolve();
       }
-    };
+    }
 
     Services.obs.addObserver(observer, "browser-search-engine-modified", false);
     var engine = ss.getEngineByName("Bug 426329");

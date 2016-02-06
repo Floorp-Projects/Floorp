@@ -89,7 +89,7 @@ function test_rsa() {
 */
     do_test_finished();
     run_next_test();
-  };
+  }
 
   jwcrypto.generateKeyPair("RS256", checkRSA);
 }
@@ -120,7 +120,7 @@ function test_dsa() {
 */
     do_test_finished();
     run_next_test();
-  };
+  }
 
   jwcrypto.generateKeyPair("DS160", checkDSA);
 }
@@ -261,7 +261,7 @@ function extractComponents(signedObject) {
           headerSegment: headerSegment,
           payloadSegment: payloadSegment,
           cryptoSegment: cryptoSegment};
-};
+}
 
 var TESTS = [
   test_sanity,

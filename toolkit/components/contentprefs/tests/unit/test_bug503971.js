@@ -6,7 +6,7 @@ function run_test() {
   var cps = new ContentPrefInstance(null);
 
   var uri = ContentPrefTest.getURI("http://www.example.com/");
-  
+
   do_check_thrown(function () { cps.setPref(uri, null, 8); });
   do_check_thrown(function () { cps.hasPref(uri, null); });
   do_check_thrown(function () { cps.getPref(uri, null); });

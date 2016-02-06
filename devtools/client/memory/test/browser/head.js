@@ -72,17 +72,6 @@ function makeMemoryTest(url, generator) {
   });
 }
 
-function waitUntilSnapshotState (store, expected) {
-  let predicate = () => {
-    let snapshots = store.getState().snapshots;
-    info(snapshots.map(x => x.state));
-    return snapshots.length === expected.length &&
-           expected.every((state, i) => state === "*" || snapshots[i].state === state);
-  };
-  info(`Waiting for snapshots to be of state: ${expected}`);
-  return waitUntilState(store, predicate);
-}
-
 /**
  * Returns a promise that will resolve when the provided store matches
  * the expected array. expectedStates is an array of dominatorTree states.

@@ -18,7 +18,7 @@ window.onload = function()
   gTextBoxEval = document.getElementById("TextboxEval");
   gEvaluator = document.getElementById("Evaluator");
   gFilter = document.getElementById("Filter");
-  
+
   updateSortCommand(gConsole.sortOrder);
   updateModeCommand(gConsole.mode);
 
@@ -45,7 +45,7 @@ function changeMode(aMode)
     case "All":
       gConsole.mode = null;
   }
-  
+
   document.persist("ConsoleBox", "mode");
 }
 
@@ -63,7 +63,7 @@ function updateSortCommand(aOrder)
 {
   var orderString = aOrder == 'reverse' ? "Descend" : "Ascend";
   var bc = document.getElementById("Console:sort"+orderString);
-  bc.setAttribute("checked", true);  
+  bc.setAttribute("checked", true);
 
   orderString = aOrder == 'reverse' ? "Ascend" : "Descend";
   bc = document.getElementById("Console:sort"+orderString);

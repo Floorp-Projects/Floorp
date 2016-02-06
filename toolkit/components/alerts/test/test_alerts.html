@@ -52,7 +52,7 @@ function runTest() {
                getService(Ci.nsIAlertsService);
     ok(true, "Alerts service is available");
   } catch (ex) {
-    todo(false, 
+    todo(false,
          "Alerts service is not available.", ex);
     return;
   }

@@ -17,7 +17,7 @@ function test() {
   let previouslySelectedEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   engine.alias = "b";
-  
+
   let base = "https://www.bing.com/search?q=foo&pc=MOZI";
   let url;
 

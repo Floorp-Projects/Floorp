@@ -301,7 +301,7 @@ ViewSourceChrome.prototype = {
     // We require the first argument to do any loading of source.
     // otherwise, we're done.
     if (!window.arguments[0]) {
-      return;
+      return undefined;
     }
 
     if (typeof window.arguments[0] == "string") {

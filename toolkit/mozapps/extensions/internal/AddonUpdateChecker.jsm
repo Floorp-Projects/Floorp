@@ -275,7 +275,7 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
 function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
   if (aManifestData.documentElement.namespaceURI != PREFIX_NS_RDF) {
     throw Components.Exception("Update manifest had an unrecognised namespace: " + xml.documentElement.namespaceURI);
-    return;
+    return undefined;
   }
 
   function EM_R(aProp) {

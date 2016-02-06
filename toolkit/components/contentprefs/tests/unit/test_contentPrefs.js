@@ -64,7 +64,7 @@ function run_test() {
     // Create a corrupted database.
     let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
                    createInstance(Ci.nsIFileOutputStream);
-    foStream.init(dbFile, 0x02 | 0x08 | 0x20, 0666, 0);
+    foStream.init(dbFile, 0x02 | 0x08 | 0x20, 0o666, 0);
     let garbageData = "garbage that makes SQLite think the file is corrupted";
     foStream.write(garbageData, garbageData.length);
     foStream.close();
@@ -357,10 +357,10 @@ function run_test() {
       }
     };
 
-    var uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
-    var uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
-    var uri3 = ContentPrefTest.getURI("http://domain1.com/");
-    var uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
+    let uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
+    let uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
+    let uri3 = ContentPrefTest.getURI("http://domain1.com/");
+    let uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
 
     cps.setPref(uri1, "test.byname.1", 1);
     cps.setPref(uri1, "test.byname.2", 2);

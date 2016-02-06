@@ -18,7 +18,7 @@
       <xul:spacer class="progress-bar" xbl:inherits="mode"/>
       <xul:spacer class="progress-remainder" xbl:inherits="mode"/>
     </content>
-    
+
     <implementation>
       <property name="mode" onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
                             onget="return this.getAttribute('mode');"/>
@@ -31,7 +31,7 @@
             p = 0;
           else if (p > max)
             p = max;
-          var c = this.value; 
+          var c = this.value;
           if (p != c) {
             var delta = p - c;
             if (delta < 0)
@@ -44,7 +44,7 @@
               this.dispatchEvent(event);
             }
           }
-          
+
           return val;
         ]]></setter>
       </property>

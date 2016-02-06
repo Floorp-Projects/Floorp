@@ -108,7 +108,7 @@ pageInfoTreeView.prototype = {
         this,
         this.data,
         treecol.index,
-        function textComparator(a, b) { return (a || "").toLowerCase().localeCompare((b || "").toLowerCase()); },
+        function textComparator(a, b) { return (a || "").toLowerCase().localeCompare((b || "").toLowerCase()); },
         this.sortcol,
         this.sortdir
       );

@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+
+%define item richlistitem.download
+%define itemFocused @item@[selected]
+
+/*** View and outer controls ***/
+
+#downloadsRichListBox {
+  /** The default listbox appearance comes with an unwanted margin. **/
+  -moz-appearance: none;
+  margin: 0;
+}
+
+/*** List items ***/
+
+#downloadsRichListBox > richlistitem.download {
+  height: var(--downloads-item-height);
+}
+
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp) {
+%endif
+#downloadsRichListBox > richlistitem.download {
+  padding: 5px 8px;
+}
+%ifdef XP_WIN
+}
+%endif
+
+.downloadTypeIcon {
+  -moz-margin-end: 8px;
+  width: 32px;
+  height: 32px;
+}
+
+%ifdef XP_WIN
+@media not all and (-moz-os-version: windows-xp) {
+  .downloadTypeIcon {
+    -moz-margin-start: 8px;
+  }
+}
+%endif
+
+.blockedIcon {
+  list-style-image: url("chrome://global/skin/icons/Error.png");
+}
+
+.downloadTarget {
+  margin-bottom: 3px;
+  cursor: inherit;
+}
+
+.downloadDetails {
+  opacity: 0.7;
+  font-size: 95%;
+  cursor: inherit;
+}
+
+.downloadButton {
+  -moz-appearance: none;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  margin: 3px;
+  border: none;
+  padding: 5px;
+  list-style-image: url("chrome://browser/skin/downloads/buttons.png");
+}

@@ -4,13 +4,13 @@ Unit test for dates
 
 assert = chai.assert;
 
-// Tests the private Modules.dates object 
-// Modules.dates is unit tested as it has an interface access by other modules  
+// Tests the private Modules.dates object
+// Modules.dates is unit tested as it has an interface access by other modules
 
 
 describe('Modules.dates', function() {
-    
-   
+
+
    it('hasAM', function(){
        assert.isTrue( Modules.dates.hasAM( '5am' ) );
        assert.isTrue( Modules.dates.hasAM( '5AM' ) );
@@ -19,8 +19,8 @@ describe('Modules.dates', function() {
        assert.isTrue( Modules.dates.hasAM( '5:20 a.m.' ) );
        assert.isFalse( Modules.dates.hasAM( '5pm' ) );
    });
-   
-   
+
+
    it('hasPM', function(){
        assert.isTrue( Modules.dates.hasPM( '5pm' ) );
        assert.isTrue( Modules.dates.hasPM( '5PM' ) );
@@ -29,8 +29,8 @@ describe('Modules.dates', function() {
        assert.isTrue( Modules.dates.hasPM( '5:20 p.m.' ) );
        assert.isFalse( Modules.dates.hasPM( '5am' ) );
    });
-   
-   
+
+
    it('removeAMPM', function(){
        assert.equal( Modules.dates.removeAMPM( '5pm' ), '5' );
        assert.equal( Modules.dates.removeAMPM( '5 pm' ), '5 ' );
@@ -39,8 +39,8 @@ describe('Modules.dates', function() {
        assert.equal( Modules.dates.removeAMPM( '5a.m.' ), '5' );
        assert.equal( Modules.dates.removeAMPM( '5' ), '5' );
    });
-   
-   
+
+
    it('isDuration', function(){
        assert.isTrue( Modules.dates.isDuration( 'PY17M' ) );
        assert.isTrue( Modules.dates.isDuration( 'PW12' ) );
@@ -50,8 +50,8 @@ describe('Modules.dates', function() {
        assert.isFalse( Modules.dates.isDuration( '2015-01-23 13:45' ) );
        assert.isFalse( Modules.dates.isDuration( '20150123T1345' ) );
    });
-   
-   
+
+
    it('isTime', function(){
        assert.isTrue( Modules.dates.isTime( '8:43' ) );
        assert.isTrue( Modules.dates.isTime( '08:43' ) );
@@ -67,10 +67,10 @@ describe('Modules.dates', function() {
        assert.isFalse( Modules.dates.isTime( '2015-01-23 13:45' ) );
        assert.isFalse( Modules.dates.isTime( '20150123T1345' ) );
        assert.isFalse( Modules.dates.isTime( 'abc' ) );
-       assert.isFalse( Modules.dates.isTime( '12345' ) ); 
+       assert.isFalse( Modules.dates.isTime( '12345' ) );
    });
-   
-   
+
+
    it('parseAmPmTime', function(){
        assert.equal( Modules.dates.parseAmPmTime( '5am' ), '05' );
        assert.equal( Modules.dates.parseAmPmTime( '12pm' ), '12' );
@@ -82,8 +82,8 @@ describe('Modules.dates', function() {
        assert.equal( Modules.dates.parseAmPmTime( '05:34:00' ), '05:34:00' );
        assert.equal( Modules.dates.parseAmPmTime( '1:52:04pm' ), '13:52:04' );
    });
-   
-      
+
+
    it('dateTimeUnion', function(){
        assert.equal( Modules.dates.dateTimeUnion( '2015-01-23', '05:34:00', 'HTML5' ).toString('HTML5'), '2015-01-23 05:34:00' );
        assert.equal( Modules.dates.dateTimeUnion( '2015-01-23', '05:34', 'HTML5' ).toString('HTML5'), '2015-01-23 05:34' );
@@ -93,8 +93,8 @@ describe('Modules.dates', function() {
        assert.equal( Modules.dates.dateTimeUnion( '2015-01-23', '', 'HTML5' ).toString('HTML5'), '2015-01-23' );
        assert.equal( Modules.dates.dateTimeUnion( '', '', 'HTML5' ).toString('HTML5'), '' );
    });
-   
-   
+
+
    it('concatFragments', function(){
        assert.equal( Modules.dates.concatFragments( ['2015-01-23', '05:34:00'], 'HTML5' ).toString('HTML5'), '2015-01-23 05:34:00' );
        assert.equal( Modules.dates.concatFragments( ['05:34:00', '2015-01-23'], 'HTML5' ).toString('HTML5'), '2015-01-23 05:34:00' );
@@ -103,11 +103,11 @@ describe('Modules.dates', function() {
        assert.equal( Modules.dates.concatFragments( ['2015-01-23', '05:34', '-01'], 'HTML5' ).toString('HTML5'), '2015-01-23 05:34-01' );
        assert.equal( Modules.dates.concatFragments( ['2015-01-23', '05:34', '-01:00'], 'HTML5' ).toString('HTML5'), '2015-01-23 05:34-01:00' );
        assert.equal( Modules.dates.concatFragments( ['2015-01-23', '05:34-01:00'], 'HTML5' ).toString('HTML5'), '2015-01-23 05:34-01:00' );
-       
+
    });
-   
-   
 
 
-   
+
+
+
 });

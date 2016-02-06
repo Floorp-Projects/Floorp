@@ -32,7 +32,7 @@ function* promiseKeyword(keyword, expectedHref) {
     yield new Promise(resolve => do_timeout(100, resolve));
     let entry = yield PlacesUtils.keywords.fetch(keyword);
     if (entry)
-      href = entry.url.href; 
+      href = entry.url.href;
   } while (href != expectedHref);
 }
 

@@ -113,7 +113,7 @@ function createSymlink() {
               getApplyDirFile().path + "/" + DIR_RESOURCES + "link"];
   runHelperProcess(args);
   getApplyDirFile(DIR_RESOURCES + "link", false).permissions = 0o666;
-  
+
   args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
           getApplyDirFile().path +"/" + DIR_RESOURCES + "link2", "change-perm"];
   runHelperProcess(args);

@@ -165,7 +165,7 @@ function setup_test_identity(identity, cert, cb) {
   function keyGenerated(err, kpo) {
     store.addIdentity(identity, kpo, cert);
     cb();
-  };
+  }
 
   jwcrypto.generateKeyPair("DS160", keyGenerated);
 }

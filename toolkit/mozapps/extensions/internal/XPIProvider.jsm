@@ -2582,16 +2582,20 @@ this.XPIProvider = {
       if (!REQUIRE_SIGNING)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this, false);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
-      if (Cu.isModuleLoaded("resource://devtools/client/framework/ToolboxProcess.jsm")) {
-        // If BrowserToolboxProcess is already loaded, set the boolean to true
-        // and do whatever is needed
-        this._toolboxProcessLoaded = true;
-        BrowserToolboxProcess.on("connectionchange",
-                                 this.onDebugConnectionChange.bind(this));
-      }
-      else {
-        // Else, wait for it to load
-        Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+
+      // Cu.isModuleLoaded can fail here for external XUL apps where there is
+      // no chrome.manifest that defines resource://devtools.
+      if (ResProtocolHandler.hasSubstitution("devtools")) {
+        if (Cu.isModuleLoaded("resource://devtools/client/framework/ToolboxProcess.jsm")) {
+          // If BrowserToolboxProcess is already loaded, set the boolean to true
+          // and do whatever is needed
+          this._toolboxProcessLoaded = true;
+          BrowserToolboxProcess.on("connectionchange",
+                                   this.onDebugConnectionChange.bind(this));
+        } else {
+          // Else, wait for it to load
+          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+        }
       }
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
@@ -2885,11 +2889,11 @@ this.XPIProvider = {
   updateSystemAddons: Task.async(function*() {
     let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
     if (!systemAddonLocation)
-      return;
+      return undefined;
 
     // Don't do anything in safe mode
     if (Services.appinfo.inSafeMode)
-      return;
+      return undefined;
 
     // Download the list of system add-ons
     let url = Preferences.get(PREF_SYSTEM_ADDON_UPDATE_URL, null);
@@ -4107,7 +4111,7 @@ this.XPIProvider = {
 
           notifyComplete();
         });
-      };
+      }
     });
   },
 
@@ -5385,7 +5389,7 @@ AddonInstall.prototype = {
         this.ownsTempFile = true;
 
         yield this._createLinkedInstalls(files.filter(f => f.file != file));
-        return;
+        return undefined;
       }
       catch (e) {
         // _createLinkedInstalls will log errors when it tries to process this
@@ -6886,7 +6890,7 @@ AddonWrapper.prototype = {
     let addon = addonFor(this);
     if (this.type == "experiment") {
       logger.warn("Setting applyBackgroundUpdates on an experiment is not supported.");
-      return;
+      return addon.applyBackgroundUpdates;
     }
 
     if (val != AddonManager.AUTOUPDATE_DEFAULT &&

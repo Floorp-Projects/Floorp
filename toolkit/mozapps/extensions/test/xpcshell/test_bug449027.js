@@ -258,7 +258,7 @@ var WindowWatcher = {
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
     do_check_neq(gCallback, null);
 
-    var args = args.wrappedJSObject;
+    args = args.wrappedJSObject;
 
     gNewBlocks = [];
     var list = args.list;

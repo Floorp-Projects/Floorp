@@ -63,7 +63,7 @@ function promiseObserverNotification(aObserver) {
     Services.obs.removeObserver(notificationCallback, aObserver, false);
     clearTimeout(timeoutId);
     deferred.resolve();
-  };
+  }
   let timeoutId = setTimeout(() => {
     Services.obs.removeObserver(notificationCallback, aObserver, false);
     deferred.reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
@@ -83,7 +83,7 @@ function promiseTabSelect() {
     container.removeEventListener("TabSelect", callback);
     clearTimeout(timeoutId);
     executeSoon(deferred.resolve);
-  };
+  }
   container.addEventListener("TabSelect", callback);
   return deferred.promise;
 }

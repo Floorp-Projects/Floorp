@@ -4,7 +4,7 @@ function create_subdir(dir, subdirname) {
   if (subdir.exists()) {
     subdir.remove(true);
   }
-  subdir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  subdir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   return subdir;
 }
 
@@ -86,7 +86,7 @@ function add_fake_crashes(crD, count) {
     let fn = uuid + ".txt";
     let file = submitdir.clone();
     file.append(fn);
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
     file.lastModifiedTime = date;
     results.push({'id': uuid, 'date': date, 'pending': false});
 

@@ -35,7 +35,7 @@ function* spawnTest() {
   ok(logs[DURATION].every(d => typeof d === "number"), `every ${DURATION} entry is a number`);
   is(logs[COUNT].length, 2, `two entries for ${COUNT}`);
   is(logs[CONSOLE_COUNT], void 0, `no entries for ${CONSOLE_COUNT}`);
-  is(logs[FEATURES].length, 10, `two recordings worth of entries for ${FEATURES}`);
+  is(logs[FEATURES].length, 8, `two recordings worth of entries for ${FEATURES}`);
   ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === true), "one feature entries for memory enabled");
   ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === false), "one feature entries for memory disabled");
 

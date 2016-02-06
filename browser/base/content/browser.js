@@ -3029,7 +3029,7 @@ function populateMirrorTabMenu(popup) {
     item.addEventListener("command", mirrorMenuItemClicked);
     popup.appendChild(item);
   });
-};
+}
 
 function getWebNavigation()
 {
@@ -5501,7 +5501,7 @@ function handleDroppedLink(event, url, name)
   // Keep the event from being handled by the dragDrop listeners
   // built-in to gecko if they happen to be above us.
   event.preventDefault();
-};
+}
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
@@ -7189,14 +7189,14 @@ function getNotificationBox(aWindow) {
   if (foundBrowser)
     return gBrowser.getNotificationBox(foundBrowser)
   return null;
-};
+}
 
 function getTabModalPromptBox(aWindow) {
   var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
   if (foundBrowser)
     return gBrowser.getTabModalPromptBox(foundBrowser);
   return null;
-};
+}
 
 /* DEPRECATED */
 function getBrowser() {

@@ -10,7 +10,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  
+
   <binding id="remotecontent">
     <content>
       <xul:vbox flex="1" class="loadingBox">
@@ -25,7 +25,7 @@
         <xul:browser class="remoteContent" type="content" disablehistory="true"
                      flex="1"/>
       </xul:vbox>
-      <xul:stringbundle anonid="strings" 
+      <xul:stringbundle anonid="strings"
                         src="chrome://mozapps/locale/update/updates.properties"/>
     </content>
     <implementation>
@@ -45,7 +45,7 @@
       <destructor><![CDATA[
         // clean up the listener but you may not have one if you never showed
         // the page with a <remotecontent> element
-        if (this._remoteProgressListener) 
+        if (this._remoteProgressListener)
           this._content.webProgress
               .removeProgressListener(this._remoteProgressListener);
       ]]></destructor>
@@ -78,7 +78,7 @@
           this.setAttribute("selectedIndex", "0");
 
           var errorPropertyName = this.getAttribute("id") + "NotFound";
-          var statusText = this._strings.getFormattedString(errorPropertyName, 
+          var statusText = this._strings.getFormattedString(errorPropertyName,
                                                             [this.update_name]);
           this._setMessageValue(statusText);
           this.setAttribute("state", "error");
@@ -151,14 +151,14 @@
           return this.getAttribute("url");
         ]]></getter>
         <setter><![CDATA[
-          if (this._remoteProgressListener) 
+          if (this._remoteProgressListener)
             this._content.webProgress
                 .removeProgressListener(this._remoteProgressListener);
 
           var self = this;
 
           this._remoteProgressListener = {
-            QueryInterface: function(aIID) 
+            QueryInterface: function(aIID)
             {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
                   aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -170,32 +170,32 @@
             onProgressChange: function() {},
             onStatusChange:   function() {},
             onSecurityChange: function() {},
-            onStateChange:    function(aWebProgress, aRequest, 
-                                       aStateFlags, aStatus) 
+            onStateChange:    function(aWebProgress, aRequest,
+                                       aStateFlags, aStatus)
             {
               if (!aRequest)
                 return;
 
-              const nsIWebProgressListener = 
+              const nsIWebProgressListener =
                 Components.interfaces.nsIWebProgressListener;
- 
-              if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) 
+
+              if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
               {
-                if (aStateFlags & nsIWebProgressListener.STATE_START) 
+                if (aStateFlags & nsIWebProgressListener.STATE_START)
                   self.onStart();
                 else if (aStateFlags & nsIWebProgressListener.STATE_STOP)
                 {
                   const nsIHttpChannel = Components.interfaces.nsIHttpChannel;
                   try {
                     var channel = aRequest.QueryInterface(nsIHttpChannel);
-                    if (channel.requestSucceeded) 
+                    if (channel.requestSucceeded)
                     {
                       // if we get here, the load was OK, report success
                       self.onLoad();
                       return;
                     }
                   }
-                  catch (ex) 
+                  catch (ex)
                   {
                     // the channel.requestSucceeded can throw
                     // NS_ERROR_NOT_AVAILABLE if you can't reach the server

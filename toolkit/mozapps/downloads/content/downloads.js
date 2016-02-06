@@ -1237,7 +1237,7 @@ function prependList(aDownload)
   if (item) {
     // Add item to the beginning
     gDownloadsView.insertBefore(item, gDownloadsView.firstChild);
-    
+
     // Because of the joys of XBL, we can't update the buttons until the
     // download object is in the document.
     updateButtons(item);

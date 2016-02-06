@@ -213,7 +213,7 @@ function createMockAddonProvider(aName) {
   };
 
   return mockProvider;
-};
+}
 
 /**
  * Used to spoof the Persona Id.

@@ -693,7 +693,7 @@ function updateBookmark(info, item, newParent) {
       if (info.hasOwnProperty("url")) {
         // Ensure a page exists in moz_places for this URL.
         yield db.executeCached(
-          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
+          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid)
            VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
           `, { url: info.url ? info.url.href : null,
                rev_host: PlacesUtils.getReversedHost(info.url),
@@ -781,7 +781,7 @@ function insertBookmark(item, parent) {
       if (item.type == Bookmarks.TYPE_BOOKMARK) {
         // Ensure a page exists in moz_places for this URL.
         yield db.executeCached(
-          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
+          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid)
            VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
           `, { url: item.url.href, rev_host: PlacesUtils.getReversedHost(item.url),
                frecency: item.url.protocol == "place:" ? 0 : -1 });
@@ -969,7 +969,7 @@ function reorderChildren(parent, orderedChildrenGuids) {
       // Select all of the direct children for the given parent.
       let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
       if (!children.length)
-        return;
+        return undefined;
 
       // Reorder the children array according to the specified order, provided
       // GUIDs come first, others are appended in somehow random order.

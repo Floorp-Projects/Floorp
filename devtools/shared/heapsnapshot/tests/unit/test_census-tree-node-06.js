@@ -76,9 +76,9 @@ function run_test() {
       {
         name: abc_Stack,
         bytes: 50,
-        totalBytes: 50,
+        totalBytes: 10,
         count: 5,
-        totalCount: 5,
+        totalCount: 1,
         children: [
           {
             name: null,
@@ -93,9 +93,9 @@ function run_test() {
           {
             name: abc_Stack.parent,
             bytes: 0,
-            totalBytes: 30,
+            totalBytes: 10,
             count: 0,
-            totalCount: 3,
+            totalCount: 1,
             children: [
               {
                 name: null,

@@ -194,7 +194,7 @@ var SimpleServiceDiscovery = {
     fixedDevices = JSON.parse(fixedDevices);
     for (let fixedDevice of fixedDevices) {
       // Verify we have the right data
-      if (!"location" in fixedDevice || !"target" in fixedDevice) {
+      if (!("location" in fixedDevice) || !("target" in fixedDevice)) {
         continue;
       }
 

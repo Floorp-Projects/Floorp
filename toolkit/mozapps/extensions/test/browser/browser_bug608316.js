@@ -9,7 +9,7 @@ var gProvider;
 
 function test() {
   waitForExplicitFinish();
-  
+
   gProvider = new MockProvider();
 
   gProvider.createAddons([{

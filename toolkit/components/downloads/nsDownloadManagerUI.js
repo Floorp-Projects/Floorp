@@ -33,7 +33,7 @@ nsDownloadManagerUI.prototype = {
     let window = this.recentWindow;
     if (window) {
       window.focus();
-      
+
       // If we are being asked to show again, with a user interaction reason,
       // set the appropriate variable.
       if (aReason == Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED)

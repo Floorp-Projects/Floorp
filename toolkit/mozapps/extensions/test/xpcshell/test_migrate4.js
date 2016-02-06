@@ -141,7 +141,7 @@ function prepare_profile() {
           AddonManager.getInstallForURL("http://localhost:" + gPort + "/addons/test_migrate4_7.xpi", function(aInstall7) {
             completeAllInstalls([aInstall6, aInstall7], function() {
               restartManager();
-  
+
               AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                            "addon2@tests.mozilla.org",
                                            "addon3@tests.mozilla.org",
@@ -151,7 +151,7 @@ function prepare_profile() {
                                            function([a1, a2, a3, a4, a5, a6]) {
                 a3.userDisabled = true;
                 a4.userDisabled = false;
-  
+
                 a5.findUpdates({
                   onUpdateFinished: function() {
                     do_execute_soon(perform_migration);
@@ -168,7 +168,7 @@ function prepare_profile() {
 
 function perform_migration() {
   shutdownManager();
-  
+
   // Turn on disabling for all scopes
   Services.prefs.setIntPref("extensions.autoDisableScopes", 15);
 
