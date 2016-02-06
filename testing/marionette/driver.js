@@ -1707,7 +1707,7 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
         let frames = curWindow.document.getElementsByTagName("iframe");
         let numFrames = frames.length;
         for (let i = 0; i < numFrames; i++) {
-          if (XPCNativeWrapper(frames[i]) == XPCNativeWrapper(wantedFrame)) {
+          if (new XPCNativeWrapper(frames[i]) == new XPCNativeWrapper(wantedFrame)) {
             curWindow = frames[i].contentWindow;
             this.curFrame = curWindow;
             if (focus) {
