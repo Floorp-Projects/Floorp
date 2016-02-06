@@ -4,18 +4,27 @@
 
 "use strict";
 
-/* static functions */
-const DEBUG = true;
-
-function debug(aStr) {
-  DEBUG && dump("AlarmService: " + aStr + "\n");
-}
-
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AlarmDB.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
+function getLogger() {
+  var logger = Log.repository.getLogger("AlarmsService");
+  logger.addAppender(new Log.DumpAppender(new Log.BasicFormatter()));
+  logger.level = Log.Level.Debug;
+  return logger;
+}
+
+const logger = getLogger();
+
+/* Only log in B2G */
+function debug(aStr) {
+  AppConstants.MOZ_B2G && logger.debug(aStr);
+}
 
 this.EXPORTED_SYMBOLS = ["AlarmService"];
 
