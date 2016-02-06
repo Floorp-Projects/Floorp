@@ -31,17 +31,6 @@ add_task(function* () {
       </head></html>`,
 
       "bg/background.js": function() {
-        // Wrap API methods in promise-based variants.
-        let promiseTabs = {};
-        Object.keys(browser.tabs).forEach(method => {
-          promiseTabs[method] = (...args) => {
-            return new Promise(resolve => {
-              browser.tabs[method](...args, resolve);
-            });
-          };
-        });
-
-
         let activeTab;
         let activeWindow;
 
@@ -132,7 +121,7 @@ add_task(function* () {
             });
 
             Promise.all([
-              promiseTabs.create(test.create),
+              browser.tabs.create(test.create),
               createdPromise,
             ]).then(([tab]) => {
               tabId = tab.id;
@@ -150,9 +139,9 @@ add_task(function* () {
             }).then(url => {
               browser.test.assertEq(expected.url, url, `Expected value for tab.url`);
 
-              return promiseTabs.remove(tabId);
+              return browser.tabs.remove(tabId);
             }).then(() => {
-              return promiseTabs.update(activeTab, { active: true });
+              return browser.tabs.update(activeTab, { active: true });
             }).then(() => {
               nextTest();
             });
