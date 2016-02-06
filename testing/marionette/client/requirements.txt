@@ -1,14 +1,1 @@
-marionette-driver >= 1.3.0
-browsermob-proxy >= 0.6.0
-manifestparser >= 1.1
-wptserve >= 1.3.0
-mozinfo >= 0.8
-mozprocess >= 0.9
 mozrunner >= 6.9
-mozdevice >= 0.44
-mozlog >= 3.0
-moznetwork >= 0.21
-mozcrash >= 0.5
-mozprofile >= 0.7
-moztest >= 0.7
-mozversion >= 1.1
