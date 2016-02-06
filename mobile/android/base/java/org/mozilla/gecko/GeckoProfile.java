@@ -616,6 +616,7 @@ public final class GeckoProfile {
         try {
             clientIdFileContents = readFile(CLIENT_ID_FILE_PATH);
         } catch (final IOException e) {
+            // Don't log exception to avoid leaking profile path.
             throw new IOException("Could not read client ID file to retrieve client ID");
         }
 
@@ -623,6 +624,7 @@ public final class GeckoProfile {
             final org.json.JSONObject json = new org.json.JSONObject(clientIdFileContents);
             return json.getString(CLIENT_ID_JSON_ATTR);
         } catch (final JSONException e) {
+            // Don't log exception to avoid leaking profile path.
             throw new IOException("Could not parse JSON to retrieve client ID");
         }
     }
