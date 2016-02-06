@@ -248,8 +248,7 @@ InlineSpellChecker.prototype = {
             menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
           }
         };
-        item.addEventListener
-          ("command", callback(this, i, sortedList[i].id), true);
+        item.addEventListener("command", callback(this, i, sortedList[i].id), true);
       }
       if (insertBefore)
         menu.insertBefore(item, insertBefore);

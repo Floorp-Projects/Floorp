@@ -183,14 +183,14 @@ SavePage.prototype.onClick = function() {
     for (let node of nodes) {
       noPrintList.push(node);
       node.style.setProperty("display", "none");
-    };
+    }
 
     fout.write(content.outerHTML, content.outerHTML.length);
     FileUtils.closeAtomicFileOutputStream(fout);
 
     for (let node of noPrintList) {
       node.style.removeProperty("display");
-    };
+    }
 
     this._message = formatString("save_page_msg", [FilePicker.file.path], 1);
     this.update();
@@ -365,7 +365,7 @@ var AboutWebRTC = {
     for (let report of reports) {
       let peerConnection = new PeerConnection(report);
       connections.appendChild(peerConnection.render());
-    };
+    }
 
     return connections;
   },
@@ -404,7 +404,7 @@ var AboutWebRTC = {
       elem = document.createElement("p");
       elem.textContent = line;
       div.appendChild(elem);
-    };
+    }
 
     content.appendChild(div);
     return content;
@@ -520,7 +520,7 @@ RTPStats.prototype = {
 
     for (let statSet of this._stats) {
       div.appendChild(this.renderRTPStatSet(statSet));
-    };
+    }
 
     return div;
   },
@@ -536,7 +536,7 @@ RTPStats.prototype = {
       if (stats.isRemote) {
         remoteRtpStats[stats.id] = stats;
       }
-    };
+    }
 
     // If a streamStat has a remoteId attribute, create a remoteRtpStats
     // attribute that references the remote streamStat entry directly.
@@ -545,7 +545,7 @@ RTPStats.prototype = {
       if (stats.remoteId) {
         stats.remoteRtpStats = remoteRtpStats[stats.remoteId];
       }
-    };
+    }
 
     this._stats = rtpStats;
   },
@@ -666,7 +666,7 @@ ICEStats.prototype = {
         stat.nominated || "",
         stat.selected || ""
       ]);
-    };
+    }
 
     let statsTable = new SimpleTable(
       [getString("local_candidate"), getString("remote_candidate"), getString("ice_state"),
@@ -718,7 +718,7 @@ ICEStats.prototype = {
         }
         stats.push(stat);
       }
-    };
+    }
 
     for (let c of candidates.values()) {
       if (matched[c.id])
@@ -727,7 +727,7 @@ ICEStats.prototype = {
       stat = {};
       stat[c.type] = this.candidateToString(c);
       stats.push(stat);
-    };
+    }
 
     return stats.sort((a, b) => (b.priority || 0) - (a.priority || 0));
   },
@@ -760,7 +760,7 @@ SimpleTable.prototype = {
       let cell = document.createElement("td");
       cell.textContent = elem;
       row.appendChild(cell);
-    };
+    }
 
     return row;
   },
@@ -774,7 +774,7 @@ SimpleTable.prototype = {
 
     for (let row of this._data) {
       table.appendChild(this.renderRow(row));
-    };
+    }
 
     return table;
   }
@@ -788,7 +788,7 @@ function FoldEffect(targetElem, options = {}) {
     this._hideHint = options.hideHint || getString("fold_hide_hint");
     this._target = targetElem;
   }
-};
+}
 
 FoldEffect.prototype = {
   render: function() {
@@ -831,11 +831,11 @@ FoldEffect._sections = [];
 FoldEffect.expandAll = function() {
   for (let section of this._sections) {
     section.open();
-  };
+  }
 };
 
 FoldEffect.collapseAll = function() {
   for (let section of this._sections) {
     section.close();
-  };
+  }
 };

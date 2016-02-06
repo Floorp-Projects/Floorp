@@ -178,7 +178,7 @@ PromiseSet.prototype = {
     if (!key || typeof key != "object") {
       throw new Error("Expected an object");
     }
-    if ((!"then" in key) || typeof key.then != "function") {
+    if ((!("then" in key)) || typeof key.then != "function") {
       throw new Error("Expected a Promise");
     }
   },
@@ -466,7 +466,7 @@ function getPhase(topic) {
   });
   gPhases.set(topic, phase);
   return phase;
-};
+}
 
 /**
  * Utility class used to spin the event loop until all blockers for a

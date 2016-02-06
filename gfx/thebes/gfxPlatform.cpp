@@ -2123,8 +2123,7 @@ gfxPlatform::UsesOffMainThreadCompositing()
     result =
       sPrefBrowserTabsRemoteAutostart ||
       gfxPrefs::LayersOffMainThreadCompositionEnabled() ||
-      gfxPrefs::LayersOffMainThreadCompositionForceEnabled() ||
-      gfxPrefs::LayersOffMainThreadCompositionTestingEnabled();
+      gfxPrefs::LayersOffMainThreadCompositionForceEnabled();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
     result |= gfxPrefs::LayersAccelerationForceEnabled();

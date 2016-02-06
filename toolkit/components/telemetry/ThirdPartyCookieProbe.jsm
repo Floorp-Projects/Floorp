@@ -188,4 +188,4 @@ RejectStats.prototype = {
  */
 function normalizeHost(host) {
   return Services.eTLD.getBaseDomainFromHost(host);
-};
+}

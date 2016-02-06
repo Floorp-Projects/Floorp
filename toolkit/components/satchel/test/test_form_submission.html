@@ -114,10 +114,10 @@
   <!-- input with sensitive data (15 digit credit card number) -->
   <form id="form16" onsubmit="return checkSubmit(16)">
     <script type="text/javascript">
-      var form = document.getElementById('form16');
-      for (var i = 0; i != 10; i++)
+      form = document.getElementById('form16');
+      for (i = 0; i != 10; i++)
       {
-        var input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test' + (i + 1);
         form.appendChild(input);
@@ -216,10 +216,10 @@
        satisfy the requirements (Luhn check fails for 16 chars) -->
   <form id="form107" onsubmit="return checkSubmit(107)">
     <script type="text/javascript">
-      var form = document.getElementById('form107');
-      for (var i = 0; i != 10; i++)
+      form = document.getElementById('form107');
+      for (i = 0; i != 10; i++)
       {
-        var input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test7_' + (i + 1);
         form.appendChild(input);
@@ -232,10 +232,10 @@
        satisfy the requirements (Luhn check fails for 15 chars) -->
   <form id="form108" onsubmit="return checkSubmit(108)">
     <script type="text/javascript">
-      var form = document.getElementById('form108');
-      for (var i = 0; i != 10; i++)
+      form = document.getElementById('form108');
+      for (i = 0; i != 10; i++)
       {
-        var input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test8_' + (i + 1);
         form.appendChild(input);
@@ -330,7 +330,7 @@ function startTest() {
   }
 
   testData = ccNumbers.valid15;
-  for (var i = 0; i != testData.length; i++) {
+  for (i = 0; i != testData.length; i++) {
     $_(16, "test" + (i + 1)).value = testData[i];
   }
   $_(17, "test1").value = "001064088";
@@ -348,13 +348,13 @@ function startTest() {
   $_(105, "test5").value = "\t trimTrailingAndLeadingWhitespace\t ";
   $_(106, "test6").value = "00000000109181";
 
-  var testData = ccNumbers.invalid16;
-  for (var i = 0; i != testData.length; i++) {
+  testData = ccNumbers.invalid16;
+  for (i = 0; i != testData.length; i++) {
     $_(107, "test7_" + (i + 1)).value = testData[i];
   }
 
-  var testData = ccNumbers.invalid15;
-  for (var i = 0; i != testData.length; i++) {
+  testData = ccNumbers.invalid15;
+  for (i = 0; i != testData.length; i++) {
     $_(108, "test8_" + (i + 1)).value = testData[i];
   }
 
@@ -435,7 +435,7 @@ function checkSubmit(formNum) {
         }
         break;
     case 108:
-        for (var i = 0; i != ccNumbers.invalid15.length; i++) {
+        for (i = 0; i != ccNumbers.invalid15.length; i++) {
           checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
         }
         break;

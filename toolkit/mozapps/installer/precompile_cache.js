@@ -49,17 +49,17 @@ function dir_entries(baseDir, subpath, ext) {
 
 function get_modules_under(uri) {
   if (uri instanceof Ci.nsIJARURI) {
-    var jar = uri.QueryInterface(Ci.nsIJARURI);
-    var jarReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-    var file = jar.JARFile.QueryInterface(Ci.nsIFileURL);
+    let jar = uri.QueryInterface(Ci.nsIJARURI);
+    let jarReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    let file = jar.JARFile.QueryInterface(Ci.nsIFileURL);
     jarReader.open(file.file);
-    var entries = jar_entries(jarReader, "components/*.js")
+    let entries = jar_entries(jarReader, "components/*.js")
                   .concat(jar_entries(jarReader, "modules/*.js"))
                   .concat(jar_entries(jarReader, "modules/*.jsm"));
     jarReader.close();
     return entries;
   } else if (uri instanceof Ci.nsIFileURL){
-    var file = uri.QueryInterface(Ci.nsIFileURL);
+    let file = uri.QueryInterface(Ci.nsIFileURL);
     return dir_entries(file.file, "components", ".js")
            .concat(dir_entries(file.file, "modules", ".js"))
            .concat(dir_entries(file.file, "modules", ".jsm"));

@@ -5380,7 +5380,7 @@
             let averageInterval = 0;
             for (let i = 1; i < frameCount; i++) {
               averageInterval += intervals[i];
-            };
+            }
             averageInterval = averageInterval / (frameCount - 1);
 
             Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS").add(averageInterval);

@@ -26,9 +26,9 @@ add_task(function* test() {
   ok(placesItems.localName == "scrollbox", "PlacesToolbarItems should not be null");
   ok(placesItems.childNodes[0], "PlacesToolbarItems must have at least one child");
 
-  /** 
+  /**
    * Simulates a drop of a URI onto the bookmarks bar.
-   * 
+   *
    * @param aEffect
    *        The effect to use for the drop operation: move, copy, or link.
    * @param aMimeType
@@ -38,22 +38,22 @@ add_task(function* test() {
     const uriSpec = "http://www.mozilla.org/D1995729-A152-4e30-8329-469B01F30AA7";
     let uri = makeURI(uriSpec);
     ChromeUtils.synthesizeDrop(placesItems.childNodes[0],
-                              placesItems, 
-                              [[{type: aMimeType, 
-                                data: uriSpec}]], 
+                              placesItems,
+                              [[{type: aMimeType,
+                                data: uriSpec}]],
                               aEffect, window);
 
     // Verify that the drop produces exactly one bookmark.
     let bookmarkIds = PlacesUtils.bookmarks
                       .getBookmarkIdsForURI(uri);
     ok(bookmarkIds.length == 1, "There should be exactly one bookmark");
-    
+
     PlacesUtils.bookmarks.removeItem(bookmarkIds[0]);
 
     // Verify that we removed the bookmark successfully.
     ok(!PlacesUtils.bookmarks.isBookmarked(uri), "URI should be removed");
-  } 
-  
+  }
+
   // Simulate a bookmark drop for all of the mime types and effects.
   let mimeTypes = ["text/plain", "text/unicode", "text/x-moz-url"];
   let effects = ["move", "copy", "link"];

@@ -124,7 +124,7 @@ function* linesOf(string) {
   while ((match = reLine.exec(string))) {
     yield [match[0], match.index];
   }
-};
+}
 
 /**
  * Detect whether a value is a generator.

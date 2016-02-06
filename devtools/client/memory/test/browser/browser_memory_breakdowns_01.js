@@ -13,7 +13,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   yield takeSnapshot(panel.panelWin);
 
-  yield waitUntilSnapshotState(gStore, [states.SAVED_CENSUS]);
+  yield waitUntilState(gStore, state =>
+    state.snapshots[0].state === states.SAVED_CENSUS);
 
   info("Check coarse type heap view");
   ["objects", "other", "scripts", "strings"].forEach(findNameCell);

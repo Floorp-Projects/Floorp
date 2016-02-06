@@ -23,7 +23,7 @@ add_task(function* test_observers() {
   let initialObservers = PlacesUtils.bookmarks.getObservers();
 
   // Add a common observer, it should be invoked after the category observer.
-  let notificationsPromised = new Promise((resolve, reject) => {  
+  let notificationsPromised = new Promise((resolve, reject) => {
     PlacesUtils.bookmarks.addObserver( {
       __proto__: NavBookmarkObserver.prototype,
       onItemAdded() {

@@ -1,13 +1,13 @@
 /*
 	Copyright (C) 2010 - 2015 Glenn Jones. All Rights Reserved.
-	MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt  
+	MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt
 */
 
 var Modules = (function (modules) {
-	
+
 	modules.maps = (modules.maps)? modules.maps : {};
 
-	modules.maps['h-event'] = {  
+	modules.maps['h-event'] = {
 		root: 'vevent',
 		name: 'h-event',
 		properties: {
@@ -53,7 +53,7 @@ var Modules = (function (modules) {
 				'map': 'u-attach'
 			},
 			'status': {},
-			'rdate': {}, 
+			'rdate': {},
 			'rrule': {}
 		}
 	};

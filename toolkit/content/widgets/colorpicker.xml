@@ -13,7 +13,7 @@
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
     </resources>
-    
+
     <content>
       <xul:vbox flex="1">
 
@@ -106,7 +106,7 @@
       <button style="border : 0px; width: 0px; height: 0px;"/>
       -->
     </content>
-    
+
     <implementation implements="nsIDOMEventListener">
       <property name="color">
         <getter><![CDATA[
@@ -210,7 +210,7 @@
           }
 
           this.hoverCell(this.mBox.childNodes[0].childNodes[0]);
-          
+
           // used to capture keydown at the document level
           this.mPickerKeyDown = function(aEvent)
           {
@@ -219,12 +219,12 @@
 
         ]]></body>
       </method>
-      
+
       <method name="_fireEvent">
         <parameter name="aTarget"/>
         <parameter name="aEventName"/>
         <body>
-        <![CDATA[      
+        <![CDATA[
           try {
             var event = document.createEvent("Events");
             event.initEvent(aEventName, true, true);
@@ -235,9 +235,9 @@
               if (rv == false)
                 cancel = true;
             }
-            return !cancel;  
+            return !cancel;
           }
-          catch (e) { 
+          catch (e) {
             Components.utils.reportError(e);
           }
           return false;
@@ -277,7 +277,7 @@
           this.hoverCell(cell);
         ]]></body>
       </method>
-      
+
       <method name="hoverRight">
         <body><![CDATA[
           var cell = this.mHoverCell.nextSibling;
@@ -310,7 +310,7 @@
       <method name="hoverTo">
         <parameter name="aRow"/>
         <parameter name="aCol"/>
-        
+
         <body><![CDATA[
           var row = this.mBox.childNodes[aRow];
           if (!row) return;
@@ -322,7 +322,7 @@
 
       <method name="hoverCell">
         <parameter name="aCell"/>
-        
+
         <body><![CDATA[
           if (this.isColorCell(aCell)) {
             this.resetHover();
@@ -343,7 +343,7 @@
 
       <method name="selectCell">
         <parameter name="aCell"/>
-        
+
         <body><![CDATA[
           if (this.isColorCell(aCell)) {
             if (this.mSelectedCell)
@@ -386,13 +386,13 @@
         this.initialize();
       ]]></constructor>
 
-    </implementation>    
-    
+    </implementation>
+
     <handlers>
       <handler event="mouseover"><![CDATA[
         this.hoverCell(event.originalTarget);
       ]]></handler>
-      
+
       <handler event="click"><![CDATA[
         if (event.originalTarget.hasAttribute("color")) {
           this.selectCell(event.originalTarget);
@@ -411,7 +411,7 @@
         }
       ]]>
       </handler>
-    
+
       <handler event="blur" phase="capturing">
       <![CDATA[
         if (!mIsPopup && this.getAttribute('focused') == 'true') {
@@ -429,7 +429,7 @@
     <resources>
       <stylesheet src="chrome://global/skin/colorpicker.css"/>
     </resources>
-    
+
     <content>
       <xul:image class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
 
@@ -442,7 +442,7 @@
         <xul:colorpicker xbl:inherits="palettename,disabled" allowevents="true" anonid="colorpicker"/>
       </xul:panel>
     </content>
-    
+
     <implementation>
       <property name="open"
                 onget="return this.getAttribute('open') == 'true'"
@@ -460,7 +460,7 @@
           return val;
         ]]></setter>
       </property>
-      
+
       <method name="initialize">
         <body><![CDATA[
           this.mColorBox = document.getAnonymousElementByAttribute(this, "anonid", "colorbox");
@@ -468,19 +468,19 @@
             "data:image/svg+xml,<svg style='background-color: " +
             encodeURIComponent(this.color) +
             "' xmlns='http://www.w3.org/2000/svg' />");
-        
+
           var popup = document.getAnonymousElementByAttribute(this, "anonid", "colorpopup")
           popup._colorPicker = this;
-          
+
           this.mPicker = document.getAnonymousElementByAttribute(this, "anonid", "colorpicker")
         ]]></body>
       </method>
-      
+
       <method name="_fireEvent">
         <parameter name="aTarget"/>
         <parameter name="aEventName"/>
         <body>
-        <![CDATA[      
+        <![CDATA[
           try {
             var event = document.createEvent("Events");
             event.initEvent(aEventName, true, true);
@@ -491,9 +491,9 @@
               if (rv == false)
                 cancel = true;
             }
-            return !cancel;  
+            return !cancel;
           }
-          catch (e) { 
+          catch (e) {
             dump(e);
           }
           return false;
@@ -506,7 +506,7 @@
           this.mPicker.parentNode.openPopup(this, "after_start", 0, 0, false, false);
         ]]></body>
       </method>
-      
+
       <method name="hidePopup">
         <body><![CDATA[
           this.mPicker.parentNode.hidePopup();
@@ -523,7 +523,7 @@
           this.mPicker.initColor(this.color);
         ]]></body>
       </method>
-      
+
       <method name="onPopupHiding">
         <body><![CDATA[
           // Removes the key listener
@@ -536,7 +536,7 @@
         <body><![CDATA[
           this.color = this.mPicker.color;
           setTimeout(function(aPopup) { aPopup.hidePopup() }, 1, this.mPicker.parentNode);
-          
+
           this._fireEvent(this, "change");
         ]]></body>
       </method>
@@ -544,7 +544,7 @@
       <constructor><![CDATA[
         this.initialize();
       ]]></constructor>
-      
+
     </implementation>
 
     <handlers>

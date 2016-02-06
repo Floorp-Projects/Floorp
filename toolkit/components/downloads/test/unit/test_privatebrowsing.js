@@ -268,13 +268,13 @@ function run_test() {
   // Create all target files
   let fileA = tmpDir.clone();
   fileA.append(downloadADest);
-  fileA.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileA.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let fileB = tmpDir.clone();
   fileB.append(downloadBDest);
-  fileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileB.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let fileC = tmpDir.clone();
   fileC.append(downloadCDest);
-  fileC.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  fileC.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
   // use js closures to access dlC
   let dlC;

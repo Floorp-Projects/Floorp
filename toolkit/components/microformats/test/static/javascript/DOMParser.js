@@ -53,7 +53,7 @@
 
     // Mess with DOMParser.prototype (less than optimal...) if one of the above worked
     // Assume can write to the prototype, if not, make this a stand alone function
-    if (DOMParser.prototype && (htmlElInnerHTML || textXML)) { 
+    if (DOMParser.prototype && (htmlElInnerHTML || textXML)) {
         DOMParser_proto = DOMParser.prototype;
         real_parseFromString = DOMParser_proto.parseFromString;
 
@@ -76,7 +76,7 @@
                     // Make sure markup is wrapped in HTML tags
                     // Should probably allow for a DOCTYPE
                     if (!(/^<html.*html>$/i.test(markup))) {
-                        markup = '<html>' + markup + '<\/html>'; 
+                        markup = '<html>' + markup + '<\/html>';
                     }
                     doc = (new DOMParser).parseFromString(markup, 'text/xml');
                     doc_el = doc.documentElement;

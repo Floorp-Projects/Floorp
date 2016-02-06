@@ -8,7 +8,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  
+
   <binding id="dialog" extends="chrome://global/content/bindings/general.xml#root-element">
     <resources>
       <stylesheet src="chrome://global/skin/dialog.css"/>
@@ -17,7 +17,7 @@
       <xul:vbox class="box-inherit dialog-content-box" flex="1">
         <children/>
       </xul:vbox>
-          
+
       <xul:hbox class="dialog-button-box" anonid="buttons"
                 xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient"
 #ifdef XP_UNIX
@@ -77,7 +77,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="cancelDialog">
         <body>
         <![CDATA[
@@ -85,7 +85,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="getButton">
         <parameter name="aDlgType"/>
         <body>
@@ -136,7 +136,7 @@
         <![CDATA[
           var xOffset = screen.availWidth/2 - window.outerWidth/2;
           var yOffset = screen.availHeight/2 - window.outerHeight/2; //(opener.outerHeight *2)/10;
-  
+
           xOffset = xOffset > 0 ? xOffset : 0;
           yOffset = yOffset > 0 ? yOffset : 0;
           window.moveTo(xOffset, yOffset);
@@ -208,7 +208,7 @@
           setTimeout(focusInit, 0);
         ]]>
         </body>
-      </method>                
+      </method>
 
       <property name="mStrBundle">
         <getter>
@@ -223,7 +223,7 @@
           return this._mStrBundle;
         ]]></getter>
       </property>
-      
+
       <method name="_configureButtons">
         <parameter name="aButtons"/>
         <body>
@@ -295,7 +295,7 @@
 
           // ensure that hitting enter triggers the default button command
           this.defaultButton = this.defaultButton;
-          
+
           // if there is a special button configuration, use it
           if (aButtons) {
             // expect a comma delimited list of dlgtype values
@@ -308,7 +308,7 @@
               shown[list[i].replace(/ /g, "")] = true;
 
             // hide/show the buttons we want
-            for (dlgtype in buttons) 
+            for (dlgtype in buttons)
               buttons[dlgtype].hidden = !shown[dlgtype];
 
             let { AppConstants } =
@@ -356,7 +356,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="_doButtonCommand">
         <parameter name="aDlgType"/>
         <body>
@@ -380,17 +380,17 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="_fireButtonEvent">
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
           var event = document.createEvent("Events");
           event.initEvent("dialog"+aDlgType, true, true);
-          
+
           // handle dom event handlers
           var noCancel = this.dispatchEvent(event);
-          
+
           // handle any xml attribute event handlers
           var handler = this.getAttribute("ondialog"+aDlgType);
           if (handler != "") {
@@ -399,7 +399,7 @@
             if (returned == false)
               noCancel = false;
           }
-          
+
           return noCancel;
         ]]>
         </body>
@@ -420,7 +420,7 @@
       </method>
 
     </implementation>
-    
+
     <handlers>
       <handler event="keypress" keycode="VK_RETURN"
                group="system" action="this._hitEnter(event);"/>

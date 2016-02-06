@@ -184,7 +184,7 @@
             case event.DOM_VK_RIGHT:
               if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
                 if (this.tabs && this._handleMetaAltArrows) {
-                  var offset = window.getComputedStyle(this, "")
+                  offset = window.getComputedStyle(this, "")
                                      .direction == "ltr" ? 1 : -1;
                   this.tabs.advanceSelectedTab(offset, true);
                   event.preventDefault();

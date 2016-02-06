@@ -52,7 +52,7 @@ var test = {
                                               EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                               PlacesUtils.annotations.EXPIRE_NEVER);
 
-    // create a root to be exclude 
+    // create a root to be exclude
     this._excludeRootTitle = "exclude root";
     this._excludeRootId = PlacesUtils.bookmarks
                                      .createFolder(PlacesUtils.placesRootId,
@@ -90,7 +90,7 @@ var test = {
     else {
       // exclude root should not exist anymore
       do_check_eq(rootNode.childCount, PLACES_ROOTS_COUNT + 1);
-      var restoreRootIndex = PLACES_ROOTS_COUNT;
+      restoreRootIndex = PLACES_ROOTS_COUNT;
     }
 
     var restoreRootNode = rootNode.getChild(restoreRootIndex);

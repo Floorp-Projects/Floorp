@@ -19,7 +19,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  tab = gBrowser.addTab("data:text/html;base64," + 
+  tab = gBrowser.addTab("data:text/html;base64," +
                         btoa(scrollHtml));
   browser = gBrowser.getBrowserForTab(tab);
   gBrowser.selectedTab = tab;

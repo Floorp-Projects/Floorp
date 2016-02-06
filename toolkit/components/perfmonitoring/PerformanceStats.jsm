@@ -393,7 +393,7 @@ var Probes = {
  */
 function PerformanceMonitor(probes) {
   this._probes = probes;
-  
+
   // Activate low-level features as needed
   for (let probe of probes) {
     probe.acquire();
@@ -429,7 +429,7 @@ PerformanceMonitor.prototype = {
    * `promiseSnapshot()` and `subtract()`.
    *
    * On the other hand, numeric values are also monotonic across several instances
-   * of a PerformanceMonitor with the same probes. 
+   * of a PerformanceMonitor with the same probes.
    *  let a = PerformanceStats.getMonitor(someProbes);
    *  let snapshot1 = yield a.promiseSnapshot();
    *

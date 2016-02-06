@@ -1915,10 +1915,11 @@ var gCategories = {
       return;
     }
 
+    var item;
     if (view.type == "search")
-      var item = this._search;
+      item = this._search;
     else
-      var item = this.get(aId);
+      item = this.get(aId);
 
     if (item) {
       item.hidden = false;
@@ -3150,7 +3151,7 @@ var gDetailView = {
     if (pending != AddonManager.PENDING_NONE) {
       this.node.removeAttribute("notification");
 
-      var pending = null;
+      pending = null;
       const PENDING_OPERATIONS = ["enable", "disable", "install", "uninstall",
                                   "upgrade"];
       for (let op of PENDING_OPERATIONS) {
@@ -3181,7 +3182,7 @@ var gDetailView = {
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
           "details.notification.unsignedAndDisabled", [this._addon.name, gStrings.brandShortName], 2
         );
-        var errorLink = document.getElementById("detail-error-link");
+        let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.unsigned.link");
         errorLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
         errorLink.hidden = false;
@@ -3208,7 +3209,7 @@ var gDetailView = {
           "details.notification.softblocked",
           [this._addon.name], 1
         );
-        var warningLink = document.getElementById("detail-warning-link");
+        let warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.softblocked.link");
         warningLink.href = this._addon.blocklistURL;
         warningLink.hidden = false;
@@ -3218,7 +3219,7 @@ var gDetailView = {
           "details.notification.outdated",
           [this._addon.name], 1
         );
-        var warningLink = document.getElementById("detail-warning-link");
+        let warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.outdated.link");
         warningLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
         warningLink.hidden = false;
@@ -3228,7 +3229,7 @@ var gDetailView = {
           "details.notification.vulnerableUpdatable",
           [this._addon.name], 1
         );
-        var errorLink = document.getElementById("detail-error-link");
+        let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableUpdatable.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
@@ -3238,7 +3239,7 @@ var gDetailView = {
           "details.notification.vulnerableNoUpdate",
           [this._addon.name], 1
         );
-        var errorLink = document.getElementById("detail-error-link");
+        let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableNoUpdate.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;

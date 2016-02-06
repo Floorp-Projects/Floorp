@@ -58,7 +58,7 @@ const EXCEPTION_NAMES = {
 function Meta(data, meta) {
   this.data = data;
   this.meta = meta;
-};
+}
 exports.Meta = Meta;
 
 /**
@@ -88,7 +88,7 @@ exports.Meta = Meta;
  */
 function AbstractWorker(agent) {
   this._agent = agent;
-};
+}
 AbstractWorker.prototype = {
   // Default logger: discard all messages
   log: function() {

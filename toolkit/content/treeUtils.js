@@ -24,7 +24,7 @@ var gTreeUtils = {
     for (var i = 0; i < rc; ++i) {
       var min = { }; var max = { };
       selection.getRangeAt(i, min, max);
-      for (var j = min.value; j <= max.value; ++j) {
+      for (let j = min.value; j <= max.value; ++j) {
         aDeletedItems.push(aItems[j]);
         aItems[j] = null;
       }
@@ -33,7 +33,7 @@ var gTreeUtils = {
     var nextSelection = 0;
     for (i = 0; i < aItems.length; ++i) {
       if (!aItems[i]) {
-        var j = i;
+        let j = i;
         while (j < aItems.length && !aItems[j])
           ++j;
         aItems.splice(i, j - i);

@@ -799,7 +799,7 @@
         <parameter name="aMessage"/>
         <body><![CDATA[
           if (aMessage.target != this._browser) {
-            return;
+            return undefined;
           }
           switch (aMessage.name) {
             case "Findbar:Mouseup":
@@ -1099,7 +1099,7 @@
           // finder.searchString will never get updated which in turn means
           // there would never be findAgain events because of the logic below.
           if (!this._dispatchFindEvent("again", aFindPrevious))
-            return;
+            return undefined;
 
           // user explicitly requested another search, so do it even if we think it'll fail
           this._findFailedString = null;

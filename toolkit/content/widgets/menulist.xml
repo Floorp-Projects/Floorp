@@ -250,7 +250,7 @@
             event.initEvent("select", true, true);
             this.dispatchEvent(event);
 
-            var event = document.createEvent("Events");
+            event = document.createEvent("Events");
             event.initEvent("ValueChange", true, true);
             this.dispatchEvent(event);
 
@@ -515,7 +515,7 @@
             event.initEvent("select", true, true);
             this.dispatchEvent(event);
 
-            var event = document.createEvent("Events");
+            event = document.createEvent("Events");
             event.initEvent("ValueChange", true, true);
             this.dispatchEvent(event);
 

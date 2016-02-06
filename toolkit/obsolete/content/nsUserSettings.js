@@ -16,7 +16,7 @@ var nsPreferences = {
 
   setBoolPref: function (aPrefName, aPrefValue)
     {
-      try 
+      try
         {
           this.mPrefService.setBoolPref(aPrefName, aPrefValue);
         }
@@ -24,7 +24,7 @@ var nsPreferences = {
         {
         }
     },
-  
+
   getBoolPref: function (aPrefName, aDefVal)
     {
       try
@@ -37,7 +37,7 @@ var nsPreferences = {
         }
       return null;        // quiet warnings
     },
-  
+
   setUnicharPref: function (aPrefName, aPrefValue)
     {
       try
@@ -52,7 +52,7 @@ var nsPreferences = {
         {
         }
     },
-  
+
   copyUnicharPref: function (aPrefName, aDefVal)
     {
       try
@@ -66,7 +66,7 @@ var nsPreferences = {
         }
       return null;        // quiet warnings
     },
-    
+
   setIntPref: function (aPrefName, aPrefValue)
     {
       try
@@ -77,7 +77,7 @@ var nsPreferences = {
         {
         }
     },
-  
+
   getIntPref: function (aPrefName, aDefVal)
     {
       try

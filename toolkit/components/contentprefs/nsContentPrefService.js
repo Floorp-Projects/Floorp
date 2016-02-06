@@ -229,7 +229,7 @@ ContentPrefService.prototype = {
         let value = this._privModeStorage.get(group, aName);
         if (aCallback) {
           this._scheduleCallback(function(){aCallback.onResult(value);});
-          return;
+          return undefined;
         }
         return value;
       }
@@ -598,7 +598,7 @@ ContentPrefService.prototype = {
       value = this._cache.get(aGroup, aSetting);
       if (aCallback) {
         this._scheduleCallback(function(){aCallback.onResult(value);});
-        return;
+        return undefined;
       }
       return value;
     }
@@ -648,7 +648,7 @@ ContentPrefService.prototype = {
       value = this._cache.get(null, aName);
       if (aCallback) {
         this._scheduleCallback(function(){aCallback.onResult(value);});
-        return;
+        return undefined;
       }
       return value;
     }

@@ -31,7 +31,7 @@ function run_test() {
 
     let futureBackupFile = bookmarksBackupDir.clone();
     futureBackupFile.append(name);
-    futureBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
+    futureBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0o600);
     do_check_true(futureBackupFile.exists());
 
     do_check_eq((yield PlacesBackups.getBackupFiles()).length, 0);

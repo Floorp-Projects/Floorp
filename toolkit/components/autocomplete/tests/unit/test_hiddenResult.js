@@ -16,7 +16,7 @@ function AutoCompleteTypeAheadResult(aValues) {
 AutoCompleteTypeAheadResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
 
-/** 
+/**
  * Test AutoComplete with multiple AutoCompleteSearch sources, with one of them
  * being hidden from the popup, but can still do typeahead completion.
  */
@@ -31,11 +31,11 @@ function run_test() {
   // Regular result
   var searchNormal = new AutoCompleteSearchBase("search2",
                                                 new AutoCompleteResult(["mozillaTest2"]));
-  
+
   // Register searches so AutoCompleteController can find them
   registerAutoCompleteSearch(searchNormal);
   registerAutoCompleteSearch(searchTypeAhead);
-  
+
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete.
   var input = new AutoCompleteInputBase([searchTypeAhead.name, searchNormal.name]);
@@ -50,7 +50,7 @@ function run_test() {
   do_check_eq(input.selectionEnd, strLen);
 
   var controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
 
   controller.input = input;
   controller.startSearch(inputStr);

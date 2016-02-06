@@ -1,9 +1,0 @@
-{
-  "extends": [
-    "../../.eslintrc"
-  ],
-
-  "rules": {
-    "eol-last": 0,
-  }
-}

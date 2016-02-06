@@ -66,13 +66,13 @@ add_task(function* test_results_as_visit()
    // Add to the query set
    do_print("Adding item to query")
    var tmp = [];
-   for (var i=0; i < 2; i++) {
+   for (let i=0; i < 2; i++) {
      tmp.push({ isVisit: true,
                 uri: "http://foo.com/added.html",
                 title: "ab moz" });
    }
    yield task_populateDB(tmp);
-   for (var i=0; i < 2; i++)
+   for (let i=0; i < 2; i++)
      do_check_eq(root.getChild(i).title, "ab moz");
 
    // Update an existing URI

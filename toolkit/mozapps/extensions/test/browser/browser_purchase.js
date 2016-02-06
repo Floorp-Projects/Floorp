@@ -121,7 +121,7 @@ add_test(function() {
   info("Changing sort order");
   EventUtils.synthesizeMouseAtCenter(priceSorter, { }, gManagerWindow);
 
-  var items = Array.filter(list.childNodes, function(e) {
+  items = Array.filter(list.childNodes, function(e) {
     return e.tagName == "richlistitem";
   });
 

@@ -29,7 +29,7 @@ function createFavicon(fileName) {
 
   let stream = Cc["@mozilla.org/network/file-output-stream;1"]
     .createInstance(Ci.nsIFileOutputStream);
-  stream.init(outfile, 0x02 | 0x08 | 0x10, 0600, 0);
+  stream.init(outfile, 0x02 | 0x08 | 0x10, 0o600, 0);
 
   // append some data that sniffers/encoders will ignore that will distinguish
   // the different favicons we'll create
@@ -57,7 +57,7 @@ function run_test() {
   // check that the favicon loaded correctly
   do_check_eq(originalFavicon.data.length, 286);
   run_next_test();
-};
+}
 
 add_task(function* test_replaceFaviconData_validHistoryURI() {
   do_print("test replaceFaviconData for valid history uri");

@@ -39,7 +39,7 @@ function run_test() {
   }, profileDir);
 
   startupManager();
-                                     
+
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 
   AddonManager.getAddonsByIDs(["default@tests.mozilla.org",

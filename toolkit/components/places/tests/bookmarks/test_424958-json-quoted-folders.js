@@ -24,7 +24,7 @@ var quotesTest = {
   _folderId: null,
 
   populate: function () {
-    this._folderId = 
+    this._folderId =
       PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId,
                                          this._folderTitle,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX);

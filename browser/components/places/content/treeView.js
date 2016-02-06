@@ -230,7 +230,7 @@ PlacesTreeView.prototype = {
     if (aRow < 0) {
       return null;
     }
-  
+
     let node = this._rows[aRow];
     if (node !== undefined)
       return node;
@@ -885,7 +885,7 @@ PlacesTreeView.prototype = {
 
       PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
         .then(aLivemark => {
-          let shouldInvalidate = 
+          let shouldInvalidate =
             !this._controller.hasCachedLivemarkInfo(aNode);
           this._controller.cacheLivemarkInfo(aNode, aLivemark);
           if (aNewState == Components.interfaces.nsINavHistoryContainerResultNode.STATE_OPENED) {

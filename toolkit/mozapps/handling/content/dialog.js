@@ -46,7 +46,7 @@ var dialog = {
   _okButton: null,
   _windowCtxt: null,
   _buttonDisabled: true,
-  
+
   //////////////////////////////////////////////////////////////////////////////
   //// Methods
 
@@ -138,7 +138,7 @@ var dialog = {
         elm.setAttribute("description", uri.prePath);
       }
       else if (app instanceof Ci.nsIDBusHandlerApp){
-	  elm.setAttribute("description", app.method);  
+	  elm.setAttribute("description", app.method);
       }
       else
         throw "unknown handler type";
@@ -153,15 +153,15 @@ var dialog = {
       elm.setAttribute("type", "handler");
       elm.id = "os-default-handler";
       elm.setAttribute("name", this._handlerInfo.defaultDescription);
-    
+
       items.insertBefore(elm, items.firstChild);
-      if (this._handlerInfo.preferredAction == 
-          Ci.nsIHandlerInfo.useSystemDefault) 
+      if (this._handlerInfo.preferredAction ==
+          Ci.nsIHandlerInfo.useSystemDefault)
           this.selectedItem = elm;
     }
     items.ensureSelectedElementIsVisible();
   },
-  
+
  /**
   * Brings up a filepicker and allows a user to choose an application.
   */
@@ -277,5 +277,5 @@ var dialog = {
   {
     return document.getElementById("items").selectedItem = aItem;
   }
-  
+
 };

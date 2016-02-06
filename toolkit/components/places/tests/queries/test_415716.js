@@ -75,7 +75,7 @@ add_task(function* test_buildTestDatabase()
  * Annotation == "moz-test-places/testing123" &&
  * TimeRange == "now() - 2d" &&
  * minVisits == 2 &&
- * maxVisits == 10 
+ * maxVisits == 10
  */
 add_task(function test_execute()
 {

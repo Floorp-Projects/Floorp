@@ -465,9 +465,7 @@ function insertOrMergeNode(parentCacheValue, node) {
 
   if (val) {
     val.node.count += node.count;
-    val.node.totalCount += node.totalCount;
     val.node.bytes += node.bytes;
-    val.node.totalBytes += node.totalBytes;
   } else {
     val = new CensusTreeNodeCacheValue();
 

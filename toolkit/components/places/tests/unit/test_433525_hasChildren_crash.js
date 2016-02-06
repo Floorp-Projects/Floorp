@@ -42,11 +42,11 @@ add_task(function* test_execute()
                        0 /* first item */, "test query");
 
   // query for that query
-  var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
+  options = histsvc.getNewQueryOptions();
+  query = histsvc.getNewQuery();
   query.setFolders([bmsvc.toolbarFolder], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  result = histsvc.executeQuery(query, options);
+  root = result.root;
   root.containerOpen = true;
   var queryNode = root.getChild(0);
   do_check_eq(queryNode.title, "test query");

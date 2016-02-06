@@ -207,7 +207,7 @@ var tests = {
       [toURL, expectedLocation, expectedWhere] = testArgs.shift();
       data.actionArgs.toURL = toURL;
       port.postMessage({topic: 'test-notification-create', data: data});
-    };
+    }
 
     port.onmessage = function(evt) {
       if (evt.data.topic == "did-notification-create") {

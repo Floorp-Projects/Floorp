@@ -109,7 +109,7 @@ add_task(function* test_install_from_file() {
                    get_addon_file_url("browser_bug567127_2.xpi")
                   ];
   MockFilePicker.returnFiles = filePaths.map(aPath => aPath.file);
-  
+
   Services.obs.addObserver(gInstallNotificationObserver,
                            "addon-install-started", false);
 

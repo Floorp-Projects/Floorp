@@ -169,7 +169,7 @@ Sntp.prototype = {
       return String.fromCharCode.apply(null, new Uint8Array(buffer));
     }
 
-    function SNTPListener() {};
+    function SNTPListener() {}
     SNTPListener.prototype = {
       onStartRequest: function onStartRequest(request, context) {
       },

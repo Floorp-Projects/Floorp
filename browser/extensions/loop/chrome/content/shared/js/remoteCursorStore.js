@@ -16,7 +16,8 @@ loop.store.RemoteCursorStore = (function() {
   var RemoteCursorStore = loop.store.createStore({
     actions: [
       "receivedCursorData",
-      "videoDimensionsChanged"
+      "videoDimensionsChanged",
+      "videoScreenStreamChanged"
     ],
 
     /**
@@ -98,6 +99,21 @@ loop.store.RemoteCursorStore = (function() {
           height: actionData.dimensions.height,
           width: actionData.dimensions.width
         }
+      });
+    },
+
+    /**
+     * Listen to screen stream changes.
+     *
+     * @param {sharedActions.VideoScreenStreamChanged} actionData
+     */
+    videoScreenStreamChanged: function(actionData) {
+      if (actionData.hasVideo) {
+        return;
+      }
+
+      this.setStoreState({
+        remoteCursorPosition: null
       });
     }
   });

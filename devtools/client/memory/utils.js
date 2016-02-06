@@ -574,7 +574,8 @@ const createParentMap = exports.createParentMap = function (node,
                                                             getId = node => node.id,
                                                             aggregator = Object.create(null)) {
   if (node.children) {
-    for (let child of node.children) {
+    for (let i = 0, length = node.children.length; i < length; i++) {
+      const child = node.children[i];
       aggregator[getId(child)] = node;
       createParentMap(child, getId, aggregator);
     }

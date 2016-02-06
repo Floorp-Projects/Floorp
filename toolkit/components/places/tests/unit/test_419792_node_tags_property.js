@@ -31,7 +31,7 @@ function run_test() {
   do_check_eq(node.itemId, bookmarkId);
 
   // confirm there's no tags via the .tags property
-  do_check_eq(node.tags, null); 
+  do_check_eq(node.tags, null);
 
   // add a tag
   tagssvc.tagURI(bookmarkURI, ["foo"]);
@@ -43,7 +43,7 @@ function run_test() {
 
   // remove the tags, confirming the property is cleared
   tagssvc.untagURI(bookmarkURI, null);
-  do_check_eq(node.tags, null); 
+  do_check_eq(node.tags, null);
 
   toolbarNode.containerOpen = false;
 }

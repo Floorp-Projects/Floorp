@@ -3,10 +3,10 @@
  JS Beautifier
 ---------------
 
-  Written by Einars "elfz" Lielmanis, <elfz@laacz.lv> 
+  Written by Einars "elfz" Lielmanis, <elfz@laacz.lv>
       http://elfz.laacz.lv/beautify/
 
-  Originally converted to javascript by Vital, <vital76@gmail.com> 
+  Originally converted to javascript by Vital, <vital76@gmail.com>
       http://my.opera.com/Vital/blog/2007/11/21/javascript-beautify-on-javascript-translated
 
 
@@ -411,7 +411,7 @@ function js_beautify(js_source_text, indent_size, indent_character)
             }
             return [c, 'TK_WORD'];
         }
-        
+
         if (c == '(' || c == '[') {
             return [c, 'TK_START_EXPR'];
         }

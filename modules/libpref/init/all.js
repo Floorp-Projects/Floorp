@@ -4399,10 +4399,6 @@ pref("layers.tiled-drawtarget.enabled", true);
 pref("layers.tiles.edge-padding", true);
 #endif
 
-// same effect as layers.offmainthreadcomposition.enabled, but specifically for
-// use with tests.
-pref("layers.offmainthreadcomposition.testing.enabled", false);
-
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", true);
 
