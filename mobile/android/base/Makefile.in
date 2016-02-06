@@ -437,7 +437,6 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		$$(addprefix -A ,$$(ANDROID_ASSETS_DIRS)) \
 		$(if $(ANDROID_EXTRA_PACKAGES),--extra-packages $$(subst $$(NULL) ,:,$$(strip $$(ANDROID_EXTRA_PACKAGES)))) \
 		$(if $(ANDROID_EXTRA_RES_DIRS),$$(addprefix -S ,$$(ANDROID_EXTRA_RES_DIRS))) \
-		--rename-manifest-package $(ANDROID_PACKAGE_NAME) \
 		--custom-package org.mozilla.gecko \
 		--non-constant-id \
 		-F $(3) \
