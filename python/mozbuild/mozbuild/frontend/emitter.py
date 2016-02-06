@@ -729,7 +729,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'ANDROID_GENERATED_RESFILES',
             'DISABLE_STL_WRAPPING',
             'EXTRA_DSO_LDOPTS',
-            'USE_STATIC_LIBS',
             'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
@@ -768,6 +767,21 @@ class TreeMetadataEmitter(LoggingMixin):
             passthru.variables['DIST_INSTALL'] = True
         elif dist_install is False:
             passthru.variables['NO_DIST_INSTALL'] = True
+
+        # Ideally, this should be done in templates, but this is difficult at
+        # the moment because USE_STATIC_LIBS can be set after a template
+        # returns. Eventually, with context-based templates, it will be
+        # possible.
+        if (context.config.substs.get('OS_ARCH') == 'WINNT' and
+                not context.config.substs.get('GNU_CC')):
+            use_static_lib = (context.get('USE_STATIC_LIBS') and
+                              not context.config.substs.get('MOZ_ASAN'))
+            rtl_flag = '-MT' if use_static_lib else '-MD'
+            if (context.config.substs.get('MOZ_DEBUG') and
+                    not context.config.substs.get('MOZ_NO_DEBUG_RTL')):
+                rtl_flag += 'd'
+            # Use a list, like MOZBUILD_*FLAGS variables
+            passthru.variables['RTL_FLAGS'] = [rtl_flag]
 
         generated_files = set()
         for obj in self._process_generated_files(context):

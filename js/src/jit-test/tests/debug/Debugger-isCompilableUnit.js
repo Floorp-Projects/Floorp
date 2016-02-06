@@ -48,3 +48,11 @@ for (var code of compilable_units) {
 for (var code of non_compilable_units) {
     assertEq(Debugger.isCompilableUnit(code), false);
 }
+
+// Supplying no arguments should throw a type error
+assertThrowsInstanceOf(() => {
+    Debugger.isCompilableUnit();
+}, TypeError);
+
+// Supplying extra arguments should be fine
+assertEq(Debugger.isCompilableUnit("", 1, 2, 3, 4, {}, []), true);
