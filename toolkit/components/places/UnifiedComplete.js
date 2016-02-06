@@ -1335,7 +1335,7 @@ Search.prototype = {
         match.icon = favicon.spec;
     } catch (e) {
       // It's possible we don't have a favicon for this - and that's ok.
-    };
+    }
 
     this._addMatch(match);
     return true;

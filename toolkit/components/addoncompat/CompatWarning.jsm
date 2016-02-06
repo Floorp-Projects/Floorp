@@ -33,7 +33,7 @@ var CompatWarning = {
         filename.indexOf("RemoteAddonsParent.jsm") != -1 ||
         filename.indexOf("RemoteAddonsChild.jsm") != -1 ||
         filename.indexOf("multiprocessShims.js") != -1;
-    };
+    }
 
     let stack = Components.stack;
     while (stack && isShimLayer(stack.filename))

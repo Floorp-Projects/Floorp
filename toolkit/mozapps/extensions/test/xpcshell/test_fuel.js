@@ -129,7 +129,7 @@ function run_test() {
 
       // test resetting a pref [since there is no default value, the pref should disappear]
       inspector.prefs.get(testdata.dummy).reset();
-      var itemValue = inspector.prefs.getValue(testdata.dummy, "default");
+      itemValue = inspector.prefs.getValue(testdata.dummy, "default");
       do_check_eq(itemValue, "default");
 
       // test to see if a non-existant property exists

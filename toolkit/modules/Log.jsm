@@ -634,7 +634,7 @@ StructuredFormatter.prototype = {
 function isError(aObj) {
   return (aObj && typeof(aObj) == 'object' && "name" in aObj && "message" in aObj &&
           "fileName" in aObj && "lineNumber" in aObj && "stack" in aObj);
-};
+}
 
 /*
  * Parameter Formatters

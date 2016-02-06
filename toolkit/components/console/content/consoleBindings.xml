@@ -12,7 +12,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="console-box" extends="xul:box">
-    <content>  
+    <content>
       <xul:stringbundle src="chrome://global/locale/console.properties" role="string-bundle"/>
       <xul:vbox class="console-box-internal">
         <xul:vbox class="console-rows" role="console-rows" xbl:inherits="dir=sortOrder"/>
@@ -89,7 +89,7 @@
           this.mCount = 0;
 
           this.mConsoleListener = {
-            console: this, 
+            console: this,
             observe : function(aObject) {
               // The message can arrive a little bit after the xbl binding has been
               // unbind. So node.appendItem will not be available anymore.
@@ -360,7 +360,7 @@
       </method>
 
       <!-- UTILITY FUNCTIONS -->
-      
+
       <method name="repeatChar">
         <parameter name="aChar"/>
         <parameter name="aCol"/>
@@ -390,9 +390,9 @@
           });
         ]]></body>
       </method>
-          
-      <constructor> this.init(); </constructor>
-      <destructor> this.destroy(); </destructor>
+
+      <constructor>this.init();</constructor>
+      <destructor>this.destroy();</destructor>
 
       <!-- Command controller for the copy command -->
       <field name="_controller"><![CDATA[({

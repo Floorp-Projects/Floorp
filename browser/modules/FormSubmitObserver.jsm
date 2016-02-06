@@ -42,7 +42,7 @@ FormSubmitObserver.prototype =
   {
     this._content = aWindow;
     this._tab = aTabChildGlobal;
-    this._mm = 
+    this._mm =
       this._content.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDocShell)
                    .sameTypeRootTreeItem
@@ -103,7 +103,7 @@ FormSubmitObserver.prototype =
     if (!aInvalidElements.length) {
       return;
     }
-    
+
     // Insure that this is the FormSubmitObserver associated with the form
     // element / window this notification is about.
     if (this._content != aFormElement.ownerDocument.defaultView.top.document.defaultView) {
@@ -142,7 +142,7 @@ FormSubmitObserver.prototype =
   /*
    * Internal
    */
-  
+
   /*
    * Handles input changes on the form element we've associated a popup
    * with. Updates the validation message or closes the popup if form data

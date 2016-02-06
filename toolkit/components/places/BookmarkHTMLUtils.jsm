@@ -289,7 +289,7 @@ function Frame(aFrameId) {
    * contains the URL of the previous bookmark created. This is used so that
    * when we encounter a <dd>, we know what bookmark to associate the text with.
    * This is cleared whenever we hit a <h3>, so that we know NOT to save this
-   * with a bookmark, but to keep it until 
+   * with a bookmark, but to keep it until
    */
   this.previousLink = null; // nsIURI
 
@@ -346,7 +346,7 @@ BookmarkImporter.prototype = {
     switch (containerType) {
       case Container_Normal:
         // append a new folder
-        containerId = 
+        containerId =
           PlacesUtils.bookmarks.createFolder(frame.containerId,
                                              containerTitle,
                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
@@ -765,14 +765,14 @@ BookmarkImporter.prototype = {
         frame.previousText = "";
 
         // Set last-modified a 2nd time for all items with descriptions
-        // we need to set last-modified as the *last* step in processing 
+        // we need to set last-modified as the *last* step in processing
         // any item type in the bookmarks.html file, so that we do
-        // not overwrite the imported value. for items without descriptions, 
-        // setting this value after setting the item title is that 
+        // not overwrite the imported value. for items without descriptions,
+        // setting this value after setting the item title is that
         // last point at which we can save this value before it gets reset.
         // for items with descriptions, it must set after that point.
-        // however, at the point at which we set the title, there's no way 
-        // to determine if there will be a description following, 
+        // however, at the point at which we set the title, there's no way
+        // to determine if there will be a description following,
         // so we need to set the last-modified-date at both places.
 
         let lastModified;

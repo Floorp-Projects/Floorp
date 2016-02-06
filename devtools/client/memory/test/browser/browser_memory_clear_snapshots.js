@@ -16,9 +16,12 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   is(snapshotEls.length, 0, "No snapshots visible");
 
   info("Take two snapshots");
-  yield takeSnapshot(panel.panelWin);
-  yield takeSnapshot(panel.panelWin);
-  yield waitUntilSnapshotState(gStore, [states.SAVED_CENSUS, states.SAVED_CENSUS]);
+  takeSnapshot(panel.panelWin);
+  takeSnapshot(panel.panelWin);
+  yield waitUntilState(gStore, state =>
+    state.snapshots.length === 2 &&
+    state.snapshots[0].state === states.SAVED_CENSUS &&
+    state.snapshots[1].state === states.SAVED_CENSUS);
 
   snapshotEls = document.querySelectorAll("#memory-tool-container .list li");
   is(snapshotEls.length, 2, "Two snapshots visible");

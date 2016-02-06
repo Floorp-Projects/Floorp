@@ -50,7 +50,7 @@ function setup_osfile_crash_noerror() {
 
   Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
-};
+}
 
 function after_osfile_crash_noerror(mdump, extra) {
   do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
@@ -81,7 +81,7 @@ function setup_osfile_crash_exn() {
 
   Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
-};
+}
 
 function after_osfile_crash_exn(mdump, extra) {
   do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);

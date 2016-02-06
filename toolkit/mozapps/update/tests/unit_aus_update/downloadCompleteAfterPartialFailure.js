@@ -59,7 +59,7 @@ const WindowWatcher = {
 
         doTestFinish();
       }
-    }; 
+    };
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])

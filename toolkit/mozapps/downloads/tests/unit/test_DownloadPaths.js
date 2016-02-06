@@ -29,7 +29,7 @@ function createTemporarySaveDirectory()
                 getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   saveDir.append("testsavedir");
   if (!saveDir.exists()) {
-    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   }
   return saveDir;
 }

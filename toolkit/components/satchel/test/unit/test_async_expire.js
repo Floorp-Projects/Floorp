@@ -165,4 +165,4 @@ function* tests()
   yield countEntries(null, null, function(num) { do_check_eq(3, num); next_test(); });
 
   test_finished();
-};
+}

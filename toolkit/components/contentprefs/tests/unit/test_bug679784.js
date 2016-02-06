@@ -51,7 +51,7 @@ function run_test() {
   cps.removePref(uri, "value");
   do_check_eq(cps.hasPref(uri, "value"), true);
   // fallback to non private mode value
-  do_check_eq(cps.getPref(uri, "value"), "foo"); 
+  do_check_eq(cps.getPref(uri, "value"), "foo");
   do_check_eq(prefObserver.removedCalledNum, num + 1);
 
   num = prefObserver.removedCalledNum;

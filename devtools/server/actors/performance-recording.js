@@ -73,7 +73,6 @@ var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
       withTicks: options.withTicks || false,
       withMemory: options.withMemory || false,
       withAllocations: options.withAllocations || false,
-      withJITOptimizations: options.withJITOptimizations || false,
       allocationsSampleProbability: options.allocationsSampleProbability || 0,
       allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
       bufferSize: options.bufferSize || 0,

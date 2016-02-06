@@ -265,7 +265,7 @@ add_task(function* toggleCheckboxWantCaretBrowsing() {
   syncToggleCaretNoDialog(false);
   syncToggleCaretNoDialog(true);
   syncToggleCaretNoDialog(false);
-  
+
   Services.prefs.setBoolPref(kPrefShortcutEnabled, true);
   Services.prefs.setBoolPref(kPrefWarnOnEnable, true);
   Services.prefs.setBoolPref(kPrefCaretBrowsingOn, false);

@@ -66,7 +66,7 @@ function run_test_4() {
 }
 
 // Checks that a file that doesn't exist shows an error
-function run_test_4() {
+function run_test_5() {
   let file = do_get_file("data");
   file.append("missing.xpi");
   AddonManager.getInstallForFile(file, function(install) {
@@ -74,12 +74,12 @@ function run_test_4() {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq(install.error, AddonManager.ERROR_NETWORK_FAILURE);
 
-    run_test_5();
+    run_test_6();
   });
 }
 
 // Checks that an add-on with an illegal ID shows an error
-function run_test_5() {
+function run_test_6() {
   AddonManager.getInstallForFile(do_get_addon("test_bug567173"), function(install) {
     do_check_neq(install, null);
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);

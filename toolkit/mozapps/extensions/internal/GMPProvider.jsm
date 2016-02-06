@@ -205,7 +205,7 @@ GMPWrapper.prototype = {
   get updateDate() {
     let time = Number(GMPPrefs.get(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, null,
                                    this._plugin.id));
-    if (time !== NaN && this.isInstalled) {
+    if (!isNaN(time) && this.isInstalled) {
       return new Date(time * 1000)
     }
     return null;

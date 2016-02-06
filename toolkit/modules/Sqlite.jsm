@@ -401,7 +401,7 @@ ConnectionData.prototype = Object.freeze({
 
     return this._barrier.wait().then(() => {
       if (!this._dbConn) {
-        return;
+        return undefined;
       }
       return this._finalize();
     });

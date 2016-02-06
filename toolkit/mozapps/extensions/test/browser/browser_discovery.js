@@ -576,7 +576,7 @@ add_test(function() {
   });
 });
 
-// Test for Bug 601442 - extensions.getAddons.showPane need to be update 
+// Test for Bug 601442 - extensions.getAddons.showPane need to be update
 // for the new addon manager.
 function bug_601442_test_elements(visible) {
   open_manager("addons://list/extension", function(aWindow) {

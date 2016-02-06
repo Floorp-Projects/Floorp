@@ -49,7 +49,7 @@ function test()
 
     finish();
   }
-  
+
   // OK, let's pull up the UI
   // Linux uses y, everything else is j
   var key = navigator.platform.match("Linux") ? "y" : "j";

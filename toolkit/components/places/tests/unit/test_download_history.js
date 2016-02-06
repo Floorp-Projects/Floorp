@@ -225,7 +225,7 @@ add_test(function test_dh_details()
 
       PlacesTestUtils.clearHistory().then(run_next_test);
     }
-  };
+  }
 
   let annoObserver = {
     onPageAnnotationSet: function AO_onPageAnnotationSet(aPage, aName)

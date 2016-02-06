@@ -258,5 +258,5 @@ function checkItem(node, item) {
     Assert.equal(node.dataset.id, item.id,
       "Node's ID should match item ID");
   }
-};
+}
 

@@ -918,7 +918,7 @@ add_test(function() {
         is_in_discovery(aManager, SECOND_URL, true, false);
 
         EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
-        
+
         waitForLoad(aManager, function() {
           is_in_discovery(aManager, MAIN_URL, true, false);
 

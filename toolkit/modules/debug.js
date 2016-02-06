@@ -17,7 +17,7 @@ var gTraceOnAssert = true;
  * If the condition is true, this function will do nothing.  If the
  * condition is false, then the message will be printed to the console
  * and an alert will appear showing a stack trace, so that the (alpha
- * or nightly) user can file a bug containing it.  For future enhancements, 
+ * or nightly) user can file a bug containing it.  For future enhancements,
  * see bugs 330077 and 330078.
  *
  * To suppress the dialogs, you can run with the environment variable

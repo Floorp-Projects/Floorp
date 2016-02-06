@@ -1,7 +1,7 @@
 /*!
 	Parser rels
 	All the functions that deal with microformats v2 rel structures
-	
+
 	Copyright (C) 2010 - 2015 Glenn Jones. All Rights Reserved.
 	MIT License: https://raw.github.com/glennjones/microformat-shiv/master/license.txt
 	Dependencies  dates.js, domutils.js, html.js, isodate,js, text.js,  utilities.js, url.js
@@ -9,10 +9,10 @@
 
 
 var Modules = (function (modules) {
-	
+
 	// check parser module is loaded
 	if(modules.Parser){
-	
+
 		/**
 		 * finds rel=* structures
 		 *
@@ -34,36 +34,36 @@ var Modules = (function (modules) {
 				item,
 				value,
 				arr;
-	
+
 			arr = modules.domUtils.getNodesByAttribute(rootNode, 'rel');
 			x = 0;
 			i = arr.length;
 			while(x < i) {
 				relList = modules.domUtils.getAttribute(arr[x], 'rel');
-	
+
 				if(relList) {
 					items = relList.split(' ');
-					
-					
+
+
 					// add rels
 					z = 0;
 					y = items.length;
 					while(z < y) {
 						item = modules.utils.trim(items[z]);
-	
+
 						// get rel value
 						value = modules.domUtils.getAttrValFromTagList(arr[x], ['a', 'area'], 'href');
 						if(!value) {
 							value = modules.domUtils.getAttrValFromTagList(arr[x], ['link'], 'href');
 						}
-	
+
 						// create the key
 						if(!out.rels[item]) {
 							out.rels[item] = [];
 						}
-	
+
 						if(typeof this.options.baseUrl === 'string' && typeof value === 'string') {
-					
+
 							var resolved = modules.url.resolve(value, this.options.baseUrl);
 							// do not add duplicate rels - based on resolved URLs
 							if(out.rels[item].indexOf(resolved) === -1){
@@ -72,8 +72,8 @@ var Modules = (function (modules) {
 						}
 						z++;
 					}
-					
-					
+
+
 					var url = null;
 					if(modules.domUtils.hasAttribute(arr[x], 'href')){
 						url = modules.domUtils.getAttribute(arr[x], 'href');
@@ -81,8 +81,8 @@ var Modules = (function (modules) {
 							url = modules.url.resolve(url, this.options.baseUrl );
 						}
 					}
-	
-					
+
+
 					// add to rel-urls
 					var relUrl = this.getRelProperties(arr[x]);
 					relUrl.rels = items;
@@ -90,15 +90,15 @@ var Modules = (function (modules) {
 					if(url && out['rel-urls'][url] === undefined){
 						out['rel-urls'][url] = relUrl;
 					}
-	
-			
+
+
 				}
 				x++;
 			}
 			return out;
 		};
-		
-		
+
+
 		/**
 		 * gets the properties of a rel=*
 		 *
@@ -107,7 +107,7 @@ var Modules = (function (modules) {
 		 */
 		modules.Parser.prototype.getRelProperties = function(node){
 			var obj = {};
-			
+
 			if(modules.domUtils.hasAttribute(node, 'media')){
 				obj.media = modules.domUtils.getAttribute(node, 'media');
 			}
@@ -122,12 +122,12 @@ var Modules = (function (modules) {
 			}
 			if(modules.utils.trim(this.getPValue(node, false)) !== ''){
 				obj.text = this.getPValue(node, false);
-			}	
-			
+			}
+
 			return obj;
 		};
-		
-		
+
+
 		/**
 		 * finds any alt rel=* mappings for a given node/microformat
 		 *
@@ -139,7 +139,7 @@ var Modules = (function (modules) {
 			var out,
 				map,
 				i;
-	
+
 			map = this.getMapping(ufName);
 			if(map) {
 				for(var key in map.properties) {
@@ -147,8 +147,8 @@ var Modules = (function (modules) {
 						var prop = map.properties[key],
 							propName = (prop.map) ? prop.map : 'p-' + key,
 							relCount = 0;
-		
-						// is property an alt rel=* mapping 
+
+						// is property an alt rel=* mapping
 						if(prop.relAlt && modules.domUtils.hasAttribute(node, 'rel')) {
 							i = prop.relAlt.length;
 							while(i--) {
@@ -165,8 +165,8 @@ var Modules = (function (modules) {
 			}
 			return out;
 		};
-		
-		
+
+
 		/**
 		 * returns whether a node or its children has rel=* microformat
 		 *
@@ -176,8 +176,8 @@ var Modules = (function (modules) {
 		modules.Parser.prototype.hasRel = function(node) {
 			return (this.countRels(node) > 0);
 		};
-		
-		
+
+
 		/**
 		 * returns the number of rel=* microformats
 		 *
@@ -190,9 +190,9 @@ var Modules = (function (modules) {
 			}
 			return 0;
 		};
-	
-	
-		
+
+
+
 	}
 
 	return modules;

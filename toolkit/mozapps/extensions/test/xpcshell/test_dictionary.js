@@ -39,7 +39,7 @@ mapFile("/data/test_dictionary.rdf", testserver);
 var HunspellEngine = {
   dictionaryDirs: [],
   listener: null,
-  
+
   QueryInterface: function hunspell_qi(iid) {
     if (iid.equals(Components.interfaces.nsISupports) ||
         iid.equals(Components.interfaces.nsIFactory) ||
@@ -89,7 +89,7 @@ var HunspellEngine = {
     Components.manager.nsIComponentRegistrar.registerFactory(this.classID,
       "Test hunspell", this.contractID, this);
   },
-  
+
   deactivate: function hunspell_deactivate() {
     Components.manager.nsIComponentRegistrar.unregisterFactory(this.classID, this);
     Components.manager.nsIComponentRegistrar.registerFactory(this.origClassID,

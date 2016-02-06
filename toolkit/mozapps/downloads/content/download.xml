@@ -38,9 +38,9 @@
         <![CDATA[
           var state = parseInt(this.getAttribute("state"));
           const dl = Components.interfaces.nsIDownloadManager;
-          return state == dl.DOWNLOAD_NOTSTARTED || 
+          return state == dl.DOWNLOAD_NOTSTARTED ||
                  state == dl.DOWNLOAD_QUEUED ||
-                 state == dl.DOWNLOAD_DOWNLOADING || 
+                 state == dl.DOWNLOAD_DOWNLOADING ||
                  state == dl.DOWNLOAD_PAUSED ||
                  state == dl.DOWNLOAD_SCANNING;
         ]]>
@@ -51,11 +51,11 @@
         <![CDATA[
           var state = parseInt(this.getAttribute("state"));
           const dl = Components.interfaces.nsIDownloadManager;
-          return state == dl.DOWNLOAD_FINISHED || 
-                 state == dl.DOWNLOAD_CANCELED || 
-                 state == dl.DOWNLOAD_BLOCKED_PARENTAL || 
-                 state == dl.DOWNLOAD_BLOCKED_POLICY || 
-                 state == dl.DOWNLOAD_DIRTY || 
+          return state == dl.DOWNLOAD_FINISHED ||
+                 state == dl.DOWNLOAD_CANCELED ||
+                 state == dl.DOWNLOAD_BLOCKED_PARENTAL ||
+                 state == dl.DOWNLOAD_BLOCKED_POLICY ||
+                 state == dl.DOWNLOAD_DIRTY ||
                  state == dl.DOWNLOAD_FAILED;
         ]]>
         </getter>
@@ -74,7 +74,7 @@
       </property>
     </implementation>
   </binding>
-  
+
   <binding id="download-starting" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
@@ -96,9 +96,9 @@
                       oncommand="performCommand('cmd_cancel', this);"/>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
-  
+
   <binding id="download-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1" class="downloadContentBox">
@@ -129,7 +129,7 @@
       </xul:hbox>
     </content>
   </binding>
-  
+
   <binding id="download-paused" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
@@ -160,7 +160,7 @@
       </xul:hbox>
     </content>
   </binding>
-  
+
   <binding id="download-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
@@ -181,9 +181,9 @@
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
-  
+
   <binding id="download-canceled" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
@@ -207,9 +207,9 @@
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
-  
+
   <binding id="download-failed" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
@@ -233,7 +233,7 @@
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
 
   <binding id="download-blocked-parental" extends="chrome://mozapps/content/downloads/download.xml#download-base">
@@ -299,7 +299,7 @@
           <xul:spacer flex="1"/>
         </xul:vbox>
       </xul:hbox>
-    </content>  
+    </content>
   </binding>
 
   <binding id="download-dirty" extends="chrome://mozapps/content/downloads/download.xml#download-base">

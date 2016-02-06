@@ -9,7 +9,7 @@ try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
 } catch(ex) {
   do_throw("Could not get history service\n");
-} 
+}
 
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
             getService(Ci.nsINavBookmarksService);
@@ -73,13 +73,13 @@ function run_test() {
 
   // bookmark query that should result in a flat list
   // because we specified max results
-  var options = histsvc.getNewQueryOptions();
+  options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 10;
-  var query = histsvc.getNewQuery();
+  query = histsvc.getNewQuery();
   query.setFolders([folder], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  result = histsvc.executeQuery(query, options);
+  root = result.root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 3);
   do_check_eq(root.getChild(0).itemId, b1);
@@ -88,7 +88,7 @@ function run_test() {
   root.containerOpen = false;
 
   // XXX TODO
-  // test that if we have: more than one query, 
+  // test that if we have: more than one query,
   // multiple folders, a begin time, an end time, a domain, a uri
   // or a search term, that we get the (correct) flat list results
   // (like we do when specified maxResults)

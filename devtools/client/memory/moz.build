@@ -21,6 +21,7 @@ DevToolsModules(
     'panel.js',
     'reducers.js',
     'store.js',
+    'telemetry.js',
     'utils.js',
 )
 

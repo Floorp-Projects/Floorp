@@ -9,7 +9,7 @@ var Scope = {}
 Components.utils.import("resource://gre/modules/CrashMonitor.jsm", Scope);
 var MonitorAPI = Scope.CrashMonitor;
 
-function CrashMonitor() {};
+function CrashMonitor() {}
 
 CrashMonitor.prototype = {
 

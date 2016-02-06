@@ -22,7 +22,7 @@ add_task(function* () {
     return new Promise(resolve => {
       listener.onFindResult = resolve;
     })
-  };
+  }
 
   let promiseFind = waitForFind();
   finder.highlight(true, "content");

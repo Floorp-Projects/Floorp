@@ -186,7 +186,7 @@ function checkResult()
     document.getElementById(test.autohide).hidePopup();
     return;
   }
-  
+
   goNextStep();
 }
 

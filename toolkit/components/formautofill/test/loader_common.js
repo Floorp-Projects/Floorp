@@ -88,7 +88,7 @@ function* terminationTaskFn() {
       Assert.ok(false);
     }
   }
-};
+}
 
 function add_termination_task(taskFn) {
   gTerminationTasks.push(taskFn);

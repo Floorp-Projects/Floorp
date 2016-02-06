@@ -202,7 +202,7 @@ nsAsyncShutdownClient.prototype = {
 function nsAsyncShutdownBarrier(moduleBarrier) {
   this._client = new nsAsyncShutdownClient(moduleBarrier.client);
   this._moduleBarrier = moduleBarrier;
-};
+}
 nsAsyncShutdownBarrier.prototype = {
   get state() {
     return PropertyBagConverter.fromValue(this._moduleBarrier.state);
