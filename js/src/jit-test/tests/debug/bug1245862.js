@@ -1,5 +1,8 @@
 // |jit-test| allow-oom
 
+if (!('oomAfterAllocations' in this))
+  quit();
+
 var g = newGlobal();
 var dbg = new Debugger;
 g.h = function h(d) {
