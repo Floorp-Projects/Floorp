@@ -32,6 +32,7 @@
 #include "gfxUtils.h"
 #include "gfx2DGlue.h"
 #include "GLScreenBuffer.h"
+#include "gfxPrefs.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -227,11 +228,7 @@ GLXLibrary::EnsureInitialized()
         GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap,
                                          (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
     {
-#ifdef MOZ_WIDGET_GTK
-        mUseTextureFromPixmap = gfxPlatformGtk::GetPlatform()->UseXRender();
-#else
-        mUseTextureFromPixmap = true;
-#endif
+        mUseTextureFromPixmap = gfxPrefs::UseGLXTextureFromPixmap();
     } else {
         mUseTextureFromPixmap = false;
         NS_WARNING("Texture from pixmap disabled");

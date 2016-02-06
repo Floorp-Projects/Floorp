@@ -1386,11 +1386,11 @@ CompositorD3D11::VerifyBufferSize()
     if (newRefCnt > 0) {
       gfxCriticalError() << "Unexpecting lingering references to backbuffer! RefCnt: " << newRefCnt;
     }
-
-    hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
-                                   DXGI_FORMAT_B8G8R8A8_UNORM,
-                                   0);
   }
+
+  hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+                                 DXGI_FORMAT_B8G8R8A8_UNORM,
+                                 0);
 
   mVerifyBuffersFailed = FAILED(hr);
   if (mVerifyBuffersFailed) {
