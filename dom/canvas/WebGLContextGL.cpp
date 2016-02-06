@@ -839,25 +839,31 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
     MakeContextCurrent();
 
     switch (pname) {
-        case LOCAL_GL_RENDERBUFFER_SAMPLES:
-        case LOCAL_GL_RENDERBUFFER_WIDTH:
-        case LOCAL_GL_RENDERBUFFER_HEIGHT:
-        case LOCAL_GL_RENDERBUFFER_RED_SIZE:
-        case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
-        case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
-        case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
-        case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
-        case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
-        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
-        {
-            // RB emulation means we have to ask the RB itself.
-            GLint i = mBoundRenderbuffer->GetRenderbufferParameter(target, pname);
-            return JS::Int32Value(i);
-        }
-        default:
-            ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
+    case LOCAL_GL_RENDERBUFFER_SAMPLES:
+        if (!IsWebGL2())
+            break;
+        // fallthrough
+
+    case LOCAL_GL_RENDERBUFFER_WIDTH:
+    case LOCAL_GL_RENDERBUFFER_HEIGHT:
+    case LOCAL_GL_RENDERBUFFER_RED_SIZE:
+    case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
+    case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
+    case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
+    case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
+    case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
+    case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
+    {
+        // RB emulation means we have to ask the RB itself.
+        GLint i = mBoundRenderbuffer->GetRenderbufferParameter(target, pname);
+        return JS::Int32Value(i);
     }
 
+    default:
+        break;
+    }
+
+    ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
     return JS::NullValue();
 }
 
