@@ -166,10 +166,6 @@ function loadAddonManager(id, name, version, platformVersion) {
   let uri = ns.Services.io.newFileURI(file);
   ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
   createAppInfo(id, name, version, platformVersion);
-  // As we're not running in application, we need to setup the features directory
-  // used by system add-ons.
-  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
-  registerDirectory("XREAppFeat", distroDir);
   startupManager();
 }
 

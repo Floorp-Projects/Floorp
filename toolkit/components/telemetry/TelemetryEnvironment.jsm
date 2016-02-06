@@ -540,7 +540,6 @@ EnvironmentAddonBuilder.prototype = {
           installDay: Utils.millisecondsToDays(installDate.getTime()),
           updateDay: Utils.millisecondsToDays(updateDate.getTime()),
           signedState: addon.signedState,
-          isSystem: addon.isSystem,
         };
 
         if (addon.signedState !== undefined)
