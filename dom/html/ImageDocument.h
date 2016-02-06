@@ -62,7 +62,7 @@ public:
   }
   bool ImageIsOverflowing() const
   {
-    return mImageIsOverflowing;
+    return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
   }
   bool ImageIsResized() const
   {
@@ -118,7 +118,8 @@ protected:
 
   bool                          mResizeImageByDefault;
   bool                          mClickResizingEnabled;
-  bool                          mImageIsOverflowing;
+  bool                          mImageIsOverflowingHorizontally;
+  bool                          mImageIsOverflowingVertically;
   // mImageIsResized is true if the image is currently resized
   bool                          mImageIsResized;
   // mShouldResize is true if the image should be resized when it doesn't fit
