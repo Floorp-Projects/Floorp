@@ -716,6 +716,7 @@ GeckoDriver.prototype.setUpProxy = function(proxy) {
       case "NOPROXY":
       default:
         Preferences.set("network.proxy.type", 0);
+        break;
     }
   } else {
     throw new InvalidArgumentError("Value of 'proxy' should be an object");
@@ -2629,7 +2630,6 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
 
     case Context.CONTENT:
       return this.listener.takeScreenshot(id, full, highlights);
-      break;
   }
 };
 
