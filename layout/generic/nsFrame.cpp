@@ -2218,7 +2218,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       int index = 1;
 
       while (nsDisplayItem* item = resultList.RemoveBottom()) {
-        if (ItemParticipatesIn3DContext(this, item)) {
+        if (ItemParticipatesIn3DContext(this, item) && !item->GetClip().HasClip()) {
           // The frame of this item participates the same 3D context.
           WrapSeparatorTransform(aBuilder, this, dirtyRect,
                                  &nonparticipants, &participants, index++);
