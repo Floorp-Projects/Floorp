@@ -357,36 +357,6 @@ CXXFLAGS += $(WARNINGS_AS_ERRORS)
 CFLAGS   += $(WARNINGS_AS_ERRORS)
 endif # ALLOW_COMPILER_WARNINGS
 
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-#// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
-#// DLL version of the RTL is used...
-#//
-#//------------------------------------------------------------------------
-ifdef MOZ_ASAN
-# ASAN-instrumented code tries to link against the dynamic CRT, which can't be
-# used in the same link as the static CRT.
-USE_STATIC_LIBS=
-endif # MOZ_ASAN
-
-ifdef USE_STATIC_LIBS
-RTL_FLAGS=-MT          # Statically linked multithreaded RTL
-ifdef MOZ_DEBUG
-ifndef MOZ_NO_DEBUG_RTL
-RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
-endif
-endif # MOZ_DEBUG
-
-else # !USE_STATIC_LIBS
-
-RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
-ifdef MOZ_DEBUG
-ifndef MOZ_NO_DEBUG_RTL
-RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
-endif
-endif # MOZ_DEBUG
-endif # USE_STATIC_LIBS
-endif # WINNT && !GNU_CC
-
 COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS) $(_DEPEND_CFLAGS) $(CFLAGS) $(MOZBUILD_CFLAGS)
 COMPILE_CXXFLAGS = $(if $(DISABLE_STL_WRAPPING),,$(STL_FLAGS)) $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS) $(_DEPEND_CFLAGS) $(CXXFLAGS) $(MOZBUILD_CXXFLAGS)
 COMPILE_CMFLAGS = $(OS_COMPILE_CMFLAGS) $(MOZBUILD_CMFLAGS)

@@ -359,6 +359,9 @@ void NrSocket::OnSocketReady(PRFileDesc *fd, int16_t outflags) {
     fire_callback(NR_ASYNC_WAIT_READ);
   if (outflags & PR_POLL_WRITE & poll_flags())
     fire_callback(NR_ASYNC_WAIT_WRITE);
+  if (outflags & (PR_POLL_ERR | PR_POLL_NVAL | PR_POLL_HUP))
+    // TODO: Bug 946423: how do we notify the upper layers about this?
+    close();
 }
 
 void NrSocket::OnSocketDetached(PRFileDesc *fd) {

@@ -4528,6 +4528,9 @@ Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    if (!args.requireAtLeast(cx, "Debugger.isCompilableUnit", 1))
+        return false;
+
     if (!args[0].isString()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_NOT_EXPECTED_TYPE, "Debugger.isCompilableUnit",
