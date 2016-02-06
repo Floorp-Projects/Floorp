@@ -465,7 +465,7 @@ this.PushServiceHttp2 = {
           listener: null,
           countUnableToConnect: 0,
           lastStartListening: 0,
-          retryTimerID: 0,
+          waitingForAlarm: false
         };
         this._listenForMsgs(result.subscriptionUri);
         return result;
@@ -585,20 +585,28 @@ this.PushServiceHttp2 = {
 
     if (retryAfter !== -1) {
       // This is a 5xx response.
+      // To respect RetryAfter header, setTimeout is used. setAlarm sets a
+      // cumulative alarm so it will not always respect RetryAfter header.
       this._conns[aSubscriptionUri].countUnableToConnect++;
-      this._conns[aSubscriptionUri].retryTimerID =
-        setTimeout(_ => this._listenForMsgs(aSubscriptionUri), retryAfter);
+      setTimeout(_ => this._listenForMsgs(aSubscriptionUri), retryAfter);
       return;
     }
 
+    // we set just one alarm because most probably all connection will go over
+    // a single TCP connection.
     retryAfter = prefs.get("http2.retryInterval") *
       Math.pow(2, this._conns[aSubscriptionUri].countUnableToConnect);
 
     retryAfter = retryAfter * (0.8 + Math.random() * 0.4); // add +/-20%.
 
     this._conns[aSubscriptionUri].countUnableToConnect++;
-    this._conns[aSubscriptionUri].retryTimerID =
-      setTimeout(_ => this._listenForMsgs(aSubscriptionUri), retryAfter);
+
+    if (retryAfter === 0) {
+      setTimeout(_ => this._listenForMsgs(aSubscriptionUri), 0);
+    } else {
+      this._conns[aSubscriptionUri].waitingForAlarm = true;
+      this._mainPushService.setAlarm(retryAfter);
+    }
 
     console.debug("retryAfterBackoff: Retry in", retryAfter);
   },
@@ -620,11 +628,7 @@ this.PushServiceHttp2 = {
         }
         this._conns[subscriptionUri].listener = null;
         this._conns[subscriptionUri].channel = null;
-
-        if (this._conns[subscriptionUri].retryTimerID > 0) {
-          clearTimeout(this._conns[subscriptionUri].retryTimerID);
-        }
-
+        this._conns[subscriptionUri].waitingForAlarm = false;
         if (deleteInfo) {
           delete this._conns[subscriptionUri];
         }
@@ -653,10 +657,24 @@ this.PushServiceHttp2 = {
       this._conns[record.subscriptionUri] = {channel: null,
                                              listener: null,
                                              countUnableToConnect: 0,
-                                             retryTimerID: 0};
+                                             waitingForAlarm: false};
     }
     if (!this._conns[record.subscriptionUri].conn) {
+      this._conns[record.subscriptionUri].waitingForAlarm = false;
       this._listenForMsgs(record.subscriptionUri);
+    }
+  },
+
+  // Start listening if subscriptions present.
+  _startConnectionsWaitingForAlarm: function() {
+    console.debug("startConnectionsWaitingForAlarm()");
+    for (let subscriptionUri in this._conns) {
+      if ((this._conns[subscriptionUri]) &&
+          !this._conns[subscriptionUri].conn &&
+          this._conns[subscriptionUri].waitingForAlarm) {
+        this._conns[subscriptionUri].waitingForAlarm = false;
+        this._listenForMsgs(subscriptionUri);
+      }
     }
   },
 
@@ -768,6 +786,10 @@ this.PushServiceHttp2 = {
       console.error("pushChannelOnStop: Error receiving message",
         err);
     });
+  },
+
+  onAlarmFired: function() {
+    this._startConnectionsWaitingForAlarm();
   },
 };
 

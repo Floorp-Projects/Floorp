@@ -140,112 +140,44 @@ this.PushServiceWebSocket = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "nsPref:changed" && aData == "dom.push.userAgentID") {
-      this._onUAIDChanged();
-    } else if (aTopic == "timer-callback") {
-      this._onTimerFired(aSubject);
-    }
-  },
 
-  /**
-   * Handles a UAID change. Unlike reconnects, we cancel all pending requests
-   * after disconnecting. Existing subscriptions stored in IndexedDB will be
-   * dropped on reconnect.
-   */
-  _onUAIDChanged() {
-    console.debug("onUAIDChanged()");
-
-    this._shutdownWS();
-    this._startBackoffTimer();
-  },
-
-  /** Handles a ping, backoff, or request timeout timer event. */
-  _onTimerFired(timer) {
-    console.debug("onTimerFired()");
-
-    if (timer == this._pingTimer) {
-      this._sendPing();
-      return;
-    }
-
-    if (timer == this._backoffTimer) {
-      console.debug("onTimerFired: Reconnecting after backoff");
-      if (this._reconnectTestCallback) {
-        // Notify the test callback once the client reconnects.
-        let actualRetryTimeout = Date.now() - this._lastDisconnect;
-        this._reconnectTestCallback(actualRetryTimeout);
+    switch (aTopic) {
+    case "nsPref:changed":
+      if (aData == "dom.push.userAgentID") {
+        this._shutdownWS();
+        this._reconnectAfterBackoff();
       }
-      this._beginWSSetup();
-      return;
-    }
+      break;
+    case "timer-callback":
+      if (aSubject == this._requestTimeoutTimer) {
+        if (Object.keys(this._registerRequests).length === 0) {
+          this._requestTimeoutTimer.cancel();
+        }
 
-    if (timer == this._requestTimeoutTimer) {
-      this._timeOutRequests();
-      return;
-    }
-  },
+        // Set to true if at least one request timed out.
+        let requestTimedOut = false;
+        for (let channelID in this._registerRequests) {
+          let duration = Date.now() - this._registerRequests[channelID].ctime;
+          // If any of the registration requests time out, all the ones after it
+          // also made to fail, since we are going to be disconnecting the
+          // socket.
+          if (requestTimedOut || duration > this._requestTimeout) {
+            requestTimedOut = true;
+            this._registerRequests[channelID]
+              .reject(new Error("Register request timed out for channel ID " +
+                  channelID));
 
-  /**
-   * Sends a ping to the server. Bypasses the request queue, but starts the
-   * request timeout timer. If the socket is already closed, or the server
-   * does not respond within the timeout, the client will reconnect.
-   */
-  _sendPing() {
-    console.debug("sendPing()");
+            delete this._registerRequests[channelID];
+          }
+        }
 
-    this._startRequestTimeoutTimer();
-    try {
-      this._wsSendMessage({});
-      this._lastPingTime = Date.now();
-    } catch (e) {
-      console.debug("sendPing: Error sending ping", e);
-      this._reconnect();
-    }
-  },
-
-  /** Times out any pending requests. */
-  _timeOutRequests() {
-    console.debug("timeOutRequests()");
-
-    if (!this._hasPendingRequests()) {
-      // Cancel the repeating timer and exit early if we aren't waiting for
-      // pongs or requests.
-      this._requestTimeoutTimer.cancel();
-      return;
-    }
-
-    let now = Date.now();
-
-    // Set to true if at least one request timed out, or we're still waiting
-    // for a pong after the request timeout.
-    let requestTimedOut = false;
-
-    if (this._lastPingTime > 0 &&
-        now - this._lastPingTime > this._requestTimeout) {
-
-      console.debug("timeOutRequests: Did not receive pong in time");
-      requestTimedOut = true;
-
-    } else {
-      for (let [channelID, request] of this._registerRequests) {
-        let duration = now - request.ctime;
-        // If any of the registration requests time out, all the ones after it
-        // also made to fail, since we are going to be disconnecting the
-        // socket.
-        requestTimedOut |= duration > this._requestTimeout;
+        // The most likely reason for a registration request timing out is
+        // that the socket has disconnected. Best to reconnect.
         if (requestTimedOut) {
-          request.reject(new Error(
-            "Register request timed out for channel ID " + channelID));
-
-          this._registerRequests.delete(channelID);
+          this._reconnect();
         }
       }
-    }
-
-    // The most likely reason for a pong or registration request timing out is
-    // that the socket has disconnected. Best to reconnect.
-    if (requestTimedOut) {
-      this._reconnect();
+      break;
     }
   },
 
@@ -268,7 +200,7 @@ this.PushServiceWebSocket = {
   },
 
   _ws: null,
-  _registerRequests: new Map(),
+  _registerRequests: {},
   _currentState: STATE_SHUT_DOWN,
   _requestTimeout: 0,
   _requestTimeoutTimer: null,
@@ -325,34 +257,6 @@ this.PushServiceWebSocket = {
   _dataEnabled: false,
 
   /**
-   * The last time the client sent a ping to the server. If non-zero, keeps the
-   * request timeout timer active. Reset to zero when the server responds with
-   * a pong or pending messages.
-   */
-  _lastPingTime: 0,
-
-  /** The last time the connection was closed. */
-  _lastDisconnect: 0,
-
-  /**
-   * A one-shot timer used to ping the server, to avoid timing out idle
-   * connections. Reset to the ping interval on each incoming message.
-   */
-  _pingTimer: null,
-
-  /** A one-shot timer fired after the reconnect backoff period. */
-  _backoffTimer: null,
-
-  /**
-   * A function called when the client reconnects after backing off.
-   *
-   * @param {Number} actualRetryTimeout The time elapsed between the last
-   *  disconnect and reconnect time. This should be >= the backoff delay for
-   *  that attempt.
-   */
-  _reconnectTestCallback: null,
-
-  /**
    * Sends a message to the Push Server through an open websocket.
    * typeof(msg) shall be an object
    */
@@ -402,7 +306,7 @@ this.PushServiceWebSocket = {
   _reconnect: function () {
     console.debug("reconnect()");
     this._shutdownWS(false);
-    this._startBackoffTimer();
+    this._reconnectAfterBackoff();
   },
 
   _shutdownWS: function(shouldCancelPending = true) {
@@ -420,10 +324,11 @@ this.PushServiceWebSocket = {
     } catch (e) {}
     this._ws = null;
 
-    this._lastPingTime = 0;
-
-    if (this._pingTimer) {
-      this._pingTimer.cancel();
+    this._waitingForPong = false;
+    if (this._mainPushService) {
+      this._mainPushService.stopAlarm();
+    } else {
+      console.error("shutdownWS: Uninitialized push service");
     }
 
     if (shouldCancelPending) {
@@ -434,8 +339,6 @@ this.PushServiceWebSocket = {
       this._notifyRequestQueue();
       this._notifyRequestQueue = null;
     }
-
-    this._lastDisconnect = Date.now();
   },
 
   uninit: function() {
@@ -449,9 +352,6 @@ this.PushServiceWebSocket = {
     // or receiving notifications.
     this._shutdownWS();
 
-    if (this._backoffTimer) {
-      this._backoffTimer.cancel();
-    }
     if (this._requestTimeoutTimer) {
       this._requestTimeoutTimer.cancel();
     }
@@ -465,8 +365,11 @@ this.PushServiceWebSocket = {
    * How retries work:  The goal is to ensure websocket is always up on
    * networks not supporting UDP. So the websocket should only be shutdown if
    * onServerClose indicates UDP wakeup.  If WS is closed due to socket error,
-   * _startBackoffTimer() is called. The retry timer is started and when
+   * _reconnectAfterBackoff() is called.  The retry alarm is started and when
    * it times out, beginWSSetup() is called again.
+   *
+   * On a successful connection, the alarm is cancelled in
+   * wsOnMessageAvailable() when the ping alarm is started.
    *
    * If we are in the middle of a timeout (i.e. waiting), but
    * a register/unregister is called, we don't want to wait around anymore.
@@ -475,8 +378,8 @@ this.PushServiceWebSocket = {
    * timer event comes in (because the timer fired the event before it was
    * cancelled), so the connection won't be reset.
    */
-  _startBackoffTimer() {
-    console.debug("startBackoffTimer()");
+  _reconnectAfterBackoff: function() {
+    console.debug("reconnectAfterBackoff()");
     //Calculate new ping interval
     this._calculateAdaptivePing(true /* wsWentDown */);
 
@@ -487,46 +390,13 @@ this.PushServiceWebSocket = {
 
     this._retryFailCount++;
 
-    console.debug("startBackoffTimer: Retry in", retryTimeout,
+    console.debug("reconnectAfterBackoff: Retry in", retryTimeout,
       "Try number", this._retryFailCount);
-
-    if (!this._backoffTimer) {
-      this._backoffTimer = Cc["@mozilla.org/timer;1"]
-                               .createInstance(Ci.nsITimer);
+    if (this._mainPushService) {
+      this._mainPushService.setAlarm(retryTimeout);
+    } else {
+      console.error("reconnectAfterBackoff: Uninitialized push service");
     }
-    this._backoffTimer.init(this, retryTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-  },
-
-  /** Indicates whether we're waiting for pongs or requests. */
-  _hasPendingRequests() {
-    return this._lastPingTime > 0 || this._registerRequests.size > 0;
-  },
-
-  /**
-   * Starts the request timeout timer unless we're already waiting for a pong
-   * or register request.
-   */
-  _startRequestTimeoutTimer() {
-    if (this._hasPendingRequests()) {
-      return;
-    }
-    if (!this._requestTimeoutTimer) {
-      this._requestTimeoutTimer = Cc["@mozilla.org/timer;1"]
-                                    .createInstance(Ci.nsITimer);
-    }
-    this._requestTimeoutTimer.init(this,
-                                   this._requestTimeout,
-                                   Ci.nsITimer.TYPE_REPEATING_SLACK);
-  },
-
-  /** Starts or resets the ping timer. */
-  _startPingTimer() {
-    if (!this._pingTimer) {
-      this._pingTimer = Cc["@mozilla.org/timer;1"]
-                          .createInstance(Ci.nsITimer);
-    }
-    this._pingTimer.init(this, prefs.get("pingInterval"),
-                         Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
@@ -710,8 +580,8 @@ this.PushServiceWebSocket = {
     }
 
     // Stop any pending reconnects scheduled for the near future.
-    if (this._backoffTimer) {
-      this._backoffTimer.cancel();
+    if (this._mainPushService) {
+      this._mainPushService.stopAlarm();
     }
 
     let uri = this._serverURI;
@@ -751,6 +621,74 @@ this.PushServiceWebSocket = {
 
   isConnected: function() {
     return !!this._ws;
+  },
+
+  /**
+   * There is only one alarm active at any time. This alarm has 3 intervals
+   * corresponding to 3 tasks.
+   *
+   * 1) Reconnect on ping timeout.
+   *    If we haven't received any messages from the server by the time this
+   *    alarm fires, the connection is closed and PushService tries to
+   *    reconnect, repurposing the alarm for (3).
+   *
+   * 2) Send a ping.
+   *    The protocol sends a ping ({}) on the wire every pingInterval ms. Once
+   *    it sends the ping, the alarm goes to task (1) which is waiting for
+   *    a pong. If data is received after the ping is sent,
+   *    _wsOnMessageAvailable() will reset the ping alarm (which cancels
+   *    waiting for the pong). So as long as the connection is fine, pong alarm
+   *    never fires.
+   *
+   * 3) Reconnect after backoff.
+   *    The alarm is set by _reconnectAfterBackoff() and increases in duration
+   *    every time we try and fail to connect.  When it triggers, websocket
+   *    setup begins again. On successful socket setup, the socket starts
+   *    receiving messages. The alarm now goes to (2) where it monitors the
+   *    WebSocket by sending a ping.  Since incoming data is a sign of the
+   *    connection being up, the ping alarm is reset every time data is
+   *    received.
+   */
+  onAlarmFired: function() {
+    // Conditions are arranged in decreasing specificity.
+    // i.e. when _waitingForPong is true, other conditions are also true.
+    if (this._waitingForPong) {
+      console.debug("onAlarmFired: Did not receive pong in time.",
+        "Reconnecting WebSocket");
+      this._reconnect();
+    }
+    else if (this._currentState == STATE_READY) {
+      // Send a ping.
+      // Bypass the queue; we don't want this to be kept pending.
+      // Watch out for exception in case the socket has disconnected.
+      // When this happens, we pretend the ping was sent and don't specially
+      // handle the exception, as the lack of a pong will lead to the socket
+      // being reset.
+      try {
+        this._wsSendMessage({});
+      } catch (e) {
+      }
+
+      this._waitingForPong = true;
+      this._mainPushService.setAlarm(prefs.get("requestTimeout"));
+    }
+    else if (this._mainPushService && this._mainPushService._alarmID !== null) {
+      console.debug("onAlarmFired: reconnect alarm fired");
+      // Reconnect after back-off.
+      // The check for a non-null _alarmID prevents a situation where the alarm
+      // fires, but _shutdownWS() is called from another code-path (e.g.
+      // network state change) and we don't want to reconnect.
+      //
+      // It also handles the case where _beginWSSetup() is called from another
+      // code-path.
+      //
+      // alarmID will be non-null only when no shutdown/connect is
+      // called between _reconnectAfterBackoff() setting the alarm and the
+      // alarm firing.
+
+      // Websocket is shut down. Backoff interval expired, try to connect.
+      this._beginWSSetup();
+    }
   },
 
   _acquireWakeLock: function() {
@@ -880,13 +818,14 @@ this.PushServiceWebSocket = {
   _handleRegisterReply: function(reply) {
     console.debug("handleRegisterReply()");
     if (typeof reply.channelID !== "string" ||
-        !this._registerRequests.has(reply.channelID)) {
+        typeof this._registerRequests[reply.channelID] !== "object") {
       return;
     }
 
-    let tmp = this._registerRequests.get(reply.channelID);
-    this._registerRequests.delete(reply.channelID);
-    if (!this._hasPendingRequests()) {
+    let tmp = this._registerRequests[reply.channelID];
+    delete this._registerRequests[reply.channelID];
+    if (Object.keys(this._registerRequests).length === 0 &&
+        this._requestTimeoutTimer) {
       this._requestTimeoutTimer.cancel();
     }
 
@@ -1025,20 +964,27 @@ this.PushServiceWebSocket = {
   request: function(action, record) {
     console.debug("request() ", action);
 
-    // start the timer since we now have at least one request
-    this._startRequestTimeoutTimer();
+    if (Object.keys(this._registerRequests).length === 0) {
+      // start the timer since we now have at least one request
+      if (!this._requestTimeoutTimer) {
+        this._requestTimeoutTimer = Cc["@mozilla.org/timer;1"]
+                                      .createInstance(Ci.nsITimer);
+      }
+      this._requestTimeoutTimer.init(this,
+                                     this._requestTimeout,
+                                     Ci.nsITimer.TYPE_REPEATING_SLACK);
+    }
 
     if (action == "register") {
       let data = {channelID: this._generateID(),
                   messageType: action};
 
       return new Promise((resolve, reject) => {
-        this._registerRequests.set(data.channelID, {
-          record: record,
-          resolve: resolve,
-          reject: reject,
-          ctime: Date.now(),
-        });
+        this._registerRequests[data.channelID] = {record: record,
+                                                 resolve: resolve,
+                                                 reject: reject,
+                                                 ctime: Date.now()
+                                                };
         this._queueRequest(data);
       }).then(record => {
         if (!this._dataEnabled) {
@@ -1075,7 +1021,7 @@ this.PushServiceWebSocket = {
   _send(data) {
     if (this._currentState == STATE_READY) {
       if (data.messageType != "register" ||
-          this._registerRequests.has(data.channelID)) {
+        typeof this._registerRequests[data.channelID] == "object") {
 
         // check if request has not been cancelled
         this._wsSendMessage(data);
@@ -1084,14 +1030,12 @@ this.PushServiceWebSocket = {
   },
 
   _sendRegisterRequests() {
-    this._enqueue(_ => {
-      for (let channelID of this._registerRequests.keys()) {
-        this._send({
-          messageType: "register",
-          channelID: channelID,
-        });
-      }
-    });
+    this._enqueue(_ => Promise.all(Object.keys(this._registerRequests).map(channelID =>
+      this._send({
+        messageType: "register",
+        channelID: channelID,
+      })
+    )));
   },
 
   _queueRequest(data) {
@@ -1204,8 +1148,7 @@ this.PushServiceWebSocket = {
   _wsOnMessageAvailable: function(context, message) {
     console.debug("wsOnMessageAvailable()", message);
 
-    // Clearing the last ping time indicates we're no longer waiting for a pong.
-    this._lastPingTime = 0;
+    this._waitingForPong = false;
 
     let reply;
     try {
@@ -1231,8 +1174,8 @@ this.PushServiceWebSocket = {
     }
 
     // Reset the ping timer.  Note: This path is executed at every step of the
-    // handshake, so this timer does not need to be set explicitly at startup.
-    this._startPingTimer();
+    // handshake, so this alarm does not need to be set explicitly at startup.
+    this._mainPushService.setAlarm(prefs.get("pingInterval"));
 
     // If it is a ping, do not handle the message.
     if (doNotHandle) {
@@ -1289,10 +1232,11 @@ this.PushServiceWebSocket = {
    * Rejects all pending register requests with errors.
    */
   _cancelRegisterRequests: function() {
-    for (let request of this._registerRequests.values()) {
+    for (let channelID in this._registerRequests) {
+      let request = this._registerRequests[channelID];
+      delete this._registerRequests[channelID];
       request.reject(new Error("Register request aborted"));
     }
-    this._registerRequests.clear();
   },
 
   _makeUDPSocket: function() {
