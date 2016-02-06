@@ -62,17 +62,21 @@ nsBaseURLParser::ParseURL(const char *spec, int32_t specLen,
     const char *stop = nullptr;
     const char *colon = nullptr;
     const char *slash = nullptr;
-    const char *p;
+    const char *p = spec;
     uint32_t offset = 0;
     int32_t len = specLen;
-    for (p = spec; len && *p && !colon && !slash; ++p, --len) {
-        // skip leading whitespace
-        if (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
-            spec++;
-            specLen--;
-            offset++;
-            continue;
-        }
+
+    // skip leading whitespace
+    while (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
+        spec++;
+        specLen--;
+        offset++;
+
+        p++;
+        len--;
+    }
+
+    for (; len && *p && !colon && !slash; ++p, --len) {
         switch (*p) {
             case ':':
                 if (!colon)

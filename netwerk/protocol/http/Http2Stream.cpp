@@ -344,7 +344,7 @@ nsresult
 Http2Stream::MakeOriginURL(const nsACString &origin, RefPtr<nsStandardURL> &url)
 {
   nsAutoCString scheme;
-  nsresult rv = net_ExtractURLScheme(origin, nullptr, nullptr, &scheme);
+  nsresult rv = net_ExtractURLScheme(origin, scheme);
   NS_ENSURE_SUCCESS(rv, rv);
   return MakeOriginURL(scheme, origin, url);
 }

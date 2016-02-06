@@ -123,6 +123,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
       group.mMaskSurface = GetMaskForLayer(aLayer, &group.mMaskTransform);
       return group;
     }
+    aContext->Restore();
   }
 
   Matrix maskTransform;

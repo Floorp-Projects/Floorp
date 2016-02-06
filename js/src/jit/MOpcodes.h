@@ -159,6 +159,7 @@ namespace jit {
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \
     _(PostWriteBarrier)                                                     \
+    _(PostWriteElementBarrier)                                              \
     _(GetPropertyCache)                                                     \
     _(GetPropertyPolymorphic)                                               \
     _(SetPropertyPolymorphic)                                               \

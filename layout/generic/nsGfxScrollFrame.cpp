@@ -3346,9 +3346,32 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
         displayportBase =
           nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
       } else {
-        // Restrict the dirty rect to the scrollport, and make it relative to the
-        // scrollport for the displayport base.
+        // Make the displayport base equal to the dirty rect restricted to
+        // the scrollport and the root composition bounds, relative to the
+        // scrollport.
         displayportBase = aDirtyRect->Intersect(mScrollPort);
+
+        const nsPresContext* rootPresContext =
+          pc->GetToplevelContentDocumentPresContext();
+        if (!rootPresContext) {
+          rootPresContext = pc->GetRootPresContext();
+        }
+        if (rootPresContext) {
+          const nsIPresShell* const rootPresShell = rootPresContext->PresShell();
+          nsIFrame* rootFrame = rootPresShell->GetRootScrollFrame();
+          if (!rootFrame) {
+            rootFrame = rootPresShell->GetRootFrame();
+          }
+          if (rootFrame) {
+            nsRect rootCompBounds =
+              nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame));
+
+            nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
+
+            displayportBase = displayportBase.Intersect(rootCompBounds);
+          }
+        }
+
         displayportBase -= mScrollPort.TopLeft();
       }
 

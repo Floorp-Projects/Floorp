@@ -12829,6 +12829,53 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>::Dat
     ALLOW_CLONE(MPostWriteBarrier)
 };
 
+// Given a value being written to another object's elements at the specified
+// index, update the generational store buffer if the value is in the nursery
+// and object is in the tenured heap.
+class MPostWriteElementBarrier : public MTernaryInstruction
+                               , public MixPolicy<ObjectPolicy<0>, IntPolicy<2>>::Data
+{
+    MPostWriteElementBarrier(MDefinition* obj, MDefinition* value, MDefinition* index)
+      : MTernaryInstruction(obj, value, index)
+    {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(PostWriteElementBarrier)
+
+    static MPostWriteElementBarrier* New(TempAllocator& alloc, MDefinition* obj, MDefinition* value,
+                                         MDefinition* index) {
+        return new(alloc) MPostWriteElementBarrier(obj, value, index);
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* value() const {
+        return getOperand(1);
+    }
+
+    MDefinition* index() const {
+        return getOperand(2);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse* use) const override {
+        // During lowering, values that neither have object nor value MIR type
+        // are ignored, thus Float32 can show up at this point without any issue.
+        return use == getUseFor(1);
+    }
+#endif
+
+    ALLOW_CLONE(MPostWriteElementBarrier)
+};
+
 class MNewDeclEnvObject : public MNullaryInstruction
 {
     CompilerGCPointer<DeclEnvObject*> templateObj_;

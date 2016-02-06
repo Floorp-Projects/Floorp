@@ -366,10 +366,6 @@ CSS_PROP_ALIAS(-webkit-mask-image,
                mask_image,
                WebkitMaskImage,
                WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-mask-mode,
-               mask_mode,
-               WebkitMaskMode,
-               WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-mask-origin,
                mask_origin,
                WebkitMaskOrigin,
