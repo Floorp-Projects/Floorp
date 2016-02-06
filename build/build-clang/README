@@ -13,6 +13,16 @@ optional arguments:
   --clean               Clean the build directory
 ```
 
+Pre-requisites
+--------------
+* Working build toolchain.
+* Subversion
+* CMake
+* Ninja
+* Python 2.7
+
+Please use the latest available CMake for your platform to avoid surprises.
+
 Config file format
 ------------------
 
