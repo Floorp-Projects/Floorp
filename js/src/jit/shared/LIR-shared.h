@@ -6597,6 +6597,75 @@ class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
     }
 };
 
+// Generational write barrier used when writing an object to another object's
+// elements.
+class LPostWriteElementBarrierO : public LInstructionHelper<0, 3, 1>
+{
+  public:
+    LIR_HEADER(PostWriteElementBarrierO)
+
+    LPostWriteElementBarrierO(const LAllocation& obj, const LAllocation& value,
+                              const LAllocation& index, const LDefinition& temp) {
+        setOperand(0, obj);
+        setOperand(1, value);
+        setOperand(2, index);
+        setTemp(0, temp);
+    }
+
+    const MPostWriteElementBarrier* mir() const {
+        return mir_->toPostWriteElementBarrier();
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+
+    const LAllocation* value() {
+        return getOperand(1);
+    }
+
+    const LAllocation* index() {
+        return getOperand(2);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
+// Generational write barrier used when writing a value to another object's
+// elements.
+class LPostWriteElementBarrierV : public LInstructionHelper<0, 2 + BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(PostWriteElementBarrierV)
+
+    LPostWriteElementBarrierV(const LAllocation& obj, const LAllocation& index,
+                              const LDefinition& temp) {
+        setOperand(0, obj);
+        setOperand(1, index);
+        setTemp(0, temp);
+    }
+
+    static const size_t Input = 2;
+
+    const MPostWriteElementBarrier* mir() const {
+        return mir_->toPostWriteElementBarrier();
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+
+    const LAllocation* index() {
+        return getOperand(1);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 // Guard against an object's identity.
 class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0>
 {

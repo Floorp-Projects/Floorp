@@ -78,9 +78,9 @@ CompileRuntime::addressOfLastCachedNativeIterator()
 
 #ifdef JS_GC_ZEAL
 const void*
-CompileRuntime::addressOfGCZeal()
+CompileRuntime::addressOfGCZealModeBits()
 {
-    return runtime()->gc.addressOfZealMode();
+    return runtime()->gc.addressOfZealModeBits();
 }
 #endif
 

@@ -1257,6 +1257,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>>)                     \
     _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >)            \
     _(MixPolicy<ObjectPolicy<0>, IntPolicy<1> >)                        \
+    _(MixPolicy<ObjectPolicy<0>, IntPolicy<2> >)                        \
     _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1> >)                    \
     _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<2> >)                    \
     _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<3> >)                    \

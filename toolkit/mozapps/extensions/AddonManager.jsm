@@ -688,53 +688,6 @@ var AddonManagerInternal = {
   // Store telemetry details per addon provider
   telemetryDetails: {},
 
-  // A read-only wrapper around the types dictionary
-  typesProxy: Proxy.create({
-    getOwnPropertyDescriptor: function(aName) {
-      if (!(aName in AddonManagerInternal.types))
-        return undefined;
-
-      return {
-        value: AddonManagerInternal.types[aName].type,
-        writable: false,
-        configurable: false,
-        enumerable: true
-      }
-    },
-
-    getPropertyDescriptor: function(aName) {
-      return this.getOwnPropertyDescriptor(aName);
-    },
-
-    getOwnPropertyNames: function() {
-      return Object.keys(AddonManagerInternal.types);
-    },
-
-    getPropertyNames: function() {
-      return this.getOwnPropertyNames();
-    },
-
-    delete: function(aName) {
-      // Not allowed to delete properties
-      return false;
-    },
-
-    defineProperty: function(aName, aProperty) {
-      // Ignore attempts to define properties
-    },
-
-    fix: function(){
-      return undefined;
-    },
-
-    // Despite MDC's claims to the contrary, it is required that this trap
-    // be defined
-    enumerate: function() {
-      // All properties are enumerable
-      return this.getPropertyNames();
-    }
-  }),
-
   recordTimestamp: function(name, value) {
     this.TelemetryTimestamps.add(name, value);
   },
@@ -2697,7 +2650,53 @@ var AddonManagerInternal = {
   },
 
   get addonTypes() {
-    return this.typesProxy;
+    // A read-only wrapper around the types dictionary
+    return new Proxy(this.types, {
+      defineProperty(target, property, descriptor) {
+        // Not allowed to define properties
+        return false;
+      },
+
+      deleteProperty(target, property) {
+        // Not allowed to delete properties
+        return false;
+      },
+
+      get(target, property, receiver) {
+        if (!target.hasOwnProperty(property))
+          return undefined;
+
+        return target[property].type;
+      },
+
+      getOwnPropertyDescriptor(target, property) {
+        if (!target.hasOwnProperty(property))
+          return undefined;
+
+        return {
+          value: target[property].type,
+          writable: false,
+          // Claim configurability to maintain the proxy invariants.
+          configurable: true,
+          enumerable: true
+        }
+      },
+
+      preventExtensions(target) {
+        // Not allowed to prevent adding new properties
+        return false;
+      },
+
+      set(target, property, value, receiver) {
+        // Not allowed to set properties
+        return false;
+      },
+
+      setPrototypeOf(target, prototype) {
+        // Not allowed to change prototype
+        return false;
+      }
+    });
   },
 
   get autoUpdateDefault() {

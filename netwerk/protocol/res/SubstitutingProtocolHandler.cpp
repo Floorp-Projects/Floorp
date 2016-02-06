@@ -54,7 +54,7 @@ SubstitutingURL::EnsureFile()
     return rv;
 
   nsAutoCString scheme;
-  rv = net_ExtractURLScheme(spec, nullptr, nullptr, &scheme);
+  rv = net_ExtractURLScheme(spec, scheme);
   if (NS_FAILED(rv))
     return rv;
 

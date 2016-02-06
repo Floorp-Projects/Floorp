@@ -54,9 +54,8 @@ class CentOSBootstrapper(BaseBootstrapper):
         self.dnf_groupinstall(*self.browser_group_packages)
         self.dnf_install(*self.browser_packages)
 
-        kern = platform.uname()
         yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.i686.rpm'
-        if 'x86_64' in kern[2]:
+        if platform.architecture()[0] == '64bit':
             yasm = 'http://pkgs.repoforge.org/yasm/yasm-1.1.0-1.el6.rf.x86_64.rpm'
 
         self.run_as_root(['rpm', '-ivh', yasm])

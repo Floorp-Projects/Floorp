@@ -11,7 +11,8 @@
 
 #include "mozilla/Attributes.h"  // for MOZ_IMPLICIT
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/RefCounted.h"
+#include "mozilla/RefPtr.h"
 
 // |Function<Signature>| is a wrapper that can hold any type of callable
 // object that can be invoked in a way that's compatible with |Signature|.
@@ -40,9 +41,11 @@ namespace mozilla {
 namespace detail {
 
 template<typename ReturnType, typename... Arguments>
-class FunctionImplBase
+class FunctionImplBase : public mozilla::RefCounted<FunctionImplBase<ReturnType, Arguments...>>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FunctionImplBase)
+
   virtual ~FunctionImplBase() {}
   virtual ReturnType call(Arguments... aArguments) = 0;
 };
@@ -137,7 +140,12 @@ public:
   // This constructor is implicit to match the interface of |std::function|.
   template <typename Callable>
   MOZ_IMPLICIT Function(const Callable& aCallable)
-    : mImpl(MakeUnique<detail::FunctionImpl<Callable, ReturnType, Arguments...>>(aCallable))
+    : mImpl(new detail::FunctionImpl<Callable, ReturnType, Arguments...>(aCallable))
+  {}
+  MOZ_IMPLICIT Function(const Function& aFunction)
+    : mImpl(aFunction.mImpl)
+  {}
+  MOZ_IMPLICIT Function(decltype(nullptr))
   {}
 
   // Move constructor and move assingment operator.
@@ -151,7 +159,17 @@ public:
   template <typename Callable>
   Function& operator=(const Callable& aCallable)
   {
-    mImpl = MakeUnique<detail::FunctionImpl<Callable, ReturnType, Arguments...>>(aCallable);
+    mImpl = new detail::FunctionImpl<Callable, ReturnType, Arguments...>(aCallable);
+    return *this;
+  }
+  Function& operator=(const Function& aFunction)
+  {
+    mImpl = aFunction.mImpl;
+    return *this;
+  }
+  Function& operator=(decltype(nullptr))
+  {
+    mImpl = nullptr;
     return *this;
   }
 
@@ -161,9 +179,15 @@ public:
     MOZ_ASSERT(mImpl);
     return mImpl->call(Forward<Args>(aArguments)...);
   }
+
+  explicit operator bool() const
+  {
+    return bool(mImpl);
+  }
+
 private:
   // TODO: Consider implementing a small object optimization.
-  UniquePtr<detail::FunctionImplBase<ReturnType, Arguments...>> mImpl;
+  RefPtr<detail::FunctionImplBase<ReturnType, Arguments...>> mImpl;
 };
 
 } // namespace mozilla
