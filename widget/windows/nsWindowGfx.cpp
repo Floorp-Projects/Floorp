@@ -516,8 +516,18 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
-        result = listener->PaintWindow(
-          this, LayoutDeviceIntRegion::FromUnknownRegion(region));
+        {
+          result = listener->PaintWindow(
+            this, LayoutDeviceIntRegion::FromUnknownRegion(region));
+          ClientLayerManager* clientLM =
+            static_cast<ClientLayerManager*>(GetLayerManager());
+          IDXGISwapChain* swapChain = clientLM->GetTextureFactoryIdentifier().mSwapChain.get();
+          if (swapChain) {
+            // Workaround for bug 1232042. On some devices artifacts will occur
+            // is we don't do a main thread present call from the WM_PAINT event.
+            swapChain->Present(0, 0);
+          }
+        }
         break;
       default:
         NS_ERROR("Unknown layers backend used!");

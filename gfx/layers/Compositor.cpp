@@ -18,9 +18,47 @@
 #include "nsScreenManagerGonk.h"
 #endif
 
+#ifdef XP_WIN
+#include "dxgi.h"
+#endif
+
 namespace mozilla {
 
 namespace layers {
+
+TextureFactoryIdentifier&
+TextureFactoryIdentifier::operator=(const TextureFactoryIdentifier& aOther) = default;
+
+TextureFactoryIdentifier::TextureFactoryIdentifier(const TextureFactoryIdentifier& aOther)
+{
+  *this = aOther;
+}
+
+TextureFactoryIdentifier::TextureFactoryIdentifier(LayersBackend aLayersBackend,
+                                                   GeckoProcessType aParentProcessId,
+                                                   int32_t aMaxTextureSize,
+                                                   bool aSupportsTextureBlitting,
+                                                   bool aSupportsPartialUploads,
+                                                   SyncHandle aSyncHandle,
+                                                   IDXGISwapChain* aSwapChain)
+  : mParentBackend(aLayersBackend)
+  , mParentProcessId(aParentProcessId)
+  , mSupportedBlendModes(gfx::CompositionOp::OP_OVER)
+  , mMaxTextureSize(aMaxTextureSize)
+  , mSupportsTextureBlitting(aSupportsTextureBlitting)
+  , mSupportsPartialUploads(aSupportsPartialUploads)
+  , mSyncHandle(aSyncHandle)
+  , mSwapChain(aSwapChain)
+{}
+
+TextureFactoryIdentifier::~TextureFactoryIdentifier()
+{}
+
+void
+TextureFactoryIdentifier::SetSwapChain(IDXGISwapChain* aSwapChain)
+{
+  mSwapChain = aSwapChain;
+}
 
 /* static */ void
 Compositor::AssertOnCompositorThread()
