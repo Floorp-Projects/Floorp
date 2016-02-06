@@ -29,10 +29,12 @@ if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
 System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 
 include ':app'
+include ':base'
 include ':omnijar'
 include ':thirdparty'
 
 project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
+project(':base').projectDir = new File("${json.topsrcdir}/mobile/android/app/base")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
