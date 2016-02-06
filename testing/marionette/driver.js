@@ -640,10 +640,10 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
           to = copy(from[key], to);
           break;
         case "requiredCapabilities":
-          if (from[key]["proxy"]) {
-              this.setUpProxy(from[key]["proxy"]);
-              to["proxy"] = from[key]["proxy"];
-              delete from[key]["proxy"];
+          if (from[key].proxy) {
+              this.setUpProxy(from[key].proxy);
+              to.proxy = from[key].proxy;
+              delete from[key].proxy;
           }
           for (let caps in from[key]) {
             if (from[key][caps] !== this.sessionCapabilities[caps]) {
