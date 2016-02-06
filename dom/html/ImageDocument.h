@@ -101,7 +101,8 @@ protected:
   enum eModeClasses {
     eNone,
     eShrinkToFit,
-    eOverflowing
+    eOverflowingVertical, // And maybe horizontal too.
+    eOverflowingHorizontalOnly
   };
   void SetModeClass(eModeClasses mode);
 
