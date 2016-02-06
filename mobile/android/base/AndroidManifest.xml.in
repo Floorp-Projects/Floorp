@@ -1,7 +1,7 @@
 #filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.mozilla.gecko"
+      package="@ANDROID_PACKAGE_NAME@"
       android:installLocation="auto"
       android:versionCode="@ANDROID_VERSION_CODE@"
       android:versionName="@MOZ_APP_VERSION@"
