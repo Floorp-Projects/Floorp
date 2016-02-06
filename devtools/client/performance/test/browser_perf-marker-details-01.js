@@ -19,7 +19,7 @@ function* spawnTest() {
   };
 
   const MARKER_TYPES = [
-    "Styles", "Reflow", "Paint", "ConsoleTime", "TimeStamp"
+    "Styles", "Reflow", "ConsoleTime", "TimeStamp"
   ];
 
   yield startRecording(panel);
@@ -37,8 +37,10 @@ function* spawnTest() {
   info("No need to select everything in the timeline.");
   info("All the markers should be displayed by default.");
 
-  let bars = $$(".waterfall-marker-bar");
-  let markers = PerformanceController.getCurrentRecording().getMarkers();
+  let bars = Array.prototype.filter.call($$(".waterfall-marker-bar"),
+             (bar) => MARKER_TYPES.indexOf(bar.getAttribute("type")) !== -1);
+  let markers = PerformanceController.getCurrentRecording().getMarkers()
+                .filter(m => MARKER_TYPES.indexOf(m.name) !== -1);
 
   info(`Got ${bars.length} bars and ${markers.length} markers.`);
   info("Markers types from datasrc: " + Array.map(markers, e => e.name));
@@ -46,6 +48,15 @@ function* spawnTest() {
 
   ok(bars.length >= MARKER_TYPES.length, `Got at least ${MARKER_TYPES.length} markers (1)`);
   ok(markers.length >= MARKER_TYPES.length, `Got at least ${MARKER_TYPES.length} markers (2)`);
+
+  // Sanity check that markers are in chronologically ascending order
+  markers.reduce((previous, m) => {
+    if (m.start <= previous) {
+      ok(false, "Markers are not in order");
+      info(markers);
+    }
+    return m.start;
+  }, 0);
 
   const tests = {
     ConsoleTime: function (marker) {
@@ -98,7 +109,7 @@ function* spawnTest() {
         }
       }
     } else {
-      info(`TODO: Need to add marker details tests for ${m.name}`);
+      throw new Error(`No tests for ${m.name} -- should be filtered out.`);
     }
 
     if (testsDone.length === Object.keys(tests).length) {
@@ -115,7 +126,6 @@ function shouldHaveStack ($, type, marker) {
 }
 
 function shouldHaveLabel ($, name, value, marker) {
-  info(name);
   let $name = $(`#waterfall-details .marker-details-labelcontainer .marker-details-labelname[value="${name}"]`);
   let $value = $name.parentNode.querySelector(".marker-details-labelvalue");
   is($value.getAttribute("value"), value, `${marker.name} has correct label for ${name}:${value}`);
