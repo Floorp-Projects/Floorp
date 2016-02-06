@@ -282,12 +282,8 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   //  - They recalculate their visible regions, taking ancestorClipForChildren
   //    into account, and accumulate them into descendantsVisibleRegion.
   LayerIntRegion descendantsVisibleRegion;
-  bool hasPreserve3DChild = false;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     PostProcessLayers(child, localOpaque, descendantsVisibleRegion, ancestorClipForChildren);
-    if (child->Extend3DContext()) {
-      hasPreserve3DChild = true;
-    }
   }
 
   // Recalculate our visible region.
@@ -295,7 +291,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
 
   // If we have descendants, throw away the visible region stored on this
   // layer, and use the region accumulated by our descendants instead.
-  if (aLayer->GetFirstChild() && !hasPreserve3DChild) {
+  if (aLayer->GetFirstChild()) {
     visible = descendantsVisibleRegion;
   }
 
