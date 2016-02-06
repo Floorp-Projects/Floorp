@@ -9,7 +9,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm", this);
-Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
@@ -572,11 +571,6 @@ function checkSystemSection(data) {
 }
 
 function checkActiveAddon(data){
-  let signedState = mozinfo.addon_signing ? "number" : "undefined";
-  // system add-ons have an undefined signState
-  if (data.isSystem)
-    signedState = "undefined";
-
   const EXPECTED_ADDON_FIELDS_TYPES = {
     blocklisted: "boolean",
     name: "string",
@@ -589,8 +583,7 @@ function checkActiveAddon(data){
     hasBinaryComponents: "boolean",
     installDay: "number",
     updateDay: "number",
-    signedState: signedState,
-    isSystem: "boolean",
+    signedState: mozinfo.addon_signing ? "number" : "undefined",
   };
 
   for (let f in EXPECTED_ADDON_FIELDS_TYPES) {
@@ -722,10 +715,6 @@ function run_test() {
   do_test_pending();
   spoofGfxAdapter();
   do_get_profile();
-
-  // The system add-on must be installed before AddonManager is started.
-  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
-  do_get_file("system.xpi").copyTo(distroDir, "tel-system-xpi@tests.mozilla.org.xpi");
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
 
   // Spoof the persona ID, but not on Gonk.
@@ -1027,25 +1016,6 @@ add_task(function* test_addonsAndPlugins() {
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
-    isSystem: false,
-  };
-  const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
-  const SYSTEM_ADDON_INSTALL_DATE = truncateToDays(Date.now());
-  const EXPECTED_SYSTEM_ADDON_DATA = {
-    blocklisted: false,
-    description: "A system addon which is shipped with Firefox.",
-    name: "XPI Telemetry System Add-on Test",
-    userDisabled: false,
-    appDisabled: false,
-    version: "1.0",
-    scope: 1,
-    type: "extension",
-    foreignInstall: false,
-    hasBinaryComponents: false,
-    installDay: SYSTEM_ADDON_INSTALL_DATE,
-    updateDay: SYSTEM_ADDON_INSTALL_DATE,
-    signedState: undefined,
-    isSystem: true,
   };
 
   const EXPECTED_PLUGIN_DATA = {
@@ -1068,13 +1038,6 @@ add_task(function* test_addonsAndPlugins() {
   let targetAddon = data.addons.activeAddons[ADDON_ID];
   for (let f in EXPECTED_ADDON_DATA) {
     Assert.equal(targetAddon[f], EXPECTED_ADDON_DATA[f], f + " must have the correct value.");
-  }
-
-  // Check system add-on data.
-  Assert.ok(SYSTEM_ADDON_ID in data.addons.activeAddons, "We must have one active system addon.");
-  let targetSystemAddon = data.addons.activeAddons[SYSTEM_ADDON_ID];
-  for (let f in EXPECTED_SYSTEM_ADDON_DATA) {
-    Assert.equal(targetSystemAddon[f], EXPECTED_SYSTEM_ADDON_DATA[f], f + " must have the correct value.");
   }
 
   // Check theme data.
