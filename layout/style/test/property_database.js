@@ -7250,13 +7250,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "mask-image",
     subproperties: [ "mask-image" ],
   };
-  gCSSProperties["-webkit-mask-mode"] = {
-    domProp: "webkitMaskMode",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "mask-mode",
-    subproperties: [ "mask-mode" ],
-  };
   gCSSProperties["-webkit-mask-origin"] = {
     domProp: "webkitMaskOrigin",
     inherited: false,

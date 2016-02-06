@@ -2524,6 +2524,55 @@ LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier* ins)
 }
 
 void
+LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    // LPostWriteElementBarrier assumes that if it has a constant object then that
+    // object is tenured, and does not need to be tested for being in the
+    // nursery. Ensure that assumption holds by lowering constant nursery
+    // objects to a register.
+    bool useConstantObject =
+        ins->object()->isConstant() &&
+        !IsInsideNursery(&ins->object()->toConstant()->value().toObject());
+
+    switch (ins->value()->type()) {
+      case MIRType_Object:
+      case MIRType_ObjectOrNull: {
+        LDefinition tmp = needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
+        LPostWriteElementBarrierO* lir =
+            new(alloc()) LPostWriteElementBarrierO(useConstantObject
+                                                   ? useOrConstant(ins->object())
+                                                   : useRegister(ins->object()),
+                                                   useRegister(ins->value()),
+                                                   useRegister(ins->index()),
+                                                   tmp);
+        add(lir, ins);
+        assignSafepoint(lir, ins);
+        break;
+      }
+      case MIRType_Value: {
+        LDefinition tmp = needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
+        LPostWriteElementBarrierV* lir =
+            new(alloc()) LPostWriteElementBarrierV(useConstantObject
+                                                   ? useOrConstant(ins->object())
+                                                   : useRegister(ins->object()),
+                                                   useRegister(ins->index()),
+                                                   tmp);
+        useBox(lir, LPostWriteElementBarrierV::Input, ins->value());
+        add(lir, ins);
+        assignSafepoint(lir, ins);
+        break;
+      }
+      default:
+        // Currently, only objects can be in the nursery. Other instruction
+        // types cannot hold nursery pointers.
+        break;
+    }
+}
+
+void
 LIRGenerator::visitArrayLength(MArrayLength* ins)
 {
     MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);

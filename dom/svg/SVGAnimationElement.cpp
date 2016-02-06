@@ -372,7 +372,7 @@ SVGAnimationElement::ActivateByHyperlink()
     // else, silently fail. We mustn't be part of an SVG document fragment that
     // is attached to the document tree so there's nothing we can do here
   } else {
-    ErrorResult rv;
+    IgnoredErrorResult rv;
     BeginElement(rv);
   }
 }

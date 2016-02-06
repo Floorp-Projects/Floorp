@@ -526,6 +526,21 @@ TEST(Tokenizer, SkipWhites)
   EXPECT_TRUE(p.CheckEOF());
 }
 
+TEST(Tokenizer, SkipCustomWhites)
+{
+  Tokenizer p("Text1 \n\r\t.Text2 \n\r\t.", " \n\r\t.");
+
+  EXPECT_TRUE(p.CheckWord("Text1"));
+  p.SkipWhites();
+  EXPECT_TRUE(p.CheckWord("Text2"));
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckEOF());
+}
+
 TEST(Tokenizer, IntegerReading)
 {
 #define INT_6_BITS                 64U

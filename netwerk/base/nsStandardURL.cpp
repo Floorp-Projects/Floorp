@@ -2867,20 +2867,8 @@ nsStandardURL::Init(uint32_t urlType,
         mOriginCharset = charset;
     }
 
-    if (baseURI) {
-        uint32_t start, end;
-        // pull out the scheme and where it ends
-        nsresult rv = net_ExtractURLScheme(spec, &start, &end, nullptr);
-        if (NS_SUCCEEDED(rv) && spec.Length() > end+2) {
-            nsACString::const_iterator slash;
-            spec.BeginReading(slash);
-            slash.advance(end+1);
-            // then check if // follows
-            // if it follows, aSpec is really absolute ... 
-            // ignore aBaseURI in this case
-            if (*slash == '/' && *(++slash) == '/')
-                baseURI = nullptr;
-        }
+    if (baseURI && net_IsAbsoluteURL(spec)) {
+        baseURI = nullptr;
     }
 
     if (!baseURI)
