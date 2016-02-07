@@ -7,7 +7,6 @@ toolkit.jar:
   skin/classic/mozapps/downloads/downloadIcon.png            (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloads.css               (downloads/downloads.css)
 * skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
-* skin/classic/mozapps/extensions/selectAddons.css           (extensions/selectAddons.css)
   skin/classic/mozapps/extensions/category-search.png        (extensions/category-search.png)
   skin/classic/mozapps/extensions/category-discover.png      (extensions/category-discover.png)
   skin/classic/mozapps/extensions/category-plugins.png       (extensions/category-plugins.png)

@@ -427,34 +427,28 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
         return menuItem.id;
       },
 
-      update: function(id, updateProperties, callback) {
+      update: function(id, updateProperties) {
         let menuItem = contextMenuMap.get(extension).get(id);
         if (menuItem) {
           menuItem.setProps(updateProperties);
         }
-        if (callback) {
-          runSafe(context, callback);
-        }
+        return Promise.resolve();
       },
 
-      remove: function(id, callback) {
+      remove: function(id) {
         let menuItem = contextMenuMap.get(extension).get(id);
         if (menuItem) {
           menuItem.remove();
         }
-        if (callback) {
-          runSafe(context, callback);
-        }
+        return Promise.resolve();
       },
 
-      removeAll: function(callback) {
+      removeAll: function() {
         let root = rootItems.get(extension);
         if (root) {
           root.remove();
         }
-        if (callback) {
-          runSafe(context, callback);
-        }
+        return Promise.resolve();
       },
 
       // TODO: implement this once event pages are ready.

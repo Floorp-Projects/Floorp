@@ -9,7 +9,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 extensions.registerSchemaAPI("windows", null, (extension, context) => {
@@ -40,34 +39,28 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
         };
       }).api(),
 
-      get: function(windowId, getInfo, callback) {
+      get: function(windowId, getInfo) {
         let window = WindowManager.getWindow(windowId);
-        runSafe(context, callback, WindowManager.convert(extension, window, getInfo));
+        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
       },
 
-      getCurrent: function(getInfo, callback) {
+      getCurrent: function(getInfo) {
         let window = currentWindow(context);
-        runSafe(context, callback, WindowManager.convert(extension, window, getInfo));
+        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
       },
 
-      getLastFocused: function(getInfo, callback) {
+      getLastFocused: function(getInfo) {
         let window = WindowManager.topWindow;
-        runSafe(context, callback, WindowManager.convert(extension, window, getInfo));
+        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
       },
 
-      getAll: function(getInfo, callback) {
-        let e = Services.wm.getEnumerator("navigator:browser");
-        let windows = [];
-        while (e.hasMoreElements()) {
-          let window = e.getNext();
-          if (window.document.readyState == "complete") {
-            windows.push(WindowManager.convert(extension, window, getInfo));
-          }
-        }
-        runSafe(context, callback, windows);
+      getAll: function(getInfo) {
+        let windows = Array.from(WindowListManager.browserWindows(),
+                                 window => WindowManager.convert(extension, window, getInfo));
+        return Promise.resolve(windows);
       },
 
-      create: function(createData, callback) {
+      create: function(createData) {
         function mkstr(s) {
           let result = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
           result.data = s;
@@ -114,37 +107,35 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
 
         // TODO: focused, type, state
 
-        window.addEventListener("load", function listener() {
-          window.removeEventListener("load", listener);
-          if (callback) {
-            runSafe(context, callback, WindowManager.convert(extension, window));
-          }
+        return new Promise(resolve => {
+          window.addEventListener("load", function listener() {
+            window.removeEventListener("load", listener);
+            resolve(WindowManager.convert(extension, window));
+          });
         });
       },
 
-      update: function(windowId, updateInfo, callback) {
+      update: function(windowId, updateInfo) {
         let window = WindowManager.getWindow(windowId);
         if (updateInfo.focused) {
           Services.focus.activeWindow = window;
         }
         // TODO: All the other properties...
 
-        if (callback) {
-          runSafe(context, callback, WindowManager.convert(extension, window));
-        }
+        return Promise.resolve(WindowManager.convert(extension, window));
       },
 
-      remove: function(windowId, callback) {
+      remove: function(windowId) {
         let window = WindowManager.getWindow(windowId);
         window.close();
 
-        let listener = () => {
-          AllWindowEvents.removeListener("domwindowclosed", listener);
-          if (callback) {
-            runSafe(context, callback);
-          }
-        };
-        AllWindowEvents.addListener("domwindowclosed", listener);
+        return new Promise(resolve => {
+          let listener = () => {
+            AllWindowEvents.removeListener("domwindowclosed", listener);
+            resolve();
+          };
+          AllWindowEvents.addListener("domwindowclosed", listener);
+        });
       },
     },
   };

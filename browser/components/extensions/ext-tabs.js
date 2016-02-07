@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
-  runSafe,
 } = ExtensionUtils;
 
 // This function is pretty tightly tied to Extension.jsm.
@@ -268,57 +267,56 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         };
       }).api(),
 
-      create: function(createProperties, callback) {
-        function createInWindow(window) {
-          let url;
-          if (createProperties.url !== null) {
-            url = context.uri.resolve(createProperties.url);
-          } else {
-            url = window.BROWSER_NEW_TAB_URL;
-          }
-
-          let tab = window.gBrowser.addTab(url);
-          let active = true;
-
-          if (createProperties.active !== null) {
-            active = createProperties.active;
-          }
-          if (active) {
-            window.gBrowser.selectedTab = tab;
-          }
-
-          if (createProperties.index !== null) {
-            window.gBrowser.moveTabTo(tab, createProperties.index);
-          }
-
-          if (createProperties.pinned) {
-            window.gBrowser.pinTab(tab);
-          }
-
-          if (callback) {
-            runSafe(context, callback, TabManager.convert(extension, tab));
-          }
-        }
-
-        let window = createProperties.windowId !== null ?
-          WindowManager.getWindow(createProperties.windowId) :
-          WindowManager.topWindow;
-
-        if (!window.gBrowser) {
-          let obs = (finishedWindow, topic, data) => {
-            if (finishedWindow != window) {
-              return;
+      create: function(createProperties) {
+        return new Promise(resolve => {
+          function createInWindow(window) {
+            let url;
+            if (createProperties.url !== null) {
+              url = context.uri.resolve(createProperties.url);
+            } else {
+              url = window.BROWSER_NEW_TAB_URL;
             }
-            Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
+
+            let tab = window.gBrowser.addTab(url);
+
+            let active = true;
+            if (createProperties.active !== null) {
+              active = createProperties.active;
+            }
+            if (active) {
+              window.gBrowser.selectedTab = tab;
+            }
+
+            if (createProperties.index !== null) {
+              window.gBrowser.moveTabTo(tab, createProperties.index);
+            }
+
+            if (createProperties.pinned) {
+              window.gBrowser.pinTab(tab);
+            }
+
+            resolve(TabManager.convert(extension, tab));
+          }
+
+          let window = createProperties.windowId !== null ?
+            WindowManager.getWindow(createProperties.windowId) :
+            WindowManager.topWindow;
+          if (!window.gBrowser) {
+            let obs = (finishedWindow, topic, data) => {
+              if (finishedWindow != window) {
+                return;
+              }
+              Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
+              createInWindow(window);
+            };
+            Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
+          } else {
             createInWindow(window);
-          };
-          Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
-        } else {
-          createInWindow(window);
-        }
+          }
+        });
       },
 
-      remove: function(tabs, callback) {
+      remove: function(tabs) {
         if (!Array.isArray(tabs)) {
           tabs = [tabs];
         }
@@ -328,12 +326,10 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
         }
 
-        if (callback) {
-          runSafe(context, callback);
-        }
+        return Promise.resolve();
       },
 
-      update: function(tabId, updateProperties, callback) {
+      update: function(tabId, updateProperties) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
         if (updateProperties.url !== null) {
@@ -360,12 +356,10 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
         // FIXME: highlighted/selected, openerTabId
 
-        if (callback) {
-          runSafe(context, callback, TabManager.convert(extension, tab));
-        }
+        return Promise.resolve(TabManager.convert(extension, tab));
       },
 
-      reload: function(tabId, reloadProperties, callback) {
+      reload: function(tabId, reloadProperties) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
         if (reloadProperties && reloadProperties.bypassCache) {
@@ -373,33 +367,31 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
         tab.linkedBrowser.reloadWithFlags(flags);
 
-        if (callback) {
-          runSafe(context, callback);
-        }
+        return Promise.resolve();
       },
 
-      get: function(tabId, callback) {
+      get: function(tabId) {
         let tab = TabManager.getTab(tabId);
-        runSafe(context, callback, TabManager.convert(extension, tab));
+        return Promise.resolve(TabManager.convert(extension, tab));
       },
 
-      getCurrent(callback) {
+      getCurrent() {
         let tab;
         if (context.tabId) {
           tab = TabManager.convert(extension, TabManager.getTab(context.tabId));
         }
-        runSafe(context, callback, tab);
+        return Promise.resolve(tab);
       },
 
-      getAllInWindow: function(windowId, callback) {
+      getAllInWindow: function(windowId) {
         if (windowId === null) {
           windowId = WindowManager.topWindow.windowId;
         }
 
-        return self.tabs.query({windowId}, callback);
+        return self.tabs.query({windowId});
       },
 
-      query: function(queryInfo, callback) {
+      query: function(queryInfo) {
         let pattern = null;
         if (queryInfo.url !== null) {
           pattern = new MatchPattern(queryInfo.url);
@@ -468,12 +460,12 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             }
           }
         }
-        runSafe(context, callback, result);
+        return Promise.resolve(result);
       },
 
       captureVisibleTab: function(windowId, options) {
         if (!extension.hasPermission("<all_urls>")) {
-          throw new context.contentWindow.Error("The <all_urls> permission is required to use the captureVisibleTab API");
+          return Promise.reject({ message: "The <all_urls> permission is required to use the captureVisibleTab API" });
         }
 
         let window = windowId == null ?
@@ -587,7 +579,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         return context.messenger.sendMessage(mm, message, recipient, responseCallback);
       },
 
-      move: function(tabIds, moveProperties, callback) {
+      move: function(tabIds, moveProperties) {
         let index = moveProperties.index;
         let tabsMoved = [];
         if (!Array.isArray(tabIds)) {
@@ -652,6 +644,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
 
             tab.parentNode._finishAnimateTabMove();
             gBrowser.swapBrowsersAndCloseOther(newTab, tab);
+            tab = newTab;
           } else {
             // If the window we are moving is the same, just move the tab.
             gBrowser.moveTabTo(tab, getInsertionPoint());
@@ -659,9 +652,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           tabsMoved.push(tab);
         }
 
-        if (callback) {
-          runSafe(context, callback, tabsMoved.map(tab => TabManager.convert(extension, tab)));
-        }
+        return Promise.resolve(tabsMoved.map(tab => TabManager.convert(extension, tab)));
       },
     },
   };

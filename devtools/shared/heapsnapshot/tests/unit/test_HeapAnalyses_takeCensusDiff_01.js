@@ -30,17 +30,17 @@ add_task(function* () {
   yield client.readHeapSnapshot(secondSnapshotFilePath);
   ok(true, "Should have read both heap snapshot files");
 
-  const delta = yield client.takeCensusDiff(firstSnapshotFilePath,
-                                            secondSnapshotFilePath,
-                                            { breakdown: BREAKDOWN });
+  const { delta } = yield client.takeCensusDiff(firstSnapshotFilePath,
+                                                secondSnapshotFilePath,
+                                                { breakdown: BREAKDOWN });
 
   equal(delta.AllocationMarker.count, 1,
     "There exists one new AllocationMarker in the second heap snapshot");
 
-  const deltaTreeNode = yield client.takeCensusDiff(firstSnapshotFilePath,
-                                                    secondSnapshotFilePath,
-                                                    { breakdown: BREAKDOWN },
-                                                    { asTreeNode: true });
+  const { delta: deltaTreeNode } = yield client.takeCensusDiff(firstSnapshotFilePath,
+                                                               secondSnapshotFilePath,
+                                                               { breakdown: BREAKDOWN },
+                                                               { asTreeNode: true });
 
   // Have to manually set these because symbol properties aren't structured
   // cloned.

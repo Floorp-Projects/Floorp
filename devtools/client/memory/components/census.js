@@ -32,7 +32,7 @@ const Census = module.exports = createClass({
     } = this.props;
 
     const report = census.report;
-    let parentMap = createParentMap(report);
+    let parentMap = census.parentMap;
     const { totalBytes, totalCount } = report;
 
     const getPercentBytes = totalBytes === 0

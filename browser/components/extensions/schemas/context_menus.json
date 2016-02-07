@@ -209,6 +209,7 @@
         "name": "update",
         "type": "function",
         "description": "Updates a previously created context menu item.",
+        "async": "callback",
         "parameters": [
           {
             "choices": [
@@ -295,6 +296,7 @@
         "name": "remove",
         "type": "function",
         "description": "Removes a context menu item.",
+        "async": "callback",
         "parameters": [
           {
             "choices": [
@@ -317,6 +319,7 @@
         "name": "removeAll",
         "type": "function",
         "description": "Removes all context menu items added by this extension.",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",

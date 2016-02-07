@@ -150,15 +150,15 @@ add_task(function* testCaptureVisibleTabPermissions() {
 
     background: function(x) {
       browser.tabs.query({ currentWindow: true, active: true }, tab => {
-        try {
-          browser.tabs.captureVisibleTab(tab.windowId, () => {});
-        } catch (e) {
-          if (e.message == "The <all_urls> permission is required to use the captureVisibleTab API") {
+        browser.tabs.captureVisibleTab(tab.windowId).then(
+          () => {
+            browser.test.notifyFail("captureVisibleTabPermissions");
+          },
+          (e) => {
+            browser.test.assertEq("The <all_urls> permission is required to use the captureVisibleTab API",
+                                  e.message, "Expected permissions error message");
             browser.test.notifyPass("captureVisibleTabPermissions");
-            return;
-          }
-        }
-        browser.test.notifyFail("captureVisibleTabPermissions");
+          });
       });
     },
   });
