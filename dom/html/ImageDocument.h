@@ -62,7 +62,7 @@ public:
   }
   bool ImageIsOverflowing() const
   {
-    return mImageIsOverflowing;
+    return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
   }
   bool ImageIsResized() const
   {
@@ -101,7 +101,8 @@ protected:
   enum eModeClasses {
     eNone,
     eShrinkToFit,
-    eOverflowing
+    eOverflowingVertical, // And maybe horizontal too.
+    eOverflowingHorizontalOnly
   };
   void SetModeClass(eModeClasses mode);
 
@@ -118,7 +119,8 @@ protected:
 
   bool                          mResizeImageByDefault;
   bool                          mClickResizingEnabled;
-  bool                          mImageIsOverflowing;
+  bool                          mImageIsOverflowingHorizontally;
+  bool                          mImageIsOverflowingVertically;
   // mImageIsResized is true if the image is currently resized
   bool                          mImageIsResized;
   // mShouldResize is true if the image should be resized when it doesn't fit

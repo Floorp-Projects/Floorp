@@ -69,7 +69,7 @@ typedef any Transferable;
 #ifdef HAVE_SIDEBAR
   [Replaceable, Throws] readonly attribute External external;
 #endif
-  [Throws] readonly attribute ApplicationCache applicationCache;
+  [Throws, Pref="browser.cache.offline.enable"] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
   [Throws, UnsafeInPrerendering] void alert();
