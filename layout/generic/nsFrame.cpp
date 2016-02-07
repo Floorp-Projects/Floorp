@@ -1143,6 +1143,12 @@ nsIFrame::Extend3DContext() const
     return false;
   }
 
+  // Opacity can only be only the root or leaves of a preserve-3d context
+  // as it requires flattening.
+  if (HasOpacity() && Combines3DTransformWithAncestors()) {
+    return false;
+  }
+
   nsRect temp;
   return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
          !GetClipPropClipRect(disp, &temp, GetSize()) &&
@@ -1961,6 +1967,28 @@ WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   }
 }
 
+static void
+CreateOpacityItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                  nsDisplayList& aList, bool aItemForEventsOnly)
+{
+  // Don't clip nsDisplayOpacity items. We clip their descendants instead.
+  // The clip we would set on an element with opacity would clip
+  // all descendant content, but some should not be clipped.
+  // We clear both regular clips and scroll clips. If this item's animated
+  // geometry root has async scrolling, then the async scroll transform will
+  // be applied on the opacity's descendants (because that's where the
+  // scroll clip will be). However, this won't work if the opacity item is
+  // inactive, which is why we record the pre-clear scroll clip here.
+  const DisplayItemScrollClip* scrollClipForSameAGRChildren =
+    aBuilder->ClipState().GetCurrentInnermostScrollClip();
+  DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
+  opacityClipState.ClearIncludingScrollClip();
+  aList.AppendNewToTop(
+      new (aBuilder) nsDisplayOpacity(aBuilder, aFrame, &aList,
+                                      scrollClipForSameAGRChildren,
+                                      aItemForEventsOnly));
+}
+
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
@@ -2183,6 +2211,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     clipState.Restore();
   }
 
+  bool is3DContextRoot = Extend3DContext() && !Combines3DTransformWithAncestors();
+
   /* If there are any SVG effects, wrap the list up in an SVG effects item
    * (which also handles CSS group opacity). Note that we create an SVG effects
    * item even if resultList is empty, since a filter can produce graphical
@@ -2195,26 +2225,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
   }
-  /* Else, if the list is non-empty and there is CSS group opacity without SVG
-   * effects, wrap it up in an opacity item.
-   */
-  else if (useOpacity && !resultList.IsEmpty()) {
-    // Don't clip nsDisplayOpacity items. We clip their descendants instead.
-    // The clip we would set on an element with opacity would clip
-    // all descendant content, but some should not be clipped.
-    // We clear both regular clips and scroll clips. If this item's animated
-    // geometry root has async scrolling, then the async scroll transform will
-    // be applied on the opacity's descendants (because that's where the
-    // scroll clip will be). However, this won't work if the opacity item is
-    // inactive, which is why we record the pre-clear scroll clip here.
-    const DisplayItemScrollClip* scrollClipForSameAGRChildren =
-      aBuilder->ClipState().GetCurrentInnermostScrollClip();
-    DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
-    opacityClipState.ClearIncludingScrollClip();
-    resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList,
-                                        scrollClipForSameAGRChildren,
-                                        opacityItemForEventsOnly));
+  else if (useOpacity && !resultList.IsEmpty() && !is3DContextRoot) {
+    /* If this element is the root of a preserve-3d context, then we want
+     * to make sure any opacity items are on the outside of the transform
+     * so that they don't interfere with the chain of nsDisplayTransforms.
+     * Opacity on preserve-3d leaves need to be inside the transform for the
+     * same reason, and we do this in the general case as well to preserve
+     * existing behaviour.
+     */
+    CreateOpacityItem(aBuilder, this, resultList, opacityItemForEventsOnly);
+    useOpacity = false;
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set, wrap
@@ -2288,6 +2308,12 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
           GetContainingBlock()->GetContent()->GetPrimaryFrame(), &resultList));
     }
 
+    /* If we need an opacity item, but didn't do it earlier, add it now on the
+     * outside of the transform.
+     */
+    if (useOpacity && !usingSVGEffects) {
+      CreateOpacityItem(aBuilder, this, resultList, opacityItemForEventsOnly);
+    }
   }
 
   /* If we have sticky positioning, wrap it in a sticky position item.

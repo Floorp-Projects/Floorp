@@ -1956,8 +1956,11 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   const nsIFrame* aFrame,
   const nsIContent* aContent)
 {
+  // Disallow OMTA for preserve-3d transform. Note that we check the style property
+  // rather than Extend3DContext() since that can recurse back into this function
+  // via HasOpacity().
   if (aFrame->Combines3DTransformWithAncestors() ||
-      aFrame->Extend3DContext()) {
+      aFrame->StyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
     if (aContent) {
       nsCString message;
       message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
