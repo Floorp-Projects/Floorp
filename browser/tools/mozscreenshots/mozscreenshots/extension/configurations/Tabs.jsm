@@ -64,7 +64,8 @@ this.Tabs = {
 
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.gBrowser.loadTabs([
-          "about:addons",
+          PREFS_TAB,
+          CUST_TAB,
           "about:home",
           DEFAULT_FAVICON_TAB,
           "about:newtab",
@@ -93,12 +94,10 @@ this.Tabs = {
           DEFAULT_FAVICON_TAB,
           "about:newtab",
         ], true, true);
-        let tab = browserWindow.gBrowser.addTab(PREFS_TAB);
-        browserWindow.gBrowser.pinTab(tab);
-        tab = browserWindow.gBrowser.addTab(CUST_TAB);
-        browserWindow.gBrowser.pinTab(tab);
-        browserWindow.gBrowser.selectTabAtIndex(4);
-        hoverTab(browserWindow.gBrowser.tabs[6]);
+        browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[1]);
+        browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[2]);
+        browserWindow.gBrowser.selectTabAtIndex(3);
+        hoverTab(browserWindow.gBrowser.tabs[5]);
         yield new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
