@@ -657,75 +657,6 @@ loser:
   return nsrv;
 }
 
-NS_IMETHODIMP
-nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length, 
-                                            nsIInterfaceRequestor *ctx)
-
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  SECStatus srv = SECFailure;
-  nsresult nsrv = NS_OK;
-  ScopedCERTCertificate cert;
-  SECItem **rawCerts = nullptr;
-  int numcerts;
-  int i;
-  nsNSSCertTrust trust;
-  char *serverNickname = nullptr;
- 
-  PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!arena)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  CERTDERCerts *certCollection = getCertsFromPackage(arena, data, length, locker);
-  if (!certCollection) {
-    PORT_FreeArena(arena, false);
-    return NS_ERROR_FAILURE;
-  }
-  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certCollection->rawCerts,
-                                 nullptr, false, true);
-  if (!cert) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-  numcerts = certCollection->numcerts;
-  rawCerts = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numcerts);
-  if ( !rawCerts ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-
-  for ( i = 0; i < numcerts; i++ ) {
-    rawCerts[i] = &certCollection->rawCerts[i];
-  }
-
-  serverNickname = DefaultServerNicknameForCert(cert.get());
-  srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageSSLServer,
-             numcerts, rawCerts, nullptr, true, false,
-             serverNickname);
-  PR_FREEIF(serverNickname);
-  if ( srv != SECSuccess ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-
-  trust.SetValidServerPeer();
-  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), cert.get(),
-                             trust.GetTrust());
-  if ( srv != SECSuccess ) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-loser:
-  PORT_Free(rawCerts);
-  if (arena) 
-    PORT_FreeArena(arena, true);
-  return nsrv;
-}
-
 nsresult
 nsNSSCertificateDB::ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx,  const nsNSSShutDownPreventionLock &proofOfLock)
 {
@@ -1093,7 +1024,6 @@ nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
   switch (aType) {
     case nsIX509Cert::CA_CERT:
     case nsIX509Cert::EMAIL_CERT:
-    case nsIX509Cert::SERVER_CERT:
       // good
       break;
 
@@ -1102,51 +1032,41 @@ nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
       return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-  PRFileDesc *fd = nullptr;
-
-  rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-
-  if (NS_FAILED(rv))
+  PRFileDesc* fd = nullptr;
+  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  if (NS_FAILED(rv)) {
     return rv;
-
-  if (!fd)
+  }
+  if (!fd) {
     return NS_ERROR_FAILURE;
-
-  PRFileInfo file_info;
-  if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &file_info))
-    return NS_ERROR_FAILURE;
-  
-  unsigned char *buf = new unsigned char[file_info.size];
-  
-  int32_t bytes_obtained = PR_Read(fd, buf, file_info.size);
-  PR_Close(fd);
-  
-  if (bytes_obtained != file_info.size)
-    rv = NS_ERROR_FAILURE;
-  else {
-	  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-
-    switch (aType) {
-      case nsIX509Cert::CA_CERT:
-        rv = ImportCertificates(buf, bytes_obtained, aType, cxt);
-        break;
-        
-      case nsIX509Cert::SERVER_CERT:
-        rv = ImportServerCertificate(buf, bytes_obtained, cxt);
-        break;
-
-      case nsIX509Cert::EMAIL_CERT:
-        rv = ImportEmailCertificate(buf, bytes_obtained, cxt);
-        break;
-      
-      default:
-        break;
-    }
   }
 
-  delete [] buf;
-  return rv;  
+  PRFileInfo fileInfo;
+  if (PR_GetOpenFileInfo(fd, &fileInfo) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto buf = MakeUnique<unsigned char[]>(fileInfo.size);
+  int32_t bytesObtained = PR_Read(fd, buf.get(), fileInfo.size);
+  PR_Close(fd);
+
+  if (bytesObtained != fileInfo.size) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+
+  switch (aType) {
+    case nsIX509Cert::CA_CERT:
+      return ImportCertificates(buf.get(), bytesObtained, aType, cxt);
+    case nsIX509Cert::EMAIL_CERT:
+      return ImportEmailCertificate(buf.get(), bytesObtained, cxt);
+    default:
+      MOZ_ASSERT(false, "Unsupported type should have been filtered out");
+      break;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
