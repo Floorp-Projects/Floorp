@@ -8,7 +8,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 extensions.registerPrivilegedAPI("storage", (extension, context) => {
@@ -16,30 +15,20 @@ extensions.registerPrivilegedAPI("storage", (extension, context) => {
     storage: {
       local: {
         get: function(keys, callback) {
-          ExtensionStorage.get(extension.id, keys).then(result => {
-            runSafe(context, callback, result);
-          });
+          return context.wrapPromise(
+            ExtensionStorage.get(extension.id, keys), callback);
         },
         set: function(items, callback) {
-          ExtensionStorage.set(extension.id, items).then(() => {
-            if (callback) {
-              runSafe(context, callback);
-            }
-          });
+          return context.wrapPromise(
+            ExtensionStorage.set(extension.id, items), callback);
         },
         remove: function(items, callback) {
-          ExtensionStorage.remove(extension.id, items).then(() => {
-            if (callback) {
-              runSafe(context, callback);
-            }
-          });
+          return context.wrapPromise(
+            ExtensionStorage.remove(extension.id, items), callback);
         },
         clear: function(callback) {
-          ExtensionStorage.clear(extension.id).then(() => {
-            if (callback) {
-              runSafe(context, callback);
-            }
-          });
+          return context.wrapPromise(
+            ExtensionStorage.clear(extension.id), callback);
         },
       },
 

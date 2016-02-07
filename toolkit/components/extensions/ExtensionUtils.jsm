@@ -212,30 +212,41 @@ class BaseContext {
    *     callback. May resolve to a `SpreadArgs` instance, in which case
    *     each element will be used as a separate argument.
    *
+   *     Unless the promise object belongs to the cloneScope global, its
+   *     resolution value is cloned into cloneScope prior to calling the
+   *     `callback` function or resolving the wrapped promise.
+   *
    * @param {function} [callback] The callback function to wrap
    *
    * @returns {Promise|undefined} If callback is null, a promise object
    *     belonging to the target scope. Otherwise, undefined.
    */
   wrapPromise(promise, callback = null) {
+    // Note: `promise instanceof this.cloneScope.Promise` returns true
+    // here even for promises that do not belong to the content scope.
+    let runSafe = runSafeSync.bind(null, this);
+    if (promise.constructor === this.cloneScope.Promise) {
+      runSafe = runSafeSyncWithoutClone;
+    }
+
     if (callback) {
       promise.then(
         args => {
           if (args instanceof SpreadArgs) {
-            runSafeSync(this, callback, ...args);
+            runSafe(callback, ...args);
           } else {
-            runSafeSync(this, callback, args);
+            runSafe(callback, args);
           }
         },
         error => {
           this.withLastError(error, () => {
-            runSafeSync(this, callback);
+            runSafeSyncWithoutClone(callback);
           });
         });
     } else {
       return new this.cloneScope.Promise((resolve, reject) => {
         promise.then(
-          value => { runSafeSync(this, resolve, value); },
+          value => { runSafe(resolve, value); },
           value => {
             if (!(value instanceof this.cloneScope.Error)) {
               value = new this.cloneScope.Error(value.message);

@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env browser */
+/* exported openAboutDebugging, closeAboutDebugging, installAddon,
+   uninstallAddon, waitForMutation */
+
 "use strict";
 
 var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
@@ -37,47 +41,48 @@ function closeAboutDebugging(tab) {
   return removeTab(tab);
 }
 
-function addTab(aUrl, aWindow) {
-  info("Adding tab: " + aUrl);
+function addTab(url, win) {
+  info("Adding tab: " + url);
 
   return new Promise(done => {
-    let targetWindow = aWindow || window;
+    let targetWindow = win || window;
     let targetBrowser = targetWindow.gBrowser;
 
     targetWindow.focus();
-    let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+    let tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
     let linkedBrowser = tab.linkedBrowser;
 
     linkedBrowser.addEventListener("load", function onLoad() {
       linkedBrowser.removeEventListener("load", onLoad, true);
-      info("Tab added and finished loading: " + aUrl);
+      info("Tab added and finished loading: " + url);
       done(tab);
     }, true);
   });
 }
 
-function removeTab(aTab, aWindow) {
+function removeTab(tab, win) {
   info("Removing tab.");
 
   return new Promise(done => {
-    let targetWindow = aWindow || window;
+    let targetWindow = win || window;
     let targetBrowser = targetWindow.gBrowser;
     let tabContainer = targetBrowser.tabContainer;
 
-    tabContainer.addEventListener("TabClose", function onClose(aEvent) {
+    tabContainer.addEventListener("TabClose", function onClose() {
       tabContainer.removeEventListener("TabClose", onClose, false);
       info("Tab removed and finished closing.");
       done();
     }, false);
 
-    targetBrowser.removeTab(aTab);
+    targetBrowser.removeTab(tab);
   });
 }
 
-function get_supports_file(path) {
-  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-  getService(Ci.nsIChromeRegistry);
-  let fileurl = cr.convertChromeURL(Services.io.newURI(CHROME_ROOT + path, null, null));
+function getSupportsFile(path) {
+  let cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+    .getService(Ci.nsIChromeRegistry);
+  let uri = Services.io.newURI(CHROME_ROOT + path, null, null);
+  let fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
@@ -85,7 +90,7 @@ function installAddon(document, path, evt) {
   // Mock the file picker to select a test addon
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(null);
-  let file = get_supports_file(path);
+  let file = getSupportsFile(path);
   MockFilePicker.returnFiles = [file.file];
 
   // Wait for a message sent by the addon's bootstrap.js file

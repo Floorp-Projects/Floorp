@@ -81,6 +81,7 @@ handlers[actions.TAKE_CENSUS_DIFF_END] = function (diffing, action) {
     state: diffingState.TOOK_DIFF,
     census: {
       report: action.report,
+      parentMap: action.parentMap,
       expanded: new Set(),
       inverted: action.inverted,
       filter: action.filter,

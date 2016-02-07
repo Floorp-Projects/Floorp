@@ -21,6 +21,7 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.packages = [
             'autoconf213',
             'mercurial',
+            'python2-devel',
         ]
 
         self.browser_group_packages = [

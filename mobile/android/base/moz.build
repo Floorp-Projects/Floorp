@@ -886,9 +886,13 @@ ANDROID_ASSETS_DIRS += [
 ]
 
 if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
-    ANDROID_ASSETS_DIRS += [
-        '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
-    ]
+    # If you change this, also change its equivalent in mobile/android/bouncer.
+    if not CONFIG['MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER']:
+        # If we are packaging the bouncer, it will have the distribution, so don't put
+        # it in the main APK as well.
+        ANDROID_ASSETS_DIRS += [
+            '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
+        ]
 
 # We do not expose MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN here because that
 # would leak the value to build logs.  Instead we expose the token quietly where

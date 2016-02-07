@@ -99,7 +99,12 @@
 
           "permissions": {
             "type": "array",
-            "items": { "$ref": "Permission" },
+            "items": {
+              "choices": [
+                { "$ref": "Permission" },
+                { "type": "string" }
+              ]
+            },
             "optional": true
           },
 
@@ -108,6 +113,10 @@
             "items": { "type": "string" },
             "optional": true
           }
+        },
+
+        "additionalProperties": {
+          "type": "any"
         }
       },
       {

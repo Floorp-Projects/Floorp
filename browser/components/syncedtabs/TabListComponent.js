@@ -100,7 +100,7 @@ TabListComponent.prototype = {
 
   onBookmarkTab(uri, title) {
     this._window.top.PlacesCommandHook
-      .bookmarkLink(this._window.PlacesUtils.bookmarksMenuFolderId, uri, title)
+      .bookmarkLink(this._window.top.PlacesUtils.bookmarksMenuFolderId, uri, title)
       .catch(Cu.reportError);
   },
 

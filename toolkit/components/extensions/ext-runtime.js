@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
-  runSafe,
 } = ExtensionUtils;
 
 extensions.registerSchemaAPI("runtime", null, (extension, context) => {
@@ -69,7 +68,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         return extension.baseURI.resolve(url);
       },
 
-      getPlatformInfo: function(callback) {
+      getPlatformInfo: function() {
         let os = AppConstants.platform;
         if (os == "macosx") {
           os = "mac";
@@ -84,7 +83,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         }
 
         let info = {os, arch};
-        runSafe(context, callback, info);
+        return Promise.resolve(info);
       },
     },
   };
