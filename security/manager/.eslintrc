@@ -111,6 +111,9 @@
     // No space padding in parentheses
     "space-in-parens": [2, "never"],
 
+    // Require spaces around operators
+    "space-infix-ops": 2,
+
     // Require spaces after return, throw and case
     "space-return-throw-case": 2,
 

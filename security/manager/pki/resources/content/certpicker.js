@@ -38,12 +38,13 @@ function onLoad()
 
 function setDetails()
 {
-  var selItem = document.getElementById("nicknames").value;
-  if (!selItem.length)
+  let selItem = document.getElementById("nicknames").value;
+  if (selItem.length == 0) {
     return;
+  }
 
-  var index = parseInt(selItem);
-  var details = dialogParams.GetString(index+itemCount);
+  let index = parseInt(selItem);
+  let details = dialogParams.GetString(index + itemCount);
   document.getElementById("details").value = details;
 }
 

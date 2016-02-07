@@ -149,10 +149,11 @@ function ok(a, message)
 
 function is(a, b, message)
 {
-  if (a != b)
-    postMsg("FAILURE: " + message + ", expected "+b+" got "+a);
-  else
-    postMsg(message + ", expected "+b+" got "+a);
+  if (a != b) {
+    postMsg(`FAILURE: ${message}, expected ${b} got ${a}`);
+  } else {
+    postMsg(`${message}, expected ${b} got ${a}`);
+  }
 }
 
 function todo(a, message)

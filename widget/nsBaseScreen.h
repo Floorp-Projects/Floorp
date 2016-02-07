@@ -43,6 +43,8 @@ public:
 
   NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) override;
 
+  NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override;
+
 protected:
   virtual ~nsBaseScreen();
 

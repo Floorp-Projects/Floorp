@@ -4,7 +4,7 @@
 config = {
     "staging": {
         # if not clobberer_url, only clobber 'abs_work_dir'
-        # if true: possibly clobber, clobberer, and purge_builds
+        # if true: possibly clobber, clobberer
         # see PurgeMixin for clobber() conditions
         'clobberer_url': 'https://api-pub-build.allizom.org/clobberer/lastclobber',
         # staging we should use MozillaTest
@@ -23,7 +23,7 @@ config = {
     },
     "production": {
         # if not clobberer_url, only clobber 'abs_work_dir'
-        # if true: possibly clobber, clobberer, and purge_builds
+        # if true: possibly clobber, clobberer
         # see PurgeMixin for clobber() conditions
         'clobberer_url': 'https://api.pub.build.mozilla.org/clobberer/lastclobber',
         'graph_server': 'graphs.mozilla.org',

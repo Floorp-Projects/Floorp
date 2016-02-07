@@ -26,7 +26,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 # import the guts
 from mozharness.base.config import parse_config_file
-from mozharness.base.log import WARNING, ERROR, FATAL
+from mozharness.base.log import WARNING, FATAL
 from mozharness.mozilla.l10n.locales import GaiaLocalesMixin, LocalesMixin
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.signing import SigningMixin

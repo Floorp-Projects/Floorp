@@ -74,8 +74,25 @@ interface nsIScreen : nsISupports
   attribute unsigned long rotation;
 
   /**
-   * The number of device pixels per screen point in HiDPI mode.
-   * Returns 1.0 if HiDPI mode is disabled or unsupported.
+   * The number of device pixels per desktop pixel for this screen (for
+   * hidpi configurations where there may be multiple device pixels per
+   * desktop px and/or per CSS px).
+   *
+   * This seems poorly named (something like devicePixelsPerDesktopPixel
+   * would be more accurate/explicit), but given that it is exposed to
+   * front-end code and may also be used by add-ons, it's probably not
+   * worth the disruption of changing it.
+   *
+   * Returns 1.0 if HiDPI mode is disabled or unsupported, or if the
+   * host OS uses device pixels as its desktop pixel units (as in Win8.1
+   * per-monitor dpi support).
    */
   readonly attribute double contentsScaleFactor;
+
+  /**
+   * The default number of device pixels per unscaled CSS pixel for this
+   * screen. This is probably what contentsScaleFactor originally meant
+   * to be, prior to confusion between CSS pixels and desktop pixel units.
+   */
+  readonly attribute double defaultCSSScaleFactor;
 };

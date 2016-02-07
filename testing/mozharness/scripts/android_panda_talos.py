@@ -197,7 +197,6 @@ class PandaTalosTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixi
                 dirs = self.query_abs_dirs()
                 abs_base_cmd = self._query_abs_base_cmd(suite_category)
                 cmd = abs_base_cmd[:]
-                tbpl_status, log_level = None, None
                 c = self.config
                 if c.get('minidump_stackwalk_path'):
                     env['MINIDUMP_STACKWALK'] = c['minidump_stackwalk_path']
