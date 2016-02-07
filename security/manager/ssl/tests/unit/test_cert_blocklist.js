@@ -128,9 +128,9 @@ var initialBlocklist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
     // also in the blocklist
     "<certItem issuerName='YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy'>" +
     "<serialNumber>c2VyaWFsMi4=</serialNumber>" +
-    "<serialNumber>YW5vdGhlciBzZXJpYWwu</serialNumber>" +
+    "<serialNumber>YW5vdGhlciBzZXJpYWwu</serialNumber></certItem>" +
     // This item revokes same-issuer-ee.pem by subject and pubKeyHash.
-    "</certItem><certItem subject='MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5'"+
+    "<certItem subject='MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5'" +
     " pubKeyHash='VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8='>" +
     "</certItem></certItems></blocklist>";
 
@@ -250,8 +250,8 @@ function run_test() {
                   .getService(Ci.nsICertBlocklist);
 
   let expected = "# Auto generated contents. Do not edit.\n" +
-                 "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5\n"+
-                 "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=\n"+
+                 "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5\n" +
+                 "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=\n" +
                  "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=\n" +
                  " BVio/iQ21GCi2iUven8oJ/gae74=\n" +
                  "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=\n" +

@@ -130,7 +130,7 @@ function writeRootHashes(fos) {
       let fpBytes = atob(fp.sha256Fingerprint);
 
       writeString(fos, "  {\n");
-      writeString(fos, "    /* "+fp.label+" */\n");
+      writeString(fos, "    /* " + fp.label + " */\n");
       writeString(fos, "    { " + hexSlice(fpBytes, 0, 16) + ",\n");
       writeString(fos, "      " + hexSlice(fpBytes, 16, 32) + " },\n");
       writeString(fos, "      " + fp.binNumber + " /* Bin Number */\n");

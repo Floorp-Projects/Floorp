@@ -15,7 +15,8 @@
     isSecurityState("secure");
     window.setTimeout(function () {
       var newElement = document.createElement("script");
-      newElement.src= "http://example.org/tests/security/manager/ssl/tests/mochitest/mixedcontent/bug329869.js";
+      newElement.src = "http://example.org/tests/security/manager/ssl/tests/" +
+                       "mochitest/mixedcontent/bug329869.js";
       document.body.appendChild(newElement);
     }, 0);
   }

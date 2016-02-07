@@ -10,7 +10,7 @@
 var gFetchCount = 0;
 var gGoodOCSPResponse = null;
 var gResponsePattern = [];
-var gMessage= "";
+var gMessage = "";
 
 function respondWithGoodOCSP(request, response) {
   do_print("returning 200 OK");
