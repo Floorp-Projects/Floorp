@@ -14,16 +14,14 @@ var proxy = new Proxy(function() {}, {
 })
 
 var bound = Function.prototype.bind.call(proxy);
-//assertEq(bound.name, "bound hello world");
-assertEq(bound.name, "hello world");
+assertEq(bound.name, "bound hello world");
 assertEq(bound.length, 3);
 
 var fun = function() {};
 Object.defineProperty(fun, "name", {value: 1337});
 Object.defineProperty(fun, "length", {value: "15"});
 bound = fun.bind();
-// assertEq(bound.name, "bound ");
-assertEq(bound.name, "");
+assertEq(bound.name, "bound ");
 assertEq(bound.length, 0);
 
 Object.defineProperty(fun, "length", {value: Number.MAX_SAFE_INTEGER});
