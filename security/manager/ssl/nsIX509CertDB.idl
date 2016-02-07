@@ -151,17 +151,6 @@ interface nsIX509CertDB : nsISupports {
                               in nsIInterfaceRequestor ctx);
 
   /**
-   *  Import a server machine's certificate into the database.
-   *
-   *  @param data The raw data to be imported
-   *  @param length The length of the data to be imported
-   *  @param ctx A UI context.
-   */
-  void importServerCertificate([array, size_is(length)] in octet data,
-                               in unsigned long length,
-                               in nsIInterfaceRequestor ctx);
-
-  /**
    *  Import a personal certificate into the database, assuming
    *  the database already contains the private key for this certificate.
    *

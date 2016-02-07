@@ -443,7 +443,7 @@ function genExpirationTime() {
   let expirationMillis = nowMillis + (PINNING_MINIMUM_REQUIRED_MAX_AGE * 1000);
   let expirationMicros = expirationMillis * 1000;
   return "static const PRTime kPreloadPKPinsExpirationTime = INT64_C(" +
-         expirationMicros +");\n";
+         expirationMicros + ");\n";
 }
 
 function writeFullPinset(certNameToSKD, certSKDToName, pinset) {

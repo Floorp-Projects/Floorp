@@ -28,7 +28,6 @@ config = {
         "virtualenv": [PYTHON_DIR + "/bin/python", "/tools/misc-python/virtualenv.py"],
     },
 
-    "purge_minsize": 18,
     "force_clobber": True,
     'vcs_share_base': HG_SHARE_BASE_DIR,
 

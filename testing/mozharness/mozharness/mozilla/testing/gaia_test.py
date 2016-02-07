@@ -6,14 +6,12 @@
 
 import copy
 import os
-import re
 import sys
 import time
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.base.errors import TarErrorList, ZipErrorList
 from mozharness.base.log import INFO, ERROR, WARNING, FATAL
 from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin

@@ -52,9 +52,9 @@ function onLoad()
 
     var selectElement = document.getElementById("nicknames");
     itemCount = dialogParams.GetInt(0);
-    for (var i=0; i < itemCount; i++) {
+    for (let i = 0; i < itemCount; i++) {
         var menuItemNode = document.createElement("menuitem");
-        var nick = dialogParams.GetString(i+3);
+        let nick = dialogParams.GetString(i + 3);
         menuItemNode.setAttribute("value", i);
         menuItemNode.setAttribute("label", nick); // this is displayed
         selectElement.firstChild.appendChild(menuItemNode);
@@ -68,8 +68,8 @@ function onLoad()
 
 function setDetails()
 {
-  var index = parseInt(document.getElementById("nicknames").value);
-  var details = dialogParams.GetString(index+itemCount+3);
+  let index = parseInt(document.getElementById("nicknames").value);
+  let details = dialogParams.GetString(index + itemCount + 3);
   document.getElementById("details").value = details;
 }
 
