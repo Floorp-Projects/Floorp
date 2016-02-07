@@ -2057,9 +2057,7 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     char* filename = getenv("MOZ_SELFHOSTEDJS");
     if (filename) {
-        RootedScript script(cx);
-        if (Compile(cx, options, filename, &script))
-            ok = Execute(cx, script, *shg.get(), rv.address());
+        ok = ok && Evaluate(cx, options, filename, &rv);
     } else {
         uint32_t srcLen = GetRawScriptsSize();
 
