@@ -216,17 +216,20 @@ SharedContext::markSuperScopeNeedsHomeObject()
 // See comment on member function declaration.
 template <>
 bool
-ParseContext<FullParseHandler>::define(TokenStream& ts,
-                                       HandlePropertyName name, ParseNode* pn, Definition::Kind kind)
+ParseContext<FullParseHandler>::define(TokenStream& ts, HandlePropertyName name, ParseNode* pn,
+                                       Definition::Kind kind, bool declaringVarInCatchBody)
 {
     MOZ_ASSERT(!pn->isUsed());
     MOZ_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
+    MOZ_ASSERT_IF(declaringVarInCatchBody, kind == Definition::VAR);
 
     pn->setDefn(true);
 
     Definition* prevDef = nullptr;
     if (kind == Definition::LET || kind == Definition::CONSTANT)
         prevDef = decls_.lookupFirst(name);
+    else if (declaringVarInCatchBody)
+        MOZ_ASSERT(decls_.lookupLast(name)->kind() != Definition::VAR);
     else
         MOZ_ASSERT(!decls_.lookupFirst(name));
 
@@ -306,8 +309,18 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
             if (!checkLocalsOverflow(ts))
                 return false;
         }
-        if (!decls_.addUnique(name, dn))
-            return false;
+
+        // Set when declaring a 'var' binding despite a shadowing lexical binding
+        // of the same name already existing as a catch parameter. Covered by ES6
+        // Annex B.3.5. Also see note in Parser::bindVar
+        if (declaringVarInCatchBody) {
+            if (!decls_.addShadowedForAnnexB(name, dn))
+                return false;
+        } else {
+            if (!decls_.addUnique(name, dn))
+                return false;
+        }
+
         break;
 
       case Definition::LET:
@@ -317,6 +330,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         dn->pn_dflags |= (PND_LEXICAL | PND_BOUND);
         if (atBodyLevel()) {
             if (!bodyLevelLexicals_.append(dn))
+                return false;
+            if (!addBodyLevelLexicallyDeclaredName(ts, name))
                 return false;
             if (!checkLocalsOverflow(ts))
                 return false;
@@ -355,7 +370,7 @@ ParseContext<SyntaxParseHandler>::checkLocalsOverflow(TokenStream& ts)
 template <>
 bool
 ParseContext<SyntaxParseHandler>::define(TokenStream& ts, HandlePropertyName name, Node pn,
-                                         Definition::Kind kind)
+                                         Definition::Kind kind, bool declaringVarInCatchBody)
 {
     MOZ_ASSERT(!decls_.lookupFirst(name));
 
@@ -1520,7 +1535,10 @@ struct BindData
     };
 
     explicit BindData(ExclusiveContext* cx)
-      : kind_(Uninitialized), nameNode_(ParseHandler::null()), letData_(cx)
+      : kind_(Uninitialized),
+        nameNode_(ParseHandler::null()),
+        letData_(cx),
+        isForOf(false)
     {}
 
     void initLexical(VarContext varContext, JSOp op, StaticBlockScope* blockScope,
@@ -1617,6 +1635,10 @@ struct BindData
     bool isAnnexB_;   // Whether this is a synthesized 'var' binding for Annex B.3.
     LetData letData_;
 
+  public:
+    bool isForOf;     // Whether this is binding a for-of head.
+
+  private:
     bool isInitialized() {
         return kind_ != Uninitialized;
     }
@@ -3703,42 +3725,63 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
      * define() right now. Otherwise, delay define until pushLetScope.
      */
     if (data->letData().varContext == HoistVars) {
-        // The reason we compare using >= instead of == on the block id is to
-        // detect redeclarations where a 'var' binding first appeared in a
-        // nested block: |{ var x; } let x;|
-        if (dn && dn->pn_blockid >= pc->blockid()) {
-            // XXXshu Used only for phasing in block-scope function early
-            // XXXshu errors.
-            // XXXshu
-            // XXXshu Back out when major version >= 50. See [1].
-            // XXXshu
-            // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-            if (pn->isKind(PNK_FUNCTION) && dn->isKind(PNK_FUNCTION) && !pc->sc->strict()) {
-                if (!parser->makeDefIntoUse(dn, pn, name))
-                    return false;
+        if (dn) {
+            // The reason we compare using >= instead of == on the block id is to
+            // detect redeclarations where a 'var' binding first appeared in a
+            // nested block: |{ var x; } let x;|
+            if (dn->pn_blockid >= pc->blockid()) {
+                // XXXshu Used only for phasing in block-scope function early
+                // XXXshu errors.
+                // XXXshu
+                // XXXshu Back out when major version >= 50. See [1].
+                // XXXshu
+                // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
+                if (pn->isKind(PNK_FUNCTION) && dn->isKind(PNK_FUNCTION) && !pc->sc->strict()) {
+                    if (!parser->makeDefIntoUse(dn, pn, name))
+                        return false;
 
-                MOZ_ASSERT(blockScope);
-                Shape* shape = blockScope->lastProperty()->search(cx, NameToId(name));
-                MOZ_ASSERT(shape);
-                uint32_t oldDefIndex = blockScope->shapeToIndex(*shape);
-                blockScope->updateDefinitionParseNode(oldDefIndex, dn,
-                                                      reinterpret_cast<Definition*>(pn));
+                    MOZ_ASSERT(blockScope);
+                    Shape* shape = blockScope->lastProperty()->search(cx, NameToId(name));
+                    MOZ_ASSERT(shape);
+                    uint32_t oldDefIndex = blockScope->shapeToIndex(*shape);
+                    blockScope->updateDefinitionParseNode(oldDefIndex, dn,
+                                                          reinterpret_cast<Definition*>(pn));
 
-                parser->addTelemetry(JSCompartment::DeprecatedBlockScopeFunRedecl);
-                JSAutoByteString bytes;
-                if (!AtomToPrintableString(cx, name, &bytes))
-                    return false;
-                if (!parser->report(ParseWarning, false, null(),
-                                    JSMSG_DEPRECATED_BLOCK_SCOPE_FUN_REDECL,
-                                    bytes.ptr()))
-                {
-                    return false;
+                    parser->addTelemetry(JSCompartment::DeprecatedBlockScopeFunRedecl);
+                    JSAutoByteString bytes;
+                    if (!AtomToPrintableString(cx, name, &bytes))
+                        return false;
+                    if (!parser->report(ParseWarning, false, null(),
+                                        JSMSG_DEPRECATED_BLOCK_SCOPE_FUN_REDECL,
+                                        bytes.ptr()))
+                    {
+                        return false;
+                    }
+
+                    return true;
                 }
 
-                return true;
+                return parser->reportRedeclaration(pn, dn->kind(), name);
             }
 
-            return parser->reportRedeclaration(pn, dn->kind(), name);
+            // Lexical declarations inside catch blocks need special
+            // attention. The catch parameter is in the enclosing block scope
+            // from the catch body, but lexical declarations inside the catch
+            // body block cannot shadow any catch parameter name.
+            //
+            // The reason the catch parameter is not in the same scope as the
+            // catch body is to satisfy Annex B.3.5, which allows 'var'
+            // redeclaration of the catch parameter but not of lexical
+            // bindings introduced in the catch body.
+            StmtInfoPC* enclosingStmt = pc->innermostScopeStmt()
+                                      ? pc->innermostScopeStmt()->enclosing
+                                      : nullptr;
+            if (enclosingStmt && enclosingStmt->type == StmtType::CATCH &&
+                dn->pn_blockid == enclosingStmt->blockid)
+            {
+                MOZ_ASSERT(LexicalLookup(pc, name) == enclosingStmt);
+                return parser->reportRedeclaration(pn, dn->kind(), name);
+            }
         }
 
         if (!pc->define(parser->tokenStream, name, pn, bindingKind))
@@ -3910,7 +3953,7 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::makeInnermostLexicalScope(StaticBlockS
 
 template <typename ParseHandler>
 static inline bool
-OuterLet(ParseContext<ParseHandler>* pc, StmtInfoPC* stmt, HandleAtom atom)
+HasOuterLexicalBinding(ParseContext<ParseHandler>* pc, StmtInfoPC* stmt, HandleAtom atom)
 {
     while (stmt->enclosingScope) {
         stmt = LexicalLookup(pc, atom, stmt->enclosingScope);
@@ -3919,7 +3962,10 @@ OuterLet(ParseContext<ParseHandler>* pc, StmtInfoPC* stmt, HandleAtom atom)
         if (stmt->type == StmtType::BLOCK)
             return true;
     }
-    return false;
+
+    // Even if the binding doesn't appear in any blocks, it might still be a
+    // body-level lexical.
+    return pc->isBodyLevelLexicallyDeclaredName(atom);
 }
 
 template <typename ParseHandler>
@@ -3936,6 +3982,27 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
 
     if (!parser->checkStrictBinding(name, pn))
         return false;
+
+    // Special case var bindings in for-of heads for bailing out of syntax
+    // parsing to satisfy early errors per ES6 Annex B.3.5.
+    //
+    // 'var' bindings in for-of heads do not trigger Annex B.3.5 (i.e.,
+    // regular lexical redeclaration early errors apply). When syntax parsing
+    // we do not have enough binding information to detect early errors, so
+    // abort when binding vars in for-of head inside catch. We cannot use stmt
+    // as syntax parsing does not keep enough info to find the correct scope
+    // via LexicalLookup above.
+    if (data->isForOf) {
+        for (StmtInfoPC* scopeStmt = pc->innermostScopeStmt();
+             scopeStmt;
+             scopeStmt = scopeStmt->enclosingScope)
+        {
+            if (scopeStmt->type == StmtType::CATCH) {
+                if (!parser->abortIfSyntaxParser())
+                    return false;
+            }
+        }
+    }
 
     StmtInfoPC* stmt = LexicalLookup(pc, name);
 
@@ -3972,9 +4039,47 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
     DefinitionList::Range defs = pc->decls().lookupMulti(name);
     MOZ_ASSERT_IF(stmt, !defs.empty());
 
-    // TODOshu: ES6 Annex B.3.5 is not implemented.
     if (defs.empty())
         return pc->define(parser->tokenStream, name, pn, Definition::VAR);
+
+    // ES6 Annex B.3.5 allows for var declarations inside catch blocks with
+    // the same name as the catch parameter.
+    bool nameIsCatchParam = stmt && stmt->type == StmtType::CATCH;
+    bool declaredVarInCatchBody = false;
+    if (nameIsCatchParam && !data->isForOf && !HasOuterLexicalBinding(pc, stmt, name)) {
+        declaredVarInCatchBody = true;
+
+        // Deoptimize the original name node, set the shadowing lexical
+        // name as aliased. Consider the following:
+        //
+        // try {} catch (e) { var e = 42; }
+        //
+        // While a new var 'e' is declared, the initializer '= 42' needs
+        // to be assigned to the lexically bound catch parameter
+        // 'e'. Deoptimizing the original parse node ensures that happen
+        // by emitting {BIND,SET}NAME ops.
+        //
+        // (Ideally, the 'e' in 'e = 42' can be linked up as a use to the
+        // def of the catch parameter. However, in practice this is messy
+        // because we then need to emit the synthesized var name node to
+        // ensure that functionless scopes get the proper DEFVAR emits.)
+        parser->handler.setFlag(pn, PND_DEOPTIMIZED);
+
+        // Synthesize a new 'var' binding if one does not exist.
+        DefinitionNode last = pc->decls().lookupLast(name);
+        if (last && parser->handler.getDefinitionKind(last) != Definition::VAR) {
+            parser->handler.setFlag(parser->handler.getDefinitionNode(last), PND_CLOSED);
+
+            Node synthesizedVarName = parser->newName(name);
+            if (!synthesizedVarName)
+                return false;
+            if (!pc->define(parser->tokenStream, name, synthesizedVarName, Definition::VAR,
+                            /* declaringVarInCatchBody = */ true))
+            {
+                return false;
+            }
+        }
+    }
 
     /*
      * There was a previous declaration with the same name. The standard
@@ -3992,11 +4097,9 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
         if (!parser->report(ParseExtraWarning, false, pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
             return false;
     } else {
-        bool inCatchBody = (stmt && stmt->type == StmtType::CATCH);
         bool error = (dn_kind == Definition::IMPORT ||
                       dn_kind == Definition::CONSTANT ||
-                      (dn_kind == Definition::LET &&
-                       (!inCatchBody || OuterLet(pc, stmt, name))));
+                      (dn_kind == Definition::LET && !declaredVarInCatchBody));
 
         if (parser->options().extraWarningsOption
             ? data->op() != JSOP_DEFVAR || dn_kind != Definition::VAR
@@ -4007,7 +4110,7 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
                 return false;
 
             ParseReportKind reporter = error ? ParseError : ParseExtraWarning;
-            if (!(inCatchBody
+            if (!(nameIsCatchParam && !declaredVarInCatchBody
                   ? parser->report(reporter, false, pn,
                                    JSMSG_REDECLARED_CATCH_IDENTIFIER, bytes.ptr())
                   : parser->report(reporter, false, pn, JSMSG_REDECLARED_VAR,
@@ -4440,7 +4543,7 @@ Parser<SyntaxParseHandler>::pushLetScope(HandleStaticBlockScope blockScope,
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling)
+Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling, unsigned errorNumber)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
 
@@ -4452,7 +4555,7 @@ Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling)
     if (!list)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_IN_COMPOUND);
+    MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, errorNumber);
     return list;
 }
 
@@ -4522,12 +4625,14 @@ Parser<ParseHandler>::declarationPattern(Node decl, TokenKind tt, BindData<Parse
         if (!matchInOrOf(&isForIn, &isForOf))
             return null();
 
-        if (isForIn)
+        if (isForIn) {
             *forHeadKind = PNK_FORIN;
-        else if (isForOf)
+        } else if (isForOf) {
+            data->isForOf = true;
             *forHeadKind = PNK_FOROF;
-        else
+        } else {
             *forHeadKind = PNK_FORHEAD;
+        }
 
         if (*forHeadKind != PNK_FORHEAD) {
             // |for (const ... in ...);| and |for (const ... of ...);| are
@@ -4727,12 +4832,15 @@ Parser<ParseHandler>::declarationName(Node decl, TokenKind tt, BindData<ParseHan
             if (!matchInOrOf(&isForIn, &isForOf))
                 return null();
 
-            if (isForIn || isForOf) {
+            if (isForIn) {
                 // XXX Uncomment this when fixing bug 449811.  Until then,
                 //     |for (const ... in/of ...)| remains an error.
                 //constRequiringInitializer = false;
 
-                *forHeadKind = isForIn ? PNK_FORIN : PNK_FOROF;
+                *forHeadKind = PNK_FORIN;
+            } else if (isForOf) {
+                data->isForOf = true;
+                *forHeadKind = PNK_FOROF;
             } else {
                 *forHeadKind = PNK_FORHEAD;
             }
@@ -6780,10 +6888,9 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
             MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
 
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
-            Node catchBody = statements(yieldHandling);
+            Node catchBody = blockStatement(yieldHandling, JSMSG_CURLY_AFTER_CATCH);
             if (!catchBody)
                 return null();
-            MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_CATCH);
 
             if (!catchGuard)
                 hasUnconditionalCatch = true;

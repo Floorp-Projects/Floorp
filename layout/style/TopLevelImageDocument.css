@@ -23,6 +23,13 @@
     left: 0;
   }
 
+  img.overflowingVertical {
+    /* If we're overflowing vertically, we need to set margin-top to
+       0.  Otherwise we'll end up trying to vertically center, and end
+       up cutting off the top part of the image. */
+    margin-top: 0;
+  }
+
   .completeRotation {
     transition: transform 0.3s ease 0s;
   }
