@@ -735,7 +735,7 @@ add_task(function* cancelUninstallTemporary() {
 
   BootstrapMonitor.checkAddonNotStarted(ID, "1.0");
   do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
-  
+
   prepare_test({
     "undouninstall1@tests.mozilla.org": [
       "onOperationCancelled"
