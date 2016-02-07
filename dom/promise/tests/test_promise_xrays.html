@@ -43,6 +43,30 @@ function testHaveXray() {
   nextTest();
 }
 
+function testConstructor1() {
+  var p = new win.Promise(function(resolve, reject) { resolve(win.Promise.resolve(5)); });
+  p.then(
+    function(arg) {
+      is(arg, 5, "Content Promise constructor resolved with content promise should work");
+    },
+    function(e) {
+      ok(false, "Content Promise constructor resolved with content promise should not fail");
+    }
+  ).then(nextTest);
+}
+
+function testConstructor2() {
+  var p = new win.Promise(function(resolve, reject) { resolve(Promise.resolve(5)); });
+  p.then(
+    function(arg) {
+      is(arg, 5, "Content Promise constructor resolved with chrome promise should work");
+    },
+    function(e) {
+      ok(false, "Content Promise constructor resolved with chrome promise should not fail");
+    }
+  ).then(nextTest);
+}
+
 function testRace1() {
   var p = win.Promise.race(new win.Array(1, 2));
   p.then(
@@ -250,7 +274,7 @@ function testThen2() {
 
 function testCatch1() {
   var p = win.Promise.reject(5);
-  ok(p instanceof win.Promise, "Promise.resolve should return a promise");
+  ok(p instanceof win.Promise, "Promise.reject should return a promise");
   var q = p.catch((x) => x*x);
   ok(q instanceof win.Promise,
      "Promise.catch should return a promise from the right global");
@@ -267,6 +291,8 @@ function testCatch1() {
 var tests = [
   testLoadComplete,
   testHaveXray,
+  testConstructor1,
+  testConstructor2,
   testRace1,
   testRace2,
   testRace3,
