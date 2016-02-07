@@ -531,27 +531,6 @@ function addEmailCert()
   }
 }
 
-function addWebSiteCert()
-{
-  var bundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          bundle.getString("importServerCertPrompt"),
-          nsIFilePicker.modeOpen);
-  fp.appendFilter(bundle.getString("file_browse_Certificate_spec"),
-                  gCertFileTypes);
-  fp.appendFilters(nsIFilePicker.filterAll);
-  if (fp.show() == nsIFilePicker.returnOK) {
-    certdb.importCertsFromFile(fp.file, nsIX509Cert.SERVER_CERT);
-
-    var certcache = certdb.getCerts();
-    serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
-    serverTreeView.selection.clearSelection();
-    caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
-    caTreeView.selection.clearSelection();
-  }
-}
-
 function addException()
 {
   window.openDialog('chrome://pippki/content/exceptionDialog.xul', "",
