@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1104356 smooth scrolling expected</title>
+    <style type="text/css">
+
+        html,body {
+            color: black;
+            background-color: white;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        #parent {
+            overflow: hidden;
+            width: 100px;
+            height: 100px;
+        }
+
+        #a_box {
+            position: relative;
+            left: 10px;
+            top: 10px;
+            width: 20px;
+            height: 20px;
+            background: blue;
+        }
+
+        #another_box {
+            position: relative;
+            left: 2000px;
+            top: 2000px;
+            width: 20px;
+            height: 20px;
+            background: green;
+        }
+
+    </style>
+</head>
+<body>
+  <div id="parent">
+   <div id="a_box"></div>
+   <div id="another_box"></div>
+  </div>
+<script>
+  function doTest() {
+    if (document.location.search != '?ref') {
+      document.getElementById('parent').scrollTo({left: 10, top: 10, behavior: 'smooth'});
+    } else {
+      document.getElementById('parent').scrollLeft = 10;
+      document.getElementById('parent').scrollTop = 10;
+    }
+
+    // Allow smooth scrolling to complete before testing result
+    setTimeout(function() {
+      document.documentElement.removeAttribute("class");
+    }, 500);
+  }
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
