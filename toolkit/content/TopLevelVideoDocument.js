@@ -14,9 +14,9 @@ document.addEventListener("keypress", ev => {
   if (ev.synthetic) // prevent recursion
     return;
 
-  // Maximize the video when pressing F11,
-  // because this is the standanlone video document.
-  if (ev.key == "F11") {
+  // Maximize the standalone video when pressing F11,
+  // but ignore audio elements
+  if (ev.key == "F11" && videoElement.videoWidth != 0 && videoElement.videoHeight != 0) {
     // If we're in browser fullscreen mode, it means the user pressed F11
     // while browser chrome or another tab had focus.
     // Don't break leaving that mode, so do nothing here.
