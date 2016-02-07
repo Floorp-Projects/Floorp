@@ -1799,15 +1799,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
     if (marginBStartIsAuto) {
       if (marginBEndIsAuto) {
-        if (availMarginSpace < 0) {
-          // FIXME: Note that the spec doesn't actually say we should do this!
-          margin.BEnd(cbwm) = availMarginSpace;
-        } else {
-          // Both margin-block-start and -end are 'auto', so they get
-          // equal values
-          margin.BStart(cbwm) = availMarginSpace / 2;
-          margin.BEnd(cbwm) = availMarginSpace - margin.BStart(cbwm);
-        }
+        // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+        // equal values
+        margin.BStart(cbwm) = availMarginSpace / 2;
+        margin.BEnd(cbwm) = availMarginSpace - margin.BStart(cbwm);
       } else {
         // Just margin-block-start is 'auto'
         margin.BStart(cbwm) = availMarginSpace;

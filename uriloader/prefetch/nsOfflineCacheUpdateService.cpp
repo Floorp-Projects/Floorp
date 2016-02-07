@@ -52,6 +52,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nullptr;
+static bool sAllowOfflineCache = true;
 
 nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains = nullptr;
 
@@ -247,6 +248,10 @@ nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
     , mUpdateRunning(false)
     , mLowFreeSpace(false)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+    Preferences::AddBoolVarCache(&sAllowOfflineCache,
+                                 "browser.cache.offline.enable",
+                                 true);
 }
 
 nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService()
@@ -605,6 +610,10 @@ OfflineAppPermForPrincipal(nsIPrincipal *aPrincipal,
 {
     *aAllowed = false;
 
+    if (!sAllowOfflineCache) {
+        return NS_OK;
+    }
+
     if (!aPrincipal)
         return NS_ERROR_INVALID_ARG;
 
@@ -695,6 +704,10 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal *aPrincipal)
 {
     nsresult rv;
+
+    if (!sAllowOfflineCache) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     if (GeckoProcessType_Default != XRE_GetProcessType()) {
         ContentChild* child = ContentChild::GetSingleton();
