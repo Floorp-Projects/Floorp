@@ -1488,13 +1488,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute string focusedInputType;
 
   /**
-   * Given a view ID from the compositor process, retrieve the element
-   * associated with a view. For scrollpanes for documents, the root
-   * element of the document is returned.
-   */
-  nsIDOMElement findElementWithViewId(in nsViewID aId);
-
-  /**
    * Find the view ID for a given element. This is the reverse of
    * findElementWithViewId().
    */

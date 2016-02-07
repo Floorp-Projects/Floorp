@@ -1270,5 +1270,7 @@ DigestOutputStream::IsNonBlocking(bool *retval)
   return mOutputStream->IsNonBlocking(retval);
 }
 
+#undef LOG_ENABLED
+
 } // namespace net
 } // namespace mozilla
