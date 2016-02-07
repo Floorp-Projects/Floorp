@@ -431,7 +431,7 @@ JS_PUBLIC_API(void)
 JS::TraceEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
 {
     MOZ_ASSERT(thingp);
-    if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
+    if (InternalBarrierMethods<T>::isMarkable(*thingp->unsafeGet()))
         DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
 }
 
@@ -2949,6 +2949,7 @@ TypedUnmarkGrayCellRecursively(T* t)
 
     JSRuntime* rt = t->runtimeFromMainThread();
     MOZ_ASSERT(!rt->isHeapCollecting());
+    MOZ_ASSERT(!rt->isCycleCollecting());
 
     bool unmarkedArg = false;
     if (t->isTenured()) {

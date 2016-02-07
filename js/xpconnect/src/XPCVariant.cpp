@@ -65,7 +65,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    MOZ_ASSERT(mJSVal.isMarkable());
+    MOZ_ASSERT(GetJSValPreserveColor().isMarkable());
     JS::TraceEdge(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
 }
 

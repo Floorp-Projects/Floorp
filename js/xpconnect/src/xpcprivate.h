@@ -887,12 +887,11 @@ public:
 
     JSObject*
     GetGlobalJSObject() const {
-        JS::ExposeObjectToActiveJS(mGlobalJSObject);
         return mGlobalJSObject;
     }
 
     JSObject*
-    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
+    GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject.unbarrieredGet();}
 
     nsIPrincipal*
     GetPrincipal() const {
@@ -2159,7 +2158,7 @@ public:
      * be passed into a JS API function and that it won't be stored without
      * being rooted (or otherwise signaling the stored value to the CC).
      */
-    JSObject* GetJSObjectPreserveColor() const {return mJSObj;}
+    JSObject* GetJSObjectPreserveColor() const { return mJSObj.unbarrieredGet(); }
 
     // Returns true if the wrapper chain contains references to multiple
     // compartments. If the wrapper chain contains references to multiple
@@ -2183,8 +2182,8 @@ public:
         return FindInherited(aIID);
     }
 
-    bool IsRootWrapper() const {return mRoot == this;}
-    bool IsValid() const {return mJSObj != nullptr;}
+    bool IsRootWrapper() const { return mRoot == this; }
+    bool IsValid() const { return bool(mJSObj); }
     void SystemIsBeingShutDown();
 
     // These two methods are used by JSObject2WrappedJSMap::FindDyingJSObjects
@@ -2223,6 +2222,10 @@ protected:
     void Unlink();
 
 private:
+    JSCompartment* Compartment() const {
+        return js::GetObjectCompartment(mJSObj.unbarrieredGet());
+    }
+
     JS::Heap<JSObject*> mJSObj;
     RefPtr<nsXPCWrappedJSClass> mClass;
     nsXPCWrappedJS* mRoot;    // If mRoot != this, it is an owning pointer.
@@ -2881,8 +2884,6 @@ public:
      * kept alive past the next CC.
      */
     JS::Value GetJSVal() const {
-        if (!mJSVal.isPrimitive())
-            JS::ExposeObjectToActiveJS(&mJSVal.toObject());
         return mJSVal;
     }
 
@@ -2895,7 +2896,7 @@ public:
      * be passed into a JS API function and that it won't be stored without
      * being rooted (or otherwise signaling the stored value to the CC).
      */
-    JS::Value GetJSValPreserveColor() const {return mJSVal;}
+    JS::Value GetJSValPreserveColor() const { return mJSVal.unbarrieredGet(); }
 
     XPCVariant(JSContext* cx, const JS::Value& aJSVal);
 
