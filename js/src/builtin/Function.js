@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// ES6 spec draft 29, 19.2.3.2
+// ES7 draft (January 21, 2016) 19.2.3.2 Function.prototype.bind
 function FunctionBind(thisArg, ...boundArgs) {
     // Step 1.
     var target = this;
@@ -11,7 +11,7 @@ function FunctionBind(thisArg, ...boundArgs) {
         ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, 'Function', 'bind', target);
 
     // Step 3 (implicit).
-    // Steps 4-5.
+    // Step 4.
     var F;
     var argCount = boundArgs.length;
     switch (argCount) {
@@ -28,30 +28,30 @@ function FunctionBind(thisArg, ...boundArgs) {
         F = bind_bindFunctionN(target, thisArg, boundArgs);
     }
 
-    // Steps 6-7.
+    // Step 5.
     var targetHasLength = callFunction(std_Object_hasOwnProperty, target, "length");
 
-    // Step 8.
+    // Step 6.
     var L;
     if (targetHasLength) {
-        // Steps 8.a-b.
+        // Step 6.a.
         var targetLen = target.length;
-        // Step 8.c.
+        // Step 6.b.
         if (typeof targetLen !== 'number') {
             L = 0;
         } else {
-            // Steps d.i-ii.
+            // Steps 6.b.i-ii.
             L = std_Math_max(0, ToInteger(targetLen) - argCount);
         }
     } else {
-        // Step 9.
+        // Step 7.
         L = 0;
     }
 
-    // Steps 12-13.
+    // Step 9.
     var targetName = target.name;
 
-    // Step 14.
+    // Step 10.
     if (typeof targetName !== "string")
         targetName = "";
 
@@ -62,7 +62,7 @@ function FunctionBind(thisArg, ...boundArgs) {
     // JIT code.
     var funApply = std_Function_apply;
 
-    // Step 17.
+    // Step 12.
     return F;
 }
 /**
