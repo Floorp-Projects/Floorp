@@ -10,7 +10,7 @@ const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
 const nsIPK11Token = Components.interfaces.nsIPK11Token;
 
 var params;
-var tokenName="";
+var tokenName = "";
 var pw1;
 
 function doPrompt(msg)
@@ -42,7 +42,7 @@ function onLoad()
      var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
      var tokenList = sectokdb.listTokens();
      var enumElement;
-     var i=0;
+     let i = 0;
      var menu = document.getElementById("tokenMenu");
      try {
         for (; !tokenList.isDone(); tokenList.next()) {
@@ -233,7 +233,7 @@ function setPasswordStrength()
   }
 
   let numnumeric = pw.replace(/[0-9]/g, "");
-  let numeric= pw.length - numnumeric.length;
+  let numeric = pw.length - numnumeric.length;
   if (numeric > 3) {
     numeric = 3;
   }
@@ -269,8 +269,8 @@ function setPasswordStrength()
 
 function checkPasswords()
 {
-  var pw1=document.getElementById('pw1').value;
-  var pw2=document.getElementById('pw2').value;
+  let pw1 = document.getElementById("pw1").value;
+  let pw2 = document.getElementById("pw2").value;
 
   var oldpwbox = document.getElementById("oldpw");
   if (oldpwbox) {
