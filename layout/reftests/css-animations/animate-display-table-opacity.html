@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<title>Testcase for bug 1245075</title>
+<style>
+@keyframes HoldOpacity {
+  from, to { opacity: 0.6 }
+}
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+  display: table;
+  animation: HoldOpacity 100s linear infinite;
+}
+</style>
+<div id="test"></div>
