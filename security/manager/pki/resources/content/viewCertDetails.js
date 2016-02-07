@@ -25,13 +25,11 @@ function doPrompt(msg)
 
 function AddCertChain(node, chain, idPrefix)
 {
-  var idfier = idPrefix+"chain_";
   var child = document.getElementById(node);
-  var numCerts = chain.length;
   var currCert;
   var displayVal;
   var addTwistie;
-  for (var i=numCerts-1; i>=0; i--) {
+  for (let i = chain.length - 1; i >= 0; i--) {
     currCert = chain.queryElementAt(i, nsIX509Cert);
     if (currCert.commonName) {
       displayVal = currCert.commonName;
@@ -130,7 +128,7 @@ function displaySelected() {
     var value = asn1Tree.getDisplayData(items.currentIndex);
     certDumpVal.value = value;
   } else {
-    certDumpVal.value ="";
+    certDumpVal.value = "";
   }
 }
 
@@ -213,11 +211,11 @@ function DisplayVerificationData(cert, result)
   } else { /* if (verifystate == cert.NOT_VERIFIED_UNKNOWN || == USAGE_NOT_ALLOWED) */
     verifystr = bundle.getString('certNotVerified_Unknown');
   }
-  var verified=document.getElementById('verified');
+  let verified = document.getElementById("verified");
   verified.textContent = verifystr;
   if (count > 0) {
     var verifyInfoBox = document.getElementById('verify_info_box');
-    for (var i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
       AddUsage(usageList[i],verifyInfoBox);
     }
   }

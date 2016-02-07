@@ -29,8 +29,6 @@ from mozharness.mozilla.buildbot import TBPL_WORST_LEVEL_TUPLE
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.unittest import EmulatorMixin
 
-from mozharness.mozilla.testing.device import ADBDeviceHandler
-
 
 class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin, BaseScript, MozbaseMixin):
     config_options = [[
@@ -477,7 +475,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
          - the stdout where the output is going to
          - the suite name that is associated
         """
-        dirs = self.query_abs_dirs()
         cmd = self._build_command(self.emulators[emulator_index], suite_name)
 
         try:

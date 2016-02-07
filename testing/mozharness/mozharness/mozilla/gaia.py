@@ -6,7 +6,8 @@ import json
 import os
 import re
 
-from mozharness.base.errors import HgErrorList, BaseErrorList, ZipErrorList
+from mozharness.base.errors import HgErrorList, BaseErrorList, TarErrorList, \
+    ZipErrorList
 from mozharness.base.log import ERROR, FATAL
 
 gaia_config_options = [

@@ -434,7 +434,7 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
     HRESULT hr = srcSurface->LockRect(&rect, nullptr, 0);
     if (FAILED(hr) || !rect.pBits) {
       gfxCriticalError() << "Failed to lock rect initialize texture in D3D9 " << hexa(hr);
-      return nullptr;
+      return false;
     }
 
     for (auto iter = regionToUpdate.RectIter(); !iter.Done(); iter.Next()) {

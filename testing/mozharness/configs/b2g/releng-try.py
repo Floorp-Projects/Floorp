@@ -37,7 +37,6 @@ config = {
         "WGET_OPTS": "-c -q",
         "PATH": "/tools/python27/bin:%(PATH)s",
     },
-    "purge_minsize": 20,
     #"clobberer_url": "https://api-pub-build.allizom.org/clobberer/lastclobber",
     #"clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
     "is_automation": True,
