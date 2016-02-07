@@ -59,6 +59,64 @@ var mediaPlayerDevice = {
   }
 };
 
+var fxOSTVDevice = {
+  id: "app://fling-player.gaiamobile.org",
+  target: "app://fling-player.gaiamobile.org/index.html",
+  factory: function(aService) {
+    Cu.import("resource://gre/modules/PresentationApp.jsm");
+    let request = new window.PresentationRequest(this.target);
+    return new PresentationApp(aService, request);
+  },
+  init: function() {
+    Services.obs.addObserver(this, "presentation-device-change", false);
+    SimpleServiceDiscovery.addExternalDiscovery(this);
+  },
+  observe: function(subject, topic, data) {
+    let device = subject.QueryInterface(Ci.nsIPresentationDevice);
+    let service = this.toService(device);
+    switch (data) {
+      case "add":
+        SimpleServiceDiscovery.addService(service);
+        break;
+      case "update":
+        SimpleServiceDiscovery.updateService(service);
+        break;
+      case "remove":
+        if(SimpleServiceDiscovery.findServiceForID(device.id)) {
+          SimpleServiceDiscovery.removeService(device.id);
+        }
+        break;
+    }
+  },
+  toService: function(device) {
+    return {
+      location: device.id,
+      target: fxOSTVDevice.target,
+      friendlyName: device.name,
+      uuid: device.id,
+      manufacturer: "Firefox OS TV",
+      modelName: "Firefox OS TV",
+    };
+  },
+  startDiscovery: function() {
+    window.navigator.mozPresentationDeviceInfo.forceDiscovery();
+
+    // need to update the lastPing time for known device.
+    window.navigator.mozPresentationDeviceInfo.getAll()
+    .then(function(devices) {
+      for (let device of devices) {
+        let service = fxOSTVDevice.toService(device);
+        SimpleServiceDiscovery.addService(service);
+      }
+    });
+  },
+  stopDiscovery: function() {
+    // do nothing
+  },
+  types: ["video/mp4", "video/webm"],
+  extensions: ["mp4", "webm"],
+};
+
 var CastingApps = {
   _castMenuId: -1,
   mirrorStartMenuId: -1,
@@ -78,6 +136,10 @@ var CastingApps = {
     // MediaPlayerDevice will notify us any time the native device list changes.
     mediaPlayerDevice.init();
     SimpleServiceDiscovery.registerDevice(mediaPlayerDevice);
+
+    // Presentation Device will notify us any time the available device list changes.
+    fxOSTVDevice.init();
+    SimpleServiceDiscovery.registerDevice(fxOSTVDevice);
 
     // Search for devices continuously
     SimpleServiceDiscovery.search(this._interval);
