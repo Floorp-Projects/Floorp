@@ -55,6 +55,9 @@ function FunctionBind(thisArg, ...boundArgs) {
     if (typeof targetName !== "string")
         targetName = "";
 
+    // 9.2.11 SetFunctionName, Step 5.a.
+    targetName = "bound " + targetName;
+
     // Steps 10-11, 15-16.
     _FinishBoundFunctionInit(F, target, L, targetName);
 
