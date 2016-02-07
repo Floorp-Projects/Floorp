@@ -1395,7 +1395,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   } else {
     float opacity = GetEffectiveOpacity();
     CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) ||
+    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && (HasMultipleChildren() || Creates3DContextWithExtendingChildren())) ||
         (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
       useIntermediateSurface = true;
     } else {
@@ -1896,6 +1896,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (!mTransform.IsIdentity()) {
     AppendToString(aStream, mTransform, " [transform=", "]");
+  }
+  if (!GetEffectiveTransform().IsIdentity()) {
+    AppendToString(aStream, GetEffectiveTransform(), " [effective-transform=", "]");
   }
   if (mTransformIsPerspective) {
     aStream << " [perspective]";
