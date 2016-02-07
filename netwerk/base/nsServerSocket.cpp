@@ -233,15 +233,17 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
     mListener->OnStopListening(this, mCondition);
 
     // need to atomically clear mListener.  see our Close() method.
-    nsIServerSocketListener *listener = nullptr;
+    RefPtr<nsIServerSocketListener> listener = nullptr;
     {
       MutexAutoLock lock(mLock);
-      mListener.swap(listener);
+      listener = mListener.forget();
     }
+
     // XXX we need to proxy the release to the listener's target thread to work
     // around bug 337492.
-    if (listener)
-      NS_ProxyRelease(mListenerTarget, listener);
+    if (listener) {
+      NS_ProxyRelease(mListenerTarget, listener.forget());
+    }
   }
 }
 

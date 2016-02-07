@@ -523,16 +523,13 @@ nsUDPSocket::OnSocketDetached(PRFileDesc *fd)
   if (mListener)
   {
     // need to atomically clear mListener.  see our Close() method.
-    nsCOMPtr<nsIUDPSocketListener> listener;
+    RefPtr<nsIUDPSocketListener> listener = nullptr;
     {
       MutexAutoLock lock(mLock);
-      mListener.swap(listener);
+      listener = mListener.forget();
     }
 
-    if (listener) {
-      listener->OnStopListening(this, mCondition);
-      NS_ProxyRelease(mListenerTarget, listener);
-    }
+    NS_ProxyRelease(mListenerTarget, listener.forget());
   }
 }
 
