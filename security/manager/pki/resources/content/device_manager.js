@@ -148,11 +148,11 @@ function AddModule(module, slots)
   row.appendChild(cell);
   item.appendChild(row);
   var parent = document.createElement("treechildren");
-  for (var i = 0; i<slots.length; i++) {
+  for (let slot of slots) {
     var child_item = document.createElement("treeitem");
     var child_row = document.createElement("treerow");
     var child_cell = document.createElement("treecell");
-    child_cell.setAttribute("label", slots[i]);
+    child_cell.setAttribute("label", slot);
     child_row.appendChild(child_cell);
     child_item.appendChild(child_row);
     child_item.setAttribute("pk11kind", "slot");

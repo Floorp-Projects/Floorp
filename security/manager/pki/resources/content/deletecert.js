@@ -62,9 +62,8 @@ function setWindowName()
 
   setText("confirm",confirm);
 
-  var box=document.getElementById("certlist");
-  for(var x=0;x<numberOfCerts;x++)
-  {
+  let box = document.getElementById("certlist");
+  for (let x = 0; x < numberOfCerts; x++) {
     var listItem = document.createElement("richlistitem");
     var label = document.createElement("label");
     label.setAttribute("value", gParams.GetString(x + 1));
