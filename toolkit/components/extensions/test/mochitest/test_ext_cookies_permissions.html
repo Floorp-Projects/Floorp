@@ -19,30 +19,6 @@ function* testCookies(options) {
   options.expiry = Date.now() / 1000 + 3600;
 
   function background(options) {
-    function get(details) {
-      return new Promise(resolve => {
-        browser.cookies.get(details, resolve);
-      });
-    }
-
-    function getAll(details) {
-      return new Promise(resolve => {
-        browser.cookies.getAll(details, resolve);
-      });
-    }
-
-    function set(details) {
-      return new Promise(resolve => {
-        browser.cookies.set(details, resolve);
-      });
-    }
-
-    function remove(details) {
-      return new Promise(resolve => {
-        browser.cookies.remove(details, resolve);
-      });
-    }
-
     // Ask the parent scope to change some cookies we may or may not have
     // permission for.
     let awaitChanges = new Promise(resolve => {
@@ -62,12 +38,17 @@ function* testCookies(options) {
     // Try to access some cookies in various ways.
     let { url, domain, secure } = options;
 
+    let failures = 0;
+    let tallyFailure = error => {
+      failures++;
+    };
+
     awaitChanges.then(() => {
-      return get({ url, name: "foo" });
+      return browser.cookies.get({ url, name: "foo" });
     }).then(cookie => {
       browser.test.assertEq(options.shouldPass, cookie != null, "should pass == get cookie");
 
-      return getAll({ domain });
+      return browser.cookies.getAll({ domain });
     }).then(cookies => {
       if (options.shouldPass) {
         browser.test.assertEq(2, cookies.length, "expected number of cookies");
@@ -76,9 +57,9 @@ function* testCookies(options) {
       }
 
       return Promise.all([
-        set({ url, domain, secure, name: "foo", "value": "baz", expirationDate: options.expiry }),
-        set({ url, domain, secure, name: "bar", "value": "quux", expirationDate: options.expiry }),
-        remove({ url, name: "deleted" }),
+        browser.cookies.set({ url, domain, secure, name: "foo", "value": "baz", expirationDate: options.expiry }).catch(tallyFailure),
+        browser.cookies.set({ url, domain, secure, name: "bar", "value": "quux", expirationDate: options.expiry }).catch(tallyFailure),
+        browser.cookies.remove({ url, name: "deleted" }),
       ]);
     }).then(() => {
       if (options.shouldPass) {
@@ -99,6 +80,14 @@ function* testCookies(options) {
       }
 
       browser.test.notifyPass("cookie-permissions");
+    }).then(() => {
+      if (!(options.shouldPass || options.shouldWrite)) {
+        browser.test.assertEq(2, failures, "Expected failures");
+      } else {
+        browser.test.assertEq(0, failures, "Expected no failures");
+      }
+    }).catch(error => {
+      browser.test.fail(`Error: ${error} :: ${error.stack}`);
     });
   }
 

@@ -360,3 +360,25 @@ function diff(breakdown, startCensus, endCensus) {
   return visitor.results();
 };
 exports.diff = diff
+
+/**
+ * Creates a hash map mapping node IDs to its parent node.
+ *
+ * @param {CensusTreeNode} node
+ * @param {Object<number, TreeNode>} aggregator
+ *
+ * @return {Object<number, TreeNode>}
+ */
+const createParentMap = exports.createParentMap = function (node,
+                                                            getId = node => node.id,
+                                                            aggregator = Object.create(null)) {
+  if (node.children) {
+    for (let i = 0, length = node.children.length; i < length; i++) {
+      const child = node.children[i];
+      aggregator[getId(child)] = getId(node);
+      createParentMap(child, getId, aggregator);
+    }
+  }
+
+  return aggregator;
+};

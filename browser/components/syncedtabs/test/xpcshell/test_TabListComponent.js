@@ -71,10 +71,10 @@ add_task(function* testActions() {
     top: {
       PlacesCommandHook: {
         bookmarkLink() { return Promise.resolve(); }
-      }
+      },
+      PlacesUtils: { bookmarksMenuFolderId: "id" }
     },
-    openUILink() {},
-    PlacesUtils: { bookmarksMenuFolderId: "id" },
+    openUILink() {}
   };
   let component = new TabListComponent({
     window: windowMock, store, View: null, SyncedTabs});

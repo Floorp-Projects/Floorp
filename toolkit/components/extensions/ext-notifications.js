@@ -6,7 +6,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
-  runSafe,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Set[Notification]]
@@ -56,7 +55,7 @@ Notification.prototype = {
       return;
     }
 
-    for (let callback in notificationCallbacksMap.get(this.extension)) {
+    for (let callback of notificationCallbacksMap.get(this.extension)) {
       callback(this);
     }
 
@@ -101,9 +100,7 @@ extensions.registerPrivilegedAPI("notifications", (extension, context) => {
         let notification = new Notification(extension, notificationId, options);
         notificationsMap.get(extension).add(notification);
 
-        if (callback) {
-          runSafe(context, callback, notificationId);
-        }
+        return context.wrapPromise(Promise.resolve(notificationId), callback);
       },
 
       clear: function(notificationId, callback) {
@@ -117,15 +114,13 @@ extensions.registerPrivilegedAPI("notifications", (extension, context) => {
           }
         }
 
-        if (callback) {
-          runSafe(context, callback, cleared);
-        }
+        return context.wrapPromise(Promise.resolve(cleared), callback);
       },
 
       getAll: function(callback) {
         let notifications = notificationsMap.get(extension);
         notifications = Array.from(notifications, notification => notification.id);
-        runSafe(context, callback, notifications);
+        return context.wrapPromise(Promise.resolve(notifications), callback);
       },
 
       onClosed: new EventManager(context, "notifications.onClosed", fire => {

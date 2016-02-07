@@ -136,7 +136,7 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
     assert([states.READ, states.SAVED_CENSUS].includes(snapshot.state),
       `Can only take census of snapshots in READ or SAVED_CENSUS state, found ${snapshot.state}`);
 
-    let report;
+    let report, parentMap;
     let inverted = getState().inverted;
     let breakdown = getState().breakdown;
     let filter = getState().filter;
@@ -166,7 +166,9 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
       opts.filter = filter || null;
 
       try {
-        report = yield heapWorker.takeCensus(snapshot.path, { breakdown }, opts);
+        ({ report, parentMap } = yield heapWorker.takeCensus(snapshot.path,
+                                                             { breakdown },
+                                                             opts));
       } catch (error) {
         reportException("takeCensus", error);
         dispatch({ type: actions.SNAPSHOT_ERROR, id, error });
@@ -183,7 +185,8 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
       breakdown,
       inverted,
       filter,
-      report
+      report,
+      parentMap
     });
 
     telemetry.countCensus({ inverted, filter, breakdown });
