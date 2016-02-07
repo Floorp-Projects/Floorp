@@ -301,6 +301,29 @@ intrinsic_AssertionFailed(JSContext* cx, unsigned argc, Value* vp)
     return false;
 }
 
+/**
+ * Dumps a message to stderr, after stringifying it. Doesn't append a newline.
+ */
+static bool
+intrinsic_DumpMessage(JSContext* cx, unsigned argc, Value* vp)
+{
+#ifdef DEBUG
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() > 0) {
+        // try to dump the informative string
+        JSString* str = ToString<CanGC>(cx, args[0]);
+        if (str) {
+            str->dumpCharsNoNewline();
+            fputc('\n', stderr);
+        } else {
+            cx->recoverFromOutOfMemory();
+        }
+    }
+#endif
+    args.rval().setUndefined();
+    return true;
+}
+
 static bool
 intrinsic_MakeConstructible(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1715,6 +1738,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowTypeError",          intrinsic_ThrowTypeError,          4,0),
     JS_FN("ThrowSyntaxError",        intrinsic_ThrowSyntaxError,        4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
+    JS_FN("DumpMessage",             intrinsic_DumpMessage,             1,0),
     JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
