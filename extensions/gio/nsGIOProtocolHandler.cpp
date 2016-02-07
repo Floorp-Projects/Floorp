@@ -615,17 +615,10 @@ nsGIOInputStream::Close()
     mDirListPtr = nullptr;
   }
 
-  if (mChannel)
-  {
-    nsresult rv = NS_OK;
+  if (mChannel) {
+    NS_ReleaseOnMainThread(dont_AddRef(mChannel));
 
-    nsCOMPtr<nsIThread> thread = do_GetMainThread();
-    if (thread)
-      rv = NS_ProxyRelease(thread, mChannel);
-
-    NS_ASSERTION(thread && NS_SUCCEEDED(rv), "leaking channel reference");
     mChannel = nullptr;
-    (void) rv;
   }
 
   mSpec.Truncate(); // free memory
