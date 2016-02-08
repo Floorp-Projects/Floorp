@@ -107,19 +107,19 @@ HwcUtils::PrepareVisibleRegion(const nsIntRegion& aVisible,
         layerBufferTransform.TransformBounds(ThebesRect(aBufferRect));
     gfxMatrix inverse = gfx::ThebesMatrix(aLayerBufferTransform);
     inverse.Invert();
-    nsIntRegionRectIterator rect(aVisible);
     aIsVisible = false;
-    while (const nsIntRect* visibleRect = rect.Next()) {
-        hwc_rect_t visibleRectScreen;
-        gfxRect screenRect;
 
-        screenRect = layerTransform.TransformBounds(ThebesRect(*visibleRect));
+    for (auto iter = aVisible.RectIter(); !iter.Done(); iter.Next()) {
+        gfxRect screenRect =
+          layerTransform.TransformBounds(ThebesRect(iter.Get()));
         screenRect.IntersectRect(screenRect, bufferRect);
         screenRect.IntersectRect(screenRect, ThebesRect(aClip));
         screenRect.Round();
         if (screenRect.IsEmpty()) {
             continue;
         }
+
+        hwc_rect_t visibleRectScreen;
         visibleRectScreen.left = screenRect.x;
         visibleRectScreen.top  = screenRect.y;
         visibleRectScreen.right  = screenRect.XMost();

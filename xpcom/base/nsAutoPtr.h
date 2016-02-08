@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TypeTraits.h"
 
 #include "nsCycleCollectionNoteChild.h"
 #include "mozilla/MemoryReporting.h"
@@ -21,6 +22,9 @@ template <class T>
 class nsAutoPtr
 {
 private:
+  static_assert(!mozilla::IsScalar<T>::value, "If you are using "
+                "nsAutoPtr to hold an array, use UniquePtr<T[]> instead");
+
   void**
   begin_assignment()
   {

@@ -82,7 +82,7 @@
     }
 
     // check if the result (SECURE/INSECURE) is expected for this round/test combo
-    SimpleTest.is(result[0], testframes[result[1]].expected[round], 
+    SimpleTest.is(result[0], testframes[result[1]].expected[round],
                   "in ROUND " + round + ", test " + result[1]);
     testsleft[round]--;
 
@@ -95,8 +95,8 @@
       // defer this so it doesn't muck with the stack too much.
       if (roundsLeft == 1)
         setTimeout(function () {
-            startRound('subdom'); 
-          }, 0);
+          startRound("subdom");
+        }, 0);
     }
 
     if (roundsLeft < 1) {

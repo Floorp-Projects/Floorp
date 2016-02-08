@@ -45,6 +45,9 @@
 #include "PeerConnectionImplEnumsBinding.cpp"
 #endif
 
+#include "FakeIPC.h"
+#include "FakeIPC.cpp"
+
 #include "ice_ctx.h"
 #include "ice_peer_ctx.h"
 

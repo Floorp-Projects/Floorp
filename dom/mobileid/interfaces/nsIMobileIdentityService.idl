@@ -4,11 +4,11 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
-[scriptable, uuid(2dff5d37-d39d-4a7b-9bad-c108712c8a91)]
+[scriptable, uuid(c03d38e3-bae6-4b62-ae96-cf8acc1501ec)]
 interface nsIMobileIdentityService : nsISupports
 {
-  nsISupports getMobileIdAssertion(in nsIDOMWindow window,
+  nsISupports getMobileIdAssertion(in mozIDOMWindow window,
                                    in jsval options);
 };

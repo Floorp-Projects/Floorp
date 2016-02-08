@@ -634,7 +634,7 @@ public:
   }
 
 private:
-  nsAutoTArray<ImageContainer::OwningImage,4> mImages;
+  AutoTArray<ImageContainer::OwningImage,4> mImages;
 };
 
 struct PlanarYCbCrData {
@@ -857,12 +857,14 @@ public:
   {
     mOverlayId = aData.mOverlayId;
     mSize = aData.mSize;
+    mSidebandStream = GonkNativeHandle();
   }
 
   void SetData(const SidebandStreamData& aData)
   {
     mSidebandStream = aData.mStream;
     mSize = aData.mSize;
+    mOverlayId = INVALID_OVERLAY;
   }
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; } ;

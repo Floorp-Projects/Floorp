@@ -37,27 +37,27 @@ async protocol PRtspController
   manager PNecko;
 
 parent:
-  AsyncOpen(URIParams aURI);
-  Play();
-  Pause();
-  Resume();
-  Suspend();
-  Seek(uint64_t offset);
-  Stop();
-  PlaybackEnded();
-  __delete__();
+  async AsyncOpen(URIParams aURI);
+  async Play();
+  async Pause();
+  async Resume();
+  async Suspend();
+  async Seek(uint64_t offset);
+  async Stop();
+  async PlaybackEnded();
+  async __delete__();
 
 child:
-  OnMediaDataAvailable(uint8_t index,
-                       nsCString data,
-                       uint32_t length,
-                       uint32_t offset,
-                       RtspMetadataParam[] meta);
-  OnConnected(uint8_t index,
-              RtspMetadataParam[] meta);
-  OnDisconnected(uint8_t index,
-                 nsresult reason);
-  AsyncOpenFailed(nsresult reason);
+  async OnMediaDataAvailable(uint8_t index,
+                             nsCString data,
+                             uint32_t length,
+                             uint32_t offset,
+                             RtspMetadataParam[] meta);
+  async OnConnected(uint8_t index,
+                    RtspMetadataParam[] meta);
+  async OnDisconnected(uint8_t index,
+                       nsresult reason);
+  async AsyncOpenFailed(nsresult reason);
 };
 
 } //namespace net

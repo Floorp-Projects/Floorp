@@ -36,8 +36,6 @@ IPDL_SOURCES += [
 
 LOCAL_INCLUDES += [
     '../workers',
-    # For nsJARChannel.h
-    '/modules/libjar',
     # For HttpBaseChannel.h dependencies
     '/netwerk/base',
     # For nsDataHandler.h

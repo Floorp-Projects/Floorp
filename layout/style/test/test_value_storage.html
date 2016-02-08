@@ -222,7 +222,8 @@ function test_property(property)
          property + ": " + value + "'");
     }
 
-    if (info.type != CSS_TYPE_TRUE_SHORTHAND) {
+    if (info.type != CSS_TYPE_TRUE_SHORTHAND &&
+          property != "mask") {
       gDeclaration.removeProperty(property);
       gDeclaration.setProperty(property, step1comp, "");
       var func = xfail_compute(property, value) ? todo_is : is;

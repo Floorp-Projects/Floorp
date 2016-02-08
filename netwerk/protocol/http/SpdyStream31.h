@@ -88,6 +88,7 @@ public:
   int64_t  LocalWindow()  { return mLocalWindow; }
 
   bool     BlockedOnRwin() { return mBlockedOnRwin; }
+  bool     ChannelPipeFull();
 
   // A pull stream has an implicit sink, a pushed stream has a sink
   // once it is matched to a pull stream.
@@ -143,10 +144,6 @@ protected:
 
 private:
   friend class nsAutoPtr<SpdyStream31>;
-
-  static PLDHashOperator hdrHashEnumerate(const nsACString &,
-                                          nsAutoPtr<nsCString> &,
-                                          void *);
 
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
   nsresult GenerateSynFrame();

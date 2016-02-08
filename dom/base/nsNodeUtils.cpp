@@ -524,8 +524,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         newDoc->RegisterActivityObserver(aNode->AsElement());
       }
 
-      nsPIDOMWindow* window = newDoc->GetInnerWindow();
-      if (window) {
+      if (nsPIDOMWindowInner* window = newDoc->GetInnerWindow()) {
         EventListenerManager* elm = aNode->GetExistingListenerManager();
         if (elm) {
           window->SetMutationListeners(elm->MutationListenerBits());

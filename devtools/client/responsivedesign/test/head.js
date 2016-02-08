@@ -15,10 +15,14 @@ Services.scriptloader.loadSubScript(gcliHelpersURI, this);
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
   DevToolsUtils.testing = false;
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
+  Services.prefs.clearUserPref("devtools.responsiveUI.currentPreset");
+  Services.prefs.clearUserPref("devtools.responsiveUI.customHeight");
+  Services.prefs.clearUserPref("devtools.responsiveUI.customWidth");
+  Services.prefs.clearUserPref("devtools.responsiveUI.presets");
+  Services.prefs.clearUserPref("devtools.responsiveUI.rotate");
 });
+
+SimpleTest.requestCompleteLog();
 
 /**
  * Open the Responsive Design Mode
@@ -29,19 +33,26 @@ registerCleanupFunction(() => {
 var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
                                    method = "menu") {
   let manager = ResponsiveUI.ResponsiveUIManager;
-  let mgrOn = once(manager, "on");
+
+  let opened = once(manager, "on");
+  let resized = once(manager, "contentResize");
   if (method == "menu") {
     document.getElementById("Tools:ResponsiveUI").doCommand();
   } else {
     synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
   }
-  yield mgrOn;
+  yield opened;
 
   let rdm = manager.getResponsiveUIForTab(tab);
   rdm.transitionsEnabled = false;
   registerCleanupFunction(() => {
     rdm.transitionsEnabled = true;
   });
+
+  // Wait for content to resize.  This is triggered async by the preset menu
+  // auto-selecting its default entry once it's in the document.
+  yield resized;
+
   return {rdm, manager};
 });
 
@@ -50,13 +61,15 @@ var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
  * @param {rdm} ResponsiveUI instance for the tab
  */
 var closeRDM = Task.async(function*(rdm) {
-  let mgr = ResponsiveUI.ResponsiveUIManager;
+  let manager = ResponsiveUI.ResponsiveUIManager;
   if (!rdm) {
-    rdm = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
+    rdm = manager.getResponsiveUIForTab(gBrowser.selectedTab);
   }
-  let mgrOff = mgr.once("off");
+  let closed = once(manager, "off");
+  let resized = once(manager, "contentResize");
   rdm.close();
-  yield mgrOff;
+  yield resized;
+  yield closed;
 });
 
 /**
@@ -90,7 +103,9 @@ var openInspector = Task.async(function*() {
   inspector = toolbox.getPanel("inspector");
 
   info("Waiting for the inspector to update");
-  yield inspector.once("inspector-updated");
+  if (inspector._updateProgress) {
+    yield inspector.once("inspector-updated");
+  }
 
   return {
     toolbox: toolbox,
@@ -125,18 +140,13 @@ function waitForToolboxFrameFocus(toolbox) {
 var openInspectorSideBar = Task.async(function*(id) {
   let {toolbox, inspector} = yield openInspector();
 
-  if (!hasSideBarTab(inspector, id)) {
-    info("Waiting for the " + id + " sidebar to be ready");
-    yield inspector.sidebar.once(id + "-ready");
-  }
-
   info("Selecting the " + id + " sidebar");
   inspector.sidebar.select(id);
 
   return {
     toolbox: toolbox,
     inspector: inspector,
-    view: inspector.sidebar.getWindowForTab(id)[id].view
+    view: inspector[id].view
   };
 });
 
@@ -256,4 +266,39 @@ var selectNode = Task.async(function*(selector, inspector, reason = "test") {
   let updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(nodeFront, reason);
   yield updated;
+});
+
+function waitForResizeTo(manager, width, height) {
+  return new Promise(resolve => {
+    let onResize = (_, data) => {
+      if (data.width != width || data.height != height) {
+        return;
+      }
+      manager.off("contentResize", onResize);
+      info(`Got contentResize to ${width} x ${height}`);
+      resolve();
+    };
+    info(`Waiting for contentResize to ${width} x ${height}`);
+    manager.on("contentResize", onResize);
+  });
+}
+
+var setPresetIndex = Task.async(function*(rdm, manager, index) {
+  info(`Current preset: ${rdm.menulist.selectedIndex}, change to: ${index}`);
+  if (rdm.menulist.selectedIndex != index) {
+    let resized = once(manager, "contentResize");
+    rdm.menulist.selectedIndex = index;
+    yield resized;
+  }
+});
+
+var setSize = Task.async(function*(rdm, manager, width, height) {
+  let size = rdm.getSize();
+  info(`Current size: ${size.width} x ${size.height}, ` +
+       `set to: ${width} x ${height}`);
+  if (size.width != width || size.height != height) {
+    let resized = waitForResizeTo(manager, width, height);
+    rdm.setSize(width, height);
+    yield resized;
+  }
 });

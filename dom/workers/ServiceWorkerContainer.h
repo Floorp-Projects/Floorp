@@ -9,7 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +34,7 @@ public:
 
   static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow);
+  explicit ServiceWorkerContainer(nsPIDOMWindowInner* aWindow);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

@@ -1,6 +1,6 @@
 protocol unreachedDeleteMultiStart {
 child:
-    M1(); M2(); __delete__();
+    async M1(); async M2(); async __delete__();
 
 start state S1:  send M1 goto S2;
 state S2:        send __delete__;

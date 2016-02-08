@@ -61,7 +61,7 @@ ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
   int32_t startOffset = 0, endOffset = 0;
   HRESULT hr;
   if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
-    nsAutoTArray<Attribute, 10> attrs;
+    AutoTArray<Attribute, 10> attrs;
     proxy->TextAttributes(true, aOffset, &attrs, &startOffset, &endOffset);
     hr = AccessibleWrap::ConvertToIA2Attributes(&attrs, aTextAttributes);
   } else {

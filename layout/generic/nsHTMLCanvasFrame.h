@@ -86,7 +86,8 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
+    return nsSplittableFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -95,7 +96,7 @@ public:
 
   // Inserted child content gets its frames parented by our child block
   virtual nsContainerFrame* GetContentInsertionFrame() override {
-    return GetFirstPrincipalChild()->GetContentInsertionFrame();
+    return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
 protected:

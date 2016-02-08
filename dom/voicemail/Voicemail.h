@@ -15,7 +15,7 @@
 class JSObject;
 struct JSContext;
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -42,13 +42,13 @@ public:
                                            DOMEventTargetHelper)
 
   static already_AddRefed<Voicemail>
-  Create(nsPIDOMWindow* aOwner,
+  Create(nsPIDOMWindowInner* aOwner,
          ErrorResult& aRv);
 
   void
   Shutdown();
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -74,7 +74,7 @@ public:
   IMPL_EVENT_HANDLER(statuschanged)
 
 private:
-  Voicemail(nsPIDOMWindow* aWindow,
+  Voicemail(nsPIDOMWindowInner* aWindow,
             nsIVoicemailService* aService);
 
   // final suppresses -Werror,-Wdelete-non-virtual-dtor
@@ -87,7 +87,7 @@ private:
   // |mStatuses| keeps all instantiated VoicemailStatus objects as well as the
   // empty slots for not interested ones. The length of |mStatuses| is decided
   // in the constructor and is never changed ever since.
-  nsAutoTArray<RefPtr<VoicemailStatus>, 1> mStatuses;
+  AutoTArray<RefPtr<VoicemailStatus>, 1> mStatuses;
 
   // Return a nsIVoicemailProvider instance based on the requests from external
   // components. Return nullptr if aOptionalServiceId contains an invalid

@@ -30,6 +30,7 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"  // for TransformFunction, etc
@@ -470,31 +471,15 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   mAnimationData.Clear();
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {
     AnimData* data = mAnimationData.AppendElement();
-    InfallibleTArray<nsAutoPtr<ComputedTimingFunction> >& functions =
+    InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
     const InfallibleTArray<AnimationSegment>& segments =
       mAnimations.ElementAt(i).segments();
     for (uint32_t j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
-      ComputedTimingFunction* ctf = new ComputedTimingFunction();
-      switch (tf.type()) {
-        case TimingFunction::TCubicBezierFunction: {
-          CubicBezierFunction cbf = tf.get_CubicBezierFunction();
-          ctf->Init(nsTimingFunction(cbf.x1(), cbf.y1(), cbf.x2(), cbf.y2()));
-          break;
-        }
-        default: {
-          NS_ASSERTION(tf.type() == TimingFunction::TStepFunction,
-                       "Function must be bezier or step");
-          StepFunction sf = tf.get_StepFunction();
-          nsTimingFunction::Type type = sf.type() == 1 ?
-                                          nsTimingFunction::Type::StepStart :
-                                          nsTimingFunction::Type::StepEnd;
-          ctf->Init(nsTimingFunction(type, sf.steps(),
-                                     nsTimingFunction::Keyword::Explicit));
-          break;
-        }
-      }
+
+      Maybe<ComputedTimingFunction> ctf =
+        AnimationUtils::TimingFunctionToComputedTimingFunction(tf);
       functions.AppendElement(ctf);
     }
 
@@ -1346,7 +1331,7 @@ ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
 void
 ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 {
-  nsAutoTArray<Layer*, 10> toSort;
+  AutoTArray<Layer*, 10> toSort;
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();
@@ -1395,7 +1380,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   } else {
     float opacity = GetEffectiveOpacity();
     CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) ||
+    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && (HasMultipleChildren() || Creates3DContextWithExtendingChildren())) ||
         (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
       useIntermediateSurface = true;
     } else {
@@ -1897,6 +1882,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (!mTransform.IsIdentity()) {
     AppendToString(aStream, mTransform, " [transform=", "]");
   }
+  if (!GetEffectiveTransform().IsIdentity()) {
+    AppendToString(aStream, GetEffectiveTransform(), " [effective-transform=", "]");
+  }
   if (mTransformIsPerspective) {
     aStream << " [perspective]";
   }
@@ -1997,9 +1985,8 @@ DumpRect(layerscope::LayersPacket::Layer::Rect* aLayerRect,
 static void
 DumpRegion(layerscope::LayersPacket::Layer::Region* aLayerRegion, const nsIntRegion& aRegion)
 {
-  nsIntRegionRectIterator it(aRegion);
-  while (const IntRect* sr = it.Next()) {
-    DumpRect(aLayerRegion->add_r(), *sr);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    DumpRect(aLayerRegion->add_r(), iter.Get());
   }
 }
 

@@ -2,8 +2,8 @@ protocol redefState {
 
     // error: redefining state in state machine
 child:
-    Msg();
-    __delete__();
+    async Msg();
+    async __delete__();
 
 state S1: send Msg goto S1;
 

@@ -53,14 +53,14 @@ public:
   nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
                            nsIPrincipal* aLoadingPrincipal,
-                           nsPIDOMWindow* aWindow);
+                           nsPIDOMWindowInner* aWindow);
 
   void FirePendingEvents();
   void Disconnect();
 
   nsresult Init();
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }

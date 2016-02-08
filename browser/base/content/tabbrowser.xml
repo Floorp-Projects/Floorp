@@ -2501,6 +2501,7 @@
             let modifiedAttrs = [];
             if (aOtherTab.hasAttribute("muted")) {
               aOurTab.setAttribute("muted", "true");
+              aOurTab.muteReason = aOtherTab.muteReason;
               ourBrowser.mute();
               modifiedAttrs.push("muted");
             }
@@ -5379,7 +5380,7 @@
             let averageInterval = 0;
             for (let i = 1; i < frameCount; i++) {
               averageInterval += intervals[i];
-            };
+            }
             averageInterval = averageInterval / (frameCount - 1);
 
             Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS").add(averageInterval);
@@ -5502,7 +5503,25 @@
         if (event.target.localName == "tab") {
           this.tabbrowser.removeTab(event.target, {animate: true, byMouse: true});
         } else if (event.originalTarget.localName == "box") {
-          BrowserOpenTab();
+          // The user middleclicked an open space on the tabstrip. This could
+          // be because they intend to open a new tab, but it could also be
+          // because they just removed a tab and they now middleclicked on the
+          // resulting space while that tab is closing. In that case, we don't
+          // want to open a tab. So if we're removing one or more tabs, and
+          // the tab click is before the end of the last visible tab, we do
+          // nothing.
+          if (this.tabbrowser._removingTabs.length) {
+            let visibleTabs = this.tabbrowser.visibleTabs;
+            let ltr = (window.getComputedStyle(this, null).direction == "ltr");
+            let lastTab = visibleTabs[visibleTabs.length - 1];
+            let endOfTab = lastTab.getBoundingClientRect()[ltr ? "right" : "left"];
+            if ((ltr && event.clientX > endOfTab) ||
+                (!ltr && event.clientX < endOfTab)) {
+              BrowserOpenTab();
+            }
+          } else {
+            BrowserOpenTab();
+          }
         } else {
           return;
         }
@@ -6080,6 +6099,25 @@
           return this.getAttribute("hidden") == "true";
         </getter>
       </property>
+      <property name="muted" readonly="true">
+        <getter>
+          return this.getAttribute("muted") == "true";
+        </getter>
+      </property>
+      <!--
+      Describes how the tab ended up in this mute state. May be any of:
+
+       - undefined: The tabs mute state has never changed.
+       - null: The mute state was last changed through the UI.
+       - Any string: The ID was changed through an extension API. The string
+                     must be the ID of the extension which changed it.
+      -->
+      <field name="muteReason">undefined</field>
+      <property name="soundPlaying" readonly="true">
+        <getter>
+          return this.getAttribute("soundplaying") == "true";
+        </getter>
+      </property>
 
       <property name="lastAccessed">
         <getter>
@@ -6162,6 +6200,7 @@
       </method>
 
       <method name="toggleMuteAudio">
+        <parameter name="aMuteReason"/>
         <body>
         <![CDATA[
           let tabContainer = this.parentNode;
@@ -6173,6 +6212,7 @@
             browser.mute();
             this.setAttribute("muted", "true");
           }
+          this.muteReason = aMuteReason || null;
           tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);
         ]]>
         </body>

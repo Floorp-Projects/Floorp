@@ -493,7 +493,21 @@ public class BaseResource implements Resource {
     put(jsonEntity(jsonObject));
   }
 
+  public void put(ExtendedJSONObject o) {
+    put(jsonEntity(o));
+  }
+
   public void post(ExtendedJSONObject o) {
+    post(jsonEntity(o));
+  }
+
+  /**
+   * Perform an HTTP POST as with {@link BaseResource#post(ExtendedJSONObject)}, returning only
+   * after callbacks have been invoked.
+   */
+  public void postBlocking(final ExtendedJSONObject o) {
+    // Until we use the asynchronous Apache HttpClient, we can simply call
+    // through.
     post(jsonEntity(o));
   }
 

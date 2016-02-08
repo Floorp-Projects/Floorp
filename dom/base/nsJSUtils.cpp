@@ -89,9 +89,9 @@ nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
   if (jsGlobal) {
     nsIScriptGlobalObject *scriptGlobal = GetStaticScriptGlobal(jsGlobal);
     if (scriptGlobal) {
-      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptGlobal);
-      if (win)
+      if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(scriptGlobal)) {
         innerWindowID = win->WindowID();
+      }
     }
   }
 

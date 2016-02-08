@@ -211,7 +211,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (IsDisabled())
     return NS_OK;
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return NS_OK;
 
@@ -294,7 +294,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint)
   if (IsDisabled() || (GetStateBits() & NS_FRAME_IS_NONDISPLAY))
     return nullptr;
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return nullptr;
 
@@ -360,7 +360,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
 
   // Fully mark our kid dirty so that it gets resized if necessary
   // (NS_FRAME_HAS_DIRTY_CHILDREN isn't enough in that case):
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   kid->AddStateBits(NS_FRAME_IS_DIRTY);
 
   // Make sure to not allow interrupts if we're not being reflown as a root:
@@ -510,7 +510,7 @@ void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
     // If we haven't had a ReflowSVG() yet, nothing to do.
     return;
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return;
 
@@ -527,7 +527,7 @@ nsSVGForeignObjectFrame::DoReflow()
     return;
 
   nsPresContext *presContext = PresContext();
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
     return;
 
@@ -571,7 +571,7 @@ nsSVGForeignObjectFrame::GetInvalidRegion()
   MOZ_ASSERT(!NS_SVGDisplayListPaintingEnabled(),
              "Only called by nsDisplayOuterSVG code");
 
-  nsIFrame* kid = GetFirstPrincipalChild();
+  nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid->HasInvalidFrameInSubtree()) {
     gfxRect r(mRect.x, mRect.y, mRect.width, mRect.height);
     r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());

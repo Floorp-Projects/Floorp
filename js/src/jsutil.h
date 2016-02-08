@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 
 #include <limits.h>
@@ -132,6 +133,28 @@ ForEach(InputIterT begin, InputIterT end, CallableT f)
 {
     for (; begin != end; ++begin)
         f(*begin);
+}
+
+template <class Container1, class Container2>
+static inline bool
+EqualContainers(const Container1& lhs, const Container2& rhs)
+{
+    if (lhs.length() != rhs.length())
+        return false;
+    for (size_t i = 0, n = lhs.length(); i < n; i++) {
+        if (lhs[i] != rhs[i])
+            return false;
+    }
+    return true;
+}
+
+template <class Container>
+static inline HashNumber
+AddContainerToHash(const Container& c, HashNumber hn = 0)
+{
+    for (size_t i = 0; i < c.length(); i++)
+        hn = mozilla::AddToHash(hn, HashNumber(c[i]));
+    return hn;
 }
 
 template <class T>

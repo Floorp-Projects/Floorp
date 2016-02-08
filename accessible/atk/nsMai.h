@@ -11,6 +11,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "AccessibleOrProxy.h"
 #include "AccessibleWrap.h"
 
 namespace mozilla {
@@ -66,6 +67,7 @@ typedef struct _MaiAtkSocketClass
 
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
+mozilla::a11y::AccessibleOrProxy GetInternalObj(AtkObject* aObj);
 AtkObject* GetWrapperFor(mozilla::a11y::ProxyAccessible* aProxy);
 
 extern int atkMajorVersion, atkMinorVersion;
@@ -95,7 +97,7 @@ struct MaiAtkObject
    * The AccessibleWrap whose properties and features are exported
    * via this object instance.
    */
-  uintptr_t accWrap;
+  mozilla::a11y::AccessibleOrProxy accWrap;
 
   /*
    * Get the AtkHyperlink for this atk object.

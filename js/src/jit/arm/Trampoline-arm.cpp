@@ -205,7 +205,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     }
 
     masm.ma_sub(r8, sp, r8);
-    masm.makeFrameDescriptor(r8, JitFrame_Entry);
+    masm.makeFrameDescriptor(r8, JitFrame_Entry, JitFrameLayout::Size());
 
     masm.startDataTransferM(IsStore, sp, IB, NoWriteBack);
                            // [sp]    = return address (written later)
@@ -283,7 +283,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
         // Enter exit frame.
         masm.addPtr(Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), scratch);
-        masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
+        masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, ExitFrameLayout::Size());
         masm.push(scratch);
         masm.push(Imm32(0)); // Fake return address.
         // No GC things to mark on the stack, push a bare token.
@@ -528,7 +528,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.ma_lsl(Imm32(3), r6, r6);
 
     // Construct sizeDescriptor.
-    masm.makeFrameDescriptor(r6, JitFrame_Rectifier);
+    masm.makeFrameDescriptor(r6, JitFrame_Rectifier, JitFrameLayout::Size());
 
     // Construct JitFrameLayout.
     masm.ma_push(r0); // actual arguments.

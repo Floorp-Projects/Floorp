@@ -48,28 +48,28 @@ prio(normal upto high) sync protocol PDocAccessible
   manager PBrowser;
 
 parent:
-  Shutdown();
+  async Shutdown();
 
   /*
    * Notify the parent process the document in the child process is firing an
    * event.
    */
-  Event(uint64_t aID, uint32_t type);
-  ShowEvent(ShowEventData data);
-  HideEvent(uint64_t aRootID);
-  StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
-  CaretMoveEvent(uint64_t aID, int32_t aOffset);
-  TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
-                  bool aIsInsert, bool aFromUser);
+  async Event(uint64_t aID, uint32_t type);
+  async ShowEvent(ShowEventData data);
+  async HideEvent(uint64_t aRootID);
+  async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
+  async CaretMoveEvent(uint64_t aID, int32_t aOffset);
+  async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
+                        bool aIsInsert, bool aFromUser);
 
   /*
    * Tell the parent document to bind the existing document as a new child
    * document.
    */
-  BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+  async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
 
 child:
-  __delete__();
+  async __delete__();
 
   // Accessible
   prio(high) sync State(uint64_t aID) returns(uint64_t states);
@@ -132,13 +132,13 @@ child:
   prio(high) sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
     returns(bool aSucceeded);
 
-  ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
-                    uint32_t aScrollType);
-  ScrollSubstringToPoint(uint64_t aID,
-                         int32_t aStartOffset,
-                         int32_t aEndOffset,
-                         uint32_t aCoordinateType,
-                         int32_t aX, int32_t aY);
+  async ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+                          uint32_t aScrollType);
+  async ScrollSubstringToPoint(uint64_t aID,
+                               int32_t aStartOffset,
+                               int32_t aEndOffset,
+                               uint32_t aCoordinateType,
+                               int32_t aX, int32_t aY);
 
   prio(high) sync Text(uint64_t aID) returns(nsString aText);
   prio(high) sync ReplaceText(uint64_t aID, nsString aText);

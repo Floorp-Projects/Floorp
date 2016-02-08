@@ -78,7 +78,7 @@ function frameScript() {
         }
 
         if (!re) {
-          return;
+          return undefined;
         }
 
         let match = elt.textContent.match(re);

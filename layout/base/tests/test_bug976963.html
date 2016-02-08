@@ -15,7 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=976963
         SimpleTest.requestFlakyTimeout("untriaged");
         SpecialPowers.pushPrefEnv({
           "set": [
-            ["dom.w3c_pointer_events.enabled", true]
+            ["dom.w3c_pointer_events.enabled", true],
+            ["layout.reflow.synthMouseMove", false]
           ]
         }, startTest);
       }

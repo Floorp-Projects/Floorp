@@ -96,7 +96,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
 
   NS_ENSURE_TRUE_VOID(parentObject);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(parentObject);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
   mNewCues = new TextTrackCueList(window);
   mTextTracks = new TextTrackList(window, this);
   mPendingTextTracks = new TextTrackList(window, this);
@@ -222,7 +222,7 @@ TextTrackManager::UpdateCueDisplay()
                        activeCues.Length(),
                        static_cast<void*>(activeCues.Elements()));
 
-    nsPIDOMWindow* window = mMediaElement->OwnerDoc()->GetWindow();
+    nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (window) {
       sParserWrapper->ProcessCues(window, jsCues, overlay);
     }

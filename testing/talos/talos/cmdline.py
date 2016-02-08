@@ -111,8 +111,6 @@ def create_parser(mach_interface=False):
         add_arg('--develop', action='store_true', default=False,
                 help="useful for running tests on a developer machine."
                      " Doesn't upload to the graph servers.")
-    add_arg('--responsiveness', action='store_true',
-            help="turn on responsiveness collection")
     add_arg("--cycles", type=int,
             help="number of browser cycles to run")
     add_arg("--tpmanifest",

@@ -33,14 +33,14 @@ protocol PBackgroundIDBFactoryRequest
   manager PBackgroundIDBFactory;
 
 child:
-  __delete__(FactoryRequestResponse response);
+  async __delete__(FactoryRequestResponse response);
 
-  PermissionChallenge(PrincipalInfo principalInfo);
+  async PermissionChallenge(PrincipalInfo principalInfo);
 
-  Blocked(uint64_t currentVersion);
+  async Blocked(uint64_t currentVersion);
 
 parent:
-  PermissionRetry();
+  async PermissionRetry();
 };
 
 } // namespace indexedDB

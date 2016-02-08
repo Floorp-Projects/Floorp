@@ -9,6 +9,7 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsNetCID.h"
 #include "nspr.h"
 
 extern "C" {

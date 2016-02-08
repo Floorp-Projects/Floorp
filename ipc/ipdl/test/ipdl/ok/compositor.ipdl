@@ -4,7 +4,7 @@ sync protocol compositor {
     bridges compositor, content;
 
 child:
-    __delete__();
+    async __delete__();
 
 state DEAD:
     send __delete__;

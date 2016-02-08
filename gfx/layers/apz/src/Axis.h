@@ -251,7 +251,14 @@ public:
 
 protected:
   ParentLayerCoord mPos;
-  uint32_t mPosTimeMs;
+
+  // mVelocitySampleTimeMs and mVelocitySamplePos are the time and position
+  // used in the last velocity sampling. They get updated when a new sample is
+  // taken (which may not happen on every input event, if the time delta is too
+  // small).
+  uint32_t mVelocitySampleTimeMs;
+  ParentLayerCoord mVelocitySamplePos;
+
   ParentLayerCoord mStartPos;
   float mVelocity;      // Units: ParentLayerCoords per millisecond
   bool mAxisLocked;     // Whether movement on this axis is locked.

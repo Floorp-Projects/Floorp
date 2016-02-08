@@ -64,3 +64,7 @@
 
     // Allow XUL and XBL files to be opened from file:// URIs
     branch.setBoolPref("dom.allow_XUL_XBL_for_file", true);
+
+    // Allow view-source URIs to be opened from URIs that share
+    // their protocol with the inner URI of the view-source URI
+    branch.setBoolPref("security.view-source.reachable-from-inner-protocol", true);

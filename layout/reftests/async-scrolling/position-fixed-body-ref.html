@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html reftest-async-scroll>
+<style>
+body {
+  height: 100vh;
+  margin: 0px;
+}
+#scrollbox {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#scrolledContents {
+  height: 10000px;
+  background: radial-gradient(circle, blue 30%, transparent 0);
+  background-size: 80px 80px;
+}
+</style>
+<body>
+  <div id="scrollbox"
+       reftest-dislayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="20">
+    <div id="scrolledContents"></div>
+  </div>
+</body>
+</html>

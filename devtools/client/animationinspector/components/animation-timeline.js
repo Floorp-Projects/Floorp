@@ -357,16 +357,19 @@ AnimationsTimeline.prototype = {
   },
 
   startAnimatingScrubber: function(time) {
-    let x = TimeScale.startTimeToDistance(time);
-    this.scrubberEl.style.left = x + "%";
-
-    // Only stop the scrubber if it's out of bounds or all animations have been
-    // paused, but not if at least an animation is infinite.
     let isOutOfBounds = time < TimeScale.minStartTime ||
                         time > TimeScale.maxEndTime;
     let isAllPaused = !this.isAtLeastOneAnimationPlaying();
     let hasInfinite = this.hasInfiniteAnimations();
 
+    let x = TimeScale.startTimeToDistance(time);
+    if (x > 100 && !hasInfinite) {
+      x = 100;
+    }
+    this.scrubberEl.style.left = x + "%";
+
+    // Only stop the scrubber if it's out of bounds or all animations have been
+    // paused, but not if at least an animation is infinite.
     if (isAllPaused || (isOutOfBounds && !hasInfinite)) {
       this.stopAnimatingScrubber();
       this.emit("timeline-data-changed", {
@@ -410,15 +413,20 @@ AnimationsTimeline.prototype = {
 
   drawHeaderAndBackground: function() {
     let width = this.timeHeaderEl.offsetWidth;
-    let scale = width / (TimeScale.maxEndTime - TimeScale.minStartTime);
+    let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
+    let minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+    let intervalLength = findOptimalTimeInterval(minTimeInterval);
+    let intervalWidth = intervalLength * width / animationDuration;
+
     drawGraphElementBackground(this.win.document, "time-graduations",
-                               width, scale);
+                               width, intervalWidth);
 
     // And the time graduation header.
     this.timeHeaderEl.innerHTML = "";
-    let interval = findOptimalTimeInterval(scale, TIME_GRADUATION_MIN_SPACING);
-    for (let i = 0; i < width; i += interval) {
-      let pos = 100 * i / width;
+
+    for (let i = 0; i <= width / intervalWidth; i++) {
+      let pos = 100 * i * intervalWidth / width;
+
       createNode({
         parent: this.timeHeaderEl,
         nodeType: "span",

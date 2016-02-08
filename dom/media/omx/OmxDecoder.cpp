@@ -35,7 +35,6 @@
 #include "mozilla/Logging.h"
 
 #include "GonkNativeWindow.h"
-#include "GonkNativeWindowClient.h"
 #include "OMXCodecProxy.h"
 #include "OmxDecoder.h"
 

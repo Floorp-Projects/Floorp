@@ -17,7 +17,7 @@ namespace xpc {
 
 bool
 InterposeProperty(JSContext* cx, JS::HandleObject target, const nsIID* iid, JS::HandleId id,
-                  JS::MutableHandle<JSPropertyDescriptor> descriptor);
+                  JS::MutableHandle<JS::PropertyDescriptor> descriptor);
 
 bool
 InterposeCall(JSContext* cx, JS::HandleObject wrapper,
@@ -30,9 +30,9 @@ class AddonWrapper : public Base {
 
     virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
-                                JS::Handle<JSPropertyDescriptor> desc,
+                                JS::Handle<JS::PropertyDescriptor> desc,
                                 JS::ObjectOpResult& result) const override;
     virtual bool delete_(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                          JS::ObjectOpResult& result) const override;
@@ -45,7 +45,7 @@ class AddonWrapper : public Base {
 
     virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
 
     static const AddonWrapper singleton;
 };

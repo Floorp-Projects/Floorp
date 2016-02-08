@@ -17,6 +17,7 @@
 #include "AudioCompactor.h"
 #include "Intervals.h"
 #include "TimeUnits.h"
+#include "SeekTarget.h"
 
 namespace mozilla {
 
@@ -78,7 +79,7 @@ public:
     MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
   using VideoDataPromise =
     MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
-  using SeekPromise = MozPromise<int64_t, nsresult, IsExclusive>;
+  using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
@@ -177,7 +178,7 @@ public:
   // Moves the decode head to aTime microseconds. aEndTime denotes the end
   // time of the media in usecs. This is only needed for OggReader, and should
   // probably be removed somehow.
-  virtual RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) = 0;
+  virtual RefPtr<SeekPromise> Seek(SeekTarget aTarget, int64_t aEndTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media

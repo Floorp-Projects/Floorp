@@ -23,9 +23,8 @@ using mozilla::dom::DOMCursor;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
 
-DOMRequest::DOMRequest(nsPIDOMWindow* aWindow)
-  : DOMEventTargetHelper(aWindow->IsInnerWindow() ?
-                           aWindow : aWindow->GetCurrentInnerWindow())
+DOMRequest::DOMRequest(nsPIDOMWindowInner* aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mResult(JS::UndefinedValue())
   , mDone(false)
 {
@@ -240,24 +239,24 @@ DOMRequest::Then(JSContext* aCx, AnyCallback* aResolveCallback,
 NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
 
 NS_IMETHODIMP
-DOMRequestService::CreateRequest(nsIDOMWindow* aWindow,
+DOMRequestService::CreateRequest(mozIDOMWindow* aWindow,
                                  nsIDOMDOMRequest** aRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
-  NS_ENSURE_STATE(win);
+  NS_ENSURE_STATE(aWindow);
+  auto* win = nsPIDOMWindowInner::From(aWindow);
   NS_ADDREF(*aRequest = new DOMRequest(win));
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMRequestService::CreateCursor(nsIDOMWindow* aWindow,
+DOMRequestService::CreateCursor(mozIDOMWindow* aWindow,
                                 nsICursorContinueCallback* aCallback,
                                 nsIDOMDOMCursor** aCursor)
 {
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
-  NS_ENSURE_STATE(win);
+  NS_ENSURE_STATE(aWindow);
+  auto* win = nsPIDOMWindowInner::From(aWindow);
   NS_ADDREF(*aCursor = new DOMCursor(win, aCallback));
 
   return NS_OK;

@@ -464,15 +464,17 @@
     <tooltip id="dynamic-shortcut-tooltip"
              onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
 
-    <menupopup id="emeNotificationsPopup">
-      <menuitem id="emeNotificationsNotNow"
-                label="&emeNotificationsNotNow.label;"
-                acceskey="&emeNotificationsNotNow.accesskey;"
-                oncommand="gEMEHandler.onNotNow(this);"/>
-      <menuitem id="emeNotificationsDontAskAgain"
-                label="&emeNotificationsDontAskAgain.label;"
-                acceskey="&emeNotificationsDontAskAgain.accesskey;"
-                oncommand="gEMEHandler.onDontAskAgain(this);"/>
+    <menupopup id="SyncedTabsSidebarContext">
+      <menuitem label="&syncedTabs.context.openTab.label;"
+                accesskey="&syncedTabs.context.openTab.accesskey;"
+                id="syncedTabsOpenSelected"/>
+      <menuitem label="&syncedTabs.context.bookmarkSingleTab.label;"
+                accesskey="&syncedTabs.context.bookmarkSingleTab.accesskey;"
+                id="syncedTabsBookmarkSelected"/>
+      <menuseparator/>
+      <menuitem label="&syncedTabs.context.refreshList.label;"
+                accesskey="&syncedTabs.context.refreshList.accesskey;"
+                id="syncedTabsRefresh"/>
     </menupopup>
   </popupset>
 
@@ -670,10 +672,6 @@
               <box id="notification-popup-box" hidden="true" align="center">
                 <image id="default-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.defaultNotificationAnchor.label;"/>
-                <!-- NB: the identity-notification-icon is used for persona-based auth and preffed
-                     off by default. It hasn't been updated for some time and liable to being
-                     removed.-->
-                <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="geo-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
                 <image id="addons-notification-icon" class="notification-anchor-icon" role="button"
@@ -813,30 +811,6 @@
                       label="&showAllBookmarks2.label;"
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
-            <menuseparator/>
-            <menuitem id="BMB_subscribeToPageMenuitem"
-#ifndef XP_MACOSX
-                      class="menuitem-iconic subviewbutton"
-#else
-                      class="subviewbutton"
-#endif
-                      label="&subscribeToPageMenuitem.label;"
-                      oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                      onclick="checkForMiddleClick(this, event);"
-                      observes="singleFeedMenuitemState"/>
-            <menu id="BMB_subscribeToPageMenupopup"
-#ifndef XP_MACOSX
-                  class="menu-iconic subviewbutton"
-#else
-                  class="subviewbutton"
-#endif
-                  label="&subscribeToPageMenupopup.label;"
-                  observes="multipleFeedsMenuState">
-              <menupopup id="BMB_subscribeToPageSubmenuMenupopup"
-                         onpopupshowing="return FeedHandler.buildFeedList(event.target);"
-                         oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                         onclick="checkForMiddleClick(this, event);"/>
-            </menu>
             <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
                   class="menu-iconic bookmark-item subviewbutton"

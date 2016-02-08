@@ -149,12 +149,12 @@ public:
         mDirection(direction),
         mMoved(false)
     {
-        MOZ_ASSERT(mMessageName);
+        MOZ_RELEASE_ASSERT(mMessageName);
     }
 
     InterruptFrame(InterruptFrame&& aOther)
     {
-        MOZ_ASSERT(aOther.mMessageName);
+        MOZ_RELEASE_ASSERT(aOther.mMessageName);
         mMessageName = aOther.mMessageName;
         aOther.mMessageName = nullptr;
         aOther.mMoved = true;
@@ -166,7 +166,7 @@ public:
 
     ~InterruptFrame()
     {
-        MOZ_ASSERT_IF(!mMessageName, mMoved);
+        MOZ_RELEASE_ASSERT(mMessageName || mMoved);
     }
 
     InterruptFrame& operator=(InterruptFrame&& aOther)
@@ -213,7 +213,7 @@ private:
     int32_t mMessageRoutingId;
     Semantics mMesageSemantics;
     Direction mDirection;
-    DebugOnly<bool> mMoved;
+    bool mMoved;
 
     // Disable harmful methods.
     InterruptFrame(const InterruptFrame& aOther) = delete;
@@ -248,7 +248,7 @@ public:
     ~CxxStackFrame() {
         mThat.AssertWorkerThread();
 
-        MOZ_ASSERT(!mThat.mCxxStackFrames.empty());
+        MOZ_RELEASE_ASSERT(!mThat.mCxxStackFrames.empty());
 
         const InterruptFrame& frame = mThat.mCxxStackFrames.back();
         bool exitingSync = frame.IsOutgoingSync();
@@ -280,31 +280,6 @@ private:
     CxxStackFrame& operator=(const CxxStackFrame&) = delete;
 };
 
-namespace {
-
-class MOZ_RAII MaybeScriptBlocker {
-public:
-    explicit MaybeScriptBlocker(MessageChannel *aChannel, bool aBlock
-                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mBlocked(aChannel->ShouldBlockScripts() && aBlock)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (mBlocked) {
-            nsContentUtils::AddScriptBlocker();
-        }
-    }
-    ~MaybeScriptBlocker() {
-        if (mBlocked) {
-            nsContentUtils::RemoveScriptBlocker();
-        }
-    }
-private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    bool mBlocked;
-};
-
-} // namespace
-
 MessageChannel::MessageChannel(MessageListener *aListener)
   : mListener(aListener),
     mChannelState(ChannelClosed),
@@ -316,6 +291,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mTimeoutMs(kNoTimeout),
     mInTimeoutSecondHalf(false),
     mNextSeqno(0),
+    mLastSendError(SyncSendError::SendSuccess),
     mAwaitingSyncReply(false),
     mAwaitingSyncReplyPriority(0),
     mDispatchingSyncMessage(false),
@@ -323,6 +299,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDispatchingAsyncMessage(false),
     mDispatchingAsyncMessagePriority(0),
     mCurrentTransaction(0),
+    mPendingSendPriorities(0),
     mTimedOutMessageSeqno(0),
     mTimedOutMessagePriority(0),
     mRecvdErrors(0),
@@ -330,7 +307,6 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mSawInterruptOutMsg(false),
     mIsWaitingForIncoming(false),
     mAbortOnError(false),
-    mBlockScripts(false),
     mFlags(REQUIRE_DEFAULT),
     mPeerPidSet(false),
     mPeerPid(-1)
@@ -352,7 +328,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    NS_ASSERTION(mEvent, "CreateEvent failed! Nothing is going to work!");
+    MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
 }
 
@@ -361,8 +337,8 @@ MessageChannel::~MessageChannel()
     MOZ_COUNT_DTOR(ipc::MessageChannel);
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
-    DebugOnly<BOOL> ok = CloseHandle(mEvent);
-    MOZ_ASSERT(ok);
+    BOOL ok = CloseHandle(mEvent);
+    MOZ_RELEASE_ASSERT(ok);
 #endif
     Clear();
 }
@@ -490,7 +466,7 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
-    NS_ASSERTION(ChannelConnected == mChannelState, "not connected when awoken");
+    MOZ_RELEASE_ASSERT(ChannelConnected == mChannelState, "not connected when awoken");
     return (ChannelConnected == mChannelState);
 }
 
@@ -507,8 +483,8 @@ MessageChannel::OnOpenAsSlave(MessageChannel *aTargetChan, Side aSide)
     mMonitor = aTargetChan->mMonitor;
 
     MonitorAutoLock lock(*mMonitor);
-    NS_ASSERTION(ChannelOpening == aTargetChan->mChannelState,
-                 "Target channel not in the process of opening");
+    MOZ_RELEASE_ASSERT(ChannelOpening == aTargetChan->mChannelState,
+                          "Target channel not in the process of opening");
     mChannelState = ChannelConnected;
     aTargetChan->mChannelState = ChannelConnected;
     aTargetChan->mMonitor->Notify();
@@ -570,9 +546,10 @@ MessageChannel::Send(Message* aMsg)
 class CancelMessage : public IPC::Message
 {
 public:
-    CancelMessage() :
+    explicit CancelMessage(int transaction) :
         IPC::Message(MSG_ROUTING_NONE, CANCEL_MESSAGE_TYPE, PRIORITY_NORMAL)
     {
+        set_transaction_id(transaction);
     }
     static bool Read(const Message* msg) {
         return true;
@@ -600,20 +577,9 @@ MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg)
             return true;
         } else if (CANCEL_MESSAGE_TYPE == aMsg.type()) {
             IPC_LOG("Cancel from message");
-
-            if (aMsg.transaction_id() == mTimedOutMessageSeqno) {
-                // An unusual case: We timed out a transaction which the other
-                // side then cancelled. In this case we just leave the timedout
-                // state and try to forget this ever happened.
-                mTimedOutMessageSeqno = 0;
-                return true;
-            } else {
-                MOZ_RELEASE_ASSERT(mCurrentTransaction == aMsg.transaction_id());
-                CancelCurrentTransactionInternal();
-                NotifyWorkerThread();
-                IPC_LOG("Notified");
-                return true;
-            }
+            CancelTransaction(aMsg.transaction_id());
+            NotifyWorkerThread();
+            return true;
         }
     }
     return false;
@@ -630,7 +596,7 @@ MessageChannel::ShouldDeferMessage(const Message& aMsg)
 
     // Unless they're urgent, we always defer async messages.
     if (!aMsg.is_sync()) {
-        MOZ_ASSERT(aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
+        MOZ_RELEASE_ASSERT(aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
         return true;
     }
 
@@ -688,14 +654,14 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
         if (aMsg.seqno() == mTimedOutMessageSeqno) {
             // Drop the message, but allow future sync messages to be sent.
             IPC_LOG("Received reply to timedout message; igoring; xid=%d", mTimedOutMessageSeqno);
-            mTimedOutMessageSeqno = 0;
+            EndTimeout();
             return;
         }
 
-        MOZ_ASSERT(aMsg.transaction_id() == mCurrentTransaction);
-        MOZ_ASSERT(AwaitingSyncReply());
-        MOZ_ASSERT(!mRecvd);
-        MOZ_ASSERT(!mTimedOutMessageSeqno);
+        MOZ_RELEASE_ASSERT(aMsg.transaction_id() == mCurrentTransaction);
+        MOZ_RELEASE_ASSERT(AwaitingSyncReply());
+        MOZ_RELEASE_ASSERT(!mRecvd);
+        MOZ_RELEASE_ASSERT(!mTimedOutMessageSeqno);
 
         // Rather than storing errors in mRecvd, we mark them in
         // mRecvdErrors. We need a counter because multiple replies can arrive
@@ -717,8 +683,8 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     }
 
     // Prioritized messages cannot be compressed.
-    MOZ_ASSERT_IF(aMsg.compress_type() != IPC::Message::COMPRESSION_NONE,
-                  aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
+    MOZ_RELEASE_ASSERT(aMsg.compress_type() == IPC::Message::COMPRESSION_NONE ||
+                          aMsg.priority() == IPC::Message::PRIORITY_NORMAL);
 
     bool compress = false;
     if (aMsg.compress_type() == IPC::Message::COMPRESSION_ENABLED) {
@@ -729,8 +695,8 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
             // This message type has compression enabled, and the back of the
             // queue was the same message type and routed to the same destination.
             // Replace it with the newer message.
-            MOZ_ASSERT(mPending.back().compress_type() ==
-                       IPC::Message::COMPRESSION_ENABLED);
+            MOZ_RELEASE_ASSERT(mPending.back().compress_type() ==
+                                  IPC::Message::COMPRESSION_ENABLED);
             mPending.pop_back();
         }
     } else if (aMsg.compress_type() == IPC::Message::COMPRESSION_ALL) {
@@ -743,14 +709,22 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
             // Erase it.  Note that, since we always compress these redundancies, There Can
             // Be Only One.
             compress = true;
-            MOZ_ASSERT((*it).compress_type() == IPC::Message::COMPRESSION_ALL);
+            MOZ_RELEASE_ASSERT((*it).compress_type() == IPC::Message::COMPRESSION_ALL);
             mPending.erase((++it).base());
         }
     }
 
+    bool wakeUpSyncSend = AwaitingSyncReply() && !ShouldDeferMessage(aMsg);
+
     bool shouldWakeUp = AwaitingInterruptReply() ||
-                        (AwaitingSyncReply() && !ShouldDeferMessage(aMsg)) ||
+                        wakeUpSyncSend ||
                         AwaitingIncomingMessage();
+
+    // Although we usually don't need to post an OnMaybeDequeueOne task if
+    // shouldWakeUp is true, it's easier to post anyway than to have to
+    // guarantee that every Send call processes everything it's supposed to
+    // before returning.
+    bool shouldPostTask = !shouldWakeUp || wakeUpSyncSend;
 
     IPC_LOG("Receive on link thread; seqno=%d, xid=%d, shouldWakeUp=%d",
             aMsg.seqno(), aMsg.transaction_id(), shouldWakeUp);
@@ -781,10 +755,9 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 
     if (shouldWakeUp) {
         NotifyWorkerThread();
-    } else {
-        // Worker thread is either not blocked on a reply, or this is an
-        // incoming Interrupt that raced with outgoing sync, and needs to be
-        // deferred to a later event-loop iteration.
+    }
+
+    if (shouldPostTask) {
         if (!compress) {
             // If we compressed away the previous message, we'll re-use
             // its pending task.
@@ -794,17 +767,28 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
-MessageChannel::ProcessPendingRequests(int transaction, int prio)
+MessageChannel::ProcessPendingRequests(int seqno, int transaction)
 {
-    IPC_LOG("ProcessPendingRequests");
+    IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d", seqno, transaction);
 
     // Loop until there aren't any more priority messages to process.
     for (;;) {
+        // If we canceled during ProcessPendingRequest, then we need to leave
+        // immediately because the results of ShouldDeferMessage will be
+        // operating with weird state (as if no Send is in progress). That could
+        // cause even normal priority sync messages to be processed (but not
+        // normal priority async messages), which would break message ordering.
+        if (WasTransactionCanceled(transaction)) {
+            return;
+        }
+
         mozilla::Vector<Message> toProcess;
 
         for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
             Message &msg = *it;
 
+            MOZ_RELEASE_ASSERT(mCurrentTransaction == transaction,
+                                  "Calling ShouldDeferMessage when cancelled");
             bool defer = ShouldDeferMessage(msg);
 
             // Only log the interesting messages.
@@ -829,65 +813,34 @@ MessageChannel::ProcessPendingRequests(int transaction, int prio)
 
         for (auto it = toProcess.begin(); it != toProcess.end(); it++)
             ProcessPendingRequest(*it);
-
-        // If we canceled during ProcessPendingRequest, then we need to leave
-        // immediately because the results of ShouldDeferMessage will be
-        // operating with weird state (as if no Send is in progress). That could
-        // cause even normal priority sync messages to be processed (but not
-        // normal priority async messages), which would break message ordering.
-        if (WasTransactionCanceled(transaction, prio)) {
-            return;
-        }
     }
 }
 
 bool
-MessageChannel::WasTransactionCanceled(int transaction, int prio)
+MessageChannel::WasTransactionCanceled(int transaction)
 {
-    if (transaction == mCurrentTransaction) {
-        return false;
+    if (transaction != mCurrentTransaction) {
+        // Imagine this scenario:
+        // 1. Child sends high prio sync message H1.
+        // 2. Parent sends reply to H1.
+        // 3. Parent sends high prio sync message H2.
+        // 4. Child's link thread receives H1 reply and H2 before worker wakes up.
+        // 5. Child dispatches H2 while still waiting for H1 reply.
+        // 6. Child cancels H2.
+        //
+        // In this case H1 will also be considered cancelled. However, its
+        // reply is still sitting in mRecvd, which can trip up later Sends. So
+        // we null it out here.
+        mRecvd = nullptr;
+        return true;
     }
-
-    // This isn't an assert so much as an intentional crash because we're in a
-    // situation that we don't know how to recover from: The child is awaiting
-    // a reply to a normal-priority sync message. The transaction that this
-    // message initiated has now been canceled. That could only happen if a CPOW
-    // raced with the sync message and was dispatched by the child while the
-    // child was awaiting the sync reply; at some point while dispatching the
-    // CPOW, the transaction was canceled.
-    //
-    // Notes:
-    //
-    // 1. We don't want to cancel the normal-priority sync message along with
-    // the CPOWs because the browser relies on these messages working
-    // reliably.
-    //
-    // 2. Ideally we would like to avoid dispatching CPOWs while awaiting a sync
-    // response. This isn't possible though. To avoid deadlock, the parent would
-    // have to dispatch the sync message while waiting for the CPOW
-    // response. However, it wouldn't have dispatched async messages at that
-    // time, so we would have a message ordering bug. Dispatching the async
-    // messages first causes other hard-to-handle situations (what if they send
-    // CPOWs?).
-    //
-    // 3. We would like to be able to cancel the CPOWs but not the sync
-    // message. However, that would leave both the parent and the child running
-    // code at the same time, all while the sync message is still
-    // outstanding. That can cause a problem where message replies are received
-    // out of order.
-    IPC_ASSERT(prio != IPC::Message::PRIORITY_NORMAL,
-               "Intentional crash: We canceled a CPOW that was racing with a sync message.");
-
-    return true;
+    return false;
 }
 
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
     nsAutoPtr<Message> msg(aMsg);
-
-    // See comment in DispatchSyncMessage.
-    MaybeScriptBlocker scriptBlocker(this, true);
 
     // Sanity checks.
     AssertWorkerThread();
@@ -908,6 +861,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // message receives a reply, we'll be able to send more sync messages
         // again.
         IPC_LOG("Send() failed due to previous timeout");
+        mLastSendError = SyncSendError::PreviousTimeout;
         return false;
     }
 
@@ -918,6 +872,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // Don't allow sending CPOWs while we're dispatching a sync message.
         // If you want to do that, use sendRpcMessage instead.
         IPC_LOG("Prio forbids send");
+        mLastSendError = SyncSendError::SendingCPOWWhileDispatchingSync;
         return false;
     }
 
@@ -928,7 +883,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // Generally only the parent dispatches urgent messages. And the only
         // sync messages it can send are high-priority. Mainly we want to ensure
         // here that we don't return false for non-CPOW messages.
-        MOZ_ASSERT(msg->priority() == IPC::Message::PRIORITY_HIGH);
+        MOZ_RELEASE_ASSERT(msg->priority() == IPC::Message::PRIORITY_HIGH);
+        IPC_LOG("Sending while dispatching urgent message");
+        mLastSendError = SyncSendError::SendingCPOWWhileDispatchingUrgent;
         return false;
     }
 
@@ -936,12 +893,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         (msg->priority() < DispatchingSyncMessagePriority() ||
          msg->priority() < AwaitingSyncReplyPriority()))
     {
-        MOZ_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
+        MOZ_RELEASE_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
         IPC_LOG("Cancel from Send");
-        CancelMessage *cancel = new CancelMessage();
-        cancel->set_transaction_id(mCurrentTransaction);
+        CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
+        CancelTransaction(mCurrentTransaction);
         mLink->SendMessage(cancel);
-        CancelCurrentTransactionInternal();
     }
 
     IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
@@ -960,6 +916,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     if (!Connected()) {
         ReportConnectionError("MessageChannel::SendAndWait", msg);
+        mLastSendError = SyncSendError::NotConnectedBeforeSend;
         return false;
     }
 
@@ -967,30 +924,33 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     int32_t seqno = msg->seqno();
     int prio = msg->priority();
-    DebugOnly<msgid_t> replyType = msg->type() + 1;
+    msgid_t replyType = msg->type() + 1;
 
     AutoSetValue<bool> replies(mAwaitingSyncReply, true);
     AutoSetValue<int> prioSet(mAwaitingSyncReplyPriority, prio);
     AutoEnterTransaction transact(this, seqno);
 
+    int prios = mPendingSendPriorities | (1 << prio);
+    AutoSetValue<int> priosSet(mPendingSendPriorities, prios);
+
     int32_t transaction = mCurrentTransaction;
     msg->set_transaction_id(transaction);
 
-    IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
-
-    ProcessPendingRequests(transaction, prio);
-    if (WasTransactionCanceled(transaction, prio)) {
-        IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
-        return false;
-    }
+    IPC_LOG("Send seqno=%d, xid=%d, pending=%d", seqno, transaction, prios);
 
     bool handleWindowsMessages = mListener->HandleWindowsMessages(*aMsg);
     mLink->SendMessage(msg.forget());
 
     while (true) {
-        ProcessPendingRequests(transaction, prio);
-        if (WasTransactionCanceled(transaction, prio)) {
+        ProcessPendingRequests(seqno, transaction);
+        if (WasTransactionCanceled(transaction)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+            mLastSendError = SyncSendError::CancelledAfterSend;
+            return false;
+        }
+        if (!Connected()) {
+            ReportConnectionError("MessageChannel::Send");
+            mLastSendError = SyncSendError::DisconnectedDuringSend;
             return false;
         }
 
@@ -998,6 +958,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         if (mRecvdErrors) {
             IPC_LOG("Error: seqno=%d, xid=%d", seqno, transaction);
             mRecvdErrors--;
+            mLastSendError = SyncSendError::ReplyError;
             return false;
         }
 
@@ -1006,18 +967,20 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             break;
         }
 
-        MOZ_ASSERT(!mTimedOutMessageSeqno);
+        MOZ_RELEASE_ASSERT(!mTimedOutMessageSeqno);
 
-        MOZ_ASSERT(mCurrentTransaction == transaction);
+        MOZ_RELEASE_ASSERT(mCurrentTransaction == transaction);
         bool maybeTimedOut = !WaitForSyncNotify(handleWindowsMessages);
 
         if (!Connected()) {
             ReportConnectionError("MessageChannel::SendAndWait");
+            mLastSendError = SyncSendError::DisconnectedDuringSend;
             return false;
         }
 
-        if (WasTransactionCanceled(transaction, prio)) {
+        if (WasTransactionCanceled(transaction)) {
             IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+            mLastSendError = SyncSendError::CancelledAfterSend;
             return false;
         }
 
@@ -1025,35 +988,43 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // if neither side has any other message Sends on the stack).
         bool canTimeOut = transaction == seqno;
         if (maybeTimedOut && canTimeOut && !ShouldContinueFromTimeout()) {
-            IPC_LOG("Timing out Send: xid=%d", transaction);
-
-            // We might have received a reply during WaitForSyncNotify or inside
-            // ShouldContinueFromTimeout (which drops the lock). We need to make
-            // sure not to set mTimedOutMessageSeqno if that happens, since then
-            // there would be no way to unset it.
+            // Since ShouldContinueFromTimeout drops the lock, we need to
+            // re-check all our conditions here. We shouldn't time out if any of
+            // these things happen because there won't be a reply to the timed
+            // out message in these cases.
+            if (WasTransactionCanceled(transaction)) {
+                IPC_LOG("Other side canceled seqno=%d, xid=%d", seqno, transaction);
+                mLastSendError = SyncSendError::CancelledAfterSend;
+                return false;
+            }
             if (mRecvdErrors) {
                 mRecvdErrors--;
+                mLastSendError = SyncSendError::ReplyError;
                 return false;
             }
             if (mRecvd) {
                 break;
             }
 
+            IPC_LOG("Timing out Send: xid=%d", transaction);
+
             mTimedOutMessageSeqno = seqno;
             mTimedOutMessagePriority = prio;
+            mLastSendError = SyncSendError::TimedOut;
             return false;
         }
     }
 
-    MOZ_ASSERT(mRecvd);
-    MOZ_ASSERT(mRecvd->is_reply(), "expected reply");
-    MOZ_ASSERT(!mRecvd->is_reply_error());
-    MOZ_ASSERT(mRecvd->type() == replyType, "wrong reply type");
-    MOZ_ASSERT(mRecvd->seqno() == seqno);
-    MOZ_ASSERT(mRecvd->is_sync());
+    MOZ_RELEASE_ASSERT(mRecvd);
+    MOZ_RELEASE_ASSERT(mRecvd->is_reply(), "expected reply");
+    MOZ_RELEASE_ASSERT(!mRecvd->is_reply_error());
+    MOZ_RELEASE_ASSERT(mRecvd->seqno() == seqno);
+    MOZ_RELEASE_ASSERT(mRecvd->type() == replyType, "wrong reply type");
+    MOZ_RELEASE_ASSERT(mRecvd->is_sync());
 
     *aReply = Move(*mRecvd);
     mRecvd = nullptr;
+    mLastSendError = SyncSendError::SendSuccess;
     return true;
 }
 
@@ -1318,6 +1289,37 @@ MessageChannel::DequeueOne(Message *recvd)
     if (!mDeferred.empty())
         MaybeUndeferIncall();
 
+    // If we've timed out a message and we're awaiting the reply to the timed
+    // out message, we have to be careful what messages we process. Here's what
+    // can go wrong:
+    // 1. child sends a normal priority sync message S
+    // 2. parent sends a high priority sync message H at the same time
+    // 3. parent times out H
+    // 4. child starts processing H and sends a high priority message H' nested
+    //    within the same transaction
+    // 5. parent dispatches S and sends reply
+    // 6. child asserts because it instead expected a reply to H'.
+    //
+    // To solve this, we refuse to process S in the parent until we get a reply
+    // to H. More generally, let the timed out message be M. We don't process a
+    // message unless the child would need the response to that message in order
+    // to process M. Those messages are the ones that have a higher priority
+    // than M or that are part of the same transaction as M.
+    if (mTimedOutMessageSeqno) {
+        for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
+            Message &msg = *it;
+            if (msg.priority() > mTimedOutMessagePriority ||
+                (msg.priority() == mTimedOutMessagePriority
+                 && msg.transaction_id() == mTimedOutMessageSeqno))
+            {
+                *recvd = Move(msg);
+                mPending.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+
     if (mPending.empty())
         return false;
 
@@ -1346,7 +1348,7 @@ MessageChannel::OnMaybeDequeueOne()
     }
 
     // We should not be in a transaction yet if we're not blocked.
-    MOZ_ASSERT(mCurrentTransaction == 0);
+    MOZ_RELEASE_ASSERT(mCurrentTransaction == 0);
     DispatchMessage(recvd);
 
     return true;
@@ -1367,7 +1369,7 @@ MessageChannel::DispatchMessage(const Message &aMsg)
         AutoEnterTransaction transaction(this, aMsg);
 
         int id = aMsg.transaction_id();
-        MOZ_ASSERT_IF(aMsg.is_sync(), id == mCurrentTransaction);
+        MOZ_RELEASE_ASSERT(!aMsg.is_sync() || id == mCurrentTransaction);
 
         {
             MonitorAutoUnlock unlock(*mMonitor);
@@ -1399,33 +1401,13 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
 
     int prio = aMsg.priority();
 
-    // We don't want to run any code that might run a nested event loop here, so
-    // we avoid running event handlers. Once we've sent the response to the
-    // urgent message, it's okay to run event handlers again since the parent is
-    // no longer blocked.
-    MOZ_ASSERT_IF(prio > IPC::Message::PRIORITY_NORMAL, NS_IsMainThread());
-    MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
+    MOZ_RELEASE_ASSERT(prio == IPC::Message::PRIORITY_NORMAL || NS_IsMainThread());
 
     MessageChannel* dummy;
-    MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
+    MessageChannel*& blockingVar = mSide == ChildSide && NS_IsMainThread() ? gParentProcessBlocker : dummy;
 
     Result rv;
-    if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
-        // If the other side sends a message in response to one of our messages
-        // that we've timed out, then we reply with an error.
-        //
-        // We do this because want to avoid a situation where we process an
-        // incoming message from the child here while it simultaneously starts
-        // processing our timed-out CPOW. It's very bad for both sides to
-        // be processing sync messages concurrently.
-        //
-        // The only exception is if the incoming message has urgent priority and
-        // our timed-out message had only high priority. In that case it's safe
-        // to process the incoming message because we know that the child won't
-        // process anything (the child will defer incoming messages when waiting
-        // for a response to its urgent message).
-        rv = MsgNotAllowed;
-    } else {
+    {
         AutoSetValue<MessageChannel*> blocked(blockingVar, this);
         AutoSetValue<bool> sync(mDispatchingSyncMessage, true);
         AutoSetValue<int> prioSet(mDispatchingSyncMessagePriority, prio);
@@ -1447,7 +1429,7 @@ void
 MessageChannel::DispatchAsyncMessage(const Message& aMsg)
 {
     AssertWorkerThread();
-    MOZ_ASSERT(!aMsg.is_interrupt() && !aMsg.is_sync());
+    MOZ_RELEASE_ASSERT(!aMsg.is_interrupt() && !aMsg.is_sync());
 
     if (aMsg.routing_id() == MSG_ROUTING_NONE) {
         NS_RUNTIMEABORT("unhandled special message!");
@@ -1566,7 +1548,7 @@ MessageChannel::MaybeUndeferIncall()
     IPC_ASSERT(0 < mRemoteStackDepthGuess, "fatal logic error");
     --mRemoteStackDepthGuess;
 
-    MOZ_ASSERT(call.priority() == IPC::Message::PRIORITY_NORMAL);
+    MOZ_RELEASE_ASSERT(call.priority() == IPC::Message::PRIORITY_NORMAL);
     mPending.push_back(call);
 }
 
@@ -1715,7 +1697,7 @@ MessageChannel::SetReplyTimeoutMs(int32_t aTimeoutMs)
 void
 MessageChannel::OnChannelConnected(int32_t peer_id)
 {
-    MOZ_ASSERT(!mPeerPidSet);
+    MOZ_RELEASE_ASSERT(!mPeerPidSet);
     mPeerPidSet = true;
     mPeerPid = peer_id;
     mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mOnChannelConnectedTask));
@@ -1725,7 +1707,7 @@ void
 MessageChannel::DispatchOnChannelConnected()
 {
     AssertWorkerThread();
-    MOZ_ASSERT(mPeerPidSet);
+    MOZ_RELEASE_ASSERT(mPeerPidSet);
     if (mListener)
         mListener->OnChannelConnected(mPeerPid);
 }
@@ -1827,6 +1809,8 @@ MessageChannel::OnChannelErrorFromLink()
 {
     AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
+
+    IPC_LOG("OnChannelErrorFromLink");
 
     if (InterruptStackDepth() > 0)
         NotifyWorkerThread();
@@ -1961,13 +1945,6 @@ MessageChannel::CloseWithTimeout()
 }
 
 void
-MessageChannel::BlockScripts()
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    mBlockScripts = true;
-}
-
-void
 MessageChannel::Close()
 {
     AssertWorkerThread();
@@ -2084,7 +2061,7 @@ MessageChannel::DumpInterruptStack(const char* const pfx) const
 int32_t
 MessageChannel::GetTopmostMessageRoutingId() const
 {
-    MOZ_ASSERT(MessageLoop::current() == mWorkerLoop);
+    MOZ_RELEASE_ASSERT(MessageLoop::current() == mWorkerLoop);
     if (mCxxStackFrames.empty()) {
         return MSG_ROUTING_NONE;
     }
@@ -2093,7 +2070,25 @@ MessageChannel::GetTopmostMessageRoutingId() const
 }
 
 void
-MessageChannel::CancelCurrentTransactionInternal()
+MessageChannel::EndTimeout()
+{
+    mMonitor->AssertCurrentThreadOwns();
+
+    IPC_LOG("Ending timeout of seqno=%d", mTimedOutMessageSeqno);
+    mTimedOutMessageSeqno = 0;
+    mTimedOutMessagePriority = 0;
+
+    for (size_t i = 0; i < mPending.size(); i++) {
+        // There may be messages in the queue that we expected to process from
+        // OnMaybeDequeueOne. But during the timeout, that function will skip
+        // some messages. Now they're ready to be processed, so we enqueue more
+        // tasks.
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
+}
+
+void
+MessageChannel::CancelTransaction(int transaction)
 {
     mMonitor->AssertCurrentThreadOwns();
 
@@ -2107,20 +2102,91 @@ MessageChannel::CancelCurrentTransactionInternal()
     // tampered with (by us). If so, they don't reset the variable to the old
     // value.
 
-    IPC_LOG("CancelInternal: current xid=%d", mCurrentTransaction);
+    IPC_LOG("CancelTransaction: xid=%d prios=%d", transaction, mPendingSendPriorities);
 
-    MOZ_ASSERT(mCurrentTransaction);
-    mCurrentTransaction = 0;
+    if (mPendingSendPriorities & (1 << IPC::Message::PRIORITY_NORMAL)) {
+        // This isn't an assert so much as an intentional crash because we're in
+        // a situation that we don't know how to recover from: The child is
+        // awaiting a reply to a normal-priority sync message. The transaction
+        // that this message initiated has now been canceled. That could only
+        // happen if a CPOW raced with the sync message and was dispatched by
+        // the child while the child was awaiting the sync reply; at some point
+        // while dispatching the CPOW, the transaction was canceled.
+        //
+        // Notes:
+        //
+        // 1. We don't want to cancel the normal-priority sync message along
+        // with the CPOWs because the browser relies on these messages working
+        // reliably.
+        //
+        // 2. Ideally we would like to avoid dispatching CPOWs while awaiting a
+        // sync response. This isn't possible though. To avoid deadlock, the
+        // parent would have to dispatch the sync message while waiting for the
+        // CPOW response. However, it wouldn't have dispatched async messages at
+        // that time, so we would have a message ordering bug. Dispatching the
+        // async messages first causes other hard-to-handle situations (what if
+        // they send CPOWs?).
+        //
+        // 3. We would like to be able to cancel the CPOWs but not the sync
+        // message. However, that would leave both the parent and the child
+        // running code at the same time, all while the sync message is still
+        // outstanding. That can cause a problem where message replies are
+        // received out of order.
+        mListener->IntentionalCrash();
+    }
 
-    mAwaitingSyncReply = false;
-    mAwaitingSyncReplyPriority = 0;
+    // An unusual case: We timed out a transaction which the other side then
+    // cancelled. In this case we just leave the timedout state and try to
+    // forget this ever happened.
+    if (transaction == mTimedOutMessageSeqno) {
+        IPC_LOG("Cancelled timed out message %d", mTimedOutMessageSeqno);
+        EndTimeout();
 
-    for (size_t i = 0; i < mPending.size(); i++) {
+        // Normally mCurrentTransaction == 0 here. But it can be non-zero if:
+        // 1. Parent sends hi prio message H.
+        // 2. Parent times out H.
+        // 3. Child dispatches H and sends nested message H' (same transaction).
+        // 4. Parent dispatches H' and cancels.
+        MOZ_RELEASE_ASSERT(!mCurrentTransaction || mCurrentTransaction == transaction);
+        mCurrentTransaction = 0;
+
+        // During a timeout Send should always fail.
+        MOZ_RELEASE_ASSERT(!mAwaitingSyncReply);
+    } else {
+        MOZ_RELEASE_ASSERT(mCurrentTransaction == transaction);
+        mCurrentTransaction = 0;
+
+        mAwaitingSyncReply = false;
+        mAwaitingSyncReplyPriority = 0;
+    }
+
+    bool foundSync = false;
+    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
+        Message &msg = *it;
+
+        // If there was a race between the parent and the child, then we may
+        // have a queued sync message. We want to drop this message from the
+        // queue since it will get cancelled along with the transaction being
+        // cancelled. We don't bother doing this for normal priority messages
+        // because the child is just going to crash in that case, and we want to
+        // avoid processing messages out of order in the short time before it
+        // crashes.
+        if (msg.is_sync() && msg.priority() != IPC::Message::PRIORITY_NORMAL) {
+            MOZ_RELEASE_ASSERT(!foundSync);
+            MOZ_RELEASE_ASSERT(msg.transaction_id() != transaction);
+            IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg.seqno(), msg.transaction_id());
+            foundSync = true;
+            it = mPending.erase(it);
+            continue;
+        }
+
         // There may be messages in the queue that we expected to process from
         // ProcessPendingRequests. However, Send will no longer call that
         // function once it's been canceled. So we may need to process these
         // messages in the normal event loop instead.
         mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+
+        it++;
     }
 
     // We could also zero out mDispatchingSyncMessage here. However, that would
@@ -2134,10 +2200,17 @@ MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
     if (mCurrentTransaction) {
-        CancelMessage *cancel = new CancelMessage();
-        cancel->set_transaction_id(mCurrentTransaction);
+        if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
+            DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT)
+        {
+            mListener->IntentionalCrash();
+        }
+
+        IPC_LOG("Cancel requested: current xid=%d", mCurrentTransaction);
+        MOZ_RELEASE_ASSERT(DispatchingSyncMessage());
+        CancelMessage *cancel = new CancelMessage(mCurrentTransaction);
+        CancelTransaction(mCurrentTransaction);
         mLink->SendMessage(cancel);
-        CancelCurrentTransactionInternal();
     }
 }
 

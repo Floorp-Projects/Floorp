@@ -162,7 +162,7 @@ WebBrowserPersistLocalDocument::GetReferrer(nsAString& aReferrer)
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::GetContentDisposition(nsAString& aCD)
 {
-    nsCOMPtr<nsIDOMWindow> window = mDocument->GetDefaultView();
+    nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetDefaultView();
     if (NS_WARN_IF(!window)) {
         aCD.SetIsVoid(true);
         return NS_OK;
@@ -216,7 +216,7 @@ WebBrowserPersistLocalDocument::GetPostData(nsIInputStream** aStream)
 already_AddRefed<nsISHEntry>
 WebBrowserPersistLocalDocument::GetHistory()
 {
-    nsCOMPtr<nsIDOMWindow> window = mDocument->GetDefaultView();
+    nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetDefaultView();
     if (NS_WARN_IF(!window)) {
         return nullptr;
     }

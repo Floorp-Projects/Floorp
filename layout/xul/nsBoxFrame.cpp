@@ -148,11 +148,13 @@ nsBoxFrame::SetInitialChildList(ChildListID     aListID,
                                 nsFrameList&    aChildList)
 {
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
-  // initialize our list of infos.
-  nsBoxLayoutState state(PresContext());
-  CheckBoxOrder();
-  if (mLayoutManager)
-    mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
+  if (aListID == kPrincipalList) {
+    // initialize our list of infos.
+    nsBoxLayoutState state(PresContext());
+    CheckBoxOrder();
+    if (mLayoutManager)
+      mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
+  }
 }
 
 /* virtual */ void
@@ -1105,7 +1107,7 @@ nsBoxFrame::AppendFrames(ChildListID     aListID,
 nsBoxFrame::GetContentInsertionFrame()
 {
   if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)
-    return GetFirstPrincipalChild()->GetContentInsertionFrame();
+    return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   return nsContainerFrame::GetContentInsertionFrame();
 }
 

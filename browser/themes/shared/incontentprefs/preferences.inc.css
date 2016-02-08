@@ -563,7 +563,8 @@ description > html|a {
 }
 
 .fxaMobilePromo {
-  margin-bottom: 31px;
+  margin-bottom: 20px;
+  margin-top: 25px;
 }
 
 #fxaLoginRejectedWarning {
@@ -576,9 +577,22 @@ description > html|a {
   margin-bottom: 27.5px;
 }
 
+.androidLink {
+  background-image: url("chrome://browser/skin/fxa/android.png");
+}
+
+.iOSLink {
+  background-image: url("chrome://browser/skin/fxa/ios.png");
+}
+
 .androidLink,
 .iOSLink {
-  margin: 0;
+  margin: 0 0 0 2px;
+  padding-left: 28px;
+  padding-top: 6px;
+  height: 28px;
+  background-repeat: no-repeat;
+  background-size: 24px 28px;
 }
 
 #tosPP-small {
@@ -587,6 +601,12 @@ description > html|a {
 }
 
 @media (min-resolution: 1.1dppx) {
+  .androidLink {
+    background-image: url("chrome://browser/skin/fxa/android@2x.png");
+  }
+  .iOSLink {
+    background-image: url("chrome://browser/skin/fxa/ios@2x.png");
+  }
   .fxaSyncIllustration {
     list-style-image: url(chrome://browser/skin/fxa/sync-illustration@2x.png)
   }

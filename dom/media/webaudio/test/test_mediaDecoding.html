@@ -311,8 +311,8 @@ function runResampling(test, response, callback) {
 }
 
 function runTest(test, response, callback) {
-  // We need to copy the array here, because decodeAudioData is going to neuter
-  // the array.
+  // We need to copy the array here, because decodeAudioData will detach the
+  // array's buffer.
   var compressedAudio = response.slice(0);
   var expectCallback = false;
   var cx = new OfflineAudioContext(test.numberOfChannels || 1,

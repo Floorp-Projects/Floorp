@@ -69,7 +69,11 @@ bool RWLockWin::LoadModule() {
   if (!library) {
     return false;
   }
-  WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Kernel.dll");
+  // Don't log here, since we may be creating a FileWrapper for
+  // the TraceImpl, from within GetStaticInstance.  With singleton.h, you
+  // can't safely call GetStaticInstance on the same object from within
+  // creating that object (go figure...)
+  //WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Kernel.dll");
 
   initialize_srw_lock =
     (InitializeSRWLock)GetProcAddress(library, "InitializeSRWLock");
@@ -88,7 +92,7 @@ bool RWLockWin::LoadModule() {
   if (initialize_srw_lock && acquire_srw_lock_exclusive &&
       release_srw_lock_exclusive && acquire_srw_lock_shared &&
       release_srw_lock_shared) {
-    WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Native RW Lock");
+    //WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Native RW Lock");
     native_rw_locks_supported = true;
   }
   return native_rw_locks_supported;

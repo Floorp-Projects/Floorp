@@ -22,11 +22,13 @@
 #include "nsCoord.h"
 #include "nsColor.h"
 #include "nsIContent.h"
+#include "nsStyleStruct.h"
 
 namespace mozilla {
 namespace dom {
 class Element;
 } // namespace dom
+struct ComputedGridTrackInfo;
 } // namespace mozilla
 
 struct nsComputedStyleMap;
@@ -35,7 +37,6 @@ class nsIPresShell;
 class nsDOMCSSValueList;
 struct nsMargin;
 class nsROCSSPrimitiveValue;
-struct nsStyleBackground;
 class nsStyleCoord;
 class nsStyleCorners;
 struct nsStyleFilter;
@@ -176,12 +177,14 @@ private:
 
   already_AddRefed<CSSValue> GetSVGPaintFor(bool aFill);
 
-  // Appends all aLineNames (must be non-empty) space-separated to aResult.
+  // Appends all aLineNames (may be empty) space-separated to aResult.
   void AppendGridLineNames(nsString& aResult,
                            const nsTArray<nsString>& aLineNames);
-  // Appends aLineNames (if non-empty) as a CSSValue* to aValueList.
+  // Appends aLineNames as a CSSValue* to aValueList.  If aLineNames is empty
+  // a value ("[]") is only appended if aSuppressEmptyList is false.
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
-                           const nsTArray<nsString>& aLineNames);
+                           const nsTArray<nsString>& aLineNames,
+                           bool aSuppressEmptyList = true);
   // Appends aLineNames1/2 (if non-empty) as a CSSValue* to aValueList.
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
                            const nsTArray<nsString>& aLineNames1,
@@ -190,9 +193,7 @@ private:
                                               const nsStyleCoord& aMaxSize);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
     const nsStyleGridTemplate& aTrackList,
-    const uint32_t aNumLeadingImplicitTracks,
-    const uint32_t aNumExplicitTracks,
-    const nsTArray<nscoord>* aTrackSizes);
+    const mozilla::ComputedGridTrackInfo* aTrackInfo);
   already_AddRefed<CSSValue> GetGridLine(const nsStyleGridLine& aGridLine);
 
   bool GetLineHeightCoord(nscoord& aCoord);
@@ -202,8 +203,9 @@ private:
                                                bool aIsBoxShadow);
 
   already_AddRefed<CSSValue> GetBackgroundList(
-    uint8_t nsStyleBackground::Layer::* aMember,
-    uint32_t nsStyleBackground::* aCount,
+    uint8_t nsStyleImageLayers::Layer::* aMember,
+    uint32_t nsStyleImageLayers::* aCount,
+    const nsStyleImageLayers& aLayers,
     const KTableEntry aTable[]);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,
@@ -283,6 +285,12 @@ private:
   already_AddRefed<CSSValue> DoGetGridColumnGap();
   already_AddRefed<CSSValue> DoGetGridRowGap();
 
+  /* StyleImageLayer properties */
+  already_AddRefed<CSSValue> DoGetImageLayerImage(const nsStyleImageLayers& aLayers);
+  already_AddRefed<CSSValue> DoGetImageLayerPosition(const nsStyleImageLayers& aLayers);
+  already_AddRefed<CSSValue> DoGetImageLayerRepeat(const nsStyleImageLayers& aLayers);
+  already_AddRefed<CSSValue> DoGetImageLayerSize(const nsStyleImageLayers& aLayers);
+
   /* Background properties */
   already_AddRefed<CSSValue> DoGetBackgroundAttachment();
   already_AddRefed<CSSValue> DoGetBackgroundColor();
@@ -293,6 +301,17 @@ private:
   already_AddRefed<CSSValue> DoGetBackgroundBlendMode();
   already_AddRefed<CSSValue> DoGetBackgroundOrigin();
   already_AddRefed<CSSValue> DoGetBackgroundSize();
+
+  /* Mask properties */
+  already_AddRefed<CSSValue> DoGetMask();
+  already_AddRefed<CSSValue> DoGetMaskImage();
+  already_AddRefed<CSSValue> DoGetMaskPosition();
+  already_AddRefed<CSSValue> DoGetMaskRepeat();
+  already_AddRefed<CSSValue> DoGetMaskClip();
+  already_AddRefed<CSSValue> DoGetMaskOrigin();
+  already_AddRefed<CSSValue> DoGetMaskSize();
+  already_AddRefed<CSSValue> DoGetMaskMode();
+  already_AddRefed<CSSValue> DoGetMaskComposite();
 
   /* Padding properties */
   already_AddRefed<CSSValue> DoGetPaddingTop();
@@ -542,7 +561,6 @@ private:
 
   already_AddRefed<CSSValue> DoGetClipPath();
   already_AddRefed<CSSValue> DoGetFilter();
-  already_AddRefed<CSSValue> DoGetMask();
   already_AddRefed<CSSValue> DoGetMaskType();
   already_AddRefed<CSSValue> DoGetPaintOrder();
 
@@ -556,9 +574,9 @@ private:
   void SetValueToStyleImage(const nsStyleImage& aStyleImage,
                             nsROCSSPrimitiveValue* aValue);
   void SetValueToPositionCoord(
-    const nsStyleBackground::Position::PositionCoord& aCoord,
+    const nsStyleImageLayers::Position::PositionCoord& aCoord,
     nsROCSSPrimitiveValue* aValue);
-  void SetValueToPosition(const nsStyleBackground::Position& aPosition,
+  void SetValueToPosition(const nsStyleImageLayers::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
 
   /**

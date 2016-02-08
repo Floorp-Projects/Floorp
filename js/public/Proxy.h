@@ -29,6 +29,7 @@ using JS::MutableHandleValue;
 using JS::NativeImpl;
 using JS::ObjectOpResult;
 using JS::PrivateValue;
+using JS::PropertyDescriptor;
 using JS::Value;
 
 class RegExpGuard;
@@ -251,9 +252,9 @@ class JS_FRIEND_API(BaseProxyHandler)
 
     /* Standard internal methods. */
     virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                          MutableHandle<JSPropertyDescriptor> desc) const = 0;
+                                          MutableHandle<PropertyDescriptor> desc) const = 0;
     virtual bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                Handle<PropertyDescriptor> desc,
                                 ObjectOpResult& result) const = 0;
     virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
                                  AutoIdVector& props) const = 0;
@@ -315,7 +316,7 @@ class JS_FRIEND_API(BaseProxyHandler)
 
     /* SpiderMonkey extensions. */
     virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc) const;
+                                       MutableHandle<PropertyDescriptor> desc) const;
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                               AutoIdVector& props) const;
@@ -374,9 +375,9 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
 
     /* Standard internal methods. */
     virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                          MutableHandle<JSPropertyDescriptor> desc) const override;
+                                          MutableHandle<PropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                                Handle<JSPropertyDescriptor> desc,
+                                Handle<PropertyDescriptor> desc,
                                 ObjectOpResult& result) const override;
     virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
                                  AutoIdVector& props) const override;
@@ -404,7 +405,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
 
     /* SpiderMonkey extensions. */
     virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc) const override;
+                                       MutableHandle<PropertyDescriptor> desc) const override;
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                         bool* bp) const override;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,

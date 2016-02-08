@@ -84,10 +84,6 @@ public:
   // method updates the cached value (and toggles the 'mForceCompositing' flag)
   void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
 
-  // Static callback methods
-  static PLDHashOperator DoComposeAttribute(
-      nsSMILCompositor* aCompositor, void *aData);
-
   // The hash key (tuple of element/attributeName/attributeType)
   KeyType mKey;
 

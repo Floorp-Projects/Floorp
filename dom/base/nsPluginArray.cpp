@@ -23,7 +23,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsPluginArray::nsPluginArray(nsPIDOMWindow* aWindow)
+nsPluginArray::nsPluginArray(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }
@@ -42,7 +42,7 @@ nsPluginArray::~nsPluginArray()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 nsPluginArray::GetParentObject() const
 {
   MOZ_ASSERT(mWindow);
@@ -324,7 +324,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginElement, mWindow, mMimeTypes)
 
-nsPluginElement::nsPluginElement(nsPIDOMWindow* aWindow,
+nsPluginElement::nsPluginElement(nsPIDOMWindowInner* aWindow,
                                  nsIInternalPluginTag* aPluginTag)
   : mWindow(aWindow),
     mPluginTag(aPluginTag)
@@ -335,7 +335,7 @@ nsPluginElement::~nsPluginElement()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 nsPluginElement::GetParentObject() const
 {
   MOZ_ASSERT(mWindow);

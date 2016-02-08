@@ -49,7 +49,7 @@ function fakeOpenPopup(aPopup) {
   popupEvent.initMouseEvent("popupshowing", true, true, window, 0,
                             0, 0, 0, 0, false, false, false, false,
                             0, null);
-  aPopup.dispatchEvent(popupEvent);  
+  aPopup.dispatchEvent(popupEvent);
 }
 
 /**
@@ -474,7 +474,7 @@ function getViewsForFolder(aFolderId) {
       break;
     case PlacesUtils.unfiledBookmarksFolderId:
       return ["sidebar"]
-      break;    
+      break;
   }
   return new Array();
 }

@@ -125,6 +125,7 @@ add_task(function*() {
   }, profileDir);
 
   startupManager();
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);

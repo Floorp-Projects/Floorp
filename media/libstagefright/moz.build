@@ -81,7 +81,7 @@ SOURCES += [
 
 if CONFIG['MOZ_RUST']:
     SOURCES += [
-        'binding/MP4Metadata.rs',
+        'binding/mp4parse/lib.rs',
     ]
     EXPORTS += [
         'binding/include/mp4parse.h',

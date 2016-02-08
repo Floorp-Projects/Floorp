@@ -134,9 +134,14 @@ public:
       return;
     }
     AppendPrintf("{ mStartOffset=%u, mRemovedEndOffset=%u, mAddedEndOffset=%u, "
-                 "mCausedByComposition=%s }", aData.mStartOffset,
-                 aData.mRemovedEndOffset, aData.mAddedEndOffset,
-                 ToChar(aData.mCausedByComposition));
+                 "mCausedOnlyByComposition=%s, "
+                 "mIncludingChangesDuringComposition=%s, "
+                 "mIncludingChangesWithoutComposition=%s }",
+                 aData.mStartOffset, aData.mRemovedEndOffset,
+                 aData.mAddedEndOffset,
+                 ToChar(aData.mCausedOnlyByComposition),
+                 ToChar(aData.mIncludingChangesDuringComposition),
+                 ToChar(aData.mIncludingChangesWithoutComposition));
   }
   virtual ~TextChangeDataToString() {}
 };

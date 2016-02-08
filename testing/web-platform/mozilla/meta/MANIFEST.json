@@ -569,6 +569,12 @@
             "url": "/_mozilla/service-workers/service-worker/waiting.https.html"
           }
         ],
+        "service-workers/service-worker/websocket.https.html": [
+          {
+            "path": "service-workers/service-worker/websocket.https.html",
+            "url": "/_mozilla/service-workers/service-worker/websocket.https.html"
+          }
+        ],
         "service-workers/service-worker/worker-interception.https.html": [
           {
             "path": "service-workers/service-worker/worker-interception.https.html",

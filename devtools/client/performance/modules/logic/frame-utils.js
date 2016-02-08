@@ -5,6 +5,7 @@
 
 const global = require("devtools/client/performance/modules/global");
 const demangle = require("devtools/client/shared/demangle");
+const { assert } = require("devtools/shared/DevToolsUtils");
 const { isChromeScheme, isContentScheme, parseURL } =
   require("devtools/client/shared/source-utils");
 
@@ -19,6 +20,8 @@ const CHAR_CODE_RPAREN = ")".charCodeAt(0);
 const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_SPACE = " ".charCodeAt(0);
 const CHAR_CODE_UNDERSCORE = "_".charCodeAt(0);
+
+const EVAL_TOKEN = "%20%3E%20eval";
 
 // The cache used to store inflated frames.
 const gInflatedFrameStore = new WeakMap();
@@ -149,6 +152,26 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
     fileName = parsedUrl.fileName;
     port = parsedUrl.port;
     host = parsedUrl.host;
+
+    // Check for the case of the filename containing eval
+    // e.g. "file.js%20line%2065%20%3E%20eval"
+    let evalIndex = fileName.indexOf(EVAL_TOKEN);
+    if (evalIndex !== -1 && evalIndex === (fileName.length - EVAL_TOKEN.length)) {
+      // Match the filename
+      let evalLine = line;
+      let [, _fileName, , _line] = fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/) || [];
+      fileName = `${_fileName} (eval:${evalLine})`;
+      line =  _line;
+      assert(_fileName !== undefined,
+             "Filename could not be found from an eval location site");
+      assert(_line !== undefined,
+             "Line could not be found from an eval location site");
+
+      // Match the url as well
+      [, url] = url.match(/(.+)( line (\d+) > eval)/) || [];
+      assert(url !== undefined,
+             "The URL could not be parsed correctly from an eval location site");
+    }
   } else {
     functionName = location;
     url = null;

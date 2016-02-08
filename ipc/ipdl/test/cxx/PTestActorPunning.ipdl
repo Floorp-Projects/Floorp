@@ -13,13 +13,13 @@ protocol PTestActorPunning {
     manages PTestActorPunningSub;
 
 child:
-    Start();
+    async Start();
 
 parent:
-    PTestActorPunningPunned();
-    PTestActorPunningSub();
-    Pun(PTestActorPunningSub a, Bad bad);
-    __delete__();
+    async PTestActorPunningPunned();
+    async PTestActorPunningSub();
+    async Pun(PTestActorPunningSub a, Bad bad);
+    async __delete__();
 
 
 state PING:

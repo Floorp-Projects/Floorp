@@ -113,7 +113,7 @@ public:
     }
   }
 private:
-  nsAutoTArray<Chunk, 7> mChunks;
+  AutoTArray<Chunk, 7> mChunks;
   int64_t mBaseOffset;
   double mBasePosition;
 };
@@ -287,7 +287,7 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
   }
 
   NS_ASSERTION(AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32, "bad format");
-  nsAutoTArray<uint8_t, 1024*2> buf;
+  AutoTArray<uint8_t, 1024*2> buf;
   buf.SetLength(samples*2);
   float* input = static_cast<float*>(aBuffer);
   uint8_t* output = buf.Elements();
@@ -616,7 +616,7 @@ AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
       mTimeStretcher->putSamples(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
-      nsAutoTArray<AudioDataValue, 1000> buf;
+      AutoTArray<AudioDataValue, 1000> buf;
       buf.SetLength(mOutChannels * c->Frames());
       memset(buf.Elements(), 0, buf.Length() * sizeof(AudioDataValue));
       mTimeStretcher->putSamples(buf.Elements(), c->Frames());

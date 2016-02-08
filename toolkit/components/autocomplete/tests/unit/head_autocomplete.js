@@ -8,23 +8,23 @@ var Ci = Components.interfaces;
 
 /**
  * Dummy nsIAutoCompleteInput source that returns
- * the given list of AutoCompleteSearch names. 
- * 
+ * the given list of AutoCompleteSearch names.
+ *
  * Implements only the methods needed for this test.
  */
 function AutoCompleteInputBase(aSearches) {
   this.searches = aSearches;
 }
 AutoCompleteInputBase.prototype = {
- 
+
   // Array of AutoCompleteSearch names
   searches: null,
-  
+
   minResultsForPopup: 0,
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
 
   // Text selection range
@@ -40,20 +40,20 @@ AutoCompleteInputBase.prototype = {
     this._selStart = aStart;
     this._selEnd = aEnd;
   },
-  
+
   get searchCount() {
     return this.searches.length;
   },
-  
+
   getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
-  
+
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  
-  popupOpen: false,  
-  
+
+  popupOpen: false,
+
   get popup() {
     if (!this._popup) {
       this._popup = new AutocompletePopupBase(this);
@@ -65,14 +65,14 @@ AutoCompleteInputBase.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }
 
-/** 
+/**
  * nsIAutoCompleteResult implementation
  */
 function AutoCompleteResultBase(aValues) {
   this._values = aValues;
 }
 AutoCompleteResultBase.prototype = {
-  
+
   // Arrays
   _values: null,
   _comments: [],
@@ -81,9 +81,9 @@ AutoCompleteResultBase.prototype = {
 
   searchString: "",
   searchResult: null,
-  
+
   defaultIndex: -1,
-  
+
   _typeAheadResult: false,
   get typeAheadResult() {
     return this._typeAheadResult;
@@ -100,15 +100,15 @@ AutoCompleteResultBase.prototype = {
   getLabelAt: function(aIndex) {
     return this.getValueAt(aIndex);
   },
-  
+
   getCommentAt: function(aIndex) {
     return this._comments[aIndex];
   },
-  
+
   getStyleAt: function(aIndex) {
     return this._styles[aIndex];
   },
-  
+
   getImageAt: function(aIndex) {
     return "";
   },
@@ -123,7 +123,7 @@ AutoCompleteResultBase.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
 }
 
-/** 
+/**
  * nsIAutoCompleteSearch implementation that always returns
  * the same result set.
  */
@@ -132,29 +132,29 @@ function AutoCompleteSearchBase(aName, aResult) {
   this._result = aResult;
 }
 AutoCompleteSearchBase.prototype = {
-  
+
   // Search name. Used by AutoCompleteController
   name: null,
 
   // AutoCompleteResult
   _result: null,
 
-  startSearch: function(aSearchString, 
-                        aSearchParam, 
-                        aPreviousResult, 
+  startSearch: function(aSearchString,
+                        aSearchParam,
+                        aPreviousResult,
                         aListener) {
     var result = this._result;
 
     result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     aListener.onSearchResult(this, result);
   },
-  
+
   stopSearch: function() {},
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
                                          Ci.nsIAutoCompleteSearch]),
-  
+
   // nsIFactory implementation
   createInstance: function(outer, iid) {
     return this.QueryInterface(iid);
@@ -180,7 +180,7 @@ AutocompletePopupBase.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
 };
 
-/** 
+/**
  * Helper to register an AutoCompleteSearch with the given name.
  * Allows the AutoCompleteController to find the search.
  */
@@ -196,15 +196,15 @@ function registerAutoCompleteSearch(aSearch) {
   componentManager.registerFactory(cid, desc, name, aSearch);
 
   // Keep the id on the object so we can unregister later
-  aSearch.cid = cid; 
+  aSearch.cid = cid;
 }
 
-/** 
- * Helper to unregister an AutoCompleteSearch. 
+/**
+ * Helper to unregister an AutoCompleteSearch.
  */
 function unregisterAutoCompleteSearch(aSearch) {
   var componentManager = Components.manager
-                                   .QueryInterface(Ci.nsIComponentRegistrar);  
+                                   .QueryInterface(Ci.nsIComponentRegistrar);
   componentManager.unregisterFactory(aSearch.cid, aSearch);
 }
 

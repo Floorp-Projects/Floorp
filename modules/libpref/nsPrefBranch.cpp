@@ -534,7 +534,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   char            **outArray;
   int32_t         numPrefs;
   int32_t         dwIndex;
-  nsAutoTArray<nsCString, 32> prefArray;
+  AutoTArray<nsCString, 32> prefArray;
 
   NS_ENSURE_ARG(aStartingAt);
   NS_ENSURE_ARG_POINTER(aCount);
@@ -685,6 +685,15 @@ void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   observer->Observe(static_cast<nsIPrefBranch *>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
                     NS_ConvertASCIItoUTF16(suffix).get());
+}
+
+size_t
+nsPrefBranch::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  n += mPrefRoot.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return n;
 }
 
 void nsPrefBranch::freeObserverList(void)

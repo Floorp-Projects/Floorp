@@ -49,7 +49,7 @@ FormAutofillStartup.prototype = {
     // raised in the parent process is caught and serialized into the reply
     // message that is sent to the requesting child process.
     FormAutofill.processRequestAutocomplete(aMessage.data)
-      .catch(ex => { exception: ex })
+      .catch(ex => { return { exception: ex } })
       .then(result => {
         // The browser message manager in the parent will send the reply to the
         // associated frame message manager in the child.

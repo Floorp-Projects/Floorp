@@ -4,5 +4,5 @@ union Union {
 
 protocol shmem_access_union {
 child:
-    Msg(Union u);
+    async Msg(Union u);
 };

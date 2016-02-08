@@ -13,7 +13,7 @@ protocol PBackgroundTest
   manager PBackground;
 
 child:
-  __delete__(nsCString testArg);
+  async __delete__(nsCString testArg);
 };
 
 } // namespace ipc

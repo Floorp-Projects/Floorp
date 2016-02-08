@@ -3,17 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPKCS11Slot.h"
-#include "nsPK11TokenDB.h"
-
-#include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-
-#include "secmod.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
+#include "nsPK11TokenDB.h"
+#include "secmod.h"
 
 using mozilla::LogLevel;
 
@@ -479,6 +475,10 @@ NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
   SECStatus srv = SECMOD_DeleteInternalModule(internal->commonName);
   if (srv != SECSuccess)
     return NS_ERROR_FAILURE;
+
+  if (PK11_IsFIPS()) {
+    Telemetry::Accumulate(Telemetry::FIPS_ENABLED, true);
+  }
 
   return NS_OK;
 }

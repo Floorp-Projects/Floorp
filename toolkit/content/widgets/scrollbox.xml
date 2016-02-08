@@ -398,7 +398,7 @@
             mid = Math.floor((low + high) / 2);
             rect = elements[mid].getBoundingClientRect();
             if (rect[start] > aX)
-              high = mid - 1; 
+              high = mid - 1;
             else if (rect[end] < aX)
               low = mid + 1;
             else
@@ -469,7 +469,7 @@
           else if (this.scrollPosition == 0) {
             // In the RTL case, this means the _last_ element in the
             // scrollbox is visible
-            if (this._isRTLScrollbox) 
+            if (this._isRTLScrollbox)
               scrolledToEnd = true;
             else
               scrolledToStart = true;
@@ -554,7 +554,7 @@
         this.setAttribute("notoverflowing", "true");
 
         try {
-          // See bug 341047 and comments in overflow handler as to why 
+          // See bug 341047 and comments in overflow handler as to why
           // try..catch is needed here
           this._updateScrollButtonsDisabledState();
 
@@ -589,13 +589,13 @@
         this.removeAttribute("notoverflowing");
 
         try {
-          // See bug 341047, the overflow event is dispatched when the 
+          // See bug 341047, the overflow event is dispatched when the
           // scrollbox already is mostly destroyed. This causes some code in
           // _updateScrollButtonsDisabledState() to throw an error. It also
           // means that the notoverflowing attribute was removed erroneously,
           // as the whole overflow event should not be happening in that case.
           this._updateScrollButtonsDisabledState();
-        } 
+        }
         catch(e) {
           this.setAttribute("notoverflowing", "true");
         }
@@ -689,7 +689,7 @@
           const scrollIndex = this.scrollbox._scrollIndex;
           const timePassed = timeStamp - this.lastFrameTime;
           this.lastFrameTime = timeStamp;
-          
+
           const scrollDelta = 0.5 * timePassed * scrollIndex;
           this.scrollbox.scrollPosition += scrollDelta;
 

@@ -129,7 +129,7 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
                   nsISSLStatusProvider)
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow* aWindow)
+nsSecureBrowserUIImpl::Init(mozIDOMWindowProxy* aWindow)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -151,18 +151,11 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow* aWindow)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(aWindow));
-  if (pwin->IsInnerWindow()) {
-    pwin = pwin->GetOuterWindow();
-  }
-
   nsresult rv;
-  mWindow = do_GetWeakReference(pwin, &rv);
+  mWindow = do_GetWeakReference(aWindow, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(aWindow));
-  if (!piwindow) return NS_ERROR_FAILURE;
-
+  auto* piwindow = nsPIDOMWindowOuter::From(aWindow);
   nsIDocShell *docShell = piwindow->GetDocShell();
 
   // The Docshell will own the SecureBrowserUI object
@@ -565,10 +558,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     regardless of whether the load flags indicate a top level document.
   */
 
-  nsCOMPtr<nsIDOMWindow> windowForProgress;
+  nsCOMPtr<mozIDOMWindowProxy> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-  nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
+  nsCOMPtr<mozIDOMWindowProxy> window(do_QueryReferent(mWindow));
   NS_ASSERTION(window, "Window has gone away?!");
 
   if (!mIOService) {
@@ -1201,7 +1194,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   bool updateIsViewSource = false;
   bool temp_IsViewSource = false;
-  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<mozIDOMWindowProxy> window;
 
   if (aLocation)
   {
@@ -1240,7 +1233,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   // loading may never end in some edge cases (perhaps by a site with malicious
   // intent).
 
-  nsCOMPtr<nsIDOMWindow> windowForProgress;
+  nsCOMPtr<mozIDOMWindowProxy> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
   nsCOMPtr<nsISupports> securityInfo(ExtractSecurityInfo(aRequest));

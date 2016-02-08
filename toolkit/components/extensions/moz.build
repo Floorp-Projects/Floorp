@@ -10,6 +10,7 @@ EXTRA_JS_MODULES += [
     'ExtensionManagement.jsm',
     'ExtensionStorage.jsm',
     'ExtensionUtils.jsm',
+    'MessageChannel.jsm',
     'Schemas.jsm',
 ]
 

@@ -603,7 +603,7 @@ this.PageThumbsStorage = {
    *
    * @param {string} aURL The url for which to store a thumbnail.
    * @param {ArrayBuffer} aData The data to store in the thumbnail, as
-   * an ArrayBuffer. This array buffer is neutered and cannot be
+   * an ArrayBuffer. This array buffer will be detached and cannot be
    * reused after the copy.
    * @param {boolean} aNoOverwrite If true and the thumbnail's file already
    * exists, the file will not be overwritten.

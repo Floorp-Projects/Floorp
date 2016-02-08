@@ -15,7 +15,7 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(() => {
+  gClient.connect().then(() => {
     attachTestTab(gClient, "test-reattach", (aReply, aTabClient) => {
       gTabClient = aTabClient;
       test_attach();

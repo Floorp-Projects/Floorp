@@ -48,7 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaKeySystemAccessManager)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-MediaKeySystemAccessManager::MediaKeySystemAccessManager(nsPIDOMWindow* aWindow)
+MediaKeySystemAccessManager::MediaKeySystemAccessManager(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
   , mAddedObservers(false)
 {

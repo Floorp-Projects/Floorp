@@ -109,6 +109,11 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
+bool nsXULPopupManager::sDevtoolsDisableAutoHide = false;
+
+const char* kPrefDevtoolsDisableAutoHide =
+  "ui.popup.disable_autohide";
+
 NS_IMPL_ISUPPORTS(nsXULPopupManager,
                   nsIDOMEventListener,
                   nsITimerCallback,
@@ -127,6 +132,8 @@ nsXULPopupManager::nsXULPopupManager() :
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
+  Preferences::AddBoolVarCache(&sDevtoolsDisableAutoHide,
+                               kPrefDevtoolsDisableAutoHide, false);
 }
 
 nsXULPopupManager::~nsXULPopupManager() 
@@ -183,6 +190,15 @@ bool
 nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
                           const nsIntPoint* pos, nsIContent** aLastRolledUp)
 {
+  // We can disable the autohide behavior via a pref to ease debugging.
+  if (nsXULPopupManager::sDevtoolsDisableAutoHide) {
+    // Required on linux to allow events to work on other targets.
+    if (mWidget) {
+      mWidget->CaptureRollupEvents(nullptr, false);
+    }
+    return false;
+  }
+
   bool consume = false;
 
   nsMenuChainItem* item = GetTopVisibleMenu();
@@ -394,7 +410,7 @@ nsXULPopupManager::GetRollupWidget()
 }
 
 void
-nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
+nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindowOuter* aWindow)
 {
   // When the parent window is moved, adjust any child popups. Dismissable
   // menus and panels are expected to roll up when a window is moved, so there
@@ -413,8 +429,7 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
       if (popup) {
         nsIDocument* document = popup->GetCurrentDoc();
         if (document) {
-          nsPIDOMWindow* window = document->GetWindow();
-          if (window) {
+          if (nsPIDOMWindowOuter* window = document->GetWindow()) {
             window = window->GetPrivateRoot();
             if (window == aWindow) {
               list.AppendElement(frame);
@@ -826,12 +841,12 @@ CheckCaretDrawingState()
   // document and erase its caret.
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIDOMWindow> window;
+    nsCOMPtr<mozIDOMWindowProxy> window;
     fm->GetFocusedWindow(getter_AddRefs(window));
     if (!window)
       return;
 
-    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
+    auto* piWindow = nsPIDOMWindowOuter::From(window);
     MOZ_ASSERT(piWindow);
 
     nsCOMPtr<nsIDocument> focusedDoc = piWindow->GetDoc();
@@ -1219,6 +1234,41 @@ nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames)
   }
 
   SetCaptureState(nullptr);
+}
+
+void
+nsXULPopupManager::EnableRollup(nsIContent* aPopup, bool aShouldRollup)
+{
+#ifndef MOZ_GTK
+  if (aShouldRollup) {
+    nsMenuChainItem* item = mNoHidePanels;
+    while (item) {
+      if (item->Content() == aPopup) {
+        item->Detach(&mNoHidePanels);
+        nsIContent* oldmenu = nullptr;
+        if (mPopups)
+          oldmenu = mPopups->Content();
+        item->SetParent(mPopups);
+        mPopups = item;
+        SetCaptureState(oldmenu);
+        return;
+      }
+      item = item->GetParent();
+    }
+  } else {
+    nsMenuChainItem* item = mPopups;
+    while (item) {
+      if (item->Content() == aPopup) {
+        item->Detach(&mPopups);
+        item->SetParent(mNoHidePanels);
+        mNoHidePanels = item;
+        SetCaptureState(nullptr);
+        return;
+      }
+      item = item->GetParent();
+    }
+  }
+#endif
 }
 
 bool
@@ -1678,7 +1728,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> rootWin = root->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> rootWin = root->GetWindow();
 
   // chrome shells can always open popups, but other types of shells can only
   // open popups when they are focused and visible
@@ -1688,7 +1738,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
     if (!fm || !rootWin)
       return false;
 
-    nsCOMPtr<nsIDOMWindow> activeWindow;
+    nsCOMPtr<mozIDOMWindowProxy> activeWindow;
     fm->GetActiveWindow(getter_AddRefs(activeWindow));
     if (activeWindow != rootWin)
       return false;
@@ -1710,7 +1760,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 
 #ifdef XP_MACOSX
   if (rootWin) {
-    nsGlobalWindow *globalWin = static_cast<nsGlobalWindow *>(rootWin.get());
+    auto globalWin = nsGlobalWindow::Cast(rootWin.get());
     if (globalWin->IsInModalState()) {
       return false;
     }
@@ -2317,7 +2367,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
       currFrame = aStart->GetParent()->GetNextSibling();
   }
   else
-    currFrame = immediateParent->GetFirstPrincipalChild();
+    currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   while (currFrame) {
     // See if it's a menu item.
@@ -2327,7 +2377,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
-      currFrame = currFrame->GetFirstPrincipalChild();
+      currFrame = currFrame->PrincipalChildList().FirstChild();
     else if (!currFrame->GetNextSibling() &&
              currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();
@@ -2335,7 +2385,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
       currFrame = currFrame->GetNextSibling();
   }
 
-  currFrame = immediateParent->GetFirstPrincipalChild();
+  currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != aStart) {
@@ -2346,7 +2396,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
         currFrameContent->GetChildCount() > 0)
-      currFrame = currFrame->GetFirstPrincipalChild();
+      currFrame = currFrame->PrincipalChildList().FirstChild();
     else if (!currFrame->GetNextSibling() &&
              currFrame->GetParent()->GetContent()->IsXULElement(nsGkAtoms::menugroup))
       currFrame = currFrame->GetParent()->GetNextSibling();

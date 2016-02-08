@@ -389,7 +389,7 @@ FocusManager::FocusedDOMNode() const
   }
 
   // Otherwise the focus can be on DOM document.
-  nsPIDOMWindow* focusedWnd = DOMFocusManager->GetFocusedWindow();
+  nsPIDOMWindowOuter* focusedWnd = DOMFocusManager->GetFocusedWindow();
   return focusedWnd ? focusedWnd->GetExtantDoc() : nullptr;
 }
 

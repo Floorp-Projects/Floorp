@@ -21,7 +21,7 @@ void foo() {
   SmartPtr<R> sp;
   take([&](R* argptr) {
     R* localptr;
-    ptr->method(); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+    ptr->method();
     argptr->method();
     localptr->method();
   });
@@ -33,7 +33,7 @@ void foo() {
   });
   take([&](R* argptr) {
     R* localptr;
-    take(ptr); // expected-error{{Refcounted variable 'ptr' of type 'R' cannot be captured by a lambda}} expected-note{{Please consider using a smart pointer}}
+    take(ptr);
     take(argptr);
     take(localptr);
   });
@@ -91,4 +91,28 @@ void foo() {
     take(argsp);
     take(localsp);
   });
+  take([&ptr](R* argptr) {
+      R* localptr;
+      ptr->method();
+      argptr->method();
+      localptr->method();
+    });
+  take([&sp](SmartPtr<R> argsp) {
+      SmartPtr<R> localsp;
+      sp->method();
+      argsp->method();
+      localsp->method();
+    });
+  take([&ptr](R* argptr) {
+      R* localptr;
+      take(ptr);
+      take(argptr);
+      take(localptr);
+    });
+  take([&sp](SmartPtr<R> argsp) {
+      SmartPtr<R> localsp;
+      take(sp);
+      take(argsp);
+      take(localsp);
+    });
 }

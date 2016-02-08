@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+"use strict";
+
+const {Cc, Ci, Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -19,6 +21,10 @@ loader.lazyGetter(this, "MarkupView", () => require("devtools/client/inspector/m
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspector/inspector-search").InspectorSearch);
+loader.lazyGetter(this, "RuleViewTool", () => require("devtools/client/inspector/rules/rules").RuleViewTool);
+loader.lazyGetter(this, "ComputedViewTool", () => require("devtools/client/inspector/computed/computed").ComputedViewTool);
+loader.lazyGetter(this, "FontInspector", () => require("devtools/client/inspector/fonts/fonts").FontInspector);
+loader.lazyGetter(this, "LayoutView", () => require("devtools/client/inspector/layout/layout").LayoutView);
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -352,23 +358,16 @@ InspectorPanel.prototype = {
 
     this.sidebar.on("select", this._setDefaultSidebar);
 
-    this.sidebar.addTab("ruleview",
-                        "chrome://devtools/content/inspector/rules/rules.xhtml",
-                        "ruleview" == defaultTab);
+    this.ruleview = new RuleViewTool(this, this.panelWin);
+    this.computedview = new ComputedViewTool(this, this.panelWin);
 
-    this.sidebar.addTab("computedview",
-                        "chrome://devtools/content/inspector/computed/computed.xhtml",
-                        "computedview" == defaultTab);
-
-    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
-      this.sidebar.addTab("fontinspector",
-                          "chrome://devtools/content/inspector/fonts/fonts.xhtml",
-                          "fontinspector" == defaultTab);
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
+        this.canGetUsedFontFaces) {
+      this.fontInspector = new FontInspector(this, this.panelWin);
+      this.panelDoc.getElementById("sidebar-tab-fontinspector").hidden = false;
     }
 
-    this.sidebar.addTab("layoutview",
-                        "chrome://devtools/content/inspector/layout/layout.xhtml",
-                        "layoutview" == defaultTab);
+    this.layoutview = new LayoutView(this, this.panelWin);
 
     if (this.target.form.animationsActor) {
       this.sidebar.addTab("animationinspector",
@@ -376,7 +375,7 @@ InspectorPanel.prototype = {
                           "animationinspector" == defaultTab);
     }
 
-    this.sidebar.show();
+    this.sidebar.show(defaultTab);
 
     this.setupSidebarToggle();
   },
@@ -585,6 +584,22 @@ InspectorPanel.prototype = {
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
     this._toolbox.off("select", this.updateDebuggerPausedWarning);
     this._toolbox.off("host-changed", this.onToolboxHostChanged);
+
+    if (this.ruleview) {
+      this.ruleview.destroy();
+    }
+
+    if (this.computedview) {
+      this.computedview.destroy();
+    }
+
+    if (this.fontInspector) {
+      this.fontInspector.destroy();
+    }
+
+    if (this.layoutview) {
+      this.layoutview.destroy();
+    }
 
     this.sidebar.off("select", this._setDefaultSidebar);
     let sidebarDestroyer = this.sidebar.destroy();

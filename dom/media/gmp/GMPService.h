@@ -72,7 +72,7 @@ public:
   // Note: if the plugin has crashed before the target window has been set,
   // the 'PluginCrashed' event is dispatched as soon as a target window is set.
   void AddPluginCrashedEventTarget(const uint32_t aPluginId,
-                                   nsPIDOMWindow* aParentWindow);
+                                   nsPIDOMWindowInner* aParentWindow);
 
 protected:
   GeckoMediaPluginService();
@@ -101,7 +101,7 @@ protected:
     NS_INLINE_DECL_REFCOUNTING(GMPCrashCallback)
 
     GMPCrashCallback(const uint32_t aPluginId,
-                     nsPIDOMWindow* aParentWindow,
+                     nsPIDOMWindowInner* aParentWindow,
                      nsIDocument* aDocument);
     void Run(const nsACString& aPluginName);
     bool IsStillValid();
@@ -109,7 +109,7 @@ protected:
   private:
     virtual ~GMPCrashCallback() { MOZ_ASSERT(NS_IsMainThread()); }
 
-    bool GetParentWindowAndDocumentIfValid(nsCOMPtr<nsPIDOMWindow>& parentWindow,
+    bool GetParentWindowAndDocumentIfValid(nsCOMPtr<nsPIDOMWindowInner>& parentWindow,
                                            nsCOMPtr<nsIDocument>& document);
     const uint32_t mPluginId;
     nsWeakPtr mParentWindowWeakPtr;

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension idle API test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* testIdle() {
+  function background() {
+    browser.idle.queryState(15).then(status => {
+      browser.test.assertEq("active", status, "Expected status");
+      browser.test.notifyPass("idle");
+    },
+    e => {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFail("idle");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+
+    manifest: {
+      permissions: ["idle"],
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("idle");
+
+  yield extension.unload();
+});
+</script>
+</body>

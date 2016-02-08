@@ -250,7 +250,15 @@ abort:
 
 static void nr_socket_buffered_stun_failed(nr_socket_buffered_stun *sock)
   {
+    NR_SOCKET fd;
+
     sock->read_state = NR_ICE_SOCKET_READ_FAILED;
+
+    /* Cancel waiting on the socket */
+    if (sock->inner && !nr_socket_getfd(sock->inner, &fd)) {
+      NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_WRITE);
+      NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
+    }
   }
 
 static int nr_socket_buffered_stun_recvfrom(void *obj,void * restrict buf,

@@ -31,8 +31,8 @@ parent:
                         PBrowser browser,
                         PrintData settings);
 
-  PPrintProgressDialog();
-  PPrintSettingsDialog();
+  async PPrintProgressDialog();
+  async PPrintSettingsDialog();
 
   sync SavePrintSettings(PrintData settings, bool usePrinterNamePrefix,
                          uint32_t flags)
@@ -40,7 +40,7 @@ parent:
 
 child:
   async PRemotePrintJob();
-  __delete__();
+  async __delete__();
 };
 
 } // namespace embedding

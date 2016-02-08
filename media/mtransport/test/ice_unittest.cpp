@@ -316,12 +316,9 @@ class IceTestPeer : public sigslot::has_slots<> {
         this,
         &IceTestPeer::ConnectionStateChange);
 
-    nr_socket_factory *fac;
-    int r = nat_->create_socket_factory(&fac);
+    int r = ice_ctx_->SetNat(nat_);
+    (void)r;
     MOZ_ASSERT(!r);
-    if (!r) {
-      nr_ice_ctx_set_socket_factory(ice_ctx_->ctx(), fac);
-    }
   }
 
   ~IceTestPeer() {
@@ -2098,7 +2095,7 @@ TEST_F(IceGatherTest, TestFakeStunServerNoNatDefaultRouteOnly) {
 
 TEST_F(IceGatherTest, TestStunTcpServerTrickle) {
   UseFakeStunTcpServerWithResponse("192.0.3.1", 3333);
-  TestStunServer::GetInstance(AF_INET)->SetDelay(500);
+  TestStunTcpServer::GetInstance(AF_INET)->SetDelay(500);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
   WaitForGather();

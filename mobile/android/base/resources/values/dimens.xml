@@ -220,6 +220,7 @@
     <item name="wrap_content" type="dimen">-2</item>
 
     <item name="tab_strip_content_start" type="dimen">12dp</item>
+    <item name="firstrun_tab_strip_content_start" type="dimen">15dp</item>
 
     <item name="split_plane_left_pane_weight" format="float" type="dimen">0.32</item>
     <item name="split_plane_right_pane_weight" format="float" type="dimen">0.68</item>

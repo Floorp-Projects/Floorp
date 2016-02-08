@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ds/TraceableFifo.h"
+#include "gc/Policy.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
@@ -43,17 +44,17 @@ BEGIN_TEST(testGCSuppressions)
 }
 END_TEST(testGCSuppressions)
 
-struct MyContainer : public JS::Traceable
+struct MyContainer
 {
     RelocatablePtrObject obj;
     RelocatablePtrString str;
 
     MyContainer() : obj(nullptr), str(nullptr) {}
-    static void trace(MyContainer* self, JSTracer* trc) {
-        if (self->obj)
-            js::TraceEdge(trc, &self->obj, "test container");
-        if (self->str)
-            js::TraceEdge(trc, &self->str, "test container");
+    void trace(JSTracer* trc) {
+        if (obj)
+            js::TraceEdge(trc, &obj, "test container");
+        if (str)
+            js::TraceEdge(trc, &str, "test container");
     }
 };
 

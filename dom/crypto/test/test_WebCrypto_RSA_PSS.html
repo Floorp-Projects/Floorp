@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// Generating 2048-bit keys takes some time.
+SimpleTest.requestLongerTimeout(2);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS key generation (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-PSS",
+      hash: "SHA-1",
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    crypto.subtle.generateKey(alg, false, ["sign", "verify"])
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS key generation and sign/verify round-trip (SHA-256, 2048-bit)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-PSS",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+    function doSign() {
+      var alg = {name: "RSA-PSS", saltLength: 32};
+      return crypto.subtle.sign(alg, privKey, data);
+    }
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: 32};
+      return crypto.subtle.verify(alg, pubKey, x, data);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["sign", "verify"])
+      .then(setKey, error(that))
+      .then(doSign, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that))
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signature (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var vec = tv.rsapss;
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: vec.saltLength};
+      return crypto.subtle.verify(alg, x, vec.sig, vec.data);
+    }
+
+    crypto.subtle.importKey("spki", vec.spki, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test invalid RSA-PSS signatures",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var vec = tv.rsapss;
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: vec.saltLength};
+      var clone1 = new Uint8Array(vec.data);
+      var clone2 = new Uint8Array(vec.data);
+      clone1[clone1.byteLength - 1] ^= 1;
+      clone2[0] ^= 1;
+
+      return Promise.all([
+        crypto.subtle.verify(alg, x, vec.sig, clone1),
+        crypto.subtle.verify(alg, x, vec.sig, clone2),
+        crypto.subtle.verify(alg, x, vec.sig, vec.data.slice(1)),
+        crypto.subtle.verify(alg, x, vec.sig, vec.data.slice(0, vec.data.byteLength - 1)),
+      ]);
+    }
+
+    crypto.subtle.importKey("spki", vec.spki, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(results => results.every(x => !x))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signature (SHA-1, 1024-bit, JWK)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
+      return crypto.subtle.verify(alg, x, tv.rsapss.sig, tv.rsapss.data);
+    }
+
+    crypto.subtle.importKey("jwk", tv.rsapss.jwk_pub, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signatures (SHA-1 to SHA-512, 1024-bit)",
+  function () {
+    var that = this;
+
+    function verifyCase(hash, tv) {
+      var alg = {name: "RSA-PSS", hash, saltLength: tv.saltLength};
+      return crypto.subtle.importKey("spki", tv.spki, alg, false, ["verify"])
+        .then(x => crypto.subtle.verify(alg, x, tv.sig, tv.data));
+    }
+
+    Promise.all([
+      verifyCase("SHA-1", tv.rsapss2),
+      verifyCase("SHA-256", tv.rsapss3),
+      verifyCase("SHA-384", tv.rsapss4),
+      verifyCase("SHA-512", tv.rsapss5),
+    ]).then(complete(that, x => x.every(y => y)), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS import SPKI/PKCS#8 keys and sign/verify (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    var privKey, pubKey;
+    function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
+    function doSign() {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
+      return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
+    }
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
+      return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
+    }
+
+    var spki =
+      crypto.subtle.importKey("spki", tv.rsapss.spki, alg, false, ["verify"]);
+    var pkcs8 =
+      crypto.subtle.importKey("pkcs8", tv.rsapss.pkcs8, alg, false, ["sign"]);
+
+    Promise.all([spki, pkcs8])
+      .then(setKeys, error(that))
+      .then(doSign, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS import JWK keys and sign/verify (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    var privKey, pubKey;
+    function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
+    function doSign() {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
+      return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
+    }
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.saltLength};
+      return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
+    }
+
+    var spki =
+      crypto.subtle.importKey("jwk", tv.rsapss.jwk_pub, alg, false, ["verify"]);
+    var pkcs8 =
+      crypto.subtle.importKey("jwk", tv.rsapss.jwk_priv, alg, false, ["sign"]);
+
+    Promise.all([spki, pkcs8])
+      .then(setKeys, error(that))
+      .then(doSign, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS SPKI import/export (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("spki", x);
+    }
+
+    crypto.subtle.importKey("spki", tv.rsapss.spki, alg, true, ["verify"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.rsapss.spki), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS PKCS#8 import/export (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("pkcs8", x);
+    }
+
+    crypto.subtle.importKey("pkcs8", tv.rsapss.pkcs8, alg, true, ["sign"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.rsapss.pkcs8), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS JWK export a public key",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var jwk = tv.rsapss.jwk_pub;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("jwk", x);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["verify"])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ["n", "e"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "PS1" &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ["verify"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS JWK export a private key",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var jwk = tv.rsapss.jwk_priv;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("jwk", x);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["sign"])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ["n", "e", "d", "p", "q", "dp", "dq", "qi"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "PS1" &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ["sign"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e &&
+                 x.d == jwk.d &&
+                 x.p == jwk.p &&
+                 x.q == jwk.q &&
+                 x.dp == jwk.dp &&
+                 x.dq == jwk.dq &&
+                 x.qi == jwk.qi;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Deterministic RSA-PSS signatures with saltLength=0 (SHA-256, 2048-bit)",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-PSS",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+
+    function doSignTwice() {
+      var alg = {name: "RSA-PSS", saltLength: 0};
+      return Promise.all([
+        crypto.subtle.sign(alg, privKey, data),
+        crypto.subtle.sign(alg, privKey, data)
+      ]);
+    }
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: 0};
+      return crypto.subtle.verify(alg, pubKey, x, data);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["sign", "verify"])
+      .then(setKey, error(that))
+      .then(doSignTwice, error(that))
+      .then(([sig1, sig2]) => {
+        if (!util.memcmp(sig1, sig2)) {
+          throw new Error("sig1 must be equal to sig2");
+        }
+
+        return sig1;
+      }, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that))
+  }
+);
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

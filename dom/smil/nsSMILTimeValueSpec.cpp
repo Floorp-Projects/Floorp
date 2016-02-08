@@ -353,7 +353,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
     nsIDocument* doc = aTarget->GetCurrentDoc();
     if (!doc)
       return nullptr;
-    nsPIDOMWindow* win = doc->GetWindow();
+    nsPIDOMWindowOuter* win = doc->GetWindow();
     if (!win)
       return nullptr;
     target = do_QueryInterface(win);

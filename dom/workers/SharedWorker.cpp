@@ -25,7 +25,7 @@ using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
 
-SharedWorker::SharedWorker(nsPIDOMWindow* aWindow,
+SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            WorkerPrivate* aWorkerPrivate,
                            MessagePort* aMessagePort)
   : DOMEventTargetHelper(aWindow)

@@ -977,7 +977,10 @@ function browserAdditions (controller) {
         return windows.map.hasPageLoaded(utils.getWindowId(win));
       }, "Timeout", timeout, aInterval);
     }
-    catch (ex if ex instanceof errors.TimeoutError) {
+    catch (ex) {
+      if (!ex instanceof errors.TimeoutError) {
+        throw ex;
+      }
       timed_out = true;
     }
     finally {

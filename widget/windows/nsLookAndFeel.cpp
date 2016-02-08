@@ -584,7 +584,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   }
 
   // Get scaling factor from physical to logical pixels
-  double pixelScale = 1.0 / WinUtils::LogToPhysFactor(aHDC);
+  double pixelScale = 1.0 / WinUtils::SystemScaleFactor();
 
   // The lfHeight is in pixels, and it needs to be adjusted for the
   // device it will be displayed on.

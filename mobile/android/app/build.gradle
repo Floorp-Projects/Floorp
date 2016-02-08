@@ -65,6 +65,13 @@ android {
     sourceSets {
         main {
             manifest.srcFile "${topobjdir}/mobile/android/base/AndroidManifest.xml"
+            assets {
+                if (mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY && !mozconfig.substs.MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER) {
+                    // If we are packaging the bouncer, it will have the distribution, so don't put
+                    // it in the main APK as well.
+                    srcDir "${mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets"
+                }
+            }
         }
 
         androidTest {
@@ -207,9 +214,9 @@ afterEvaluate {
     // The task name itself is fished at runtime and the package name configured
     // in the spoon configuration.
     task runBrowserTests {
-        dependsOn tasks["spoonLocalDebugAndroidTest"]
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
     }
     task runBackgroundTests {
-        dependsOn tasks["spoonLocalDebugAndroidTest"]
+        dependsOn tasks["spoonLocalOldDebugAndroidTest"]
     }
 }

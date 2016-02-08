@@ -7,6 +7,7 @@
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsContentUtils.h"
 #include <stdint.h>
 
@@ -65,18 +66,18 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
   }
   // Need a fallible allocator because the caller may be a content
   // and the content can specify the length of the string.
-  nsAutoArrayPtr<char16_t> buf(new (fallible) char16_t[outLen + 1]);
+  auto buf = MakeUniqueFallible<char16_t[]>(outLen + 1);
   if (!buf) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
   int32_t length = aLength;
-  rv = mDecoder->Convert(aInput, &length, buf, &outLen);
+  rv = mDecoder->Convert(aInput, &length, buf.get(), &outLen);
   MOZ_ASSERT(mFatal || rv != NS_ERROR_ILLEGAL_INPUT);
   buf[outLen] = 0;
 
-  if (!aOutDecodedString.Append(buf, outLen, fallible)) {
+  if (!aOutDecodedString.Append(buf.get(), outLen, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

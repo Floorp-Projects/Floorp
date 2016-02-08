@@ -31,7 +31,7 @@ function test() {
     permissions: perms,
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
   }]);
-  
+
   open_manager("addons://list/extension", function(aWindow) {
     let addonList = aWindow.document.getElementById("addon-list");
     let ed_r_Item, un_r_Item, no_r_Item;

@@ -10,7 +10,7 @@ var { Heritage } = Cu.import("resource://devtools/client/shared/widgets/ViewHelp
 
 function* spawnTest() {
   let container = document.createElement("vbox");
-  gBrowser.selectedBrowser.parentNode.appendChild(container);
+  yield appendAndWaitForPaint(gBrowser.selectedBrowser.parentNode, container);
 
   // Populate the tree and test the root item...
 

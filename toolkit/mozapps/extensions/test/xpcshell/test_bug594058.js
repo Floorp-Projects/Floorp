@@ -84,5 +84,5 @@ function run_test() {
     do_check_false(gCachePurged);
 
     do_test_finished();
-  });  
+  });
 }

@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeyStatusMap)
 NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeyStatusMap, mParent)
 
-MediaKeyStatusMap::MediaKeyStatusMap(nsPIDOMWindow* aParent)
+MediaKeyStatusMap::MediaKeyStatusMap(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {
 }
@@ -36,7 +36,7 @@ MediaKeyStatusMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return MediaKeyStatusMapBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 MediaKeyStatusMap::GetParentObject() const
 {
   return mParent;

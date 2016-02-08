@@ -66,10 +66,17 @@ public class PermissionBlock {
     }
 
     /**
+     * Execute this permission block. Calling this method will prompt the user if needed.
+     */
+    public void run() {
+        run(null);
+    }
+
+    /**
      * Execute the specified runnable if the app has been granted all permissions. Calling this method will prompt the
      * user if needed.
      */
-    public void run(@NonNull Runnable onPermissionsGranted) {
+    public void run(Runnable onPermissionsGranted) {
         if (!doNotPrompt && !(context instanceof Activity)) {
             throw new IllegalStateException("You need to either specify doNotPrompt() or pass in an Activity context");
         }

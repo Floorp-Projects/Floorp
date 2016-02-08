@@ -525,6 +525,8 @@ class JitCompartment
         regExpTesterStub_ = generateRegExpTesterStub(cx);
         return regExpTesterStub_ != nullptr;
     }
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // Called from JSCompartment::discardJitCode().

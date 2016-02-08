@@ -12,4 +12,3 @@ contract @mozilla.org/networkstatsalarm;1 {a93ea13e-409c-4189-9b1e-95fff220be55}
 
 component {ceb874cd-cc1a-4e65-b404-cc2d3e42425f} NetworkStatsManager.js
 contract @mozilla.org/networkStatsManager;1 {ceb874cd-cc1a-4e65-b404-cc2d3e42425f}
-category JavaScript-navigator-property mozNetworkStats @mozilla.org/networkStatsManager;1

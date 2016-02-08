@@ -14,14 +14,14 @@ protocol PPSMContentDownloader
   manager PContent;
 
 parent:
-  OnStartRequest(uint32_t contentLength);
-  OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
-  OnStopRequest(nsresult code);
+  async OnStartRequest(uint32_t contentLength);
+  async OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
+  async OnStopRequest(nsresult code);
 
-  DivertToParentUsing(PChannelDiverter diverter);
+  async DivertToParentUsing(PChannelDiverter diverter);
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 } // namespace psm

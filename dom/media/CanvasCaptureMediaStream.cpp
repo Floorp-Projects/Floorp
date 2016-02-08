@@ -254,7 +254,7 @@ CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
 }
 
 already_AddRefed<CanvasCaptureMediaStream>
-CanvasCaptureMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
+CanvasCaptureMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                              HTMLCanvasElement* aCanvas)
 {
   RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);

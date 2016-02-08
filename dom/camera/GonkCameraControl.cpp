@@ -247,7 +247,7 @@ nsGonkCameraControl::Initialize()
     DOM_CAMERA_LOGI(" - flash:                         NOT supported\n");
   }
 
-  nsAutoTArray<Size, 16> sizes;
+  AutoTArray<Size, 16> sizes;
   mParams.Get(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, sizes);
   if (sizes.Length() > 0) {
     mSeparateVideoAndPreviewSizesSupported = true;
@@ -264,7 +264,7 @@ nsGonkCameraControl::Initialize()
     mLastRecorderSize = mCurrentConfiguration.mPreviewSize;
   }
 
-  nsAutoTArray<nsString, 8> modes;
+  AutoTArray<nsString, 8> modes;
   mParams.Get(CAMERA_PARAM_SUPPORTED_METERINGMODES, modes);
   if (!modes.IsEmpty()) {
     nsString mode;
@@ -302,7 +302,7 @@ nsGonkCameraControl::~nsGonkCameraControl()
 nsresult
 nsGonkCameraControl::ValidateConfiguration(const Configuration& aConfig, Configuration& aValidatedConfig)
 {
-  nsAutoTArray<Size, 16> supportedSizes;
+  AutoTArray<Size, 16> supportedSizes;
   Get(CAMERA_PARAM_SUPPORTED_PICTURESIZES, supportedSizes);
 
   nsresult rv = GetSupportedSize(aConfig.mPictureSize, supportedSizes,
@@ -923,7 +923,7 @@ nsGonkCameraControl::SetThumbnailSizeImpl(const Size& aSize)
   uint32_t smallestDeltaIndex = UINT32_MAX;
   int targetArea = aSize.width * aSize.height;
 
-  nsAutoTArray<Size, 8> supportedSizes;
+  AutoTArray<Size, 8> supportedSizes;
   Get(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES, supportedSizes);
 
   for (uint32_t i = 0; i < supportedSizes.Length(); ++i) {
@@ -1028,7 +1028,7 @@ nsGonkCameraControl::SetPictureSizeImpl(const Size& aSize)
     return NS_OK;
   }
 
-  nsAutoTArray<Size, 8> supportedSizes;
+  AutoTArray<Size, 8> supportedSizes;
   Get(CAMERA_PARAM_SUPPORTED_PICTURESIZES, supportedSizes);
 
   Size best;
@@ -1727,7 +1727,7 @@ nsGonkCameraControl::SelectCaptureAndPreviewSize(const Size& aPreviewSize,
                   aPreviewSize.width, aPreviewSize.height,
                   aMaxSize.width, aMaxSize.height);
 
-  nsAutoTArray<Size, 16> sizes;
+  AutoTArray<Size, 16> sizes;
   nsresult rv = Get(CAMERA_PARAM_SUPPORTED_PREVIEWSIZES, sizes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2273,8 +2273,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
 
       // ARGB is 32 bits / pixel
       size_t tmpLength = mWidth * mHeight * sizeof(uint32_t);
-      nsAutoArrayPtr<uint8_t> tmp;
-      tmp = new uint8_t[tmpLength];
+      UniquePtr<uint8_t[]> tmp = MakeUnique<uint8_t[]>(tmpLength);
 
       GrallocImage* nativeImage = static_cast<GrallocImage*>(mImage.get());
       android::sp<GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
@@ -2284,7 +2283,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
 
       uint32_t stride = mWidth * 4;
       int err = libyuv::ConvertToARGB(static_cast<uint8_t*>(graphicSrc),
-                                      srcLength, tmp, stride, 0, 0,
+                                      srcLength, tmp.get(), stride, 0, 0,
                                       mWidth, mHeight, mWidth, mHeight,
                                       libyuv::kRotate0, libyuv::FOURCC_NV21);
 
@@ -2307,7 +2306,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
       }
 
       nsString opt;
-      nsresult rv = encoder->InitFromData(tmp, tmpLength, mWidth,
+      nsresult rv = encoder->InitFromData(tmp.get(), tmpLength, mWidth,
                                           mHeight, stride,
                                           imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                           opt);

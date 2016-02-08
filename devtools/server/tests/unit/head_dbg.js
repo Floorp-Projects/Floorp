@@ -130,11 +130,7 @@ function createTestGlobal(name) {
 
 function connect(client) {
   dump("Connecting client.\n");
-  return new Promise(function (resolve) {
-    client.connect(function () {
-      resolve();
-    });
-  });
+  return client.connect();
 }
 
 function close(client) {
@@ -423,11 +419,11 @@ function get_chrome_actors(callback)
   DebuggerServer.allowChromeProcess = true;
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(() => {
-    client.getProcess().then(response => {
+  client.connect()
+    .then(() => client.getProcess())
+    .then(response => {
       callback(client, response.form);
     });
-  });
 }
 
 function getChromeActors(client, server = DebuggerServer) {

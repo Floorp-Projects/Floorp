@@ -6,7 +6,8 @@
 
 #include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
-interface nsIDOMWindow;
+
+interface mozIDOMWindowProxy;
 
 [scriptable, function, uuid(8144404d-e6c7-4861-bcca-47de912ee811)]
 interface nsIApplicationChooserFinishedCallback : nsISupports
@@ -14,7 +15,7 @@ interface nsIApplicationChooserFinishedCallback : nsISupports
   void done(in nsIHandlerApp handlerApp);
 };
 
-[scriptable, uuid(8413fc42-d6c4-4d78-bf70-64cd78ebcc5c)]
+[scriptable, uuid(f7a149da-612a-46ba-8a2f-54786fc28791)]
 interface nsIApplicationChooser : nsISupports
 {
  /**
@@ -26,7 +27,7 @@ interface nsIApplicationChooser : nsISupports
   * @param      title    The title for the file widget
   *
   */
-  void init(in nsIDOMWindow parent, in ACString title);
+  void init(in mozIDOMWindowProxy parent, in ACString title);
 
   /**
    * Open application chooser dialog.

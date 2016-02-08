@@ -65,10 +65,10 @@ xpcAccessible::GetFirstChild(nsIAccessible** aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aFirstChild = ToXPC(Intl()->FirstChild()));
+  NS_IF_ADDREF(*aFirstChild = ToXPC(IntlGeneric().FirstChild()));
   return NS_OK;
 }
 
@@ -78,10 +78,10 @@ xpcAccessible::GetLastChild(nsIAccessible** aLastChild)
   NS_ENSURE_ARG_POINTER(aLastChild);
   *aLastChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aLastChild = ToXPC(Intl()->LastChild()));
+  NS_IF_ADDREF(*aLastChild = ToXPC(IntlGeneric().LastChild()));
   return NS_OK;
 }
 
@@ -90,10 +90,10 @@ xpcAccessible::GetChildCount(int32_t* aChildCount)
 {
   NS_ENSURE_ARG_POINTER(aChildCount);
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  *aChildCount = Intl()->ChildCount();
+  *aChildCount = IntlGeneric().ChildCount();
   return NS_OK;
 }
 
@@ -103,16 +103,16 @@ xpcAccessible::GetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
   NS_ENSURE_ARG_POINTER(aChild);
   *aChild = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   // If child index is negative, then return last child.
   // XXX: do we really need this?
   if (aChildIndex < 0)
-    aChildIndex = Intl()->ChildCount() - 1;
+    aChildIndex = IntlGeneric().ChildCount() - 1;
 
-  Accessible* child = Intl()->GetChildAt(aChildIndex);
-  if (!child)
+  AccessibleOrProxy child = IntlGeneric().ChildAt(aChildIndex);
+  if (child.IsNull())
     return NS_ERROR_INVALID_ARG;
 
   NS_ADDREF(*aChild = ToXPC(child));
@@ -125,7 +125,7 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
   NS_ENSURE_ARG_POINTER(aChildren);
   *aChildren = nullptr;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -133,13 +133,13 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t childCount = Intl()->ChildCount();
+  uint32_t childCount = IntlGeneric().ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = Intl()->GetChildAt(childIdx);
+    AccessibleOrProxy child = IntlGeneric().ChildAt(childIdx);
     children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)), false);
   }
 
-  NS_ADDREF(*aChildren = children);
+  children.forget(aChildren);
   return NS_OK;
 }
 
@@ -204,10 +204,10 @@ xpcAccessible::GetRole(uint32_t* aRole)
   NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  *aRole = Intl()->Role();
+  *aRole = IntlGeneric().Role();
   return NS_OK;
 }
 

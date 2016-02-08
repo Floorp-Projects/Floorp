@@ -5,7 +5,10 @@
 
 package org.mozilla.gecko;
 
+import android.Manifest;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
+import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -23,15 +26,12 @@ import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.health.HealthRecorder;
-import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
@@ -46,6 +46,7 @@ import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -60,11 +61,14 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.TelemetryConstants;
+import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
@@ -90,7 +94,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -110,7 +113,6 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -156,6 +158,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.Vector;
 
 public class BrowserApp extends GeckoApp
@@ -680,6 +683,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -754,6 +758,39 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
+
+        // The update service is enabled for RELEASE_BUILD, which includes the release and beta channels.
+        // However, no updates are served.  Therefore, we don't trust the update service directly, and
+        // try to avoid prompting unnecessarily. See Bug 1232798.
+        if (!AppConstants.RELEASE_BUILD && UpdateServiceHelper.isUpdaterEnabled()) {
+            Permissions.from(this)
+                       .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                       .doNotPrompt()
+                       .andFallback(new Runnable() {
+                           @Override
+                           public void run() {
+                               showUpdaterPermissionSnackbar();
+                           }
+                       })
+                      .run();
+        }
+    }
+
+    private void showUpdaterPermissionSnackbar() {
+        SnackbarHelper.SnackbarCallback allowCallback = new SnackbarHelper.SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                Permissions.from(BrowserApp.this)
+                        .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        .run();
+            }
+        };
+
+        SnackbarHelper.showSnackbarWithAction(this,
+                getString(R.string.updater_permission_text),
+                Snackbar.LENGTH_INDEFINITE,
+                getString(R.string.updater_permission_allow),
+                allowCallback);
     }
 
     private void conditionallyNotifyHCEOL() {
@@ -958,7 +995,8 @@ public class BrowserApp extends GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (getProfile().inGuestMode()) {
+                final GeckoProfile profile = getProfile();
+                if (profile.inGuestMode()) {
                     GuestSession.showNotification(BrowserApp.this);
                 } else {
                     // If we're restarting, we won't destroy the activity.
@@ -966,6 +1004,15 @@ public class BrowserApp extends GeckoApp
                     // have been shown.
                     GuestSession.hideNotification(BrowserApp.this);
                 }
+
+                // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
+                // and it's possible the system will never free the Activity from memory.
+                //
+                // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
+                // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
+                //
+                // So we're left with onStart/onStop.
+                uploadTelemetry(profile);
             }
         });
     }
@@ -1118,7 +1165,12 @@ public class BrowserApp extends GeckoApp
                     final String title = tab.getDisplayTitle();
 
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url);
+                        ThreadUtils.postToBackgroundThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                GeckoAppShell.createShortcut(title, url);
+                            }
+                        });
                     }
                 }
             }
@@ -1254,13 +1306,13 @@ public class BrowserApp extends GeckoApp
                 return true;
             }
 
-            new AsyncTask<Void, Void, Void>() {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
-                protected Void doInBackground(Void... voids) {
+                public void run() {
                     GeckoAppShell.createShortcut(title, url);
-                    return null;
+
                 }
-            }.execute();
+            });
 
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
                 getResources().getResourceEntryName(itemId));
@@ -1332,6 +1384,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:LastUrl",
             "Feedback:MaybeLater",
@@ -1614,6 +1667,10 @@ public class BrowserApp extends GeckoApp
                 }
             });
 
+        } else if ("Experiments:GetActive".equals(event)) {
+            final List<String> experiments = SwitchBoard.getActiveExperiments(this);
+            final JSONArray json = new JSONArray(experiments);
+            callback.sendSuccess(json.toString());
         } else if ("Favicon:CacheLoad".equals(event)) {
             final String url = message.getString("url");
             getFaviconFromCache(callback, url);
@@ -1683,9 +1740,7 @@ public class BrowserApp extends GeckoApp
             final BrowserDB db = getProfile().getDB();
             final ContentResolver cr = getContentResolver();
             Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
-            Telemetry.addToHistogram("PLACES_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
-            Telemetry.addToHistogram("FENNEC_FAVICONS_COUNT", db.getCount(cr, "favicons"));
-            Telemetry.addToHistogram("FENNEC_THUMBNAILS_COUNT", db.getCount(cr, "thumbnails"));
+            Telemetry.addToHistogram("FENNEC_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
             Telemetry.addToHistogram("FENNEC_READING_LIST_COUNT", db.getReadingListAccessor().getCount(cr));
             Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
             Telemetry.addToHistogram("FENNEC_TABQUEUE_ENABLED", (TabQueueHelper.isTabQueueEnabled(BrowserApp.this) ? 1 : 0));
@@ -2178,36 +2233,33 @@ public class BrowserApp extends GeckoApp
         }
 
         String url = "";
+        String telemetryMsg = "urlbar-empty";
 
         final Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             final String userSearchTerm = tab.getUserRequested();
+            final String tabURL = tab.getURL();
 
             // Check to see if there's a user-entered search term,
             // which we save whenever the user performs a search.
-            final String telemetryMsg;
             if (!TextUtils.isEmpty(userSearchTerm)) {
                 url = userSearchTerm;
                 telemetryMsg = "urlbar-userentered";
-            } else {
-                url = tab.getURL();
-                telemetryMsg = url.isEmpty() ? "urlbar-empty" : "urlbar-url";
+            } else if (!TextUtils.isEmpty(tabURL)) {
+                url = tabURL;
+                telemetryMsg = "urlbar-url";
             }
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.ACTIONBAR, telemetryMsg);
         }
+
         enterEditingMode(url);
+        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.ACTIONBAR, telemetryMsg);
     }
 
     /**
      * Enters editing mode with the specified URL. If a null
      * url is given, the empty String will be used instead.
      */
-    private void enterEditingMode(String url) {
-        if (url == null) {
-            url = "";
-        }
-
+    private void enterEditingMode(@NonNull String url) {
         if (mBrowserToolbar.isEditing() || mBrowserToolbar.isAnimating()) {
             return;
         }
@@ -2230,7 +2282,7 @@ public class BrowserApp extends GeckoApp
         mBrowserToolbar.startEditing(url, animator);
 
         final boolean isUserSearchTerm = !TextUtils.isEmpty(selectedTab.getUserRequested());
-        if (isUserSearchTerm && AppConstants.NIGHTLY_BUILD) {
+        if (isUserSearchTerm && SwitchBoard.isInExperiment(getContext(), Experiments.SEARCH_TERM)) {
             showBrowserSearchAfterAnimation(animator);
         } else {
             showHomePagerWithAnimator(panelId, animator);
@@ -3881,6 +3933,26 @@ public class BrowserApp extends GeckoApp
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
+    }
+
+    private void uploadTelemetry(final GeckoProfile profile) {
+        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(this, profile)) {
+            return;
+        }
+
+        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(this, profile.getName());
+        final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
+
+        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
+        i.setClass(this, TelemetryUploadService.class);
+        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
+        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().toString());
+        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
+        startService(i);
+
+        // Intent redelivery will ensure this value gets used - see TelemetryUploadService class comments for details.
+        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
     }
 
     public static interface Refreshable {

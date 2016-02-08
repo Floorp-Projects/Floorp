@@ -1,0 +1,21 @@
+{
+	"author": "Glenn Jones",
+	"name": "microformat-shiv-updater",
+	"description": "A script for updating microformat-shiv in mozilla-central from source repo",
+	"version": "1.0.0",
+	"license": "MIT",
+	"homepage": "http://microformat-shiv.com",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/glennjones/microformat-shiv-updater.git"
+	},
+	"main": "update.js",
+	"scripts": {
+		"start": "update"
+	 },
+	"dependencies": {
+		"download-github-repo": "0.1.x",
+		"fs-extra": "0.19.x",
+		"request": "2.58.x"
+	}
+}

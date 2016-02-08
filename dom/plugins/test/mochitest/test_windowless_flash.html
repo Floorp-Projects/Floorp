@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests()">
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function runTests() {
+    var p1 = document.getElementById('plugin1');
+    var p2 = document.getElementById('plugin2');
+    var p3 = document.getElementById('plugin3');
+    is(p1.hasWidget(), false, "Flash is always windowless mode even if wmode=window");
+    is(p2.hasWidget(), false, "Flash is always windowless mode even if wmode=anything");
+    is(p3.hasWidget(), false, "Flash is always windowless mode even if no wmode");
+    SimpleTest.finish();
+  }
+
+  </script>
+  <p id="display"></p>
+
+  <div id="div1">
+    <embed id="plugin1" type="application/x-shockwave-flash-test" width="200" height="200" wmode="window"></embed>
+    <embed id="plugin2" type="application/x-shockwave-flash-test" width="200" height="200" wmode="test"></embed>
+    <embed id="plugin3" type="application/x-shockwave-flash-test" width="200" height="200"></embed>
+  </div>
+</body>
+</html>

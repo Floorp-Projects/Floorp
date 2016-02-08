@@ -17,7 +17,7 @@ class IccCardLockError final : public DOMError
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  IccCardLockError(nsPIDOMWindow* aWindow, const nsAString& aName,
+  IccCardLockError(nsPIDOMWindowInner* aWindow, const nsAString& aName,
                    int16_t aRetryCount);
 
   static already_AddRefed<IccCardLockError>

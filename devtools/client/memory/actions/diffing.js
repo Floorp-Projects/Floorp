@@ -5,6 +5,7 @@
 
 const { assert, reportException } = require("devtools/shared/DevToolsUtils");
 const { actions, diffingState, viewState } = require("../constants");
+const telemetry = require("../telemetry");
 const {
   breakdownEquals,
   getSnapshot,
@@ -49,7 +50,7 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
     assert(snapshotIsDiffable(second),
            `Second snapshot must be in a diffable state, found ${second.state}`);
 
-    let report;
+    let report, parentMap;
     let inverted = getState().inverted;
     let breakdown = getState().breakdown;
     let filter = getState().filter;
@@ -86,10 +87,10 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
       opts.filter = filter || null;
 
       try {
-        report = yield heapWorker.takeCensusDiff(first.path,
-                                                 second.path,
-                                                 { breakdown },
-                                                 opts);
+        ({ delta: report, parentMap } = yield heapWorker.takeCensusDiff(first.path,
+                                                                        second.path,
+                                                                        { breakdown },
+                                                                        opts));
       } catch (error) {
         reportException("actions/diffing/takeCensusDiff", error);
         dispatch({ type: actions.DIFFING_ERROR, error });
@@ -105,10 +106,13 @@ const takeCensusDiff = exports.takeCensusDiff = function (heapWorker, first, sec
       first,
       second,
       report,
+      parentMap,
       inverted,
       filter,
       breakdown,
     });
+
+    telemetry.countDiff({ inverted, filter, breakdown });
   };
 };
 

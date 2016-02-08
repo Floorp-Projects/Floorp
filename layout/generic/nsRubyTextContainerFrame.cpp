@@ -67,7 +67,9 @@ nsRubyTextContainerFrame::SetInitialChildList(ChildListID aListID,
                                               nsFrameList& aChildList)
 {
   nsRubyTextContainerFrameSuper::SetInitialChildList(aListID, aChildList);
-  UpdateSpanFlag();
+  if (aListID == kPrincipalList) {
+    UpdateSpanFlag();
+  }
 }
 
 /* virtual */ void

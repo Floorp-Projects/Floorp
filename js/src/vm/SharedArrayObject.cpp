@@ -23,6 +23,7 @@
 #endif
 
 #include "asmjs/AsmJS.h"
+#include "asmjs/Wasm.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
 
@@ -74,11 +75,15 @@ MarkValidRegion(void* addr, size_t len)
 
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 // Since this SharedArrayBuffer will likely be used for asm.js code, prepare it
-// for asm.js by mapping the 4gb protected zone described in AsmJSValidate.h.
+// for asm.js by mapping the 4gb protected zone described in Wasm.h.
 // Since we want to put the SharedArrayBuffer header immediately before the
 // heap but keep the heap page-aligned, allocate an extra page before the heap.
-static const uint64_t SharedArrayMappedSize = AsmJSMappedSize + AsmJSPageSize;
-static_assert(sizeof(SharedArrayRawBuffer) < AsmJSPageSize, "Page size not big enough");
+static uint64_t
+SharedArrayMappedSize()
+{
+    MOZ_RELEASE_ASSERT(sizeof(SharedArrayRawBuffer) < gc::SystemPageSize());
+    return wasm::MappedSize + gc::SystemPageSize();
+}
 
 // If there are too many 4GB buffers live we run up against system resource
 // exhaustion (address space or number of memory map descriptors), see
@@ -91,6 +96,12 @@ static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numLive;
 static const uint32_t maxLive = 1000;
 #endif
 
+static uint32_t
+SharedArrayAllocSize(uint32_t length)
+{
+    return AlignBytes(length + gc::SystemPageSize(), gc::SystemPageSize());
+}
+
 SharedArrayRawBuffer*
 SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
 {
@@ -99,7 +110,7 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     MOZ_ASSERT(length != (uint32_t)-1);
 
     // Add a page for the header and round to a page boundary.
-    uint32_t allocSize = (length + 2*AsmJSPageSize - 1) & ~(AsmJSPageSize - 1);
+    uint32_t allocSize = SharedArrayAllocSize(length);
     if (allocSize <= length)
         return nullptr;
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
@@ -121,21 +132,21 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
             }
         }
         // Get the entire reserved region (with all pages inaccessible)
-        p = MapMemory(SharedArrayMappedSize, false);
+        p = MapMemory(SharedArrayMappedSize(), false);
         if (!p) {
             numLive--;
             return nullptr;
         }
 
         if (!MarkValidRegion(p, allocSize)) {
-            UnmapMemory(p, SharedArrayMappedSize);
+            UnmapMemory(p, SharedArrayMappedSize());
             numLive--;
             return nullptr;
         }
 #   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
         // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
         VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)p + allocSize,
-                                                       SharedArrayMappedSize - allocSize);
+                                                       SharedArrayMappedSize() - allocSize);
 #   endif
     }
 #else
@@ -143,7 +154,7 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     if (!p)
         return nullptr;
 #endif
-    uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + AsmJSPageSize;
+    uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
     SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length);
     MOZ_ASSERT(rawbuf->length == length); // Deallocation needs this
@@ -165,24 +176,24 @@ SharedArrayRawBuffer::dropReference()
 
     // If this was the final reference, release the buffer.
     if (refcount == 0) {
-        SharedMem<uint8_t*> p = this->dataPointerShared() - AsmJSPageSize;
+        SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
 
-        MOZ_ASSERT(p.asValue() % AsmJSPageSize == 0);
+        MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);
 
         uint8_t* address = p.unwrap(/*safe - only reference*/);
-        uint32_t allocSize = (this->length + 2*AsmJSPageSize - 1) & ~(AsmJSPageSize - 1);
+        uint32_t allocSize = SharedArrayAllocSize(this->length);
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
         if (!IsValidAsmJSHeapLength(this->length)) {
             UnmapMemory(address, allocSize);
         } else {
             numLive--;
-            UnmapMemory(address, SharedArrayMappedSize);
+            UnmapMemory(address, SharedArrayMappedSize());
 #       if defined(MOZ_VALGRIND) \
            && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
             // Tell Valgrind/Memcheck to recommence reporting accesses in the
             // previously-inaccessible region.
             VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address,
-                                                          SharedArrayMappedSize);
+                                                          SharedArrayMappedSize());
 #       endif
         }
 #else

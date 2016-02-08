@@ -17,7 +17,7 @@
 #include "mozilla/BasePrincipal.h"
 
 class nsINode;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsXMLHttpRequest;
 
 namespace mozilla {
@@ -95,7 +95,7 @@ private:
 
   ~LoadInfo();
 
-  void ComputeIsThirdPartyContext(nsPIDOMWindow* aOuterWindow);
+  void ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow);
 
   // This function is the *only* function which can change the securityflags
   // of a loadinfo. It only exists because of the XHR code. Don't call it

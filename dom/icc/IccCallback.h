@@ -36,9 +36,9 @@ public:
 
   // TODO: Bug 1125018 - Simplify The Result of GetCardLock and
   // getCardLockRetryCount in MozIcc.webidl without a wrapper object.
-  IccCallback(nsPIDOMWindow* aWindow, DOMRequest* aRequest,
+  IccCallback(nsPIDOMWindowInner* aWindow, DOMRequest* aRequest,
               bool aIsCardLockEnabled = false);
-  IccCallback(nsPIDOMWindow* aWindow, Promise* aPromise);
+  IccCallback(nsPIDOMWindowInner* aWindow, Promise* aPromise);
 
 private:
   ~IccCallback() {}
@@ -51,7 +51,7 @@ private:
   nsresult
   NotifyGetCardLockEnabled(bool aResult);
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<DOMRequest> mRequest;
   RefPtr<Promise> mPromise;
   // TODO: Bug 1125018 - Simplify The Result of GetCardLock and

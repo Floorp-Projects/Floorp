@@ -95,7 +95,15 @@ Probe.prototype = {
   release: function() {
     this._counter--;
     if (this._counter == 0) {
-      this._impl.isActive = false;
+      try {
+        this._impl.isActive = false;
+      } catch (ex) {
+        if (ex && typeof ex == "object" && ex.result == Components.results.NS_ERROR_NOT_AVAILABLE) {
+          // The service has already been shutdown. Ignore further shutdown requests.
+          return;
+        }
+        throw ex;
+      }
       Process.broadcast("release", [this._name]);
     }
   },
@@ -385,7 +393,7 @@ var Probes = {
  */
 function PerformanceMonitor(probes) {
   this._probes = probes;
-  
+
   // Activate low-level features as needed
   for (let probe of probes) {
     probe.acquire();
@@ -421,7 +429,7 @@ PerformanceMonitor.prototype = {
    * `promiseSnapshot()` and `subtract()`.
    *
    * On the other hand, numeric values are also monotonic across several instances
-   * of a PerformanceMonitor with the same probes. 
+   * of a PerformanceMonitor with the same probes.
    *  let a = PerformanceStats.getMonitor(someProbes);
    *  let snapshot1 = yield a.promiseSnapshot();
    *

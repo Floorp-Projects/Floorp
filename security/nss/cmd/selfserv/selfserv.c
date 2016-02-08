@@ -2459,12 +2459,12 @@ main(int argc, char **argv)
             testBulkBuf[i] = i;
     }
 
-    envString = getenv(envVarName);
-    tmp = getenv("TMP");
+    envString = PR_GetEnvSecure(envVarName);
+    tmp = PR_GetEnvSecure("TMP");
     if (!tmp)
-	tmp = getenv("TMPDIR");
+	tmp = PR_GetEnvSecure("TMPDIR");
     if (!tmp)
-	tmp = getenv("TEMP");
+	tmp = PR_GetEnvSecure("TEMP");
     if (envString) {
 	/* we're one of the children in a multi-process server. */
 	listen_sock = PR_GetInheritedFD(inheritableSockName);

@@ -24,7 +24,6 @@ public:
   nsCookiePermission()
     : mCookiesLifetimeSec(INT64_MAX)
     , mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
-    , mCookiesAlwaysAcceptSession(false)
     {}
 
   bool Init();
@@ -40,7 +39,6 @@ private:
 
   int64_t      mCookiesLifetimeSec;            // lifetime limit specified in seconds
   uint8_t      mCookiesLifetimePolicy;         // pref for how long cookies are stored
-  bool mCookiesAlwaysAcceptSession;    // don't prompt for session cookies
 };
 
 // {EF565D0A-AB9A-4A13-9160-0644CDFD859A}

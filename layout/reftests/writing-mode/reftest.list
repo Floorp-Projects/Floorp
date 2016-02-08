@@ -167,6 +167,8 @@ fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-l
 == 1216747-1.html 1216747-1-ref.html
 != 1216747-1.html 1216747-1-notref.html
 
+== 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
+
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest.list

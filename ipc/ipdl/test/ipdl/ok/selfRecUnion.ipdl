@@ -6,6 +6,6 @@ union R {
 
 protocol selfRecUnion {
 child:
-    Test(R r);
-    __delete__();
+    async Test(R r);
+    async __delete__();
 };

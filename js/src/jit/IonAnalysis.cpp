@@ -3695,8 +3695,12 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
                        &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {
-        if (cx->isThrowingOverRecursed() || builder.abortReason() == AbortReason_Alloc)
+        if (cx->isThrowingOverRecursed() ||
+            cx->isThrowingOutOfMemory() ||
+            builder.abortReason() == AbortReason_Alloc)
+        {
             return false;
+        }
         MOZ_ASSERT(!cx->isExceptionPending());
         return true;
     }

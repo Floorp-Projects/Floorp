@@ -92,7 +92,22 @@ LazyScript::functionDelazifying(JSContext* cx) const
     return function_;
 }
 
+inline StaticScope*
+LazyScript::enclosingScope() const
+{
+    return staticScope_->enclosingScope();
+}
+
 } // namespace js
+
+inline js::StaticScope*
+JSScript::enclosingStaticScope() const
+{
+    // The static scope of a function script is the function scope (which
+    // contains arguments and local variables). This method's callers want to
+    // skip that scope.
+    return function_ ? staticScope_->enclosingScope() : staticScope_;
+}
 
 inline JSFunction*
 JSScript::functionDelazifying() const
@@ -158,18 +173,13 @@ JSScript::functionOrCallerFunction()
 inline js::RegExpObject*
 JSScript::getRegExp(size_t index)
 {
-    js::ObjectArray* arr = regexps();
-    MOZ_ASSERT(uint32_t(index) < arr->length);
-    JSObject* obj = arr->vector[index];
-    MOZ_ASSERT(obj->is<js::RegExpObject>());
-    return (js::RegExpObject*) obj;
+    return &getObject(index)->as<js::RegExpObject>();
 }
 
 inline js::RegExpObject*
 JSScript::getRegExp(jsbytecode* pc)
 {
-    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
-    return getRegExp(GET_UINT32_INDEX(pc));
+    return &getObject(pc)->as<js::RegExpObject>();
 }
 
 inline js::GlobalObject&

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Append <summary> and <p> into <details>.
+    var summary = document.createElement("summary");
+    var summary_text = document.createTextNode("Summary");
+    summary.appendChild(summary_text);
+
+    var paragraph = document.createElement("p");
+    var details_text = document.createTextNode("This is the details.");
+    paragraph.appendChild(details_text);
+
+    var details = document.getElementById("details");
+    details.appendChild(summary);
+    details.appendChild(paragraph);
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details open id="details">
+    </details>
+  </body>
+</html>

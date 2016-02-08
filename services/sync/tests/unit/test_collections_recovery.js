@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_identity_test(this, function test_missing_crypto_collection() {
+add_identity_test(this, function* test_missing_crypto_collection() {
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;

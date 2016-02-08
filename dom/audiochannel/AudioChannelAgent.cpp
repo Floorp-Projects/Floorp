@@ -64,36 +64,30 @@ NS_IMETHODIMP AudioChannelAgent::GetAudioChannelType(int32_t *aAudioChannelType)
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::Init(nsIDOMWindow* aWindow, int32_t aChannelType,
+AudioChannelAgent::Init(mozIDOMWindow* aWindow, int32_t aChannelType,
                         nsIAudioChannelAgentCallback *aCallback)
 {
-  return InitInternal(aWindow, aChannelType, aCallback,
-                      /* useWeakRef = */ false);
+  return InitInternal(nsPIDOMWindowInner::From(aWindow), aChannelType,
+                      aCallback, /* useWeakRef = */ false);
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::InitWithWeakCallback(nsIDOMWindow* aWindow,
+AudioChannelAgent::InitWithWeakCallback(mozIDOMWindow* aWindow,
                                         int32_t aChannelType,
                                         nsIAudioChannelAgentCallback *aCallback)
 {
-  return InitInternal(aWindow, aChannelType, aCallback,
-                      /* useWeakRef = */ true);
+  return InitInternal(nsPIDOMWindowInner::From(aWindow), aChannelType,
+                      aCallback, /* useWeakRef = */ true);
 }
 
 nsresult
-AudioChannelAgent::FindCorrectWindow(nsIDOMWindow* aWindow)
+AudioChannelAgent::FindCorrectWindow(nsPIDOMWindowInner* aWindow)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  MOZ_ASSERT(window->IsInnerWindow());
+  MOZ_ASSERT(aWindow->IsInnerWindow());
 
-  mWindow = window->GetScriptableTop();
+  mWindow = aWindow->GetScriptableTop();
   if (NS_WARN_IF(!mWindow)) {
     return NS_OK;
-  }
-
-  mWindow = mWindow->GetOuterWindow();
-  if (NS_WARN_IF(!mWindow)) {
-    return NS_ERROR_FAILURE;
   }
 
   // From here we do an hack for nested iframes.
@@ -103,17 +97,17 @@ AudioChannelAgent::FindCorrectWindow(nsIDOMWindow* aWindow)
   // iframe (what is controlled by the system app).
   // For doing this we go recursively back into the chain of windows until we
   // find apps that are not the system one.
-  window = mWindow->GetParent();
-  if (!window || window == mWindow) {
+  nsCOMPtr<nsPIDOMWindowOuter> outerParent = mWindow->GetParent();
+  if (!outerParent || outerParent == mWindow) {
     return NS_OK;
   }
 
-  window = window->GetCurrentInnerWindow();
-  if (!window) {
+  nsCOMPtr<nsPIDOMWindowInner> parent = outerParent->GetCurrentInnerWindow();
+  if (!parent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = parent->GetExtantDoc();
   if (!doc) {
     return NS_OK;
   }
@@ -152,11 +146,12 @@ AudioChannelAgent::FindCorrectWindow(nsIDOMWindow* aWindow)
     return NS_OK;
   }
 
-  return FindCorrectWindow(window);
+  return FindCorrectWindow(parent);
 }
 
 nsresult
-AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
+AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
+                                int32_t aChannelType,
                                 nsIAudioChannelAgentCallback *aCallback,
                                 bool aUseWeakRef)
 {
@@ -182,9 +177,8 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindow> pInnerWindow = do_QueryInterface(aWindow);
-  MOZ_ASSERT(pInnerWindow->IsInnerWindow());
-  mInnerWindowID = pInnerWindow->WindowID();
+  MOZ_ASSERT(aWindow->IsInnerWindow());
+  mInnerWindowID = aWindow->WindowID();
 
   nsresult rv = FindCorrectWindow(aWindow);
   if (NS_WARN_IF(NS_FAILED(rv))) {

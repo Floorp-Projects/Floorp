@@ -181,10 +181,10 @@ public:
    * Others
    ***************************************************************************/
   static already_AddRefed<BluetoothAdapter>
-    Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
+    Create(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);
 
   void Notify(const BluetoothSignal& aParam); // BluetoothSignalObserver
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return GetOwner();
   }
@@ -223,7 +223,7 @@ public:
   void RemoveLeScanHandle(const nsAString& aScanUuid);
 
 private:
-  BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
+  BluetoothAdapter(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);
   ~BluetoothAdapter();
 
   /**

@@ -138,7 +138,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.actions = new ActionChain(utils);
+  this.actions = new actions.Chain(utils);
 
   this.sessionCapabilities = {
     // mandated capabilities
@@ -223,6 +223,9 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
   name = "Marionette:" + name;
 
+  // TODO(ato): When proxy.AsyncMessageChannel
+  // is used for all chrome <-> content communication
+  // this can be removed.
   if (cmdId) {
     msg.command_id = cmdId;
   }
@@ -242,8 +245,8 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
       this.mm.sendAsyncMessage(name + remoteFrameId, msg);
     } catch (e) {
       switch(e.result) {
-        case Components.results.NS_ERROR_FAILURE:
-        case Components.results.NS_ERROR_NOT_INITIALIZED:
+        case Cr.NS_ERROR_FAILURE:
+        case Cr.NS_ERROR_NOT_INITIALIZED:
           throw new NoSuchWindowError();
         default:
           throw new WebDriverError(e.toString());
@@ -1218,7 +1221,8 @@ GeckoDriver.prototype.get = function(cmd, resp) {
   switch (this.context) {
     case Context.CONTENT:
       let get = this.listener.get({url: url, pageTimeout: this.pageTimeout});
-      let id = this.listener.curId;
+      // TODO(ato): Bug 1242595
+      let id = this.listener.activeMessageId;
 
       // If a remoteness update interrupts our page load, this will never return
       // We need to re-issue this request to correctly poll for readyState and
@@ -2595,7 +2599,7 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
       if (this.appName == "B2G") {
         doc = win.document.body;
       } else {
-        doc = win.document.getElementsByTagName("window")[0];
+        doc = win.document.documentElement;
       }
       let docRect = doc.getBoundingClientRect();
       let width = docRect.width;

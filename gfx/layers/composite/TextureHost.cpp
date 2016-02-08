@@ -522,6 +522,8 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     // We don't have a buffer; a possible cause is that the IPDL actor
     // is already dead. This inevitably happens as IPDL actors can die
     // at any time, so we want to silently return in this case.
+    // another possible cause is that IPDL failed to map the shmem when
+    // deserializing it.
     return false;
   }
   if (!mCompositor) {
@@ -651,9 +653,19 @@ ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
                                    ISurfaceAllocator* aDeallocator,
                                    TextureFlags aFlags)
 : BufferTextureHost(aDesc, aFlags)
-, mShmem(MakeUnique<ipc::Shmem>(aShmem))
 , mDeallocator(aDeallocator)
 {
+  if (aShmem.IsReadable()) {
+    mShmem = MakeUnique<ipc::Shmem>(aShmem);
+  } else {
+    // This can happen if we failed to map the shmem on this process, perhaps
+    // because it was big and we didn't have enough contiguous address space
+    // available, even though we did on the child process.
+    // As a result this texture will be in an invalid state and Lock will
+    // always fail.
+    gfxCriticalError() << "Failed to create a valid ShmemTextureHost";
+  }
+
   MOZ_COUNT_CTOR(ShmemTextureHost);
 }
 

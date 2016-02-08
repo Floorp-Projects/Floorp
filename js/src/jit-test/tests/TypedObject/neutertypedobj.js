@@ -14,7 +14,7 @@ function main(variant) {
   for (var i = 0; i < 10; i++)
     assertEq(readFromS(s), 66);
 
-  neuter(storage(s).buffer, variant);
+  detachArrayBuffer(storage(s).buffer, variant);
 
   for (var i = 0; i < 10; i++) {
     var ok = false;

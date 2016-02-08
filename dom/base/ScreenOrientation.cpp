@@ -63,7 +63,7 @@ OrientationTypeToInternal(OrientationType aOrientation)
   }
 }
 
-ScreenOrientation::ScreenOrientation(nsPIDOMWindow* aWindow, nsScreen* aScreen)
+ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow, nsScreen* aScreen)
   : DOMEventTargetHelper(aWindow), mScreen(aScreen)
 {
   MOZ_ASSERT(aWindow);
@@ -289,7 +289,7 @@ ScreenOrientation::LockInternal(ScreenOrientationInternal aOrientation, ErrorRes
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
   if (NS_WARN_IF(!owner)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -439,7 +439,7 @@ ScreenOrientation::GetAngle(ErrorResult& aRv) const
 ScreenOrientation::LockPermission
 ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const
 {
-  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
   if (!owner) {
     return LOCK_DENIED;
   }
@@ -478,7 +478,7 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const
 nsIDocument*
 ScreenOrientation::GetResponsibleDocument() const
 {
-  nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
   if (!owner) {
     return nullptr;
   }
@@ -579,7 +579,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(doc->GetInnerWindow());
+  auto* win = nsGlobalWindow::Cast(doc->GetInnerWindow());
   if (!win) {
     return NS_OK;
   }

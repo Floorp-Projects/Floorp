@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  </body>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var url = "http://test/chrome/dom/apps/tests/apps/utf8.webapp";
+
+confirmNextPopup();
+navigator.mozApps.install(url, null).onsuccess = function onInstall() {
+  is(this.result.manifest.name, "TheBOM ゲゴケ゚セニツ゚ヅヂチ", "manifest.name");
+  is(this.result.manifest.description, "This App is THE BOM, yo. ヅヂチ",
+     "manifest.description");
+
+  confirmNextPopup();
+  navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
+    SimpleTest.finish();
+  }
+};
+
+</script>
+</window>

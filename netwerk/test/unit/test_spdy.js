@@ -21,6 +21,7 @@ var md5s = ['f1b708bba17f1ce948dc979f4d7092bc',
 
 var bigListenerData = generateContent(128 * 1024);
 var bigListenerMD5 = '8f607cfdd2c87d6a7eedb657dafbd836';
+var hugeListenerData = generateContent(800 * 1024);
 
 function checkIsSpdy(request) {
   try {
@@ -151,9 +152,6 @@ SpdyBigListener.prototype.onDataAvailable = function(request, ctx, stream, off, 
   this.onDataAvailableFired = true;
   this.isSpdyConnection = checkIsSpdy(request);
   this.buffer = this.buffer.concat(read_stream(stream, cnt));
-  // We know the server should send us the same data as our big post will be,
-  // so the md5 should be the same
-  do_check_eq(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
 };
 
 SpdyBigListener.prototype.onStopRequest = function(request, ctx, status) {
@@ -162,7 +160,14 @@ SpdyBigListener.prototype.onStopRequest = function(request, ctx, status) {
   do_check_true(this.isSpdyConnection);
 
   // Don't want to flood output, so don't use do_check_eq
-  do_check_true(this.buffer == bigListenerData);
+  if (request.originalURI.spec == "https://localhost:" + serverPort + "/big") {
+    // We know the server should send us the same data as our big post will be,
+    // so the md5 should be the same
+    do_check_eq(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
+    do_check_true(this.buffer == bigListenerData);
+  } else {
+    do_check_true(this.buffer == hugeListenerData);
+  }
 
   run_next_test();
   do_test_finished();
@@ -298,6 +303,15 @@ function test_spdy_big() {
   chan.asyncOpen2(listener);
 }
 
+// Make sure we handle big GETs with suspend/resume
+function test_spdy_big_and_slow() {
+  var chan = makeChan("https://localhost:" + serverPort + "/huge");
+  var listener = new SpdyBigListener();
+  chan.asyncOpen2(listener);
+  chan.suspend();
+  do_timeout(750, chan.resume);
+}
+
 // Support for doing a POST
 function do_post(content, chan, listener) {
   var stream = Cc["@mozilla.org/io/string-input-stream;1"]
@@ -348,6 +362,7 @@ var tests = [ test_spdy_post_big
             , test_spdy_header
             , test_spdy_multiplex
             , test_spdy_big
+            , test_spdy_big_and_slow
             , test_spdy_post
             // cleanup
             , test_complete

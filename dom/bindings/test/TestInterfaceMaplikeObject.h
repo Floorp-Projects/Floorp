@@ -10,7 +10,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -29,8 +29,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceMaplikeObject)
 
-  explicit TestInterfaceMaplikeObject(nsPIDOMWindow* aParent);
-  nsPIDOMWindow* GetParentObject() const;
+  explicit TestInterfaceMaplikeObject(nsPIDOMWindowInner* aParent);
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   static already_AddRefed<TestInterfaceMaplikeObject>
@@ -43,7 +43,7 @@ public:
   bool HasInternal(const nsAString& aKey);
 private:
   virtual ~TestInterfaceMaplikeObject() {}
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
 } // namespace dom

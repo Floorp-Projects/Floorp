@@ -49,7 +49,7 @@ sync protocol PFileSystemRequest
   manager PContent;
 
 child:
-  __delete__(FileSystemResponseValue response);
+  async __delete__(FileSystemResponseValue response);
 };
 
 } // namespace dom

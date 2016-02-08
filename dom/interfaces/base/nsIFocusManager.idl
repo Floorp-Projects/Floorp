@@ -5,10 +5,11 @@
 
 #include "domstubs.idl"
 
+interface mozIDOMWindowProxy;
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(2487F9CA-D05F-4BD1-8F43-5964E746C482)]
+[scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -46,7 +47,7 @@ interface nsIFocusManager : nsISupports
    * to null or to a non-top-level window throws an NS_ERROR_INVALID_ARG
    * exception.
    */
-  attribute nsIDOMWindow activeWindow;
+  attribute mozIDOMWindowProxy activeWindow;
 
   /**
    * The child window within the activeWindow that is focused. This will
@@ -58,7 +59,7 @@ interface nsIFocusManager : nsISupports
    * that set as the focused element. This process repeats downwards until a
    * non-frame element is found.
    */
-  attribute nsIDOMWindow focusedWindow;
+  attribute mozIDOMWindowProxy focusedWindow;
 
   /**
    * The element that is currently focused. This will always be an element
@@ -74,7 +75,7 @@ interface nsIFocusManager : nsISupports
    * of retrieving the method that was used to focus the currently focused
    * element.
    */
-  uint32_t getLastFocusMethod(in nsIDOMWindow window);
+  uint32_t getLastFocusMethod(in mozIDOMWindowProxy window);
 
   /**
    * Changes the focused element reference within the window containing
@@ -100,7 +101,8 @@ interface nsIFocusManager : nsISupports
    * Returns the element that was focused. The return value may be null if focus
    * was moved into a child process.
    */
-  nsIDOMElement moveFocus(in nsIDOMWindow aWindow, in nsIDOMElement aStartElement,
+  nsIDOMElement moveFocus(in mozIDOMWindowProxy aWindow,
+                          in nsIDOMElement aStartElement,
                           in unsigned long aType, in unsigned long aFlags);
 
   /**
@@ -109,7 +111,7 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
-  void clearFocus(in nsIDOMWindow aWindow);
+  void clearFocus(in mozIDOMWindowProxy aWindow);
 
   /**
    * Returns the currently focused element within aWindow. If aWindow is equal
@@ -128,13 +130,14 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
-  nsIDOMElement getFocusedElementForWindow(in nsIDOMWindow aWindow, in boolean aDeep,
-                                           out nsIDOMWindow aFocusedWindow);
+  nsIDOMElement getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
+                                           in boolean aDeep,
+                                           out mozIDOMWindowProxy aFocusedWindow);
 
   /**
    * Moves the selection caret within aWindow to the current focus.
    */
-  void moveCaretToFocus(in nsIDOMWindow aWindow);
+  void moveCaretToFocus(in mozIDOMWindowProxy aWindow);
 
   /***
    * Check if given element is focusable.
@@ -230,12 +233,12 @@ interface nsIFocusManager : nsISupports
   /**
    * Called when a window has been raised.
    */
-  [noscript] void windowRaised(in nsIDOMWindow aWindow);
+  [noscript] void windowRaised(in mozIDOMWindowProxy aWindow);
 
   /**
    * Called when a window has been lowered.
    */
-  [noscript] void windowLowered(in nsIDOMWindow aWindow);
+  [noscript] void windowLowered(in mozIDOMWindowProxy aWindow);
 
   /**
    * Called when a new document in a window is shown.
@@ -243,13 +246,14 @@ interface nsIFocusManager : nsISupports
    * If aNeedsFocus is true, then focus events are expected to be fired on the
    * window if this window is in the focused window chain.
    */
-  [noscript] void windowShown(in nsIDOMWindow aWindow, in boolean aNeedsFocus);
+  [noscript] void windowShown(in mozIDOMWindowProxy aWindow,
+                              in boolean aNeedsFocus);
 
   /**
    * Called when a document in a window has been hidden or otherwise can no
    * longer accept focus.
    */
-  [noscript] void windowHidden(in nsIDOMWindow aWindow);
+  [noscript] void windowHidden(in mozIDOMWindowProxy aWindow);
 
   /**
    * Fire any events that have been delayed due to synchronized actions.
@@ -267,5 +271,6 @@ interface nsIFocusManager : nsISupports
    * Used in a child process to indicate that the parent window is now
    * active or deactive.
    */
-  [noscript] void parentActivated(in nsIDOMWindow aWindow, in bool active);
+  [noscript] void parentActivated(in mozIDOMWindowProxy aWindow,
+                                  in bool active);
 };

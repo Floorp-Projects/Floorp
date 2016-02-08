@@ -421,7 +421,7 @@ class ObjectGroup : public gc::TenuredCell
     void finalize(FreeOp* fop);
     void fixupAfterMovingGC() {}
 
-    static inline ThingRootKind rootKind() { return THING_ROOT_OBJECT_GROUP; }
+    static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
 
     static inline uint32_t offsetOfClasp() {
         return offsetof(ObjectGroup, clasp_);
@@ -547,21 +547,21 @@ class ObjectGroupCompartment
     NewTable* lazyTable;
 
     struct ArrayObjectKey;
-    using ArrayObjectTable = js::GCHashMap<ArrayObjectKey,
-                                           ReadBarrieredObjectGroup,
-                                           ArrayObjectKey,
-                                           SystemAllocPolicy>;
+    using ArrayObjectTable = js::GCRekeyableHashMap<ArrayObjectKey,
+                                                    ReadBarrieredObjectGroup,
+                                                    ArrayObjectKey,
+                                                    SystemAllocPolicy>;
 
     struct PlainObjectKey;
     struct PlainObjectEntry;
-    struct PlainObjectGCPolicy : public DefaultMapGCPolicy<PlainObjectKey, PlainObjectEntry> {
+    struct PlainObjectTableSweepPolicy {
         static bool needsSweep(PlainObjectKey* key, PlainObjectEntry* entry);
     };
     using PlainObjectTable = js::GCHashMap<PlainObjectKey,
                                            PlainObjectEntry,
                                            PlainObjectKey,
                                            SystemAllocPolicy,
-                                           PlainObjectGCPolicy>;
+                                           PlainObjectTableSweepPolicy>;
 
     // Tables for managing groups common to the contents of large script
     // singleton objects and JSON objects. These are vanilla ArrayObjects and

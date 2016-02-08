@@ -568,7 +568,7 @@ add_test(function test_overlapping_signins() {
 add_task(function* test_getAssertion() {
   let fxa = new MockFxAccounts();
 
-  do_check_throws(function() {
+  do_check_throws(function* () {
     yield fxa.getAssertion("nonaudience");
   });
 

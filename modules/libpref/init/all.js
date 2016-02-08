@@ -129,9 +129,6 @@ pref("dom.indexedDB.logging.profiler-marks", false);
 // Whether or not File Handle is enabled.
 pref("dom.fileHandle.enabled", true);
 
-// Whether or not the Permissions API is enabled.
-pref("dom.permissions.enabled", true);
-
 // Whether or not selection events are enabled
 #ifdef NIGHTLY_BUILD
 pref("dom.select_events.enabled", true);
@@ -142,7 +139,7 @@ pref("dom.select_events.enabled", false);
 // Whether or not Web Workers are enabled.
 pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.
-pref("dom.workers.maxPerDomain", 20);
+pref("dom.workers.maxPerDomain", 50);
 
 pref("dom.serviceWorkers.enabled", false);
 
@@ -206,6 +203,12 @@ pref("dom.url.getters_decode_hash", false);
 // significantly increase the number of compartments in the system.
 pref("dom.compartment_per_addon", true);
 
+#ifdef NIGHTLY_BUILD
+pref("dom.document.scrollingElement.enabled", true);
+#else
+pref("dom.document.scrollingElement.enabled", false);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -214,6 +217,9 @@ pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
 // Duration of timeout of incremental search in menus (ms).  0 means infinite.
 pref("ui.menu.incremental_search.timeout", 1000);
+// If true, all popups won't hide automatically on blur
+pref("ui.popup.disable_autohide", false);
+
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 // 0 = default: always, except in high contrast mode
 // 1 = always
@@ -303,6 +309,7 @@ pref("media.play-stand-alone", true);
 pref("media.block-play-until-visible", false);
 
 pref("media.hardware-video-decoding.enabled", true);
+pref("media.hardware-video-decoding.force-enabled", false);
 
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
@@ -384,11 +391,6 @@ pref("media.navigator.video.h264.max_mbps", 11880); // CIF@30fps
 pref("media.peerconnection.video.h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", false);
 pref("media.getusermedia.aec", 4);
-// Gonk typically captures at QVGA, and so min resolution is QQVGA or
-// 160x120; 100Kbps is plenty for that.
-pref("media.peerconnection.video.min_bitrate", 100);
-pref("media.peerconnection.video.start_bitrate", 220);
-pref("media.peerconnection.video.max_bitrate", 1000);
 #else
 pref("media.navigator.video.default_width",0);  // adaptive default
 pref("media.navigator.video.default_height",0); // adaptive default
@@ -402,12 +404,15 @@ pref("media.navigator.video.h264.max_mbps", 0);
 pref("media.peerconnection.video.h264_enabled", false);
 pref("media.getusermedia.aec", 1);
 pref("media.getusermedia.browser.enabled", true);
+#endif
+// Gonk typically captures at QVGA, and so min resolution is QQVGA or
+// 160x120; 100Kbps is plenty for that.
 // Desktop is typically VGA capture or more; and qm_select will not drop resolution
 // below 1/2 in each dimension (or so), so QVGA (320x200) is the lowest here usually.
-pref("media.peerconnection.video.min_bitrate", 200);
-pref("media.peerconnection.video.start_bitrate", 300);
-pref("media.peerconnection.video.max_bitrate", 2000);
-#endif
+pref("media.peerconnection.video.min_bitrate", 0);
+pref("media.peerconnection.video.start_bitrate", 0);
+pref("media.peerconnection.video.max_bitrate", 0);
+pref("media.peerconnection.video.min_bitrate_estimate", 0);
 pref("media.navigator.audio.fake_frequency", 1000);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.simulcast", true);
@@ -562,6 +567,7 @@ pref("apz.content_response_timeout", 300);
 pref("apz.drag.enabled", false);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
+pref("apz.displayport_expiry_ms", 15000);
 pref("apz.enlarge_displayport_when_clipped", false);
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
@@ -572,7 +578,6 @@ pref("apz.fling_curve_function_x2", "1.0");
 pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "-1.0");
 pref("apz.fling_friction", "0.002");
-pref("apz.fling_repaint_interval", 16);
 pref("apz.fling_stop_on_tap_threshold", "0.05");
 pref("apz.fling_stopped_threshold", "0.01");
 pref("apz.highlight_checkerboarded_areas", false);
@@ -587,13 +592,15 @@ pref("apz.overscroll.spring_stiffness", "0.0018");
 pref("apz.overscroll.stop_distance_threshold", "5.0");
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 pref("apz.overscroll.stretch_factor", "0.35");
-pref("apz.pan_repaint_interval", 16);
 
 // Whether to print the APZC tree for debugging
 pref("apz.printtree", false);
 
+#ifdef NIGHTLY_BUILD
+pref("apz.record_checkerboarding", true);
+#else
 pref("apz.record_checkerboarding", false);
-pref("apz.smooth_scroll_repaint_interval", 16);
+#endif
 pref("apz.test.logging_enabled", false);
 pref("apz.touch_start_tolerance", "0.1");
 pref("apz.touch_move_tolerance", "0.03");
@@ -611,8 +618,6 @@ pref("apz.zoom_animation_duration_ms", 250);
 // Mobile prefs
 pref("apz.allow_zooming", true);
 pref("apz.enlarge_displayport_when_clipped", true);
-pref("apz.fling_repaint_interval", 75);
-pref("apz.smooth_scroll_repaint_interval", 75);
 pref("apz.x_skate_size_multiplier", "1.25");
 pref("apz.y_skate_size_multiplier", "1.5");
 pref("apz.x_stationary_size_multiplier", "1.5");
@@ -1021,7 +1026,11 @@ pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
 // Print via the parent process. This is only used when e10s is enabled.
+#if defined(XP_WIN)
+pref("print.print_via_parent", true);
+#else
 pref("print.print_via_parent", false);
+#endif
 
 // Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
@@ -1324,7 +1333,7 @@ pref("network.http.max-persistent-connections-per-proxy", 32);
 pref("network.http.request.max-start-delay", 10);
 
 // If a connection is reset, we will retry it max-attempts times.
-pref("network.http.request.max-attempts", 3);
+pref("network.http.request.max-attempts", 6);
 
 // Headers
 pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
@@ -1858,7 +1867,6 @@ pref("network.cookie.cookieBehavior",       0); // Keep the old default of accep
 #endif
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptForSession, 3-acceptForNDays
-pref("network.cookie.alwaysAcceptSessionCookies", false);
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90); // Ignored unless network.cookie.lifetimePolicy is 3.
 
@@ -2018,6 +2026,10 @@ pref("security.cert_pinning.enforcement_level", 0);
 // This is to prevent accidental pinning from MITM devices and is used
 // for tests.
 pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
+
+// If set to true, allow view-source URIs to be opened from URIs that share
+// their protocol with the inner URI of the view-source URI
+pref("security.view-source.reachable-from-inner-protocol", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
@@ -2623,8 +2635,13 @@ pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 // Asynchronous plugin initialization is on hold.
 pref("dom.ipc.plugins.asyncInit.enabled", false);
 
+#ifdef RELEASE_BUILD
+// Allow the AsyncDrawing mode to be used for plugins.
+pref("dom.ipc.plugins.asyncdrawing.enabled", false);
+#else
 // Allow the AsyncDrawing mode to be used for plugins.
 pref("dom.ipc.plugins.asyncdrawing.enabled", true);
+#endif
 
 pref("dom.ipc.processCount", 1);
 
@@ -4387,10 +4404,6 @@ pref("layers.tiled-drawtarget.enabled", true);
 pref("layers.tiles.edge-padding", true);
 #endif
 
-// same effect as layers.offmainthreadcomposition.enabled, but specifically for
-// use with tests.
-pref("layers.offmainthreadcomposition.testing.enabled", false);
-
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", true);
 
@@ -4615,8 +4628,9 @@ pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
 // 0 - disabled, 1 - enabled, 2 - autodetect
-// Enabling it for Windows is tracked by bug 736048.
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
+pref("dom.w3c_touch_events.enabled", 0);
+#elif defined(XP_WIN) && !defined(NIGHTLY_BUILD)
 pref("dom.w3c_touch_events.enabled", 0);
 #else
 pref("dom.w3c_touch_events.enabled", 2);
@@ -4938,9 +4952,12 @@ pref("layout.accessiblecaret.timeout_ms", 3000);
 // or long tap events does not fired by APZ.
 pref("layout.accessiblecaret.use_long_tap_injector", true);
 
-// Selection change notifications generated by Javascript, or misc internal
-// events hide AccessibleCarets by default.
+// Use AccessibleCaret default behaviours.
 pref("layout.accessiblecaret.extendedvisibility", false);
+
+// Selection change notifications generated by Javascript hide
+// AccessibleCarets and close UI interaction by default.
+pref("layout.accessiblecaret.allow_script_change_updates", false);
 
 // Optionally provide haptic feedback on longPress selection events.
 pref("layout.accessiblecaret.hapticfeedback", false);
@@ -5131,6 +5148,9 @@ pref("media.gmp.insecure.allow", false);
 #endif
 
 pref("dom.audiochannel.mutedByDefault", false);
+
+// Enable <details> and <summary> tags.
+pref("dom.details_element.enabled", false);
 
 // Secure Element API
 #ifdef MOZ_SECUREELEMENT

@@ -18,29 +18,29 @@ sync protocol PMobileConnection
   manages PMobileConnectionRequest;
 
 child:
-  NotifyVoiceInfoChanged(nsMobileConnectionInfo aInfo);
-  NotifyDataInfoChanged(nsMobileConnectionInfo aInfo);
-  NotifyDataError(nsString aMessage);
-  NotifyCFStateChanged(uint16_t aAction, uint16_t aReason, nsString aNumber,
-                       uint16_t aTimeSeconds, uint16_t aServiceClass);
-  NotifyEmergencyCbModeChanged(bool aActive, uint32_t aTimeoutMs);
-  NotifyOtaStatusChanged(nsString aStatus);
-  NotifyRadioStateChanged(int32_t aRadioState);
-  NotifyClirModeChanged(uint32_t aMode);
-  NotifyLastNetworkChanged(nsString aNetwork);
-  NotifyLastHomeNetworkChanged(nsString aNetwork);
-  NotifyNetworkSelectionModeChanged(int32_t aMode);
+  async NotifyVoiceInfoChanged(nsMobileConnectionInfo aInfo);
+  async NotifyDataInfoChanged(nsMobileConnectionInfo aInfo);
+  async NotifyDataError(nsString aMessage);
+  async NotifyCFStateChanged(uint16_t aAction, uint16_t aReason, nsString aNumber,
+                             uint16_t aTimeSeconds, uint16_t aServiceClass);
+  async NotifyEmergencyCbModeChanged(bool aActive, uint32_t aTimeoutMs);
+  async NotifyOtaStatusChanged(nsString aStatus);
+  async NotifyRadioStateChanged(int32_t aRadioState);
+  async NotifyClirModeChanged(uint32_t aMode);
+  async NotifyLastNetworkChanged(nsString aNetwork);
+  async NotifyLastHomeNetworkChanged(nsString aNetwork);
+  async NotifyNetworkSelectionModeChanged(int32_t aMode);
 
 parent:
   /**
    * Send when child no longer needs to use PMobileConnection.
    */
-  __delete__();
+  async __delete__();
 
   /**
    * Sent when the child makes an asynchronous request to the parent.
    */
-  PMobileConnectionRequest(MobileConnectionRequest aRequest);
+  async PMobileConnectionRequest(MobileConnectionRequest aRequest);
 
   /**
    * Sync call only be called once per child actor for initialization.

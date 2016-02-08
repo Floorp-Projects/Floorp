@@ -212,6 +212,8 @@ pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 // This is used as a regexp match against the page's URL.
 pref("browser.uitour.readerViewTrigger", "^https:\\/\\/www\\.mozilla\\.org\\/[^\\/]+\\/firefox\\/reading\\/start");
+// How long to show a Hearbeat survey (two hours, in seconds)
+pref("browser.uitour.surveyDuration", 7200);
 
 pref("browser.customizemode.tip0.shown", false);
 pref("browser.customizemode.tip0.learnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/customize");
@@ -526,8 +528,6 @@ pref("privacy.sanitize.timeSpan", 1);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 
 pref("privacy.sanitize.migrateFx3Prefs",    false);
-
-pref("privacy.sanitize.migrateClearSavedPwdsOnExit", false);
 
 pref("privacy.panicButton.enabled",         true);
 
@@ -953,6 +953,10 @@ pref("browser.safebrowsing.downloads.enabled", true);
 pref("browser.safebrowsing.downloads.remote.enabled", true);
 pref("browser.safebrowsing.downloads.remote.timeout_ms", 10000);
 pref("browser.safebrowsing.downloads.remote.url", "https://sb-ssl.google.com/safebrowsing/clientreport/download?key=%GOOGLE_API_KEY%");
+pref("browser.safebrowsing.downloads.remote.block_dangerous",            true);
+pref("browser.safebrowsing.downloads.remote.block_dangerous_host",       true);
+pref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", false);
+pref("browser.safebrowsing.downloads.remote.block_uncommon",             false);
 pref("browser.safebrowsing.debug", false);
 
 pref("browser.safebrowsing.provider.google.lists", "goog-badbinurl-shavar,goog-downloadwhite-digest256,goog-phish-shavar,goog-malware-shavar,goog-unwanted-shavar");
@@ -1118,6 +1122,9 @@ pref("toolkit.crashreporter.infoURL",
 
 // base URL for web-based support pages
 pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
+
+// a11y conflicts with e10s support page
+pref("app.support.e10sAccessibilityUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/accessibility-ppt");
 
 // base url for web-based feedback pages
 #ifdef MOZ_DEV_EDITION
@@ -1309,6 +1316,12 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
+#ifdef NIGHTLY_BUILD
+pref("services.sync.syncedTabsUIRefresh", true);
+#else
+pref("services.sync.syncedTabsUIRefresh", false);
+#endif
+
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
 sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
@@ -1389,8 +1402,6 @@ pref("social.sidebar.unload_timeout_ms", 10000);
 pref("social.share.activationPanelEnabled", true);
 pref("social.shareDirectory", "https://activations.cdn.mozilla.net/sharePanel.html");
 
-pref("dom.identity.enabled", false);
-
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
@@ -1466,7 +1477,7 @@ pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com/
 // The URL we take the user to when they opt to "manage" their Firefox Account.
 // Note that this will always need to be in the same TLD as the
 // "identity.fxaccounts.remote.signup.uri" pref.
-pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings");
+pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings?service=sync&context=fx_desktop_v3");
 
 // The remote URL of the FxA Profile Server
 pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
@@ -1537,8 +1548,6 @@ pref("browser.translation.engine", "bing");
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
 pref("toolkit.telemetry.archive.enabled", true);
-// Whether we enable opt-out Telemetry for a sample of the release population.
-pref("toolkit.telemetry.optoutSample", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);
@@ -1588,6 +1597,9 @@ pref("browser.defaultbrowser.notificationbar", false);
 // How often to check for CPOW timeouts. CPOWs are only timed out by
 // the hang monitor.
 pref("dom.ipc.cpow.timeout", 500);
+
+// Causes access on unsafe CPOWs from browser code to throw by default.
+pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
 
 // Enable e10s hang monitoring (slow script checking and plugin hang
 // detection).

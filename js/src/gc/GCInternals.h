@@ -19,9 +19,6 @@
 namespace js {
 namespace gc {
 
-void
-MarkPersistentRootedChains(JSTracer* trc);
-
 class MOZ_RAII AutoCopyFreeListToArenas
 {
     JSRuntime* runtime;

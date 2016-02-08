@@ -123,7 +123,7 @@ ImageClientSingle::FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaite
 bool
 ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags)
 {
-  nsAutoTArray<ImageContainer::OwningImage,4> images;
+  AutoTArray<ImageContainer::OwningImage,4> images;
   uint32_t generationCounter;
   aContainer->GetCurrentImages(&images, &generationCounter);
 
@@ -149,7 +149,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
 
   nsTArray<Buffer> newBuffers;
-  nsAutoTArray<CompositableForwarder::TimedTextureClient,4> textures;
+  AutoTArray<CompositableForwarder::TimedTextureClient,4> textures;
 
   for (auto& img : images) {
     Image* image = img.mImage;
@@ -178,11 +178,12 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 #endif
 
     RefPtr<TextureClient> texture = image->GetTextureClient(this);
+    const bool hasTextureClient = !!texture;
 
     for (int32_t i = mBuffers.Length() - 1; i >= 0; --i) {
       if (mBuffers[i].mImageSerial == image->GetSerial()) {
-        if (texture) {
-          MOZ_ASSERT(texture == mBuffers[i].mTextureClient);
+        if (hasTextureClient) {
+          MOZ_ASSERT(image->GetTextureClient(this) == mBuffers[i].mTextureClient);
         } else {
           texture = mBuffers[i].mTextureClient;
         }

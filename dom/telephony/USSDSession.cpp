@@ -23,7 +23,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(USSDSession)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-USSDSession::USSDSession(nsPIDOMWindow* aWindow, nsITelephonyService* aService,
+USSDSession::USSDSession(nsPIDOMWindowInner* aWindow,
+                         nsITelephonyService* aService,
                          uint32_t aServiceId)
   : mWindow(aWindow), mService(aService), mServiceId(aServiceId)
 {
@@ -33,7 +34,7 @@ USSDSession::~USSDSession()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 USSDSession::GetParentObject() const
 {
   return mWindow;
@@ -73,7 +74,7 @@ already_AddRefed<USSDSession>
 USSDSession::Constructor(const GlobalObject& aGlobal, uint32_t aServiceId,
                          ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

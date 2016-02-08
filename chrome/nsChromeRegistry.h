@@ -22,7 +22,7 @@
 
 #include "mozilla/FileLocation.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsIPrefBranch;
 class nsIURL;
 
@@ -95,7 +95,7 @@ protected:
 
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
 
-  static nsresult RefreshWindow(nsPIDOMWindow* aWindow);
+  static nsresult RefreshWindow(nsPIDOMWindowOuter* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 

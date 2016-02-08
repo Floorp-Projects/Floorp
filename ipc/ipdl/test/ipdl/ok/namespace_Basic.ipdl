@@ -5,7 +5,7 @@ namespace basic {
 protocol namespace_Basic {
 
 child:
-    Msg();
+    async Msg();
 
 };
 

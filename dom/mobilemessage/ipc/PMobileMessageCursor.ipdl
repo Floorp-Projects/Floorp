@@ -17,15 +17,15 @@ protocol PMobileMessageCursor
   manager PSms;
 
 child:
-  NotifyResult(MobileMessageCursorData aData);
+  async NotifyResult(MobileMessageCursorData aData);
 
   /**
    * Sent when the asynchronous cursor request has completed.
    */
-  __delete__(int32_t aError);
+  async __delete__(int32_t aError);
 
 parent:
-  Continue();
+  async Continue();
 };
 
 } // namespace mobilemessage

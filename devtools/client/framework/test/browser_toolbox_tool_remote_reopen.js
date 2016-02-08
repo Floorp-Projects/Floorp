@@ -73,11 +73,7 @@ function getClient() {
   let transport = DebuggerServer.connectPipe();
   let client = new DebuggerClient(transport);
 
-  client.connect(() => {
-    deferred.resolve(client);
-  });
-
-  return deferred.promise;
+  return client.connect().then(() => client);
 }
 
 function getTarget(client) {

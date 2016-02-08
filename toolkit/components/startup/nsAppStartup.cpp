@@ -364,7 +364,7 @@ nsAppStartup::Quit(uint32_t aMode)
         while (windowEnumerator->HasMoreElements(&more), more) {
           nsCOMPtr<nsISupports> window;
           windowEnumerator->GetNext(getter_AddRefs(window));
-          nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(window));
+          nsCOMPtr<nsPIDOMWindowOuter> domWindow(do_QueryInterface(window));
           if (domWindow) {
             MOZ_ASSERT(domWindow->IsOuterWindow());
             if (!domWindow->CanClose())
@@ -433,7 +433,7 @@ nsAppStartup::Quit(uint32_t aMode)
             ferocity = eAttemptQuit;
             nsCOMPtr<nsISupports> window;
             windowEnumerator->GetNext(getter_AddRefs(window));
-            nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(window);
+            nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryInterface(window);
             if (domWindow) {
               if (!domWindow->Closed()) {
                 rv = NS_ERROR_FAILURE;
@@ -504,7 +504,7 @@ nsAppStartup::CloseAllWindows()
     if (NS_FAILED(windowEnumerator->GetNext(getter_AddRefs(isupports))))
       break;
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(isupports);
+    nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(isupports);
     NS_ASSERTION(window, "not an nsPIDOMWindow");
     if (window) {
       MOZ_ASSERT(window->IsOuterWindow());

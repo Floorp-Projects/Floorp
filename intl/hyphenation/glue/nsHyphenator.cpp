@@ -43,8 +43,7 @@ nsHyphenator::IsValid()
 }
 
 nsresult
-nsHyphenator::Hyphenate(const nsAString& aString,
-                        FallibleTArray<bool>& aHyphens)
+nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
 {
   if (!aHyphens.SetLength(aString.Length(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -121,7 +120,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         }
       }
 
-      nsAutoTArray<char,200> utf8hyphens;
+      AutoTArray<char,200> utf8hyphens;
       utf8hyphens.SetLength(utf8.Length() + 5);
       char **rep = nullptr;
       int *pos = nullptr;

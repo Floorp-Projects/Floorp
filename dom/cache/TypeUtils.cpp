@@ -44,7 +44,7 @@ namespace {
 static bool
 HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
 {
-  nsAutoTArray<nsCString, 16> varyHeaders;
+  AutoTArray<nsCString, 16> varyHeaders;
   ErrorResult rv;
   aHeaders->GetAll(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
   MOZ_ALWAYS_TRUE(!rv.Failed());
@@ -67,7 +67,7 @@ HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
 void
 SerializeNormalStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut)
 {
-  nsAutoTArray<FileDescriptor, 4> fds;
+  AutoTArray<FileDescriptor, 4> fds;
   SerializeInputStream(aStream, aReadStreamOut.params(), fds);
 
   PFileDescriptorSetChild* fdSet = nullptr;
@@ -94,7 +94,7 @@ ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
 {
   MOZ_ASSERT(aHeaders);
 
-  nsAutoTArray<InternalHeaders::Entry, 16> entryList;
+  AutoTArray<InternalHeaders::Entry, 16> entryList;
   aHeaders->GetEntries(entryList);
 
   for (uint32_t i = 0; i < entryList.Length(); ++i) {

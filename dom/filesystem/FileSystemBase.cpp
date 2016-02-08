@@ -57,7 +57,7 @@ FileSystemBase::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 FileSystemBase::GetWindow() const
 {
   return nullptr;

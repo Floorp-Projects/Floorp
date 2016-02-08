@@ -37,11 +37,6 @@ static inline bool IsCurrentThread(nsIThread* aThread) {
   return NS_GetCurrentThread() == aThread;
 }
 
-enum class MediaDecoderEventVisibility : int8_t {
-  Observable,
-  Suppressed
-};
-
 /**
  * The AbstractMediaDecoder class describes the public interface for a media decoder
  * and is used by the MediaReader classes.

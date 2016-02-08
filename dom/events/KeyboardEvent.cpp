@@ -260,9 +260,9 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
                                          ErrorResult& aRv)
 {
   bool trusted = Init(aOwner);
-  aRv = InitKeyEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                     aParam.mView, false, false, false, false,
-                     aParam.mKeyCode, aParam.mCharCode);
+  InitKeyEvent(aType, aParam.mBubbles, aParam.mCancelable,
+               aParam.mView, false, false, false, false,
+               aParam.mKeyCode, aParam.mCharCode);
   InitModifiers(aParam);
   SetTrusted(trusted);
   mDetail = aParam.mDetail;
@@ -289,7 +289,7 @@ NS_IMETHODIMP
 KeyboardEvent::InitKeyEvent(const nsAString& aType,
                             bool aCanBubble,
                             bool aCancelable,
-                            nsIDOMWindow* aView,
+                            mozIDOMWindow* aView,
                             bool aCtrlKey,
                             bool aAltKey,
                             bool aShiftKey,
@@ -297,8 +297,7 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
                             uint32_t aKeyCode,
                             uint32_t aCharCode)
 {
-  nsresult rv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
 
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);

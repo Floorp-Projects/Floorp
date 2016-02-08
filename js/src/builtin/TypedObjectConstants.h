@@ -28,7 +28,7 @@
 
 #define JS_ARRAYBUFFER_FLAGS_SLOT            3
 
-#define JS_ARRAYBUFFER_NEUTERED_FLAG 0x4
+#define JS_ARRAYBUFFER_DETACHED_FLAG 0x4
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for typed prototypes

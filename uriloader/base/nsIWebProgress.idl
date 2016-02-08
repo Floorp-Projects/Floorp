@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIWebProgressListener;
 
 /**
@@ -26,7 +26,7 @@ interface nsIWebProgressListener;
  * notifications from any nsIWebProgress instances that are children of that
  * nsIWebProgress instance.
  */
-[scriptable, uuid(bd0efb3b-1c81-4fb0-b16d-576a2be48a95)]
+[scriptable, uuid(c4d64640-b332-4db6-a2a5-e08566000dc9)]
 interface nsIWebProgress : nsISupports
 {
   /**
@@ -131,7 +131,7 @@ interface nsIWebProgress : nsISupports
    * @throw NS_ERROR_FAILURE
    *        Indicates that there is no associated DOM window.
    */
-  readonly attribute nsIDOMWindow DOMWindow;
+  readonly attribute mozIDOMWindowProxy DOMWindow;
   readonly attribute uint64_t DOMWindowID;
 
   /**

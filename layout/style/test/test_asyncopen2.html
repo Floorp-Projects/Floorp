@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1195173
+-->
+<head>
+  <title>Bug 1195173 - Test asyncOpen2 security exception</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!-- Note: the following stylesheet does not exist -->
+  <link rel="stylesheet" id="myCSS" type="text/css" href="file:///home/foo/bar.css">
+
+</head>
+<body onload="checkCSS()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1195173">Mozilla Bug 1195173</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<script type="application/javascript">
+/*
+ * Description of the test:
+ * Accessing a stylesheet that got blocked by asyncOpen2 should
+ * throw an exception.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+function checkCSS()
+{
+  try {
+    // accessing tests/SimpleTest/test.css should not throw
+    var goodCSS = document.styleSheets[0].cssRules
+    ok(true, "accessing test.css should be allowed");
+  }
+  catch(e) {
+    ok(false, "accessing test.css should be allowed");
+  }
+
+  try {
+    // accessing file:///home/foo/bar.css should throw
+    var badCSS = document.styleSheets[1].cssRules
+    ok(false, "accessing bar.css should throw");
+  }
+  catch(e) {
+    ok(true, "accessing bar.css should throw");
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

@@ -5,25 +5,25 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
-[scriptable, builtinclass, uuid(323e5472-b8f4-4288-b1b9-53c7c54bbbe8)]
+[scriptable, builtinclass, uuid(5cb24dbc-36c7-46a4-9966-ac73141dc795)]
 interface nsIAudioChannelService : nsISupports
 {
-  float getAudioChannelVolume(in nsIDOMWindow window,
+  float getAudioChannelVolume(in mozIDOMWindowProxy window,
                               in unsigned short audioChannel);
 
-  void setAudioChannelVolume(in nsIDOMWindow window,
+  void setAudioChannelVolume(in mozIDOMWindowProxy window,
                              in unsigned short audioChannel,
                              in float volume);
 
-  boolean getAudioChannelMuted(in nsIDOMWindow window,
+  boolean getAudioChannelMuted(in mozIDOMWindowProxy window,
                                in unsigned short audioChannel);
 
-  void setAudioChannelMuted(in nsIDOMWindow window,
+  void setAudioChannelMuted(in mozIDOMWindowProxy window,
                             in unsigned short audioChannel,
                             in boolean muted);
 
-  boolean isAudioChannelActive(in nsIDOMWindow window,
+  boolean isAudioChannelActive(in mozIDOMWindowProxy window,
                                in unsigned short audioChannel);
 };

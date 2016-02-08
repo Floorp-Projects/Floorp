@@ -82,78 +82,95 @@ container.addEventListener('mozbrowsershowmodalprompt', function (e) {
   }
 });
 
-if (outOfProcess) {
-  let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+function StartTest() {
+  if (outOfProcess) {
+    let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
 
-  //Workaround for bug 848411, once that bug is fixed, the following line can be removed
-  function contentScript() {
-    addEventListener("DOMWindowCreated", function listener(e) {
-      removeEventListener("DOMWindowCreated", listener, false);
-      var window = e.target.defaultView;
-      window.wrappedJSObject.SpecialPowers.addPermission("allowXULXBL", true, window.document);
-    });
+    //Workaround for bug 848411, once that bug is fixed, the following line can be removed
+    function contentScript() {
+      addEventListener("DOMWindowCreated", function listener(e) {
+        removeEventListener("DOMWindowCreated", listener, false);
+        var window = e.target.defaultView;
+        window.wrappedJSObject.SpecialPowers.addPermission("allowXULXBL", true, window.document);
+      });
+    }
+    mm.loadFrameScript("data:,(" + encodeURI(contentScript.toSource()) + ")();", true);
   }
-  mm.loadFrameScript("data:,(" + encodeURI(contentScript.toSource()) + ")();", true);
-}
 
-if (chrome) {
-  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-  if (typeof(SpecialPowers) == 'undefined') {
-    loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
-    loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
-    loader.loadSubScript("chrome://specialpowers/content/ChromePowers.js");
+  if (chrome) {
+    let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+    if (typeof(SpecialPowers) == 'undefined') {
+      loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
+      loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
+      loader.loadSubScript("chrome://specialpowers/content/ChromePowers.js");
+    }
+    loader.loadSubScript("chrome://mochikit/content/browser-test.js");
+    b2gStart();
   }
-  loader.loadSubScript("chrome://mochikit/content/browser-test.js");
-  b2gStart();
-}
 
-if (onDevice) {
-  var cpuLock = Components.classes["@mozilla.org/power/powermanagerservice;1"]
-                      .getService(Ci.nsIPowerManagerService)
-                      .newWakeLock("cpu");
+  if (onDevice) {
+    var cpuLock = Components.classes["@mozilla.org/power/powermanagerservice;1"]
+      .getService(Ci.nsIPowerManagerService)
+      .newWakeLock("cpu");
 
-  let manager = navigator.mozWifiManager;
-  let con = manager.connection;
-  manager.setPowerSavingMode(false);
+    let manager = navigator.mozWifiManager;
+    let con = manager.connection;
+    manager.setPowerSavingMode(false);
 
-  manager.onenabled = function () {
-    if(wifiSettings) {
-      var req = manager.getKnownNetworks();
-      req.onsuccess = function () {
-        var networks = req.result;
-        for (var i = 0; i < networks.length; ++i){
-          var network = networks[i];
-          if(network.ssid == wifiSettings.ssid) {
-            manager.forget(network);
+    manager.onenabled = function () {
+      if(wifiSettings) {
+        var req = manager.getKnownNetworks();
+        req.onsuccess = function () {
+          var networks = req.result;
+          for (var i = 0; i < networks.length; ++i){
+            var network = networks[i];
+            if(network.ssid == wifiSettings.ssid) {
+              manager.forget(network);
+            }
           }
-        }
-        manager.associate(new window.MozWifiNetwork(wifiSettings));
+          manager.associate(new window.MozWifiNetwork(wifiSettings));
+        };
+      }
+    };
+
+    manager.onstatuschange = function (event) {
+      prefs.setIntPref("network.proxy.type", 2);
+      if (event.status == 'connected') {
+        container.src = mochitestUrl;
+      }
+    };
+
+    if(wifiSettings) {
+      var req = settings.createLock().set({
+        'wifi.enabled': false,
+      'wifi.suspended': false
+      });
+
+      req.onsuccess = function () {
+        dump("----------------------enabling wifi------------------\n");
+        var req1 = settings.createLock().set({
+          'wifi.enabled': true,
+            'wifi.suspended': false});
       };
     }
-  };
-
-  manager.onstatuschange = function (event) {
-    prefs.setIntPref("network.proxy.type", 2);
-    if (event.status == 'connected') {
+  } else {
+    if (!chrome) {
       container.src = mochitestUrl;
     }
-  };
-
-  if(wifiSettings) {
-    var req = settings.createLock().set({
-       'wifi.enabled': false,
-       'wifi.suspended': false
-     });
-
-    req.onsuccess = function () {
-      dump("----------------------enabling wifi------------------\n");
-      var req1 = settings.createLock().set({
-          'wifi.enabled': true,
-          'wifi.suspended': false});
-    };
   }
-} else {
-  if (!chrome) {
-    container.src = mochitestUrl;
-  }
+}
+
+// Prevent display off during testing.
+navigator.mozPower.screenEnabled = true;
+var settingLock = navigator.mozSettings.createLock();
+var settingResult = settingLock.set({
+  'screen.timeout': 0
+});
+settingResult.onsuccess = function () {
+  dump("Set screen.time to 0\n");
+  StartTest();
+}
+settingResult.onerror = function () {
+  dump("Change screen.time failed\n");
+  StartTest();
 }

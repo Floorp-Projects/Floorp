@@ -5,10 +5,10 @@
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
 
-// Deactivate the standard xpcshell observer, as it turns uncaught
-// rejections into failures, which we don't want here.
-Promise.Debugging.clearUncaughtErrorObservers();
+// Prevent test failures due to the unhandled rejections in this test file.
+PromiseTestUtils.disableUncaughtRejectionObserverForSelfTest();
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test runner
@@ -909,7 +909,7 @@ tests.push(
 //   do some work that will asynchronously signal done
 //   start an event loop waiting for the done signal
 // }
-// where the async work uses resolution of a second promise to 
+// where the async work uses resolution of a second promise to
 // trigger the "done" signal. While this would likely work in a
 // naive implementation, our constant-stack implementation needs
 // a special case to avoid deadlock. Note that this test is

@@ -29,7 +29,7 @@
 
 class nsFormHistory;
 class nsINode;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 
 class nsFormFillController final : public nsIFormFillController,
                                    public nsIAutoCompleteInput,
@@ -58,8 +58,8 @@ public:
 protected:
   virtual ~nsFormFillController();
 
-  void AddWindowListeners(nsPIDOMWindow *aWindow);
-  void RemoveWindowListeners(nsPIDOMWindow *aWindow);
+  void AddWindowListeners(nsPIDOMWindowOuter* aWindow);
+  void RemoveWindowListeners(nsPIDOMWindowOuter* aWindow);
 
   void AddKeyListener(nsINode* aInput);
   void RemoveKeyListener();
@@ -79,7 +79,7 @@ protected:
   bool RowMatch(nsFormHistory *aHistory, uint32_t aIndex, const nsAString &aInputName, const nsAString &aInputValue);
 
   inline nsIDocShell *GetDocShellForInput(nsIDOMHTMLInputElement *aInput);
-  inline nsPIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
+  inline nsPIDOMWindowOuter *GetWindowForDocShell(nsIDocShell *aDocShell);
   inline int32_t GetIndexOfDocShell(nsIDocShell *aDocShell);
 
   void MaybeRemoveMutationObserver(nsINode* aNode);

@@ -21,7 +21,7 @@ add_task(function*() {
   let onUpdated = inspector.once("fontinspector-updated");
 
   info("Clicking 'Select all' button.");
-  viewDoc.getElementById("showall").click();
+  viewDoc.getElementById("font-showall").click();
 
   info("Waiting for font-inspector to update.");
   yield onUpdated;

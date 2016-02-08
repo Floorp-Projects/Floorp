@@ -11,11 +11,11 @@ namespace _ipdltest {
 // they bridge)
 intr protocol PTestEndpointBridgeMainSub {
 child:
-  Hi();
+  async Hi();
   intr HiRpc();
 
 parent:
-  Hello();
+  async Hello();
   sync HelloSync();
   intr HelloRpc();
 };

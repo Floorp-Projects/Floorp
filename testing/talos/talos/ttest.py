@@ -91,9 +91,8 @@ class TTest(object):
         if test_config['shutdown']:
             global_counters['shutdown'] = []
         if test_config.get('responsiveness') and \
-                platform.system() != "Linux":
-            # ignore responsiveness tests on linux until we fix
-            # Bug 710296
+           platform.system() != "Darwin":
+            # ignore osx for now as per bug 1245793
             setup.env['MOZ_INSTRUMENT_EVENT_LOOP'] = '1'
             setup.env['MOZ_INSTRUMENT_EVENT_LOOP_THRESHOLD'] = '20'
             setup.env['MOZ_INSTRUMENT_EVENT_LOOP_INTERVAL'] = '10'

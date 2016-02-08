@@ -37,7 +37,7 @@ function confirm_install(window) {
   var bundle = sbs.createBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties");
 
   var expectedIntroString = bundle.formatStringFromName("itemWarnIntroMultiple", ["5"], 1);
-  
+
   var introStringNode = window.document.getElementById("itemWarningIntro");
   is(introStringNode.textContent, expectedIntroString, "Should have the correct intro string");
 

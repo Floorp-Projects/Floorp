@@ -392,9 +392,9 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
 {
   MsgBegin(sDocLoadTitle, aMsg);
 
-  nsCOMPtr<nsIDOMWindow> DOMWindow;
+  nsCOMPtr<mozIDOMWindowProxy> DOMWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(DOMWindow);
+  nsPIDOMWindowOuter* window = nsPIDOMWindowOuter::From(DOMWindow);
   if (!window) {
     MsgEnd();
     return;

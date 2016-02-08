@@ -12,6 +12,7 @@ const {
   dominatorTreeIsComputed,
 } = require("../utils");
 const { actions, snapshotState: states, viewState, dominatorTreeState } = require("../constants");
+const telemetry = require("../telemetry");
 const view = require("./view");
 const refresh = require("./refresh");
 
@@ -67,6 +68,8 @@ const selectSnapshotAndRefresh = exports.selectSnapshotAndRefresh = function (he
  */
 const takeSnapshot = exports.takeSnapshot = function (front) {
   return function *(dispatch, getState) {
+    telemetry.countTakeSnapshot();
+
     if (getState().diffing) {
       dispatch(view.changeView(viewState.CENSUS));
     }
@@ -133,7 +136,7 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
     assert([states.READ, states.SAVED_CENSUS].includes(snapshot.state),
       `Can only take census of snapshots in READ or SAVED_CENSUS state, found ${snapshot.state}`);
 
-    let report;
+    let report, parentMap;
     let inverted = getState().inverted;
     let breakdown = getState().breakdown;
     let filter = getState().filter;
@@ -163,7 +166,9 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
       opts.filter = filter || null;
 
       try {
-        report = yield heapWorker.takeCensus(snapshot.path, { breakdown }, opts);
+        ({ report, parentMap } = yield heapWorker.takeCensus(snapshot.path,
+                                                             { breakdown },
+                                                             opts));
       } catch (error) {
         reportException("takeCensus", error);
         dispatch({ type: actions.SNAPSHOT_ERROR, id, error });
@@ -180,8 +185,11 @@ const takeCensus = exports.takeCensus = function (heapWorker, id) {
       breakdown,
       inverted,
       filter,
-      report
+      report,
+      parentMap
     });
+
+    telemetry.countCensus({ inverted, filter, breakdown });
   };
 };
 
@@ -275,6 +283,7 @@ const fetchDominatorTree = exports.fetchDominatorTree = function (heapWorker, id
     while (!breakdownEquals(breakdown, getState().dominatorTreeBreakdown));
 
     dispatch({ type: actions.FETCH_DOMINATOR_TREE_END, id, root });
+    telemetry.countDominatorTree({ breakdown });
     return root;
   };
 };
@@ -420,11 +429,10 @@ const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
 
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids });
 
-    Promise.all(snapshots.map(s => {
-      heapWorker.deleteHeapSnapshot(s.path)
-      .catch(error => {
+    yield Promise.all(snapshots.map(snapshot => {
+      return heapWorker.deleteHeapSnapshot(snapshot.path).catch(error => {
         reportException("clearSnapshots", error);
-        dispatch({ type: actions.SNAPSHOT_ERROR, id: s.id, error });
+        dispatch({ type: actions.SNAPSHOT_ERROR, id: snapshot.id, error });
       });
     }));
 

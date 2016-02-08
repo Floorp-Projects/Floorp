@@ -192,13 +192,15 @@ nsIDocument*
 GetEntryDocument()
 {
   nsIGlobalObject* global = GetEntryGlobal();
-  nsCOMPtr<nsPIDOMWindow> entryWin = do_QueryInterface(global);
+  nsCOMPtr<nsPIDOMWindowInner> entryWin = do_QueryInterface(global);
 
   // If our entry global isn't a window, see if it's an addon scope associated
   // with a window. If it is, the caller almost certainly wants that rather
   // than null.
   if (!entryWin && global) {
-    entryWin = xpc::AddonWindowOrNull(global->GetGlobalJSObject());
+    if (auto* win = xpc::AddonWindowOrNull(global->GetGlobalJSObject())) {
+      entryWin = win->AsInner();
+    }
   }
 
   return entryWin ? entryWin->GetExtantDoc() : nullptr;
@@ -419,15 +421,15 @@ AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
 }
 
 bool
-AutoJSAPI::Init(nsPIDOMWindow* aWindow, JSContext* aCx)
+AutoJSAPI::Init(nsPIDOMWindowInner* aWindow, JSContext* aCx)
 {
-  return Init(static_cast<nsGlobalWindow*>(aWindow), aCx);
+  return Init(nsGlobalWindow::Cast(aWindow), aCx);
 }
 
 bool
-AutoJSAPI::Init(nsPIDOMWindow* aWindow)
+AutoJSAPI::Init(nsPIDOMWindowInner* aWindow)
 {
-  return Init(static_cast<nsGlobalWindow*>(aWindow));
+  return Init(nsGlobalWindow::Cast(aWindow));
 }
 
 bool
@@ -443,9 +445,9 @@ AutoJSAPI::Init(nsGlobalWindow* aWindow)
 }
 
 bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsPIDOMWindow* aWindow)
+AutoJSAPI::InitWithLegacyErrorReporting(nsPIDOMWindowInner* aWindow)
 {
-  return InitWithLegacyErrorReporting(static_cast<nsGlobalWindow*>(aWindow));
+  return InitWithLegacyErrorReporting(nsGlobalWindow::Cast(aWindow));
 }
 
 bool
@@ -467,9 +469,9 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aR
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  nsPIDOMWindow* win = xpc::CurrentWindowOrNull(aCx);
+  nsGlobalWindow* win = xpc::CurrentWindowOrNull(aCx);
   xpcReport->Init(aRep, aMessage, nsContentUtils::IsCallerChrome(),
-                  win ? win->WindowID() : 0);
+                  win ? win->AsInner()->WindowID() : 0);
   xpcReport->LogToConsole();
 }
 
@@ -513,12 +515,13 @@ AutoJSAPI::ReportException()
   if (StealException(&exn) && jsReport.init(cx(), exn)) {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-      nsCOMPtr<nsPIDOMWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
+      RefPtr<nsGlobalWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
+      nsPIDOMWindowInner* inner = win ? win->AsInner() : nullptr;
       xpcReport->Init(jsReport.report(), jsReport.message(),
                       nsContentUtils::IsCallerChrome(),
-                      win ? win->WindowID() : 0);
-      if (win) {
-        DispatchScriptErrorEvent(win, JS_GetRuntime(cx()), xpcReport, exn);
+                      inner ? inner->WindowID() : 0);
+      if (inner) {
+        DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
         xpcReport->LogToConsole();
       }
@@ -612,7 +615,7 @@ AutoEntryScript::DocshellEntryMonitor::Entry(JSContext* aCx, JSFunction* aFuncti
     rootedScript = aScript;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window =
+  nsCOMPtr<nsPIDOMWindowInner> window =
     do_QueryInterface(xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx)));
   if (!window || !window->GetDocShell() ||
       !window->GetDocShell()->GetRecordProfileTimelineMarkers()) {
@@ -659,7 +662,7 @@ AutoEntryScript::DocshellEntryMonitor::Entry(JSContext* aCx, JSFunction* aFuncti
 void
 AutoEntryScript::DocshellEntryMonitor::Exit(JSContext* aCx)
 {
-  nsCOMPtr<nsPIDOMWindow> window =
+  nsCOMPtr<nsPIDOMWindowInner> window =
     do_QueryInterface(xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx)));
   // Not really worth checking GetRecordProfileTimelineMarkers here.
   if (window && window->GetDocShell()) {

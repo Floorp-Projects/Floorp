@@ -13,9 +13,9 @@ protocol PFileDescriptorSet
   manager PBackground or PContent;
 
 both:
-  AddFileDescriptor(FileDescriptor fd);
+  async AddFileDescriptor(FileDescriptor fd);
 
-  __delete__();
+  async __delete__();
 };
 
 } // namespace ipc

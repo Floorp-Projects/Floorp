@@ -60,7 +60,7 @@ NS_IMPL_ISUPPORTS(CellBroadcast::Listener, nsICellBroadcastListener)
 
 // static
 already_AddRefed<CellBroadcast>
-CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
+CellBroadcast::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
@@ -76,8 +76,8 @@ CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
   return cb.forget();
 }
 
-CellBroadcast::CellBroadcast(nsPIDOMWindow *aWindow,
-                             nsICellBroadcastService *aService)
+CellBroadcast::CellBroadcast(nsPIDOMWindowInner* aWindow,
+                             nsICellBroadcastService* aService)
   : DOMEventTargetHelper(aWindow)
 {
   mListener = new Listener(this);

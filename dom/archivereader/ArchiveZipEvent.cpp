@@ -10,6 +10,9 @@
 #include "nsContentUtils.h"
 #include "nsCExternalHandlerService.h"
 
+#include "mozilla/UniquePtr.h"
+
+using namespace mozilla;
 using namespace mozilla::dom;
 
 USING_ARCHIVEREADER_NAMESPACE
@@ -191,8 +194,8 @@ ArchiveReaderZipEvent::Exec()
     }
 
     // Read the name:
-    nsAutoArrayPtr<char> filename(new char[filenameLen + 1]);
-    rv = inputStream->Read(filename, filenameLen, &ret);
+    auto filename = MakeUnique<char[]>(filenameLen + 1);
+    rv = inputStream->Read(filename.get(), filenameLen, &ret);
     if (NS_FAILED(rv) || ret != filenameLen) {
       return RunShare(NS_ERROR_UNEXPECTED);
     }
@@ -201,7 +204,8 @@ ArchiveReaderZipEvent::Exec()
 
     // We ignore the directories:
     if (filename[filenameLen - 1] != '/') {
-      mFileList.AppendElement(new ArchiveZipItem(filename, centralStruct, mEncoding));
+      mFileList.AppendElement(new ArchiveZipItem(filename.get(), centralStruct,
+                                                 mEncoding));
     }
 
     // Ignore the rest

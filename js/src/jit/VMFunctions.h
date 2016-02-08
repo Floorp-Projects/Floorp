@@ -640,6 +640,7 @@ bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, Muta
 void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
 void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
+void PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, size_t index);
 void PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj);
 
 uint32_t GetIndexFromString(JSString* str);

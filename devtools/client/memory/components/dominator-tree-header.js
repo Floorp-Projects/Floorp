@@ -16,14 +16,29 @@ const DominatorTreeHeader = module.exports = createClass({
         className: "header"
       },
 
-      dom.span({ className: "heap-tree-item-bytes" },
-               L10N.getStr("heapview.field.retainedSize")),
+      dom.span(
+        {
+          className: "heap-tree-item-bytes",
+          title: L10N.getStr("heapview.field.retainedSize.tooltip"),
+        },
+        L10N.getStr("heapview.field.retainedSize")
+      ),
 
-      dom.span({ className: "heap-tree-item-bytes" },
-               L10N.getStr("heapview.field.shallowSize")),
+      dom.span(
+        {
+          className: "heap-tree-item-bytes",
+          title: L10N.getStr("heapview.field.shallowSize.tooltip"),
+        },
+        L10N.getStr("heapview.field.shallowSize")
+      ),
 
-      dom.span({ className: "heap-tree-item-name" },
-               L10N.getStr("heapview.field.name"))
+      dom.span(
+        {
+          className: "heap-tree-item-name",
+          title: L10N.getStr("dominatortree.field.label.tooltip"),
+        },
+        L10N.getStr("dominatortree.field.label")
+      )
     );
   }
 });

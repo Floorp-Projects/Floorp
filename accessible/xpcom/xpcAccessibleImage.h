@@ -21,6 +21,9 @@ public:
   explicit xpcAccessibleImage(Accessible* aIntl) :
     xpcAccessibleGeneric(aIntl) { }
 
+  xpcAccessibleImage(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleGeneric(aProxy, aInterfaces) {}
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD GetImagePosition(uint32_t aCoordType,
@@ -31,7 +34,8 @@ protected:
   virtual ~xpcAccessibleImage() {}
 
 private:
-  ImageAccessible* Intl() { return mIntl->AsImage(); }
+  ImageAccessible* Intl()
+  { return mIntl.IsAccessible() ? mIntl.AsAccessible()->AsImage() : nullptr; }
 
   xpcAccessibleImage(const xpcAccessibleImage&) = delete;
   xpcAccessibleImage& operator =(const xpcAccessibleImage&) = delete;

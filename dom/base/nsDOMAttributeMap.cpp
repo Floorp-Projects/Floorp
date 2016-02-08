@@ -37,27 +37,18 @@ nsDOMAttributeMap::nsDOMAttributeMap(Element* aContent)
   // we'll be told to drop our reference
 }
 
-/**
- * Clear map pointer for attributes.
- */
-PLDHashOperator
-RemoveMapRef(nsAttrHashKey::KeyType aKey, RefPtr<Attr>& aData,
-             void* aUserArg)
-{
-  aData->SetMap(nullptr);
-
-  return PL_DHASH_REMOVE;
-}
-
 nsDOMAttributeMap::~nsDOMAttributeMap()
 {
-  mAttributeCache.Enumerate(RemoveMapRef, nullptr);
+  DropReference();
 }
 
 void
 nsDOMAttributeMap::DropReference()
 {
-  mAttributeCache.Enumerate(RemoveMapRef, nullptr);
+  for (auto iter = mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->SetMap(nullptr);
+    iter.Remove();
+  }
   mContent = nullptr;
 }
 
@@ -70,20 +61,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
-PLDHashOperator
-TraverseMapEntry(nsAttrHashKey::KeyType aKey, RefPtr<Attr>& aData,
-                 void* aUserArg)
-{
-  nsCycleCollectionTraversalCallback *cb = 
-    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
-
-  cb->NoteXPCOMChild(static_cast<nsINode*>(aData.get()));
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap)
-  tmp->mAttributeCache.Enumerate(TraverseMapEntry, &cb);
+  for (auto iter = tmp->mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
+    cb.NoteXPCOMChild(static_cast<nsINode*>(iter.Data().get()));
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

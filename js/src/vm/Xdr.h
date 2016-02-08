@@ -28,12 +28,14 @@ namespace js {
  * this wiki page:
  *
  *  https://developer.mozilla.org/en-US/docs/SpiderMonkey/Internals/Bytecode
+ *
+ * (If you're wondering, 0xb973c0de is used because it looks like "bytecode".)
  */
-static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 342;
+static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 344;
 static const uint32_t XDR_BYTECODE_VERSION =
     uint32_t(0xb973c0de - XDR_BYTECODE_VERSION_SUBTRAHEND);
 
-static_assert(JSErr_Limit == 438,
+static_assert(JSErr_Limit == 442,
               "GREETINGS, POTENTIAL SUBTRAHEND INCREMENTER! If you added or "
               "removed MSG_DEFs from js.msg, you should increment "
               "XDR_BYTECODE_VERSION_SUBTRAHEND and update this assertion's "

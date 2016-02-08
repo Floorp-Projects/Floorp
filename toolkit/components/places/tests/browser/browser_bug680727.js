@@ -8,7 +8,7 @@
 
 const kUniqueURI = Services.io.newURI("http://mochi.test:8888/#bug_680727",
                                       null, null);
-var gAsyncHistory = 
+var gAsyncHistory =
   Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory);
 
 var proxyPrefValue;
@@ -87,7 +87,7 @@ function reloadListener() {
   ok(!Services.io.offline, "Services.io.offline is false.");
 
   // This is not an error page.
-  is(gBrowser.contentDocument.documentURI, kUniqueURI.spec, 
+  is(gBrowser.contentDocument.documentURI, kUniqueURI.spec,
      "Document URI is not the offline-error page, but the original URI.");
 
   // Check if global history remembers the successfully-requested URI.

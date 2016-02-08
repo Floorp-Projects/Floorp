@@ -70,6 +70,7 @@
 #include "nsContentUtils.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla::dom;
 using namespace mozilla;
@@ -104,17 +105,20 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
     MOZ_COUNT_CTOR(nsXULTemplateBuilder);
 }
 
-static PLDHashOperator
-DestroyMatchList(nsISupports* aKey, nsTemplateMatch*& aMatch, void* aContext)
+void
+nsXULTemplateBuilder::DestroyMatchMap()
 {
-    // delete all the matches in the list
-    while (aMatch) {
-        nsTemplateMatch* next = aMatch->mNext;
-        nsTemplateMatch::Destroy(aMatch, true);
-        aMatch = next;
-    }
+    for (auto iter = mMatchMap.Iter(); !iter.Done(); iter.Next()) {
+        nsTemplateMatch*& match = iter.Data();
+        // delete all the matches in the list
+        while (match) {
+            nsTemplateMatch* next = match->mNext;
+            nsTemplateMatch::Destroy(match, true);
+            match = next;
+        }
 
-    return PL_DHASH_REMOVE;
+        iter.Remove();
+    }
 }
 
 nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
@@ -195,7 +199,7 @@ nsXULTemplateBuilder::CleanUp(bool aIsFinal)
 
     mQuerySets.Clear();
 
-    mMatchMap.Enumerate(DestroyMatchList, nullptr);
+    DestroyMatchMap();
 
     // Setting mQueryProcessor to null will close connections. This would be
     // handled by the cycle collector, but we want to close them earlier.
@@ -232,7 +236,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootResult)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mQueryProcessor)
-    tmp->mMatchMap.Enumerate(DestroyMatchList, nullptr);
+    tmp->DestroyMatchMap();
     for (uint32_t i = 0; i < tmp->mQuerySets.Length(); ++i) {
         nsTemplateQuerySet* qs = tmp->mQuerySets[i];
         delete qs;
@@ -1064,9 +1068,9 @@ nsXULTemplateBuilder::Observe(nsISupports* aSubject,
     // Uuuuber hack to clean up circular references that the cycle collector
     // doesn't know about. See bug 394514.
     if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
-        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSubject);
-        if (window) {
-            nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+        if (nsCOMPtr<mozIDOMWindow> window = do_QueryInterface(aSubject)) {
+            nsCOMPtr<nsIDocument> doc =
+                nsPIDOMWindowInner::From(window)->GetExtantDoc();
             if (doc && doc == mObservedDocument)
                 NodeWillBeDestroyed(doc);
         }
@@ -2354,7 +2358,7 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule,
     // Crawl the content tree of a "simple" rule, adding a variable
     // assignment for any attribute whose value is "rdf:".
 
-    nsAutoTArray<nsIContent*, 8> elements;
+    AutoTArray<nsIContent*, 8> elements;
 
     if (elements.AppendElement(aElement) == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;

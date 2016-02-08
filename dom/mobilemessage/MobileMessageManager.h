@@ -37,12 +37,12 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  explicit MobileMessageManager(nsPIDOMWindow* aWindow);
+  explicit MobileMessageManager(nsPIDOMWindowInner* aWindow);
 
   void Init();
   void Shutdown();
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const { return GetOwner(); }
 
   // WrapperCache

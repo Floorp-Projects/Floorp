@@ -269,7 +269,8 @@ public:
 
   bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
                             int32_t* aLength);
-  bool SetCandidateWindow(int32_t aX, int32_t aY);
+  bool SetCandidateWindow(
+           const mozilla::widget::CandidateWindowPosition& aPosition);
   bool RequestCommitOrCancel(bool aCommitted);
 
 private:

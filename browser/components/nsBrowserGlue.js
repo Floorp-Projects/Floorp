@@ -120,11 +120,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
 XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
                                   "resource://gre/modules/SimpleServiceDiscovery.jsm");
 
-if (AppConstants.NIGHTLY_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
-                                    "resource:///modules/SignInToWebsite.jsm");
-}
-
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
@@ -448,6 +443,9 @@ BrowserGlue.prototype = {
       case "test-initialize-sanitizer":
         this._sanitizer.onStartup();
         break;
+      case AddonWatcher.TOPIC_SLOW_ADDON_DETECTED:
+        this._notifySlowAddon(data);
+        break;
     }
   },
 
@@ -535,7 +533,7 @@ BrowserGlue.prototype = {
     this._isPlacesShutdownObserver = true;
     os.addObserver(this, "handle-xul-text-link", false);
     os.addObserver(this, "profile-before-change", false);
-    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       os.addObserver(this, "keyword-search", false);
     }
     os.addObserver(this, "browser-search-engine-modified", false);
@@ -543,6 +541,11 @@ BrowserGlue.prototype = {
     os.addObserver(this, "flash-plugin-hang", false);
     os.addObserver(this, "xpi-signature-changed", false);
     os.addObserver(this, "autocomplete-did-enter-text", false);
+
+    if (AppConstants.NIGHTLY_BUILD) {
+      AddonWatcher.init();
+      os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
+    }
 
     ExtensionManagement.registerScript("chrome://browser/content/ext-utils.js");
     ExtensionManagement.registerScript("chrome://browser/content/ext-browserAction.js");
@@ -594,7 +597,7 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "places-shutdown");
     os.removeObserver(this, "handle-xul-text-link");
     os.removeObserver(this, "profile-before-change");
-    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       os.removeObserver(this, "keyword-search");
     }
     os.removeObserver(this, "browser-search-engine-modified");
@@ -747,11 +750,6 @@ BrowserGlue.prototype = {
 
     WebappManager.init();
     PageThumbs.init();
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("dom.identity.enabled")) {
-        SignInToWebsiteUX.init();
-      }
-    }
     webrtcUI.init();
     AboutHome.init();
 
@@ -796,10 +794,6 @@ BrowserGlue.prototype = {
     }
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
-
-    if (AppConstants.NIGHTLY_BUILD) {
-      AddonWatcher.init(this._notifySlowAddon);
-    }
   },
 
   _checkForOldBuildUpdates: function () {
@@ -1082,11 +1076,6 @@ BrowserGlue.prototype = {
 
     NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("dom.identity.enabled")) {
-        SignInToWebsiteUX.uninit();
-      }
-    }
     webrtcUI.uninit();
     FormValidationHandler.uninit();
     if (AppConstants.NIGHTLY_BUILD) {
@@ -1141,19 +1130,24 @@ BrowserGlue.prototype = {
 
     // For any add-ons that were installed disabled and can be enabled offer
     // them to the user.
-    let changedIDs = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED);
-    if (changedIDs.length > 0) {
-      let win = RecentWindow.getMostRecentBrowserWindow();
-      AddonManager.getAddonsByIDs(changedIDs, function(aAddons) {
-        aAddons.forEach(function(aAddon) {
-          // If the add-on isn't user disabled or can't be enabled then skip it.
-          if (!aAddon.userDisabled || !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE))
-            return;
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    AddonManager.getAllAddons(addons => {
+      for (let addon of addons) {
+        // If this add-on has already seen (or seen is undefined for non-XPI
+        // add-ons) then skip it.
+        if (addon.seen !== false) {
+          continue;
+        }
 
-          win.openUILinkIn("about:newaddon?id=" + aAddon.id, "tab");
-        })
-      });
-    }
+        // If this add-on cannot be enabled (either already enabled or
+        // appDisabled) then skip it.
+        if (!(addon.permissions & AddonManager.PERM_CAN_ENABLE)) {
+          continue;
+        }
+
+        win.openUILinkIn("about:newaddon?id=" + addon.id, "tab");
+      }
+    });
 
     let signingRequired;
     if (AppConstants.MOZ_REQUIRE_SIGNING) {
@@ -3210,7 +3204,7 @@ var E10SAccessibilityCheck = {
     }];
     let options = {
       popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
-      learnMoreURL: "https://support.mozilla.org/kb/accessibility-and-ppt",
+      learnMoreURL: Services.urlFormatter.formatURLPref("app.support.e10sAccessibilityUrl"),
       persistWhileVisible: true,
       hideNotNow: true,
     };

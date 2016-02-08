@@ -13,7 +13,7 @@ var countAfter = 0;
 function onBeforeSendHeaders(details)
 {
   if (details.url != URL) {
-    return;
+    return undefined;
   }
 
   countBefore++;

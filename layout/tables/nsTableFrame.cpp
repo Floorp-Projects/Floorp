@@ -316,9 +316,13 @@ void
 nsTableFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
+  if (aListID != kPrincipalList) {
+    nsContainerFrame::SetInitialChildList(aListID, aChildList);
+    return;
+  }
+
   MOZ_ASSERT(mFrames.IsEmpty() && mColGroups.IsEmpty(),
              "unexpected second call to SetInitialChildList");
-  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
 
   // XXXbz the below code is an icky cesspit that's only needed in its current
   // form for two reasons:
@@ -368,7 +372,7 @@ nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
         cellFrame->GetRowIndex(rowIndex);
         cellFrame->GetColIndex(colIndex);
         RemoveCell(cellFrame, rowIndex);
-        nsAutoTArray<nsTableCellFrame*, 1> cells;
+        AutoTArray<nsTableCellFrame*, 1> cells;
         cells.AppendElement(cellFrame);
         InsertCells(cells, rowIndex, colIndex - 1);
 
@@ -473,10 +477,9 @@ nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
   int32_t colIndex, rowIndex;
   aCell.GetColIndex(colIndex);
   aCell.GetRowIndex(rowIndex);
-  bool ignore;
 
   if (aCellMap)
-    return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex, ignore);
+    return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex);
   else
     return tableCellMap->GetEffectiveColSpan(rowIndex, colIndex);
 }
@@ -776,21 +779,6 @@ nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
       aCellMap->AddColsAtEnd(numColsNotRemoved);
     }
   }
-  if (numColsToAdd && HasZeroColSpans()) {
-    SetNeedColSpanExpansion(true);
-  }
-  if (NeedColSpanExpansion()) {
-    // This flag can be set in two ways -- either by changing
-    // the number of columns (that happens in the block above),
-    // or by adding a cell with colspan="0" to the cellmap.  To
-    // handle the latter case we need to explicitly check the
-    // flag here -- it may be set even if the number of columns
-    // did not change.
-    //
-    // @see nsCellMap::AppendCell
-
-    aCellMap->ExpandZeroColSpans();
-  }
 }
 
 void
@@ -1000,11 +988,9 @@ nsTableFrame::CollectRows(nsIFrame*                   aFrame,
 {
   NS_PRECONDITION(aFrame, "null frame");
   int32_t numRows = 0;
-  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
     aCollection.AppendElement(static_cast<nsTableRowFrame*>(childFrame));
     numRows++;
-    childFrame = childFrame->GetNextSibling();
   }
   return numRows;
 }
@@ -1021,7 +1007,7 @@ nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups)
     RowGroupArray orderedRowGroups;
     OrderRowGroups(orderedRowGroups);
 
-    nsAutoTArray<nsTableRowFrame*, 8> rows;
+    AutoTArray<nsTableRowFrame*, 8> rows;
     // Loop over the rowgroups and check if some of them are new, if they are
     // insert cellmaps in the order that is predefined by OrderRowGroups,
     // XXXbz this code is O(N*M) where N is number of new rowgroups
@@ -1218,10 +1204,8 @@ nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   // stacking context, in which case the child won't use its passed-in
   // BorderBackground list anyway. It does affect cell borders though; this
   // lets us get cell borders into the nsTableFrame's BorderBackground list.
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
-  while (kid) {
+  for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
-    kid = kid->GetNextSibling();
   }
 }
 
@@ -1516,9 +1500,8 @@ nsTableFrame::ProcessRowInserted(nscoord aNewBSize)
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
     NS_ASSERTION(rgFrame, "Must have rgFrame here");
-    nsIFrame* childFrame = rgFrame->GetFirstPrincipalChild();
     // find the row that was inserted first
-    while (childFrame) {
+    for (nsIFrame* childFrame : rgFrame->PrincipalChildList()) {
       nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
       if (rowFrame) {
         if (rowFrame->IsFirstInserted()) {
@@ -1530,7 +1513,6 @@ nsTableFrame::ProcessRowInserted(nscoord aNewBSize)
           return; // found it, so leave
         }
       }
-      childFrame = childFrame->GetNextSibling();
     }
   }
 }
@@ -2451,7 +2433,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
       aPrevFrame = nullptr;
       while (pseudoFrame  && (parentContent ==
                               (content = pseudoFrame->GetContent()))) {
-        pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
+        pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
       if (MOZ_LIKELY(container)) { // XXX need this null-check, see bug 411823.
@@ -2477,7 +2459,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
           pseudoFrame = kidFrame;
           while (pseudoFrame  && (parentContent ==
                                   (content = pseudoFrame->GetContent()))) {
-            pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
+            pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
           }
           int32_t index = container->IndexOf(content);
           if (index > lastIndex && index < newIndex) {
@@ -2666,14 +2648,13 @@ nsTableFrame::GetUsedMargin() const
   return nsMargin(0, 0, 0, 0);
 }
 
-NS_DECLARE_FRAME_PROPERTY(TableBCProperty, DeleteValue<BCPropertyData>)
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCProperty, BCPropertyData)
 
 BCPropertyData*
 nsTableFrame::GetBCProperty(bool aCreateIfNecessary) const
 {
   FrameProperties props = Properties();
-  BCPropertyData* value = static_cast<BCPropertyData*>
-                          (props.Get(TableBCProperty()));
+  BCPropertyData* value = props.Get(TableBCProperty());
   if (!value && aCreateIfNecessary) {
     value = new BCPropertyData();
     props.Set(TableBCProperty(), value);
@@ -3936,7 +3917,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
   // aPriorChildFrame is not of type aChildType, so we need start from
   // the beginnng and find the closest one
   nsIFrame* lastMatchingFrame = nullptr;
-  nsIFrame* childFrame = aParentFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = aParentFrame->PrincipalChildList().FirstChild();
   while (childFrame && (childFrame != aPriorChildFrame)) {
     if (aChildType == childFrame->GetType()) {
       lastMatchingFrame = childFrame;
@@ -3953,28 +3934,24 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
   if (!aKidFrame)
     return;
 
-  nsIFrame* cFrame = aKidFrame->GetFirstPrincipalChild();
-  while (cFrame) {
+  for (nsIFrame* cFrame : aKidFrame->PrincipalChildList()) {
     nsTableRowFrame *rowFrame = do_QueryFrame(cFrame);
     if (rowFrame) {
       printf("row(%d)=%p ", rowFrame->GetRowIndex(),
              static_cast<void*>(rowFrame));
-      nsIFrame* childFrame = cFrame->GetFirstPrincipalChild();
-      while (childFrame) {
+      for (nsIFrame* childFrame : cFrame->PrincipalChildList()) {
         nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
         if (cellFrame) {
           int32_t colIndex;
           cellFrame->GetColIndex(colIndex);
           printf("cell(%d)=%p ", colIndex, static_cast<void*>(childFrame));
         }
-        childFrame = childFrame->GetNextSibling();
       }
       printf("\n");
     }
     else {
       DumpRowGroup(rowFrame);
     }
-    cFrame = cFrame->GetNextSibling();
   }
 }
 
@@ -4308,8 +4285,7 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
   : mTableFrame(aTableFrame)
   , mNumTableRows(aTableFrame->GetRowCount())
   , mNumTableCols(aTableFrame->GetColCount())
-  , mTableBCData(static_cast<BCPropertyData*>(
-      mTableFrame->Properties().Get(TableBCProperty())))
+  , mTableBCData(mTableFrame->Properties().Get(TableBCProperty()))
   , mTableWM(aTableFrame->StyleContext())
 {
   ResetCellInfo();

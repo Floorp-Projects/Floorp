@@ -23,19 +23,35 @@ body {
   margin-bottom: 0.5em;
 }
 
+#refreshButton {
+  vertical-align: middle;
+}
+
+/** Categories **/
+
 .category {
   cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
 }
 
 .category .category-name {
   pointer-events: none;
 }
 
+#categories hr {
+  border-top-color: rgba(255,255,255,0.15);
+}
+
+/** Warning container **/
+
 /* XXX: a lot of this is duplicated from info-pages.css since that stylesheet
    is incompatible with this type of layout */
 .warningBackground:not([hidden]) {
   display: flex;
 }
+
 .warningBackground {
   flex-direction: column;
   box-sizing: border-box;
@@ -54,7 +70,7 @@ body {
 .title {
   position: relative;
   border-bottom: 1px solid var(--in-content-box-border-color);
-  margin-bottom: 2em;
+  margin-bottom: 1em;
   padding-bottom: 0.5em;
 }
 
@@ -76,12 +92,14 @@ body {
   min-width: 100px;
 }
 
+/** Content area **/
+
 .main-content {
   flex: 1;
 }
 
 .tab {
-  padding: 0.5em;
+  padding: 0.5em 0;
 }
 
 .tab table {
@@ -89,20 +107,15 @@ body {
   width: 100%;
 }
 
-hr {
+th, td, table {
+  border-collapse: collapse;
   border: none;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  text-align: start;
 }
 
 th {
   padding-bottom: 0.5em;
   font-size: larger;
-}
-
-th, td, table {
-  border-collapse: collapse;
-  border: none;
-  text-align: start;
 }
 
 td {

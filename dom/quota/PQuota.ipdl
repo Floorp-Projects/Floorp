@@ -64,15 +64,15 @@ protocol PQuota
   manages PQuotaUsageRequest;
 
 parent:
-  __delete__();
+  async __delete__();
 
-  PQuotaUsageRequest(UsageRequestParams params);
+  async PQuotaUsageRequest(UsageRequestParams params);
 
-  PQuotaRequest(RequestParams params);
+  async PQuotaRequest(RequestParams params);
 
-  StartIdleMaintenance();
+  async StartIdleMaintenance();
 
-  StopIdleMaintenance();
+  async StopIdleMaintenance();
 };
 
 } // namespace quota

@@ -1,0 +1,367 @@
+/*
+All content and code is released into the public domain
+http://en.wikipedia.org/wiki/public_domain
+
+Contributors
+Glenn Jones - http://glennjones.net/
+*/
+
+
+
+
+@import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);
+
+body {
+  padding:50px;
+  font:1em "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color:#333;
+  font-weight:300;
+  border-top: 5px solid #302F2D;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color:#222;
+  font-weight: normal;
+}
+
+p, ul, ol, table, pre, dl {
+  margin:0 0 20px;
+}
+
+h1, h2, h3 {
+  margin-top: 50px;
+  margin-bottom: 10px;
+  font-family: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+h2, h3 {
+  font-size: 1.5em;
+}
+
+/* the first h1 in a page */
+h1:first-of-type{
+  margin-top: 0;
+  font-weight: bold;
+}
+
+a {
+  color: #39c;
+  font-weight: 300;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a[name]{
+  color: #333;
+}
+
+a[name]:hover {
+  text-decoration: none;
+}
+
+blockquote {
+  border-left: 1px solid #e5e5e5;
+  margin: 0;
+  padding: 0 0 0 20px;
+  font-style: italic;
+}
+
+code, pre {
+  font-family: Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
+  font-size: 12px;
+  margin: 0;
+}
+
+pre {
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: 1px solid #e5e5e5;
+  overflow-x: auto;
+  color: #fff;
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 2px 10px;
+  border-bottom: 1px solid #e5e5e5;
+  font-weight: 300;
+}
+
+th{
+  background-color: #333;
+  color:#fff;
+}
+
+td a{
+  font-weight: 300;
+}
+
+dt {
+  color:#444;
+  font-weight:700;
+}
+
+img {
+  max-width:100%;
+}
+
+li{
+  padding: 0.25em 0 0.25em 0;
+}
+
+
+button, input[type="submit"], input[type="button"], .button {
+  display: inline-block;
+  padding-top: 0.4em;
+  padding-right: 1em;
+  padding-left: 1em;
+  padding-bottom: 0.5em;
+  margin-bottom: 0;
+  font-weight: 200;
+  font-size: 1rem;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background-color: #33a0e8;
+  color: #fff;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none; 
+}
+
+select {
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+  -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+
+option {
+  padding: 2em;
+}
+
+footer{
+  margin-top: 8em;
+  text-align: center;
+}
+
+
+/* The Magnificent Clearfix: Updated to prevent margin-collapsing on child elements.
+   j.mp/bestclearfix */
+.clearfix:before, .clearfix:after { content: "\0020"; display: block; height: 0; overflow: hidden; }
+.clearfix:after { clear: both; }
+/* Fix clearfix: blueprintcss.lighthouseapp.com/projects/15318/tickets/5-extra-margin-padding-bottom-of-page */
+.clearfix { zoom: 1; }
+
+.test-counts{
+  font-weight: 700;
+  margin-bottom: 4em;
+}
+
+.test-detail{
+  display:none;
+}
+
+.all-test-list, .test-result-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+  float: left;
+}
+
+.all-test-list li .test-result-list li{
+  padding: 0.2em 0 0.2em 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.all-test-list li::hover, .test-result-list li::hover{
+  text-decoration: underline;
+}
+
+.all-test-list li.test-error a, .test-result-list li.test-error a{
+  color: red;
+  text-decoration: underline;
+}
+
+.flexbox-container {
+	display: -ms-flex;
+	display: -webkit-flex;
+	display: flex;
+}
+
+.flexbox-container > section {
+  margin-bottom: 3em;
+}
+
+.flexbox-container > section:first-child {
+  width: 20%;
+	margin-right: 20px;
+}
+
+.flexbox-container > section:nth-child(2) {
+  padding-left: 1em;
+  width: 80%;
+}
+
+
+@media (max-width: 1400px) {
+  .flexbox-container > section:first-child {
+    width: 25%;
+  }
+  
+  .flexbox-container > section:nth-child(2) {
+    width: 75%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .flexbox-container > section:first-child {
+    width: 30%;
+  }
+  
+  .flexbox-container > section:nth-child(2) {
+    width: 70%;
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .flexbox-container > section:first-child {
+    width: 35%;
+  }
+  
+  .flexbox-container > section:nth-child(2) {
+    width: 65%;
+  }
+}
+
+
+
+
+
+
+#test-status {
+  margin-top: 0;
+}
+
+.test-passed{
+  border-left: 10px solid green;
+}
+
+.test-failed{
+  border-left: 10px solid red;
+}
+
+.differences-description{
+  margin-top: 2em;
+}
+
+.differences-description li{
+  padding: 0;
+}
+
+.failed{
+  color: red;
+}
+
+#test-list-by-version section{
+  width: 30%;
+	margin-right: 20px;
+}
+
+.test-container{
+  padding-left: 1em;
+}
+
+
+#textcontent-test textarea{
+  font-size: 1em;
+  min-height: 6em;
+  min-width: 40em;
+  padding: 0.5em;
+}
+
+#textcontent-test input{
+  font-size: 1em;
+}
+
+
+/* Tool interface */
+
+.tool-interface input[type="text"], input[type="url"] {
+  width: 20em;
+  padding: 0.4em;
+  border: 1px solid #999;
+  border-radius: 0.4em;
+  color: #333;
+  font-size: 1em
+}
+
+.tool-interface label {
+  display: inline-block;
+  width: 5em;
+}
+
+.tool-interface select {
+  padding: 0.2em;
+  font-family: open_sansregular, calibri, arial, helvetica, 'lucida grande', 'lucida sans unicode', verdana, sans-serif;
+}
+
+.tool-interface option{
+  padding: 0.2em;
+}
+
+.tool-interface textarea{
+  width: 100%;
+  height: 16em;
+  border: 1px solid #999;
+  border-radius: 0.4em;
+  font-size: 1em;
+  font-family: open_sansregular, calibri, arial, helvetica, 'lucida grande', 'lucida sans unicode', verdana, sans-serif;
+}
+
+.tool-interface .button{
+  margin-left: 5.2em;
+}
+
+.tool-interface label.checkbox-label{
+  width: auto;
+}
+
+.tool-interface .checkbox{
+    margin-left: 5.2em;
+}
+
+select.indent {
+  margin-left: 5em;
+}  

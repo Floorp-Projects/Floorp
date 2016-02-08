@@ -13,8 +13,6 @@ RESFILE = 'bar.res'
 RCINCLUDE = 'bar.rc'
 DEFFILE = 'baz.def'
 
-USE_STATIC_LIBS = True
-
 CFLAGS += ['-fno-exceptions', '-w']
 CXXFLAGS += ['-fcxx-exceptions', '-include foo.h']
 LDFLAGS += ['-framework Foo', '-x']

@@ -35,7 +35,7 @@ nsViewSourceHandler::GetDefaultPort(int32_t *result)
 NS_IMETHODIMP
 nsViewSourceHandler::GetProtocolFlags(uint32_t *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
         URI_NON_PERSISTABLE;
     return NS_OK;
 }

@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
-[scriptable, uuid(731C6C50-67D6-11d4-9529-0020183BF181)]
+[scriptable, uuid(08aed3cc-69f7-47ba-a110-f2efa8a6d7ea)]
 interface nsICommandHandlerInit : nsISupports
 {
-	attribute nsIDOMWindow window;
+	attribute mozIDOMWindowProxy window;
 };
 
 [scriptable, uuid(34A4FCF0-66FC-11d4-9528-0020183BF181)]

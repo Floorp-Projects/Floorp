@@ -3,7 +3,7 @@
     "events": [
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}],
-       "removeConsecutiveGestureDelay": true }
+       "removeGestureResolveDelay": true }
     ],
     "expectedGestures": [{ "type": "tap" }]
   },
@@ -13,7 +13,7 @@
       {"type": "pointermove",
         "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.03, "y": 1.03, "identifier": 1}],
-       "removeConsecutiveGestureDelay": true }
+       "removeGestureResolveDelay": true }
     ],
     "expectedGestures": [{ "type": "tap" }]
   },
@@ -37,7 +37,7 @@
         "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]},
       {"type": "pointerup",
         "points": [{"x": 0.97, "y": 1.01, "identifier": 1}],
-        "removeConsecutiveGestureDelay": true }
+        "removeGestureResolveDelay": true }
     ],
     "expectedGestures": [{ "type": "doubletap" }]
   },
@@ -49,7 +49,7 @@
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}],
-       "removeConsecutiveGestureDelay": true }
+       "removeGestureResolveDelay": true }
     ],
     "expectedGestures": [{ "type": "tripletap" }]
   },
@@ -292,7 +292,7 @@
         {"y": 1.30098, "x": 1.52602, "identifier": 0},
         {"y": 1.94093, "x": 1.02672, "identifier": 1},
         {"y": 2.67229, "x": 0.75246, "identifier": 2}], "type": "pointerup",
-       "removeConsecutiveGestureDelay": false}],
+       "removeGestureResolveDelay": true}],
     "expectedGestures": [{ "type": "tripletap", "fingers": 3 }]
   },
   {
@@ -343,14 +343,8 @@
        "points": [{"identifier": 0, "x": 1.4375, "y": 2.59375},
                   {"identifier": 2, "x": 2.15625, "y": 1.489583}]},
       {"type": "pointerup",
-       "points": [{"identifier": 1, "x": 1.083333, "y": 3.71875}]},
-      {"type": "pointermove",
-       "points": [{"identifier": 0, "x": 1.427083, "y": 2.59375}]},
-      {"type": "pointerup",
-       "points": [{"identifier": 0, "x": 1.427083, "y": 2.59375}]},
-      {"type": "pointerup",
-       "points": [{"identifier": 2, "x": 2.15625, "y": 1.489583}],
-       "removeConsecutiveGestureDelay": false}
+       "points": [{"identifier": 1, "x": 1.083333, "y": 3.71875}],
+       "removeGestureResolveDelay": true}
     ],
     "expectedGestures": [{ "type": "tripletap", "fingers": 3 }]
   }

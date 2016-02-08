@@ -127,6 +127,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mContentDecoding(false)
     , mContentDecodingCheck(false)
     , mDeferredSendProgress(false)
+    , mWaitingOnPipeOut(false)
     , mReportedStart(false)
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
@@ -832,9 +833,10 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         nsCOMPtr<nsIEventTarget> target;
         gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
-        if (target)
+        if (target) {
             mPipeOut->AsyncWait(this, 0, 0, target);
-        else {
+            mWaitingOnPipeOut = true;
+        } else {
             NS_ERROR("no socket thread event target");
             rv = NS_ERROR_UNEXPECTED;
         }
@@ -2179,6 +2181,7 @@ NS_IMPL_QUERY_INTERFACE(nsHttpTransaction,
 NS_IMETHODIMP
 nsHttpTransaction::OnInputStreamReady(nsIAsyncInputStream *out)
 {
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     if (mConnection) {
         mConnection->TransactionHasDataToWrite(this);
         nsresult rv = mConnection->ResumeSend();
@@ -2196,6 +2199,8 @@ nsHttpTransaction::OnInputStreamReady(nsIAsyncInputStream *out)
 NS_IMETHODIMP
 nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    mWaitingOnPipeOut = false;
     if (mConnection) {
         mConnection->TransactionHasDataToRecv(this);
         nsresult rv = mConnection->ResumeRecv();

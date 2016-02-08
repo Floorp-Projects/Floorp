@@ -22,7 +22,7 @@ function*(inspector, view, iframe2) {
   yield selectNodeInIframe2("div", inspector);
 
   info("Checking that the layout-view shows the right value");
-  let sizeElt = view.doc.querySelector(".size > span");
+  let sizeElt = view.doc.querySelector(".layout-size > span");
   is(sizeElt.textContent, "400\u00D7200");
 
   info("Listening for layout-view changes and modifying its size");
@@ -46,7 +46,7 @@ function*(inspector, view, iframe2) {
   yield selectNodeInIframe1("p", inspector);
 
   info("Checking that the layout-view shows the right value");
-  let sizeElt = view.doc.querySelector(".size > span");
+  let sizeElt = view.doc.querySelector(".layout-size > span");
   is(sizeElt.textContent, "100\u00D7100");
 
   info("Listening for layout-view changes and modifying its size");

@@ -5,6 +5,9 @@
 
 #include "domstubs.idl"
 
+interface mozIDOMWindow;
+interface nsPIDOMWindowInner;
+interface mozIDOMWindowProxy;
 interface nsIArray;
 interface nsIDocument;
 interface nsIInterceptedChannel;
@@ -74,7 +77,7 @@ interface nsIServiceWorkerManagerListener : nsISupports
   void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
 };
 
-[scriptable, builtinclass, uuid(12381ddf-9b51-4c0a-9123-9e7754393a5a)]
+[scriptable, builtinclass, uuid(7404c8e8-4d47-4449-8ed1-47d1261d4e33)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -85,7 +88,7 @@ interface nsIServiceWorkerManager : nsISupports
    *
    * Returns a Promise.
    */
-  nsISupports register(in nsIDOMWindow aWindow, in nsIURI aScope, in nsIURI aScriptURI);
+  nsISupports register(in mozIDOMWindow aWindow, in nsIURI aScope, in nsIURI aScriptURI);
 
   /**
    * Unregister an existing ServiceWorker registration for `aScope`.
@@ -96,16 +99,16 @@ interface nsIServiceWorkerManager : nsISupports
                   in DOMString aScope);
 
   // Returns a Promise
-  nsISupports getRegistrations(in nsIDOMWindow aWindow);
+  nsISupports getRegistrations(in mozIDOMWindow aWindow);
 
   // Returns a Promise
-  nsISupports getRegistration(in nsIDOMWindow aWindow, in DOMString aScope);
+  nsISupports getRegistration(in mozIDOMWindow aWindow, in DOMString aScope);
 
   // Returns a Promise
-  nsISupports getReadyPromise(in nsIDOMWindow aWindow);
+  nsISupports getReadyPromise(in mozIDOMWindow aWindow);
 
   // Remove ready pending Promise
-  void removeReadyPromise(in nsIDOMWindow aWindow);
+  void removeReadyPromise(in mozIDOMWindow aWindow);
 
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in DOMString aScope);
@@ -131,15 +134,15 @@ interface nsIServiceWorkerManager : nsISupports
    * a valid entry that window is allowed to load, otherwise this will return nullptr.
    * These are only meant to be called from ServiceWorkerRegistration instances.
    */
-  [noscript] nsISupports GetInstalling(in nsIDOMWindow aWindow, in DOMString aScope);
-  [noscript] nsISupports GetWaiting(in nsIDOMWindow aWindow, in DOMString aScope);
-  [noscript] nsISupports GetActive(in nsIDOMWindow aWindow, in DOMString aScope);
+  [noscript] nsISupports GetInstalling(in nsPIDOMWindowInner aWindow, in DOMString aScope);
+  [noscript] nsISupports GetWaiting(in nsPIDOMWindowInner aWindow, in DOMString aScope);
+  [noscript] nsISupports GetActive(in nsPIDOMWindowInner aWindow, in DOMString aScope);
 
   /*
    * Returns a ServiceWorker object representing the active worker controlling this
    * window.
    */
-  [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
+  [noscript] nsISupports GetDocumentController(in nsPIDOMWindowInner aWindow);
 
   /*
    * Clears ServiceWorker registrations from memory and disk for the specified
@@ -193,7 +196,7 @@ interface nsIServiceWorkerManager : nsISupports
 
   void removeListener(in nsIServiceWorkerManagerListener aListener);
 
-  bool shouldReportToWindow(in nsIDOMWindow aWindow, in ACString aScope);
+  bool shouldReportToWindow(in mozIDOMWindowProxy aWindow, in ACString aScope);
 };
 
 %{ C++

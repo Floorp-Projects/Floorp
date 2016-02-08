@@ -558,6 +558,30 @@ DrawTargetRecording::PopClip()
   mFinalDT->PopClip();
 }
 
+void
+DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
+                               SourceSurface* aMask,
+                               const Matrix& aMaskTransform,
+                               const IntRect& aBounds, bool aCopyBackground)
+{
+  if (aMask) {
+    EnsureSurfaceStored(mRecorder, aMask, "PushLayer");
+  }
+
+  mRecorder->RecordEvent(RecordedPushLayer(this, aOpacity, aOpacity, aMask,
+                                           aMaskTransform, aBounds,
+                                           aCopyBackground));
+  mFinalDT->PushLayer(aOpacity, aOpacity, aMask, aMaskTransform, aBounds,
+                      aCopyBackground);
+}
+
+void
+DrawTargetRecording::PopLayer()
+{
+  mRecorder->RecordEvent(RecordedPopLayer(this));
+  mFinalDT->PopLayer();
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
                                                  const IntSize &aSize,

@@ -57,18 +57,11 @@ public:
   already_AddRefed<EventTarget> GetRelatedTarget();
   void GetRegion(nsAString& aRegion);
   void InitMouseEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                      nsIDOMWindow* aView, int32_t aDetail, int32_t aScreenX,
+                      nsGlobalWindow* aView, int32_t aDetail, int32_t aScreenX,
                       int32_t aScreenY, int32_t aClientX, int32_t aClientY,
                       bool aCtrlKey, bool aAltKey, bool aShiftKey,
                       bool aMetaKey, uint16_t aButton,
-                      EventTarget* aRelatedTarget, ErrorResult& aRv)
-  {
-    aRv = InitMouseEvent(aType, aCanBubble, aCancelable,
-                         aView, aDetail, aScreenX, aScreenY,
-                         aClientX, aClientY, aCtrlKey, aAltKey,
-                         aShiftKey, aMetaKey, aButton,
-                         aRelatedTarget);
-  }
+                      EventTarget* aRelatedTarget);
 
   void InitializeExtraMouseEventDictionaryMembers(const MouseEventInit& aParam);
 
@@ -93,36 +86,29 @@ public:
   uint16_t MozInputSource() const;
   void InitNSMouseEvent(const nsAString& aType,
                         bool aCanBubble, bool aCancelable,
-                        nsIDOMWindow* aView, int32_t aDetail, int32_t aScreenX,
-                        int32_t aScreenY, int32_t aClientX, int32_t aClientY,
+                        nsGlobalWindow* aView, int32_t aDetail,
+                        int32_t aScreenX, int32_t aScreenY,
+                        int32_t aClientX, int32_t aClientY,
                         bool aCtrlKey, bool aAltKey, bool aShiftKey,
                         bool aMetaKey, uint16_t aButton,
                         EventTarget* aRelatedTarget,
-                        float aPressure, uint16_t aInputSource,
-                        ErrorResult& aRv)
-  {
-    aRv = InitNSMouseEvent(aType, aCanBubble, aCancelable,
-                           aView, aDetail, aScreenX, aScreenY,
-                           aClientX, aClientY, aCtrlKey, aAltKey,
-                           aShiftKey, aMetaKey, aButton,
-                           aRelatedTarget, aPressure, aInputSource);
-  }
+                        float aPressure, uint16_t aInputSource);
 
 protected:
   ~MouseEvent() {}
 
-  nsresult InitMouseEvent(const nsAString& aType,
-                          bool aCanBubble,
-                          bool aCancelable,
-                          nsIDOMWindow* aView,
-                          int32_t aDetail,
-                          int32_t aScreenX,
-                          int32_t aScreenY,
-                          int32_t aClientX,
-                          int32_t aClientY,
-                          int16_t aButton,
-                          nsIDOMEventTarget* aRelatedTarget,
-                          const nsAString& aModifiersList);
+  void InitMouseEvent(const nsAString& aType,
+                      bool aCanBubble,
+                      bool aCancelable,
+                      nsGlobalWindow* aView,
+                      int32_t aDetail,
+                      int32_t aScreenX,
+                      int32_t aScreenY,
+                      int32_t aClientX,
+                      int32_t aClientY,
+                      int16_t aButton,
+                      EventTarget* aRelatedTarget,
+                      const nsAString& aModifiersList);
 };
 
 } // namespace dom

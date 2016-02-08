@@ -82,7 +82,7 @@ NS_IMPL_RELEASE_INHERITED(DeviceStorageAreaListener, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN(DeviceStorageAreaListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-DeviceStorageAreaListener::DeviceStorageAreaListener(nsPIDOMWindow* aWindow)
+DeviceStorageAreaListener::DeviceStorageAreaListener(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
   MOZ_ASSERT(aWindow);

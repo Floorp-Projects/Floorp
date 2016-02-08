@@ -21,16 +21,3 @@ sdk_processor := \
 
 %.cpp %.h: $(ANDROID_SDK)/android.jar %-classes.txt
 	$(sdk_processor) $(ANDROID_SDK)/android.jar $(srcdir)/$*-classes.txt $(CURDIR) $* 16
-
-# We'd like these to be defined in a future GENERATED_EXPORTS list.
-bindings_exports_FILES := \
-	AndroidRect.h \
-  Bundle.h \
-  KeyEvent.h \
-  MediaCodec.h \
-  MotionEvent.h \
-  SurfaceTexture.h \
-  $(NULL)
-bindings_exports_DEST = $(DIST)/include
-bindings_exports_TARGET := export
-INSTALL_TARGETS += bindings_exports

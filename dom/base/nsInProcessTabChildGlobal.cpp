@@ -181,15 +181,15 @@ nsInProcessTabChildGlobal::CacheFrameLoader(nsIFrameLoader* aFrameLoader)
 }
 
 NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetContent(nsIDOMWindow** aContent)
+nsInProcessTabChildGlobal::GetContent(mozIDOMWindowProxy** aContent)
 {
   *aContent = nullptr;
   if (!mDocShell) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMWindow> window = mDocShell->GetWindow();
-  window.swap(*aContent);
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
+  window.forget(aContent);
   return NS_OK;
 }
 
@@ -220,8 +220,7 @@ void
 nsInProcessTabChildGlobal::DisconnectEventListeners()
 {
   if (mDocShell) {
-    nsCOMPtr<nsPIDOMWindow> win = mDocShell->GetWindow();
-    if (win) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> win = mDocShell->GetWindow()) {
       MOZ_ASSERT(win->IsOuterWindow());
       win->SetChromeEventHandler(win->GetChromeEventHandler());
     }
@@ -277,8 +276,7 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
   if (mIsBrowserOrAppFrame &&
       (!mOwner || !nsContentUtils::IsInChromeDocshell(mOwner->OwnerDoc()))) {
     if (mOwner) {
-      nsPIDOMWindow* innerWindow = mOwner->OwnerDoc()->GetInnerWindow();
-      if (innerWindow) {
+      if (nsPIDOMWindowInner* innerWindow = mOwner->OwnerDoc()->GetInnerWindow()) {
         aVisitor.mParentTarget = innerWindow->GetParentTarget();
       }
     }

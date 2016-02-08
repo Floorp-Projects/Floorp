@@ -12,10 +12,10 @@ async protocol PGMPTimer
 {
   manager PGMP;
 child:
-  TimerExpired(uint32_t aTimerId);
+  async TimerExpired(uint32_t aTimerId);
 parent:
-  SetTimer(uint32_t aTimerId, uint32_t aTimeoutMs);
-  __delete__();
+  async SetTimer(uint32_t aTimerId, uint32_t aTimeoutMs);
+  async __delete__();
 };
 
 } // namespace gmp

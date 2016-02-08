@@ -65,7 +65,7 @@ nsPrintingProxy::Init()
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
+nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
                                  nsIWebBrowserPrint *webBrowserPrint,
                                  nsIPrintSettings *printSettings)
 {
@@ -76,7 +76,7 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
   // Get the root docshell owner of this nsIDOMWindow, which
   // should map to a TabChild, which we can then pass up to
   // the parent.
-  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(parent);
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(parent);
   NS_ENSURE_STATE(pwin);
   nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
   NS_ENSURE_STATE(docShell);
@@ -120,7 +120,7 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
+nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
                               nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                               nsIPrintSettings*        printSettings,      // ok to be null
                               nsIObserver*             openDialogObserver, // ok to be null
@@ -137,7 +137,7 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
   // Get the root docshell owner of this nsIDOMWindow, which
   // should map to a TabChild, which we can then pass up to
   // the parent.
-  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(parent);
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(parent);
   NS_ENSURE_STATE(pwin);
   nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
   NS_ENSURE_STATE(docShell);
@@ -165,7 +165,7 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPageSetup(nsIDOMWindow *parent,
+nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy *parent,
                                nsIPrintSettings *printSettings,
                                nsIObserver *aObs)
 {
@@ -173,7 +173,7 @@ nsPrintingProxy::ShowPageSetup(nsIDOMWindow *parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrinterProperties(nsIDOMWindow *parent,
+nsPrintingProxy::ShowPrinterProperties(mozIDOMWindowProxy *parent,
                                        const char16_t *printerName,
                                        nsIPrintSettings *printSettings)
 {

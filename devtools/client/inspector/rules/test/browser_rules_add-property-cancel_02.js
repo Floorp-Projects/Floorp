@@ -71,7 +71,7 @@ add_task(function*() {
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   yield onRuleViewChanged;
 
-  is(view.styleDocument.body, view.styleDocument.activeElement,
+  is(view.styleDocument.documentElement, view.styleDocument.activeElement,
     "Correct element has focus");
 
   is(elementRuleEditor.rule.textProps.length, 1,

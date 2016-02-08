@@ -7,9 +7,7 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
-Cu.import("resource://gre/modules/accessibility/Gestures.jsm");
 
 var win = getMainChromeWindow(window);
 
@@ -100,11 +98,6 @@ var eventMap = {
   touchmove: sendTouchEvent
 };
 
-var originalDwellThreshold = GestureSettings.dwellThreshold;
-var originalSwipeMaxDuration = GestureSettings.swipeMaxDuration;
-var originalConsecutiveGestureDelay =
-  GestureSettings.maxConsecutiveGestureDelay;
-
 /**
  * Attach a listener for the mozAccessFuGesture event that tests its
  * type.
@@ -158,9 +151,11 @@ function setTimers(aTimeStamp, aRemoveDwellThreshold, aRemoveSwipeMaxDuration) {
   GestureTracker.current.startTimer(aTimeStamp);
 }
 
-function resetTimers() {
-  GestureSettings.dwellThreshold = originalDwellThreshold;
-  GestureSettings.swipeMaxDuration = originalSwipeMaxDuration;
+function resetTimers(aRemoveGestureResolveDelay) {
+  GestureSettings.dwellThreshold = AccessFuTest.dwellThreshold;
+  GestureSettings.swipeMaxDuration = AccessFuTest.swipeMaxDuration;
+  GestureSettings.maxGestureResolveTimeout = aRemoveGestureResolveDelay ?
+    0 : AccessFuTest.maxGestureResolveTimeout;
 }
 
 /**
@@ -179,10 +174,7 @@ AccessFuTest.addSequence = function AccessFuTest_addSequence(aSequence) {
         type: aEvent.type
       };
       var timeStamp = Date.now();
-      resetTimers();
-      GestureSettings.maxConsecutiveGestureDelay =
-        aEvent.removeConsecutiveGestureDelay ?
-        0 : originalConsecutiveGestureDelay;
+      resetTimers(aEvent.removeGestureResolveDelay);
       GestureTracker.handle(event, timeStamp);
       setTimers(timeStamp, aEvent.removeDwellThreshold,
         aEvent.removeSwipeMaxDuration);

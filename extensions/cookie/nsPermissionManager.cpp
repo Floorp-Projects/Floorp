@@ -1773,14 +1773,6 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
       // If requested, create the entry in the DB.
       if (aDBOperation == eWriteToDB) {
-        uint32_t appId;
-        rv = aPrincipal->GetAppId(&appId);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        bool isInBrowserElement;
-        rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
-        NS_ENSURE_SUCCESS(rv, rv);
-
         UpdateDB(eOperationAdding, mStmtInsert, id, origin, aType, aPermission,
                  aExpireType, aExpireTime, aModificationTime);
       }
@@ -1968,19 +1960,15 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestPermissionFromWindow(nsIDOMWindow* aWindow,
+nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
                                               const char* aType,
                                               uint32_t* aPermission)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(window, NS_NOINTERFACE);
-
-  nsPIDOMWindow* innerWindow = window->IsInnerWindow() ?
-    window.get() :
-    window->GetCurrentInnerWindow();
+  NS_ENSURE_ARG(aWindow);
+  nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(aWindow);
 
   // Get the document for security check
-  nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
+  nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
   NS_ENSURE_TRUE(document, NS_NOINTERFACE);
 
   nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
@@ -2952,4 +2940,3 @@ nsPermissionManager::FetchPermissions() {
   }
   return NS_OK;
 }
-

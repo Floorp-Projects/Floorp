@@ -1175,14 +1175,16 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     }
   }
 
-  // Display port margins changing means that the set of visible images may
-  // have drastically changed. Check if we should schedule an update.
   nsIFrame* frame = GetScrollFrameFromContent(aContent);
   nsIScrollableFrame* scrollableFrame = frame ? frame->GetScrollTargetFrame() : nullptr;
   if (!scrollableFrame) {
     return true;
   }
 
+  scrollableFrame->TriggerDisplayPortExpiration();
+
+  // Display port margins changing means that the set of visible images may
+  // have drastically changed. Check if we should schedule an update.
   nsRect oldDisplayPort;
   bool hadDisplayPort =
     scrollableFrame->GetDisplayPortAtLastImageVisibilityUpdate(&oldDisplayPort);
@@ -1249,12 +1251,19 @@ nsLayoutUtils::HasCriticalDisplayPort(nsIContent* aContent)
   return GetCriticalDisplayPort(aContent, nullptr);
 }
 
+void
+nsLayoutUtils::RemoveDisplayPort(nsIContent* aContent)
+{
+  aContent->DeleteProperty(nsGkAtoms::DisplayPort);
+  aContent->DeleteProperty(nsGkAtoms::DisplayPortMargins);
+}
+
 nsContainerFrame*
 nsLayoutUtils::LastContinuationWithChild(nsContainerFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
   nsIFrame* f = aFrame->LastContinuation();
-  while (!f->GetFirstPrincipalChild() && f->GetPrevContinuation()) {
+  while (!f->PrincipalChildList().FirstChild() && f->GetPrevContinuation()) {
     f = f->GetPrevContinuation();
   }
   return static_cast<nsContainerFrame*>(f);
@@ -1382,7 +1391,7 @@ nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
   // If the first child frame is a pseudo-frame, then try that.
   // Note that the frame we create for the generated content is also a
   // pseudo-frame and so don't drill down in that case.
-  nsIFrame* childFrame = genConParentFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = genConParentFrame->PrincipalChildList().FirstChild();
   if (childFrame &&
       childFrame->IsPseudoFrame(aContent) &&
       !childFrame->IsGeneratedContentFrame()) {
@@ -1466,8 +1475,8 @@ nsIFrame*
 nsLayoutUtils::GetStyleFrame(nsIFrame* aFrame)
 {
   if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
-    nsIFrame* inner = aFrame->GetFirstPrincipalChild();
-    NS_ASSERTION(inner, "Outer table must have an inner");
+    nsIFrame* inner = aFrame->PrincipalChildList().FirstChild();
+    // inner may be null, if aFrame is mid-destruction
     return inner;
   }
 
@@ -1597,7 +1606,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
 
-  nsAutoTArray<nsINode*, 32> content1Ancestors;
+  AutoTArray<nsINode*, 32> content1Ancestors;
   nsINode* c1;
   for (c1 = aContent1; c1 && c1 != aCommonAncestor; c1 = c1->GetParentNode()) {
     content1Ancestors.AppendElement(c1);
@@ -1608,7 +1617,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
     aCommonAncestor = nullptr;
   }
 
-  nsAutoTArray<nsINode*, 32> content2Ancestors;
+  AutoTArray<nsINode*, 32> content2Ancestors;
   nsINode* c2;
   for (c2 = aContent2; c2 && c2 != aCommonAncestor; c2 = c2->GetParentNode()) {
     content2Ancestors.AppendElement(c2);
@@ -1702,7 +1711,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
   NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
 
-  nsAutoTArray<nsIFrame*,20> frame2Ancestors;
+  AutoTArray<nsIFrame*,20> frame2Ancestors;
   nsIFrame* nonCommonAncestor =
     FillAncestors(aFrame2, aCommonAncestor, &frame2Ancestors);
 
@@ -1729,7 +1738,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
     return 0;
   }
 
-  nsAutoTArray<nsIFrame*,20> frame1Ancestors;
+  AutoTArray<nsIFrame*,20> frame1Ancestors;
   if (aCommonAncestor &&
       !FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
@@ -1914,19 +1923,18 @@ nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame)
   return ViewportHasDisplayPort(aFrame->PresContext());
 }
 
-NS_DECLARE_FRAME_PROPERTY(ScrollbarThumbLayerized, nullptr)
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ScrollbarThumbLayerized, bool)
 
 /* static */ void
 nsLayoutUtils::SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize)
 {
-  aThumbFrame->Properties().Set(ScrollbarThumbLayerized(),
-    reinterpret_cast<void*>(intptr_t(aLayerize)));
+  aThumbFrame->Properties().Set(ScrollbarThumbLayerized(), aLayerize);
 }
 
 bool
 nsLayoutUtils::IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
 {
-  return reinterpret_cast<intptr_t>(aThumbFrame->Properties().Get(ScrollbarThumbLayerized()));
+  return aThumbFrame->Properties().Get(ScrollbarThumbLayerized());
 }
 
 // static
@@ -2502,8 +2510,8 @@ nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(nsIFrame* aFrame)
 nsIFrame*
 nsLayoutUtils::FindNearestCommonAncestorFrame(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
-  nsAutoTArray<nsIFrame*,100> ancestors1;
-  nsAutoTArray<nsIFrame*,100> ancestors2;
+  AutoTArray<nsIFrame*,100> ancestors1;
+  AutoTArray<nsIFrame*,100> ancestors2;
   nsIFrame* commonAncestor = nullptr;
   if (aFrame1->PresContext() == aFrame2->PresContext()) {
     commonAncestor = aFrame1->PresContext()->PresShell()->GetRootFrame();
@@ -2960,7 +2968,7 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt, uint32_t aFlags)
     js::ProfileEntry::Category::GRAPHICS);
 
   nsresult rv;
-  nsAutoTArray<nsIFrame*,8> outFrames;
+  AutoTArray<nsIFrame*,8> outFrames;
   rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames, aFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
@@ -3165,6 +3173,37 @@ nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(nsIFrame* aFra
       nsLayoutUtils::SetDisplayPortMargins(
         frame->GetContent(), frame->PresContext()->PresShell(), ScreenMargin(), 0,
         aRepaintMode);
+    }
+  }
+}
+
+void
+nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
+    if (!frame) {
+      break;
+    }
+    nsIScrollableFrame* scrollAncestor = GetAsyncScrollableAncestorFrame(frame);
+    if (!scrollAncestor) {
+      break;
+    }
+    frame = do_QueryFrame(scrollAncestor);
+    MOZ_ASSERT(frame);
+    MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
+      frame->PresContext()->PresShell()->GetRootScrollFrame() == frame);
+    if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
+        nsLayoutUtils::HasDisplayPort(frame->GetContent())) {
+      scrollAncestor->TriggerDisplayPortExpiration();
+      // Stop after the first trigger. If it failed, there's no point in
+      // continuing because all the rest of the frames we encounter are going
+      // to be ancestors of |scrollAncestor| which will keep its displayport.
+      // If the trigger succeeded, we stop because when the trigger executes
+      // it will call this function again to trigger the next ancestor up the
+      // chain.
+      break;
     }
   }
 }
@@ -3598,7 +3637,7 @@ AddBoxesForFrame(nsIFrame* aFrame,
   nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
 
   if (pseudoType == nsCSSAnonBoxes::tableOuter) {
-    AddBoxesForFrame(aFrame->GetFirstPrincipalChild(), aCallback);
+    AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
     nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
     if (kid) {
       AddBoxesForFrame(kid, aCallback);
@@ -3631,7 +3670,7 @@ nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame)
     nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
 
     if (pseudoType == nsCSSAnonBoxes::tableOuter) {
-      nsIFrame* f = GetFirstNonAnonymousFrame(aFrame->GetFirstPrincipalChild());
+      nsIFrame* f = GetFirstNonAnonymousFrame(aFrame->PrincipalChildList().FirstChild());
       if (f) {
         return f;
       }
@@ -3954,7 +3993,7 @@ ComputeConcreteObjectSize(const nsSize& aConstraintSize,
 
 // (Helper for HasInitialObjectFitAndPosition, to check
 // each "object-position" coord.)
-typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+typedef nsStyleImageLayers::Position::PositionCoord PositionCoord;
 static bool
 IsCoord50Pct(const PositionCoord& aCoord)
 {
@@ -3968,7 +4007,7 @@ IsCoord50Pct(const PositionCoord& aCoord)
 static bool
 HasInitialObjectFitAndPosition(const nsStylePosition* aStylePos)
 {
-  const nsStyleBackground::Position& objectPos = aStylePos->mObjectPosition;
+  const nsStyleImageLayers::Position& objectPos = aStylePos->mObjectPosition;
 
   return aStylePos->mObjectFit == NS_STYLE_OBJECT_FIT_FILL &&
     IsCoord50Pct(objectPos.mXPosition) &&
@@ -4543,19 +4582,23 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   pctTotal += pctOutsideSize;
 
   nscoord size;
-  if (GetAbsoluteCoord(aStyleSize, size) ||
-      GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
-                        PROP_WIDTH, size)) {
+  if (aType == nsLayoutUtils::MIN_ISIZE &&
+      (((aStyleSize.HasPercent() || aStyleMaxSize.HasPercent()) &&
+        aFrame->IsFrameOfType(nsIFrame::eReplacedSizing)) ||
+       (aStyleSize.HasPercent() &&
+        aFrame->GetType() == nsGkAtoms::textInputFrame))) {
+    // A percentage width or max-width on replaced elements means they
+    // can shrink to 0.
+    // This is also true for percentage widths (but not max-widths) on
+    // text inputs.
+    // Note that if this is max-width, this overrides the fixed-width
+    // rule in the next condition.
+    result = 0; // let |min| handle padding/border/margin
+  } else if (GetAbsoluteCoord(aStyleSize, size) ||
+             GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
+                               PROP_WIDTH, size)) {
     result = nsLayoutUtils::AddPercents(aType, size + coordOutsideSize,
                                         pctOutsideSize);
-  } else if (aType == nsLayoutUtils::MIN_ISIZE &&
-             // The only cases of coord-percent-calc() units that
-             // GetAbsoluteCoord didn't handle are percent and calc()s
-             // containing percent.
-             aStyleSize.IsCoordPercentCalcUnit() &&
-             aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-    // A percentage width on replaced elements means they can shrink to 0.
-    result = 0; // let |min| handle padding/border/margin
   } else {
     // NOTE: We could really do a lot better for percents and for some
     // cases of calc() containing percent (certainly including any where
@@ -5039,7 +5082,7 @@ nsLayoutUtils::ComputeBSizeDependentValue(
 /* static */ void
 nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
 {
-  nsAutoTArray<nsIFrame*, 4> subtrees;
+  AutoTArray<nsIFrame*, 4> subtrees;
   subtrees.AppendElement(aSubtreeRoot);
 
   // dirty descendants, iterating over subtrees that may include
@@ -5052,7 +5095,7 @@ nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
     // recursion).
     // Note that nsHTMLReflowState::InitResizeFlags has some similar
     // code; see comments there for how and why it differs.
-    nsAutoTArray<nsIFrame*, 32> stack;
+    AutoTArray<nsIFrame*, 32> stack;
     stack.AppendElement(subtreeRoot);
 
     do {
@@ -5860,7 +5903,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
 
     if (fType == nsGkAtoms::fieldSetFrame) {
       LinePosition kidPosition;
-      nsIFrame* kid = aFrame->GetFirstPrincipalChild();
+      nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
       // kid might be a legend frame here, but that's ok.
       if (GetFirstLinePosition(aWM, kid, &kidPosition)) {
         *aResult = kidPosition +
@@ -6759,7 +6802,7 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   // doing otherwise breaks window display effects on some platforms,
   // specifically Vista. (bug 450322)
   if (aBackgroundFrame->GetType() == nsGkAtoms::viewportFrame &&
-      !aBackgroundFrame->GetFirstPrincipalChild()) {
+      !aBackgroundFrame->PrincipalChildList().FirstChild()) {
     return eTransparencyOpaque;
   }
 
@@ -6770,7 +6813,7 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   const nsStyleBackground* bg = bgSC->StyleBackground();
   if (NS_GET_A(bg->mBackgroundColor) < 255 ||
       // bottom layer's clip is used for the color
-      bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
+      bg->BottomLayer().mClip != NS_STYLE_IMAGELAYER_CLIP_BORDER)
     return eTransparencyTransparent;
   return eTransparencyOpaque;
 }
@@ -6915,7 +6958,7 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
 }
 
 nsDeviceContext*
-nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
+nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindowOuter* aWindow)
 {
   if (!aWindow) {
     return nullptr;
@@ -6927,7 +6970,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
     // context does the right thing on multi-monitor systems when we return it to
     // the caller.  It will also make sure that our prescontext has been created,
     // if we're supposed to have one.
-    nsCOMPtr<nsPIDOMWindow> win = docShell->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> win = docShell->GetWindow();
     if (!win) {
       // No reason to go on
       return nullptr;
@@ -7452,7 +7495,7 @@ nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
     return total;
   }
 
-  nsAutoTArray<nsIFrame::ChildList,4> childListArray;
+  AutoTArray<nsIFrame::ChildList,4> childListArray;
   aFrame->GetChildLists(&childListArray);
 
   for (nsIFrame::ChildListArrayIterator childLists(childListArray);
@@ -8904,6 +8947,18 @@ nsLayoutUtils::IsScrollFrameWithSnapping(nsIFrame* aFrame)
   ScrollbarStyles styles = sf->GetScrollbarStyles();
   return styles.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
          styles.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+}
+
+/* static */ nsBlockFrame*
+nsLayoutUtils::GetFloatContainingBlock(nsIFrame* aFrame)
+{
+  nsIFrame* ancestor = aFrame->GetParent();
+  while (ancestor && !ancestor->IsFloatContainingBlock()) {
+    ancestor = ancestor->GetParent();
+  }
+  MOZ_ASSERT(!ancestor || GetAsBlock(ancestor),
+             "Float containing block can only be block frame");
+  return static_cast<nsBlockFrame*>(ancestor);
 }
 
 // The implementation of this calculation is adapted from

@@ -24,7 +24,7 @@ const TEST_DATA = [
   ["down", "node5"],
   ["down", "node6"],
   ["down", "*comment*"],
-  ["down" , "node7"],
+  ["down", "node7"],
   ["right", "node7"],
   ["down", "*text*"],
   ["down", "node8"],
@@ -83,10 +83,17 @@ add_task(function*() {
     info("Checking the right node is selected");
     checkSelectedNode(key, className, inspector);
   }
+
+  // In theory, we should wait for the inspector-updated event at each iteration
+  // of the previous loop where we expect the current node to change (because
+  // changing the current node ends up refreshing the rule-view, breadcrumbs,
+  // ...), but this would make this test a *lot* slower. Instead, having a final
+  // catch-all event works too.
+  yield inspector.once("inspector-updated");
 });
 
 function pressKey(key) {
-  switch(key) {
+  switch (key) {
     case "right":
       EventUtils.synthesizeKey("VK_RIGHT", {});
       break;
@@ -115,12 +122,16 @@ function checkSelectedNode(key, className, inspector) {
   let node = inspector.selection.nodeFront;
 
   if (className == "*comment*") {
-    is(node.nodeType, Node.COMMENT_NODE, "Found a comment after pressing " + key);
+    is(node.nodeType, Node.COMMENT_NODE,
+       "Found a comment after pressing " + key);
   } else if (className == "*text*") {
-    is(node.nodeType, Node.TEXT_NODE, "Found text after pressing " + key);
+    is(node.nodeType, Node.TEXT_NODE,
+       "Found text after pressing " + key);
   } else if (className == "*doctype*") {
-    is(node.nodeType, Node.DOCUMENT_TYPE_NODE, "Found the doctype after pressing " + key);
+    is(node.nodeType, Node.DOCUMENT_TYPE_NODE,
+       "Found the doctype after pressing " + key);
   } else {
-    is(node.className, className, "Found node: " + className + " after pressing " + key);
+    is(node.className, className,
+       "Found node: " + className + " after pressing " + key);
   }
 }

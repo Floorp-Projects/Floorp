@@ -62,7 +62,7 @@ WebVTTListener::LoadResource()
   mParserWrapper = do_CreateInstance(NS_WEBVTTPARSERWRAPPER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsPIDOMWindow* window = mElement->OwnerDoc()->GetWindow();
+  nsPIDOMWindowInner* window = mElement->OwnerDoc()->GetInnerWindow();
   rv = mParserWrapper->LoadParser(window);
   NS_ENSURE_SUCCESS(rv, rv);
 

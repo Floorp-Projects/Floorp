@@ -923,7 +923,20 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
 
         // Deal with slim wrappers here.
         if (GetISupportsFromJSObject(inner ? inner : src, &iface)) {
-            return iface && NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
+            if (iface && NS_SUCCEEDED(iface->QueryInterface(*iid, dest))) {
+                return true;
+            }
+
+            // If that failed, and iid is for mozIDOMWindowProxy, we actually
+            // want the outer!
+            if (iid->Equals(NS_GET_IID(mozIDOMWindowProxy))) {
+                if (nsCOMPtr<mozIDOMWindow> inner = do_QueryInterface(iface)) {
+                    iface = nsPIDOMWindowInner::From(inner)->GetOuterWindow();
+                    return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
+                }
+            }
+
+            return false;
         }
     }
 

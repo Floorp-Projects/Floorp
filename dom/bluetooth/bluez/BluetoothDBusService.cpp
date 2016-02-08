@@ -862,12 +862,12 @@ CheckDBusReply(DBusMessage* aMsg, void* aServiceClass, bool aConnect)
   nsAutoString replyError;
   UnpackVoidMessage(aMsg, nullptr, v, replyError);
 
-  nsAutoPtr<BluetoothServiceClass> serviceClass(
-    static_cast<BluetoothServiceClass*>(aServiceClass));
+  BluetoothServiceClass serviceClass =
+    static_cast<BluetoothServiceClass>(NS_PTR_TO_INT32(aServiceClass));
 
   if (!replyError.IsEmpty()) {
     NS_DispatchToMainThread(
-      new ReplyErrorToProfileManager(*serviceClass, aConnect, replyError));
+      new ReplyErrorToProfileManager(serviceClass, aConnect, replyError));
   }
 }
 
@@ -2592,7 +2592,7 @@ class SendAsyncDBusMessageTask : public Task
 {
 public:
   SendAsyncDBusMessageTask(DBusReplyCallback aCallback,
-                           BluetoothServiceClass* aServiceClass,
+                           BluetoothServiceClass aServiceClass,
                            const nsACString& aObjectPath,
                            const char* aInterface,
                            const nsACString& aMessage)
@@ -2602,7 +2602,6 @@ public:
     , mInterface(aInterface)
     , mMessage(aMessage)
   {
-    MOZ_ASSERT(mServiceClass);
     MOZ_ASSERT(!mObjectPath.IsEmpty());
     MOZ_ASSERT(!mInterface.IsEmpty());
     MOZ_ASSERT(!mMessage.IsEmpty());
@@ -2613,18 +2612,18 @@ public:
     MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
     MOZ_ASSERT(sDBusConnection);
 
+    static_assert(sizeof(BluetoothServiceClass) <= sizeof(intptr_t),
+                  "BluetoothServiceClass cannot be passed via intptr_t");
     bool success = sDBusConnection->SendWithReply(
-      mCallback, static_cast<void*>(mServiceClass), -1,
+      mCallback, NS_INT32_TO_PTR(mServiceClass), -1,
       BLUEZ_DBUS_BASE_IFC, mObjectPath.get(), mInterface.get(),
       mMessage.get(), DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
-
-    mServiceClass.forget();
   }
 
 private:
   DBusReplyCallback mCallback;
-  nsAutoPtr<BluetoothServiceClass> mServiceClass;
+  BluetoothServiceClass mServiceClass;
   const nsCString mObjectPath;
   const nsCString mInterface;
   const nsCString mMessage;
@@ -2642,18 +2641,18 @@ BluetoothDBusService::SendAsyncDBusMessage(const nsAString& aObjectPath,
   MOZ_ASSERT(!aObjectPath.IsEmpty());
   MOZ_ASSERT(aInterface);
 
-  nsAutoPtr<BluetoothServiceClass> serviceClass(new BluetoothServiceClass());
+  BluetoothServiceClass serviceClass;
   if (!strcmp(aInterface, DBUS_SINK_IFACE)) {
-    *serviceClass = BluetoothServiceClass::A2DP;
+    serviceClass = BluetoothServiceClass::A2DP;
   } else if (!strcmp(aInterface, DBUS_INPUT_IFACE)) {
-    *serviceClass = BluetoothServiceClass::HID;
+    serviceClass = BluetoothServiceClass::HID;
   } else {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
 
   Task* task = new SendAsyncDBusMessageTask(aCallback,
-                                            serviceClass.forget(),
+                                            serviceClass,
                                             NS_ConvertUTF16toUTF8(aObjectPath),
                                             aInterface,
                                             NS_ConvertUTF16toUTF8(aMessage));

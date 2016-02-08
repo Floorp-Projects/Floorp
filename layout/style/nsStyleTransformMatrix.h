@@ -140,7 +140,8 @@ namespace nsStyleTransformMatrix {
                            nsStyleContext* aContext,
                            nsPresContext* aPresContext,
                            mozilla::RuleNodeCacheConditions& aConditions,
-                           TransformReferenceBox& aBounds);
+                           TransformReferenceBox& aBounds,
+                           bool* aContains3dTransform);
 
   /**
    * Given an nsCSSValueList containing -moz-transform functions,
@@ -153,6 +154,9 @@ namespace nsStyleTransformMatrix {
    *   result cannot be cached in the rule tree, otherwise untouched.
    * @param aBounds The frame's bounding rectangle.
    * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
+   * @param aContains3dTransform [out] Set to true if aList contains at least
+   *   one 3d transform function (as defined in the CSS transforms
+   *   specification), false otherwise.
    *
    * aContext and aPresContext may be null if all of the (non-percent)
    * length values in aData are already known to have been converted to
@@ -163,8 +167,8 @@ namespace nsStyleTransformMatrix {
                                          nsPresContext* aPresContext,
                                          mozilla::RuleNodeCacheConditions& aConditions,
                                          TransformReferenceBox& aBounds,
-                                         float aAppUnitsPerMatrixUnit);
-
+                                         float aAppUnitsPerMatrixUnit,
+                                         bool* aContains3dTransform);
 } // namespace nsStyleTransformMatrix
 
 #endif

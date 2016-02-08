@@ -45,7 +45,8 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
 #define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
                                   PLACEHOLDER_FOR_ABSPOS | \
                                   PLACEHOLDER_FOR_FIXEDPOS | \
-                                  PLACEHOLDER_FOR_POPUP)
+                                  PLACEHOLDER_FOR_POPUP | \
+                                  PLACEHOLDER_FOR_TOPLAYER)
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
@@ -72,7 +73,8 @@ public:
     NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||
                     aTypeBit == PLACEHOLDER_FOR_ABSPOS ||
                     aTypeBit == PLACEHOLDER_FOR_FIXEDPOS ||
-                    aTypeBit == PLACEHOLDER_FOR_POPUP,
+                    aTypeBit == PLACEHOLDER_FOR_POPUP ||
+                    aTypeBit == PLACEHOLDER_FOR_TOPLAYER,
                     "Unexpected type bit");
     AddStateBits(aTypeBit);
   }

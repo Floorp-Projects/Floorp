@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  </body>
+
+  <iframe id="iframe"/>
+
+<script> 
+
+var url1 = "http://test1.example.com/chrome/dom/apps/tests/apps/basic.webapp";
+var url2 = "http://test2.example.com/chrome/dom/apps/tests/apps/basic.webapp";
+
+// References to the apps we install, so we can uninstall them afterward.
+// Note that app2 is set by the helper page, which throws "TypeError: can't
+// redefine non-configurable property 'app2'" if we declare it here.
+var app1 /* , app2 */;
+
+var steps = [
+  installAppFromOwnOrigin,
+  installAppFromOtherOrigin,
+  getInstalled,
+  getAll,
+  uninstall,
+];
+
+runAll(steps);
+
+/**
+ * Install the first app from our own origin (chrome://mochitests).  Note that
+ * the app itself is from a different origin (http://test1.example.com).
+ */
+function installAppFromOwnOrigin(next) {
+  confirmNextPopup();
+  navigator.mozApps.install(url1, null).onsuccess = function onInstall() {
+    app1 = this.result;
+    next();
+  };
+}
+
+/**
+ * Install the second app from another origin (http://test2.example.com) using
+ * the helper page.  In this case, the origin of the installing page is the same
+ * as the origin of the app being installed, so the helper page can test
+ * getSelf().
+ */
+function installAppFromOtherOrigin(next) {
+  document.getElementById("iframe").setAttribute("src",
+    "http://test2.example.com/chrome/dom/apps/tests/cross_origin.html");
+
+  window.addEventListener("message", function onMessage(event) {
+    if (event.data == "next") {
+      window.removeEventListener("message", onMessage, false);
+      next();
+    }
+  }, false);
+}
+
+function getInstalled(next) {
+  navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
+    var app1 = Array.from(this.result).filter((a) => a.manifestURL == url1)[0];
+    ok(app1, "getInstalled() includes app installed from own origin");
+
+    var app2 = Array.from(this.result).filter((a) => a.manifestURL == url2)[0];
+    ok(!app2, "getInstalled() excludes app installed from other origin");
+
+    next();
+  };
+}
+
+function getAll(next) {
+  navigator.mozApps.mgmt.getAll().onsuccess = function onMgmtGetAll() {
+    var app1 = Array.from(this.result).filter((a) => a.manifestURL == url1)[0];
+    ok(app1, "mgmt.getAll() includes app installed from own origin");
+
+    var app2 = Array.from(this.result).filter((a) => a.manifestURL == url2)[0];
+    ok(app2, "mgmt.getAll() includes app installed from other origin");
+
+    next();
+  };
+}
+
+function uninstall(next) {
+  confirmNextPopup();
+  navigator.mozApps.mgmt.uninstall(app1).onsuccess = function onUninstallApp1() {
+    confirmNextPopup();
+    navigator.mozApps.mgmt.uninstall(app2).onsuccess = function onUninstallApp2() {
+      next();
+    };
+  };
+}
+
+</script> 
+</window>

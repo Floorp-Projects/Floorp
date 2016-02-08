@@ -697,7 +697,8 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 #ifdef USE_SKIA_GPU
   if (UsingSkiaGPU()) {
     // Try to create a GPU draw target first if we're currently using the GPU.
-    if (target->InitWithGrContext(mGrContext.get(), aSize, aFormat)) {
+    // Mark the DT as cached so that shadow DTs, extracted subrects, and similar can be reused.
+    if (target->InitWithGrContext(mGrContext.get(), aSize, aFormat, true)) {
       return target.forget();
     }
     // Otherwise, just fall back to a software draw target.
@@ -731,17 +732,31 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
       return surface.forget();
     }
 
+    SkBitmap bitmap = GetBitmapForSurface(aSurface);
+
     // Upload the SkBitmap to a GrTexture otherwise.
     SkAutoTUnref<GrTexture> texture(
-      GrRefCachedBitmapTexture(mGrContext.get(),
-                               GetBitmapForSurface(aSurface),
-                               GrTextureParams::ClampBilerp()));
+      GrRefCachedBitmapTexture(mGrContext.get(), bitmap, GrTextureParams::ClampBilerp()));
 
-    // Create a new SourceSurfaceSkia whose SkBitmap contains the GrTexture.
-    RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
-    if (surface->InitFromGrTexture(texture, aSurface->GetSize(), aSurface->GetFormat())) {
+    if (texture) {
+      // Create a new SourceSurfaceSkia whose SkBitmap contains the GrTexture.
+      RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
+      if (surface->InitFromGrTexture(texture, aSurface->GetSize(), aSurface->GetFormat())) {
+        return surface.forget();
+      }
+    }
+
+    // The data was too big to fit in a GrTexture.
+    if (aSurface->GetType() == SurfaceType::SKIA) {
+      // It is already a Skia source surface, so just reuse it as-is.
+      RefPtr<SourceSurface> surface(aSurface);
       return surface.forget();
     }
+
+    // Wrap it in a Skia source surface so that can do tiled uploads on-demand.
+    RefPtr<SourceSurfaceSkia> surface = new SourceSurfaceSkia();
+    surface->InitFromBitmap(bitmap);
+    return surface.forget();
   }
 #endif
 
@@ -847,10 +862,30 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 }
 
 #ifdef USE_SKIA_GPU
+/** Indicating a DT should be cached means that space will be reserved in Skia's cache
+ * for the render target at creation time, with any unused resources exceeding the cache
+ * limits being purged. When the DT is freed, it will then be guaranteed to be kept around
+ * for subsequent allocations until it gets incidentally purged.
+ *
+ * If it is not marked as cached, no space will be purged to make room for the render
+ * target in the cache. When the DT is freed, If there is space within the resource limits
+ * it may be added to the cache, otherwise it will be freed immediately if the cache is
+ * already full.
+ *
+ * If you want to ensure that the resources will be kept around for reuse, it is better
+ * to mark them as cached. Such resources should be short-lived to ensure they don't
+ * permanently tie up cache resource limits. Long-lived resources should generally be
+ * left as uncached.
+ *
+ * In neither case will cache resource limits affect whether the resource allocation
+ * succeeds. The amount of in-use GPU resources is allowed to exceed the size of the cache.
+ * Thus, only hard GPU out-of-memory conditions will cause resource allocation to fail.
+ */
 bool
 DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
                                   const IntSize &aSize,
-                                  SurfaceFormat aFormat)
+                                  SurfaceFormat aFormat,
+                                  bool aCached)
 {
   MOZ_ASSERT(aGrContext, "null GrContext");
 
@@ -860,7 +895,10 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
 
   // Create a GPU rendertarget/texture using the supplied GrContext.
   // NewRenderTarget also implicitly clears the underlying texture on creation.
-  SkAutoTUnref<SkSurface> gpuSurface(SkSurface::NewRenderTarget(aGrContext, SkSurface::kNo_Budgeted, MakeSkiaImageInfo(aSize, aFormat)));
+  SkAutoTUnref<SkSurface> gpuSurface(
+    SkSurface::NewRenderTarget(aGrContext,
+                               SkSurface::Budgeted(aCached),
+                               MakeSkiaImageInfo(aSize, aFormat)));
   if (!gpuSurface) {
     return false;
   }

@@ -16,7 +16,7 @@ try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
 } catch(ex) {
   do_throw("Could not get history service\n");
-} 
+}
 
 // get bookmarks root id
 var root = bmsvc.bookmarksMenuFolder;

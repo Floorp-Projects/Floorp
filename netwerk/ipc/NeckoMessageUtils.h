@@ -108,9 +108,12 @@ struct ParamTraits<mozilla::net::NetAddr>
       return false;
 
     if (aResult->raw.family == AF_UNSPEC) {
-      return aMsg->ReadBytes(aIter,
-                             reinterpret_cast<const char**>(&aResult->raw.data),
-                             sizeof(aResult->raw.data));
+      const char *tmp;
+      if (aMsg->ReadBytes(aIter, &tmp, sizeof(aResult->raw.data))) {
+        memcpy(&(aResult->raw.data), tmp, sizeof(aResult->raw.data));
+        return true;
+      }
+      return false;
     } else if (aResult->raw.family == AF_INET) {
       return ReadParam(aMsg, aIter, &aResult->inet.port) &&
              ReadParam(aMsg, aIter, &aResult->inet.ip);
@@ -122,9 +125,12 @@ struct ParamTraits<mozilla::net::NetAddr>
              ReadParam(aMsg, aIter, &aResult->inet6.scope_id);
 #if defined(XP_UNIX)
     } else if (aResult->raw.family == AF_LOCAL) {
-      return aMsg->ReadBytes(aIter,
-                             reinterpret_cast<const char**>(&aResult->local.path),
-                             sizeof(aResult->local.path));
+      const char *tmp;
+      if (aMsg->ReadBytes(aIter, &tmp, sizeof(aResult->local.path))) {
+        memcpy(&(aResult->local.path), tmp, sizeof(aResult->local.path));
+        return true;
+      }
+      return false;
 #endif
     }
 

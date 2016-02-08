@@ -54,7 +54,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
       }
       nsIFrame* colFrame = aStartColFrame; 
       if (!colFrame || (colIndex != aFirstColIndex)) {
-        colFrame = colGroupFrame->GetFirstPrincipalChild();
+        colFrame = colGroupFrame->PrincipalChildList().FirstChild();
       }
       while (colFrame) {
         if (nsGkAtoms::tableColFrame == colFrame->GetType()) {

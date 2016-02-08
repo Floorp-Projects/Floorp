@@ -25,7 +25,7 @@ NS_IMPL_RELEASE_INHERITED(TVManager, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TVManager)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TVManager::TVManager(nsPIDOMWindow* aWindow)
+TVManager::TVManager(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsReady(false)
 {
@@ -36,7 +36,7 @@ TVManager::~TVManager()
 }
 
 /* static */ already_AddRefed<TVManager>
-TVManager::Create(nsPIDOMWindow* aWindow)
+TVManager::Create(nsPIDOMWindowInner* aWindow)
 {
   RefPtr<TVManager> manager = new TVManager(aWindow);
   return (manager->Init()) ? manager.forget() : nullptr;

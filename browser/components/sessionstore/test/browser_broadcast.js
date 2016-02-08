@@ -74,7 +74,7 @@ add_task(function flush_on_settabstate() {
 
   // Flush all data contained in the content script but send it using
   // asynchronous messages.
-  TabState.flushAsync(browser);
+  TabStateFlusher.flush(browser);
 
   yield promiseTabState(tab, state);
 
@@ -101,7 +101,7 @@ add_task(function flush_on_tabclose_racy() {
 
   // Flush all data contained in the content script but send it using
   // asynchronous messages.
-  TabState.flushAsync(browser);
+  TabStateFlusher.flush(browser);
   yield promiseRemoveTab(tab);
 
   let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));

@@ -27,16 +27,16 @@ add_task(function*() {
     highlighterOptions = options;
   }
 
-  let elt = view.doc.getElementById("margins");
+  let elt = view.doc.getElementById("layout-margins");
   yield testGuideOnLayoutHover(elt, "margin", inspector, view);
 
-  elt = view.doc.getElementById("borders");
+  elt = view.doc.getElementById("layout-borders");
   yield testGuideOnLayoutHover(elt, "border", inspector, view);
 
-  elt = view.doc.getElementById("padding");
+  elt = view.doc.getElementById("layout-padding");
   yield testGuideOnLayoutHover(elt, "padding", inspector, view);
 
-  elt = view.doc.getElementById("content");
+  elt = view.doc.getElementById("layout-content");
   yield testGuideOnLayoutHover(elt, "content", inspector, view);
 });
 

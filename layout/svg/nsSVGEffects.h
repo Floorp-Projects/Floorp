@@ -387,40 +387,43 @@ private:
 class nsSVGEffects {
 public:
   typedef mozilla::dom::Element Element;
-  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
     URIObserverHashtable;
 
-  static void DestroyFilterProperty(void* aPropertyValue)
-  {
-    auto* prop = static_cast<nsSVGFilterProperty*>(aPropertyValue);
+  using ObserverPropertyDescriptor =
+    const mozilla::FramePropertyDescriptor<nsISupports>*;
+  using URIObserverHashtablePropertyDescriptor =
+    const mozilla::FramePropertyDescriptor<URIObserverHashtable>*;
 
+  static void DestroyFilterProperty(nsSVGFilterProperty* aProp)
+  {
     // nsSVGFilterProperty is cycle-collected, so dropping the last reference
     // doesn't necessarily destroy it. We need to tell it that the frame
     // has now become invalid.
-    prop->DetachFromFrame();
+    aProp->DetachFromFrame();
 
-    prop->Release();
+    aProp->Release();
   }
 
-  NS_DECLARE_FRAME_PROPERTY(FilterProperty, DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY(MaskProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(ClipPathProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(MarkerBeginProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(MarkerMiddleProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(MarkerEndProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(FillProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(StrokeProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(HrefProperty, ReleaseValue<nsISupports>)
-  NS_DECLARE_FRAME_PROPERTY(BackgroundImageProperty,
-                            DeleteValue<URIObserverHashtable>)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
+                                      DestroyFilterProperty)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
+                                      URIObserverHashtable)
 
   /**
    * Get the paint server for a aTargetFrame.
    */
   static nsSVGPaintServerFrame *GetPaintServer(nsIFrame *aTargetFrame,
                                                const nsStyleSVGPaint *aPaint,
-                                               const FramePropertyDescriptor *aProperty);
+                                               ObserverPropertyDescriptor aProperty);
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
@@ -523,26 +526,26 @@ public:
    */
   static nsSVGMarkerProperty *
   GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
-                    const FramePropertyDescriptor *aProperty);
+                    ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGTextPathProperty for the frame, creating a fresh one if necessary
    */
   static nsSVGTextPathProperty *
   GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
-                      const FramePropertyDescriptor *aProperty);
+                      ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
    */
   static nsSVGPaintingProperty *
   GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
-                      const FramePropertyDescriptor *aProperty);
+                      ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame for that URI, creating a fresh
    * one if necessary
    */
   static nsSVGPaintingProperty *
   GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
-                            const FramePropertyDescriptor *aProp);
+                            URIObserverHashtablePropertyDescriptor aProp);
 };
 
 #endif /*NSSVGEFFECTS_H_*/

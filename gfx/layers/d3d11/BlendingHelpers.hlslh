@@ -1,0 +1,184 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Helper functions.
+float hardlight(float dest, float src) {
+  if (src <= 0.5) {
+    return dest * (2.0 * src);
+  } else {
+    // Note: we substitute (2*src-1) into the screen formula below.
+    return 2.0 * dest + 2.0 * src - 1.0 - 2.0 * dest * src;
+  }
+}
+
+float dodge(float dest, float src) {
+  if (dest == 0.0) {
+    return 0.0;
+  } else if (src == 1.0) {
+    return 1.0;
+  } else {
+    return min(1.0, dest / (1.0 - src));
+  }
+}
+
+float burn(float dest, float src) {
+  if (dest == 1.0) {
+    return 1.0;
+  } else if (src == 0.0) {
+    return 0.0;
+  } else {
+    return 1.0 - min(1.0, (1.0 - dest) / src);
+  }
+}
+
+float darken(float dest) {
+  if (dest <= 0.25) {
+    return ((16.0 * dest - 12.0) * dest + 4.0) * dest;
+  } else {
+    return sqrt(dest);
+  }
+}
+
+float softlight(float dest, float src) {
+  if (src <= 0.5) {
+    return dest - (1.0 - 2.0 * src) * dest * (1.0 - dest);
+  } else {
+    return dest + (2.0 * src - 1.0) * (darken(dest) - dest);
+  }
+}
+
+float Lum(float3 c) {
+  return dot(float3(0.3, 0.59, 0.11), c);
+}
+
+float3 ClipColor(float3 c) {
+  float L = Lum(c);
+  float n = min(min(c.r, c.g), c.b);
+  float x = max(max(c.r, c.g), c.b);
+  if (n < 0.0) {
+    c = L + (((c - L) * L) / (L - n));
+  }
+  if (x > 1.0) {
+    c = L + (((c - L) * (1.0 - L)) / (x - L));
+  }
+  return c;
+}
+
+float3 SetLum(float3 c, float L) {
+  float d = L - Lum(c);
+  return ClipColor(float3(
+    c.r + d,
+    c.g + d,
+    c.b + d));
+}
+
+float Sat(float3 c) {
+  return max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);
+}
+
+// To use this helper, re-arrange rgb such that r=min, g=mid, and b=max.
+float3 SetSatInner(float3 c, float s) {
+  if (c.b > c.r) {
+    c.g = (((c.g - c.r) * s) / (c.b - c.r));
+    c.b = s;
+  } else {
+    c.gb = float2(0.0, 0.0);
+  }
+  return float3(0.0, c.g, c.b);
+}
+
+float3 SetSat(float3 c, float s) {
+  if (c.r <= c.g) {
+    if (c.g <= c.b) {
+      c.rgb = SetSatInner(c.rgb, s);
+    } else if (c.r <= c.b) {
+      c.rbg = SetSatInner(c.rbg, s);
+    } else {
+      c.brg = SetSatInner(c.brg, s);
+    }
+  } else if (c.r <= c.b) {
+    c.grb = SetSatInner(c.grb, s);
+  } else if (c.g <= c.b) {
+    c.gbr = SetSatInner(c.gbr, s);
+  } else {
+    c.bgr = SetSatInner(c.bgr, s);
+  }
+  return c;
+}
+
+float3 BlendMultiply(float3 dest, float3 src) {
+  return dest * src;
+}
+
+float3 BlendScreen(float3 dest, float3 src) {
+  return dest + src - (dest * src);
+}
+
+float3 BlendOverlay(float3 dest, float3 src) {
+  return float3(
+    hardlight(src.r, dest.r),
+    hardlight(src.g, dest.g),
+    hardlight(src.b, dest.b));
+}
+
+float3 BlendDarken(float3 dest, float3 src) {
+  return min(dest, src);
+}
+
+float3 BlendLighten(float3 dest, float3 src) {
+  return max(dest, src);
+}
+
+float3 BlendColorDodge(float3 dest, float3 src) {
+  return float3(
+    dodge(dest.r, src.r),
+    dodge(dest.g, src.g),
+    dodge(dest.b, src.b));
+}
+
+float3 BlendColorBurn(float3 dest, float3 src) {
+  return float3(
+    burn(dest.r, src.r),
+    burn(dest.g, src.g),
+    burn(dest.b, src.b));
+}
+
+float3 BlendHardLight(float3 dest, float3 src) {
+  return float3(
+    hardlight(dest.r, src.r),
+    hardlight(dest.g, src.g),
+    hardlight(dest.b, src.b));
+}
+
+float3 BlendSoftLight(float3 dest, float3 src) {
+  return float3(
+    softlight(dest.r, src.r),
+    softlight(dest.g, src.g),
+    softlight(dest.b, src.b));
+}
+
+float3 BlendDifference(float3 dest, float3 src) {
+  return abs(dest - src);
+}
+
+float3 BlendExclusion(float3 dest, float3 src) {
+  return dest + src - 2.0 * dest * src;
+}
+
+float3 BlendHue(float3 dest, float3 src) {
+  return SetLum(SetSat(src, Sat(dest)), Lum(dest));
+}
+
+float3 BlendSaturation(float3 dest, float3 src) {
+  return SetLum(SetSat(dest, Sat(src)), Lum(dest));
+}
+
+float3 BlendColor(float3 dest, float3 src) {
+  return SetLum(src, Lum(dest));
+}
+
+float3 BlendLuminosity(float3 dest, float3 src) {
+  return SetLum(dest, Lum(src));
+}

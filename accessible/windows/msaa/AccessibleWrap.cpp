@@ -834,7 +834,7 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
     return E_NOTIMPL;
 
   if (IsSelect()) {
-    nsAutoTArray<Accessible*, 10> selectedItems;
+    AutoTArray<Accessible*, 10> selectedItems;
     if (IsProxy()) {
       nsTArray<ProxyAccessible*> proxies;
       Proxy()->SelectedItems(&proxies);

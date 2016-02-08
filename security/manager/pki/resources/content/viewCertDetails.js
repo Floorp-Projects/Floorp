@@ -25,13 +25,11 @@ function doPrompt(msg)
 
 function AddCertChain(node, chain, idPrefix)
 {
-  var idfier = idPrefix+"chain_";
   var child = document.getElementById(node);
-  var numCerts = chain.length;
   var currCert;
   var displayVal;
   var addTwistie;
-  for (var i=numCerts-1; i>=0; i--) {
+  for (let i = chain.length - 1; i >= 0; i--) {
     currCert = chain.queryElementAt(i, nsIX509Cert);
     if (currCert.commonName) {
       displayVal = currCert.commonName;
@@ -76,7 +74,7 @@ function setWindowName()
     //var token = pk11db.findTokenByName(tokenName);
 
     //var cert = certdb.findCertByNickname(token, myName);
-    cert = certdb.findCertByNickname(null, myName);
+    cert = certdb.findCertByNickname(myName);
   } else {
     var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
     var cert = params.objects.queryElementAt(0, nsIX509Cert);
@@ -130,7 +128,7 @@ function displaySelected() {
     var value = asn1Tree.getDisplayData(items.currentIndex);
     certDumpVal.value = value;
   } else {
-    certDumpVal.value ="";
+    certDumpVal.value = "";
   }
 }
 
@@ -213,11 +211,11 @@ function DisplayVerificationData(cert, result)
   } else { /* if (verifystate == cert.NOT_VERIFIED_UNKNOWN || == USAGE_NOT_ALLOWED) */
     verifystr = bundle.getString('certNotVerified_Unknown');
   }
-  var verified=document.getElementById('verified');
+  let verified = document.getElementById("verified");
   verified.textContent = verifystr;
   if (count > 0) {
     var verifyInfoBox = document.getElementById('verify_info_box');
-    for (var i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
       AddUsage(usageList[i],verifyInfoBox);
     }
   }
@@ -265,7 +263,7 @@ function updateCertDump()
     var dbKey = item.firstChild.firstChild.getAttribute('display');
     //  Get the cert from the cert database
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-    var cert = certdb.findCertByDBKey(dbKey,null);
+    var cert = certdb.findCertByDBKey(dbKey);
     asn1Tree.loadASN1Structure(cert.ASN1Structure);
   }
   displaySelected();
@@ -290,7 +288,7 @@ function getCurrentCert()
     var item = tree.contentView.getItemAtIndex(realIndex);
     var dbKey = item.firstChild.firstChild.getAttribute('display');
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-    var cert = certdb.findCertByDBKey(dbKey,null);
+    var cert = certdb.findCertByDBKey(dbKey);
     return cert;
   }
   /* shouldn't really happen */

@@ -508,6 +508,13 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
     mCurrentCompositeTask = nullptr;
   }
 
+  if ((aVsyncTimestamp < mLastCompose) && !mAsapScheduling) {
+    // We can sometimes get vsync timestamps that are in the past
+    // compared to the last compose with force composites.
+    // In those cases, wait until the next vsync;
+    return;
+  }
+
   DispatchTouchEvents(aVsyncTimestamp);
   DispatchVREvents(aVsyncTimestamp);
 
@@ -545,6 +552,7 @@ CompositorVsyncScheduler::OnForceComposeToTarget()
 void
 CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   OnForceComposeToTarget();
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(aTarget, aRect);
@@ -632,6 +640,7 @@ CompositorVsyncScheduler::ScheduleTask(CancelableTask* aTask, int aTime)
 void
 CompositorVsyncScheduler::ResumeComposition()
 {
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(nullptr);
 }
@@ -664,6 +673,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mLastPluginUpdateLayerTreeId(0)
   , mPluginUpdateResponsePending(false)
   , mDeferPluginWindows(false)
+  , mPluginWindowsHidden(false)
 #endif
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2210,6 +2220,14 @@ CompositorParent::UpdatePluginWindowState(uint64_t aId)
     return false;
   }
 
+  // If the plugin windows were hidden but now are not, we need to force
+  // update the metrics to make sure they are visible again.
+  if (mPluginWindowsHidden) {
+    PLUGINS_LOG("[%" PRIu64 "] re-showing", aId);
+    mPluginWindowsHidden = false;
+    pluginMetricsChanged = true;
+  }
+
   if (!lts.mPluginData.Length()) {
     // We will pass through here in cases where the previous shadow layer
     // tree contained visible plugins and the new tree does not. All we need
@@ -2300,6 +2318,7 @@ CompositorParent::HideAllPluginWindows()
   }
   mDeferPluginWindows = true;
   mPluginUpdateResponsePending = true;
+  mPluginWindowsHidden = true;
   Unused << SendHideAllPlugins((uintptr_t)GetWidget());
   ScheduleComposition();
 }

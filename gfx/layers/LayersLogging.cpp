@@ -95,10 +95,9 @@ AppendToString(std::stringstream& aStream, const nsRegion& r,
 {
   aStream << pfx;
 
-  nsRegionRectIterator it(r);
   aStream << "< ";
-  while (const nsRect* sr = it.Next()) {
-    AppendToString(aStream, *sr);
+  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
+    AppendToString(aStream, iter.Get());
     aStream << "; ";
   }
   aStream << ">";
@@ -112,10 +111,9 @@ AppendToString(std::stringstream& aStream, const nsIntRegion& r,
 {
   aStream << pfx;
 
-  nsIntRegionRectIterator it(r);
   aStream << "< ";
-  while (const IntRect* sr = it.Next()) {
-    AppendToString(aStream, *sr);
+  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
+    AppendToString(aStream, iter.Get());
     aStream << "; ";
   }
   aStream << ">";

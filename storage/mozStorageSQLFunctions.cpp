@@ -165,8 +165,8 @@ levenshteinDistance(const nsAString &aStringS,
     // we be able to see the current row and the previous one.
 
     // Allocate memory for two rows.
-    nsAutoTArray<int, nsAutoString::kDefaultStorageSize> row1;
-    nsAutoTArray<int, nsAutoString::kDefaultStorageSize> row2;
+    AutoTArray<int, nsAutoString::kDefaultStorageSize> row1;
+    AutoTArray<int, nsAutoString::kDefaultStorageSize> row2;
 
     // Declare the raw pointers that will actually be used to access the memory.
     int *prevRow = row1.AppendElements(sLen + 1);

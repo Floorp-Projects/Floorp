@@ -7,17 +7,24 @@
 #if !defined(OmxPromiseLayer_h_)
 #define OmxPromiseLayer_h_
 
-#include "OMX_Core.h"
-#include "OMX_Types.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/TaskQueue.h"
 
+#include "OMX_Core.h"
+#include "OMX_Types.h"
+
 namespace mozilla {
 
-class OmxPlatformLayer;
-class OmxDataDecoder;
-class TrackInfo;
+namespace layers
+{
+class ImageContainer;
+}
+
 class MediaData;
+class MediaRawData;
+class OmxDataDecoder;
+class OmxPlatformLayer;
+class TrackInfo;
 
 /* This class acts as a middle layer between OmxDataDecoder and the underlying
  * OmxPlatformLayer.
@@ -77,7 +84,9 @@ public:
   typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true> OmxPortConfigPromise;
 
   // TODO: maybe a generic promise is good enough for this case?
-  RefPtr<OmxCommandPromise> Init(TaskQueue* aQueue, const TrackInfo* aInfo);
+  RefPtr<OmxCommandPromise> Init(const TrackInfo* aInfo);
+
+  OMX_ERRORTYPE Config();
 
   RefPtr<OmxBufferPromise> FillBuffer(BufferData* aData);
 

@@ -274,7 +274,7 @@ protected:
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold);
 
     virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                   FallibleTArray<uint8_t>& aBuffer) override;
+                                   nsTArray<uint8_t>& aBuffer) override;
 
     LOGFONTW mLogFont;
 };

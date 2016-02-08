@@ -27,7 +27,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DataStore, DOMEventTargetHelper, mStore)
 
-DataStore::DataStore(nsPIDOMWindow* aWindow)
+DataStore::DataStore(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
 }
@@ -39,7 +39,8 @@ DataStore::~DataStore()
 already_AddRefed<DataStore>
 DataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

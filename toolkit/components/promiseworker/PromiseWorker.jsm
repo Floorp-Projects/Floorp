@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  */
 function Queue() {
   this._array = [];
-};
+}
 Queue.prototype = {
   pop: function pop() {
     return this._array.shift();
@@ -372,7 +372,7 @@ this.BasePromiseWorker.prototype = {
  */
 function WorkerError(data) {
   this.data = data;
-};
+}
 
 /**
  * A constructor used to send data to the worker thread while

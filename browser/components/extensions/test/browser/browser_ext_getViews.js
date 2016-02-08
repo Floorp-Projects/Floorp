@@ -20,6 +20,7 @@ function genericChecker() {
         "tab": 0,
         "popup": 0,
       };
+      let background;
       for (let i = 0; i < views.length; i++) {
         let view = views[i];
         browser.test.assertTrue(view.kind in counts, "view type is valid");
@@ -27,9 +28,17 @@ function genericChecker() {
         if (view.kind == "background") {
           browser.test.assertTrue(view === browser.extension.getBackgroundPage(),
                                   "background page is correct");
+          background = view;
         }
       }
-      browser.test.sendMessage("counts", counts);
+      if (background) {
+        browser.runtime.getBackgroundPage().then(view => {
+          browser.test.assertEq(background, view, "runtime.getBackgroundPage() is correct");
+          browser.test.sendMessage("counts", counts);
+        });
+      } else {
+        browser.test.sendMessage("counts", counts);
+      }
     } else if (msg == kind + "-open-tab") {
       browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("tab.html")});
     } else if (msg == kind + "-close-tab") {

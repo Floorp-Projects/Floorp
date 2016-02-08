@@ -42,7 +42,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MobileConnection,
                                            DOMEventTargetHelper)
 
-  MobileConnection(nsPIDOMWindow *aWindow, uint32_t aClientId);
+  MobileConnection(nsPIDOMWindowInner* aWindow, uint32_t aClientId);
 
   void
   Shutdown();
@@ -50,7 +50,7 @@ public:
   virtual void
   DisconnectFromOwner() override;
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();

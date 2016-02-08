@@ -121,7 +121,7 @@ GetAlphabeticCounterText(CounterValue aOrdinal,
   // The precise length of this array should be
   // ceil(log((double) aOrdinal / n * (n - 1) + 1) / log(n)).
   // The max length is slightly smaller than which defined below.
-  nsAutoTArray<int32_t, std::numeric_limits<CounterValue>::digits> indexes;
+  AutoTArray<int32_t, std::numeric_limits<CounterValue>::digits> indexes;
   while (aOrdinal > 0) {
     --aOrdinal;
     indexes.AppendElement(aOrdinal % n);
@@ -150,7 +150,7 @@ GetNumericCounterText(CounterValue aOrdinal,
   }
 
   auto n = aSymbols.Length();
-  nsAutoTArray<int32_t, std::numeric_limits<CounterValue>::digits> indexes;
+  AutoTArray<int32_t, std::numeric_limits<CounterValue>::digits> indexes;
   while (aOrdinal > 0) {
     indexes.AppendElement(aOrdinal % n);
     aOrdinal /= n;

@@ -12,7 +12,7 @@ sync protocol PTestIndirectProtocolParamFirst {
 parent:
     sync Test(IndirectParamUnion actor);
 both:
-    __delete__();
+    async __delete__();
 };
 
 }

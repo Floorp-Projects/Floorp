@@ -12,10 +12,10 @@ protocol PTestEndpointBridgeMain {
   child spawns PTestEndpointBridgeSub;
 
 child:
-  Start();
+  async Start();
 
 parent:
-  Bridged(Endpoint<PTestEndpointBridgeMainSubParent> endpoint);
+  async Bridged(Endpoint<PTestEndpointBridgeMainSubParent> endpoint);
 };
 
 

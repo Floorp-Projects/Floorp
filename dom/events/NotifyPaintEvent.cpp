@@ -84,11 +84,9 @@ NotifyPaintEvent::ClientRects()
   RefPtr<DOMRectList> rectList = new DOMRectList(parent);
 
   nsRegion r = GetRegion();
-  nsRegionRectIterator iter(r);
-  for (const nsRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
+  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
     RefPtr<DOMRect> rect = new DOMRect(parent);
-    
-    rect->SetLayoutRect(*rgnRect);
+    rect->SetLayoutRect(iter.Get());
     rectList->Append(rect);
   }
 

@@ -10,7 +10,7 @@ try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
 } catch(ex) {
   do_throw("Could not get history service\n");
-} 
+}
 
 // main
 function run_test() {
@@ -35,7 +35,7 @@ function run_test() {
     "&sortingAnnotation=test%20anno";
   do_check_eq(histsvc.queriesToQueryString([query], 1, options),
               placeURI);
-  var options = {};
+  options = {};
   histsvc.queryStringToQueries(placeURI, { }, {}, options);
   do_check_eq(options.value.sortingAnnotation, "test anno");
   do_check_eq(options.value.sortingMode, NHQO.SORT_BY_ANNOTATION_DESCENDING);

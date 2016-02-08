@@ -24,6 +24,7 @@
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
+#include "RubyUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ArenaObjectID.h"
 
@@ -511,12 +512,23 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 }
 
 static bool
-ShouldSuppressLineBreak(const nsStyleDisplay* aStyleDisplay,
+ShouldSuppressLineBreak(const nsStyleContext* aContext,
+                        const nsStyleDisplay* aDisplay,
                         const nsStyleContext* aParentContext,
                         const nsStyleDisplay* aParentDisplay)
 {
   // The display change should only occur for "in-flow" children
-  if (aStyleDisplay->IsOutOfFlowStyle()) {
+  if (aDisplay->IsOutOfFlowStyle()) {
+    return false;
+  }
+  // Display value of any anonymous box should not be touched. In most
+  // cases, anonymous boxes are actually not in ruby frame, but instead,
+  // some other frame with a ruby display value. Non-element pseudos
+  // which represents text frames, as well as ruby pseudos are excluded
+  // because we still want to set the flag for them.
+  if (aContext->GetPseudoType() == nsCSSPseudoElements::ePseudo_AnonBox &&
+      aContext->GetPseudo() != nsCSSAnonBoxes::mozNonElement &&
+      !RubyUtils::IsRubyPseudo(aContext->GetPseudo())) {
     return false;
   }
   if (aParentContext->ShouldSuppressLineBreak()) {
@@ -550,12 +562,12 @@ ShouldSuppressLineBreak(const nsStyleDisplay* aStyleDisplay,
   // directly affects the line layout. This case is handled by the BR
   // frame which checks the flag of its parent frame instead of itself.
   if ((aParentDisplay->IsRubyDisplayType() &&
-       aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
-       aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
+       aDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
+       aDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
       // Since ruby base and ruby text may exist themselves without any
       // non-anonymous frame outside, we should also check them.
-      aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
-      aStyleDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT) {
+      aDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
+      aDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT) {
     return true;
   }
   return false;
@@ -714,7 +726,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
   }
 
-  if (mParent && ::ShouldSuppressLineBreak(disp, mParent,
+  if (mParent && ::ShouldSuppressLineBreak(this, disp, mParent,
                                            mParent->StyleDisplay())) {
     mBits |= NS_STYLE_SUPPRESS_LINEBREAK;
     uint8_t displayVal = disp->mDisplay;

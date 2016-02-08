@@ -40,7 +40,7 @@ NS_INTERFACE_MAP_END
 // Bit 7 ~ Bit 2: Minor device class
 #define GET_MINOR_DEVICE_CLASS(cod)  (((cod) & 0xfc) >> 2)
 
-BluetoothClassOfDevice::BluetoothClassOfDevice(nsPIDOMWindow* aOwner)
+BluetoothClassOfDevice::BluetoothClassOfDevice(nsPIDOMWindowInner* aOwner)
   : mOwnerWindow(aOwner)
 {
   MOZ_ASSERT(aOwner);
@@ -85,7 +85,7 @@ BluetoothClassOfDevice::Update(const uint32_t aValue)
 
 // static
 already_AddRefed<BluetoothClassOfDevice>
-BluetoothClassOfDevice::Create(nsPIDOMWindow* aOwner)
+BluetoothClassOfDevice::Create(nsPIDOMWindowInner* aOwner)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aOwner);

@@ -18,7 +18,8 @@ const {
 } = require("devtools/server/actors/highlighters/utils/markup");
 
 add_task(function*() {
-  let doc = yield addTab("about:preferences");
+  let browser = yield addTab("about:preferences");
+  let doc = browser.contentDocument;
 
   let nodeBuilder = () => {
     let root = doc.createElement("div");

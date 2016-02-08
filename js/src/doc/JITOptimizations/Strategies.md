@@ -7,6 +7,7 @@ and function calls.
 
 Optimization information is currently collected for the following operations:
 
+- [BinaryArith](#binaryarith) (`+-/*%`)
 - [GetProperty](#getprop) (`obj.prop`)
 - [SetProperty](#setprop) (`obj.prop = val`)
 - [GetElement](#getelem) (`obj[elemName]`)
@@ -24,9 +25,32 @@ speed-up they provide, what kind of program characteristics can prevent them
 from being used, and common ways to enable the engine to utilize that
 optimization.
 
+## <a name="binaryarith"></a>BinaryArith
+
+### BinaryArith_Concat
+
+Attempts to optimize an addition to string concatenation. The types of the operands are checked to contain a hint of being a concatenation. Both have to be string or one has to be a string and the other a type that easily can get converted to string (like numbers).
+
+### BinaryArith_SpecializedTypes
+
+Attempts to do a numeric arithmetic based on operand types. One of the inputs need to be a numeric type and the other a simple arithmetic type.
+
+### BinaryArith_SpecializedOnBaselineTypes
+
+Just like BinrayArith_SpecializedTypes tries to do a numeric arithmetic, but based on the observed types in the Baseline Compiler. If it succeeds it will roughly give same optimization as BinaryArith_SpecializedTypes, but the deduction is more fragile. In the best case one should try to get this optimization based on the input types.
+
+### BinaryArith_SharedCache
+
+Attempts to optimize a binary arithmetic using inline cache.
+
+### BinaryArith_Call
+
+Last resort which cannot get specialized at all and takes the slow path to do the arithmetic.
+
+
 ## <a name="getprop"></a>GetProperty
 
-### GetProperty_ArgumentsLength
+### GetProp_ArgumentsLength
 
 Attempts to optimize an `arguments.length` property access. This optimization
 only works if the arguments object is used in well-understood ways within the

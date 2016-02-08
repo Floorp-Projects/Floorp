@@ -199,12 +199,13 @@ public:
                                      const nsAString& aType,
                                      const nsAString& aReplace,
                                      mozilla::ErrorResult& rv);
-  already_AddRefed<nsIDOMWindow> Open(JSContext* cx,
-                                      const nsAString& aURL,
-                                      const nsAString& aName,
-                                      const nsAString& aFeatures,
-                                      bool aReplace,
-                                      mozilla::ErrorResult& rv);
+  already_AddRefed<nsPIDOMWindowOuter>
+  Open(JSContext* cx,
+       const nsAString& aURL,
+       const nsAString& aName,
+       const nsAString& aFeatures,
+       bool aReplace,
+       mozilla::ErrorResult& rv);
   void Close(mozilla::ErrorResult& rv);
   void Write(JSContext* cx, const mozilla::dom::Sequence<nsString>& aText,
              mozilla::ErrorResult& rv);

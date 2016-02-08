@@ -26,6 +26,8 @@ const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 const REMOTE_NEWTAB_URL = "https://newtab.cdn.mozilla.net/" +
                               "v%VERSION%/%CHANNEL%/%LOCALE%/index.html";
 
+const ABOUT_URL = "about:newtab";
+
 // Pref that tells if remote newtab is enabled
 const PREF_REMOTE_ENABLED = "browser.newtabpage.remote";
 
@@ -46,25 +48,65 @@ function AboutNewTabService() {
   this.toggleRemote(Services.prefs.getBoolPref(PREF_REMOTE_ENABLED));
 }
 
+/*
+ * A service that allows for the overriding, at runtime, of the newtab page's url.
+ * Additionally, the service manages pref state between a remote and local newtab page.
+ *
+ * There is tight coupling with browser/about/AboutRedirector.cpp.
+ *
+ * 1. Browser chrome access:
+ *
+ * When the user issues a command to open a new tab page, usually clicking a button
+ * in the browser chrome or using shortcut keys, the browser chrome code invokes the
+ * service to obtain the newtab URL. It then loads that URL in a new tab.
+ *
+ * When not overridden, the default URL emitted by the service is "about:newtab".
+ * When overridden, it returns the overriden URL.
+ *
+ * 2. Redirector Access:
+ *
+ * When the URL loaded is about:newtab, the default behavior, or when entered in the
+ * URL bar, the redirector is hit. The service is then called to return either of
+ * two URLs, a chrome or remote one, based on the browser.newtabpage.remote pref.
+ *
+ * NOTE: "about:newtab" will always result in a default newtab page, and never an overridden URL.
+ *
+ * Access patterns:
+ *
+ * The behavior is different when accessing the service via browser chrome or via redirector
+ * largely to maintain compatibility with expectations of add-on developers.
+ *
+ * Loading a chrome resource, or an about: URL in the redirector with either the
+ * LOAD_NORMAL or LOAD_REPLACE flags yield unexpected behaviors, so a roundtrip
+ * to the redirector from browser chrome is avoided.
+ */
 AboutNewTabService.prototype = {
 
-  _newTabURL: LOCAL_NEWTAB_URL,
+  _newTabURL: ABOUT_URL,
   _remoteEnabled: false,
+  _remoteURL: null,
   _overridden: false,
 
-  classID: Components.ID("{cef25b06-0ef6-4c50-a243-e69f943ef23d}"),
+  classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutNewTabService]),
   _xpcom_categories: [{
     service: true
   }],
 
   _handleToggleEvent(prefName, stateEnabled, forceState) { //jshint unused:false
-    this.toggleRemote(stateEnabled, forceState);
+    if (this.toggleRemote(stateEnabled, forceState)) {
+      Services.obs.notifyObservers(null, "newtab-url-changed", ABOUT_URL);
+    }
   },
 
   /**
-   * React to changes to the remote newtab pref. Only act
-   * if there is a change of state and if not overridden.
+   * React to changes to the remote newtab pref.
+   *
+   * If browser.newtabpage.remote is true, this will change the default URL to the
+   * remote newtab page URL. If browser.newtabpage.remote is false, the default URL
+   * will be a local chrome URL.
+   *
+   * This will only act if there is a change of state and if not overridden.
    *
    * @returns {Boolean} Returns if there has been a state change
    *
@@ -79,7 +121,7 @@ AboutNewTabService.prototype = {
     }
 
     if (stateEnabled) {
-      this._newTabURL = this.generateRemoteURL();
+      this._remoteURL = this.generateRemoteURL();
       NewTabPrefsProvider.prefs.on(
         PREF_SELECTED_LOCALE,
         this._updateRemoteMaybe.bind(this));
@@ -88,11 +130,11 @@ AboutNewTabService.prototype = {
         this._updateRemoteMaybe.bind(this));
       this._remoteEnabled = true;
     } else {
-      this._newTabURL = LOCAL_NEWTAB_URL;
       NewTabPrefsProvider.prefs.off(PREF_SELECTED_LOCALE, this._updateRemoteMaybe);
       NewTabPrefsProvider.prefs.off(PREF_MATCH_OS_LOCALE, this._updateRemoteMaybe);
       this._remoteEnabled = false;
     }
+    this._newTabURL = ABOUT_URL;
     return true;
   },
 
@@ -109,6 +151,21 @@ AboutNewTabService.prototype = {
   },
 
   /*
+   * Returns the default URL.
+   *
+   * This URL only depends on the browser.newtabpage.remote pref. Overriding
+   * the newtab page has no effect on the result of this function.
+   *
+   * @returns {String} the default newtab URL, remote or local depending on browser.newtabpage.remote
+   */
+  get defaultURL() {
+    if (this._remoteEnabled) {
+      return this._remoteURL;
+    }
+    return LOCAL_NEWTAB_URL;
+  },
+
+  /*
    * Updates the remote location when the page is not overriden.
    *
    * Useful when there is a dependent pref change
@@ -119,17 +176,17 @@ AboutNewTabService.prototype = {
     }
 
     let url = this.generateRemoteURL();
-    if (url !== this._newTabURL) {
-      this._newTabURL = url;
+    if (url !== this._remoteURL) {
+      this._remoteURL = url;
       Services.obs.notifyObservers(null, "newtab-url-changed",
-        this._newTabURL);
+        this._remoteURL);
     }
   },
 
   /**
    * Returns the release name from an Update Channel name
    *
-   * @return {String} a release name based on the update channel. Defaults to nightly
+   * @returns {String} a release name based on the update channel. Defaults to nightly
    */
   releaseFromUpdateChannel(channelName) {
     return VALID_CHANNELS.has(channelName) ? channelName : "nightly";
@@ -148,10 +205,13 @@ AboutNewTabService.prototype = {
   },
 
   set newTabURL(aNewTabURL) {
-    if (aNewTabURL === "about:newtab") {
+    aNewTabURL = aNewTabURL.trim();
+    if (aNewTabURL === ABOUT_URL) {
       // avoid infinite redirects in case one sets the URL to about:newtab
       this.resetNewTabURL();
       return;
+    } else if (aNewTabURL === "") {
+      aNewTabURL = "about:blank";
     }
     let remoteURL = this.generateRemoteURL();
     let prefRemoteEnabled = Services.prefs.getBoolPref(PREF_REMOTE_ENABLED);
@@ -182,6 +242,7 @@ AboutNewTabService.prototype = {
 
   resetNewTabURL() {
     this._overridden = false;
+    this._newTabURL = ABOUT_URL;
     this.toggleRemote(Services.prefs.getBoolPref(PREF_REMOTE_ENABLED), true);
     Services.obs.notifyObservers(null, "newtab-url-changed", this._newTabURL);
   }

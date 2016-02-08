@@ -119,7 +119,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
 #endif    
 #if defined(XP_MACOSX) || defined(XP_WIN)
   nsIDocument* doc = aFrame->GetContent()->OwnerDoc();
-  nsPIDOMWindow* window = doc->GetWindow();
+  nsPIDOMWindowOuter* window = doc->GetWindow();
   if (window && !window->ShouldShowFocusRing())
     flags &= ~NS_EVENT_STATE_FOCUS;
 #endif
@@ -486,12 +486,10 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
   if (!aFrame)
     return false;
 
-  nsIFrame* first = aFrame->GetParent()->GetFirstPrincipalChild();
-  while (first) {
+  for (nsIFrame* first : aFrame->GetParent()->PrincipalChildList()) {
     if (first->GetRect().width > 0 &&
         first->GetContent()->IsXULElement(nsGkAtoms::tab))
       return (first == aFrame);
-    first = first->GetNextSibling();
   }
   return false;
 }
@@ -518,7 +516,7 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset)
 
   int32_t thisTabIndex = -1, selectedTabIndex = -1;
 
-  nsIFrame* currentTab = aFrame->GetParent()->GetFirstPrincipalChild();
+  nsIFrame* currentTab = aFrame->GetParent()->PrincipalChildList().FirstChild();
   for (int32_t i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
     if (currentTab->GetRect().width == 0)
       continue;

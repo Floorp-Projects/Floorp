@@ -35,6 +35,11 @@ var listener = {
       }
     }
 
+    // Ignored until they are fixed in bug 1242968.
+    if (string.includes("JavaScript Warning")) {
+      return;
+    }
+
     do_throw("head_pretty-fast.js got console message: " + string + "\n");
   }
 };

@@ -104,8 +104,9 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   const char* kToType = "text/css";
 
   nsCOMPtr<nsIInputStream> inputStream;
-  if (aLoadInfo && aLoadInfo->GetSecurityMode()) {
-    // Certain security checks require an async channel.
+  if (aLoadInfo &&
+      aLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
+    // If the channel needs to enforce CORS, we need to open the channel async.
 
     nsCOMPtr<nsIOutputStream> outputStream;
     rv = NS_NewPipe(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
@@ -128,11 +129,14 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
 
     rv = (*result)->AsyncOpen2(converter);
   } else {
-    // Stylesheet loads for extension content scripts require a sync channel,
-    // but fortunately do not invoke security checks.
+    // Stylesheet loads for extension content scripts require a sync channel.
 
     nsCOMPtr<nsIInputStream> sourceStream;
-    rv = (*result)->Open(getter_AddRefs(sourceStream));
+    if (aLoadInfo && aLoadInfo->GetEnforceSecurity()) {
+      rv = (*result)->Open2(getter_AddRefs(sourceStream));
+    } else {
+      rv = (*result)->Open(getter_AddRefs(sourceStream));
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = convService->Convert(sourceStream, kFromType, kToType,

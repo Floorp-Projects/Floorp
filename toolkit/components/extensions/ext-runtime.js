@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
-  runSafe,
 } = ExtensionUtils;
 
 extensions.registerSchemaAPI("runtime", null, (extension, context) => {
@@ -47,7 +46,16 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
           [extensionId, message, options, responseCallback] = args;
         }
         let recipient = {extensionId: extensionId ? extensionId : extension.id};
+
+        if (!GlobalManager.extensionMap.has(recipient.extensionId)) {
+          return context.wrapPromise(Promise.reject({ message: "Invalid extension ID" }),
+                                     responseCallback);
+        }
         return context.messenger.sendMessage(Services.cpmm, message, recipient, responseCallback);
+      },
+
+      get lastError() {
+        return context.lastError;
       },
 
       getManifest() {
@@ -60,7 +68,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         return extension.baseURI.resolve(url);
       },
 
-      getPlatformInfo: function(callback) {
+      getPlatformInfo: function() {
         let os = AppConstants.platform;
         if (os == "macosx") {
           os = "mac";
@@ -75,7 +83,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         }
 
         let info = {os, arch};
-        runSafe(context, callback, info);
+        return Promise.resolve(info);
       },
     },
   };

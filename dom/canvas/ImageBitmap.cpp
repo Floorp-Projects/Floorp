@@ -1065,7 +1065,7 @@ private:
     RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect);
 
     if (NS_WARN_IF(!data)) {
-      mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+      mPromise->MaybeRejectWithNull();
       return nullptr;
     }
 
@@ -1143,9 +1143,9 @@ private:
       mPromise->MaybeReject(rv);
       return nullptr;
     }
-    
+
     if (NS_WARN_IF(!data)) {
-      mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+      mPromise->MaybeRejectWithNull();
       return nullptr;
     }
 

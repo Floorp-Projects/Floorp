@@ -83,7 +83,7 @@ NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, obsolete)
 nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
                                                    nsIPrincipal *aLoadingPrincipal,
-                                                   nsPIDOMWindow *aWindow)
+                                                   nsPIDOMWindowInner *aWindow)
   : DOMEventTargetHelper(aWindow)
   , mInitialized(false)
   , mManifestURI(aManifestURI)
@@ -466,8 +466,7 @@ nsDOMOfflineResourceList::Update()
     do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> window = 
-    do_QueryInterface(GetOwner());
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
 
   nsCOMPtr<nsIOfflineCacheUpdate> update;
   rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI, mLoadingPrincipal,

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1064843</title>
+  <style id="style"></style>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+<div id="fullscreen"></div>
+<script>
+
+const gStyle = document.getElementById("style");
+const gFullscreen = document.getElementById("fullscreen");
+
+function is(a, b, msg) {
+  opener.is(a, b, "[backdrop] " + msg);
+}
+
+function isnot(a, b, msg) {
+  opener.isnot(a, b, "[backdrop] " + msg);
+}
+
+function ok(cond, msg) {
+  opener.ok(cond, "[backdrop] " + msg);
+}
+
+function info(msg) {
+  opener.info("[backdrop] " + msg);
+}
+
+function synthesizeMouseAtWindowCenter() {
+  synthesizeMouseAtPoint(innerWidth / 2, innerHeight / 2, {});
+}
+
+const gFullscreenElementBackground = getComputedStyle(gFullscreen).background;
+
+function begin() {
+  info("The default background of window should be white");
+  assertWindowPureColor(window, "white");
+  addFullscreenChangeContinuation("enter", enterFullscreen);
+  gFullscreen.mozRequestFullScreen();
+}
+
+function setBackdropStyle(style) {
+  gStyle.textContent = `#fullscreen::backdrop { ${style} }`;
+}
+
+function enterFullscreen() {
+  is(getComputedStyle(gFullscreen).background, gFullscreenElementBackground,
+     "Computed background of #fullscreen shouldn't be changed");
+
+  info("The default background of backdrop for fullscreen is black");
+  assertWindowPureColor(window, "black");
+
+  setBackdropStyle("background: green");
+  info("The background color of backdrop should be changed to green");
+  assertWindowPureColor(window, "green");
+
+  gFullscreen.style.background = "blue";
+  info("The blue fullscreen element should cover the backdrop");
+  assertWindowPureColor(window, "blue");
+
+  gFullscreen.style.background = "";
+  setBackdropStyle("display: none");
+  info("The white body should be shown when the backdrop is hidden");
+  assertWindowPureColor(window, "white");
+
+  setBackdropStyle("");
+  info("Content should return to black because we restore the backdrop");
+  assertWindowPureColor(window, "black");
+
+  gFullscreen.style.display = "none";
+  info("The backdrop should disappear with the fullscreen element");
+  assertWindowPureColor(window, "white");
+
+  addFullscreenChangeContinuation("exit", exitFullscreen);
+  document.mozCancelFullScreen();
+}
+
+function exitFullscreen() {
+  opener.nextTest();
+}
+</script>
+</body>
+</html>

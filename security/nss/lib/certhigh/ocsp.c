@@ -159,7 +159,7 @@ wantOcspTrace(void)
 
 #ifdef NSS_HAVE_GETENV
     if (firstTime) {
-        char *ev = getenv("NSS_TRACE_OCSP");
+        char *ev = PR_GetEnvSecure("NSS_TRACE_OCSP");
         if (ev && ev[0]) {
             wantTrace = PR_TRUE;
         }

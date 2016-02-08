@@ -571,7 +571,7 @@ lg_FindECPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type,
 					key->u.ec.ecParams.DEREncoding.data,
 					key->u.ec.ecParams.DEREncoding.len);
     case CKA_EC_POINT:
-	if (getenv("NSS_USE_DECODED_CKA_EC_POINT")) {
+	if (PR_GetEnvSecure("NSS_USE_DECODED_CKA_EC_POINT")) {
 	    return lg_CopyAttributeSigned(attribute, type,
 					key->u.ec.publicValue.data,
 					key->u.ec.publicValue.len);

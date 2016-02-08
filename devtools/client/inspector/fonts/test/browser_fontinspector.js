@@ -82,7 +82,7 @@ function* testShowAllFonts(inspector, viewDoc) {
   info("testing showing all fonts");
 
   let updated = inspector.once("fontinspector-updated");
-  viewDoc.querySelector("#showall").click();
+  viewDoc.querySelector("#font-showall").click();
   yield updated;
 
   // shouldn't change the node selection

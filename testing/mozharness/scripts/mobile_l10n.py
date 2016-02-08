@@ -490,8 +490,8 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
                                    'testing/taskcluster/routes.json')
-        with open(routes_json) as f:
-            contents = json.load(f)
+        with open(routes_json) as routes_file:
+            contents = json.load(routes_file)
             templates = contents['l10n']
 
         for locale in locales:

@@ -182,20 +182,6 @@ nsNSSCertTrust::SetValidPeer()
 }
 
 void 
-nsNSSCertTrust::SetValidServerPeer()
-{
-  SetSSLTrust(true, false,
-              false, false, false,
-              false, false);
-  SetEmailTrust(false, false,
-                false, false, false,
-                false, false);
-  SetObjSignTrust(false, false,
-                  false, false, false,
-                  false, false);
-}
-
-void 
 nsNSSCertTrust::SetTrustedPeer()
 {
   SetSSLTrust(true, true,

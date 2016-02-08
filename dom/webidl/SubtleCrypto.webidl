@@ -19,17 +19,17 @@ dictionary Algorithm {
 };
 
 dictionary AesCbcParams : Algorithm {
-  required CryptoOperationData iv;
+  required BufferSource iv;
 };
 
 dictionary AesCtrParams : Algorithm {
-  required CryptoOperationData counter;
+  required BufferSource counter;
   [EnforceRange] required octet length;
 };
 
 dictionary AesGcmParams : Algorithm {
-  required CryptoOperationData iv;
-  CryptoOperationData additionalData;
+  required BufferSource iv;
+  BufferSource additionalData;
   [EnforceRange] octet tagLength;
 };
 
@@ -38,7 +38,7 @@ dictionary HmacImportParams : Algorithm {
 };
 
 dictionary Pbkdf2Params : Algorithm {
-  required CryptoOperationData salt;
+  required BufferSource salt;
   [EnforceRange] required unsigned long iterations;
   required AlgorithmIdentifier hash;
 };
@@ -63,7 +63,11 @@ dictionary RsaHashedKeyGenParams : Algorithm {
 };
 
 dictionary RsaOaepParams : Algorithm {
-  CryptoOperationData label;
+  BufferSource label;
+};
+
+dictionary RsaPssParams : Algorithm {
+  [EnforceRange] required unsigned long saltLength;
 };
 
 dictionary DhKeyGenParams : Algorithm {
@@ -102,6 +106,12 @@ dictionary EcdsaParams : Algorithm {
 
 dictionary EcKeyImportParams : Algorithm {
   NamedCurve namedCurve;
+};
+
+dictionary HkdfParams : Algorithm {
+  required AlgorithmIdentifier hash;
+  required BufferSource salt;
+  required BufferSource info;
 };
 
 /***** JWK *****/
@@ -155,30 +165,29 @@ dictionary CryptoKeyPair {
 };
 
 typedef DOMString KeyFormat;
-typedef (ArrayBufferView or ArrayBuffer) CryptoOperationData;
 typedef (object or DOMString) AlgorithmIdentifier;
 
 interface SubtleCrypto {
   [Throws]
   Promise<any> encrypt(AlgorithmIdentifier algorithm,
                        CryptoKey key,
-                       CryptoOperationData data);
+                       BufferSource data);
   [Throws]
   Promise<any> decrypt(AlgorithmIdentifier algorithm,
                        CryptoKey key,
-                       CryptoOperationData data);
+                       BufferSource data);
   [Throws]
   Promise<any> sign(AlgorithmIdentifier algorithm,
                      CryptoKey key,
-                     CryptoOperationData data);
+                     BufferSource data);
   [Throws]
   Promise<any> verify(AlgorithmIdentifier algorithm,
                       CryptoKey key,
-                      CryptoOperationData signature,
-                      CryptoOperationData data);
+                      BufferSource signature,
+                      BufferSource data);
   [Throws]
   Promise<any> digest(AlgorithmIdentifier algorithm,
-                      CryptoOperationData data);
+                      BufferSource data);
 
   [Throws]
   Promise<any> generateKey(AlgorithmIdentifier algorithm,
@@ -212,7 +221,7 @@ interface SubtleCrypto {
 
   [Throws]
   Promise<any> unwrapKey(KeyFormat format,
-                         CryptoOperationData wrappedKey,
+                         BufferSource wrappedKey,
                          CryptoKey unwrappingKey,
                          AlgorithmIdentifier unwrapAlgorithm,
                          AlgorithmIdentifier unwrappedKeyAlgorithm,

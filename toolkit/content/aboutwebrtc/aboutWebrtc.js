@@ -24,13 +24,20 @@ const formatString = strings.formatStringFromName;
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
 const WEBRTC_TRACE_ALL = 65535;
 
-var reportsRetrieved = new Promise(resolve =>
-  WebrtcGlobalInformation.getAllStats(stats => resolve(stats))
-);
+function getStats() {
+  return new Promise(resolve =>
+    WebrtcGlobalInformation.getAllStats(stats => resolve(stats)));
+}
 
-var logRetrieved = new Promise(resolve =>
-  WebrtcGlobalInformation.getLogging("", log => resolve(log))
-);
+function getLog() {
+  return new Promise(resolve =>
+    WebrtcGlobalInformation.getLogging("", log => resolve(log)));
+}
+
+// Begin initial data queries as page loads. Store returned Promises for
+// later use.
+var reportsRetrieved = getStats();
+var logRetrieved = getLog();
 
 function onLoad() {
   document.title = getString("document_title");
@@ -43,23 +50,33 @@ function onLoad() {
     controls.appendChild(set);
   }
 
-  let content = document.querySelector("#content");
-  if (!content) {
+  let contentElem = document.querySelector("#content");
+  if (!contentElem) {
     return;
   }
 
+  let contentInit = function(data) {
+    AboutWebRTC.init(onClearStats, onClearLog);
+    AboutWebRTC.render(contentElem, data);
+  };
+
   Promise.all([reportsRetrieved, logRetrieved])
-    .then(([stats, log]) => {
-      AboutWebRTC.init(stats.reports, log);
-      content.appendChild(AboutWebRTC.render());
-    }).catch(error => {
-      let msg = document.createElement("h3");
-      msg.textContent = getString("cannot_retrieve_log");
-      content.appendChild(msg);
-      msg = document.createElement("p");
-      msg.innerHTML = `${error.name}: ${error.message}`;
-      content.appendChild(msg);
-    });
+    .then(([stats, log]) => contentInit({reports: stats.reports, log: log}))
+    .catch(error => contentInit({error: error}));
+}
+
+function onClearLog() {
+  WebrtcGlobalInformation.clearLogging();
+  getLog()
+    .then(log => AboutWebRTC.refresh({log: log}))
+    .catch(error => AboutWebRTC.refresh({logError: error}));
+}
+
+function onClearStats() {
+  WebrtcGlobalInformation.clearAllStats();
+  getStats()
+    .then(stats => AboutWebRTC.refresh({reports: stats.reports}))
+    .catch(error => AboutWebRTC.refresh({reportError: error}));
 }
 
 var ControlSet = {
@@ -166,14 +183,14 @@ SavePage.prototype.onClick = function() {
     for (let node of nodes) {
       noPrintList.push(node);
       node.style.setProperty("display", "none");
-    };
+    }
 
     fout.write(content.outerHTML, content.outerHTML.length);
     FileUtils.closeAtomicFileOutputStream(fout);
 
     for (let node of noPrintList) {
       node.style.removeProperty("display");
-    };
+    }
 
     this._message = formatString("save_page_msg", [FilePicker.file.path], 1);
     this.update();
@@ -277,27 +294,78 @@ var AboutWebRTC = {
   _reports: [],
   _log: [],
 
-  init: function(reports, log) {
-    this._reports = reports || [];
-    this._log = log || [];
+  init: function(onClearStats, onClearLog) {
+    this._onClearStats = onClearStats;
+    this._onClearLog = onClearLog;
   },
 
-  render: function() {
-    let content = document.createDocumentFragment();
-    content.appendChild(this.renderPeerConnections());
-    content.appendChild(this.renderConnectionLog());
-    return content;
+  render: function(parent, data) {
+    this._content = parent;
+    this._setData(data);
+
+    if (data.error) {
+      let msg = document.createElement("h3");
+      msg.textContent = getString("cannot_retrieve_log");
+      parent.appendChild(msg);
+      msg = document.createElement("p");
+      msg.innerHTML = `${data.error.name}: ${data.error.message}`;
+      parent.appendChild(msg);
+      return;
+    }
+
+    this._peerConnections = this.renderPeerConnections();
+    this._connectionLog = this.renderConnectionLog();
+    this._content.appendChild(this._peerConnections);
+    this._content.appendChild(this._connectionLog);
+  },
+
+  _setData: function(data) {
+    if (data.reports) {
+      this._reports = data.reports;
+    }
+
+    if (data.log) {
+      this._log = data.log;
+    }
+  },
+
+  refresh: function(data) {
+    this._setData(data);
+    let pc = this._peerConnections;
+    this._peerConnections = this.renderPeerConnections();
+    let log = this._connectionLog;
+    this._connectionLog = this.renderConnectionLog();
+    this._content.replaceChild(this._peerConnections, pc);
+    this._content.replaceChild(this._connectionLog, log);
   },
 
   renderPeerConnections: function() {
-    let connections = document.createDocumentFragment();
+    let connections = document.createElement("div");
+    connections.className = "stats";
+
+    let heading = document.createElement("span");
+    heading.className = "section-heading";
+    let elem = document.createElement("h3");
+    elem.textContent = getString("stats_heading");
+    heading.appendChild(elem);
+
+    elem = document.createElement("button");
+    elem.textContent = "Clear History";
+    elem.className = "no-print";
+    elem.onclick = this._onClearStats;
+    heading.appendChild(elem);
+    connections.appendChild(heading);
+
+    if (!this._reports || !this._reports.length) {
+      return connections;
+    }
 
     let reports = [...this._reports];
     reports.sort((a, b) => b.timestamp - a.timestamp);
     for (let report of reports) {
       let peerConnection = new PeerConnection(report);
       connections.appendChild(peerConnection.render());
-    };
+    }
 
     return connections;
   },
@@ -306,13 +374,21 @@ var AboutWebRTC = {
     let content = document.createElement("div");
     content.className = "log";
 
-    if (!this._log.length) {
-      return content;
-    }
-
+    let heading = document.createElement("span");
+    heading.className = "section-heading";
     let elem = document.createElement("h3");
     elem.textContent = getString("log_heading");
-    content.appendChild(elem);
+    heading.appendChild(elem);
+    elem = document.createElement("button");
+    elem.textContent = "Clear Log";
+    elem.className = "no-print";
+    elem.onclick = this._onClearLog;
+    heading.appendChild(elem);
+    content.appendChild(heading);
+
+    if (!this._log || !this._log.length) {
+      return content;
+    }
 
     let div = document.createElement("div");
     let sectionCtrl = document.createElement("div");
@@ -328,7 +404,7 @@ var AboutWebRTC = {
       elem = document.createElement("p");
       elem.textContent = line;
       div.appendChild(elem);
-    };
+    }
 
     content.appendChild(div);
     return content;
@@ -444,7 +520,7 @@ RTPStats.prototype = {
 
     for (let statSet of this._stats) {
       div.appendChild(this.renderRTPStatSet(statSet));
-    };
+    }
 
     return div;
   },
@@ -460,7 +536,7 @@ RTPStats.prototype = {
       if (stats.isRemote) {
         remoteRtpStats[stats.id] = stats;
       }
-    };
+    }
 
     // If a streamStat has a remoteId attribute, create a remoteRtpStats
     // attribute that references the remote streamStat entry directly.
@@ -469,7 +545,7 @@ RTPStats.prototype = {
       if (stats.remoteId) {
         stats.remoteRtpStats = remoteRtpStats[stats.remoteId];
       }
-    };
+    }
 
     this._stats = rtpStats;
   },
@@ -590,7 +666,7 @@ ICEStats.prototype = {
         stat.nominated || "",
         stat.selected || ""
       ]);
-    };
+    }
 
     let statsTable = new SimpleTable(
       [getString("local_candidate"), getString("remote_candidate"), getString("ice_state"),
@@ -642,7 +718,7 @@ ICEStats.prototype = {
         }
         stats.push(stat);
       }
-    };
+    }
 
     for (let c of candidates.values()) {
       if (matched[c.id])
@@ -651,7 +727,7 @@ ICEStats.prototype = {
       stat = {};
       stat[c.type] = this.candidateToString(c);
       stats.push(stat);
-    };
+    }
 
     return stats.sort((a, b) => (b.priority || 0) - (a.priority || 0));
   },
@@ -684,7 +760,7 @@ SimpleTable.prototype = {
       let cell = document.createElement("td");
       cell.textContent = elem;
       row.appendChild(cell);
-    };
+    }
 
     return row;
   },
@@ -698,7 +774,7 @@ SimpleTable.prototype = {
 
     for (let row of this._data) {
       table.appendChild(this.renderRow(row));
-    };
+    }
 
     return table;
   }
@@ -712,7 +788,7 @@ function FoldEffect(targetElem, options = {}) {
     this._hideHint = options.hideHint || getString("fold_hide_hint");
     this._target = targetElem;
   }
-};
+}
 
 FoldEffect.prototype = {
   render: function() {
@@ -755,11 +831,11 @@ FoldEffect._sections = [];
 FoldEffect.expandAll = function() {
   for (let section of this._sections) {
     section.open();
-  };
+  }
 };
 
 FoldEffect.collapseAll = function() {
   for (let section of this._sections) {
     section.close();
-  };
+  }
 };

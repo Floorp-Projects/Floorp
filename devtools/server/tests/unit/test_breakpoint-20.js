@@ -16,7 +16,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-breakpoints");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function() {
+  gClient.connect().then(function() {
     attachTestThread(gClient, "test-breakpoints", testBreakpoint);
   });
   do_test_pending();

@@ -511,7 +511,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
     // After bug 1015790 is fixed, we should be able to remove this unwrapping.
     RootedObject unwrappedProto(cx, js::UncheckedUnwrap(proto, /* stopAtWindowProxy = */ false));
 
-    Rooted<JSPropertyDescriptor> pd(cx);
+    Rooted<JS::PropertyDescriptor> pd(cx);
     if (!JS_GetPropertyDescriptorById(cx, proto, id, &pd))
         return false;
 
@@ -725,7 +725,7 @@ WrapCallable(JSContext* cx, HandleObject callable, HandleObject sandboxProtoProx
 }
 
 template<typename Op>
-bool WrapAccessorFunction(JSContext* cx, Op& op, JSPropertyDescriptor* desc,
+bool WrapAccessorFunction(JSContext* cx, Op& op, PropertyDescriptor* desc,
                           unsigned attrFlag, HandleObject sandboxProtoProxy)
 {
     if (!op) {
@@ -749,7 +749,7 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext* cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                JS::MutableHandle<JSPropertyDescriptor> desc) const
+                                                JS::MutableHandle<PropertyDescriptor> desc) const
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
 
@@ -784,7 +784,7 @@ bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
-                                                   JS::MutableHandle<JSPropertyDescriptor> desc)
+                                                   JS::MutableHandle<PropertyDescriptor> desc)
                                                    const
 {
     if (!getPropertyDescriptor(cx, proxy, id, desc))
@@ -820,7 +820,33 @@ xpc::SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
                               JS::MutableHandle<Value> vp) const
 {
-    return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
+    // This uses getPropertyDescriptor for backward compatibility with
+    // the old BaseProxyHandler::get implementation.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+        return false;
+    desc.assertCompleteIfFound();
+
+    if (!desc.object()) {
+        vp.setUndefined();
+        return true;
+    }
+
+    // Everything after here follows [[Get]] for ordinary objects.
+    if (desc.isDataDescriptor()) {
+        vp.set(desc.value());
+        return true;
+    }
+
+    MOZ_ASSERT(desc.isAccessorDescriptor());
+    RootedObject getter(cx, desc.getterObject());
+
+    if (!getter) {
+        vp.setUndefined();
+        return true;
+    }
+
+    return Call(cx, receiver, getter, HandleValueArray::empty(), vp);
 }
 
 bool

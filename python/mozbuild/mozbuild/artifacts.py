@@ -40,6 +40,7 @@ consumers will need to arrange this themselves.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import collections
 import functools
 import hashlib
 import logging
@@ -58,6 +59,7 @@ import zipfile
 import pylru
 import taskcluster
 
+import buildconfig
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -76,7 +78,6 @@ from mozregression.persist_limit import (
     PersistLimit,
 )
 
-MAX_CACHED_PARENTS = 100  # Number of parent changesets to cache candidate pushheads for.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50  # Number of candidate pushheads to cache per parent changeset.
 
 MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data for.
@@ -377,7 +378,7 @@ class WinArtifactJob(ArtifactJob):
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-api-11': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
+    'android-api-15': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
                                             None)),
     'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-i386\.apk',
                                          None)),
@@ -491,52 +492,32 @@ class CacheManager(object):
     def __exit__(self, type, value, traceback):
         self.dump_cache()
 
+class TreeCache(CacheManager):
+    '''Map pushhead revisions to trees with tasks/artifacts known to taskcluster.'''
 
-class PushHeadCache(CacheManager):
-    '''Map parent hg revisions to candidate pushheads.'''
+    def __init__(self, cache_dir, log=None):
+        CacheManager.__init__(self, cache_dir, 'artifact_tree', MAX_CACHED_TASKS, log=log)
 
-    def __init__(self, hg, cache_dir, log=None):
-        # It's not unusual to pull hundreds of changesets at once, and perhaps
-        # |hg up| back and forth a few times.
-        CacheManager.__init__(self, cache_dir, 'pushheads', MAX_CACHED_PARENTS, log=log)
-        self._hg = hg
+        self._index = taskcluster.Index()
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def pushheads(self, tree, parent):
+    def artifact_trees(self, rev, trees):
+        # The "trees" argument is intentionally ignored. If this value
+        # changes over time it means a changeset we care about has become
+        # a pushhead on another tree, and our cache may no longer be
+        # valid.
+        rev_ns = 'buildbot.revisions.{rev}'.format(rev=rev)
         try:
-            pushheads = subprocess.check_output([self._hg, 'log',
-                '--template', '{node}\n',
-                '-r', 'last(pushhead("{tree}") and ::"{parent}", {num})'.format(
-                    tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
-            # Filter blank lines.
-            pushheads = [ pushhead for pushhead in pushheads.strip().split('\n') if pushhead ]
-            if pushheads:
-                return pushheads
-        except subprocess.CalledProcessError as e:
-            # We probably don't have the mozext extension installed.
-            ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
-            if ret:
-                raise Exception('Could not find candidate pushheads.\n\n'
-                                'You need to enable the "mozext" hg extension: '
-                                'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
-            raise e
-
-        # We probably don't have the pushlog database present locally.  Check.
-        tree_pushheads = subprocess.check_output([self._hg, 'log',
-            '--template', '{node}\n',
-            '-r', 'last(pushhead("{tree}"))'.format(tree=tree)])
-        # Filter blank lines.
-        tree_pushheads = [ pushhead for pushhead in tree_pushheads.strip().split('\n') if pushhead ]
-        if tree_pushheads:
-            # Okay, we have some pushheads but no candidates.  This can happen
-            # for legitimate reasons: old revisions with no upstream builds
-            # remaining; or new revisions that don't have upstream builds yet.
+            result = self._index.listNamespaces(rev_ns, {"limit": 10})
+        except Exception:
             return []
+        return [ns['name'] for ns in result['namespaces']]
 
-        raise Exception('Could not find any pushheads for tree "{tree}".\n\n'
-                        'Try running |hg pushlogsync|; '
-                        'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(tree=tree))
-
+    def print_last_item(self, args, sorted_kwargs, result):
+        rev, trees = args
+        self.log(logging.INFO, 'artifact',
+            {'rev': rev},
+            'Last fetched trees for pushhead revision {rev}')
 
 class TaskCache(CacheManager):
     '''Map candidate pushheads to Task Cluster task IDs and artifact URLs.'''
@@ -656,9 +637,9 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job, log=None, cache_dir='.', hg='hg'):
+    def __init__(self, tree, job=None, log=None, cache_dir='.', hg='hg'):
         self._tree = tree
-        self._job = job
+        self._job = job or self._guess_artifact_job()
         self._log = log
         self._hg = hg
         self._cache_dir = cache_dir
@@ -671,15 +652,105 @@ class Artifacts(object):
                 'Unknown job {job}')
             raise KeyError("Unknown job")
 
-        self._pushhead_cache = PushHeadCache(self._hg, self._cache_dir, log=self._log)
         self._task_cache = TaskCache(self._cache_dir, log=self._log)
         self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log)
+        self._tree_cache = TreeCache(self._cache_dir, log=self._log)
+        # A "tree" according to mozext and an integration branch isn't always
+        # an exact match. For example, pushhead("central") refers to pushheads
+        # with artifacts under the taskcluster namespace "mozilla-central".
+        self._tree_replacements = {
+            'inbound': 'mozilla-inbound',
+            'central': 'mozilla-central',
+        }
+
 
     def log(self, *args, **kwargs):
         if self._log:
             self._log(*args, **kwargs)
 
-    def install_from_file(self, filename, distdir, install_callback=None):
+    def _guess_artifact_job(self):
+        if buildconfig.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
+            if buildconfig.substs['ANDROID_CPU_ARCH'] == 'x86':
+                return 'android-x86'
+            return 'android-api-15'
+
+        target_64bit = False
+        if buildconfig.substs['target_cpu'] == 'x86_64':
+            target_64bit = True
+
+        if buildconfig.defines.get('XP_LINUX', False):
+            return 'linux64' if target_64bit else 'linux'
+        if buildconfig.defines.get('XP_WIN', False):
+            return 'win64' if target_64bit else 'win32'
+        if buildconfig.defines.get('XP_MACOSX', False):
+            # We only produce unified builds in automation, so the target_cpu
+            # check is not relevant.
+            return 'macosx64'
+        raise Exception('Cannot determine default job for |mach artifact|!')
+
+    def _find_pushheads(self, parent):
+        # Return an ordered dict associating revisions that are pushheads with
+        # trees they are known to be in (starting with the first tree they're
+        # known to be in).
+
+        try:
+            output = subprocess.check_output([
+                self._hg, 'log',
+                '--template', '{node},{join(trees, ",")}\n',
+                '-r', 'last(pushhead({tree}) and ::{parent}, {num})'.format(
+                    tree=self._tree or '', parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)
+            ])
+        except subprocess.CalledProcessError:
+            # We probably don't have the mozext extension installed.
+            ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
+            if ret:
+                raise Exception('Could not find pushheads for recent revisions.\n\n'
+                                'You need to enable the "mozext" hg extension: '
+                                'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
+            raise
+
+        rev_trees = collections.OrderedDict()
+        for line in output.splitlines():
+            if not line:
+                continue
+            rev_info = line.split(',')
+            if len(rev_info) == 1:
+                # If pushhead() is true, it would seem "trees" should be
+                # non-empty, but this is defensive.
+                continue
+            rev_trees[rev_info[0]] = tuple(rev_info[1:])
+
+        if not rev_trees:
+            raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n\n'
+                            'Try running |hg pushlogsync|;\n'
+                            'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
+                                num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
+
+        return rev_trees
+
+    def find_pushhead_artifacts(self, task_cache, tree_cache, job, pushhead, trees):
+        known_trees = set(tree_cache.artifact_trees(pushhead, trees))
+        if not known_trees:
+            return None
+        # If we ever find a rev that's a pushhead on multiple trees, we want
+        # the most recent one.
+        for tree in reversed(trees):
+            tree = self._tree_replacements.get(tree) or tree
+            if tree not in known_trees:
+                continue
+            try:
+                urls = task_cache.artifact_urls(tree, job, pushhead)
+            except ValueError:
+                continue
+            if urls:
+                self.log(logging.INFO, 'artifact',
+                         {'pushhead': pushhead,
+                          'tree': tree},
+                         'Installing from remote pushhead {pushhead} on {tree}')
+                return urls
+        return None
+
+    def install_from_file(self, filename, distdir):
         self.log(logging.INFO, 'artifact',
             {'filename': filename},
             'Installing from {filename}')
@@ -719,70 +790,49 @@ class Artifacts(object):
                     perms = info.external_attr >> 16 # See http://stackoverflow.com/a/434689.
                     perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH # u+w, a+r.
                     os.chmod(n, perms)
-                if install_callback:
-                    install_callback(info.filename, file_existed, file_updated)
         return 0
 
-    def install_from_url(self, url, distdir, install_callback=None):
+    def install_from_url(self, url, distdir):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
         with self._artifact_cache as artifact_cache:  # The with block handles persistence.
             filename = artifact_cache.fetch(url)
-        return self.install_from_file(filename, distdir, install_callback=install_callback)
+        return self.install_from_file(filename, distdir)
 
-    def install_from_hg(self, revset, distdir, install_callback=None):
+    def install_from_hg(self, revset, distdir):
         if not revset:
             revset = '.'
-        if len(revset) != 40:
-            revset = subprocess.check_output([self._hg, 'log', '--template', '{node}\n', '-r', revset]).strip()
-            if len(revset.split('\n')) != 1:
-                raise ValueError('hg revision specification must resolve to exactly one commit')
-
-        self.log(logging.INFO, 'artifact',
-            {'revset': revset},
-            'Installing from local revision {revset}')
-
+        rev_pushheads = self._find_pushheads(revset)
         urls = None
-        with self._task_cache as task_cache, self._pushhead_cache as pushhead_cache:
-            # with blocks handle handle persistence.
-            for pushhead in pushhead_cache.pushheads(self._tree, revset):
+        # with blocks handle handle persistence.
+        with self._task_cache as task_cache, self._tree_cache as tree_cache:
+            while rev_pushheads:
+                rev, trees = rev_pushheads.popitem(last=False)
                 self.log(logging.DEBUG, 'artifact',
-                    {'pushhead': pushhead},
-                    'Trying to find artifacts for pushhead {pushhead}.')
-                try:
-                    urls = task_cache.artifact_urls(self._tree, self._job, pushhead)
-                    self.log(logging.INFO, 'artifact',
-                        {'pushhead': pushhead},
-                        'Installing from remote pushhead {pushhead}')
-                    break
-                except ValueError:
-                    pass
-        if urls:
-            for url in urls:
-                if self.install_from_url(url, distdir, install_callback=install_callback):
-                    return 1
-            return 0
+                    {'rev': rev},
+                    'Trying to find artifacts for pushhead {rev}.')
+                urls = self.find_pushhead_artifacts(task_cache, tree_cache,
+                                                    self._job, rev, trees)
+                if urls:
+                    for url in urls:
+                        if self.install_from_url(url, distdir):
+                            return 1
+                    return 0
         self.log(logging.ERROR, 'artifact',
                  {'revset': revset},
                  'No built artifacts for {revset} found.')
         return 1
 
-    def install_from(self, source, distdir, install_callback=None):
+    def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
-
-        If ``callback`` is given, it is called once with arguments ``(path,
-        existed, updated)``, where ``path`` is the file path written relative
-        to ``distdir``; ``existed`` is a boolean indicating whether the file
-        existed; and ``updated`` is a boolean indicating whether the file was
-        updated.
         """
         if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir, install_callback=install_callback)
+            return self.install_from_file(source, distdir)
         elif source and urlparse.urlparse(source).scheme:
-            return self.install_from_url(source, distdir, install_callback=install_callback)
+            return self.install_from_url(source, distdir)
         else:
-            return self.install_from_hg(source, distdir, install_callback=install_callback)
+            return self.install_from_hg(source, distdir)
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',
@@ -804,6 +854,6 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {},
             'Printing cached artifacts and caches.')
-        self._pushhead_cache.print_cache()
+        self._tree_cache.print_cache()
         self._task_cache.print_cache()
         self._artifact_cache.print_cache()

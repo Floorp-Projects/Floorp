@@ -17,7 +17,7 @@ function* cleanup() {
 
 add_task(function* remove_visits_outside_unbookmarked_uri() {
   do_print("*** TEST: Remove some visits outside valid timeframe from an unbookmarked URI");
- 
+
   do_print("Add 10 visits for the URI from way in the past.");
   let visits = [];
   for (let i = 0; i < 10; i++) {

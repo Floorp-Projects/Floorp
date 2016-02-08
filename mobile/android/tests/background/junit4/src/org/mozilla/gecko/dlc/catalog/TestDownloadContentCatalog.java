@@ -8,8 +8,10 @@ package org.mozilla.gecko.dlc.catalog;
 import android.support.v4.util.AtomicFile;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.io.FileNotFoundException;
@@ -36,7 +38,7 @@ public class TestDownloadContentCatalog {
     @Test
     public void testUntouchedCatalogHasNotChangedAndWillNotBePersisted() throws Exception {
         AtomicFile file = mock(AtomicFile.class);
-        doReturn("[]".getBytes("UTF-8")).when(file).readFully();
+        doReturn("{content:[]}".getBytes("UTF-8")).when(file).readFully();
 
         DownloadContentCatalog catalog = spy(new DownloadContentCatalog(file));
         catalog.loadFromDisk();
@@ -57,7 +59,11 @@ public class TestDownloadContentCatalog {
      *  * Catalog is bootstrapped with items.
      */
     @Test
-    public void testCatalogIsBootstrapedIfFileDoesNotExist() throws Exception {
+    public void testCatalogIsBootstrappedIfFileDoesNotExist() throws Exception {
+        // The catalog is only bootstrapped if fonts are excluded from the build. If this is a build
+        // with fonts included then ignore this test.
+        Assume.assumeTrue("Fonts are excluded from build", AppConstants.MOZ_ANDROID_EXCLUDE_FONTS);
+
         AtomicFile file = mock(AtomicFile.class);
         doThrow(FileNotFoundException.class).when(file).readFully();
 

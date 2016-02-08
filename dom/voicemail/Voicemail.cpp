@@ -64,7 +64,7 @@ NS_IMPL_ADDREF_INHERITED(Voicemail, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Voicemail, DOMEventTargetHelper)
 
 /* static */ already_AddRefed<Voicemail>
-Voicemail::Create(nsPIDOMWindow* aWindow,
+Voicemail::Create(nsPIDOMWindowInner* aWindow,
                   ErrorResult& aRv)
 {
   nsCOMPtr<nsIVoicemailService> service =
@@ -74,15 +74,11 @@ Voicemail::Create(nsPIDOMWindow* aWindow,
     return nullptr;
   }
 
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-
-  RefPtr<Voicemail> voicemail = new Voicemail(innerWindow, service);
+  RefPtr<Voicemail> voicemail = new Voicemail(aWindow, service);
   return voicemail.forget();
 }
 
-Voicemail::Voicemail(nsPIDOMWindow* aWindow,
+Voicemail::Voicemail(nsPIDOMWindowInner* aWindow,
                      nsIVoicemailService* aService)
   : DOMEventTargetHelper(aWindow)
   , mService(aService)

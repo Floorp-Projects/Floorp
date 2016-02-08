@@ -5,15 +5,15 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(function*() {
   let tab = yield addTab("about:logo");
-  let {rdm} = yield openRDM(tab);
+  let { rdm, manager } = yield openRDM(tab);
   ok(rdm, "An instance of the RDM should be attached to the tab.");
-  rdm.setSize(110, 500);
+  yield setSize(rdm, manager, 110, 500);
 
   info("Checking initial width/height properties.");
   yield doInitialChecks();
 
   info("Changing the RDM size");
-  rdm.setSize(90, 500);
+  yield setSize(rdm, manager, 90, 500);
 
   info("Checking for screen props");
   yield checkScreenProps();

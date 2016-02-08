@@ -264,12 +264,7 @@ ToolSidebar.prototype = {
     this._tabs.set(id, tab);
 
     if (selected) {
-      // For some reason I don't understand, if we call this.select in this
-      // event loop (after inserting the tab), the tab will never get the
-      // the "selected" attribute set to true.
-      this._panelDoc.defaultView.setTimeout(() => {
-        this.select(id);
-      }, 10);
+      this._selectTabSoon(id);
     }
 
     this.emit("new-tab-registered", id);
@@ -290,6 +285,12 @@ ToolSidebar.prototype = {
 
       // Find an ID for this unknown tab
       let id = tab.getAttribute("id") || "untitled-tab-" + (this.untitledTabsIndex++);
+
+      // If the existing tab contains the tab ID prefix, extract the ID of the
+      // tab
+      if (id.startsWith(this.TAB_ID_PREFIX)) {
+        id = id.split(this.TAB_ID_PREFIX).pop();
+      }
 
       // Register the tab
       this._tabs.set(id, tab);
@@ -355,6 +356,18 @@ ToolSidebar.prototype = {
     if (tab) {
       this._tabbox.selectedTab = tab;
     }
+  },
+
+  /**
+   * Hack required to select a tab right after it was created.
+   *
+   * @param  {String} id
+   *         The sidebar tab id to select.
+   */
+  _selectTabSoon: function(id) {
+    this._panelDoc.defaultView.setTimeout(() => {
+      this.select(id);
+    }, 0);
   },
 
   /**
@@ -450,12 +463,27 @@ ToolSidebar.prototype = {
 
   /**
    * Show the sidebar.
+   *
+   * @param  {String} id
+   *         The sidebar tab id to select.
    */
-  show: function() {
+  show: function(id) {
     if (this._width) {
       this._tabbox.width = this._width;
     }
     this._tabbox.removeAttribute("hidden");
+
+    // If an id is given, select the corresponding sidebar tab and record the
+    // tool opened.
+    if (id) {
+      this._currentTool = id;
+
+      if (this._telemetry) {
+        this._telemetry.toolOpened(this._currentTool);
+      }
+
+      this._selectTabSoon(id);
+    }
 
     this.emit("show");
   },

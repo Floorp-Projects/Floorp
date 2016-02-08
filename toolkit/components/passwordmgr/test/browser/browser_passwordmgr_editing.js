@@ -1,5 +1,4 @@
 const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
-const TIME_INTERVAL = 500;
 const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
 
 var doc;
@@ -55,7 +54,7 @@ function* editUsernamePromises(site, oldUsername, newUsername) {
   is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login replaced");
   login = Services.logins.findLogins({}, site, "", "")[0];
   is(login.username, newUsername, "Correct username updated");
-  is(getUsername(0), newUsername, "Correct username shown");
+  is(getUsername(0), newUsername, "Correct username shown after the update");
 }
 
 function* editPasswordPromises(site, oldPassword, newPassword) {
@@ -77,7 +76,7 @@ function* editPasswordPromises(site, oldPassword, newPassword) {
   is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login replaced");
   login = Services.logins.findLogins({}, site, "", "")[0];
   is(login.password, newPassword, "Correct password updated");
-  is(getPassword(0), newPassword, "Correct password shown");
+  is(getPassword(0), newPassword, "Correct password shown after the update");
 }
 
 add_task(function* test_setup() {

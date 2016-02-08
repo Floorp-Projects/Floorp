@@ -7,11 +7,11 @@
 var search = window.location.href.match(/^.*\?(.*)$/);
 var searchParams = new URLSearchParams(search ? search[1] : '');
 var storage = searchParams.get('storage');
-var context = searchParams.get('context');
+var cacheContext = searchParams.get('context');
 
 // The context is in a format as used by the HTTP cache v2 back end
-if (context)
-  var [context, isAnon, isInBrowser, appId, isPrivate] = context.match(/(a,)?(b,)?(i\d+,)?(p,)?/);
+if (cacheContext)
+  var [context, isAnon, isInBrowser, appId, isPrivate] = cacheContext.match(/(a,)?(b,)?(i\d+,)?(p,)?/);
 if (appId)
   appId = appId.match(/i(\d+),/)[1];
 

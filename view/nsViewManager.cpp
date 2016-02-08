@@ -606,9 +606,8 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   leftOver.Sub(aDamagedRegion, children);
 
   if (!leftOver.IsEmpty()) {
-    const nsRect* r;
-    for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
-      LayoutDeviceIntRect bounds = ViewToWidget(aWidgetView, *r);
+    for (auto iter = leftOver.RectIter(); !iter.Done(); iter.Next()) {
+      LayoutDeviceIntRect bounds = ViewToWidget(aWidgetView, iter.Get());
       widget->Invalidate(bounds);
     }
   }

@@ -31,7 +31,7 @@ namespace WebCore {
   class PeriodicWave;
 } // namespace WebCore
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -116,7 +116,7 @@ enum class AudioContextOperation { Suspend, Resume, Close };
 class AudioContext final : public DOMEventTargetHelper,
                            public nsIMemoryReporter
 {
-  AudioContext(nsPIDOMWindow* aParentWindow,
+  AudioContext(nsPIDOMWindowInner* aParentWindow,
                bool aIsOffline,
                AudioChannel aChannel,
                uint32_t aNumberOfChannels = 0,
@@ -134,7 +134,7 @@ public:
                                            DOMEventTargetHelper)
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }

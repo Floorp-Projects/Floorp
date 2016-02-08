@@ -69,7 +69,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-LoadContext::GetAssociatedWindow(nsIDOMWindow**)
+LoadContext::GetAssociatedWindow(mozIDOMWindowProxy**)
 {
   MOZ_ASSERT(mIsNotNull);
 
@@ -78,7 +78,7 @@ LoadContext::GetAssociatedWindow(nsIDOMWindow**)
 }
 
 NS_IMETHODIMP
-LoadContext::GetTopWindow(nsIDOMWindow**)
+LoadContext::GetTopWindow(mozIDOMWindowProxy**)
 {
   MOZ_ASSERT(mIsNotNull);
 

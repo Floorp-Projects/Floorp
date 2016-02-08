@@ -32,7 +32,7 @@
  * this might net a function that is a likely candidate for further
  * manual inspection.
  *
- * (It is sometimes useful to neuter the assert() macro in the
+ * (It is sometimes useful to comment out the assert() macro in the
  * self-hosted code.)
  */
 

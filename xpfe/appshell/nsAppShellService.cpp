@@ -763,7 +763,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     isUsingRemoteTabs = true;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(aParent);
+  nsCOMPtr<mozIDOMWindowProxy> domWin = do_GetInterface(aParent);
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(domWin);
   nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(webNav);
 
@@ -778,7 +778,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     isUsingRemoteTabs = parentContext->UseRemoteTabs();
   }
 
-  nsCOMPtr<nsIDOMWindow> newDomWin =
+  nsCOMPtr<mozIDOMWindowProxy> newDomWin =
       do_GetInterface(NS_ISUPPORTS_CAST(nsIBaseWindow*, window));
   nsCOMPtr<nsIWebNavigation> newWebNav = do_GetInterface(newDomWin);
   nsCOMPtr<nsILoadContext> thisContext = do_GetInterface(newWebNav);
@@ -808,7 +808,7 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow **aWindow)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
+nsAppShellService::GetHiddenDOMWindow(mozIDOMWindowProxy **aWindow)
 {
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell;
@@ -818,7 +818,7 @@ nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(docShell->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> hiddenDOMWindow(docShell->GetWindow());
   hiddenDOMWindow.forget(aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -836,7 +836,7 @@ nsAppShellService::GetHiddenPrivateWindow(nsIXULWindow **aWindow)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenPrivateDOMWindow(nsIDOMWindow **aWindow)
+nsAppShellService::GetHiddenPrivateDOMWindow(mozIDOMWindowProxy **aWindow)
 {
   EnsurePrivateHiddenWindow();
 
@@ -848,7 +848,7 @@ nsAppShellService::GetHiddenPrivateDOMWindow(nsIDOMWindow **aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindow> hiddenPrivateDOMWindow(docShell->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> hiddenPrivateDOMWindow(docShell->GetWindow());
   hiddenPrivateDOMWindow.forget(aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -863,7 +863,7 @@ nsAppShellService::GetHasHiddenPrivateWindow(bool* aHasPrivateWindow)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
+nsAppShellService::GetHiddenWindowAndJSContext(mozIDOMWindowProxy **aWindow,
                                                JSContext    **aJSContext)
 {
     nsresult rv = NS_OK;
@@ -882,8 +882,8 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindow **aWindow,
                   break;
                 }
 
-                // 2. Convert that to an nsIDOMWindow.
-                nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(docShell->GetWindow());
+                // 2. Convert that to an nsPIDOMWindowOuter.
+                nsCOMPtr<nsPIDOMWindowOuter> hiddenDOMWindow(docShell->GetWindow());
                 if(!hiddenDOMWindow) break;
 
                 // 3. Get script global object for the window.
@@ -931,7 +931,7 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
   aWindow->GetDocShell(getter_AddRefs(docShell));
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPIDOMWindow> domWindow(docShell->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow(docShell->GetWindow());
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
   domWindow->SetInitialPrincipalToSubject();
 
@@ -1002,7 +1002,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     nsCOMPtr<nsIDocShell> docShell;
     aWindow->GetDocShell(getter_AddRefs(docShell));
     if (docShell) {
-      nsCOMPtr<nsIDOMWindow> domWindow(docShell->GetWindow());
+      nsCOMPtr<nsPIDOMWindowOuter> domWindow(docShell->GetWindow());
       if (domWindow)
         wwatcher->RemoveWindow(domWindow);
     }

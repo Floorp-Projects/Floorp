@@ -541,6 +541,7 @@
 
   <string name="updater_permission_title">&brandShortName;</string>
   <string name="updater_permission_text">&updater_permission_text;</string>
+  <string name="updater_permission_allow">&updater_permission_allow;</string>
 
   <!-- Awesomescreen screen -->
   <string name="suggestions_prompt">&suggestions_prompt3;</string>

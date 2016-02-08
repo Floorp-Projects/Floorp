@@ -237,7 +237,7 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
     }
 
     if (!mRefreshString.IsEmpty()) {
-        nsPIDOMWindow *win = mDocument->GetWindow();
+        nsPIDOMWindowOuter* win = mDocument->GetWindow();
         if (win) {
             nsCOMPtr<nsIRefreshURI> refURI =
                 do_QueryInterface(win->GetDocShell());

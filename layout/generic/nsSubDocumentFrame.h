@@ -7,15 +7,17 @@
 #define NSSUBDOCUMENTFRAME_H_
 
 #include "mozilla/Attributes.h"
-#include "nsLeafFrame.h"
+#include "nsAtomicContainerFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsFrameLoader.h"
 #include "Units.h"
 
+typedef nsAtomicContainerFrame nsSubDocumentFrameSuper;
+
 /******************************************************************************
  * nsSubDocumentFrame
  *****************************************************************************/
-class nsSubDocumentFrame : public nsLeafFrame,
+class nsSubDocumentFrame : public nsSubDocumentFrameSuper,
                            public nsIReflowCallback
 {
 public:
@@ -35,9 +37,10 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    // nsLeafFrame is already eReplacedContainsBlock, but that's somewhat bogus
-    return nsLeafFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+    return nsSubDocumentFrameSuper::IsFrameOfType(aFlags &
+      ~(nsIFrame::eReplaced |
+        nsIFrame::eReplacedSizing |
+        nsIFrame::eReplacedContainsBlock));
   }
 
   virtual void Init(nsIContent*       aContent,
@@ -138,8 +141,8 @@ protected:
 
   bool IsInline() { return mIsInline; }
 
-  virtual nscoord GetIntrinsicISize() override;
-  virtual nscoord GetIntrinsicBSize() override;
+  nscoord GetIntrinsicISize();
+  nscoord GetIntrinsicBSize();
 
   // Show our document viewer. The document viewer is hidden via a script
   // runner, so that we can save and restore the presentation if we're

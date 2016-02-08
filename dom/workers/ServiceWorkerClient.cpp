@@ -39,7 +39,7 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
     NS_WARNING("Failed to get the UUID of the document.");
   }
 
-  RefPtr<nsGlobalWindow> innerWindow = static_cast<nsGlobalWindow*>(aDoc->GetInnerWindow());
+  RefPtr<nsGlobalWindow> innerWindow = nsGlobalWindow::Cast(aDoc->GetInnerWindow());
   if (innerWindow) {
     // XXXcatalinb: The inner window can be null if the document is navigating
     // and was detached.
@@ -60,7 +60,7 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
     NS_WARNING("Failed to get focus information.");
   }
 
-  RefPtr<nsGlobalWindow> outerWindow = static_cast<nsGlobalWindow*>(aDoc->GetWindow());
+  RefPtr<nsGlobalWindow> outerWindow = nsGlobalWindow::Cast(aDoc->GetWindow());
   MOZ_ASSERT(outerWindow);
   if (!outerWindow->IsTopLevelWindow()) {
     mFrameType = FrameType::Nested;

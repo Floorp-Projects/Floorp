@@ -53,9 +53,9 @@ function run_test() {
       {
         name: "objects",
         bytes: 0,
-        totalBytes: 1350,
+        totalBytes: 450,
         count: 0,
-        totalCount: 135,
+        totalCount: 45,
         children: [
           {
             name: "Int32Array",

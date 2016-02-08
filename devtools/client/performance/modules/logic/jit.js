@@ -52,7 +52,7 @@ const SUCCESSFUL_OUTCOMES = [
  * a "getter" optimization, `a[b]`, has site `a` (the "Receiver") and `b` (the "Index").
  *
  * Generally the more ObservedTypes, the more deoptimized this OptimizationSite is.
- * There could be no ObservedTypes, in which case `types` is undefined.
+ * There could be no ObservedTypes, in which case `typeset` is undefined.
  *
  * @type {?Array<ObservedType>} typeset
  * @type {string} site
@@ -121,41 +121,6 @@ const OptimizationSite = function (id, opts) {
 };
 
 /**
- * Returns a boolean indicating if the passed in OptimizationSite
- * has a "good" outcome at the end of its attempted strategies.
- *
- * @param {Array<string>} stringTable
- * @return {boolean}
- */
-
-OptimizationSite.prototype.hasSuccessfulOutcome = function () {
-  let attempts = this.getAttempts();
-  let lastOutcome = attempts[attempts.length - 1].outcome;
-  return OptimizationSite.isSuccessfulOutcome(lastOutcome);
-};
-
-/**
- * Returns the last attempted OptimizationAttempt for this OptimizationSite.
- *
- * @return {Array<OptimizationAttempt>}
- */
-
-OptimizationSite.prototype.getAttempts = function () {
-  return this.data.attempts;
-};
-
-/**
- * Returns all IonTypes in this OptimizationSite.
- *
- * @return {Array<IonType>}
- */
-
-OptimizationSite.prototype.getIonTypes = function () {
-  return this.data.types;
-};
-
-
-/**
  * Constructor for JITOptimizations. A collection of OptimizationSites for a frame.
  *
  * @constructor
@@ -184,23 +149,33 @@ const JITOptimizations = function (rawSites, stringTable) {
     let data = site.data;
     let STRATEGY_SLOT = data.attempts.schema.strategy;
     let OUTCOME_SLOT = data.attempts.schema.outcome;
+    let attempts = data.attempts.data.map((a) => {
+      return {
+        id: site.id,
+        strategy: stringTable[a[STRATEGY_SLOT]],
+        outcome: stringTable[a[OUTCOME_SLOT]]
+      }
+    });
+    let types = data.types.map((t) => {
+      let typeset = maybeTypeset(t.typeset, stringTable);
+      if (typeset) {
+        typeset.forEach(t => t.id = site.id);
+      }
+
+      return {
+        id: site.id,
+        typeset,
+        site: stringTable[t.site],
+        mirType: stringTable[t.mirType]
+      };
+    });
+    // Add IDs to to all children objects, so we can correllate sites when
+    // just looking at a specific type, attempt, etc..
+    attempts.id = types.id = site.id;
 
     site.data = {
-      attempts: data.attempts.data.map((a) => {
-        return {
-          strategy: stringTable[a[STRATEGY_SLOT]],
-          outcome: stringTable[a[OUTCOME_SLOT]]
-        }
-      }),
-
-      types: data.types.map((t) => {
-        return {
-          typeset: maybeTypeset(t.typeset, stringTable),
-          site: stringTable[t.site],
-          mirType: stringTable[t.mirType]
-        };
-      }),
-
+      attempts,
+      types,
       propertyName: maybeString(stringTable, data.propertyName),
       line: data.line,
       column: data.column
@@ -230,8 +205,22 @@ JITOptimizations.prototype = {
  * @return {boolean}
  */
 
-OptimizationSite.isSuccessfulOutcome = JITOptimizations.isSuccessfulOutcome = function (outcome) {
+function isSuccessfulOutcome (outcome) {
   return !!~SUCCESSFUL_OUTCOMES.indexOf(outcome);
+};
+
+/**
+ * Takes an OptimizationSite. Returns a boolean indicating if the passed
+ * in OptimizationSite has a "good" outcome at the end of its attempted strategies.
+ *
+ * @param {OptimizationSite} optimizationSite
+ * @return {boolean}
+ */
+
+function hasSuccessfulOutcome (optimizationSite) {
+  let attempts = optimizationSite.data.attempts;
+  let lastOutcome = attempts[attempts.length - 1].outcome;
+  return isSuccessfulOutcome(lastOutcome);
 };
 
 function maybeString(stringTable, index) {
@@ -345,3 +334,6 @@ function createTierGraphDataFromFrameNode (frameNode, sampleTimes, bucketSize) {
 exports.createTierGraphDataFromFrameNode = createTierGraphDataFromFrameNode;
 exports.OptimizationSite = OptimizationSite;
 exports.JITOptimizations = JITOptimizations;
+exports.hasSuccessfulOutcome = hasSuccessfulOutcome;
+exports.isSuccessfulOutcome = isSuccessfulOutcome;
+exports.SUCCESSFUL_OUTCOMES = SUCCESSFUL_OUTCOMES;

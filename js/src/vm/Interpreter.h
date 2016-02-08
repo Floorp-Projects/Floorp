@@ -21,6 +21,7 @@
 namespace js {
 
 class ScopeIter;
+class StaticWithScope;
 
 /*
  * For a given |call|, convert null/undefined |this| into the global object for
@@ -87,7 +88,7 @@ InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
 //       ensure |fval| and |newTarget| are both |IsConstructor|.
 extern bool
 Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
-          MutableHandleValue rval);
+          MutableHandleObject objp);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.
@@ -428,8 +429,8 @@ unsigned
 GetInitDataPropAttrs(JSOp op);
 
 bool
-EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val, HandleObject staticWith);
-
+EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
+                   Handle<StaticWithScope*> staticWith);
 
 bool
 InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue idval,
@@ -477,9 +478,6 @@ ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
 
 bool
 DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
-
-bool
-DefaultDerivedClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 bool
 Debug_CheckSelfHosted(JSContext* cx, HandleValue v);

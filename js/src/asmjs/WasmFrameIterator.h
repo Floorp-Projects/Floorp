@@ -56,7 +56,7 @@ class FrameIterator
     void operator++();
     bool done() const { return !fp_; }
     JSAtom* functionDisplayAtom() const;
-    unsigned computeLine(uint32_t* column) const;
+    unsigned lineOrBytecode() const;
 };
 
 // An ExitReason describes the possible reasons for leaving compiled wasm code

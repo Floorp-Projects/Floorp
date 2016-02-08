@@ -18,7 +18,7 @@
 #include "nsWrapperCache.h"
 
 struct JSClass;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -134,7 +134,7 @@ public:
   bool
   HasValidKeyPath() const;
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const;
 
   void

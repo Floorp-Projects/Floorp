@@ -6,43 +6,10 @@
 
 #include "nsIDOMMouseEvent.idl"
 
-[builtinclass, uuid(f1ca2983-8559-43d1-be0e-1af8331755fd)]
+[builtinclass, uuid(d320d075-b29d-4edd-b3a3-3ffd460640de)]
 interface nsIDOMWheelEvent : nsIDOMMouseEvent
 {
   const unsigned long DOM_DELTA_PIXEL = 0x00;
   const unsigned long DOM_DELTA_LINE  = 0x01;
   const unsigned long DOM_DELTA_PAGE  = 0x02;
-
-  // Note that DOM Level 3 Events defines the type of delta values as float.
-  // However, we should use double for them.  Javascript engine always uses
-  // double even if interface attributes are float.  If we defined them
-  // as float, that would cause error at casting from float to double.
-  // E.g., following function may return false if the deltaX is float:
-  //
-  // function () {
-  //   var event = new WheelEvent("wheel", { deltaX: 0.1 });
-  //   return (event.deltaX == 0.1);
-  // }
-
-  readonly attribute double        deltaX;
-  readonly attribute double        deltaY;
-  readonly attribute double        deltaZ;
-  readonly attribute unsigned long deltaMode;
-
-  [noscript] void initWheelEvent(in DOMString typeArg,
-                                 in boolean canBubbleArg,
-                                 in boolean cancelableArg,
-                                 in nsIDOMWindow viewArg,
-                                 in long detailArg,
-                                 in long screenXArg,
-                                 in long screenYArg,
-                                 in long clientXArg,
-                                 in long clientYArg,
-                                 in unsigned short buttonArg,
-                                 in nsIDOMEventTarget relatedTargetArg,
-                                 in DOMString modifiersListArg,
-                                 in double deltaXArg,
-                                 in double deltaYArg,
-                                 in double deltaZArg,
-                                 in unsigned long deltaMode);
 };

@@ -292,9 +292,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'DEFFILE': [
                 'DEFFILE := baz.def',
             ],
-            'USE_STATIC_LIBS': [
-                'USE_STATIC_LIBS := 1',
-            ],
             'MOZBUILD_CFLAGS': [
                 'MOZBUILD_CFLAGS += -fno-exceptions',
                 'MOZBUILD_CFLAGS += -w',

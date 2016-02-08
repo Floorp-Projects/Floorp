@@ -34,7 +34,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ArchiveRequest, DOMRequest)
 
-  ArchiveRequest(nsPIDOMWindow* aWindow,
+  ArchiveRequest(nsPIDOMWindowInner* aWindow,
                  ArchiveReader* aReader);
 
   // nsIDOMEventTarget
@@ -52,7 +52,7 @@ public:
   nsresult ReaderReady(nsTArray<RefPtr<File>>& aFileList, nsresult aStatus);
 
 public: // static
-  static already_AddRefed<ArchiveRequest> Create(nsPIDOMWindow* aOwner,
+  static already_AddRefed<ArchiveRequest> Create(nsPIDOMWindowInner* aOwner,
                                                  ArchiveReader* aReader);
 
 private:

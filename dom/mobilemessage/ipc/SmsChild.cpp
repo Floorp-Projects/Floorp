@@ -349,10 +349,10 @@ MobileMessageCursorChild::DoNotifyResult(const nsTArray<MobileMessageData>& aDat
   const uint32_t length = aDataArray.Length();
   MOZ_ASSERT(length);
 
-  AutoFallibleTArray<nsISupports*, 1> autoArray;
+  AutoTArray<nsISupports*, 1> autoArray;
   NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length, fallible));
 
-  AutoFallibleTArray<nsCOMPtr<nsISupports>, 1> messages;
+  AutoTArray<nsCOMPtr<nsISupports>, 1> messages;
   NS_ENSURE_TRUE_VOID(messages.SetCapacity(length, fallible));
 
   for (uint32_t i = 0; i < length; i++) {
@@ -370,10 +370,10 @@ MobileMessageCursorChild::DoNotifyResult(const nsTArray<ThreadData>& aDataArray)
   const uint32_t length = aDataArray.Length();
   MOZ_ASSERT(length);
 
-  AutoFallibleTArray<nsISupports*, 1> autoArray;
+  AutoTArray<nsISupports*, 1> autoArray;
   NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length, fallible));
 
-  AutoFallibleTArray<nsCOMPtr<nsISupports>, 1> threads;
+  AutoTArray<nsCOMPtr<nsISupports>, 1> threads;
   NS_ENSURE_TRUE_VOID(threads.SetCapacity(length, fallible));
 
   for (uint32_t i = 0; i < length; i++) {

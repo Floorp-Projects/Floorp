@@ -599,6 +599,7 @@ nsHTMLEditor::InsertTableRow(int32_t aNumber, bool aAfter)
     // We are adding a new row after all others
     // If it weren't for colspan=0 effect,
     // we could simply use colCount for number of new cells...
+    // XXX colspan=0 support has now been removed in table layout so maybe this can be cleaned up now? (bug 1243183)
     cellsInRow = colCount;
 
     // ...but we must compensate for all cells with rowSpan = 0 in the last row

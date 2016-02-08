@@ -165,6 +165,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
 
 <script class="testbody" type="application/javascript"><![CDATA[
 
+var gFinished = false;
+
 /** Test for Bug 632379 **/
 // Tests whether scrolling a menu affects the position at which popups appear
 var pos = new Array(2);
@@ -172,6 +174,7 @@ var count=0;
 
 function snapshot(elem)
 {
+    todo(false, "snapshot() called");
     pos[count] = elem.getBoundingClientRect().top;
     ++count;
     if (count <= 1) {
@@ -184,22 +187,29 @@ function snapshot(elem)
         } else {
             todo(false, "This test fails on Mac since it was ported to chrome: Bug 668716.");
         }
+        todo(false, "Test finished");
+        gFinished = true;
         SimpleTest.finish();
     }
 }
 
 function doTest() {
+    todo(false, "doTest() called");
     // open the top-level menu
     $("mainMenu").open = true;
 }
 
 function openSubmenu()
 {
+    if (!gFinished) {
+        todo(false, "openSubmenu() called");
+    }
     // open a submenu in the middle
     synthesizeKey("5", {});
 }
 
 SimpleTest.waitForExplicitFinish();
+todo(false, "Wait for focus");
 SimpleTest.waitForFocus(doTest);
 
 ]]></script>

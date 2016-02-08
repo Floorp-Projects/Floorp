@@ -306,14 +306,6 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
 
   // TODO: remove following code once securityMode is fully implemented (bug 1189945)
 
-  // We only support app:// protocol interception in non-release builds.
-#ifndef RELEASE_BUILD
-  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aChannel);
-  if (jarChannel) {
-    return RequestMode::No_cors;
-  }
-#endif
-
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   uint32_t corsMode;
@@ -322,6 +314,51 @@ InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
 
   // This cast is valid due to static asserts in ServiceWorkerManager.cpp.
   return static_cast<RequestMode>(corsMode);
+}
+
+// static
+RequestCredentials
+InternalRequest::MapChannelToRequestCredentials(nsIChannel* aChannel)
+{
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aChannel->GetLoadInfo(getter_AddRefs(loadInfo))));
+
+  uint32_t securityMode;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSecurityMode(&securityMode)));
+
+  // TODO: Remove following code after stylesheet and image support cookie policy
+  if (securityMode == nsILoadInfo::SEC_NORMAL) {
+    uint32_t loadFlags;
+    aChannel->GetLoadFlags(&loadFlags);
+
+    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
+      return RequestCredentials::Omit;
+    } else {
+      bool includeCrossOrigin;
+      nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(aChannel);
+
+      internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
+      if (includeCrossOrigin) {
+        return RequestCredentials::Include;
+      }
+    }
+    return RequestCredentials::Same_origin;
+  }
+
+  uint32_t cookiePolicy = loadInfo->GetCookiePolicy();
+
+  if (cookiePolicy == nsILoadInfo::SEC_COOKIES_INCLUDE) {
+    return RequestCredentials::Include;
+  } else if (cookiePolicy == nsILoadInfo::SEC_COOKIES_OMIT) {
+    return RequestCredentials::Omit;
+  } else if (cookiePolicy == nsILoadInfo::SEC_COOKIES_SAME_ORIGIN) {
+    return RequestCredentials::Same_origin;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unexpected cookie policy!");
+  return RequestCredentials::Same_origin;
 }
 
 } // namespace dom

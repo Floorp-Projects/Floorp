@@ -65,8 +65,8 @@ addLoadEvent(function() {
     }
   }
 
-  // Now, neuter the array buffer
-  var worker = new Worker("audioBufferSourceNodeNeutered_worker.js");
+  // Now, detach the array buffer
+  var worker = new Worker("audioBufferSourceNodeDetached_worker.js");
   var data = buffer.getChannelData(0).buffer;
   worker.postMessage(data, [data]);
   SpecialPowers.gc();

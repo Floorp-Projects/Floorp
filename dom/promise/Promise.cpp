@@ -317,7 +317,7 @@ struct MOZ_STACK_CLASS Promise::PromiseCapability
   // purposes it's simpler to store them as JS::Value.
 
   // [[Promise]].
-  JS::Rooted<JS::Value> mPromise;
+  JS::Rooted<JSObject*> mPromise;
   // [[Resolve]].  Value in the context compartment.
   JS::Rooted<JS::Value> mResolve;
   // [[Reject]].  Value in the context compartment.
@@ -340,7 +340,7 @@ Promise::PromiseCapability::RejectWithException(JSContext* aCx,
   // or at least the parts of it that happen if we have an abrupt completion.
 
   MOZ_ASSERT(!aRv.Failed());
-  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+  MOZ_ASSERT(mNativePromise || mPromise,
              "NewPromiseCapability didn't succeed");
 
   JS::Rooted<JS::Value> exn(aCx);
@@ -370,14 +370,14 @@ Promise::PromiseCapability::RejectWithException(JSContext* aCx,
 JS::Value
 Promise::PromiseCapability::PromiseValue() const
 {
-  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+  MOZ_ASSERT(mNativePromise || mPromise,
              "NewPromiseCapability didn't succeed");
 
   if (mNativePromise) {
     return JS::ObjectValue(*mNativePromise->GetWrapper());
   }
 
-  return mPromise;
+  return JS::ObjectValue(*mPromise);
 }
 
 // Promise
@@ -540,6 +540,12 @@ Promise::MaybeReject(JSContext* aCx,
 void
 Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
+}
+
+void
+Promise::MaybeRejectWithNull()
+{
+  MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
 }
 
 bool
@@ -931,10 +937,10 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   // Step 6 and step 7.
   JS::Rooted<JS::Value> getCapabilities(aCx,
                                         JS::ObjectValue(*getCapabilitiesObj));
-  JS::Rooted<JS::Value> promiseVal(aCx);
+  JS::Rooted<JSObject*> promiseObj(aCx);
   if (!JS::Construct(aCx, aConstructor,
                      JS::HandleValueArray(getCapabilities),
-                     &promiseVal)) {
+                     &promiseObj)) {
     aRv.NoteJSContextException();
     return;
   }
@@ -959,7 +965,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   aCapability.mReject = v;
 
   // Step 10.
-  aCapability.mPromise = promiseVal;
+  aCapability.mPromise = promiseObj;
 
   // Step 11 doesn't need anything, since the PromiseCapability was passed in.
 }
@@ -1274,11 +1280,11 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
     RefPtr<AnyCallback> rejectFunc =
       new AnyCallback(aCx, rejectObj, GetIncumbentGlobal());
 
-    if (!capability.mPromise.isObject()) {
+    if (!capability.mPromise) {
       aRv.ThrowTypeError<MSG_ILLEGAL_PROMISE_CONSTRUCTOR>();
       return;
     }
-    JS::Rooted<JSObject*> newPromiseObj(aCx, &capability.mPromise.toObject());
+    JS::Rooted<JSObject*> newPromiseObj(aCx, capability.mPromise);
     // We want to store the reflector itself.
     newPromiseObj = js::CheckedUnwrap(newPromiseObj);
     if (!newPromiseObj) {
@@ -1995,7 +2001,7 @@ void
 Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
                          PromiseCallback* aRejectCallback)
 {
-  if (mGlobal->IsDying()) {
+  if (!mGlobal || mGlobal->IsDying()) {
     return;
   }
 
@@ -2105,8 +2111,8 @@ Promise::MaybeReportRejected()
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj))
                                : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
-  nsPIDOMWindow* win = isMainThread ? xpc::WindowGlobalOrNull(obj) : nullptr;
-  xpcReport->Init(report.report(), report.message(), isChrome, win ? win->WindowID() : 0);
+  nsGlobalWindow* win = isMainThread ? xpc::WindowGlobalOrNull(obj) : nullptr;
+  xpcReport->Init(report.report(), report.message(), isChrome, win ? win->AsInner()->WindowID() : 0);
 
   // Now post an event to do the real reporting async
   // Since Promises preserve their wrapper, it is essential to RefPtr<> the

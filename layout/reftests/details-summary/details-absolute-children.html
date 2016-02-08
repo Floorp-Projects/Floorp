@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <style>
+  details {
+    background-color: orange;
+    width: 500px;
+    height: 200px;
+  }
+  summary::-moz-list-bullet {
+    /* Hide the triangle for comparing with div in reftest. */
+    list-style-type: none;
+  }
+  summary {
+    background-color: green;
+    width: 50%;
+  }
+  div#in_summary {
+    position: absolute;
+    background-color: green;
+    top: 60px;
+    left: 100px;
+    width: 150px;
+    height: 100px;
+  }
+  div#before_summary {
+    position: absolute;
+    background-color: cyan;
+    top: 50px;
+    left: 50px;
+    width: 150px;
+    height: 100px;
+  }
+  </style>
+  <body>
+    <details open>
+      <div id="before_summary">div before summary</div> <!-- This div is at front. -->
+      <summary>Summary<div id="in_summary">div in summary</div></summary>
+    </details>
+  </body>
+</html>

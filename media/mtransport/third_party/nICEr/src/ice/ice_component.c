@@ -490,6 +490,14 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if (ctx->turn_servers[j].turn_server.transport != IPPROTO_TCP)
           continue;
 
+        if (ctx->turn_servers[j].turn_server.type == NR_ICE_STUN_SERVER_TYPE_ADDR &&
+            nr_transport_addr_cmp(&ctx->turn_servers[j].turn_server.u.addr,
+                                  &addrs[i].addr,
+                                  NR_TRANSPORT_ADDR_CMP_MODE_VERSION)) {
+          r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of IP version mis-match (%u - %u)",ctx->label,addrs[i].addr.ip_version,ctx->turn_servers[j].turn_server.u.addr.ip_version);
+          continue;
+        }
+
         if (!ice_tcp_disabled) {
           /* Use TURN server to get srflx candidates */
           if(r=nr_ice_candidate_create(ctx,component,

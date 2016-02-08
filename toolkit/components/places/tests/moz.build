@@ -22,7 +22,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'queries/xpcshell.ini',
     'unifiedcomplete/xpcshell.ini',
     'unit/xpcshell.ini',
-    'xpcshell.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
@@ -30,10 +29,59 @@ MOCHITEST_CHROME_MANIFESTS += [
     'chrome.ini',
     'chrome/chrome.ini',
 ]
-MOCHITEST_MANIFESTS += [
-    'browser/mochitest.ini',
-    'chrome/mochitest.ini',
-    'mochitest.ini',
-    'mochitest/bug_411966/mochitest.ini',
-    'mochitest/bug_461710/mochitest.ini',
+
+TEST_HARNESS_FILES.xpcshell.toolkit.components.places.tests += [
+    'head_common.js',
 ]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.browser += [
+    'browser/399606-history.go-0.html',
+    'browser/399606-httprefresh.html',
+    'browser/399606-location.reload.html',
+    'browser/399606-location.replace.html',
+    'browser/399606-window.location.href.html',
+    'browser/399606-window.location.html',
+    'browser/begin.html',
+    'browser/favicon-normal16.png',
+    'browser/favicon-normal32.png',
+    'browser/favicon.html',
+    'browser/final.html',
+    'browser/redirect-target.html',
+    'browser/redirect.sjs',
+    'browser/redirect_once.sjs',
+    'browser/redirect_twice.sjs',
+    'browser/title1.html',
+    'browser/title2.html',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrome += [
+    'chrome/bad_links.atom',
+    'chrome/link-less-items-no-site-uri.rss',
+    'chrome/link-less-items.rss',
+    'chrome/rss_as_html.rss',
+    'chrome/rss_as_html.rss^headers^',
+    'chrome/sample_feed.atom',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests += [
+    'bug94514-postpage.html',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.mochitest.bug_411966 += [
+    'mochitest/bug_411966/ClickedPage.htm',
+    'mochitest/bug_411966/ClickedPage.htm^headers^',
+    'mochitest/bug_411966/PermRedirectPage.htm',
+    'mochitest/bug_411966/redirect.js',
+    'mochitest/bug_411966/TempRedirectPage.htm',
+    'mochitest/bug_411966/TempRedirectPage.htm^headers^',
+    'mochitest/bug_411966/TypedPage.htm',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.mochitest.bug_461710 += [
+    'mochitest/bug_461710/iframe.html',
+    'mochitest/bug_461710/link_page-2.html',
+    'mochitest/bug_461710/link_page-3.html',
+    'mochitest/bug_461710/link_page.html',
+    'mochitest/bug_461710/visited_page.html',
+]
+

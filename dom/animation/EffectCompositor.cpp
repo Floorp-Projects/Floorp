@@ -516,6 +516,11 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
     if (!content) {
       return result;
     }
+  } else {
+    if (nsLayoutUtils::GetStyleFrame(content) != aFrame) {
+      // The effects associated with an element are for its primary frame.
+      return result;
+    }
   }
 
   if (!content->IsElement()) {
@@ -578,7 +583,7 @@ EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
                                           nsCSSPropertySet&
                                             aPropertiesOverridden)
 {
-  nsAutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
+  AutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
   {
     nsCSSPropertySet propertiesToTrackAsSet;
     for (KeyframeEffectReadOnly* effect : aEffectSet) {

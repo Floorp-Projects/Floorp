@@ -33,7 +33,7 @@ const uint16_t BluetoothGattService::sHandleCount = 1;
 
 // Constructor of BluetoothGattService in ATT client role
 BluetoothGattService::BluetoothGattService(
-  nsPIDOMWindow* aOwner, const nsAString& aAppUuid,
+  nsPIDOMWindowInner* aOwner, const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId)
   : mOwner(aOwner)
   , mAppUuid(aAppUuid)
@@ -49,7 +49,7 @@ BluetoothGattService::BluetoothGattService(
 
 // Constructor of BluetoothGattService in ATT server role
 BluetoothGattService::BluetoothGattService(
-  nsPIDOMWindow* aOwner,
+  nsPIDOMWindowInner* aOwner,
   const BluetoothGattServiceInit& aInit)
   : mOwner(aOwner)
   , mUuidStr(aInit.mUuid)
@@ -174,7 +174,7 @@ BluetoothGattService::Constructor(const GlobalObject& aGlobal,
                                   const BluetoothGattServiceInit& aInit,
                                   ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

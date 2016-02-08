@@ -13,15 +13,15 @@ var gParams;
 function setWindowName()
 {
   gParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-  
+
   var typeFlag = gParams.GetString(0);
   var numberOfCerts = gParams.GetInt(0);
-  
+
   var bundle = document.getElementById("pippki_bundle");
   var title;
   var confirm;
   var impact;
-  
+
   if(typeFlag == "mine_tab")
   {
      title = bundle.getString("deleteUserCertTitle");
@@ -62,9 +62,8 @@ function setWindowName()
 
   setText("confirm",confirm);
 
-  var box=document.getElementById("certlist");
-  for(var x=0;x<numberOfCerts;x++)
-  {
+  let box = document.getElementById("certlist");
+  for (let x = 0; x < numberOfCerts; x++) {
     var listItem = document.createElement("richlistitem");
     var label = document.createElement("label");
     label.setAttribute("value", gParams.GetString(x + 1));

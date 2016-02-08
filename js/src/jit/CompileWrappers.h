@@ -53,7 +53,7 @@ class CompileRuntime
     const void* addressOfLastCachedNativeIterator();
 
 #ifdef JS_GC_ZEAL
-    const void* addressOfGCZeal();
+    const void* addressOfGCZealModeBits();
 #endif
 
     const void* addressOfInterruptUint32();

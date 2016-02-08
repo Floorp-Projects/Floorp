@@ -18,7 +18,7 @@
 #include "nsWrapperCache.h"
 
 class nsIPrincipal;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 struct PRThread;
 
 namespace mozilla {
@@ -60,7 +60,7 @@ class IDBFactory final
 
   // If this factory lives on a window then mWindow must be non-null. Otherwise
   // mOwningObject must be non-null.
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   JS::Heap<JSObject*> mOwningObject;
 
   // This will only be set if the factory belongs to a window in a child
@@ -82,7 +82,7 @@ class IDBFactory final
 
 public:
   static nsresult
-  CreateForWindow(nsPIDOMWindow* aWindow,
+  CreateForWindow(nsPIDOMWindowInner* aWindow,
                   IDBFactory** aFactory);
 
   static nsresult
@@ -103,7 +103,7 @@ public:
                   IDBFactory** aFactory);
 
   static bool
-  AllowedForWindow(nsPIDOMWindow* aWindow);
+  AllowedForWindow(nsPIDOMWindowInner* aWindow);
 
   static bool
   AllowedForPrincipal(nsIPrincipal* aPrincipal,
@@ -132,7 +132,7 @@ public:
   void
   IncrementParentLoggingRequestSerialNumber();
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -227,7 +227,7 @@ private:
                       IDBFactory** aFactory);
 
   static nsresult
-  AllowedForWindowInternal(nsPIDOMWindow* aWindow,
+  AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                            nsIPrincipal** aPrincipal);
 
   already_AddRefed<IDBOpenDBRequest>

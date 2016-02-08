@@ -13,10 +13,10 @@ import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.DateTimePicker;
-import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.text.Html;
 import android.text.InputType;
@@ -67,7 +67,7 @@ public class PromptInput {
 
         @Override
         public View getView(final Context context) throws UnsupportedOperationException {
-            EditText input = new FloatingHintEditText(context);
+            EditText input = new EditText(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT);
             input.setText(mValue);
 
@@ -87,14 +87,17 @@ public class PromptInput {
                 input.requestFocus();
             }
 
-            mView = (View)input;
+            TextInputLayout inputLayout = new TextInputLayout(context);
+            inputLayout.addView(input);
+
+            mView = (View) inputLayout;
             return mView;
         }
 
         @Override
         public Object getValue() {
-            EditText edit = (EditText)mView;
-            return edit.getText();
+            final TextInputLayout inputLayout = (TextInputLayout) mView;
+            return inputLayout.getEditText().getText();
         }
     }
 
@@ -106,7 +109,8 @@ public class PromptInput {
 
         @Override
         public View getView(final Context context) throws UnsupportedOperationException {
-            EditText input = (EditText) super.getView(context);
+            final TextInputLayout inputLayout = (TextInputLayout) super.getView(context);
+            final EditText input = inputLayout.getEditText();
             input.setRawInputType(Configuration.KEYBOARD_12KEY);
             input.setInputType(InputType.TYPE_CLASS_NUMBER |
                                InputType.TYPE_NUMBER_FLAG_SIGNED);
@@ -122,17 +126,11 @@ public class PromptInput {
 
         @Override
         public View getView(Context context) throws UnsupportedOperationException {
-            EditText input = (EditText) super.getView(context);
-            input.setInputType(InputType.TYPE_CLASS_TEXT |
+            final TextInputLayout inputLayout = (TextInputLayout) super.getView(context);
+            inputLayout.getEditText().setInputType(InputType.TYPE_CLASS_TEXT |
                                InputType.TYPE_TEXT_VARIATION_PASSWORD |
                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-            return input;
-        }
-
-        @Override
-        public Object getValue() {
-            EditText edit = (EditText)mView;
-            return edit.getText();
+            return inputLayout;
         }
     }
 

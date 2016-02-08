@@ -27,7 +27,7 @@ add_task(function* testPrivateBrowsingCustomizeModeWidget() {
      "Widget should not appear as unused in private window");
   yield promiseWindowClosed(privateWindow);
 
-  CustomizableUI.destroyWidget(kWidgetId); 
+  CustomizableUI.destroyWidget(kWidgetId);
 });
 
 add_task(function* asyncCleanup() {

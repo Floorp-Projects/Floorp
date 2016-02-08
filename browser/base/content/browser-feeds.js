@@ -49,8 +49,7 @@ var FeedHandler = {
     for (let feedInfo of feeds) {
       let item = document.createElement(itemNodeType);
       let baseTitle = feedInfo.title || feedInfo.href;
-      let labelStr = gNavigatorBundle.getFormattedString("feedShowFeedNew", [baseTitle]);
-      item.setAttribute("label", labelStr);
+      item.setAttribute("label", baseTitle);
       item.setAttribute("feed", feedInfo.href);
       item.setAttribute("tooltiptext", feedInfo.href);
       item.setAttribute("crop", "center");

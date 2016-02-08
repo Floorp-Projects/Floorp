@@ -1003,7 +1003,7 @@ var PDFFindController = (function PDFFindControllerClosure() {
   function PDFFindController(options) {
     this.startedTextExtraction = false;
     this.extractTextPromises = [];
-    this.pendingFindMatches = {};
+    this.pendingFindMatches = Object.create(null);
     this.active = false; // If active, find results will be highlighted.
     this.pageContents = []; // Stores the text for each page.
     this.pageMatches = [];
@@ -7097,6 +7097,7 @@ var PDFViewerApplication = {
     this.pdfPresentationMode.mouseScroll(delta);
   }
 };
+
 
 
 function webViewerLoad(evt) {

@@ -45,7 +45,7 @@
 
     mfs = Microformats.get("hCalendar", document.getElementById("secondnode"));
 
-    is(mfs[0].summary, "Pseudo Conference", 
+    is(mfs[0].summary, "Pseudo Conference",
        "Make sure we get the proper hCalendar from the second level node");
     is(mfs.length, 1, "And we should only get one hCalendar not two from this node.");
   }

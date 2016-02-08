@@ -24,7 +24,7 @@ function run_test_with_server(aServer, aCallback)
   initTestDebuggerServer(aServer);
   gDebuggee = addTestGlobal("test-stack", aServer);
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect(function () {
+  gClient.connect().then(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       // XXX: We have to do an executeSoon so that the error isn't caught and

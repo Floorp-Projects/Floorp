@@ -210,7 +210,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
 
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
-    nsIFrame* first = GetFirstPrincipalChild();
+    nsIFrame* first = PrincipalChildList().FirstChild();
 
     nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
@@ -1224,21 +1224,21 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
                                         nsFrameList&    aChildList)
 {
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
-
-  nsIFrame* first = GetFirstPrincipalChild();
+  if (aListID != kPrincipalList) {
+    return;
+  }
 
   // Mark the scroll frame as being a reflow root. This will allow
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
-  if (first) {
+  if (nsIFrame* first = PrincipalChildList().FirstChild()) {
     first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
     NS_ASSERTION(txtCtrl, "Content not a text control element");
     txtCtrl->InitializeKeyboardEventListeners();
 
-    nsPoint* contentScrollPos = static_cast<nsPoint*>
-      (Properties().Get(ContentScrollPos()));
+    nsPoint* contentScrollPos = Properties().Get(ContentScrollPos());
     if (contentScrollPos) {
       // If we have a scroll pos stored to be passed to our anonymous
       // div, do it here!

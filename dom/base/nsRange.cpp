@@ -3096,7 +3096,7 @@ nsRange::AutoInvalidateSelection::~AutoInvalidateSelection()
 nsRange::Constructor(const GlobalObject& aGlobal,
                      ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -3335,7 +3335,7 @@ IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
     for (nsIFrame* next = c->GetNextSibling(); next; next = next->GetNextSibling()) {
-      if (next->GetFirstPrincipalChild()) {
+      if (next->PrincipalChildList().FirstChild()) {
         return false;
       }
     }

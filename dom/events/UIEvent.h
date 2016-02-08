@@ -51,7 +51,13 @@ public:
     return UIEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  nsIDOMWindow* GetView() const
+  void InitUIEvent(const nsAString& typeArg,
+                   bool canBubbleArg,
+                   bool cancelableArg,
+                   nsGlobalWindow* viewArg,
+                   int32_t detailArg);
+
+  nsPIDOMWindowOuter* GetView() const
   {
     return mView;
   }
@@ -101,7 +107,7 @@ protected:
   nsIntPoint GetMovementPoint();
   nsIntPoint GetLayerPoint() const;
 
-  nsCOMPtr<nsIDOMWindow> mView;
+  nsCOMPtr<nsPIDOMWindowOuter> mView;
   int32_t mDetail;
   CSSIntPoint mClientPoint;
   // Screenpoint is mEvent->refPoint.

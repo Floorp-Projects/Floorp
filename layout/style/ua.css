@@ -282,7 +282,6 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: black;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
@@ -299,6 +298,18 @@
  * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
 *|*:-moz-full-screen:not(:root):not(:-moz-browser-frame) {
   -moz-top-layer: top !important;
+}
+
+*|*::backdrop {
+  -moz-top-layer: top !important;
+  display: block;
+  position: fixed;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+}
+
+*|*:-moz-full-screen:not(:root)::backdrop {
+  background: black;
 }
 
 /* XML parse error reporting */

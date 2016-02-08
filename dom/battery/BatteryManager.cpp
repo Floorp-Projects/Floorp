@@ -29,7 +29,7 @@ namespace mozilla {
 namespace dom {
 namespace battery {
 
-BatteryManager::BatteryManager(nsPIDOMWindow* aWindow)
+BatteryManager::BatteryManager(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)

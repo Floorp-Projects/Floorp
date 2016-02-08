@@ -94,7 +94,7 @@ nsCounterUseNode::GetText(nsString& aResult)
 {
     aResult.Truncate();
 
-    nsAutoTArray<nsCounterNode*, 8> stack;
+    AutoTArray<nsCounterNode*, 8> stack;
     stack.AppendElement(static_cast<nsCounterNode*>(this));
 
     if (mAllCounters && mScopeStart)

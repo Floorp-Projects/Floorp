@@ -595,7 +595,7 @@ void
 nsINode::Normalize()
 {
   // First collect list of nodes to be removed
-  nsAutoTArray<nsCOMPtr<nsIContent>, 50> nodes;
+  AutoTArray<nsCOMPtr<nsIContent>, 50> nodes;
 
   bool canMerge = false;
   for (nsIContent* node = this->GetFirstChild();
@@ -864,7 +864,7 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
     return static_cast<uint16_t>(nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
   }
 
-  nsAutoTArray<const nsINode*, 32> parents1, parents2;
+  AutoTArray<const nsINode*, 32> parents1, parents2;
 
   const nsINode *node1 = &aOtherNode, *node2 = this;
 
@@ -1325,12 +1325,12 @@ nsINode::GetContextForEventHandlers(nsresult* aRv)
   return nsContentUtils::GetContextForEventHandlers(this, aRv);
 }
 
-nsIDOMWindow*
+nsPIDOMWindowOuter*
 nsINode::GetOwnerGlobalForBindings()
 {
   bool dummy;
-  return nsPIDOMWindow::GetOuterFromCurrentInner(
-    static_cast<nsGlobalWindow*>(OwnerDoc()->GetScriptHandlingObject(dummy)));
+  auto* window = static_cast<nsGlobalWindow*>(OwnerDoc()->GetScriptHandlingObject(dummy));
+  return window ? nsPIDOMWindowOuter::GetFromCurrentInner(window->AsInner()) : nullptr;
 }
 
 nsIGlobalObject*
@@ -1992,7 +1992,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     nodeToInsertBefore = nodeToInsertBefore->GetNextSibling();
   }
 
-  Maybe<nsAutoTArray<nsCOMPtr<nsIContent>, 50> > fragChildren;
+  Maybe<AutoTArray<nsCOMPtr<nsIContent>, 50> > fragChildren;
 
   // Remove the new child from the old parent if one exists
   nsIContent* newContent = aNewChild->AsContent();
@@ -2702,7 +2702,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 
   nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
   if (selectorList) {
-    FindMatchingElements<false, nsAutoTArray<Element*, 128>>(this,
+    FindMatchingElements<false, AutoTArray<Element*, 128>>(this,
                                                              selectorList,
                                                              *contentList,
                                                              aResult);

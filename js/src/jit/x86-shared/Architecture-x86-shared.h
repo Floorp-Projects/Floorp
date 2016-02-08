@@ -20,6 +20,12 @@
 namespace js {
 namespace jit {
 
+// Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+
+// Does this architecture support comparisons of unsigned 32x4 integer vectors?
+static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
+
 #if defined(JS_CODEGEN_X86)
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
@@ -446,10 +452,9 @@ hasMultiAlias()
     return false;
 }
 
-// Support some constant-offset addressing.
-// See the comments above AsmJSMappedSize in AsmJS.cpp for more info.
-static const size_t AsmJSCheckedImmediateRange = 4096;
-static const size_t AsmJSImmediateRange = UINT32_C(0x80000000);
+// See MIRGenerator::foldableOffsetRange for more info.
+static const size_t WasmCheckedImmediateRange = 4096;
+static const size_t WasmImmediateRange = UINT32_C(0x80000000);
 
 } // namespace jit
 } // namespace js

@@ -360,6 +360,7 @@ private:
 
   // Opens the database, first thing we do after start of the thread.
   nsresult OpenDatabaseConnection();
+  nsresult OpenAndUpdateDatabase();
   nsresult InitDatabase();
   nsresult ShutdownDatabase();
 

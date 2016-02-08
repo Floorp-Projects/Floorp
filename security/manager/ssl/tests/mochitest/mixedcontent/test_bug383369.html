@@ -22,26 +22,26 @@
     handlerInfo.preferredAction = SpecialPowers.Ci.nsIHandlerInfo.saveToDisk;
     handlerInfo.alwaysAskBeforeHandling = false;
     handlerInfo.preferredApplicationHandler = null;
-    
+
     const handlerSvc = SpecialPowers.Cc["@mozilla.org/uriloader/handler-service;1"]
       .getService(SpecialPowers.Ci.nsIHandlerService);
     handlerSvc.store(handlerInfo);
-    
+
     var dirProvider = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
       .getService(SpecialPowers.Ci.nsIProperties);
     var profileDir = dirProvider.get("ProfDS", SpecialPowers.Ci.nsIFile);
     profileDir.append("downloads");
-    
+
     var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
       .getService(SpecialPowers.Ci.nsIPrefService);
     prefs = prefs.getBranch("browser.download.");
-        
+
     prefs.setCharPref("dir", profileDir.path);
     prefs.setBoolPref("useDownloadDir", true);
     prefs.setIntPref("folderList", 2);
     prefs.setBoolPref("manager.closeWhenDone", true);
     prefs.setBoolPref("manager.showWhenStarting", false);
-  
+
     var theWindow = window;
 
     var Downloads = SpecialPowers.Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
@@ -63,28 +63,28 @@
   function afterNavigationTest()
   {
   }
-  
+
   testCleanUp = function cleanup()
   {
     const mimeSvc = SpecialPowers.Cc["@mozilla.org/mime;1"]
       .getService(SpecialPowers.Ci.nsIMIMEService);
     var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
-    
+
     const handlerSvc = SpecialPowers.Cc["@mozilla.org/uriloader/handler-service;1"]
       .getService(SpecialPowers.Ci.nsIHandlerService);
     handlerSvc.remove(handlerInfo);
-    
+
     var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
       .getService(SpecialPowers.Ci.nsIPrefService);
     prefs = prefs.getBranch("browser.download.");
 
-    var prefKeys = ["dir", "useDownloadDir", "folderList", 
+    var prefKeys = ["dir", "useDownloadDir", "folderList",
                     "manager.closeWhenDone", "manager.showWhenStarting"];
     for (var i = 0; i < prefKeys.length; i++)
       if (prefs.prefHasUserValue(prefKeys[i]))
         prefs.clearUserPref(prefKeys[i]);
   }
-  
+
   </script>
 </head>
 

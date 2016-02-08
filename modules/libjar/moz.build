@@ -23,14 +23,12 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'jar'
 
 EXPORTS += [
-    'InterceptedJARChannel.h',
     'nsJARURI.h',
     'nsZipArchive.h',
     'zipstruct.h',
 ]
 
 UNIFIED_SOURCES += [
-    'InterceptedJARChannel.cpp',
     'nsJARProtocolHandler.cpp',
     'nsJARURI.cpp',
 ]

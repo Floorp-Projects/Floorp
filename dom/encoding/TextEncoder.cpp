@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/TextEncoder.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -54,18 +55,18 @@ TextEncoder::Encode(JSContext* aCx,
   }
   // Need a fallible allocator because the caller may be a content
   // and the content can specify the length of the string.
-  nsAutoArrayPtr<char> buf(new (fallible) char[maxLen + 1]);
+  auto buf = MakeUniqueFallible<char[]>(maxLen + 1);
   if (!buf) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
   int32_t dstLen = maxLen;
-  rv = mEncoder->Convert(data, &srcLen, buf, &dstLen);
+  rv = mEncoder->Convert(data, &srcLen, buf.get(), &dstLen);
 
   // Now reset the encoding algorithm state to the default values for encoding.
   int32_t finishLen = maxLen - dstLen;
-  rv = mEncoder->Finish(buf + dstLen, &finishLen);
+  rv = mEncoder->Finish(&buf[dstLen], &finishLen);
   if (NS_SUCCEEDED(rv)) {
     dstLen += finishLen;
   }

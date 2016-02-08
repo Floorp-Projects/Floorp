@@ -130,7 +130,7 @@ function writeRootHashes(fos) {
       let fpBytes = atob(fp.sha256Fingerprint);
 
       writeString(fos, "  {\n");
-      writeString(fos, "    /* "+fp.label+" */\n");
+      writeString(fos, "    /* " + fp.label + " */\n");
       writeString(fos, "    { " + hexSlice(fpBytes, 0, 16) + ",\n");
       writeString(fos, "      " + hexSlice(fpBytes, 16, 32) + " },\n");
       writeString(fos, "      " + fp.binNumber + " /* Bin Number */\n");
@@ -166,14 +166,14 @@ function getLabelForCert(cert) {
   }
 
   // replace non-ascii characters
-  label = label.replace( /[^[:ascii:]]/g, "_");
+  label = label.replace(/[^[:ascii:]]/g, "_");
   // replace non-word characters
-  label = label.replace(/[^A-Za-z0-9]/g ,"_");
+  label = label.replace(/[^A-Za-z0-9]/g, "_");
   return label;
 }
 
 // Fill in the gTrustAnchors list with trust anchors from the database.
-function insertTrustAnchorsFromDatabase(){
+function insertTrustAnchorsFromDatabase() {
   // We only want CA certs for SSL
   const CERT_TYPE = Ci.nsIX509Cert.CA_CERT;
   const TRUST_TYPE = Ci.nsIX509CertDB.TRUSTED_SSL;

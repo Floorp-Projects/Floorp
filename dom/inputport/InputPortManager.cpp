@@ -30,7 +30,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InputPortManager)
   NS_INTERFACE_MAP_ENTRY(nsIInputPortServiceCallback)
 NS_INTERFACE_MAP_END
 
-InputPortManager::InputPortManager(nsPIDOMWindow* aWindow)
+InputPortManager::InputPortManager(nsPIDOMWindowInner* aWindow)
   : mParent(aWindow)
   , mIsReady(false)
 {
@@ -41,7 +41,7 @@ InputPortManager::~InputPortManager()
 }
 
 /* static */ already_AddRefed<InputPortManager>
-InputPortManager::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
+InputPortManager::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
   RefPtr<InputPortManager> manager = new InputPortManager(aWindow);
   manager->Init(aRv);
@@ -66,7 +66,7 @@ InputPortManager::Init(ErrorResult& aRv)
   }
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 InputPortManager::GetParentObject() const
 {
   return mParent;

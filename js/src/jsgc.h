@@ -51,51 +51,6 @@ enum State {
     COMPACT
 };
 
-// Expand the given macro D for each publicly exposed GC reference type.
-#define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
-    D(JS::Symbol*) \
-    D(JSAtom*) \
-    D(JSFunction*) \
-    D(JSObject*) \
-    D(JSScript*) \
-    D(JSString*) \
-    D(JS::Value) \
-    D(jsid)
-
-// Expand the given macro D for each valid GC reference type.
-#define FOR_EACH_GC_POINTER_TYPE(D) \
-    FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
-    D(AccessorShape*) \
-    D(BaseShape*) \
-    D(UnownedBaseShape*) \
-    D(jit::JitCode*) \
-    D(NativeObject*) \
-    D(ArrayObject*) \
-    D(ArgumentsObject*) \
-    D(ArrayBufferObject*) \
-    D(ArrayBufferObjectMaybeShared*) \
-    D(ArrayBufferViewObject*) \
-    D(DebugScopeObject*) \
-    D(GlobalObject*) \
-    D(ModuleObject*) \
-    D(ModuleEnvironmentObject*) \
-    D(ModuleNamespaceObject*) \
-    D(NestedScopeObject*) \
-    D(PlainObject*) \
-    D(SavedFrame*) \
-    D(ScopeObject*) \
-    D(ScriptSourceObject*) \
-    D(SharedArrayBufferObject*) \
-    D(ImportEntryObject*) \
-    D(ExportEntryObject*) \
-    D(LazyScript*) \
-    D(Shape*) \
-    D(JSFlatString*) \
-    D(JSLinearString*) \
-    D(PropertyName*) \
-    D(js::ObjectGroup*) \
-    D(TaggedProto)
-
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
 template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = AllocKind::SCRIPT; };
@@ -639,7 +594,7 @@ class ArenaLists
 
     enum BackgroundFinalizeStateEnum { BFS_DONE, BFS_RUN };
 
-    typedef mozilla::Atomic<BackgroundFinalizeStateEnum, mozilla::ReleaseAcquire>
+    typedef mozilla::Atomic<BackgroundFinalizeStateEnum, mozilla::SequentiallyConsistent>
         BackgroundFinalizeState;
 
     /* The current background finalization state, accessed atomically. */
@@ -1296,20 +1251,23 @@ CheckValueAfterMovingGC(const JS::Value& value)
 
 #endif // JSGC_HASH_TABLE_CHECKS
 
-const int ZealPokeValue = 1;
-const int ZealAllocValue = 2;
-const int ZealFrameGCValue = 3;
-const int ZealVerifierPreValue = 4;
-const int ZealFrameVerifierPreValue = 5;
-const int ZealStackRootingValue = 6;
-const int ZealGenerationalGCValue = 7;
-const int ZealIncrementalRootsThenFinish = 8;
-const int ZealIncrementalMarkAllThenFinish = 9;
-const int ZealIncrementalMultipleSlices = 10;
-const int ZealIncrementalMarkingValidator = 11;
-const int ZealCheckHashTablesOnMinorGC = 13;
-const int ZealCompactValue = 14;
-const int ZealLimit = 14;
+enum class ZealMode {
+    Poke = 1,
+    Alloc = 2,
+    FrameGC = 3,
+    VerifierPre = 4,
+    FrameVerifierPre = 5,
+    StackRooting = 6,
+    GenerationalGC = 7,
+    IncrementalRootsThenFinish = 8,
+    IncrementalMarkAllThenFinish = 9,
+    IncrementalMultipleSlices = 10,
+    IncrementalMarkingValidator = 11,
+    ElementsBarrier = 12,
+    CheckHashTablesOnMinorGC = 13,
+    Compact = 14,
+    Limit = 14
+};
 
 enum VerifierType {
     PreBarrierVerifier

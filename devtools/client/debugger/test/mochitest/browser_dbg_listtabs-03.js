@@ -1,5 +1,7 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
  * Make sure the listTabs request works as specified.
@@ -17,7 +19,7 @@ function test() {
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect(Task.async(function*(aType, aTraits) {
+  gClient.connect().then(Task.async(function*([aType, aTraits]) {
     is(aType, "browser",
       "Root actor should identify itself as a browser.");
     let tab = yield addTab(TAB1_URL);

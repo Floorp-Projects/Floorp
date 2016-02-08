@@ -54,8 +54,8 @@ function resetPassword()
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
   if (promptService && bundle) {
     promptService.alert(window,
-      bundle.getString("resetPasswordConfirmationTitle"), 
-      bundle.getString("resetPasswordConfirmationMessage"));
+                        bundle.getString("resetPasswordConfirmationTitle"),
+                        bundle.getString("resetPasswordConfirmationMessage"));
   }
 
   return true;

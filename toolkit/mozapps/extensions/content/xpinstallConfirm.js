@@ -36,7 +36,7 @@ XPInstallConfirm.init = function()
     var delay_in_milliseconds = prefs.getIntPref("security.dialog_enable_delay");
     _installCountdownLength = Math.round(delay_in_milliseconds / 500);
   } catch (ex) { }
-  
+
   var itemList = document.getElementById("itemList");
 
   let installMap = new WeakMap();
@@ -47,7 +47,7 @@ XPInstallConfirm.init = function()
         window.close();
     }
   };
-  
+
   var numItemsToInstall = args.installs.length;
   for (let install of args.installs) {
     var installItem = document.createElement("installitem");
@@ -72,7 +72,7 @@ XPInstallConfirm.init = function()
     installMap.set(install, installItem);
     install.addListener(installListener);
   }
-  
+
   var introString = bundle.getString("itemWarnIntroSingle");
   if (numItemsToInstall > 4)
     introString = bundle.getFormattedString("itemWarnIntroMultiple", [numItemsToInstall]);
@@ -81,7 +81,7 @@ XPInstallConfirm.init = function()
   while (introNode.hasChildNodes())
     introNode.removeChild(introNode.firstChild);
   introNode.appendChild(textNode);
-  
+
   var okButton = document.documentElement.getButton("accept");
   okButton.focus();
 

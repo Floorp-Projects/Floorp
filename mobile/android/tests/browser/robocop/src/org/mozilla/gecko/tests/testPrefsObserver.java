@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 
 /**
@@ -16,97 +14,68 @@ import org.mozilla.gecko.Actions;
  */
 public class testPrefsObserver extends BaseTest {
     private static final String PREF_TEST_PREF = "robocop.tests.dummy";
-    private static final int PREF_OBSERVE_REQUEST_ID = 0x7357;
-    private static final long PREF_TIMEOUT = 10000;
 
-    private Actions.RepeatedEventExpecter mExpecter;
+    private Actions.PrefWaiter prefWaiter;
+    private boolean prefValue;
 
-    public void setPref(boolean value) throws JSONException {
+    public void setPref(boolean value) {
         mAsserter.dumpLog("Setting pref");
-
-        JSONObject jsonPref = new JSONObject();
-        jsonPref.put("name", PREF_TEST_PREF);
-        jsonPref.put("type", "bool");
-        jsonPref.put("value", value);
-        mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
+        mActions.setPref(PREF_TEST_PREF, value, /* flush */ false);
     }
 
-    public void waitAndCheckPref(boolean value) throws JSONException {
+    public void waitAndCheckPref(boolean value) {
         mAsserter.dumpLog("Waiting to check pref");
 
-        JSONObject data = null;
-        int requestId = -1;
+        mAsserter.isnot(prefWaiter, null, "Check pref waiter is not null");
+        prefWaiter.waitForFinish();
 
-        while (requestId != PREF_OBSERVE_REQUEST_ID) {
-            data = new JSONObject(mExpecter.blockForEventData());
-            if (!mExpecter.eventReceived()) {
-                mAsserter.ok(false, "Checking pref is correct value", "Didn't receive pref");
-                return;
-            }
-            requestId = data.getInt("requestId");
-        }
-
-        JSONObject pref = data.getJSONArray("preferences").getJSONObject(0);
-        mAsserter.is(pref.getString("name"), PREF_TEST_PREF, "Pref name is correct");
-        mAsserter.is(pref.getString("type"), "bool", "Pref type is correct");
-        mAsserter.is(pref.getBoolean("value"), value, "Pref value is correct");
+        mAsserter.is(prefValue, value, "Check correct pref value");
     }
 
-    public void verifyDisconnect() throws JSONException {
+    public void verifyDisconnect() {
         mAsserter.dumpLog("Checking pref observer is removed");
 
-        JSONObject pref = null;
-        int requestId = -1;
-
-        while (requestId != PREF_OBSERVE_REQUEST_ID) {
-            String data = mExpecter.blockForEventDataWithTimeout(PREF_TIMEOUT);
-            if (data == null) {
-                mAsserter.ok(true, "Verifying pref is unobserved", "Didn't get unobserved pref");
-                return;
-            }
-            pref = new JSONObject(data);
-            requestId = pref.getInt("requestId");
-        }
-
-        mAsserter.ok(false, "Received unobserved pref change", "");
+        final boolean newValue = !prefValue;
+        setPreferenceAndWaitForChange(PREF_TEST_PREF, newValue);
+        mAsserter.isnot(prefValue, newValue, "Check pref value did not change");
     }
 
-    public void observePref() throws JSONException {
+    public void observePref() {
         mAsserter.dumpLog("Setting up pref observer");
 
         // Setup the pref observer
-        mExpecter = mActions.expectGeckoEvent("Preferences:Data");
-        mActions.sendPreferencesObserveEvent(PREF_OBSERVE_REQUEST_ID, new String[] { PREF_TEST_PREF });
+        mAsserter.is(prefWaiter, null, "Check pref waiter is null");
+        prefWaiter = mActions.addPrefsObserver(
+                new String[] { PREF_TEST_PREF }, new Actions.PrefHandlerBase() {
+            @Override // Actions.PrefHandlerBase
+            public void prefValue(String pref, boolean value) {
+                mAsserter.is(pref, PREF_TEST_PREF, "Check correct pref name");
+                prefValue = value;
+            }
+        });
     }
 
     public void removePrefObserver() {
         mAsserter.dumpLog("Removing pref observer");
 
-        mActions.sendPreferencesRemoveObserversEvent(PREF_OBSERVE_REQUEST_ID);
+        mActions.removePrefsObserver(prefWaiter);
     }
 
     public void testPrefsObserver() {
         blockForGeckoReady();
 
-        try {
-            setPref(false);
-            observePref();
-            waitAndCheckPref(false);
+        setPref(false);
+        observePref();
+        waitAndCheckPref(false);
 
-            setPref(true);
-            waitAndCheckPref(true);
+        setPref(true);
+        waitAndCheckPref(true);
 
-            removePrefObserver();
-            setPref(false);
-            verifyDisconnect();
-        } catch (Exception ex) {
-            mAsserter.ok(false, "exception in testPrefsObserver", ex.toString());
-        } finally {
-            // Make sure we remove the observer - if it's already removed, this
-            // will do nothing.
-            removePrefObserver();
-        }
-        mExpecter.unregisterListener();
+        removePrefObserver();
+        verifyDisconnect();
+
+        // Removing again should be a no-op.
+        removePrefObserver();
     }
 }
 

@@ -19,7 +19,7 @@ function*(inspector, view) {
   yield selectNode("p", inspector);
 
   info("Checking that the layout-view shows the right value");
-  let paddingElt = view.doc.querySelector(".padding.top > span");
+  let paddingElt = view.doc.querySelector(".layout-padding.layout-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for layout-view changes and modifying the padding");
@@ -44,7 +44,7 @@ function*(inspector, view) {
   yield selectNode("p", inspector);
 
   info("Checking that the layout-view shows the right value");
-  let sizeElt = view.doc.querySelector(".size > span");
+  let sizeElt = view.doc.querySelector(".layout-size > span");
   is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for layout-view changes and modifying the size");
@@ -70,7 +70,7 @@ function*(inspector, view) {
 
   info("Checking that the layout-view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
-  let paddingElt = view.doc.querySelector(".padding.top > span");
+  let paddingElt = view.doc.querySelector(".layout-padding.layout-top > span");
   is(paddingElt.textContent, "20");
 
   info("Listening for layout-view changes and modifying the padding");

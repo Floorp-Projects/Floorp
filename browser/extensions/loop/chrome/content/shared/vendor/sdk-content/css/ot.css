@@ -228,9 +228,6 @@
 .OT_dialog-button.OT_dialog-button-disabled {
   cursor: not-allowed;
 
-  /* IE 8 */
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
-
   opacity: 0.5;
 }
 
@@ -310,6 +307,7 @@
   display: block;
   position: absolute;
   width: 100%;
+  height: 100%;
 
   transform-origin: 0 0;
 }
@@ -791,16 +789,22 @@
 
   background-repeat: no-repeat;
   background-image: url(../images/rtc/audioonly-silhouette.svg);
+  background-size: auto 76%;
 }
 
+.OT_fit-mode-cover .OT_video-element {
+  object-fit: cover;
+}
+
+.OT_fit-mode-contain .OT_video-element {
+  object-fit: contain;
+}
 
 .OT_fit-mode-cover .OT_video-poster {
-  background-size: auto 76%;
   background-position: center bottom;
 }
 
 .OT_fit-mode-contain .OT_video-poster {
-  background-size: contain;
   background-position: center;
 }
 
@@ -887,12 +891,18 @@
 
 .OT_video-disabled {
   background-image: url(../images/rtc/video-disabled.png);
+  background-size: 33px auto;
 }
 
 .OT_video-disabled-warning {
   background-image: url(../images/rtc/video-disabled-warning.png);
+  background-size: 33px auto;
 }
 
 .OT_video-disabled-indicator.OT_active {
   display: block;
+}
+
+.OT_hide-forced {
+  display: none;
 }

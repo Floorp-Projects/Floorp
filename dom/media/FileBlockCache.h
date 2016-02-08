@@ -202,7 +202,7 @@ private:
   // main thread).
   nsCOMPtr<nsIThread> mThread;
   // Queue of pending block indexes that need to be written or moved.
-  //nsAutoTArray<int32_t, 8> mChangeIndexList;
+  //AutoTArray<int32_t, 8> mChangeIndexList;
   Int32Queue mChangeIndexList;
   // True if we've dispatched an event to commit all pending block changes
   // to file on mThread.

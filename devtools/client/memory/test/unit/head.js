@@ -62,42 +62,6 @@ StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached", 
   this.recordingAllocations = false;
 }));
 
-function waitUntilState (store, predicate) {
-  let deferred = promise.defer();
-  let unsubscribe = store.subscribe(check);
-
-  function check () {
-    if (predicate(store.getState())) {
-      unsubscribe();
-      deferred.resolve()
-    }
-  }
-
-  // Fire the check immediately incase the action has already occurred
-  check();
-
-  return deferred.promise;
-}
-
-function waitUntilAction (store, actionType) {
-  let deferred = promise.defer();
-  let unsubscribe = store.subscribe(check);
-  let history = store.history;
-  let index = history.length;
-
-  do_print(`Waiting for action "${actionType}"`);
-  function check () {
-    let action = history[index++];
-    if (action && action.type === actionType) {
-      do_print(`Found action "${actionType}"`);
-      unsubscribe();
-      deferred.resolve(store.getState());
-    }
-  }
-
-  return deferred.promise;
-}
-
 function waitUntilSnapshotState (store, expected) {
   let predicate = () => {
     let snapshots = store.getState().snapshots;

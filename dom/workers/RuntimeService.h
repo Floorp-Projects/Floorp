@@ -17,7 +17,7 @@
 #include "nsTArray.h"
 
 class nsITimer;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -84,7 +84,7 @@ class RuntimeService final : public nsIObserver
   nsTArray<IdleThreadInfo> mIdleThreadArray;
 
   // *Not* protected by mMutex.
-  nsClassHashtable<nsPtrHashKey<nsPIDOMWindow>,
+  nsClassHashtable<nsPtrHashKey<nsPIDOMWindowInner>,
                    nsTArray<WorkerPrivate*> > mWindowMap;
 
   // Only used on the main thread.
@@ -134,19 +134,19 @@ public:
                      WorkerPrivate* aWorkerPrivate);
 
   void
-  CancelWorkersForWindow(nsPIDOMWindow* aWindow);
+  CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
-  FreezeWorkersForWindow(nsPIDOMWindow* aWindow);
+  FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
-  ThawWorkersForWindow(nsPIDOMWindow* aWindow);
+  ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
-  SuspendWorkersForWindow(nsPIDOMWindow* aWindow);
+  SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
-  ResumeWorkersForWindow(nsPIDOMWindow* aWindow);
+  ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   nsresult
   CreateSharedWorker(const GlobalObject& aGlobal,
@@ -266,7 +266,7 @@ private:
   AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
   void
-  GetWorkersForWindow(nsPIDOMWindow* aWindow,
+  GetWorkersForWindow(nsPIDOMWindowInner* aWindow,
                       nsTArray<WorkerPrivate*>& aWorkers);
 
   bool

@@ -85,7 +85,7 @@ union DeviceStorageResponseValue
 sync protocol PDeviceStorageRequest {
     manager PContent;
 child:
-    __delete__(DeviceStorageResponseValue response);
+    async __delete__(DeviceStorageResponseValue response);
 };
 
 } // namespace devicestorage

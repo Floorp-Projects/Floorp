@@ -34,7 +34,7 @@ nsIRootBox::GetRootBox(nsIPresShell* aShell)
   }
 
   if (rootFrame) {
-    rootFrame = rootFrame->GetFirstPrincipalChild();
+    rootFrame = rootFrame->PrincipalChildList().FirstChild();
   }
 
   nsIRootBox* rootBox = do_QueryFrame(rootFrame);

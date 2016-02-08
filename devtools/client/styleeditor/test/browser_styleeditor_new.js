@@ -13,7 +13,7 @@ add_task(function*() {
   let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   let editor = yield createNew(ui, panel.panelWindow);
-  testInitialState(editor);
+  yield testInitialState(editor);
 
   let originalHref = editor.styleSheet.href;
   let waitForPropertyChange = onPropertyChange(editor);
@@ -45,14 +45,14 @@ function createNew(ui, panelWindow) {
   return deferred.promise;
 }
 
-function onPropertyChange(aEditor) {
+function onPropertyChange(editor) {
   let deferred = promise.defer();
 
-  aEditor.styleSheet.on("property-change", function onProp(property) {
+  editor.styleSheet.on("property-change", function onProp(property) {
     // wait for text to be entered fully
-    let text = aEditor.sourceEditor.getText();
+    let text = editor.sourceEditor.getText();
     if (property == "ruleCount" && text == TESTCASE_CSS_SOURCE + "}") {
-      aEditor.styleSheet.off("property-change", onProp);
+      editor.styleSheet.off("property-change", onProp);
       deferred.resolve();
     }
   });
@@ -60,33 +60,33 @@ function onPropertyChange(aEditor) {
   return deferred.promise;
 }
 
-function testInitialState(aEditor) {
+function* testInitialState(editor) {
   info("Testing the initial state of the new editor");
 
-  let summary = aEditor.summary;
+  let summary = editor.summary;
 
-  ok(aEditor.sourceLoaded, "new editor is loaded when attached");
-  ok(aEditor.isNew, "new editor has isNew flag");
+  ok(editor.sourceLoaded, "new editor is loaded when attached");
+  ok(editor.isNew, "new editor has isNew flag");
 
-  ok(aEditor.sourceEditor.hasFocus(), "new editor has focus");
+  ok(editor.sourceEditor.hasFocus(), "new editor has focus");
 
-  summary = aEditor.summary;
+  summary = editor.summary;
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount, 10), 0, "new editor initially shows 0 rules");
 
-  let computedStyle = content.getComputedStyle(content.document.body, null);
-  is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
+  let color = yield getComputedStyleProperty("body", null, "background-color");
+  is(color, "rgb(255, 255, 255)",
      "content's background color is initially white");
 }
 
-function typeInEditor(aEditor, panelWindow) {
+function typeInEditor(editor, panelWindow) {
   let deferred = promise.defer();
 
   waitForFocus(function() {
     for (let c of TESTCASE_CSS_SOURCE) {
       EventUtils.synthesizeKey(c, {}, panelWindow);
     }
-    ok(aEditor.unsaved, "new editor has unsaved flag");
+    ok(editor.unsaved, "new editor has unsaved flag");
 
     deferred.resolve();
   }, panelWindow);
@@ -94,17 +94,17 @@ function typeInEditor(aEditor, panelWindow) {
   return deferred.promise;
 }
 
-function testUpdated(aEditor, originalHref) {
+function testUpdated(editor, originalHref) {
   info("Testing the state of the new editor after editing it");
 
-  is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
+  is(editor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
      "rule bracket has been auto-closed");
 
-  let ruleCount = aEditor.summary.querySelector(".stylesheet-rule-count")
+  let ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
     .textContent;
   is(parseInt(ruleCount, 10), 1,
      "new editor shows 1 rule after modification");
 
-  is(aEditor.styleSheet.href, originalHref,
+  is(editor.styleSheet.href, originalHref,
      "style sheet href did not change");
 }

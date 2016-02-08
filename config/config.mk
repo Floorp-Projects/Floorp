@@ -189,19 +189,12 @@ OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
 # XXX: What does this? Bug 482434 filed for better explanation.
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-ifdef MOZ_DEBUG
-ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
-OS_CFLAGS += -FR
-OS_CXXFLAGS += -FR
-endif
-else # ! MOZ_DEBUG
+ifndef MOZ_DEBUG
 
 # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
 # Used for generating an optimized build with debugging symbols.
 # Used in the Windows nightlies to generate symbols for crash reporting.
 ifdef MOZ_DEBUG_SYMBOLS
-OS_CXXFLAGS += -UDEBUG -DNDEBUG
-OS_CFLAGS += -UDEBUG -DNDEBUG
 ifdef HAVE_64BIT_BUILD
 OS_LDFLAGS += -DEBUG -OPT:REF,ICF
 else
@@ -211,10 +204,8 @@ endif
 
 #
 # Handle DMD in optimized builds.
-# No opt to give sane callstacks.
 #
 ifdef MOZ_DMD
-MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
 ifdef HAVE_64BIT_BUILD
 OS_LDFLAGS = -DEBUG -OPT:REF,ICF
 else
@@ -365,49 +356,6 @@ ifneq (1,$(ALLOW_COMPILER_WARNINGS))
 CXXFLAGS += $(WARNINGS_AS_ERRORS)
 CFLAGS   += $(WARNINGS_AS_ERRORS)
 endif # ALLOW_COMPILER_WARNINGS
-
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-#// Currently, unless USE_STATIC_LIBS is defined, the multithreaded
-#// DLL version of the RTL is used...
-#//
-#//------------------------------------------------------------------------
-ifdef MOZ_ASAN
-# ASAN-instrumented code tries to link against the dynamic CRT, which can't be
-# used in the same link as the static CRT.
-USE_STATIC_LIBS=
-endif # MOZ_ASAN
-
-ifdef USE_STATIC_LIBS
-RTL_FLAGS=-MT          # Statically linked multithreaded RTL
-ifdef MOZ_DEBUG
-ifndef MOZ_NO_DEBUG_RTL
-RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
-endif
-endif # MOZ_DEBUG
-
-else # !USE_STATIC_LIBS
-
-RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
-ifdef MOZ_DEBUG
-ifndef MOZ_NO_DEBUG_RTL
-RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
-endif
-endif # MOZ_DEBUG
-endif # USE_STATIC_LIBS
-endif # WINNT && !GNU_CC
-
-ifeq ($(OS_ARCH),Darwin)
-# Compiling ObjC requires an Apple compiler anyway, so it's ok to set
-# host CMFLAGS here.
-HOST_CMFLAGS += -fobjc-exceptions
-HOST_CMMFLAGS += -fobjc-exceptions
-OS_COMPILE_CMFLAGS += -fobjc-exceptions
-OS_COMPILE_CMMFLAGS += -fobjc-exceptions
-ifeq ($(MOZ_WIDGET_TOOLKIT),uikit)
-OS_COMPILE_CMFLAGS += -fobjc-abi-version=2 -fobjc-legacy-dispatch
-OS_COMPILE_CMMFLAGS += -fobjc-abi-version=2 -fobjc-legacy-dispatch
-endif
-endif
 
 COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS) $(_DEPEND_CFLAGS) $(CFLAGS) $(MOZBUILD_CFLAGS)
 COMPILE_CXXFLAGS = $(if $(DISABLE_STL_WRAPPING),,$(STL_FLAGS)) $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(OS_INCLUDES) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS) $(_DEPEND_CFLAGS) $(CXXFLAGS) $(MOZBUILD_CXXFLAGS)

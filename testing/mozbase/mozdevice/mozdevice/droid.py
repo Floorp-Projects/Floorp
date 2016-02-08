@@ -103,7 +103,7 @@ class DroidMixin(object):
         if extraArgs:
             extras['args'] = " ".join(extraArgs)
 
-        self.launchApplication(appName, ".App", intent, url=url, extras=extras,
+        self.launchApplication(appName, "org.mozilla.gecko.BrowserApp", intent, url=url, extras=extras,
                                wait=wait, failIfRunning=failIfRunning)
 
     def getInstalledApps(self):
@@ -168,7 +168,7 @@ class DroidADB(DeviceManagerADB, DroidMixin):
         # activity is indicated by something like:
         #   mFocusedApp=AppWindowToken{483e6db0 token=HistoryRecord{484dcad8 com.mozilla.SUTAgentAndroid/.SUTAgentAndroid}}
         # or, on other devices:
-        #   FocusedApplication: name='AppWindowToken{41a65340 token=ActivityRecord{418fbd68 org.mozilla.fennec_mozdev/.App}}', dispatchingTimeout=5000.000ms
+        #   FocusedApplication: name='AppWindowToken{41a65340 token=ActivityRecord{418fbd68 org.mozilla.fennec_mozdev/org.mozilla.gecko.BrowserApp}}', dispatchingTimeout=5000.000ms
         # Extract this line, ending in the forward slash:
         m = re.search('mFocusedApp(.+)/', data)
         if not m:

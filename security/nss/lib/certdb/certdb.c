@@ -1344,7 +1344,7 @@ cert_TestHostName(char *cn, const char *hn)
     static int useShellExp = -1;
 
     if (useShellExp < 0) {
-        useShellExp = (NULL != PR_GetEnv("NSS_USE_SHEXP_IN_CERT_NAME"));
+        useShellExp = (NULL != PR_GetEnvSecure("NSS_USE_SHEXP_IN_CERT_NAME"));
     }
     if (useShellExp) {
         /* Backward compatible code, uses Shell Expressions (SHEXP). */

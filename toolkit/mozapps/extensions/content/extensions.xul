@@ -185,6 +185,7 @@
                   command="cmd_restartApp"/>
         </hbox>
         <button id="show-disabled-unsigned-extensions" hidden="true"
+                class="warning"
                 label="&showUnsignedExtensions.button.label;"
                 command="cmd_showUnsignedExtensions"/>
         <toolbarbutton id="header-utils-btn" class="header-button" type="menu"

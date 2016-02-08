@@ -1034,7 +1034,8 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
     }
 
-    if (Preferences::GetBool("dom.forms.inputmode", false)) {
+    if (Preferences::GetBool("dom.forms.inputmode", false) ||
+        nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
       aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
                         context.mHTMLInputInputmode);
     }

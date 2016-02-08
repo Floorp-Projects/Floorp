@@ -21,6 +21,8 @@ namespace js {
 
 class ModuleEnvironmentObject;
 class ModuleObject;
+class StaticScope;
+class StaticModuleScope;
 
 namespace frontend {
 class ParseNode;
@@ -152,9 +154,9 @@ class ModuleNamespaceObject : public ProxyObject
         JS::Value getEnumerateFunction(HandleObject proxy) const;
 
         bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                      MutableHandle<JSPropertyDescriptor> desc) const override;
+                                      MutableHandle<PropertyDescriptor> desc) const override;
         bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                            Handle<JSPropertyDescriptor> desc,
+                            Handle<PropertyDescriptor> desc,
                             ObjectOpResult& result) const override;
         bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
                              AutoIdVector& props) const override;
@@ -225,7 +227,7 @@ class ModuleObject : public NativeObject
 
     static bool isInstance(HandleValue value);
 
-    static ModuleObject* create(ExclusiveContext* cx, HandleObject enclosingStaticScope);
+    static ModuleObject* create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticScope);
     void init(HandleScript script);
     void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
@@ -235,7 +237,7 @@ class ModuleObject : public NativeObject
                               HandleArrayObject starExportEntries);
 
     JSScript* script() const;
-    JSObject* enclosingStaticScope() const;
+    StaticModuleScope* staticScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
     ModuleNamespaceObject* namespace_();

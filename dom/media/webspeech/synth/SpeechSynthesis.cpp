@@ -64,7 +64,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechSynthesis)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechSynthesis)
 
-SpeechSynthesis::SpeechSynthesis(nsPIDOMWindow* aParent)
+SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
   , mHoldQueue(false)
   , mInnerID(aParent->WindowID())
@@ -89,7 +89,7 @@ SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return SpeechSynthesisBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIDOMWindow*
+nsPIDOMWindowInner*
 SpeechSynthesis::GetParentObject() const
 {
   return mParent;
@@ -164,8 +164,7 @@ SpeechSynthesis::AdvanceQueue()
   RefPtr<SpeechSynthesisUtterance> utterance = mSpeechQueue.ElementAt(0);
 
   nsAutoString docLang;
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mParent);
-  nsIDocument* doc = win->GetExtantDoc();
+  nsIDocument* doc = mParent->GetExtantDoc();
 
   if (doc) {
     Element* elm = doc->GetHtmlElement();

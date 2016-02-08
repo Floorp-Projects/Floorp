@@ -3,7 +3,7 @@
 
 /**
  * Tests that JITOptimizations create OptimizationSites, and the underlying
- * OptimizationSites methods work as expected.
+ * hasSuccessfulOutcome/isSuccessfulOutcome work as intended.
  */
 
 function run_test() {
@@ -11,7 +11,9 @@ function run_test() {
 }
 
 add_task(function test() {
-  let { JITOptimizations, OptimizationSite } = require("devtools/client/performance/modules/logic/jit");
+  let {
+    JITOptimizations, hasSuccessfulOutcome, isSuccessfulOutcome, SUCCESSFUL_OUTCOMES
+  } = require("devtools/client/performance/modules/logic/jit");
 
   let rawSites = [];
   rawSites.push(gRawSite2);
@@ -27,21 +29,26 @@ add_task(function test() {
   let [first, second, third] = sites;
 
   /* hasSuccessfulOutcome */
-  equal(first.hasSuccessfulOutcome(), false, "optSite.hasSuccessfulOutcome() returns expected (1)");
-  equal(second.hasSuccessfulOutcome(), true, "optSite.hasSuccessfulOutcome() returns expected (2)");
-  equal(third.hasSuccessfulOutcome(), true, "optSite.hasSuccessfulOutcome() returns expected (3)");
+  equal(hasSuccessfulOutcome(first), false, "hasSuccessfulOutcome() returns expected (1)");
+  equal(hasSuccessfulOutcome(second), true, "hasSuccessfulOutcome() returns expected (2)");
+  equal(hasSuccessfulOutcome(third), true, "hasSuccessfulOutcome() returns expected (3)");
 
-  /* getAttempts */
-  equal(first.getAttempts().length, 2, "optSite.getAttempts() has the correct amount of attempts (1)");
-  equal(second.getAttempts().length, 5, "optSite.getAttempts() has the correct amount of attempts (2)");
-  equal(third.getAttempts().length, 3, "optSite.getAttempts() has the correct amount of attempts (3)");
+  /* .data.attempts */
+  equal(first.data.attempts.length, 2, "optSite.data.attempts has the correct amount of attempts (1)");
+  equal(second.data.attempts.length, 5, "optSite.data.attempts has the correct amount of attempts (2)");
+  equal(third.data.attempts.length, 3, "optSite.data.attempts has the correct amount of attempts (3)");
 
-  /* getIonTypes */
-  equal(first.getIonTypes().length, 1, "optSite.getIonTypes() has the correct amount of IonTypes (1)");
-  equal(second.getIonTypes().length, 2, "optSite.getIonTypes() has the correct amount of IonTypes (2)");
-  equal(third.getIonTypes().length, 1, "optSite.getIonTypes() has the correct amount of IonTypes (3)");
+  /* .data.types */
+  equal(first.data.types.length, 1, "optSite.data.types has the correct amount of IonTypes (1)");
+  equal(second.data.types.length, 2, "optSite.data.types has the correct amount of IonTypes (2)");
+  equal(third.data.types.length, 1, "optSite.data.types has the correct amount of IonTypes (3)");
+
+  /* isSuccessfulOutcome */
+  ok(SUCCESSFUL_OUTCOMES.length, "Have some successful outcomes in SUCCESSFUL_OUTCOMES");
+  SUCCESSFUL_OUTCOMES.forEach(outcome =>
+    ok(isSuccessfulOutcome(outcome),
+      `${outcome} considered a successful outcome via isSuccessfulOutcome()`));
 });
-
 
 var gStringTable = new RecordingUtils.UniqueStrings();
 

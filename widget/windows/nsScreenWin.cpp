@@ -196,3 +196,9 @@ nsScreenWin::GetContentsScaleFactor(double *aContentsScaleFactor)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScreenWin::GetDefaultCSSScaleFactor(double* aScaleFactor)
+{
+  *aScaleFactor = widget::WinUtils::LogToPhysFactor(mScreen);
+  return NS_OK;
+}

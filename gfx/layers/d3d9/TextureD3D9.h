@@ -416,7 +416,6 @@ private:
 
   RefPtr<IDirect3DSurface9> mSurface;
   SurfaceInitMode mInitMode;
-  bool mInitialized;
 };
 
 }

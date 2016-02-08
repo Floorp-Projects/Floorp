@@ -313,7 +313,7 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
     // will be reset when nsRootPresContext computes our true
     // geometry. The plugin window does need to have a good size here, so
     // set the size explicitly to a reasonable guess.
-    nsAutoTArray<nsIWidget::Configuration,1> configurations;
+    AutoTArray<nsIWidget::Configuration,1> configurations;
     nsIWidget::Configuration* configuration = configurations.AppendElement();
     nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
     configuration->mChild = mWidget;
@@ -790,10 +790,8 @@ nsPluginFrame::GetRemoteTabChromeOffset()
 {
   LayoutDeviceIntPoint offset;
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetContent()->OwnerDoc()->GetWindow());
-    if (window) {
-      nsCOMPtr<nsPIDOMWindow> topWindow = window->GetTop();
-      if (topWindow) {
+    if (nsPIDOMWindowOuter* window = GetContent()->OwnerDoc()->GetWindow()) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop()) {
         dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
         if (tc) {
           offset += tc->GetChromeDisplacement();
@@ -1027,10 +1025,9 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
       visibleRegion.MoveBy(-ToReferenceFrame());
 
       f->mNextConfigurationClipRegion.Clear();
-      nsRegionRectIterator iter(visibleRegion);
-      for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
+      for (auto iter = visibleRegion.RectIter(); !iter.Done(); iter.Next()) {
         nsRect rAncestor =
-          nsLayoutUtils::TransformFrameRectToAncestor(f, *r, ReferenceFrame());
+          nsLayoutUtils::TransformFrameRectToAncestor(f, iter.Get(), ReferenceFrame());
         LayoutDeviceIntRect rPixels =
           LayoutDeviceIntRect::FromUnknownRect(rAncestor.ToNearestPixels(appUnitsPerDevPixel)) -
           f->mNextConfigurationBounds.TopLeft();
@@ -1772,9 +1769,7 @@ nsPluginFrame::SetIsDocumentActive(bool aIsActive)
 nsIObjectFrame *
 nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 {
-  nsIFrame* child = aRoot->GetFirstPrincipalChild();
-
-  while (child) {
+  for (nsIFrame* child : aRoot->PrincipalChildList()) {
     nsIObjectFrame* outFrame = do_QueryFrame(child);
     if (outFrame) {
       RefPtr<nsNPAPIPluginInstance> pi;
@@ -1786,7 +1781,6 @@ nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
     outFrame = GetNextObjectFrame(aPresContext, child);
     if (outFrame)
       return outFrame;
-    child = child->GetNextSibling();
   }
 
   return nullptr;

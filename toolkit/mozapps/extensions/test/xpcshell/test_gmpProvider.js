@@ -230,7 +230,7 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
     if (!f.exists()) {
       f.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     }
-  };
+  }
 
   let id = aPluginId.substring(4);
   let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;

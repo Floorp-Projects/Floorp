@@ -355,6 +355,41 @@ struct IsArithmetic
   : IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPoint<T>::value>
 {};
 
+namespace detail {
+
+template<typename T>
+struct IsMemberPointerHelper : FalseType {};
+
+template<typename T, typename U>
+struct IsMemberPointerHelper<T U::*> : TrueType {};
+
+} // namespace detail
+
+/**
+ * IsMemberPointer determines whether a type is pointer to non-static member
+ * object or a pointer to non-static member function.
+ *
+ * mozilla::IsMemberPointer<int(cls::*)>::value is true
+ * mozilla::IsMemberPointer<int*>::value is false
+ */
+template<typename T>
+struct IsMemberPointer
+  : detail::IsMemberPointerHelper<typename RemoveCV<T>::Type>
+{};
+
+/**
+ * IsScalar determines whether a type is a scalar type.
+ *
+ * mozilla::IsScalar<int>::value is true
+ * mozilla::IsScalar<int*>::value is true
+ * mozilla::IsScalar<cls>::value is false
+ */
+template<typename T>
+struct IsScalar
+  : IntegralConstant<bool, IsArithmetic<T>::value || IsEnum<T>::value ||
+                     IsPointer<T>::value || IsMemberPointer<T>::value>
+{};
+
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
@@ -644,18 +679,15 @@ struct IsBaseOf
 
 namespace detail {
 
-// This belongs inside ConvertibleTester, but it's pulled out to
-// work around a bug in the compiler used for hazard builds.
-template <typename To>
-static void ConvertibleTestHelper(To);
-
 template<typename From, typename To>
 struct ConvertibleTester
 {
 private:
-  template<typename From1, typename To1,
-           typename = decltype(ConvertibleTestHelper<To1>(DeclVal<From>()))>
-  static char test(int);
+  template<typename To1>
+  static char test_helper(To1);
+
+  template<typename From1, typename To1>
+  static decltype(test_helper<To1>(DeclVal<From1>())) test(int);
 
   template<typename From1, typename To1>
   static int test(...);

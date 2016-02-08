@@ -182,8 +182,6 @@ function checkCertErrorGeneric(certdb, cert, expectedError, usage,
 }
 
 function checkEVStatus(certDB, cert, usage, isEVExpected) {
-  do_print(`cert o=${cert.organization}`);
-  do_print(`cert issuer o=${cert.issuerOrganization}`);
   let hasEVPolicy = {};
   checkCertErrorGeneric(certDB, cert, PRErrorCodeSuccess, usage, hasEVPolicy);
   Assert.equal(hasEVPolicy.value, isEVExpected,
@@ -498,7 +496,7 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation)
     argArray.push(ocspRespArray[i][1]); // nick;
     argArray.push(ocspRespArray[i][2]); // extranickname
     argArray.push(filename);
-    do_print("arg_array ="+argArray);
+    do_print("argArray = " + argArray);
 
     let process = Cc["@mozilla.org/process/util;1"]
                     .createInstance(Ci.nsIProcess);

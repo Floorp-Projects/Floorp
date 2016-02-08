@@ -20,12 +20,12 @@ class nsMimeTypeArray final : public nsISupports,
                               public nsWrapperCache
 {
 public:
-  explicit nsMimeTypeArray(nsPIDOMWindow* aWindow);
+  explicit nsMimeTypeArray(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)
 
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void Refresh();
@@ -45,7 +45,7 @@ protected:
   void EnsurePluginMimeTypes();
   void Clear();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
   // mMimeTypes contains MIME types handled by plugins or by an OS
   // PreferredApplicationHandler.
@@ -58,13 +58,13 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsMimeType)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsMimeType)
 
-  nsMimeType(nsPIDOMWindow* aWindow,
+  nsMimeType(nsPIDOMWindowInner* aWindow,
              nsPluginElement* aPluginElement,
              const nsAString& aType,
              const nsAString& aDescription,
              const nsAString& aExtension);
-  nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aMimeType);
-  nsPIDOMWindow* GetParentObject() const;
+  nsMimeType(nsPIDOMWindowInner* aWindow, const nsAString& aMimeType);
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   const nsString& Type() const
@@ -81,7 +81,7 @@ public:
 protected:
   virtual ~nsMimeType();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
   // Strong reference to the active plugin, if any. Note that this
   // creates an explicit reference cycle through the plugin element's

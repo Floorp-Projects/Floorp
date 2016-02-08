@@ -5,7 +5,6 @@
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  runSafe,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> PageAction]
@@ -223,16 +222,17 @@ extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
         PageAction.for(extension).setProperty(tab, "title", details.title || null);
       },
 
-      getTitle(details, callback) {
+      getTitle(details) {
         let tab = TabManager.getTab(details.tabId);
         let title = PageAction.for(extension).getProperty(tab, "title");
-        runSafe(context, callback, title);
+        return Promise.resolve(title);
       },
 
-      setIcon(details, callback) {
+      setIcon(details) {
         let tab = TabManager.getTab(details.tabId);
         let icon = IconDetails.normalize(details, extension, context);
         PageAction.for(extension).setProperty(tab, "icon", icon);
+        return Promise.resolve();
       },
 
       setPopup(details) {
@@ -246,10 +246,10 @@ extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
         PageAction.for(extension).setProperty(tab, "popup", url);
       },
 
-      getPopup(details, callback) {
+      getPopup(details) {
         let tab = TabManager.getTab(details.tabId);
         let popup = PageAction.for(extension).getProperty(tab, "popup");
-        runSafe(context, callback, popup);
+        return Promise.resolve(popup);
       },
     },
   };

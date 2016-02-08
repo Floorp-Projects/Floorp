@@ -127,7 +127,7 @@ void Invalidate(TypeZone& types, FreeOp* fop,
                 bool cancelOffThread = true);
 void Invalidate(JSContext* cx, const RecompileInfoVector& invalid, bool resetUses = true,
                 bool cancelOffThread = true);
-bool Invalidate(JSContext* cx, JSScript* script, bool resetUses = true,
+void Invalidate(JSContext* cx, JSScript* script, bool resetUses = true,
                 bool cancelOffThread = true);
 
 void ToggleBarriers(JS::Zone* zone, bool needs);

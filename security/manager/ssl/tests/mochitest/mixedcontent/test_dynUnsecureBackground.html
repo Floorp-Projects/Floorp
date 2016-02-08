@@ -20,8 +20,7 @@
     document.body.background =
       "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/moonsurface.jpg";
 
-    waitForSecurityState("broken", function() 
-    {
+    waitForSecurityState("broken", function () {
       isSecurityState("broken", "document.body.background='http://...' changed to broken");
       finish();
     });

@@ -547,7 +547,7 @@ nsHTMLEditor::BeginningOfDocument()
   // Find first editable thingy
   bool done = false;
   nsCOMPtr<nsINode> curNode = rootElement.get(), selNode;
-  int32_t curOffset = 0, selOffset;
+  int32_t curOffset = 0, selOffset = 0;
   while (!done) {
     nsWSRunObject wsObj(this, curNode, curOffset);
     int32_t visOffset = 0;
@@ -5009,8 +5009,8 @@ nsHTMLEditor::IsActiveInDOMWindow()
     return true;
   }
 
-  nsPIDOMWindow* ourWindow = doc->GetWindow();
-  nsCOMPtr<nsPIDOMWindow> win;
+  nsPIDOMWindowOuter* ourWindow = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win;
   nsIContent* content =
     nsFocusManager::GetFocusedDescendant(ourWindow, false,
                                          getter_AddRefs(win));
@@ -5162,13 +5162,13 @@ nsHTMLEditor::OurWindowHasFocus()
   NS_ENSURE_TRUE(mDocWeak, false);
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, false);
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
+  nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
   fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
   if (!focusedWindow) {
     return false;
   }
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsCOMPtr<nsIDOMWindow> ourWindow = do_QueryInterface(doc->GetWindow());
+  nsPIDOMWindowOuter* ourWindow = doc->GetWindow();
   return ourWindow == focusedWindow;
 }
 

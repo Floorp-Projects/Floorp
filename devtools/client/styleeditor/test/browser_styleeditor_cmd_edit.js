@@ -5,6 +5,12 @@
 
 // Tests that the edit command works
 
+// Import the GCLI test helper
+/* import-globals-from ../../commandline/test/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
+  this);
+
 const TEST_URI = "http://example.com/browser/devtools/client/styleeditor/" +
                  "test/browser_styleeditor_cmd_edit.html";
 
@@ -82,9 +88,9 @@ add_task(function* () {
           resource: {
             arg: " page1",
             status: "INCOMPLETE",
-            message: 'Value required for \'resource\'.'
+            message: "Value required for \'resource\'."
           },
-          line: { status: 'VALID' },
+          line: { status: "VALID" },
         }
       },
     },

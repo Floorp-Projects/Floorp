@@ -12,7 +12,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   startupManager();
-  
+
   installAllFiles([do_get_addon("test_chromemanifest_1"),
                    do_get_addon("test_chromemanifest_2"),
                    do_get_addon("test_chromemanifest_3"),

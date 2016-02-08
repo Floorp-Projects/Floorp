@@ -6,12 +6,14 @@
 </head>
 <body>
 <script type="text/javascript">
+"use strict";
+
 var sw = navigator.serviceWorker.register("empty-sw.js");
 sw.then(
-  function (registration) {
+  function() {
     dump("SW registered\n");
   },
-  function (e) {
+  function(e) {
     dump("SW not registered: " + e + "\n");
   }
 );

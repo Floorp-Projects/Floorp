@@ -11,10 +11,10 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
 #include "nsIWidget.h"
-#include "nsPIDOMWindow.h"
 #include "nsRect.h"
+
+class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
@@ -54,7 +54,7 @@ public:
    * Starting at the docshell item for the passed in DOM window this looks up
    * the docshell tree until it finds a docshell item that has a widget.
    */
-  static already_AddRefed<nsIWidget> DOMWindowToWidget(nsIDOMWindow *aDOMWindow);
+  static already_AddRefed<nsIWidget> DOMWindowToWidget(nsPIDOMWindowOuter* aDOMWindow);
 
   /**
    * Compute our keyCode value (NS_VK_*) from an ASCII character.

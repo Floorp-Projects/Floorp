@@ -358,7 +358,7 @@ MultipartBlobImpl::InitializeChromeFile(Blob& aBlob,
 }
 
 void
-MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
+MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                                         nsIFile* aFile,
                                         const ChromeFilePropertyBag& aBag,
                                         bool aIsFromNsIFile,
@@ -430,7 +430,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
 }
 
 void
-MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
+MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                                         const nsAString& aData,
                                         const ChromeFilePropertyBag& aBag,
                                         ErrorResult& aRv)

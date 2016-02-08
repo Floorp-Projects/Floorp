@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1245681
+-->
+<head>
+  <title>Test for Bug 1245681</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1245681">Mozilla Bug 1245681</a>
+<p id="display"></p>
+<div id="content">
+  <iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Ci = SpecialPowers.Ci;
+var styleSheets = null;
+
+function runTest() {
+
+  var editframe = window.frames[0];
+  var editdoc = editframe.document;
+  editdoc.designMode = 'on';
+  var editor = SpecialPowers.wrap(editframe)
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIEditingSession)
+                            .getEditorForWindow(editframe);
+
+  styleSheets = editor.QueryInterface(Ci.nsIEditorStyleSheets);
+
+  // test 1: try to access chrome:// url that is accessible to content
+  try
+  {
+    styleSheets.addOverrideStyleSheet("chrome://browser/content/pageinfo/pageInfo.css");
+    ok(true, "should be allowed to access chrome://*.css if contentaccessible");
+  }
+  catch (ex) {
+    ok(false, "should be allowed to access chrome://*.css if contentaccessible");
+  }
+
+  // test 2: try to access chrome:// url that is *not* accessible to content
+  // please note that addOverrideStyleSheet() is triggered by the system,
+  // so the load should also *always* succeed.
+  try
+  {
+    styleSheets.addOverrideStyleSheet("chrome://mozapps/skin/aboutNetworking.css");
+    ok(true, "should be allowed to access chrome://*.css even if *not* contentaccessible");
+  }
+  catch (ex) {
+    ok(false, "should be allowed to access chrome://*.css even if *not* contentaccessible");
+  }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+</script>
+</pre>
+</body>
+</html>

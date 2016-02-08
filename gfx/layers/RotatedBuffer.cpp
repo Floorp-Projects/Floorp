@@ -759,20 +759,18 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
       // requested.
       return nullptr;
     }
-    nsIntRegionRectIterator iter(*drawPtr);
-    const IntRect *iterRect;
-    while ((iterRect = iter.Next())) {
-      mDTBuffer->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+    for (auto iter = drawPtr->RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      mDTBuffer->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
                           ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-      mDTBufferOnWhite->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+      mDTBufferOnWhite->FillRect(Rect(rect.x, rect.y, rect.width, rect.height),
                                  ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
   } else if (aPaintState.mContentType == gfxContentType::COLOR_ALPHA && HaveBuffer()) {
     // HaveBuffer() => we have an existing buffer that we must clear
-    nsIntRegionRectIterator iter(*drawPtr);
-    const IntRect *iterRect;
-    while ((iterRect = iter.Next())) {
-      result->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
+    for (auto iter = drawPtr->RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      result->ClearRect(Rect(rect.x, rect.y, rect.width, rect.height));
     }
   }
 

@@ -81,7 +81,7 @@ public:
 
   // Inserted child content gets its frames parented by our child block
   virtual nsContainerFrame* GetContentInsertionFrame() override {
-    return GetFirstPrincipalChild()->GetContentInsertionFrame();
+    return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override

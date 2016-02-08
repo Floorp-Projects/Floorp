@@ -535,10 +535,10 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
   nsAutoString convertedString;
-  nsAutoTArray<bool,50> charsToMergeArray;
-  nsAutoTArray<bool,50> deletedCharsArray;
-  nsAutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
-  nsAutoTArray<uint8_t,50> canBreakBeforeArray;
+  AutoTArray<bool,50> charsToMergeArray;
+  AutoTArray<bool,50> deletedCharsArray;
+  AutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
+  AutoTArray<uint8_t,50> canBreakBeforeArray;
   bool mergeNeeded = false;
 
   bool singleCharMI =

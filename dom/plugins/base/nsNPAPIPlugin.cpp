@@ -533,7 +533,7 @@ GetChannelFromNPP(NPP npp)
   nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
   if (!doc)
     return nullptr;
-  nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> domwindow = doc->GetWindow();
   nsCOMPtr<nsIChannel> channel;
   if (domwindow) {
     nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
@@ -1058,11 +1058,11 @@ _getwindowobject(NPP npp)
   // we don't know what the plugin will do with it).
   nsIDocument* doc = GetDocumentFromNPP(npp);
   NS_ENSURE_TRUE(doc, nullptr);
-  nsCOMPtr<nsPIDOMWindow> outer = do_QueryInterface(doc->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> outer = doc->GetWindow();
   NS_ENSURE_TRUE(outer, nullptr);
 
   AutoJSContext cx;
-  JS::Rooted<JSObject*> global(cx, static_cast<nsGlobalWindow*>(outer.get())->GetGlobalJSObject());
+  JS::Rooted<JSObject*> global(cx, nsGlobalWindow::Cast(outer)->GetGlobalJSObject());
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, global);
 }
 
@@ -1350,7 +1350,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   nsIDocument *doc = GetDocumentFromNPP(npp);
   NS_ENSURE_TRUE(doc, false);
 
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(doc->GetInnerWindow());
+  nsGlobalWindow* win = nsGlobalWindow::Cast(doc->GetInnerWindow());
   if (NS_WARN_IF(!win || !win->FastGetGlobalJSObject())) {
     return false;
   }
@@ -1693,7 +1693,7 @@ _releasevariantvalue(NPVariant* variant)
         } else {
           void *p = (void *)s->UTF8Characters;
           DWORD nheaps = 0;
-          nsAutoTArray<HANDLE, 50> heaps;
+          AutoTArray<HANDLE, 50> heaps;
           nheaps = GetProcessHeaps(0, heaps.Elements());
           heaps.AppendElements(nheaps);
           GetProcessHeaps(nheaps, heaps.Elements());

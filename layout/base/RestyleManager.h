@@ -917,7 +917,7 @@ class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher final
 private:
   TreeMatchContext& mTreeMatchContext;
   nsPresContext* const mPresContext;
-  nsAutoTArray<mozilla::dom::Element*, 4> mAncestors;
+  AutoTArray<mozilla::dom::Element*, 4> mAncestors;
 };
 
 } // namespace mozilla

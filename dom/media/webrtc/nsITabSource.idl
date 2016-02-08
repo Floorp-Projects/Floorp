@@ -4,14 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIDOMWindow.idl"
 
-[scriptable,uuid(b3a7a402-2760-4583-b4a3-af095fe00c84)]
+interface mozIDOMWindowProxy;
+
+[scriptable,uuid(0feba7f2-800d-4fe5-b28d-e3f17a7a7322)]
 interface nsITabSource : nsISupports
 {
-  nsIDOMWindow getTabToStream();
-  void notifyStreamStart(in nsIDOMWindow window);
-  void notifyStreamStop(in nsIDOMWindow window);
+  mozIDOMWindowProxy getTabToStream();
+  void notifyStreamStart(in mozIDOMWindowProxy window);
+  void notifyStreamStop(in mozIDOMWindowProxy window);
 };
 
 %{C++

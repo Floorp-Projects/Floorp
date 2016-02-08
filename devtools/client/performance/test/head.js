@@ -45,7 +45,7 @@ const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
 const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
 const INVERT_FLAME_PREF = "devtools.performance.ui.invert-flame-graph";
 const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
-const JIT_PREF = "devtools.performance.ui.enable-jit-optimizations";
+const JIT_PREF = "devtools.performance.ui.show-jit-optimizations";
 const EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 
 // Keep in sync with FRAMERATE_GRAPH_HIGH_RES_INTERVAL in views/overview.js
@@ -66,7 +66,7 @@ var DEFAULT_PREFS = [
   "devtools.performance.ui.enable-memory",
   "devtools.performance.ui.enable-allocations",
   "devtools.performance.ui.enable-framerate",
-  "devtools.performance.ui.enable-jit-optimizations",
+  "devtools.performance.ui.show-jit-optimizations",
   "devtools.performance.memory.sample-probability",
   "devtools.performance.memory.max-log-length",
   "devtools.performance.profiler.buffer-size",
@@ -204,6 +204,37 @@ function once(aTarget, aEventName, aUseCapture = false, spread = false) {
  */
 function onceSpread(aTarget, aEventName, aUseCapture) {
   return once(aTarget, aEventName, aUseCapture, true);
+}
+
+/**
+ * Returns a promise that will resolve when the window triggers a MozAfterPaint
+ * event. This ensures the current tab has been painted.
+ * @return {Promise}
+ */
+function waitForMozAfterPaint() {
+  return new Promise(resolve => {
+    let onMozAfterPaint = function() {
+      window.removeEventListener("MozAfterPaint", onMozAfterPaint);
+      resolve();
+    };
+    window.addEventListener("MozAfterPaint", onMozAfterPaint);
+  });
+}
+
+/**
+ * Appends the provided element to the provided parent node. If run in e10s
+ * mode, will also wait for MozAfterPaint to make sure the tab is rendered.
+ * Should be reviewed if Bug 1240509 lands
+ */
+function* appendAndWaitForPaint(parent, element) {
+  let isE10s = Services.appinfo.browserTabsRemoteAutostart;
+  if (isE10s) {
+    let onMozAfterPaint = waitForMozAfterPaint();
+    parent.appendChild(element);
+    return onMozAfterPaint;
+  }
+
+  parent.appendChild(element);
 }
 
 function test () {

@@ -68,7 +68,10 @@ PasswordEngine.prototype = {
         // record success.
         Svc.Prefs.set("deletePwdFxA", true);
         Svc.Prefs.reset("deletePwd"); // The old prefname we previously used.
-      } catch (ex if !Async.isShutdownException(ex)) {
+      } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
         this._log.debug("Password deletes failed", ex);
       }
     }

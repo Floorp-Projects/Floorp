@@ -60,7 +60,7 @@ function test_wrappers() {
 }
 
 var TESTS = [
-// XXX fix me 
+// XXX fix me
 //    toggle_debug,
     test_log,
     test_reportError,

@@ -50,7 +50,7 @@ UDPSocket::Constructor(const GlobalObject& aGlobal,
                        const UDPOptions& aOptions,
                        ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -112,7 +112,7 @@ UDPSocket::Constructor(const GlobalObject& aGlobal,
   return socket.forget();
 }
 
-UDPSocket::UDPSocket(nsPIDOMWindow* aOwner,
+UDPSocket::UDPSocket(nsPIDOMWindowInner* aOwner,
                      const nsCString& aRemoteAddress,
                      const Nullable<uint16_t>& aRemotePort)
   : DOMEventTargetHelper(aOwner)

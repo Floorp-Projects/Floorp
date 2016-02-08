@@ -24,10 +24,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   static already_AddRefed<BluetoothDiscoveryHandle>
-    Create(nsPIDOMWindow* aWindow);
+    Create(nsPIDOMWindowInner* aWindow);
 
   static already_AddRefed<BluetoothDiscoveryHandle>
-    Create(nsPIDOMWindow* aWindow,
+    Create(nsPIDOMWindowInner* aWindow,
            const nsTArray<nsString>& aServiceUuids,
            const nsAString& aLeScanUuid);
 
@@ -48,9 +48,9 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow);
+  BluetoothDiscoveryHandle(nsPIDOMWindowInner* aWindow);
 
-  BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow,
+  BluetoothDiscoveryHandle(nsPIDOMWindowInner* aWindow,
                            const nsTArray<nsString>& aServiceUuids,
                            const nsAString& aLeScanUuid);
 

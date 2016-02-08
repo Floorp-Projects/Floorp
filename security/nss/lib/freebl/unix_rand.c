@@ -17,6 +17,7 @@
 #include "prerror.h"
 #include "prthread.h"
 #include "prprf.h"
+#include "prenv.h"
 
 size_t RNG_FileUpdate(const char *fileName, size_t limit);
 
@@ -888,9 +889,9 @@ void RNG_SystemInfoForRNG(void)
     bytes = RNG_FileUpdate("/dev/urandom", SYSTEM_RNG_SEED_COUNT);
 
     /* If the user points us to a random file, pass it through the rng */
-    randfile = getenv("NSRANDFILE");
+    randfile = PR_GetEnvSecure("NSRANDFILE");
     if ( ( randfile != NULL ) && ( randfile[0] != '\0') ) {
-	char *randCountString = getenv("NSRANDCOUNT");
+	char *randCountString = PR_GetEnvSecure("NSRANDCOUNT");
 	int randCount = randCountString ? atoi(randCountString) : 0;
 	if (randCount != 0) {
 	    RNG_FileUpdate(randfile, randCount);
@@ -1075,7 +1076,7 @@ int ReadOneFile(int fileToRead)
     int i, error = -1;
 
     if (fd == NULL) {
-	dir = getenv("HOME");
+	dir = PR_GetEnvSecure("HOME");
 	if (dir) {
 	    fd = opendir(dir);
 	}

@@ -46,7 +46,7 @@ add_test(function test_immediate_search() {
   registerAutoCompleteSearch(delayedSearch);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
 
   let input = new AutoCompleteInputBase([delayedSearch.name,
                                          immediateSearch.name]);
@@ -91,7 +91,7 @@ add_test(function test_immediate_search_notimeout() {
   registerAutoCompleteSearch(delayedSearch);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
 
   let input = new AutoCompleteInputBase([delayedSearch.name,
                                          immediateSearch.name]);
@@ -132,7 +132,7 @@ add_test(function test_delayed_search_notimeout() {
   registerAutoCompleteSearch(delayedSearch);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
 
   let input = new AutoCompleteInputBase([delayedSearch.name]);
   input.completeDefaultIndex = true;

@@ -9,6 +9,7 @@
 
 #include "nsTArray.h"
 #include "nsGkAtoms.h"
+#include "nsCSSAnonBoxes.h"
 
 #define RTC_ARRAY_SIZE 1
 
@@ -77,6 +78,15 @@ public:
     return IsRubyContentBox(type) || IsRubyContainerBox(type);
   }
 
+  static inline bool IsRubyPseudo(nsIAtom* aPseudo)
+  {
+    return aPseudo == nsCSSAnonBoxes::ruby ||
+           aPseudo == nsCSSAnonBoxes::rubyBase ||
+           aPseudo == nsCSSAnonBoxes::rubyText ||
+           aPseudo == nsCSSAnonBoxes::rubyBaseContainer ||
+           aPseudo == nsCSSAnonBoxes::rubyTextContainer;
+  }
+
   static void SetReservedISize(nsIFrame* aFrame, nscoord aISize);
   static void ClearReservedISize(nsIFrame* aFrame);
   static nscoord GetReservedISize(nsIFrame* aFrame);
@@ -87,7 +97,7 @@ public:
  * of the given ruby base container.
  */
 class MOZ_STACK_CLASS AutoRubyTextContainerArray final
-  : public nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
+  : public AutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
 {
 public:
   explicit AutoRubyTextContainerArray(nsRubyBaseContainerFrame* aBaseContainer);
@@ -121,9 +131,57 @@ private:
 struct MOZ_STACK_CLASS RubyColumn
 {
   nsRubyBaseFrame* mBaseFrame;
-  nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
+  AutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
   bool mIsIntraLevelWhitespace;
+
   RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
+
+  // Helper class to support iteration across the frames within a single
+  // RubyColumn (the column's ruby base and its annotations).
+  class MOZ_STACK_CLASS Iterator
+  {
+  public:
+    nsIFrame* operator*() const;
+
+    Iterator& operator++() { ++mIndex; SkipUntilExistingFrame(); return *this; }
+    Iterator operator++(int) { auto ret = *this; ++*this; return ret; }
+
+    friend bool operator==(const Iterator& aIter1, const Iterator& aIter2)
+    {
+      MOZ_ASSERT(&aIter1.mColumn == &aIter2.mColumn,
+                 "Should only compare iterators of the same ruby column");
+      return aIter1.mIndex == aIter2.mIndex;
+    }
+    friend bool operator!=(const Iterator& aIter1, const Iterator& aIter2)
+    {
+      return !(aIter1 == aIter2);
+    }
+
+  private:
+    Iterator(const RubyColumn& aColumn, int32_t aIndex)
+      : mColumn(aColumn)
+      , mIndex(aIndex)
+    {
+      MOZ_ASSERT(aIndex == -1 ||
+                 (aIndex >= 0 &&
+                  aIndex <= int32_t(aColumn.mTextFrames.Length())));
+      SkipUntilExistingFrame();
+    }
+    friend struct RubyColumn; // for the constructor
+
+    void SkipUntilExistingFrame();
+
+    const RubyColumn& mColumn;
+    // -1 means the ruby base frame,
+    // non-negative means the index of ruby text frame
+    // a value of mTextFrames.Length() means we're done iterating
+    int32_t mIndex = -1;
+  };
+
+  Iterator begin() const { return Iterator(*this, -1); }
+  Iterator end() const { return Iterator(*this, mTextFrames.Length()); }
+  Iterator cbegin() const { return begin(); }
+  Iterator cend() const { return end(); }
 };
 
 /**
@@ -146,7 +204,7 @@ private:
   // Frames in this array are NOT necessary part of the current column.
   // When in doubt, use GetFrameAtLevel to access it.
   // See GetFrameAtLevel() and Next() for more info.
-  nsAutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
+  AutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
   // Whether we are on a column for intra-level whitespaces
   bool mAtIntraLevelWhitespace;
 };

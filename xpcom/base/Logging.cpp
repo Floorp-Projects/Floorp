@@ -86,7 +86,9 @@ public:
     : mModulesLock("logmodules")
     , mModules(kInitialModuleCount)
     , mOutFile(nullptr)
+    , mMainThread(PR_GetCurrentThread())
     , mAddTimestamp(false)
+    , mIsSync(false)
   {
   }
 
@@ -103,20 +105,24 @@ public:
   {
     bool shouldAppend = false;
     bool addTimestamp = false;
+    bool isSync = false;
     const char* modules = PR_GetEnv("NSPR_LOG_MODULES");
     NSPRLogModulesParser(modules,
-        [&shouldAppend, &addTimestamp]
+        [&shouldAppend, &addTimestamp, &isSync]
             (const char* aName, LogLevel aLevel) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
           } else if (strcmp(aName, "timestamp") == 0) {
             addTimestamp = true;
+          } else if (strcmp(aName, "sync") == 0) {
+            isSync = true;
           } else {
             LogModule::Get(aName)->SetLevel(aLevel);
           }
     });
 
     mAddTimestamp = addTimestamp;
+    mIsSync = isSync;
 
     const char* logFile = PR_GetEnv("NSPR_LOG_FILE");
     if (logFile && logFile[0]) {
@@ -171,21 +177,36 @@ public:
     //
     // Additionally we prefix the output with the abbreviated log level
     // and the module name.
+    PRThread *currentThread = PR_GetCurrentThread();
+    const char *currentThreadName = (mMainThread == currentThread)
+      ? "Main Thread"
+      : PR_GetThreadName(currentThread);
+
+    char noNameThread[40];
+    if (!currentThreadName) {
+      snprintf_literal(noNameThread, "Unnamed thread %p", currentThread);
+      currentThreadName = noNameThread;
+    }
+
     if (!mAddTimestamp) {
       fprintf_stderr(out,
-                     "[%p]: %s/%s %s%s",
-                     PR_GetCurrentThread(), ToLogStr(aLevel),
+                     "[%s]: %s/%s %s%s",
+                     currentThreadName, ToLogStr(aLevel),
                      aName, buffToWrite, newline);
     } else {
       PRExplodedTime now;
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
       fprintf_stderr(
           out,
-          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%p]: %s/%s %s%s",
+          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s]: %s/%s %s%s",
           now.tm_year, now.tm_month + 1, now.tm_mday,
           now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
-          PR_GetCurrentThread(), ToLogStr(aLevel),
+          currentThreadName, ToLogStr(aLevel),
           aName, buffToWrite, newline);
+    }
+
+    if (mIsSync) {
+      fflush(out);
     }
 
     if (buffToWrite != buff) {
@@ -197,7 +218,9 @@ private:
   OffTheBooksMutex mModulesLock;
   nsClassHashtable<nsCharPtrHashKey, LogModule> mModules;
   ScopedCloseFile mOutFile;
+  PRThread *mMainThread;
   bool mAddTimestamp;
+  bool mIsSync;
 };
 
 StaticAutoPtr<LogModuleManager> sLogModuleManager;

@@ -34,7 +34,6 @@
 
 #include "nsIGeolocationProvider.h"
 #include "nsIContentPermissionPrompt.h"
-#include "nsIDOMWindow.h"
 #include "mozilla/Attributes.h"
 
 class nsGeolocationService;
@@ -145,9 +144,9 @@ public:
 
   Geolocation();
 
-  nsresult Init(nsIDOMWindow* contentDom=nullptr);
+  nsresult Init(nsPIDOMWindowInner* aContentDom = nullptr);
 
-  nsIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext *aCtx, JS::Handle<JSObject*> aGivenProto) override;
 
   int32_t WatchPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);

@@ -26,10 +26,14 @@ public:
                           const Optional<nsAString>& pcIdFilter,
                           ErrorResult& aRv);
 
+  static void ClearAllStats(const GlobalObject& aGlobal);
+
   static void GetLogging(const GlobalObject& aGlobal,
                          const nsAString& aPattern,
                          WebrtcGlobalLoggingCallback& aLoggingCallback,
                          ErrorResult& aRv);
+
+  static void ClearLogging(const GlobalObject& aGlobal);
 
   static void SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel);
   static int32_t DebugLevel(const GlobalObject& aGlobal);

@@ -70,7 +70,7 @@ GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
     }
 
     BOOL exists;
-    nsAutoTArray<wchar_t,32> faceName;
+    AutoTArray<wchar_t,32> faceName;
     UINT32 englishIdx = 0;
     hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
     if (FAILED(hr)) {
@@ -114,7 +114,7 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
         return E_FAIL;
     }
 
-    nsAutoTArray<wchar_t,32> faceName;
+    AutoTArray<wchar_t,32> faceName;
     UINT32 englishIdx = 0;
     hr = infostrings->FindLocaleName(L"en-us", &englishIdx, &exists);
     if (FAILED(hr)) {
@@ -304,7 +304,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
             idx = 0;
         }
     }
-    AutoFallibleTArray<WCHAR, 32> famName;
+    AutoTArray<WCHAR, 32> famName;
     UINT32 length;
     
     hr = names->GetStringLength(idx, &length);
@@ -398,7 +398,7 @@ UsingArabicOrHebrewScriptSystemLocale()
 
 nsresult
 gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
-                                  FallibleTArray<uint8_t> &aBuffer)
+                                  nsTArray<uint8_t> &aBuffer)
 {
     gfxDWriteFontList *pFontList = gfxDWriteFontList::PlatformFontList();
 
@@ -633,7 +633,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         if (FAILED(mFontFace->GetFiles(&numberOfFiles, nullptr))) {
             return NS_ERROR_FAILURE;
         }
-        nsAutoTArray<IDWriteFontFile*,1> files;
+        AutoTArray<IDWriteFontFile*,1> files;
         files.AppendElements(numberOfFiles);
         if (FAILED(mFontFace->GetFiles(&numberOfFiles, files.Elements()))) {
             return NS_ERROR_FAILURE;
@@ -679,7 +679,7 @@ gfxDWriteFontEntry::IsCJKFont()
     mIsCJK = false;
 
     const uint32_t kOS2Tag = TRUETYPE_TAG('O','S','/','2');
-    AutoFallibleTArray<uint8_t,128> buffer;
+    AutoTArray<uint8_t, 128> buffer;
     if (CopyFontTable(kOS2Tag, buffer) != NS_OK) {
         return mIsCJK;
     }
@@ -1065,7 +1065,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
             englishIdx = 0;
         }
 
-        AutoFallibleTArray<WCHAR, 32> enName;
+        AutoTArray<WCHAR, 32> enName;
         UINT32 length;
 
         hr = names->GetStringLength(englishIdx, &length);
@@ -1110,7 +1110,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
 
         for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
             UINT32 nameLen;
-            AutoFallibleTArray<WCHAR, 32> localizedName;
+            AutoTArray<WCHAR, 32> localizedName;
 
             // only add other names
             if (nameIndex == englishIdx) {
@@ -1331,7 +1331,7 @@ static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
         index = 0;
     }
 
-    AutoFallibleTArray<WCHAR, 32> name;
+    AutoTArray<WCHAR, 32> name;
     UINT32 length;
 
     hr = familyNames->GetStringLength(index, &length);
@@ -1517,7 +1517,7 @@ void
 DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 {
     // lookup the family
-    nsAutoTArray<wchar_t, 32> famName;
+    AutoTArray<wchar_t, 32> famName;
 
     uint32_t len = aFamilyName.Length();
     if(!famName.SetLength(len + 1, fallible)) {

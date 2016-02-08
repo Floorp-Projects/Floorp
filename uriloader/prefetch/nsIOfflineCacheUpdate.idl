@@ -5,8 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindow;
 interface nsIURI;
-interface nsIDOMWindow;
 interface nsIDOMNode;
 interface nsIDOMDocument;
 interface nsIOfflineCacheUpdate;
@@ -191,7 +191,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(39aee0e8-9478-475d-8b62-7535293cae08)]
+[scriptable, uuid(44971e74-37e4-4140-8677-a4cf213a3f4b)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -220,7 +220,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     nsIOfflineCacheUpdate scheduleUpdate(in nsIURI aManifestURI,
                                          in nsIURI aDocumentURI,
                                          in nsIPrincipal aLoadingPrincipal,
-                                         in nsIDOMWindow aWindow);
+                                         in mozIDOMWindow aWindow);
 
     /**
      * Schedule a cache update for a given offline manifest using app cache
@@ -288,5 +288,5 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      * In the single process model calls directly on permission manager.
      * In the multi process model dispatches to the parent process.
      */
-    void allowOfflineApp(in nsIDOMWindow aWindow, in nsIPrincipal aPrincipal);
+    void allowOfflineApp(in nsIPrincipal aPrincipal);
 };

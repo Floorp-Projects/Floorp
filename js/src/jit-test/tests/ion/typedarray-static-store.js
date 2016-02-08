@@ -7,6 +7,6 @@ store();
 store();
 store();
 
-neuter(buffer, "change-data");
+detachArrayBuffer(buffer, "change-data");
 
 store();

@@ -6,8 +6,6 @@ from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import ERROR, FATAL
 from mozharness.mozilla.proxxy import Proxxy
 
-from mozharness.lib.python.authentication import get_credentials_path
-
 TooltoolErrorList = PythonErrorList + [{
     'substr': 'ERROR - ', 'level': ERROR
 }]

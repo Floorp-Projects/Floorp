@@ -30,7 +30,6 @@ namespace dom {
 
 class PerformanceEntry;
 class PerformanceObserver;
-class WindowOrWorkerOrSharedWorkerOrServiceWorker;
 
 } // namespace dom
 } // namespace mozilla
@@ -303,7 +302,7 @@ public:
                                            DOMEventTargetHelper)
 
   PerformanceBase();
-  explicit PerformanceBase(nsPIDOMWindow* aWindow);
+  explicit PerformanceBase(nsPIDOMWindowInner* aWindow);
 
   typedef mozilla::dom::PerformanceEntry PerformanceEntry;
   typedef mozilla::dom::PerformanceObserver PerformanceObserver;
@@ -317,11 +316,6 @@ public:
   void ClearResourceTimings();
 
   virtual DOMHighResTimeStamp Now() const = 0;
-
-  DOMHighResTimeStamp
-  TranslateTime(DOMHighResTimeStamp aTime,
-                const mozilla::dom::WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
-                mozilla::ErrorResult& aRv);
 
   void Mark(const nsAString& aName, mozilla::ErrorResult& aRv);
   void ClearMarks(const mozilla::dom::Optional<nsAString>& aName);
@@ -391,7 +385,7 @@ private:
 class nsPerformance final : public PerformanceBase
 {
 public:
-  nsPerformance(nsPIDOMWindow* aWindow,
+  nsPerformance(nsPIDOMWindowInner* aWindow,
                 nsDOMNavigationTiming* aDOMTiming,
                 nsITimedChannel* aChannel,
                 nsPerformance* aParentPerformance);

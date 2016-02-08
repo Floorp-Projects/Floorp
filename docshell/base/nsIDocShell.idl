@@ -43,7 +43,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(98358234-3936-4b95-b051-fcda4e55b52d)]
+[scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
