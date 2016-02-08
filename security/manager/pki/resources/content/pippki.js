@@ -72,19 +72,25 @@ function alertPromptService(title, message)
 function exportToFile(parent, cert)
 {
   var bundle = document.getElementById("pippki_bundle");
-  if (!cert)
+  if (!cert) {
     return;
+  }
 
   var nsIFilePicker = Components.interfaces.nsIFilePicker;
   var fp = Components.classes["@mozilla.org/filepicker;1"].
            createInstance(nsIFilePicker);
   fp.init(parent, bundle.getString("SaveCertAs"),
           nsIFilePicker.modeSave);
-  var filename = cert.commonName;
-  if (!filename.length)
+  let filename = cert.commonName;
+  if (filename.length == 0) {
     filename = cert.windowTitle;
-  // remove all whitespace from the default filename
-  fp.defaultString = filename.replace(/\s*/g,'');
+  }
+  // Remove all whitespace from the default filename, and try and ensure that
+  // an extension is included by default.
+  // Note: defaultExtension is more of a suggestion to some file picker
+  //       implementations, so we include the extension in the default file name
+  //       as well.
+  fp.defaultString = filename.replace(/\s*/g, "") + ".crt";
   fp.defaultExtension = "crt";
   fp.appendFilter(bundle.getString("CertFormatBase64"), "*.crt; *.pem");
   fp.appendFilter(bundle.getString("CertFormatBase64Chain"), "*.crt; *.pem");
@@ -93,8 +99,9 @@ function exportToFile(parent, cert)
   fp.appendFilter(bundle.getString("CertFormatPKCS7Chain"), "*.p7c");
   fp.appendFilters(nsIFilePicker.filterAll);
   var res = fp.show();
-  if (res != nsIFilePicker.returnOK && res != nsIFilePicker.returnReplace)
+  if (res != nsIFilePicker.returnOK && res != nsIFilePicker.returnReplace) {
     return;
+  }
 
   var content = '';
   switch (fp.filterIndex) {
