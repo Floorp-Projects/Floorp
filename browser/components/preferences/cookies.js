@@ -506,7 +506,7 @@ var gCookiesWindow = {
   },
 
   _getUserContextString: function(aUserContextId) {
-    if (parseInt(aUserContextId) == 0) {
+    if (parseInt(aItem.originAttributes.userContextId) == 0) {
       return this._bundle.getString("noUserContextLabel");
     }
 
