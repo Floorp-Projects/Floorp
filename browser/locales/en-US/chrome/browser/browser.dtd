@@ -777,6 +777,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.disableMixedContentBlocking.accesskey "D">
 <!ENTITY identity.learnMore "Learn More">
 
+<!ENTITY identity.removeCertException.label "Remove Exception">
+<!ENTITY identity.removeCertException.accesskey "R">
+
 <!ENTITY identity.moreInfoLinkText2 "More Information">
 
 <!ENTITY identity.permissions "Permissions">

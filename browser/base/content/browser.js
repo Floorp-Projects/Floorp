@@ -6648,6 +6648,18 @@ var gIdentityHandler = {
     this._identityPopup.hidePopup();
   },
 
+  removeCertException() {
+    if (!this._uriHasHost) {
+      Cu.reportError("Trying to revoke a cert exception on a URI without a host?");
+      return;
+    }
+    let host = this._uri.host;
+    let port = this._uri.port > 0 ? this._uri.port : 443;
+    this._overrideService.clearValidityOverride(host, port);
+    BrowserReloadSkipCache();
+    this._identityPopup.hidePopup();
+  },
+
   /**
    * Helper to parse out the important parts of _sslStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
