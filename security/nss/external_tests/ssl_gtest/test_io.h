@@ -25,14 +25,21 @@ class DummyPrSocket;  // Fwd decl.
 // Allow us to inspect a packet before it is written.
 class PacketFilter {
  public:
+  enum Action {
+    KEEP,   // keep the original packet unmodified
+    CHANGE, // change the packet to a different value
+    DROP    // drop the packet
+  };
+
   virtual ~PacketFilter() {}
 
   // The packet filter takes input and has the option of mutating it.
   //
   // A filter that modifies the data places the modified data in *output and
-  // returns true.  A filter that does not modify data returns false, in which
-  // case the value in *output is ignored.
-  virtual bool Filter(const DataBuffer& input, DataBuffer* output) = 0;
+  // returns CHANGE.  A filter that does not modify data returns LEAVE, in which
+  // case the value in *output is ignored.  A Filter can return DROP, in which
+  // case the packet is dropped (and *output is ignored).
+  virtual Action Filter(const DataBuffer& input, DataBuffer* output) = 0;
 };
 
 enum Mode { STREAM, DGRAM };
@@ -49,6 +56,7 @@ class DummyPrSocket {
                               Mode mode);  // Returns an FD.
   static DummyPrSocket* GetAdapter(PRFileDesc* fd);
 
+  DummyPrSocket* peer() const { return peer_; }
   void SetPeer(DummyPrSocket* peer) { peer_ = peer; }
   void SetPacketFilter(PacketFilter* filter) { filter_ = filter; }
   // Drops peer, packet filter and any outstanding packets.

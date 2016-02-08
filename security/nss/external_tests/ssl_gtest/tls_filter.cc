@@ -7,133 +7,153 @@
 #include "tls_filter.h"
 
 #include <iostream>
+#include "gtest_utils.h"
 
 namespace nss_test {
 
-bool TlsRecordFilter::Filter(const DataBuffer& input, DataBuffer* output) {
+PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input, DataBuffer* output) {
   bool changed = false;
-  size_t output_offset = 0U;
+  size_t offset = 0U;
   output->Allocate(input.len());
 
   TlsParser parser(input);
   while (parser.remaining()) {
-    size_t start = parser.consumed();
-    uint8_t content_type;
-    if (!parser.Read(&content_type)) {
-      return false;
-    }
-    uint32_t version;
-    if (!parser.Read(&version, 2)) {
-      return false;
-    }
-
-    if (IsDtls(version)) {
-      if (!parser.Skip(8)) {
-        return false;
-      }
-    }
-    size_t header_len = parser.consumed() - start;
-    output->Write(output_offset, input.data() + start, header_len);
-
+    RecordHeader header;
     DataBuffer record;
-    if (!parser.ReadVariable(&record, 2)) {
-      return false;
+    if (!header.Parse(&parser, &record)) {
+      return KEEP;
     }
 
-    // Move the offset in the output forward.  ApplyFilter() returns the index
-    // of the end of the record it wrote to the output, so we need to skip
-    // over the content type and version for the value passed to it.
-    output_offset = ApplyFilter(content_type, version, record, output,
-                                output_offset + header_len,
-                                &changed);
+    DataBuffer filtered;
+    PacketFilter::Action action = FilterRecord(header, record, &filtered);
+    if (action == DROP) {
+      changed = true;
+      std::cerr << "record drop: " << record << std::endl;
+      continue; // don't copy this one
+    }
+
+    const DataBuffer* source = &record;
+    if (action == CHANGE) {
+      EXPECT_GT(0x10000U, filtered.len());
+      changed = true;
+      std::cerr << "record old: " << record << std::endl;
+      std::cerr << "record new: " << filtered << std::endl;
+      source = &filtered;
+    }
+
+    offset = header.Write(output, offset, *source);
   }
-  output->Truncate(output_offset);
+  output->Truncate(offset);
 
   // Record how many packets we actually touched.
   if (changed) {
     ++count_;
+    return (offset == 0) ? DROP : CHANGE;
   }
 
-  return changed;
+  return KEEP;
 }
 
-size_t TlsRecordFilter::ApplyFilter(uint8_t content_type, uint16_t version,
-                                    const DataBuffer& record,
-                                    DataBuffer* output,
-                                    size_t offset, bool* changed) {
-  const DataBuffer* source = &record;
-  DataBuffer filtered;
-  if (FilterRecord(content_type, version, record, &filtered) &&
-      filtered.len() < 0x10000) {
-    *changed = true;
-    std::cerr << "record old: " << record << std::endl;
-    std::cerr << "record new: " << filtered << std::endl;
-    source = &filtered;
-  }
-
-  output->Write(offset, source->len(), 2);
-  output->Write(offset + 2, *source);
-  return offset + 2 + source->len();
-}
-
-bool TlsHandshakeFilter::FilterRecord(uint8_t content_type, uint16_t version,
-                                      const DataBuffer& input,
-                                      DataBuffer* output) {
-  // Check that the first byte is as requested.
-  if (content_type != kTlsHandshakeType) {
+bool TlsRecordFilter::RecordHeader::Parse(TlsParser* parser, DataBuffer* body) {
+  if (!parser->Read(&content_type_)) {
     return false;
   }
 
+  uint32_t version;
+  if (!parser->Read(&version, 2)) {
+    return false;
+  }
+  version_ = version;
+
+  sequence_number_ = 0;
+  if (IsDtls(version)) {
+    uint32_t tmp;
+    if (!parser->Read(&tmp, 4)) {
+      return false;
+    }
+    sequence_number_ = static_cast<uint64_t>(tmp) << 32;
+    if (!parser->Read(&tmp, 4)) {
+      return false;
+    }
+    sequence_number_ |= static_cast<uint64_t>(tmp);
+  }
+  return parser->ReadVariable(body, 2);
+}
+
+size_t TlsRecordFilter::RecordHeader::Write(
+    DataBuffer* buffer, size_t offset, const DataBuffer& body) const {
+  offset = buffer->Write(offset, content_type_, 1);
+  offset = buffer->Write(offset, version_, 2);
+  if (is_dtls()) {
+    // write epoch (2 octet), and seqnum (6 octet)
+    offset = buffer->Write(offset, sequence_number_ >> 32, 4);
+    offset = buffer->Write(offset, sequence_number_ & 0xffffffff, 4);
+  }
+  offset = buffer->Write(offset, body.len(), 2);
+  offset = buffer->Write(offset, body);
+  return offset;
+}
+
+PacketFilter::Action TlsHandshakeFilter::FilterRecord(
+    const RecordHeader& record_header, const DataBuffer& input,
+    DataBuffer* output) {
+  // Check that the first byte is as requested.
+  if (record_header.content_type() != kTlsHandshakeType) {
+    return KEEP;
+  }
+
   bool changed = false;
-  size_t output_offset = 0U;
+  size_t offset = 0U;
   output->Allocate(input.len()); // Preallocate a little.
 
   TlsParser parser(input);
   while (parser.remaining()) {
-    size_t start = parser.consumed();
-    uint8_t handshake_type;
-    if (!parser.Read(&handshake_type)) {
-      return false; // malformed
-    }
-    uint32_t length;
-    if (!ReadLength(&parser, version, &length)) {
-      return false;
-    }
-
-    size_t header_len = parser.consumed() - start;
-    output->Write(output_offset, input.data() + start, header_len);
-
+    HandshakeHeader header;
     DataBuffer handshake;
-    if (!parser.Read(&handshake, length)) {
-      return false;
+    if (!header.Parse(&parser, record_header, &handshake)) {
+      return KEEP;
     }
 
-    // Move the offset in the output forward.  ApplyFilter() returns the index
-    // of the end of the message it wrote to the output, so we need to identify
-    // offsets from the start of the message for length and the handshake
-    // message.
-    output_offset = ApplyFilter(version, handshake_type, handshake,
-                                output, output_offset + 1,
-                                output_offset + header_len,
-                                &changed);
+    DataBuffer filtered;
+    PacketFilter::Action action = FilterHandshake(header, handshake, &filtered);
+    if (action == DROP) {
+      changed = true;
+      std::cerr << "handshake drop: " << handshake << std::endl;
+      continue;
+    }
+
+    const DataBuffer* source = &handshake;
+    if (action == CHANGE) {
+      EXPECT_GT(0x1000000U, filtered.len());
+      changed = true;
+      std::cerr << "handshake old: " << handshake << std::endl;
+      std::cerr << "handshake new: " << filtered << std::endl;
+      source = &filtered;
+    }
+
+    offset = header.Write(output, offset, *source);
   }
-  output->Truncate(output_offset);
-  return changed;
+  output->Truncate(offset);
+  return changed ? (offset ? CHANGE : DROP) : KEEP;
 }
 
-bool TlsHandshakeFilter::ReadLength(TlsParser* parser, uint16_t version, uint32_t *length) {
+bool TlsHandshakeFilter::HandshakeHeader::ReadLength(TlsParser* parser,
+                                                     const RecordHeader& header,
+                                                     uint32_t *length) {
   if (!parser->Read(length, 3)) {
     return false; // malformed
   }
 
-  if (!IsDtls(version)) {
+  if (!header.is_dtls()) {
     return true; // nothing left to do
   }
 
   // Read and check DTLS parameters
-  if (!parser->Skip(2)) { // sequence number
+  uint32_t message_seq_tmp;
+  if (!parser->Read(&message_seq_tmp, 2)) { // sequence number
     return false;
   }
+  message_seq_ = message_seq_tmp;
 
   uint32_t fragment_offset;
   if (!parser->Read(&fragment_offset, 3)) {
@@ -149,63 +169,68 @@ bool TlsHandshakeFilter::ReadLength(TlsParser* parser, uint16_t version, uint32_
   return (fragment_offset == 0 && fragment_length == *length);
 }
 
-size_t TlsHandshakeFilter::ApplyFilter(
-    uint16_t version, uint8_t handshake_type, const DataBuffer& handshake,
-    DataBuffer* output, size_t length_offset, size_t value_offset,
-    bool* changed) {
-  const DataBuffer* source = &handshake;
-  DataBuffer filtered;
-  if (FilterHandshake(version, handshake_type, handshake, &filtered) &&
-      filtered.len() < 0x1000000) {
-    *changed = true;
-    std::cerr << "handshake old: " << handshake << std::endl;
-    std::cerr << "handshake new: " << filtered << std::endl;
-    source = &filtered;
+bool TlsHandshakeFilter::HandshakeHeader::Parse(
+    TlsParser* parser, const RecordHeader& record_header,
+    DataBuffer* body) {
+
+  version_ = record_header.version();
+  if (!parser->Read(&handshake_type_)) {
+    return false; // malformed
+  }
+  uint32_t length;
+  if (!ReadLength(parser, record_header, &length)) {
+    return false;
   }
 
-  // Back up and overwrite the (two) length field(s): the handshake message
-  // length and the DTLS fragment length.
-  output->Write(length_offset, source->len(), 3);
-  if (IsDtls(version)) {
-    output->Write(length_offset + 8, source->len(), 3);
-  }
-  output->Write(value_offset, *source);
-  return value_offset + source->len();
+  return parser->Read(body, length);
 }
 
-bool TlsInspectorRecordHandshakeMessage::FilterHandshake(
-    uint16_t version, uint8_t handshake_type,
+size_t TlsHandshakeFilter::HandshakeHeader::Write(
+    DataBuffer* buffer, size_t offset, const DataBuffer& body) const {
+    offset = buffer->Write(offset, handshake_type(), 1);
+    offset = buffer->Write(offset, body.len(), 3);
+    if (is_dtls()) {
+      offset = buffer->Write(offset, message_seq_, 2);
+      offset = buffer->Write(offset, 0U, 3); // fragment_offset
+      offset = buffer->Write(offset, body.len(), 3);
+    }
+    offset = buffer->Write(offset, body);
+    return offset;
+}
+
+PacketFilter::Action TlsInspectorRecordHandshakeMessage::FilterHandshake(
+    const HandshakeHeader& header,
     const DataBuffer& input, DataBuffer* output) {
   // Only do this once.
   if (buffer_.len()) {
-    return false;
+    return KEEP;
   }
 
-  if (handshake_type == handshake_type_) {
+  if (header.handshake_type() == handshake_type_) {
     buffer_ = input;
   }
-  return false;
+  return KEEP;
 }
 
 
-bool TlsInspectorReplaceHandshakeMessage::FilterHandshake(
-    uint16_t version, uint8_t handshake_type,
+PacketFilter::Action TlsInspectorReplaceHandshakeMessage::FilterHandshake(
+    const HandshakeHeader& header,
     const DataBuffer& input, DataBuffer* output) {
-  if (handshake_type == handshake_type_) {
+  if (header.handshake_type() == handshake_type_) {
     *output = buffer_;
-    return true;
+    return CHANGE;
   }
 
-  return false;
+  return KEEP;
 }
 
-bool TlsAlertRecorder::FilterRecord(uint8_t content_type, uint16_t version,
-                                    const DataBuffer& input, DataBuffer* output) {
+PacketFilter::Action TlsAlertRecorder::FilterRecord(
+    const RecordHeader& header, const DataBuffer& input, DataBuffer* output) {
   if (level_ == kTlsAlertFatal) { // already fatal
-    return false;
+    return KEEP;
   }
-  if (content_type != kTlsAlertType) {
-    return false;
+  if (header.content_type() != kTlsAlertType) {
+    return KEEP;
   }
 
   std::cerr << "Alert: " << input << std::endl;
@@ -213,14 +238,14 @@ bool TlsAlertRecorder::FilterRecord(uint8_t content_type, uint16_t version,
   TlsParser parser(input);
   uint8_t lvl;
   if (!parser.Read(&lvl)) {
-    return false;
+    return KEEP;
   }
   if (lvl == kTlsAlertWarning) { // not strong enough
-    return false;
+    return KEEP;
   }
   level_ = lvl;
   (void)parser.Read(&description_);
-  return false;
+  return KEEP;
 }
 
 ChainedPacketFilter::~ChainedPacketFilter() {
@@ -229,16 +254,21 @@ ChainedPacketFilter::~ChainedPacketFilter() {
   }
 }
 
-bool ChainedPacketFilter::Filter(const DataBuffer& input, DataBuffer* output) {
+PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
+                                                 DataBuffer* output) {
   DataBuffer in(input);
   bool changed = false;
   for (auto it = filters_.begin(); it != filters_.end(); ++it) {
-    if ((*it)->Filter(in, output)) {
+    PacketFilter::Action action = (*it)->Filter(in, output);
+    if (action == DROP) {
+      return DROP;
+    }
+    if (action == CHANGE) {
       in = *output;
       changed = true;
     }
   }
-  return changed;
+  return changed ? CHANGE : KEEP;
 }
 
 }  // namespace nss_test
