@@ -10,7 +10,6 @@ EXPORTS += [
     'dec/huffman.h',
     'dec/port.h',
     'dec/state.h',
-    'dec/streams.h',
     'dec/types.h',
 ]
 
@@ -20,7 +19,6 @@ UNIFIED_SOURCES += [
     'dec/dictionary.c',
     'dec/huffman.c',
     'dec/state.c',
-    'dec/streams.c',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
