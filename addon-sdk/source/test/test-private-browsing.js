@@ -17,7 +17,7 @@ const { getMode, isWindowPBSupported, isTabPBSupported } = require('sdk/private-
 const { pb } = require('./private-browsing/helper');
 const prefs = require('sdk/preferences/service');
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -66,14 +66,10 @@ exports.testIsPrivateBrowsingFalseDefault = function(assert) {
 };
 
 exports.testNSIPrivateBrowsingChannel = function(assert) {
-  let channel = Services.io.newChannel2("about:blank",
-                                        null,
-                                        null,
-                                        null,      // aLoadingNode
-                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
-                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: "about:blank",
+    loadUsingSystemPrincipal: true
+  });
   channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   assert.equal(isPrivate(channel), false, 'isPrivate detects non-private channels');
   channel.setPrivate(true);
