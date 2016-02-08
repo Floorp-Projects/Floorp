@@ -4947,6 +4947,9 @@ pref("layout.accessiblecaret.bar.width", "2.0");
 // Show the selection bars at the two ends of the selection highlight.
 pref("layout.accessiblecaret.bar.enabled", true);
 
+// Show the caret when long tapping on an empty content.
+pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
+
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
 // no one touches it. Set the value to 0 to disable this feature.
 pref("layout.accessiblecaret.timeout_ms", 3000);
