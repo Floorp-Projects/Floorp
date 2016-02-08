@@ -51,6 +51,7 @@
 #include "CaptivePortalService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
+#include "nsHttpHandler.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -64,6 +65,7 @@
 using namespace mozilla;
 using mozilla::net::IsNeckoChild;
 using mozilla::net::CaptivePortalService;
+using mozilla::net::gHttpHandler;
 
 #define PORT_PREF_PREFIX           "network.security.ports."
 #define PORT_PREF(x)               PORT_PREF_PREFIX x
@@ -180,7 +182,6 @@ nsIOService::nsIOService()
     , mSettingOffline(false)
     , mSetOfflineValue(false)
     , mShutdown(false)
-    , mHttpHandlerAlreadyShutingDown(false)
     , mNetworkLinkServiceInitialized(false)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mAutoDialEnabled(false)
@@ -1406,15 +1407,6 @@ nsIOService::NotifyWakeup()
     return NS_OK;
 }
 
-void
-nsIOService::SetHttpHandlerAlreadyShutingDown()
-{
-    if (!mShutdown && !mOfflineForProfileChange) {
-        mNetTearingDownStarted = PR_IntervalNow();
-        mHttpHandlerAlreadyShutingDown = true;
-    }
-}
-
 // nsIObserver interface
 NS_IMETHODIMP
 nsIOService::Observe(nsISupports *subject,
@@ -1426,12 +1418,12 @@ nsIOService::Observe(nsISupports *subject,
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
     } else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
-        if (!mHttpHandlerAlreadyShutingDown) {
-          mNetTearingDownStarted = PR_IntervalNow();
-        }
-        mHttpHandlerAlreadyShutingDown = false;
         if (!mOffline) {
             mOfflineForProfileChange = true;
+            mNetTearingDownStarted = PR_IntervalNow();
+            if (gHttpHandler) {
+                gHttpHandler->ShutdownConnectionManager();
+            }
             SetOffline(true);
         }
     } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
@@ -1457,12 +1449,12 @@ nsIOService::Observe(nsISupports *subject,
         // changes of the offline status from now. We must not allow going
         // online after this point.
         mShutdown = true;
-
-        if (!mHttpHandlerAlreadyShutingDown && !mOfflineForProfileChange) {
+        if (!mOfflineForProfileChange) {
           mNetTearingDownStarted = PR_IntervalNow();
         }
-        mHttpHandlerAlreadyShutingDown = false;
-
+        if (gHttpHandler) {
+            gHttpHandler->ShutdownConnectionManager();
+        }
         SetOffline(true);
 
         if (mCaptivePortalService) {
