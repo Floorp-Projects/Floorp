@@ -191,7 +191,7 @@ LiveBundle::addRange(LiveRange* range)
 bool
 LiveBundle::addRange(TempAllocator& alloc, uint32_t vreg, CodePosition from, CodePosition to)
 {
-    LiveRange* range = LiveRange::New(alloc, vreg, from, to);
+    LiveRange* range = LiveRange::FallibleNew(alloc, vreg, from, to);
     if (!range)
         return false;
     addRange(range);
@@ -202,7 +202,7 @@ bool
 LiveBundle::addRangeAndDistributeUses(TempAllocator& alloc, LiveRange* oldRange,
                                       CodePosition from, CodePosition to)
 {
-    LiveRange* range = LiveRange::New(alloc, oldRange->vreg(), from, to);
+    LiveRange* range = LiveRange::FallibleNew(alloc, oldRange->vreg(), from, to);
     if (!range)
         return false;
     addRange(range);
@@ -296,7 +296,7 @@ VirtualRegister::addInitialRange(TempAllocator& alloc, CodePosition from, CodePo
 
     if (!merged) {
         // The new range does not overlap any existing range for the vreg.
-        LiveRange* range = LiveRange::New(alloc, vreg(), from, to);
+        LiveRange* range = LiveRange::FallibleNew(alloc, vreg(), from, to);
         if (!range)
             return false;
 
@@ -447,7 +447,8 @@ BacktrackingAllocator::init()
 
         if (block == backedge) {
             LBlock* header = block->mir()->loopHeaderOfBackedge()->lir();
-            LiveRange* range = LiveRange::New(alloc(), 0, entryOf(header), exitOf(block).next());
+            LiveRange* range = LiveRange::FallibleNew(alloc(), 0, entryOf(header),
+                                                      exitOf(block).next());
             if (!range || !hotcode.insert(range))
                 return false;
         }
@@ -459,7 +460,7 @@ BacktrackingAllocator::init()
 bool
 BacktrackingAllocator::addInitialFixedRange(AnyRegister reg, CodePosition from, CodePosition to)
 {
-    LiveRange* range = LiveRange::New(alloc(), 0, from, to);
+    LiveRange* range = LiveRange::FallibleNew(alloc(), 0, from, to);
     return range && registers[reg.code()].allocations.insert(range);
 }
 
@@ -1017,16 +1018,16 @@ BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def, VirtualRegis
         }
     }
 
-    LiveRange* preRange = LiveRange::New(alloc(), input.vreg(),
-                                         inputRange->from(), outputOf(def.ins()));
+    LiveRange* preRange = LiveRange::FallibleNew(alloc(), input.vreg(),
+                                                 inputRange->from(), outputOf(def.ins()));
     if (!preRange)
         return false;
 
     // The new range starts at reg's input position, which means it overlaps
     // with the old range at one position. This is what we want, because we
     // need to copy the input before the instruction.
-    LiveRange* postRange = LiveRange::New(alloc(), input.vreg(),
-                                          inputOf(def.ins()), inputRange->to());
+    LiveRange* postRange = LiveRange::FallibleNew(alloc(), input.vreg(),
+                                                  inputOf(def.ins()), inputRange->to());
     if (!postRange)
         return false;
 
@@ -2140,7 +2141,7 @@ BacktrackingAllocator::annotateMoveGroups()
     // only required for x86, as other platforms always have scratch registers
     // available for use.
 #ifdef JS_CODEGEN_X86
-    LiveRange* range = LiveRange::New(alloc(), 0, CodePosition(), CodePosition().next());
+    LiveRange* range = LiveRange::FallibleNew(alloc(), 0, CodePosition(), CodePosition().next());
     if (!range)
         return false;
 
@@ -2885,7 +2886,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
                 return false;
         }
 
-        LiveRange* activeRange = LiveRange::New(alloc(), range->vreg(), range->from(), range->to());
+        LiveRange* activeRange = LiveRange::FallibleNew(alloc(), range->vreg(),
+                                                        range->from(), range->to());
         if (!activeRange)
             return false;
         activeBundle->addRange(activeRange);
@@ -2918,7 +2920,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
                     activeBundle = LiveBundle::New(alloc(), bundle->spillSet(), spillBundle);
                     if (!newBundles.append(activeBundle))
                         return false;
-                    activeRange = LiveRange::New(alloc(), range->vreg(), range->from(), range->to());
+                    activeRange = LiveRange::FallibleNew(alloc(), range->vreg(),
+                                                         range->from(), range->to());
                     if (!activeRange)
                         return false;
                     activeBundle->addRange(activeRange);
