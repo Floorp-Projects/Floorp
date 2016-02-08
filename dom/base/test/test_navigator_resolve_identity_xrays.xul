@@ -32,11 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
     is(nav.mozContacts, nav.mozContacts,
        "Should have gotten the same mozContacts object again");
 
-    // Test Javascript-navigator-property objects
-    is(typeof nav.mozApps, "object", "Should have a mozApps object");
-    is(nav.mozApps, nav.mozApps,
-       "Should have gotten the same mozApps object again");
-
     SimpleTest.finish();
   });
   ]]>

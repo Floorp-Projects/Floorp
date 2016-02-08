@@ -26,19 +26,19 @@ function test()
   is(nav.foopy, undefined, "We should have an Xray now");
   is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object");
   var props = Object.getOwnPropertyNames(nav);
-  isnot(props.indexOf("mozApps"), -1,
-        "Should enumerate a mozApps property on navigator xray");
+  isnot(props.indexOf("mozContacts"), -1,
+        "Should enumerate a mozContacts property on navigator xray");
 
   var nav = document.getElementById("t2").contentWindow.navigator;
   is(nav.foopy, undefined, "We should have an Xray now again");
   is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object again");
   var found = false;
   for (var name in nav) {
-    if (name == "mozApps") {
+    if (name == "mozContacts") {
       found = true;
     }
   }
-  ok(found, "Should enumerate a mozApps property on navigator xray via for...in");
+  ok(found, "Should enumerate a mozContacts property on navigator xray via for...in");
 
   SimpleTest.finish();
 }
