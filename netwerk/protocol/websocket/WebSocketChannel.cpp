@@ -1216,14 +1216,14 @@ WebSocketChannel::~WebSocketChannel()
   while ((mCurrentOut = (OutboundMessage *) mOutgoingMessages.PopFront()))
     delete mCurrentOut;
 
-  NS_ReleaseOnMainThread(mURI.forget());
-  NS_ReleaseOnMainThread(mOriginalURI.forget());
+  NS_ReleaseOnMainThread(mURI);
+  NS_ReleaseOnMainThread(mOriginalURI);
 
   mListenerMT = nullptr;
 
-  NS_ReleaseOnMainThread(mLoadGroup.forget());
-  NS_ReleaseOnMainThread(mLoadInfo.forget());
-  NS_ReleaseOnMainThread(mService.forget());
+  NS_ReleaseOnMainThread(mLoadGroup);
+  NS_ReleaseOnMainThread(mLoadInfo);
+  NS_ReleaseOnMainThread(static_cast<nsIWebSocketEventService*>(mService.forget().take()));
 }
 
 NS_IMETHODIMP

@@ -778,11 +778,11 @@ Console::~Console()
 
   if (!NS_IsMainThread()) {
     if (mStorage) {
-      NS_ReleaseOnMainThread(mStorage.forget());
+      NS_ReleaseOnMainThread(mStorage);
     }
 
     if (mSandbox) {
-      NS_ReleaseOnMainThread(mSandbox.forget());
+      NS_ReleaseOnMainThread(mSandbox);
     }
   }
 
