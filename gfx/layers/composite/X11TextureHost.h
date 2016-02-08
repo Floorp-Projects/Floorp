@@ -21,6 +21,8 @@ public:
   // Called when the underlying X surface has been changed.
   // Useful for determining whether to rebind a GLXPixmap to a texture.
   virtual void Updated() = 0;
+
+  virtual const char* Name() const override { return "X11TextureSource"; }
 };
 
 // TextureHost for Xlib-backed TextureSources.
