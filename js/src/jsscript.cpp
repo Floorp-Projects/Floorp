@@ -584,10 +584,11 @@ static bool
 SaveSharedScriptData(ExclusiveContext*, Handle<JSScript*>, SharedScriptData*, uint32_t);
 
 enum XDRClassKind {
-    CK_BlockObject = 0,
-    CK_WithObject  = 1,
-    CK_JSFunction  = 2,
-    CK_JSObject    = 3
+    CK_BlockObject  = 0,
+    CK_WithObject   = 1,
+    CK_RegexpObject = 2,
+    CK_JSFunction   = 3,
+    CK_JSObject     = 4
 };
 
 template<XDRMode mode>
@@ -710,8 +711,6 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
             nconsts = script->consts()->length;
         if (script->hasObjects())
             nobjects = script->objects()->length;
-        if (script->hasRegexps())
-            nregexps = script->regexps()->length;
         if (script->hasTrynotes())
             ntrynotes = script->trynotes()->length;
         if (script->hasBlockScopes())
@@ -787,8 +786,6 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
     if (!xdr->codeUint32(&nconsts))
         return false;
     if (!xdr->codeUint32(&nobjects))
-        return false;
-    if (!xdr->codeUint32(&nregexps))
         return false;
     if (!xdr->codeUint32(&ntrynotes))
         return false;
@@ -875,7 +872,7 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
         return false;
 
     if (mode == XDR_DECODE) {
-        if (!JSScript::partiallyInit(cx, script, nconsts, nobjects, nregexps, ntrynotes,
+        if (!JSScript::partiallyInit(cx, script, nconsts, nobjects, ntrynotes,
                                      nblockscopes, nyieldoffsets, nTypeSets))
         {
             return false;
@@ -1022,6 +1019,8 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
                 classk = CK_BlockObject;
             else if (obj->is<StaticWithScope>())
                 classk = CK_WithObject;
+            else if (obj->is<RegExpObject>())
+                classk = CK_RegexpObject;
             else if (obj->is<JSFunction>())
                 classk = CK_JSFunction;
             else if (obj->is<PlainObject>() || obj->is<ArrayObject>())
@@ -1082,6 +1081,17 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
                     return false;
                 *objp = tmp;
             }
+            break;
+          }
+
+          case CK_RegexpObject: {
+            Rooted<RegExpObject*> regexp(cx);
+            if (mode == XDR_ENCODE)
+                regexp = &(*objp)->as<RegExpObject>();
+            if (!XDRScriptRegExpObject(xdr, &regexp))
+                return false;
+            if (mode == XDR_DECODE)
+                *objp = regexp;
             break;
           }
 
@@ -1169,16 +1179,6 @@ js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
             return false;
           }
         }
-    }
-
-    for (i = 0; i != nregexps; ++i) {
-        Rooted<RegExpObject*> regexp(cx);
-        if (mode == XDR_ENCODE)
-            regexp = &script->regexps()->vector[i]->as<RegExpObject>();
-        if (!XDRScriptRegExpObject(xdr, &regexp))
-            return false;
-        if (mode == XDR_DECODE)
-            script->regexps()->vector[i] = regexp;
     }
 
     if (ntrynotes != 0) {
@@ -2735,7 +2735,7 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, BlockScopeNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(BlockScopeNote, uint32_t));
 
 static inline size_t
-ScriptDataSize(uint32_t nbindings, uint32_t nconsts, uint32_t nobjects, uint32_t nregexps,
+ScriptDataSize(uint32_t nbindings, uint32_t nconsts, uint32_t nobjects,
                uint32_t ntrynotes, uint32_t nblockscopes, uint32_t nyieldoffsets)
 {
     size_t size = 0;
@@ -2744,8 +2744,6 @@ ScriptDataSize(uint32_t nbindings, uint32_t nconsts, uint32_t nobjects, uint32_t
         size += sizeof(ConstArray) + nconsts * sizeof(Value);
     if (nobjects != 0)
         size += sizeof(ObjectArray) + nobjects * sizeof(NativeObject*);
-    if (nregexps != 0)
-        size += sizeof(ObjectArray) + nregexps * sizeof(NativeObject*);
     if (ntrynotes != 0)
         size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
     if (nblockscopes != 0)
@@ -2822,10 +2820,10 @@ AllocScriptData(JS::Zone* zone, size_t size)
 
 /* static */ bool
 JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t nconsts,
-                        uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes,
+                        uint32_t nobjects, uint32_t ntrynotes,
                         uint32_t nblockscopes, uint32_t nyieldoffsets, uint32_t nTypeSets)
 {
-    size_t size = ScriptDataSize(script->bindings.count(), nconsts, nobjects, nregexps, ntrynotes,
+    size_t size = ScriptDataSize(script->bindings.count(), nconsts, nobjects, ntrynotes,
                                  nblockscopes, nyieldoffsets);
     script->data = AllocScriptData(script->zone(), size);
     if (size && !script->data) {
@@ -2844,10 +2842,6 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     }
     if (nobjects != 0) {
         script->setHasArray(OBJECTS);
-        cursor += sizeof(ObjectArray);
-    }
-    if (nregexps != 0) {
-        script->setHasArray(REGEXPS);
         cursor += sizeof(ObjectArray);
     }
     if (ntrynotes != 0) {
@@ -2876,12 +2870,6 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
         script->objects()->length = nobjects;
         script->objects()->vector = (HeapPtrObject*)cursor;
         cursor += nobjects * sizeof(script->objects()->vector[0]);
-    }
-
-    if (nregexps != 0) {
-        script->regexps()->length = nregexps;
-        script->regexps()->vector = (HeapPtrObject*)cursor;
-        cursor += nregexps * sizeof(script->regexps()->vector[0]);
     }
 
     if (ntrynotes != 0) {
@@ -2930,7 +2918,7 @@ JSScript::fullyInitTrivial(ExclusiveContext* cx, Handle<JSScript*> script)
     if (!script->bindings.initTrivial(cx))
         return false;
 
-    if (!partiallyInit(cx, script, 0, 0, 0, 0, 0, 0, 0))
+    if (!partiallyInit(cx, script, 0, 0, 0, 0, 0, 0))
         return false;
 
     SharedScriptData* ssd = SharedScriptData::new_(cx, 1, 1, 0);
@@ -3006,7 +2994,6 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     /* The counts of indexed things must be checked during code generation. */
     MOZ_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
     MOZ_ASSERT(bce->objectList.length <= INDEX_LIMIT);
-    MOZ_ASSERT(bce->regexpList.length <= INDEX_LIMIT);
 
     uint32_t mainLength = bce->offset();
     uint32_t prologueLength = bce->prologueOffset();
@@ -3015,7 +3002,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         return false;
     uint32_t natoms = bce->atomIndices->count();
     if (!partiallyInit(cx, script,
-                       bce->constList.length(), bce->objectList.length, bce->regexpList.length,
+                       bce->constList.length(), bce->objectList.length,
                        bce->tryNoteList.length(), bce->blockScopeList.length(),
                        bce->yieldOffsetList.length(), bce->typesetCount))
     {
@@ -3074,8 +3061,6 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         bce->constList.finish(script->consts());
     if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
-    if (bce->regexpList.length != 0)
-        bce->regexpList.finish(script->regexps());
     if (bce->tryNoteList.length() != 0)
         bce->tryNoteList.finish(script->trynotes());
     if (bce->blockScopeList.length() != 0)
@@ -3494,7 +3479,6 @@ js::detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, Ha
 
     uint32_t nconsts   = src->hasConsts()   ? src->consts()->length   : 0;
     uint32_t nobjects  = src->hasObjects()  ? src->objects()->length  : 0;
-    uint32_t nregexps  = src->hasRegexps()  ? src->regexps()->length  : 0;
     uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes()->length : 0;
     uint32_t nblockscopes = src->hasBlockScopes() ? src->blockScopes()->length : 0;
     uint32_t nyieldoffsets = src->hasYieldOffsets() ? src->yieldOffsets().length() : 0;
@@ -3540,6 +3524,10 @@ js::detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, Ha
                 }
 
                 clone = CloneNestedScopeObject(cx, enclosingScope, innerBlock);
+
+            } else if (obj->is<RegExpObject>()) {
+                clone = CloneScriptRegExpObject(cx, obj->as<RegExpObject>());
+
             } else if (obj->is<JSFunction>()) {
                 RootedFunction innerFun(cx, &obj->as<JSFunction>());
                 if (innerFun->isNative()) {
@@ -3580,22 +3568,12 @@ js::detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, Ha
 
                     clone = CloneInnerInterpretedFunction(cx, enclosingScope, innerFun);
                 }
+
             } else {
                 clone = DeepCloneObjectLiteral(cx, obj, TenuredObject);
             }
+
             if (!clone || !objects.append(clone))
-                return false;
-        }
-    }
-
-    /* RegExps */
-
-    AutoObjectVector regexps(cx);
-    if (nregexps != 0) {
-        HeapPtrObject* vector = src->regexps()->vector;
-        for (unsigned i = 0; i < nregexps; i++) {
-            JSObject* clone = CloneScriptRegExpObject(cx, vector[i]->as<RegExpObject>());
-            if (!clone || !regexps.append(clone))
                 return false;
         }
     }
@@ -3654,12 +3632,6 @@ js::detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, Ha
         dst->objects()->vector = vector;
         for (unsigned i = 0; i < nobjects; ++i)
             vector[i].init(&objects[i]->as<NativeObject>());
-    }
-    if (nregexps != 0) {
-        HeapPtrObject* vector = Rebase<HeapPtrObject>(dst, src, src->regexps()->vector);
-        dst->regexps()->vector = vector;
-        for (unsigned i = 0; i < nregexps; ++i)
-            vector[i].init(&regexps[i]->as<NativeObject>());
     }
     if (ntrynotes != 0)
         dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
@@ -3995,11 +3967,6 @@ JSScript::traceChildren(JSTracer* trc)
     if (hasObjects()) {
         ObjectArray* objarray = objects();
         TraceRange(trc, objarray->length, objarray->vector, "objects");
-    }
-
-    if (hasRegexps()) {
-        ObjectArray* objarray = regexps();
-        TraceRange(trc, objarray->length, objarray->vector, "regexps");
     }
 
     if (hasConsts()) {
