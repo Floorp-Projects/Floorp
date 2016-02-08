@@ -3,11 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-# Windows opt builds without PGO break nptest.dll
-MOZ_OPTIMIZE=
-endif
-
 TEST_PLUGIN_FILES = $(SHARED_LIBRARY)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
