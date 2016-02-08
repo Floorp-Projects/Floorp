@@ -1129,7 +1129,10 @@ void
 PeerConnectionMedia::RemoveTransportFlow(int aIndex, bool aRtcp)
 {
   int index_inner = GetTransportFlowIndex(aIndex, aRtcp);
-  NS_ProxyRelease(GetSTSThread(), mTransportFlows[index_inner].forget());
+  TransportFlow* flow = mTransportFlows[index_inner].forget().take();
+  if (flow) {
+    NS_ProxyRelease(GetSTSThread(), flow);
+  }
 }
 
 void

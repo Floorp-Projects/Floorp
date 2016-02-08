@@ -782,8 +782,17 @@ nsScriptLoader::ProcessOffThreadRequest(nsScriptLoadRequest* aRequest)
 NotifyOffThreadScriptLoadCompletedRunnable::~NotifyOffThreadScriptLoadCompletedRunnable()
 {
   if (MOZ_UNLIKELY(mRequest || mLoader) && !NS_IsMainThread()) {
-    NS_ReleaseOnMainThread(mRequest.forget());
-    NS_ReleaseOnMainThread(mLoader.forget());
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+    if (mainThread) {
+      NS_ProxyRelease(mainThread, mRequest);
+      NS_ProxyRelease(mainThread, mLoader);
+    } else {
+      MOZ_ASSERT(false, "We really shouldn't leak!");
+      // Better to leak than crash.
+      Unused << mRequest.forget();
+      Unused << mLoader.forget();
+    }
   }
 }
 

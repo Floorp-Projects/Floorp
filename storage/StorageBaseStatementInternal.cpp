@@ -45,12 +45,10 @@ public:
   NS_IMETHOD Run()
   {
     if (mStatement->mAsyncStatement) {
-      sqlite3_finalize(mStatement->mAsyncStatement);
+      (void)::sqlite3_finalize(mStatement->mAsyncStatement);
       mStatement->mAsyncStatement = nullptr;
     }
-
-    nsCOMPtr<nsIThread> targetThread(mConnection->threadOpenedOn);
-    NS_ProxyRelease(targetThread, mStatement.forget());
+    (void)::NS_ProxyRelease(mConnection->threadOpenedOn, mStatement);
     return NS_OK;
   }
 private:
@@ -93,8 +91,13 @@ public:
     (void)::sqlite3_finalize(mAsyncStatement);
     mAsyncStatement = nullptr;
 
-    nsCOMPtr<nsIThread> target(mConnection->threadOpenedOn);
-    (void)::NS_ProxyRelease(target, mConnection.forget());
+    // Because of our ambiguous nsISupports we cannot use the NS_ProxyRelease
+    // template helpers.
+    Connection *rawConnection = nullptr;
+    mConnection.swap(rawConnection);
+    (void)::NS_ProxyRelease(
+      rawConnection->threadOpenedOn,
+      NS_ISUPPORTS_CAST(mozIStorageConnection *, rawConnection));
     return NS_OK;
   }
 private:

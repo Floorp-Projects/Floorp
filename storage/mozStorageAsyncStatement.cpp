@@ -220,8 +220,10 @@ AsyncStatement::~AsyncStatement()
   if (!onCallingThread) {
     // NS_ProxyRelase only magic forgets for us if mDBConnection is an
     // nsCOMPtr.  Which it is not; it's an nsRefPtr.
-    nsCOMPtr<nsIThread> targetThread(mDBConnection->threadOpenedOn);
-    NS_ProxyRelease(targetThread, mDBConnection.forget());
+    Connection *forgottenConn = nullptr;
+    mDBConnection.swap(forgottenConn);
+    (void)::NS_ProxyRelease(forgottenConn->threadOpenedOn,
+                            static_cast<mozIStorageConnection *>(forgottenConn));
   }
 }
 

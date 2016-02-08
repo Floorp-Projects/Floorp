@@ -3626,8 +3626,17 @@ WorkerDebugger::~WorkerDebugger()
   MOZ_ASSERT(!mWorkerPrivate);
 
   if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
+      NS_WARNING("Failed to proxy release of listeners, leaking instead!");
+    }
+
     for (size_t index = 0; index < mListeners.Length(); ++index) {
-      NS_ReleaseOnMainThread(mListeners[index].forget());
+      nsIWorkerDebuggerListener* listener = nullptr;
+      mListeners[index].forget(&listener);
+      if (NS_FAILED(NS_ProxyRelease(mainThread, listener))) {
+        NS_WARNING("Failed to proxy release of listener, leaking instead!");
+      }
     }
   }
 }
@@ -4149,7 +4158,11 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     if (parentStatus > Running) {
-      NS_ReleaseOnMainThread(loadInfo.mChannel.forget());
+      nsCOMPtr<nsIThread> mainThread;
+      if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread))) ||
+          NS_FAILED(NS_ProxyRelease(mainThread, loadInfo.mChannel))) {
+        NS_WARNING("Failed to proxy release of channel, leaking instead!");
+      }
       return NS_ERROR_FAILURE;
     }
 

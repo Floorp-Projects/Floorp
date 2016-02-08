@@ -40,7 +40,13 @@ public:
 
   ~nsWyciwygAsyncEvent()
   {
-    NS_ReleaseOnMainThread(mChannel.forget());
+    nsCOMPtr<nsIThread> thread = do_GetMainThread();
+    NS_WARN_IF_FALSE(thread, "Couldn't get the main thread!");
+    if (thread) {
+      nsIWyciwygChannel *chan = static_cast<nsIWyciwygChannel *>(mChannel);
+      mozilla::Unused << mChannel.forget();
+      NS_ProxyRelease(thread, chan);
+    }
   }
 protected:
   RefPtr<nsWyciwygChannel> mChannel;
@@ -103,7 +109,12 @@ nsWyciwygChannel::nsWyciwygChannel()
 nsWyciwygChannel::~nsWyciwygChannel() 
 {
   if (mLoadInfo) {
-    NS_ReleaseOnMainThread(mLoadInfo.forget(), false);
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+
+    nsILoadInfo *forgetableLoadInfo;
+    mLoadInfo.forget(&forgetableLoadInfo);
+    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
   }
 }
 

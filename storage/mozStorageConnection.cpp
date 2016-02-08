@@ -382,8 +382,15 @@ public:
   }
 
   ~AsyncCloseConnection() {
-    NS_ReleaseOnMainThread(mConnection.forget());
-    NS_ReleaseOnMainThread(mCallbackEvent.forget());
+    nsCOMPtr<nsIThread> thread;
+    (void)NS_GetMainThread(getter_AddRefs(thread));
+    // Handle ambiguous nsISupports inheritance.
+    Connection *rawConnection = nullptr;
+    mConnection.swap(rawConnection);
+    (void)NS_ProxyRelease(thread,
+                          NS_ISUPPORTS_CAST(mozIStorageConnection *,
+                                            rawConnection));
+    (void)NS_ProxyRelease(thread, mCallbackEvent);
   }
 private:
   RefPtr<Connection> mConnection;
@@ -445,13 +452,22 @@ private:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Handle ambiguous nsISupports inheritance.
-    NS_ProxyRelease(thread, mConnection.forget());
-    NS_ProxyRelease(thread, mClone.forget());
+    Connection *rawConnection = nullptr;
+    mConnection.swap(rawConnection);
+    (void)NS_ProxyRelease(thread, NS_ISUPPORTS_CAST(mozIStorageConnection *,
+                                                    rawConnection));
+
+    Connection *rawClone = nullptr;
+    mClone.swap(rawClone);
+    (void)NS_ProxyRelease(thread, NS_ISUPPORTS_CAST(mozIStorageConnection *,
+                                                    rawClone));
 
     // Generally, the callback will be released by CallbackComplete.
     // However, if for some reason Run() is not executed, we still
     // need to ensure that it is released here.
-    NS_ProxyRelease(thread, mCallback.forget());
+    mozIStorageCompletionCallback *rawCallback = nullptr;
+    mCallback.swap(rawCallback);
+    (void)NS_ProxyRelease(thread, rawCallback);
   }
 
   RefPtr<Connection> mConnection;

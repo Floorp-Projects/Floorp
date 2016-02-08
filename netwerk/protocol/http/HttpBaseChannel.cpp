@@ -127,7 +127,7 @@ HttpBaseChannel::~HttpBaseChannel()
 {
   LOG(("Destroying HttpBaseChannel @%x\n", this));
 
-  NS_ReleaseOnMainThread(mLoadInfo.forget());
+  NS_ReleaseOnMainThread(mLoadInfo);
 
   // Make sure we don't leak
   CleanRedirectCacheChainIfNecessary();

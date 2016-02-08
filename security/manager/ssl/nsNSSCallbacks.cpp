@@ -610,7 +610,8 @@ nsHTTPListener::~nsHTTPListener()
   }
 
   if (mLoader) {
-    NS_ReleaseOnMainThread(mLoader.forget());
+    nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
+    NS_ProxyRelease(mainThread, mLoader);
   }
 }
 

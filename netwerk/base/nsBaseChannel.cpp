@@ -66,7 +66,7 @@ nsBaseChannel::nsBaseChannel()
 
 nsBaseChannel::~nsBaseChannel()
 {
-  NS_ReleaseOnMainThread(mLoadInfo.forget());
+  NS_ReleaseOnMainThread(mLoadInfo);
 }
 
 nsresult

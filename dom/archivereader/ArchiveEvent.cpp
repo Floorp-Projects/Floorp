@@ -49,7 +49,17 @@ ArchiveReaderEvent::ArchiveReaderEvent(ArchiveReader* aArchiveReader)
 ArchiveReaderEvent::~ArchiveReaderEvent()
 {
   if (!NS_IsMainThread()) {
-    NS_ReleaseOnMainThread(mMimeService.forget());
+    nsIMIMEService* mimeService;
+    mMimeService.forget(&mimeService);
+
+    if (mimeService) {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread! Leaking!");
+
+      if (mainThread) {
+        NS_ProxyRelease(mainThread, mimeService);
+      }
+    }
   }
 
   MOZ_COUNT_DTOR(ArchiveReaderEvent);
