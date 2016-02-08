@@ -41,8 +41,8 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   yield onShown;
 
   yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
-    element: content.document.body,
-    name: "backgroundColor",
+    selector: "body",
+    name: "background-color",
     value: "rgb(0, 0, 0)"
   });
 

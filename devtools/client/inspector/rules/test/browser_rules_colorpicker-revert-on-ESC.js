@@ -33,8 +33,8 @@ function* testPressingEscapeRevertsChanges(view) {
   yield onShown;
 
   yield simulateColorPickerChange(view, cPicker, [0, 0, 0, 1], {
-    element: content.document.body,
-    name: "backgroundColor",
+    selector: "body",
+    name: "background-color",
     value: "rgb(0, 0, 0)"
   });
 
