@@ -396,7 +396,7 @@ var MigrationWizard = {
     var brandBundle = document.getElementById("brandBundle");
     var itemID;
     for (var i = 0; i < 16; ++i) {
-      var itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;
+      itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
         var label = document.createElement("label");
         label.id = itemID + "_migrated";
@@ -416,16 +416,17 @@ var MigrationWizard = {
 
   observe: function (aSubject, aTopic, aData)
   {
+    var label;
     switch (aTopic) {
     case "Migration:Started":
       break;
     case "Migration:ItemBeforeMigrate":
-      var label = document.getElementById(aData + "_migrated");
+      label = document.getElementById(aData + "_migrated");
       if (label)
         label.setAttribute("style", "font-weight: bold");
       break;
     case "Migration:ItemAfterMigrate":
-      var label = document.getElementById(aData + "_migrated");
+      label = document.getElementById(aData + "_migrated");
       if (label)
         label.removeAttribute("style");
       break;
