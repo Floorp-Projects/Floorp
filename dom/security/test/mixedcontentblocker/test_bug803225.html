@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Testing Whitelist of Resource Schemed for Mixed Content Blocker
+Testing Whitelist of Resource Scheme for Mixed Content Blocker
 https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 -->
 <head>
@@ -11,7 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script>
-
   var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
   var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
 
@@ -29,10 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
   }
 
-  //Set the first set of settings (true, true) and increment the counter.
-  changePrefs(counter);
-  counter++;
-
   var testsToRun = {
     /* https - Tests already run as part of bug 62178. */
     about: false,
@@ -47,6 +42,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   function log(msg) {
     document.getElementById("log").textContent += "\n" + msg;
+  }
+
+  function reloadFrame() {
+    document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>';
   }
 
   function checkTestsCompleted() {
@@ -64,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
       changePrefs(counter);
       counter++;
       log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
-      document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>';
+      reloadFrame();
     }
     else {
       //set the prefs back to what they were set to originally
@@ -76,8 +75,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   var firstTest = true;
 
-  // listen for a messages from the mixed content test harness
-  window.addEventListener("message", receiveMessage, false);
   function receiveMessage(event) {
     if(firstTest) {
       log("blockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
@@ -135,14 +132,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     checkTestsCompleted();
   }
 
+  function startTest() {
+    //Set the first set of settings (true, true) and increment the counter.
+    changePrefs(counter);
+    counter++;
+
+    // listen for a messages from the mixed content test harness
+    window.addEventListener("message", receiveMessage, false);
+
+    reloadFrame();
+  }
+
   SimpleTest.waitForExplicitFinish();
   </script>
 </head>
 
-<body>
-  <div id="framediv">
-    <iframe id="testHarness" src="https://example.com/tests/dom/security/test/mixedcontentblocker/file_main_bug803225.html"></iframe>
-  </div>
+<body onload='startTest()'>
+  <div id="framediv"></div>
   <pre id="log"></pre>
 </body>
 </html>
