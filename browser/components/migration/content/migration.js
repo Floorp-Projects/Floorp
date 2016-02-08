@@ -118,11 +118,11 @@ var MigrationWizard = {
       this._wiz.canRewind = false;
     }
   },
-  
+
   onImportSourcePageAdvanced: function ()
   {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
-    
+
     if (newSource == "nothing") {
       // Need to do telemetry here because we're closing the dialog before we get to
       // do actual migration. For actual migration, this doesn't happen until after
@@ -132,7 +132,7 @@ var MigrationWizard = {
       document.documentElement.cancel();
       return false;
     }
-    
+
     if (!this._migrator || (newSource != this._source)) {
       // Create the migrator for the selected source.
       this._migrator = MigrationUtils.getMigrator(newSource);
@@ -143,7 +143,7 @@ var MigrationWizard = {
     this._source = newSource;
 
     // check for more than one source profile
-    var sourceProfiles = this._migrator.sourceProfiles;    
+    var sourceProfiles = this._migrator.sourceProfiles;
     if (this._skipImportSourcePage) {
       this._wiz.currentPage.next = "homePageImport";
     }
@@ -162,7 +162,7 @@ var MigrationWizard = {
         this._selectedProfile = null;
     }
   },
-  
+
   // 2 - [Profile Selection]
   onSelectProfilePageShow: function ()
   {
@@ -170,11 +170,11 @@ var MigrationWizard = {
     // too and don't want to disable the back button
     // if (this._autoMigrate)
     //   document.documentElement.getButton("back").disabled = true;
-      
+
     var profiles = document.getElementById("profiles");
-    while (profiles.hasChildNodes()) 
+    while (profiles.hasChildNodes())
       profiles.removeChild(profiles.firstChild);
-    
+
     // Note that this block is still reached even if the user chose 'From File'
     // and we canceled the dialog.  When that happens, _migrator will be null.
     if (this._migrator) {
@@ -187,10 +187,10 @@ var MigrationWizard = {
         profiles.appendChild(item);
       }
     }
-    
+
     profiles.selectedItem = this._selectedProfile ? document.getElementById(this._selectedProfile.id) : profiles.firstChild;
   },
-  
+
   onSelectProfilePageRewound: function ()
   {
     var profiles = document.getElementById("profiles");
@@ -198,7 +198,7 @@ var MigrationWizard = {
       profile => profile.id == profiles.selectedItem.id
     ) || null;
   },
-  
+
   onSelectProfilePageAdvanced: function ()
   {
     var profiles = document.getElementById("profiles");
@@ -210,7 +210,7 @@ var MigrationWizard = {
     if (this._autoMigrate)
       this._wiz.currentPage.next = "homePageImport";
   },
-  
+
   // 3 - ImportItems
   onImportItemsPageShow: function ()
   {
@@ -224,7 +224,7 @@ var MigrationWizard = {
       if (itemID > 0) {
         var checkbox = document.createElement("checkbox");
         checkbox.id = itemID;
-        checkbox.setAttribute("label", 
+        checkbox.setAttribute("label",
           MigrationUtils.getLocalizedString(itemID + "_" + this._source));
         dataSources.appendChild(checkbox);
         if (!this._itemsFlags || this._itemsFlags & itemID)
@@ -249,7 +249,7 @@ var MigrationWizard = {
         this._itemsFlags |= parseInt(checkbox.id);
     }
   },
-  
+
   onImportItemCommand: function (aEvent)
   {
     var items = document.getElementById("dataSources");
@@ -358,7 +358,7 @@ var MigrationWizard = {
     this._wiz.getButton("cancel").disabled = true;
     this._wiz.canRewind = false;
     this._wiz.canAdvance = false;
-    
+
     // When automigrating, show all of the data that can be received from this source.
     if (this._autoMigrate)
       this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
@@ -386,7 +386,7 @@ var MigrationWizard = {
       }
     }
   },
-  
+
   _listItems: function (aID)
   {
     var items = document.getElementById(aID);
@@ -407,13 +407,13 @@ var MigrationWizard = {
         }
         catch (e) {
           // if the block above throws, we've enumerated all the import data types we
-          // currently support and are now just wasting time, break. 
+          // currently support and are now just wasting time, break.
           break;
         }
       }
     }
   },
-  
+
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
@@ -457,8 +457,8 @@ var MigrationWizard = {
             var prefFile = dirSvc.get("ProfDS", Components.interfaces.nsIFile);
             prefFile.append("prefs.js");
             prefSvc.savePrefFile(prefFile);
-          } catch(ex) { 
-            dump(ex); 
+          } catch(ex) {
+            dump(ex);
           }
         }
 
