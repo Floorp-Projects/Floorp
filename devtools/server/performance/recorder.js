@@ -467,7 +467,13 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    * @return {object}
    */
   getConfiguration: function () {
-    return extend({}, this._memory.getAllocationsSettings(), this._profiler.getStartOptions());
+    let allocationSettings = Object.create(null);
+
+    if (this._memory.getState() === "attached") {
+      allocationSettings = this._memory.getAllocationsSettings();
+    }
+
+    return extend({}, allocationSettings, this._profiler.getStartOptions());
   },
 
   toString: () => "[object PerformanceRecorder]"
