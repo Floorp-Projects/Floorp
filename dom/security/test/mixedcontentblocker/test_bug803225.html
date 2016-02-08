@@ -11,9 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script>
-  var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
-  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
-
   var counter = 0;
   var settings = [ [true, true], [true, false], [false, true], [false, false] ];
 
@@ -21,11 +18,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   var blockDisplay;
 
   //Cycle through 4 different preference settings.
-  function changePrefs(x) {
-    SpecialPowers.setBoolPref("security.mixed_content.block_display_content", settings[x][0]);
-    SpecialPowers.setBoolPref("security.mixed_content.block_active_content", settings[x][1]);
-    blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
-    blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+  function changePrefs(callback) {
+    let newPrefs = [["security.mixed_content.block_display_content", settings[counter][0]],
+                    ["security.mixed_content.block_active_content", settings[counter][1]]];
+
+    SpecialPowers.pushPrefEnv({"set": newPrefs}, function () {
+      blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+      blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+      counter++;
+      callback();
+    });
   }
 
   var testsToRun = {
@@ -60,15 +62,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
          testsToRun[prop] = false;
        }
       //call to change the preferences
-      changePrefs(counter);
-      counter++;
-      log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
-      reloadFrame();
+      changePrefs(function() {
+        log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
+        reloadFrame();
+      });
     }
     else {
-      //set the prefs back to what they were set to originally
-      SpecialPowers.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
       SimpleTest.finish();
     }
   }
@@ -134,13 +133,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   function startTest() {
     //Set the first set of settings (true, true) and increment the counter.
-    changePrefs(counter);
-    counter++;
+    changePrefs(function() {
+      // listen for a messages from the mixed content test harness
+      window.addEventListener("message", receiveMessage, false);
 
-    // listen for a messages from the mixed content test harness
-    window.addEventListener("message", receiveMessage, false);
-
-    reloadFrame();
+      reloadFrame();
+    });
   }
 
   SimpleTest.waitForExplicitFinish();
