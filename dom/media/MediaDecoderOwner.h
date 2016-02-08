@@ -64,6 +64,9 @@ public:
   // resource has a decode error during metadata loading or decoding.
   virtual void DecodeError() = 0;
 
+  // Return true if media element error attribute is not null.
+  virtual bool HasError() const = 0;
+
   // Called by the video decoder object, on the main thread, when the
   // resource load has been cancelled.
   virtual void LoadAborted() = 0;

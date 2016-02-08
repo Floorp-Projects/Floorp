@@ -200,10 +200,6 @@ public:
         aLoaderState = (uint32_t) mState;
     }
 
-    // for platforms that use linked system fontlists, append these
-    virtual void
-    AppendLinkedSystemFamilies(nsIAtom* aLanguage,
-                               nsTArray<gfxFontFamily*>& aFamilyList) {}
     virtual void
     AddGenericFonts(mozilla::FontFamilyType aGenericType,
                     nsIAtom* aLanguage,

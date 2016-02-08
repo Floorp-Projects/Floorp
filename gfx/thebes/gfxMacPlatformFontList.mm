@@ -623,10 +623,6 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
     mOtherFamilyNamesInitialized = true;
 }
 
-typedef CFArrayRef (CTFontCopyDefaultCascadeListForLanguagesFunc)(CTFontRef font, CFArrayRef languagePrefList);
-static CTFontCopyDefaultCascadeListForLanguagesFunc*
-    CTFontCopyDefaultCascadeListForLanguagesPtr = nullptr;
-
 /* gfxMacPlatformFontList */
 #pragma mark-
 
@@ -649,11 +645,6 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     // cache this in a static variable so that MacOSFontFamily objects
     // don't have to repeatedly look it up
     sFontManager = [NSFontManager sharedFontManager];
-
-    // available in 10.8 and above
-    CTFontCopyDefaultCascadeListForLanguagesPtr =
-        (CTFontCopyDefaultCascadeListForLanguagesFunc*)
-            dlsym(RTLD_DEFAULT, "CTFontCopyDefaultCascadeListForLanguages");
 }
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList()
@@ -792,63 +783,6 @@ static NSString* GetRealFamilyName(NSFont* aFont)
 const CGFloat kTextDisplayCrossover = 20.0; // use text family below this size
 
 void
-gfxMacPlatformFontList::LookupFontCascadeForLang(const nsACString& aLang,
-                                                 nsTArray<gfxFontFamily*>& aCascadeList)
-{
-    // if cascade not available just return empty list
-    if (!CTFontCopyDefaultCascadeListForLanguagesPtr) {
-        return;
-    }
-
-    // get the system font (note: the lang parameter doesn't affect the result)
-    CTFontRef systemFont =
-        CTFontCreateUIFontForLanguage(kCTFontSystemFontType, 12.0,
-                                      CFSTR("en-US"));
-
-    // fetch cascade list
-    CFStringRef langStr =
-        CFStringCreateWithCString(kCFAllocatorDefault,
-                                  PromiseFlatCString(aLang).get(),
-                                  kCFStringEncodingUTF8);
-    CFStringRef languages[1] = { langStr };
-    CFArrayRef langList = CFArrayCreate(kCFAllocatorDefault,
-                                        (const void **) languages, 1,
-                                        &kCFTypeArrayCallBacks);
-    CFRelease(langStr);
-    CFArrayRef cascade =
-        CTFontCopyDefaultCascadeListForLanguagesPtr(systemFont, langList);
-    CFRelease(systemFont);
-    CFRelease(langList);
-
-    // iterate over font descriptors in cascade array
-    for (NSFontDescriptor* fontDesc in (NSArray*) cascade) {
-        // First, determine the font family name. Since font cascades
-        // sometimes include weird "meta" names, need to determine the
-        // family name using the CGFont object
-        CTFontDescriptorRef fd = (CTFontDescriptorRef) fontDesc;
-        CTFontRef fontRef = CTFontCreateWithFontDescriptor(fd, 0.0, 0);
-        CFRelease(fd);
-        CGFontRef cgFontRef = CTFontCopyGraphicsFont(fontRef, NULL);
-        CFRelease(fontRef);
-        CFStringRef psname = CGFontCopyPostScriptName(cgFontRef);
-        CFRelease(cgFontRef);
-        fontRef = CTFontCreateWithName(psname, 0.0, NULL);
-        CFRelease(psname);
-        CFStringRef name = CTFontCopyFamilyName(fontRef);
-        CFRelease(fontRef);
-
-        // lookup the family and append it to the list
-        nsAutoString familyStr;
-        GetStringForNSString((NSString*) name, familyStr);
-        CFRelease(name);
-        gfxFontFamily* family = FindFamily(familyStr);
-        if (family) {
-            aCascadeList.AppendElement(family);
-        }
-    }
-}
-
-void
 gfxMacPlatformFontList::InitSystemFonts()
 {
     // system font under 10.11 are two distinct families for text/display sizes
@@ -863,7 +797,6 @@ gfxMacPlatformFontList::InitSystemFonts()
     nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
     mSystemTextFontFamily = FindSystemFontFamily(familyName);
     NS_ASSERTION(mSystemTextFontFamily, "null system display font family");
-    mSystemTextFontFamily->SetLinkedSystemFamily();
 
     // display font family, if on OSX 10.11
     if (mUseSizeSensitiveSystemFont) {
@@ -872,7 +805,6 @@ gfxMacPlatformFontList::InitSystemFonts()
         nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
         mSystemDisplayFontFamily = FindSystemFontFamily(familyName);
         NS_ASSERTION(mSystemDisplayFontFamily, "null system display font family");
-        mSystemDisplayFontFamily->SetLinkedSystemFamily();
 
 #if DEBUG
         // confirm that the optical size switch is at 20.0
@@ -900,11 +832,6 @@ gfxMacPlatformFontList::InitSystemFonts()
                    " -- please log a bug!!");
     }
 #endif
-
-    nsAutoCString en("en");
-    AutoTArray<gfxFontFamily*,10> list;
-    LookupFontCascadeForLang(en, list);
-    mDefaultCascadeFamilies.AppendElements(list);
 }
 
 gfxFontFamily*
@@ -1250,66 +1177,6 @@ gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
     // convert size from css pixels to device pixels
     aFontStyle.size = [font pointSize] * aDevPixPerCSSPixel;
     aFontStyle.systemFont = true;
-}
-
-void
-gfxMacPlatformFontList::AppendLinkedSystemFamilies(nsIAtom* aLanguage,
-                                                   nsTArray<gfxFontFamily*>& aFamilyList)
-{
-    // map lang atom to lang string
-    nsAutoCString lang;
-    GetSampleLangForGroup(aLanguage, lang, false);
-    ToLowerCase(lang);
-
-    // quick exit for older versions of OSX
-    if (mDefaultCascadeFamilies.IsEmpty()) {
-        return;
-    }
-
-    // assume default cascade except for CJK locales
-    bool defaultCascade = true;
-    if (lang.Length() >= 2) {
-        const nsACString& langTag = Substring(lang, 0, 2);
-        if (langTag.EqualsLiteral("zh")) {
-            defaultCascade = false;
-            // the font cascade code is fussy about the hyphen/underbar before
-            // the region code, so zh_TW is recognized, zh-TW is ignored
-            if (lang.EqualsLiteral("zh-tw")) {
-                lang.AssignLiteral("zh_tw");
-            } else if (lang.EqualsLiteral("zh-cn")) {
-                lang.AssignLiteral("zh_cn");
-            } else if (lang.EqualsLiteral("zh-hk")) {
-                lang.AssignLiteral("zh_hk");
-            }
-        } else if (langTag.EqualsLiteral("ja") ||
-                   langTag.EqualsLiteral("ko")) {
-            defaultCascade = false;
-        }
-    }
-
-    if (defaultCascade) {
-        aFamilyList.AppendElements(mDefaultCascadeFamilies);
-        return;
-    }
-
-    // check to see if cached already
-    PrefFontList* fontsForLang = mNonDefaultCascadeFamilies.Get(lang);
-    if (fontsForLang) {
-        aFamilyList.AppendElements(*fontsForLang);
-        return;
-    }
-
-    // lookup the cascade fonts
-    AutoTArray<gfxFontFamily*,30> list;
-    LookupFontCascadeForLang(lang, list);
-
-    // add cascade to cascade cache
-    fontsForLang = new PrefFontList;
-    fontsForLang->AppendElements(list);
-    mNonDefaultCascadeFamilies.Put(lang, fontsForLang);
-
-    // use the new list
-    aFamilyList.AppendElements(list);
 }
 
 // used to load system-wide font info on off-main thread
