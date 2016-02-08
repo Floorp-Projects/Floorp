@@ -1,5 +1,5 @@
 // Enable signature checks for these tests
-gUseRealCertChecks = true;
+Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 // Disable update security
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 // Allow attempting to show the compatibility UI which should not happen
