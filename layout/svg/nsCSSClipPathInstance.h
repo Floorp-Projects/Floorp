@@ -36,6 +36,12 @@ private:
 
   already_AddRefed<Path> CreateClipPath(DrawTarget* aDrawTarget);
 
+  already_AddRefed<Path> CreateClipPathCircle(DrawTarget* aDrawTarget,
+                                              const nsRect& aRefBox);
+
+  already_AddRefed<Path> CreateClipPathEllipse(DrawTarget* aDrawTarget,
+                                               const nsRect& aRefBox);
+
   already_AddRefed<Path> CreateClipPathPolygon(DrawTarget* aDrawTarget,
                                                const nsRect& aRefBox);
 
