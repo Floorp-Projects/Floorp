@@ -1114,8 +1114,10 @@ MediaFormatReader::Update(TrackType aTrack)
               decoder.mLastSampleTime.ref().ToMicroseconds());
           InternalSeek(aTrack, SeekTarget(decoder.mLastSampleTime.ref(), true));
         }
-        LOG("Rejecting %s promise: WAITING_FOR_DATA", TrackTypeToStr(aTrack));
-        decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+        if (!decoder.mReceivedNewData) {
+          LOG("Rejecting %s promise: WAITING_FOR_DATA", TrackTypeToStr(aTrack));
+          decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+        }
       }
       // Now that draining has completed, we check if we have received
       // new data again as the result may now be different from the earlier
