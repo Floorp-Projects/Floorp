@@ -431,7 +431,7 @@ Settings.prototype = {
   /**
    * Reads a setting from the Registry and stores the converted result into
    * the appropriate Firefox preference.
-   * 
+   *
    * @param aPath
    *        Registry path under HKCU.
    * @param aKey
