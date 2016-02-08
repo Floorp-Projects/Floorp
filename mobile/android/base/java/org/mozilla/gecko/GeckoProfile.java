@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
@@ -612,20 +613,12 @@ public final class GeckoProfile {
      */
     @WorkerThread
     public String getClientId() throws IOException {
-        final String clientIdFileContents;
+        final JSONObject obj = readJSONObjectFromFile(CLIENT_ID_FILE_PATH);
         try {
-            clientIdFileContents = readFile(CLIENT_ID_FILE_PATH);
-        } catch (final IOException e) {
-            // Don't log exception to avoid leaking profile path.
-            throw new IOException("Could not read client ID file to retrieve client ID");
-        }
-
-        try {
-            final org.json.JSONObject json = new org.json.JSONObject(clientIdFileContents);
-            return json.getString(CLIENT_ID_JSON_ATTR);
+            return obj.getString(CLIENT_ID_JSON_ATTR);
         } catch (final JSONException e) {
-            // Don't log exception to avoid leaking profile path.
-            throw new IOException("Could not parse JSON to retrieve client ID");
+            // Don't log to avoid leaking data in JSONObject.
+            throw new IOException("Client ID does not exist in JSONObject");
         }
     }
 
@@ -688,6 +681,24 @@ public final class GeckoProfile {
             } catch (IOException e) {
                 Log.e(LOGTAG, "Error closing writer while writing to file", e);
             }
+        }
+    }
+
+    @WorkerThread
+    public JSONObject readJSONObjectFromFile(final String filename) throws IOException {
+        final String fileContents;
+        try {
+            fileContents = readFile(filename);
+        } catch (final IOException e) {
+            // Don't log exception to avoid leaking profile path.
+            throw new IOException("Could not access given file to retrieve JSONObject");
+        }
+
+        try {
+            return new JSONObject(fileContents);
+        } catch (final JSONException e) {
+            // Don't log exception to avoid leaking profile path.
+            throw new IOException("Could not parse JSON to retrieve JSONObject");
         }
     }
 
