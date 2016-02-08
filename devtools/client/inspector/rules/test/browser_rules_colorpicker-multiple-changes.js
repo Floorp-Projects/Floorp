@@ -118,7 +118,7 @@ function* testOverriddenMultipleColorChanges(inspector, ruleView) {
       name: "color",
       value: computed
     });
-    is(content.getComputedStyle(content.document.querySelector("p")).color,
+    is((yield getComputedStyleProperty("p", null, "color")),
       "rgb(200, 200, 200)", "The color of the P tag is still correct");
   }
 }
