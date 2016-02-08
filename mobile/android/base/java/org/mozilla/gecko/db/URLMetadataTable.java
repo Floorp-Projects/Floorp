@@ -57,6 +57,7 @@ public class URLMetadataTable extends BaseTable {
         // This table was added in v21 of the db. Force its creation if we're coming from an earlier version
         if (newVersion >= 21 && oldVersion < 21) {
             onCreate(db);
+            return;
         }
 
         // Removed the redundant metadata_url_idx index in version 26
