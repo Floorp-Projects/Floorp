@@ -6529,6 +6529,7 @@ AddonInternal.prototype = {
   sourceURI: null,
   releaseNotesURI: null,
   foreignInstall: false,
+  seen: true,
   skinnable: false,
 
   get selectedLocale() {
@@ -6811,6 +6812,15 @@ function AddonWrapper(aAddon) {
 AddonWrapper.prototype = {
   get __AddonInternal__() {
     return AppConstants.DEBUG ? addonFor(this) : undefined;
+  },
+
+  get seen() {
+    return addonFor(this).seen;
+  },
+
+  markAsSeen: function() {
+    addonFor(this).seen = true;
+    XPIDatabase.saveChanges();
   },
 
   get type() {

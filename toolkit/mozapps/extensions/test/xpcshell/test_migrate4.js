@@ -172,7 +172,12 @@ function perform_migration() {
   // Turn on disabling for all scopes
   Services.prefs.setIntPref("extensions.autoDisableScopes", 15);
 
-  changeXPIDBVersion(1);
+  changeXPIDBVersion(1, data => {
+    // Delete the seen property from all add-ons to make sure it defaults to true
+    for (let addon of data.addons) {
+      delete addon.seen;
+    }
+  });
   Services.prefs.setIntPref("extensions.databaseSchema", 1);
 
   gAppInfo.version = "2"
@@ -205,6 +210,7 @@ function test_results() {
     do_check_true(a1.isActive);
     do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_true(a1.foreignInstall);
+    do_check_true(a1.seen);
     do_check_false(a1.hasBinaryComponents);
     do_check_false(a1.strictCompatibility);
 
@@ -216,6 +222,7 @@ function test_results() {
     do_check_false(a2.isActive);
     do_check_eq(a2.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
     do_check_true(a2.foreignInstall);
+    do_check_true(a2.seen);
     do_check_false(a2.hasBinaryComponents);
     do_check_false(a2.strictCompatibility);
 
@@ -227,6 +234,7 @@ function test_results() {
     do_check_false(a3.isActive);
     do_check_eq(a3.applyBackgroundUpdates, AddonManager.AUTOUPDATE_ENABLE);
     do_check_true(a3.foreignInstall);
+    do_check_true(a3.seen);
     do_check_false(a3.hasBinaryComponents);
     do_check_false(a3.strictCompatibility);
 
@@ -238,6 +246,7 @@ function test_results() {
     do_check_true(a4.isActive);
     do_check_eq(a4.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_true(a4.foreignInstall);
+    do_check_true(a4.seen);
     do_check_false(a4.hasBinaryComponents);
     do_check_true(a4.strictCompatibility);
 
@@ -248,6 +257,7 @@ function test_results() {
     do_check_true(a5.isActive);
     do_check_eq(a4.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_true(a5.foreignInstall);
+    do_check_true(a5.seen);
     do_check_false(a5.hasBinaryComponents);
     do_check_false(a5.strictCompatibility);
 
@@ -260,6 +270,7 @@ function test_results() {
     do_check_false(a6.isActive);
     do_check_eq(a6.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_true(a6.foreignInstall);
+    do_check_true(a6.seen);
     do_check_eq(a6.sourceURI.spec, "http://localhost:" + gPort + "/addons/test_migrate4_6.xpi");
     do_check_eq(a6.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     do_check_false(a6.hasBinaryComponents);
@@ -273,6 +284,7 @@ function test_results() {
     do_check_true(a7.isActive);
     do_check_eq(a7.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
     do_check_false(a7.foreignInstall);
+    do_check_true(a7.seen);
     do_check_eq(a7.sourceURI.spec, "http://localhost:" + gPort + "/addons/test_migrate4_7.xpi");
     do_check_eq(a7.releaseNotesURI, null);
     do_check_false(a7.hasBinaryComponents);
@@ -284,6 +296,7 @@ function test_results() {
     do_check_false(a8.appDisabled);
     do_check_true(a8.isActive);
     do_check_false(a8.foreignInstall);
+    do_check_true(a8.seen);
     do_check_true(a8.hasBinaryComponents);
     do_check_false(a8.strictCompatibility);
 
@@ -293,6 +306,7 @@ function test_results() {
     do_check_false(a9.appDisabled);
     do_check_true(a9.isActive);
     do_check_false(a9.foreignInstall);
+    do_check_true(a9.seen);
     do_check_false(a9.hasBinaryComponents);
     do_check_true(a9.strictCompatibility);
 
