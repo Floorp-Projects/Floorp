@@ -1751,7 +1751,7 @@ class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*RegExpMatcherRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
-                                   int32_t lastIndex, bool sticky,
+                                   uint32_t lastIndex, bool sticky,
                                    MatchPairs* pairs, MutableHandleValue output);
 static const VMFunction RegExpMatcherRawInfo = FunctionInfo<RegExpMatcherRawFn>(RegExpMatcherRaw);
 
@@ -1916,7 +1916,7 @@ class OutOfLineRegExpTester : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*RegExpTesterRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
-                                  int32_t lastIndex, bool sticky, int32_t* result);
+                                  uint32_t lastIndex, bool sticky, int32_t* result);
 static const VMFunction RegExpTesterRawInfo = FunctionInfo<RegExpTesterRawFn>(RegExpTesterRaw);
 
 void
