@@ -60,6 +60,16 @@ function WebNavigationEventManager(context, eventName) {
 
 WebNavigationEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
+function convertGetFrameResult(tabId, data) {
+  return {
+    errorOccurred: data.errorOccurred,
+    url: data.url,
+    tabId,
+    frameId: ExtensionManagement.getFrameId(data.windowId),
+    parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
+  };
+}
+
 extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, context) => {
   return {
     webNavigation: {
@@ -70,6 +80,36 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
       onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
       onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
       onCreatedNavigationTarget: ignoreEvent(context, "webNavigation.onCreatedNavigationTarget"),
+      getAllFrames(details) {
+        let tab = TabManager.getTab(details.tabId);
+        if (!tab) {
+          return Promise.reject({ message: `No tab found with tabId: ${details.tabId}`});
+        }
+
+        let { innerWindowID, messageManager } = tab.linkedBrowser;
+        let recipient = { innerWindowID };
+
+        return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, recipient)
+                      .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
+      },
+      getFrame(details) {
+        let tab = TabManager.getTab(details.tabId);
+        if (!tab) {
+          return Promise.reject({ message: `No tab found with tabId: ${details.tabId}`});
+        }
+
+        let recipient = {
+          innerWindowID: tab.linkedBrowser.innerWindowID,
+        };
+
+        let mm = tab.linkedBrowser.messageManager;
+        return context.sendMessage(mm, "WebNavigation:GetFrame", { options: details }, recipient)
+                      .then((result) => {
+                        return result ?
+                          convertGetFrameResult(details.tabId, result) :
+                          Promise.reject({ message: `No frame found with frameId: ${details.frameId}`});
+                      });
+      },
     },
   };
 });
