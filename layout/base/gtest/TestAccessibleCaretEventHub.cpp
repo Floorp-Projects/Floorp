@@ -447,6 +447,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
   PressEventCreator aPressEventCreator,
   ReleaseEventCreator aReleaseEventCreator)
 {
+  MockFunction<void(::std::string aCheckPointName)> check;
   {
     InSequence dummy;
 
@@ -455,8 +456,20 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
 
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
       .WillOnce(Return(NS_OK));
+
+    EXPECT_CALL(check, Call("longtap with scrolling"));
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+      .WillOnce(Return(NS_ERROR_FAILURE));
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), SelectWordOrShortcut(_))
+      .WillOnce(Return(NS_OK));
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
   }
 
+  // Test long tap without scrolling.
   HandleEventAndCheckState(aPressEventCreator(0, 0),
                            MockAccessibleCaretEventHub::PressNoCaretState(),
                            nsEventStatus_eIgnore);
@@ -466,6 +479,36 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
                            nsEventStatus_eConsumeNoDefault);
 
   HandleEventAndCheckState(aReleaseEventCreator(0, 0),
+                           MockAccessibleCaretEventHub::NoActionState(),
+                           nsEventStatus_eIgnore);
+
+  // On Fennec, after long tap, the script might scroll and zoom the input field
+  // to the center of the screen to make typing easier before the user lifts the
+  // finger.
+  check.Call("longtap with scrolling");
+
+  HandleEventAndCheckState(aPressEventCreator(1, 1),
+                           MockAccessibleCaretEventHub::PressNoCaretState(),
+                           nsEventStatus_eIgnore);
+
+  HandleEventAndCheckState(CreateLongTapEvent(1, 1),
+                           MockAccessibleCaretEventHub::LongTapState(),
+                           nsEventStatus_eConsumeNoDefault);
+
+  mHub->AsyncPanZoomStarted();
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
+
+  mHub->ScrollPositionChanged();
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
+
+  mHub->AsyncPanZoomStopped();
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
+
+  // Simulate scroll end fired by timer.
+  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
+  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
+
+  HandleEventAndCheckState(aReleaseEventCreator(1, 1),
                            MockAccessibleCaretEventHub::NoActionState(),
                            nsEventStatus_eIgnore);
 }
