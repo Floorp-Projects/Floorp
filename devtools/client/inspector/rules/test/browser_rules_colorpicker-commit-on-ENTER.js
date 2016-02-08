@@ -51,7 +51,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   yield onHidden;
   yield onModified;
 
-  is(content.getComputedStyle(content.document.body).borderLeftColor,
+  is((yield getComputedStyleProperty("body", null, "border-left-color")),
     "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
   is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
     "The color swatch's background was kept after RETURN");
