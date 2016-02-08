@@ -24,6 +24,8 @@ class X11TextureSourceBasic
 public:
   X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface);
 
+  virtual const char* Name() const override { return "X11TextureSourceBasic"; }
+
   virtual X11TextureSourceBasic* AsSourceBasic() override { return this; }
 
   virtual gfx::IntSize GetSize() const override;
