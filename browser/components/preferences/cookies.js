@@ -505,6 +505,14 @@ var gCookiesWindow = {
     return this._bundle.getString("expireAtEndOfSession");
   },
 
+  _getUserContextString: function(aUserContextId) {
+    if (parseInt(aUserContextId) == 0) {
+      return this._bundle.getString("noUserContextLabel");
+    }
+
+    return UserContextUI.getUserContextLabel(aUserContextId);
+  },
+
   _updateCookieData: function (aItem) {
     var seln = this._view.selection;
     var ids = ["name", "value", "host", "path", "isSecure", "expires", "userContext"];
@@ -517,7 +525,7 @@ var gCookiesWindow = {
                                               : this._bundle.getString("hostColon"),
                      isSecure: aItem.isSecure ? this._bundle.getString("forSecureOnly")
                                               : this._bundle.getString("forAnyConnection"),
-                     userContext: UserContextUI.getUserContextLabel(aItem.originAttributes.userContextId) };
+                     userContext: this._getUserContextString(aItem.originAttributes.userContextId) };
       for (var i = 0; i < ids.length; ++i) {
         document.getElementById(ids[i]).disabled = false;
       }
