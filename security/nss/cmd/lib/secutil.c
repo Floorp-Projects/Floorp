@@ -3717,6 +3717,12 @@ SECU_GetSSLVersionFromName(const char *buf, size_t bufLen, PRUint16 *version)
         *version = SSL_LIBRARY_VERSION_TLS_1_2;
         return SECSuccess;
     }
+
+    if (!PL_strncasecmp(buf, "tls1.3", bufLen)) {
+        *version = SSL_LIBRARY_VERSION_TLS_1_3;
+        return SECSuccess;
+    }
+
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
 }
