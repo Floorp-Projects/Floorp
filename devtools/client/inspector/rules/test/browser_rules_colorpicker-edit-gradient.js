@@ -58,8 +58,8 @@ function* testPickingNewColor(view) {
   yield onShown;
 
   let change = {
-    element: content.document.body,
-    name: "backgroundImage",
+    selector: "body",
+    name: "background-image",
     value: "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
   };
   yield simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
