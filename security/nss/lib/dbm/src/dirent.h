@@ -13,8 +13,8 @@
  *
  *  Some modifications by Martin Junius                      02-14-89
  *
- *	AK900712
- *	AK910410	abs_path - make absolute path
+ *  AK900712
+ *  AK910410    abs_path - make absolute path
  *
  */
 
@@ -24,9 +24,9 @@
 #if defined(__IBMC__) || defined(__IBMCPP__) || defined(XP_W32_MSVC)
 #include <stdio.h>
 #ifdef MAXPATHLEN
-	#undef MAXPATHLEN
+#undef MAXPATHLEN
 #endif
-#define MAXPATHLEN (FILENAME_MAX*4)
+#define MAXPATHLEN (FILENAME_MAX * 4)
 #define MAXNAMLEN FILENAME_MAX
 
 #else
@@ -40,54 +40,54 @@ extern "C" {
 
 /* attribute stuff */
 #ifndef A_RONLY
-# define A_RONLY   0x01
-# define A_HIDDEN  0x02
-# define A_SYSTEM  0x04
-# define A_LABEL   0x08
-# define A_DIR     0x10
-# define A_ARCHIVE 0x20
+#define A_RONLY 0x01
+#define A_HIDDEN 0x02
+#define A_SYSTEM 0x04
+#define A_LABEL 0x08
+#define A_DIR 0x10
+#define A_ARCHIVE 0x20
 #endif
 
 struct dirent {
-#if defined(OS2) || defined(WIN32)        /* use the layout of EMX to avoid trouble */
-    int            d_ino;                 /* Dummy */
-    int            d_reclen;		  /* Dummy, same as d_namlen */
-    int            d_namlen;              /* length of name */
-    char           d_name[MAXNAMLEN + 1];
-    unsigned long  d_size;
-    unsigned short d_attribute;           /* attributes (see above) */
-    unsigned short d_time;                /* modification time */
-    unsigned short d_date;                /* modification date */
+#if defined(OS2) || defined(WIN32) /* use the layout of EMX to avoid trouble */
+    int d_ino;                     /* Dummy */
+    int d_reclen;                  /* Dummy, same as d_namlen */
+    int d_namlen;                  /* length of name */
+    char d_name[MAXNAMLEN + 1];
+    unsigned long d_size;
+    unsigned short d_attribute; /* attributes (see above) */
+    unsigned short d_time;      /* modification time */
+    unsigned short d_date;      /* modification date */
 #else
-    char	   d_name[MAXNAMLEN + 1]; /* garentee null termination */
-    char	   d_attribute;		  /* .. extension .. */
-    unsigned long  d_size;		  /* .. extension .. */
+    char d_name[MAXNAMLEN + 1]; /* garentee null termination */
+    char d_attribute;           /* .. extension .. */
+    unsigned long d_size;       /* .. extension .. */
 #endif
 };
 
 typedef struct _dirdescr DIR;
 /* the structs do not have to be defined here */
 
-extern DIR		*opendir(const char *);
-extern DIR		*openxdir(const char *, unsigned);
-extern struct dirent	*readdir(DIR *);
-extern void		seekdir(DIR *, long);
-extern long		telldir(DIR *);
-extern void 		closedir(DIR *);
-#define			rewinddir(dirp) seekdir(dirp, 0L)
+extern DIR *opendir(const char *);
+extern DIR *openxdir(const char *, unsigned);
+extern struct dirent *readdir(DIR *);
+extern void seekdir(DIR *, long);
+extern long telldir(DIR *);
+extern void closedir(DIR *);
+#define rewinddir(dirp) seekdir(dirp, 0L)
 
-extern char *		abs_path(const char *name, char *buffer, int len);
+extern char *abs_path(const char *name, char *buffer, int len);
 
 #ifndef S_IFMT
-#define S_IFMT ( S_IFDIR | S_IFREG )
+#define S_IFMT (S_IFDIR | S_IFREG)
 #endif
 
 #ifndef S_ISDIR
-#define S_ISDIR( m )                    (((m) & S_IFMT) == S_IFDIR)
+#define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
 
 #ifndef S_ISREG
-#define S_ISREG( m )                    (((m) & S_IFMT) == S_IFREG)
+#define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
 #endif
 
 #ifdef __cplusplus

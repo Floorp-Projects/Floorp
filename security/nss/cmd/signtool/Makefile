@@ -25,12 +25,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 
 include ../platlibs.mk
-
-ifdef USE_SYSTEM_ZLIB
-OS_LIBS += $(ZLIB_LIBS)
-else
-EXTRA_LIBS += $(ZLIB_LIBS)
-endif
+include $(CORE_DEPTH)/coreconf/zlib.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #

@@ -238,6 +238,7 @@ ssl_DupSocket(sslSocket *os)
                     sizeof(ss->ssl3.signatureAlgorithms[0]) *
                     os->ssl3.signatureAlgorithmCount);
         ss->ssl3.signatureAlgorithmCount = os->ssl3.signatureAlgorithmCount;
+        ss->ssl3.downgradeCheckVersion = os->ssl3.downgradeCheckVersion;
 
         ss->ssl3.dheWeakGroupEnabled = os->ssl3.dheWeakGroupEnabled;
         ss->ssl3.numDHEGroups = os->ssl3.numDHEGroups;
@@ -1967,6 +1968,7 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
                 sizeof(ss->ssl3.signatureAlgorithms[0]) *
                 sm->ssl3.signatureAlgorithmCount);
     ss->ssl3.signatureAlgorithmCount = sm->ssl3.signatureAlgorithmCount;
+    ss->ssl3.downgradeCheckVersion = sm->ssl3.downgradeCheckVersion;
 
     if (!ss->opt.useSecurity) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -2279,7 +2281,7 @@ SSL_VersionRangeGet(PRFileDesc *fd, SSLVersionRange *vrange)
     sslSocket *ss = ssl_FindSocket(fd);
 
     if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL3_VersionRangeGet",
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_VersionRangeGet",
                 SSL_GETPID(), fd));
         return SECFailure;
     }
@@ -2306,7 +2308,7 @@ SSL_VersionRangeSet(PRFileDesc *fd, const SSLVersionRange *vrange)
     sslSocket *ss = ssl_FindSocket(fd);
 
     if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL3_VersionRangeSet",
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_VersionRangeSet",
                 SSL_GETPID(), fd));
         return SECFailure;
     }
@@ -2319,12 +2321,54 @@ SSL_VersionRangeSet(PRFileDesc *fd, const SSLVersionRange *vrange)
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
 
+    if (ss->ssl3.downgradeCheckVersion &&
+        ss->vrange.max > ss->ssl3.downgradeCheckVersion) {
+        PORT_SetError(SSL_ERROR_INVALID_VERSION_RANGE);
+        ssl_ReleaseSSL3HandshakeLock(ss);
+        ssl_Release1stHandshakeLock(ss);
+        return SECFailure;
+    }
+
     ss->vrange = *vrange;
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
 
     return SECSuccess;
+}
+
+SECStatus
+SSL_SetDowngradeCheckVersion(PRFileDesc *fd, PRUint16 version)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+    SECStatus rv = SECFailure;
+
+    if (!ss) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetDowngradeCheckVersion",
+                SSL_GETPID(), fd));
+        return SECFailure;
+    }
+
+    if (version && !ssl3_VersionIsSupported(ss->protocolVariant, version)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    ssl_Get1stHandshakeLock(ss);
+    ssl_GetSSL3HandshakeLock(ss);
+
+    if (version && version < ss->vrange.max) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto loser;
+    }
+    ss->ssl3.downgradeCheckVersion = version;
+    rv = SECSuccess;
+
+loser:
+    ssl_ReleaseSSL3HandshakeLock(ss);
+    ssl_Release1stHandshakeLock(ss);
+
+    return rv;
 }
 
 const SECItemArray *
@@ -3475,6 +3519,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         ssl2_InitSocketPolicy(ss);
         ssl3_InitSocketPolicy(ss);
         PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
+        PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
 
         if (makeLocks) {
             status = ssl_MakeLocks(ss);

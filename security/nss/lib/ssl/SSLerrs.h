@@ -440,3 +440,27 @@ ER3(SSL_ERROR_MISSING_EXTENDED_MASTER_SECRET, (SSL_ERROR_BASE + 136),
 
 ER3(SSL_ERROR_UNEXPECTED_EXTENDED_MASTER_SECRET, (SSL_ERROR_BASE + 137),
 "The peer tried to resume with an unexpected extended_master_secret extension")
+
+ER3(SSL_ERROR_RX_MALFORMED_KEY_SHARE, (SSL_ERROR_BASE + 138),
+"SSL received a malformed Key Share extension.")
+
+ER3(SSL_ERROR_MISSING_KEY_SHARE, (SSL_ERROR_BASE + 139),
+"SSL expected a Key Share extension.")
+
+ER3(SSL_ERROR_RX_MALFORMED_ECDHE_KEY_SHARE, (SSL_ERROR_BASE + 140),
+"SSL received a malformed ECDHE key share handshake extension.")
+
+ER3(SSL_ERROR_RX_MALFORMED_DHE_KEY_SHARE, (SSL_ERROR_BASE + 141),
+"SSL received a malformed DHE key share handshake extension.")
+
+ER3(SSL_ERROR_RX_UNEXPECTED_ENCRYPTED_EXTENSIONS, (SSL_ERROR_BASE + 142),
+"SSL received a malformed Encrypted Extensions handshake message.")
+
+ER3(SSL_ERROR_MISSING_EXTENSION_ALERT, (SSL_ERROR_BASE + 143),
+"SSL received a missing_extenson alert.")
+
+ER3(SSL_ERROR_KEY_EXCHANGE_FAILURE, (SSL_ERROR_BASE + 144),
+"SSL had an error performing key exchange.")
+
+ER3(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION, (SSL_ERROR_BASE + 145),
+"SSL received an extension that is not permitted for this version.")
