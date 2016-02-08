@@ -1,0 +1,41 @@
+<html>
+<head>
+<style>
+body {padding: 0;margin:0;}
+div {
+  width:  200px;
+  height: 200px;
+  position: fixed;
+  top: 50px;
+  left: 50px;
+  margin: 50;
+  padding: 50;
+  border: 50px solid red;
+  transform-origin: 0 0;
+  transform: translate(50px, 50px) scale(0.5);
+  background-color: green;
+  clip-path: polygon(0 0, 200px 0, 0 200px) content-box;*/
+}
+</style>
+<title>clip-path with polygon() hit test</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<div id="a"></div>
+<p style="margin-top: 110px">
+<script>
+var a = document.getElementById("a");
+if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
+  isnot(a, document.elementFromPoint(199, 199), "a shouldn't be found");
+  isnot(a, document.elementFromPoint(199, 250), "a shouldn't be found");
+  isnot(a, document.elementFromPoint(250, 199), "a shouldn't be found");
+  isnot(a, document.elementFromPoint(255, 255), "a shouldn't be found");
+  isnot(a, document.elementFromPoint(301, 200), "a shouldn't be found");
+  isnot(a, document.elementFromPoint(200, 301), "a shouldn't be found");
+}
+is(a, document.elementFromPoint(200, 200), "a should be found");
+is(a, document.elementFromPoint(299, 200), "a should be found");
+is(a, document.elementFromPoint(200, 299), "a should be found");
+is(a, document.elementFromPoint(250, 250), "a should be found");
+</script>
+</html>
