@@ -251,6 +251,12 @@ protected:
   // selection bar is always disabled in cursor mode.
   static bool sSelectionBarEnabled;
 
+  // Preference to show caret in cursor mode when long tapping on an empty
+  // content. This also changes the default update behavior in cursor mode,
+  // which is based on the emptiness of the content, into something more
+  // heuristic. See UpdateCaretsForCursorMode() for the details.
+  static bool sCaretShownWhenLongTappingOnEmptyContent;
+
   // Android specific visibility extensions correct compatibility issues
   // with caret-drag and ActionBar visibility during page scroll.
   static bool sCaretsExtendedVisibility;
