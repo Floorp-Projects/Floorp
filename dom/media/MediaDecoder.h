@@ -278,6 +278,10 @@ public:
   // Call on the main thread only.
   virtual bool IsEndedOrShutdown() const;
 
+  // Return true if the MediaDecoderOwner's error attribute is not null.
+  // If the MediaDecoder is shutting down, OwnerHasError will return true.
+  bool OwnerHasError() const;
+
 protected:
   // Updates the media duration. This is called while the media is being
   // played, calls before the media has reached loaded metadata are ignored.
