@@ -1,16 +1,7 @@
 /* Copyright 2013 Google Inc. All Rights Reserved.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+   Distributed under MIT license.
+   See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
 /* Utilities for building Huffman decoding tables. */
@@ -29,9 +20,14 @@ extern "C" {
 /* For current format this constant equals to kNumInsertAndCopyCodes */
 #define BROTLI_HUFFMAN_MAX_CODE_LENGTHS_SIZE 704
 
-/* Maximum possible Huffman table size for an alphabet size of 704, max code
- * length 15 and root table bits 8. */
-#define BROTLI_HUFFMAN_MAX_TABLE_SIZE 1080
+/* Maximum possible Huffman table size for an alphabet size of (index * 32),
+ * max code length 15 and root table bits 8. */
+static const uint16_t kMaxHuffmanTableSize[] = {
+  256, 402, 436, 468, 500, 534, 566, 598, 630, 662, 694, 726, 758, 790, 822,
+  854, 886, 920, 952, 984, 1016, 1048, 1080};
+#define BROTLI_HUFFMAN_MAX_SIZE_26 396
+#define BROTLI_HUFFMAN_MAX_SIZE_258 632
+#define BROTLI_HUFFMAN_MAX_SIZE_272 646
 
 #define BROTLI_HUFFMAN_MAX_CODE_LENGTH_CODE_LENGTH 5
 
@@ -48,31 +44,27 @@ void BrotliBuildCodeLengthsHuffmanTable(HuffmanCode* root_table,
 
 /* Builds Huffman lookup table assuming code lengths are in symbol order. */
 /* Returns size of resulting table. */
-int BrotliBuildHuffmanTable(HuffmanCode* root_table,
-                            int root_bits,
-                            const uint16_t* const symbol_lists,
-                            uint16_t *count_arg);
+uint32_t BrotliBuildHuffmanTable(HuffmanCode* root_table,
+                                 int root_bits,
+                                 const uint16_t* const symbol_lists,
+                                 uint16_t *count_arg);
 
 /* Builds a simple Huffman table. The num_symbols parameter is to be */
 /* interpreted as follows: 0 means 1 symbol, 1 means 2 symbols, 2 means 3 */
 /* symbols, 3 means 4 symbols with lengths 2,2,2,2, 4 means 4 symbols with */
 /* lengths 1,2,3,3. */
-int BrotliBuildSimpleHuffmanTable(HuffmanCode* table,
-                                  int root_bits,
-                                  uint16_t *symbols,
-                                  uint32_t num_symbols);
+uint32_t BrotliBuildSimpleHuffmanTable(HuffmanCode* table,
+                                       int root_bits,
+                                       uint16_t *symbols,
+                                       uint32_t num_symbols);
 
 /* Contains a collection of Huffman trees with the same alphabet size. */
 typedef struct {
   HuffmanCode** htrees;
   HuffmanCode* codes;
-  int16_t alphabet_size;
-  int16_t num_htrees;
+  uint16_t alphabet_size;
+  uint16_t num_htrees;
 } HuffmanTreeGroup;
-
-void BrotliHuffmanTreeGroupInit(HuffmanTreeGroup* group,
-                                int alphabet_size, int ntrees);
-void BrotliHuffmanTreeGroupRelease(HuffmanTreeGroup* group);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }    /* extern "C" */
