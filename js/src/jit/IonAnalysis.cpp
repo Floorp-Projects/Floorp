@@ -1193,7 +1193,7 @@ class TypeAnalyzer
     bool propagateSpecialization(MPhi* phi);
     bool specializePhis();
     void replaceRedundantPhi(MPhi* phi);
-    void adjustPhiInputs(MPhi* phi);
+    bool adjustPhiInputs(MPhi* phi);
     bool adjustInputs(MDefinition* def);
     bool insertConversions();
 
@@ -1408,7 +1408,7 @@ TypeAnalyzer::specializePhis()
     return true;
 }
 
-void
+bool
 TypeAnalyzer::adjustPhiInputs(MPhi* phi)
 {
     MIRType phiType = phi->type();
@@ -1423,6 +1423,9 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             MDefinition* in = phi->getOperand(i);
             if (in->type() == phiType)
                 continue;
+
+            if (!alloc().ensureBallast())
+                return false;
 
             if (in->isBox() && in->toBox()->input()->type() == phiType) {
                 phi->replaceOperand(i, in->toBox()->input());
@@ -1467,7 +1470,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             }
         }
 
-        return;
+        return true;
     }
 
     // Box every typed input.
@@ -1481,10 +1484,15 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             // the original box.
             phi->replaceOperand(i, in->toUnbox()->input());
         } else {
+            if (!alloc().ensureBallast())
+                return false;
+
             MDefinition* box = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
             phi->replaceOperand(i, box);
         }
     }
+
+    return true;
 }
 
 bool
@@ -1552,7 +1560,8 @@ TypeAnalyzer::insertConversions()
                 replaceRedundantPhi(phi);
                 block->discardPhi(phi);
             } else {
-                adjustPhiInputs(phi);
+                if (!adjustPhiInputs(phi))
+                    return false;
             }
         }
 
