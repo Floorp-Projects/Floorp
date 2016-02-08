@@ -116,6 +116,9 @@ pref("network.predictor.enabled", true);
 pref("network.predictor.max-db-size", 2097152); // bytes
 pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
 
+// Use JS mDNS as a fallback
+pref("network.mdns.use_js_fallback", true);
+
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
 
@@ -976,3 +979,7 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 
 // Token server used by Firefox Account-authenticated Sync.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
+
+// Enable Presentation API
+pref("dom.presentation.enabled", true);
+pref("dom.presentation.discovery.enabled", true);

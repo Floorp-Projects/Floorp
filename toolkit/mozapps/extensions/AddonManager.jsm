@@ -3043,14 +3043,22 @@ this.AddonManager = {
   // The combination of all scopes.
   SCOPE_ALL: 31,
 
-  // 1-15 are different built-in views for the add-on type
+  // Add-on type is expected to be displayed in the UI in a list.
   VIEW_TYPE_LIST: "list",
 
+  // Constants describing how add-on types behave.
+
+  // If no add-ons of a type are installed, then the category for that add-on
+  // type should be hidden in the UI.
   TYPE_UI_HIDE_EMPTY: 16,
   // Indicates that this add-on type supports the ask-to-activate state.
   // That is, add-ons of this type can be set to be optionally enabled
   // on a case-by-case basis.
   TYPE_SUPPORTS_ASK_TO_ACTIVATE: 32,
+  // The add-on type natively supports undo for restartless uninstalls.
+  // If this flag is not specified, the UI is expected to handle this via
+  // disabling the add-on, and performing the actual uninstall at a later time.
+  TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL: 64,
 
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.
