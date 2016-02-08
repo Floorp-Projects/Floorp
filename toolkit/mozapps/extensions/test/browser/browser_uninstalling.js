@@ -166,7 +166,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -221,7 +221,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -342,7 +342,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -405,7 +405,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -531,7 +531,7 @@ add_test(function() {
           isnot(item, null, "Should have found the add-on in the list");
           is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-          ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+          ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
           ok(!aAddon.isActive, "Add-on should be inactive");
 
           // Force XBL to apply
@@ -598,7 +598,7 @@ add_test(function() {
           isnot(item, null, "Should have found the add-on in the list");
           is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-          ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+          ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
           ok(!aAddon.isActive, "Add-on should be inactive");
 
           // Force XBL to apply
@@ -808,8 +808,7 @@ add_test(function() {
       item.clientTop;
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
-
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -888,7 +887,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -964,7 +963,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
@@ -1046,7 +1045,7 @@ add_test(function() {
 
       is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
       ok(!aAddon.isActive, "Add-on should be inactive");
 
       button = gDocument.getAnonymousElementByAttribute(item, "anonid", "restart-btn");
