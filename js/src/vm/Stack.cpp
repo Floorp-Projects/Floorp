@@ -61,8 +61,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     prevpc_ = nullptr;
     prevsp_ = nullptr;
 
-    MOZ_ASSERT_IF(evalInFramePrev, isDebuggerEvalFrame());
     evalInFramePrev_ = evalInFramePrev;
+    MOZ_ASSERT_IF(evalInFramePrev, isDebuggerEvalFrame());
 
     if (script->isDebuggee())
         setIsDebuggee();
