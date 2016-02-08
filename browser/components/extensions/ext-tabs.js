@@ -154,6 +154,19 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         };
       }).api(),
 
+      /**
+       * Since multiple tabs currently can't be highlighted, onHighlighted
+       * essentially acts an alias for self.tabs.onActivated but returns
+       * the tabId in an array to match the API.
+       * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
+      */
+      onHighlighted: new WindowEventManager(context, "tabs.onHighlighted", "TabSelect", (fire, event) => {
+        let tab = event.originalTarget;
+        let tabIds = [TabManager.getId(tab)];
+        let windowId = WindowManager.getId(tab.ownerDocument.defaultView);
+        fire({tabIds, windowId});
+      }).api(),
+
       onAttached: new EventManager(context, "tabs.onAttached", fire => {
         let fireForTab = tab => {
           let newWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
