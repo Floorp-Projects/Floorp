@@ -269,11 +269,8 @@ class LiveRange : public TempObject
     }
 
   public:
-    static LiveRange* FallibleNew(TempAllocator& alloc, uint32_t vreg,
-                                  CodePosition from, CodePosition to)
-    {
-        if (!alloc.ensureBallast())
-            return nullptr;
+    static LiveRange* New(TempAllocator& alloc, uint32_t vreg,
+                          CodePosition from, CodePosition to) {
         return new(alloc) LiveRange(vreg, Range(from, to));
     }
 
