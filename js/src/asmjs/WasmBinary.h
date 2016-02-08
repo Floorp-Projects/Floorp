@@ -372,6 +372,20 @@ class Encoder
         return t;
     }
 
+    template <typename UInt>
+    MOZ_WARN_UNUSED_RESULT bool
+    writeVarU(UInt i) {
+        do {
+            uint8_t byte = i & 0x7F;
+            i >>= 7;
+            if (i != 0)
+                byte |= 0x80;
+            if (!writeU8(byte))
+                return false;
+        } while(i != 0);
+        return true;
+    }
+
     static const uint32_t BadSectionLength = uint32_t(-1);
 
   public:
@@ -386,15 +400,12 @@ class Encoder
 
     MOZ_WARN_UNUSED_RESULT bool
     writeVarU32(uint32_t i) {
-        do {
-            uint8_t byte = i & 0x7F;
-            i >>= 7;
-            if (i != 0)
-                byte |= 0x80;
-            if (!writeU8(byte))
-                return false;
-        } while(i != 0);
-        return true;
+        return writeVarU(i);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool
+    writeVarU64(uint64_t i) {
+        return writeVarU(i);
     }
 
     MOZ_WARN_UNUSED_RESULT bool
@@ -548,6 +559,32 @@ class Decoder
         return (T)uncheckedRead<IntT>();
     }
 
+    template <typename UInt>
+    MOZ_WARN_UNUSED_RESULT bool readVarU(UInt* out = nullptr) {
+        static const unsigned numBits = sizeof(UInt) * CHAR_BIT;
+        static const unsigned remainderBits = numBits % 7;
+        static const unsigned numBitsInSevens = numBits - remainderBits;
+        UInt u = 0;
+        uint8_t byte;
+        UInt shift = 0;
+        do {
+            if (!readU8(&byte))
+                return false;
+            if (!(byte & 0x80)) {
+                if (out)
+                    *out = u | UInt(byte & 0x7F) << shift;
+                return true;
+            }
+            u |= UInt(byte & 0x7F) << shift;
+            shift += 7;
+        } while (shift != numBitsInSevens);
+        if (!readU8(&byte) || (byte & (-1 << remainderBits)))
+            return false;
+        if (out)
+            *out = u | UInt(byte) << numBitsInSevens;
+        return true;
+    }
+
   public:
     Decoder(const uint8_t* begin, const uint8_t* end)
       : beg_(begin),
@@ -610,25 +647,10 @@ class Decoder
     }
 
     MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* out = nullptr) {
-        uint32_t u32 = 0;
-        uint8_t byte;
-        uint32_t shift = 0;
-        do {
-            if (!readU8(&byte))
-                return false;
-            if (!(byte & 0x80)) {
-                if (out)
-                    *out = u32 | uint32_t(byte & 0x7F) << shift;
-                return true;
-            }
-            u32 |= uint32_t(byte & 0x7F) << shift;
-            shift += 7;
-        } while (shift != 28);
-        if (!readU8(&byte) || (byte & 0xF0))
-            return false;
-        if (out)
-            *out = u32 | uint32_t(byte) << 28;
-        return true;
+        return readVarU(out);
+    }
+    MOZ_WARN_UNUSED_RESULT bool readVarU64(uint64_t* out = nullptr) {
+        return readVarU(out);
     }
     MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr = nullptr) {
         return readEnum<uint16_t>(expr);

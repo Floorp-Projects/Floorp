@@ -203,12 +203,51 @@ DecodeCallImport(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
-DecodeConst(FunctionDecoder& f, ExprType expected)
+DecodeConstI32(FunctionDecoder& f, ExprType expected)
 {
     if (!f.d().readVarU32())
         return f.fail("unable to read i32.const immediate");
 
     return CheckType(f, ExprType::I32, expected);
+}
+
+static bool
+DecodeConstI64(FunctionDecoder& f, ExprType expected)
+{
+    if (!f.d().readVarU64())
+        return f.fail("unable to read i64.const immediate");
+
+    return CheckType(f, ExprType::I64, expected);
+}
+
+static bool
+DecodeConstF32(FunctionDecoder& f, ExprType expected)
+{
+    float value;
+    if (!f.d().readF32(&value))
+        return f.fail("unable to read f32.const immediate");
+    if (IsNaN(value)) {
+        const float jsNaN = (float)JS::GenericNaN();
+        if (memcmp(&value, &jsNaN, sizeof(value)) != 0)
+            return f.fail("NYI: NaN literals with custom payloads");
+    }
+
+    return CheckType(f, ExprType::F32, expected);
+}
+
+static bool
+DecodeConstF64(FunctionDecoder& f, ExprType expected)
+{
+    double value;
+    if (!f.d().readF64(&value))
+        return f.fail("unable to read f64.const immediate");
+    if (IsNaN(value)) {
+        const double jsNaN = JS::GenericNaN();
+        if (memcmp(&value, &jsNaN, sizeof(value)) != 0)
+            return f.fail("NYI: NaN literals with custom payloads");
+    }
+
+    return CheckType(f, ExprType::F64, expected);
 }
 
 static bool
@@ -320,7 +359,14 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::CallImport:
         return DecodeCallImport(f, expected);
       case Expr::I32Const:
-        return DecodeConst(f, expected);
+        return DecodeConstI32(f, expected);
+      case Expr::I64Const:
+        return f.fail("NYI: i64") &&
+               DecodeConstI64(f, expected);
+      case Expr::F32Const:
+        return DecodeConstF32(f, expected);
+      case Expr::F64Const:
+        return DecodeConstF64(f, expected);
       case Expr::GetLocal:
         return DecodeGetLocal(f, expected);
       case Expr::SetLocal:
