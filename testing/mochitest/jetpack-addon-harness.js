@@ -9,12 +9,14 @@ if (Cc === undefined) {
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
+
+// How long to wait for an add-on to uninstall before aborting
+const MAX_UNINSTALL_TIME = 10000;
 
 setTimeout(testInit, 0);
 
@@ -98,6 +100,8 @@ function uninstallAddon(oldAddon) {
         if (addon.id != oldAddon.id)
           return;
 
+        AddonManager.removeAddonListener(this);
+
         dump("TEST-INFO | jetpack-addon-harness.js | Uninstalled test add-on " + addon.id + "\n");
 
         // Some add-ons do async work on uninstall, we must wait for that to
@@ -107,6 +111,11 @@ function uninstallAddon(oldAddon) {
     });
 
     oldAddon.uninstall();
+
+    // The uninstall should happen quickly, if not throw an exception
+    setTimeout(() => {
+      reject(new Error(`Addon ${oldAddon.id} failed to uninstall in a timely fashion.`));
+    }, MAX_UNINSTALL_TIME);
   });
 }
 
