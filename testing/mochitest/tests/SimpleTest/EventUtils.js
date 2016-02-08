@@ -600,75 +600,75 @@ function _computeKeyCodeFromChar(aChar)
   if (aChar.length != 1) {
     return 0;
   }
-  const nsIDOMKeyEvent = _EU_Ci.nsIDOMKeyEvent;
+  const KeyEvent = _EU_Ci.nsIDOMKeyEvent;
   if (aChar >= 'a' && aChar <= 'z') {
-    return nsIDOMKeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
+    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
   }
   if (aChar >= 'A' && aChar <= 'Z') {
-    return nsIDOMKeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'A'.charCodeAt(0);
+    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'A'.charCodeAt(0);
   }
   if (aChar >= '0' && aChar <= '9') {
-    return nsIDOMKeyEvent.DOM_VK_0 + aChar.charCodeAt(0) - '0'.charCodeAt(0);
+    return KeyEvent.DOM_VK_0 + aChar.charCodeAt(0) - '0'.charCodeAt(0);
   }
   // returns US keyboard layout's keycode
   switch (aChar) {
     case '~':
     case '`':
-      return nsIDOMKeyEvent.DOM_VK_BACK_QUOTE;
+      return KeyEvent.DOM_VK_BACK_QUOTE;
     case '!':
-      return nsIDOMKeyEvent.DOM_VK_1;
+      return KeyEvent.DOM_VK_1;
     case '@':
-      return nsIDOMKeyEvent.DOM_VK_2;
+      return KeyEvent.DOM_VK_2;
     case '#':
-      return nsIDOMKeyEvent.DOM_VK_3;
+      return KeyEvent.DOM_VK_3;
     case '$':
-      return nsIDOMKeyEvent.DOM_VK_4;
+      return KeyEvent.DOM_VK_4;
     case '%':
-      return nsIDOMKeyEvent.DOM_VK_5;
+      return KeyEvent.DOM_VK_5;
     case '^':
-      return nsIDOMKeyEvent.DOM_VK_6;
+      return KeyEvent.DOM_VK_6;
     case '&':
-      return nsIDOMKeyEvent.DOM_VK_7;
+      return KeyEvent.DOM_VK_7;
     case '*':
-      return nsIDOMKeyEvent.DOM_VK_8;
+      return KeyEvent.DOM_VK_8;
     case '(':
-      return nsIDOMKeyEvent.DOM_VK_9;
+      return KeyEvent.DOM_VK_9;
     case ')':
-      return nsIDOMKeyEvent.DOM_VK_0;
+      return KeyEvent.DOM_VK_0;
     case '-':
     case '_':
-      return nsIDOMKeyEvent.DOM_VK_SUBTRACT;
+      return KeyEvent.DOM_VK_SUBTRACT;
     case '+':
     case '=':
-      return nsIDOMKeyEvent.DOM_VK_EQUALS;
+      return KeyEvent.DOM_VK_EQUALS;
     case '{':
     case '[':
-      return nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET;
+      return KeyEvent.DOM_VK_OPEN_BRACKET;
     case '}':
     case ']':
-      return nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET;
+      return KeyEvent.DOM_VK_CLOSE_BRACKET;
     case '|':
     case '\\':
-      return nsIDOMKeyEvent.DOM_VK_BACK_SLASH;
+      return KeyEvent.DOM_VK_BACK_SLASH;
     case ':':
     case ';':
-      return nsIDOMKeyEvent.DOM_VK_SEMICOLON;
+      return KeyEvent.DOM_VK_SEMICOLON;
     case '\'':
     case '"':
-      return nsIDOMKeyEvent.DOM_VK_QUOTE;
+      return KeyEvent.DOM_VK_QUOTE;
     case '<':
     case ',':
-      return nsIDOMKeyEvent.DOM_VK_COMMA;
+      return KeyEvent.DOM_VK_COMMA;
     case '>':
     case '.':
-      return nsIDOMKeyEvent.DOM_VK_PERIOD;
+      return KeyEvent.DOM_VK_PERIOD;
     case '?':
     case '/':
-      return nsIDOMKeyEvent.DOM_VK_SLASH;
+      return KeyEvent.DOM_VK_SLASH;
     case '\n':
-      return nsIDOMKeyEvent.DOM_VK_RETURN;
+      return KeyEvent.DOM_VK_RETURN;
     case ' ':
-      return nsIDOMKeyEvent.DOM_VK_SPACE;
+      return KeyEvent.DOM_VK_SPACE;
     default:
       return 0;
   }
@@ -711,15 +711,15 @@ function _computeKeyCodeFromChar(aChar)
  *
  * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeKey(aKey, aEvent, aWindow)
+function synthesizeKey(aKey, aEvent, aWindow = window)
 {
   var TIP = _getTIP(aWindow);
   if (!TIP) {
     return;
   }
-  var modifiers = _emulateToActivateModifiers(TIP, aEvent);
-  var keyEventDict = _createKeyboardEventDictionary(aKey, aEvent);
-  var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+  var modifiers = _emulateToActivateModifiers(TIP, aEvent, aWindow);
+  var keyEventDict = _createKeyboardEventDictionary(aKey, aEvent, aWindow);
+  var keyEvent = new aWindow.KeyboardEvent("", keyEventDict.dictionary);
   var dispatchKeydown =
     !("type" in aEvent) || aEvent.type === "keydown" || !aEvent.type;
   var dispatchKeyup =
@@ -730,7 +730,7 @@ function synthesizeKey(aKey, aEvent, aWindow)
       TIP.keydown(keyEvent, keyEventDict.flags);
       if ("repeat" in aEvent && aEvent.repeat > 1) {
         keyEventDict.dictionary.repeat = true;
-        var repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+        var repeatedKeyEvent = new aWindow.KeyboardEvent("", keyEventDict.dictionary);
         for (var i = 1; i < aEvent.repeat; i++) {
           TIP.keydown(repeatedKeyEvent, keyEventDict.flags);
         }
@@ -740,7 +740,7 @@ function synthesizeKey(aKey, aEvent, aWindow)
       TIP.keyup(keyEvent, keyEventDict.flags);
     }
   } finally {
-    _emulateToInactivateModifiers(TIP, modifiers);
+    _emulateToInactivateModifiers(TIP, modifiers, aWindow);
   }
 }
 
@@ -864,9 +864,9 @@ const KEYBOARD_LAYOUT_THAI =
  */
 
 function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
-                             aChars, aUnmodifiedChars, aCallback)
+                             aChars, aUnmodifiedChars, aCallback, aWindow = window)
 {
-  var utils = _getDOMWindowUtils(window);
+  var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return false;
   }
@@ -989,12 +989,8 @@ function disableNonTestMouseEvents(aDisable)
   domutils.disableNonTestMouseEvents(aDisable);
 }
 
-function _getDOMWindowUtils(aWindow)
+function _getDOMWindowUtils(aWindow = window)
 {
-  if (!aWindow) {
-    aWindow = window;
-  }
-
   // we need parent.SpecialPowers for:
   //  layout/base/tests/test_reftests_with_caret.html
   //  chrome: toolkit/content/tests/chrome/test_findbar.xul
@@ -1055,8 +1051,9 @@ function _getTIP(aWindow, aCallback)
   return tip;
 }
 
-function _guessKeyNameFromKeyCode(aKeyCode)
+function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window)
 {
+  const KeyboardEvent = aWindow.KeyboardEvent;
   switch (aKeyCode) {
     case KeyboardEvent.DOM_VK_CANCEL:
       return "Cancel";
@@ -1201,10 +1198,8 @@ function _guessKeyNameFromKeyCode(aKeyCode)
   }
 }
 
-function _createKeyboardEventDictionary(aKey, aKeyEvent)
-{
+function _createKeyboardEventDictionary(aKey, aKeyEvent, aWindow = window) {
   var result = { dictionary: null, flags: 0 };
-
   var keyCodeIsDefined = "keyCode" in aKeyEvent;
   var keyCode =
     (keyCodeIsDefined && aKeyEvent.keyCode >= 0 && aKeyEvent.keyCode <= 255) ?
@@ -1214,11 +1209,11 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent)
     keyName = aKey.substr("KEY_".length);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
   } else if (aKey.indexOf("VK_") == 0) {
-    keyCode = KeyEvent["DOM_" + aKey];
+    keyCode = _EU_Ci.nsIDOMKeyEvent["DOM_" + aKey];
     if (!keyCode) {
       throw "Unknown key: " + aKey;
     }
-    keyName = _guessKeyNameFromKeyCode(keyCode);
+    keyName = _guessKeyNameFromKeyCode(keyCode, aWindow);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
   } else if (aKey != "") {
     keyName = aKey;
@@ -1244,7 +1239,7 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent)
   return result;
 }
 
-function _emulateToActivateModifiers(aTIP, aKeyEvent)
+function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
 {
   if (!aKeyEvent) {
     return null;
@@ -1259,7 +1254,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent)
       { key: "OS",         attr: "osKey" },
       { key: "Shift",      attr: "shiftKey" },
       { key: "Symbol",     attr: "symbolKey" },
-      { key: (navigator.platform.indexOf("Mac") >= 0) ? "Meta" : "Control",
+      { key: (aWindow.navigator.platform.indexOf("Mac") >= 0) ? "Meta" : "Control",
                            attr: "accelKey" },
     ],
     lockable: [
@@ -1278,7 +1273,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent)
     if (aTIP.getModifierState(modifiers.normal[i].key)) {
       continue; // already activated.
     }
-    var event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    var event = new aWindow.KeyboardEvent("", { key: modifiers.normal[i].key });
     aTIP.keydown(event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     modifiers.normal[i].activated = true;
@@ -1290,7 +1285,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent)
     if (aTIP.getModifierState(modifiers.lockable[i].key)) {
       continue; // already activated.
     }
-    var event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
+    var event = new aWindow.KeyboardEvent("", { key: modifiers.lockable[i].key });
     aTIP.keydown(event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     aTIP.keyup(event,
@@ -1300,7 +1295,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent)
   return modifiers;
 }
 
-function _emulateToInactivateModifiers(aTIP, aModifiers)
+function _emulateToInactivateModifiers(aTIP, aModifiers, aWindow = window)
 {
   if (!aModifiers) {
     return;
@@ -1309,7 +1304,7 @@ function _emulateToInactivateModifiers(aTIP, aModifiers)
     if (!aModifiers.normal[i].activated) {
       continue;
     }
-    var event = new KeyboardEvent("", { key: aModifiers.normal[i].key });
+    var event = new aWindow.KeyboardEvent("", { key: aModifiers.normal[i].key });
     aTIP.keyup(event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
   }
@@ -1320,7 +1315,7 @@ function _emulateToInactivateModifiers(aTIP, aModifiers)
     if (!aTIP.getModifierState(aModifiers.lockable[i].key)) {
       continue; // who already inactivated this?
     }
-    var event = new KeyboardEvent("", { key: aModifiers.lockable[i].key });
+    var event = new aWindow.KeyboardEvent("", { key: aModifiers.lockable[i].key });
     aTIP.keydown(event,
       aTIP.KEY_NON_PRINTABLE_KEY | aTIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     aTIP.keyup(event,
@@ -1355,15 +1350,15 @@ function synthesizeComposition(aEvent, aWindow, aCallback)
   if (!TIP) {
     return false;
   }
-  var modifiers = _emulateToActivateModifiers(TIP, aEvent.key);
+  var modifiers = _emulateToActivateModifiers(TIP, aEvent.key, aWindow);
   var ret = false;
   var keyEventDict =
     "key" in aEvent ?
-      _createKeyboardEventDictionary(aEvent.key.key, aEvent.key) :
+      _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, aWindow) :
       { dictionary: null, flags: 0 };
   var keyEvent = 
     "key" in aEvent ?
-      new KeyboardEvent(aEvent.type === "keydown" ? "keydown" : "",
+      new aWindow.KeyboardEvent(aEvent.type === "keydown" ? "keydown" : "",
                         keyEventDict.dictionary) :
       null;
   try {
@@ -1380,7 +1375,7 @@ function synthesizeComposition(aEvent, aWindow, aCallback)
         break;
     }
   } finally {
-    _emulateToInactivateModifiers(TIP, modifiers);
+    _emulateToInactivateModifiers(TIP, modifiers, aWindow);
   }
 }
 /**
@@ -1470,20 +1465,20 @@ function synthesizeCompositionChange(aEvent, aWindow, aCallback)
     TIP.setCaretInPendingComposition(aEvent.caret.start);
   }
 
-  var modifiers = _emulateToActivateModifiers(TIP, aEvent.key);
+  var modifiers = _emulateToActivateModifiers(TIP, aEvent.key, aWindow);
   try {
     var keyEventDict =
       "key" in aEvent ?
-        _createKeyboardEventDictionary(aEvent.key.key, aEvent.key) :
+        _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, aWindow) :
         { dictionary: null, flags: 0 };
     var keyEvent = 
       "key" in aEvent ?
-        new KeyboardEvent(aEvent.type === "keydown" ? "keydown" : "",
+        new aWindow.KeyboardEvent(aEvent.type === "keydown" ? "keydown" : "",
                           keyEventDict.dictionary) :
         null;
     TIP.flushPendingComposition(keyEvent, keyEventDict.flags);
   } finally {
-    _emulateToInactivateModifiers(TIP, modifiers);
+    _emulateToInactivateModifiers(TIP, modifiers, aWindow);
   }
 }
 
