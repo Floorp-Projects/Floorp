@@ -176,6 +176,11 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                              SourceSurface *aMask,
                              const Matrix* aMaskTransform)
 {
+  if (!aSource) {
+    gfxWarning() << "DrawSurfaceWithTextureCoords problem " << gfx::hexa(aSource) << " and " << gfx::hexa(aMask);
+    return;
+  }
+
   // Convert aTextureCoords into aSource's coordinate space
   gfxRect sourceRect(aTextureCoords.x * aSource->GetSize().width,
                      aTextureCoords.y * aSource->GetSize().height,
@@ -397,6 +402,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
     EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
     sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface(dest);
+    if (!sourceMask) {
+      gfxWarning() << "Invalid sourceMask effect";
+    }
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
     maskTransform = effectMask->mMaskTransform.As2D();
@@ -439,7 +447,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
       } else if (source) {
-          RefPtr<DataSourceSurface> srcData = source->GetSurface(dest)->GetDataSurface();
+        SourceSurface* srcSurf = source->GetSurface(dest);
+        if (srcSurf) {
+          RefPtr<DataSourceSurface> srcData = srcSurf->GetDataSurface();
 
           // Yes, we re-create the premultiplied data every time.
           // This might be better with a cache, eventually.
@@ -451,8 +461,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                        texturedEffect->mFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
+        }
       } else {
-        gfxDevCrash(LogReason::IncompatibleBasicTexturedEffect) << "Bad for basic with " << texturedEffect->mTexture->Name();
+        gfxDevCrash(LogReason::IncompatibleBasicTexturedEffect) << "Bad for basic with " << texturedEffect->mTexture->Name() << " and " << gfx::hexa(sourceMask);
       }
 
       break;
