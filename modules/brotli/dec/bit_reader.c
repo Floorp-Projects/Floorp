@@ -1,38 +1,23 @@
 /* Copyright 2013 Google Inc. All Rights Reserved.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+   Distributed under MIT license.
+   See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 */
 
 /* Bit reading helpers */
 
-#include <stdlib.h>
-
 #include "./bit_reader.h"
+
 #include "./port.h"
+#include "./types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
 
-void BrotliInitBitReader(BrotliBitReader* const br, BrotliInput input) {
-  BROTLI_DCHECK(br != NULL);
-
-  br->input_ = input;
+void BrotliInitBitReader(BrotliBitReader* const br) {
   br->val_ = 0;
   br->bit_pos_ = sizeof(br->val_) << 3;
-  br->avail_in = 0;
-  br->eos_ = 0;
-  br->next_in = br->buf_;
 }
 
 int BrotliWarmupBitReader(BrotliBitReader* const br) {
@@ -43,12 +28,17 @@ int BrotliWarmupBitReader(BrotliBitReader* const br) {
   if (!BROTLI_ALIGNED_READ) {
     aligned_read_mask = 0;
   }
-  while (br->bit_pos_ == (sizeof(br->val_) << 3) ||
-      (((size_t)br->next_in) & aligned_read_mask) != 0) {
-    if (!br->avail_in) {
+  if (BrotliGetAvailableBits(br) == 0) {
+    if (!BrotliPullByte(br)) {
       return 0;
     }
-    BrotliPullByte(br);
+  }
+
+  while ((((size_t)br->next_in) & aligned_read_mask) != 0) {
+    if (!BrotliPullByte(br)) {
+      /* If we consumed all the input, we don't care about the alignment. */
+      return 1;
+    }
   }
   return 1;
 }
