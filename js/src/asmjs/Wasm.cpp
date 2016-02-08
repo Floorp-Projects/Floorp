@@ -268,7 +268,7 @@ static bool
 DecodeUnaryOperator(FunctionDecoder& f, ExprType expected, ExprType type)
 {
     return CheckType(f, type, expected) &&
-           DecodeExpr(f, expected);
+           DecodeExpr(f, type);
 }
 
 static bool
