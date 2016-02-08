@@ -27,6 +27,9 @@ endif
 
 # run the binscope tool to make sure the binary and all libraries
 # are using all available Windows OS-level security mechanisms
+# Don't do this in clang-cl since it doesn't support debug information yet.
+ifndef CLANG_CL
 check::
 	$(PYTHON) $(srcdir)/autobinscope.py $(DIST)/bin/$(MOZ_APP_NAME)$(BIN_SUFFIX) $(DIST)/crashreporter-symbols/
 	$(PYTHON) $(srcdir)/autobinscope.py $(DIST)/bin/plugin-container.exe $(DIST)/crashreporter-symbols/
+endif
