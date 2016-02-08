@@ -789,8 +789,11 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     CheckLoadingFinished();
   }
 
-  // local rules have been rebuilt, so clear the flag
-  mUserFontSet->mLocalRulesUsed = false;
+  // if local rules needed to be rebuilt, they have been rebuilt at this point
+  if (mUserFontSet->mRebuildLocalRules) {
+    mUserFontSet->mLocalRulesUsed = false;
+    mUserFontSet->mRebuildLocalRules = false;
+  }
 
   if (LOG_ENABLED() && !mRuleFaces.IsEmpty()) {
     LOG(("userfonts (%p) userfont rules update (%s) rule count: %d",
@@ -875,7 +878,8 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 
       // if local rules were used, don't use the old font entry
       // for rules containing src local usage
-      if (mUserFontSet->mLocalRulesUsed) {
+      if (mUserFontSet->mLocalRulesUsed &&
+          mUserFontSet->mRebuildLocalRules) {
         nsCSSValue val;
         aFontFace->GetDesc(eCSSFontDesc_Src, val);
         nsCSSUnit unit = val.GetUnit();
