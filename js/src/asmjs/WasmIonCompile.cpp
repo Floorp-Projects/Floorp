@@ -2637,6 +2637,7 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def, LabelVector* may
 
     switch (Expr op = f.readOpcode()) {
       case Expr::Nop:
+        *def = nullptr;
         return true;
       case Expr::Block:
         return EmitBlock(f, type, def);

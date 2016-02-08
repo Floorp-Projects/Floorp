@@ -64,6 +64,7 @@ assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f64) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f64) (result i32) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("f64", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("f64", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (f32.sqrt (nop))))'), TypeError, mismatchError("void", "f32"));
 
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result f32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result f32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
