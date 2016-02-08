@@ -7,7 +7,7 @@
 
 interface nsIAccessiblePivot;
 interface nsIDOMDocument;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 
 /**
  * An interface for in-process accessibility clients
@@ -19,7 +19,7 @@ interface nsIDOMWindow;
  * the root node of a document or you can get one from
  * nsIAccessible::GetDocument().
  */
-[scriptable, uuid(2be938df-0210-4609-9ece-26b197a517e5)]
+[scriptable, uuid(5cad5f91-fcce-40e7-913e-4671701d19b4)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -50,7 +50,7 @@ interface nsIAccessibleDocument : nsISupports
   /**
    * The nsIDOMWindow that the document resides in.
    */
-  readonly attribute nsIDOMWindow window;
+  readonly attribute mozIDOMWindowProxy window;
 
   /**
    * Return the parent document accessible.

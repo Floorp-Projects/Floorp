@@ -316,20 +316,13 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
     return;
   }
 
-  nsIFrame* ancestor = aFrame;
-  do {
-    ancestor = ancestor->GetParent();
-    if (!ancestor)
-      return;
-  } while (!ancestor->IsFloatContainingBlock());
-
-  if (ancestor == aOurLineContainer)
+  nsBlockFrame* frameBlock = nsLayoutUtils::GetFloatContainingBlock(aFrame);
+  if (!frameBlock || frameBlock == aOurLineContainer) {
     return;
+  }
 
   nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
   NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
-  nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
-  NS_ASSERTION(frameBlock, "ancestor not a block");
 
   while (true) {
     ourBlock->ReparentFloats(aFrame, frameBlock, false);
@@ -659,7 +652,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       // so nsFirstLetterFrame::Reflow can destroy them safely (bug 401042).
       nsIFrame* realFrame = nsPlaceholderFrame::GetRealFrameFor(frame);
       if (realFrame->GetType() == nsGkAtoms::letterFrame) {
-        nsIFrame* child = realFrame->GetFirstPrincipalChild();
+        nsIFrame* child = realFrame->PrincipalChildList().FirstChild();
         if (child) {
           NS_ASSERTION(child->GetType() == nsGkAtoms::textFrame,
                        "unexpected frame type");

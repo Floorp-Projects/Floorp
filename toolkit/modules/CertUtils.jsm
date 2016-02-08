@@ -202,7 +202,7 @@ BadCertHandler.prototype = {
     // Don't call checkCert for internal redirects. See bug 569648.
     if (!(flags & Ci.nsIChannelEventSink.REDIRECT_INTERNAL))
       checkCert(oldChannel);
-    
+
     callback.onRedirectVerifyCallback(Components.results.NS_OK);
   },
 

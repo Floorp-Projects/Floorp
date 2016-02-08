@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
-function neuter(ab)
+function detachArrayBuffer(ab)
 {
   var w = new Worker("data:application/javascript,");
   w.postMessage(ab, [ab]);
@@ -34,7 +34,7 @@ function test()
 
   is(sis.read(1), "a", "should read 'a' after init");
 
-  neuter(ab);
+  detachArrayBuffer(ab);
 
   SpecialPowers.forceGC();
   SpecialPowers.forceGC();
@@ -47,7 +47,7 @@ function test()
   catch (e)
   {
     ok(e.result === Cr.NS_BASE_STREAM_CLOSED,
-       "neutering underneath an input stream should close it");
+       "detaching underneath an input stream should close it");
   }
 }
 

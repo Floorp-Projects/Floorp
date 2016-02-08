@@ -70,7 +70,7 @@ public:
     nsresult EvaluateScript(nsIChannel *aChannel,
                             PopupControlState aPopupState,
                             uint32_t aExecutionPolicy,
-                            nsPIDOMWindow *aOriginalInnerWindow);
+                            nsPIDOMWindowInner *aOriginalInnerWindow);
 
 protected:
     virtual ~nsJSThunk();
@@ -144,7 +144,7 @@ nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
                                    PopupControlState aPopupState,
                                    uint32_t aExecutionPolicy,
-                                   nsPIDOMWindow *aOriginalInnerWindow)
+                                   nsPIDOMWindowInner *aOriginalInnerWindow)
 {
     if (aExecutionPolicy == nsIScriptChannel::NO_EXECUTION) {
         // Nothing to do here.
@@ -208,8 +208,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     nsAutoPopupStatePusher popupStatePusher(aPopupState);
 
     // Make sure we still have the same inner window as we used to.
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(global);
-    nsPIDOMWindow *innerWin = win->GetCurrentInnerWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(global);
+    nsPIDOMWindowInner *innerWin = win->GetCurrentInnerWindow();
 
     if (innerWin != aOriginalInnerWindow) {
         return NS_ERROR_UNEXPECTED;
@@ -352,8 +352,8 @@ protected:
     nsCOMPtr<nsIPropertyBag2> mPropertyBag;
     nsCOMPtr<nsIStreamListener> mListener;  // Our final listener
     nsCOMPtr<nsISupports> mContext; // The context passed to AsyncOpen
-    nsCOMPtr<nsPIDOMWindow> mOriginalInnerWindow;  // The inner window our load
-                                                   // started against.
+    nsCOMPtr<nsPIDOMWindowInner> mOriginalInnerWindow;  // The inner window our load
+                                                        // started against.
     // If we blocked onload on a document in AsyncOpen, this is the document we
     // did it on.
     nsCOMPtr<nsIDocument>   mDocumentOnloadBlockedOn;
@@ -569,7 +569,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+    nsCOMPtr<nsPIDOMWindowOuter> win(do_QueryInterface(global));
     NS_ASSERTION(win, "Our global is not a window??");
 
     // Make sure we create a new inner window if one doesn't already exist (see

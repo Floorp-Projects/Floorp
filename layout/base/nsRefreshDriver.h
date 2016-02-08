@@ -13,6 +13,8 @@
 #define nsRefreshDriver_h_
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Vector.h"
+
 #include "mozFlushType.h"
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
@@ -296,6 +298,20 @@ public:
 
   bool IsInRefresh() { return mInRefresh; }
 
+  /**
+   * The latest value of process-wide jank levels.
+   *
+   * For each i, sJankLevels[i] counts the number of times delivery of
+   * vsync to the main thread has been delayed by at least 2^i
+   * ms. This data structure has been designed to make it easy to
+   * determine how much jank has taken place between two instants in
+   * time.
+   *
+   * Return `false` if `aJank` needs to be grown to accomodate the
+   * data but we didn't have enough memory.
+   */
+  static bool GetJankLevels(mozilla::Vector<uint64_t>& aJank);
+
   // mozilla::layers::TransactionIdAllocator
   virtual uint64_t GetTransactionId() override;
   void NotifyTransactionCompleted(uint64_t aTransactionId) override;
@@ -329,8 +345,9 @@ private:
 
   enum EnsureTimerStartedFlags {
     eNone = 0,
-    eAdjustingTimer = 1 << 0,
-    eAllowTimeToGoBackwards = 1 << 1
+    eForceAdjustTimer = 1 << 0,
+    eAllowTimeToGoBackwards = 1 << 1,
+    eNeverAdjustTimer = 1 << 2,
   };
   void EnsureTimerStarted(EnsureTimerStartedFlags aFlags = eNone);
   void StopTimer();
@@ -413,9 +430,9 @@ private:
     nsCOMPtr<nsIDOMEvent> mEvent;
   };
 
-  nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
-  nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
-  nsAutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
+  AutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
+  AutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
+  AutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
   nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;

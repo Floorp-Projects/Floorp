@@ -16,7 +16,7 @@
 #include "nsIRunnable.h"
 #include "nsWeakReference.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -42,7 +42,7 @@ public:
          FileMode aMode);
 
   // WebIDL
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     AssertIsOnOwningThread();

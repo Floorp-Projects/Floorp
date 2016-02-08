@@ -29,7 +29,7 @@ function AutoCompleteInput(aSearches) {
 }
 
 AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput, 
+  constructor: AutoCompleteInput,
 
   searches: null,
 
@@ -37,7 +37,7 @@ AutoCompleteInput.prototype = {
   timeout: 10,
   searchParam: "",
   textValue: "",
-  disableAutoComplete: false,  
+  disableAutoComplete: false,
   completeDefaultIndex: false,
 
   get searchCount() {

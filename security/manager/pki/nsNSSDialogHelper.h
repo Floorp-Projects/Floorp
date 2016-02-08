@@ -7,7 +7,7 @@
 #ifndef nsNSSDialogHelper_h
 #define nsNSSDialogHelper_h
 
-class nsIDOMWindow;
+class mozIDOMWindowProxy;
 class nsISupports;
 
 /**
@@ -20,7 +20,7 @@ class nsNSSDialogHelper
 {
 public:
   // params is a nsIDialogParamBlock or a nsIKeygenThread
-  static nsresult openDialog(nsIDOMWindow* window, const char* url,
+  static nsresult openDialog(mozIDOMWindowProxy* window, const char* url,
                              nsISupports* params, bool modal = true);
 };
 

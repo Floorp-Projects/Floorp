@@ -1,4 +1,4 @@
-function neuterEventually(arr, i, variant)
+function detachArrayBufferEventually(arr, i, variant)
 {
   with (arr)
   {
@@ -6,7 +6,7 @@ function neuterEventually(arr, i, variant)
   }
 
   if (i === 2000)
-    neuter(arr.buffer, variant);
+    detachArrayBuffer(arr.buffer, variant);
 }
 
 function test(variant)
@@ -16,7 +16,7 @@ function test(variant)
 
   for (var i = 0; i < 2500; i++)
   {
-    neuterEventually(ta, i, variant);
+    detachArrayBufferEventually(ta, i, variant);
     assertEq(ta.length, i >= 2000 ? 0 : 1000);
   }
 }

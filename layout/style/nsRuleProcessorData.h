@@ -336,7 +336,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   nsRuleWalker::VisitedHandlingType mVisitedHandling;
 
   // For matching :scope
-  nsAutoTArray<mozilla::dom::Element*, 1> mScopes;
+  AutoTArray<mozilla::dom::Element*, 1> mScopes;
  public:
   // The document we're working with.
   nsIDocument* const mDocument;
@@ -380,7 +380,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 
   // List of ancestor elements that define a style scope (due to having a
   // <style scoped> child).
-  nsAutoTArray<mozilla::dom::Element*, 1> mStyleScopes;
+  AutoTArray<mozilla::dom::Element*, 1> mStyleScopes;
 
   // The current style scope element for selector matching.
   mozilla::dom::Element* mCurrentStyleScope;

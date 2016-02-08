@@ -41,25 +41,25 @@ protocol PUDPSocket
   manager PNecko or PBackground;
 
 parent:
-  Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
-  Connect(UDPAddressInfo addressInfo);
+  async Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
+  async Connect(UDPAddressInfo addressInfo);
 
-  OutgoingData(UDPData data, UDPSocketAddr addr);
+  async OutgoingData(UDPData data, UDPSocketAddr addr);
 
-  JoinMulticast(nsCString multicastAddress, nsCString iface);
-  LeaveMulticast(nsCString multicastAddress, nsCString iface);
+  async JoinMulticast(nsCString multicastAddress, nsCString iface);
+  async LeaveMulticast(nsCString multicastAddress, nsCString iface);
 
-  Close();
+  async Close();
 
-  RequestDelete();
+  async RequestDelete();
 
 child:
-  CallbackOpened(UDPAddressInfo addressInfo);
-  CallbackConnected(UDPAddressInfo addressInfo);
-  CallbackClosed();
-  CallbackReceivedData(UDPAddressInfo addressInfo, uint8_t[] data);
-  CallbackError(nsCString message, nsCString filename, uint32_t lineNumber);
-  __delete__();
+  async CallbackOpened(UDPAddressInfo addressInfo);
+  async CallbackConnected(UDPAddressInfo addressInfo);
+  async CallbackClosed();
+  async CallbackReceivedData(UDPAddressInfo addressInfo, uint8_t[] data);
+  async CallbackError(nsCString message, nsCString filename, uint32_t lineNumber);
+  async __delete__();
 };
 
 

@@ -186,6 +186,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitTypeBarrier(MTypeBarrier* ins);
     void visitMonitorTypes(MMonitorTypes* ins);
     void visitPostWriteBarrier(MPostWriteBarrier* ins);
+    void visitPostWriteElementBarrier(MPostWriteElementBarrier* ins);
     void visitArrayLength(MArrayLength* ins);
     void visitSetArrayLength(MSetArrayLength* ins);
     void visitTypedArrayLength(MTypedArrayLength* ins);

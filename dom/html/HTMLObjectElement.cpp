@@ -483,7 +483,7 @@ HTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
   return NS_OK;
 }
 
-nsIDOMWindow*
+nsPIDOMWindowOuter*
 HTMLObjectElement::GetContentWindow()
 {
   nsIDocument* doc = GetContentDocument();

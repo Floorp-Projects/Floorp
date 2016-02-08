@@ -31,7 +31,7 @@ public:
 
   friend class Telephony;
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -106,7 +106,7 @@ public:
   NotifyError(const nsAString& aName, const nsAString& aMessage);
 
 private:
-  explicit TelephonyCallGroup(nsPIDOMWindow* aOwner);
+  explicit TelephonyCallGroup(nsPIDOMWindowInner* aOwner);
   ~TelephonyCallGroup();
 
   nsresult

@@ -126,8 +126,7 @@ function download(filename) {
   }
 
   if (req.status != 200) {
-    throw("ERROR: problem downloading '" + filename + "': status " +
-          req.status);
+    throw `ERROR: problem downloading '${filename}': status ${req.status}`;
   }
 
   let resultDecoded;
@@ -336,7 +335,7 @@ function downloadAndParseChromePins(filename,
         // We should have already added hashes for all of these when we
         // imported the certificate file.
         if (!certNameToSKD[name]) {
-          throw("No hash for name: " + name);
+          throw "No hash for name: " + name;
         }
       } else if (name in chromeNameToMozName) {
         pinset.sha256_hashes.push(chromeNameToMozName[name]);
@@ -427,7 +426,7 @@ function parseJson(filename) {
 function nameToAlias(certName) {
   // change the name to a string valid as a c identifier
   // remove  non-ascii characters
-  certName = certName.replace( /[^[:ascii:]]/g, "_");
+  certName = certName.replace(/[^[:ascii:]]/g, "_");
   // replace non word characters
   certName = certName.replace(/[^A-Za-z0-9]/g ,"_");
 
@@ -444,7 +443,7 @@ function genExpirationTime() {
   let expirationMillis = nowMillis + (PINNING_MINIMUM_REQUIRED_MAX_AGE * 1000);
   let expirationMicros = expirationMillis * 1000;
   return "static const PRTime kPreloadPKPinsExpirationTime = INT64_C(" +
-         expirationMicros +");\n";
+         expirationMicros + ");\n";
 }
 
 function writeFullPinset(certNameToSKD, certSKDToName, pinset) {
@@ -504,7 +503,7 @@ function writeEntry(entry) {
   }
   if ("id" in entry) {
     if (entry.id >= 256) {
-      throw("Not enough buckets in histogram");
+      throw "Not enough buckets in histogram";
     }
     if (entry.id >= 0) {
       printVal += entry.id + ", ";

@@ -15,14 +15,6 @@
 #include "mozilla/Types.h"
 #include "nscore.h"
 
-#if defined(__GNUC__) && defined(__i386__)
-#define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
-#elif defined(XP_WIN)
-#define PL_DHASH_FASTCALL __fastcall
-#else
-#define PL_DHASH_FASTCALL
-#endif
-
 typedef uint32_t PLDHashNumber;
 
 class PLDHashTable;
@@ -550,10 +542,10 @@ private:
   enum SearchReason { ForSearchOrRemove, ForAdd };
 
   template <SearchReason Reason>
-  PLDHashEntryHdr* PL_DHASH_FASTCALL
+  PLDHashEntryHdr* NS_FASTCALL
     SearchTable(const void* aKey, PLDHashNumber aKeyHash);
 
-  PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
+  PLDHashEntryHdr* FindFreeEntry(PLDHashNumber aKeyHash);
 
   bool ChangeTable(int aDeltaLog2);
 

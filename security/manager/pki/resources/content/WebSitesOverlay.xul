@@ -40,10 +40,6 @@
               label="&certmgr.view2.label;"
               accesskey="&certmgr.view2.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
-      <button id="websites_addButton"
-              label="&certmgr.restore2.label;"
-              accesskey="&certmgr.restore2.accesskey;"
-              oncommand="addWebSiteCert();"/>
       <button id="websites_exportButton"
               label="&certmgr.export.label;"
               accesskey="&certmgr.export.accesskey;"

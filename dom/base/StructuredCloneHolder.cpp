@@ -417,7 +417,8 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
 
   if (aTag == SCTAG_DOM_NULL_PRINCIPAL ||
       aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
-      aTag == SCTAG_DOM_CONTENT_PRINCIPAL) {
+      aTag == SCTAG_DOM_CONTENT_PRINCIPAL ||
+      aTag == SCTAG_DOM_EXPANDED_PRINCIPAL) {
     JSPrincipals* prin;
     if (!nsJSPrincipals::ReadKnownPrincipalType(aCx, aReader, aTag, &prin)) {
       return nullptr;
@@ -1041,7 +1042,7 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
     // This can be null.
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mParent);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mParent);
 
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     const MessagePortIdentifier& portIdentifier = mPortIdentifiers[aExtraData];

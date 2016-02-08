@@ -4,5 +4,5 @@ sync protocol Delete {
     manages DeleteSub;
 
 child:
-    DeleteSub();
+    async DeleteSub();
 };

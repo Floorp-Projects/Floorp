@@ -28,13 +28,12 @@ registerCleanupFunction(() => {
 add_task(function* test_send_report_neterror() {
   yield testSendReportAutomatically(URL_BAD_CHAIN, "succeed", "neterror");
   yield testSendReportAutomatically(URL_NO_CERT, "nocert", "neterror");
-  yield testSendReportFailRetry(URL_NO_CERT, "nocert", "neterror");
   yield testSetAutomatic(URL_NO_CERT, "nocert", "neterror");
 });
 
+
 add_task(function* test_send_report_certerror() {
   yield testSendReportAutomatically(URL_BAD_CERT, "badcert", "certerror");
-  yield testSendReportFailRetry(URL_BAD_CERT, "badcert", "certerror");
   yield testSetAutomatic(URL_BAD_CERT, "badcert", "certerror");
 });
 
@@ -65,10 +64,11 @@ function* testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   let browser = tab.linkedBrowser;
 
   // Load the page and wait for the error report submission.
-  let promiseReport = createErrorReportPromise(browser);
+  let promiseStatus = createReportResponseStatusPromise(URL_REPORTS + suffix);
   browser.loadURI(testURL);
-  yield promiseReport;
-  ok(true, "SSL error report submitted successfully");
+
+  ok(!isErrorStatus(yield promiseStatus),
+     "SSL error report submitted successfully");
 
   // Check that we loaded the right error page.
   yield checkErrorPage(browser, errorURISuffix);
@@ -77,30 +77,6 @@ function* testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   gBrowser.removeTab(tab);
   cleanup();
 };
-
-function* testSendReportFailRetry(testURL, suffix, errorURISuffix) {
-  try {
-    yield testSendReportAutomatically(testURL, "error", errorURISuffix);
-    ok(false, "sending a report should have failed");
-  } catch (err) {
-    ok(err, "saw a failure notification");
-  }
-
-  Services.prefs.setCharPref(PREF_REPORT_URL, URL_REPORTS + suffix);
-
-  let browser = gBrowser.selectedBrowser;
-  let promiseReport = createErrorReportPromise(browser);
-  let promiseRetry = ContentTask.spawn(browser, null, function* () {
-    content.document.getElementById("reportCertificateErrorRetry").click();
-  });
-
-  yield Promise.all([promiseReport, promiseRetry]);
-  ok(true, "SSL error report submitted successfully");
-
-  // Cleanup.
-  gBrowser.removeCurrentTab();
-  cleanup();
-}
 
 function* testSetAutomatic(testURL, suffix, errorURISuffix) {
   Services.prefs.setBoolPref(PREF_REPORT_ENABLED, true);
@@ -118,15 +94,15 @@ function* testSetAutomatic(testURL, suffix, errorURISuffix) {
   // Check that we loaded the right error page.
   yield checkErrorPage(browser, errorURISuffix);
 
+  let statusPromise = createReportResponseStatusPromise(URL_REPORTS + suffix);
+
   // Click the checkbox, enable automatic error reports.
-  let promiseReport = createErrorReportPromise(browser);
   yield ContentTask.spawn(browser, null, function* () {
     content.document.getElementById("automaticallyReportInFuture").click();
   });
 
   // Wait for the error report submission.
-  yield promiseReport;
-  ok(true, "SSL error report submitted successfully");
+  yield statusPromise;
 
   let isAutomaticReportingEnabled = () =>
     Services.prefs.getBoolPref(PREF_REPORT_AUTOMATIC);
@@ -170,32 +146,22 @@ function* testSendReportDisabled(testURL, errorURISuffix) {
   gBrowser.removeTab(tab);
 }
 
-function createErrorReportPromise(browser) {
-  return ContentTask.spawn(browser, null, function* () {
-    let type = "Browser:SSLErrorReportStatus";
-    let active = false;
+function isErrorStatus(status) {
+  return status < 200 || status >= 300;
+}
 
-    yield new Promise((resolve, reject) => {
-      addMessageListener(type, function onReportStatus(message) {
-        switch (message.data.reportStatus) {
-          case "activity":
-            active = true;
-            break;
-          case "complete":
-            removeMessageListener(type, onReportStatus);
-            if (active) {
-              resolve(message.data.reportStatus);
-            } else {
-              reject("activity should be seen before success");
-            }
-            break;
-          case "error":
-            removeMessageListener(type, onReportStatus);
-            reject("sending the report failed");
-            break;
-        }
-      });
-    });
+// use the observer service to see when a report is sent
+function createReportResponseStatusPromise(expectedURI) {
+  return new Promise(resolve => {
+    let observer = (subject, topic, data) => {
+      subject.QueryInterface(Ci.nsIHttpChannel);
+      let requestURI = subject.URI.spec;
+      if (requestURI == expectedURI) {
+        Services.obs.removeObserver(observer, "http-on-examine-response");
+        resolve(subject.responseStatus);
+      }
+    };
+    Services.obs.addObserver(observer, "http-on-examine-response", false);
   });
 }
 

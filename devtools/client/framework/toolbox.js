@@ -61,6 +61,8 @@ loader.lazyRequireGetter(this, "createPerformanceFront",
   "devtools/server/actors/performance", true);
 loader.lazyRequireGetter(this, "system",
   "devtools/shared/system");
+loader.lazyRequireGetter(this, "getPreferenceFront",
+  "devtools/server/actors/preference", true);
 loader.lazyGetter(this, "osString", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
@@ -91,7 +93,9 @@ const ToolboxButtons = exports.ToolboxButtons = [
   { id: "command-button-eyedropper" },
   { id: "command-button-screenshot" },
   { id: "command-button-rulers" },
-  { id: "command-button-measure" }
+  { id: "command-button-measure" },
+  { id: "command-button-noautohide",
+    isTargetSupported: target => target.chrome },
 ];
 
 /**
@@ -119,6 +123,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
+  this._toggleAutohide = this._toggleAutohide.bind(this);
   this.selectFrame = this.selectFrame.bind(this);
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
@@ -377,6 +382,9 @@ Toolbox.prototype = {
 
       let framesMenu = this.doc.getElementById("command-button-frames");
       framesMenu.addEventListener("command", this.selectFrame, true);
+
+      let noautohideMenu = this.doc.getElementById("command-button-noautohide");
+      noautohideMenu.addEventListener("command", this._toggleAutohide, true);
 
       this.textboxContextMenuPopup =
         this.doc.getElementById("toolbox-textbox-context-popup");
@@ -1012,7 +1020,7 @@ Toolbox.prototype = {
         visibilityswitch: "devtools." + options.id + ".enabled",
         isTargetSupported: options.isTargetSupported
                            ? options.isTargetSupported
-                           : target => target.isLocalTab
+                           : target => target.isLocalTab,
       };
     }).filter(button=>button);
   },
@@ -1039,6 +1047,8 @@ Toolbox.prototype = {
         }
       }
     });
+
+    this._updateNoautohideButton();
 
     // Tilt is handled separately because it is disabled in E10S mode. Because
     // we have removed tilt from toolboxButtons we have to deal with it here.
@@ -1541,6 +1551,40 @@ Toolbox.prototype = {
     this._host.setTitle(title);
   },
 
+  // Returns an instance of the preference actor
+  get _preferenceFront() {
+    return this.target.root.then(rootForm => {
+      return new getPreferenceFront(this.target.client, rootForm);
+    });
+  },
+
+  _toggleAutohide: Task.async(function*() {
+    let prefName = "ui.popup.disable_autohide";
+    let front = yield this._preferenceFront;
+    let current = yield front.getBoolPref(prefName);
+    yield front.setBoolPref(prefName, !current);
+
+    this._updateNoautohideButton();
+  }),
+
+  _updateNoautohideButton: Task.async(function*() {
+    let menu = this.doc.getElementById("command-button-noautohide");
+    if (menu.getAttribute("hidden") === "true") {
+      return;
+    }
+    if (!this.target.root) {
+      return;
+    }
+    let prefName = "ui.popup.disable_autohide";
+    let front = yield this._preferenceFront;
+    let current = yield front.getBoolPref(prefName);
+    if (current) {
+      menu.setAttribute("checked", "true");
+    } else {
+      menu.removeAttribute("checked");
+    }
+  }),
+
   _listFrames: function(event) {
     if (!this._target.activeTab || !this._target.activeTab.traits.frames) {
       // We are not targetting a regular TabActor
@@ -1729,6 +1773,16 @@ Toolbox.prototype = {
   },
 
   /**
+   * Return if the tool is available as a tab (i.e. if it's checked
+   * in the options panel). This is different from Toolbox.getPanel -
+   * a tool could be registered but not yet opened in which case
+   * isToolRegistered would return true but getPanel would return false.
+   */
+  isToolRegistered: function(toolId) {
+    return gDevTools.getToolDefinitionMap().has(toolId);
+  },
+
+  /**
    * Handler for the tool-registered event.
    * @param  {string} event
    *         Name of the event ("tool-registered")
@@ -1738,6 +1792,9 @@ Toolbox.prototype = {
   _toolRegistered: function(event, toolId) {
     let tool = gDevTools.getToolDefinition(toolId);
     this._buildTabForTool(tool);
+    // Emit the event so tools can listen to it from the toolbox level
+    // instead of gDevTools
+    this.emit("tool-registered", toolId);
   },
 
   /**
@@ -1789,6 +1846,9 @@ Toolbox.prototype = {
         key.parentNode.removeChild(key);
       }
     }
+    // Emit the event so tools can listen to it from the toolbox level
+    // instead of gDevTools
+    this.emit("tool-unregistered", toolId);
   },
 
   /**

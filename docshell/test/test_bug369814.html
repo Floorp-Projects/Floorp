@@ -164,18 +164,6 @@ var gTests = [
     "pokes" : { },
     "func" : anchorTest,
   },
-  { "name" : "iframes.html loaded from view-source jar type, pref disabled",
-    "url" : "jar:view-source:http://mochi.test:8888/tests/docshell/test/bug369814.jar!/iframes.html",
-    "pref" : false,
-    "pokes" : { },
-    "func" : loadErrorTest
-  },
-  { "name" : "iframes.html loaded from view-source jar type, pref enabled",
-    "url" : "jar:view-source:http://mochi.test:8888/tests/docshell/test/bug369814.jar!/iframes.html",
-    "pref" : true,
-    "pokes" : { },
-    "func" : loadErrorTest
-  },
 ];
 
 var gNextTest = 0;

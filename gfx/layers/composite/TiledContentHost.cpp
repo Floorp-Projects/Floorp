@@ -510,11 +510,11 @@ TiledContentHost::RenderTile(TileHost& aTile,
 
   aEffectChain.mPrimaryEffect = effect;
 
-  nsIntRegionRectIterator it(aScreenRegion);
-  for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
-    Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
-    Rect textureRect(rect->x - aTextureOffset.x, rect->y - aTextureOffset.y,
-                     rect->width, rect->height);
+  for (auto iter = aScreenRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& rect = iter.Get();
+    Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
+    Rect textureRect(rect.x - aTextureOffset.x, rect.y - aTextureOffset.y,
+                     rect.width, rect.height);
 
     effect->mTextureCoords = Rect(textureRect.x / aTextureBounds.width,
                                   textureRect.y / aTextureBounds.height,
@@ -591,9 +591,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     backgroundRegion.ScaleRoundOut(resolution, resolution);
     EffectChain effect;
     effect.mPrimaryEffect = new EffectSolidColor(*aBackgroundColor);
-    nsIntRegionRectIterator it(backgroundRegion);
-    for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
-      Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
+    for (auto iter = backgroundRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& rect = iter.Get();
+      Rect graphicsRect(rect.x, rect.y, rect.width, rect.height);
       mCompositor->DrawQuad(graphicsRect, aClipRect, effect, 1.0, aTransform);
     }
   }

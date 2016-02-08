@@ -13,22 +13,22 @@ protocol PPrintProgressDialog
   manager PPrinting;
 
 parent:
-  StateChange(long stateFlags,
-              nsresult status);
+  async StateChange(long stateFlags,
+                    nsresult status);
 
-  ProgressChange(long curSelfProgress,
-                 long maxSelfProgress,
-                 long curTotalProgress,
-                 long maxTotalProgress);
+  async ProgressChange(long curSelfProgress,
+                       long maxSelfProgress,
+                       long curTotalProgress,
+                       long maxTotalProgress);
 
-  DocTitleChange(nsString newTitle);
+  async DocTitleChange(nsString newTitle);
 
-  DocURLChange(nsString newURL);
+  async DocURLChange(nsString newURL);
 
-  __delete__();
+  async __delete__();
 
 child:
-  DialogOpened();
+  async DialogOpened();
 };
 
 } // namespace embedding

@@ -57,7 +57,7 @@ RESOURCE_FILES.fonts += [
     'mathfontUnicode.properties',
 ]
 
-if CONFIG['TARGET_MD_ARCH'] == 'win32':
+if CONFIG['OS_TARGET'] == 'WINNT':
     RESOURCE_FILES.fonts += [
         'mathfontSymbol.properties',
     ]

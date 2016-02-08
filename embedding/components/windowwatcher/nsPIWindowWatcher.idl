@@ -10,6 +10,7 @@
 
 #include "nsISupports.idl"
 
+interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 interface nsIWebBrowserChrome;
@@ -17,7 +18,7 @@ interface nsIDocShellTreeItem;
 interface nsIArray;
 interface nsITabParent;
 
-[uuid(0f2d9d75-c46b-4114-802e-83b4655e61d2)]
+[uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
 
 interface nsPIWindowWatcher : nsISupports
 {
@@ -29,12 +30,13 @@ interface nsPIWindowWatcher : nsISupports
                      method getChromeForWindow. If null, any extant mapping
                      will be cleared.
   */
-  void addWindow(in nsIDOMWindow aWindow, in nsIWebBrowserChrome aChrome);
+  void addWindow(in mozIDOMWindowProxy aWindow,
+                 in nsIWebBrowserChrome aChrome);
 
   /** A window has been closed. Remove it from our list.
       @param aWindow the window to remove
   */
-  void removeWindow(in nsIDOMWindow aWindow);
+  void removeWindow(in mozIDOMWindowProxy aWindow);
 
   /** Like the public interface's open(), but can handle openDialog-style
       arguments and calls which shouldn't result in us navigating the window.
@@ -66,11 +68,13 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
-  nsIDOMWindow openWindow2(in nsIDOMWindow aParent, in string aUrl,
-                           in string aName, in string aFeatures,
-                           in boolean aCalledFromScript, in boolean aDialog,
-                           in boolean aNavigate, in nsITabParent aOpeningTab,
-                           in nsISupports aArgs);
+  mozIDOMWindowProxy openWindow2(in mozIDOMWindowProxy aParent, in string aUrl,
+                                 in string aName, in string aFeatures,
+                                 in boolean aCalledFromScript,
+                                 in boolean aDialog,
+                                 in boolean aNavigate,
+                                 in nsITabParent aOpeningTab,
+                                 in nsISupports aArgs);
 
   /**
    * Find a named docshell tree item amongst all windows registered

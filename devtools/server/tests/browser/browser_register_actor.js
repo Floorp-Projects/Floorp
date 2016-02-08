@@ -11,8 +11,9 @@ function test() {
   }
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function onConnect() {
-    gClient.listTabs(function onListTabs(aResponse) {
+  gClient.connect()
+    .then(() => gClient.listTabs())
+    .then(aResponse => {
 
       var options = {
         prefix: "helloActor",
@@ -41,7 +42,6 @@ function test() {
         });
       });
     });
-  });
 }
 
 function checkActorState(helloActor, callback) {

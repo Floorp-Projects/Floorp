@@ -11,7 +11,7 @@ BEGIN_TEST(test_GetPropertyDescriptor)
   CHECK(v.isObject());
 
   JS::RootedObject obj(cx, &v.toObject());
-  JS::Rooted<JSPropertyDescriptor> desc(cx);
+  JS::Rooted<JS::PropertyDescriptor> desc(cx);
 
   CHECK(JS_GetPropertyDescriptor(cx, obj, "somename", &desc));
   CHECK_EQUAL(desc.object(), obj);

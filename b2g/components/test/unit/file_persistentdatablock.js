@@ -33,7 +33,7 @@ function toHexString(data) {
   let hexString = "";
   if (typeof data === "string") {
     hexString = Array.from(data, (c, i) => toHexChar(data.charCodeAt(i))).join("");
-  } else if (typeof data === "array") {
+  } else if (data instanceof Array) {
     hexString = data.map(toHexChar).join("");
   }
   return hexString;

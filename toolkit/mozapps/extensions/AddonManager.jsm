@@ -248,7 +248,7 @@ function callProviderAsync(aProvider, aMethod, ...aArgs) {
   let callback = aArgs[aArgs.length - 1];
   if (!(aMethod in aProvider)) {
     callback(undefined);
-    return;
+    return undefined;
   }
   try {
     return aProvider[aMethod].apply(aProvider, aArgs);
@@ -256,7 +256,7 @@ function callProviderAsync(aProvider, aMethod, ...aArgs) {
   catch (e) {
     reportProviderError(aProvider, aMethod, e);
     callback(undefined);
-    return;
+    return undefined;
   }
 }
 
@@ -688,53 +688,6 @@ var AddonManagerInternal = {
   // Store telemetry details per addon provider
   telemetryDetails: {},
 
-  // A read-only wrapper around the types dictionary
-  typesProxy: Proxy.create({
-    getOwnPropertyDescriptor: function(aName) {
-      if (!(aName in AddonManagerInternal.types))
-        return undefined;
-
-      return {
-        value: AddonManagerInternal.types[aName].type,
-        writable: false,
-        configurable: false,
-        enumerable: true
-      }
-    },
-
-    getPropertyDescriptor: function(aName) {
-      return this.getOwnPropertyDescriptor(aName);
-    },
-
-    getOwnPropertyNames: function() {
-      return Object.keys(AddonManagerInternal.types);
-    },
-
-    getPropertyNames: function() {
-      return this.getOwnPropertyNames();
-    },
-
-    delete: function(aName) {
-      // Not allowed to delete properties
-      return false;
-    },
-
-    defineProperty: function(aName, aProperty) {
-      // Ignore attempts to define properties
-    },
-
-    fix: function(){
-      return undefined;
-    },
-
-    // Despite MDC's claims to the contrary, it is required that this trap
-    // be defined
-    enumerate: function() {
-      // All properties are enumerable
-      return this.getPropertyNames();
-    }
-  }),
-
   recordTimestamp: function(name, value) {
     this.TelemetryTimestamps.add(name, value);
   },
@@ -981,7 +934,7 @@ var AddonManagerInternal = {
             AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
             logger.error("Exception loading default provider \"" + url + "\"", e);
           }
-        };
+        }
       }
 
       // Load any providers registered in the category manager
@@ -2697,7 +2650,53 @@ var AddonManagerInternal = {
   },
 
   get addonTypes() {
-    return this.typesProxy;
+    // A read-only wrapper around the types dictionary
+    return new Proxy(this.types, {
+      defineProperty(target, property, descriptor) {
+        // Not allowed to define properties
+        return false;
+      },
+
+      deleteProperty(target, property) {
+        // Not allowed to delete properties
+        return false;
+      },
+
+      get(target, property, receiver) {
+        if (!target.hasOwnProperty(property))
+          return undefined;
+
+        return target[property].type;
+      },
+
+      getOwnPropertyDescriptor(target, property) {
+        if (!target.hasOwnProperty(property))
+          return undefined;
+
+        return {
+          value: target[property].type,
+          writable: false,
+          // Claim configurability to maintain the proxy invariants.
+          configurable: true,
+          enumerable: true
+        }
+      },
+
+      preventExtensions(target) {
+        // Not allowed to prevent adding new properties
+        return false;
+      },
+
+      set(target, property, value, receiver) {
+        // Not allowed to set properties
+        return false;
+      },
+
+      setPrototypeOf(target, prototype) {
+        // Not allowed to change prototype
+        return false;
+      }
+    });
   },
 
   get autoUpdateDefault() {
@@ -3044,14 +3043,22 @@ this.AddonManager = {
   // The combination of all scopes.
   SCOPE_ALL: 31,
 
-  // 1-15 are different built-in views for the add-on type
+  // Add-on type is expected to be displayed in the UI in a list.
   VIEW_TYPE_LIST: "list",
 
+  // Constants describing how add-on types behave.
+
+  // If no add-ons of a type are installed, then the category for that add-on
+  // type should be hidden in the UI.
   TYPE_UI_HIDE_EMPTY: 16,
   // Indicates that this add-on type supports the ask-to-activate state.
   // That is, add-ons of this type can be set to be optionally enabled
   // on a case-by-case basis.
   TYPE_SUPPORTS_ASK_TO_ACTIVATE: 32,
+  // The add-on type natively supports undo for restartless uninstalls.
+  // If this flag is not specified, the UI is expected to handle this via
+  // disabling the add-on, and performing the actual uninstall at a later time.
+  TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL: 64,
 
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.

@@ -98,14 +98,11 @@ void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRegionTyped<units>& r,
                const char* pfx="", const char* sfx="")
 {
-  typedef mozilla::gfx::IntRegionTyped<units> RegionType;
-
   aStream << pfx;
 
-  typename RegionType::RectIterator it(r);
   aStream << "< ";
-  while (const typename RegionType::RectType* sr = it.Next()) {
-    AppendToString(aStream, *sr);
+  for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
+    AppendToString(aStream, iter.Get());
     aStream << "; ";
   }
   aStream << ">";

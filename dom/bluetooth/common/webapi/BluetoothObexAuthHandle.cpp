@@ -26,7 +26,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothObexAuthHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-BluetoothObexAuthHandle::BluetoothObexAuthHandle(nsPIDOMWindow* aOwner)
+BluetoothObexAuthHandle::BluetoothObexAuthHandle(nsPIDOMWindowInner* aOwner)
   : mOwner(aOwner)
 {
   MOZ_ASSERT(aOwner);
@@ -37,7 +37,7 @@ BluetoothObexAuthHandle::~BluetoothObexAuthHandle()
 }
 
 already_AddRefed<BluetoothObexAuthHandle>
-BluetoothObexAuthHandle::Create(nsPIDOMWindow* aOwner)
+BluetoothObexAuthHandle::Create(nsPIDOMWindowInner* aOwner)
 {
   MOZ_ASSERT(aOwner);
 

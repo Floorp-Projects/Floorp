@@ -25,10 +25,10 @@ protocol PQuotaUsageRequest
   manager PQuota;
 
 parent:
-  Cancel();
+  async Cancel();
 
 child:
-  __delete__(UsageRequestResponse response);
+  async __delete__(UsageRequestResponse response);
 };
 
 } // namespace quota

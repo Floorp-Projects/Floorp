@@ -18,17 +18,15 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 // How many times, maximum, can we loop before we find the optimal time
 // interval in the timeline graph.
 const OPTIMAL_TIME_INTERVAL_MAX_ITERS = 100;
-// Background time graduations should be multiple of this number of millis.
-const TIME_INTERVAL_MULTIPLE = 25;
-const TIME_INTERVAL_SCALES = 3;
-// The default minimum spacing between time graduations in px.
-const TIME_GRADUATION_MIN_SPACING = 10;
+// Time graduations should be multiple of one of these number.
+const OPTIMAL_TIME_INTERVAL_MULTIPLES = [1, 2.5, 5];
+
 // RGB color for the time interval background.
 const TIME_INTERVAL_COLOR = [128, 136, 144];
 // byte
-const TIME_INTERVAL_OPACITY_MIN = 32;
+const TIME_INTERVAL_OPACITY_MIN = 64;
 // byte
-const TIME_INTERVAL_OPACITY_ADD = 32;
+const TIME_INTERVAL_OPACITY_MAX = 96;
 
 const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 
@@ -72,9 +70,9 @@ exports.createNode = createNode;
  * @param {Document} document The document where the image-element should be set.
  * @param {String} id The ID for the image-element.
  * @param {Number} graphWidth The width of the graph.
- * @param {Number} timeScale How many px is 1ms in the graph.
+ * @param {Number} intervalWidth The width of one interval
  */
-function drawGraphElementBackground(document, id, graphWidth, timeScale) {
+function drawGraphElementBackground(document, id, graphWidth, intervalWidth) {
   let canvas = document.createElement("canvas");
   let ctx = canvas.getContext("2d");
 
@@ -93,17 +91,19 @@ function drawGraphElementBackground(document, id, graphWidth, timeScale) {
 
   // Build new millisecond tick lines...
   let [r, g, b] = TIME_INTERVAL_COLOR;
-  let alphaComponent = TIME_INTERVAL_OPACITY_MIN;
-  let interval = findOptimalTimeInterval(timeScale);
+  let opacities = [TIME_INTERVAL_OPACITY_MAX, TIME_INTERVAL_OPACITY_MIN];
 
-  // Insert one pixel for each division on each scale.
-  for (let i = 1; i <= TIME_INTERVAL_SCALES; i++) {
-    let increment = interval * Math.pow(2, i);
-    for (let x = 0; x < canvas.width; x += increment) {
-      let position = x | 0;
-      view32bit[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
+  // Insert one tick line on each interval
+  for (let i = 0; i <= graphWidth / intervalWidth; i++) {
+    let x = i * intervalWidth;
+    // Ensure the last line is drawn on canvas
+    if (x >= graphWidth) {
+      x = graphWidth - 0.5;
     }
-    alphaComponent += TIME_INTERVAL_OPACITY_ADD;
+    let position = x | 0;
+    let alphaComponent = opacities[i % opacities.length];
+
+    view32bit[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
   }
 
   // Flush the image data and cache the waterfall background.
@@ -116,31 +116,30 @@ exports.drawGraphElementBackground = drawGraphElementBackground;
 
 /**
  * Find the optimal interval between time graduations in the animation timeline
- * graph based on a time scale and a minimum spacing.
- * @param {Number} timeScale How many px is 1ms in the graph.
- * @param {Number} minSpacing The minimum spacing between 2 graduations,
- * defaults to TIME_GRADUATION_MIN_SPACING.
- * @return {Number} The optimal interval, in pixels.
+ * graph based on a minimum time interval
+ * @param {Number} minTimeInterval Minimum time in ms in one interval
+ * @return {Number} The optimal interval time in ms
  */
-function findOptimalTimeInterval(timeScale,
-                                 minSpacing=TIME_GRADUATION_MIN_SPACING) {
-  let timingStep = TIME_INTERVAL_MULTIPLE;
+function findOptimalTimeInterval(minTimeInterval) {
   let numIters = 0;
+  let multiplier = 1;
 
-  if (timeScale > minSpacing) {
-    return timeScale;
+  if (!minTimeInterval) {
+    return 0;
   }
 
+  let interval;
   while (true) {
-    let scaledStep = timeScale * timingStep;
+    for (let i = 0; i < OPTIMAL_TIME_INTERVAL_MULTIPLES.length; i++) {
+      interval = OPTIMAL_TIME_INTERVAL_MULTIPLES[i] * multiplier;
+      if (minTimeInterval <= interval) {
+        return interval;
+      }
+    }
     if (++numIters > OPTIMAL_TIME_INTERVAL_MAX_ITERS) {
-      return scaledStep;
+      return interval;
     }
-    if (scaledStep < minSpacing) {
-      timingStep *= 2;
-      continue;
-    }
-    return scaledStep;
+    multiplier *= 10;
   }
 }
 

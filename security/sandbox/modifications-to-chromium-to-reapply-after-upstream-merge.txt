@@ -5,4 +5,5 @@ https://hg.mozilla.org/mozilla-central/rev/efa7518e43b0
 https://hg.mozilla.org/mozilla-central/rev/421446ab2347
 https://hg.mozilla.org/mozilla-central/rev/beb74056ac2d
 https://hg.mozilla.org/mozilla-central/rev/7df8d6639971
-https://bugzilla.mozilla.org/show_bug.cgi?id=1157864 sandbox-cdefs.patch
+https://hg.mozilla.org/mozilla-central/rev/1178c11561bc
+https://bugzilla.mozilla.org/show_bug.cgi?id=1173371 bug1173371part2.patch

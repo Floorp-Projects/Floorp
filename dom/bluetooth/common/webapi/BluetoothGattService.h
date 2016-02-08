@@ -95,7 +95,7 @@ public:
     return mServiceHandle;
   }
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return mOwner;
   }
@@ -106,11 +106,11 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // Constructor of BluetoothGattService in ATT client role
-  BluetoothGattService(nsPIDOMWindow* aOwner,
+  BluetoothGattService(nsPIDOMWindowInner* aOwner,
                        const nsAString& aAppUuid,
                        const BluetoothGattServiceId& aServiceId);
   // Constructor of BluetoothGattService in ATT server role
-  BluetoothGattService(nsPIDOMWindow* aOwner,
+  BluetoothGattService(nsPIDOMWindowInner* aOwner,
                        const BluetoothGattServiceInit& aInit);
 
 private:
@@ -209,7 +209,7 @@ private:
   /****************************************************************************
    * Variables
    ***************************************************************************/
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 
   /**
    * UUID of the GATT client.

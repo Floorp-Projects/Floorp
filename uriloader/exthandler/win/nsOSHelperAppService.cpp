@@ -19,6 +19,7 @@
 #include "nsAutoPtr.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIWindowsRegKey.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
@@ -352,14 +353,14 @@ static void StripRundll32(nsString& aCommandString)
   if (bufLength == 0) // Error
     return false;
 
-  nsAutoArrayPtr<wchar_t> destination(new wchar_t[bufLength]);
+  auto destination = mozilla::MakeUniqueFallible<wchar_t[]>(bufLength);
   if (!destination)
     return false;
-  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination,
+  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination.get(),
                                    bufLength))
     return false;
 
-  handlerCommand = static_cast<const wchar_t*>(destination);
+  handlerCommand.Assign(destination.get());
 
   // Remove quotes around paths
   handlerCommand.StripChars("\"");

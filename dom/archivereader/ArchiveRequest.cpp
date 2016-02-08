@@ -49,7 +49,7 @@ ArchiveRequestEvent::Run()
 
 // ArchiveRequest
 
-ArchiveRequest::ArchiveRequest(nsPIDOMWindow* aWindow,
+ArchiveRequest::ArchiveRequest(nsPIDOMWindowInner* aWindow,
                                ArchiveReader* aReader)
 : DOMRequest(aWindow),
   mArchiveReader(aReader)
@@ -257,7 +257,7 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
 
 // static
 already_AddRefed<ArchiveRequest>
-ArchiveRequest::Create(nsPIDOMWindow* aOwner,
+ArchiveRequest::Create(nsPIDOMWindowInner* aOwner,
                        ArchiveReader* aReader)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

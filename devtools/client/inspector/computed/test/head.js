@@ -19,11 +19,11 @@ registerCleanupFunction(() => {
  * view is visible and ready
  */
 function openComputedView() {
-  return openInspectorSidebarTab("computedview").then(objects => {
+  return openInspectorSidebarTab("computedview").then(({toolbox, inspector}) => {
     return {
-      toolbox: objects.toolbox,
-      inspector: objects.inspector,
-      view: objects.view.view
+      toolbox,
+      inspector,
+      view: inspector.computedview.view
     };
   });
 }

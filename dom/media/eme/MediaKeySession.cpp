@@ -40,7 +40,7 @@ NS_IMPL_RELEASE_INHERITED(MediaKeySession, DOMEventTargetHelper)
 static uint32_t sMediaKeySessionNum = 0;
 
 MediaKeySession::MediaKeySession(JSContext* aCx,
-                                 nsPIDOMWindow* aParent,
+                                 nsPIDOMWindowInner* aParent,
                                  MediaKeys* aKeys,
                                  const nsAString& aKeySystem,
                                  const nsAString& aCDMVersion,

@@ -213,15 +213,15 @@
       </vbox>
     </hbox>
     <label class="fxaMobilePromo">
-        &mobilePromo2.start;<!-- We put these comments to avoid inserting white spaces
+        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
         --><label id="fxaMobilePromo-android"
                   class="androidLink text-link"><!--
-        -->&mobilePromo2.androidLink;</label><!--
-        -->&mobilePromo2.iOSBefore;<!--
+        -->&mobilePromo3.androidLink;</label><!--
+        -->&mobilePromo3.iOSBefore;<!--
         --><label id="fxaMobilePromo-ios"
                   class="iOSLink text-link"><!--
-        -->&mobilePromo2.iOSLink;</label><!--
-        -->&mobilePromo2.end;
+        -->&mobilePromo3.iOSLink;</label><!--
+        -->&mobilePromo3.end;
     </label>
   </vbox>
 
@@ -347,15 +347,15 @@
       </hbox>
     </groupbox>
     <label class="fxaMobilePromo">
-        &mobilePromo2.start;<!-- We put these comments to avoid inserting white spaces
+        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
         --><label class="androidLink text-link"
                   href="https://www.mozilla.org/firefox/android/?utm_source=firefox-browser&amp;utm_medium=firefox-browser&amp;utm_campaign=sync-preferences"><!--
-        -->&mobilePromo2.androidLink;</label><!--
-        -->&mobilePromo2.iOSBefore;<!--
+        -->&mobilePromo3.androidLink;</label><!--
+        -->&mobilePromo3.iOSBefore;<!--
         --><label class="iOSLink text-link"
                   href="https://www.mozilla.org/firefox/ios/?utm_source=firefox-browser&amp;utm_medium=firefox-browser&amp;utm_campaign=sync-preferences"><!--
-        -->&mobilePromo2.iOSLink;</label><!--
-        -->&mobilePromo2.end;
+        -->&mobilePromo3.iOSLink;</label><!--
+        -->&mobilePromo3.end;
     </label>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">

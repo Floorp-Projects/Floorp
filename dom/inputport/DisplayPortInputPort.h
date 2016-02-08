@@ -15,15 +15,16 @@ namespace dom {
 class DisplayPortInputPort final : public InputPort
 {
 public:
-  static already_AddRefed<DisplayPortInputPort> Create(nsPIDOMWindow* aWindow,
-                                                       nsIInputPortListener* aListener,
-                                                       nsIInputPortData* aData,
-                                                       ErrorResult& aRv);
+  static already_AddRefed<DisplayPortInputPort>
+  Create(nsPIDOMWindowInner* aWindow,
+         nsIInputPortListener* aListener,
+         nsIInputPortData* aData,
+         ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  explicit DisplayPortInputPort(nsPIDOMWindow* aWindow);
+  explicit DisplayPortInputPort(nsPIDOMWindowInner* aWindow);
 
   ~DisplayPortInputPort();
 };

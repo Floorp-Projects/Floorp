@@ -120,7 +120,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (!targetNode && mIsContext) {
     // Not a DOM node, see if it's the DOM window (bug 380818).
-    nsCOMPtr<nsPIDOMWindow> domWin = do_QueryInterface(target);
+    nsCOMPtr<nsPIDOMWindowInner> domWin = do_QueryInterface(target);
     if (!domWin) {
       return NS_ERROR_DOM_WRONG_TYPE_ERR;
     }
@@ -272,7 +272,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
         }
         fm->SetFocus(element, focusFlags);
       } else if (!suppressBlur) {
-        nsPIDOMWindow *window = doc->GetWindow();
+        nsPIDOMWindowOuter *window = doc->GetWindow();
         fm->ClearFocus(window);
       }
     }

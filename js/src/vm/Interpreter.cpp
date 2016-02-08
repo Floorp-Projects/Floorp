@@ -593,7 +593,7 @@ ConstructFromStack(JSContext* cx, const CallArgs& args)
 
 bool
 js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
-              MutableHandleValue rval)
+              MutableHandleObject objp)
 {
     args.setCallee(fval);
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
@@ -601,7 +601,8 @@ js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, Handle
     if (!InternalConstruct(cx, args))
         return false;
 
-    rval.set(args.rval());
+    MOZ_ASSERT(args.rval().isObject());
+    objp.set(&args.rval().toObject());
     return true;
 }
 
@@ -926,9 +927,8 @@ js::TypeOfValue(const Value& v)
  */
 bool
 js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
-                       HandleObject staticWith)
+                       Handle<StaticWithScope*> staticWith)
 {
-    MOZ_ASSERT(staticWith->is<StaticWithScope>());
     RootedObject obj(cx);
     if (val.isObject()) {
         obj = &val.toObject();
@@ -1038,8 +1038,8 @@ SettleOnTryNote(JSContext* cx, JSTryNote* tn, ScopeIter& si, InterpreterRegs& re
     // Unwind the scope to the beginning of the JSOP_TRY.
     UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
 
-    // Set pc to the first bytecode after the the try note to point
-    // to the beginning of catch or finally.
+    // Set pc to the first bytecode after the span of the try note, the
+    // beginning of the first catch or finally block.
     regs.pc = regs.fp()->script()->main() + tn->start + tn->length;
     regs.sp = regs.spForStackDepth(tn->stackDepth);
 }
@@ -1481,17 +1481,20 @@ class ReservedRooted : public ReservedRootedBase<T>
     }
 
     explicit ReservedRooted(Rooted<T>* root) : savedRoot(root) {
-        *root = js::GCMethods<T>::initial();
+        *root = js::GCPolicy<T>::initial();
     }
 
     ~ReservedRooted() {
-        *savedRoot = js::GCMethods<T>::initial();
+        *savedRoot = js::GCPolicy<T>::initial();
     }
 
     void set(const T& p) const { *savedRoot = p; }
     operator Handle<T>() { return *savedRoot; }
     operator Rooted<T>&() { return *savedRoot; }
     MutableHandle<T> operator&() { return &*savedRoot; }
+
+    template <typename U>
+    Handle<U*> as() { return savedRoot->template as<U>(); }
 
     DECLARE_NONPOINTER_ACCESSOR_METHODS(savedRoot->get())
     DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(savedRoot->get())
@@ -1872,7 +1875,7 @@ CASE(JSOP_ENTERWITH)
     REGS.sp--;
     ReservedRooted<JSObject*> staticWith(&rootObject0, script->getObject(REGS.pc));
 
-    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith))
+    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith.as<StaticWithScope>()))
         goto error;
 }
 END_CASE(JSOP_ENTERWITH)
@@ -4577,8 +4580,10 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
         if (!GetElements(cx, aobj, length, cargs.array()))
             return false;
 
-        if (!Construct(cx, callee, cargs, newTarget, res))
+        RootedObject obj(cx);
+        if (!Construct(cx, callee, cargs, newTarget, &obj))
             return false;
+        res.setObject(*obj);
     } else {
         InvokeArgs args(cx);
 

@@ -33,3 +33,8 @@
 <!ENTITY abouthome.addonsButton.label    "Add-ons">
 <!ENTITY abouthome.downloadsButton.label "Downloads">
 <!ENTITY abouthome.syncButton.label      "&syncBrand.shortName.label;">
+
+<!-- LOCALIZATION NOTE (abouthome.aboutMozilla.label): The (invisible) label for
+     the mozilla wordmark in the top-right corner that links to Mozilla's main
+     about page. -->
+<!ENTITY abouthome.aboutMozilla.label    "About Mozilla">

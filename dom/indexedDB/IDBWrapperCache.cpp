@@ -48,7 +48,7 @@ IDBWrapperCache::IDBWrapperCache(DOMEventTargetHelper* aOwner)
   : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
 { }
 
-IDBWrapperCache::IDBWrapperCache(nsPIDOMWindow* aOwner)
+IDBWrapperCache::IDBWrapperCache(nsPIDOMWindowInner* aOwner)
   : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
 { }
 

@@ -48,32 +48,30 @@ var steps = [
     };
 
     req.onerror = function () {
-      ok(req.error.name == "InvalidInterface", "Get InvalidInterface error");
+      is(req.error.name, "InvalidInterface", "Get InvalidInterface error");
       next();
     }
   },
   function () {
     ok(true, "Calling addAlarm() with invalid network or parameters.");
+    var msg = "TypeError: Not enough arguments to MozNetworkStatsManager.addAlarm.";
 
     try {
       navigator.mozNetworkStats.addAlarm();
     } catch(ex) {
-      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
-         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no parameters");
+      is(ex.toString(), msg, "addAlarm() throws \"" + msg + "\" when no parameters");
     }
 
     try {
       navigator.mozNetworkStats.addAlarm(100000);
     } catch(ex) {
-      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
-         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no network");
+      is(ex.toString(), msg, "addAlarm() throws " + msg + " when no network");
     }
 
     try {
       navigator.mozNetworkStats.addAlarm(new window.MozNetworkStatsInterface(wifi));
     } catch(ex) {
-      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
-         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no threshold");
+      is(ex.toString(), msg, "addAlarm() throws " + msg + " when no threshold");
     }
 
     req = navigator.mozNetworkStats
@@ -84,7 +82,7 @@ var steps = [
     };
 
     req.onerror = function () {
-      ok(req.error.name == "InvalidThresholdValue", "Get InvalidThresholdValue error");
+      is(req.error.name, "InvalidThresholdValue", "Get InvalidThresholdValue error");
       next();
     }
   },
@@ -109,8 +107,8 @@ var steps = [
                    .getAllAlarms(new window.MozNetworkStatsInterface(wifi));
 
     req.onsuccess = function () {
-      ok(req.result.length == 1, "Only one alarm");
-      ok(req.result[0].alarmId == 1, "Get correct alarmId");
+      is(req.result.length, 1, "Only one alarm");
+      is(req.result[0].alarmId, 1, "Get correct alarmId");
       next();
     };
 
@@ -226,8 +224,8 @@ SpecialPowers.pushPrefEnv({'set': [["dom.mozNetworkStats.enabled", true]]},
 
     ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
 
-    ok(navigator.mozNetworkStats instanceof SpecialPowers.Ci.nsIDOMMozNetworkStatsManager,
-       "navigator.mozNetworkStats should be a nsIDOMMozNetworkStatsManager object");
+    ok(navigator.mozNetworkStats instanceof MozNetworkStatsManager,
+       "navigator.mozNetworkStats should be a MozNetworkStatsManager object");
 
     test();
   });

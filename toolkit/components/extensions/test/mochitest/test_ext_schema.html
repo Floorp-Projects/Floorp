@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for schema API creation</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* testSchema() {
+  function background() {
+    browser.test.assertTrue(!("manifest" in browser), "browser.manifest is not defined");
+    browser.test.notifyPass("schema");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+  });
+
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("schema");
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

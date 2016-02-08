@@ -15,15 +15,16 @@ namespace dom {
 class HDMIInputPort final : public InputPort
 {
 public:
-  static already_AddRefed<HDMIInputPort> Create(nsPIDOMWindow* aWindow,
-                                                nsIInputPortListener* aListener,
-                                                nsIInputPortData* aData,
-                                                ErrorResult& aRv);
+  static already_AddRefed<HDMIInputPort>
+  Create(nsPIDOMWindowInner* aWindow,
+         nsIInputPortListener* aListener,
+         nsIInputPortData* aData,
+         ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  explicit HDMIInputPort(nsPIDOMWindow* aWindow);
+  explicit HDMIInputPort(nsPIDOMWindowInner* aWindow);
 
   ~HDMIInputPort();
 };

@@ -61,10 +61,55 @@ def expectedTabProcessLeakCounts():
         'nsTArray_base': 2,
     })
 
-    # Bug 1219369 - On Aurora, we leak a SyncObject in Windows.
-    appendExpectedLeakCounts({
-        'SyncObject': 1
-    })
+    # Bug 1215265 - Windows-specific graphics leaks, maybe related to
+    # CompositorChild and/or ImageBridgeChild not being shut down.
+    if mozinfo.isWin:
+        # Windows leaks comment to all content processes.
+        # 2696 bytes leaked total on Win7.
+        appendExpectedLeakCounts({
+            'AsyncTransactionTrackersHolder': 1,
+            'CompositableChild': 1,
+            'Mutex': 1,
+            'PCompositableChild': 1,
+            'PImageContainerChild': 1,
+            'SyncObject': 1,
+            'WeakReference<MessageListener>': 2,
+        })
+
+        # Various additional graphics-related Windows leaks in Mochitests.
+        # M2 leaks in dom/media/tests/mochitest/ipc/
+        # dt1 leaks in devtools/client/animationinspector/test/browser_animation_animated_properties_displayed.js
+        # dt1 leaks in devtools/client/debugger/test/mochitest/ (additional leaks are intermittent?)
+        # dt2 leaks in devtools/client/inspector/computed/test/
+        # dt8 leaks in devtools/shared/worker/tests/browser/ (additional leaks are intermittent?)
+        # gl leaks in dom/canvas/test/webgl-mochitest/
+        appendExpectedLeakCounts({
+            'AsyncTransactionTracker': 1,
+            'AsyncTransactionTrackersHolder': 4,
+            'AsyncTransactionWaiter': 1,
+            'CompositableChild': 3,
+            'CompositableClient': 3,
+            'CondVar': 5,
+            'DXGID3D9TextureData': 1,
+            'FdObj': 2,
+            'GfxTextureWasteTracker': 1,
+            'IPC::Message': 1,
+            'ITextureClientRecycleAllocator': 1,
+            'LayerTransactionChild': 5,
+            'Mutex': 7,
+            'PCompositableChild': 3,
+            'PImageContainerChild': 3,
+            'PLayerTransactionChild': 5,
+            'PTextureChild': 5,
+            'RemoveTextureFromCompositableTracker': 1,
+            'SharedMemory': 5,
+            'SyncObject': 5,
+            'TextureChild': 5,
+            'TextureClientHolder': 1,
+            'TextureData': 5,
+            'WeakReference<MessageListener>': 10,
+            'nsTArray_base': 17,
+        })
 
     return leaks
 

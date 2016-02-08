@@ -424,19 +424,29 @@ class TestJSPrincipals : public JSPrincipals
 class AutoLeaveZeal
 {
     JSContext* cx_;
-    uint8_t zeal_;
+    uint32_t zealBits_;
     uint32_t frequency_;
 
   public:
     explicit AutoLeaveZeal(JSContext* cx) : cx_(cx) {
         uint32_t dummy;
-        JS_GetGCZeal(cx_, &zeal_, &frequency_, &dummy);
+        JS_GetGCZealBits(cx_, &zealBits_, &frequency_, &dummy);
         JS_SetGCZeal(cx_, 0, 0);
         JS::PrepareForFullGC(JS_GetRuntime(cx_));
         JS::GCForReason(JS_GetRuntime(cx_), GC_SHRINK, JS::gcreason::DEBUG_GC);
     }
     ~AutoLeaveZeal() {
-        JS_SetGCZeal(cx_, zeal_, frequency_);
+        for (size_t i = 0; i < sizeof(zealBits_) * 8; i++) {
+            if (zealBits_ & (1 << i))
+                JS_SetGCZeal(cx_, i, frequency_);
+        }
+
+#ifdef DEBUG
+        uint32_t zealBitsAfter, frequencyAfter, dummy;
+        JS_GetGCZealBits(cx_, &zealBitsAfter, &frequencyAfter, &dummy);
+        MOZ_ASSERT(zealBitsAfter == zealBits_);
+        MOZ_ASSERT(frequencyAfter == frequency_);
+#endif
     }
 };
 #endif /* JS_GC_ZEAL */

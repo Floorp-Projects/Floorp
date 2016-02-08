@@ -55,12 +55,7 @@ using namespace mozilla;
 #define NSCONTEXTMENUISMOUSEUP 1
 #endif
 
-static void
-AssertNotCalled(void* aPropertyValue)
-{
-  NS_ERROR("popup list should never be destroyed by the FramePropertyTable");
-}
-NS_DECLARE_FRAME_PROPERTY(PopupListProperty, AssertNotCalled)
+NS_DECLARE_FRAME_PROPERTY_FRAMELIST(PopupListProperty)
 
 static int32_t gEatMouseMove = false;
 
@@ -275,8 +270,7 @@ nsMenuFrame::GetPopupList() const
   if (!HasPopup()) {
     return nullptr;
   }
-  nsFrameList* prop =
-    static_cast<nsFrameList*>(Properties().Get(PopupListProperty()));
+  nsFrameList* prop = Properties().Get(PopupListProperty());
   NS_ASSERTION(prop && prop->GetLength() == 1 &&
                prop->FirstChild()->GetType() == nsGkAtoms::menuPopupFrame,
                "popup list should have exactly one nsMenuPopupFrame");
@@ -287,8 +281,7 @@ void
 nsMenuFrame::DestroyPopupList()
 {
   NS_ASSERTION(HasPopup(), "huh?");
-  nsFrameList* prop =
-    static_cast<nsFrameList*>(Properties().Remove(PopupListProperty()));
+  nsFrameList* prop = Properties().Remove(PopupListProperty());
   NS_ASSERTION(prop && prop->IsEmpty(),
                "popup list must exist and be empty when destroying");
   RemoveStateBits(NS_STATE_MENU_HAS_POPUP_LIST);
@@ -315,8 +308,8 @@ void
 nsMenuFrame::SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList)
 {
-  NS_ASSERTION(!HasPopup(), "SetInitialChildList called twice?");
   if (aListID == kPrincipalList || aListID == kPopupList) {
+    NS_ASSERTION(!HasPopup(), "SetInitialChildList called twice?");
     SetPopupFrame(aChildList);
   }
   nsBoxFrame::SetInitialChildList(aListID, aChildList);
@@ -1365,7 +1358,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
       GetBorderAndPadding(borderPadding);
 
       // if there is a scroll frame, add the desired width of the scrollbar as well
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(popupFrame->GetFirstPrincipalChild());
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(popupFrame->PrincipalChildList().FirstChild());
       nscoord scrollbarWidth = 0;
       if (scrollFrame) {
         scrollbarWidth =
@@ -1448,7 +1441,7 @@ nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame()
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame)
     return nullptr;
-  nsIFrame* childFrame = popupFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = popupFrame->PrincipalChildList().FirstChild();
   if (childFrame)
     return popupFrame->GetScrollFrame(childFrame);
   return nullptr;

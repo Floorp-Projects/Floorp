@@ -18,11 +18,11 @@ public:
   explicit OSFileSystem(const nsAString& aRootDir);
 
   void
-  Init(nsPIDOMWindow* aWindow);
+  Init(nsPIDOMWindowInner* aWindow);
 
   // Overrides FileSystemBase
 
-  virtual nsPIDOMWindow*
+  virtual nsPIDOMWindowInner*
   GetWindow() const override;
 
   virtual void
@@ -41,7 +41,7 @@ public:
 private:
   virtual ~OSFileSystem() {}
 
-   nsCOMPtr<nsPIDOMWindow> mWindow;
+   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 } // namespace dom

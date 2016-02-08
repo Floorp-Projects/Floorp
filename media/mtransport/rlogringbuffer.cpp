@@ -21,6 +21,7 @@
 extern "C" {
 #include <csi_platform.h>
 #include "r_log.h"
+#include "registry.h"
 }
 
 /* Matches r_dest_vlog type defined in r_log.h */
@@ -44,7 +45,8 @@ RLogRingBuffer* RLogRingBuffer::instance;
 
 RLogRingBuffer::RLogRingBuffer()
   : log_limit_(4096),
-    mutex_("RLogRingBuffer::mutex_") {
+    mutex_("RLogRingBuffer::mutex_"),
+    disableCount_(0) {
 }
 
 RLogRingBuffer::~RLogRingBuffer() {
@@ -58,7 +60,13 @@ void RLogRingBuffer::SetLogLimit(uint32_t new_limit) {
 
 void RLogRingBuffer::Log(std::string&& log) {
   OffTheBooksMutexAutoLock lock(mutex_);
-  log_messages_.push_front(Move(log));
+  if (disableCount_ == 0) {
+    AddMsg(Move(log));
+  }
+}
+
+void RLogRingBuffer::AddMsg(std::string&& msg) {
+  log_messages_.push_front(Move(msg));
   RemoveOld();
 }
 
@@ -68,10 +76,10 @@ inline void RLogRingBuffer::RemoveOld() {
   }
 }
 
-
 RLogRingBuffer* RLogRingBuffer::CreateInstance() {
   if (!instance) {
     instance = new RLogRingBuffer;
+    NR_reg_init(NR_REG_MODE_LOCAL);
     r_log_set_extra_destination(LOG_INFO, &ringbuffer_vlog);
   }
   return instance;
@@ -86,6 +94,35 @@ void RLogRingBuffer::DestroyInstance() {
   r_log_set_extra_destination(LOG_INFO, nullptr);
   delete instance;
   instance = nullptr;
+}
+
+// As long as at least one PeerConnection exists in a Private Window rlog messages will not
+// be saved in the RLogRingBuffer. This is necessary because the log_messages buffer
+// is shared across all instances of PeerConnectionImpls. There is no way with the current
+// structure of r_log to run separate logs.
+
+void RLogRingBuffer::EnterPrivateMode() {
+  OffTheBooksMutexAutoLock lock(mutex_);
+  ++disableCount_;
+  MOZ_ASSERT(disableCount_ != 0);
+
+  if (disableCount_ == 1) {
+    AddMsg("LOGGING SUSPENDED: a connection is active in a Private Window ***");
+  }
+}
+
+void RLogRingBuffer::ExitPrivateMode() {
+  OffTheBooksMutexAutoLock lock(mutex_);
+  MOZ_ASSERT(disableCount_ != 0);
+
+  if (--disableCount_ == 0) {
+    AddMsg("LOGGING RESUMED: no connections are active in a Private Window ***");
+  }
+}
+
+void RLogRingBuffer::Clear() {
+  OffTheBooksMutexAutoLock lock(mutex_);
+  log_messages_.clear();
 }
 
 void RLogRingBuffer::Filter(const std::string& substring,
@@ -125,4 +162,3 @@ void RLogRingBuffer::FilterAny(const std::vector<std::string>& substrings,
 }
 
 } // namespace mozilla
-

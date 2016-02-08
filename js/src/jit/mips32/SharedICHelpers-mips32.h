@@ -98,7 +98,7 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
     // keep it there through the stub calls), but the VMWrapper code being
     // called expects the return address to also be pushed on the stack.
     MOZ_ASSERT(ICTailCallReg == ra);
-    masm.makeFrameDescriptor(t6, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(t6, JitFrame_BaselineJS, ExitFrameLayout::Size());
     masm.subPtr(Imm32(sizeof(CommonFrameLayout)), StackPointer);
     masm.storePtr(t6, Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
     masm.storePtr(ra, Address(StackPointer, CommonFrameLayout::offsetOfReturnAddress()));
@@ -113,7 +113,7 @@ EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
 }
 
 inline void
-EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
+EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg, uint32_t headerSize)
 {
     // Compute stub frame size. We have to add two pointers: the stub reg and
     // previous frame pointer pushed by EmitEnterStubFrame.
@@ -121,13 +121,13 @@ EmitBaselineCreateStubFrameDescriptor(MacroAssembler& masm, Register reg)
     masm.addPtr(Imm32(sizeof(intptr_t) * 2), reg);
     masm.subPtr(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub);
+    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub, headerSize);
 }
 
 inline void
 EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
 {
-    EmitBaselineCreateStubFrameDescriptor(masm, t6);
+    EmitBaselineCreateStubFrameDescriptor(masm, t6, ExitFrameLayout::Size());
     masm.push(t6);
     masm.call(target);
 }
@@ -164,7 +164,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     // BaselineStubFrame if needed.
 
     // Push frame descriptor and return address.
-    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, BaselineStubFrameLayout::Size());
     masm.subPtr(Imm32(STUB_FRAME_SIZE), StackPointer);
     masm.storePtr(scratch, Address(StackPointer, offsetof(BaselineStubFrame, descriptor)));
     masm.storePtr(ICTailCallReg, Address(StackPointer,

@@ -9,12 +9,12 @@ intr protocol PTestDesc {
 child:
     intr PTestDescSub(nullable PTestDescSubsub dummy);
 
-    Test(PTestDescSubsub a);
+    async Test(PTestDescSubsub a);
 
-    __delete__();
+    async __delete__();
 
 parent:
-    Ok(PTestDescSubsub a);
+    async Ok(PTestDescSubsub a);
 
 
 state CONSTRUCT:

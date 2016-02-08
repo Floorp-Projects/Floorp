@@ -36,12 +36,12 @@ function checkDouble(element, maxVal)
 function isListOfPrinterFeaturesAvailable()
 {
   var has_printerfeatures = false;
-  
+
   try {
     has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
   } catch(ex) {
   }
-  
+
   return has_printerfeatures;
 }
 
@@ -66,7 +66,7 @@ function initDialog()
   dialog.jobTitleLabel   = document.getElementById("jobTitleLabel");
   dialog.jobTitleGroup   = document.getElementById("jobTitleGroup");
   dialog.jobTitleInput   = document.getElementById("jobTitleInput");
-    
+
   dialog.colorGroup      = document.getElementById("colorGroup");
   dialog.colorRadioGroup = document.getElementById("colorRadioGroup");
   dialog.colorRadio      = document.getElementById("colorRadio");
@@ -100,33 +100,33 @@ paperListElement.prototype =
           this.paperListElement.removeChild(this.paperListElement.firstChild);
         },
 
-    appendPaperNames: 
-      function (aDataObject) 
-        { 
-          var popupNode = document.createElement("menupopup"); 
+    appendPaperNames:
+      function (aDataObject)
+        {
+          var popupNode = document.createElement("menupopup");
           for (var i=0;i<aDataObject.length;i++)  {
             var paperObj = aDataObject[i];
             var itemNode = document.createElement("menuitem");
             var label;
             try {
               label = gPrintBundle.getString(paperObj.name);
-            } 
+            }
             catch (e) {
               /* No name in string bundle ? Then build one manually (this
-               * usually happens when gPaperArray was build by createPaperArrayFromPrinterFeatures() ...) */              
+               * usually happens when gPaperArray was build by createPaperArrayFromPrinterFeatures() ...) */
               if (paperObj.inches) {
                 label = paperObj.name + " (" + round10(paperObj.width) + "x" + round10(paperObj.height) + " inch)";
-              }  
+              }
               else {
                 label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " mm)";
               }
             }
             itemNode.setAttribute("label", label);
             itemNode.setAttribute("value", i);
-            popupNode.appendChild(itemNode);            
+            popupNode.appendChild(itemNode);
           }
-          this.paperListElement.appendChild(popupNode); 
-        } 
+          this.paperListElement.appendChild(popupNode);
+        }
   };
 
 //---------------------------------------------------
@@ -148,15 +148,15 @@ function createPaperArrayFromDefaults()
     obj.width  = paperWidths[i];
     obj.height = paperHeights[i];
     obj.inches = paperInches[i];
-    
+
     /* Calculate the width/height in millimeters */
     if (paperInches[i]) {
       obj.width_mm  = paperWidths[i]  * 25.4;
-      obj.height_mm = paperHeights[i] * 25.4; 
+      obj.height_mm = paperHeights[i] * 25.4;
     }
     else {
       obj.width_mm  = paperWidths[i];
-      obj.height_mm = paperHeights[i];        
+      obj.height_mm = paperHeights[i];
     }
     gPaperArray[i] = obj;
   }
@@ -171,12 +171,12 @@ function createPaperArrayFromPrinterFeatures()
   }
 
   gPaperArray = new Array();
-  
+
   var numPapers = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".paper.count");
-  
+
   if (doDebug) {
     dump("processing " + numPapers + " entries...\n");
-  }    
+  }
 
   for (var i=0;i<numPapers;i++) {
     var obj    = new Object();
@@ -184,11 +184,11 @@ function createPaperArrayFromPrinterFeatures()
     obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
     obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".height_mm");
     obj.inches    = gPrefs.getBoolPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".is_inch");
-    
+
     /* Calculate the width/height in paper's native units (either inches or millimeters) */
     if (obj.inches) {
       obj.width  = obj.width_mm  / 25.4;
-      obj.height = obj.height_mm / 25.4; 
+      obj.height = obj.height_mm / 25.4;
     }
     else {
       obj.width  = obj.width_mm;
@@ -200,14 +200,14 @@ function createPaperArrayFromPrinterFeatures()
     if (doDebug) {
       dump("paper index=" + i + ", name=" + obj.name + ", width=" + obj.width + ", height=" + obj.height + ".\n");
     }
-  }  
+  }
 }
 
 //---------------------------------------------------
 function createPaperArray()
-{  
+{
   if (isListOfPrinterFeaturesAvailable()) {
-    createPaperArrayFromPrinterFeatures();    
+    createPaperArrayFromPrinterFeatures();
   }
   else {
     createPaperArrayFromDefaults();
@@ -263,13 +263,13 @@ function loadDialog()
   createPaperArray();
 
   var paperSelectedInx = 0;
-  for (var i=0;i<gPaperArray.length;i++) { 
+  for (var i=0;i<gPaperArray.length;i++) {
     if (print_paper_name == gPaperArray[i].name) {
       paperSelectedInx = i;
       break;
     }
   }
-  
+
   if (doDebug) {
     if (i == gPaperArray.length)
       dump("loadDialog: No paper found.\n");
@@ -302,7 +302,7 @@ function loadDialog()
       dialog.paperGroup.removeAttribute("hidden");
     else
       dialog.paperGroup.setAttribute("hidden","true");
-            
+
     // color/grayscale radio
     if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_printincolor"))
       dialog.colorRadioGroup.removeAttribute("disabled");

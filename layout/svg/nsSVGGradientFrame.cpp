@@ -225,7 +225,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
                 aSource->GetParent() : aSource;
   }
 
-  nsAutoTArray<nsIFrame*,8> stopFrames;
+  AutoTArray<nsIFrame*,8> stopFrames;
   GetStopFrames(&stopFrames);
 
   uint32_t nStops = stopFrames.Length();

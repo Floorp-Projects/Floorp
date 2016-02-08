@@ -162,11 +162,11 @@ protected:
   uint32_t          mEndDepth;
   int32_t           mStartRootIndex;
   int32_t           mEndRootIndex;
-  nsAutoTArray<nsINode*, 8>    mCommonAncestors;
-  nsAutoTArray<nsIContent*, 8> mStartNodes;
-  nsAutoTArray<int32_t, 8>     mStartOffsets;
-  nsAutoTArray<nsIContent*, 8> mEndNodes;
-  nsAutoTArray<int32_t, 8>     mEndOffsets;
+  AutoTArray<nsINode*, 8>    mCommonAncestors;
+  AutoTArray<nsIContent*, 8> mStartNodes;
+  AutoTArray<int32_t, 8>     mStartOffsets;
+  AutoTArray<nsIContent*, 8> mEndNodes;
+  AutoTArray<int32_t, 8>     mEndOffsets;
   bool              mHaltRangeHint;  
   // Used when context has already been serialized for
   // table cell selections (where parent is <tr>)
@@ -331,12 +331,10 @@ LineHasNonEmptyContentWorker(nsIFrame* aFrame)
   // Look for non-empty frames, but ignore inline and br frames.
   // For inline frames, descend into the children, if any.
   if (aFrame->GetType() == nsGkAtoms::inlineFrame) {
-    nsIFrame* child = aFrame->GetFirstPrincipalChild();
-    while (child) {
+    for (nsIFrame* child : aFrame->PrincipalChildList()) {
       if (LineHasNonEmptyContentWorker(child)) {
         return true;
       }
-      child = child->GetNextSibling();
     }
   } else {
     if (aFrame->GetType() != nsGkAtoms::brFrame &&

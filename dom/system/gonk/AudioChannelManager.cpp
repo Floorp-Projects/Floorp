@@ -44,10 +44,9 @@ AudioChannelManager::~AudioChannelManager()
 }
 
 void
-AudioChannelManager::Init(nsPIDOMWindow* aWindow)
+AudioChannelManager::Init(nsPIDOMWindowInner* aWindow)
 {
-  BindToOwner(aWindow->IsOuterWindow() ?
-              aWindow->GetCurrentInnerWindow() : aWindow);
+  BindToOwner(aWindow);
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
   NS_ENSURE_TRUE_VOID(target);
@@ -167,7 +166,7 @@ AudioChannelManager::GetAllowedAudioChannels(
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

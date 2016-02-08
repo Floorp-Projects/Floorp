@@ -16,12 +16,12 @@ var FontBuilder = {
   },
 
   _allFonts: null,
-  buildFontList: function (aLanguage, aFontType, aMenuList) 
+  buildFontList: function (aLanguage, aFontType, aMenuList)
   {
     // Reset the list
     while (aMenuList.hasChildNodes())
       aMenuList.removeChild(aMenuList.firstChild);
-    
+
     var defaultFont = null;
     // Load Font Lists
     var fonts = this.enumerator.EnumerateFonts(aLanguage, aFontType, { } );
@@ -32,10 +32,10 @@ var FontBuilder = {
       if (fonts.length > 0)
         defaultFont = this.enumerator.getDefaultFont(aLanguage, "");
     }
-    
+
     if (!this._allFonts)
       this._allFonts = this.enumerator.EnumerateAllFonts({});
-    
+
     // Build the UI for the Default Font and Fonts for this CSS type.
     var popup = document.createElement("menupopup");
     var separator;
@@ -47,11 +47,11 @@ var FontBuilder = {
         menuitem.setAttribute("label", label);
         menuitem.setAttribute("value", ""); // Default Font has a blank value
         popup.appendChild(menuitem);
-        
+
         separator = document.createElement("menuseparator");
         popup.appendChild(separator);
       }
-      
+
       for (var i = 0; i < fonts.length; ++i) {
         menuitem = document.createElement("menuitem");
         menuitem.setAttribute("value", fonts[i]);
@@ -59,18 +59,18 @@ var FontBuilder = {
         popup.appendChild(menuitem);
       }
     }
-    
-    // Build the UI for the remaining fonts. 
+
+    // Build the UI for the remaining fonts.
     if (this._allFonts.length > fonts.length) {
       // Both lists are sorted, and the Fonts-By-Type list is a subset of the
       // All-Fonts list, so walk both lists side-by-side, skipping values we've
-      // already created menu items for. 
+      // already created menu items for.
       var builtItem = separator ? separator.nextSibling : popup.firstChild;
       var builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
 
       separator = document.createElement("menuseparator");
       popup.appendChild(separator);
-      
+
       for (i = 0; i < this._allFonts.length; ++i) {
         if (this._allFonts[i] != builtItemValue) {
           menuitem = document.createElement("menuitem");
@@ -84,7 +84,7 @@ var FontBuilder = {
         }
       }
     }
-    aMenuList.appendChild(popup);    
+    aMenuList.appendChild(popup);
   },
 
   readFontSelection(aElement)

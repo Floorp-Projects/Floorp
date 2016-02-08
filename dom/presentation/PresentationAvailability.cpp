@@ -31,13 +31,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationAvailability)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationAvailability>
-PresentationAvailability::Create(nsPIDOMWindow* aWindow)
+PresentationAvailability::Create(nsPIDOMWindowInner* aWindow)
 {
   RefPtr<PresentationAvailability> availability = new PresentationAvailability(aWindow);
   return NS_WARN_IF(!availability->Init()) ? nullptr : availability.forget();
 }
 
-PresentationAvailability::PresentationAvailability(nsPIDOMWindow* aWindow)
+PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsAvailable(false)
 {

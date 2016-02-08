@@ -17,4 +17,5 @@
 <em:creator>Joel Maher</em:creator>
 <em:description>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:description>
 <em:homepageURL>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:homepageURL>
+<em:multiprocessCompatible>true</em:multiprocessCompatible>
 </Description></RDF>

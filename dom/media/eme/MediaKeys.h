@@ -46,11 +46,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeys)
 
-  MediaKeys(nsPIDOMWindow* aParentWindow, const nsAString& aKeySystem, const nsAString& aCDMVersion);
+  MediaKeys(nsPIDOMWindowInner* aParentWindow,
+            const nsAString& aKeySystem, const nsAString& aCDMVersion);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
 
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -131,7 +132,7 @@ private:
 
   RefPtr<HTMLMediaElement> mElement;
 
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
   const nsString mCDMVersion;
   nsCString mNodeId;

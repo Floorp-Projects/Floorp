@@ -96,13 +96,6 @@
           }));
         });
 
-        var retryBtn = document.getElementById("reportCertificateErrorRetry");
-        retryBtn.addEventListener("click", function () {
-          document.dispatchEvent(new CustomEvent("AboutCertErrorSendReport", {
-            bubbles: true
-          }));
-        });
-
         addEventListener("AboutCertErrorOptions", function (event) {
           var options = JSON.parse(event.detail);
           if (options && options.enabled) {
@@ -287,12 +280,6 @@
         <p>
           <input type="checkbox" id="automaticallyReportInFuture" />
           <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic;</label>
-
-          <span id="reportingState">
-            <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
-            <span id="reportSendingMessage">&errorReporting.sending;</span>
-            <span id="reportSentMessage">&errorReporting.sent;</span>
-          </span>
         </p>
       </div>
 

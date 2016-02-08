@@ -5,10 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 interface nsIFile;
 
-[scriptable, uuid(B249B2C0-EE11-11DA-8AD9-0800200C9A66)]
+[scriptable, uuid(0a065e41-3a55-4b5c-bb41-1e848bb2d10c)]
 interface nsILayoutRegressionTester : nsISupports
 {
   /**
@@ -28,7 +28,9 @@ interface nsILayoutRegressionTester : nsISupports
   const long DUMP_RESULT_LOADING             = 1;   // still loading
   const long DUMP_RESULT_ERROR               = 2;   // an error occurred
   
-  long dumpFrameModel(in nsIDOMWindow aWindowToDump, in nsIFile aFile, in unsigned long aFlagsMask);
+  long dumpFrameModel(in mozIDOMWindow aWindowToDump,
+                      in nsIFile aFile,
+                      in unsigned long aFlagsMask);
 
   /**
    * Compares the contents of frame model files

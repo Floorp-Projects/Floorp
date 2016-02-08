@@ -26,45 +26,45 @@ parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
 
-  __delete__();
+  async __delete__();
 
-  Cancel(nsresult status);
-  Suspend();
-  Resume();
+  async Cancel(nsresult status);
+  async Suspend();
+  async Resume();
 
   // Divert OnDataAvailable to the parent.
-  DivertOnDataAvailable(nsCString data,
-                        uint64_t  offset,
-                        uint32_t  count);
+  async DivertOnDataAvailable(nsCString data,
+                              uint64_t  offset,
+                              uint32_t  count);
 
   // Divert OnStopRequest to the parent.
-  DivertOnStopRequest(nsresult statusCode);
+  async DivertOnStopRequest(nsresult statusCode);
 
   // Child has no more events/messages to divert to the parent.
-  DivertComplete();
+  async DivertComplete();
 
 child:
-  OnStartRequest(nsresult aChannelStatus,
-                 int64_t aContentLength,
-                 nsCString aContentType,
-                 PRTime aLastModified,
-                 nsCString aEntityID,
-                 URIParams aURI);
-  OnDataAvailable(nsresult channelStatus,
-                  nsCString data,
-                  uint64_t offset,
-                  uint32_t count);
-  OnStopRequest(nsresult channelStatus);
-  FailedAsyncOpen(nsresult statusCode);
+  async OnStartRequest(nsresult aChannelStatus,
+                       int64_t aContentLength,
+                       nsCString aContentType,
+                       PRTime aLastModified,
+                       nsCString aEntityID,
+                       URIParams aURI);
+  async OnDataAvailable(nsresult channelStatus,
+                        nsCString data,
+                        uint64_t offset,
+                        uint32_t count);
+  async OnStopRequest(nsresult channelStatus);
+  async FailedAsyncOpen(nsresult statusCode);
 
   // Parent has been suspended for diversion; no more events to be enqueued.
-  FlushedForDiversion();
+  async FlushedForDiversion();
 
   // Child should resume processing the ChannelEventQueue, i.e. diverting any
   // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
-  DivertMessages();
+  async DivertMessages();
 
-  DeleteSelf();
+  async DeleteSelf();
 };
 
 } // namespace net

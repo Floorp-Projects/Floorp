@@ -15,7 +15,7 @@ namespace dom {
 class AVInputPort final : public InputPort
 {
 public:
-  static already_AddRefed<AVInputPort> Create(nsPIDOMWindow* aWindow,
+  static already_AddRefed<AVInputPort> Create(nsPIDOMWindowInner* aWindow,
                                               nsIInputPortListener* aListener,
                                               nsIInputPortData* aData,
                                               ErrorResult& aRv);
@@ -23,7 +23,7 @@ public:
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  explicit AVInputPort(nsPIDOMWindow* aWindow);
+  explicit AVInputPort(nsPIDOMWindowInner* aWindow);
 
   ~AVInputPort();
 };

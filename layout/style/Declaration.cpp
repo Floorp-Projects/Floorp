@@ -202,6 +202,188 @@ Declaration::GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const
 }
 
 void
+Declaration::GetImageLayerValue(
+                   nsCSSCompressedDataBlock *data,
+                   nsAString& aValue,
+                   nsCSSValue::Serialization aSerialization,
+                   const nsCSSProperty aTable[]) const
+{
+  // We know from our caller that all subproperties were specified.
+  // However, we still can't represent that in the shorthand unless
+  // they're all lists of the same length.  So if they're different
+  // lengths, we need to bail out.
+  // We also need to bail out if an item has background-clip and
+  // background-origin that are different and not the default
+  // values.  (We omit them if they're both default.)
+
+  // Common CSS properties for both background & mask layer.
+  const nsCSSValueList *image =
+    data->ValueFor(aTable[nsStyleImageLayers::image])->GetListValue();
+  const nsCSSValuePairList *repeat =
+    data->ValueFor(aTable[nsStyleImageLayers::repeat])->GetPairListValue();
+  const nsCSSValueList *position =
+    data->ValueFor(aTable[nsStyleImageLayers::position])->GetListValue();
+  const nsCSSValueList *clip =
+    data->ValueFor(aTable[nsStyleImageLayers::clip])->GetListValue();
+  const nsCSSValueList *origin =
+    data->ValueFor(aTable[nsStyleImageLayers::origin])->GetListValue();
+  const nsCSSValuePairList *size =
+    data->ValueFor(aTable[nsStyleImageLayers::size])->GetPairListValue();
+
+  // Background layer property.
+  const nsCSSValueList *attachment =
+    (aTable[nsStyleImageLayers::attachment] ==  eCSSProperty_UNKNOWN)?
+      nullptr :
+      data->ValueFor(aTable[nsStyleImageLayers::attachment])->GetListValue();
+
+  // Mask layer properties.
+  const nsCSSValueList *composite =
+    (aTable[nsStyleImageLayers::composite] ==  eCSSProperty_UNKNOWN)?
+      nullptr :
+      data->ValueFor(aTable[nsStyleImageLayers::composite])->GetListValue();
+  const nsCSSValueList *mode =
+    (aTable[nsStyleImageLayers::maskMode] ==  eCSSProperty_UNKNOWN)?
+      nullptr :
+      data->ValueFor(aTable[nsStyleImageLayers::maskMode])->GetListValue();
+
+  for (;;) {
+    // Serialize background-color at the beginning of the last item.
+    if (!image->mNext) {
+      if (aTable[nsStyleImageLayers::color] != eCSSProperty_UNKNOWN) {
+        AppendValueToString(aTable[nsStyleImageLayers::color], aValue,
+                            aSerialization);
+        aValue.Append(char16_t(' '));
+      }
+    }
+
+    image->mValue.AppendToString(aTable[nsStyleImageLayers::image], aValue,
+                                 aSerialization);
+
+    aValue.Append(char16_t(' '));
+    repeat->mXValue.AppendToString(aTable[nsStyleImageLayers::repeat], aValue,
+                                   aSerialization);
+    if (repeat->mYValue.GetUnit() != eCSSUnit_Null) {
+      repeat->mYValue.AppendToString(aTable[nsStyleImageLayers::repeat], aValue,
+                                     aSerialization);
+    }
+
+    if (attachment) {
+      aValue.Append(char16_t(' '));
+          attachment->mValue.AppendToString(aTable[nsStyleImageLayers::attachment],
+                                            aValue, aSerialization);
+    }
+
+    aValue.Append(char16_t(' '));
+    position->mValue.AppendToString(aTable[nsStyleImageLayers::position],
+                                    aValue, aSerialization);
+
+    if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
+        size->mYValue.GetUnit() != eCSSUnit_Auto) {
+      aValue.Append(char16_t(' '));
+      aValue.Append(char16_t('/'));
+      aValue.Append(char16_t(' '));
+      size->mXValue.AppendToString(aTable[nsStyleImageLayers::size], aValue,
+                                   aSerialization);
+      aValue.Append(char16_t(' '));
+      size->mYValue.AppendToString(aTable[nsStyleImageLayers::size], aValue,
+                                   aSerialization);
+    }
+
+    MOZ_ASSERT(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
+               origin->mValue.GetUnit() == eCSSUnit_Enumerated,
+               "should not have inherit/initial within list");
+
+    if (clip->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
+        origin->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+      MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
+                   aTable[nsStyleImageLayers::origin]] ==
+                 nsCSSProps::kImageLayerOriginKTable);
+      MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
+                   aTable[nsStyleImageLayers::clip]] ==
+                 nsCSSProps::kImageLayerOriginKTable);
+      static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
+                    NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
+                    NS_STYLE_IMAGELAYER_CLIP_PADDING ==
+                    NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
+                    NS_STYLE_IMAGELAYER_CLIP_CONTENT ==
+                    NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+                    "mask-clip and mask-origin style constants must agree");
+      aValue.Append(char16_t(' '));
+      origin->mValue.AppendToString(aTable[nsStyleImageLayers::origin], aValue,
+                                    aSerialization);
+
+      if (clip->mValue != origin->mValue) {
+        aValue.Append(char16_t(' '));
+        clip->mValue.AppendToString(aTable[nsStyleImageLayers::clip], aValue,
+                                    aSerialization);
+      }
+    }
+
+    if (composite) {
+      aValue.Append(char16_t(' '));
+      composite->mValue.AppendToString(aTable[nsStyleImageLayers::composite],
+                                       aValue, aSerialization);
+    }
+
+    if (mode) {
+      aValue.Append(char16_t(' '));
+      mode->mValue.AppendToString(aTable[nsStyleImageLayers::maskMode],
+                                  aValue, aSerialization);
+    }
+
+    image = image->mNext;
+    repeat = repeat->mNext;
+    position = position->mNext;
+    clip = clip->mNext;
+    origin = origin->mNext;
+    size = size->mNext;
+    attachment = attachment ? attachment->mNext : nullptr;
+    composite = composite ? composite->mNext : nullptr;
+    mode = mode ? mode->mNext : nullptr;
+
+    if (!image) {
+      // This layer is an background layer
+      if (aTable == nsStyleImageLayers::kBackgroundLayerTable) {
+        if (repeat || position || clip || origin || size || attachment) {
+          // Uneven length lists, so can't be serialized as shorthand.
+          aValue.Truncate();
+          return;
+        }
+      // This layer is an mask layer
+      } else {
+        MOZ_ASSERT(aTable == nsStyleImageLayers::kMaskLayerTable);
+        if (repeat || position || clip || origin || size || composite || mode) {
+          // Uneven length lists, so can't be serialized as shorthand.
+          aValue.Truncate();
+          return;
+        }
+      }
+      break;
+    }
+
+    // This layer is an background layer
+    if (aTable == nsStyleImageLayers::kBackgroundLayerTable) {
+      if (!repeat || !position || !clip || !origin || !size || !attachment) {
+        // Uneven length lists, so can't be serialized as shorthand.
+        aValue.Truncate();
+        return;
+      }
+    // This layer is an mask layer
+    } else {
+      MOZ_ASSERT(aTable == nsStyleImageLayers::kMaskLayerTable);
+      if (!repeat || !position || !clip || !origin || !size ||
+          !composite || !mode) {
+        // Uneven length lists, so can't be serialized as shorthand.
+        aValue.Truncate();
+        return;
+      }
+    }
+    aValue.Append(char16_t(','));
+    aValue.Append(char16_t(' '));
+  }
+}
+
+void
 Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                       nsCSSValue::Serialization aSerialization) const
 {
@@ -316,10 +498,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 
   nsCSSCompressedDataBlock *data = importantCount ? mImportantData : mData;
   switch (aProperty) {
-    case eCSSProperty_margin: 
-    case eCSSProperty_padding: 
-    case eCSSProperty_border_color: 
-    case eCSSProperty_border_style: 
+    case eCSSProperty_margin:
+    case eCSSProperty_padding:
+    case eCSSProperty_border_color:
+    case eCSSProperty_border_style:
     case eCSSProperty_border_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
@@ -471,124 +653,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_background: {
-      // We know from above that all subproperties were specified.
-      // However, we still can't represent that in the shorthand unless
-      // they're all lists of the same length.  So if they're different
-      // lengths, we need to bail out.
-      // We also need to bail out if an item has background-clip and
-      // background-origin that are different and not the default
-      // values.  (We omit them if they're both default.)
-      const nsCSSValueList *image =
-        data->ValueFor(eCSSProperty_background_image)->
-        GetListValue();
-      const nsCSSValuePairList *repeat =
-        data->ValueFor(eCSSProperty_background_repeat)->
-        GetPairListValue();
-      const nsCSSValueList *attachment =
-        data->ValueFor(eCSSProperty_background_attachment)->
-        GetListValue();
-      const nsCSSValueList *position =
-        data->ValueFor(eCSSProperty_background_position)->
-        GetListValue();
-      const nsCSSValueList *clip =
-        data->ValueFor(eCSSProperty_background_clip)->
-        GetListValue();
-      const nsCSSValueList *origin =
-        data->ValueFor(eCSSProperty_background_origin)->
-        GetListValue();
-      const nsCSSValuePairList *size =
-        data->ValueFor(eCSSProperty_background_size)->
-        GetPairListValue();
-      for (;;) {
-        // Serialize background-color at the beginning of the last item.
-        if (!image->mNext) {
-          AppendValueToString(eCSSProperty_background_color, aValue,
-                              aSerialization);
-          aValue.Append(char16_t(' '));
-        }
-
-        image->mValue.AppendToString(eCSSProperty_background_image, aValue,
-                                     aSerialization);
-        aValue.Append(char16_t(' '));
-        repeat->mXValue.AppendToString(eCSSProperty_background_repeat, aValue,
-                                       aSerialization);
-        if (repeat->mYValue.GetUnit() != eCSSUnit_Null) {
-          repeat->mYValue.AppendToString(eCSSProperty_background_repeat, aValue,
-                                         aSerialization);
-        }
-        aValue.Append(char16_t(' '));
-        attachment->mValue.AppendToString(eCSSProperty_background_attachment,
-                                          aValue, aSerialization);
-        aValue.Append(char16_t(' '));
-        position->mValue.AppendToString(eCSSProperty_background_position,
-                                        aValue, aSerialization);
-        
-        if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
-            size->mYValue.GetUnit() != eCSSUnit_Auto) {
-          aValue.Append(char16_t(' '));
-          aValue.Append(char16_t('/'));
-          aValue.Append(char16_t(' '));
-          size->mXValue.AppendToString(eCSSProperty_background_size, aValue,
-                                       aSerialization);
-          aValue.Append(char16_t(' '));
-          size->mYValue.AppendToString(eCSSProperty_background_size, aValue,
-                                       aSerialization);
-        }
-
-        MOZ_ASSERT(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
-                   origin->mValue.GetUnit() == eCSSUnit_Enumerated,
-                   "should not have inherit/initial within list");
-
-        if (clip->mValue.GetIntValue() != NS_STYLE_BG_CLIP_BORDER ||
-            origin->mValue.GetIntValue() != NS_STYLE_BG_ORIGIN_PADDING) {
-          MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
-                       eCSSProperty_background_origin] ==
-                     nsCSSProps::kBackgroundOriginKTable);
-          MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
-                       eCSSProperty_background_clip] ==
-                     nsCSSProps::kBackgroundOriginKTable);
-          static_assert(NS_STYLE_BG_CLIP_BORDER ==
-                        NS_STYLE_BG_ORIGIN_BORDER &&
-                        NS_STYLE_BG_CLIP_PADDING ==
-                        NS_STYLE_BG_ORIGIN_PADDING &&
-                        NS_STYLE_BG_CLIP_CONTENT ==
-                        NS_STYLE_BG_ORIGIN_CONTENT,
-                        "bg-clip and bg-origin style constants must agree");
-          aValue.Append(char16_t(' '));
-          origin->mValue.AppendToString(eCSSProperty_background_origin, aValue,
-                                        aSerialization);
-
-          if (clip->mValue != origin->mValue) {
-            aValue.Append(char16_t(' '));
-            clip->mValue.AppendToString(eCSSProperty_background_clip, aValue,
-                                        aSerialization);
-          }
-        }
-
-        image = image->mNext;
-        repeat = repeat->mNext;
-        attachment = attachment->mNext;
-        position = position->mNext;
-        clip = clip->mNext;
-        origin = origin->mNext;
-        size = size->mNext;
-
-        if (!image) {
-          if (repeat || attachment || position || clip || origin || size) {
-            // Uneven length lists, so can't be serialized as shorthand.
-            aValue.Truncate();
-            return;
-          }
-          break;
-        }
-        if (!repeat || !attachment || !position || !clip || !origin || !size) {
-          // Uneven length lists, so can't be serialized as shorthand.
-          aValue.Truncate();
-          return;
-        }
-        aValue.Append(char16_t(','));
-        aValue.Append(char16_t(' '));
-      }
+      GetImageLayerValue(data, aValue, aSerialization,
+                         nsStyleImageLayers::kBackgroundLayerTable);
+      break;
+    }
+    case eCSSProperty_mask: {
+      GetImageLayerValue(data, aValue, aSerialization,
+                         nsStyleImageLayers::kMaskLayerTable);
       break;
     }
     case eCSSProperty_font: {
@@ -1052,10 +1123,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         AppendValueToString(eCSSProperty_grid_auto_flow,
                             aValue, aSerialization);
         aValue.Append(char16_t(' '));
-        AppendValueToString(eCSSProperty_grid_auto_columns,
+        AppendValueToString(eCSSProperty_grid_auto_rows,
                             aValue, aSerialization);
         aValue.AppendLiteral(" / ");
-        AppendValueToString(eCSSProperty_grid_auto_rows,
+        AppendValueToString(eCSSProperty_grid_auto_columns,
                             aValue, aSerialization);
         break;
       } else if (!(autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
@@ -1076,10 +1147,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue& rowsValue =
         *data->ValueFor(eCSSProperty_grid_template_rows);
       if (areasValue.GetUnit() == eCSSUnit_None) {
-        AppendValueToString(eCSSProperty_grid_template_columns,
+        AppendValueToString(eCSSProperty_grid_template_rows,
                             aValue, aSerialization);
         aValue.AppendLiteral(" / ");
-        AppendValueToString(eCSSProperty_grid_template_rows,
+        AppendValueToString(eCSSProperty_grid_template_columns,
                             aValue, aSerialization);
         break;
       }
@@ -1116,11 +1187,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       if ((nRowItems - 1) / 2 != areas->NRows()) {
         // Not serializable, bail.
         return;
-      }
-      if (columnsValue.GetUnit() != eCSSUnit_None) {
-        AppendValueToString(eCSSProperty_grid_template_columns,
-                            aValue, aSerialization);
-        aValue.AppendLiteral(" / ");
       }
       rowsItem = rowsValue.GetListValue();
       uint32_t row = 0;
@@ -1162,6 +1228,11 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         if (addSpaceSeparator) {
           aValue.Append(char16_t(' '));
         }
+      }
+      if (columnsValue.GetUnit() != eCSSUnit_None) {
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
       }
       break;
     }
@@ -1371,7 +1442,7 @@ Declaration::ToString(nsAString& aString) const
 
   int32_t count = mOrder.Length();
   int32_t index;
-  nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
+  AutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
     nsCSSProperty property = GetPropertyAt(index);
 
@@ -1544,13 +1615,6 @@ Declaration::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     n += mImportantVariables->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
-}
-
-bool
-Declaration::HasVariableDeclaration(const nsAString& aName) const
-{
-  return (mVariables && mVariables->Has(aName)) ||
-         (mImportantVariables && mImportantVariables->Has(aName));
 }
 
 void

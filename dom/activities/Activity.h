@@ -30,7 +30,7 @@ public:
               const ActivityOptions& aOptions,
               ErrorResult& aRv)
   {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner.GetAsSupports());
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
     if (!window) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
@@ -41,10 +41,10 @@ public:
     return activity.forget();
   }
 
-  explicit Activity(nsPIDOMWindow* aWindow);
+  explicit Activity(nsPIDOMWindowInner* aWindow);
 
 protected:
-  nsresult Initialize(nsPIDOMWindow* aWindow,
+  nsresult Initialize(nsPIDOMWindowInner* aWindow,
                       JSContext* aCx,
                       const ActivityOptions& aOptions);
 

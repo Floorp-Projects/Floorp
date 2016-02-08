@@ -100,7 +100,7 @@ TelephonyCall::Create(Telephony* aTelephony,
   return call.forget();
 }
 
-TelephonyCall::TelephonyCall(nsPIDOMWindow* aOwner)
+TelephonyCall::TelephonyCall(nsPIDOMWindowInner* aOwner)
   : DOMEventTargetHelper(aOwner),
     mLive(false)
 {

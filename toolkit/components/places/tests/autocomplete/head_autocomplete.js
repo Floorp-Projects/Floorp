@@ -270,7 +270,7 @@ function run_test() {
     // Iterate over all tasks and execute them
     for (let [, [fn, args]] in Iterator(gNextTestSetupTasks)) {
       yield fn.apply(this, args);
-    };
+    }
 
     // Clean up to allow tests to register more functions.
     gNextTestSetupTasks = [];

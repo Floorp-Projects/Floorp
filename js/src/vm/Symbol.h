@@ -56,7 +56,7 @@ class Symbol : public js::gc::TenuredCell
 
     bool isWellKnownSymbol() const { return uint32_t(code_) < WellKnownSymbolLimit; }
 
-    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SYMBOL; }
+    static const JS::TraceKind TraceKind = JS::TraceKind::Symbol;
     inline void traceChildren(JSTracer* trc) {
         if (description_)
             js::TraceManuallyBarrieredEdge(trc, &description_, "description");

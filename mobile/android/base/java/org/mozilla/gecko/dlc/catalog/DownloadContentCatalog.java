@@ -11,6 +11,7 @@ import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +32,7 @@ public class DownloadContentCatalog {
     private static final String LOGTAG = "GeckoDLCCatalog";
     private static final String FILE_NAME = "download_content_catalog";
 
+    private static final String JSON_KEY_CONTENT = "content";
     private static final int MAX_FAILURES_UNTIL_PERMANENTLY_FAILED = 10;
 
     private final AtomicFile file;          // Guarded by 'file'
@@ -176,12 +178,13 @@ public class DownloadContentCatalog {
         List<DownloadContent> content = new ArrayList<>();
 
         try {
-            JSONArray array;
+            JSONObject catalog;
 
             synchronized (file) {
-                array = new JSONArray(new String(file.readFully(), "UTF-8"));
+                catalog = new JSONObject(new String(file.readFully(), "UTF-8"));
             }
 
+            JSONArray array = catalog.getJSONArray(JSON_KEY_CONTENT);
             for (int i = 0; i < array.length(); i++) {
                 content.add(DownloadContent.fromJSON(array.getJSONObject(i)));
             }
@@ -232,7 +235,10 @@ public class DownloadContentCatalog {
                     array.put(content.toJSON());
                 }
 
-                outputStream.write(array.toString().getBytes("UTF-8"));
+                JSONObject catalog = new JSONObject();
+                catalog.put(JSON_KEY_CONTENT, array);
+
+                outputStream.write(catalog.toString().getBytes("UTF-8"));
 
                 file.finishWrite(outputStream);
 

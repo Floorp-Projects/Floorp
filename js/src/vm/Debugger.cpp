@@ -19,6 +19,7 @@
 #include "jswrapper.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
@@ -2113,27 +2114,6 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
     JSRuntime* rt = cx->runtime();
     FreeOp* fop = cx->runtime()->defaultFreeOp();
 
-    // Mark active baseline scripts in the observable set so that they don't
-    // get discarded. They will be recompiled.
-    for (JitActivationIterator actIter(rt); !actIter.done(); ++actIter) {
-        if (actIter->compartment()->zone() != zone)
-            continue;
-
-        for (JitFrameIterator iter(actIter); !iter.done(); ++iter) {
-            switch (iter.type()) {
-              case JitFrame_BaselineJS:
-                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
-                break;
-              case JitFrame_IonJS:
-                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
-                for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
-                    MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
-                break;
-              default:;
-            }
-        }
-    }
-
     Vector<JSScript*> scripts(cx);
 
     // Iterate through observable scripts, invalidating their Ion scripts and
@@ -2154,6 +2134,30 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                     if (!AppendAndInvalidateScript(cx, zone, script, scripts))
                         return false;
                 }
+            }
+        }
+    }
+
+    // Code below this point must be infallible to ensure the active bit of
+    // BaselineScripts is in a consistent state.
+    //
+    // Mark active baseline scripts in the observable set so that they don't
+    // get discarded. They will be recompiled.
+    for (JitActivationIterator actIter(rt); !actIter.done(); ++actIter) {
+        if (actIter->compartment()->zone() != zone)
+            continue;
+
+        for (JitFrameIterator iter(actIter); !iter.done(); ++iter) {
+            switch (iter.type()) {
+              case JitFrame_BaselineJS:
+                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
+                break;
+              case JitFrame_IonJS:
+                MarkBaselineScriptActiveIfObservable(iter.script(), obs);
+                for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
+                    MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
+                break;
+              default:;
             }
         }
     }
@@ -2477,7 +2481,7 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     // `Debugger::logTenurePromotion`, we can't hold onto CCWs inside the log,
     // and instead have unwrapped cross-compartment edges. We need to be sure to
     // mark those here.
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    tenurePromotionsLog.trace(trc);
 }
 
 /*
@@ -2653,8 +2657,8 @@ Debugger::trace(JSTracer* trc)
         TraceEdge(trc, &frameobj, "live Debugger.Frame");
     }
 
-    AllocationsLog::trace(&allocationsLog, trc);
-    TenurePromotionsLog::trace(&tenurePromotionsLog, trc);
+    allocationsLog.trace(trc);
+    tenurePromotionsLog.trace(trc);
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);
@@ -4520,6 +4524,56 @@ Debugger::endTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
+Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.requireAtLeast(cx, "Debugger.isCompilableUnit", 1))
+        return false;
+
+    if (!args[0].isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NOT_EXPECTED_TYPE, "Debugger.isCompilableUnit",
+                             "string", InformalValueTypeName(args[0]));
+        return false;
+    }
+
+    JSString* str = args[0].toString();
+    size_t length = GetStringLength(str);
+
+    AutoStableStringChars chars(cx);
+    if (!chars.initTwoByte(cx, str))
+        return false;
+
+    bool result = true;
+
+    CompileOptions options(cx);
+    frontend::Parser<frontend::FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
+                                                        options, chars.twoByteChars(),
+                                                        length, /* foldConstants = */ true,
+                                                        nullptr, nullptr);
+    JSErrorReporter older = JS_SetErrorReporter(cx->runtime(), nullptr);
+    if (!parser.checkOptions() || !parser.parse()) {
+        // We ran into an error. If it was because we ran out of memory we report
+        // it in the usual way.
+        if (cx->isThrowingOutOfMemory()) {
+            JS_SetErrorReporter(cx->runtime(), older);
+            return false;
+        }
+
+        // If it was because we ran out of source, we return false so our caller
+        // knows to try to collect more [source].
+        if (parser.isUnexpectedEOF())
+            result = false;
+
+        cx->clearPendingException();
+    }
+    JS_SetErrorReporter(cx->runtime(), older);
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
 Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
@@ -4640,7 +4694,11 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FS_END
 };
 
-
+const JSFunctionSpec Debugger::static_methods[] {
+    JS_FN("isCompilableUnit", Debugger::isCompilableUnit, 1, 0),
+    JS_FS_END
+};
+
 /*** Debugger.Script *****************************************************************************/
 
 static inline JSScript*
@@ -8412,8 +8470,8 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
         return false;
     debugProto = InitClass(cx, obj,
                            objProto, &Debugger::jsclass, Debugger::construct,
-                           1, Debugger::properties, Debugger::methods, nullptr, nullptr,
-                           debugCtor.address());
+                           1, Debugger::properties, Debugger::methods, nullptr,
+                           Debugger::static_methods, debugCtor.address());
     if (!debugProto)
         return false;
 

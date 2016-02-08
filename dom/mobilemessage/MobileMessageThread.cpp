@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileMessageThread)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MobileMessageThread::MobileMessageThread(nsPIDOMWindow* aWindow,
+MobileMessageThread::MobileMessageThread(nsPIDOMWindowInner* aWindow,
                                          MobileMessageThreadInternal* aThread)
   : mWindow(aWindow)
   , mThread(aThread)

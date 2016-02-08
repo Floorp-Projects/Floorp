@@ -96,7 +96,6 @@ body {
 
 /* Advanced section is hidden via inline styles until the link is clicked */
 #advancedPanel {
-  position: absolute;
   background-color: white;
   color: var(--in-content-text-color);
   border: 1px lightgray solid;

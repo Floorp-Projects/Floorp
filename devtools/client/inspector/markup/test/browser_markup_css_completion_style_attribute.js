@@ -76,14 +76,23 @@ add_task(function*() {
   EventUtils.sendKey("return", inspector.panelWin);
   let editor = inplaceEditor(attr);
 
-  for (let i = 0; i < TEST_DATA.length; i ++) {
+  for (let i = 0; i < TEST_DATA.length; i++) {
+    // Expect a markupmutation event at the last iteration since that's when the
+    // attribute is actually created.
+    let onMutation = i === TEST_DATA.length - 1
+                     ? inspector.once("markupmutation") : null;
     yield enterData(i, editor, inspector);
     yield checkData(i, editor, inspector);
+    yield onMutation;
   }
 
+  // Undoing the action will remove the new attribute, so make sure to wait for
+  // the markupmutation event here again.
+  let onMutation = inspector.once("markupmutation");
   while (inspector.markup.undo.canUndo()) {
     yield undoChange(inspector);
   }
+  yield onMutation;
 });
 
 function enterData(index, editor, inspector) {

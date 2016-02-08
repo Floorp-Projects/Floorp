@@ -13,7 +13,8 @@
 
 class nsIURI;
 
-class nsAboutProtocolHandler : public nsIProtocolHandler
+class nsAboutProtocolHandler : public nsIProtocolHandlerWithDynamicFlags
+                             , public nsIProtocolHandler
                              , public nsSupportsWeakReference
 {
 public:
@@ -21,6 +22,7 @@ public:
 
     // nsIProtocolHandler methods:
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
 
     // nsAboutProtocolHandler methods:
     nsAboutProtocolHandler() {}

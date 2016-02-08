@@ -1,0 +1,50 @@
+# HG changeset patch
+# User Gerald Squelart <gsquelart@mozilla.com>
+# Parent  5f9ba76eb3b1fd9377bbdb4cc2f98a7e75eabdfb
+Bug 1237848 - Check lookahead ctx - r=rillian
+
+Copied from https://chromium-review.googlesource.com/324510
+
+diff --git a/media/libvpx/vp8/encoder/lookahead.c b/media/libvpx/vp8/encoder/lookahead.c
+--- a/media/libvpx/vp8/encoder/lookahead.c
++++ b/media/libvpx/vp8/encoder/lookahead.c
+@@ -176,16 +176,17 @@ vp8_lookahead_push(struct lookahead_ctx 
+ 
+ 
+ struct lookahead_entry*
+ vp8_lookahead_pop(struct lookahead_ctx *ctx,
+                   int                   drain)
+ {
+     struct lookahead_entry* buf = NULL;
+ 
++    assert(ctx != NULL);
+     if(ctx->sz && (drain || ctx->sz == ctx->max_sz - 1))
+     {
+         buf = pop(ctx, &ctx->read_idx);
+         ctx->sz--;
+     }
+     return buf;
+ }
+ 
+diff --git a/media/libvpx/vp9/encoder/vp9_lookahead.c b/media/libvpx/vp9/encoder/vp9_lookahead.c
+--- a/media/libvpx/vp9/encoder/vp9_lookahead.c
++++ b/media/libvpx/vp9/encoder/vp9_lookahead.c
+@@ -202,17 +202,17 @@ int vp9_lookahead_push(struct lookahead_
+   return 0;
+ }
+ 
+ 
+ struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
+                                           int drain) {
+   struct lookahead_entry *buf = NULL;
+ 
+-  if (ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
++  if (ctx && ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
+     buf = pop(ctx, &ctx->read_idx);
+     ctx->sz--;
+   }
+   return buf;
+ }
+ 
+ 
+ struct lookahead_entry *vp9_lookahead_peek(struct lookahead_ctx *ctx,

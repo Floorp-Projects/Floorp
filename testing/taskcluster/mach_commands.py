@@ -320,7 +320,7 @@ class Graph(object):
 
         jobs = templates.load(job_path, {})
 
-        job_graph = parse_commit(message, jobs)
+        job_graph, trigger_tests = parse_commit(message, jobs)
 
         cmdline_interactive = params.get('interactive', False)
 
@@ -538,7 +538,12 @@ class Graph(object):
                             treeherder_route
                         )
 
-                    graph['tasks'].append(test_task)
+                    # This will schedule test jobs N times
+                    for i in range(0, trigger_tests):
+                        graph['tasks'].append(test_task)
+                        # If we're scheduling more tasks each have to be unique
+                        test_task = copy.deepcopy(test_task)
+                        test_task['taskId'] = slugid()
 
                     define_task = DEFINE_TASK.format(
                         test_task['task']['workerType']

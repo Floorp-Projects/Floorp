@@ -40,7 +40,6 @@
 #include "nsWrapperCacheInlines.h"
 
 class nsIJSID;
-class nsPIDOMWindow;
 
 namespace mozilla {
 
@@ -52,6 +51,9 @@ template<typename DataType> class MozMap;
 nsresult
 UnwrapArgImpl(JS::Handle<JSObject*> src, const nsIID& iid, void** ppArg);
 
+nsresult
+UnwrapWindowProxyImpl(JS::Handle<JSObject*> src, nsPIDOMWindowOuter** ppArg);
+
 /** Convert a jsval to an XPCOM pointer. */
 template <class Interface>
 inline nsresult
@@ -59,6 +61,13 @@ UnwrapArg(JS::Handle<JSObject*> src, Interface** ppArg)
 {
   return UnwrapArgImpl(src, NS_GET_TEMPLATE_IID(Interface),
                        reinterpret_cast<void**>(ppArg));
+}
+
+template <>
+inline nsresult
+UnwrapArg<nsPIDOMWindowOuter>(JS::Handle<JSObject*> src, nsPIDOMWindowOuter** ppArg)
+{
+  return UnwrapWindowProxyImpl(src, ppArg);
 }
 
 bool
@@ -2061,10 +2070,10 @@ void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq);
 namespace binding_detail {
 
 template<typename T>
-class AutoSequence : public AutoFallibleTArray<T, 16>
+class AutoSequence : public AutoTArray<T, 16>
 {
 public:
-  AutoSequence() : AutoFallibleTArray<T, 16>()
+  AutoSequence() : AutoTArray<T, 16>()
   {}
 
   // Allow converting to const sequences as needed
@@ -2417,7 +2426,7 @@ bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj,
                        JS::Handle<jsid> id,
-                       JS::MutableHandle<JSPropertyDescriptor> desc,
+                       JS::MutableHandle<JS::PropertyDescriptor> desc,
                        bool& cacheOnHolder);
 
 /**
@@ -2434,7 +2443,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JS::Handle<JSPropertyDescriptor> desc,
+                   JS::Handle<JS::PropertyDescriptor> desc,
                    JS::ObjectOpResult &result,
                    bool *defined);
 
@@ -3014,6 +3023,11 @@ RegisterDOMNames();
 
 // The return value is whatever the ProtoHandleGetter we used
 // returned.  This should be the DOM prototype for the global.
+//
+// Typically this method's caller will want to ensure that
+// xpc::InitGlobalObjectOptions is called before, and xpc::InitGlobalObject is
+// called after, this method, to ensure that this global object and its
+// compartment are consistent with other global objects.
 template <class T, ProtoHandleGetter GetProto>
 JS::Handle<JSObject*>
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
@@ -3149,7 +3163,7 @@ EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj);
 // aborting the scripts, and preventing timers and event handlers from running
 // in the window in the future.
 void
-HandlePrerenderingViolation(nsPIDOMWindow* aWindow);
+HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow);
 
 bool
 CallerSubsumes(JSObject* aObject);

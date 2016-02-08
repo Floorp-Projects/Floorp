@@ -545,6 +545,8 @@ Statement::Reset()
 NS_IMETHODIMP
 Statement::BindParameters(mozIStorageBindingParamsArray *aParameters)
 {
+  NS_ENSURE_ARG_POINTER(aParameters);
+
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
 

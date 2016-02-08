@@ -1,7 +1,4 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/**
+/*
  * Test that width and height attributes don't get set by widget code on the highlight panel.
  */
 
@@ -13,37 +10,33 @@ var gContentWindow;
 var highlight = document.getElementById("UITourHighlightContainer");
 var tooltip = document.getElementById("UITourTooltip");
 
-function test() {
-  UITourTest();
-}
+add_task(setup_UITourTest);
 
-var tests = [
-  function test_highlight_size_attributes(done) {
-    gContentAPI.showHighlight("appMenu");
-    waitForElementToBeVisible(highlight, function moveTheHighlight() {
-      gContentAPI.showHighlight("urlbar");
-      waitForElementToBeVisible(highlight, function checkPanelAttributes() {
-        SimpleTest.executeSoon(() => {
-          is(highlight.height, "", "Highlight panel should have no explicit height set");
-          is(highlight.width, "", "Highlight panel should have no explicit width set");
-          done();
-        });
-      }, "Highlight should be moved to the urlbar");
-    }, "Highlight should be shown after showHighlight() for the appMenu");
-  },
+add_UITour_task(function* test_highlight_size_attributes() {
+  yield gContentAPI.showHighlight("appMenu");
+  yield elementVisiblePromise(highlight,
+                              "Highlight should be shown after showHighlight() for the appMenu");
+  yield gContentAPI.showHighlight("urlbar");
+  yield elementVisiblePromise(highlight, "Highlight should be moved to the urlbar");
+  yield new Promise((resolve) => {
+    SimpleTest.executeSoon(() => {
+      is(highlight.height, "", "Highlight panel should have no explicit height set");
+      is(highlight.width, "", "Highlight panel should have no explicit width set");
+      resolve();
+    });
+  });
+});
 
-  function test_info_size_attributes(done) {
-    gContentAPI.showInfo("appMenu", "test title", "test text");
-    waitForElementToBeVisible(tooltip, function moveTheTooltip() {
-      gContentAPI.showInfo("urlbar", "new title", "new text");
-      waitForElementToBeVisible(tooltip, function checkPanelAttributes() {
-        SimpleTest.executeSoon(() => {
-          is(tooltip.height, "", "Info panel should have no explicit height set");
-          is(tooltip.width, "", "Info panel should have no explicit width set");
-          done();
-        });
-      }, "Tooltip should be moved to the urlbar");
-    }, "Tooltip should be shown after showInfo() for the appMenu");
-  },
-
-];
+add_UITour_task(function* test_info_size_attributes() {
+  yield gContentAPI.showInfo("appMenu", "test title", "test text");
+  yield elementVisiblePromise(tooltip, "Tooltip should be shown after showInfo() for the appMenu");
+  yield gContentAPI.showInfo("urlbar", "new title", "new text");
+  yield elementVisiblePromise(tooltip, "Tooltip should be moved to the urlbar");
+  yield new Promise((resolve) => {
+    SimpleTest.executeSoon(() => {
+      is(tooltip.height, "", "Info panel should have no explicit height set");
+      is(tooltip.width, "", "Info panel should have no explicit width set");
+      resolve();
+    });
+  });
+});

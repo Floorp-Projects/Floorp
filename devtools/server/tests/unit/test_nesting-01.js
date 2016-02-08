@@ -12,7 +12,7 @@ function run_test() {
   initTestDebuggerServer();
   let gDebuggee = addTestGlobal("test-nesting");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect(function () {
+  gClient.connect().then(function () {
     attachTestTabAndResume(gClient, "test-nesting", function (aResponse, aTabClient, aThreadClient) {
       // Reach over the protocol connection and get a reference to the thread actor.
       gThreadActor = aThreadClient._transport._serverConnection.getActor(aThreadClient._actor);

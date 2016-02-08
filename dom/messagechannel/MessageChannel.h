@@ -14,7 +14,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessageChannel)
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return mWindow;
@@ -41,7 +41,7 @@ public:
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
   static already_AddRefed<MessageChannel>
-  Constructor(nsPIDOMWindow* aWindow, ErrorResult& aRv);
+  Constructor(nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   MessagePort*
   Port1() const
@@ -56,10 +56,10 @@ public:
   }
 
 private:
-  explicit MessageChannel(nsPIDOMWindow* aWindow);
+  explicit MessageChannel(nsPIDOMWindowInner* aWindow);
   ~MessageChannel();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
   RefPtr<MessagePort> mPort1;
   RefPtr<MessagePort> mPort2;

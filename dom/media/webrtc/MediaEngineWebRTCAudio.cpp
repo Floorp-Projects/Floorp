@@ -639,7 +639,7 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
     memcpy(dest, audio10ms, length * sizeof(sample));
 
     nsAutoPtr<AudioSegment> segment(new AudioSegment());
-    nsAutoTArray<const sample*,1> channels;
+    AutoTArray<const sample*,1> channels;
     channels.AppendElement(dest);
     segment->AppendFrames(buffer.forget(), channels, length);
     TimeStamp insertTime;

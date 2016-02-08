@@ -133,7 +133,7 @@ MobileMessageCallback::NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync)
 nsresult
 MobileMessageCallback::NotifySuccess(nsISupports *aMessage, bool aAsync)
 {
-  nsCOMPtr<nsPIDOMWindow> window = mDOMRequest->GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = mDOMRequest->GetOwner();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> result;
@@ -205,7 +205,7 @@ MobileMessageCallback::NotifyMessageSent(nsISupports *aMessage)
 NS_IMETHODIMP
 MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
-  nsCOMPtr<nsPIDOMWindow> window = mDOMRequest->GetOwner();
+  nsCOMPtr<nsPIDOMWindowInner> window = mDOMRequest->GetOwner();
   if (NS_WARN_IF(!window)) {
     return NS_ERROR_FAILURE;
   }

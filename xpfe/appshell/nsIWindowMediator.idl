@@ -15,12 +15,13 @@
   "@mozilla.org/appshell/window-mediator;1"
 %}
 
+interface mozIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIXULWindow;
 interface nsIWidget;
-interface nsIDOMWindow;
 interface nsIWindowMediatorListener;
 
-[scriptable, uuid(30cda5a1-a6df-4f32-9a73-0e59a32928c5)]
+[scriptable, uuid(df0da056-357d-427f-bafd-e6cbf19c9381)]
 interface nsIWindowMediator: nsISupports
 {
   /** Return an enumerator which iterates over all windows of type aWindowType
@@ -69,19 +70,19 @@ interface nsIWindowMediator: nsISupports
     *                     If null, return the topmost window of any type.
     * @return the topmost window
     */
-  nsIDOMWindow getMostRecentWindow(in wstring aWindowType);
+  mozIDOMWindowProxy getMostRecentWindow(in wstring aWindowType);
 
   /**
    * Return the outer window with the given ID, if any.  Can return null.
    */
-  nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
+  mozIDOMWindowProxy getOuterWindowWithId(in unsigned long long aOuterWindowID);
 
   /**
-    * Return the outer window with the given current window ID, if any.
+    * Return the inner window with the given current window ID, if any.
     * Can return null if no inner window with the ID exists or if it's not
     * a current inner anymore.
     */
-  nsIDOMWindow getCurrentInnerWindowWithId(in unsigned long long aInnerWindowID);
+  mozIDOMWindow getCurrentInnerWindowWithId(in unsigned long long aInnerWindowID);
 
   /** Add the window to the list of known windows. Listeners (see
     * addListener) will be notified through their onOpenWindow method.
@@ -194,12 +195,12 @@ interface nsIWindowMediator: nsISupports
 
 // XXXcatalinb: This should be merged to nsIWindowMediator. Using this
 // to avoid UUID change in aurora.
-[scriptable, uuid(88b54988-7f3c-40d2-a625-7e42a9c196c2)]
+[scriptable, uuid(b9ed4063-39a2-4302-8e5c-7287eef021fe)]
 interface nsIWindowMediator_44 : nsIWindowMediator
 {
   /**
    * Same as getMostRecentWindow, but ignores private browsing
    * windows.
    */
-  nsIDOMWindow getMostRecentNonPBWindow(in wstring aWindowType);
+  mozIDOMWindowProxy getMostRecentNonPBWindow(in wstring aWindowType);
 };

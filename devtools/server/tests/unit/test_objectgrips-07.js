@@ -29,7 +29,7 @@ function run_test_with_server(aServer, aCallback)
   }.toString());
 
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect(function() {
+  gClient.connect().then(function() {
     attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();

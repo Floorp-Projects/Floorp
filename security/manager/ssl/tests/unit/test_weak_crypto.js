@@ -124,13 +124,17 @@ function startClient(port, expectedResult, options = {}) {
     onInputStreamReady: function(input) {
       try {
         let data = NetUtil.readInputStreamToString(input, input.available());
+        equal(Cr.NS_OK, expectedResult, "Connection should succeed");
         equal(data, "HELLO", "Echoed data received");
-        input.close();
-        output.close();
-        deferred.resolve();
       } catch (e) {
-        deferred.reject(e);
+        if (!((e.result == Cr.NS_ERROR_NET_RESET) && options.allowReset) &&
+            (e.result != expectedResult)) {
+          deferred.reject(e);
+        }
       }
+      input.close();
+      output.close();
+      deferred.resolve();
     },
 
     onOutputStreamReady: function(output) {
@@ -142,13 +146,15 @@ function startClient(port, expectedResult, options = {}) {
             output.asyncWait(handler, 0, 0, Services.tm.currentThread);
             return;
           }
-          equal(e.result, expectedResult,
-                "Actual and expected connection result should match");
-          output.close();
-          deferred.resolve();
-          return;
+          if (e.result != Cr.NS_OK) {
+            ok((e.result === expectedResult) ||
+               (options.allowReset && (e.result === Cr.NS_ERROR_NET_RESET)),
+               "Actual and expected connection result should match");
+            output.close();
+            deferred.resolve();
+            return;
+          }
         }
-        equal(Cr.NS_OK, expectedResult, "Connection should succeed");
         do_print("Output to server written");
         input = transport.openInputStream(0, 0, 0);
         input.asyncWait(handler, 0, 0, Services.tm.currentThread);
@@ -198,7 +204,8 @@ add_task(function*() {
   // The auto-retry on connection reset is implemented in our HTTP layer.
   // So we will see the crafted NS_ERROR_NET_RESET when we use
   // nsISocketTransport directly.
-  yield startClient(port, Cr.NS_ERROR_NET_RESET, {isPrivate: true});
+  yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
+                    {isPrivate: true, allowReset: true});
   // retry manually to simulate the HTTP layer
   yield startClient(port, Cr.NS_OK, {isPrivate: true});
 
@@ -213,7 +220,8 @@ add_task(function*() {
   // temporary override should not change the pref.
   equal(Services.prefs.getCharPref("security.tls.insecure_fallback_hosts"),
         "");
-  yield startClient(port, Cr.NS_ERROR_NET_RESET);
+  yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
+                    {allowReset: true});
   yield startClient(port, Cr.NS_OK);
   yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
                     {isPrivate: true});
@@ -229,7 +237,8 @@ add_task(function*() {
   // permanent override should change the pref.
   equal(Services.prefs.getCharPref("security.tls.insecure_fallback_hosts"),
         "127.0.0.1");
-  yield startClient(port, Cr.NS_ERROR_NET_RESET);
+  yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
+                    {allowReset: true});
   yield startClient(port, Cr.NS_OK);
   yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
                     {isPrivate: true});
@@ -243,7 +252,8 @@ add_task(function*() {
 
   // add a host to the pref to prepare the next test
   weakCryptoOverride.addWeakCryptoOverride("127.0.0.1", false);
-  yield startClient(port, Cr.NS_ERROR_NET_RESET);
+  yield startClient(port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
+                    {allowReset: true});
   yield startClient(port, Cr.NS_OK);
   equal(Services.prefs.getCharPref("security.tls.insecure_fallback_hosts"),
         "127.0.0.1");

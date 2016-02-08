@@ -10165,16 +10165,16 @@ get_fake_cert(SECItem *pCertItem, int *pIndex)
     char        cfn[100];
 
     pCertItem->data = 0;
-    if ((testdir = PR_GetEnv("NISCC_TEST")) == NULL) {
+    if ((testdir = PR_GetEnvSecure("NISCC_TEST")) == NULL) {
 	return SECSuccess;
     }
     *pIndex   = (NULL != strstr(testdir, "root"));
     extension = (strstr(testdir, "simple") ? "" : ".der");
     fileNum     = PR_ATOMIC_INCREMENT(&connNum) - 1;
-    if ((startat = PR_GetEnv("START_AT")) != NULL) {
+    if ((startat = PR_GetEnvSecure("START_AT")) != NULL) {
 	fileNum += atoi(startat);
     }
-    if ((stopat = PR_GetEnv("STOP_AT")) != NULL && 
+    if ((stopat = PR_GetEnvSecure("STOP_AT")) != NULL && 
 	fileNum >= atoi(stopat)) {
 	*pIndex = -1;
 	return SECSuccess;

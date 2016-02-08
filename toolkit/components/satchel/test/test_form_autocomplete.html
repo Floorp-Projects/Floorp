@@ -216,7 +216,7 @@ registerPopupShownListener(popupShownListener);
  * This is a bit hacky, as many operations happen asynchronously.
  * Various mechanisms call runTests as a result of operations:
  *   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
- *   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it 
+ *   - call waitForMenuChange(x) to run the next test when the autocomplete popup to have x items in it
  *   - addEntry calls runs the test when an entry has been added
  *   - some tests scroll the window. This is because the form fill controller happens to scroll
  *     the field into view near the end of the search, and there isn't any other good notification

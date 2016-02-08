@@ -17,8 +17,7 @@
 #include "nsISupports.h"
 
 class nsIPrincipal;
-class nsIDOMWindow;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -61,7 +60,7 @@ public:
     return mIsPrivate;
   }
 
-  DOMStorage(nsIDOMWindow* aWindow,
+  DOMStorage(nsPIDOMWindowInner* aWindow,
              DOMStorageManager* aManager,
              DOMStorageCache* aCache,
              const nsAString& aDocumentURI,
@@ -71,7 +70,7 @@ public:
   // WebIDL
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mWindow;
   }
@@ -123,7 +122,8 @@ public:
   // It is an optimization since the privileges check and session only
   // state determination are complex and share the code (comes hand in
   // hand together).
-  static bool CanUseStorage(nsPIDOMWindow* aWindow, DOMStorage* aStorage = nullptr);
+  static bool CanUseStorage(nsPIDOMWindowInner* aWindow,
+                            DOMStorage* aStorage = nullptr);
 
   bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const { return mIsSessionOnly; }
@@ -140,7 +140,7 @@ private:
   friend class DOMStorageManager;
   friend class DOMStorageCache;
 
-  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<DOMStorageManager> mManager;
   RefPtr<DOMStorageCache> mCache;
   nsString mDocumentURI;

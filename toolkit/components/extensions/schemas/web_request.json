@@ -4,6 +4,21 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "webRequest",
+            "webRequestBlocking"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "webRequest",
     "description": "Use the <code>browser.webRequest</code> API to observe and analyze traffic and to intercept, block, or modify requests in-flight.",
     "properties": {
@@ -175,8 +190,14 @@
         "name": "handlerBehaviorChanged",
         "type": "function",
         "description": "Needs to be called when the behavior of the webRequest handlers has changed to prevent incorrect handling due to caching. This function call is expensive. Don't call it often.",
+        "async": "callback",
         "parameters": [
-          {"type": "function", "name": "callback", "optional": true, "parameters": []}
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       }
     ],

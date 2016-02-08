@@ -322,11 +322,9 @@ static float
 ComputeDistanceFromRegion(const nsPoint& aPoint, const nsRegion& aRegion)
 {
   MOZ_ASSERT(!aRegion.IsEmpty(), "can't compute distance between point and empty region");
-  nsRegionRectIterator iter(aRegion);
-  const nsRect* r;
   float minDist = -1;
-  while ((r = iter.Next()) != nullptr) {
-    float dist = ComputeDistanceFromRect(aPoint, *r);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    float dist = ComputeDistanceFromRect(aPoint, iter.Get());
     if (dist < minDist || minDist < 0) {
       minDist = dist;
     }
@@ -597,7 +595,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
                                     restrictToDescendants, prefs, aFlags);
   PET_LOG("Expanded point to target rect %s\n",
     mozilla::layers::Stringify(targetRect).c_str());
-  nsAutoTArray<nsIFrame*,8> candidates;
+  AutoTArray<nsIFrame*,8> candidates;
   nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect, candidates, flags);
   if (NS_FAILED(rv)) {
     return target;

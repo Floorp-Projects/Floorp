@@ -15,12 +15,12 @@ protocol PCacheStreamControl
   manager PBackground;
 
 parent:
-  NoteClosed(nsID aStreamId);
+  async NoteClosed(nsID aStreamId);
 
 child:
-  Close(nsID aStreamId);
-  CloseAll();
-  __delete__();
+  async Close(nsID aStreamId);
+  async CloseAll();
+  async __delete__();
 };
 
 } // namespace cache

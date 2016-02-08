@@ -389,8 +389,8 @@ WebMDemuxer::ReadMetadata()
         return NS_ERROR_FAILURE;
       }
 
-      nsAutoTArray<const unsigned char*,4> headers;
-      nsAutoTArray<size_t,4> headerLens;
+      AutoTArray<const unsigned char*,4> headers;
+      AutoTArray<size_t,4> headerLens;
       for (uint32_t header = 0; header < nheaders; ++header) {
         unsigned char* data = 0;
         size_t length = 0;

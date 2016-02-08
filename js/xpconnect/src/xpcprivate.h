@@ -85,6 +85,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -1971,6 +1972,15 @@ public:
     void Unmark()     {mJSObject.unsetFlags(1);}
     bool IsMarked() const {return mJSObject.hasFlag(1);}
 
+    XPCWrappedNativeTearOff* AddTearOff()
+    {
+        MOZ_ASSERT(!mNextTearOff);
+        mNextTearOff = mozilla::MakeUnique<XPCWrappedNativeTearOff>();
+        return mNextTearOff.get();
+    }
+
+    XPCWrappedNativeTearOff* GetNextTearOff() {return mNextTearOff.get();}
+
 private:
     XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r) = delete;
     XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r) = delete;
@@ -1981,25 +1991,9 @@ private:
     // nsISupports pointer.
     RefPtr<nsISupports> mNative;
     JS::TenuredHeap<JSObject*> mJSObject;
+    mozilla::UniquePtr<XPCWrappedNativeTearOff> mNextTearOff;
 };
 
-/***********************************************/
-// XPCWrappedNativeTearOffChunk is a linked list of XPCWrappedNativeTearOff
-// objects. It lets us allocate a set of XPCWrappedNativeTearOff objects and
-// link the sets - rather than only having the option of linking single
-// XPCWrappedNativeTearOff objects.
-
-class XPCWrappedNativeTearOffChunk
-{
-friend class XPCWrappedNative;
-private:
-    XPCWrappedNativeTearOffChunk() : mNextChunk(nullptr) {}
-    ~XPCWrappedNativeTearOffChunk() {delete mNextChunk;}
-
-private:
-    XPCWrappedNativeTearOff mTearOff;
-    XPCWrappedNativeTearOffChunk* mNextChunk;
-};
 
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
@@ -2268,13 +2262,13 @@ public:
 private:
     union
     {
-        XPCWrappedNativeScope*   mMaybeScope;
-        XPCWrappedNativeProto*   mMaybeProto;
+        XPCWrappedNativeScope* mMaybeScope;
+        XPCWrappedNativeProto* mMaybeProto;
     };
-    XPCNativeSet*                mSet;
-    JS::TenuredHeap<JSObject*>   mFlatJSObject;
-    XPCNativeScriptableInfo*     mScriptableInfo;
-    XPCWrappedNativeTearOffChunk mFirstChunk;
+    XPCNativeSet* mSet;
+    JS::TenuredHeap<JSObject*> mFlatJSObject;
+    XPCNativeScriptableInfo* mScriptableInfo;
+    XPCWrappedNativeTearOff mFirstTearOff;
 };
 
 /***************************************************************************
@@ -2885,7 +2879,7 @@ private:
     JSContext* Pop();
     bool Push(JSContext* cx);
 
-    AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
+    AutoTArray<XPCJSContextInfo, 16> mStack;
     XPCJSRuntime* mRuntime;
     JSContext*  mSafeJSContext;
 };
@@ -3591,8 +3585,23 @@ JSObject*
 CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
                    JS::CompartmentOptions& aOptions);
 
-// InitGlobalObject enters the compartment of aGlobal, so it doesn't matter what
-// compartment aJSContext is in.
+// Modify the provided compartment options, consistent with |aPrincipal| and
+// with globally-cached values of various preferences.
+//
+// Call this function *before* |aOptions| is used to create the corresponding
+// global object, as not all of the options it sets can be modified on an
+// existing global object.  (The type system should make this obvious, because
+// you can't get a *mutable* JS::CompartmentOptions& from an existing global
+// object.)
+void
+InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
+                        nsIPrincipal* aPrincipal);
+
+// Finish initializing an already-created, not-yet-exposed-to-script global
+// object.  This will attach a Components object (if necessary) and call
+// |JS_FireOnNewGlobalObject| (if necessary).
+//
+// If you must modify compartment options, see InitGlobalObjectOptions above.
 bool
 InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal,
                  uint32_t aFlags);
@@ -3729,6 +3738,13 @@ public:
     // for every scope. If this flag is set we waive interposition for this
     // scope.
     bool waiveInterposition;
+
+    // If CPOWs are disabled for browser code via the
+    // dom.ipc.cpows.forbid-unsafe-from-browser preferences, then only
+    // add-ons can use CPOWs. This flag allows a non-addon scope
+    // to opt into CPOWs. It's necessary for the implementation of
+    // RemoteAddonsParent.jsm.
+    bool allowCPOWs;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

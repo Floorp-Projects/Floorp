@@ -215,12 +215,10 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
     }
   }
   if (doc) {
-    nsPIDOMWindow* inner = doc->GetInnerWindow();
-    if (inner) {
+    if (nsPIDOMWindowInner* inner = doc->GetInnerWindow()) {
       inner->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
     }
-    nsPIDOMWindow* outer = doc->GetWindow();
-    if (outer) {
+    if (nsPIDOMWindowOuter* outer = doc->GetWindow()) {
       outer->MarkUncollectableForCCGeneration(nsCCUncollectableMarker::sGeneration);
     }
   }
@@ -300,8 +298,7 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
   nsCOMPtr<nsISupports> iter;
   while (NS_SUCCEEDED(aWindowList->GetNext(getter_AddRefs(iter))) &&
          iter) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(iter);
-    if (window) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(iter)) {
       nsCOMPtr<nsIDocShell> rootDocShell = window->GetDocShell();
 
       MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);
@@ -467,37 +464,6 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-struct TraceClosure
-{
-  TraceClosure(JSTracer* aTrc, uint32_t aGCNumber)
-    : mTrc(aTrc), mGCNumber(aGCNumber)
-  {}
-  JSTracer* mTrc;
-  uint32_t mGCNumber;
-};
-
-static PLDHashOperator
-TraceActiveWindowGlobal(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aClosure)
-{
-  if (aWindow->GetDocShell() && aWindow->IsOuterWindow()) {
-    TraceClosure* closure = static_cast<TraceClosure*>(aClosure);
-    aWindow->TraceGlobalJSObject(closure->mTrc);
-    EventListenerManager* elm = aWindow->GetExistingListenerManager();
-    if (elm) {
-      elm->TraceListeners(closure->mTrc);
-    }
-
-#ifdef MOZ_XUL
-    nsIDocument* doc = aWindow->GetExtantDoc();
-    if (doc && doc->IsXULDocument()) {
-      XULDocument* xulDoc = static_cast<XULDocument*>(doc);
-      xulDoc->TraceProtos(closure->mTrc, closure->mGCNumber);
-    }
-#endif
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownGC)
 {
@@ -518,12 +484,27 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, uint32_t aGCNumber, bool aIsShutdownG
     return;
   }
 
-  TraceClosure closure(aTrc, aGCNumber);
-
   // Mark globals of active windows black.
   nsGlobalWindow::WindowByIdTable* windowsById =
     nsGlobalWindow::GetWindowsTable();
   if (windowsById) {
-    windowsById->Enumerate(TraceActiveWindowGlobal, &closure);
+    for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+      nsGlobalWindow* window = iter.Data();
+      if (window->GetDocShell() && window->IsOuterWindow()) {
+        window->TraceGlobalJSObject(aTrc);
+        EventListenerManager* elm = window->GetExistingListenerManager();
+        if (elm) {
+          elm->TraceListeners(aTrc);
+        }
+
+#ifdef MOZ_XUL
+        nsIDocument* doc = window->GetExtantDoc();
+        if (doc && doc->IsXULDocument()) {
+          XULDocument* xulDoc = static_cast<XULDocument*>(doc);
+          xulDoc->TraceProtos(aTrc, aGCNumber);
+        }
+#endif
+      }
+    }
   }
 }

@@ -37,7 +37,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MessageEvent, Event)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MessageEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMessageEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_ADDREF_INHERITED(MessageEvent, Event)
@@ -63,14 +62,6 @@ MessageEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
   return mozilla::dom::MessageEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData)
-{
-  ErrorResult rv;
-  GetData(aCx, aData, rv);
-  return rv.StealNSResult();
-}
-
 void
 MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
                       ErrorResult& aRv)
@@ -82,32 +73,23 @@ MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
   }
 }
 
-NS_IMETHODIMP
-MessageEvent::GetOrigin(nsAString& aOrigin)
+void
+MessageEvent::GetOrigin(nsAString& aOrigin) const
 {
   aOrigin = mOrigin;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MessageEvent::GetLastEventId(nsAString& aLastEventId)
+void
+MessageEvent::GetLastEventId(nsAString& aLastEventId) const
 {
   aLastEventId = mLastEventId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MessageEvent::GetSource(nsIDOMWindow** aSource)
-{
-  NS_IF_ADDREF(*aSource = mWindowSource);
-  return NS_OK;
 }
 
 void
 MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const
 {
   if (mWindowSource) {
-    aValue.SetValue().SetAsWindowProxy() = mWindowSource;
+    aValue.SetValue().SetAsWindowProxy() = mWindowSource->GetOuterWindow();
   } else if (mPortSource) {
     aValue.SetValue().SetAsMessagePort() = mPortSource;
   }
@@ -149,7 +131,7 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
 
   if (!aParam.mSource.IsNull()) {
     if (aParam.mSource.Value().IsWindow()) {
-      event->mWindowSource = aParam.mSource.Value().GetAsWindow();
+      event->mWindowSource = aParam.mSource.Value().GetAsWindow()->AsInner();
     } else {
       event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
     }
@@ -167,25 +149,6 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   }
 
   return event.forget();
-}
-
-NS_IMETHODIMP
-MessageEvent::InitMessageEvent(const nsAString& aType,
-                               bool aCanBubble,
-                               bool aCancelable,
-                               JS::Handle<JS::Value> aData,
-                               const nsAString& aOrigin,
-                               const nsAString& aLastEventId,
-                               nsIDOMWindow* aSource)
-{
-  Event::InitEvent(aType, aCanBubble, aCancelable);
-  mData = aData;
-  mozilla::HoldJSObjects(this);
-  mOrigin = aOrigin;
-  mLastEventId = aLastEventId;
-  mWindowSource = aSource;
-
-  return NS_OK;
 }
 
 void
@@ -208,7 +171,8 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
 
   if (!aSource.IsNull()) {
     if (aSource.Value().IsWindowProxy()) {
-      mWindowSource = aSource.Value().GetAsWindowProxy();
+      auto* windowProxy = aSource.Value().GetAsWindowProxy();
+      mWindowSource = windowProxy ? windowProxy->GetCurrentInnerWindow() : nullptr;
     } else {
       mPortSource = &aSource.Value().GetAsMessagePort();
     }

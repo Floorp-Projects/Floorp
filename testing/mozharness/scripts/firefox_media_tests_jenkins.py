@@ -8,14 +8,11 @@
 
 Author: Syd Polk
 """
-import copy
-import glob
 import os
 import sys
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.script import PreScriptAction
 from mozharness.mozilla.testing.firefox_media_tests import (
     FirefoxMediaTestsBase
 )
@@ -26,7 +23,6 @@ class FirefoxMediaTestsJenkins(FirefoxMediaTestsBase):
     def __init__(self):
         super(FirefoxMediaTestsJenkins, self).__init__(
             all_actions=['clobber',
-                         'checkout',
                          'download-and-extract',
                          'create-virtualenv',
                          'install',

@@ -1361,10 +1361,10 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
     // fill the frame descriptor.
     if (dynStack) {
         masm.addPtr(Imm32(masm.framePushed()), *dynStack);
-        masm.makeFrameDescriptor(*dynStack, JitFrame_IonJS);
+        masm.makeFrameDescriptor(*dynStack, JitFrame_IonJS, ExitFrameLayout::Size());
         masm.Push(*dynStack); // descriptor
     } else {
-        masm.pushStaticFrameDescriptor(JitFrame_IonJS);
+        masm.pushStaticFrameDescriptor(JitFrame_IonJS, ExitFrameLayout::Size());
     }
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack

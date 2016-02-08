@@ -59,7 +59,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
   int32_t count = 0;
   bool isSubScript = !mContent->IsMathMLElement(nsGkAtoms::msup_);
 
-  nsAutoTArray<nsIFrame*, 8> subScriptFrames;
+  AutoTArray<nsIFrame*, 8> subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     if (childFrame->GetContent()->IsMathMLElement(nsGkAtoms::mprescripts_)) {
@@ -173,7 +173,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   // depend only on the current font
   ////////////////////////////////////////
 
-  nsIFrame* baseFrame = aFrame->GetFirstPrincipalChild();
+  nsIFrame* baseFrame = aFrame->PrincipalChildList().FirstChild();
 
   if (!baseFrame) {
     if (tag == nsGkAtoms::mmultiscripts_)
@@ -330,7 +330,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   // Note that only msup starts with a superscript.
   bool isSubScript = (tag != nsGkAtoms::msup_);
 
-  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
+  nsIFrame* childFrame = aFrame->PrincipalChildList().FirstChild();
   while (childFrame) {
     if (childFrame->GetContent()->IsMathMLElement(nsGkAtoms::mprescripts_)) {
       if (tag != nsGkAtoms::mmultiscripts_) {

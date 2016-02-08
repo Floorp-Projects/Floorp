@@ -1031,8 +1031,12 @@ public:
                                    const nsAString& aAttrValue) const override;
 
   virtual Element* ElementFromPointHelper(float aX, float aY,
-                                                      bool aIgnoreRootScrollFrame,
-                                                      bool aFlushLayout) override;
+                                          bool aIgnoreRootScrollFrame,
+                                          bool aFlushLayout) override;
+
+  virtual void ElementsFromPointHelper(float aX, float aY,
+                                       uint32_t aFlags,
+                                       nsTArray<RefPtr<mozilla::dom::Element>>& aElements) override;
 
   virtual nsresult NodesFromRectHelper(float aX, float aY,
                                                    float aTopSize, float aRightSize,
@@ -1512,7 +1516,7 @@ protected:
                               const nsAString& aType,
                               bool aPersisted);
 
-  virtual nsPIDOMWindow *GetWindowInternal() const override;
+  virtual nsPIDOMWindowOuter* GetWindowInternal() const override;
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const override;
   virtual bool InternalAllowXULXBL() override;
 

@@ -26,8 +26,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextTrackList, DOMEventTargetHelper)
 
-  explicit TextTrackList(nsPIDOMWindow* aOwnerWindow);
-  TextTrackList(nsPIDOMWindow* aOwnerWindow, TextTrackManager* aTextTrackManager);
+  explicit TextTrackList(nsPIDOMWindowInner* aOwnerWindow);
+  TextTrackList(nsPIDOMWindowInner* aOwnerWindow, TextTrackManager* aTextTrackManager);
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

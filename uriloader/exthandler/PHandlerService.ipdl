@@ -34,7 +34,7 @@ parent:
       returns (bool exists);
   sync GetTypeFromExtension(nsCString aFileExtension)
       returns (nsCString type);
-  __delete__();
+  async __delete__();
 };
 
 

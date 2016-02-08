@@ -16,15 +16,7 @@ public class testCheck2 extends PixelTest {
         String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
 
         // Enable double-tap zooming
-        JSONObject jsonPref = new JSONObject();
-        try {
-            jsonPref.put("name", "browser.ui.zoom.force-user-scalable");
-            jsonPref.put("type", "bool");
-            jsonPref.put("value", true);
-            setPreferenceAndWaitForChange(jsonPref);
-        } catch (Exception ex) {
-            mAsserter.ok(false, "exception in testCheck2", ex.toString());
-        }
+        setPreferenceAndWaitForChange("browser.ui.zoom.force-user-scalable", true);
 
         blockForGeckoReady();
         loadAndPaint(url);

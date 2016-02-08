@@ -24,7 +24,7 @@ function run_test()
       return request.call(this, aRequest, aOnResponse);
     };
   }(gClient.request));
-  gClient.connect(function () {
+  gClient.connect().then(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_listing_zero_sources();

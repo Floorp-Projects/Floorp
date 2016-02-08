@@ -24,8 +24,6 @@ config = {
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
-    'purge_skip': ['info', 'rel-*:10d', 'tb-rel-*:10d'],
-    'purge_basedirs':  [],
     'enable_ccache': True,
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
@@ -80,7 +78,6 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux64/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'purge_minsize': 12,
     'src_mozconfig': 'browser/config/mozconfigs/macosx64/nightly',
     'tooltool_manifest_src': 'browser/config/tooltool-manifests/macosx64/cross-releng.manifest',
     #########################################################################

@@ -8,7 +8,7 @@ protocol PTestMultiMgrsBottom {
     manager PTestMultiMgrsLeft or PTestMultiMgrsRight;
 
 child:
-    __delete__();
+    async __delete__();
 
 state DOA:
     send __delete__;

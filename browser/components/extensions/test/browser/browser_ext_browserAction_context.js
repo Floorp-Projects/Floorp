@@ -8,10 +8,10 @@ function* runTests(options) {
     // promise that resolves to an object containing them.
     function getDetails(tabId) {
       return Promise.all([
-        new Promise(resolve => browser.browserAction.getTitle({tabId}, resolve)),
-        new Promise(resolve => browser.browserAction.getPopup({tabId}, resolve)),
-        new Promise(resolve => browser.browserAction.getBadgeText({tabId}, resolve)),
-        new Promise(resolve => browser.browserAction.getBadgeBackgroundColor({tabId}, resolve))]
+        browser.browserAction.getTitle({tabId}),
+        browser.browserAction.getPopup({tabId}),
+        browser.browserAction.getBadgeText({tabId}),
+        browser.browserAction.getBadgeBackgroundColor({tabId})]
       ).then(details => {
         return Promise.resolve({ title: details[0],
                                  popup: details[1],

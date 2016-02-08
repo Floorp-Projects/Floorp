@@ -48,8 +48,6 @@ config = {
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
-    'purge_skip': ['info', 'rel-*:10d', 'tb-rel-*:10d'],
-    'purge_basedirs':  [],
     'enable_ccache': False,
     'vcs_share_base': 'C:/builds/hg-shared',
     'objdir': 'obj-firefox',
@@ -101,7 +99,6 @@ config = {
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
     'enable_pymake': True,
-    'purge_minsize': 12,
     'src_mozconfig': 'browser/config/mozconfigs/win32/nightly',
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/releng.manifest",
     #########################################################################

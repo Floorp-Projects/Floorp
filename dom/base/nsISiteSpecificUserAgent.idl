@@ -5,13 +5,13 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 /**
  * nsISiteSpecificUserAgent provides you with site/window-specific User Agent strings.
  */
 
-[scriptable, uuid(a509469a-ef3d-4ad1-8dba-c92a96b0bc64)]
+[scriptable, uuid(0f0ace30-9ab1-4175-9d60-fd26c0324adc)]
 interface nsISiteSpecificUserAgent : nsISupports
 {
   /**
@@ -24,5 +24,5 @@ interface nsISiteSpecificUserAgent : nsISupports
    * @returns the User Agent string for the given URI. If no override applies,
    * the default User Agent string is used.
    */
-  AString getUserAgentForURIAndWindow(in nsIURI aURI, in nsIDOMWindow aWindow);
+  AString getUserAgentForURIAndWindow(in nsIURI aURI, in mozIDOMWindow aWindow);
 };

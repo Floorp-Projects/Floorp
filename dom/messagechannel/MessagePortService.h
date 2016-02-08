@@ -51,12 +51,6 @@ private:
 
   class MessagePortServiceData;
 
-#ifdef DEBUG
-  static PLDHashOperator
-  CloseAllDebugCheck(const nsID& aID, MessagePortServiceData* aData,
-                     void* aPtr);
-#endif
-
   nsClassHashtable<nsIDHashKey, MessagePortServiceData> mPorts;
 };
 

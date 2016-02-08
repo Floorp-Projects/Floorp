@@ -11,7 +11,7 @@
 #include "nsWrapperCache.h"
 #include "nsIAtom.h"
 
-class nsIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsIGlobalObject;
 
 namespace mozilla {
@@ -70,7 +70,7 @@ public:
   // Returns an outer window that corresponds to the inner window this event
   // target is associated with.  Will return null if the inner window is not the
   // current inner or if there is no window around at all.
-  virtual nsIDOMWindow* GetOwnerGlobalForBindings() = 0;
+  virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() = 0;
 
   // The global object this event target is associated with, if any.
   // This may be an inner window or some other global object.  This

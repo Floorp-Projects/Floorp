@@ -1,0 +1,9 @@
+
+body {
+  font: 20px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 60px 50px;
+}
+
+h3.capitalize {
+    text-transform: capitalize;
+}

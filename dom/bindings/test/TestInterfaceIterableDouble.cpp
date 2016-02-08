@@ -20,7 +20,7 @@ NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TestInterfaceIterableDouble::TestInterfaceIterableDouble(nsPIDOMWindow* aParent)
+TestInterfaceIterableDouble::TestInterfaceIterableDouble(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {
   mValues.AppendElement(std::pair<nsString, nsString>(NS_LITERAL_STRING("a"),
@@ -36,7 +36,7 @@ already_AddRefed<TestInterfaceIterableDouble>
 TestInterfaceIterableDouble::Constructor(const GlobalObject& aGlobal,
                                          ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -52,7 +52,7 @@ TestInterfaceIterableDouble::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aG
   return TestInterfaceIterableDoubleBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 TestInterfaceIterableDouble::GetParentObject() const
 {
   return mParent;

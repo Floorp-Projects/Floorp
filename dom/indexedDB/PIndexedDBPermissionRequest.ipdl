@@ -19,7 +19,7 @@ child:
    * @param permission
    *   The permission result (see nsIPermissionManager.idl for valid values).
    */
-  __delete__(uint32_t permission);
+  async __delete__(uint32_t permission);
 };
 
 } // namespace indexedDB

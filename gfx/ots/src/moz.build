@@ -44,7 +44,6 @@ UNIFIED_SOURCES += [
     'prep.cc',
     'vhea.cc',
     'vmtx.cc',
-    'woff2.cc',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
@@ -57,4 +56,5 @@ DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 
 USE_LIBS += [
     'brotli',
+    'woff2',
 ]

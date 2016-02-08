@@ -13,14 +13,14 @@ protocol PCachePushStream
   manager PCache;
 
 parent:
-  Buffer(nsCString aBuffer);
-  Close(nsresult aRv);
+  async Buffer(nsCString aBuffer);
+  async Close(nsresult aRv);
 
 child:
   // Stream is always destroyed from the parent side.  This occurs if the
   // parent encounters an error while writing to its pipe or if the child
   // signals the stream should close by SendClose().
-  __delete__();
+  async __delete__();
 };
 
 } // namespace cache

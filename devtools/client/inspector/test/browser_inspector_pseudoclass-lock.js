@@ -21,7 +21,10 @@ add_task(function*() {
   info("Creating the test tab and opening the rule-view");
   let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
-  let view = yield ensureRuleView(inspector);
+  info("Selecting the ruleview sidebar");
+  inspector.sidebar.select("ruleview");
+
+  let view = inspector.ruleview.view;
 
   info("Selecting the test node");
   yield selectNode("#div-1", inspector);
@@ -133,16 +136,4 @@ function* assertPseudoRemovedFromView(inspector, testActor, ruleview) {
   let value = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-pseudo-classes");
   is(value, "", "pseudo-class removed from infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
-}
-
-function* ensureRuleView(inspector) {
-  if (!inspector.sidebar.getWindowForTab("ruleview")) {
-    info("Waiting for ruleview initialization to complete.");
-    yield inspector.sidebar.once("ruleview-ready");
-  }
-
-  info("Selecting the ruleview sidebar");
-  inspector.sidebar.select("ruleview");
-
-  return inspector.sidebar.getWindowForTab("ruleview")["ruleview"].view;
 }

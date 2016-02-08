@@ -19,7 +19,7 @@
 class nsIDocShell;
 class nsISHistory;
 class nsIWeakReference;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 // Script "History" object
 class nsHistory final : public nsIDOMHistory, // Empty, needed for extension
@@ -31,9 +31,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsHistory)
 
 public:
-  explicit nsHistory(nsPIDOMWindow* aInnerWindow);
+  explicit nsHistory(nsPIDOMWindowInner* aInnerWindow);
 
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;

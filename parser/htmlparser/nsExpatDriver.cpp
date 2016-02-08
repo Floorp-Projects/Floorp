@@ -33,6 +33,7 @@
 
 #include "mozilla/Logging.h"
 
+using mozilla::fallible;
 using mozilla::LogLevel;
 
 #define kExpatSeparatorChar 0xFFFF
@@ -415,7 +416,9 @@ nsExpatDriver::HandleCharacterData(const char16_t *aValue,
   NS_ASSERTION(mSink, "content sink not found!");
 
   if (mInCData) {
-    mCDataText.Append(aValue, aLength);
+    if (!mCDataText.Append(aValue, aLength, fallible)) {
+      MaybeStopParser(NS_ERROR_OUT_OF_MEMORY);
+    }
   }
   else if (mSink) {
     nsresult rv = mSink->HandleCharacterData(aValue, aLength);
@@ -1244,20 +1247,20 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOriginalSink->GetTarget());
   if (doc) {
-    nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
-    if (!win) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowInner> inner;
+    if (win) {
+      inner = win->GetCurrentInnerWindow();
+    } else {
       bool aHasHadScriptHandlingObject;
       nsIScriptGlobalObject *global =
         doc->GetScriptHandlingObject(aHasHadScriptHandlingObject);
       if (global) {
-        win = do_QueryInterface(global);
+        inner = do_QueryInterface(global);
       }
     }
-    if (win && !win->IsInnerWindow()) {
-      win = win->GetCurrentInnerWindow();
-    }
-    if (win) {
-      mInnerWindowID = win->WindowID();
+    if (inner) {
+      mInnerWindowID = inner->WindowID();
     }
   }
 

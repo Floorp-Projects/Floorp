@@ -18,7 +18,7 @@ sync protocol PBackgroundIndexedDBUtils
   manager PBackground;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
   // Use only for testing!
   sync GetFileReferences(PersistenceType persistenceType,
@@ -29,7 +29,7 @@ parent:
              bool result);
 
 child:
-  __delete__();
+  async __delete__();
 };
 
 } // namespace indexedDB

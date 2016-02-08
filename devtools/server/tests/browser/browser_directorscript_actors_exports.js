@@ -10,7 +10,8 @@ const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 DirectorRegistry.clear();
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "director-script-target.html");
+  let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
+  let doc = browser.contentDocument;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());

@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BluetoothPbapRequestHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-BluetoothPbapRequestHandle::BluetoothPbapRequestHandle(nsPIDOMWindow* aOwner)
+BluetoothPbapRequestHandle::BluetoothPbapRequestHandle(nsPIDOMWindowInner* aOwner)
   : mOwner(aOwner)
 {
   MOZ_ASSERT(aOwner);
@@ -36,7 +36,7 @@ BluetoothPbapRequestHandle::~BluetoothPbapRequestHandle()
 }
 
 already_AddRefed<BluetoothPbapRequestHandle>
-BluetoothPbapRequestHandle::Create(nsPIDOMWindow* aOwner)
+BluetoothPbapRequestHandle::Create(nsPIDOMWindowInner* aOwner)
 {
   MOZ_ASSERT(aOwner);
 
@@ -50,7 +50,7 @@ already_AddRefed<DOMRequest>
 BluetoothPbapRequestHandle::ReplyTovCardPulling(Blob& aBlob,
                                                 ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetParentObject();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -93,7 +93,7 @@ BluetoothPbapRequestHandle::ReplyToPhonebookPulling(Blob& aBlob,
                                                     uint16_t phonebookSize,
                                                     ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetParentObject();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -136,7 +136,7 @@ BluetoothPbapRequestHandle::ReplyTovCardListing(Blob& aBlob,
                                                 uint16_t phonebookSize,
                                                 ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetParentObject();
+  nsCOMPtr<nsPIDOMWindowInner> win = GetParentObject();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

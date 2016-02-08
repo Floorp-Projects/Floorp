@@ -308,7 +308,7 @@ template<typename T> class ConcreteStackFrame;
 // valid within the scope of an AutoCheckCannotGC; if the graph being analyzed
 // is an offline heap snapshot, the JS::ubi::StackFrame is valid as long as the
 // offline heap snapshot is alive.
-class StackFrame : public JS::Traceable {
+class StackFrame {
     // Storage in which we allocate BaseStackFrame subclasses.
     mozilla::AlignedStorage2<BaseStackFrame> storage;
 
@@ -397,12 +397,6 @@ class StackFrame : public JS::Traceable {
     // Get the size of the respective strings. 0 is returned for null strings.
     size_t sourceLength();
     size_t functionDisplayNameLength();
-
-    // JS::Traceable implementation just forwards to our virtual trace method.
-    static void trace(StackFrame* frame, JSTracer* trc) {
-        if (frame)
-            frame->trace(trc);
-    }
 
     // Methods that forward to virtual calls through BaseStackFrame.
 

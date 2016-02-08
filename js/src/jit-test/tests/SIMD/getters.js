@@ -4,6 +4,7 @@ setJitCompilerOption("ion.warmup.trigger", 50);
 
 function f() {
     var i4 = SIMD.Int32x4(1, -2, 3, -4);
+    var u4 = SIMD.Uint32x4(1, -2, 3, 0x88000000);
     var b4 = SIMD.Bool32x4(true, true, false, true);
 
 
@@ -18,6 +19,11 @@ function f() {
         assertEq(SIMD.Int32x4.extractLane(i4, 1), -2);
         assertEq(SIMD.Int32x4.extractLane(i4, 2), 3);
         assertEq(SIMD.Int32x4.extractLane(i4, 3), -4);
+
+        assertEq(SIMD.Uint32x4.extractLane(u4, 0), 1);
+        assertEq(SIMD.Uint32x4.extractLane(u4, 1), -2 >>> 0);
+        assertEq(SIMD.Uint32x4.extractLane(u4, 2), 3);
+        assertEq(SIMD.Uint32x4.extractLane(u4, 3), 0x88000000);
 
         assertEq(SIMD.Float32x4.extractLane(f4, 0), v);
         assertEq(SIMD.Float32x4.extractLane(f4, 1), NaN);

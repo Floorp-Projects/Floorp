@@ -161,7 +161,7 @@ var HistoryEntry = {
     }
 
     let all_items_found = true;
-    for (let itemvisit in item.visits) {
+    for (let itemvisit of item.visits) {
       all_items_found = all_items_found && "found" in itemvisit;
       Logger.logInfo("History entry for " + item.uri + ", type:" +
               itemvisit.type + ", date:" + itemvisit.date +

@@ -44,7 +44,7 @@ add_task(function*() {
   let inspector = toolbox.getPanel("inspector");
   yield inspector.once("inspector-updated");
 
-  let view = inspector.sidebar.getWindowForTab("ruleview")["ruleview"].view;
+  let view = inspector.ruleview.view;
 
   checkRuleViewContent(view);
 });

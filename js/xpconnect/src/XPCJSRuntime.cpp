@@ -202,6 +202,7 @@ CompartmentPrivate::CompartmentPrivate(JSCompartment* c)
     , skipWriteToGlobalPrototype(false)
     , isWebExtensionContentScript(false)
     , waiveInterposition(false)
+    , allowCPOWs(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , scriptability(c)
@@ -1445,7 +1446,7 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
     if (win->GetIsPrerendered()) {
         // We cannot display a dialog if the page is being prerendered, so
         // just kill the page.
-        mozilla::dom::HandlePrerenderingViolation(win);
+        mozilla::dom::HandlePrerenderingViolation(win->AsInner());
         return false;
     }
 
@@ -2369,6 +2370,14 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         cStats.savedStacksSet,
         "The saved stacks set.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("non-syntactic-lexical-scopes-table"),
+        cStats.nonSyntacticLexicalScopesTable,
+        "The non-syntactic lexical scopes table.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jit-compartment"),
+        cStats.jitCompartment,
+        "The JIT compartment.");
+
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
@@ -2784,7 +2793,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             // might crash.
             JSAutoCompartment ac(cx, global);
             nsISupports* native = xpc->GetNativeOfWrapper(cx, global);
-            if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
+            if (nsCOMPtr<nsPIDOMWindowInner> piwindow = do_QueryInterface(native)) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.
                 if (mTopWindowPaths->Get(piwindow->WindowID(),
@@ -2828,7 +2837,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
             // might crash.
             JSAutoCompartment ac(cx, global);
             nsISupports* native = xpc->GetNativeOfWrapper(cx, global);
-            if (nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(native)) {
+            if (nsCOMPtr<nsPIDOMWindowInner> piwindow = do_QueryInterface(native)) {
                 // The global is a |window| object.  Use the path prefix that
                 // we should have already created for it.
                 if (mWindowPaths->Get(piwindow->WindowID(),

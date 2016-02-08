@@ -5,22 +5,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[builtinclass, uuid(05aaf2cf-27c3-4d3d-9e55-4c6a4cf700ec)]
+[builtinclass, uuid(5883e564-e676-4652-9421-7df6132016b2)]
 interface nsIDOMScrollAreaEvent : nsIDOMUIEvent
 {
-  // Scroll area client rect
-  readonly attribute float x;
-  readonly attribute float y;
-  readonly attribute float width;
-  readonly attribute float height;
-
-  void initScrollAreaEvent(in DOMString aEventType,
-                           in boolean aCanBubble,
-                           in boolean aCancelable,
-                           in nsIDOMWindow aView,
-                           in long aDetail,
-                           in float x,
-                           in float y,
-                           in float width,
-                           in float height);
 };

@@ -540,6 +540,10 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'tabs/TabsPanel.java',
     'tabs/TabsPanelThumbnailView.java',
     'Telemetry.java',
+    'telemetry/TelemetryConstants.java',
+    'telemetry/TelemetryPing.java',
+    'telemetry/TelemetryPingGenerator.java',
+    'telemetry/TelemetryUploadService.java',
     'TelemetryContract.java',
     'TextSelection.java',
     'TextSelectionHandle.java',
@@ -602,7 +606,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/FadedSingleColorTextView.java',
     'widget/FadedTextView.java',
     'widget/FaviconView.java',
-    'widget/FloatingHintEditText.java',
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
@@ -881,6 +884,15 @@ ANDROID_GENERATED_RESFILES += [
 ANDROID_ASSETS_DIRS += [
     '/mobile/android/app/assets',
 ]
+
+if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
+    # If you change this, also change its equivalent in mobile/android/bouncer.
+    if not CONFIG['MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER']:
+        # If we are packaging the bouncer, it will have the distribution, so don't put
+        # it in the main APK as well.
+        ANDROID_ASSETS_DIRS += [
+            '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
+        ]
 
 # We do not expose MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN here because that
 # would leak the value to build logs.  Instead we expose the token quietly where

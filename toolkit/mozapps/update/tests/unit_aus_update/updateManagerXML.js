@@ -13,7 +13,7 @@ function run_test() {
   setUpdateChannel("test_channel");
 
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
-  // and until bug 470244 is fixed this will not test the value for detailsURL 
+  // and until bug 470244 is fixed this will not test the value for detailsURL
   // when it isn't specified in the update xml.
   let patches = getLocalPatchString("partial", "http://partial/", "SHA256",
                                     "cd43", "86", "true", STATE_PENDING);

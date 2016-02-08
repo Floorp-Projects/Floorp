@@ -9,7 +9,7 @@ var gCategoryUtilities;
 
 function test() {
   waitForExplicitFinish();
-  
+
   run_next_test();
 }
 

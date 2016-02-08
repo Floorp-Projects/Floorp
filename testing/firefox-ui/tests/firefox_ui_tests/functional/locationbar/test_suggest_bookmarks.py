@@ -83,7 +83,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
         # Wait for the search string to be present, for the autocomplete results to appear
         # and for there to be exactly one autocomplete result
         Wait(self.marionette).until(lambda mn: locationbar.value == search_string)
-        Wait(self.marionette).until(lambda mn: autocomplete_results.is_open)
+        Wait(self.marionette).until(lambda mn: autocomplete_results.is_complete)
         Wait(self.marionette).until(lambda mn: len(autocomplete_results.visible_results) == 2)
 
         # Compare the highlighted text in the autocomplete result to the search string

@@ -352,11 +352,11 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> parent;
+  nsCOMPtr<mozIDOMWindowProxy> parent;
   wwatch->GetActiveWindow(getter_AddRefs(parent));
   // null |parent| is non-fatal
 
-  nsCOMPtr<nsIDOMWindow> newWindow;
+  nsCOMPtr<mozIDOMWindowProxy> newWindow;
 
   return wwatch->OpenWindow(parent,
                             "chrome://global/content/printPageSetup.xul",

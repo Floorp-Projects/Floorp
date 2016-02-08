@@ -98,7 +98,7 @@ public:
 
   void GetUuid(BluetoothUuid& aUuid) const;
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
      return mOwner;
   }
@@ -124,12 +124,12 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // Constructor of BluetoothGattCharacteristic in ATT client role
-  BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
+  BluetoothGattCharacteristic(nsPIDOMWindowInner* aOwner,
                               BluetoothGattService* aService,
                               const BluetoothGattCharAttribute& aChar);
 
   // Constructor of BluetoothGattCharacteristic in ATT server role
-  BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
+  BluetoothGattCharacteristic(nsPIDOMWindowInner* aOwner,
                               BluetoothGattService* aService,
                               const nsAString& aCharacteristicUuid,
                               const GattPermissions& aPermissions,
@@ -195,7 +195,7 @@ private:
   /****************************************************************************
    * Variables
    ***************************************************************************/
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 
   /**
    * Service that this characteristic belongs to.

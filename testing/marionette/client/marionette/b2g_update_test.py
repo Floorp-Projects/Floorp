@@ -12,13 +12,15 @@ import types
 import weakref
 
 from marionette_driver.marionette import Marionette
+from marionette_driver import transport
+
 from .marionette_test import MarionetteTestCase
-from marionette_transport import MarionetteTransport
 
 from b2ginstance import B2GInstance
 from .runtests import MarionetteTestRunner, cli
 
-class B2GUpdateMarionetteClient(MarionetteTransport):
+
+class B2GUpdateMarionetteClient(transport.TcpTransport):
     RETRY_TIMEOUT   = 5
     CONNECT_TIMEOUT = 30
     SEND_TIMEOUT    = 60 * 5
@@ -36,7 +38,7 @@ class B2GUpdateMarionetteClient(MarionetteTransport):
         """
         for i in range(self.MAX_RETRIES):
             try:
-                MarionetteTransport.connect(self)
+                transport.TcpTransport.connect(self)
                 break
             except:
                 if i == self.MAX_RETRIES - 1:
@@ -47,6 +49,7 @@ class B2GUpdateMarionetteClient(MarionetteTransport):
 
         # Upon success, reset the socket timeout to something more reasonable
         self.sock.settimeout(self.SEND_TIMEOUT)
+
 
 class B2GUpdateTestRunner(MarionetteTestRunner):
     match_re = re.compile(r'update_(smoke)?test_(.*)\.py$')

@@ -17,28 +17,28 @@ protocol PServiceWorkerManager
   manager PBackground;
 
 parent:
-  Register(ServiceWorkerRegistrationData data);
+  async Register(ServiceWorkerRegistrationData data);
 
-  Unregister(PrincipalInfo principalInfo, nsString scope);
+  async Unregister(PrincipalInfo principalInfo, nsString scope);
 
-  PropagateSoftUpdate(PrincipalOriginAttributes originAttributes,
-                      nsString scope);
-  PropagateUnregister(PrincipalInfo principalInfo, nsString scope);
+  async PropagateSoftUpdate(PrincipalOriginAttributes originAttributes,
+                            nsString scope);
+  async PropagateUnregister(PrincipalInfo principalInfo, nsString scope);
 
-  PropagateRemove(nsCString host);
+  async PropagateRemove(nsCString host);
 
-  PropagateRemoveAll();
+  async PropagateRemoveAll();
 
-  Shutdown();
+  async Shutdown();
 
 child:
-  NotifyRegister(ServiceWorkerRegistrationData data);
-  NotifySoftUpdate(PrincipalOriginAttributes originAttributes, nsString scope);
-  NotifyUnregister(PrincipalInfo principalInfo, nsString scope);
-  NotifyRemove(nsCString host);
-  NotifyRemoveAll();
+  async NotifyRegister(ServiceWorkerRegistrationData data);
+  async NotifySoftUpdate(PrincipalOriginAttributes originAttributes, nsString scope);
+  async NotifyUnregister(PrincipalInfo principalInfo, nsString scope);
+  async NotifyRemove(nsCString host);
+  async NotifyRemoveAll();
 
-  __delete__();
+  async __delete__();
 };
 
 } // namespace dom

@@ -38,8 +38,10 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   ok(true, "Clicking the diffing button put us into the diffing state.");
   is(getDisplayedSnapshotStatus(doc), "Select the baseline snapshot");
 
-  yield waitUntilSnapshotState(store, [snapshotState.SAVED_CENSUS,
-                                       snapshotState.SAVED_CENSUS]);
+  yield waitUntilState(store, state =>
+    state.snapshots.length === 2 &&
+    state.snapshots[0].state === snapshotState.SAVED_CENSUS &&
+    state.snapshots[1].state === snapshotState.SAVED_CENSUS);
 
   const listItems = [...doc.querySelectorAll(".snapshot-list-item")];
   is(listItems.length, 2, "Should have two snapshot list items");

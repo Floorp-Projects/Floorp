@@ -128,7 +128,7 @@ var PluginHost = {
     if (iid.equals(Ci.nsIPluginHost)
      || iid.equals(Ci.nsISupports))
       return this;
-  
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 }
@@ -247,7 +247,7 @@ function check_initial_state(callback) {
     do_check_eq(check_addon_state(addons[4]), "false,false,false");
     do_check_eq(check_addon_state(addons[5]), "false,false,true");
     do_check_eq(check_addon_state(addons[6]), "false,false,true");
-  
+
     do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
     do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
     do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");
@@ -268,22 +268,22 @@ function check_test_pt1() {
       if (!addons[i])
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
     }
-  
+
     do_check_eq(check_addon_state(addons[0]), "false,false,false");
     do_check_eq(check_addon_state(addons[1]), "false,false,false");
     do_check_eq(check_addon_state(addons[2]), "false,false,false");
-  
+
     // Warn add-ons should be soft disabled automatically
     do_check_eq(check_addon_state(addons[3]), "true,true,false");
     do_check_eq(check_addon_state(addons[4]), "true,true,false");
-  
+
     // Blocked and incompatible should be app disabled only
     do_check_eq(check_addon_state(addons[5]), "false,false,true");
     do_check_eq(check_addon_state(addons[6]), "false,false,true");
-  
+
     // We've overridden the plugin host so we cannot tell what that would have
     // initialised the plugins as
-  
+
     // Put the add-ons into the base state
     addons[0].userDisabled = true;
     addons[4].userDisabled = false;

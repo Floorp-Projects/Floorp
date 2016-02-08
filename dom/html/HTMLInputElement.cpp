@@ -550,7 +550,7 @@ NS_IMPL_ISUPPORTS(nsColorPickerShownCallback, nsIColorPickerShownCallback)
 bool
 HTMLInputElement::IsPopupBlocked() const
 {
-  nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = OwnerDoc()->GetWindow();
   MOZ_ASSERT(win, "window should not be null");
   if (!win) {
     return true;
@@ -581,7 +581,7 @@ HTMLInputElement::InitColorPicker()
 
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
@@ -628,7 +628,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
     return NS_ERROR_FAILURE;
   }
@@ -1163,7 +1163,6 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {
       UpdateHasRange();
-      UpdateRangeOverflowValidityState();
       if (mType == NS_FORM_INPUT_RANGE) {
         // The value may need to change when @max changes since the value may
         // have been invalid and can now change to a valid value, or vice
@@ -1181,25 +1180,34 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         nsresult rv =
           SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
         NS_ENSURE_SUCCESS(rv, rv);
-        MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
-                   "HTML5 spec does not allow this");
       }
+      // Validity state must be updated *after* the SetValueInternal call above
+      // or else the following assert will not be valid.
+      // We don't assert the state of underflow during parsing since
+      // DoneCreatingElement sanitizes.
+      UpdateRangeOverflowValidityState();
+      MOZ_ASSERT(mParserCreating ||
+                 mType != NS_FORM_INPUT_RANGE ||
+                 !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
+                 "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::min) {
       UpdateHasRange();
+      if (mType == NS_FORM_INPUT_RANGE) {
+        // See @max comment
+        nsAutoString value;
+        GetValue(value);
+        nsresult rv =
+          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // See corresponding @max comment
       UpdateRangeUnderflowValidityState();
       UpdateStepMismatchValidityState();
-      if (mType == NS_FORM_INPUT_RANGE) {
-        // See @max comment
-        nsAutoString value;
-        GetValue(value);
-        nsresult rv =
-          SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
-        NS_ENSURE_SUCCESS(rv, rv);
-        MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
-                   "HTML5 spec does not allow this");
-      }
+      MOZ_ASSERT(mParserCreating ||
+                 mType != NS_FORM_INPUT_RANGE ||
+                 !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
+                 "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::step) {
-      UpdateStepMismatchValidityState();
       if (mType == NS_FORM_INPUT_RANGE) {
         // See @max comment
         nsAutoString value;
@@ -1207,9 +1215,13 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         nsresult rv =
           SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
         NS_ENSURE_SUCCESS(rv, rv);
-        MOZ_ASSERT(!GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
-                   "HTML5 spec does not allow this");
       }
+      // See corresponding @max comment
+      UpdateStepMismatchValidityState();
+      MOZ_ASSERT(mParserCreating ||
+                 mType != NS_FORM_INPUT_RANGE ||
+                 !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
+                 "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::dir &&
                aValue && aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
       SetDirectionIfAuto(true, aNotify);
@@ -2905,9 +2917,7 @@ HTMLInputElement::Focus(ErrorResult& aError)
   // tab to the next one.
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
-    for (nsIFrame* childFrame = frame->GetFirstPrincipalChild();
-         childFrame;
-         childFrame = childFrame->GetNextSibling()) {
+    for (nsIFrame* childFrame : frame->PrincipalChildList()) {
       // See if the child is a button control.
       nsCOMPtr<nsIFormControl> formCtrl =
         do_QueryInterface(childFrame->GetContent());

@@ -118,14 +118,14 @@ TextPropertyEditor.prototype = {
     // Create a span that will hold the property and semicolon.
     // Use this span to create a slightly larger click target
     // for the value.
-    let propertyContainer = createChild(this.container, "span", {
+    this.valueContainer = createChild(this.container, "span", {
       class: "ruleview-propertyvaluecontainer"
     });
 
     // Property value, editable when focused.  Changes to the
     // property value are applied as they are typed, and reverted
     // if the user presses escape.
-    this.valueSpan = createChild(propertyContainer, "span", {
+    this.valueSpan = createChild(this.valueContainer, "span", {
       class: "ruleview-propertyvalue theme-fg-color1",
       tabindex: this.ruleEditor.isEditable ? "0" : "-1",
     });
@@ -149,7 +149,7 @@ TextPropertyEditor.prototype = {
                        value: parsedValue,
                        priority: this.prop.priority };
 
-    appendText(propertyContainer, ";");
+    appendText(this.valueContainer, ";");
 
     this.warning = createChild(this.container, "div", {
       class: "ruleview-warning",
@@ -183,7 +183,9 @@ TextPropertyEditor.prototype = {
       this.nameContainer.addEventListener("click", (event) => {
         // Clicks within the name shouldn't propagate any further.
         event.stopPropagation();
-        if (event.target === propertyContainer) {
+
+        // Forward clicks on nameContainer to the editable nameSpan
+        if (event.target === this.nameContainer) {
           this.nameSpan.click();
         }
       }, false);
@@ -202,11 +204,12 @@ TextPropertyEditor.prototype = {
       this.nameContainer.addEventListener("paste",
         blurOnMultipleProperties, false);
 
-      propertyContainer.addEventListener("click", (event) => {
+      this.valueContainer.addEventListener("click", (event) => {
         // Clicks within the value shouldn't propagate any further.
         event.stopPropagation();
 
-        if (event.target === propertyContainer) {
+        // Forward clicks on valueContainer to the editable valueSpan
+        if (event.target === this.valueContainer) {
           this.valueSpan.click();
         }
       }, false);

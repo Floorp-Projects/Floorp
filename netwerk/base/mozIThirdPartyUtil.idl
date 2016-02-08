@@ -5,14 +5,14 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIDOMWindow;
+interface mozIDOMWindowProxy;
 interface nsIChannel;
 
 /**
  * Utility functions for determining whether a given URI, channel, or window
  * hierarchy is third party with respect to a known URI.
  */
-[scriptable, uuid(b711bd7f-0674-49be-ae77-f221db5f7b6c)]
+[scriptable, uuid(fd82700e-ffb4-4932-b7d6-08f0b5697dda)]
 interface mozIThirdPartyUtil : nsISupports
 {
   /**
@@ -75,7 +75,7 @@ interface mozIThirdPartyUtil : nsISupports
    *
    * @see isThirdPartyURI
    */
-  boolean isThirdPartyWindow(in nsIDOMWindow aWindow, [optional] in nsIURI aURI);
+  boolean isThirdPartyWindow(in mozIDOMWindowProxy aWindow, [optional] in nsIURI aURI);
 
   /**
    * isThirdPartyChannel
@@ -147,14 +147,14 @@ interface mozIThirdPartyUtil : nsISupports
    * Returns the URI associated with the script object principal for the
    * window.
    */
-  nsIURI getURIFromWindow(in nsIDOMWindow aWindow);
+  nsIURI getURIFromWindow(in mozIDOMWindowProxy aWindow);
 
   /**
    * getTopWindowForChannel
    *
    * Returns the top-level window associated with the given channel.
    */
-  nsIDOMWindow getTopWindowForChannel(in nsIChannel aChannel);
+  mozIDOMWindowProxy getTopWindowForChannel(in nsIChannel aChannel);
 };
 
 %{ C++

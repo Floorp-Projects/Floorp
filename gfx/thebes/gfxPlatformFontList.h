@@ -200,10 +200,6 @@ public:
         aLoaderState = (uint32_t) mState;
     }
 
-    // for platforms that use linked system fontlists, append these
-    virtual void
-    AppendLinkedSystemFamilies(nsIAtom* aLanguage,
-                               nsTArray<gfxFontFamily*>& aFamilyList) {}
     virtual void
     AddGenericFonts(mozilla::FontFamilyType aGenericType,
                     nsIAtom* aLanguage,
@@ -315,11 +311,6 @@ protected:
     void LoadBadUnderlineList();
 
     void GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult);
-
-    static PLDHashOperator
-        HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
-                                RefPtr<gfxFontFamily>& aFamilyEntry,
-                                void* aUserArg);
 
     virtual void GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames);
 

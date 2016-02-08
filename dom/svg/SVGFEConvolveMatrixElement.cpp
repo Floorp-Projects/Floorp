@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/SVGFEConvolveMatrixElement.h"
 #include "mozilla/dom/SVGFEConvolveMatrixElementBinding.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "DOMSVGAnimatedNumberList.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterInstance.h"
@@ -203,7 +205,7 @@ SVGFEConvolveMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstan
   if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
       orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
     return failureDescription;
-  nsAutoArrayPtr<float> kernel(new (fallible) float[orderX * orderY]);
+  UniquePtr<float[]> kernel = MakeUniqueFallible<float[]>(orderX * orderY);
   if (!kernel)
     return failureDescription;
   for (uint32_t i = 0; i < kmLength; i++) {

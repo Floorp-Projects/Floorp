@@ -28,6 +28,7 @@
 
 #include "nsString.h"                   // for nsCString
 
+class mozIDOMWindowProxy;
 class nsIDOMWindow;
 class nsISupports;
 class nsITimer;
@@ -63,10 +64,8 @@ public:
 protected:
   virtual         ~nsEditingSession();
 
-  nsIDocShell *   GetDocShellFromWindow(nsIDOMWindow *aWindow);
-
   nsresult        SetupEditorCommandController(const char *aControllerClassName,
-                                               nsIDOMWindow *aWindow,
+                                               mozIDOMWindowProxy* aWindow,
                                                nsISupports *aContext,
                                                uint32_t *aControllerId);
 
@@ -74,7 +73,7 @@ protected:
                                             nsISupports* aContext,
                                             uint32_t aID);
 
-  nsresult        PrepareForEditing(nsIDOMWindow *aWindow);
+  nsresult        PrepareForEditing(nsPIDOMWindowOuter* aWindow);
 
   static void     TimerCallback(nsITimer *aTimer, void *aClosure);
   nsCOMPtr<nsITimer>  mLoadBlankDocTimer;
@@ -91,10 +90,10 @@ protected:
 
   bool            IsProgressForTargetDocument(nsIWebProgress *aWebProgress);
 
-  void            RemoveEditorControllers(nsIDOMWindow *aWindow);
-  void            RemoveWebProgressListener(nsIDOMWindow *aWindow);
-  void            RestoreAnimationMode(nsIDOMWindow *aWindow);
-  void            RemoveListenersAndControllers(nsIDOMWindow *aWindow,
+  void            RemoveEditorControllers(nsPIDOMWindowOuter* aWindow);
+  void            RemoveWebProgressListener(nsPIDOMWindowOuter* aWindow);
+  void            RestoreAnimationMode(nsPIDOMWindowOuter* aWindow);
+  void            RemoveListenersAndControllers(nsPIDOMWindowOuter* aWindow,
                                                 nsIEditor *aEditor);
 
 protected:

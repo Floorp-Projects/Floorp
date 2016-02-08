@@ -2,20 +2,35 @@
 <html dir="ltr" xml:lang="en-US" lang="en-US">
   <head>
     <meta charset="utf8">
-    <title>Test for bugs 720180, 800510 and 865288</title>
+    <title>Test for bugs 720180, 800510, 865288 and 1218089</title>
     <script>
       function testConsole() {
         // same line and column number
         for(var i = 0; i < 2; i++) {
           console.log("foo repeat");
         }
-        console.log("foo repeat"); console.error("foo repeat");
+        console.log("foo repeat");
+        console.error("foo repeat");
       }
       function testConsoleObjects() {
         for (var i = 0; i < 3; i++) {
           var o = { id: "abba" + i };
           console.log("abba", o);
         }
+      }
+      function testConsoleFalsyValues(){
+        [NaN, undefined, null].forEach(function(item, index){
+          console.log(item);
+        });
+        [NaN, NaN].forEach(function(item, index){
+          console.log(item);
+        });
+        [undefined, undefined].forEach(function(item, index){
+          console.log(item);
+        });
+        [null, null].forEach(function(item, index){
+          console.log(item);
+        });
       }
     </script>
     <style>

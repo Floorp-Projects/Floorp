@@ -14,7 +14,6 @@
 
 #include "AudioSegment.h"
 #include "GonkNativeWindow.h"
-#include "GonkNativeWindowClient.h"
 #include "mozilla/media/MediaSystemResourceClient.h"
 #include "mozilla/RefPtr.h"
 

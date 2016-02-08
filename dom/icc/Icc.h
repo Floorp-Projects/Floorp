@@ -30,7 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Icc, DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Icc(nsPIDOMWindow* aWindow, nsIIcc* aHandler, nsIIccInfo* aIccInfo);
+  Icc(nsPIDOMWindowInner* aWindow, nsIIcc* aHandler, nsIIccInfo* aIccInfo);
 
   void
   Shutdown();
@@ -50,7 +50,7 @@ public:
   void
   UpdateIccInfo(nsIIccInfo* aIccInfo);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();

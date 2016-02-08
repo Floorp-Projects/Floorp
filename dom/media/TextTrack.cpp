@@ -28,7 +28,7 @@ NS_IMPL_RELEASE_INHERITED(TextTrack, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrack)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TextTrack::TextTrack(nsPIDOMWindow* aOwnerWindow,
+TextTrack::TextTrack(nsPIDOMWindowInner* aOwnerWindow,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
@@ -46,7 +46,7 @@ TextTrack::TextTrack(nsPIDOMWindow* aOwnerWindow,
   SetDefaultSettings();
 }
 
-TextTrack::TextTrack(nsPIDOMWindow* aOwnerWindow,
+TextTrack::TextTrack(nsPIDOMWindowInner* aOwnerWindow,
                      TextTrackList* aTextTrackList,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
@@ -73,7 +73,7 @@ TextTrack::~TextTrack()
 void
 TextTrack::SetDefaultSettings()
 {
-  nsPIDOMWindow* ownerWindow = GetOwner();
+  nsPIDOMWindowInner* ownerWindow = GetOwner();
   mCueList = new TextTrackCueList(ownerWindow);
   mActiveCueList = new TextTrackCueList(ownerWindow);
   mCuePos = 0;

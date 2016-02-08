@@ -6,6 +6,43 @@
 // consolidated here to avoid confusion and re-implementation of existing
 // algorithms.
 
+// For sorting values with limited range; uint8 and int8.
+function CountingSort(array, len, signed) {
+    var buffer = new List();
+    var min = 0;
+
+    // Map int8 values onto the uint8 range when storing in buffer.
+    if (signed)  {
+        min = -128;
+    }
+
+    for (var i = 0; i  < 256; i++) {
+        buffer[i] = 0;
+    }
+
+    // Populate the buffer
+    for (var i = 0; i < len; i++) {
+        var val = array[i];
+        buffer[val - min]++
+    }
+
+    // Traverse the buffer in order and write back elements to array
+    var val = 0;
+    for (var i = 0; i < len; i++) {
+        // Invariant: sum(buffer[val:]) == len-i
+        while (true) {
+            if (buffer[val] > 0) {
+                array[i] = val + min;
+                buffer[val]--;
+                break;
+            } else {
+                val++;
+            }
+        }
+    }
+    return array;
+}
+
 // For sorting small arrays.
 function InsertionSort(array, from, to, comparefn) {
     var item, swap;

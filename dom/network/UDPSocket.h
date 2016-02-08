@@ -43,7 +43,7 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
 public:
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -159,7 +159,7 @@ private:
     UDPSocket* mSocket;
   };
 
-  UDPSocket(nsPIDOMWindow* aOwner,
+  UDPSocket(nsPIDOMWindowInner* aOwner,
             const nsCString& aRemoteAddress,
             const Nullable<uint16_t>& aRemotePort);
 

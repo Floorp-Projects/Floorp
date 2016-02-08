@@ -4,6 +4,21 @@
 
 [
   {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "activeTab",
+            "tabs"
+          ]
+        }]
+      }
+    ]
+  },
+  {
     "namespace": "tabs",
     "description": "Use the <code>browser.tabs</code> API to interact with the browser's tab system. You can use this API to create, modify, and rearrange tabs in the browser.",
     "types": [
@@ -49,8 +64,8 @@
           "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted."},
           "active": {"type": "boolean", "description": "Whether the tab is active in its window. (Does not necessarily mean the window is focused.)"},
           "pinned": {"type": "boolean", "description": "Whether the tab is pinned."},
-          "audible": {"unsupported": true, "type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
-          "mutedInfo": {"unsupported": true, "$ref": "MutedInfo", "optional": true, "description": "Current tab muted state and the reason for the last state change."},
+          "audible": {"type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
+          "mutedInfo": {"$ref": "MutedInfo", "optional": true, "description": "Current tab muted state and the reason for the last state change."},
           "url": {"type": "string", "optional": true, "description": "The URL the tab is displaying. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},
           "title": {"type": "string", "optional": true, "description": "The title of the tab. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},
           "favIconUrl": {"type": "string", "optional": true, "description": "The URL of the tab's favicon. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission. It may also be an empty string if the tab is loading."},
@@ -141,6 +156,7 @@
         "name": "get",
         "type": "function",
         "description": "Retrieves details about the specified tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -160,6 +176,7 @@
         "name": "getCurrent",
         "type": "function",
         "description": "Gets the tab that this script call is being made from. May be undefined if called from a non-tab context (for example: a background page or popup view).",
+        "async": "callback",
         "parameters": [
           {
             "type": "function",
@@ -281,6 +298,7 @@
         "unsupported": true,
         "type": "function",
         "description": "Gets the tab that is selected in the specified window.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -303,6 +321,7 @@
         "type": "function",
         "deprecated": "Please use $(ref:tabs.query) <code>{windowId: windowId}</code>.",
         "description": "Gets details about all tabs in the specified window.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -324,6 +343,7 @@
         "name": "create",
         "type": "function",
         "description": "Creates a new tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -390,6 +410,7 @@
         "name": "duplicate",
         "type": "function",
         "description": "Duplicates a tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -416,6 +437,7 @@
         "name": "query",
         "type": "function",
         "description": "Gets all tabs that have the specified properties, or all tabs if no properties are specified.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -432,13 +454,11 @@
                 "description": "Whether the tabs are pinned."
               },
               "audible": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tabs are audible."
               },
               "muted": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tabs are muted."
@@ -514,6 +534,7 @@
         "name": "highlight",
         "type": "function",
         "description": "Highlights the given tabs.",
+        "async": "callback",
         "parameters": [
           {
             "type": "object",
@@ -552,6 +573,7 @@
         "name": "update",
         "type": "function",
         "description": "Modifies the properties of a tab. Properties that are not specified in <var>updateProperties</var> are not modified.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -593,7 +615,6 @@
                 "description": "Whether the tab should be pinned."
               },
               "muted": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tab should be muted."
@@ -626,6 +647,7 @@
         "name": "move",
         "type": "function",
         "description": "Moves one or more tabs to a new position within its window, or to a new window. Note that tabs can only be moved to and from normal (window.type === \"normal\") windows.",
+        "async": "callback",
         "parameters": [
           {
             "name": "tabIds",
@@ -673,8 +695,15 @@
         "name": "reload",
         "type": "function",
         "description": "Reload a tab.",
+        "async": "callback",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "optional": true, "description": "The ID of the tab to reload; defaults to the selected tab of the current window."},
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": true,
+            "description": "The ID of the tab to reload; defaults to the selected tab of the current window."
+          },
           {
             "type": "object",
             "name": "reloadProperties",
@@ -687,13 +716,19 @@
               }
             }
           },
-          {"type": "function", "name": "callback", "optional": true, "parameters": []}
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {
         "name": "remove",
         "type": "function",
         "description": "Closes one or more tabs.",
+        "async": "callback",
         "parameters": [
           {
             "name": "tabIds",
@@ -703,13 +738,19 @@
               {"type": "array", "items": {"type": "integer", "minimum": 0}}
             ]
           },
-          {"type": "function", "name": "callback", "optional": true, "parameters": []}
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {
         "name": "detectLanguage",
         "type": "function",
         "description": "Detects the primary language of the content in a tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -735,6 +776,7 @@
         "name": "captureVisibleTab",
         "type": "function",
         "description": "Captures the visible area of the currently active tab in the specified window. You must have $(topic:declare_permissions)[&lt;all_urls&gt;] permission to use this method.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -749,8 +791,14 @@
             "optional": true
           },
           {
-            "type": "function", "name": "callback", "parameters": [
-              {"type": "string", "name": "dataUrl", "description": "A data URL which encodes an image of the visible area of the captured tab. May be assigned to the 'src' property of an HTML Image element for display."}
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "type": "string",
+                "name": "dataUrl",
+                "description": "A data URL which encodes an image of the visible area of the captured tab. May be assigned to the 'src' property of an HTML Image element for display."
+              }
             ]
           }
         ]
@@ -759,8 +807,15 @@
         "name": "executeScript",
         "type": "function",
         "description": "Injects JavaScript code into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
+        "async": "callback",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "optional": true, "description": "The ID of the tab in which to run the script; defaults to the active tab of the current window."},
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": true,
+            "description": "The ID of the tab in which to run the script; defaults to the active tab of the current window."
+          },
           {
             "$ref": "extensionTypes.InjectDetails",
             "name": "details",
@@ -787,8 +842,15 @@
         "name": "insertCSS",
         "type": "function",
         "description": "Injects CSS into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
+        "async": "callback",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "optional": true, "description": "The ID of the tab in which to insert the CSS; defaults to the active tab of the current window."},
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": true,
+            "description": "The ID of the tab in which to insert the CSS; defaults to the active tab of the current window."
+          },
           {
             "$ref": "extensionTypes.InjectDetails",
             "name": "details",
@@ -807,6 +869,7 @@
         "name": "setZoom",
         "type": "function",
         "description": "Zooms a specified tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -833,6 +896,7 @@
         "name": "getZoom",
         "type": "function",
         "description": "Gets the current zoom factor of a specified tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -859,6 +923,7 @@
         "name": "setZoomSettings",
         "type": "function",
         "description": "Sets the zoom settings for a specified tab, which define how zoom changes are handled. These settings are reset to defaults upon navigating the tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -885,6 +950,7 @@
         "name": "getZoomSettings",
         "type": "function",
         "description": "Gets the current zoom settings of a specified tab.",
+        "async": "callback",
         "parameters": [
           {
             "type": "integer",
@@ -948,13 +1014,11 @@
                 "description": "The tab's new pinned state."
               },
               "audible": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "The tab's new audible state."
               },
               "mutedInfo": {
-                "unsupported": true,
                 "$ref": "MutedInfo",
                 "optional": true,
                 "description": "The tab's new muted state and the reason for the change."

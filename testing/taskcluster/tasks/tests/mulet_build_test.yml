@@ -13,14 +13,9 @@ task:
       - >
         python ./mozharness/scripts/gaia_build_integration.py
         --application firefox
-        --no-read-buildbot-config
-        --config-file ./mozharness/configs/b2g/gaia_integration_config.py
-        --config-file ./mozharness_configs/gaia_integration_override.py
-        --config-file ./mozharness_configs/remove_executables.py
+        --config-file ./mozharness/configs/b2g/taskcluster_gaia_integration.py
         --installer-url {{build_url}}
-        --no-pull
         --test-packages-url {{test_packages_url}}
-        --download-symbols ondemand
         --gaia-repo https://hg.mozilla.org/integration/gaia-central
         --gaia-dir /home/worker
         --xre-url https://api.pub.build.mozilla.org/tooltool/sha512/cefa8c00db04969d3a50e2a5509bd4ea1dc17d256a651a9518cb28dad72e87a1dbbcd3c88ef770be0edf0ab73d2d73925140df93618ffb7fab81b789d312f547

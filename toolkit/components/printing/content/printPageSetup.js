@@ -66,12 +66,12 @@ function initDialog()
 function isListOfPrinterFeaturesAvailable()
 {
   var has_printerfeatures = false;
-  
+
   try {
     has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
   } catch(ex) {
   }
-  
+
   return has_printerfeatures;
 }
 
@@ -91,7 +91,7 @@ function setOrientation()
   var selection = gDialog.orientation.selectedItem;
 
   var style = "background-color:white;";
-  if ((selection == gDialog.portrait && gPageWidth > gPageHeight) || 
+  if ((selection == gDialog.portrait && gPageWidth > gPageHeight) ||
       (selection == gDialog.landscape && gPageWidth < gPageHeight)) {
     // Swap width/height.
     var temp = gPageHeight;
@@ -236,13 +236,13 @@ function setPrinterDefaultsForSelectedPrinter()
   if (gPrintSettings.printerName == "") {
     gPrintSettings.printerName = gPrintService.defaultPrinterName;
   }
-  
-  // First get any defaults from the printer 
+
+  // First get any defaults from the printer
   gPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
 
   // now augment them with any values from last time
   gPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettingsInterface.kInitSaveAll);
-  
+
   if (gDoDebug) {
     dump("pagesetup/setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', orientation='"+gPrintSettings.orientation+"'\n");
   }
@@ -259,7 +259,7 @@ function loadDialog()
 
   try {
     gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  
+
     gPrintService = Components.classes["@mozilla.org/gfx/printsettings-service;1"];
     if (gPrintService) {
       gPrintService = gPrintService.getService();

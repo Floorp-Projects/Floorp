@@ -577,10 +577,9 @@ nsFilterInstance::FrameSpaceToFilterSpace(const nsRegion* aRegion) const
     return OutputFilterSpaceBounds();
   }
   nsIntRegion result;
-  nsRegionRectIterator it(*aRegion);
-  while (const nsRect* r = it.Next()) {
+  for (auto iter = aRegion->RectIter(); !iter.Done(); iter.Next()) {
     // FrameSpaceToFilterSpace rounds out, so this works.
-    result.Or(result, FrameSpaceToFilterSpace(r));
+    result.Or(result, FrameSpaceToFilterSpace(&iter.Get()));
   }
   return result;
 }
@@ -589,10 +588,9 @@ nsRegion
 nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRegion& aRegion) const
 {
   nsRegion result;
-  nsIntRegionRectIterator it(aRegion);
-  while (const nsIntRect* r = it.Next()) {
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
     // FilterSpaceToFrameSpace rounds out, so this works.
-    result.Or(result, FilterSpaceToFrameSpace(*r));
+    result.Or(result, FilterSpaceToFrameSpace(iter.Get()));
   }
   return result;
 }

@@ -368,13 +368,6 @@
     padding-right: 1px;
   }
 
-  /* Make the window draggable by glassed toolbars (bug 555081) */
-  #toolbar-menubar:not([autohide="true"]),
-  #TabsToolbar,
-  #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#addon-bar):-moz-lwtheme {
-    -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
-  }
-
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
   }
@@ -469,11 +462,6 @@
     }
     #main-window:-moz-window-inactive {
       background-color: rgb(215,228,242);
-    }
-
-    #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme),
-    #TabsToolbar:not(:-moz-lwtheme) {
-      -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
     }
 
     /* Render a window top border for lwthemes: */

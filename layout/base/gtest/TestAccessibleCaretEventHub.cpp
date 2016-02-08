@@ -60,6 +60,7 @@ public:
   using AccessibleCaretEventHub::PressNoCaretState;
   using AccessibleCaretEventHub::ScrollState;
   using AccessibleCaretEventHub::PostScrollState;
+  using AccessibleCaretEventHub::LongTapState;
   using AccessibleCaretEventHub::FireScrollEnd;
 
   explicit MockAccessibleCaretEventHub()
@@ -461,7 +462,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
                            nsEventStatus_eIgnore);
 
   HandleEventAndCheckState(CreateLongTapEvent(0, 0),
-                           MockAccessibleCaretEventHub::NoActionState(),
+                           MockAccessibleCaretEventHub::LongTapState(),
                            nsEventStatus_eConsumeNoDefault);
 
   HandleEventAndCheckState(aReleaseEventCreator(0, 0),
@@ -502,7 +503,7 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordFailed(
                            nsEventStatus_eIgnore);
 
   HandleEventAndCheckState(CreateLongTapEvent(0, 0),
-                           MockAccessibleCaretEventHub::NoActionState(),
+                           MockAccessibleCaretEventHub::LongTapState(),
                            nsEventStatus_eIgnore);
 
   HandleEventAndCheckState(aReleaseEventCreator(0, 0),

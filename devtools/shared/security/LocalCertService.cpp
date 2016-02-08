@@ -258,7 +258,7 @@ private:
 
     nsCOMPtr<nsIX509Cert> certFromDB;
     nsresult rv;
-    rv = certDB->FindCertByNickname(nullptr, NS_ConvertASCIItoUTF16(mNickname),
+    rv = certDB->FindCertByNickname(NS_ConvertASCIItoUTF16(mNickname),
                                     getter_AddRefs(certFromDB));
     if (NS_FAILED(rv)) {
       return rv;

@@ -30,14 +30,14 @@ class SpeechSynthesis final : public nsIObserver
                             , public nsSupportsWeakReference
 {
 public:
-  explicit SpeechSynthesis(nsPIDOMWindow* aParent);
+  explicit SpeechSynthesis(nsPIDOMWindowInner* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SpeechSynthesis,
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
-  nsIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -68,7 +68,7 @@ private:
 
   void AdvanceQueue();
 
-  nsCOMPtr<nsPIDOMWindow> mParent;
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   nsTArray<RefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
 

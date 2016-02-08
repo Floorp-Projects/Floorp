@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Open the inner details.
+    document.getElementById("inner").open = true;
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details open>
+      <summary>outer summary</summary>
+      <details id="inner">
+        <summary>inner summary</summary>
+        <p>inner details</p>
+        <details open>
+          <summary>inner most summary</summary>
+          <p>inner most details</p>
+        </details>
+      </details>
+      <p>outer details</p>
+    </details>
+  </body>
+</html>

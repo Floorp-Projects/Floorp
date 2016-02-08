@@ -1,5 +1,5 @@
-// Test the case where we neuter an instance of a variable-length array.
-// Here we can fold the neuter check into the bounds check.
+// Test the case where we detach the buffer underlying a variable-length array.
+// Here we can fold the detached check into the bounds check.
 
 if (!this.hasOwnProperty("TypedObject"))
   quit();
@@ -20,7 +20,7 @@ function main(variant) {
   for (var i = 0; i < 10; i++)
     assertEq(readFrom(a), 66);
 
-  neuter(storage(a).buffer, variant);
+  detachArrayBuffer(storage(a).buffer, variant);
 
   for (var i = 0; i < 10; i++) {
     var ok = false;

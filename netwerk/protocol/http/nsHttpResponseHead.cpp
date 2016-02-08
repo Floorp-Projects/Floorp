@@ -415,7 +415,7 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
 // <or>
 //     freshnessLifetime = expires_value - date_value
 // <or>
-//     freshnessLifetime = (date_value - last_modified_value) * 0.10
+//     freshnessLifetime = min(one-week,(date_value - last_modified_value) * 0.10)
 // <or>
 //     freshnessLifetime = 0
 //
@@ -463,6 +463,8 @@ nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
         if (date2 <= date) {
             // this only makes sense if last-modified is actually in the past
             *result = (date - date2) / 10;
+            const uint32_t kOneWeek = 60 * 60 * 24 * 7;
+            *result = std::min(kOneWeek, *result);
             return NS_OK;
         }
     }

@@ -17,6 +17,7 @@ const BUILTIN_SIDEBAR_MENUITEMS = exports.BUILTIN_SIDEBAR_MENUITEMS = [
   'menu_socialSidebar',
   'menu_historySidebar',
   'menu_bookmarksSidebar',
+  'menu_tabsSidebar',
 ];
 
 function isSidebarShowing(window) {

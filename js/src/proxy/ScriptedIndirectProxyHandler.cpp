@@ -299,8 +299,40 @@ ScriptedIndirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
     if (!IsCallable(fval))
-        return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
+        return derivedGet(cx, proxy, receiver, id, vp);
     return Trap(cx, handler, fval, 2, argv.begin(), vp);
+}
+
+bool
+ScriptedIndirectProxyHandler::derivedGet(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                                         HandleId id, MutableHandleValue vp) const
+{
+    // This uses getPropertyDescriptor for backward compatibility reasons.
+
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+        return false;
+    desc.assertCompleteIfFound();
+
+    if (!desc.object()) {
+        vp.setUndefined();
+        return true;
+    }
+
+    if (desc.isDataDescriptor()) {
+        vp.set(desc.value());
+        return true;
+    }
+
+    MOZ_ASSERT(desc.isAccessorDescriptor());
+    RootedObject getter(cx, desc.getterObject());
+
+    if (!getter) {
+        vp.setUndefined();
+        return true;
+    }
+
+    return InvokeGetter(cx, receiver, ObjectValue(*getter), vp);
 }
 
 bool
@@ -480,7 +512,12 @@ CallableScriptedIndirectProxyHandler::construct(JSContext* cx, HandleObject prox
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return Construct(cx, construct, cargs, args.newTarget(), args.rval());
+    RootedObject obj(cx);
+    if (!Construct(cx, construct, cargs, args.newTarget(), &obj))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
 }
 
 const CallableScriptedIndirectProxyHandler CallableScriptedIndirectProxyHandler::singleton;
@@ -489,6 +526,11 @@ bool
 js::proxy_create(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject create(cx, &args.callee());
+    if (!GlobalObject::warnOnceAboutProxyCreate(cx, create))
+        return false;
+
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "create", "0", "s");
@@ -518,6 +560,11 @@ bool
 js::proxy_createFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject createFunction(cx, &args.callee());
+    if (!GlobalObject::warnOnceAboutProxyCreate(cx, createFunction))
+        return false;
+
     if (args.length() < 2) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "createFunction", "1", "");

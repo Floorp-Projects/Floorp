@@ -11,6 +11,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'OmxDataDecoder.cpp',
     'OmxDecoderModule.cpp',
+    'OmxPlatformLayer.cpp',
     'OmxPromiseLayer.cpp',
 ]
 

@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MmsMessage)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MmsMessage::MmsMessage(nsPIDOMWindow* aWindow, MmsMessageInternal* aMessage)
+MmsMessage::MmsMessage(nsPIDOMWindowInner* aWindow, MmsMessageInternal* aMessage)
   : mWindow(aWindow)
   , mMessage(aMessage)
 {

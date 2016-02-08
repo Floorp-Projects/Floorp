@@ -55,7 +55,7 @@ parent:
                bool success);
 
 child:
-    __delete__();
+    async __delete__();
 };
 
 } // namespace dom

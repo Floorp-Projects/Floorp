@@ -110,8 +110,7 @@ add_task(function*() {
   // Force XBL to apply
   item.clientTop;
 
-  ok(aAddon.userDisabled, "Add-on should be disabled");
-  ok(!aAddon.pendingUninstall, "Add-on should not be pending uninstall");
+  ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
   is_element_visible(get_class_node(item, "pending"), "Pending message should be visible");
 
   yield install_addon("browser_bug596336_2");
@@ -139,8 +138,7 @@ add_task(function*() {
   // Force XBL to apply
   item.clientTop;
 
-  ok(aAddon.userDisabled, "Add-on should be disabled");
-  ok(!aAddon.pendingUninstall, "Add-on should not be pending uninstall");
+  ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
   is_element_visible(get_class_node(item, "pending"), "Pending message should be visible");
 
   yield install_addon("browser_bug596336_2");

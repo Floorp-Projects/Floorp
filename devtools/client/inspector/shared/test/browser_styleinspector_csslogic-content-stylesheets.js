@@ -21,6 +21,8 @@ var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
 const XUL_PRINCIPAL = ssm.createCodebasePrincipal(XUL_URI, {});
 
 add_task(function*() {
+  requestLongerTimeout(2);
+
   info("Checking stylesheets on HTML document");
   yield addTab(TEST_URI_HTML);
   let target = getNode("#target");

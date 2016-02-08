@@ -51,19 +51,18 @@ protected:
 
   bool CanFindNext() { return mSearchString.Length() != 0; }
 
-  nsresult SearchInFrame(nsIDOMWindow* aWindow, bool aWrapping, bool* aDidFind);
+  nsresult SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
+                         bool* aDidFind);
 
-  nsresult OnStartSearchFrame(nsIDOMWindow* aWindow);
-  nsresult OnEndSearchFrame(nsIDOMWindow* aWindow);
+  nsresult OnStartSearchFrame(nsPIDOMWindowOuter* aWindow);
+  nsresult OnEndSearchFrame(nsPIDOMWindowOuter* aWindow);
 
-  void GetFrameSelection(nsIDOMWindow* aWindow, nsISelection** aSel);
-  nsresult ClearFrameSelection(nsIDOMWindow* aWindow);
+  already_AddRefed<nsISelection> GetFrameSelection(nsPIDOMWindowOuter* aWindow);
+  nsresult ClearFrameSelection(nsPIDOMWindowOuter* aWindow);
 
-  nsresult OnFind(nsIDOMWindow* aFoundWindow);
+  nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
 
-  nsIDocShell* GetDocShellFromWindow(nsIDOMWindow* aWindow);
-
-  void SetSelectionAndScroll(nsIDOMWindow* aWindow, nsIDOMRange* aRange);
+  void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsIDOMRange* aRange);
 
   nsresult GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
   nsresult GetSearchLimits(nsIDOMRange* aRange,

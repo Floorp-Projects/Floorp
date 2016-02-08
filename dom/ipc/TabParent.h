@@ -238,8 +238,8 @@ public:
 
   virtual bool RecvSetPluginFocused(const bool& aFocused) override;
 
-  virtual bool RecvSetCandidateWindowForPlugin(const int32_t& aX,
-                                               const int32_t& aY) override;
+  virtual bool RecvSetCandidateWindowForPlugin(
+                 const widget::CandidateWindowPosition& aPosition) override;
 
   virtual bool
   RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) override;
@@ -614,7 +614,7 @@ public:
   void OnStartSignedPackageRequest(nsIChannel* aChannel,
                                    const nsACString& aPackageId);
 
-  void AudioChannelChangeNotification(nsPIDOMWindow* aWindow,
+  void AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
                                       AudioChannel aAudioChannel,
                                       float aVolume,
                                       bool aMuted);

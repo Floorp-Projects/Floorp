@@ -129,6 +129,11 @@ class Context(KeyedDefaultDict):
             self._all_paths.insert(0, path)
 
     @property
+    def error_is_fatal(self):
+        """Returns True if the error function should be fatal."""
+        return self.config and getattr(self.config, 'error_is_fatal', True)
+
+    @property
     def all_paths(self):
         """Returns all paths ever added to the context."""
         return set(self._all_paths)

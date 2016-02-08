@@ -30,7 +30,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileConnectionArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MobileConnectionArray::MobileConnectionArray(nsPIDOMWindow* aWindow)
+MobileConnectionArray::MobileConnectionArray(nsPIDOMWindowInner* aWindow)
   : mLengthInitialized(false)
   , mWindow(aWindow)
 {
@@ -40,7 +40,7 @@ MobileConnectionArray::~MobileConnectionArray()
 {
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 MobileConnectionArray::GetParentObject() const
 {
   MOZ_ASSERT(mWindow);

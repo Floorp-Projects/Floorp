@@ -370,7 +370,7 @@ SocialFlyout = {
     // the xbl bindings for the iframe probably don't exist yet, so we can't
     // access iframe.messageManager directly - but can get at it with this dance.
     let mm = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
-    mm.sendAsyncMessage("Social:SetErrorURL", null,
+    mm.sendAsyncMessage("Social:SetErrorURL",
                         { template: "about:socialerror?mode=compactInfo&origin=%{origin}" });
   },
 
@@ -512,7 +512,7 @@ SocialShare = {
     iframe.setAttribute("messagemanagergroup", "social");
     panel.lastChild.appendChild(iframe);
     let mm = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
-    mm.sendAsyncMessage("Social:SetErrorURL", null,
+    mm.sendAsyncMessage("Social:SetErrorURL",
                         { template: "about:socialerror?mode=compactInfo&origin=%{origin}&url=%{url}" });
 
     this.populateProviderMenu();
@@ -639,17 +639,17 @@ SocialShare = {
         }
         this.sharePage(providerOrigin, pageData, target, anchor);
       });
-      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData", null, { target });
       return;
     }
-    // if this is a share of a selected item, get any microdata
-    if (!pageData.microdata && target) {
-      messageManager.addMessageListener("PageMetadata:MicrodataResult", _dataFn = (msg) => {
-        messageManager.removeMessageListener("PageMetadata:MicrodataResult", _dataFn);
-        pageData.microdata = msg.data;
+    // if this is a share of a selected item, get any microformats
+    if (!pageData.microformats && target) {
+      messageManager.addMessageListener("PageMetadata:MicroformatsResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("PageMetadata:MicroformatsResult", _dataFn);
+        pageData.microformats = msg.data;
         this.sharePage(providerOrigin, pageData, target, anchor);
       });
-      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicrodata", null, { target });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetMicroformats", null, { target });
       return;
     }
     this.currentShare = pageData;

@@ -8,6 +8,9 @@ browser.jar:
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutSyncTabs.css
+* skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
+  skin/classic/browser/syncedtabs/arrow-open.svg       (syncedtabs/arrow-open.svg)
+  skin/classic/browser/syncedtabs/arrow-closed.svg     (syncedtabs/arrow-closed.svg)
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css
@@ -81,7 +84,7 @@ browser.jar:
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
 * skin/classic/browser/customizableui/panelUIOverlay.css    (customizableui/panelUIOverlay.css)
-  skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
+* skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/buttons@2x.png             (downloads/buttons@2x.png)
   skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
@@ -92,7 +95,7 @@ browser.jar:
   skin/classic/browser/downloads/download-notification-start@2x.png  (downloads/download-notification-start@2x.png)
   skin/classic/browser/downloads/download-summary.png       (downloads/download-summary.png)
   skin/classic/browser/downloads/download-summary@2x.png    (downloads/download-summary@2x.png)
-  skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
+* skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/subscribe-ui.css               (feeds/subscribe-ui.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)

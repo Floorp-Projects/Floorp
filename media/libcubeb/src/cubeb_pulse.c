@@ -76,6 +76,9 @@
   X(pa_stream_peek)                             \
   X(pa_stream_drop)                             \
   X(pa_stream_get_buffer_attr)                  \
+  X(pa_stream_get_device_name)                  \
+  X(pa_context_set_subscribe_callback)          \
+  X(pa_context_subscribe)                       \
 
 #define MAKE_TYPEDEF(x) static typeof(x) * cubeb_##x;
 LIBPULSE_API_VISIT(MAKE_TYPEDEF);
@@ -101,6 +104,8 @@ struct cubeb {
   pa_sink_info * default_sink_info;
   char * context_name;
   int error;
+  cubeb_device_collection_changed_callback collection_changed_callback;
+  void * collection_changed_user_ptr;
 };
 
 struct cubeb_stream {
@@ -301,9 +306,6 @@ stream_read_callback(pa_stream * s, size_t nbytes, void * u)
   if (stm->shutdown) {
     return;
   }
-
-  // Note: this has failed running under rr on occassion - needs investigation.
-  assert(stm->input_stream && stm->input_sample_spec.rate != 0);
 
   void const * read_data = NULL;
   size_t read_size;
@@ -812,12 +814,14 @@ pulse_stream_destroy(cubeb_stream * stm)
     }
 
     WRAP(pa_stream_set_state_callback)(stm->output_stream, NULL, NULL);
+    WRAP(pa_stream_set_write_callback)(stm->output_stream, NULL, NULL);
     WRAP(pa_stream_disconnect)(stm->output_stream);
     WRAP(pa_stream_unref)(stm->output_stream);
   }
 
   if (stm->input_stream) {
     WRAP(pa_stream_set_state_callback)(stm->input_stream, NULL, NULL);
+    WRAP(pa_stream_set_read_callback)(stm->input_stream, NULL, NULL);
     WRAP(pa_stream_disconnect)(stm->input_stream);
     WRAP(pa_stream_unref)(stm->input_stream);
   }
@@ -971,6 +975,7 @@ typedef struct {
   cubeb_device_info ** devinfo;
   uint32_t max;
   uint32_t count;
+  cubeb * context;
 } pulse_dev_list_data;
 
 static cubeb_device_fmt
@@ -1056,6 +1061,8 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
 
   pulse_ensure_dev_list_data_list_size (list_data);
   list_data->devinfo[list_data->count++] = devinfo;
+
+  WRAP(pa_threaded_mainloop_signal)(list_data->context->mainloop, 0);
 }
 
 static cubeb_device_state
@@ -1114,6 +1121,8 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
 
   pulse_ensure_dev_list_data_list_size (list_data);
   list_data->devinfo[list_data->count++] = devinfo;
+
+  WRAP(pa_threaded_mainloop_signal)(list_data->context->mainloop, 0);
 }
 
 static void
@@ -1127,15 +1136,19 @@ pulse_server_info_cb(pa_context * c, const pa_server_info * i, void * userdata)
   free(list_data->default_source_name);
   list_data->default_sink_name = strdup(i->default_sink_name);
   list_data->default_source_name = strdup(i->default_source_name);
+
+  WRAP(pa_threaded_mainloop_signal)(list_data->context->mainloop, 0);
 }
 
 static int
 pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
                         cubeb_device_collection ** collection)
 {
-  pulse_dev_list_data user_data = { NULL, NULL, NULL, 0, 0 };
+  pulse_dev_list_data user_data = { NULL, NULL, NULL, 0, 0, context };
   pa_operation * o;
   uint32_t i;
+
+  WRAP(pa_threaded_mainloop_lock)(context->mainloop);
 
   o = WRAP(pa_context_get_server_info)(context->context,
       pulse_server_info_cb, &user_data);
@@ -1162,6 +1175,8 @@ pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
     }
   }
 
+  WRAP(pa_threaded_mainloop_unlock)(context->mainloop);
+
   *collection = malloc(sizeof(cubeb_device_collection) +
       sizeof(cubeb_device_info *) * (user_data.count > 0 ? user_data.count - 1 : 0));
   (*collection)->count = user_data.count;
@@ -1171,6 +1186,117 @@ pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
   free(user_data.default_sink_name);
   free(user_data.default_source_name);
   free(user_data.devinfo);
+  return CUBEB_OK;
+}
+
+int pulse_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const device)
+{
+#if PA_CHECK_VERSION(0, 9, 8)
+  *device = calloc(1, sizeof(cubeb_device));
+  if (*device == NULL)
+    return CUBEB_ERROR;
+
+  if (stm->input_stream) {
+    const char * name = WRAP(pa_stream_get_device_name)(stm->input_stream);
+    (*device)->input_name = (name == NULL) ? NULL : strdup(name);
+  }
+
+  if (stm->output_stream) {
+    const char * name = WRAP(pa_stream_get_device_name)(stm->output_stream);
+    (*device)->output_name = (name == NULL) ? NULL : strdup(name);
+  }
+
+  return CUBEB_OK;
+#else
+  return CUBEB_ERROR_NOT_SUPPORTED;
+#endif
+}
+
+int pulse_stream_device_destroy(cubeb_stream * stream,
+                                cubeb_device * device)
+{
+  free(device->input_name);
+  free(device->output_name);
+  free(device);
+  return CUBEB_OK;
+}
+
+void pulse_subscribe_callback(pa_context * ctx,
+                              pa_subscription_event_type_t t,
+                              uint32_t index, void * userdata)
+{
+  cubeb * context = userdata;
+
+  switch (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) {
+  case PA_SUBSCRIPTION_EVENT_SOURCE:
+  case PA_SUBSCRIPTION_EVENT_SINK:
+
+#ifdef LOGGING_ENABLED
+    if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
+        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE)
+      LOG("Removing sink index %d\n", index);
+    else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE &&
+        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW)
+      LOG("Adding sink index %d\n", index);
+    if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
+        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE)
+      LOG("Removing source index %d\n", index);
+    else if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK &&
+        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW)
+      LOG("Adding source index %d\n", index);
+#endif
+
+    if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE ||
+        (t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW) {
+      context->collection_changed_callback(context, context->collection_changed_user_ptr);
+    }
+    break;
+  }
+}
+
+void subscribe_success(pa_context *c, int success, void *userdata)
+{
+  cubeb * context = userdata;
+  assert(success);
+  WRAP(pa_threaded_mainloop_signal)(context->mainloop, 0);
+}
+
+int pulse_register_device_collection_changed(cubeb * context,
+                                             cubeb_device_type devtype,
+                                             cubeb_device_collection_changed_callback collection_changed_callback,
+                                             void * user_ptr)
+{
+  context->collection_changed_callback = collection_changed_callback;
+  context->collection_changed_user_ptr = user_ptr;
+
+  WRAP(pa_threaded_mainloop_lock)(context->mainloop);
+
+  pa_subscription_mask_t mask;
+  if (context->collection_changed_callback == NULL) {
+    // Unregister subscription
+    WRAP(pa_context_set_subscribe_callback)(context->context, NULL, NULL);
+    mask = PA_SUBSCRIPTION_MASK_NULL;
+  } else {
+    WRAP(pa_context_set_subscribe_callback)(context->context, pulse_subscribe_callback, context);
+    if (devtype == CUBEB_DEVICE_TYPE_INPUT)
+      mask = PA_SUBSCRIPTION_MASK_SOURCE;
+    else if (devtype == CUBEB_DEVICE_TYPE_OUTPUT)
+      mask = PA_SUBSCRIPTION_MASK_SINK;
+    else
+      mask = PA_SUBSCRIPTION_MASK_SINK | PA_SUBSCRIPTION_MASK_SOURCE;
+  }
+
+  pa_operation * o;
+  o = WRAP(pa_context_subscribe)(context->context, mask, subscribe_success, context);
+  if (o == NULL) {
+    LOG("Context subscribe failed\n");
+    return CUBEB_ERROR;
+  }
+  operation_wait(context, NULL, o);
+  WRAP(pa_operation_unref)(o);
+
+  WRAP(pa_threaded_mainloop_unlock)(context->mainloop);
+
   return CUBEB_OK;
 }
 
@@ -1190,7 +1316,8 @@ static struct cubeb_ops const pulse_ops = {
   .stream_get_latency = pulse_stream_get_latency,
   .stream_set_volume = pulse_stream_set_volume,
   .stream_set_panning = pulse_stream_set_panning,
-  .stream_get_current_device = NULL,
-  .stream_device_destroy = NULL,
-  .stream_register_device_changed_callback = NULL
+  .stream_get_current_device = pulse_stream_get_current_device,
+  .stream_device_destroy = pulse_stream_device_destroy,
+  .stream_register_device_changed_callback = NULL,
+  .register_device_collection_changed = pulse_register_device_collection_changed
 };

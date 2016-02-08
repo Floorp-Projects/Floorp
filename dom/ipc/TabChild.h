@@ -105,7 +105,7 @@ public:
                                         aPrincipal, aCx, aArgc, aRetval)
       : NS_ERROR_NULL_POINTER;
   }
-  NS_IMETHOD GetContent(nsIDOMWindow** aContent) override;
+  NS_IMETHOD GetContent(mozIDOMWindowProxy** aContent) override;
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) override;
 
   nsresult AddEventListener(const nsAString& aType,
@@ -473,6 +473,7 @@ public:
                                    const bool& aFlushLayout,
                                    const nsIntSize& aRenderSize) override;
 
+
   virtual PColorPickerChild*
   AllocPColorPickerChild(const nsString& aTitle,
                          const nsString& aInitialColor) override;
@@ -542,6 +543,22 @@ public:
   {
     nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
     return static_cast<TabChild*>(tc.get());
+  }
+
+  static inline TabChild*
+  GetFrom(mozIDOMWindow* aWindow)
+  {
+    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
+    return GetFrom(docShell);
+  }
+
+  static inline TabChild*
+  GetFrom(mozIDOMWindowProxy* aWindow)
+  {
+    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
+    return GetFrom(docShell);
   }
 
   static TabChild* GetFrom(nsIPresShell* aPresShell);
@@ -689,7 +706,7 @@ private:
   // Whether we have already received a FileDescriptor for the app package.
   bool mAppPackageFileDescriptorRecved;
   // At present only 1 of these is really expected.
-  nsAutoTArray<nsAutoPtr<CachedFileDescriptorInfo>, 1>
+  AutoTArray<nsAutoPtr<CachedFileDescriptorInfo>, 1>
       mCachedFileDescriptorInfos;
   nscolor mLastBackgroundColor;
   bool mDidFakeShow;
@@ -717,7 +734,7 @@ private:
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
 
-  nsAutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
+  AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

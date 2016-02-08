@@ -51,7 +51,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   static nsresult GetDOMWindow(nsIXULWindow* inWindow,
-                               nsCOMPtr<nsIDOMWindow>& outDOMWindow);
+                               nsCOMPtr<nsPIDOMWindowOuter>& outDOMWindow);
 
 private:
   int32_t AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);

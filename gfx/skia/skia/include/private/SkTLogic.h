@@ -119,15 +119,12 @@ template <typename> struct is_function : false_type { };
 #if !defined(SK_BUILD_FOR_WIN)
 template <typename R, typename... Args> struct is_function<R(Args...)> : true_type {};
 #else
-#if defined(_M_IX86)
 template <typename R, typename... Args> struct is_function<R __cdecl (Args...)> : true_type {};
+#if defined(_M_IX86)
 template <typename R, typename... Args> struct is_function<R __stdcall (Args...)> : true_type {};
 template <typename R, typename... Args> struct is_function<R __fastcall (Args...)> : true_type {};
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-template <typename R, typename... Args> struct is_function<R __vectorcall (Args...)> : true_type {};
 #endif
-#else
-template <typename R, typename... Args> struct is_function<R __cdecl (Args...)> : true_type {};
+#if defined(_MSC_VER) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
 template <typename R, typename... Args> struct is_function<R __vectorcall (Args...)> : true_type {};
 #endif
 #endif

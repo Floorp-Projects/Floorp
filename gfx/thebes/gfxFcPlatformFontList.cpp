@@ -744,7 +744,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
 
 nsresult
 gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
-                                      FallibleTArray<uint8_t>& aBuffer)
+                                      nsTArray<uint8_t>& aBuffer)
 {
     NS_ASSERTION(!mIsDataUserFont,
                  "data fonts should be reading tables directly from memory");
@@ -1554,10 +1554,8 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
                 bool foundLang = !fcLang.IsEmpty() &&
                                  PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
                 foundFontWithLang = foundFontWithLang || foundLang;
-                // stop at the first family for which the lang matches (or
-                // when there is no lang)
-                if (fcLang.IsEmpty() ||
-                    prefFonts->Length() >= limit || foundLang) {
+                // check to see if the list is full
+                if (prefFonts->Length() >= limit) {
                     break;
                 }
             }

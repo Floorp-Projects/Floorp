@@ -223,8 +223,9 @@ public:
                           { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              SetPluginFocused(bool& aFocused) override
                           { return NS_ERROR_NOT_IMPLEMENTED; }
-  virtual void            SetCandidateWindowForPlugin(int32_t aX,
-                                                      int32_t aY) override
+  virtual void            SetCandidateWindowForPlugin(
+                            const mozilla::widget::CandidateWindowPosition&
+                              aPosition) override
                           { }
   virtual void            DefaultProcOfPluginEvent(
                             const mozilla::WidgetPluginEvent& aEvent) override
@@ -238,10 +239,6 @@ public:
   virtual bool            ComputeShouldAccelerate();
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override { return nsIMEUpdatePreference(); }
   NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
-                                                         double aOriginalDeltaY,
-                                                         double& aOverriddenDeltaX,
-                                                         double& aOverriddenDeltaY) override;
   virtual already_AddRefed<nsIWidget>
   CreateChild(const LayoutDeviceIntRect& aRect,
               nsWidgetInitData* aInitData = nullptr,

@@ -1448,7 +1448,7 @@ main(int argc, char **argv)
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
+    tmp = PR_GetEnvSecure("NSS_DEBUG_TIMEOUT");
     if (tmp && tmp[0]) {
         int sec = PORT_Atoi(tmp);
 	if (sec > 0) {

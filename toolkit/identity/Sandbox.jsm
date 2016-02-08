@@ -124,7 +124,7 @@ this.Sandbox.prototype = {
       );
 
       aCallback(self);
-    };
+    }
 
     this._frame.addEventListener("DOMWindowCreated",
                                  _makeSandboxContentLoaded,

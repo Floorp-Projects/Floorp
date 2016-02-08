@@ -76,7 +76,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   NS_ENSURE_STATE(doc);
 
   if (mParent) {
-    nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
     if (window) {
       mContent = window->GetFrameElementInternal();
     }

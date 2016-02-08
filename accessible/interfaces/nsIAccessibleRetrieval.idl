@@ -9,7 +9,6 @@ interface nsIDOMNode;
 interface nsIAccessible;
 interface nsIWeakReference;
 interface nsIPresShell;
-interface nsIDOMWindow;
 interface nsIAccessiblePivot;
 
 /**

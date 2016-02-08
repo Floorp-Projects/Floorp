@@ -56,7 +56,7 @@ ColorPickerParent::CreateColorPicker()
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(ownerElement->OwnerDoc()->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> window = ownerElement->OwnerDoc()->GetWindow();
   if (!window) {
     return false;
   }

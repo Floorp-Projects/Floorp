@@ -22,7 +22,7 @@
 
 struct JSContext;
 class JSObject;
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -73,7 +73,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaSource, DOMEventTargetHelper)
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
 
-  nsPIDOMWindow* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -119,7 +119,7 @@ private:
 
   ~MediaSource();
 
-  explicit MediaSource(nsPIDOMWindow* aWindow);
+  explicit MediaSource(nsPIDOMWindowInner* aWindow);
 
   friend class AsyncEventRunner<MediaSource>;
   void DispatchSimpleEvent(const char* aName);

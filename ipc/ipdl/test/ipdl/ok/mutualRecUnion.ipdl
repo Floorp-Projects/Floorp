@@ -15,6 +15,6 @@ union Z {
 
 protocol mutualRecUnion {
 child:
-    Test(X x, Y y, Z z);
-    __delete__();
+    async Test(X x, Y y, Z z);
+    async __delete__();
 };

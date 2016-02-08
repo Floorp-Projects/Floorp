@@ -18,10 +18,11 @@ add_task(function*() {
   yield inspector.markup.expandNode(parentFront);
   yield waitForMultipleChildrenUpdates(inspector);
 
-  info("Getting the ::before pseudo element");
+  info("Getting the ::before pseudo element and selecting it");
   let parentContainer = yield getContainerForNodeFront(parentFront, inspector);
   let beforePseudo = parentContainer.elt.children[1].firstChild.container;
   parentContainer.elt.scrollIntoView(true);
+  yield selectNode(beforePseudo.node, inspector);
 
   info("Simulate dragging the ::before pseudo element");
   yield simulateNodeDrag(inspector, beforePseudo);
@@ -33,10 +34,11 @@ add_task(function*() {
   yield inspector.markup.expandNode(inputFront);
   yield waitForMultipleChildrenUpdates(inspector);
 
-  info("Getting the anonymous node");
+  info("Getting the anonymous node and selecting it");
   let inputContainer = yield getContainerForNodeFront(inputFront, inspector);
   let anonymousDiv = inputContainer.elt.children[1].firstChild.container;
   inputContainer.elt.scrollIntoView(true);
+  yield selectNode(anonymousDiv.node, inspector);
 
   info("Simulate dragging the anonymous node");
   yield simulateNodeDrag(inspector, anonymousDiv);

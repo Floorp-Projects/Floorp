@@ -322,11 +322,11 @@ hasMultiAlias() {
     return true;
 }
 
-// See the comments above AsmJSMappedSize in AsmJS.cpp for more info.
+// See MIRGenerator::foldableOffsetRange for more info.
 // TODO: Implement this for MIPS. Note that it requires Codegen to respect the
 // offset field of AsmJSHeapAccess.
-static const size_t AsmJSCheckedImmediateRange = 0;
-static const size_t AsmJSImmediateRange = 0;
+static const size_t WasmCheckedImmediateRange = 0;
+static const size_t WasmImmediateRange = 0;
 
 } // namespace jit
 } // namespace js

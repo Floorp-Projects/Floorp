@@ -17,6 +17,7 @@
 #include "jspubtd.h"
 
 #include "js/GCAPI.h"
+#include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -105,8 +106,7 @@
 namespace js {
 
 template <typename T>
-struct GCMethods {
-    static T initial() { return T(); }
+struct BarrierMethods {
 };
 
 template <typename T>
@@ -221,7 +221,7 @@ class Heap : public js::HeapBase<T>
     Heap() {
         static_assert(sizeof(T) == sizeof(Heap<T>),
                       "Heap<T> must be binary compatible with T.");
-        init(js::GCMethods<T>::initial());
+        init(js::GCPolicy<T>::initial());
     }
     explicit Heap(T p) { init(p); }
 
@@ -234,7 +234,7 @@ class Heap : public js::HeapBase<T>
     explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
     ~Heap() {
-        post(ptr, js::GCMethods<T>::initial());
+        post(ptr, js::GCPolicy<T>::initial());
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -258,7 +258,7 @@ class Heap : public js::HeapBase<T>
   private:
     void init(T newPtr) {
         ptr = newPtr;
-        post(js::GCMethods<T>::initial(), ptr);
+        post(js::GCPolicy<T>::initial(), ptr);
     }
 
     void set(T newPtr) {
@@ -268,7 +268,7 @@ class Heap : public js::HeapBase<T>
     }
 
     void post(const T& prev, const T& next) {
-        js::GCMethods<T>::postBarrier(&ptr, prev, next);
+        js::BarrierMethods<T>::postBarrier(&ptr, prev, next);
     }
 
     enum {
@@ -509,25 +509,8 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 
 namespace js {
 
-/**
- * By default, things should use the inheritance hierarchy to find their
- * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
- * Rooted<T> may be used without the class definition being available.
- */
 template <typename T>
-struct RootKind
-{
-    static ThingRootKind rootKind() { return T::rootKind(); }
-};
-
-template <typename T>
-struct RootKind<T*>
-{
-    static ThingRootKind rootKind() { return T::rootKind(); }
-};
-
-template <typename T>
-struct GCMethods<T*>
+struct BarrierMethods<T*>
 {
     static T* initial() { return nullptr; }
     static void postBarrier(T** vp, T* prev, T* next) {
@@ -538,7 +521,7 @@ struct GCMethods<T*>
 };
 
 template <>
-struct GCMethods<JSObject*>
+struct BarrierMethods<JSObject*>
 {
     static JSObject* initial() { return nullptr; }
     static gc::Cell* asGCThingOrNull(JSObject* v) {
@@ -553,7 +536,7 @@ struct GCMethods<JSObject*>
 };
 
 template <>
-struct GCMethods<JSFunction*>
+struct BarrierMethods<JSFunction*>
 {
     static JSFunction* initial() { return nullptr; }
     static void postBarrier(JSFunction** vp, JSFunction* prev, JSFunction* next) {
@@ -598,30 +581,15 @@ struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
 
 } /* namespace js */
 
-namespace JS {
-
-// Non pointer types -- structs or classes that contain GC pointers, either as
-// a member or in a more complex container layout -- can also be stored in a
-// [Persistent]Rooted if it derives from JS::Traceable. A JS::Traceable stored
-// in a [Persistent]Rooted must implement the method:
-//     |static void trace(T*, JSTracer*)|
-class Traceable
-{
-  public:
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_TRACEABLE; }
-};
-
-} /* namespace JS */
-
 namespace js {
 
 template <typename T>
 class DispatchWrapper
 {
-    static_assert(mozilla::IsBaseOf<JS::Traceable, T>::value,
+    static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
                   "DispatchWrapper is intended only for usage with a Traceable");
 
-    using TraceFn = void (*)(T*, JSTracer*);
+    using TraceFn = void (*)(JSTracer*, T*, const char*);
     TraceFn tracer;
 #if JS_BITS_PER_WORD == 32
     uint32_t padding; // Ensure the storage fields have CellSize alignment.
@@ -631,7 +599,7 @@ class DispatchWrapper
   public:
     template <typename U>
     MOZ_IMPLICIT DispatchWrapper(U&& initial)
-      : tracer(&T::trace),
+      : tracer(&GCPolicy<T>::trace),
         storage(mozilla::Forward<U>(initial))
     { }
 
@@ -643,10 +611,10 @@ class DispatchWrapper
 
     // Trace the contained storage (of unknown type) using the trace function
     // we set aside when we did know the type.
-    static void TraceWrapped(JSTracer* trc, JS::Traceable* thingp, const char* name) {
+    static void TraceWrapped(JSTracer* trc, T* thingp, const char* name) {
         auto wrapper = reinterpret_cast<DispatchWrapper*>(
                            uintptr_t(thingp) - offsetof(DispatchWrapper, storage));
-        wrapper->tracer(&wrapper->storage, trc);
+        wrapper->tracer(trc, &wrapper->storage, name);
     }
 };
 
@@ -689,13 +657,9 @@ namespace JS {
 template <typename T>
 class MOZ_RAII Rooted : public js::RootedBase<T>
 {
-    static_assert(!mozilla::IsConvertible<T, Traceable*>::value,
-                  "Rooted takes pointer or Traceable types but not Traceable* type");
-
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
     void registerWithRootLists(js::RootLists& roots) {
-        js::ThingRootKind kind = js::RootKind<T>::rootKind();
-        this->stack = &roots.stackRoots_[kind];
+        this->stack = &roots.stackRoots_[JS::MapTypeToRootKind<T>::kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }
@@ -703,7 +667,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
   public:
     template <typename RootingContext>
     explicit Rooted(const RootingContext& cx)
-      : ptr(js::GCMethods<T>::initial())
+      : ptr(js::GCPolicy<T>::initial())
     {
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
@@ -747,14 +711,14 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
 
     /*
      * For pointer types, the TraceKind for tracing is based on the list it is
-     * in (selected via rootKind), so no additional storage is required here.
-     * All Traceable, however, share the same list, so the function to
-     * call for tracing is stored adjacent to the struct. Since C++ cannot
-     * templatize on storage class, this is implemented via the wrapper class
-     * DispatchWrapper.
+     * in (selected via MapTypeToRootKind), so no additional storage is
+     * required here. Non-pointer types, however, share the same list, so the
+     * function to call for tracing is stored adjacent to the struct. Since C++
+     * cannot templatize on storage class, this is implemented via the wrapper
+     * class DispatchWrapper.
      */
     using MaybeWrapped = typename mozilla::Conditional<
-        mozilla::IsBaseOf<Traceable, T>::value,
+        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
         js::DispatchWrapper<T>,
         T>::Type;
     MaybeWrapped ptr;
@@ -808,7 +772,7 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
 {
   public:
     template <typename CX>
-    explicit FakeRooted(CX* cx) : ptr(GCMethods<T>::initial()) {}
+    explicit FakeRooted(CX* cx) : ptr(GCPolicy<T>::initial()) {}
 
     template <typename CX>
     FakeRooted(CX* cx, T initial) : ptr(initial) {}
@@ -1001,35 +965,23 @@ template<typename T>
 class PersistentRooted : public js::PersistentRootedBase<T>,
                          private mozilla::LinkedListElement<PersistentRooted<T>>
 {
-    typedef mozilla::LinkedListElement<PersistentRooted<T>> ListBase;
+    using ListBase = mozilla::LinkedListElement<PersistentRooted<T>>;
 
     friend class mozilla::LinkedList<PersistentRooted>;
     friend class mozilla::LinkedListElement<PersistentRooted>;
 
-    friend struct js::gc::PersistentRootedMarker<T>;
-
-    friend void js::gc::FinishPersistentRootedChains(js::RootLists&);
-
     void registerWithRootLists(js::RootLists& roots) {
         MOZ_ASSERT(!initialized());
-        js::ThingRootKind kind = js::RootKind<T>::rootKind();
+        JS::RootKind kind = JS::MapTypeToRootKind<T>::kind;
         roots.heapRoots_[kind].insertBack(reinterpret_cast<JS::PersistentRooted<void*>*>(this));
-        // Until marking and destruction support the full set, we assert that
-        // we don't try to add any unsupported types.
-        MOZ_ASSERT(kind == js::THING_ROOT_OBJECT ||
-                   kind == js::THING_ROOT_SCRIPT ||
-                   kind == js::THING_ROOT_STRING ||
-                   kind == js::THING_ROOT_ID ||
-                   kind == js::THING_ROOT_VALUE ||
-                   kind == js::THING_ROOT_TRACEABLE);
     }
 
   public:
-    PersistentRooted() : ptr(js::GCMethods<T>::initial()) {}
+    PersistentRooted() : ptr(js::GCPolicy<T>::initial()) {}
 
     template <typename RootingContext>
     explicit PersistentRooted(const RootingContext& cx)
-      : ptr(js::GCMethods<T>::initial())
+      : ptr(js::GCPolicy<T>::initial())
     {
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
@@ -1062,7 +1014,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     template <typename RootingContext>
     void init(const RootingContext& cx) {
-        init(cx, js::GCMethods<T>::initial());
+        init(cx, js::GCPolicy<T>::initial());
     }
 
     template <typename RootingContext, typename U>
@@ -1073,7 +1025,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void reset() {
         if (initialized()) {
-            set(js::GCMethods<T>::initial());
+            set(js::GCPolicy<T>::initial());
             ListBase::remove();
         }
     }
@@ -1103,7 +1055,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     // See the comment above Rooted::ptr.
     using MaybeWrapped = typename mozilla::Conditional<
-        mozilla::IsBaseOf<Traceable, T>::value,
+        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
         js::DispatchWrapper<T>,
         T>::Type;
 
@@ -1162,7 +1114,7 @@ CallTraceCallbackOnNonHeap(T* v, const TraceCallbacks& aCallbacks, const char* a
 {
     static_assert(sizeof(T) == sizeof(JS::Heap<T>), "T and Heap<T> must be compatible.");
     MOZ_ASSERT(v);
-    mozilla::DebugOnly<Cell*> cell = GCMethods<T>::asGCThingOrNull(*v);
+    mozilla::DebugOnly<Cell*> cell = BarrierMethods<T>::asGCThingOrNull(*v);
     MOZ_ASSERT(cell);
     MOZ_ASSERT(!IsInsideNursery(cell));
     JS::Heap<T>* asHeapT = reinterpret_cast<JS::Heap<T>*>(v);

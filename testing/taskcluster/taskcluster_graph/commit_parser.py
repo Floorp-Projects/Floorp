@@ -23,7 +23,7 @@ BUILD_TYPE_ALIASES = {
 class InvalidCommitException(Exception):
     pass
 
-def escape_whitspace_in_brackets(input_str):
+def escape_whitespace_in_brackets(input_str):
     '''
     In tests you may restrict them by platform [] inside of the brackets
     whitespace may occur this is typically invalid shell syntax so we escape it
@@ -241,7 +241,7 @@ def parse_commit(message, jobs):
     '''
 
     # shlex used to ensure we split correctly when giving values to argparse.
-    parts = shlex.split(escape_whitspace_in_brackets(message))
+    parts = shlex.split(escape_whitespace_in_brackets(message))
     try_idx = None
     for idx, part in enumerate(parts):
         if part == TRY_DELIMITER:
@@ -258,6 +258,8 @@ def parse_commit(message, jobs):
     parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
     parser.add_argument('-u', '--unittests', nargs='?', dest='tests', const='all', default='all')
     parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
+    # In order to run test jobs multiple times
+    parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
     args, unknown = parser.parse_known_args(parts[try_idx:])
 
     # Then builds...
@@ -317,4 +319,7 @@ def parse_commit(message, jobs):
                 'interactive': args.interactive,
             })
 
-    return result
+    # Times that test jobs will be scheduled
+    trigger_tests = args.trigger_tests
+
+    return result, trigger_tests

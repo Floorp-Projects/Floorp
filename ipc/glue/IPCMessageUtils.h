@@ -11,6 +11,7 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/Maybe.h"
@@ -60,7 +61,7 @@ struct null_t {
   bool operator==(const null_t&) const { return true; }
 };
 
-struct SerializedStructuredCloneBuffer
+struct MOZ_STACK_CLASS SerializedStructuredCloneBuffer
 {
   SerializedStructuredCloneBuffer()
   : data(nullptr), dataLength(0)
@@ -541,9 +542,9 @@ struct ParamTraits<InfallibleTArray<E> >
 };
 
 template<typename E, size_t N>
-struct ParamTraits<nsAutoTArray<E, N>> : ParamTraits<nsTArray<E>>
+struct ParamTraits<AutoTArray<E, N>> : ParamTraits<nsTArray<E>>
 {
-  typedef nsAutoTArray<E, N> paramType;
+  typedef AutoTArray<E, N> paramType;
 };
 
 template<>

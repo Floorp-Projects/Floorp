@@ -18,7 +18,7 @@
 #define PRIVATE_IDBREQUEST_IID \
   {0xe68901e5, 0x1d50, 0x4ee9, {0xaf, 0x49, 0x90, 0x99, 0x4a, 0xff, 0xc8, 0x39}}
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 struct PRThread;
 
 namespace mozilla {
@@ -151,7 +151,7 @@ public:
   void
   SetLoggingSerialNumber(uint64_t aLoggingSerialNumber);
 
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();
@@ -202,7 +202,7 @@ public:
 
 protected:
   explicit IDBRequest(IDBDatabase* aDatabase);
-  explicit IDBRequest(nsPIDOMWindow* aOwner);
+  explicit IDBRequest(nsPIDOMWindowInner* aOwner);
   ~IDBRequest();
 
   void
@@ -238,7 +238,7 @@ class IDBOpenDBRequest final
 public:
   static already_AddRefed<IDBOpenDBRequest>
   CreateForWindow(IDBFactory* aFactory,
-                  nsPIDOMWindow* aOwner,
+                  nsPIDOMWindowInner* aOwner,
                   JS::Handle<JSObject*> aScriptOwner);
 
   static already_AddRefed<IDBOpenDBRequest>
@@ -279,7 +279,7 @@ public:
 
 private:
   IDBOpenDBRequest(IDBFactory* aFactory,
-                   nsPIDOMWindow* aOwner,
+                   nsPIDOMWindowInner* aOwner,
                    bool aFileHandleDisabled);
 
   ~IDBOpenDBRequest();

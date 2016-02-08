@@ -1,5 +1,5 @@
-/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft= javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -192,15 +192,13 @@ HUD_SERVICE.prototype =
       DebuggerServer.allowChromeProcess = true;
 
       let client = new DebuggerClient(DebuggerServer.connectPipe());
-      client.connect(() => {
-        client.getProcess().then(aResponse => {
+      return client.connect()
+        .then(() => client.getProcess())
+        .then(aResponse => {
           // Set chrome:false in order to attach to the target
           // (i.e. send an `attach` request to the chrome actor)
-          deferred.resolve({ form: aResponse.form, client: client, chrome: false });
-        }, deferred.reject);
-      });
-
-      return deferred.promise;
+          return { form: aResponse.form, client: client, chrome: false };
+        });
     }
 
     let target;

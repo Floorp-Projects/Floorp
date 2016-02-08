@@ -73,10 +73,10 @@ protocol PBackgroundFileRequest
   manager PBackgroundFileHandle;
 
 child:
-  __delete__(FileRequestResponse response);
+  async __delete__(FileRequestResponse response);
 
-  Progress(uint64_t progress,
-           uint64_t progressMax);
+  async Progress(uint64_t progress,
+                 uint64_t progressMax);
 };
 
 } // namespace dom

@@ -77,7 +77,7 @@ class gfxContext;
 class nsIDOMEvent;
 class nsDisplayList;
 class nsDisplayListBuilder;
-class nsPIDOMWindow;
+class nsPIDOMWindowOuter;
 struct nsPoint;
 class nsINode;
 struct nsRect;
@@ -1367,7 +1367,7 @@ public:
   /**
    * Get the root DOM window of this presShell.
    */
-  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() = 0;
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() = 0;
 
   /**
    * Get the layer manager for the widget of the root view, if it has
@@ -1783,7 +1783,7 @@ protected:
   // same update block we have already had other changes that require
   // the whole document to be restyled (i.e., mStylesHaveChanged is already
   // true), then we don't bother adding the scope root here.
-  nsAutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
+  AutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
 
   static nsIContent*        gKeyDownTarget;
 

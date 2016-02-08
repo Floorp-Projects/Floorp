@@ -51,6 +51,14 @@ CONFIGS = defaultdict(lambda: {
             ('LIB_SUFFIX', 'a'),
         ],
     },
+    'sources': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('LIB_PREFIX', 'lib'),
+            ('LIB_SUFFIX', 'a'),
+        ],
+    },
     'stub0': {
         'defines': [
             ('MOZ_TRUE_1', '1'),

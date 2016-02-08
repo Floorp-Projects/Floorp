@@ -68,7 +68,7 @@ LineBreakBefore(nsIFrame* aFrame,
                 const nsLineList::iterator* aLine)
 {
   for (nsIFrame* child = aFrame; child;
-       child = child->GetFirstPrincipalChild()) {
+       child = child->PrincipalChildList().FirstChild()) {
     if (!child->CanContinueTextRun()) {
       // It is not an inline element. We can break before it.
       return gfxBreakPriority::eNormalBreak;
@@ -241,7 +241,7 @@ nsRubyBaseContainerFrame::AddInlinePrefISize(
   }
   for (uint32_t i = 0, iend = textContainers.Length(); i < iend; i++) {
     if (textContainers[i]->IsSpanContainer()) {
-      nsIFrame* frame = textContainers[i]->GetFirstPrincipalChild();
+      nsIFrame* frame = textContainers[i]->PrincipalChildList().FirstChild();
       nsIFrame::InlinePrefISizeData data;
       frame->AddInlinePrefISize(aRenderingContext, &data);
       MOZ_ASSERT(data.prevLines == 0, "Shouldn't have prev lines");
@@ -334,8 +334,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   // Since there are pointers refer to reflow states and line layouts,
   // it is necessary to guarantee that they won't be moved. For this
   // reason, they are wrapped in UniquePtr here.
-  nsAutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
-  nsAutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
+  AutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
+  AutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
   reflowStates.SetCapacity(rtcCount);
   lineLayouts.SetCapacity(rtcCount);
 
@@ -451,7 +451,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
 {
   ContinuationTraversingState mBase;
-  nsAutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
+  AutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
   const AutoRubyTextContainerArray& mTextContainers;
 
   PullFrameState(nsRubyBaseContainerFrame* aBaseContainer,
@@ -724,7 +724,7 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
   nsIFrame* nextBase = GetNextInFlowChild(aPullFrameState.mBase);
   MOZ_ASSERT(!nextBase || nextBase->GetType() == nsGkAtoms::rubyBaseFrame);
   aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(nextBase);
-  aIsComplete = !aColumn.mBaseFrame;
+  bool foundFrame = !!aColumn.mBaseFrame;
   bool pullingIntraLevelWhitespace =
     aColumn.mBaseFrame && aColumn.mBaseFrame->IsIntraLevelWhitespace();
 
@@ -735,12 +735,16 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
     MOZ_ASSERT(!nextText || nextText->GetType() == nsGkAtoms::rubyTextFrame);
     nsRubyTextFrame* textFrame = static_cast<nsRubyTextFrame*>(nextText);
     aColumn.mTextFrames.AppendElement(textFrame);
-    // If there exists any frame in continations, we haven't
-    // completed the reflow process.
-    aIsComplete = aIsComplete && !nextText;
+    foundFrame = foundFrame || nextText;
     if (nextText && !pullingIntraLevelWhitespace) {
       pullingIntraLevelWhitespace = textFrame->IsIntraLevelWhitespace();
     }
+  }
+  // If there exists any frame in continations, we haven't
+  // completed the reflow process.
+  aIsComplete = !foundFrame;
+  if (!foundFrame) {
+    return;
   }
 
   aColumn.mIsIntraLevelWhitespace = pullingIntraLevelWhitespace;
@@ -755,6 +759,31 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
       nsRubyTextFrame*& textFrame = aColumn.mTextFrames[i];
       if (textFrame && !textFrame->IsIntraLevelWhitespace()) {
         textFrame = nullptr;
+      }
+    }
+  } else {
+    // We are not pulling an intra-level whitespace, which means all
+    // elements we are going to pull can have non-whitespace content,
+    // which may contain float which we need to reparent.
+    nsBlockFrame* oldFloatCB = nullptr;
+    for (nsIFrame* frame : aColumn) {
+      oldFloatCB = nsLayoutUtils::GetFloatContainingBlock(frame);
+      break;
+    }
+#ifdef DEBUG
+    MOZ_ASSERT(oldFloatCB, "Must have found a float containing block");
+    for (nsIFrame* frame : aColumn) {
+      MOZ_ASSERT(nsLayoutUtils::GetFloatContainingBlock(frame) == oldFloatCB,
+                 "All frames in the same ruby column should share "
+                 "the same old float containing block");
+    }
+#endif
+    nsBlockFrame* newFloatCB =
+      nsLayoutUtils::GetAsBlock(aLineLayout->LineContainerFrame());
+    MOZ_ASSERT(newFloatCB, "Must have a float containing block");
+    if (oldFloatCB != newFloatCB) {
+      for (nsIFrame* frame : aColumn) {
+        newFloatCB->ReparentFloats(frame, oldFloatCB, false);
       }
     }
   }
@@ -789,7 +818,7 @@ nsRubyBaseContainerFrame::ReflowSpans(const ReflowState& aReflowState)
       continue;
     }
 
-    nsIFrame* rtFrame = container->GetFirstPrincipalChild();
+    nsIFrame* rtFrame = container->PrincipalChildList().FirstChild();
     nsReflowStatus reflowStatus;
     bool pushedFrame;
     nsLineLayout* lineLayout = aReflowState.mTextReflowStates[i]->mLineLayout;

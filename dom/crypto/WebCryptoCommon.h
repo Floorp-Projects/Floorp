@@ -23,9 +23,11 @@
 #define WEBCRYPTO_ALG_SHA384        "SHA-384"
 #define WEBCRYPTO_ALG_SHA512        "SHA-512"
 #define WEBCRYPTO_ALG_HMAC          "HMAC"
+#define WEBCRYPTO_ALG_HKDF          "HKDF"
 #define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
+#define WEBCRYPTO_ALG_RSA_PSS       "RSA-PSS"
 #define WEBCRYPTO_ALG_ECDH          "ECDH"
 #define WEBCRYPTO_ALG_ECDSA         "ECDSA"
 #define WEBCRYPTO_ALG_DH            "DH"
@@ -86,6 +88,10 @@
 #define JWK_ALG_RSA_OAEP_256        "RSA-OAEP-256"
 #define JWK_ALG_RSA_OAEP_384        "RSA-OAEP-384"
 #define JWK_ALG_RSA_OAEP_512        "RSA-OAEP-512"
+#define JWK_ALG_PS1                 "PS1"      // RSA-PSS
+#define JWK_ALG_PS256               "PS256"
+#define JWK_ALG_PS384               "PS384"
+#define JWK_ALG_PS512               "PS512"
 #define JWK_ALG_ECDSA_P_256         "ES256"
 #define JWK_ALG_ECDSA_P_384         "ES384"
 #define JWK_ALG_ECDSA_P_521         "ES521"
@@ -204,6 +210,8 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_RSA_PKCS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     mechanism = CKM_RSA_PKCS_OAEP;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
+    mechanism = CKM_RSA_PKCS_PSS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
     mechanism = CKM_ECDH1_DERIVE;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
@@ -238,12 +246,16 @@ NormalizeToken(const nsString& aName, nsString& aDest)
     aDest.AssignLiteral(WEBCRYPTO_ALG_SHA512);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_HMAC)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_HMAC);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_HKDF)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_HKDF);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_PBKDF2)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_PBKDF2);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSASSA_PKCS1)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSA_OAEP)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_RSA_OAEP);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSA_PSS)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_RSA_PSS);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_ECDH)) {
     aDest.AssignLiteral(WEBCRYPTO_ALG_ECDH);
   } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_ECDSA)) {

@@ -491,7 +491,7 @@ nsTString_CharT::ReplaceSubstring(const self_type& aTarget,
     return true;
 
   // Remember all of the non-matching parts.
-  nsAutoTArray<Segment, 16> nonMatching;
+  AutoTArray<Segment, 16> nonMatching;
   uint32_t i = 0;
   uint32_t newLength = 0;
   while (true)

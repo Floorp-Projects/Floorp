@@ -1,0 +1,228 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const promise = require("promise");
+const { Task } = require("resource://gre/modules/Task.jsm");
+const EventEmitter = require("devtools/shared/event-emitter");
+
+const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
+
+/**
+ * ResponsiveUIManager is the external API for the browser UI, etc. to use when
+ * opening and closing the responsive UI.
+ *
+ * While the HTML UI is in an experimental stage, the older ResponsiveUIManager
+ * from devtools/client/responsivedesign/responsivedesign.jsm delegates to this
+ * object when the pref "devtools.responsive.html.enabled" is true.
+ */
+exports.ResponsiveUIManager = {
+  activeTabs: new Map(),
+
+  /**
+   * Toggle the responsive UI for a tab.
+   *
+   * @param window
+   *        The main browser chrome window.
+   * @param tab
+   *        The browser tab.
+   * @return Promise
+   *         Resolved when the toggling has completed.  If the UI has opened,
+   *         it is resolved to the ResponsiveUI instance for this tab.  If the
+   *         the UI has closed, there is no resolution value.
+   */
+  toggle(window, tab) {
+    let action = this.isActiveForTab(tab) ? "close" : "open";
+    return this[action + "IfNeeded"](window, tab);
+  },
+
+  /**
+   * Opens the responsive UI, if not already open.
+   *
+   * @param window
+   *        The main browser chrome window.
+   * @param tab
+   *        The browser tab.
+   * @return Promise
+   *         Resolved to the ResponsiveUI instance for this tab when opening is
+   *         complete.
+   */
+  openIfNeeded: Task.async(function*(window, tab) {
+    if (!this.isActiveForTab(tab)) {
+      let ui = new ResponsiveUI(window, tab);
+      this.activeTabs.set(tab, ui);
+      yield ui.inited;
+      this.emit("on", { tab });
+    }
+    return this.getResponsiveUIForTab(tab);
+  }),
+
+  /**
+   * Closes the responsive UI, if not already closed.
+   *
+   * @param window
+   *        The main browser chrome window.
+   * @param tab
+   *        The browser tab.
+   * @return Promise
+   *         Resolved (with no value) when closing is complete.
+   */
+  closeIfNeeded(window, tab) {
+    if (this.isActiveForTab(tab)) {
+      this.activeTabs.get(tab).destroy();
+      this.activeTabs.delete(tab);
+      this.emit("off", { tab });
+    }
+    return promise.resolve();
+  },
+
+  /**
+   * Returns true if responsive UI is active for a given tab.
+   *
+   * @param tab
+   *        The browser tab.
+   * @return boolean
+   */
+  isActiveForTab(tab) {
+    return this.activeTabs.has(tab);
+  },
+
+  /**
+   * Return the responsive UI controller for a tab.
+   *
+   * @param tab
+   *        The browser tab.
+   * @return ResponsiveUI
+   *         The UI instance for this tab.
+   */
+  getResponsiveUIForTab(tab) {
+    return this.activeTabs.get(tab);
+  },
+
+  /**
+   * Handle GCLI commands.
+   *
+   * @param window
+   *        The main browser chrome window.
+   * @param tab
+   *        The browser tab.
+   * @param command
+   *        The GCLI command name.
+   * @param args
+   *        The GCLI command arguments.
+   */
+  handleGcliCommand: function(window, tab, command, args) {
+    let completed;
+    switch (command) {
+      case "resize to":
+        completed = this.openIfNeeded(window, tab);
+        // TODO: Probably the wrong API
+        this.activeTabs.get(tab).setSize(args.width, args.height);
+        break;
+      case "resize on":
+        completed = this.openIfNeeded(window, tab);
+        break;
+      case "resize off":
+        completed = this.closeIfNeeded(window, tab);
+        break;
+      case "resize toggle":
+        completed = this.toggle(window, tab);
+        break;
+      default:
+    }
+    completed.catch(e => console.error(e));
+  }
+};
+
+// GCLI commands in ../responsivedesign/resize-commands.js listen for events
+// from this object to know when the UI for a tab has opened or closed.
+EventEmitter.decorate(exports.ResponsiveUIManager);
+
+/**
+ * ResponsiveUI manages the responsive design tool for a specific tab.  The
+ * actual tool itself lives in a separate chrome:// document that is loaded into
+ * the tab upon opening responsive design.  This object acts a helper to
+ * integrate the tool into the surrounding browser UI as needed.
+ */
+function ResponsiveUI(window, tab) {
+  this.browserWindow = window;
+  this.tab = tab;
+  this.inited = this.init();
+}
+
+ResponsiveUI.prototype = {
+
+  /**
+   * The main browser chrome window (that holds many tabs).
+   */
+  browserWindow: null,
+
+  /**
+   * The specific browser tab this responsive instance is for.
+   */
+  tab: null,
+
+  /**
+   * Promise resovled when the UI init has completed.
+   */
+  inited: null,
+
+  /**
+   * A window reference for the chrome:// document that displays the responsive
+   * design tool.  It is safe to reference this window directly even with e10s,
+   * as the tool UI is always loaded in the parent process.  The web content
+   * contained *within* the tool UI on the other hand is loaded in the child
+   * process.
+   */
+  toolWindow: null,
+
+  /**
+   * For the moment, we open the tool by:
+   * 1. Recording the tab's URL
+   * 2. Navigating the tab to the tool
+   * 3. Passing along the URL to the tool to open in the viewport
+   *
+   * This approach is simple, but it also discards the user's state on the page.
+   * It's just like opening a fresh tab and pasting the URL.
+   *
+   * In the future, we can do better by using swapFrameLoaders to preserve the
+   * state.  Platform discussions are in progress to make this happen.  See
+   * bug 1238160 about <iframe mozbrowser> for more details.
+   */
+  init: Task.async(function*() {
+    let tabBrowser = this.tab.linkedBrowser;
+    let contentURI = tabBrowser.documentURI.spec;
+    tabBrowser.loadURI(TOOL_URL);
+    yield tabLoaded(this.tab);
+    let toolWindow = this.toolWindow = tabBrowser.contentWindow;
+    toolWindow.addInitialViewport(contentURI);
+  }),
+
+  destroy() {
+    let tabBrowser = this.tab.linkedBrowser;
+    tabBrowser.goBack();
+    this.window = null;
+    this.tab = null;
+    this.inited = null;
+    this.toolWindow = null;
+  },
+
+};
+
+function tabLoaded(tab) {
+  let deferred = promise.defer();
+
+  function handle(event) {
+    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+        event.target.location.href == "about:blank") {
+      return;
+    }
+    tab.linkedBrowser.removeEventListener("load", handle, true);
+    deferred.resolve(event);
+  }
+
+  tab.linkedBrowser.addEventListener("load", handle, true);
+  return deferred.promise;
+}

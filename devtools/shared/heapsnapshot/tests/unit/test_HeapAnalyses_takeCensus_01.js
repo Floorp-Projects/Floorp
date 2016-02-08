@@ -14,7 +14,7 @@ add_task(function* () {
   yield client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  const report = yield client.takeCensus(snapshotFilePath);
+  const { report } = yield client.takeCensus(snapshotFilePath);
   ok(report, "Should get a report");
   equal(typeof report, "object", "report should be an object");
 

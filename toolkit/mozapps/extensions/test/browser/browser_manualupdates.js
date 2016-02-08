@@ -38,7 +38,7 @@ function end_test() {
 add_test(function() {
   gAvailableCategory = gManagerWindow.gCategories.get("addons://updates/available");
   is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should initially be hidden");
-  
+
   gProvider.createAddons([{
     id: "addon2@tests.mozilla.org",
     name: "manually updating addon",
@@ -47,7 +47,7 @@ add_test(function() {
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
-  
+
   is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should still be hidden");
 
   run_next_test();
@@ -100,7 +100,7 @@ add_test(function() {
   is(list.itemCount, 1, "Should be 1 available update listed");
   var item = list.firstChild;
   is(item.mAddon.id, "addon2@tests.mozilla.org", "Update item should be for the manually updating addon");
-  
+
   // The item in the list will be checking for update information asynchronously
   // so we have to wait for it to complete. Doing the same async request should
   // make our callback be called later.

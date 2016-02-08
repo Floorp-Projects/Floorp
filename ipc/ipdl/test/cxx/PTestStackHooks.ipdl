@@ -18,7 +18,7 @@ both:
     intr StackFrame();
 
 parent:
-    __delete__();
+    async __delete__();
 
 
 state START:

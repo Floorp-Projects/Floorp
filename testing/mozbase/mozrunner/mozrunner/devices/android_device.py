@@ -242,7 +242,7 @@ def run_firefox_for_android(build_obj, params):
         #
         #   adb shell am start -a android.activity.MAIN -n org.mozilla.fennec_$USER -d <url param> --es args "<params>"
         #
-        app = "%s/.App" % build_obj.substs['ANDROID_PACKAGE_NAME']
+        app = "%s/org.mozilla.gecko.BrowserApp" % build_obj.substs['ANDROID_PACKAGE_NAME']
         cmd = ['am', 'start', '-a', 'android.activity.MAIN', '-n', app]
         if params:
             for p in params:
@@ -259,6 +259,26 @@ def run_firefox_for_android(build_obj, params):
         _log_warning("unable to launch Firefox for Android")
         return 1
     return 0
+
+def grant_runtime_permissions(build_obj, app):
+    """
+       Grant required runtime permissions to the specified app (typically org.mozilla.fennec_$USER).
+    """
+    adb_path = _find_sdk_exe(build_obj.substs, 'adb', False)
+    if not adb_path:
+        adb_path = 'adb'
+    dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1)
+    dm.default_timeout = 10
+    try:
+        sdk_level = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
+        if sdk_level and int(sdk_level) >= 23:
+            _log_info("Granting important runtime permissions to %s" % app)
+            dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.WRITE_EXTERNAL_STORAGE'])
+            dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.ACCESS_FINE_LOCATION'])
+            dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.CAMERA'])
+            dm.shellCheckOutput(['pm', 'grant', app, 'android.permission.WRITE_CONTACTS'])
+    except DMError:
+        _log_warning("Unable to grant runtime permissions to %s" % app)
 
 class AndroidEmulator(object):
 

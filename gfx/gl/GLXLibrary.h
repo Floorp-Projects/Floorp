@@ -134,12 +134,6 @@ public:
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
     bool IsATI() { return mIsATI; }
     bool GLXVersionCheck(int aMajor, int aMinor);
-    bool UseSurfaceSharing() {
-      // Disable surface sharing due to issues with compatible FBConfigs on
-      // NVIDIA drivers as described in bug 1193015.
-      static bool useSharing = PR_GetEnv("MOZ_GLX_USE_SURFACE_SHARING");
-      return mUseTextureFromPixmap && useSharing;
-    }
 
 private:
     

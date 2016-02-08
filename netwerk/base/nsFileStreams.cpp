@@ -929,7 +929,9 @@ nsAtomicFileOutputStream::DoOpen()
         tempResult->SetFollowLinks(true);
 
         // XP_UNIX ignores SetFollowLinks(), so we have to normalize.
-        tempResult->Normalize();
+        if (mTargetFileExists) {
+            tempResult->Normalize();
+        }
     }
 
     if (NS_SUCCEEDED(rv) && mTargetFileExists) {

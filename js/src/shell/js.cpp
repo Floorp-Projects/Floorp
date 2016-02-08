@@ -144,6 +144,7 @@ struct ShellRuntime
     bool isWorker;
     double timeoutInterval;
     Atomic<bool> serviceInterrupt;
+    Atomic<bool> haveInterruptFunc;
     JS::PersistentRootedValue interruptFunc;
     bool lastWarningEnabled;
     JS::PersistentRootedValue lastWarning;
@@ -290,6 +291,7 @@ ShellRuntime::ShellRuntime()
   : isWorker(false),
     timeoutInterval(-1.0),
     serviceInterrupt(false),
+    haveInterruptFunc(false),
     lastWarningEnabled(false),
     watchdogLock(nullptr),
     watchdogWakeup(nullptr),
@@ -430,12 +432,11 @@ ShellInterruptCallback(JSContext* cx)
     sr->serviceInterrupt = false;
 
     bool result;
-    RootedValue interruptFunc(cx, sr->interruptFunc);
-    if (!interruptFunc.isNull()) {
+    if (sr->haveInterruptFunc) {
         JS::AutoSaveExceptionState savedExc(cx);
-        JSAutoCompartment ac(cx, &interruptFunc.toObject());
+        JSAutoCompartment ac(cx, &sr->interruptFunc.toObject());
         RootedValue rval(cx);
-        if (!JS_CallFunctionValue(cx, nullptr, interruptFunc,
+        if (!JS_CallFunctionValue(cx, nullptr, sr->interruptFunc,
                                   JS::HandleValueArray::empty(), &rval))
         {
             return false;
@@ -2781,6 +2782,7 @@ WorkerMain(void* arg)
     JS_SetRuntimePrivate(rt, sr.get());
     JS_SetFutexCanWait(rt);
     JS_SetErrorReporter(rt, my_ErrorReporter);
+    JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
     if (!InitWatchdog(rt)) {
@@ -2828,7 +2830,21 @@ WorkerMain(void* arg)
     js_delete(input);
 }
 
-Vector<PRThread*, 0, SystemAllocPolicy> workerThreads;
+// Workers can spawn other workers, so we need a lock to access workerThreads.
+static PRLock* workerThreadsLock = nullptr;
+static Vector<PRThread*, 0, SystemAllocPolicy> workerThreads;
+
+class MOZ_RAII AutoLockWorkerThreads
+{
+  public:
+    AutoLockWorkerThreads() {
+        MOZ_ASSERT(workerThreadsLock);
+        PR_Lock(workerThreadsLock);
+    }
+    ~AutoLockWorkerThreads() {
+        PR_Unlock(workerThreadsLock);
+    }
+};
 
 static bool
 EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
@@ -2846,6 +2862,14 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     if (!args[0].toString()->ensureLinear(cx))
         return false;
+
+    if (!workerThreadsLock) {
+        workerThreadsLock = PR_NewLock();
+        if (!workerThreadsLock) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
 
     JSLinearString* str = &args[0].toString()->asLinear();
 
@@ -2871,6 +2895,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    AutoLockWorkerThreads alwt;
     if (!workerThreads.append(thread)) {
         ReportOutOfMemory(cx);
         PR_JoinThread(thread);
@@ -3068,13 +3093,41 @@ ScheduleWatchdog(JSRuntime* rt, double t)
 }
 
 static void
+KillWorkerThreads()
+{
+    MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
+
+    if (!workerThreadsLock) {
+        MOZ_ASSERT(workerThreads.empty());
+        return;
+    }
+
+    while (true) {
+        // We need to leave the AutoLockWorkerThreads scope before we call
+        // PR_JoinThread, to avoid deadlocks when AutoLockWorkerThreads is
+        // used by the worker thread.
+        PRThread* thread;
+        {
+            AutoLockWorkerThreads alwt;
+            if (workerThreads.empty())
+                break;
+            thread = workerThreads.popCopy();
+        }
+        PR_JoinThread(thread);
+    }
+
+    PR_DestroyLock(workerThreadsLock);
+    workerThreadsLock = nullptr;
+}
+
+static void
 CancelExecution(JSRuntime* rt)
 {
     ShellRuntime* sr = GetShellRuntime(rt);
     sr->serviceInterrupt = true;
     JS_RequestInterruptCallback(rt);
 
-    if (!sr->interruptFunc.isNull()) {
+    if (sr->haveInterruptFunc) {
         static const char msg[] = "Script runs for too long, terminating.\n";
         fputs(msg, stderr);
     }
@@ -3123,6 +3176,7 @@ Timeout(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         sr->interruptFunc = value;
+        sr->haveInterruptFunc = true;
     }
 
     args.rval().setUndefined();
@@ -3194,6 +3248,7 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     GetShellRuntime(cx)->interruptFunc = value;
+    GetShellRuntime(cx)->haveInterruptFunc = true;
 
     args.rval().setUndefined();
     return true;
@@ -4614,6 +4669,8 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         script = fun->getOrCreateScript(cx);
+        if (!script)
+            return false;
     } else {
         script = obj->as<ModuleObject>().script();
     }
@@ -7009,9 +7066,7 @@ main(int argc, char** argv, char** envp)
 
     KillWatchdog(rt);
 
-    MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
-    for (size_t i = 0; i < workerThreads.length(); i++)
-        PR_JoinThread(workerThreads[i]);
+    KillWorkerThreads();
 
     DestructSharedArrayBufferMailbox();
 

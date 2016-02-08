@@ -12,11 +12,16 @@ DIRS += ['blink']
 TEST_DIRS += ['compiledtest']
 
 MOCHITEST_MANIFESTS += [
-    'test/blink/mochitest.ini',
     'test/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.media.webaudio.test.blink += [
+    'test/blink/audio-testing.js',
+    'test/blink/convolution-testing.js',
+    'test/blink/panner-model-testing.js',
+]
 
 EXPORTS += [
     'AlignedTArray.h',

@@ -5,14 +5,14 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
 // NOTE: This is a temporary interface.
 // It will be removed in the next patches for rewriting DataStore in C++.
-[scriptable, uuid(0b41fef5-14ba-48b0-923c-3d8fb64692ae)]
+[scriptable, uuid(14f4bae7-dd01-4d1d-81e1-f8fd1e463b5f)]
 interface nsIDataStore : nsISupports
 {
-  void init(in nsIDOMWindow window,
+  void init(in mozIDOMWindow window,
             in DOMString name,
             in DOMString manifestURL,
             in boolean readOnly);

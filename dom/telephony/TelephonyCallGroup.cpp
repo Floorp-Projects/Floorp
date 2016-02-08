@@ -25,7 +25,7 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::telephony;
 using mozilla::ErrorResult;
 
-TelephonyCallGroup::TelephonyCallGroup(nsPIDOMWindow* aOwner)
+TelephonyCallGroup::TelephonyCallGroup(nsPIDOMWindowInner* aOwner)
   : DOMEventTargetHelper(aOwner)
 {
 }

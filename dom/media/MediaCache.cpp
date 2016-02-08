@@ -794,7 +794,7 @@ MediaCache::FindReusableBlock(TimeStamp aNow,
   // predicted time of next use". We can exploit the fact that the block
   // linked lists are ordered by increasing time of next use. This is
   // actually the whole point of having the linked lists.
-  nsAutoTArray<uint32_t,8> candidates;
+  AutoTArray<uint32_t,8> candidates;
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaCacheStream* stream = mStreams[i];
     if (stream->mPinCount > 0) {
@@ -1040,7 +1040,7 @@ MediaCache::Update()
   // decisions while holding the cache lock but implement those decisions
   // without holding the cache lock, since we need to call out to
   // stream, decoder and element code.
-  nsAutoTArray<StreamAction,10> actions;
+  AutoTArray<StreamAction,10> actions;
 
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);

@@ -272,6 +272,8 @@
 .call-tree-item .call-tree-cell,
 .call-tree-item .call-tree-cell[type=function] description {
   -moz-user-select: text;
+  /* so that optimizations view doesn't break the lines in call tree */
+  white-space: nowrap;
 }
 
 .call-tree-item .call-tree-cell::-moz-selection,
@@ -610,153 +612,6 @@ menuitem.marker-color-graphs-grey:before,
 }
 
 /**
- * JIT View
- */
-
-#jit-optimizations-view {
-  width: 350px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  min-width: 200px;
-}
-
-#optimizations-graph {
-  height: 30px;
-}
-
-#jit-optimizations-view.empty #optimizations-graph {
-  display: none !important;
-}
-
-/* override default styles for tree widget */
-#jit-optimizations-view .tree-widget-empty-text {
-  font-size: inherit;
-  padding: 0px;
-  margin: 8px;
-}
-
-#jit-optimizations-view:not(.empty) .tree-widget-empty-text {
-  display: none;
-}
-
-#jit-optimizations-toolbar {
-  height: 18px;
-  min-height: 0px; /* override .devtools-toolbar min-height */
-}
-
-.jit-optimizations-title {
-  margin: 0px 4px;
-  font-weight: 600;
-}
-
-#jit-optimizations-raw-view {
-  font-size: 90%;
-}
-
-/* override default .tree-widget-item line-height */
-#jit-optimizations-raw-view .tree-widget-item {
-  line-height: 20px !important;
-  display: block;
-  overflow: hidden;
-}
-
-#jit-optimizations-raw-view .tree-widget-item[level="1"] {
-  font-weight: 600;
-}
-
-#jit-optimizations-view .opt-outcome::before {
-  content: "→";
-  margin: 4px 0px;
-  color: var(--theme-body-color);
-}
-#jit-optimizations-view .theme-selected .opt-outcome::before {
-  color: var(--theme-selection-color);
-}
-
-#jit-optimizations-view .tree-widget-item:not(.theme-selected) .opt-outcome[outcome=success] {
-  color: var(--theme-highlight-green);
-}
-#jit-optimizations-view .tree-widget-item:not(.theme-selected) .opt-outcome[outcome=failure] {
-  color: var(--theme-highlight-red);
-}
-#jit-optimizations-view .tree-widget-container {
-  -moz-margin-end: 0px;
-}
-#jit-optimizations-view .tree-widget-container > li,
-#jit-optimizations-view .tree-widget-children > li {
-  overflow: hidden;
-}
-
-.opt-line::before {
-  content: ":";
-  color: var(--theme-highlight-orange);
-}
-.theme-selected .opt-line::before {
-  color: var(--theme-selection-color);
-}
-.opt-line.header-line::before {
-  color: var(--theme-body-color);
-}
-#jit-optimizations-view.empty .opt-line.header-line::before {
-  display: none;
-}
-
-.opt-url {
-  -moz-margin-start: 4px !important;
-}
-.opt-url:hover {
-  text-decoration: underline;
-}
-.opt-url.debugger-link {
-  cursor: pointer;
-}
-
-.opt-icon::before {
-  content: "";
-  background-image: url(chrome://devtools/skin/images/webconsole.svg);
-  background-repeat: no-repeat;
-  background-size: 72px 60px;
-  /* show grey "i" bubble by default */
-  background-position: -36px -36px;
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-
-  max-height: 12px;
-}
-
-#jit-optimizations-view .opt-icon::before {
-  margin: 5px 6px 0 0;
-}
-description.opt-icon {
-  margin: 0px 0px 0px 0px;
-}
-description.opt-icon::before {
-  margin: 1px 4px 0px 0px;
-}
-.theme-light .opt-icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
-}
-.opt-icon[severity=warning]::before {
-  background-position: -24px -24px;
-}
-
-ul.frames-list {
-  list-style-type: none;
-  padding: 0px;
-  margin: 0px;
-}
-
-ul.frames-list li {
-  cursor: pointer;
-}
-
-ul.frames-list li.selected {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-}
-
-/**
  * Configurable Options
  *
  * Elements can be tagged with a class and visibility is controlled via a
@@ -786,4 +641,33 @@ menuitem.experimental-option::before {
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option,
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option::before {
   display: none;
+}
+
+.opt-icon::before {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
+  background-repeat: no-repeat;
+  background-size: 72px 60px;
+  /* show grey "i" bubble by default */
+  background-position: -36px -36px;
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+
+  max-height: 12px;
+}
+
+.theme-light .opt-icon::before {
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+}
+.opt-icon.warning::before {
+  background-position: -24px -24px;
+}
+
+/* for call tree */
+description.opt-icon {
+  margin: 0px 0px 0px 0px;
+}
+description.opt-icon::before {
+  margin: 1px 4px 0px 0px;
 }

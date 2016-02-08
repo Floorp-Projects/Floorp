@@ -4,9 +4,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface mozIDOMWindow;
 
-[uuid(0a451ee0-972e-11e5-a837-0800200c9a66)]
+[uuid(15c05894-408e-4798-b527-a8c32d9c5f8c)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
@@ -80,7 +80,7 @@ interface nsIAudioChannelAgent : nsISupports
    *    3. The AudioChannelAgent keeps a strong reference to the callback
    *       object.
    */
-  void init(in nsIDOMWindow window, in long channelType,
+  void init(in mozIDOMWindow window, in long channelType,
             in nsIAudioChannelAgentCallback callback);
 
   /**
@@ -90,7 +90,7 @@ interface nsIAudioChannelAgent : nsISupports
    * In order for this to work, |callback| must implement
    * nsISupportsWeakReference.
    */
-  void initWithWeakCallback(in nsIDOMWindow window, in long channelType,
+  void initWithWeakCallback(in mozIDOMWindow window, in long channelType,
                             in nsIAudioChannelAgentCallback callback);
 
   /**

@@ -10,7 +10,8 @@ const { consoleMethod, PMM_loadFrameScripts } = require("devtools/shared/perform
 const MARKER_NAME = "TimeStamp";
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "doc_perf.html");
+  let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
+  let doc = browser.contentDocument;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());

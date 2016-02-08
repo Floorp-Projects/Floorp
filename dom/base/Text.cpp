@@ -25,7 +25,7 @@ Text::SplitText(uint32_t aOffset, ErrorResult& rv)
 Text::Constructor(const GlobalObject& aGlobal,
                   const nsAString& aData, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

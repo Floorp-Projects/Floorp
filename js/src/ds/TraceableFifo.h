@@ -20,8 +20,8 @@ namespace js {
 //
 // Most types of GC pointers as keys and values can be traced with no extra
 // infrastructure. For structs and non-gc-pointer members, ensure that there is
-// a specialization of DefaultGCPolicy<T> with an appropriate trace method
-// available to handle the custom type. Generic helpers can be found in
+// a specialization of GCPolicy<T> with an appropriate trace method available
+// to handle the custom type. Generic helpers can be found in
 // js/public/TracingAPI.h. Generic helpers can be found in
 // js/public/TracingAPI.h.
 //
@@ -30,11 +30,8 @@ namespace js {
 // must either be used with Rooted, or barriered and traced manually.
 template <typename T,
           size_t MinInlineCapacity = 0,
-          typename AllocPolicy = TempAllocPolicy,
-          typename GCPolicy = DefaultGCPolicy<T>>
-class TraceableFifo
-  : public js::Fifo<T, MinInlineCapacity, AllocPolicy>,
-    public JS::Traceable
+          typename AllocPolicy = TempAllocPolicy>
+class TraceableFifo : public js::Fifo<T, MinInlineCapacity, AllocPolicy>
 {
     using Base = js::Fifo<T, MinInlineCapacity, AllocPolicy>;
 
@@ -47,18 +44,18 @@ class TraceableFifo
     TraceableFifo(const TraceableFifo&) = delete;
     TraceableFifo& operator=(const TraceableFifo&) = delete;
 
-    static void trace(TraceableFifo* tf, JSTracer* trc) {
-        for (size_t i = 0; i < tf->front_.length(); ++i)
-            GCPolicy::trace(trc, &tf->front_[i], "fifo element");
-        for (size_t i = 0; i < tf->rear_.length(); ++i)
-            GCPolicy::trace(trc, &tf->rear_[i], "fifo element");
+    void trace(JSTracer* trc) {
+        for (size_t i = 0; i < this->front_.length(); ++i)
+            GCPolicy<T>::trace(trc, &this->front_[i], "fifo element");
+        for (size_t i = 0; i < this->rear_.length(); ++i)
+            GCPolicy<T>::trace(trc, &this->rear_[i], "fifo element");
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class TraceableFifoOperations
 {
-    using TF = TraceableFifo<T, Capacity, AllocPolicy, GCPolicy>;
+    using TF = TraceableFifo<T, Capacity, AllocPolicy>;
     const TF& fifo() const { return static_cast<const Outer*>(this)->extract(); }
 
   public:
@@ -67,11 +64,11 @@ class TraceableFifoOperations
     const T& front() const { return fifo().front(); }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class MutableTraceableFifoOperations
-  : public TraceableFifoOperations<Outer, T, Capacity, AllocPolicy, GCPolicy>
+  : public TraceableFifoOperations<Outer, T, Capacity, AllocPolicy>
 {
-    using TF = TraceableFifo<T, Capacity, AllocPolicy, GCPolicy>;
+    using TF = TraceableFifo<T, Capacity, AllocPolicy>;
     TF& fifo() { return static_cast<Outer*>(this)->extract(); }
 
   public:
@@ -86,41 +83,41 @@ class MutableTraceableFifoOperations
     void clear() { fifo().clear(); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class RootedBase<TraceableFifo<A,B,C,D>>
-  : public MutableTraceableFifoOperations<JS::Rooted<TraceableFifo<A,B,C,D>>, A,B,C,D>
+template <typename A, size_t B, typename C>
+class RootedBase<TraceableFifo<A,B,C>>
+  : public MutableTraceableFifoOperations<JS::Rooted<TraceableFifo<A,B,C>>, A,B,C>
 {
-    using TF = TraceableFifo<A,B,C,D>;
+    using TF = TraceableFifo<A,B,C>;
 
-    friend class TraceableFifoOperations<JS::Rooted<TF>, A,B,C,D>;
+    friend class TraceableFifoOperations<JS::Rooted<TF>, A,B,C>;
     const TF& extract() const { return *static_cast<const JS::Rooted<TF>*>(this)->address(); }
 
-    friend class MutableTraceableFifoOperations<JS::Rooted<TF>, A,B,C,D>;
+    friend class MutableTraceableFifoOperations<JS::Rooted<TF>, A,B,C>;
     TF& extract() { return *static_cast<JS::Rooted<TF>*>(this)->address(); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class MutableHandleBase<TraceableFifo<A,B,C,D>>
-  : public MutableTraceableFifoOperations<JS::MutableHandle<TraceableFifo<A,B,C,D>>, A,B,C,D>
+template <typename A, size_t B, typename C>
+class MutableHandleBase<TraceableFifo<A,B,C>>
+  : public MutableTraceableFifoOperations<JS::MutableHandle<TraceableFifo<A,B,C>>, A,B,C>
 {
-    using TF = TraceableFifo<A,B,C,D>;
+    using TF = TraceableFifo<A,B,C>;
 
-    friend class TraceableFifoOperations<JS::MutableHandle<TF>, A,B,C,D>;
+    friend class TraceableFifoOperations<JS::MutableHandle<TF>, A,B,C>;
     const TF& extract() const {
         return *static_cast<const JS::MutableHandle<TF>*>(this)->address();
     }
 
-    friend class MutableTraceableFifoOperations<JS::MutableHandle<TF>, A,B,C,D>;
+    friend class MutableTraceableFifoOperations<JS::MutableHandle<TF>, A,B,C>;
     TF& extract() { return *static_cast<JS::MutableHandle<TF>*>(this)->address(); }
 };
 
-template <typename A, size_t B, typename C, typename D>
-class HandleBase<TraceableFifo<A,B,C,D>>
-  : public TraceableFifoOperations<JS::Handle<TraceableFifo<A,B,C,D>>, A,B,C,D>
+template <typename A, size_t B, typename C>
+class HandleBase<TraceableFifo<A,B,C>>
+  : public TraceableFifoOperations<JS::Handle<TraceableFifo<A,B,C>>, A,B,C>
 {
-    using TF = TraceableFifo<A,B,C,D>;
+    using TF = TraceableFifo<A,B,C>;
 
-    friend class TraceableFifoOperations<JS::Handle<TF>, A,B,C,D>;
+    friend class TraceableFifoOperations<JS::Handle<TF>, A,B,C>;
     const TF& extract() const {
         return *static_cast<const JS::Handle<TF>*>(this)->address();
     }

@@ -225,7 +225,7 @@ class SavedStacks {
     };
 
   public:
-    struct LocationValue : public JS::Traceable {
+    struct LocationValue {
         LocationValue() : source(nullptr), line(0), column(0) { }
         LocationValue(JSAtom* source, size_t line, uint32_t column)
             : source(source),

@@ -46,6 +46,7 @@ ChildListName(FrameChildListID aListID)
     case kFloatList: return "FloatList";
     case kBulletList: return "BulletList";
     case kPushedFloatsList: return "PushedFloatsList";
+    case kBackdropList: return "BackdropList";
     case kNoReflowPrincipalList: return "NoReflowPrincipalList";
   }
 

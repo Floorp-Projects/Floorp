@@ -1,6 +1,0 @@
-# Options to enable rust in automation builds.
-
-if test `uname -s` != Linux; then
-RUSTC="$topsrcdir/rustc/bin/rustc"
-ac_add_options --enable-rust
-fi

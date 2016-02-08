@@ -1098,7 +1098,7 @@ AudioCallbackDriver::EnqueueStreamAndPromiseForOperation(MediaStream* aStream,
 
 void AudioCallbackDriver::CompleteAudioContextOperations(AsyncCubebOperation aOperation)
 {
-  nsAutoTArray<StreamAndPromiseForOperation, 1> array;
+  AutoTArray<StreamAndPromiseForOperation, 1> array;
 
   // We can't lock for the whole function because AudioContextOperationCompleted
   // will grab the monitor

@@ -22,17 +22,19 @@ class nsScreen : public mozilla::DOMEventTargetHelper
 {
   typedef mozilla::ErrorResult ErrorResult;
 public:
-  static already_AddRefed<nsScreen> Create(nsPIDOMWindow* aWindow);
+  static already_AddRefed<nsScreen> Create(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSCREEN
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen, mozilla::DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::DOMEventTargetHelper)
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }
+
+  nsPIDOMWindowOuter* GetOuter() const;
 
   int32_t GetTop(ErrorResult& aRv)
   {
@@ -52,8 +54,7 @@ public:
   {
     nsRect rect;
     if (IsDeviceSizePageSize()) {
-      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-      if (owner) {
+      if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
         int32_t innerWidth = 0;
         aRv = owner->GetInnerWidth(&innerWidth);
         return innerWidth;
@@ -68,8 +69,7 @@ public:
   {
     nsRect rect;
     if (IsDeviceSizePageSize()) {
-      nsCOMPtr<nsPIDOMWindow> owner = GetOwner();
-      if (owner) {
+      if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
         int32_t innerHeight = 0;
         aRv = owner->GetInnerHeight(&innerHeight);
         return innerHeight;
@@ -134,7 +134,7 @@ protected:
   nsresult GetWindowInnerRect(nsRect& aRect);
 
 private:
-  explicit nsScreen(nsPIDOMWindow* aWindow);
+  explicit nsScreen(nsPIDOMWindowInner* aWindow);
   virtual ~nsScreen();
 
   bool IsDeviceSizePageSize();

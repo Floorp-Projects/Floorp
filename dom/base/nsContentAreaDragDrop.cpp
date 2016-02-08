@@ -64,7 +64,7 @@ using namespace mozilla::dom;
 class MOZ_STACK_CLASS DragDataProducer
 {
 public:
-  DragDataProducer(nsPIDOMWindow* aWindow,
+  DragDataProducer(nsPIDOMWindowOuter* aWindow,
                    nsIContent* aTarget,
                    nsIContent* aSelectionTargetNode,
                    bool aIsAltKeyPressed);
@@ -90,7 +90,7 @@ private:
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   nsCOMPtr<nsIContent> mTarget;
   nsCOMPtr<nsIContent> mSelectionTargetNode;
   bool mIsAltKeyPressed;
@@ -110,7 +110,7 @@ private:
 
 
 nsresult
-nsContentAreaDragDrop::GetDragData(nsPIDOMWindow* aWindow,
+nsContentAreaDragDrop::GetDragData(nsPIDOMWindowOuter* aWindow,
                                    nsIContent* aTarget,
                                    nsIContent* aSelectionTargetNode,
                                    bool aIsAltKeyPressed,
@@ -252,7 +252,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
   return rv;
 }
 
-DragDataProducer::DragDataProducer(nsPIDOMWindow* aWindow,
+DragDataProducer::DragDataProducer(nsPIDOMWindowOuter* aWindow,
                                    nsIContent* aTarget,
                                    nsIContent* aSelectionTargetNode,
                                    bool aIsAltKeyPressed)

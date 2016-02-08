@@ -44,7 +44,7 @@ NS_IMPL_RELEASE_INHERITED(TVSource, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TVSource)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TVSource::TVSource(nsPIDOMWindow* aWindow,
+TVSource::TVSource(nsPIDOMWindowInner* aWindow,
                    TVSourceType aType,
                    TVTuner* aTuner)
   : DOMEventTargetHelper(aWindow)
@@ -61,7 +61,7 @@ TVSource::~TVSource()
 }
 
 /* static */ already_AddRefed<TVSource>
-TVSource::Create(nsPIDOMWindow* aWindow,
+TVSource::Create(nsPIDOMWindowInner* aWindow,
                  TVSourceType aType,
                  TVTuner* aTuner)
 {

@@ -74,17 +74,17 @@ protocol PBackgroundFileHandle
   manages PBackgroundFileRequest;
 
 parent:
-  DeleteMe();
+  async DeleteMe();
 
-  Finish();
-  Abort();
+  async Finish();
+  async Abort();
 
-  PBackgroundFileRequest(FileRequestParams params);
+  async PBackgroundFileRequest(FileRequestParams params);
 
 child:
-  __delete__();
+  async __delete__();
 
-  Complete(bool aborted);
+  async Complete(bool aborted);
 };
 
 } // namespace dom

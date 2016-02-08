@@ -29,9 +29,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothMapRequestHandle)
 
   static already_AddRefed<BluetoothMapRequestHandle>
-    Create(nsPIDOMWindow* aOwner);
+    Create(nsPIDOMWindowInner* aOwner);
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwner;
   }
@@ -107,10 +107,10 @@ public:
                                                  ErrorResult& aRv);
 
 private:
-  BluetoothMapRequestHandle(nsPIDOMWindow* aOwner);
+  BluetoothMapRequestHandle(nsPIDOMWindowInner* aOwner);
   ~BluetoothMapRequestHandle();
 
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 };
 
 END_BLUETOOTH_NAMESPACE

@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Permissions)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Permissions, mWindow)
 
-Permissions::Permissions(nsPIDOMWindow* aWindow)
+Permissions::Permissions(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
 }
@@ -45,7 +45,7 @@ namespace {
 already_AddRefed<PermissionStatus>
 CreatePushPermissionStatus(JSContext* aCx,
                            JS::Handle<JSObject*> aPermission,
-                           nsPIDOMWindow* aWindow,
+                           nsPIDOMWindowInner* aWindow,
                            ErrorResult& aRv)
 {
   PushPermissionDescriptor permission;
@@ -66,7 +66,7 @@ CreatePushPermissionStatus(JSContext* aCx,
 already_AddRefed<PermissionStatus>
 CreatePermissionStatus(JSContext* aCx,
                        JS::Handle<JSObject*> aPermission,
-                       nsPIDOMWindow* aWindow,
+                       nsPIDOMWindowInner* aWindow,
                        ErrorResult& aRv)
 {
   PermissionDescriptor permission;

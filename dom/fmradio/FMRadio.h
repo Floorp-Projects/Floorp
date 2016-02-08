@@ -14,8 +14,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
 
-class nsPIDOMWindow;
-
 BEGIN_FMRADIO_NAMESPACE
 
 class DOMRequest;
@@ -37,7 +35,7 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  void Init(nsPIDOMWindow *aWindow);
+  void Init(nsPIDOMWindowInner *aWindow);
   void Shutdown();
 
   /* hal::SwitchObserver */
@@ -45,7 +43,7 @@ public:
   /* FMRadioEventObserver */
   virtual void Notify(const FMRadioEventType& aType) override;
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return GetOwner();
   }

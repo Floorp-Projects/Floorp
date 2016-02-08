@@ -35,6 +35,27 @@ var ActionBarHandler = {
       return;
     }
 
+    if (!this._selectionID && e.collapsed) {
+      switch (e.reason) {
+        case 'longpressonemptycontent':
+        // case 'taponcaret':
+          // Show ActionBar when long pressing on an empty input.
+          // XXX: If we ever want to show ActionBar when single tapping on the
+          // caret, uncomment the above case 'taponcaret'.
+          this._init();
+          break;
+
+        case 'updateposition':
+          // Do not show ActionBar when single tapping on an non-empty editable
+          // input.
+          break;
+
+        default:
+          break;
+      }
+      return;
+    }
+
     // Open a closed ActionBar if carets actually visible.
     if (!this._selectionID && e.caretVisuallyVisible) {
       this._init();

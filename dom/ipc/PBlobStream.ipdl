@@ -14,7 +14,7 @@ protocol PBlobStream
   manager PBlob;
 
 child:
-  __delete__(InputStreamParams params, OptionalFileDescriptorSet fds);
+  async __delete__(InputStreamParams params, OptionalFileDescriptorSet fds);
 };
 
 } // namespace dom

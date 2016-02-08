@@ -15,12 +15,12 @@ protocol PColorPicker
     manager PBrowser;
 
 parent:
-    Open();
+    async Open();
 
 child:
-    Update(nsString color);
+    async Update(nsString color);
 
-    __delete__(nsString color);
+    async __delete__(nsString color);
 };
 
 } // namespace dom

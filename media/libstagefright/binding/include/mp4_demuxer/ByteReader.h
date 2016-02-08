@@ -25,7 +25,7 @@ public:
   {
   }
   template<size_t S>
-  explicit ByteReader(const nsAutoTArray<uint8_t, S>& aData)
+  explicit ByteReader(const AutoTArray<uint8_t, S>& aData)
     : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }

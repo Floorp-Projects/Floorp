@@ -152,7 +152,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     *****************************************************************/
     // Create a frame descriptor.
     masm.subl(esp, esi);
-    masm.makeFrameDescriptor(esi, JitFrame_Entry);
+    masm.makeFrameDescriptor(esi, JitFrame_Entry, JitFrameLayout::Size());
     masm.push(esi);
 
     CodeLabel returnLabel;
@@ -216,7 +216,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
         // Enter exit frame.
         masm.addPtr(Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), scratch);
-        masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
+        masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS, ExitFrameLayout::Size());
         masm.push(scratch); // Fake return address.
         masm.push(Imm32(0));
         // No GC things to mark on the stack, push a bare token.
@@ -508,7 +508,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Construct descriptor, accounting for pushed frame pointer above
     masm.lea(Operand(FramePointer, sizeof(void*)), ebx);
     masm.subl(esp, ebx);
-    masm.makeFrameDescriptor(ebx, JitFrame_Rectifier);
+    masm.makeFrameDescriptor(ebx, JitFrame_Rectifier, JitFrameLayout::Size());
 
     // Construct JitFrameLayout.
     masm.push(edx); // number of actual arguments

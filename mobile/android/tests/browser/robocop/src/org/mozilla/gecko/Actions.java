@@ -51,28 +51,39 @@ public interface Actions {
      */
     void sendGeckoEvent(String geckoEvent, String data);
 
-    /**
-     * Sends a preferences get event to Gecko.
-     *
-     * @param requestId The id of this request.
-     * @param prefNames The preferences being requested.
-     */
-    void sendPreferencesGetEvent(int requestId, String[] prefNames);
+    public interface PrefWaiter {
+        boolean isFinished();
+        void waitForFinish();
+        void waitForFinish(long timeoutMillis, boolean failOnTimeout);
+    }
 
-    /**
-     * Sends a preferences observe event to Gecko.
-     *
-     * @param requestId The id of this request.
-     * @param prefNames The preferences being requested.
-     */
-    void sendPreferencesObserveEvent(int requestId, String[] prefNames);
+    public abstract static class PrefHandlerBase implements PrefsHelper.PrefHandler {
+        /* package */ Assert asserter;
 
-    /**
-     * Sends a preferences remove observers event to Gecko.
-     *
-     * @param requestId The id of this request.
-     */
-    void sendPreferencesRemoveObserversEvent(int requestid);
+        @Override // PrefsHelper.PrefHandler
+        public void prefValue(String pref, boolean value) {
+            asserter.ok(false, "Unexpected pref callback", "");
+        }
+
+        @Override // PrefsHelper.PrefHandler
+        public void prefValue(String pref, int value) {
+            asserter.ok(false, "Unexpected pref callback", "");
+        }
+
+        @Override // PrefsHelper.PrefHandler
+        public void prefValue(String pref, String value) {
+            asserter.ok(false, "Unexpected pref callback", "");
+        }
+
+        @Override // PrefsHelper.PrefHandler
+        public void finish() {
+        }
+    }
+
+    PrefWaiter getPrefs(String[] prefNames, PrefHandlerBase handler);
+    void setPref(String pref, Object value, boolean flush);
+    PrefWaiter addPrefsObserver(String[] prefNames, PrefHandlerBase handler);
+    void removePrefsObserver(PrefWaiter handler);
 
     /**
      * Listens for a gecko event to be sent from the Gecko instance.

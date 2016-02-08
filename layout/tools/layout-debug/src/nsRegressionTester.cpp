@@ -40,7 +40,7 @@ nsRegressionTester::~nsRegressionTester()
 NS_IMPL_ISUPPORTS(nsRegressionTester, nsILayoutRegressionTester)
 
 NS_IMETHODIMP
-nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
+nsRegressionTester::DumpFrameModel(mozIDOMWindow* aWindowToDump,
                                    nsIFile *aDestFile,
                                    uint32_t aFlagsMask, int32_t *aResult)
 {
@@ -56,9 +56,9 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
   uint32_t    busyFlags;
   bool        stillLoading;
 
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = GetDocShellFromWindow(aWindowToDump, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  auto* windowToDump = nsPIDOMWindowInner::From(aWindowToDump);
+
+  nsCOMPtr<nsIDocShell> docShell = windowToDump->GetDocShell();
 
   // find out if the document is loaded
   docShell->GetBusyFlags(&busyFlags);
@@ -134,17 +134,5 @@ nsRegressionTester::CompareFrameModels(nsIFile *aBaseFile, nsIFile *aVerFile,
   }
 
   *aResult = NS_FAILED(rv);
-  return NS_OK;
-}
-
-nsresult
-nsRegressionTester::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell)
-{
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(inWindow));
-  if (!window) return NS_ERROR_FAILURE;
-
-  *outShell = window->GetDocShell();
-  NS_IF_ADDREF(*outShell);
-
   return NS_OK;
 }

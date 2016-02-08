@@ -8,6 +8,8 @@ with Files('**/Makefile.in'):
     BUG_COMPONENT = ('Core', 'Build Config')
     FINAL = True
 
+FILES_PER_UNIFIED_FILE = 1
+
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',

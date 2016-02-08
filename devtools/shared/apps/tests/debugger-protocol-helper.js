@@ -49,13 +49,13 @@ function connect(onDone) {
 function startClient(transport, onDone) {
   // Setup client and actor used in all tests
   gClient = new DebuggerClient(transport);
-  gClient.connect(function onConnect() {
-    gClient.listTabs(function onListTabs(aResponse) {
+  gClient.connect()
+    .then(() => gClient.listTabs())
+    .then(aResponse => {
       gActor = aResponse.webappsActor;
       if (gActor)
         webappActorRequest({type: "watchApps"}, onDone);
     });
-  });
 
   gClient.addListener("appInstall", function (aState, aType, aPacket) {
     sendAsyncMessage("installed-event", { manifestURL: aType.manifestURL });

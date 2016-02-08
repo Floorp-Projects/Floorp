@@ -38,7 +38,7 @@ function fillDialog()
   // get the find service, which stores global find state
   var findService = Components.classes["@mozilla.org/find/find_service;1"]
                               .getService(Components.interfaces.nsIFindService);
-  
+
   // Set initial dialog field contents. Use the gFindInst attributes first,
   // this is necessary for window.find()
   dialog.findKey.value           = gFindInst.searchString ? gFindInst.searchString : findService.searchString;
@@ -69,15 +69,15 @@ function onLoad()
   initDialogObject();
 
   // get the find instance
-  var arg0 = window.arguments[0];                                               
+  var arg0 = window.arguments[0];
   // If the dialog was opened from window.find(),
   // arg0 will be an instance of nsIWebBrowserFind
   if (arg0 instanceof Components.interfaces.nsIWebBrowserFind) {
     gFindInst = arg0;
-  } else {  
-    gFindInstData = arg0;                                                       
-    gFindInst = gFindInstData.webBrowserFind;                                   
-  }                                                                             
+  } else {
+    gFindInstData = arg0;
+    gFindInst = gFindInstData.webBrowserFind;
+  }
 
   fillDialog();
   doEnabling();
@@ -95,7 +95,7 @@ function onUnload()
 function onAccept()
 {
   if (gFindInstData && gFindInst != gFindInstData.webBrowserFind) {
-    gFindInstData.init();             
+    gFindInstData.init();
     gFindInst = gFindInstData.webBrowserFind;
   }
 
@@ -108,7 +108,7 @@ function onAccept()
   gFindInst.matchCase     = dialog.caseSensitive.checked;
   gFindInst.wrapFind      = dialog.wrap.checked;
   gFindInst.findBackwards = dialog.up.selected;
-  
+
   // Search.
   var result = gFindInst.findNext();
 
@@ -120,7 +120,7 @@ function onAccept()
                                   dialog.bundle.getString("notFoundWarning"));
     dialog.findKey.select();
     dialog.findKey.focus();
-  } 
+  }
   return false;
 }
 

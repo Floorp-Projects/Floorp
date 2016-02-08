@@ -1591,7 +1591,7 @@ interface HTMLFormElement : HTMLElement {
            attribute DOMString target;
 
   readonly attribute HTMLFormControlsCollection elements;
-  readonly attribute long length;
+  readonly attribute unsigned long length;
   getter Element (unsigned long index);
   getter (RadioNodeList or Element) (DOMString name);
 
@@ -2309,8 +2309,11 @@ interface BarProp {
            attribute boolean visible;
 };
 
+enum ScrollRestoration { "auto", "manual" };
 interface History {
+
   readonly attribute long length;
+  attribute ScrollRestoration scrollRestoration;
   readonly attribute any state;
   void go(optional long delta);
   void back();

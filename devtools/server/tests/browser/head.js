@@ -25,7 +25,10 @@ waitForExplicitFinish();
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
- * @return a promise that resolves to the document when the url is loaded
+ * @return a promise that resolves to the new browser that the document
+ *         is loaded in. Note that we cannot return the document
+ *         directly, since this would be a CPOW in the e10s case,
+ *         and Promises cannot be resolved with CPOWs (see bug 1233497).
  */
 var addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: '" + url + "'");
@@ -42,7 +45,7 @@ var addTab = Task.async(function* (url) {
     waitForFocus(resolve, content, isBlank);
   });
 
-  return tab.linkedBrowser.contentWindow.document;
+  return tab.linkedBrowser;
 });
 
 function* initAnimationsFrontForUrl(url) {
@@ -78,13 +81,11 @@ function initDebuggerServer() {
  * connected.
  */
 function connectDebuggerClient(client) {
-  return new Promise(resolve => {
-    client.connect(() => {
-      client.listTabs(tabs => {
-        resolve(tabs.tabs[tabs.selected]);
-      });
+  return client.connect()
+    .then(() => client.listTabs())
+    .then(tabs => {
+      return tabs.tabs[tabs.selected];
     });
-  });
 }
 
 /**

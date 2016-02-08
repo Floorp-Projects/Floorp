@@ -384,7 +384,7 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
                                                         &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> navWin;
+  nsCOMPtr<mozIDOMWindowProxy> navWin;
   rv = winMediator->GetMostRecentWindow(MOZ_UTF16("navigator:browser"),
                                         getter_AddRefs(navWin));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -392,7 +392,8 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(navWin);
+  nsPIDOMWindowOuter* win = nsPIDOMWindowOuter::From(navWin);
+  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(win);
   if (!widget) {
     return NS_ERROR_FAILURE;
   }

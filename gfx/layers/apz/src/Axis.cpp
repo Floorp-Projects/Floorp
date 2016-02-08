@@ -30,6 +30,13 @@
 namespace mozilla {
 namespace layers {
 
+// When we compute the velocity we do so by taking two input events and
+// dividing the distance delta over the time delta. In some cases the time
+// delta can be really small, which can make the velocity computation very
+// volatile. To avoid this we impose a minimum time delta below which we do
+// not recompute the velocity.
+const uint32_t MIN_VELOCITY_SAMPLE_TIME_MS = 5;
+
 bool FuzzyEqualsCoordinate(float aValue1, float aValue2)
 {
   return FuzzyEqualsAdditive(aValue1, aValue2, COORDINATE_EPSILON)
@@ -40,7 +47,8 @@ extern StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
-    mPosTimeMs(0),
+    mVelocitySampleTimeMs(0),
+    mVelocitySamplePos(0),
     mVelocity(0.0f),
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
@@ -67,16 +75,20 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
   // mVelocityQueue is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
-  if (aTimestampMs == mPosTimeMs) {
-    // This could be a duplicate event, or it could be a legitimate event
-    // on some platforms that generate events really fast. As a compromise
-    // update mPos so we don't run into problems like bug 1042734, even though
-    // that means the velocity will be stale. Better than doing a divide-by-zero.
+  if (aTimestampMs <= mVelocitySampleTimeMs + MIN_VELOCITY_SAMPLE_TIME_MS) {
+    // See also the comment on MIN_VELOCITY_SAMPLE_TIME_MS.
+    // We still update mPos so that the positioning is correct (and we don't run
+    // into problems like bug 1042734) but the velocity will remain where it was.
+    // In particular we don't update either mVelocitySampleTimeMs or
+    // mVelocitySamplePos so that eventually when we do get an event with the
+    // required time delta we use the corresponding distance delta as well.
+    AXIS_LOG("%p|%s skipping velocity computation for small time delta %dms\n",
+        mAsyncPanZoomController, Name(), (aTimestampMs - mVelocitySampleTimeMs));
     mPos = aPos;
     return;
   }
 
-  float newVelocity = mAxisLocked ? 0.0f : (float)(mPos - aPos + aAdditionalDelta) / (float)(aTimestampMs - mPosTimeMs);
+  float newVelocity = mAxisLocked ? 0.0f : (float)(mVelocitySamplePos - aPos + aAdditionalDelta) / (float)(aTimestampMs - mVelocitySampleTimeMs);
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     bool velocityIsNegative = (newVelocity < 0);
     newVelocity = fabs(newVelocity);
@@ -107,7 +119,8 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
     mAsyncPanZoomController, Name(), newVelocity);
   mVelocity = newVelocity;
   mPos = aPos;
-  mPosTimeMs = aTimestampMs;
+  mVelocitySampleTimeMs = aTimestampMs;
+  mVelocitySamplePos = aPos;
 
   // Limit queue size pased on pref
   mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, mVelocity));
@@ -119,7 +132,8 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
 void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
-  mPosTimeMs = aTimestampMs;
+  mVelocitySampleTimeMs = aTimestampMs;
+  mVelocitySamplePos = aPos;
   mAxisLocked = false;
 }
 

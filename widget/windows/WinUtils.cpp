@@ -524,6 +524,30 @@ WinUtils::Log(const char *fmt, ...)
   delete[] buffer;
 }
 
+// static
+double
+WinUtils::SystemScaleFactor()
+{
+  // The result of GetDeviceCaps won't change dynamically, as it predates
+  // per-monitor DPI and support for on-the-fly resolution changes.
+  // Therefore, we only need to look it up once.
+  static double systemScale = 0;
+  if (systemScale == 0) {
+    HDC screenDC = GetDC(nullptr);
+    systemScale = GetDeviceCaps(screenDC, LOGPIXELSY) / 96.0;
+    ReleaseDC(nullptr, screenDC);
+
+    if (systemScale == 0) {
+      // Bug 1012487 - This can occur when the Screen DC is used off the
+      // main thread on windows. For now just assume a 100% DPI for this
+      // drawing call.
+      // XXX - fixme!
+      return 1.0;
+    }
+  }
+  return systemScale;
+}
+
 #ifndef WM_DPICHANGED
 typedef enum {
   MDT_EFFECTIVE_DPI = 0,
@@ -585,19 +609,7 @@ WinUtils::LogToPhysFactor(HMONITOR aMonitor)
     return dpiY / 96.0;
   }
 
-  // The system DPI will never change during the session.
-  HDC hdc = ::GetDC(nullptr);
-  double result = ::GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
-  ::ReleaseDC(nullptr, hdc);
-
-  if (result == 0) {
-    // Bug 1012487 - This can occur when the Screen DC is used off the
-    // main thread on windows. For now just assume a 100% DPI for this
-    // drawing call.
-    // XXX - fixme!
-    result = 1.0;
-  }
-  return result;
+  return SystemScaleFactor();
 }
 
 /* static */
@@ -1367,9 +1379,8 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
   fclose(file);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Cleanup
   if (mURLShortcut) {
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS, 0);
+    SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS, 0);
   }
   return rv;
 }
@@ -1681,7 +1692,7 @@ WinUtils::ConvertHRGNToRegion(HRGN aRgn)
   nsIntRegion rgn;
 
   DWORD size = ::GetRegionData(aRgn, 0, nullptr);
-  nsAutoTArray<uint8_t,100> buffer;
+  AutoTArray<uint8_t,100> buffer;
   buffer.SetLength(size);
 
   RGNDATA* data = reinterpret_cast<RGNDATA*>(buffer.Elements());

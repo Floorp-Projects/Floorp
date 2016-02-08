@@ -121,7 +121,7 @@ IccContactListToMozContactList(JSContext* aCx, GlobalObject& aGlobal,
 
 NS_IMPL_ISUPPORTS(IccCallback, nsIIccCallback)
 
-IccCallback::IccCallback(nsPIDOMWindow* aWindow, DOMRequest* aRequest,
+IccCallback::IccCallback(nsPIDOMWindowInner* aWindow, DOMRequest* aRequest,
                          bool aIsCardLockEnabled)
   : mWindow(aWindow)
   , mRequest(aRequest)
@@ -129,7 +129,7 @@ IccCallback::IccCallback(nsPIDOMWindow* aWindow, DOMRequest* aRequest,
 {
 }
 
-IccCallback::IccCallback(nsPIDOMWindow* aWindow, Promise* aPromise)
+IccCallback::IccCallback(nsPIDOMWindowInner* aWindow, Promise* aPromise)
   : mWindow(aWindow)
   , mPromise(aPromise)
 {

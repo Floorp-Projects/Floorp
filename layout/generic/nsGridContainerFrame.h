@@ -21,6 +21,25 @@
 nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
+namespace mozilla {
+/**
+ * The number of implicit / explicit tracks and their sizes.
+ */
+struct ComputedGridTrackInfo
+{
+  ComputedGridTrackInfo(uint32_t aNumLeadingImplicitTracks,
+                        uint32_t aNumExplicitTracks,
+                        nsTArray<nscoord>&& aSizes)
+    : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks)
+    , mNumExplicitTracks(aNumExplicitTracks)
+    , mSizes(aSizes)
+  {}
+  uint32_t mNumLeadingImplicitTracks;
+  uint32_t mNumExplicitTracks;
+  nsTArray<nscoord> mSizes;
+};
+} // namespace mozilla
+
 class nsGridContainerFrame final : public nsContainerFrame
 {
 public:
@@ -86,33 +105,19 @@ public:
     StateBits mState;
   };
 
-  NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemContainingBlockRect, nsRect)
 
-  NS_DECLARE_FRAME_PROPERTY(GridColTrackSizes, DeleteValue<nsTArray<nscoord>>)
-
-  const nsTArray<nscoord>* GetComputedTemplateColumns()
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridColTrackInfo, ComputedGridTrackInfo)
+  const ComputedGridTrackInfo* GetComputedTemplateColumns()
   {
-    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridColTrackSizes()));
+    return Properties().Get(GridColTrackInfo());
   }
 
-  NS_DECLARE_FRAME_PROPERTY(GridRowTrackSizes, DeleteValue<nsTArray<nscoord>>)
-
-  const nsTArray<nscoord>* GetComputedTemplateRows()
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridRowTrackInfo, ComputedGridTrackInfo)
+  const ComputedGridTrackInfo* GetComputedTemplateRows()
   {
-    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridRowTrackSizes()));
+    return Properties().Get(GridRowTrackInfo());
   }
-
-  /**
-   * Return the number of implicit tracks that comes before the explicit grid.
-   */
-  uint32_t NumImplicitLeadingCols() const { return mExplicitGridOffsetCol; }
-  uint32_t NumImplicitLeadingRows() const { return mExplicitGridOffsetRow; }
-
-  /**
-   * Return the number of explicit tracks.
-   */
-  uint32_t NumExplicitCols() const { return mExplicitGridColEnd - 1; }
-  uint32_t NumExplicitRows() const { return mExplicitGridRowEnd - 1; }
 
 protected:
   static const uint32_t kAutoLine;
@@ -592,13 +597,13 @@ protected:
    * grid-template-columns / grid-template-rows are stored in this frame
    * property when needed, as a ImplicitNamedAreas* value.
    */
-  NS_DECLARE_FRAME_PROPERTY(ImplicitNamedAreasProperty,
-                            DeleteValue<ImplicitNamedAreas>)
+  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ImplicitNamedAreasProperty,
+                                      ImplicitNamedAreas)
   void InitImplicitNamedAreas(const nsStylePosition* aStyle);
   void AddImplicitNamedAreas(const nsTArray<nsTArray<nsString>>& aLineNameLists);
-  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
   ImplicitNamedAreas* GetImplicitNamedAreas() const {
-    return static_cast<ImplicitNamedAreas*>(Properties().Get(ImplicitNamedAreasProperty()));
+    return Properties().Get(ImplicitNamedAreasProperty());
   }
   bool HasImplicitNamedArea(const nsString& aName) const {
     ImplicitNamedAreas* areas = GetImplicitNamedAreas();

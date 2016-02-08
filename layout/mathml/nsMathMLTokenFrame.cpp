@@ -64,9 +64,9 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
   // - to force them to trim their leading and trailing whitespaces.
   // - Indicate which frames are suitable for mathvariant
   // - flag single character <mi> frames for special italic treatment
-  for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
+  for (nsIFrame* childFrame = PrincipalChildList().FirstChild(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    for (nsIFrame* childFrame2 = childFrame->GetFirstPrincipalChild();
+    for (nsIFrame* childFrame2 = childFrame->PrincipalChildList().FirstChild();
          childFrame2; childFrame2 = childFrame2->GetNextSibling()) {
       if (childFrame2->GetType() == nsGkAtoms::textFrame) {
         childFrame2->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
@@ -132,8 +132,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.SetBlockStartAscent(0);
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
-  nsIFrame* childFrame = GetFirstPrincipalChild();
-  while (childFrame) {
+  for (nsIFrame* childFrame : PrincipalChildList()) {
     // ask our children to compute their bounding metrics
     nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(),
                                          aDesiredSize.mFlags
@@ -148,8 +147,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
-
-    childFrame = childFrame->GetNextSibling();
   }
 
   // place and size children
@@ -168,8 +165,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   mBoundingMetrics = nsBoundingMetrics();
-  for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
-       childFrame = childFrame->GetNextSibling()) {
+  for (nsIFrame* childFrame :PrincipalChildList()) {
     nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
     GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                    childSize.mBoundingMetrics, nullptr);
@@ -192,8 +188,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
-    for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
-         childFrame = childFrame->GetNextSibling()) {
+    for (nsIFrame* childFrame : PrincipalChildList()) {
       nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
       GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                      childSize.mBoundingMetrics);

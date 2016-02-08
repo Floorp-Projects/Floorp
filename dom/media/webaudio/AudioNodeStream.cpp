@@ -408,7 +408,7 @@ AudioNodeStream::ObtainInputBlock(AudioBlock& aTmpChunk,
 {
   uint32_t inputCount = mInputs.Length();
   uint32_t outputChannelCount = 1;
-  nsAutoTArray<const AudioBlock*,250> inputChunks;
+  AutoTArray<const AudioBlock*,250> inputChunks;
   for (uint32_t i = 0; i < inputCount; ++i) {
     if (aPortIndex != mInputs[i]->InputNumber()) {
       // This input is connected to a different port
@@ -454,7 +454,7 @@ AudioNodeStream::ObtainInputBlock(AudioBlock& aTmpChunk,
 
   aTmpChunk.AllocateChannels(outputChannelCount);
   // The static storage here should be 1KB, so it's fine
-  nsAutoTArray<float, GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
+  AutoTArray<float, GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
 
   for (uint32_t i = 0; i < inputChunkCount; ++i) {
     AccumulateInputChunk(i, *inputChunks[i], &aTmpChunk, &downmixBuffer);
@@ -467,7 +467,7 @@ AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex,
                                       AudioBlock* aBlock,
                                       nsTArray<float>* aDownmixBuffer)
 {
-  nsAutoTArray<const float*,GUESS_AUDIO_CHANNELS> channels;
+  AutoTArray<const float*,GUESS_AUDIO_CHANNELS> channels;
   UpMixDownMixChunk(&aChunk, aBlock->ChannelCount(), channels, *aDownmixBuffer);
 
   for (uint32_t c = 0; c < channels.Length(); ++c) {
@@ -509,7 +509,7 @@ AudioNodeStream::UpMixDownMixChunk(const AudioBlock* aChunk,
     }
   } else if (aOutputChannels.Length() > aOutputChannelCount) {
     if (mChannelInterpretation == ChannelInterpretation::Speakers) {
-      nsAutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
+      AutoTArray<float*,GUESS_AUDIO_CHANNELS> outputChannels;
       outputChannels.SetLength(aOutputChannelCount);
       aDownmixBuffer.SetLength(aOutputChannelCount * WEBAUDIO_BLOCK_SIZE);
       for (uint32_t j = 0; j < aOutputChannelCount; ++j) {

@@ -673,6 +673,7 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
     , mNPPIface(nullptr)
     , mPlugin(nullptr)
     , mTaskFactory(this)
+    , mSandboxLevel(0)
     , mIsFlashPlugin(false)
     , mIsStartingAsync(false)
     , mNPInitialized(false)
@@ -736,7 +737,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mHangUIParent(nullptr)
     , mHangUIEnabled(true)
     , mIsTimerReset(true)
-    , mSandboxLevel(aSandboxLevel)
 #ifdef MOZ_CRASHREPORTER
     , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
     , mCrashReporter(nullptr)
@@ -754,6 +754,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     sInstantiated = true;
+    mSandboxLevel = aSandboxLevel;
     mRunID = GeckoChildProcessHost::GetUniqueID();
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -2669,6 +2670,23 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
 
     if (mIsFlashPlugin) {
         parentInstance->InitMetadata(strPluginType, srcAttribute);
+#ifdef XP_WIN
+        // Force windowless mode (bug 1201904) when sandbox level >= 2
+        if (mSandboxLevel >= 2) {
+           NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
+           NS_NAMED_LITERAL_CSTRING(opaqueAttributeValue, "opaque");
+           auto wmodeAttributeIndex =
+               names.IndexOf(wmodeAttributeName, 0, comparator);
+           if (wmodeAttributeIndex != names.NoIndex) {
+               if (!values[wmodeAttributeIndex].EqualsLiteral("transparent")) {
+                   values[wmodeAttributeIndex].Assign(opaqueAttributeValue);
+               }
+           } else {
+               names.AppendElement(wmodeAttributeName);
+               values.AppendElement(opaqueAttributeValue);
+           }
+        }
+#endif
     }
 
     // Release the surrogate reference that was in pdata

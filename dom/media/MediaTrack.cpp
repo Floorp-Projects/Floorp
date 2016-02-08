@@ -40,7 +40,7 @@ MediaTrack::SetTrackList(MediaTrackList* aList)
 }
 
 void
-MediaTrack::Init(nsPIDOMWindow* aOwnerWindow)
+MediaTrack::Init(nsPIDOMWindowInner* aOwnerWindow)
 {
   BindToOwner(aOwnerWindow);
 }

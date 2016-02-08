@@ -48,6 +48,9 @@ ZoomConstraintsClient::~ZoomConstraintsClient()
 static nsIWidget*
 GetWidget(nsIPresShell* aShell)
 {
+  if (!aShell) {
+    return nullptr;
+  }
   if (nsIFrame* rootFrame = aShell->GetRootFrame()) {
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
     return rootFrame->GetNearestWidget();
@@ -105,7 +108,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   mPresShell = aPresShell;
   mDocument = aDocument;
 
-  if (nsCOMPtr<nsPIDOMWindow> window = mDocument->GetWindow()) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
     mEventTarget = window->GetChromeEventHandler();
   }
   if (mEventTarget) {

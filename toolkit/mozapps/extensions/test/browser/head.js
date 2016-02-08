@@ -682,7 +682,8 @@ function MockProvider(aUseAsyncCallbacks, aTypes) {
     id: "extension",
     name: "Extensions",
     uiPriority: 4000,
-    flags: AddonManager.TYPE_UI_VIEW_LIST
+    flags: AddonManager.TYPE_UI_VIEW_LIST |
+           AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL,
   }] : aTypes;
 
   var self = this;
@@ -1134,7 +1135,8 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
 
 MockAddon.prototype = {
   get shouldBeActive() {
-    return !this.appDisabled && !this._userDisabled;
+    return !this.appDisabled && !this._userDisabled &&
+           !(this.pendingOperations & AddonManager.PENDING_UNINSTALL);
   },
 
   get appDisabled() {
@@ -1206,16 +1208,19 @@ MockAddon.prototype = {
     // Tests can implement this if they need to
   },
 
-  uninstall: function() {
-    if (this.pendingOperations & AddonManager.PENDING_UNINSTALL)
+  uninstall: function(aAlwaysAllowUndo = false) {
+    if ((this.operationsRequiringRestart & AddonManager.OP_NEED_RESTART_UNINSTALL)
+        && this.pendingOperations & AddonManager.PENDING_UNINSTALL)
       throw Components.Exception("Add-on is already pending uninstall");
 
-    var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+    var needsRestart = aAlwaysAllowUndo || !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL);
     this.pendingOperations |= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onUninstalling", this, needsRestart);
     if (!needsRestart) {
       this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
       this._provider.removeAddon(this);
+    } else if (!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE)) {
+      this.isActive = false;
     }
   },
 
@@ -1224,7 +1229,12 @@ MockAddon.prototype = {
       throw Components.Exception("Add-on is not pending uninstall");
 
     this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
+    this.isActive = this.shouldBeActive;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
+  },
+
+  markAsSeen: function() {
+    this.seen = true;
   },
 
   _updateActiveState: function(currentActive, newActive) {
@@ -1236,7 +1246,7 @@ MockAddon.prototype = {
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
     }
     else if (newActive) {
-      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
+      let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
       this.pendingOperations |= AddonManager.PENDING_ENABLE;
       AddonManagerPrivate.callAddonListeners("onEnabling", this, needsRestart);
       if (!needsRestart) {
@@ -1246,7 +1256,7 @@ MockAddon.prototype = {
       }
     }
     else {
-      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
+      let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
       this.pendingOperations |= AddonManager.PENDING_DISABLE;
       AddonManagerPrivate.callAddonListeners("onDisabling", this, needsRestart);
       if (!needsRestart) {

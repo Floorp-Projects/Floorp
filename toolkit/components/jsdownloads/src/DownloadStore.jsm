@@ -124,8 +124,8 @@ this.DownloadStore.prototype = {
           try {
             if (!download.succeeded && !download.canceled && !download.error) {
               // Try to restart the download if it was in progress during the
-              // previous session.
-              download.start();
+              // previous session.  Ignore errors.
+              download.start().catch(() => {});
             } else {
               // If the download was not in progress, try to update the current
               // progress from disk.  This is relevant in case we retained

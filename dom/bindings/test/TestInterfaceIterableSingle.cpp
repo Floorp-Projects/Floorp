@@ -20,7 +20,7 @@ NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-TestInterfaceIterableSingle::TestInterfaceIterableSingle(nsPIDOMWindow* aParent)
+TestInterfaceIterableSingle::TestInterfaceIterableSingle(nsPIDOMWindowInner* aParent)
   : mParent(aParent)
 {
   for(int i = 0; i < 3; ++i) {
@@ -33,7 +33,7 @@ already_AddRefed<TestInterfaceIterableSingle>
 TestInterfaceIterableSingle::Constructor(const GlobalObject& aGlobal,
                                          ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -49,7 +49,7 @@ TestInterfaceIterableSingle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aG
   return TestInterfaceIterableSingleBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindow*
+nsPIDOMWindowInner*
 TestInterfaceIterableSingle::GetParentObject() const
 {
   return mParent;

@@ -1,0 +1,31 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1045994"
+  target="_blank">Mozilla Bug 1045994</a>
+<div id="log"></div>
+<iframe id="iframe"
+  src="http://example.org/tests/dom/animation/test/chrome/file_animate_xrays.html"></iframe>
+<script>
+'use strict';
+
+var win = document.getElementById('iframe').contentWindow;
+
+async_test(function(t) {
+  window.addEventListener('load', t.step_func(function() {
+    var target = win.document.getElementById('target');
+    var anim = target.animate({ opacity: [ 0, 1 ] }, 2000);
+    // In the x-ray case, the frames object will be given an opaque wrapper
+    // so it won't be possible to fetch any frames from it.
+    assert_equals(anim.effect.getFrames().length, 0);
+    t.done();
+  }));
+}, 'Calling animate() across x-rays');
+
+</script>
+</body>

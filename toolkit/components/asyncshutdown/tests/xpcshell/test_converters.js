@@ -24,7 +24,7 @@ function normalize(obj) {
     result[k] = normalize(obj[k]);
   }
   return result;
-};
+}
 
 function test_conversions() {
   const SAMPLES = [

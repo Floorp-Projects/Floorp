@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a>
+  </body>
+
+<script>
+
+var steps = [
+  noArgs,
+  parseError,
+  invalidManifest,
+  permissionDenied,
+  invalidContent,
+  invalidLaunchPath,
+  invalidLaunchPath2,
+  invalidEntryPoint,
+  invalidLocaleEntryPoint,
+  invalidActivityHref,
+  invalidActivityHref2,
+  invalidMessage,
+  fileURL,
+  originNotAllowed,
+  originAllowed,
+];
+
+runAll(steps);
+
+function noArgs(next) {
+  try {
+    navigator.mozApps.install();
+  } catch (e) {
+    is(e.message, "Not enough arguments to DOMApplicationsRegistry.install.",
+       "install without arguments throws exception");
+    next();
+  }
+}
+
+function parseError(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/json_syntax_error.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "MANIFEST_PARSE_ERROR", "manifest with syntax error");
+    next();
+  };
+}
+
+function invalidManifest(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/missing_required_field.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function permissionDenied(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/no_delegated_install.webapp";
+
+  confirmNextPopup();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "DENIED", "manifest without installs_allowed_from");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    todo(false, "manifest without installs_allowed_from fails");
+    confirmNextPopup();
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
+      next();
+    };
+  };
+}
+
+function invalidContent(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/bad_content_type.webapp";
+
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST_CONTENT_TYPE", "manifest with bad content type");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    ok(false, "manifest with bad content type should fail");
+    confirmNextPopup();
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
+      next();
+    };
+  };
+}
+
+function invalidLaunchPath(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_launch_path.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
+    next();
+  };
+}
+
+function invalidLaunchPath2(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_launch_path2.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Invalid Manifest");
+    next();
+  };
+}
+
+function invalidEntryPoint(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_entry_point.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function invalidLocaleEntryPoint(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_locale_entry_point.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "manifest missing required field");
+    next();
+  };
+}
+
+function invalidActivityHref(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_activity_href.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has non-relative URI for activity href");
+    next();
+  };
+}
+
+function invalidActivityHref2(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_activity_href2.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has data: URI for activity href");
+    next();
+  };
+}
+
+function invalidMessage(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/invalid_message.webapp";
+
+  navigator.mozApps.install(url, null).onerror = function onInstallError() {
+    is(this.error.name, "INVALID_MANIFEST", "Manifest has absolute message href");
+    next();
+  };
+}
+
+function fileURL(next) {
+  try {
+    var req = navigator.mozApps.install("file:///nonexistent");
+    req.onsuccess = function() {
+      ok(false, "Unexpected success installing non existent file");
+    };
+    req.onerror = function() {
+      is(this.error.name, "INVALID_URL", "Expected INVALID_URL");
+    };
+  } catch(ex) {
+    ok(false, "Unexpected exception " + ex.message);
+  }
+
+  try {
+    req = navigator.mozApps.install("file:///");
+    req.onsuccess = function() {
+      ok(false, "Unexpected success installing file: URL");
+    };
+    req.onerror = function() {
+      is(this.error.name, "INVALID_URL", "Expected INVALID_URL");
+    };
+  } catch(ex) {
+    ok(false, "Unexpected exception " + ex.message);
+  }
+
+  next();
+}
+
+function originNotAllowed(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/installs_allowed_from_example.com.webapp";
+
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    is(this.error.name, "INSTALL_FROM_DENIED", "origin is not in installs_allowed_from");
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    ok(false, "test should fail because of installs_allowed_from");
+    confirmNextPopup();
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
+      next();
+    };
+  };
+}
+
+function originAllowed(next) {
+  var url = "http://test/chrome/dom/apps/tests/apps/installs_allowed_from_chrome_mochitests.webapp";
+
+  confirmNextPopup();
+  var request = navigator.mozApps.install(url, null);
+
+  request.onerror = function onInstallError() {
+    ok(false, "installation error: " + this.error.name);
+    next();
+  };
+
+  request.onsuccess = function onInstall() {
+    ok(true, "test origin is in installs_allowed_from");
+    confirmNextPopup();
+    navigator.mozApps.mgmt.uninstall(this.result).onsuccess = function onUninstall() {
+      next();
+    };
+  };
+}
+
+</script>
+</window>

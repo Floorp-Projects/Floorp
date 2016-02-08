@@ -654,7 +654,7 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
     return nullptr;
   }
 
-  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -864,7 +864,7 @@ HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
     JS_updateMallocCounter(cx, imgSize);
   }
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
 
   // The File takes ownership of the buffer
   nsCOMPtr<nsIDOMBlob> file =
@@ -895,7 +895,8 @@ HTMLCanvasElement::GetContext(JSContext* aCx,
   }
 
   return CanvasRenderingContextHelper::GetContext(aCx, aContextId,
-                                                  aContextOptions, aRv);
+    aContextOptions.isObject() ? aContextOptions : JS::NullHandleValue,
+    aRv);
 }
 
 NS_IMETHODIMP

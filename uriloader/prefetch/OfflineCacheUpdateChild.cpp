@@ -17,7 +17,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
@@ -73,7 +73,7 @@ NS_IMPL_RELEASE(OfflineCacheUpdateChild)
 // OfflineCacheUpdateChild <public>
 //-----------------------------------------------------------------------------
 
-OfflineCacheUpdateChild::OfflineCacheUpdateChild(nsIDOMWindow* aWindow)
+OfflineCacheUpdateChild::OfflineCacheUpdateChild(nsPIDOMWindowInner* aWindow)
     : mState(STATE_UNINITIALIZED)
     , mIsUpgrade(false)
     , mSucceeded(false)
@@ -378,11 +378,8 @@ OfflineCacheUpdateChild::Schedule()
 
     NS_ASSERTION(mWindow, "Window must be provided to the offline cache update child");
 
-    nsCOMPtr<nsPIDOMWindow> piWindow = 
-        do_QueryInterface(mWindow);
-    mWindow = nullptr;
-
-    nsIDocShell *docshell = piWindow->GetDocShell();
+    nsCOMPtr<nsPIDOMWindowInner> window = mWindow.forget();
+    nsIDocShell *docshell = window->GetDocShell();
 
     nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
     if (!item) {

@@ -30,7 +30,7 @@ public:
   virtual void
   Shutdown() override;
 
-  virtual nsPIDOMWindow*
+  virtual nsPIDOMWindowInner*
   GetWindow() const override;
 
   virtual void

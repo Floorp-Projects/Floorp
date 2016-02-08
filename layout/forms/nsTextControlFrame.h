@@ -32,7 +32,7 @@ class nsTextControlFrame final : public nsContainerFrame,
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECLARE_FRAME_PROPERTY(ContentScrollPos, DeleteValue<nsPoint>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 
   explicit nsTextControlFrame(nsStyleContext* aContext);
   virtual ~nsTextControlFrame();
@@ -40,7 +40,7 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() override {
-    return do_QueryFrame(GetFirstPrincipalChild());
+    return do_QueryFrame(PrincipalChildList().FirstChild());
   }
 
   virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
@@ -152,10 +152,6 @@ public:
 
   NS_DECL_QUERYFRAME
 
-  // Temp reference to scriptrunner
-  // We could make these auto-Revoking via the "delete" entry for safety
-  NS_DECLARE_FRAME_PROPERTY(TextControlInitializer, nullptr)
-
 protected:
   /**
    * Launch the reflow on the child frames - see nsTextControlFrame::Reflow()
@@ -201,6 +197,11 @@ protected:
   class EditorInitializer;
   friend class EditorInitializer;
   friend class nsTextEditorState; // needs access to UpdateValueDisplay
+
+  // Temp reference to scriptrunner
+  // We could make these auto-Revoking via the "delete" entry for safety
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(TextControlInitializer,
+                                         EditorInitializer)
 
   class EditorInitializer : public nsRunnable {
   public:

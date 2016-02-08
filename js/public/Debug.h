@@ -150,7 +150,7 @@ class Builder {
         // A rooted reference to our value.
         PersistentRooted<T> value;
 
-        BuiltThing(JSContext* cx, Builder& owner_, T value_ = js::GCMethods<T>::initial())
+        BuiltThing(JSContext* cx, Builder& owner_, T value_ = js::GCPolicy<T>::initial())
           : owner(owner_), value(cx, value_)
         {
             owner.assertBuilt(value_);

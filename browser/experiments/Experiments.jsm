@@ -1520,7 +1520,7 @@ Experiments.ExperimentEntry.prototype = {
         this._log.error("initFromCacheData() - missing required key " + key);
         return false;
       }
-    };
+    }
 
     if (!this._isManifestDataValid(data._manifestData)) {
       return false;

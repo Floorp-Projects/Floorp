@@ -1,65 +1,29 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-function test() {
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("services.sync.username");
-  });
-  UITourTest();
-}
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("services.sync.username");
+});
 
-var tests = [
-  function test_checkSyncSetup_disabled(done) {
-    function callback(result) {
-      is(result.setup, false, "Sync shouldn't be setup by default");
-      done();
-    }
+add_task(setup_UITourTest);
 
-    gContentAPI.getConfiguration("sync", callback);
-  },
+add_UITour_task(function* test_checkSyncSetup_disabled() {
+  let result = yield getConfigurationPromise("sync");
+  is(result.setup, false, "Sync shouldn't be setup by default");
+});
 
-  function test_checkSyncSetup_enabled(done) {
-    function callback(result) {
-      is(result.setup, true, "Sync should be setup");
-      done();
-    }
+add_UITour_task(function* test_checkSyncSetup_enabled() {
+  Services.prefs.setCharPref("services.sync.username", "uitour@tests.mozilla.org");
+  let result = yield getConfigurationPromise("sync");
+  is(result.setup, true, "Sync should be setup");
+});
 
-    Services.prefs.setCharPref("services.sync.username", "uitour@tests.mozilla.org");
-    gContentAPI.getConfiguration("sync", callback);
-  },
-
-  // The showFirefoxAccounts API is sync related, so we test that here too...
-  function test_firefoxAccounts(done) {
-    // This test will load about:accounts, and we don't want that to hit the
-    // network.
-    Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri",
-                               "https://example.com/");
-
-    loadUITourTestPage(function(contentWindow) {
-      let tabBrowser = gBrowser.selectedBrowser;
-      // This command will replace the current tab - so add a load event
-      // handler which will fire when that happens.
-      tabBrowser.addEventListener("load", function onload(evt) {
-        tabBrowser.removeEventListener("load", onload, true);
-
-        is(tabBrowser.contentDocument.location.href,
-           "about:accounts?action=signup&entrypoint=uitour",
-           "about:accounts should have replaced the tab");
-
-        // the iframe in about:accounts will still be loading, so we stop
-        // that before resetting the pref.
-        tabBrowser.contentDocument.location.href = "about:blank";
-        Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
-        done();
-      }, true);
-
-      gContentAPI.showFirefoxAccounts();
-    });
-  },
-];
+// The showFirefoxAccounts API is sync related, so we test that here too...
+add_UITour_task(function* test_firefoxAccounts() {
+  yield gContentAPI.showFirefoxAccounts();
+  yield BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
+                                       "about:accounts?action=signup&entrypoint=uitour");
+});

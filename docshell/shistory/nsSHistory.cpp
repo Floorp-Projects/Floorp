@@ -1405,7 +1405,7 @@ nsSHistory::RemoveDynEntries(int32_t aOldIndex, int32_t aNewIndex)
   nsCOMPtr<nsISHEntry> originalSH;
   GetEntryAtIndex(aOldIndex, false, getter_AddRefs(originalSH));
   nsCOMPtr<nsISHContainer> originalContainer = do_QueryInterface(originalSH);
-  nsAutoTArray<uint64_t, 16> toBeRemovedEntries;
+  AutoTArray<uint64_t, 16> toBeRemovedEntries;
   if (originalContainer) {
     nsTArray<uint64_t> originalDynDocShellIDs;
     GetDynamicChildren(originalContainer, originalDynDocShellIDs, true);

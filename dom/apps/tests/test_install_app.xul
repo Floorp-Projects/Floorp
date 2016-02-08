@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 741549">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="head.js"/>
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
+     target="_blank">Mozilla Bug 741549</a><br/>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=734294"
+     target="_blank">Mozilla Bug 734294</a>
+  </body>
+
+<script>
+<![CDATA[
+
+var url = "http://test/chrome/dom/apps/tests/apps/basic.webapp";
+var app;
+
+var steps = [
+  getInstalledReturnsNothing,
+  install,
+  getInstalledReturnsApp,
+  getSelf,
+  uninstall,
+];
+
+runAll(steps);
+
+function getInstalledReturnsNothing(next) {
+  navigator.mozApps.getInstalled().onsuccess = function() {
+    is(this.result.length, 0, "getInstalled() returns nothing");
+    next();
+  };
+}
+
+function install(next) {
+  var beforehand = Date.now();
+  const fuzzySpan = 250;
+
+  confirmNextPopup();
+  navigator.mozApps.install(url, null).onsuccess = function onInstall() {
+    app = this.result;
+
+    is(app.origin, "http://test", "origin");
+    is(app.installOrigin, "chrome://mochitests", "install origin");
+    ok(app.installTime + fuzzySpan >= beforehand, "install time is after install() call");
+    ok(app.installTime <= Date.now() + fuzzySpan, "install time is before install success");
+    is(app.manifestURL, url, "manifest URL");
+    is(app.manifest.name, "Basic App", "manifest.name");
+    is(app.manifest.installs_allowed_from.length, 1, "allowed-from length must be 1");
+    is(app.manifest.installs_allowed_from[0], "*", "allowed from anywhere");
+
+    next();
+  }
+}
+
+function getInstalledReturnsApp(next) {
+  navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
+    // Retrieve the app we just installed from the list of installed apps.
+    var a = Array.from(this.result).filter((a) => a.manifestURL == url)[0];
+
+    // Compare the values of the two app objects to make sure install()
+    // and getInstalled() return identical objects.
+    isDeeply(a, app, "getInstalled() returns app identical to install()");
+
+    next();
+  };
+}
+
+function getSelf(next) {
+  navigator.mozApps.getSelf().onsuccess = function onGetSelf() {
+    is(this.result, null, "getSelf() returns nothing (different origin)");
+
+    next();
+  };
+}
+
+function uninstall(next) {
+  confirmNextPopup();
+  navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
+    // Try to retrieve the app we just uninstalled, to make sure it no longer
+    // exists in the registry.
+    navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
+      var a = Array.from(this.result).filter((a) => a.manifestURL == url)[0];
+      is(a, undefined, "getInstalled() returns nothing again after uninstall");
+
+      next();
+    };
+  };
+}
+
+]]>
+</script>
+</window>

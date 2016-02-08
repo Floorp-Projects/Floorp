@@ -744,6 +744,10 @@
   background-image: url("chrome://devtools/skin/images/command-console.png");
 }
 
+#command-button-noautohide > image {
+  background-image: url("chrome://devtools/skin/images/command-noautohide.svg");
+}
+
 #command-button-eyedropper > image {
   background-image: url("chrome://devtools/skin/images/command-eyedropper.png");
 }

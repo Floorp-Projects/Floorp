@@ -106,7 +106,7 @@ void Fake_AudioStreamSource::Periodic() {
   }
 
   mozilla::AudioSegment segment;
-  nsAutoTArray<const int16_t *,1> channels;
+  AutoTArray<const int16_t *,1> channels;
   channels.AppendElement(data);
   segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE);
 

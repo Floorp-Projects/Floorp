@@ -5,5 +5,5 @@ protocol multiManaged {
     manager multiManager1 or multiManager2;
 
 child:
-    __delete__();
+    async __delete__();
 };

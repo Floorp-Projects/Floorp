@@ -77,3 +77,9 @@
 .gcli-row-out .nowrap {
   white-space: nowrap;
 }
+
+.gcli-mdn-url {
+  text-decoration: underline;
+  cursor: pointer;
+}
+

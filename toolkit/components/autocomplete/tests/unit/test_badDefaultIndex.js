@@ -42,7 +42,7 @@ add_test(function autocomplete_noMatch_success() {
   do_check_eq(input.selectionEnd, strLen);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
   controller.input = input;
   controller.startSearch(INPUT_STR);
 
@@ -77,7 +77,7 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
   do_check_eq(input.selectionEnd, strLen);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);  
+                   getService(Ci.nsIAutoCompleteController);
   controller.input = input;
   controller.startSearch(INPUT_STR);
 

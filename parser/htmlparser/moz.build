@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/mochitest/browser.ini']
 
 XPIDL_SOURCES += [
     'nsIExpatSink.idl',

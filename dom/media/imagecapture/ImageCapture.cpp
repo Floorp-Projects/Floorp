@@ -36,7 +36,7 @@ NS_IMPL_ADDREF_INHERITED(ImageCapture, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ImageCapture, DOMEventTargetHelper)
 
 ImageCapture::ImageCapture(VideoStreamTrack* aVideoStreamTrack,
-                           nsPIDOMWindow* aOwnerWindow)
+                           nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
 {
   MOZ_ASSERT(aOwnerWindow);
@@ -55,7 +55,7 @@ ImageCapture::Constructor(const GlobalObject& aGlobal,
                           VideoStreamTrack& aTrack,
                           ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

@@ -31,7 +31,7 @@ add_task(function*() {
   // Get the hash of the generated backup
   let backupFiles = yield PlacesBackups.getBackupFiles();
   do_check_eq(backupFiles.length, 1);
-  
+
   let matches = OS.Path.basename(backupFiles[0]).match(PlacesBackups.filenamesRegex);
   do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
   do_check_eq(matches[2], count);

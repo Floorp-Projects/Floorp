@@ -88,7 +88,7 @@ function RefreshDeviceList()
       } catch (e) { slots_done = true; }
       while (!slots_done) {
         var slot = null;
- 	try {
+        try {
           slot = slots.currentItem().QueryInterface(nsIPKCS11Slot);
         } catch (e) { slot = null; }
         // in the ongoing discussion of whether slot names or token names
@@ -148,11 +148,11 @@ function AddModule(module, slots)
   row.appendChild(cell);
   item.appendChild(row);
   var parent = document.createElement("treechildren");
-  for (var i = 0; i<slots.length; i++) {
+  for (let slot of slots) {
     var child_item = document.createElement("treeitem");
     var child_row = document.createElement("treerow");
     var child_cell = document.createElement("treecell");
-    child_cell.setAttribute("label", slots[i]);
+    child_cell.setAttribute("label", slot);
     child_row.appendChild(child_cell);
     child_item.appendChild(child_row);
     child_item.setAttribute("pk11kind", "slot");
@@ -258,11 +258,12 @@ function ClearDeviceList()
   tree.view.selection.clearSelection();
   skip_enable_buttons = false;
 
-  // Remove the existing listed modules so that refresh doesn't 
-  // display the module that just changed.
-  var device_list = document.getElementById("device_list");
-  while (device_list.hasChildNodes())
-    device_list.removeChild(device_list.firstChild);
+  // Remove the existing listed modules so that a refresh doesn't display the
+  // module that just changed.
+  let deviceList = document.getElementById("device_list");
+  while (deviceList.hasChildNodes()) {
+    deviceList.removeChild(deviceList.firstChild);
+  }
 }
 
 
@@ -356,7 +357,7 @@ function doLogin()
     selected_token.login(false);
     var tok_status = document.getElementById("tok_status");
     if (selected_token.isLoggedIn()) {
-      tok_status.setAttribute("label", 
+      tok_status.setAttribute("label",
                               bundle.getString("devinfo_stat_loggedin"));
     } else {
       tok_status.setAttribute("label",
@@ -378,7 +379,7 @@ function doLogout()
     selected_token.logoutAndDropAuthenticatedResources();
     var tok_status = document.getElementById("tok_status");
     if (selected_token.isLoggedIn()) {
-      tok_status.setAttribute("label", 
+      tok_status.setAttribute("label",
                               bundle.getString("devinfo_stat_loggedin"));
     } else {
       tok_status.setAttribute("label",
@@ -392,8 +393,7 @@ function doLogout()
 // load a new device
 function doLoad()
 {
-  window.open("load_device.xul", "loaddevice", 
-              "chrome,centerscreen,modal");
+  window.open("load_device.xul", "loaddevice", "chrome,centerscreen,modal");
   ClearDeviceList();
   RefreshDeviceList();
 }
@@ -439,11 +439,11 @@ function onSmartCardChange()
 function changePassword()
 {
   getSelectedItem();
-  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
-  params.SetString(1,selected_slot.tokenName);
-  window.openDialog("changepassword.xul",
-              "", 
-              "chrome,centerscreen,modal", params);
+  let params = Components.classes[nsDialogParamBlock]
+                         .createInstance(nsIDialogParamBlock);
+  params.SetString(1, selected_slot.tokenName);
+  window.openDialog("changepassword.xul", "", "chrome,centerscreen,modal",
+                    params);
   showSlotInfo();
   enableButtons();
 }
@@ -526,8 +526,8 @@ function toggleFIPS()
     return;
   }
 
-  //Remove the existing listed modules so that re-fresh doesn't 
-  //display the module that just changed.
+  // Remove the existing listed modules so that a refresh doesn't display the
+  // module that just changed.
   ClearDeviceList();
 
   RefreshDeviceList();

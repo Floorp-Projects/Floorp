@@ -37,7 +37,7 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
   *result = NS_ERROR_FAILURE;
   *notifyOnOpen = false;
 
-  nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(parent);
+  nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(parent);
   if (!parentWin) {
     return true;
   }
@@ -73,7 +73,7 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
                                 const PrintData& aData,
                                 PrintData* aResult)
 {
-  nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(aParent);
+  nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(aParent);
   if (!parentWin) {
     return NS_ERROR_FAILURE;
   }
@@ -208,7 +208,7 @@ PrintingParent::ActorDestroy(ActorDestroyReason aWhy)
 {
 }
 
-nsIDOMWindow*
+nsPIDOMWindowOuter*
 PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
 {
   if (!parent) {
@@ -230,7 +230,7 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMWindow> parentWin = do_QueryInterface(frame->OwnerDoc()->GetWindow());
+  nsCOMPtr<nsPIDOMWindowOuter> parentWin = frame->OwnerDoc()->GetWindow();
   if (!parentWin) {
     return nullptr;
   }

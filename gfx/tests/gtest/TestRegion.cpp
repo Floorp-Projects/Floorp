@@ -377,10 +377,10 @@ struct RegionBitmap {
 
   void set(nsRegion &region) {
     clear();
-    nsRegionRectIterator iter(region);
-    for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      for (int y = r->y; y < r->YMost(); y++) {
-        for (int x = r->x; x < r->XMost(); x++) {
+    for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
+      const nsRect& r = iter.Get();
+      for (int y = r.y; y < r.YMost(); y++) {
+        for (int x = r.x; x < r.XMost(); x++) {
           bitmap[x + y * width] = REGION_VALUE;
         }
       }

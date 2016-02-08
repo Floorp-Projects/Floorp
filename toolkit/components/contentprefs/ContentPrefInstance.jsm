@@ -24,8 +24,9 @@ ContentPrefInstance.prototype = {
     return this._contentPrefSvc.getPref(aName, aGroup, this._context, aCallback);
   },
 
-  setPref: function ContentPrefInstance_setPref(aGroup, aName, aValue) {
-    return this._contentPrefSvc.setPref(aGroup, aName, aValue, this._context);
+  setPref: function ContentPrefInstance_setPref(aGroup, aName, aValue, aContext) {
+    return this._contentPrefSvc.setPref(aGroup, aName, aValue,
+                                        aContext ? aContext : this._context);
   },
 
   hasPref: function ContentPrefInstance_hasPref(aGroup, aName) {

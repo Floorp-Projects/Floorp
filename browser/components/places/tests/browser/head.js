@@ -350,7 +350,9 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
  *
  * @param selector
  *        Valid selector syntax
- * @return the target DOM node.
+ * @return Promise
+ *         Returns a Promise that resolves once the context menu has been
+ *         opened.
  */
 var openContextMenuForContentSelector = Task.async(function* (browser, selector) {
   info("wait for the context menu");
@@ -372,8 +374,6 @@ var openContextMenuForContentSelector = Task.async(function* (browser, selector)
                                   1, 0, false, 0, 0, true);
   });
   yield contextPromise;
-
-  return gContextMenuContentData.popupNode;
 });
 
 /**

@@ -548,12 +548,13 @@ NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
 
   if (aWebProgress) {
     NS_ENSURE_STATE(mXULWindow);
-    nsCOMPtr<nsIDOMWindow> progressWin;
+    nsCOMPtr<mozIDOMWindowProxy> progressWin;
     aWebProgress->GetDOMWindow(getter_AddRefs(progressWin));
 
     nsCOMPtr<nsIDocShell> docshell;
     mXULWindow->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIDOMWindow> ourWin(do_QueryInterface(docshell));
+    // XXXkhuey this is totally wrong, bug 1223303.
+    nsCOMPtr<mozIDOMWindowProxy> ourWin(do_QueryInterface(docshell));
 
     if (ourWin != progressWin)
       itsForYou = false;

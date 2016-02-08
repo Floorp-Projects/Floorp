@@ -14,25 +14,25 @@ sync protocol PCellBroadcast {
   manager PContent;
 
 child:
-  NotifyReceivedMessage(uint32_t aServiceId,
-                        uint32_t aGsmGeographicalScope,
-                        uint16_t aMessageCode,
-                        uint16_t aMessageId,
-                        nsString aLanguage,
-                        nsString aBody,
-                        uint32_t aMessageClass,
-                        uint64_t aTimestamp,
-                        uint32_t aCdmaServiceCategory,
-                        bool aHasEtwsInfo,
-                        uint32_t aEtwsWarningType,
-                        bool aEtwsEmergencyUserAlert,
-                        bool aEtwsPopup);
+  async NotifyReceivedMessage(uint32_t aServiceId,
+                              uint32_t aGsmGeographicalScope,
+                              uint16_t aMessageCode,
+                              uint16_t aMessageId,
+                              nsString aLanguage,
+                              nsString aBody,
+                              uint32_t aMessageClass,
+                              uint64_t aTimestamp,
+                              uint32_t aCdmaServiceCategory,
+                              bool aHasEtwsInfo,
+                              uint32_t aEtwsWarningType,
+                              bool aEtwsEmergencyUserAlert,
+                              bool aEtwsPopup);
 
 parent:
   /**
    * Sent when the child no longer needs to use cellbroadcast.
    */
-  __delete__();
+  async __delete__();
 
 };
 

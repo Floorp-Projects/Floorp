@@ -35,7 +35,7 @@ function mockAddonProvider(aName) {
     mockProvider.shutdownResolve = resolve;
   });
   return mockProvider;
-};
+}
 
 function run_test() {
   run_next_test();

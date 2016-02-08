@@ -19,7 +19,7 @@
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nscore.h"                     // for NS_IMETHOD, nsresult, etc
 
-class nsIDOMWindow;
+class nsPIDOMWindowOuter;
 class nsITransaction;
 class nsITransactionManager;
 class nsPICommandUpdater;
@@ -64,7 +64,7 @@ public:
                       bool aDidMerge, nsresult aMergeResult) override;
 
 
-  nsresult   Init(nsIDOMWindow* aDOMWindow);
+  nsresult   Init(nsPIDOMWindowOuter* aDOMWindow);
 
 protected:
 

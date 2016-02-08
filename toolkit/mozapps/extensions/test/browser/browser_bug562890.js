@@ -25,7 +25,7 @@ function test() {
     description: "bar",
     optionsURL: addonPrefsURI
   }]);
-  
+
   open_manager("addons://list/extension", function(aManager) {
     var addonList = aManager.document.getElementById("addon-list");
     for (var addonItem of addonList.childNodes) {

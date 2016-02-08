@@ -14,7 +14,7 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 class PerformanceBase;
 
 namespace mozilla {
@@ -43,7 +43,7 @@ public:
               PerformanceObserverCallback& aCb,
               ErrorResult& aRv);
 
-  PerformanceObserver(nsPIDOMWindow* aOwner,
+  PerformanceObserver(nsPIDOMWindowInner* aOwner,
                       PerformanceObserverCallback& aCb);
 
   PerformanceObserver(workers::WorkerPrivate* aWorkerPrivate,

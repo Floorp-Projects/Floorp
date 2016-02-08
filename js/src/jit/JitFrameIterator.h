@@ -50,16 +50,6 @@ enum FrameType
     // Ion IC calling a scripted getter/setter.
     JitFrame_IonAccessorIC,
 
-    // An unwound JS frame is a JS frame signalling that its callee frame has been
-    // turned into an exit frame (see EnsureExitFrame). Used by Ion bailouts and
-    // Baseline exception unwinding.
-    JitFrame_Unwound_BaselineJS,
-    JitFrame_Unwound_IonJS,
-    JitFrame_Unwound_BaselineStub,
-    JitFrame_Unwound_IonStub,
-    JitFrame_Unwound_Rectifier,
-    JitFrame_Unwound_IonAccessorIC,
-
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
     // JitActivation.
@@ -143,9 +133,6 @@ class JitFrameIterator
     // on a scripted frame.
     JitFrameLayout* jsFrame() const;
 
-    // Returns true iff this exit frame was created using EnsureExitFrame.
-    inline bool isFakeExitFrame() const;
-
     inline ExitFrameLayout* exitFrame() const;
 
     // Returns whether the JS frame has been invalidated and, if so,
@@ -171,11 +158,8 @@ class JitFrameIterator
     bool isIonStub() const {
         return type_ == JitFrame_IonStub;
     }
-    bool isIonStubMaybeUnwound() const {
-        return type_ == JitFrame_IonStub || type_ == JitFrame_Unwound_IonStub;
-    }
-    bool isIonAccessorICMaybeUnwound() const {
-        return type_ == JitFrame_IonAccessorIC || type_ == JitFrame_Unwound_IonAccessorIC;
+    bool isIonAccessorIC() const {
+        return type_ == JitFrame_IonAccessorIC;
     }
     bool isBailoutJS() const {
         return type_ == JitFrame_Bailout;
@@ -183,11 +167,8 @@ class JitFrameIterator
     bool isBaselineStub() const {
         return type_ == JitFrame_BaselineStub;
     }
-    bool isBaselineStubMaybeUnwound() const {
-        return type_ == JitFrame_BaselineStub || type_ == JitFrame_Unwound_BaselineStub;
-    }
-    bool isRectifierMaybeUnwound() const {
-        return type_ == JitFrame_Rectifier || type_ == JitFrame_Unwound_Rectifier;
+    bool isRectifier() const {
+        return type_ == JitFrame_Rectifier;
     }
     bool isBareExit() const;
     template <typename T> bool isExitFrameLayout() const;
@@ -304,6 +285,8 @@ class JitProfilingFrameIterator
     bool tryInitWithTable(JitcodeGlobalTable* table, void* pc, JSRuntime* rt,
                           bool forLastCallSite);
     void fixBaselineDebugModeOSRReturnAddress();
+
+    void moveToNextFrame(CommonFrameLayout* frame);
 
   public:
     JitProfilingFrameIterator(JSRuntime* rt,

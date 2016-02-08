@@ -263,13 +263,13 @@ private:
   // NOTE: while this array will auto-expand, increases in the number of
   // channels available from the stack must be negotiated!
   bool mAllocateEven;
-  nsAutoTArray<RefPtr<DataChannel>,16> mStreams;
+  AutoTArray<RefPtr<DataChannel>,16> mStreams;
   nsDeque mPending; // Holds addref'ed DataChannel's -- careful!
   // holds data that's come in before a channel is open
   nsTArray<nsAutoPtr<QueuedDataMessage> > mQueuedData;
 
   // Streams pending reset
-  nsAutoTArray<uint16_t,4> mStreamsResetting;
+  AutoTArray<uint16_t,4> mStreamsResetting;
 
   struct socket *mMasterSocket; // accessed from STS thread
   struct socket *mSocket; // cloned from mMasterSocket on successful Connect on STS thread

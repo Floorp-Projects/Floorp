@@ -9,42 +9,126 @@
 
 // Expected values:
 var res1 = [
-      {selector: "#element-size",              value: "160" + "\u00D7" + "160.117"},
-      {selector: ".size > span",               value: "100" + "\u00D7" + "100.117"},
-      {selector: ".margin.top > span",         value: 30},
-      {selector: ".margin.left > span",        value: "auto"},
-      {selector: ".margin.bottom > span",      value: 30},
-      {selector: ".margin.right > span",       value: "auto"},
-      {selector: ".padding.top > span",        value: 20},
-      {selector: ".padding.left > span",       value: 20},
-      {selector: ".padding.bottom > span",     value: 20},
-      {selector: ".padding.right > span",      value: 20},
-      {selector: ".border.top > span",         value: 10},
-      {selector: ".border.left > span",        value: 10},
-      {selector: ".border.bottom > span",      value: 10},
-      {selector: ".border.right > span",       value: 10},
+  {
+    selector: "#layout-element-size",
+    value: "160" + "\u00D7" + "160.117"
+  },
+  {
+    selector: ".layout-size > span",
+    value: "100" + "\u00D7" + "100.117"
+  },
+  {
+    selector: ".layout-margin.layout-top > span",
+    value: 30
+  },
+  {
+    selector: ".layout-margin.layout-left > span",
+    value: "auto"
+  },
+  {
+    selector: ".layout-margin.layout-bottom > span",
+    value: 30
+  },
+  {
+    selector: ".layout-margin.layout-right > span",
+    value: "auto"
+  },
+  {
+    selector: ".layout-padding.layout-top > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-left > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-bottom > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-right > span",
+    value: 20
+  },
+  {
+    selector: ".layout-border.layout-top > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-left > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-bottom > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-right > span",
+    value: 10
+  },
 ];
 
 var res2 = [
-      {selector: "#element-size",              value: "190" + "\u00D7" + "210"},
-      {selector: ".size > span",               value: "100" + "\u00D7" + "150"},
-      {selector: ".margin.top > span",         value: 30},
-      {selector: ".margin.left > span",        value: "auto"},
-      {selector: ".margin.bottom > span",      value: 30},
-      {selector: ".margin.right > span",       value: "auto"},
-      {selector: ".padding.top > span",        value: 20},
-      {selector: ".padding.left > span",       value: 20},
-      {selector: ".padding.bottom > span",     value: 20},
-      {selector: ".padding.right > span",      value: 50},
-      {selector: ".border.top > span",         value: 10},
-      {selector: ".border.left > span",        value: 10},
-      {selector: ".border.bottom > span",      value: 10},
-      {selector: ".border.right > span",       value: 10},
+  {
+    selector: "#layout-element-size",
+    value: "190" + "\u00D7" + "210"
+  },
+  {
+    selector: ".layout-size > span",
+    value: "100" + "\u00D7" + "150"
+  },
+  {
+    selector: ".layout-margin.layout-top > span",
+    value: 30
+  },
+  {
+    selector: ".layout-margin.layout-left > span",
+    value: "auto"
+  },
+  {
+    selector: ".layout-margin.layout-bottom > span",
+    value: 30
+  },
+  {
+    selector: ".layout-margin.layout-right > span",
+    value: "auto"
+  },
+  {
+    selector: ".layout-padding.layout-top > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-left > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-bottom > span",
+    value: 20
+  },
+  {
+    selector: ".layout-padding.layout-right > span",
+    value: 50
+  },
+  {
+    selector: ".layout-border.layout-top > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-left > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-bottom > span",
+    value: 10
+  },
+  {
+    selector: ".layout-border.layout-right > span",
+    value: 10
+  },
 ];
 
 add_task(function*() {
   let style = "div { position: absolute; top: 42px; left: 42px; height: 100.111px; width: 100px; border: 10px solid black; padding: 20px; margin: 30px auto;}";
-  let html = "<style>" + style + "</style><div></div>"
+  let html = "<style>" + style + "</style><div></div>";
 
   yield addTab("data:text/html," + encodeURIComponent(html));
   let {toolbox, inspector, view} = yield openLayoutView();

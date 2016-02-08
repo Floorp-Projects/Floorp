@@ -530,13 +530,11 @@ case "$target" in
             MSVS_VERSION=2013
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
-        elif test "$_CC_MAJOR_VERSION" = "19"; then
+        elif test "$_CC_MAJOR_VERSION" = "19" -a "$_CC_BUILD_VERSION" -ge "23506"; then
             _CC_SUITE=14
             MSVS_VERSION=2015
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
-            MSVC_APPCRT_DLL=appcrt140.dll
-            MSVC_DESKTOPCRT_DLL=desktopcrt140.dll
 
             # -Wv:18 disables all warnings introduced after VS2013
             # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
@@ -555,16 +553,21 @@ case "$target" in
             # C4091: 'typedef ': ignored on left of '' when no variable is declared
             CFLAGS="$CFLAGS -wd4091"
             CXXFLAGS="$CXXFLAGS -wd4091"
+
+            if test -n "$WIN_UCRT_REDIST_DIR"; then
+              if test ! -d "$WIN_UCRT_REDIST_DIR"; then
+                AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
+              fi
+              WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd`
+            fi
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
-You must install Visual C++ 2013 Update 3 or newer in order to build.
+You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, or newer in order to build.
 See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
-        AC_SUBST(MSVC_APPCRT_DLL)
-        AC_SUBST(MSVC_DESKTOPCRT_DLL)
 
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then
@@ -944,7 +947,6 @@ OBJ_SUFFIX=o
 LIB_SUFFIX=a
 ASM_SUFFIX=s
 IMPORT_LIB_SUFFIX=
-TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
@@ -1635,7 +1637,6 @@ dnl ========================================================
 if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
   AC_MSG_CHECKING([if we're targeting 32-bit])
   if test -z "$HAVE_64BIT_BUILD"; then
-    RUSTC="$RUSTC --target=i686-apple-darwin"
     AC_MSG_RESULT([using $RUSTC])
   else
     AC_MSG_RESULT([no])
@@ -1843,7 +1844,6 @@ case "$host" in
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
     HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
-    HOST_NSPR_MDCPUCFG='"md/_winnt.cfg"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
     case "$host" in
@@ -1869,13 +1869,11 @@ case "$host" in
 
 *-darwin*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
-    HOST_NSPR_MDCPUCFG='"md/_darwin.cfg"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
 *-linux*|*-kfreebsd*-gnu|*-gnu*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
-    HOST_NSPR_MDCPUCFG='"md/_linux.cfg"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -2012,7 +2010,6 @@ case "$target" in
         # builds.
         MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
     fi
-    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
 
     if test "x$lto_is_enabled" = "xyes"; then
         echo "Skipping -dead_strip because lto is enabled."
@@ -2105,7 +2102,6 @@ ia64*-hpux*)
             MOZ_LINKER=1
         fi
     fi
-    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-Os -fno-reorder-functions"
@@ -2128,8 +2124,6 @@ ia64*-hpux*)
            MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
         fi
     fi
-
-    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_MEMORY=1
 
@@ -2224,12 +2218,12 @@ ia64*-hpux*)
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
+        SSE_FLAGS="-arch:SSE"
+        SSE2_FLAGS="-arch:SSE2"
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
-        if test "$CPU_ARCH" = "x86" -a -z "$CLANG_CL"; then
+        if test "$CPU_ARCH" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2.
-            dnl Clang-cl gets confused by -arch:IA32, so don't add it.
-            dnl (See https://llvm.org/bugs/show_bug.cgi?id=24335)
             CFLAGS="$CFLAGS -arch:IA32"
             CXXFLAGS="$CXXFLAGS -arch:IA32"
         fi
@@ -2326,13 +2320,9 @@ ia64*-hpux*)
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        # Disable these flags on clang-cl since it doesn't ignore unknown arguments by default, and
-        # autoconf insists on passing $LDFLAGS to the compiler.
-        if test -z "$CLANG_CL"; then
-            LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
-            if test -z "$DEVELOPER_OPTIONS"; then
-                LDFLAGS="$LDFLAGS -RELEASE"
-            fi
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        if test -z "$DEVELOPER_OPTIONS"; then
+            LDFLAGS="$LDFLAGS -RELEASE"
         fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
@@ -2373,13 +2363,9 @@ ia64*-hpux*)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
-    TARGET_MD_ARCH=win32
     _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    dnl Hardcode to win95 for now - cls
-    TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
 
     dnl set NO_X11 defines here as the general check is skipped on win32
     no_x=yes
@@ -2411,11 +2397,7 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -Wl,--enable-stdcall-fixup -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
-            # Disable this flag on clang-cl since it doesn't ignore unknown arguments by default, and
-            # autoconf insists on passing $LDFLAGS to the compiler.
-            if test -z "$CLANG_CL"; then
-                LDFLAGS="$LDFLAGS -SAFESEH"
-            fi
+            LDFLAGS="$LDFLAGS -SAFESEH"
         fi
 
         AC_DEFINE(_X86_)
@@ -2477,7 +2459,6 @@ ia64*-hpux*)
 
 *-solaris*)
     AC_DEFINE(SOLARIS)
-    TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
     MOZ_FIX_LINK_PATHS=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
@@ -3006,7 +2987,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(stat64 lstat64 truncate64 statvfs64 statvfs statfs64 statfs getpagesize gmtime_r localtime_r arc4random arc4random_buf mallinfo)
+AC_CHECK_FUNCS(stat64 lstat64 truncate64 statvfs64 statvfs statfs64 statfs getpagesize gmtime_r localtime_r arc4random arc4random_buf mallinfo gettid lchown setpriority strerror syscall)
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
 AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
@@ -3431,6 +3412,15 @@ MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
   AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
 
+case "$OS_TARGET" in
+WINNT|Darwin|Android)
+  MOZ_FOLD_LIBS=1
+  ;;
+*)
+  MOZ_FOLD_LIBS=
+  ;;
+esac
+
 MOZ_CONFIG_NSPR()
 
 dnl set GRE_MILESTONE
@@ -3517,7 +3507,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.20.1, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.22, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -4018,6 +4008,22 @@ if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
 fi
 AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
 
+# Optional Firefox for Android partner distribution directory.
+MOZ_ARG_WITH_STRING(android-distribution-directory,
+[  --with-android-distribution-directory=dir
+                          Optional Firefox for Android partner distribution directory.],
+  MOZ_ANDROID_DISTRIBUTION_DIRECTORY=$withval)
+
+if test -n "$MOZ_ANDROID_DISTRIBUTION_DIRECTORY"; then
+  # A distribution directory must have an assets/distribution directory.
+  # See https://wiki.mozilla.org/Mobile/Distribution_Files.
+  if test ! -d "$MOZ_ANDROID_DISTRIBUTION_DIRECTORY/assets/distribution" ; then
+    AC_MSG_ERROR([--with-android-distribution-directory does not contain assets/distribution;
+                  (looked for ${MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets/distribution).])
+  fi
+fi
+AC_SUBST(MOZ_ANDROID_DISTRIBUTION_DIRECTORY)
+
 dnl ========================================================
 dnl = Trademarked Branding
 dnl ========================================================
@@ -4118,15 +4124,6 @@ AC_SUBST(MOZ_B2G_VERSION)
 AC_SUBST(MOZ_B2GDROID)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
-
-case "$OS_TARGET" in
-WINNT|Darwin|Android)
-  MOZ_FOLD_LIBS=1
-  ;;
-*)
-  MOZ_FOLD_LIBS=
-  ;;
-esac
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
@@ -7239,14 +7236,16 @@ else
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
-    WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-    dnl Look for a broken crtdll.obj
-    WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
-    lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
-    if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_CRT=1
+    if test "$MSVS_VERSION" != "2015"; then
+        WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
+        dnl Look for a broken crtdll.obj
+        WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
+        lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
+        if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+          MOZ_CRT=1
+        fi
+        rm crtdll.obj
     fi
-    rm crtdll.obj
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -8425,12 +8424,6 @@ if test -n "$MOZ_SERVICES_HEALTHREPORT"; then
   AC_DEFINE(MOZ_SERVICES_HEALTHREPORT)
 fi
 
-dnl Build Services metrics component
-AC_SUBST(MOZ_SERVICES_METRICS)
-if test -n "$MOZ_SERVICES_METRICS"; then
-  AC_DEFINE(MOZ_SERVICES_METRICS)
-fi
-
 dnl Build Notifications if required
 AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
 if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
@@ -8547,6 +8540,7 @@ AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
+AC_SUBST(MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
@@ -8739,22 +8733,18 @@ if test "$MOZILLA_OFFICIAL"; then
     MOZ_INCLUDE_SOURCE_INFO=1
 fi
 
-# On official builds, we need to know in Telemetry what revision this is built from.
-# This is e.g. needed to match incoming data to a specific revision of the Histograms.json
-# file.
-if test "$MOZILLA_OFFICIAL" && test -d ${_topsrcdir}/.hg; then
-  SOURCE_REV=`cd $_topsrcdir && hg parent --template='{node|short}'`
-  SOURCE_REPO=`cd $_topsrcdir && hg showconfig paths.default | sed -e 's|^ssh://|http://|' -e 's|/$||'`
-  SOURCE_REV_URL=$SOURCE_REPO/rev/$SOURCE_REV
-else
-  SOURCE_REV_URL=
+# External builds (specifically Ubuntu) may drop the hg repo information, so we allow to
+# explicitly set the repository and changeset information in.
+if test "$MOZILLA_OFFICIAL"; then
+    if test -z "$MOZ_SOURCE_REPO" && test -z "$MOZ_SOURCE_CHANGESET" && test -d ${_topsrcdir}/.hg; then
+        MOZ_SOURCE_CHANGESET=`cd $_topsrcdir && hg parent --template='{node}'`
+        MOZ_SOURCE_REPO=`cd $_topsrcdir && hg showconfig paths.default | sed -e 's|^ssh://|http://|' -e 's|/$||'`
+    fi
+    SOURCE_REV_URL=$MOZ_SOURCE_REPO/rev/$MOZ_SOURCE_CHANGESET
 fi
 AC_SUBST(SOURCE_REV_URL)
 
 AC_SUBST(MOZ_INCLUDE_SOURCE_INFO)
-
-AC_DEFINE_UNQUOTED(MOZ_TELEMETRY_DISPLAY_REV, 2)
-AC_SUBST(MOZ_TELEMETRY_DISPLAY_REV)
 
 if test "$MOZ_TELEMETRY_REPORTING"; then
     AC_DEFINE(MOZ_TELEMETRY_REPORTING)
@@ -8775,7 +8765,6 @@ if test -n "$MOZ_TELEMETRY_REPORTING" || test -n "$MOZ_SERVICES_HEALTHREPORT" ||
 fi
 
 dnl win32 options
-AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(MAKENSISU)
 
@@ -8833,6 +8822,19 @@ AC_SUBST(MOZ_NATIVE_NSPR)
 AC_SUBST(MOZ_NATIVE_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
 
+HOST_CMFLAGS=-fobjc-exceptions
+HOST_CMMFLAGS=-fobjc-exceptions
+OS_COMPILE_CMFLAGS=-fobjc-exceptions
+OS_COMPILE_CMMFLAGS=-fobjc-exceptions
+if test "$MOZ_WIDGET_TOOLKIT" = uikit; then
+  OS_COMPILE_CMFLAGS="$OS_COMPILE_CMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+  OS_COMPILE_CMMFLAGS="$OS_COMPILE_CMMFLAGS -fobjc-abi-version=2 -fobjc-legacy-dispatch"
+fi
+AC_SUBST(HOST_CMFLAGS)
+AC_SUBST(HOST_CMMFLAGS)
+AC_SUBST(OS_COMPILE_CMFLAGS)
+AC_SUBST(OS_COMPILE_CMMFLAGS)
+
 OS_CFLAGS="$CFLAGS"
 OS_CXXFLAGS="$CXXFLAGS"
 OS_CPPFLAGS="$CPPFLAGS"
@@ -8860,15 +8862,12 @@ AC_SUBST(HOST_AR)
 AC_SUBST(HOST_AR_FLAGS)
 AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
-AC_SUBST(HOST_NSPR_MDCPUCFG)
 AC_SUBST(HOST_BIN_SUFFIX)
 AC_SUBST(HOST_OS_ARCH)
 
 AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
-AC_SUBST(TARGET_NSPR_MDCPUCFG)
-AC_SUBST(TARGET_MD_ARCH)
 AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
@@ -9172,8 +9171,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 export WRAP_LDFLAGS
 
-MOZ_SUBCONFIGURE_NSPR()
-
 dnl ========================================================
 dnl = Setup a nice relatively clean build environment for
 dnl = sub-configures.
@@ -9232,6 +9229,7 @@ export MOZ_APP_NAME
 export MOZ_APP_REMOTINGNAME
 export DONT_POPULATE_VIRTUALENV=1
 export PYTHON
+export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS

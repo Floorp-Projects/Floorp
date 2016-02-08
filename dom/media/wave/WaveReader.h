@@ -27,7 +27,7 @@ public:
                         int64_t aTimeThreshold) override;
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
-  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) override;
+  RefPtr<SeekPromise> Seek(SeekTarget aTarget, int64_t aEndTime) override;
 
   media::TimeIntervals GetBuffered() override;
 

@@ -1,12 +1,12 @@
 protocol race_OverlappingMultiOut {
 child:
-    Msg1();
-    Msg1_();
-    __delete__(); suppressUndeleteableError();
+    async Msg1();
+    async Msg1_();
+    async __delete__(); suppressUndeleteableError();
 
 parent:
-    Msg2();
-    Msg2_();
+    async Msg2();
+    async Msg2_();
 
 
 start state _:

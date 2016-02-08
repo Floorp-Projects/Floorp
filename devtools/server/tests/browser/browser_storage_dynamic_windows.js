@@ -302,7 +302,8 @@ function testRemoveIframe() {
 }
 
 function test() {
-  addTab(MAIN_DOMAIN + "storage-dynamic-windows.html").then(function(doc) {
+  addTab(MAIN_DOMAIN + "storage-dynamic-windows.html").then(function(browser) {
+    let doc = browser.contentDocument;
     initDebuggerServer();
 
     let createConnection = () => {

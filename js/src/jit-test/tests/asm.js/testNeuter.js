@@ -23,8 +23,10 @@ var buffer = new ArrayBuffer(BUF_MIN);
 var {get, set} = asmLink(m, this, null, buffer);
 set(4, 42);
 assertEq(get(4), 42);
-assertThrowsInstanceOf(() => neuter(buffer, "change-data"), InternalError);
-assertThrowsInstanceOf(() => neuter(buffer, "same-data"), InternalError);
+assertThrowsInstanceOf(() => detachArrayBuffer(buffer, "change-data"),
+                       InternalError);
+assertThrowsInstanceOf(() => detachArrayBuffer(buffer, "same-data"),
+                       InternalError);
 
 var m = asmCompile('stdlib', 'foreign', 'buffer',
                   `"use asm";
@@ -38,5 +40,10 @@ var m = asmCompile('stdlib', 'foreign', 'buffer',
                    return inner`);
 
 var buffer = new ArrayBuffer(BUF_MIN);
-function ffi1() { assertThrowsInstanceOf(() => neuter(buffer, "change-data"), InternalError) }
-var inner = asmLink(m, this, {ffi:ffi1}, buffer);
+function ffi1()
+{
+    assertThrowsInstanceOf(() => detachArrayBuffer(buffer, "change-data"),
+                           InternalError);
+}
+
+var inner = asmLink(m, this, {ffi: ffi1}, buffer);

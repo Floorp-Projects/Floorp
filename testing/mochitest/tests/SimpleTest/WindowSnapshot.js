@@ -75,3 +75,14 @@ function assertSnapshots(s1, s2, expectEqual, fuzz, s1name, s2name) {
   }
   return passed;
 }
+
+function assertWindowPureColor(win, color) {
+  const snapshot = SpecialPowers.snapshotRect(win);
+  const canvas = document.createElement("canvas");
+  canvas.width = snapshot.width;
+  canvas.height = snapshot.height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = color;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  assertSnapshots(snapshot, canvas, true, null, "snapshot", color);
+}

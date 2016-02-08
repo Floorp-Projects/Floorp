@@ -28,9 +28,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothObexAuthHandle)
 
   static already_AddRefed<BluetoothObexAuthHandle>
-    Create(nsPIDOMWindow* aOwner);
+    Create(nsPIDOMWindowInner* aOwner);
 
-  nsPIDOMWindow* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwner;
   }
@@ -46,10 +46,10 @@ public:
   already_AddRefed<Promise> Reject(ErrorResult& aRv);
 
 private:
-  BluetoothObexAuthHandle(nsPIDOMWindow* aOwner);
+  BluetoothObexAuthHandle(nsPIDOMWindowInner* aOwner);
   ~BluetoothObexAuthHandle();
 
-  nsCOMPtr<nsPIDOMWindow> mOwner;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
 };
 
 END_BLUETOOTH_NAMESPACE

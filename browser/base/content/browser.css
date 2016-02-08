@@ -72,10 +72,6 @@ toolbar[customizable="true"] {
 #toolbar-menubar {
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-menubar-stub");
 }
-
-toolbar[customizable="true"]:not([nowindowdrag="true"]) {
-  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
-}
 %endif
 
 #toolbar-menubar[autohide="true"] {
@@ -120,6 +116,10 @@ panelview {
 panelview:not([mainview]):not([current]) {
   transition: visibility 0s linear var(--panelui-subview-transition-duration);
   visibility: collapse;
+}
+
+browser[frameType="social"][remote="true"] {
+  -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
 }
 
 tabbrowser {
@@ -227,10 +227,7 @@ toolbar[customizing] > .overflow-button {
 
 #titlebar {
   -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
-
-%ifdef XP_MACOSX
   -moz-window-dragging: drag;
-%endif
 }
 
 #titlebar-spacer {
@@ -297,6 +294,11 @@ toolbar[customizing] > .overflow-button {
   display: none !important;
 }
 
+#main-window[tabsintitlebar] #TabsToolbar,
+#main-window[tabsintitlebar] #toolbar-menubar:not([autohide=true]),
+#main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):-moz-lwtheme {
+  -moz-window-dragging: drag;
+}
 %endif
 
 %endif
@@ -357,6 +359,16 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
 toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-box-flex: 1;
+}
+
+/* Ensure that empty parts of the bookmarks container can be dragged on OSX, and on other OSes
+ * only when a lwtheme is in use. */
+%ifdef XP_MACOSX
+#PlacesToolbarItems {
+%else
+#main-window[tabsintitlebar] #PlacesToolbarItems:-moz-lwtheme {
+%endif
+  -moz-window-dragging: drag;
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
@@ -737,11 +749,6 @@ html|*#fullscreen-exit-button {
   display: none;
 }
 
-#notification-popup .text-link.custom-link {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
-  text-decoration: none;
-}
-
 #invalid-form-popup > description {
   max-width: 280px;
 }
@@ -756,10 +763,6 @@ html|*#fullscreen-exit-button {
 
 #addon-progress-notification {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addon-progress-notification");
-}
-
-#identity-request-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#identity-request-notification");
 }
 
 #click-to-play-plugins-notification {

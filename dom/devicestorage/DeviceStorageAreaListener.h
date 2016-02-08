@@ -22,7 +22,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   IMPL_EVENT_HANDLER(storageareachanged)
 
-  explicit DeviceStorageAreaListener(nsPIDOMWindow* aWindow);
+  explicit DeviceStorageAreaListener(nsPIDOMWindowInner* aWindow);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

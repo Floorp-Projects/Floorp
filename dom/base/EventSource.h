@@ -26,7 +26,7 @@
 #include "nsDeque.h"
 #include "nsIUnicodeDecoder.h"
 
-class nsPIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -44,7 +44,7 @@ class EventSource final : public DOMEventTargetHelper
                         , public nsSupportsWeakReference
 {
 public:
-  explicit EventSource(nsPIDOMWindow* aOwnerWindow);
+  explicit EventSource(nsPIDOMWindowInner* aOwnerWindow);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
     EventSource, DOMEventTargetHelper)
@@ -59,7 +59,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
-  nsPIDOMWindow*
+  nsPIDOMWindowInner*
   GetParentObject() const
   {
     return GetOwner();

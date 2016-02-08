@@ -17,6 +17,7 @@
 #include "jshashutil.h"
 #include "jsobj.h"
 
+#include "gc/Policy.h"
 #include "js/HashTable.h"
 
 #include "jscntxtinlines.h"
@@ -1316,18 +1317,7 @@ BaseShape::traceChildren(JSTracer* trc)
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    if (!baseShapes.initialized())
-        return;
-
-    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-        UnownedBaseShape* base = e.front().unbarrieredGet();
-        if (IsAboutToBeFinalizedUnbarriered(&base)) {
-            e.removeFront();
-        } else if (base != e.front().unbarrieredGet()) {
-            ReadBarriered<UnownedBaseShape*> b(base);
-            e.rekeyFront(base, b);
-        }
-    }
+    baseShapes.sweep();
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -1612,24 +1602,7 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    if (initialShapes.initialized()) {
-        for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-            const InitialShapeEntry& entry = e.front();
-            Shape* shape = entry.shape.unbarrieredGet();
-            JSObject* proto = entry.proto.raw();
-            if (IsAboutToBeFinalizedUnbarriered(&shape) ||
-                (entry.proto.isObject() && IsAboutToBeFinalizedUnbarriered(&proto)))
-            {
-                e.removeFront();
-            } else {
-                if (shape != entry.shape.unbarrieredGet() || proto != entry.proto.raw()) {
-                    ReadBarrieredShape readBarrieredShape(shape);
-                    InitialShapeEntry newKey(readBarrieredShape, TaggedProto(proto));
-                    e.rekeyFront(newKey.getLookup(), newKey);
-                }
-            }
-        }
-    }
+    initialShapes.sweep();
 }
 
 void
