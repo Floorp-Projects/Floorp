@@ -9,11 +9,14 @@
 #include "MediaResource.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
+#include "MediaPrefs.h"
 
 #include "nsPrintfCString.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/Mutex.h"
 #include <stdint.h>
 #include <algorithm>
+#include <list>
 
 using namespace mozilla::media;
 
@@ -62,6 +65,154 @@ public:
   size_t mSize;
 };
 
+// The ReaderQueue is used to keep track of the numer of active readers to
+// enforce a given limit on the number of simultaneous active decoders.
+// Readers are added/removed during construction/destruction and are
+// suspended and resumed by the queue. The max number of active decoders is
+// controlled by the "media.decoder.limit" pref.
+class ReaderQueue
+{
+public:
+  static ReaderQueue& Instance()
+  {
+    static StaticMutex sMutex;
+    StaticMutexAutoLock lock(sMutex);
+
+    if (!sInstance) {
+      sInstance = new ReaderQueue;
+      sInstance->MaxNumActive(MediaPrefs::MediaDecoderLimit());
+      ClearOnShutdown(&sInstance);
+    }
+    MOZ_ASSERT(sInstance);
+    return *sInstance;
+  }
+
+  void MaxNumActive(int32_t aNumActive)
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (aNumActive < 0) {
+      mNumMaxActive = std::numeric_limits<uint32_t>::max();
+    } else {
+      mNumMaxActive = aNumActive;
+    }
+  }
+
+  void Add(MediaDecoderReader* aReader)
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mActive.Length() < mNumMaxActive) {
+      // Below active limit, resume the new reader.
+      mActive.AppendElement(aReader);
+      DispatchResume(aReader);
+    } else if (mActive.IsEmpty()) {
+      MOZ_ASSERT(mNumMaxActive == 0);
+      mSuspended.AppendElement(aReader);
+    } else {
+      // We're past the active limit, suspend an old reader and resume the new.
+      mActive.AppendElement(aReader);
+      MediaDecoderReader* suspendReader = mActive.ElementAt(0);
+      mSuspended.AppendElement(suspendReader);
+      mActive.RemoveElementAt(0);
+      DispatchSuspendResume(suspendReader, aReader);
+    }
+  }
+
+  void Remove(MediaDecoderReader* aReader)
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (aReader->IsSuspended()) {
+      // Removing suspended readers has no immediate side-effects.
+      DebugOnly<bool> result = mSuspended.RemoveElement(aReader);
+      MOZ_ASSERT(result, "Suspended reader must be in mSuspended");
+    } else {
+      // For each removed active reader, we resume a suspended one.
+      DebugOnly<bool> result = mActive.RemoveElement(aReader);
+      MOZ_ASSERT(result, "Non-suspended reader must be in mActive");
+      if (mSuspended.IsEmpty()) {
+        return;
+      }
+      MediaDecoderReader* resumeReader = mSuspended.LastElement();
+      mActive.AppendElement(resumeReader);
+      mSuspended.RemoveElementAt(mSuspended.Length() - 1);
+      DispatchResume(resumeReader);
+    }
+  }
+
+private:
+  ReaderQueue()
+    : mNumMaxActive(std::numeric_limits<uint32_t>::max())
+    , mMutex("ReaderQueue:mMutex")
+  {
+  }
+
+  static void Resume(MediaDecoderReader* aReader)
+  {
+    if (!aReader->IsSuspended()) {
+      return;
+    }
+    aReader->SetIsSuspended(false);
+  }
+
+  static void Suspend(MediaDecoderReader* aReader)
+  {
+    if (aReader->IsSuspended()) {
+      return;
+    }
+    aReader->SetIsSuspended(true);
+
+    aReader->ReleaseMediaResources();
+  }
+
+  static void DispatchResume(MediaDecoderReader* aReader)
+  {
+    RefPtr<MediaDecoderReader> reader = aReader;
+
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+      [reader]() {
+        Resume(reader);
+    });
+    reader->OwnerThread()->Dispatch(task.forget());
+  }
+
+  static void DispatchSuspend(MediaDecoderReader* aReader)
+  {
+    RefPtr<MediaDecoderReader> reader = aReader;
+
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+      [reader]() {
+        Suspend(reader);
+    });
+    reader->OwnerThread()->Dispatch(task.forget());
+  }
+
+  static void DispatchSuspendResume(MediaDecoderReader* aSuspend,
+                                    MediaDecoderReader* aResume)
+  {
+    RefPtr<MediaDecoderReader> suspend = aSuspend;
+    RefPtr<MediaDecoderReader> resume = aResume;
+
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+      [suspend, resume] () {
+        Suspend(suspend);
+        DispatchResume(resume);
+    });
+    suspend->OwnerThread()->Dispatch(task.forget());
+  }
+
+  static StaticAutoPtr<ReaderQueue> sInstance;
+
+  nsTArray<RefPtr<MediaDecoderReader>> mActive;
+  nsTArray<RefPtr<MediaDecoderReader>> mSuspended;
+  uint32_t mNumMaxActive;
+
+  mutable Mutex mMutex;
+};
+
+StaticAutoPtr<ReaderQueue> ReaderQueue::sInstance;
+
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
@@ -75,6 +226,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mShutdown(false)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
+  , mIsSuspended(true)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
@@ -83,6 +235,8 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
     mDataArrivedListener = mDecoder->DataArrivedEvent()->Connect(
       mTaskQueue, this, &MediaDecoderReader::NotifyDataArrived);
   }
+
+  ReaderQueue::Instance().Add(this);
 
   // Dispatch initialization that needs to happen on that task queue.
   mTaskQueue->Dispatch(NewRunnableMethod(this, &MediaDecoderReader::InitializationTask));
@@ -375,6 +529,8 @@ MediaDecoderReader::Shutdown()
   RefPtr<ShutdownPromise> p;
 
   mDecoder = nullptr;
+
+  ReaderQueue::Instance().Remove(this);
 
   return mTaskQueue->BeginShutdown();
 }
