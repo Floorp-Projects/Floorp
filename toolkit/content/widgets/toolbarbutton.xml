@@ -87,7 +87,7 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:stack class="toolbarbutton-badge-stack">
         <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
-        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0"/>
+        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0" crop="none"/>
       </xul:stack>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,wrap"/>
@@ -102,7 +102,7 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:stack class="toolbarbutton-badge-stack">
         <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
-        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0"/>
+        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0" crop="none"/>
       </xul:stack>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
