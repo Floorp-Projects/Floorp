@@ -211,6 +211,10 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     return -1;
   }
   if (aDiscardPadding > 0) {
+    // Padding discard is only supposed to happen on the final packet.
+    // Record the discard so we can return an error if another packet is
+    // decoded.
+    mPaddingDiscarded = true;
     OPUS_DEBUG("OpusDecoder discardpadding %" PRId64 "", aDiscardPadding);
     CheckedInt64 discardFrames =
       TimeUnitToFrames(media::TimeUnit::FromNanoseconds(aDiscardPadding),
@@ -221,15 +225,12 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     }
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
-      OPUS_DEBUG("Opus error, discard padding larger than packet");
-      return -1;
+      OPUS_DEBUG("Opus error, discard padding larger than packet (%d of %d frames)",
+                 int32_t(discardFrames.value()), frames);
+      return 0;
     }
     OPUS_DEBUG("Opus decoder discarding %d of %d frames",
         int32_t(discardFrames.value()), frames);
-    // Padding discard is only supposed to happen on the final packet.
-    // Record the discard so we can return an error if another packet is
-    // decoded.
-    mPaddingDiscarded = true;
     int32_t keepFrames = frames - discardFrames.value();
     frames = keepFrames;
   }
