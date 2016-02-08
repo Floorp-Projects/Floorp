@@ -375,9 +375,7 @@ BacktrackingAllocator::init()
     if (!liveIn)
         return false;
 
-    callRanges = LiveBundle::FallibleNew(alloc(), nullptr, nullptr);
-    if (!callRanges)
-        return false;
+    callRanges = LiveBundle::New(alloc(), nullptr, nullptr);
 
     size_t numVregs = graph.numVirtualRegisters();
     if (!vregs.init(mir->alloc(), numVregs))
@@ -1050,7 +1048,7 @@ BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def, VirtualRegis
 
     // The new range goes in a separate bundle, where it will be spilled during
     // allocation.
-    LiveBundle* secondBundle = LiveBundle::FallibleNew(alloc(), nullptr, nullptr);
+    LiveBundle* secondBundle = LiveBundle::New(alloc(), nullptr, nullptr);
     if (!secondBundle)
         return false;
     secondBundle->addRange(postRange);
@@ -1069,7 +1067,7 @@ BacktrackingAllocator::mergeAndQueueRegisters()
         if (!reg.hasRanges())
             continue;
 
-        LiveBundle* bundle = LiveBundle::FallibleNew(alloc(), nullptr, nullptr);
+        LiveBundle* bundle = LiveBundle::New(alloc(), nullptr, nullptr);
         if (!bundle)
             return false;
         for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter; iter++) {
@@ -2567,8 +2565,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
         return splitAt(bundle, splitPositions);
     }
 
-    LiveBundle* hotBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(),
-                                                    bundle->spillParent());
+    LiveBundle* hotBundle = LiveBundle::New(alloc(), bundle->spillSet(), bundle->spillParent());
     if (!hotBundle)
         return false;
     LiveBundle* preBundle = nullptr;
@@ -2576,7 +2573,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
     LiveBundle* coldBundle = nullptr;
 
     if (testbed) {
-        coldBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(), bundle->spillParent());
+        coldBundle = LiveBundle::New(alloc(), bundle->spillSet(), bundle->spillParent());
         if (!coldBundle)
             return false;
     }
@@ -2600,8 +2597,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
                     return false;
             } else {
                 if (!preBundle) {
-                    preBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(),
-                                                        bundle->spillParent());
+                    preBundle = LiveBundle::New(alloc(), bundle->spillSet(), bundle->spillParent());
                     if (!preBundle)
                         return false;
                 }
@@ -2616,8 +2612,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
                     return false;
             } else {
                 if (!postBundle) {
-                    postBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(),
-                                                         bundle->spillParent());
+                    postBundle = LiveBundle::New(alloc(), bundle->spillSet(), bundle->spillParent());
                     if (!postBundle)
                         return false;
                 }
@@ -2848,7 +2843,7 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
     bool spillBundleIsNew = false;
     LiveBundle* spillBundle = bundle->spillParent();
     if (!spillBundle) {
-        spillBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(), nullptr);
+        spillBundle = LiveBundle::New(alloc(), bundle->spillSet(), nullptr);
         if (!spillBundle)
             return false;
         spillBundleIsNew = true;
@@ -2873,8 +2868,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
     LiveBundleVector newBundles;
 
     // The bundle which ranges are currently being added to.
-    LiveBundle* activeBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(), spillBundle);
-    if (!activeBundle || !newBundles.append(activeBundle))
+    LiveBundle* activeBundle = LiveBundle::New(alloc(), bundle->spillSet(), spillBundle);
+    if (!newBundles.append(activeBundle))
         return false;
 
     // State for use by UseNewBundle.
@@ -2886,8 +2881,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
         LiveRange* range = LiveRange::get(*iter);
 
         if (UseNewBundle(splitPositions, range->from(), &activeSplitPosition)) {
-            activeBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(), spillBundle);
-            if (!activeBundle || newBundles.append(activeBundle))
+            activeBundle = LiveBundle::New(alloc(), bundle->spillSet(), spillBundle);
+            if (!newBundles.append(activeBundle))
                 return false;
         }
 
@@ -2922,9 +2917,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
                      activeRange->usesBegin()->usePolicy() == LUse::FIXED ||
                      use->usePolicy() == LUse::FIXED))
                 {
-                    activeBundle = LiveBundle::FallibleNew(alloc(), bundle->spillSet(),
-                                                           spillBundle);
-                    if (!activeBundle || !newBundles.append(activeBundle))
+                    activeBundle = LiveBundle::New(alloc(), bundle->spillSet(), spillBundle);
+                    if (!newBundles.append(activeBundle))
                         return false;
                     activeRange = LiveRange::FallibleNew(alloc(), range->vreg(),
                                                          range->from(), range->to());
