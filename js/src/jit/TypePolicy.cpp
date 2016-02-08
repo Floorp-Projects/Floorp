@@ -106,6 +106,8 @@ AllDoublePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         if (in->type() == MIRType_Double)
             continue;
 
+        if (!alloc.ensureBallast())
+            return false;
         MInstruction* replace = MToDouble::New(alloc, in);
 
         ins->block()->insertBefore(ins, replace);
