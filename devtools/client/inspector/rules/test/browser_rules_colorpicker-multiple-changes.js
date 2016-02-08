@@ -55,7 +55,7 @@ function* testSimpleMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      element: content.document.querySelector("p"),
+      selector: "p",
       name: "color",
       value: computed
     });
@@ -83,8 +83,8 @@ function* testComplexMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      element: content.document.body,
-      name: "backgroundColor",
+      selector: "body",
+      name: "background-color",
       value: computed
     });
   }
@@ -114,7 +114,7 @@ function* testOverriddenMultipleColorChanges(inspector, ruleView) {
   ];
   for (let {rgba, computed} of colors) {
     yield simulateColorPickerChange(ruleView, picker, rgba, {
-      element: content.document.body,
+      selector: "body",
       name: "color",
       value: computed
     });
