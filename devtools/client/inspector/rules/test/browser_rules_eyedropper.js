@@ -103,8 +103,7 @@ function* testSelect(view, swatch, dropper) {
   let color = swatch.style.backgroundColor;
   is(color, EXPECTED_COLOR, "swatch changed colors");
 
-  let element = content.document.querySelector("div");
-  is(content.window.getComputedStyle(element).backgroundColor,
+  is((yield getComputedStyleProperty("div", null, "background-color")),
      EXPECTED_COLOR,
      "div's color set to body color after dropper");
 }
