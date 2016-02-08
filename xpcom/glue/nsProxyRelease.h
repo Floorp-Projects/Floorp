@@ -12,34 +12,44 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "MainThreadUtils.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Move.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.
 #endif
 
-
+/**
+ * Ensure that a nsCOMPtr is released on the target thread.
+ *
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
+ */
 template<class T>
-class nsProxyReleaseEvent : public nsRunnable
+inline NS_HIDDEN_(nsresult)
+NS_ProxyRelease(nsIEventTarget* aTarget, nsCOMPtr<T>& aDoomed,
+                bool aAlwaysProxy = false)
 {
-public:
-  explicit nsProxyReleaseEvent(already_AddRefed<T> aDoomed)
-  : mDoomed(aDoomed.take()) {}
-
-  NS_IMETHOD Run()
-  {
-    NS_IF_RELEASE(mDoomed);
-    return NS_OK;
-  }
-
-private:
-  T* MOZ_OWNING_REF mDoomed;
-};
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ProxyRelease(aTarget, raw, aAlwaysProxy);
+}
 
 /**
- * Ensures that the delete of a smart pointer occurs on the target thread.
+ * Ensure that a nsRefPtr is released on the target thread.
+ *
+ * @see NS_ProxyRelease(nsIEventTarget*, nsISupports*, bool)
+ */
+template<class T>
+inline NS_HIDDEN_(nsresult)
+NS_ProxyRelease(nsIEventTarget* aTarget, RefPtr<T>& aDoomed,
+                bool aAlwaysProxy = false)
+{
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ProxyRelease(aTarget, raw, aAlwaysProxy);
+}
+
+/**
+ * Ensures that the delete of a nsISupports object occurs on the target thread.
  *
  * @param aTarget
  *        the target thread where the doomed object should be released.
@@ -51,39 +61,42 @@ private:
  *        true, then an event will always be posted to the target thread for
  *        asynchronous release.
  */
+nsresult
+NS_ProxyRelease(nsIEventTarget* aTarget, nsISupports* aDoomed,
+                bool aAlwaysProxy = false);
+
+/**
+ * Ensure that a nsCOMPtr is released on the main thread.
+ *
+ * @see NS_ReleaseOnMainThread( nsISupports*, bool)
+ */
 template<class T>
-inline NS_HIDDEN_(void)
-NS_ProxyRelease(nsIEventTarget* aTarget, already_AddRefed<T> aDoomed,
-                bool aAlwaysProxy = false)
+inline NS_HIDDEN_(nsresult)
+NS_ReleaseOnMainThread(nsCOMPtr<T>& aDoomed,
+                       bool aAlwaysProxy = false)
 {
-  // Auto-managing release of the pointer.
-  RefPtr<T> doomed = aDoomed;
-  nsresult rv;
-
-  if (!doomed || !aTarget) {
-    return;
-  }
-
-  if (!aAlwaysProxy) {
-    bool onCurrentThread = false;
-    rv = aTarget->IsOnCurrentThread(&onCurrentThread);
-    if (NS_SUCCEEDED(rv) && onCurrentThread) {
-      return;
-    }
-  }
-
-  nsCOMPtr<nsIRunnable> ev = new nsProxyReleaseEvent<T>(doomed.forget());
-
-  rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to post proxy release event, leaking!");
-    // It is better to leak the aDoomed object than risk crashing as
-    // a result of deleting it on the wrong thread.
-  }
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ReleaseOnMainThread(raw, aAlwaysProxy);
 }
 
 /**
- * Ensures that the delete of a smart pointer occurs on the main thread.
+ * Ensure that a nsRefPtr is released on the main thread.
+ *
+ * @see NS_ReleaseOnMainThread(nsISupports*, bool)
+ */
+template<class T>
+inline NS_HIDDEN_(nsresult)
+NS_ReleaseOnMainThread(RefPtr<T>& aDoomed,
+                       bool aAlwaysProxy = false)
+{
+  T* raw = nullptr;
+  aDoomed.swap(raw);
+  return NS_ReleaseOnMainThread(raw, aAlwaysProxy);
+}
+
+/**
+ * Ensures that the delete of a nsISupports object occurs on the main thread.
  *
  * @param aDoomed
  *        the doomed object; the object to be released on the main thread.
@@ -93,9 +106,8 @@ NS_ProxyRelease(nsIEventTarget* aTarget, already_AddRefed<T> aDoomed,
  *        parameter is true, then an event will always be posted to the main
  *        thread for asynchronous release.
  */
-template<class T>
-inline NS_HIDDEN_(void)
-NS_ReleaseOnMainThread(already_AddRefed<T> aDoomed,
+inline nsresult
+NS_ReleaseOnMainThread(nsISupports* aDoomed,
                        bool aAlwaysProxy = false)
 {
   // NS_ProxyRelease treats a null event target as "the current thread".  So a
@@ -103,15 +115,10 @@ NS_ReleaseOnMainThread(already_AddRefed<T> aDoomed,
   // main thread or the release must happen asynchronously.
   nsCOMPtr<nsIThread> mainThread;
   if (!NS_IsMainThread() || aAlwaysProxy) {
-    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Could not get main thread! Leaking.");
-      return;
-    }
+    NS_GetMainThread(getter_AddRefs(mainThread));
   }
 
-  NS_ProxyRelease(mainThread, mozilla::Move(aDoomed), aAlwaysProxy);
+  return NS_ProxyRelease(mainThread, aDoomed, aAlwaysProxy);
 }
 
 /**
@@ -178,7 +185,13 @@ private:
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
-      NS_ReleaseOnMainThread(dont_AddRef(mRawPtr));
+      nsCOMPtr<nsIThread> mainThread;
+      NS_GetMainThread(getter_AddRefs(mainThread));
+      if (!mainThread) {
+        NS_WARNING("Couldn't get main thread! Leaking pointer.");
+        return;
+      }
+      NS_ProxyRelease(mainThread, mRawPtr);
     }
   }
 

@@ -196,7 +196,7 @@ public:
   {
     mStatementCache.FinalizeStatements();
     // Release the owner back on the calling thread.
-    NS_ProxyRelease(mCallingThread, mOwner.forget());
+    (void)NS_ProxyRelease(mCallingThread, mOwner);
     return NS_OK;
   }
 

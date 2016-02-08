@@ -22,7 +22,10 @@ SpeechStreamListener::~SpeechStreamListener()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
 
-  NS_ProxyRelease(mainThread, mRecognition.forget());
+  SpeechRecognition* forgottenRecognition = nullptr;
+  mRecognition.swap(forgottenRecognition);
+  NS_ProxyRelease(mainThread,
+                  static_cast<DOMEventTargetHelper*>(forgottenRecognition));
 }
 
 void

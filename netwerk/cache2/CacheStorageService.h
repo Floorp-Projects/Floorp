@@ -383,7 +383,10 @@ private:
 template<class T>
 void ProxyRelease(nsCOMPtr<T> &object, nsIThread* thread)
 {
-  NS_ProxyRelease(thread, object.forget());
+  T* release;
+  object.forget(&release);
+
+  NS_ProxyRelease(thread, release);
 }
 
 template<class T>

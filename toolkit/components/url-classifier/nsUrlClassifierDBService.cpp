@@ -798,8 +798,11 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierLookupCallback,
 
 nsUrlClassifierLookupCallback::~nsUrlClassifierLookupCallback()
 {
+  nsCOMPtr<nsIThread> thread;
+  (void)NS_GetMainThread(getter_AddRefs(thread));
+
   if (mCallback) {
-    NS_ReleaseOnMainThread(mCallback.forget());
+    (void)NS_ProxyRelease(thread, mCallback, false);
   }
 }
 
