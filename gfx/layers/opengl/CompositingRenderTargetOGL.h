@@ -77,6 +77,8 @@ public:
 
   ~CompositingRenderTargetOGL();
 
+  virtual const char* Name() const override { return "CompositingRenderTargetOGL"; }
+
   /**
    * Create a render target around the default FBO, for rendering straight to
    * the window.
