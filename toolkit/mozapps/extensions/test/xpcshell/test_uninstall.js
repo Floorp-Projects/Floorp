@@ -201,6 +201,7 @@ function run_test_4() {
       ]
     });
     a1.uninstall();
+    ensure_test_completed();
 
     check_test_4();
   });
